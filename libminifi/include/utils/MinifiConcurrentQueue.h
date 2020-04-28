@@ -175,47 +175,50 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
   }
 
   bool dequeueWait(T& out) {
+    std::unique_lock<std::mutex> lck(this->mtx_);
     if (!running_) {
       return false;
     }
-    std::unique_lock<std::mutex> lck(this->mtx_);
     cv_.wait(lck, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Only wake up if there is something to return or stopped
     return ConcurrentQueue<T>::tryDequeueImpl(lck, out);
   }
 
   template<typename Functor>
   bool consumeWait(Functor&& fun) {
+    std::unique_lock<std::mutex> lck(this->mtx_);
     if (!running_) {
       return false;
     }
-    std::unique_lock<std::mutex> lck(this->mtx_);
     cv_.wait(lck, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Only wake up if there is something to return or stopped
     return ConcurrentQueue<T>::consumeImpl(std::move(lck), std::forward<Functor>(fun));
   }
 
   template< class Rep, class Period >
   bool dequeueWaitFor(T& out, const std::chrono::duration<Rep, Period>& time) {
+    std::unique_lock<std::mutex> lck(this->mtx_);
     if (!running_) {
       return false;
     }
-    std::unique_lock<std::mutex> lck(this->mtx_);
     cv_.wait_for(lck, time, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Wake up with timeout or in case there is something to do
     return ConcurrentQueue<T>::tryDequeueImpl(lck, out);
   }
 
   template<typename Functor, class Rep, class Period>
   bool consumeWaitFor(Functor&& fun, const std::chrono::duration<Rep, Period>& time) {
+    std::unique_lock<std::mutex> lck(this->mtx_);
     if (!running_) {
       return false;
     }
-    std::unique_lock<std::mutex> lck(this->mtx_);
     cv_.wait_for(lck, time, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Wake up with timeout or in case there is something to do
     return ConcurrentQueue<T>::consumeImpl(std::move(lck), std::forward<Functor>(fun));
   }
 
   bool tryDequeue(T& out) {
     std::unique_lock<std::mutex> lck(this->mtx_);
-    return running_ && ConcurrentQueue<T>::tryDequeueImpl(lck, out);
+    if (!running_) {
+      return false;
+    }
+    return ConcurrentQueue<T>::tryDequeueImpl(lck, out);
   }
 
   void stop() {
