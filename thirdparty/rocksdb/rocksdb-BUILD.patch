@@ -1,6 +1,6 @@
 diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
 --- orig/CMakeLists.txt	2019-02-11 23:02:52.000000000 +0100
-+++ patched/CMakeLists.txt	2020-02-06 14:35:40.000000000 +0100
++++ patched/CMakeLists.txt	2020-04-28 13:35:01.000000000 +0200
 @@ -726,8 +726,8 @@ else()
  endif()
  
@@ -12,12 +12,8 @@ diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
  
  option(WITH_LIBRADOS "Build with librados" OFF)
  if(WITH_LIBRADOS)
-@@ -738,39 +738,39 @@ endif()
- 
- if(WIN32)
-   set(SYSTEM_LIBS ${SYSTEM_LIBS} Shlwapi.lib Rpcrt4.lib)
--  set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
-+#  set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+@@ -741,36 +741,36 @@ if(WIN32)
+   set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
  else()
    set(SYSTEM_LIBS ${CMAKE_THREAD_LIBS_INIT})
 -  set(LIBS ${ROCKSDB_SHARED_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
@@ -31,7 +27,7 @@ diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
 -                        SOVERSION ${ROCKSDB_VERSION_MAJOR}
 -                        CXX_STANDARD 11
 -                        OUTPUT_NAME "rocksdb")
-+#  set(LIBS ${ROCKSDB_SHARED_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
++  set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
 +#
 +#  add_library(${ROCKSDB_SHARED_LIB} SHARED ${SOURCES})
 +#  target_link_libraries(${ROCKSDB_SHARED_LIB}
@@ -100,3 +96,12 @@ diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
  
    install(
      EXPORT RocksDBTargets
+diff -rupN orig/tools/CMakeLists.txt patched/tools/CMakeLists.txt
+--- orig/tools/CMakeLists.txt	2019-02-11 23:02:52.000000000 +0100
++++ patched/tools/CMakeLists.txt	2020-04-28 13:54:05.000000000 +0200
+@@ -19,3 +19,5 @@ add_custom_target(tools
+ add_custom_target(ldb_tests
+   COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/ldb_tests.py
+   DEPENDS ldb)
++install(TARGETS ${tool_deps}
++  RUNTIME DESTINATION bin)

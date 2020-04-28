@@ -37,7 +37,7 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     set(ROCKSDB_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/rocksdb-install"
             -DWITH_TESTS=OFF
-            -DWITH_TOOLS=OFF
+            -DWITH_TOOLS=ON
             -DWITH_GFLAGS=OFF
             -DUSE_RTTI=1
             -DFAIL_ON_WARNINGS=OFF)
