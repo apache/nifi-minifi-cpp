@@ -35,12 +35,18 @@ namespace detail {
 template<typename...>
 using void_t = void;
 
+// TryMoveCall calls an
+//  - unary function of a lvalue reference-type argument by passing a ref
+//  - unary function of any other argument type by moving into it
 template<typename /* FunType */, typename T, typename = void>
 struct TryMoveCall {
     template<typename Fun>
     static void call(Fun&& fun, T& elem) { std::forward<Fun>(fun)(elem); }
 };
 
+// 1. std::declval<T>() resolves to a non-evaluated rvalue of T
+// 2. std::declval<FunType>()(*1*) resolves to a non-evaluated function object with T& argument
+// 4. void_t<decltype(*2*)> whenever the expression is well formed, the template is enabled and cosidered more specifialized than the default
 template<typename FunType, typename T>
 struct TryMoveCall<FunType, T, void_t<decltype(std::declval<FunType>()(std::declval<T>()))>> {
     template<typename Fun>
@@ -83,7 +89,7 @@ class ConcurrentQueue {
 
   bool empty() const {
     std::unique_lock<std::mutex> lck(mtx_);
-    return queue_.emptyImpl(lck);
+    return emptyImpl(lck);
   }
 
   size_t size() const {
