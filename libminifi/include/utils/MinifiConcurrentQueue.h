@@ -23,6 +23,7 @@
 #include <condition_variable>
 #include <utility>
 #include <stdexcept>
+#include <type_traits>
 
 namespace org {
 namespace apache {
@@ -30,10 +31,26 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+namespace detail {
+template<typename...>
+using void_t = void;
+
+template<typename /* FunType */, typename T, typename = void>
+struct TryMoveCall {
+    template<typename Fun>
+    static void call(Fun&& fun, T& elem) { std::forward<Fun>(fun)(elem); }
+};
+
+template<typename FunType, typename T>
+struct TryMoveCall<FunType, T, void_t<decltype(std::declval<FunType>()(std::declval<T>()))>> {
+    template<typename Fun>
+    static void call(Fun&& fun, T& elem) { std::forward<Fun>(fun)(std::move(elem)); }
+};
+}  // namespace detail
 
 // Provides a queue API and guarantees no race conditions in case of multiple producers and consumers.
 // Guarantees elements to be dequeued in order of insertion
-template <typename T, typename = typename std::enable_if<std::is_nothrow_move_constructible<T>::value>::type>
+template <typename T>
 class ConcurrentQueue {
  public:    
   explicit ConcurrentQueue() = default;
@@ -59,9 +76,9 @@ class ConcurrentQueue {
   }
 
   template<typename Functor>
-  bool dequeueApply(Functor&& fun) {
+  bool consume(Functor&& fun) {
     std::unique_lock<std::mutex> lck(mtx_);
-    return dequeueApplyImpl(lck, std::forward<Functor>(fun));
+    return consumeImpl(std::move(lck), std::forward<Functor>(fun));
   }
 
   bool empty() const {
@@ -97,6 +114,7 @@ class ConcurrentQueue {
   }
 
   bool tryDequeueImpl(std::unique_lock<std::mutex>& lck, T& out) {
+    static_assert(std::is_nothrow_move_constructible<T>::value, "T has to be nothrow move constructible.");
     checkLock(lck);
     if (queue_.empty()) {
       return false;
@@ -107,7 +125,8 @@ class ConcurrentQueue {
   }
 
   template<typename Functor>
-  bool dequeueApplyImpl(std::unique_lock<std::mutex>& lck, Functor&& fun) {
+  bool consumeImpl(std::unique_lock<std::mutex>&& lck, Functor&& fun) {
+    static_assert(std::is_nothrow_move_assignable<T>::value, "T has to be nothrow move assignable.");
     checkLock(lck);
     if (queue_.empty()) {
       return false;
@@ -115,7 +134,7 @@ class ConcurrentQueue {
     T elem = std::move(queue_.front());
     queue_.pop_front();
     lck.unlock();
-    fun(elem);
+    detail::TryMoveCall<Functor, T>::call(std::forward<Functor>(fun), elem);
     return true;
   }
 
@@ -165,13 +184,13 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
   }
 
   template<typename Functor>
-  bool dequeueApplyWait(Functor&& fun) {
+  bool consumeWait(Functor&& fun) {
     if (!running_) {
       return false;
     }
     std::unique_lock<std::mutex> lck(this->mtx_);
     cv_.wait(lck, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Only wake up if there is something to return or stopped
-    return ConcurrentQueue<T>::dequeueApplyImpl(lck, std::forward<Functor>(fun));
+    return ConcurrentQueue<T>::consumeImpl(std::move(lck), std::forward<Functor>(fun));
   }
 
   template< class Rep, class Period >
@@ -185,13 +204,13 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
   }
 
   template<typename Functor, class Rep, class Period>
-  bool dequeueApplyWaitFor(Functor&& fun, const std::chrono::duration<Rep, Period>& time) {
+  bool consumeWaitFor(Functor&& fun, const std::chrono::duration<Rep, Period>& time) {
     if (!running_) {
       return false;
     }
     std::unique_lock<std::mutex> lck(this->mtx_);
     cv_.wait_for(lck, time, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Wake up with timeout or in case there is something to do
-    return ConcurrentQueue<T>::dequeueApplyImpl(lck, std::forward<Functor>(fun));
+    return ConcurrentQueue<T>::consumeImpl(std::move(lck), std::forward<Functor>(fun));
   }
 
   bool tryDequeue(T& out) {

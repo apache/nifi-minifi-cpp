@@ -76,7 +76,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
     return std::thread([&queue, &results] {
       while (results.size() < 3) {
         std::string s;
-        if (!queue.dequeueApply([&results] (const std::string& s) { results.push_back(s); })) {
+        if (!queue.consume([&results] (const std::string& s) { results.push_back(s); })) {
           std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
       }
@@ -96,7 +96,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
     return std::thread([&queue, &results] {
       while (results.size() < 3) {
         std::string s;
-        if (!queue.dequeueApplyWait([&results] (const std::string& s) { results.push_back(s); })) {
+        if (!queue.consumeWait([&results] (const std::string& s) { results.push_back(s); })) {
           std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
       }
@@ -152,7 +152,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
       while (results.size() < 3 && attemt_num < max_read_attempts) {
         ++attemt_num;
         std::string s;
-        queue.dequeueApplyWaitFor([&results] (const std::string& s) { results.insert(s); }, std::chrono::milliseconds(3));
+        queue.consumeWaitFor([&results] (const std::string& s) { results.insert(s); }, std::chrono::milliseconds(3));
       }
     });
   }
@@ -262,7 +262,7 @@ TEST_CASE("TestConditionConqurrentQueue::testConditionQueueDequeueWaitForWithSig
   REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
 }
 
-TEST_CASE("TestConditionConqurrentQueue::testConditionQueueDequeueApplyWaitForWithSignal", "[testConditionQueueDequeueApplyWaitForWithSignal]") {
+TEST_CASE("TestConditionConqurrentQueue::testConditionQueueconsumeWaitForWithSignal", "[testConditionQueueconsumeWaitForWithSignal]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConditionConcurrentQueue<std::string> queue(true);
   std::set<std::string> results;
@@ -291,7 +291,7 @@ TEST_CASE("TestConditionConqurrentQueue::testConditionQueueDequeueWaitForNoSigna
   REQUIRE(0 == results.size());
 }
 
-TEST_CASE("TestConditionConqurrentQueue::testConditionQueueDequeueApplyWaitForNoSignal", "[testConditionQueueDequeueApplyWaitForNoSignal]") {
+TEST_CASE("TestConditionConqurrentQueue::testConditionQueueconsumeWaitForNoSignal", "[testConditionQueueconsumeWaitForNoSignal]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConditionConcurrentQueue<std::string> queue(true);
   std::set<std::string> results;
