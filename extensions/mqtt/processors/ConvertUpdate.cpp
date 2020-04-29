@@ -19,6 +19,7 @@
 #include "utils/HTTPClient.h"
 #include "io/BaseStream.h"
 #include "io/DataStream.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -62,8 +63,8 @@ void ConvertUpdate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
       }
       std::unique_ptr<utils::BaseHTTPClient> client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
       client->initialize("GET");
-      client->setConnectionTimeout(2000);
-      client->setReadTimeout(2000);
+      client->setConnectionTimeout(std::chrono::milliseconds(2000));
+      client->setReadTimeout(std::chrono::milliseconds(2000));
 
       if (client->submit()) {
         auto data = client->getResponseBody();

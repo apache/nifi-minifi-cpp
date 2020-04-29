@@ -50,16 +50,7 @@ class InvokeHTTP : public core::Processor {
    * Create a new processor
    */
   InvokeHTTP(std::string name, utils::Identifier uuid = utils::Identifier())
-      : Processor(name, uuid),
-        ssl_context_service_(nullptr),
-        date_header_include_(true),
-        connect_timeout_(20000),
-        read_timeout_(20000),
-        always_output_response_(false),
-        use_chunked_encoding_(false),
-        penalize_no_retry_(false),
-        disable_peer_verification_(false),
-        logger_(logging::LoggerFactory<InvokeHTTP>::getLogger()) {
+      : Processor(name, uuid) {
   }
   // Destructor
   virtual ~InvokeHTTP();
@@ -140,35 +131,35 @@ class InvokeHTTP : public core::Processor {
    */
   bool emitFlowFile(const std::string &method);
 
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_{nullptr};
 
   // http method
   std::string method_;
   // url
   std::string url_;
   // include date in the header
-  bool date_header_include_;
+  bool date_header_include_{true};
   // attribute to send regex
   std::string attribute_to_send_regex_;
   // connection timeout
-  int64_t connect_timeout_;
+  std::chrono::milliseconds connect_timeout_ms_{DEFAULT_TIMEOUT_MS};
   // read timeout.
-  int64_t read_timeout_;
+  std::chrono::milliseconds read_timeout_ms_{DEFAULT_TIMEOUT_MS};
   // attribute in which response body will be added
   std::string put_attribute_name_;
   // determine if we always output a response.
-  bool always_output_response_;
+  bool always_output_response_{false};
   // content type.
   std::string content_type_;
   // use chunked encoding.
-  bool use_chunked_encoding_;
+  bool use_chunked_encoding_{false};
   // penalize on no retry
-  bool penalize_no_retry_;
+  bool penalize_no_retry_{false};
   // disable peer verification ( makes susceptible for MITM attacks )
-  bool disable_peer_verification_;
+  bool disable_peer_verification_{false};
  private:
-  std::shared_ptr<logging::Logger> logger_;
-  static std::shared_ptr<utils::IdGenerator> id_generator_;
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<InvokeHTTP>::getLogger()};
+  const std::chrono::milliseconds DEFAULT_TIMEOUT_MS{20000};
 };
 
 REGISTER_RESOURCE(InvokeHTTP,"An HTTP client processor which can interact with a configurable HTTP Endpoint. "

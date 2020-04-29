@@ -412,6 +412,18 @@ class Property {
     return true;
   }
 
+  static bool getTimeMSFromString(const std::string& str, uint64_t& valInt) {
+    core::TimeUnit unit;
+    return !str.empty() && StringToTime(str, valInt, unit)
+        && ConvertTimeUnitToMS(valInt, unit, valInt);
+  }
+
+  static bool getTimeMSFromString(const std::string& str, int64_t& valInt) {
+    core::TimeUnit unit;
+    return !str.empty() && StringToTime(str, valInt, unit)
+        && ConvertTimeUnitToMS(valInt, unit, valInt);
+  }
+
   // Convert String to Integer
   template<typename T>
   static bool StringToInt(std::string input, T &output) {

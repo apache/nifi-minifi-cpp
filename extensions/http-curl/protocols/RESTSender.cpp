@@ -104,9 +104,9 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
 
   // Client declared last to make sure calbacks are still available when client is destructed
   utils::HTTPClient client(url, ssl_context_service_);
-  client.setKeepAliveProbe(2);
-  client.setKeepAliveIdle(2);
-  client.setConnectionTimeout(2);
+  client.setKeepAliveProbe(std::chrono::milliseconds(2000));
+  client.setKeepAliveIdle(std::chrono::milliseconds(2000));
+  client.setConnectionTimeout(std::chrono::milliseconds(2000));
   if (direction == Direction::TRANSMIT) {
     input = std::unique_ptr<utils::ByteInputCallBack>(new utils::ByteInputCallBack());
     callback = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback());

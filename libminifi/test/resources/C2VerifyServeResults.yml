@@ -30,6 +30,10 @@ Processors:
       yield period: 1 sec
       run duration nanos: 0
       auto-terminated relationships list:
+          - failure
+          - retry
+          - no retry
+          - response
       Properties:
           HTTP Method: GET
           Remote URL: http://localhost:10013/geturl

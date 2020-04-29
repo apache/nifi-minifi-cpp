@@ -39,6 +39,7 @@
 #include <regex.h>
 #endif
 #include <vector>
+#include <chrono>
 
 #include "utils/ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
@@ -80,9 +81,19 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   virtual void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) override;
 
-  virtual void setConnectionTimeout(int64_t timeout) override;
+  // This is a bad API and deprecated. Use the std::chrono variant of this
+  // It is assumed that the value of timeout provided to this function
+  // is in seconds units
+  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) virtual void setConnectionTimeout(int64_t timeout) override;
 
-  virtual void setReadTimeout(int64_t timeout) override;
+  // This is a bad API and deprecated. Use the std::chrono variant of this
+  // It is assumed that the value of timeout provided to this function
+  // is in seconds units
+  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) virtual void setReadTimeout(int64_t timeout) override;
+
+  virtual void setConnectionTimeout(std::chrono::milliseconds timeout) override;
+
+  virtual void setReadTimeout(std::chrono::milliseconds timeout) override;
 
   virtual void setUploadCallback(HTTPUploadCallback *callbackObj) override;
 
@@ -124,11 +135,11 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   bool setMinimumSSLVersion(SSLVersion minimum_version) override;
 
-  void setKeepAliveProbe(long probe){
+  void setKeepAliveProbe(std::chrono::milliseconds probe){
     keep_alive_probe_ = probe;
   }
 
-  void setKeepAliveIdle(long idle){
+  void setKeepAliveIdle(std::chrono::milliseconds idle){
     keep_alive_idle_= idle;
   }
 
@@ -229,9 +240,9 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
   std::string url_;
-  int64_t connect_timeout_;
+  std::chrono::milliseconds connect_timeout_ms_{0};
   // read timeout.
-  int64_t read_timeout_;
+  std::chrono::milliseconds read_timeout_ms_{0};
   char *content_type_str_;
   std::string content_type_;
   struct curl_slist *headers_;
@@ -247,9 +258,9 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   std::string method_;
 
-  long keep_alive_probe_;
+  std::chrono::milliseconds keep_alive_probe_{0};
 
-  long keep_alive_idle_;
+  std::chrono::milliseconds keep_alive_idle_{0};
 
   std::shared_ptr<logging::Logger> logger_;
 
