@@ -52,8 +52,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-std::shared_ptr<utils::IdGenerator> InvokeHTTP::id_generator_ = utils::IdGenerator::getIdGenerator();
-
 const char *InvokeHTTP::ProcessorName = "InvokeHTTP";
 std::string InvokeHTTP::DefaultContentType = "application/octet-stream";
 
@@ -63,8 +61,14 @@ core::Property InvokeHTTP::Method("HTTP Method", "HTTP request method (GET, POST
 core::Property InvokeHTTP::URL(
     core::PropertyBuilder::createProperty("Remote URL")->withDescription("Remote URL which will be connected to, including scheme, host, port, path.")->isRequired(false)->supportsExpressionLanguage(
         true)->build());
-core::Property InvokeHTTP::ConnectTimeout("Connection Timeout", "Max wait time for connection to remote service.", "5 secs");
-core::Property InvokeHTTP::ReadTimeout("Read Timeout", "Max wait time for response from remote service.", "15 secs");
+
+core::Property InvokeHTTP::ConnectTimeout(
+      core::PropertyBuilder::createProperty("Connection Timeout")->withDescription("Max wait time for connection to remote service")->isRequired(false)
+         ->withDefaultValue<core::TimePeriodValue>("5 s")->build());
+
+core::Property InvokeHTTP::ReadTimeout(
+      core::PropertyBuilder::createProperty("Read Timeout")->withDescription("Max wait time for response from remote service")->isRequired(false)
+         ->withDefaultValue<core::TimePeriodValue>("15 s")->build());
 
 core::Property InvokeHTTP::DateHeader(
     core::PropertyBuilder::createProperty("Include Date Header")->withDescription("Include an RFC-2616 Date header in the request.")->isRequired(false)->withDefaultValue<bool>(true)->build());
@@ -149,9 +153,14 @@ void InvokeHTTP::initialize() {
 
   setSupportedProperties(properties);
   // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedRelationships({Success, RelResponse, RelFailure, RelRetry, RelNoRetry});
+}
+
+bool getTimeMSFromString(const std::string& propertyName, uint64_t& valInt) {
+  core::TimeUnit unit;
+  return !propertyName.empty()
+      && core::Property::StringToTime(propertyName, valInt, unit)
+      && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt);
 }
 
 void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -165,15 +174,13 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     return;
   }
 
+  uint64_t valInt;
   std::string timeoutStr;
-
-  if (context->getProperty(ConnectTimeout.getName(), timeoutStr)) {
-    core::Property::StringToInt(timeoutStr, connect_timeout_);
-    // set the timeout in curl options.
-
+  if (context->getProperty(ConnectTimeout.getName(), timeoutStr)
+      && core::Property::getTimeMSFromString(timeoutStr, valInt)) {
+    connect_timeout_ms_ =  std::chrono::milliseconds(valInt);
   } else {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", ConnectTimeout.getName(), ConnectTimeout.getValue());
-
     return;
   }
 
@@ -182,9 +189,10 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     content_type_ = contentTypeStr;
   }
 
-  if (context->getProperty(ReadTimeout.getName(), timeoutStr)) {
-    core::Property::StringToInt(timeoutStr, read_timeout_);
-
+  timeoutStr.clear();
+  if (context->getProperty(ReadTimeout.getName(), timeoutStr)
+      && core::Property::getTimeMSFromString(timeoutStr, valInt)) {
+    read_timeout_ms_ =  std::chrono::milliseconds(valInt);
   } else {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", ReadTimeout.getName(), ReadTimeout.getValue());
   }
@@ -244,7 +252,7 @@ InvokeHTTP::~InvokeHTTP() {
 
 std::string InvokeHTTP::generateId() {
   utils::Identifier txId;
-  id_generator_->generate(txId);
+  utils::IdGenerator::getIdGenerator()->generate(txId);
   return txId.to_string();
 }
 
@@ -266,20 +274,19 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       return;
     }
   } else {
-    context->getProperty(URL, url, flowFile);
     logger_->log_debug("InvokeHTTP -- Received flowfile");
   }
 
-  logger_->log_debug("onTrigger InvokeHTTP with %s to %s", method_, url);
+  logger_->log_debug("onTrigger InvokeHTTP with %s to %s", method_, url_);
 
   // create a transaction id
   std::string tx_id = generateId();
 
-  utils::HTTPClient client(url, ssl_context_service_);
+  utils::HTTPClient client(url_, ssl_context_service_);
 
   client.initialize(method_);
-  client.setConnectionTimeout(connect_timeout_);
-  client.setReadTimeout(read_timeout_);
+  client.setConnectionTimeout(connect_timeout_ms_);
+  client.setReadTimeout(read_timeout_ms_);
 
   if (!content_type_.empty()) {
     client.setContentType(content_type_);
@@ -333,9 +340,9 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     int64_t http_code = client.getResponseCode();
     const char *content_type = client.getContentType();
     flowFile->addAttribute(STATUS_CODE, std::to_string(http_code));
-    if (response_headers.size() > 0)
+    if (!response_headers.empty())
       flowFile->addAttribute(STATUS_MESSAGE, response_headers.at(0));
-    flowFile->addAttribute(REQUEST_URL, url);
+    flowFile->addAttribute(REQUEST_URL, url_);
     flowFile->addAttribute(TRANSACTION_ID, tx_id);
 
     bool isSuccess = ((int32_t) (http_code / 100)) == 2;
@@ -355,18 +362,18 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       // as per RFC 2046 -- 4.5.1
       response_flow->addKeyedAttribute(MIME_TYPE, content_type ? std::string(content_type) : DefaultContentType);
       response_flow->addAttribute(STATUS_CODE, std::to_string(http_code));
-      if (response_headers.size() > 0)
-        flowFile->addAttribute(STATUS_MESSAGE, response_headers.at(0));
+      if (!response_headers.empty())
+        response_flow->addAttribute(STATUS_MESSAGE, response_headers.at(0));
       response_flow->addAttribute(REQUEST_URL, url);
       response_flow->addAttribute(TRANSACTION_ID, tx_id);
       io::DataStream stream((const uint8_t*) response_body.data(), response_body.size());
       // need an import from the data stream.
       session->importFrom(stream, response_flow);
-    } else {
-      logger_->log_warn("Cannot output body to content");
-      response_flow = std::static_pointer_cast<FlowFileRecord>(session->create());
     }
     route(flowFile, response_flow, session, context, isSuccess, http_code);
+  } else {
+    session->penalize(flowFile);
+    session->transfer(flowFile, RelFailure);
   }
 }
 
@@ -381,7 +388,7 @@ void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr
   bool responseSent = false;
   if (always_output_response_ && response != nullptr) {
     logger_->log_debug("Outputting success and response");
-    session->transfer(response, Success);
+    session->transfer(response, RelResponse);
     responseSent = true;
   }
 
@@ -394,16 +401,14 @@ void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr
     }
     if (response != nullptr && !responseSent) {
       logger_->log_debug("Outputting success and response");
-      session->transfer(response, Success);
+      session->transfer(response, RelResponse);
     }
-
     // 5xx -> RETRY
   } else if (statusCode / 100 == 5) {
     if (request != nullptr) {
       session->penalize(request);
       session->transfer(request, RelRetry);
     }
-
     // 1xx, 3xx, 4xx -> NO RETRY
   } else {
     if (request != nullptr) {

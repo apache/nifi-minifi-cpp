@@ -1,0 +1,175 @@
+MiNiFi Config Version: 3
+Flow Controller:
+  name: c++lw
+  comment: Created by MiNiFi C2 Flow Designer
+Core Properties:
+  flow controller graceful shutdown period: 10 sec
+  flow service write delay interval: 500 ms
+  administrative yield duration: 30 sec
+  bored yield duration: 10 millis
+  max concurrent threads: 1
+  variable registry properties: ''
+FlowFile Repository:
+  partitions: 256
+  checkpoint interval: 2 mins
+  always sync: false
+  Swap:
+    threshold: 20000
+    in period: 5 sec
+    in threads: 1
+    out period: 5 sec
+    out threads: 4
+Content Repository:
+  content claim max appendable size: 10 MB
+  content claim max flow files: 100
+  always sync: false
+Provenance Repository:
+  provenance rollover time: 1 min
+  implementation: org.apache.nifi.provenance.MiNiFiPersistentProvenanceRepository
+Component Status Repository:
+  buffer size: 1440
+  snapshot frequency: 1 min
+Security Properties:
+  keystore: ''
+  keystore type: ''
+  keystore password: ''
+  key password: ''
+  truststore: ''
+  truststore type: ''
+  truststore password: ''
+  ssl protocol: ''
+  Sensitive Props:
+    key:
+    algorithm: PBEWITHMD5AND256BITAES-CBC-OPENSSL
+    provider: BC
+Processors:
+- id: 4ed2d51d-076a-49b0-88de-5cf5adf52a7e
+  name: GenerateFlowFile
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 15000 ms
+  penalization period: 1000 ms
+  yield period: 1000 ms
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Batch Size: '1'
+    Data Format: Binary
+    File Size: 1 kB
+    Unique FlowFiles: 'true'
+- id: 1d51724d-dd76-46a0-892d-a7c7408d58dd
+  name: InvokeHTTP
+  class: org.apache.nifi.minifi.processors.InvokeHTTP
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1000 ms
+  penalization period: 1000 ms
+  yield period: 1000 ms
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Always Output Response: 'false'
+    Connection Timeout: 2 s
+    Content-type: application/octet-stream
+    Disable Peer Verification: 'true'
+    HTTP Method: POST
+    Read Timeout: 3 s
+    Remote URL: https://localhost:0/minifi
+    Use Chunked Encoding: 'false'
+    send-message-body: 'true'
+    SSL Context Service: SSLContextService
+- id: 8543b2e2-a373-4d8d-8710-ac314666696b
+  name: LogAttribute
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1000 ms
+  penalization period: 30000 ms
+  yield period: 1000 ms
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - success
+  Properties:
+    FlowFiles To Log: '1'
+    Hexencode Payload: 'false'
+    Log Payload: 'false'
+    Maximum Payload Line Length: '80'
+- id: 4f8a0c9b-6f7c-458f-9b4d-480addb2e0af
+  name: UpdateAttribute
+  class: org.apache.nifi.minifi.processors.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 200 ms
+  penalization period: 1000 ms
+  yield period: 1000 ms
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - failure
+  Properties:
+    invoke_http: failure
+Controller Services: []
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections:
+- id: 189bee81-3e56-45ac-b6bb-aa70b7180dc8
+  name: GenerateFlowFile/success/InvokeHTTP
+  source id: 4ed2d51d-076a-49b0-88de-5cf5adf52a7e
+  source relationship names:
+  - success
+  destination id: 1d51724d-dd76-46a0-892d-a7c7408d58dd
+  max work queue size: 0
+  max work queue data size: 10000 B
+  flowfile expiration: 0 seconds
+  queue prioritizer class: ''
+- id: f5d1dd2d-f675-41bd-bf1b-b571aa23ebfb
+  name: InvokeHTTP/failure/UpdateAttribute
+  source id: 1d51724d-dd76-46a0-892d-a7c7408d58dd
+  source relationship names:
+  - failure
+  destination id: 4f8a0c9b-6f7c-458f-9b4d-480addb2e0af
+  max work queue size: 0
+  max work queue data size: 10000 B
+  flowfile expiration: 0 seconds
+  queue prioritizer class: ''
+- id: 000035d8-46a0-460a-809c-f0c6320d532e
+  name: InvokeHTTP/response/LogAttribute
+  source id: 1d51724d-dd76-46a0-892d-a7c7408d58dd
+  source relationship names:
+  - no retry
+  - response
+  - retry
+  - success
+  destination id: 8543b2e2-a373-4d8d-8710-ac314666696b
+  max work queue size: 0
+  max work queue data size: 10000 B
+  flowfile expiration: 0 seconds
+  queue prioritizer class: ''
+- id: 0f292c74-cdbb-4e69-8a26-c834569366c1
+  name: UpdateAttribute/success/LogAttribute
+  source id: 4f8a0c9b-6f7c-458f-9b4d-480addb2e0af
+  source relationship names:
+  - success
+  destination id: 8543b2e2-a373-4d8d-8710-ac314666696b
+  max work queue size: 0
+  max work queue data size: 10000 B
+  flowfile expiration: 0 seconds
+  queue prioritizer class: ''
+  
+Controller Services:
+  - name: SSLContextService
+    id: 2438e3c8-015a-1000-79ca-83af40ec1994
+    class: SSLContextService
+    Properties:
+      Client Certificate:
+          - value: cn.crt.pem
+      Private Key:
+          - value: cn.ckey.pem
+      Passphrase:
+          - value: cn.pass
+      CA Certificate:
+          - value: nifi-cert.pem
+Remote Process Groups: []
+NiFi Properties Overrides: {}

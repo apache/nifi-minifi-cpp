@@ -55,7 +55,7 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
   uri << getBaseURI() << "data-transfer/" << dir_str << "/" << getPortId() << "/transactions";
   auto client = create_http_client(uri.str(), "POST");
   client->appendHeader(PROTOCOL_VERSION_HEADER, "1");
-  client->setConnectionTimeout(5);
+  client->setConnectionTimeout(std::chrono::milliseconds(5000));
   client->setContentType("application/json");
   client->appendHeader("Accept: application/json");
   client->setUseChunkedEncoding();
@@ -282,7 +282,7 @@ void HttpSiteToSiteClient::closeTransaction(const std::string &transactionID) {
 
   client->appendHeader(PROTOCOL_VERSION_HEADER, "1");
 
-  client->setConnectionTimeout(5);
+  client->setConnectionTimeout(std::chrono::milliseconds(5000));
 
   client->appendHeader("Accept", "application/json");
 

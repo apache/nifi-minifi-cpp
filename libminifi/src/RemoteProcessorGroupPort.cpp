@@ -305,7 +305,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
       client->initialize("GET", loginUrl.str(), ssl_service);
       // use a connection timeout. if this times out we will simply attempt re-connection
       // so no need for configuration parameter that isn't already defined in Processor
-      client->setConnectionTimeout(10);
+      client->setConnectionTimeout(std::chrono::milliseconds(10000));
 
       token = utils::get_token(client.get(), this->rest_user_name_, this->rest_password_);
       logger_->log_debug("Token from NiFi REST Api endpoint %s,  %s", loginUrl.str(), token);
@@ -323,7 +323,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     client->initialize("GET", fullUrl.str().c_str(), ssl_service);
     // use a connection timeout. if this times out we will simply attempt re-connection
     // so no need for configuration parameter that isn't already defined in Processor
-    client->setConnectionTimeout(10);
+    client->setConnectionTimeout(std::chrono::milliseconds(10000));
     if (!proxy_.host.empty()) {
       client->setHTTPProxy(proxy_);
     }

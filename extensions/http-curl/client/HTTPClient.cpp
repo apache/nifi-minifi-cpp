@@ -19,6 +19,7 @@
 #include "Exception.h"
 #include <memory>
 #include <climits>
+#include <cinttypes>
 #include <map>
 #include <vector>
 #include <string>
@@ -35,60 +36,17 @@ namespace utils {
 HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service)
     : core::Connectable("HTTPClient"),
       ssl_context_service_(ssl_context_service),
-      url_(url),
-      connect_timeout_(0),
-      read_timeout_(0),
-      content_type_str_(nullptr),
-      headers_(nullptr),
-      callback(nullptr),
-      write_callback_(nullptr),
-      http_code(0),
-      read_callback_(INT_MAX),
-      header_response_(-1),
-      res(CURLE_OK),
-      keep_alive_probe_(-1),
-      keep_alive_idle_(-1),
-      logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
+      url_(url) {
   http_session_ = curl_easy_init();
 }
 
 HTTPClient::HTTPClient(std::string name, utils::Identifier uuid)
-    : core::Connectable(name, uuid),
-      ssl_context_service_(nullptr),
-      url_(),
-      connect_timeout_(0),
-      read_timeout_(0),
-      content_type_str_(nullptr),
-      headers_(nullptr),
-      callback(nullptr),
-      write_callback_(nullptr),
-      http_code(0),
-      read_callback_(INT_MAX),
-      header_response_(-1),
-      res(CURLE_OK),
-      keep_alive_probe_(-1),
-      keep_alive_idle_(-1),
-      logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
+    : core::Connectable(name, uuid) {
   http_session_ = curl_easy_init();
 }
 
 HTTPClient::HTTPClient()
-    : core::Connectable("HTTPClient"),
-      ssl_context_service_(nullptr),
-      url_(),
-      connect_timeout_(0),
-      read_timeout_(0),
-      content_type_str_(nullptr),
-      headers_(nullptr),
-      callback(nullptr),
-      write_callback_(nullptr),
-      http_code(0),
-      read_callback_(INT_MAX),
-      header_response_(-1),
-      res(CURLE_OK),
-      keep_alive_probe_(-1),
-      keep_alive_idle_(-1),
-      logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
+    : core::Connectable("HTTPClient") {
   http_session_ = curl_easy_init();
 }
 
@@ -202,13 +160,20 @@ bool HTTPClient::setMinimumSSLVersion(SSLVersion minimum_version) {
   return ret == CURLE_OK;
 }
 
-void HTTPClient::setConnectionTimeout(int64_t timeout) {
-  connect_timeout_ = timeout;
-  curl_easy_setopt(http_session_, CURLOPT_NOSIGNAL, 1);
+DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void HTTPClient::setConnectionTimeout(int64_t timeout) {
+  setConnectionTimeout(std::chrono::milliseconds(timeout * 1000));
 }
 
-void HTTPClient::setReadTimeout(int64_t timeout) {
-  read_timeout_ = timeout;
+DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void HTTPClient::setReadTimeout(int64_t timeout) {
+  setReadTimeout(std::chrono::milliseconds(timeout * 1000));
+}
+
+void HTTPClient::setConnectionTimeout(std::chrono::milliseconds timeout) {
+  connect_timeout_ms_ = timeout;
+}
+
+void HTTPClient::setReadTimeout(std::chrono::milliseconds timeout) {
+  read_timeout_ms_ = timeout;
 }
 
 void HTTPClient::setReadCallback(HTTPReadCallback *callbackObj) {
@@ -278,10 +243,14 @@ void HTTPClient::setUseChunkedEncoding() {
 bool HTTPClient::submit() {
   if (IsNullOrEmpty(url_))
     return false;
-  if (connect_timeout_ > 0) {
-    curl_easy_setopt(http_session_, CURLOPT_CONNECTTIMEOUT, connect_timeout_);
+  curl_easy_setopt(http_session_, CURLOPT_NOSIGNAL, 1);
+  if (connect_timeout_ms_.count() > 0) {
+    curl_easy_setopt(http_session_, CURLOPT_CONNECTTIMEOUT_MS, connect_timeout_ms_.count());
   }
 
+  if (read_timeout_ms_.count() > 0) {
+    curl_easy_setopt(http_session_, CURLOPT_TIMEOUT_MS, read_timeout_ms_.count());
+  }
   if (headers_ != nullptr) {
     headers_ = curl_slist_append(headers_, "Expect:");
     curl_easy_setopt(http_session_, CURLOPT_HTTPHEADER, headers_);
@@ -296,12 +265,13 @@ bool HTTPClient::submit() {
   }
   curl_easy_setopt(http_session_, CURLOPT_HEADERFUNCTION, &utils::HTTPHeaderResponse::receive_headers);
   curl_easy_setopt(http_session_, CURLOPT_HEADERDATA, static_cast<void*>(&header_response_));
-  if (keep_alive_probe_ > 0){
-    logger_->log_debug("Setting keep alive to %d",keep_alive_probe_);
+  if (keep_alive_probe_.count() > 0) {
+    const auto keepAlive = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_probe_);
+    const auto keepIdle = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_idle_);
+    logger_->log_debug("Setting keep alive to %" PRId64 " seconds", keepAlive.count());
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 1L);
-    curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPINTVL, keep_alive_probe_);
-    curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPIDLE, keep_alive_idle_);
-
+    curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPINTVL, keepAlive.count());
+    curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPIDLE, keepIdle.count());
   }
   else{
     logger_->log_debug("Not using keep alive");
@@ -314,7 +284,7 @@ bool HTTPClient::submit() {
   curl_easy_getinfo(http_session_, CURLINFO_RESPONSE_CODE, &http_code);
   curl_easy_getinfo(http_session_, CURLINFO_CONTENT_TYPE, &content_type_str_);
   if (res != CURLE_OK) {
-    logger_->log_error("curl_easy_perform() failed %s on %s\n", curl_easy_strerror(res), url_);
+    logger_->log_error("curl_easy_perform() failed %s on %s, error code %d\n", curl_easy_strerror(res), url_, res);
     return false;
   }
 
