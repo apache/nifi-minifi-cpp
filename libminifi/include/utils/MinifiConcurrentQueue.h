@@ -233,10 +233,7 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
 
   bool tryDequeue(T& out) {
     std::unique_lock<std::mutex> lck(this->mtx_);
-    if (!running_) {
-      return false;
-    }
-    return ConcurrentQueue<T>::tryDequeueImpl(lck, out);
+    return running_ && ConcurrentQueue<T>::tryDequeueImpl(lck, out);
   }
 
   void stop() {
