@@ -30,8 +30,7 @@
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
 
-class FlowObj {
- public:
+struct FlowObj {
   FlowObj() = default;
 
   FlowObj(FlowObj &&other) noexcept
@@ -260,11 +259,12 @@ class FlowFileResponder : public CivetHandler {
         flows.push_back(flowobj);
         total += flowobj->total_size;
       }
-      mg_printf(conn, "HTTP/1.1 200 OK\r\n"
-                      "Content-Length: %" PRIu64 "\r\n"
-                "Content-Type: application/octet-stream\r\n"
-                "Connection: close\r\n\r\n",
-                total);
+      mg_printf(conn,
+          "HTTP/1.1 200 OK\r\n"
+          "Content-Length: %" PRIu64 "\r\n"
+          "Content-Type: application/octet-stream\r\n"
+          "Connection: close\r\n\r\n",
+          total);
       minifi::io::BaseStream serializer;
       minifi::io::CRCStream < minifi::io::BaseStream > stream(&serializer);
       for (const auto& flow : flows) {
