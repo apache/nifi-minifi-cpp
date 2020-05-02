@@ -48,7 +48,7 @@ Processors:
   class: org.apache.nifi.minifi.processors.GenerateFlowFile
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
-  scheduling period: 4000 ms
+  scheduling period: 15000 ms
   penalization period: 1000 ms
   yield period: 1000 ms
   run duration nanos: 0
@@ -100,7 +100,7 @@ Processors:
   class: org.apache.nifi.minifi.processors.UpdateAttribute
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
-  scheduling period: 1000 ms
+  scheduling period: 200 ms
   penalization period: 1000 ms
   yield period: 1000 ms
   run duration nanos: 0

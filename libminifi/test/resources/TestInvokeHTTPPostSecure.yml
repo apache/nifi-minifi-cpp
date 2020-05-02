@@ -48,7 +48,7 @@ Processors:
   class: org.apache.nifi.minifi.processors.GenerateFlowFile
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
-  scheduling period: 4000 ms
+  scheduling period: 15000 ms
   penalization period: 1000 ms
   yield period: 1000 ms
   run duration nanos: 0
@@ -70,11 +70,11 @@ Processors:
   auto-terminated relationships list: []
   Properties:
     Always Output Response: 'false'
-    Connection Timeout: 3 s
+    Connection Timeout: 2 s
     Content-type: application/octet-stream
     Disable Peer Verification: 'true'
     HTTP Method: POST
-    Read Timeout: 4 s
+    Read Timeout: 3 s
     Remote URL: https://localhost:30468/minifi
     Use Chunked Encoding: 'false'
     send-message-body: 'true'
@@ -100,7 +100,7 @@ Processors:
   class: org.apache.nifi.minifi.processors.UpdateAttribute
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
-  scheduling period: 1000 ms
+  scheduling period: 200 ms
   penalization period: 1000 ms
   yield period: 1000 ms
   run duration nanos: 0
