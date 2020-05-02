@@ -30,7 +30,6 @@
 #include <iostream>
 #include <list>
 #include "core/FlowFile.h"
-#include "Connection.h"
 #include "core/Processor.h"
 #include "core/logging/LoggerConfiguration.h"
 
