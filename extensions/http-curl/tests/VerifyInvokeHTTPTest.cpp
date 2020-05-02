@@ -165,6 +165,14 @@ public:
   }
 };
 
+class VerifyRWTimeoutInvokeHTTP : public VerifyInvokeHTTP {
+public:
+  virtual void runAssertions() {
+    assert(LogTestController::getInstance().contains("key:invoke_http value:failure"));
+    assert(LogTestController::getInstance().contains("failed Timeout was reached"));
+  }
+};
+
 void run(VerifyInvokeHTTP& harness,
     const std::string& test_file_location,
     const std::string& key_dir,
@@ -214,6 +222,12 @@ int main(int argc, char ** argv) {
   {
     InvokeHTTPResponse501Handler handler;
     VerifyRetryInvokeHTTP harness;
+    run(harness, test_file_location, key_dir, &handler);
+  }
+
+  {
+    InvokeHTTPResponseTimeoutHandler handler;
+    VerifyRWTimeoutInvokeHTTP harness;
     run(harness, test_file_location, key_dir, &handler);
   }
   return 0;

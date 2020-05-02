@@ -70,11 +70,11 @@ Processors:
   auto-terminated relationships list: []
   Properties:
     Always Output Response: 'false'
-    Connection Timeout: 5 s
+    Connection Timeout: 3 s
     Content-type: application/octet-stream
     Disable Peer Verification: 'true'
     HTTP Method: POST
-    Read Timeout: 15 s
+    Read Timeout: 4 s
     Remote URL: https://localhost:30468/minifi
     Use Chunked Encoding: 'false'
     send-message-body: 'true'

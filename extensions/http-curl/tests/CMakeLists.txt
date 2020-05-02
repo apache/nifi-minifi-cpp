@@ -79,6 +79,7 @@ add_test(NAME C2NullConfiguration COMMAND C2NullConfiguration "${TEST_RESOURCES}
 if(NOT OPENSSL_OFF)
 add_test(NAME HttpGetIntegrationTestSecure COMMAND HttpGetIntegrationTest "${TEST_RESOURCES}/TestHTTPGetSecure.yml"  "${TEST_RESOURCES}/")
 add_test(NAME C2VerifyHeartbeatAndStopSecure COMMAND C2VerifyHeartbeatAndStop "${TEST_RESOURCES}/C2VerifyHeartbeatAndStopSecure.yml" "${TEST_RESOURCES}/")
+add_test(NAME VerifyInvokeHTTPTestSecure COMMAND VerifyInvokeHTTPTest "${TEST_RESOURCES}/TestInvokeHTTPPostSecure.yml" "${TEST_RESOURCES}/")
 endif()
 add_test(NAME HttpPostIntegrationTest COMMAND HttpPostIntegrationTest "${TEST_RESOURCES}/TestHTTPPost.yml" "${TEST_RESOURCES}/")
 if (NOT APPLE)

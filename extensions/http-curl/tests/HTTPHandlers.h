@@ -474,4 +474,15 @@ public:
     return true;
   }
 };
+
+class InvokeHTTPResponseTimeoutHandler : public CivetHandler {
+public:
+  bool handlePost(CivetServer *, struct mg_connection *conn) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(5500));
+    std::stringstream headers;
+    headers << "HTTP/1.1 201 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+    mg_printf(conn, headers.str().c_str());
+    return true;
+  }
+};
 #endif /* LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_ */
