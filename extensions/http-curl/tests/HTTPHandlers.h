@@ -445,4 +445,33 @@ class HeartbeatHandler : public CivetHandler {
   bool isSecure;
 };
 
+class InvokeHTTPResponseOKHandler : public CivetHandler {
+public:
+  bool handlePost(CivetServer *, struct mg_connection *conn) {
+    std::stringstream headers;
+    headers << "HTTP/1.1 201 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+    mg_printf(conn, headers.str().c_str());
+    return true;
+  }
+};
+
+class InvokeHTTPResponse404Handler : public CivetHandler {
+public:
+  bool handlePost(CivetServer *, struct mg_connection *conn) {
+    std::stringstream headers;
+    headers << "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+    mg_printf(conn, headers.str().c_str());
+    return true;
+  }
+};
+
+class InvokeHTTPResponse501Handler : public CivetHandler {
+public:
+  bool handlePost(CivetServer *, struct mg_connection *conn) {
+    std::stringstream headers;
+    headers << "HTTP/1.1 501 Not Implemented\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+    mg_printf(conn, headers.str().c_str());
+    return true;
+  }
+};
 #endif /* LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_ */

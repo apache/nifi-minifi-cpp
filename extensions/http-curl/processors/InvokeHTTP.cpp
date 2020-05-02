@@ -63,11 +63,11 @@ core::Property InvokeHTTP::URL(
         true)->build());
 
 core::Property InvokeHTTP::ConnectTimeout(
-      core::PropertyBuilder::createProperty("Connection Timeout")->withDescription("Max wait time for connection to remote service")
+      core::PropertyBuilder::createProperty("Connection Timeout")->withDescription("Max wait time for connection to remote service")->isRequired(false)
          ->withDefaultValue<core::TimePeriodValue>("5 s")->build());
 
 core::Property InvokeHTTP::ReadTimeout(
-      core::PropertyBuilder::createProperty("Read Timeout")->withDescription("Max wait time for response from remote service")
+      core::PropertyBuilder::createProperty("Read Timeout")->withDescription("Max wait time for response from remote service")->isRequired(false)
          ->withDefaultValue<core::TimePeriodValue>("15 s")->build());
 
 core::Property InvokeHTTP::DateHeader(
@@ -370,9 +370,6 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       io::DataStream stream((const uint8_t*) response_body.data(), response_body.size());
       // need an import from the data stream.
       session->importFrom(stream, response_flow);
-    } else {
-      logger_->log_warn("Cannot output body to content");
-      response_flow = std::static_pointer_cast<FlowFileRecord>(session->create());
     }
     route(flowFile, response_flow, session, context, isSuccess, http_code);
   } else {
@@ -407,14 +404,12 @@ void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr
       logger_->log_debug("Outputting success and response");
       session->transfer(response, RelResponse);
     }
-
     // 5xx -> RETRY
   } else if (statusCode / 100 == 5) {
     if (request != nullptr) {
       session->penalize(request);
       session->transfer(request, RelRetry);
     }
-
     // 1xx, 3xx, 4xx -> NO RETRY
   } else {
     if (request != nullptr) {

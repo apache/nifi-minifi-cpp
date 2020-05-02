@@ -19,6 +19,7 @@
 #include "Exception.h"
 #include <memory>
 #include <climits>
+#include <cinttypes>
 #include <map>
 #include <vector>
 #include <string>
@@ -190,12 +191,11 @@ bool HTTPClient::setMinimumSSLVersion(SSLVersion minimum_version) {
   return ret == CURLE_OK;
 }
 
-DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void HTTPClient::setConnectionTimeout(int64_t timeout) {
+DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void HTTPClient::setConnectionTimeout(int64_t timeout) {
   setConnectionTimeout(std::chrono::milliseconds(timeout * 1000));
-  curl_easy_setopt(http_session_, CURLOPT_NOSIGNAL, 1);
 }
 
-DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void HTTPClient::setReadTimeout(int64_t timeout) {
+DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void HTTPClient::setReadTimeout(int64_t timeout) {
   setReadTimeout(std::chrono::milliseconds(timeout * 1000));
 }
 
@@ -274,11 +274,14 @@ void HTTPClient::setUseChunkedEncoding() {
 bool HTTPClient::submit() {
   if (IsNullOrEmpty(url_))
     return false;
+  curl_easy_setopt(http_session_, CURLOPT_NOSIGNAL, 1);
   if (connect_timeout_ms_.count() > 0) {
-    const auto connect_timeout_seconds = std::chrono::duration_cast<std::chrono::duration<uint64_t>>(connect_timeout_ms_);
-    curl_easy_setopt(http_session_, CURLOPT_CONNECTTIMEOUT, connect_timeout_seconds.count());
+    curl_easy_setopt(http_session_, CURLOPT_CONNECTTIMEOUT_MS, connect_timeout_ms_.count());
   }
 
+  if (read_timeout_ms_.count() > 0) {
+    curl_easy_setopt(http_session_, CURLOPT_TIMEOUT_MS, read_timeout_ms_.count());
+  }
   if (headers_ != nullptr) {
     headers_ = curl_slist_append(headers_, "Expect:");
     curl_easy_setopt(http_session_, CURLOPT_HTTPHEADER, headers_);
@@ -296,7 +299,7 @@ bool HTTPClient::submit() {
   if (keep_alive_probe_.count() > 0) {
     const auto keepAlive = std::chrono::duration_cast<std::chrono::duration<uint64_t>>(keep_alive_probe_);
     const auto keepIdle = std::chrono::duration_cast<std::chrono::duration<uint64_t>>(keep_alive_idle_);
-    logger_->log_debug("Setting keep alive to %zu", keepAlive.count());
+    logger_->log_debug("Setting keep alive to %" PRIu64 " seconds", keepAlive.count());
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 1L);
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPINTVL, keepAlive.count());
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPIDLE, keepIdle.count());
@@ -312,7 +315,7 @@ bool HTTPClient::submit() {
   curl_easy_getinfo(http_session_, CURLINFO_RESPONSE_CODE, &http_code);
   curl_easy_getinfo(http_session_, CURLINFO_CONTENT_TYPE, &content_type_str_);
   if (res != CURLE_OK) {
-    logger_->log_error("curl_easy_perform() failed %s on %s\n", curl_easy_strerror(res), url_);
+    logger_->log_error("curl_easy_perform() failed %s on %s, error code %d\n", curl_easy_strerror(res), url_, res);
     return false;
   }
 

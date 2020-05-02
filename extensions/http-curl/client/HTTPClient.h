@@ -84,12 +84,12 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   // This is a bad API and deprecated. Use the std::chrono variant of this
   // It is assumed that the value of timeout provided to this function
   // is in seconds units
-  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) virtual void setConnectionTimeout(int64_t timeout) override;
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setConnectionTimeout(int64_t timeout) override;
 
   // This is a bad API and deprecated. Use the std::chrono variant of this
   // It is assumed that the value of timeout provided to this function
   // is in seconds units
-  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) virtual void setReadTimeout(int64_t timeout) override;
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setReadTimeout(int64_t timeout) override;
 
   virtual void setConnectionTimeout(std::chrono::milliseconds timeout) override;
 

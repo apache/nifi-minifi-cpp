@@ -283,10 +283,10 @@ public:
   virtual void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) {
   }
 
-  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) virtual void setConnectionTimeout(int64_t timeout) {
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setConnectionTimeout(int64_t timeout) {
   }
 
-  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) virtual void setReadTimeout(int64_t timeout) {
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setReadTimeout(int64_t timeout) {
   }
 
   virtual void setConnectionTimeout(std::chrono::milliseconds timeout) {
