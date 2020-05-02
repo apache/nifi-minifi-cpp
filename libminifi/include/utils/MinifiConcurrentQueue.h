@@ -130,26 +130,26 @@ class ConcurrentQueue {
     }
   }
 
+  // Warning: this function copies if T is not nothrow move constructible
   bool tryDequeueImpl(std::unique_lock<std::mutex>& lck, T& out) {
-    static_assert(std::is_nothrow_move_assignable<T>::value, "T has to be nothrow move constructible.");
     checkLock(lck);
     if (queue_.empty()) {
       return false;
     }
-    out = std::move(queue_.front());
+    out = std::move_if_noexcept(queue_.front());
     queue_.pop_front();
     return true;
   }
 
+  // Warning: this function copies if T is not nothrow move constructible
   template<typename Functor>
   bool consumeImpl(std::unique_lock<std::mutex>&& lock_to_adopt, Functor&& fun) {
-    static_assert(std::is_nothrow_move_constructible<T>::value, "T has to be nothrow move assignable.");
     std::unique_lock<std::mutex> lock(std::move(lock_to_adopt));
     checkLock(lock);
     if (queue_.empty()) {
       return false;
     }
-    T elem = std::move(queue_.front());
+    T elem = std::move_if_noexcept(queue_.front());
     queue_.pop_front();
     lock.unlock();
     detail::TryMoveCall<Functor, T>::call(std::forward<Functor>(fun), elem);
