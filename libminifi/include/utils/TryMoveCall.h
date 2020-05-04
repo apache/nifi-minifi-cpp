@@ -18,7 +18,7 @@
 
 #include <utility>
 
-#include <utils/Void_t.h> // NOLINT
+#include <utils/GeneralUtils.h> // NOLINT
 
 namespace org {
 namespace apache {

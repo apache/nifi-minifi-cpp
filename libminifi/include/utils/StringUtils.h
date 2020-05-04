@@ -29,7 +29,7 @@
 #include <map>
 #include <type_traits>
 #include "utils/FailurePolicy.h"
-#include "utils/Void_t.h"
+#include "utils/GeneralUtils.h"
 
 enum TimeUnit {
   DAY,
