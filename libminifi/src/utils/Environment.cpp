@@ -20,9 +20,9 @@
 #ifdef WIN32
 #include <Windows.h>
 #else
+#include <unistd.h>
 #include <cstdlib>
 #include <cerrno>
-#include <unistd.h>
 #endif
 #include <mutex>
 #include <vector>

@@ -15,10 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "../../include/core/Property.h"
+
 #include <string>
-#include "utils/StringUtils.h"
+
 #include "core/Property.h"
+#include "../../include/core/Property.h"
+#include "utils/StringUtils.h"
 #include "../TestBase.h"
 
 TEST_CASE("Test Boolean Conversion", "[testboolConversion]") {

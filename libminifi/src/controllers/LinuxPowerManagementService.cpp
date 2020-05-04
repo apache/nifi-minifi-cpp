@@ -16,14 +16,15 @@
  * limitations under the License.
  */
 #include "controllers/LinuxPowerManagementService.h"
-#include "utils/StringUtils.h"
 
 #include <fstream>
-#include <utility>
 #include <limits>
-#include <string>
-#include <vector>
 #include <set>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {

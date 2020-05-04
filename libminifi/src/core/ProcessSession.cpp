@@ -18,17 +18,20 @@
  * limitations under the License.
  */
 #include "core/ProcessSession.h"
-#include "core/ProcessSessionReadCallback.h"
+
+#include <algorithm>
+#include <chrono>
+#include <cinttypes>
 #include <ctime>
-#include <vector>
+#include <iostream>
 #include <map>
 #include <memory>
-#include <string>
 #include <set>
-#include <chrono>
-#include <iostream>
-#include <cinttypes>
-#include <algorithm>
+#include <string>
+#include <vector>
+
+#include "core/ProcessSessionReadCallback.h"
+
 /* This implementation is only for native Windows systems.  */
 #if (defined _WIN32 || defined __WIN32__) && !defined __CYGWIN__
 #define _WINSOCKAPI_

@@ -17,9 +17,12 @@
  */
 
 #include "utils/ClassUtils.h"
-#include "utils/StringUtils.h"
+
 #include <iostream>
 #include <string>
+
+#include "utils/StringUtils.h"
+
 namespace org {
 namespace apache {
 namespace nifi {

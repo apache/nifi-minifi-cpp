@@ -16,15 +16,15 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
-#include "utils/Environment.h"
-#include "utils/file/PathUtils.h"
-
-#include <thread>
+#include <cstdint>
 #include <random>
 #include <string>
-#include <cstdint>
+#include <thread>
 #include <vector>
+
+#include "utils/Environment.h"
+#include "utils/file/PathUtils.h"
+#include "../TestBase.h"
 
 TEST_CASE("getenv already existing", "[getenv]") {
   auto res = utils::Environment::getEnvironmentVariable("PATH");

@@ -18,17 +18,15 @@
 
 #ifdef WIN32
 
-#include "core/logging/WindowsEventLogsink.h"
-
-#include "core/logging/WindowsMessageTextFile.h"
-#include "Exception.h"
-
-#include "spdlog/common.h"
-#include "spdlog/sinks/sink.h"
-#include "spdlog/details/log_msg.h"
+#include "core/logging/WindowsEventLogSink.h"
 
 #include <string>
 
+#include "core/logging/WindowsMessageTextFile.h"
+#include "Exception.h"
+#include "spdlog/common.h"
+#include "spdlog/sinks/sink.h"
+#include "spdlog/details/log_msg.h"
 
 namespace org {
 namespace apache {

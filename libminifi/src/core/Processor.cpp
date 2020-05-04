@@ -18,25 +18,28 @@
  * limitations under the License.
  */
 #include "core/Processor.h"
+
 #include <time.h>
-#include <vector>
-#include <queue>
-#include <map>
-#include <set>
+
 #include <chrono>
+#include <functional>
+#include <map>
+#include <memory>
+#include <queue>
+#include <set>
 #include <string>
 #include <thread>
-#include <memory>
-#include <functional>
 #include <utility>
+#include <vector>
+
 #include "Connection.h"
-#include "core/ProcessorConfig.h"
 #include "core/Connectable.h"
+#include "core/logging/LoggerConfiguration.h"
+#include "core/ProcessorConfig.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "io/StreamFactory.h"
-#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {

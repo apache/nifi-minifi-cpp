@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 #include "utils/BackTrace.h"
+
 #ifdef HAS_EXECINFO
+#include <cxxabi.h>
 #include <execinfo.h>
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -23,10 +25,9 @@
 #ifdef __linux__
 #include <link.h>
 #endif
+#include <cstring>
 #include <iostream>
 #include <utility>
-#include <cstring>
-#include <cxxabi.h>
 #endif
 
 #ifdef HAS_EXECINFO

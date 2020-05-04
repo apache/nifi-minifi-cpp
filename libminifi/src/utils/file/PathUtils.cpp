@@ -17,15 +17,16 @@
  */
 
 #include "utils/file/PathUtils.h"
-#include "utils/file/FileUtils.h"
 
-#include <iostream>
 #ifdef WIN32
 #include <Windows.h>
 #else
 #include <limits.h>
 #include <stdlib.h>
 #endif
+
+#include <iostream>
+#include "utils/file/FileUtils.h"
 
 namespace org {
 namespace apache {

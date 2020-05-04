@@ -15,20 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "../TestBase.h"
+
+#include <chrono>
+#include <map>
 #include <memory>
 #include <string>
-#include <chrono>
 #include <thread>
-#include <map>
-#include "../unit/ProvenanceTestHelper.h"
-#include "provenance/Provenance.h"
-#include "FlowFileRecord.h"
+
 #include "core/Core.h"
-#include "FlowFileRepository.h"
 #include "core/repository/AtomicRepoEntries.h"
 #include "core/RepositoryFactory.h"
+#include "FlowFileRecord.h"
+#include "FlowFileRepository.h"
+#include "provenance/Provenance.h"
 #include "properties/Configure.h"
+#include "../unit/ProvenanceTestHelper.h"
+#include "../TestBase.h"
 
 TEST_CASE("Test Repo Names", "[TestFFR1]") {
   auto repoA = minifi::core::createRepository("FlowFileRepository", false, "flowfile");

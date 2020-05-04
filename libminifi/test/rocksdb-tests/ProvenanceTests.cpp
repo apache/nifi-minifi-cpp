@@ -16,18 +16,19 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
-#include <utility>
-#include <memory>
-#include <string>
 #include <map>
-#include "../unit/ProvenanceTestHelper.h"
-#include "provenance/Provenance.h"
-#include "FlowFileRecord.h"
+#include <memory>
+#include <utility>
+#include <string>
+
 #include "core/Core.h"
 #include "core/repository/AtomicRepoEntries.h"
-#include "FlowFileRepository.h"
 #include "core/repository/VolatileProvenanceRepository.h"
+#include "FlowFileRecord.h"
+#include "FlowFileRepository.h"
+#include "provenance/Provenance.h"
+#include "../unit/ProvenanceTestHelper.h"
+#include "../TestBase.h"
 
 TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventRecord]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "blah", "blahblah");

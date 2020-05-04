@@ -17,12 +17,14 @@
  */
 
 #include "c2/ControllerSocketProtocol.h"
-#include "utils/StringUtils.h"
-#include <utility>
-#include <memory>
-#include <vector>
-#include <string>
+
 #include <fstream>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {

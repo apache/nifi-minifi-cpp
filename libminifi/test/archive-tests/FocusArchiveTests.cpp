@@ -16,24 +16,23 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
-#include <algorithm>
-#include <memory>
 #include <utility>
 
-#include "../TestBase.h"
+#include <archive.h> // NOLINT
+#include <archive_entry.h> // NOLINT
 #include "ArchiveTests.h"
-#include "processors/GetFile.h"
-#include "processors/PutFile.h"
-#include "processors/LogAttribute.h"
 #include "FocusArchiveEntry.h"
+#include "processors/GetFile.h"
+#include "processors/LogAttribute.h"
+#include "processors/PutFile.h"
 #include "UnfocusArchiveEntry.h"
-
-#include <archive.h>
-#include <archive_entry.h>
+#include "../TestBase.h"
 
 const char TEST_ARCHIVE_NAME[] = "focus_test_archive.tar";
 const int NUM_FILES = 2;
