@@ -75,7 +75,7 @@ Processors:
     Disable Peer Verification: 'true'
     HTTP Method: POST
     Read Timeout: 3 s
-    Remote URL: https://localhost:30468/minifi
+    Remote URL: https://localhost:0/minifi
     Use Chunked Encoding: 'false'
     send-message-body: 'true'
     SSL Context Service: SSLContextService

@@ -76,7 +76,7 @@ Processors:
     HTTP Method: POST
     Include Date Header: 'true'
     Read Timeout: 4 s
-    Remote URL: http://localhost:10033/minifi
+    Remote URL: http://localhost:0/minifi
     Use Chunked Encoding: 'false'
     send-message-body: 'true'
 - id: 8543b2e2-a373-4d8d-8710-ac314666696b

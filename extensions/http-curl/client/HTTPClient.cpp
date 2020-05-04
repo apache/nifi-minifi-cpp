@@ -36,48 +36,17 @@ namespace utils {
 HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service)
     : core::Connectable("HTTPClient"),
       ssl_context_service_(ssl_context_service),
-      url_(url),
-      content_type_str_(nullptr),
-      headers_(nullptr),
-      callback(nullptr),
-      write_callback_(nullptr),
-      http_code(0),
-      read_callback_(INT_MAX),
-      header_response_(-1),
-      res(CURLE_OK),
-      logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
+      url_(url) {
   http_session_ = curl_easy_init();
 }
 
 HTTPClient::HTTPClient(std::string name, utils::Identifier uuid)
-    : core::Connectable(name, uuid),
-      ssl_context_service_(nullptr),
-      url_(),
-      content_type_str_(nullptr),
-      headers_(nullptr),
-      callback(nullptr),
-      write_callback_(nullptr),
-      http_code(0),
-      read_callback_(INT_MAX),
-      header_response_(-1),
-      res(CURLE_OK),
-      logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
+    : core::Connectable(name, uuid) {
   http_session_ = curl_easy_init();
 }
 
 HTTPClient::HTTPClient()
-    : core::Connectable("HTTPClient"),
-      ssl_context_service_(nullptr),
-      url_(),
-      content_type_str_(nullptr),
-      headers_(nullptr),
-      callback(nullptr),
-      write_callback_(nullptr),
-      http_code(0),
-      read_callback_(INT_MAX),
-      header_response_(-1),
-      res(CURLE_OK),
-      logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
+    : core::Connectable("HTTPClient") {
   http_session_ = curl_easy_init();
 }
 
@@ -297,8 +266,8 @@ bool HTTPClient::submit() {
   curl_easy_setopt(http_session_, CURLOPT_HEADERFUNCTION, &utils::HTTPHeaderResponse::receive_headers);
   curl_easy_setopt(http_session_, CURLOPT_HEADERDATA, static_cast<void*>(&header_response_));
   if (keep_alive_probe_.count() > 0) {
-    const auto keepAlive = std::chrono::duration_cast<std::chrono::duration<uint64_t>>(keep_alive_probe_);
-    const auto keepIdle = std::chrono::duration_cast<std::chrono::duration<uint64_t>>(keep_alive_idle_);
+    const auto keepAlive = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_probe_);
+    const auto keepIdle = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_idle_);
     logger_->log_debug("Setting keep alive to %" PRIu64 " seconds", keepAlive.count());
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 1L);
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPINTVL, keepAlive.count());

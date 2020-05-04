@@ -38,8 +38,8 @@
 #else
 #include <regex.h>
 #endif
-#include <vector>
 #include <chrono>
+#include <limits>
 
 #include "utils/ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
@@ -134,6 +134,14 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   bool setSpecificSSLVersion(SSLVersion specific_version) override;
 
   bool setMinimumSSLVersion(SSLVersion minimum_version) override;
+
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setKeepAliveProbe(long probe) {
+    keep_alive_probe_ = std::chrono::milliseconds(probe * 1000);
+  }
+
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setKeepAliveIdle(long idle) {
+    keep_alive_idle_ = std::chrono::milliseconds(idle * 1000);
+  }
 
   void setKeepAliveProbe(std::chrono::milliseconds probe){
     keep_alive_probe_ = probe;
@@ -243,27 +251,26 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   std::chrono::milliseconds connect_timeout_ms_{0};
   // read timeout.
   std::chrono::milliseconds read_timeout_ms_{0};
-  char *content_type_str_;
+  char *content_type_str_{nullptr};
   std::string content_type_;
-  struct curl_slist *headers_;
-  HTTPReadCallback *callback;
-  HTTPUploadCallback *write_callback_;
-  int64_t http_code;
-  ByteOutputCallback read_callback_;
-  utils::HTTPHeaderResponse header_response_;
+  struct curl_slist *headers_{nullptr};
+  HTTPReadCallback *callback{nullptr};
+  HTTPUploadCallback *write_callback_{nullptr};
+  int64_t http_code{0};
+  ByteOutputCallback read_callback_{std::numeric_limits<int>::max()};
+  utils::HTTPHeaderResponse header_response_{-1};
 
-  CURLcode res;
+  CURLcode res{CURLE_OK};
 
   CURL *http_session_;
 
   std::string method_;
 
-  std::chrono::milliseconds keep_alive_probe_{0};
+  std::chrono::milliseconds keep_alive_probe_{-1};
 
-  std::chrono::milliseconds keep_alive_idle_{0};
+  std::chrono::milliseconds keep_alive_idle_{-1};
 
-  std::shared_ptr<logging::Logger> logger_;
-
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<HTTPClient>::getLogger()};
 };
 
 } /* namespace utils */

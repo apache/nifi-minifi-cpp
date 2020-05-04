@@ -274,16 +274,15 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       return;
     }
   } else {
-    context->getProperty(URL, url, flowFile);
     logger_->log_debug("InvokeHTTP -- Received flowfile");
   }
 
-  logger_->log_debug("onTrigger InvokeHTTP with %s to %s", method_, url);
+  logger_->log_debug("onTrigger InvokeHTTP with %s to %s", method_, url_);
 
   // create a transaction id
   std::string tx_id = generateId();
 
-  utils::HTTPClient client(url, ssl_context_service_);
+  utils::HTTPClient client(url_, ssl_context_service_);
 
   client.initialize(method_);
   client.setConnectionTimeout(connect_timeout_ms_);
@@ -343,7 +342,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     flowFile->addAttribute(STATUS_CODE, std::to_string(http_code));
     if (!response_headers.empty())
       flowFile->addAttribute(STATUS_MESSAGE, response_headers.at(0));
-    flowFile->addAttribute(REQUEST_URL, url);
+    flowFile->addAttribute(REQUEST_URL, url_);
     flowFile->addAttribute(TRANSACTION_ID, tx_id);
 
     bool isSuccess = ((int32_t) (http_code / 100)) == 2;
