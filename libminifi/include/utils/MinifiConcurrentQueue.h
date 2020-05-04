@@ -25,51 +25,19 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include <utils/TryMoveCall.h>
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
 
-namespace detail {
-template<typename...>
-using void_t = void;
-
-// TryMoveCall calls an
-//  - unary function of a lvalue reference-type argument by passing a ref
-//  - unary function of any other argument type by moving into it
-template<typename /* FunType */, typename T, typename = void>
-struct TryMoveCall {
-    template<typename Fun>
-    static void call(Fun&& fun, T& elem) { std::forward<Fun>(fun)(elem); }
-};
-
-// 1.) std::declval looks similar to this: template<typename T> T&& declval();.
-//     Not defined, therefore it's only usable in unevaluated context.
-//     No requirements regarding T, therefore makes it possible to create hypothetical objects
-//     without requiring e.g. a default constructor and a destructor, like the T{} expression does.
-// 2.) std::declval<FunType>() resolves to an object of type FunType. If FunType is an lvalue reference,
-//     then this will also result in an lvalue reference due to reference collapsing.
-// 3.) std::declval<FunType>()(std::declval<T>()) resolves to an object of the result type of
-//     a call on a function object of type FunType with an rvalue argument of type T.
-//     It is ill-formed if the function object expect an lvalue reference.
-//         - Example: FunType is a pointer to a bool(int) and T is int. This expression will result in a bool object.
-//         - Example: FunType is a function object modeling bool(int&) and T is int. This expression will be ill-formed because it's illegal to bind an int rvalue to an int&.
-// 4.) void_t<decltype(*3*)> checks for the well-formedness of 3., then discards it.
-//     If 3. is ill-formed, then this specialization is ignored through SFINAE.
-//     If well-formed, then it's considered more specialized than the other and takes precedence.
-template<typename FunType, typename T>
-struct TryMoveCall<FunType, T, void_t<decltype(std::declval<FunType>()(std::declval<T>()))>> {
-    template<typename Fun>
-    static void call(Fun&& fun, T& elem) { std::forward<Fun>(fun)(std::move(elem)); }
-};
-}  // namespace detail
-
 // Provides a queue API and guarantees no race conditions in case of multiple producers and consumers.
 // Guarantees elements to be dequeued in order of insertion
 template <typename T>
 class ConcurrentQueue {
- public:    
+ public:
   explicit ConcurrentQueue() = default;
 
   ConcurrentQueue(const ConcurrentQueue& other) = delete;
@@ -152,7 +120,7 @@ class ConcurrentQueue {
     T elem = std::move_if_noexcept(queue_.front());
     queue_.pop_front();
     lock.unlock();
-    detail::TryMoveCall<Functor, T>::call(std::forward<Functor>(fun), elem);
+    TryMoveCall<Functor, T>::call(std::forward<Functor>(fun), elem);
     return true;
   }
 
@@ -194,41 +162,29 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
 
   bool dequeueWait(T& out) {
     std::unique_lock<std::mutex> lck(this->mtx_);
-    if (!running_) {
-      return false;
-    }
     cv_.wait(lck, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Only wake up if there is something to return or stopped
-    return ConcurrentQueue<T>::tryDequeueImpl(lck, out);
+    return running_ && ConcurrentQueue<T>::tryDequeueImpl(lck, out);
   }
 
   template<typename Functor>
   bool consumeWait(Functor&& fun) {
     std::unique_lock<std::mutex> lck(this->mtx_);
-    if (!running_) {
-      return false;
-    }
     cv_.wait(lck, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Only wake up if there is something to return or stopped
-    return ConcurrentQueue<T>::consumeImpl(std::move(lck), std::forward<Functor>(fun));
+    return running_ && ConcurrentQueue<T>::consumeImpl(std::move(lck), std::forward<Functor>(fun));
   }
 
   template< class Rep, class Period >
   bool dequeueWaitFor(T& out, const std::chrono::duration<Rep, Period>& time) {
     std::unique_lock<std::mutex> lck(this->mtx_);
-    if (!running_) {
-      return false;
-    }
     cv_.wait_for(lck, time, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Wake up with timeout or in case there is something to do
-    return ConcurrentQueue<T>::tryDequeueImpl(lck, out);
+    return running_ && ConcurrentQueue<T>::tryDequeueImpl(lck, out);
   }
 
   template<typename Functor, class Rep, class Period>
   bool consumeWaitFor(Functor&& fun, const std::chrono::duration<Rep, Period>& time) {
     std::unique_lock<std::mutex> lck(this->mtx_);
-    if (!running_) {
-      return false;
-    }
     cv_.wait_for(lck, time, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Wake up with timeout or in case there is something to do
-    return ConcurrentQueue<T>::consumeImpl(std::move(lck), std::forward<Functor>(fun));
+    return running_ && ConcurrentQueue<T>::consumeImpl(std::move(lck), std::forward<Functor>(fun));
   }
 
   bool tryDequeue(T& out) {

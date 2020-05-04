@@ -29,6 +29,7 @@
 #include <map>
 #include <type_traits>
 #include "utils/FailurePolicy.h"
+#include "utils/Void_t.h"
 
 enum TimeUnit {
   DAY,
@@ -187,9 +188,6 @@ class StringUtils {
   }
 
   #ifndef _MSC_VER
-  // partial detection idiom impl
-  template<typename...>
-  using void_t = void;
 
   struct nonesuch{};
 
