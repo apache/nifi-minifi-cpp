@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_CoreComponentState_H_
-#define LIBMINIFI_INCLUDE_CORE_CoreComponentState_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_CORECOMPONENTSTATE_H_
+#define LIBMINIFI_INCLUDE_CORE_CORECOMPONENTSTATE_H_
 
 #include "Core.h"
 
@@ -58,10 +58,10 @@ class CoreComponentStateManagerProvider {
   virtual std::unordered_map<std::string, std::unordered_map<std::string, std::string>> getAllCoreComponentStates() = 0;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CoreComponentState_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CORECOMPONENTSTATE_H_

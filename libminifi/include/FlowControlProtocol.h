@@ -17,22 +17,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FLOW_CONTROL_PROTOCOL_H__
-#define __FLOW_CONTROL_PROTOCOL_H__
+#ifndef LIBMINIFI_INCLUDE_FLOWCONTROLPROTOCOL_H_
+#define LIBMINIFI_INCLUDE_FLOWCONTROLPROTOCOL_H_
 
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/types.h>
 
-#include <fcntl.h>
-#include <string>
-#include <errno.h>
 #include <chrono>
-#include <thread>
 #include <cinttypes>
+#include <memory>
+#include <string>
+#include <thread>
+#include <vector>
 
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Property.h"
 #include "properties/Configure.h"
-#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -41,8 +43,8 @@ namespace minifi {
 class FlowController;
 
 #define DEFAULT_NIFI_SERVER_PORT 9000
-#define DEFAULT_REPORT_INTERVAL 1000 // 1 sec
-#define MAX_READ_TIMEOUT 30000 // 30 seconds
+#define DEFAULT_REPORT_INTERVAL 1000  // 1 sec
+#define MAX_READ_TIMEOUT 30000  // 30 seconds
 
 // FlowControl Protocol Msg Type
 typedef enum {
@@ -66,7 +68,7 @@ inline const char *FlowControlMsgTypeToStr(FlowControlMsgType type) {
 
 // FlowControll Protocol Msg ID (Some Messages are fix length, Some are variable length (TLV)
 typedef enum {
-  //Fix length 8 bytes: client to server in register request, required field
+  // Fix length 8 bytes: client to server in register request, required field
   FLOW_SERIAL_NUMBER,
   // Flow YAML name TLV: client to server in register request and report request, required field
   FLOW_YML_NAME,
@@ -89,8 +91,8 @@ typedef enum {
 static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] = { "FLOW_SERIAL_NUMBER", "FLOW_YAML_NAME", "FLOW_YAML_CONTENT", "REPORT_INTERVAL", "PROCESSOR_NAME",
     "PROPERTY_NAME", "PROPERTY_VALUE", "REPORT_BLOB" };
 
-#define TYPE_HDR_LEN 4 // Fix Hdr Type
-#define TLV_HDR_LEN 8 // Type 4 bytes and Len 4 bytes
+#define TYPE_HDR_LEN 4  // Fix Hdr Type
+#define TLV_HDR_LEN 8  // Type 4 bytes and Len 4 bytes
 
 // FlowControl Protocol Msg Len
 inline int FlowControlMsgIDEncodingLen(FlowControlMsgID id, int payLoadLen) {
@@ -173,8 +175,9 @@ class FlowControlProtocol {
       if (core::Property::StringToTime(value, _reportInterval, unit) && core::Property::ConvertTimeUnitToMS(_reportInterval, unit, _reportInterval)) {
         logger_->log_info("NiFi server report interval: [%" PRId64 "] ms", _reportInterval);
       }
-    } else
+    } else {
       _reportInterval = 0;
+    }
   }
 
   FlowControlProtocol(const FlowControlProtocol&) = delete;
@@ -187,7 +190,6 @@ class FlowControlProtocol {
   }
 
  public:
-
   // SendRegisterRequest and Process Register Respond, return 0 for success
   int sendRegisterReq();
   // SendReportReq and Process Report Respond, return 0 for success
@@ -242,7 +244,7 @@ class FlowControlProtocol {
   uint8_t *encode(uint8_t *buf, const std::string& value) {
     // add the \0 for size
     buf = encode(buf, value.size() + 1);
-    buf = encode(buf, (uint8_t *) value.c_str(), value.size() + 1);
+    buf = encode(buf, const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(value.c_str())), value.size() + 1);
     return buf;
   }
 
@@ -263,8 +265,8 @@ class FlowControlProtocol {
   bool running_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_FLOWCONTROLPROTOCOL_H_

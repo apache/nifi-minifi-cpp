@@ -15,18 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_METRICS_SYSMETRICS_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_METRICS_SYSMETRICS_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_SYSTEMMETRICS_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_SYSTEMMETRICS_H_
+
+#include <map>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "core/Resource.h"
-#include <sstream>
-#include <map>
+
 #ifndef _WIN32
 #include <sys/utsname.h>
+
 #endif
+#include "../nodes/DeviceInformation.h"
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
-#include "../nodes/DeviceInformation.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -40,12 +46,11 @@ namespace response {
  */
 class SystemInformation : public DeviceInformation {
  public:
-
   SystemInformation(const std::string &name, utils::Identifier &  uuid)
       : DeviceInformation(name, uuid) {
   }
 
-  SystemInformation(const std::string &name)
+  SystemInformation(const std::string &name) // NOLINT
       : DeviceInformation(name) {
   }
 
@@ -77,7 +82,7 @@ class SystemInformation : public DeviceInformation {
     SerializedResponseNode mem;
     mem.name = "physicalMem";
 #if defined(_SC_PHYS_PAGES) && defined(_SC_PAGESIZE)
-    size_t mema = (size_t) sysconf( _SC_PHYS_PAGES) * (size_t) sysconf( _SC_PAGESIZE);
+    size_t mema = (size_t) sysconf(_SC_PHYS_PAGES) * (size_t) sysconf(_SC_PAGESIZE);
 #endif
     mem.value = (uint32_t)mema;
 
@@ -94,25 +99,23 @@ class SystemInformation : public DeviceInformation {
       arch.value = std::string(buf.machine);
     }
 
-	    systemInfo.children.push_back(arch);
-		serialized.push_back(systemInfo);
+    systemInfo.children.push_back(arch);
+    serialized.push_back(systemInfo);
 #endif
     serialized.push_back(identifier);
-    
 
     return serialized;
   }
 
  protected:
-
 };
 
 REGISTER_RESOURCE(SystemInformation, "Node part of an AST that defines the System information and metrics subtree");
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_METRICS_QUEUEMETRICS_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_SYSTEMMETRICS_H_

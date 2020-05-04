@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_
 
+#include <string>
+
 
 namespace org {
 namespace apache {
@@ -32,7 +34,6 @@ namespace state {
  */
 class FlowIdentifier {
  public:
-
   FlowIdentifier() = delete;
 
   /**
@@ -60,8 +61,8 @@ class FlowIdentifier {
   std::string getFlowId() const {
     return flow_id_;
   }
- protected:
 
+ protected:
   explicit FlowIdentifier(const FlowIdentifier &other) {
     registry_url_ = other.registry_url_;
     bucket_id_ = other.bucket_id_;
@@ -82,10 +83,10 @@ class FlowIdentifier {
 };
 
 
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_

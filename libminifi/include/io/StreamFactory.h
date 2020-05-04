@@ -14,13 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SOCKET_FACTORY_H
-#define SOCKET_FACTORY_H
+#ifndef LIBMINIFI_INCLUDE_IO_STREAMFACTORY_H_
+#define LIBMINIFI_INCLUDE_IO_STREAMFACTORY_H_
+
+#include <memory>
+#include <string>
+#include <utility>
 
 #include "properties/Configure.h"
 #include "Sockets.h"
 #include "utils/StringUtils.h"
-#include "validation.h"
+#include "validation.h" // NOLINT
 #include "controllers/SSLContextService.h"
 #include "NetworkPrioritizer.h"
 namespace org {
@@ -44,7 +48,6 @@ class AbstractStreamFactory {
  **/
 class StreamFactory {
  public:
-
   /**
    * Creates a socket and returns a unique ptr
    *
@@ -88,15 +91,15 @@ class StreamFactory {
   }
 
  protected:
-  StreamFactory(const std::shared_ptr<Configure> &configure);
+  StreamFactory(const std::shared_ptr<Configure> &configure); // NOLINT
 
   std::shared_ptr<AbstractStreamFactory> delegate_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_IO_STREAMFACTORY_H_

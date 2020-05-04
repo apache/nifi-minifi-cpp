@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
 #define LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "core/Core.h"
 #include "Connection.h"
 #include "RemoteProcessorGroupPort.h"
@@ -148,11 +152,9 @@ class FlowConfiguration : public CoreComponent {
     for (auto sl_func : get_static_functions().statics_sl_funcs_) {
       core::ClassLoader::getDefaultClassLoader().registerResource("", sl_func);
     }
-    //get_static_functions().statics_sl_funcs_.clear();
   }
 
  protected:
-
   void registerResource(const std::string &resource_function) {
     core::ClassLoader::getDefaultClassLoader().registerResource("", resource_function);
   }
@@ -175,16 +177,16 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<io::StreamFactory> stream_factory_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<state::response::FlowVersion> flow_version_;
+
  private:
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
 

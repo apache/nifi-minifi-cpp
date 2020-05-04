@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LOGGER_H__
-#define __LOGGER_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGER_H_
+#define LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGER_H_
 
+#include <string>
 #include <mutex>
 #include <memory>
 #include <sstream>
+#include <utility>
 #include <iostream>
 
 #include "spdlog/common.h"
@@ -79,13 +81,11 @@ typedef enum {
 
 class BaseLogger {
  public:
-
   virtual ~BaseLogger();
 
   virtual void log_string(LOG_LEVEL level, std::string str) = 0;
 
   virtual bool should_log(const LOG_LEVEL &level);
-
 };
 
 /**
@@ -170,18 +170,18 @@ class Logger : public BaseLogger {
   bool should_log(const LOG_LEVEL &level);
 
  protected:
-
   virtual void log_string(LOG_LEVEL level, std::string str);
 
   Logger(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller);
 
-  Logger(std::shared_ptr<spdlog::logger> delegate);
+  Logger(std::shared_ptr<spdlog::logger> delegate); // NOLINT
 
 
   std::shared_ptr<spdlog::logger> delegate_;
   std::shared_ptr<LoggerControl> controller_;
 
   std::mutex mutex_;
+
  private:
   template<typename ... Args>
   inline void log(spdlog::level::level_enum level, const char * const format, const Args& ... args) {
@@ -199,21 +199,21 @@ class Logger : public BaseLogger {
   Logger& operator=(Logger const&);
 };
 
-#define LOG_DEBUG(x) LogBuilder(x.get(),logging::LOG_LEVEL::debug)
+#define LOG_DEBUG(x) LogBuilder(x.get(), logging::LOG_LEVEL::debug)
 
-#define LOG_INFO(x) LogBuilder(x.get(),logging::LOG_LEVEL::info)
+#define LOG_INFO(x) LogBuilder(x.get(), logging::LOG_LEVEL::info)
 
-#define LOG_TRACE(x) LogBuilder(x.get(),logging::LOG_LEVEL::trace)
+#define LOG_TRACE(x) LogBuilder(x.get(), logging::LOG_LEVEL::trace)
 
-#define LOG_ERROR(x) LogBuilder(x.get(),logging::LOG_LEVEL::err)
+#define LOG_ERROR(x) LogBuilder(x.get(), logging::LOG_LEVEL::err)
 
-#define LOG_WARN(x) LogBuilder(x.get(),logging::LOG_LEVEL::warn)
+#define LOG_WARN(x) LogBuilder(x.get(), logging::LOG_LEVEL::warn)
 
-} /* namespace logging */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace logging
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGER_H_

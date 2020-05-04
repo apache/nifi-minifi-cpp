@@ -17,17 +17,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CRON_DRIVEN_SCHEDULING_AGENT_H__
-#define CRON_DRIVEN_SCHEDULING_AGENT_H__
+#ifndef LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_
+#define LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_
+
+#include <chrono>
+#include <map>
+#include <memory>
+#include <string>
 
 #include "core/logging/Logger.h"
-#include "core/Processor.h"
 #include "core/ProcessContext.h"
+#include "core/Processor.h"
 #include "core/ProcessSessionFactory.h"
-#include "ThreadedSchedulingAgent.h"
-#include <chrono>
-
 #include "Cron.h"
+#include "ThreadedSchedulingAgent.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -66,11 +70,10 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   // Only support pass by reference or pointer
   CronDrivenSchedulingAgent(const CronDrivenSchedulingAgent &parent);
   CronDrivenSchedulingAgent &operator=(const CronDrivenSchedulingAgent &parent);
-
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_

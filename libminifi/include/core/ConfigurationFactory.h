@@ -19,6 +19,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_
 #define LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_
 
+#include <memory>
+#include <string>
+
 #include "FlowConfiguration.h"
 #include  <type_traits>
 
@@ -51,10 +54,10 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(std::shared_ptr
                                                                  std::shared_ptr<io::StreamFactory> stream_factory, const std::string configuration_class_name, const std::string path = "",
                                                                  bool fail_safe = false);
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_

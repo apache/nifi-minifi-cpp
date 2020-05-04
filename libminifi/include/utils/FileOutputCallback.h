@@ -17,8 +17,11 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILEOUTPUTCALLBACK_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILEOUTPUTCALLBACK_H_
 
+#include <memory>
+#include <string>
+#include <vector>
 #include <fstream>
-#include "concurrentqueue.h"
+#include "concurrentqueue.h" // NOLINT
 #include "FlowFileRecord.h"
 #include "ByteArrayCallback.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -39,39 +42,36 @@ class FileOutputCallback : public ByteOutputCallback {
  public:
   FileOutputCallback() = delete;
 
-  explicit FileOutputCallback(std::string file, bool wait_on_read=false)
+  explicit FileOutputCallback(std::string file, bool wait_on_read = false)
       : ByteOutputCallback(INT_MAX), file_(file), file_stream_(file),
         logger_(logging::LoggerFactory<FileOutputCallback>::getLogger()) {
   }
 
   virtual ~FileOutputCallback() {
-
   }
 
-  virtual int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+  int64_t process(std::shared_ptr<io::BaseStream> stream) override;
 
-  virtual const std::vector<char> to_string() override;
+  const std::vector<char> to_string() override;
 
-  virtual void close() override;
+  void close() override;
 
-  virtual size_t getSize() override;
+  size_t getSize() override;
 
-  virtual void write(char *data, size_t size) override;
+  void write(char *data, size_t size) override;
 
  private:
-
   std::string file_;
 
   std::ofstream file_stream_;
 
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_FILEOUTPUTCALLBACK_H_

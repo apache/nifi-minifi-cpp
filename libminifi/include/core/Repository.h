@@ -17,9 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __REPOSITORY_H__
-#define __REPOSITORY_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_
+#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_
 
+#include <memory>
+#include <utility>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
@@ -50,9 +52,9 @@ namespace minifi {
 namespace core {
 
 #define REPOSITORY_DIRECTORY "./repo"
-#define MAX_REPOSITORY_STORAGE_SIZE (10*1024*1024) // 10M
-#define MAX_REPOSITORY_ENTRY_LIFE_TIME (600000) // 10 minute
-#define REPOSITORY_PURGE_PERIOD (2500) // 2500 msec
+#define MAX_REPOSITORY_STORAGE_SIZE (10*1024*1024)  // 10M
+#define MAX_REPOSITORY_ENTRY_LIFE_TIME (600000)  // 10 minute
+#define REPOSITORY_PURGE_PERIOD (2500)  // 2500 msec
 
 class Repository : public virtual core::SerializableComponent, public core::TraceableResource {
  public:
@@ -216,7 +218,6 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   }
 
   virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
-
   }
 
   virtual uint64_t getRepoSize();
@@ -257,9 +258,9 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_

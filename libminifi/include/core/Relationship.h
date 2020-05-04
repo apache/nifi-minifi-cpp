@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __RELATIONSHIP_H__
-#define __RELATIONSHIP_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_RELATIONSHIP_H_
+#define LIBMINIFI_INCLUDE_CORE_RELATIONSHIP_H_
 
 #include <string>
 #include <vector>
@@ -45,7 +45,6 @@ inline bool isRelationshipNameUndefined(std::string name) {
 
 // Relationship Class
 class Relationship {
-
  public:
   /*
    * Create a new relationship 
@@ -90,7 +89,6 @@ class Relationship {
   }
 
  protected:
-
   // Name
   std::string name_;
   // Description
@@ -99,9 +97,9 @@ class Relationship {
  private:
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_CORE_RELATIONSHIP_H_

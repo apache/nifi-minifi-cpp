@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_IO_REGEXUTILS_H_
-#define LIBMINIFI_INCLUDE_IO_REGEXUTILS_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_REGEXUTILS_H_
+#define LIBMINIFI_INCLUDE_UTILS_REGEXUTILS_H_
 
 #include <string>
 #include <vector>
@@ -36,7 +36,7 @@ namespace minifi {
 namespace utils {
 
 class Regex {
-public:
+ public:
   enum class Mode { ICASE };
 
   Regex();
@@ -74,10 +74,10 @@ public:
 #endif
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_IO_REGEXUTILS_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_REGEXUTILS_H_

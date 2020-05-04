@@ -18,20 +18,22 @@
 #ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 
-#include <stdexcept>
+#include <map> // NOLINT
+#include <stdexcept> // NOLINT
 
 #ifdef RAPIDJSON_ASSERT
 #undef RAPIDJSON_ASSERT
 #endif
 #define RAPIDJSON_ASSERT(x) if(!(x)) throw std::logic_error("rapidjson exception"); //NOLINT
 
+#include <vector> // NOLINT
+#include <string> // NOLINT
+#include <mutex> // NOLINT
+
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/prettywriter.h"
-
-#include <string>
-#include <mutex>
 
 #include "utils/ByteArrayCallback.h"
 #include "c2/C2Protocol.h"
@@ -39,7 +41,6 @@
 #include "controllers/SSLContextService.h"
 #include "utils/HTTPClient.h"
 #include "Exception.h"
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -64,15 +65,12 @@ class RESTProtocol {
  public:
   RESTProtocol()
       : minimize_updates_(false) {
-
   }
 
   virtual ~RESTProtocol() {
-
   }
 
  protected:
-
   virtual rapidjson::Value getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc);
 
   virtual rapidjson::Value serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc);
@@ -100,10 +98,10 @@ class RESTProtocol {
   std::map<std::string, C2Payload> nested_payloads_;
 };
 
-} /* namesapce c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTOPERATIONS_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_

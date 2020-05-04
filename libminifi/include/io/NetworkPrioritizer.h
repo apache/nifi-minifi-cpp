@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_IO_NETWORKPRIORITIZER_H_
 #define LIBMINIFI_INCLUDE_IO_NETWORKPRIORITIZER_H_
 
+#include <string>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -104,10 +105,10 @@ class NetworkPrioritizerFactory {
   std::shared_ptr<NetworkPrioritizer> np_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_IO_NETWORKPRIORITIZER_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_NETWORKPRIORITIZER_H_

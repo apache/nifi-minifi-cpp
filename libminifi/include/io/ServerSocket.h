@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_
 
+#include <memory>
+#include <string>
+
 #include "io/ClientSocket.h"
 
 namespace org {
@@ -45,12 +48,12 @@ class ServerSocket : public BaseServerSocket, public Socket {
 
   virtual ~ServerSocket();
 
-  virtual int16_t initialize(bool loopbackOnly){
+  virtual int16_t initialize(bool loopbackOnly) {
     is_loopback_only_ = loopbackOnly;
     return Socket::initialize();
   }
 
-  virtual int16_t initialize(){
+  virtual int16_t initialize() {
     return Socket::initialize();
   }
 
@@ -60,8 +63,7 @@ class ServerSocket : public BaseServerSocket, public Socket {
   virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler);
 
  private:
-
-  void close_fd(int fd );
+  void close_fd(int fd);
 
   std::atomic<bool> running_;
 
@@ -70,9 +72,9 @@ class ServerSocket : public BaseServerSocket, public Socket {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_

@@ -17,8 +17,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __TIMER_DRIVEN_SCHEDULING_AGENT_H__
-#define __TIMER_DRIVEN_SCHEDULING_AGENT_H__
+#ifndef LIBMINIFI_INCLUDE_TIMERDRIVENSCHEDULINGAGENT_H_
+#define LIBMINIFI_INCLUDE_TIMERDRIVENSCHEDULINGAGENT_H_
+
+#include <memory>
 
 #include "core/logging/Logger.h"
 #include "core/Processor.h"
@@ -59,8 +61,8 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_TIMERDRIVENSCHEDULINGAGENT_H_

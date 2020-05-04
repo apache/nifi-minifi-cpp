@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEPROVENANCEREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEPROVENANCEREPOSITORY_H_
 
+#include <string>
+
 #include "VolatileRepository.h"
 
 namespace org {
@@ -31,14 +33,11 @@ namespace repository {
  * Volatile provenance repository.
  */
 class VolatileProvenanceRepository : public VolatileRepository<std::string> {
-
  public:
   explicit VolatileProvenanceRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
   MAX_REPOSITORY_STORAGE_SIZE,
                                         uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
-      : core::SerializableComponent(repo_name),VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod)
-
-  {
+      : core::SerializableComponent(repo_name), VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod) { // NOLINT
     purge_required_ = false;
   }
 
@@ -50,14 +49,13 @@ class VolatileProvenanceRepository : public VolatileRepository<std::string> {
     purge_list_.push_back(old_value.getKey());
   }
  private:
-
 };
 
-} /* namespace repository */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace repository
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEPROVENANCEREPOSITORY_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEPROVENANCEREPOSITORY_H_

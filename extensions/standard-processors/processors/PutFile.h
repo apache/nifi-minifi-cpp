@@ -17,9 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PUT_FILE_H__
-#define __PUT_FILE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_PUTFILE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_PUTFILE_H_
 
+#include <memory>
+#include <string>
 #include <utility>
 
 #include "FlowFileRecord.h"
@@ -38,7 +40,6 @@ namespace processors {
 
 class PutFile : public core::Processor {
  public:
-
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_REPLACE = "replace";
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_IGNORE = "ignore";
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_FAIL = "fail";
@@ -48,7 +49,7 @@ class PutFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  PutFile(std::string name,  utils::Identifier uuid = utils::Identifier())
+  PutFile(std::string name,  utils::Identifier uuid = utils::Identifier()) // NOLINT
       : core::Processor(std::move(name), uuid),
         logger_(logging::LoggerFactory<PutFile>::getLogger()) {
   }
@@ -97,10 +98,7 @@ class PutFile : public core::Processor {
    */
   std::string tmpWritePath(const std::string &filename, const std::string &directory) const;
 
- protected:
-
  private:
-
   std::string conflict_resolution_;
   bool try_mkdirs_ = true;
   int64_t max_dest_files_ = -1;
@@ -114,12 +112,12 @@ class PutFile : public core::Processor {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-REGISTER_RESOURCE(PutFile,"Writes the contents of a FlowFile to the local file system");
+REGISTER_RESOURCE(PutFile, "Writes the contents of a FlowFile to the local file system");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_PUTFILE_H_

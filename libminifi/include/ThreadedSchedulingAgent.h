@@ -17,9 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __THREADED_SCHEDULING_AGENT_H__
-#define __THREADED_SCHEDULING_AGENT_H__
+#ifndef LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_
+#define LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_
 
+#include <memory>
+#include <set>
+#include <string>
 #include <chrono>
 #include "properties/Configure.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -65,8 +68,6 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
 
   virtual void stop();
 
- protected:
-
  private:
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
@@ -77,8 +78,8 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   std::set<std::string> processors_running_;  // Set just for easy usage
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_

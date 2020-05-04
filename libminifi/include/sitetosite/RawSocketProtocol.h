@@ -17,27 +17,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SITE2SITE_CLIENT_PROTOCOL_H__
-#define __SITE2SITE_CLIENT_PROTOCOL_H__
+#ifndef LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_
+#define LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_
 
+#include <errno.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <string>
-#include <errno.h>
-#include <chrono>
-#include <thread>
-#include <algorithm>
 
-#include "SiteToSite.h"
-#include "SiteToSiteClient.h"
-#include "core/Property.h"
-#include "properties/Configure.h"
-#include "FlowFileRecord.h"
+#include <algorithm>
+#include <chrono>
+#include <map>
+#include <memory>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
+
 #include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Property.h"
+#include "FlowFileRecord.h"
 #include "io/CRCStream.h"
 #include "Peer.h"
+#include "properties/Configure.h"
+#include "SiteToSite.h"
+#include "SiteToSiteClient.h"
 #include "utils/Id.h"
 
 namespace org {
@@ -52,13 +57,13 @@ namespace sitetosite {
  */
 typedef struct Site2SitePeerStatus {
   std::string host_;
-  int port_;bool isSecure_;
+  int port_;
+  bool isSecure_;
 } Site2SitePeerStatus;
 
 // RawSiteToSiteClient Class
 class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
  public:
-
   // HandShakeProperty Str
   static const char *HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY];
 
@@ -66,7 +71,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   /*!
    * Create a new control protocol
    */
-  RawSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer)
+  RawSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer) // NOLINT
       : logger_(logging::LoggerFactory<RawSiteToSiteClient>::getLogger()) {
     peer_ = std::move(peer);
     _batchSize = 0;
@@ -108,7 +113,6 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
     _timeOut = time;
     if (peer_)
       peer_->setTimeOut(time);
-
   }
 
   /**
@@ -162,8 +166,8 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
 
   // bootstrap the protocol to the ready for transaction state by going through the state machine
   virtual bool bootstrap();
- protected:
 
+ protected:
   // establish
   virtual bool establish();
   // handShake
@@ -191,9 +195,9 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace sitetosite
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_

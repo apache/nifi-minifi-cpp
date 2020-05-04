@@ -18,7 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_C2_C2PAYLOAD_H_
 #define LIBMINIFI_INCLUDE_C2_C2PAYLOAD_H_
 
+#include <vector>
 #include <memory>
+#include <utility>
 #include <string>
 #include <map>
 #include <limits>
@@ -189,10 +191,10 @@ class C2Payload : public state::Update {
   bool is_collapsible_{ true };
 };
 
-} /* namesapce c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_C2_C2PAYLOAD_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_C2PAYLOAD_H_

@@ -28,27 +28,25 @@
 #include <arpa/inet.h>
 #endif
 
-namespace {
-  template<typename Integral, typename std::enable_if<
-      std::is_integral<Integral>::value && (sizeof(Integral) == 2),Integral>::type* = nullptr>
-  Integral byteSwap(Integral i) {
-    return htons(i);
-  }
-  template<typename Integral, typename std::enable_if<
-      std::is_integral<Integral>::value &&(sizeof(Integral) == 4),Integral>::type* = nullptr>
-  Integral byteSwap(Integral i) {
-    return htonl(i);
-  }
-  template<typename Integral, typename std::enable_if<
-      std::is_integral<Integral>::value && (sizeof(Integral) == 8),Integral>::type* = nullptr>
-  Integral byteSwap(Integral i) {
+template<typename Integral, typename std::enable_if<
+    std::is_integral<Integral>::value && (sizeof(Integral) == 2), Integral>::type* = nullptr>
+Integral byteSwap(Integral i) {
+  return htons(i);
+}
+template<typename Integral, typename std::enable_if<
+    std::is_integral<Integral>::value &&(sizeof(Integral) == 4), Integral>::type* = nullptr>
+Integral byteSwap(Integral i) {
+  return htonl(i);
+}
+template<typename Integral, typename std::enable_if<
+    std::is_integral<Integral>::value && (sizeof(Integral) == 8), Integral>::type* = nullptr>
+Integral byteSwap(Integral i) {
 #ifdef htonll
-    return htonll(i);
+  return htonll(i);
 #else
-    #define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
-    return htonll_r(i);
+  #define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
+  return htonll_r(i);
 #endif
-  }
 }
 
 namespace org {
@@ -63,9 +61,7 @@ namespace io {
  *
  */
 class Serializable {
-
  public:
-
   /**
    * write byte to stream
    * @return resulting write size
@@ -112,7 +108,7 @@ class Serializable {
       (sizeof(Integral) > 1) &&
       std::is_integral<Integral>::value &&
       !std::is_signed<Integral>::value
-      ,Integral>::type* = nullptr>
+      , Integral>::type* = nullptr>
   int write(Integral const & base_value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE) {
     const Integral value = is_little_endian ? byteSwap(base_value) : base_value;
 
@@ -162,7 +158,7 @@ class Serializable {
       (sizeof(Integral) > 1) &&
       std::is_integral<Integral>::value &&
       !std::is_signed<Integral>::value
-      ,Integral>::type* = nullptr>
+      , Integral>::type* = nullptr>
   int read(Integral &value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE) {
     return stream->read(value, is_little_endian);
   }
@@ -170,9 +166,9 @@ class Serializable {
  protected:
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_SERIALIZABLE_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_SERIALIZABLE_H_

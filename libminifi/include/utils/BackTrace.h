@@ -17,6 +17,8 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_
 #define LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_
 
+#include <string>
+
 #ifdef HAS_EXECINFO
 #include <execinfo.h>
 #include <csignal>
@@ -46,7 +48,7 @@ class BackTrace {
  public:
   BackTrace() = default;
 
-  BackTrace(std::string name)
+  BackTrace(std::string name) // NOLINT
       : name_(std::move(name)) {
   }
 
@@ -167,5 +169,5 @@ class TraceResolver {
   std::condition_variable trace_condition_;
 };
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_
 

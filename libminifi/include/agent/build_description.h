@@ -15,9 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BUILD_DESCRPTION_H
-#define BUILD_DESCRPTION_H
+#ifndef LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_
+#define LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_
 
+#include <map>
+#include <memory>
+#include <string>
 #include <vector>
 #include "core/expect.h"
 
@@ -40,7 +43,6 @@ class ClassDescription {
         dynamic_properties_(dyn_prop),
         dynamic_relationships_(false),
         is_controller_service_(false) {
-
   }
   explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, std::vector<core::Relationship> class_relationships, bool dyn_prop, bool dyn_rel)
       : class_name_(name),
@@ -73,7 +75,6 @@ struct BundleDetails {
 
 class ExternalBuildDescription {
  private:
-
   static std::vector<struct BundleDetails> &getExternal() {
     static std::vector<struct BundleDetails> external_groups;
     return external_groups;
@@ -85,7 +86,6 @@ class ExternalBuildDescription {
   }
 
  public:
-
   static void addExternalComponent(struct BundleDetails details, const ClassDescription &description) {
     bool found = false;
     for (const auto &d : getExternal()) {
@@ -159,13 +159,11 @@ class BuildDescription {
     }
     return class_mappings[group];
   }
+}; // NOLINT
 
-}
-;
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif /* BUILD_DESCRPTION_H */
+#endif  // LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_

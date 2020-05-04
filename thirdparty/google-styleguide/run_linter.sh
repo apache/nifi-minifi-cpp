@@ -38,6 +38,6 @@ done
 [ x"$INCLUDE_DIRS" == x"" ] && echo "WARNING: No include directories specified."
 [ x"$SOURCE_DIRS" == x"" ] && echo "ERROR: No source directories specified." && exit 1
 
-HEADERS=`find $INCLUDE_DIRS -name '*.h' | sort | uniq | tr '\n' ','`
+HEADERS=`find $INCLUDE_DIRS -name '*.h' | sort | uniq | tr '\n' ' '`
 SOURCES=`find $SOURCE_DIRS -name  '*.cpp' | sort | uniq | tr '\n' ' '`
-python ${SCRIPT_DIR}/cpplint.py --linelength=200 ${SOURCES}
+python ${SCRIPT_DIR}/cpplint.py --linelength=200 ${HEADERS} ${SOURCES}

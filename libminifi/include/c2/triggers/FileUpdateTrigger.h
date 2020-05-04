@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_TRIGGERS_FILESYSTEMTRIGGER_H_
-#define LIBMINIFI_INCLUDE_C2_TRIGGERS_FILESYSTEMTRIGGER_H_
+#ifndef LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_
+#define LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_
+
+#include <memory>
+#include <string>
 #include <atomic>
 #include "c2/C2Trigger.h"
 #include "utils/StringUtils.h"
@@ -38,8 +41,7 @@ namespace c2 {
  */
 class FileUpdateTrigger : public C2Trigger {
  public:
-
-  FileUpdateTrigger(std::string name, utils::Identifier uuid = utils::Identifier())
+  FileUpdateTrigger(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : C2Trigger(name, uuid),
         last_update_(0),
         update_(false),
@@ -53,7 +55,6 @@ class FileUpdateTrigger : public C2Trigger {
       } else {
         logger_->log_trace("Could not configure file");
       }
-
     }
   }
 
@@ -96,7 +97,6 @@ class FileUpdateTrigger : public C2Trigger {
    */
 
   virtual void yield() {
-
   }
 
   /**
@@ -111,16 +111,17 @@ class FileUpdateTrigger : public C2Trigger {
   std::string file_;
   std::atomic<uint64_t> last_update_;
   std::atomic<bool> update_;
+
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
 // add the trigger to the known resources.
 REGISTER_RESOURCE(FileUpdateTrigger, "Defines a file update trigger when the last write time of a file has been changed.")
 
-} /* namesapce c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_C2_TRIGGERS_FILESYSTEMTRIGGER_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_

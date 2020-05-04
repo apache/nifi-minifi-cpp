@@ -20,15 +20,14 @@
 
 #ifdef WIN32
 
-#include "spdlog/common.h"
-#include "spdlog/sinks/base_sink.h"
-#include "spdlog/details/log_msg.h"
-#include "spdlog/details/null_mutex.h"
-
 #include <Windows.h>
 
 #include <string>
 
+#include "spdlog/common.h"
+#include "spdlog/details/log_msg.h"
+#include "spdlog/details/null_mutex.h"
+#include "spdlog/sinks/base_sink.h"
 
 namespace org {
 namespace apache {
@@ -44,20 +43,20 @@ class windowseventlog_sink : public spdlog::sinks::base_sink<spdlog::details::nu
 
   WORD type_from_level(const spdlog::details::log_msg& msg) const;
 
-  protected:
-   virtual void _sink_it(const spdlog::details::log_msg& msg);
+ protected:
+  virtual void _sink_it(const spdlog::details::log_msg& msg);
 
-   virtual void _flush();
+  virtual void _flush();
 
-  public:
-   windowseventlog_sink(const std::string& source_name = "ApacheNiFiMiNiFi");
+ public:
+  windowseventlog_sink(const std::string& source_name = "ApacheNiFiMiNiFi"); // NOLINT
 
-   virtual ~windowseventlog_sink();
+  virtual ~windowseventlog_sink();
 
-   windowseventlog_sink(const windowseventlog_sink&) = delete;
-   windowseventlog_sink& operator=(const windowseventlog_sink&) = delete;
-   windowseventlog_sink(windowseventlog_sink&&) = delete;
-   windowseventlog_sink& operator=(windowseventlog_sink&&) = delete;
+  windowseventlog_sink(const windowseventlog_sink&) = delete;
+  windowseventlog_sink& operator=(const windowseventlog_sink&) = delete;
+  windowseventlog_sink(windowseventlog_sink&&) = delete;
+  windowseventlog_sink& operator=(windowseventlog_sink&&) = delete;
 };
 
 }  // namespace internal

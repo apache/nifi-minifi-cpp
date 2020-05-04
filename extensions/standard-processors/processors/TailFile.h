@@ -17,8 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __TAIL_FILE_H__
-#define __TAIL_FILE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_TAILFILE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_TAILFILE_H_
+
+#include <map>
+#include <memory>
+#include <string>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -77,7 +81,6 @@ class TailFile : public core::Processor {
   static core::Relationship Success;
 
  public:
-
   bool acceptFile(const std::string &filter, const std::string &file);
   /**
    * Function that's executed when the processor is scheduled.
@@ -96,7 +99,6 @@ class TailFile : public core::Processor {
   bool storeState(const std::shared_ptr<core::ProcessContext>& context);
 
  private:
-
   static const char *CURRENT_STR;
   static const char *POSITION_STR;
   std::mutex tail_file_mutex_;
@@ -131,10 +133,10 @@ REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting dat
                   " rather than running with the default value of 0 secs, as this Processor will consume a lot of resources if scheduled very aggressively. At this time, this Processor"
                   " does not support ingesting files that have been compressed when 'rolled over'.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_TAILFILE_H_

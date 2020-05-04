@@ -20,9 +20,6 @@
 
 bool ExpressionObjectFactory::added = core::FlowConfiguration::add_static_func("createExpressionFactory");
 extern "C" {
-
-
-
 void *createExpressionFactory(void) {
   return new ExpressionObjectFactory();
 }

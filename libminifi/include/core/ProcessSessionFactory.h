@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROCESS_SESSION_FACTORY_H__
-#define __PROCESS_SESSION_FACTORY_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONFACTORY_H_
+#define LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONFACTORY_H_
 
 #include <memory>
 
@@ -53,12 +53,11 @@ class ProcessSessionFactory {
  private:
   // ProcessContext
   std::shared_ptr<ProcessContext> process_context_;
-
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONFACTORY_H_

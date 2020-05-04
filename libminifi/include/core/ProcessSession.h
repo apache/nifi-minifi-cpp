@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROCESS_SESSION_H__
-#define __PROCESS_SESSION_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSSESSION_H_
+#define LIBMINIFI_INCLUDE_CORE_PROCESSSESSION_H_
 
+#include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 #include <queue>
@@ -49,12 +51,11 @@ class ProcessSession : public ReferenceContainer {
   /*!
    * Create a new process session
    */
-  ProcessSession(std::shared_ptr<ProcessContext> processContext = nullptr)
+  ProcessSession(std::shared_ptr<ProcessContext> processContext = nullptr) // NOLINT
       : process_context_(std::move(processContext)),
         logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
     logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());
     auto repo = process_context_->getProvenanceRepository();
-    //provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
     provenance_report_ = std::make_shared<provenance::ProvenanceReporter>(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
   }
 
@@ -75,7 +76,7 @@ class ProcessSession : public ReferenceContainer {
   // Create a new UUID FlowFile with no content resource claim and without parent
   std::shared_ptr<core::FlowFile> create();
   // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
-  //std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &&parent);
+  // std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &&parent);
   // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
   std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile> &parent);
   // Add a FlowFile to the session
@@ -111,7 +112,7 @@ class ProcessSession : public ReferenceContainer {
   void importFrom(io::DataStream &stream, const std::shared_ptr<core::FlowFile> &flow);
   // import from the data source.
   void import(std::string source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource = true, uint64_t offset = 0);
-  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> &flows, bool keepSource, uint64_t offset, char inputDelimiter);
+  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> &flows, bool keepSource, uint64_t offset, char inputDelimiter); // NOLINT
   void import(const std::string& source, std::vector<std::shared_ptr<FlowFileRecord>> &flows, uint64_t offset, char inputDelimiter);
 
   /**
@@ -163,9 +164,9 @@ class ProcessSession : public ReferenceContainer {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSSESSION_H_

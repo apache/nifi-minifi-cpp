@@ -15,9 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __GET_FILE_H__
-#define __GET_FILE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETFILE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETFILE_H_
 
+#include <memory>
+#include <queue>
+#include <string>
+#include <vector>
 #include <atomic>
 
 #include "core/state/nodes/MetricsBase.h"
@@ -64,7 +68,6 @@ class GetFileMetrics : public state::response::ResponseNode {
     input_bytes_ = 0;
   }
   virtual ~GetFileMetrics() {
-
   }
   std::string getName() const override {
     return core::Connectable::getName();
@@ -100,7 +103,6 @@ class GetFileMetrics : public state::response::ResponseNode {
   std::atomic<size_t> iterations_;
   std::atomic<size_t> accepted_files_;
   std::atomic<size_t> input_bytes_;
-
 };
 
 // GetFile Class
@@ -161,10 +163,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
 
   int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) override;
 
- protected:
-
  private:
-
   std::shared_ptr<GetFileMetrics> metrics_;
 
   // Queue for store directory list
@@ -190,12 +189,12 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(GetFile,"Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.");
+REGISTER_RESOURCE(GetFile, "Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETFILE_H_

@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_SERIALIZABLECOMPONENT_H_
 #define LIBMINIFI_INCLUDE_CORE_SERIALIZABLECOMPONENT_H_
 
+#include <memory>
+#include <string>
+
 #include "io/Serializable.h"
 #include "core/Connectable.h"
 #include "core/Core.h"
@@ -32,21 +35,16 @@ namespace core {
  * Represents a component that is serializable and an extension point of core Component
  */
 class SerializableComponent : public core::Connectable, public minifi::io::Serializable {
-
  public:
-
-  SerializableComponent(const std::string name)
+  SerializableComponent(const std::string name) // NOLINT
         : core::Connectable(name) {
-
     }
 
   SerializableComponent(const std::string name, utils::Identifier &uuid )
       : core::Connectable(name, uuid) {
-
   }
 
   virtual ~SerializableComponent() {
-
   }
 
   /**
@@ -83,7 +81,6 @@ class SerializableComponent : public core::Connectable, public minifi::io::Seria
   }
 
   virtual void yield() {
-
   }
 
   /**
@@ -100,14 +97,13 @@ class SerializableComponent : public core::Connectable, public minifi::io::Seria
   virtual bool isWorkAvailable() {
     return true;
   }
-
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_SERIALIZABLECOMPONENT_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_SERIALIZABLECOMPONENT_H_
 

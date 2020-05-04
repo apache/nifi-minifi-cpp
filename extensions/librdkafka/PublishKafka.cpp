@@ -707,8 +707,8 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   });
 }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

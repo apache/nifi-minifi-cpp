@@ -17,30 +17,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LISTEN_SYSLOG_H__
-#define __LISTEN_SYSLOG_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LISTENSYSLOG_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LISTENSYSLOG_H_
 
 #include <stdio.h>
 #include <sys/types.h>
+
+#include <memory>
+#include <queue>
+#include <string>
+#include <vector>
+
 #ifndef WIN32
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/select.h>
+#include <sys/socket.h>
 #include <sys/time.h>
+
 #else
 #include <WinSock2.h>
+
 #endif
 #include <errno.h>
-#include <sys/types.h>
+
 #include <chrono>
 #include <thread>
-#include "FlowFileRecord.h"
+
+#include "core/Core.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
 #include "core/Resource.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "FlowFileRecord.h"
 
 #ifndef WIN32
 
@@ -64,7 +73,7 @@ class ListenSyslog : public core::Processor {
   /*!
    * Create a new processor
    */
-  ListenSyslog(std::string name,  utils::Identifier uuid = utils::Identifier())
+  ListenSyslog(std::string name,  utils::Identifier uuid = utils::Identifier()) // NOLINT
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ListenSyslog>::getLogger()) {
     _eventQueueByteSize = 0;
@@ -139,8 +148,6 @@ class ListenSyslog : public core::Processor {
   // Initialize, over write by NiFi ListenSyslog
   virtual void initialize(void);
 
- protected:
-
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
@@ -200,7 +207,8 @@ class ListenSyslog : public core::Processor {
   int64_t _maxBatchSize;
   std::string _messageDelimiter;
   std::string _protocol;
-  int64_t _port;bool _parseMessages;
+  int64_t _port;
+  bool _parseMessages;
   int _serverSocket;
   std::vector<int> _clientSockets;
   int _maxFds;
@@ -208,24 +216,24 @@ class ListenSyslog : public core::Processor {
   // thread
   std::thread *_thread;
   // whether to reset the server socket
-  bool _resetServerSocket;bool _serverTheadRunning;
+  bool _resetServerSocket; bool _serverTheadRunning;
   // buffer for read socket
   char _buffer[2048];
 };
 
-REGISTER_RESOURCE(ListenSyslog,"Listens for Syslog messages being sent to a given port over TCP or UDP. Incoming messages are checked against regular expressions for RFC5424 and RFC3164 formatted messages. "
+REGISTER_RESOURCE(ListenSyslog, "Listens for Syslog messages being sent to a given port over TCP or UDP. Incoming messages are checked against regular expressions for RFC5424 and RFC3164 formatted messages. " // NOLINT
                   "The format of each message is: (<PRIORITY>)(VERSION )(TIMESTAMP) (HOSTNAME) (BODY) where version is optional. The timestamp can be an RFC5424 timestamp with a format of "
                   "\"yyyy-MM-dd'T'HH:mm:ss.SZ\" or \"yyyy-MM-dd'T'HH:mm:ss.S+hh:mm\", or it can be an RFC3164 timestamp with a format of \"MMM d HH:mm:ss\". If an incoming messages matches "
                   "one of these patterns, the message will be parsed and the individual pieces will be placed in FlowFile attributes, with the original message in the content of the FlowFile. "
                   "If an incoming message does not match one of these patterns it will not be parsed and the syslog.valid attribute will be set to false with the original message in the content "
                   "of the FlowFile. Valid messages will be transferred on the success relationship, and invalid messages will be transferred on the invalid relationship.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LISTENSYSLOG_H_

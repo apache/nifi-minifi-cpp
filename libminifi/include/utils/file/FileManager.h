@@ -14,26 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_FILEMANAGER_H_
-#define LIBMINIFI_INCLUDE_UTILS_FILEMANAGER_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_FILE_FILEMANAGER_H_
+#define LIBMINIFI_INCLUDE_UTILS_FILE_FILEMANAGER_H_
+
+#include <string>
+#include <vector>
 
 #ifdef BOOST_VERSION
 #include <boost/filesystem.hpp>
+
 #else
 #include <cstdlib>
+
 #endif
-#include <cstdio>
 #include <fcntl.h>
+
+#include <cstdio>
+
 #include "io/validation.h"
 #include "utils/Id.h"
 #include "utils/StringUtils.h"
 
 #ifndef FILE_SEPARATOR
-	#ifdef WIN32
-	#define FILE_SEPARATOR "\\"
-	#else
-	#define FILE_SEPARATOR "/"
-	#endif
+  #ifdef WIN32
+  #define FILE_SEPARATOR "\\"
+  #else
+  #define FILE_SEPARATOR "/"
+  #endif
 #endif
 
 
@@ -51,7 +58,6 @@ namespace file {
  */
 class FileManager {
  public:
-
   FileManager() {
   }
 
@@ -61,8 +67,6 @@ class FileManager {
     }
   }
   std::string unique_file(const std::string &location, bool keep = false) {
-
-	 
     if (!IsNullOrEmpty(location)) {
       std::string file_name = location + FILE_SEPARATOR + non_repeating_string_generator_.generate();
       while (!verify_not_exist(file_name)) {
@@ -72,18 +76,19 @@ class FileManager {
         unique_files_.push_back(file_name);
       return file_name;
     } else {
-	  std::string tmpDir = "/tmp";
-	  #ifdef WIN32
-			TCHAR lpTempPathBuffer[MAX_PATH];
-			GetTempPath(MAX_PATH, lpTempPathBuffer);
-			tmpDir = lpTempPathBuffer;
-	  #endif
+      std::string tmpDir = "/tmp";
+#ifdef WIN32
+      TCHAR lpTempPathBuffer[MAX_PATH];
+      GetTempPath(MAX_PATH, lpTempPathBuffer);
+      tmpDir = lpTempPathBuffer;
+#endif
       std::string file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
       while (!verify_not_exist(file_name)) {
         file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
       }
-      if (!keep)
+      if (!keep) {
         unique_files_.push_back(file_name);
+      }
       return file_name;
     }
   }
@@ -92,25 +97,25 @@ class FileManager {
 #ifdef BOOST_VERSION
     return boost::filesystem::unique_path().native();
 #else
-	  std::string tmpDir = "/tmp";
-	#ifdef WIN32
-		  TCHAR lpTempPathBuffer[MAX_PATH];
-		  GetTempPath(MAX_PATH, lpTempPathBuffer);
-		  tmpDir = lpTempPathBuffer;
-	#endif
+    std::string tmpDir = "/tmp";
+#ifdef WIN32
+    TCHAR lpTempPathBuffer[MAX_PATH];
+    GetTempPath(MAX_PATH, lpTempPathBuffer);
+    tmpDir = lpTempPathBuffer;
+#endif
     std::string file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
     while (!verify_not_exist(file_name)) {
       file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
     }
-    if (!keep)
+    if (!keep) {
       unique_files_.push_back(file_name);
+    }
     return file_name;
 #endif
   }
 
 
  protected:
-
   inline bool verify_not_exist(const std::string& name) {
 #ifdef WIN32
     struct _stat buffer;
@@ -126,11 +131,11 @@ class FileManager {
   std::vector<std::string> unique_files_;
 };
 
-} /* namespace file */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace file
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_FILEMANAGER_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_FILE_FILEMANAGER_H_

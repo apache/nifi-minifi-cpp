@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 #include <sstream>
 #include <map>
 
@@ -37,12 +41,11 @@ namespace response {
  */
 class RepositoryMetrics : public ResponseNode {
  public:
-
   RepositoryMetrics(const std::string &name, utils::Identifier &uuid)
       : ResponseNode(name, uuid) {
   }
 
-  RepositoryMetrics(const std::string &name)
+  RepositoryMetrics(const std::string &name) // NOLINT
       : ResponseNode(name) {
   }
 
@@ -91,11 +94,11 @@ class RepositoryMetrics : public ResponseNode {
   std::map<std::string, std::shared_ptr<core::Repository>> repositories;
 };
 
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_METRICS_RepositoryMetrics_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_

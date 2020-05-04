@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROCESS_CONTEXT_BUILDER_H__
-#define __PROCESS_CONTEXT_BUILDER_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXTBUILDER_H_
+#define LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXTBUILDER_H_
 
+#include <string>
 #include <vector>
 #include <queue>
 #include <map>
@@ -57,7 +58,7 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
  public:
   ProcessContextBuilder(const std::string &name, minifi::utils::Identifier &uuid);
 
-  ProcessContextBuilder(const std::string &name);
+  ProcessContextBuilder(const std::string &name); // NOLINT
 
   virtual ~ProcessContextBuilder() {
   }
@@ -82,9 +83,9 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
   std::shared_ptr<core::ContentRepository> content_repo_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXTBUILDER_H_

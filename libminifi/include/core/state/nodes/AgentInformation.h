@@ -18,43 +18,47 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "core/Resource.h"
 
 #ifndef WIN32
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
-#if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
+
+#if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
-#endif
-#include <ifaddrs.h>
-#include <net/if.h> 
-#include <unistd.h>
-#include <netinet/in.h>
 
-#include <sys/socket.h>
-#include <netdb.h>
-#include <ifaddrs.h>
-#include <unistd.h>
 #endif
-#include <functional>
-#include <string.h>
+#include <ifaddrs.h>
+#include <net/if.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+#endif
 #include <stdio.h>
 #include <stdlib.h>
-#include <sstream>
-#include <sstream>
+#include <string.h>
+
+#include <functional>
 #include <map>
-#include "core/state/nodes/MetricsBase.h"
-#include "Connection.h"
-#include "io/ClientSocket.h"
-#include "agent/agent_version.h"
+#include <sstream>
+
 #include "agent/agent_docs.h"
+#include "agent/agent_version.h"
 #include "agent/build_description.h"
+#include "Connection.h"
 #include "core/ClassLoader.h"
-#include "core/state/nodes/StateMonitor.h"
 #include "core/ProcessorConfig.h"
+#include "core/state/nodes/MetricsBase.h"
+#include "core/state/nodes/StateMonitor.h"
+#include "io/ClientSocket.h"
 #include "SchedulingNodes.h"
 
 namespace org {
@@ -72,7 +76,7 @@ class ComponentManifest : public DeviceInformation {
       : DeviceInformation(name, uuid) {
   }
 
-  ComponentManifest(const std::string &name)
+  ComponentManifest(const std::string &name) // NOLINT
       : DeviceInformation(name) {
   }
 
@@ -90,8 +94,8 @@ class ComponentManifest : public DeviceInformation {
     serialized.push_back(resp);
     return serialized;
   }
- protected:
 
+ protected:
   void serializeClassDescription(const std::vector<ClassDescription> &descriptions, const std::string name, SerializedResponseNode &response) const {
     if (!descriptions.empty()) {
       SerializedResponseNode type;
@@ -99,7 +103,6 @@ class ComponentManifest : public DeviceInformation {
       type.array = true;
       std::vector<SerializedResponseNode> serialized;
       for (auto group : descriptions) {
-
         SerializedResponseNode desc;
         desc.name = group.class_name_;
         SerializedResponseNode className;
@@ -110,7 +113,6 @@ class ComponentManifest : public DeviceInformation {
           SerializedResponseNode props;
           props.name = "propertyDescriptors";
           for (auto && prop : group.class_properties_) {
-
             SerializedResponseNode child;
             child.name = prop.first;
 
@@ -186,10 +188,8 @@ class ComponentManifest : public DeviceInformation {
                 allowed_type.children.push_back(typeNode);
                 allowed_type.children.push_back(bgroup);
                 allowed_type.children.push_back(artifact);
-
               }
               child.children.push_back(allowed_type);
-
             }
 
             child.children.push_back(descriptorName);
@@ -230,7 +230,6 @@ class ComponentManifest : public DeviceInformation {
                 allowedValues.children.push_back(allowableValue);
               }
               child.children.push_back(allowedValues);
-
             }
 
             props.children.push_back(child);
@@ -301,7 +300,6 @@ class ComponentManifest : public DeviceInformation {
       }
       response.children.push_back(type);
     }
-
   }
 };
 
@@ -311,7 +309,7 @@ class ExternalManifest : public ComponentManifest {
       : ComponentManifest(name, uuid) {
   }
 
-  ExternalManifest(const std::string &name)
+  ExternalManifest(const std::string &name) // NOLINT
       : ComponentManifest(name) {
   }
 
@@ -334,7 +332,7 @@ class Bundles : public DeviceInformation {
     setArray(true);
   }
 
-  Bundles(const std::string &name)
+  Bundles(const std::string &name) // NOLINT
       : DeviceInformation(name) {
     setArray(true);
   }
@@ -400,7 +398,6 @@ class Bundles : public DeviceInformation {
 
     return serialized;
   }
-
 };
 
 /**
@@ -408,13 +405,11 @@ class Bundles : public DeviceInformation {
  */
 class AgentStatus : public StateMonitorNode {
  public:
-
   AgentStatus(std::string name, utils::Identifier & uuid)
       : StateMonitorNode(name, uuid) {
-
   }
 
-  AgentStatus(const std::string &name)
+  AgentStatus(const std::string &name) // NOLINT
       : StateMonitorNode(name) {
   }
 
@@ -432,9 +427,9 @@ class AgentStatus : public StateMonitorNode {
     SerializedResponseNode uptime;
 
     uptime.name = "uptime";
-    if (nullptr != monitor_)
+    if (nullptr != monitor_) {
       uptime.value = monitor_->getUptime();
-    else {
+    } else {
       uptime.value = "0";
     }
 
@@ -464,7 +459,6 @@ class AgentStatus : public StateMonitorNode {
         repoNode.children.push_back(isRunning);
         repoNode.children.push_back(isFull);
         repositories.children.push_back(repoNode);
-
       }
       serialized.push_back(repositories);
     }
@@ -497,13 +491,13 @@ class AgentStatus : public StateMonitorNode {
 
     return serialized;
   }
+
  protected:
   std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
 };
 
 class AgentIdentifier {
  public:
-
   AgentIdentifier()
      : include_agent_manifest_(true) {
   }
@@ -528,10 +522,8 @@ class AgentIdentifier {
 
 class AgentMonitor {
  public:
-
   AgentMonitor()
       : monitor_(nullptr) {
-
   }
   void addRepository(const std::shared_ptr<core::Repository> &repo) {
     if (nullptr != repo) {
@@ -553,12 +545,11 @@ class AgentMonitor {
  */
 class AgentManifest : public DeviceInformation {
  public:
-
   AgentManifest(const std::string& name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
   }
 
-  AgentManifest(const std::string &name)
+  AgentManifest(const std::string &name) // NOLINT
       : DeviceInformation(name) {
   }
 
@@ -634,10 +625,8 @@ class AgentManifest : public DeviceInformation {
   }
 };
 
-
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
-public:
-
+ public:
   AgentNode(const std::string& name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
     setArray(false);
@@ -648,8 +637,7 @@ public:
     setArray(false);
   }
 
-protected:
-
+ protected:
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
 
@@ -700,7 +688,6 @@ protected:
  */
 class AgentInformation : public AgentNode {
  public:
-
   AgentInformation(const std::string& name, utils::Identifier & uuid)
       : AgentNode(name, uuid),
         include_agent_status_(true) {
@@ -734,17 +721,18 @@ class AgentInformation : public AgentNode {
     }
     return serialized;
   }
+
  protected:
   bool include_agent_status_;
 };
 
 REGISTER_RESOURCE(AgentInformation, "Node part of an AST that defines all agent information, to include the manifest, and bundle information as part of a healthy hearbeat.");
 
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_

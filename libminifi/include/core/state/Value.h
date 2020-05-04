@@ -43,14 +43,12 @@ namespace response {
  */
 class Value {
  public:
-
   explicit Value(const std::string &value)
       : string_value(value),
         type_id(std::type_index(typeid(std::string))) {
   }
 
   virtual ~Value() {
-
   }
   std::string getStringValue() const {
     return string_value;
@@ -77,7 +75,6 @@ class Value {
   static const std::type_index STRING_TYPE;
 
  protected:
-
   template<typename T>
   bool convertValueImpl(T &ref) {
     return getValue(ref);
@@ -90,7 +87,7 @@ class Value {
 
   virtual bool getValue(uint32_t &ref) {
     const auto negative = string_value.find_first_of('-') != std::string::npos;
-     if (negative){
+     if (negative) {
        return false;
      }
     ref = std::stoul(string_value);
@@ -109,7 +106,7 @@ class Value {
 
   virtual bool getValue(uint64_t &ref) {
     const auto negative = string_value.find_first_of('-') != std::string::npos;
-     if (negative){
+     if (negative) {
        return false;
      }
     ref = std::stoull(string_value);
@@ -142,7 +139,7 @@ class UInt32Value : public Value {
      * is only created with a validator and type, we **should** be okay.
      */
     const auto negative = strvalue.find_first_of('-') != std::string::npos;
-     if (negative){
+     if (negative) {
        throw std::out_of_range("negative value detected");
      }
     setTypeId<uint32_t>();
@@ -151,8 +148,8 @@ class UInt32Value : public Value {
   uint32_t getValue() const {
     return value;
   }
- protected:
 
+ protected:
   virtual bool getValue(uint32_t &ref) {
     ref = value;
     return true;
@@ -194,14 +191,12 @@ class IntValue : public Value {
   explicit IntValue(const std::string &strvalue)
       : Value(strvalue),
         value(std::stoi(strvalue)) {
-
   }
   int getValue() const {
     return value;
   }
 
  protected:
-
   virtual bool getValue(int &ref) {
     ref = value;
     return true;
@@ -250,8 +245,8 @@ class BoolValue : public Value {
   bool getValue() const {
     return value;
   }
- protected:
 
+ protected:
   virtual bool getValue(int &ref) {
     return PreventSwearingInFutureRefactor(ref);
   }
@@ -303,7 +298,7 @@ class UInt64Value : public Value {
      * is only created with a validator and type, we **should** be okay.
      */
     const auto negative = strvalue.find_first_of('-') != std::string::npos;
-     if (negative){
+     if (negative) {
        throw std::out_of_range("negative value detected");
      }
     setTypeId<uint64_t>();
@@ -312,8 +307,8 @@ class UInt64Value : public Value {
   uint64_t getValue() const {
     return value;
   }
- protected:
 
+ protected:
   virtual bool getValue(int &ref) {
     return false;
   }
@@ -358,8 +353,8 @@ class Int64Value : public Value {
   int64_t getValue() {
     return value;
   }
- protected:
 
+ protected:
   virtual bool getValue(int &ref) {
     return false;
   }
@@ -449,7 +444,7 @@ class ValueNode {
   std::is_same<T, bool >::value ||
   std::is_same<T, char* >::value ||
   std::is_same<T, const char* >::value ||
-  std::is_same<T, std::string>::value,ValueNode&>::type {
+  std::is_same<T, std::string>::value, ValueNode&>::type {
     value_ = createValue(ref);
     return *this;
   }
@@ -491,7 +486,7 @@ struct SerializedResponseNode {
   bool collapsible;
   std::vector<SerializedResponseNode> children;
 
-  SerializedResponseNode(bool collapsible = true)
+  SerializedResponseNode(bool collapsible = true) // NOLINT
       : array(false),
         collapsible(collapsible) {
   }
@@ -501,11 +496,11 @@ struct SerializedResponseNode {
   SerializedResponseNode &operator=(const SerializedResponseNode &other) = default;
 };
 
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_VALUE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_VALUE_H_

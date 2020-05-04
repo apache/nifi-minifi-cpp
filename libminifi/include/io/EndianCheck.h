@@ -31,19 +31,18 @@ class EndiannessCheck {
  public:
   static bool IS_LITTLE;
  private:
-
   static bool is_little_endian() {
     /* do whatever is needed at static init time */
     unsigned int x = 1;
-    char *c = (char*) &x;
+    char *c = reinterpret_cast<char*>(&x);
     IS_LITTLE = *c == 1;
     return IS_LITTLE;
   }
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_ENDIANCHECK_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_ENDIANCHECK_H_

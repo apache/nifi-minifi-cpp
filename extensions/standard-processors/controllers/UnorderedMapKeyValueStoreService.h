@@ -14,8 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __UNORDERED_MAP_KEY_VALUE_STORE_SERVICE_H__
-#define __UNORDERED_MAP_KEY_VALUE_STORE_SERVICE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_CONTROLLERS_UNORDEREDMAPKEYVALUESTORESERVICE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_CONTROLLERS_UNORDEREDMAPKEYVALUESTORESERVICE_H_
+
+#include <unordered_map>
+#include <string>
+#include <mutex>
+#include <memory>
+#include <utility>
 
 #include "controllers/keyvalue/KeyValueStoreService.h"
 #include "core/Core.h"
@@ -23,12 +29,6 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Resource.h"
-
-#include <unordered_map>
-#include <string>
-#include <mutex>
-#include <memory>
-#include <utility>
 
 namespace org {
 namespace apache {
@@ -44,17 +44,17 @@ class UnorderedMapKeyValueStoreService : virtual public KeyValueStoreService {
 
   virtual ~UnorderedMapKeyValueStoreService();
 
-  virtual bool set(const std::string& key, const std::string& value) override;
+  bool set(const std::string& key, const std::string& value) override;
 
-  virtual bool get(const std::string& key, std::string& value) override;
+  bool get(const std::string& key, std::string& value) override;
 
-  virtual bool get(std::unordered_map<std::string, std::string>& kvs) override;
+  bool get(std::unordered_map<std::string, std::string>& kvs) override;
 
-  virtual bool remove(const std::string& key) override;
+  bool remove(const std::string& key) override;
 
-  virtual bool clear() override;
+  bool clear() override;
 
-  virtual bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
+  bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
 
  protected:
   std::unordered_map<std::string, std::string> map_;
@@ -66,10 +66,10 @@ class UnorderedMapKeyValueStoreService : virtual public KeyValueStoreService {
 
 REGISTER_RESOURCE(UnorderedMapKeyValueStoreService, "A key-value service implemented by a locked std::unordered_map<std::string, std::string>");
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controllers
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* __UNORDERED_MAP_KEY_VALUE_STORE_SERVICE_H__ */
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_CONTROLLERS_UNORDEREDMAPKEYVALUESTORESERVICE_H_

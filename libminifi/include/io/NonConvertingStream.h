@@ -16,8 +16,11 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_IO_NonConvertingStream_H_
-#define LIBMINIFI_INCLUDE_IO_NonConvertingStream_H_
+#ifndef LIBMINIFI_INCLUDE_IO_NONCONVERTINGSTREAM_H_
+#define LIBMINIFI_INCLUDE_IO_NONCONVERTINGSTREAM_H_
+
+#include <string>
+#include <vector>
 #include <iostream>
 #include <cstdint>
 #include "EndianCheck.h"
@@ -36,18 +39,16 @@ namespace io {
  * Extensions may be thread safe and thus shareable, but that is up to the implementation.
  */
 class NonConvertingStream : public BaseStream  {
-
  public:
   NonConvertingStream()
       : composable_stream_(this) {
   }
 
-  NonConvertingStream(DataStream *other)
+  NonConvertingStream(DataStream *other) // NOLINT
       : composable_stream_(other) {
   }
 
   virtual ~NonConvertingStream() {
-
   }
   /**
    * write 4 bytes to stream
@@ -172,13 +173,11 @@ class NonConvertingStream : public BaseStream  {
   int read(uint64_t &value, bool is_little_endian = false) override;
 
   const uint64_t getSize() const override {
-      if (composable_stream_ == this){
+      if (composable_stream_ == this) {
         return buffer.size();
-      }
-      else{
+      } else {
         return composable_stream_->getSize();
       }
-
     }
 
   /**
@@ -188,13 +187,14 @@ class NonConvertingStream : public BaseStream  {
    * @return resulting read size
    **/
   int readUTF(std::string &str, bool widen = false) override;
+
  protected:
   DataStream *composable_stream_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_NonConvertingStream_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_NONCONVERTINGSTREAM_H_

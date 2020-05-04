@@ -17,15 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __EXTRACT_TEXT_H__
-#define __EXTRACT_TEXT_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXTRACTTEXT_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXTRACTTEXT_H_
 
-#include "FlowFileRecord.h"
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-
-#include <vector>
+#include "FlowFileRecord.h"
 
 namespace org {
 namespace apache {
@@ -35,14 +37,13 @@ namespace processors {
 
 //! ExtractText Class
 class ExtractText : public core::Processor {
-public:
+ public:
     //! Constructor
     /*!
      * Create a new processor
      */
     explicit ExtractText(std::string name,  utils::Identifier uuid = utils::Identifier())
-    : Processor(name, uuid)
-    {
+    : Processor(name, uuid) {
         logger_ = logging::LoggerFactory<ExtractText>::getLogger();
     }
     //! Processor Name
@@ -69,34 +70,32 @@ public:
 
     virtual bool supportsDynamicProperties() {
       return true;
-    };
+    }
 
     class ReadCallback : public InputStreamCallback {
-    public:
+     public:
         ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ct, std::shared_ptr<logging::Logger> lgr);
         ~ReadCallback() {}
         int64_t process(std::shared_ptr<io::BaseStream> stream);
 
-    private:
+     private:
         std::shared_ptr<core::FlowFile> flowFile_;
         core::ProcessContext *ctx_;
         std::vector<uint8_t> buffer_;
         std::shared_ptr<logging::Logger> logger_;
     };
 
-protected:
-
-private:
+ private:
     //! Logger
     std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(ExtractText,"Extracts the content of a FlowFile and places it into an attribute.");
+REGISTER_RESOURCE(ExtractText, "Extracts the content of a FlowFile and places it into an attribute.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXTRACTTEXT_H_

@@ -17,9 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SCHEDULING_AGENT_H__
-#define __SCHEDULING_AGENT_H__
+#ifndef LIBMINIFI_INCLUDE_SCHEDULINGAGENT_H_
+#define LIBMINIFI_INCLUDE_SCHEDULINGAGENT_H_
 
+#include <memory>
+#include <string>
 #include <set>
 #include <vector>
 #include <map>
@@ -112,6 +114,7 @@ class SchedulingAgent {
 
   SchedulingAgent(const SchedulingAgent &parent) = delete;
   SchedulingAgent &operator=(const SchedulingAgent &parent) = delete;
+
  protected:
   // Mutex for protection
   std::mutex mutex_;
@@ -159,8 +162,8 @@ class SchedulingAgent {
   std::chrono::milliseconds alert_time_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_SCHEDULINGAGENT_H_

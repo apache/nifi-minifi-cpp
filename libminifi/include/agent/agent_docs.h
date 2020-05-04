@@ -13,11 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef AGENT_DOCS_H
-#define AGENT_DOCS_H
-#include <string>
+#ifndef LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_
+#define LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_
+
 #include <stdlib.h>
 #include <utils/StringUtils.h>
+
+#include <map>
+#include <string>
+#include <utility>
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -30,7 +35,6 @@ class AgentDocs {
   }
 
  public:
-
   /**
    * Updates the internal map with the feature description
    * @param feature feature ( CS or processor ) whose description is being provided.
@@ -57,8 +61,8 @@ class AgentDocs {
     }
   }
 };
-}
-}
-}
-}
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_

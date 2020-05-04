@@ -282,8 +282,8 @@ int16_t GetFile::getMetricNodes(std::vector<std::shared_ptr<state::response::Res
   return 0;
 }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

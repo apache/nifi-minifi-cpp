@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_UPDATEPOLICYCONTROLLERSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_UPDATEPOLICYCONTROLLERSERVICE_H_
 
+#include <string>
 #include <iostream>
 #include <memory>
 #include <limits>
@@ -84,7 +85,6 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
   }
 
  private:
-
   bool persist_updates_;
   std::unique_ptr<state::UpdatePolicy> policy_;
   std::shared_ptr<logging::Logger> logger_;
@@ -93,10 +93,10 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
 REGISTER_RESOURCE(UpdatePolicyControllerService, "UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates. "
     "Since the flow dictates the purpose of a device it will also be used to dictate updates to specific components.");
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controllers
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_UPDATEPOLICYCONTROLLERSERVICE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_UPDATEPOLICYCONTROLLERSERVICE_H_

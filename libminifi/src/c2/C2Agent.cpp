@@ -879,8 +879,8 @@ void C2Agent::update_agent() {
   }
 }
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

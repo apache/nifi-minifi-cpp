@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_LINUXPOWERMANAGEMENTSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_LINUXPOWERMANAGEMENTSERVICE_H_
 
+#include <string>
+#include <utility>
+#include <vector>
 #include <iostream>
 #include <memory>
 #include "core/Resource.h"
@@ -115,7 +118,6 @@ class LinuxPowerManagerService : public ThreadManagementService {
   virtual void onEnable();
 
  protected:
-
   std::vector<std::pair<std::string, std::string>> paths_;
 
   bool enabled_;
@@ -136,12 +138,12 @@ class LinuxPowerManagerService : public ThreadManagementService {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(LinuxPowerManagerService, "Linux power management service that enables control of power usage in the agent through Linux power management information. Use name \"ThreadPoolManager\" to throttle battery consumption");
+REGISTER_RESOURCE(LinuxPowerManagerService, "Linux power management service that enables control of power usage in the agent through Linux power management information. Use name \"ThreadPoolManager\" to throttle battery consumption"); // NOLINT
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controllers
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_LINUXPOWERMANAGEMENTSERVICE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_LINUXPOWERMANAGEMENTSERVICE_H_

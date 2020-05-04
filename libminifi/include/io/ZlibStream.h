@@ -18,10 +18,12 @@
 
 #ifndef LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_
-#include <cstdint>
-#include <vector>
 
 #include <zlib.h>
+
+#include <cstdint>
+#include <memory>
+#include <vector>
 
 #include "BaseStream.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -100,9 +102,9 @@ class ZlibDecompressStream : public ZlibBaseStream {
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ZlibDecompressStream>::getLogger()};
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_

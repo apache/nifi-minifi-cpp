@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICE_H_
 #define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICE_H_
 
+#include <memory>
+#include <string>
+#include <vector>
 #include <set>
 #include "properties/Configure.h"
 #include "core/Core.h"
@@ -58,11 +61,10 @@ enum ControllerServiceState {
  */
 class ControllerService : public ConfigurableComponent, public Connectable {
  public:
-
   /**
    * Controller Service constructor.
    */
-  explicit ControllerService()
+  ControllerService()
       : Connectable(core::getClassName<ControllerService>()),
         configuration_(std::make_shared<Configure>()) {
     current_state_ = DISABLED;
@@ -106,7 +108,7 @@ class ControllerService : public ConfigurableComponent, public Connectable {
     current_state_ = ENABLED;
   }
 
-  virtual ~ControllerService(){
+  virtual ~ControllerService() {
     notifyStop();
   }
 
@@ -125,14 +127,12 @@ class ControllerService : public ConfigurableComponent, public Connectable {
    * Function is called when Controller Services are enabled and being run
    */
   virtual void onEnable() {
-
   }
 
   /**
    * Function is called when Controller Services are disabled
    */
   virtual void notifyStop() {
-
   }
 
   void setState(ControllerServiceState state) {
@@ -146,12 +146,11 @@ class ControllerService : public ConfigurableComponent, public Connectable {
     return false;
   }
 
-  void setLinkedControllerServices( const std::vector<std::shared_ptr<controller::ControllerService> > &services ){
+  void setLinkedControllerServices(const std::vector<std::shared_ptr<controller::ControllerService>> &services) {
     linked_services_ = services;
   }
 
  protected:
-
   std::vector<std::shared_ptr<controller::ControllerService> > linked_services_;
   std::shared_ptr<Configure> configuration_;
   std::atomic<ControllerServiceState> current_state_;
@@ -160,11 +159,11 @@ class ControllerService : public ConfigurableComponent, public Connectable {
   }
 };
 
-} /* namespace controller */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controller
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICE_H_

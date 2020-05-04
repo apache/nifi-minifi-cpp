@@ -16,8 +16,13 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_MQTT_PROTOCOL_PAYLOADSERIALIZER_H_
-#define EXTENSIONS_MQTT_PROTOCOL_PAYLOADSERIALIZER_H_
+#ifndef LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_
+#define LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "core/state/Value.h"
 #include "c2/C2Protocol.h"
@@ -30,7 +35,6 @@ namespace c2 {
 
 class PayloadSerializer {
  public:
-
   /**
    * Static function that serializes the value nodes
    */
@@ -57,9 +61,9 @@ class PayloadSerializer {
       stream->write(&type, 1);
       if (sub_type->getValue()) {
         type = 1;
-
-      } else
+      } else {
         type = 0;
+      }
       stream->write(&type, 1);
     } else {
       auto str = base_type->getStringValue();
@@ -239,7 +243,6 @@ class PayloadSerializer {
       }
       deserializePayload(subPayload, operation, identifier, stream);
       parent.addPayload(std::move(subPayload));
-
     }
     return true;
   }
@@ -276,7 +279,7 @@ class PayloadSerializer {
       for (uint32_t j = 0; j < args; j++) {
         std::string first, second;
         stream.readUTF(first);
-        //stream.readUTF(second);
+        // stream.readUTF(second);
         content.operation_arguments[first] = deserializeValueNode(&stream);
       }
       newPayload.addContent(std::move(content));
@@ -287,8 +290,8 @@ class PayloadSerializer {
     payload = std::move(newPayload);
     return true;
   }
- private:
 
+ private:
   static Operation intToOp(int op) {
     switch (op) {
       case 1:
@@ -307,18 +310,16 @@ class PayloadSerializer {
         return Operation::UPDATE;
       default:
         return Operation::HEARTBEAT;
-        ;
     }
-
   }
   PayloadSerializer();
   virtual ~PayloadSerializer();
 };
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* EXTENSIONS_MQTT_PROTOCOL_PAYLOADSERIALIZER_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_

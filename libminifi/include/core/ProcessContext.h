@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROCESS_CONTEXT_H__
-#define __PROCESS_CONTEXT_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_
+#define LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_
 
+#include <string>
 #include <vector>
 #include <queue>
 #include <map>
+#include <unordered_map>
 #include <mutex>
 #include <atomic>
 #include <algorithm>
@@ -49,7 +51,6 @@ namespace core {
 // ProcessContext Class
 class ProcessContext : public controller::ControllerServiceLookup, public core::VariableRegistry, public std::enable_shared_from_this<VariableRegistry> {
  public:
-
   // Constructor
   /*!
    * Create a new process context associated with the processor/controller service/state manager
@@ -320,7 +321,6 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   }
 
  private:
-
   template<typename T>
   bool getPropertyImp(const std::string &name, T &value) const {
     return processor_node_->getProperty<typename std::common_type<T>::type>(name, value);
@@ -346,9 +346,9 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   bool initialized_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_

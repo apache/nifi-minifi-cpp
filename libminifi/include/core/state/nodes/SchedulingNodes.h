@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_
 
+#include <string>
+#include <vector>
+
 
 #include "MetricsBase.h"
 #include "core/ProcessorConfig.h"
@@ -36,7 +39,7 @@ class SchedulingDefaults : public DeviceInformation {
       : DeviceInformation(name, uuid) {
   }
 
-  SchedulingDefaults(const std::string &name)
+  SchedulingDefaults(const std::string &name) // NOLINT
       : DeviceInformation(name) {
   }
 
@@ -90,15 +93,14 @@ class SchedulingDefaults : public DeviceInformation {
 
     return serialized;
   }
-
 };
 
 
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_

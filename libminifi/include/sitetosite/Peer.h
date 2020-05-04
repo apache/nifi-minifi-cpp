@@ -18,23 +18,25 @@
 #ifndef LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
 #define LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
 
-#include <stdio.h>
-#include <string>
 #include <errno.h>
-#include <string>
-#include <mutex>
-#include <atomic>
-#include <memory>
-#include "io/EndianCheck.h"
+#include <stdio.h>
 
-#include "core/Property.h"
+#include <atomic>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <utility>
+
 #include "core/logging/LoggerConfiguration.h"
-#include "properties/Configure.h"
-#include "io/ClientSocket.h"
+#include "core/Property.h"
 #include "io/BaseStream.h"
+#include "io/ClientSocket.h"
 #include "io/DataStream.h"
-#include "utils/TimeUtil.h"
+#include "io/EndianCheck.h"
+#include "properties/Configure.h"
 #include "utils/HTTPClient.h"
+#include "utils/TimeUtil.h"
 
 namespace org {
 namespace apache {
@@ -105,13 +107,11 @@ class PeerStatus {
       : peer_(peer),
         flow_file_count_(flow_file_count),
         query_for_peers_(query_for_peers) {
-
   }
   PeerStatus(const PeerStatus &&other)
       : peer_(std::move(other.peer_)),
         flow_file_count_(std::move(other.flow_file_count_)),
         query_for_peers_(std::move(other.query_for_peers_)) {
-
   }
   const std::shared_ptr<Peer> &getPeer() const {
     return peer_;
@@ -124,6 +124,7 @@ class PeerStatus {
   bool getQueryForPeers() {
     return query_for_peers_;
   }
+
  protected:
   std::shared_ptr<Peer> peer_;
   uint32_t flow_file_count_;
@@ -135,13 +136,11 @@ static const char MAGIC_BYTES[] = { 'N', 'i', 'F', 'i' };
 // Site2SitePeer Class
 class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
  public:
-
   SiteToSitePeer()
       : stream_(nullptr),
         host_(""),
         port_(-1),
         logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
-
   }
   /*
    * Create a new site2site peer
@@ -161,7 +160,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
     yield_expiration_ = 0;
     timeout_ = 30000;  // 30 seconds
-    local_network_interface_= io::NetworkInterface(ifc, nullptr);
+    local_network_interface_ = io::NetworkInterface(ifc, nullptr);
   }
 
   explicit SiteToSitePeer(SiteToSitePeer &&ss)
@@ -189,7 +188,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   }
   // setInterface
   void setInterface(std::string &ifc) {
-    local_network_interface_ = io::NetworkInterface(ifc,nullptr);
+    local_network_interface_ = io::NetworkInterface(ifc, nullptr);
   }
   std::string getInterface() {
     return local_network_interface_.getInterface();
@@ -360,10 +359,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   SiteToSitePeer(const SiteToSitePeer &parent) = delete;
   SiteToSitePeer &operator=(const SiteToSitePeer &parent) = delete;
 
- protected:
-
  private:
-
   std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream_;
 
   std::string host_;
@@ -390,10 +386,10 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace sitetosite
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_ */
+#endif  // LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_

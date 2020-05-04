@@ -17,8 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __UPDATE_ATTRIBUTE_H__
-#define __UPDATE_ATTRIBUTE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_UPDATEATTRIBUTE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_UPDATEATTRIBUTE_H_
+
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -35,8 +39,7 @@ namespace processors {
 
 class UpdateAttribute : public core::Processor {
  public:
-
-  UpdateAttribute(std::string name,  utils::Identifier uuid = utils::Identifier())
+  UpdateAttribute(std::string name,  utils::Identifier uuid = utils::Identifier()) // NOLINT
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<UpdateAttribute>::getLogger()) {
   }
@@ -54,7 +57,7 @@ class UpdateAttribute : public core::Processor {
 
   virtual bool supportsDynamicProperties() {
     return true;
-  };
+  }
 
   virtual void onSchedule(core::ProcessContext *context,
                           core::ProcessSessionFactory *sessionFactory);
@@ -70,10 +73,10 @@ class UpdateAttribute : public core::Processor {
 REGISTER_RESOURCE(UpdateAttribute, "This processor updates the attributes of a FlowFile using properties that are added by the user. "
   "This allows you to set default attribute changes that affect every FlowFile going through the processor, equivalent to the \"basic\" usage in Apache NiFi.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* __UPDATE_ATTRIBUTE_H__ */
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_UPDATEATTRIBUTE_H_

@@ -17,8 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __ROUTE_ON_ATTRIBUTE_H__
-#define __ROUTE_ON_ATTRIBUTE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_ROUTEONATTRIBUTE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_ROUTEONATTRIBUTE_H_
+
+#include <map>
+#include <memory>
+#include <string>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -35,8 +39,7 @@ namespace processors {
 
 class RouteOnAttribute : public core::Processor {
  public:
-
-  RouteOnAttribute(std::string name, utils::Identifier uuid = utils::Identifier())
+  RouteOnAttribute(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<RouteOnAttribute>::getLogger()) {
   }
@@ -55,7 +58,6 @@ class RouteOnAttribute : public core::Processor {
   virtual bool supportsDynamicProperties() {
     return true;
   }
-  ;
 
   virtual bool supportsDynamicRelationships() {
     return true;
@@ -73,10 +75,10 @@ class RouteOnAttribute : public core::Processor {
 
 REGISTER_RESOURCE(RouteOnAttribute, "Routes FlowFiles based on their Attributes using the Attribute Expression Language.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* __ROUTE_ON_ATTRIBUTE_H__ */
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_ROUTEONATTRIBUTE_H_

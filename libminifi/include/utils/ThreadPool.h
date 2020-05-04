@@ -14,9 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_THREAD_POOL_H
-#define LIBMINIFI_INCLUDE_THREAD_POOL_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_
+#define LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_
 
+#include <memory>
+#include <string>
+#include <utility>
 #include <chrono>
 #include <sstream>
 #include <iostream>
@@ -72,13 +75,12 @@ class Worker {
   }
 
   virtual ~Worker() {
-
   }
 
   /**
    * Move constructor for worker tasks
    */
-  Worker (Worker &&other) noexcept
+  Worker(Worker &&other) noexcept
       : identifier_(std::move(other.identifier_)),
         next_exec_time_(std::move(other.next_exec_time_)),
         task(std::move(other.task)),
@@ -125,7 +127,8 @@ class Worker {
   const std::string &getIdentifier() const {
     return identifier_;
   }
-protected:
+
+ protected:
   std::string identifier_;
   std::chrono::time_point<std::chrono::steady_clock> next_exec_time_;
   std::function<T()> task;
@@ -162,12 +165,10 @@ class WorkerThread {
       : is_running_(false),
         thread_(std::move(thread)),
         name_(name) {
-
   }
-  WorkerThread(const std::string &name = "NamelessWorker")
+  WorkerThread(const std::string &name = "NamelessWorker") // NOLINT
       : is_running_(false),
         name_(name) {
-
   }
   std::atomic<bool> is_running_;
   std::thread thread_;
@@ -183,7 +184,6 @@ class WorkerThread {
 template<typename T>
 class ThreadPool {
  public:
-
   ThreadPool(int max_worker_threads = 2, bool daemon_threads = false, const std::shared_ptr<core::controller::ControllerServiceProvider> &controller_service_provider = nullptr,
              const std::string &name = "NamelessPool")
       : daemon_threads_(daemon_threads),
@@ -292,7 +292,6 @@ class ThreadPool {
   }
 
  protected:
-
   std::thread createThread(std::function<void()> &&functor) {
     return std::thread([ functor ]() mutable {
       functor();
@@ -305,7 +304,7 @@ class ThreadPool {
   void drain() {
     worker_queue_.stop();
     while (current_workers_ > 0) {
-      // The sleeping workers were waken up and stopped, but we have to wait 
+      // The sleeping workers were waken up and stopped, but we have to wait
       // the ones that actually worked on something when the queue was stopped.
       // Stopping the queue guarantees that they don't get any new task.
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -338,7 +337,7 @@ class ThreadPool {
 // worker queue of worker objects
   ConditionConcurrentQueue<Worker<T>> worker_queue_;
   std::priority_queue<Worker<T>, std::vector<Worker<T>>, DelayedTaskComparator<T>> delayed_worker_queue_;
-// mutex to  protect task status and delayed queue 
+// mutex to  protect task status and delayed queue
   std::mutex worker_queue_mutex_;
 // notification for new delayed tasks that's before the current ones
   std::condition_variable delayed_task_available_;
@@ -362,10 +361,10 @@ class ThreadPool {
   void manage_delayed_queue();
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_

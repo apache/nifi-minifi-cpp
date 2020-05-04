@@ -18,9 +18,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LOGGER_CONFIGURATION_H__
-#define __LOGGER_CONFIGURATION_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGERCONFIGURATION_H_
+#define LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGERCONFIGURATION_H_
 
+#include <memory>
+#include <vector>
 #include <map>
 #include <mutex>
 #include <string>
@@ -54,8 +56,7 @@ struct LoggerNamespace {
         children(std::map<std::string, std::shared_ptr<LoggerNamespace>>()) {
   }
 };
-}
-;
+}  // namespace internal
 
 class LoggerProperties : public Properties {
  public:
@@ -82,6 +83,7 @@ class LoggerProperties : public Properties {
 
   static const char* appender_prefix;
   static const char* logger_prefix;
+
  private:
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sinks_;
 };
@@ -127,6 +129,7 @@ class LoggerConfiguration {
   static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties);
   static std::shared_ptr<spdlog::logger> get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
                                                     std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
+
  private:
   static std::shared_ptr<spdlog::sinks::sink> create_syslog_sink();
   static std::shared_ptr<spdlog::sinks::sink> create_fallback_sink();
@@ -145,7 +148,6 @@ class LoggerConfiguration {
       delegate_ = delegate;
     }
     const std::string name;
-
   };
 
   LoggerConfiguration();
@@ -156,7 +158,6 @@ class LoggerConfiguration {
   std::shared_ptr<LoggerImpl> logger_ = nullptr;
   std::shared_ptr<LoggerControl> controller_;
   bool shorten_names_;
-
 };
 
 template<typename T>
@@ -176,11 +177,11 @@ class LoggerFactory {
   }
 };
 
-} /* namespace logging */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace logging
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGERCONFIGURATION_H_

@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_IO_ATOMICENTRYSTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_ATOMICENTRYSTREAM_H_
 
+#include <memory>
+#include <vector>
 #include <mutex>
 #include <cstring>
 #include <algorithm>
@@ -111,7 +113,6 @@ class AtomicEntryStream : public BaseStream {
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 template<typename T>
@@ -149,10 +150,8 @@ int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
       }
       return size;
     }
-
   }
   return -1;
-
 }
 
 template<typename T>
@@ -194,15 +193,14 @@ int AtomicEntryStream<T>::readData(uint8_t *buf, int buflen) {
       entry_->decrementOwnership();
       return len;
     }
-
   }
   return -1;
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_IO_ATOMICENTRYSTREAM_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_ATOMICENTRYSTREAM_H_

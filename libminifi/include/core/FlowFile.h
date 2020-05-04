@@ -15,8 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RECORD_H
-#define RECORD_H
+#ifndef LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
+#define LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
+
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
 
 #include "utils/TimeUtil.h"
 #include "ResourceClaim.h"
@@ -233,7 +238,6 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Yield
    */
   virtual void yield() {
-
   }
   /**
    * Determines if we are connected and operating
@@ -314,7 +318,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   // Pointers to stashed content resource claims
   std::map<std::string, std::shared_ptr<ResourceClaim>> stashedContent_;
   // UUID string
-  //std::string uuid_str_;
+  // std::string uuid_str_;
   // UUID string for all parents
   std::set<std::string> lineage_Identifiers_;
 
@@ -329,10 +333,10 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   static std::shared_ptr<utils::NonRepeatingStringGenerator> numeric_id_generator_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif // RECORD_H
+#endif  // LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_

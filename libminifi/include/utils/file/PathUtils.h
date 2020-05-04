@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_PATHUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_PATHUTILS_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
+#define LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 
 #include <string>
 
@@ -45,12 +45,12 @@ bool getFileNameAndPath(const std::string &path, std::string &filePath, std::str
  */
 std::string getFullPath(const std::string& path);
 
-} /* namespace PathUtils */
-} /* namespace file */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace PathUtils
+}  // namespace file
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_PATHUTILS_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_

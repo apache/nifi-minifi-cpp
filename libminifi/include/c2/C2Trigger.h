@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_C2_C2TRIGGER_H_
 #define LIBMINIFI_INCLUDE_C2_C2TRIGGER_H_
 
+#include <memory>
+#include <string>
+
 #include "core/Connectable.h"
 #include "c2/C2Payload.h"
 #include "properties/Configure.h"
@@ -37,10 +40,8 @@ namespace c2 {
  */
 class C2Trigger : public core::Connectable{
  public:
-
   C2Trigger(std::string name, utils::Identifier uuid)
-        : core::Connectable(name, uuid){
-
+        : core::Connectable(name, uuid) {
   }
   virtual ~C2Trigger() {
   }
@@ -73,10 +74,10 @@ class C2Trigger : public core::Connectable{
   virtual C2Payload getAction() = 0;
 };
 
-} /* namesapce c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_C2_C2TRIGGER_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_C2TRIGGER_H_

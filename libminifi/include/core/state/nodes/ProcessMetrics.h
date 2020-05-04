@@ -15,19 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_METRICS_PROCMETRICS_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_METRICS_PROCMETRICS_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_PROCESSMETRICS_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_PROCESSMETRICS_H_
+
+#include <map>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "core/Resource.h"
-#include <sstream>
-#include <map>
+
 #ifndef WIN32
 #include <sys/resource.h>
+
 #endif
 
 #include "../nodes/DeviceInformation.h"
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -42,12 +48,11 @@ namespace response {
  */
 class ProcessMetrics : public ResponseNode {
  public:
-
   ProcessMetrics(const std::string &name, utils::Identifier &uuid)
       : ResponseNode(name, uuid) {
   }
 
-  ProcessMetrics(const std::string &name)
+  ProcessMetrics(const std::string &name) // NOLINT
       : ResponseNode(name) {
   }
 
@@ -91,16 +96,15 @@ class ProcessMetrics : public ResponseNode {
   }
 
  protected:
-
 };
 
 REGISTER_RESOURCE(ProcessMetrics, "Node part of an AST that defines the Processor information and metrics subtree");
 
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_METRICS_QUEUEMETRICS_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_PROCESSMETRICS_H_

@@ -19,6 +19,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_
 #define LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_
 
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 #include <set>
 #include "Core.h"
 #include <condition_variable>
@@ -39,7 +43,6 @@ namespace core {
  */
 class Connectable : public CoreComponent {
  public:
-
   explicit Connectable(const std::string &name);
 
   explicit Connectable(const std::string &name, const utils::Identifier &uuid);
@@ -75,7 +78,6 @@ class Connectable : public CoreComponent {
   std::set<std::shared_ptr<Connectable>> getOutGoingConnections(const std::string &relationship) const;
 
   virtual void put(std::shared_ptr<Connectable> flow) {
-
   }
 
   /**
@@ -148,12 +150,11 @@ class Connectable : public CoreComponent {
    * Returns theflow version
    * @returns flow version. can be null if a flow version is not tracked.
    */
-  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const{
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const {
     return connectable_version_;
   }
 
  protected:
-
   // Penalization Period in MilliSecond
   std::atomic<uint64_t> _penalizationPeriodMsec;
 
@@ -191,11 +192,11 @@ class Connectable : public CoreComponent {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}
+}  // namespace core
 /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_

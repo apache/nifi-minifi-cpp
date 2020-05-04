@@ -18,22 +18,31 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
 
-#include "core/Resource.h"
 #include <functional>
-#if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "core/Resource.h"
+
+#if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
+
 #endif
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sstream>
+#include <string.h>
+
 #include <map>
+#include <sstream>
+
+#include "../FlowIdentifier.h"
 #include "../nodes/MetricsBase.h"
+#include "../nodes/StateMonitor.h"
 #include "Connection.h"
 #include "io/ClientSocket.h"
-#include "../nodes/StateMonitor.h"
-#include "../FlowIdentifier.h"
 
 namespace org {
 namespace apache {
@@ -44,8 +53,7 @@ namespace response {
 
 class FlowVersion : public DeviceInformation {
  public:
-
-  explicit FlowVersion()
+  FlowVersion()
       : DeviceInformation("FlowVersion") {
     setFlowVersion("", "", getUUIDStr());
   }
@@ -118,8 +126,8 @@ class FlowVersion : public DeviceInformation {
     identifier = std::move(fv.identifier);
     return *this;
   }
- protected:
 
+ protected:
   mutable std::mutex guard;
 
   std::shared_ptr<FlowIdentifier> identifier;
@@ -127,12 +135,11 @@ class FlowVersion : public DeviceInformation {
 
 class FlowMonitor : public StateMonitorNode {
  public:
-
   FlowMonitor(const std::string &name, utils::Identifier &uuid)
       : StateMonitorNode(name, uuid) {
   }
 
-  FlowMonitor(const std::string &name)
+  FlowMonitor(const std::string &name) // NOLINT
       : StateMonitorNode(name) {
   }
 
@@ -146,7 +153,6 @@ class FlowMonitor : public StateMonitorNode {
     flow_version_ = flow_version;
   }
  protected:
-
   std::shared_ptr<state::response::FlowVersion> flow_version_;
   std::map<std::string, std::shared_ptr<minifi::Connection>> connections_;
 };
@@ -156,12 +162,11 @@ class FlowMonitor : public StateMonitorNode {
  */
 class FlowInformation : public FlowMonitor {
  public:
-
   FlowInformation(const std::string &name, utils::Identifier &uuid)
       : FlowMonitor(name, uuid) {
   }
 
-  FlowInformation(const std::string &name)
+  FlowInformation(const std::string &name) // NOLINT
       : FlowMonitor(name) {
   }
 
@@ -220,7 +225,6 @@ class FlowInformation : public FlowMonitor {
         repoNode.children.push_back(queueUUIDNode);
 
         queues.children.push_back(repoNode);
-
       }
       serialized.push_back(queues);
     }
@@ -253,16 +257,15 @@ class FlowInformation : public FlowMonitor {
   }
 
  protected:
-
 };
 
 REGISTER_RESOURCE(FlowInformation, "Node part of an AST that defines the flow ID and flow URL deployed to this agent");
 
-} /* namespace response */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_

@@ -277,7 +277,7 @@ void Connection::drain() {
   logger_->log_debug("Drain connection %s", name_);
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

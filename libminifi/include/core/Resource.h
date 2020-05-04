@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_RESOURCE_H_
 #define LIBMINIFI_INCLUDE_CORE_RESOURCE_H_
 
+#include <memory>
+#include <string>
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
@@ -37,11 +40,10 @@ namespace core {
 template<class T>
 class StaticClassType {
  public:
-
-  StaticClassType(const std::string &name, const std::string &description = "") {
+  StaticClassType(const std::string &name, const std::string &description = "") { // NOLINT
     // Notify when the static member is created
-    if (!description.empty()){
-      minifi::AgentDocs::putDescription(name,description);
+    if (!description.empty()) {
+      minifi::AgentDocs::putDescription(name, description);
     }
 #ifdef MODULE_NAME
     ClassLoader::getDefaultClassLoader().registerClass(name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>(MAKESTRING(MODULE_NAME))));
@@ -51,18 +53,18 @@ class StaticClassType {
   }
 };
 
-#define REGISTER_RESOURCE(CLASSNAME,DESC) \
+#define REGISTER_RESOURCE(CLASSNAME, DESC) \
         static core::StaticClassType<CLASSNAME> \
-        CLASSNAME##_registrar( #CLASSNAME, DESC );
+        CLASSNAME##_registrar(#CLASSNAME, DESC);
 
-#define REGISTER_RESOURCE_AS(CLASSNAME,NAME) \
+#define REGISTER_RESOURCE_AS(CLASSNAME, NAME) \
         static core::StaticClassType<CLASSNAME> \
-        CLASSNAME##_registrar( #NAME );
+        CLASSNAME##_registrar(#NAME);
 
-}/* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_RESOURCE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_RESOURCE_H_

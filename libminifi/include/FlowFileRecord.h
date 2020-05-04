@@ -17,9 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FLOW_FILE_RECORD_H__
-#define __FLOW_FILE_RECORD_H__
+#ifndef LIBMINIFI_INCLUDE_FLOWFILERECORD_H_
+#define LIBMINIFI_INCLUDE_FLOWFILERECORD_H_
 
+#include <memory>
+#include <string>
 #include <vector>
 #include <queue>
 #include <map>
@@ -84,19 +86,16 @@ inline const char *FlowAttributeKey(FlowAttribute attribute) {
 class InputStreamCallback {
  public:
   virtual ~InputStreamCallback() {
-
   }
-  //virtual void process(std::ifstream *stream) = 0;
+  // virtual void process(std::ifstream *stream) = 0;
 
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
 };
 class OutputStreamCallback {
  public:
   virtual ~OutputStreamCallback() {
-
   }
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
-
 };
 
 class FlowFileRecord : public core::FlowFile, public io::Serializable {
@@ -118,7 +117,6 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
         flow_repository_(flow_repository),
         content_repo_(content_repo),
         snapshot_("") {
-
   }
   // Destructor
   virtual ~FlowFileRecord();
@@ -177,7 +175,6 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   FlowFileRecord(const FlowFileRecord &parent) = delete;
 
  protected:
-
   // connection uuid
   std::string uuid_connection_;
   // Full path to the content
@@ -201,9 +198,9 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   static std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_FLOWFILERECORD_H_

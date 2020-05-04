@@ -17,12 +17,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SCOPE_GUARD_H__
-#define __SCOPE_GUARD_H__
+#ifndef LIBMINIFI_INCLUDE_UTILS_SCOPEGUARD_H_
+#define LIBMINIFI_INCLUDE_UTILS_SCOPEGUARD_H_
 
+#include <utility>
 #include <functional>
 
-#include "gsl.h"
+#include "gsl.h" // NOLINT
 
 namespace org {
 namespace apache {
@@ -38,9 +39,9 @@ struct ScopeGuard : ::gsl::final_action<std::function<void()>> {
   }
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_UTILS_SCOPEGUARD_H_

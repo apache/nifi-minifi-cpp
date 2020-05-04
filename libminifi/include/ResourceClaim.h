@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __RESOURCE_CLAIM_H__
-#define __RESOURCE_CLAIM_H__
+#ifndef LIBMINIFI_INCLUDE_RESOURCECLAIM_H_
+#define LIBMINIFI_INCLUDE_RESOURCECLAIM_H_
 
 #include <string>
 #include <vector>
@@ -46,14 +46,12 @@ extern void setDefaultDirectory(std::string);
 
 // ResourceClaim Class
 class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
-
  public:
-
   // Constructor
   /*!
    * Create a new resource claim
    */
-  //explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory);
+  // explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory);
 
   explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager);
 
@@ -69,7 +67,6 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   // decreaseFlowFileRecordOwenedCount
   void decreaseFlowFileRecordOwnedCount() {
     claim_manager_->decrementStreamCount(shared_from_this());
-
   }
   // getFlowFileRecordOwenedCount
   uint64_t getFlowFileRecordOwnedCount() {
@@ -88,7 +85,6 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
     if (!deleted_) {
       deleted_ = true;
     }
-
   }
 
   bool exists() {
@@ -107,6 +103,7 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
     stream << claim->_contentFullPath;
     return stream;
   }
+
  protected:
   std::atomic<bool> deleted_;
   // Full path to the content
@@ -115,7 +112,6 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager_;
 
  private:
-
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation
@@ -126,8 +122,8 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   static utils::NonRepeatingStringGenerator non_repeating_string_generator_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_RESOURCECLAIM_H_

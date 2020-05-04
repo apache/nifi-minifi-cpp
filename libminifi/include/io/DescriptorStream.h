@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_IO_DESCRIPTORSTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_DESCRIPTORSTREAM_H_
 
+#include <memory>
+#include <vector>
 #include <iostream>
 #include <cstdint>
 #include <string>
@@ -155,7 +157,6 @@ class DescriptorStream : public io::BaseStream {
   int readUTF(std::string &str, bool widen = false) override;
 
  protected:
-
   /**
    * Creates a vector and returns the vector using the provided
    * type name.
@@ -178,15 +179,13 @@ class DescriptorStream : public io::BaseStream {
   int fd_;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_IO_DESCRIPTORSTREAM_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_DESCRIPTORSTREAM_H_

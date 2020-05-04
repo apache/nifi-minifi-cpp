@@ -15,20 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_YAMLCONFIGURATION_H_
-#define LIBMINIFI_INCLUDE_CORE_YAMLCONFIGURATION_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
+#define LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
 
-#include "core/ProcessorConfig.h"
-#include "yaml-cpp/yaml.h"
-#include "Exception.h"
-#include "core/FlowConfiguration.h"
-#include "sitetosite/SiteToSite.h"
+#include <memory>
 #include <string>
-#include "io/validation.h"
-#include "io/StreamFactory.h"
+
+#include "core/FlowConfiguration.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/ProcessorConfig.h"
+#include "Exception.h"
+#include "io/StreamFactory.h"
+#include "io/validation.h"
+#include "sitetosite/SiteToSite.h"
 #include "utils/Id.h"
 #include "utils/StringUtils.h"
+#include "yaml-cpp/yaml.h"
 
 namespace org {
 namespace apache {
@@ -53,7 +55,6 @@ namespace core {
 #endif
 
 class YamlConfiguration : public FlowConfiguration {
-
  public:
   explicit YamlConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
                              std::shared_ptr<io::StreamFactory> stream_factory, std::shared_ptr<Configure> configuration, const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
@@ -66,7 +67,6 @@ class YamlConfiguration : public FlowConfiguration {
   }
 
   virtual ~YamlConfiguration() {
-
   }
 
   /**
@@ -139,7 +139,6 @@ class YamlConfiguration : public FlowConfiguration {
   void validateComponentProperties(const std::shared_ptr<ConfigurableComponent> &component, const std::string &component_name, const std::string &yaml_section) const;
 
  protected:
-
   /**
    * Returns a shared pointer to a ProcessGroup object containing the
    * flow configuration. The rootYamlNode argument must point to
@@ -326,6 +325,7 @@ class YamlConfiguration : public FlowConfiguration {
 
  protected:
   std::shared_ptr<io::StreamFactory> stream_factory_;
+
  private:
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
@@ -340,10 +340,10 @@ class YamlConfiguration : public FlowConfiguration {
   void raiseComponentError(const std::string &component_name, const std::string &yaml_section, const std::string &reason) const;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_YAMLCONFIGURATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_

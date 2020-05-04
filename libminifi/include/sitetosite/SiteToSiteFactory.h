@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITEFACTORY_H_
 #define LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITEFACTORY_H_
 
+#include <utility>
+
 #include "RawSocketProtocol.h"
 #include "SiteToSite.h"
 #include <memory>
@@ -50,7 +52,6 @@ static std::unique_ptr<SiteToSitePeer> createStreamingPeer(const SiteToSiteClien
   auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(std::move(str), client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(),
       client_configuration.getInterface()));
   return peer;
-
 }
 
 /**
@@ -61,7 +62,7 @@ static std::unique_ptr<SiteToSiteClient> createRawSocket(const SiteToSiteClientC
   utils::Identifier uuid;
   client_configuration.getPeer()->getPortId(uuid);
   auto rsptr = createStreamingPeer(client_configuration);
-  if (nullptr == rsptr){
+  if (nullptr == rsptr) {
     return nullptr;
   }
   auto ptr = std::unique_ptr<SiteToSiteClient>(new RawSiteToSiteClient(std::move(rsptr)));
@@ -97,14 +98,14 @@ static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConf
         return ptr;
       }
       return nullptr;
-  };
+  }
   return nullptr;
 }
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace sitetosite
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITEFACTORY_H_ */
+#endif  // LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITEFACTORY_H_

@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_FileSystemRepository_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_FileSystemRepository_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_
+#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_
+
+#include <memory>
+#include <string>
 
 #include "core/Core.h"
 #include "../ContentRepository.h"
@@ -34,13 +37,11 @@ namespace repository {
  */
 class FileSystemRepository : public core::ContentRepository, public core::CoreComponent {
  public:
-  FileSystemRepository(std::string name = getClassName<FileSystemRepository>())
+  FileSystemRepository(std::string name = getClassName<FileSystemRepository>()) // NOLINT
       : core::CoreComponent(name),
         logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
-
   }
   virtual ~FileSystemRepository() {
-
   }
 
   virtual bool initialize(const std::shared_ptr<minifi::Configure> &configuration);
@@ -60,15 +61,14 @@ class FileSystemRepository : public core::ContentRepository, public core::CoreCo
   virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace repository */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace repository
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_FileSystemRepository_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_

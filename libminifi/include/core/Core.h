@@ -20,11 +20,12 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
+#include <properties/Configure.h>
+
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <properties/Configure.h>
 
 #ifdef WIN32
 #pragma comment(lib, "shlwapi.lib")
@@ -35,13 +36,13 @@
 #ifdef __GNUC__
 #define DLL_PUBLIC __attribute__ ((dllexport))
 #else
-#define DLL_PUBLIC __declspec(dllexport) // Note: actually gcc seems to also supports this syntax.
+#define DLL_PUBLIC __declspec(dllexport)  // Note: actually gcc seems to also supports this syntax.
 #endif
 #else
 #ifdef __GNUC__
 #define DLL_PUBLIC __attribute__ ((dllimport))
 #else
-#define DLL_PUBLIC __declspec(dllimport) // Note: actually gcc seems to also supports this syntax.
+#define DLL_PUBLIC __declspec(dllimport)  // Note: actually gcc seems to also supports this syntax.
 #endif
 #endif
 #define DLL_LOCAL
@@ -56,7 +57,7 @@
 #endif
 
 #ifdef _WIN32
-#ifndef WIN32_LEAN_AND_MEAN 
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
 // can't include cxxabi
@@ -94,19 +95,18 @@ static inline std::string getClassName() {
   std::free(b);
   return name;
 #else
-	std::string adjusted_name = typeid(T).name();
-	// can probably skip class  manually for slightly higher performance
-	const std::string clazz = "class ";
-	auto haz_clazz = adjusted_name.find(clazz);
-	if (haz_clazz == 0)
-		adjusted_name = adjusted_name.substr(clazz.length(), adjusted_name.length() - clazz.length());
-	return adjusted_name;
+  std::string adjusted_name = typeid(T).name();
+  // can probably skip class  manually for slightly higher performance
+  const std::string clazz = "class ";
+  auto haz_clazz = adjusted_name.find(clazz);
+  if (haz_clazz == 0)
+    adjusted_name = adjusted_name.substr(clazz.length(), adjusted_name.length() - clazz.length());
+  return adjusted_name;
 #endif
 }
 
 template<typename T>
 struct class_operations {
-
   template<typename Q = T>
   static std::true_type canDestruct(decltype(std::declval<Q>().~Q()) *) {
     return std::true_type();
@@ -142,9 +142,7 @@ typename std::enable_if<class_operations<T>::value, std::shared_ptr<T>>::type in
  * the functionality is localized here to avoid duplication
  */
 class CoreComponent {
-
  public:
-
   /**
    * Constructor that sets the name and uuid.
    */
@@ -175,7 +173,6 @@ class CoreComponent {
   explicit CoreComponent(CoreComponent &&other) = default;
 
   virtual ~CoreComponent() {
-
   }
 
   // Get component name Name
@@ -202,7 +199,7 @@ class CoreComponent {
    */
   bool getUUID(utils::Identifier &uuid) const;
 
-  //unsigned const char *getUUID();
+  // unsigned const char *getUUID();
   /**
    * Return the UUID string
    * @param constant reference to the UUID str
@@ -212,13 +209,12 @@ class CoreComponent {
   }
 
   virtual void configure(const std::shared_ptr<Configure> &configuration) {
-
   }
 
   void loadComponent() {
   }
 
-protected:
+ protected:
   // A global unique identifier
   utils::Identifier uuid_;
   // UUID string
@@ -230,11 +226,11 @@ protected:
 
 namespace logging {
 }
-}
-}
-}
-}
-}
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 namespace fileutils = org::apache::nifi::minifi::utils::file;
 
@@ -250,4 +246,4 @@ namespace utils = org::apache::nifi::minifi::utils;
 
 namespace provenance = org::apache::nifi::minifi::provenance;
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CORE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CORE_H_

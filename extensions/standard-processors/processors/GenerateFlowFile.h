@@ -17,8 +17,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __GENERATE_FLOW_FILE_H__
-#define __GENERATE_FLOW_FILE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GENERATEFLOWFILE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GENERATEFLOWFILE_H_
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -38,7 +43,7 @@ class GenerateFlowFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  GenerateFlowFile(std::string name, utils::Identifier uuid = utils::Identifier())
+  GenerateFlowFile(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : Processor(name, uuid), logger_(logging::LoggerFactory<GenerateFlowFile>::getLogger()) {
     batchSize_ = 1;
     uniqueFlowFile_ = true;
@@ -60,14 +65,14 @@ class GenerateFlowFile : public core::Processor {
   // Nest Callback Class for write stream
   class WriteCallback : public OutputStreamCallback {
    public:
-    WriteCallback(std::vector<char> && data) : data_(std::move(data)) {
+    WriteCallback(std::vector<char> && data) : data_(std::move(data)) { // NOLINT
     }
-    WriteCallback(const std::vector<char>& data) : data_(data) {
+    WriteCallback(const std::vector<char>& data) : data_(data) { // NOLINT
     }
     std::vector<char> data_;
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       int64_t ret = 0;
-      if(data_.size() > 0)
+      if (data_.size() > 0)
         ret = stream->write(reinterpret_cast<uint8_t*>(&data_[0]), data_.size());
       return ret;
     }
@@ -76,9 +81,9 @@ class GenerateFlowFile : public core::Processor {
  public:
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   // OnTrigger method, implemented by NiFi GenerateFlowFile
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   // Initialize, over write by NiFi GenerateFlowFile
-  virtual void initialize(void) override;
+  void initialize(void) override;
 
  protected:
   std::vector<char> data_;
@@ -89,16 +94,15 @@ class GenerateFlowFile : public core::Processor {
   bool textData_;
 
  private:
-
   // logger instance
   std::shared_ptr<logging::Logger> logger_;
 };
 
 REGISTER_RESOURCE(GenerateFlowFile, "This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GENERATEFLOWFILE_H_

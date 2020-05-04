@@ -18,19 +18,22 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_
 
-#include "core/Resource.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <sstream>
 #include <map>
+#include <memory>
+#include <sstream>
+#include <string>
+
 #include "../nodes/MetricsBase.h"
-#include "Connection.h"
-#include "io/ClientSocket.h"
 #include "agent/agent_version.h"
 #include "agent/build_description.h"
+#include "Connection.h"
 #include "core/ClassLoader.h"
+#include "core/Resource.h"
 #include "core/state/UpdateController.h"
+#include "io/ClientSocket.h"
 
 namespace org {
 namespace apache {
@@ -41,14 +44,12 @@ namespace response {
 
 class StateMonitorNode : public DeviceInformation {
  public:
-
   StateMonitorNode(std::string name, utils::Identifier &uuid)
       : DeviceInformation(name, uuid),
         monitor_(nullptr) {
-
   }
 
-  StateMonitorNode(const std::string &name)
+  StateMonitorNode(const std::string &name) // NOLINT
       : DeviceInformation(name),
         monitor_(nullptr) {
   }
@@ -60,11 +61,11 @@ class StateMonitorNode : public DeviceInformation {
   std::shared_ptr<state::StateMonitor> monitor_;
 };
 
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_

@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_C2_C2AGENT_H_
 #define LIBMINIFI_INCLUDE_C2_C2AGENT_H_
 
+#include <map>
+#include <string>
+#include <vector>
 #include <utility>
 #include <functional>
 #include <future>
@@ -59,11 +62,9 @@ namespace c2 {
  */
 class C2Agent : public state::UpdateController {
  public:
-
   C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller,
           const std::shared_ptr<state::StateMonitor> &updateSink,
           const std::shared_ptr<Configure> &configure);
-
   virtual ~C2Agent() noexcept {
     delete protocol_.load();
   }
@@ -78,13 +79,12 @@ class C2Agent : public state::UpdateController {
    */
   void performHeartBeat();
 
-  int64_t getHeartBeatDelay(){
+  int64_t getHeartBeatDelay() {
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     return heart_beat_period_;
   }
 
  protected:
-
   /**
    * Restarts this agent.
    */
@@ -245,10 +245,10 @@ class C2Agent : public state::UpdateController {
   const uint64_t C2RESPONSE_POLL_MS = 100;
 };
 
-} /* namesapce c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_C2_C2AGENT_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_C2AGENT_H_

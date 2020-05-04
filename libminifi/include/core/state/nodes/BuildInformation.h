@@ -15,42 +15,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_METRICS_BuildInformation_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_METRICS_BuildInformation_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_BUILDINFORMATION_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_BUILDINFORMATION_H_
+
+#include <string>
+#include <vector>
 
 #include "core/Resource.h"
 
 #ifndef WIN32
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/ioctl.h>
-#if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
+
+#if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
 #endif
-#include <ifaddrs.h>
-#include <net/if.h> 
-#include <unistd.h>
-#include <netinet/in.h>
 
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <netdb.h>
 #include <ifaddrs.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <netdb.h>
 #include <unistd.h>
+
 #endif
-#include <functional>
-#include <string.h>
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include <sstream>
+#include <functional>
 #include <map>
+#include <sstream>
+
+#include "../../../agent/agent_version.h"
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
-#include "io/ClientSocket.h"
-#include "../../../agent/agent_version.h"
 #include "core/ClassLoader.h"
+#include "io/ClientSocket.h"
 
 namespace org {
 namespace apache {
@@ -65,12 +68,11 @@ namespace response {
  */
 class BuildInformation : public DeviceInformation {
  public:
-
   BuildInformation(std::string name, utils::Identifier &uuid)
       : DeviceInformation(name, uuid) {
   }
 
-  BuildInformation(const std::string &name)
+  BuildInformation(const std::string &name) // NOLINT
       : DeviceInformation(name) {
   }
 
@@ -96,7 +98,6 @@ class BuildInformation : public DeviceInformation {
     SerializedResponseNode compiler;
     compiler.name = "compiler";
     {
-
       SerializedResponseNode compiler_command;
       compiler_command.name = "compiler_command";
       compiler_command.value = AgentBuild::COMPILER;
@@ -112,7 +113,6 @@ class BuildInformation : public DeviceInformation {
       compiler.children.push_back(compiler_command);
       compiler.children.push_back(compiler_version);
       compiler.children.push_back(compiler_flags);
-
     }
     SerializedResponseNode device_id;
     device_id.name = "device_id";
@@ -130,11 +130,11 @@ class BuildInformation : public DeviceInformation {
 
 REGISTER_RESOURCE(BuildInformation, "Node part of an AST that defines the pertinent build information for this agent binary");
 
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_METRICS_BuildInformation_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_BUILDINFORMATION_H_

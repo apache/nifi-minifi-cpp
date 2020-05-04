@@ -15,16 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
-#define LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
+#ifndef LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_
+#define LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_
 
-#include <openssl/ssl.h>
 #include <openssl/err.h>
-#include "controllers/SSLContextService.h"
+#include <openssl/ssl.h>
+
 #include <atomic>
 #include <cstdint>
-#include "io/ClientSocket.h"
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "controllers/SSLContextService.h"
 #include "core/expect.h"
+#include "io/ClientSocket.h"
 #include "properties/Configure.h"
 
 namespace org {
@@ -56,7 +62,7 @@ class OpenSSLInitializer {
 
 class TLSContext : public SocketContext {
  public:
-  TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service = nullptr);
+  TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service = nullptr); // NOLINT
 
   virtual ~TLSContext() {
     if (nullptr != ctx)
@@ -84,7 +90,6 @@ class TLSContext : public SocketContext {
 
 class TLSSocket : public Socket {
  public:
-
   /**
    * Constructor that accepts host name, port and listeners. With this
    * contructor we will be creating a server socket
@@ -161,15 +166,13 @@ class TLSSocket : public Socket {
   void closeStream();  // override
 
  protected:
-
   int writeData(uint8_t *value, int size, int fd);
 
   SSL *get_ssl(int fd) {
     if (UNLIKELY(listeners_ > 0)) {
       std::lock_guard<std::mutex> lock(ssl_mutex_);
       return ssl_map_[fd];
-    }
-    else{
+    } else {
       return ssl_;
     }
   }
@@ -183,10 +186,10 @@ class TLSSocket : public Socket {
   std::map<int, SSL*> ssl_map_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_

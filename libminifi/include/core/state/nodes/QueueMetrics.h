@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 #include <sstream>
 #include <map>
 
@@ -37,12 +41,11 @@ namespace response {
  */
 class QueueMetrics : public ResponseNode {
  public:
-
   QueueMetrics(const std::string &name, utils::Identifier &  uuid)
       : ResponseNode(name, uuid) {
   }
 
-  QueueMetrics(const std::string &name)
+  QueueMetrics(const std::string &name) // NOLINT
       : ResponseNode(name) {
   }
 
@@ -50,7 +53,7 @@ class QueueMetrics : public ResponseNode {
       : ResponseNode("QueueMetrics") {
   }
 
-  virtual std::string getName() const{
+  virtual std::string getName() const {
     return "QueueMetrics";
   }
 
@@ -96,11 +99,11 @@ class QueueMetrics : public ResponseNode {
   std::map<std::string, std::shared_ptr<minifi::Connection>> connections;
 };
 
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_

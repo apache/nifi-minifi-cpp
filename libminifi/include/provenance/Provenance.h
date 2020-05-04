@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROVENANCE_H__
-#define __PROVENANCE_H__
+#ifndef LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_
+#define LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_
 
+#include <memory>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
@@ -52,7 +53,6 @@ namespace provenance {
 class ProvenanceEventRecord : public core::SerializableComponent {
  public:
   enum ProvenanceEventType {
-
     /**
      * A CREATE event is used when a FlowFile is generated from data that was
      * not received from a remote system or external process
@@ -155,6 +155,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     REPLAY
   };
   static const char *ProvenanceEventTypeStr[REPLAY + 1];
+
  public:
   // Constructor
   /*!
@@ -364,7 +365,6 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &repo);
 
   uint64_t getEventTime(const uint8_t *buffer, const size_t bufferSize) {
-
     int size = bufferSize > 72 ? 72 : bufferSize;
     org::apache::nifi::minifi::io::DataStream outStream(buffer, size);
 
@@ -392,7 +392,6 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   }
 
  protected:
-
   // Event type
   ProvenanceEventType _eventType;
   // Date at which the event was created
@@ -510,10 +509,9 @@ class ProvenanceReporter {
   void receive(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string sourceSystemFlowFileIdentifier, std::string detail, uint64_t processingDuration);
 
  protected:
-
   // allocate
   std::shared_ptr<ProvenanceEventRecord> allocate(ProvenanceEventRecord::ProvenanceEventType eventType, std::shared_ptr<core::FlowFile> flow) {
-    if(repo_->isNoop()) {
+    if (repo_->isNoop()) {
       return nullptr;
     }
 
@@ -530,7 +528,6 @@ class ProvenanceReporter {
   std::string _componentType;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
   // Incoming connection Iterator
   std::set<std::shared_ptr<ProvenanceEventRecord>> _events;
@@ -545,10 +542,10 @@ class ProvenanceReporter {
 
 // Provenance Repository
 
-} /* namespace provenance */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace provenance
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_

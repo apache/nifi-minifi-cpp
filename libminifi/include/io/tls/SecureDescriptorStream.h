@@ -15,18 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_SECUREDESCRIPTORSTREAM_H_
-#define LIBMINIFI_INCLUDE_IO_SECUREDESCRIPTORSTREAM_H_
+#ifndef LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_
+#define LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_
 
-#include <openssl/ssl.h>
 #include <openssl/err.h>
-#include <iostream>
+#include <openssl/ssl.h>
+
 #include <cstdint>
+#include <iostream>
+#include <memory>
 #include <string>
-#include "io/EndianCheck.h"
-#include "io/BaseStream.h"
-#include "io/Serializable.h"
+#include <vector>
+
 #include "core/logging/LoggerConfiguration.h"
+#include "io/BaseStream.h"
+#include "io/EndianCheck.h"
+#include "io/Serializable.h"
 
 namespace org {
 namespace apache {
@@ -157,7 +161,6 @@ class SecureDescriptorStream : public io::BaseStream {
   int readUTF(std::string &str, bool widen = false) override;
 
  protected:
-
   /**
    * Creates a vector and returns the vector using the provided
    * type name.
@@ -182,15 +185,13 @@ class SecureDescriptorStream : public io::BaseStream {
   SSL *ssl_;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_IO_SECUREDESCRIPTORSTREAM_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_

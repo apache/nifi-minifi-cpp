@@ -15,17 +15,19 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_KAFKACONNECTION_H
-#define NIFI_MINIFI_CPP_KAFKACONNECTION_H
+#ifndef EXTENSIONS_LIBRDKAFKA_KAFKACONNECTION_H_
+#define EXTENSIONS_LIBRDKAFKA_KAFKACONNECTION_H_
 
 #include <atomic>
+#include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
-#include "rdkafka.h"
+#include "rdkafka.h" // NOLINT
 #include "KafkaTopic.h"
 #include "utils/gsl.h"
 
@@ -36,7 +38,7 @@ namespace minifi {
 namespace processors {
 
 class KafkaConnectionKey {
-  public:
+ public:
     std::string client_id_;
     std::string brokers_;
 
@@ -47,7 +49,6 @@ class KafkaConnectionKey {
 
 class KafkaConnection {
  public:
-
   explicit KafkaConnection(const KafkaConnectionKey &key);
 
   KafkaConnection(const KafkaConnection&) = delete;
@@ -76,7 +77,6 @@ class KafkaConnection {
   static void logCallback(const rd_kafka_t* rk, int level, const char* /*fac*/, const char* buf);
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 
   bool initialized_;
@@ -117,10 +117,10 @@ class KafkaConnection {
   }
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif //NIFI_MINIFI_CPP_KAFKACONNECTION_H
+#endif  // EXTENSIONS_LIBRDKAFKA_KAFKACONNECTION_H_

@@ -17,9 +17,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __CONFIGURE_H__
-#define __CONFIGURE_H__
+#ifndef LIBMINIFI_INCLUDE_PROPERTIES_CONFIGURE_H_
+#define LIBMINIFI_INCLUDE_PROPERTIES_CONFIGURE_H_
 
+#include <string>
 #include <mutex>
 #include "properties/Properties.h"
 
@@ -111,8 +112,8 @@ class Configure : public Properties {
   mutable std::mutex mutex_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_PROPERTIES_CONFIGURE_H_

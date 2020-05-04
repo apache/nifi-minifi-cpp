@@ -17,6 +17,7 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_ENVIRONMENT_H_
 #define LIBMINIFI_INCLUDE_UTILS_ENVIRONMENT_H_
 
+#include <utility>
 #include <functional>
 #include <string>
 
@@ -88,10 +89,10 @@ class Environment {
   static bool isRunningAsService();
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_ENVIRONMENT_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_ENVIRONMENT_H_

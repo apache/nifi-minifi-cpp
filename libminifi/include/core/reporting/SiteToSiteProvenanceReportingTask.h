@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SITE_TO_SITE_PROVENANCE_REPORTING_TASK_H__
-#define __SITE_TO_SITE_PROVENANCE_REPORTING_TASK_H__ 
+#ifndef LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_
+#define LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_
 
 #include <mutex>
 #include <memory>
@@ -59,7 +59,7 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
 
  public:
   //! Get provenance json report
-  void getJsonReport(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, std::vector<std::shared_ptr<core::SerializableComponent>> &records, std::string &report);
+  void getJsonReport(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, std::vector<std::shared_ptr<core::SerializableComponent>> &records, std::string &report); // NOLINT
 
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
@@ -86,21 +86,19 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
     port_uuid = protocol_uuid_;
   }
 
- protected:
-
  private:
   int batch_size_;
 
   std::shared_ptr<logging::Logger> logger_;
 };
 
-// SiteToSiteProvenanceReportingTask 
+// SiteToSiteProvenanceReportingTask
 
-} /* namespace reporting */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace reporting
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_

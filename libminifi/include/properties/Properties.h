@@ -17,9 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROPERTIES_H__
-#define __PROPERTIES_H__
+#ifndef LIBMINIFI_INCLUDE_PROPERTIES_PROPERTIES_H_
+#define LIBMINIFI_INCLUDE_PROPERTIES_PROPERTIES_H_
 
+#include <memory>
+#include <vector>
 #include <string>
 #include <map>
 #include "core/logging/Logger.h"
@@ -31,13 +33,12 @@ namespace minifi {
 
 class Properties {
  public:
-  Properties(const std::string& name = "");
+  Properties(const std::string& name = ""); // NOLINT
 
   virtual ~Properties() {
-
   }
 
-  virtual const std::string& getName() const{
+  virtual const std::string& getName() const {
     return name_;
   }
 
@@ -114,14 +115,12 @@ class Properties {
   bool persistProperties();
 
  protected:
-
   bool validateConfigurationFile(const std::string &file);
 
   std::map<std::string, std::string> properties_;
 
 
  private:
-
   std::atomic<bool> dirty_;
 
   std::string properties_file_;
@@ -136,8 +135,8 @@ class Properties {
   std::string name_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_PROPERTIES_PROPERTIES_H_

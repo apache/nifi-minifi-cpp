@@ -17,9 +17,10 @@
  */
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
-#endif 
+#endif
 #ifdef OPENSSL_SUPPORT
 #include <openssl/err.h>
 #include <openssl/ssl.h>
@@ -29,6 +30,7 @@
 #endif
 #include <iostream>
 #include <memory>
+#include <string>
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "io/validation.h"
@@ -44,14 +46,11 @@ namespace controllers {
 class SSLContext {
  public:
 #ifdef OPENSSL_SUPPORT
-  SSLContext(SSL_CTX *context)
+  SSLContext(SSL_CTX *context) // NOLINT
       : context_(context) {
-
   }
 #else
-	 SSLContext(void *context) {
-
-	 }
+  SSLContext(void *context) {} // NOLINT
 #endif
   ~SSLContext() {
 #ifdef OPENSSL_SUPPORT
@@ -136,7 +135,6 @@ class SSLContextService : public core::controller::ControllerService {
   const std::string &getCACertificate();
 
   void yield() {
-
   }
 
   bool isRunning() {
@@ -154,7 +152,6 @@ class SSLContextService : public core::controller::ControllerService {
   virtual void onEnable();
 
  protected:
-
   virtual void initializeTLS();
 
   std::mutex initialization_mutex_;
@@ -168,7 +165,7 @@ class SSLContextService : public core::controller::ControllerService {
 
 #ifdef OPENSSL_SUPPORT
   static std::string getLatestOpenSSLErrorString() {
-    unsigned long err = ERR_peek_last_error();
+    unsigned long err = ERR_peek_last_error(); // NOLINT
     if (err == 0U) {
       return "";
     }
@@ -188,9 +185,9 @@ class SSLContextService : public core::controller::ControllerService {
 typedef int (SSLContextService::*ptr)(char *, int, int, void *);
 REGISTER_RESOURCE(SSLContextService, "Controller service that provides SSL/TLS capabilities to consuming interfaces");
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_ */
+}  // namespace controllers
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_

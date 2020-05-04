@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_VARIABLEREGISTRY_H_
 #define LIBMINIFI_INCLUDE_CORE_VARIABLEREGISTRY_H_
 
+#include <memory>
+#include <string>
 #include <map>
 #include "properties/Configure.h"
 #include "utils/StringUtils.h"
@@ -40,7 +42,6 @@ class VariableRegistry {
   }
 
   virtual ~VariableRegistry() {
-
   }
 
   bool getConfigurationProperty(const std::string &property, std::string &value) const {
@@ -52,10 +53,7 @@ class VariableRegistry {
     return false;
   }
 
- private:
-
  protected:
-
   void loadVariableRegistry() {
     std::string registry_values;
 
@@ -93,13 +91,12 @@ class VariableRegistry {
   std::map<std::string, std::string> variable_registry_;
 
   std::shared_ptr<minifi::Configure> configuration_;
-
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_VARIABLEREGISTRY_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_VARIABLEREGISTRY_H_

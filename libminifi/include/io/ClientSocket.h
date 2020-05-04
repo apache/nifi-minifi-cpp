@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_
 
+#include <utility>
 #include <cstdint>
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -74,7 +75,7 @@ bool valid_socket(SocketDescriptor) noexcept;
  */
 class SocketContext {
  public:
-  SocketContext(const std::shared_ptr<Configure> &configure) {
+  SocketContext(const std::shared_ptr<Configure> &configure) { // NOLINT
   }
 };
 /**
@@ -231,7 +232,6 @@ class Socket : public BaseStream {
   virtual int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
  protected:
-
   /**
    * Constructor that accepts host name, port and listeners. With this
    * contructor we will be creating a server socket
@@ -299,7 +299,7 @@ class Socket : public BaseStream {
   io::NetworkInterface local_network_interface_;
 
   // connection information
-  SocketDescriptor socket_file_descriptor_{ INVALID_SOCKET }; // -1 on posix
+  SocketDescriptor socket_file_descriptor_{ INVALID_SOCKET };  // -1 on posix
 
   fd_set total_list_{};
   fd_set read_fds_{};
@@ -314,8 +314,7 @@ class Socket : public BaseStream {
 
  private:
 #ifdef WIN32
-  struct SocketInitializer
-  {
+  struct SocketInitializer {
     SocketInitializer() {
       static WSADATA s_wsaData;
       const int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);
@@ -331,7 +330,7 @@ class Socket : public BaseStream {
     static SocketInitializer initialized;
   }
 #else
-  static void initialize_socket(){}
+  static void initialize_socket() {}
 #endif /* WIN32 */
 
   static std::string init_hostname() {
@@ -345,9 +344,9 @@ class Socket : public BaseStream {
   }
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_

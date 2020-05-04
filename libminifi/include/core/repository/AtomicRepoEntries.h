@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_
 
+#include <string>
+#include <utility>
+
 #include  <cstddef>
 #include <cstring>
 #include <iostream>
@@ -44,8 +47,7 @@ namespace repository {
 template<typename T>
 class RepoValue {
  public:
-
-  explicit RepoValue() {
+  RepoValue() {
   }
 
   /**
@@ -76,8 +78,7 @@ noexcept      : key_(std::move(other.key_)),
       comparator_(std::move(other.comparator_)) {
       }
 
-      ~RepoValue()
-      {
+      ~RepoValue() {
       }
 
       T &getKey() {
@@ -87,7 +88,7 @@ noexcept      : key_(std::move(other.key_)),
       /**
        * Sets the key, relacing the custom comparator if needed.
        */
-      void setKey(const T key, std::function<bool(T,T)> comparator = nullptr) {
+      void setKey(const T key, std::function<bool(T, T)> comparator = nullptr) {
         key_ = key;
         comparator_ = comparator;
       }
@@ -97,9 +98,8 @@ noexcept      : key_(std::move(other.key_)),
        * @param other object to compare against
        * @return result of the comparison
        */
-      inline bool isEqual(RepoValue<T> *other)
-      {
-        return comparator_ == nullptr ? key_ == other->key_ : comparator_(key_,other->key_);
+      inline bool isEqual(RepoValue<T> *other) {
+        return comparator_ == nullptr ? key_ == other->key_ : comparator_(key_, other->key_);
       }
 
       /**
@@ -107,9 +107,8 @@ noexcept      : key_(std::move(other.key_)),
        * @param other object to compare against
        * @return result of the comparison
        */
-      inline bool isKey(T other)
-      {
-        return comparator_ == nullptr ? key_ == other : comparator_(key_,other);
+      inline bool isKey(T other) {
+        return comparator_ == nullptr ? key_ == other : comparator_(key_, other);
       }
 
       /**
@@ -133,8 +132,7 @@ noexcept      : key_(std::move(other.key_)),
         return buffer_.size();
       }
 
-      const uint8_t *getBuffer()
-      {
+      const uint8_t *getBuffer() {
         return buffer_.data();
       }
 
@@ -150,8 +148,7 @@ noexcept      : key_(std::move(other.key_)),
        * Appends ptr to the end of buffer.
        * @param ptr pointer containing data to add to buffer_
        */
-      void append(uint8_t *ptr, size_t size)
-      {
+      void append(uint8_t *ptr, size_t size) {
         buffer_.insert(buffer_.end(), ptr, ptr + size);
       }
 
@@ -161,11 +158,11 @@ noexcept      : key_(std::move(other.key_)),
         return *this;
       }
 
-    private:
+ private:
       T key_;
-      std::function<bool(T,T)> comparator_;
+      std::function<bool(T, T)> comparator_;
       std::vector<uint8_t> buffer_;
-    };
+};
 
     /**
      * Purpose: Atomic Entry allows us to create a statically
@@ -174,7 +171,6 @@ noexcept      : key_(std::move(other.key_)),
      **/
 template<typename T>
 class AtomicEntry {
-
  public:
   /**
    * Constructor that accepts a max size and an atomic counter for the total
@@ -252,7 +248,6 @@ class AtomicEntry {
         try_unlock();
         return false;
       }
-
     }
     ref_count_ = 1;
     value_.setKey(str, comparator);
@@ -365,7 +360,6 @@ class AtomicEntry {
       if (accumulated_repo_size_ != nullptr) {
         *accumulated_repo_size_ -= bufferSize;
       }
-
     }
     try_unlock();
     return ref;
@@ -377,7 +371,6 @@ class AtomicEntry {
     size = value_.getBufferSize();
     try_unlock();
     return size;
-
   }
 
   /**
@@ -440,7 +433,6 @@ class AtomicEntry {
   }
 
  private:
-
   /**
    * Spin lock to unlock the current atomic entry.
    */
@@ -477,11 +469,11 @@ class AtomicEntry {
   RepoValue<T> value_;
 };
 
-} /* namespace repository */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace repository
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_

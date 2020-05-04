@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_C2_C2PROTOCOL_H_
 #define LIBMINIFI_INCLUDE_C2_C2PROTOCOL_H_
 
+#include <memory>
+#include <string>
+
 #include "C2Payload.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "properties/Configure.h"
@@ -33,11 +36,9 @@ namespace c2 {
  */
 class C2Protocol : public core::Connectable {
  public:
-
   C2Protocol(const std::string &name, const utils::Identifier &uuid)
       : core::Connectable(name, uuid),
         running_(true) {
-
   }
 
   virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
@@ -45,13 +46,12 @@ class C2Protocol : public core::Connectable {
     configuration_ = configure;
   }
   virtual ~C2Protocol() {
-
   }
 
   /**
    * Update the configuration.
    */
-  virtual void update(const std::shared_ptr<Configure> &configure)=0;
+  virtual void update(const std::shared_ptr<Configure> &configure) = 0;
 
   /**
    * Send a C2 payload to the provided URI. The direction indicates to the protocol whether or not this a transmit or receive operation.
@@ -90,7 +90,6 @@ class C2Protocol : public core::Connectable {
   void waitForWork(uint64_t timeoutMs);
 
   virtual void yield() {
-
   }
 
   /**
@@ -102,7 +101,6 @@ class C2Protocol : public core::Connectable {
   }
 
  protected:
-
   std::atomic<bool> running_;
 
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_;
@@ -110,10 +108,10 @@ class C2Protocol : public core::Connectable {
   std::shared_ptr<Configure> configuration_;
 };
 
-} /* namesapce c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_C2_C2PROTOCOL_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_C2PROTOCOL_H_

@@ -15,8 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VolatileContentRepository_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VolatileContentRepository_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILECONTENTREPOSITORY_H_
+#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILECONTENTREPOSITORY_H_
+
+#include <map>
+#include <memory>
+#include <string>
 
 #include "core/Core.h"
 #include "AtomicRepoEntries.h"
@@ -39,7 +43,6 @@ namespace repository {
  */
 class VolatileContentRepository : public core::ContentRepository, public virtual core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>> {
  public:
-
   static const char *minimal_locking;
 
   explicit VolatileContentRepository(std::string name = getClassName<VolatileContentRepository>())
@@ -58,7 +61,6 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
       }
       master_list_.clear();
     }
-
   }
 
   /**
@@ -103,7 +105,6 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
  protected:
-
   virtual void start();
 
   virtual void run();
@@ -114,7 +115,6 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   }
 
  private:
-
   bool minimize_locking_;
 
   // function pointers that are associated with the claims.
@@ -132,11 +132,11 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace repository */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace repository
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_VolatileContentRepository_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILECONTENTREPOSITORY_H_

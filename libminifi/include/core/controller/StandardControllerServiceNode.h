@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICENODE_H_
 #define LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICENODE_H_
 
+#include <memory>
+#include <string>
+
 #include "core/Core.h"
 #include "ControllerServiceNode.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -32,7 +35,6 @@ namespace controller {
 
 class StandardControllerServiceNode : public ControllerServiceNode {
  public:
-
   explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, std::shared_ptr<ControllerServiceProvider> provider, const std::string &id,
                                          std::shared_ptr<Configure> configuration)
       : ControllerServiceNode(service, id, configuration),
@@ -83,7 +85,6 @@ class StandardControllerServiceNode : public ControllerServiceNode {
   }
 
  protected:
-
   // controller service provider.
   std::shared_ptr<ControllerServiceProvider> provider;
 
@@ -96,11 +97,11 @@ class StandardControllerServiceNode : public ControllerServiceNode {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace controller */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controller
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICENODE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICENODE_H_

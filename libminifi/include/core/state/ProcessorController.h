@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_PROCESSORCONTROLLER_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_PROCESSORCONTROLLER_H_
 
+#include <string>
 #include <memory>
 #include "core/Processor.h"
 #include "SchedulingAgent.h"
@@ -37,7 +38,6 @@ namespace state {
  */
 class ProcessorController : public StateController {
  public:
-
   ProcessorController(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<SchedulingAgent> &scheduler);
 
   virtual ~ProcessorController();
@@ -71,11 +71,11 @@ class ProcessorController : public StateController {
   std::shared_ptr<SchedulingAgent> scheduler_;
 };
 
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_PROCESSORCONTROLLER_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_PROCESSORCONTROLLER_H_
 

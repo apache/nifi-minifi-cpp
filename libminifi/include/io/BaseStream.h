@@ -18,6 +18,9 @@
 
 #ifndef LIBMINIFI_INCLUDE_IO_BASESTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_BASESTREAM_H_
+
+#include <string>
+#include <vector>
 #include <iostream>
 #include <cstdint>
 #include "EndianCheck.h"
@@ -40,13 +43,12 @@ namespace io {
  * Extensions may be thread safe and thus shareable, but that is up to the implementation.
  */
 class BaseStream : public DataStream, public Serializable {
-
  public:
   BaseStream()
       : composable_stream_(this) {
   }
 
-  BaseStream(DataStream *other)
+  BaseStream(DataStream *other) // NOLINT
       : composable_stream_(other) {
   }
 
@@ -189,17 +191,17 @@ class BaseStream : public DataStream, public Serializable {
    * @return resulting read size
    **/
   virtual int readUTF(std::string &str, bool widen = false);
+
  protected:
   /**
    * Changed to private to facilitate easier management of composable_stream_ and make it immutable
    */
   DataStream *composable_stream_;
-}
-;
+};
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_BASESTREAM_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_BASESTREAM_H_

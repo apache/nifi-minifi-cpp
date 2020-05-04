@@ -18,6 +18,11 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_
 #define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_
 
+#include <memory>
+#include <set>
+#include <string>
+#include <vector>
+
 #include "core/Core.h"
 #include "core/ConfigurableComponent.h"
 #include "core/logging/Logger.h"
@@ -35,7 +40,6 @@ namespace controller {
 
 class ControllerServiceNode : public CoreComponent, public ConfigurableComponent {
  public:
-
   /**
    * Constructor for the controller service node.
    * @param service controller service reference
@@ -47,7 +51,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
         ConfigurableComponent(),
         active(false),
         configuration_(configuration),
-        controller_service_(service){
+        controller_service_(service) {
     if (service == nullptr || IsNullOrEmpty(service.get())) {
       throw Exception(GENERAL_EXCEPTION, "Service must be properly configured");
     }
@@ -88,7 +92,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
    * Returns true if we can be enabled.
    * Returns false if this ControllerServiceNode cannot be enabled.
    */
-  virtual bool canEnable()=0;
+  virtual bool canEnable() = 0;
 
   virtual bool enabled() {
     return active.load();
@@ -110,8 +114,8 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
 
   ControllerServiceNode(const ControllerServiceNode &other) = delete;
   ControllerServiceNode &operator=(const ControllerServiceNode &parent) = delete;
- protected:
 
+ protected:
   bool canEdit() {
     return true;
   }
@@ -125,11 +129,11 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
   std::vector<std::shared_ptr<ConfigurableComponent> > linked_components_;
 };
 
-} /* namespace controller */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controller
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_

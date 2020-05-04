@@ -14,25 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_DIFFUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_DIFFUTILS_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_FILE_DIFFUTILS_H_
+#define LIBMINIFI_INCLUDE_UTILS_FILE_DIFFUTILS_H_
 
-#include <sstream>
 #include <fstream>
+#include <sstream>
+
 #ifdef BOOST_VERSION
 #include <boost/filesystem.hpp>
+
 #else
 #include <cstdlib>
+
 #endif
-#include <cstdio>
 #include <fcntl.h>
+
+#include <cstdio>
 
 #ifdef BDIFF
 
-extern "C"
-{
-#include "bsdiff.h"
-#include "bspatch.h"
+extern "C" {
+#include "bsdiff.h" // NOLINT
+#include "bspatch.h" // NOLINT
+
 }
 #else
 int apply_bsdiff_patch(const char *oldfile, const char *newfile, const char *patch) {
@@ -54,7 +58,6 @@ namespace file {
  */
 class DiffUtils {
  public:
-
   DiffUtils() = delete;
 
   static int apply_binary_diff(const char *file_original, const char *file_new, const char *result_file) {
@@ -64,14 +67,13 @@ class DiffUtils {
   static int binary_diff(const char *file_original, const char *file_other, const char *patchfile) {
     return -1;
   }
-
 };
 
-} /* namespace file */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace file
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_DIFFUTILS_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_FILE_DIFFUTILS_H_

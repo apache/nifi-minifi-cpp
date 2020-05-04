@@ -15,8 +15,13 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_PROCESSOR_PROCESSORNODE_H_
-#define LIBMINIFI_INCLUDE_PROCESSOR_PROCESSORNODE_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSORNODE_H_
+#define LIBMINIFI_INCLUDE_CORE_PROCESSORNODE_H_
+
+#include <memory>
+#include <set>
+#include <string>
+#include <vector>
 
 #include "ConfigurableComponent.h"
 #include "Connectable.h"
@@ -62,9 +67,9 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   template<typename T>
   bool getProperty(const std::string &name, T &value) {
     const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
-    if (nullptr != processor_cast)
+    if (nullptr != processor_cast) {
       return processor_cast->getProperty<T>(name, value);
-    else {
+    } else {
       return ConfigurableComponent::getProperty<T>(name, value);
     }
   }
@@ -81,7 +86,6 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
       ret = processor_cast->setProperty(name, value);
 
     return ret;
-
   }
 
   /**
@@ -284,7 +288,6 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   virtual ~ProcessorNode();
 
  protected:
-
   virtual bool canEdit() {
     return !processor_->isRunning();
   }
@@ -293,14 +296,12 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * internal connectable.
    */
   std::shared_ptr<Connectable> processor_;
+};
 
-}
-;
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_PROCESSOR_PROCESSORNODE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSORNODE_H_

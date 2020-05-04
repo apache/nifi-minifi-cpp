@@ -15,8 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_TLSSERVERSOCKET_H_
-#define LIBMINIFI_INCLUDE_IO_TLSSERVERSOCKET_H_
+#ifndef LIBMINIFI_INCLUDE_IO_TLS_TLSSERVERSOCKET_H_
+#define LIBMINIFI_INCLUDE_IO_TLS_TLSSERVERSOCKET_H_
+
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "TLSSocket.h"
 #include "../ServerSocket.h"
@@ -37,19 +41,19 @@ class TLSServerSocket : public BaseServerSocket, public TLSSocket {
 
   virtual ~TLSServerSocket();
 
-  int16_t initialize(bool loopbackOnly){
+  int16_t initialize(bool loopbackOnly) {
     is_loopback_only_ = loopbackOnly;
     return TLSSocket::initialize();
   }
 
-  virtual int16_t initialize(){
+  virtual int16_t initialize() {
     return TLSSocket::initialize();
   }
 
   /**
    * Registers a call back and starts the read for the server socket.
    */
-  void registerCallback(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*,int *)> handler);
+  void registerCallback(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler);
 
   /**
    * Initializes the socket
@@ -58,10 +62,9 @@ class TLSServerSocket : public BaseServerSocket, public TLSSocket {
   virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler);
 
  private:
+  std::function<void(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler)> fx;
 
-  std::function<void(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*,int *)> handler)> fx;
-
-  void close_fd(int fd );
+  void close_fd(int fd);
 
   std::atomic<bool> running_;
 
@@ -70,9 +73,9 @@ class TLSServerSocket : public BaseServerSocket, public TLSSocket {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_TLSSERVERSOCKET_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_TLS_TLSSERVERSOCKET_H_

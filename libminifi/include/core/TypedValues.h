@@ -18,9 +18,13 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_
 #define LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_
 
-#include "state/Value.h"
+#include <algorithm>
+#include <string>
 #include <typeindex>
+
+#include "state/Value.h"
 #include "utils/StringUtils.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -130,8 +134,9 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
       timeunit = DAY;
       output = ival;
       return true;
-    } else
+    } else {
       return false;
+    }
   }
 };
 
@@ -154,10 +159,10 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
       : state::response::UInt64Value(value) {
   }
 
-  
+
 // Convert String to Integer
   template<typename T, typename std::enable_if<
-	  std::is_integral<T>::value>::type* = nullptr>
+      std::is_integral<T>::value>::type* = nullptr>
   static bool StringToInt(const std::string &input, T &output) {
     if (input.size() == 0) {
       return false;
@@ -183,7 +188,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
       return true;
     } else if ((end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T') || (end0 == 'P')) {
       if (pEnd[1] == '\0') {
-        unsigned long int multiplier = 1000;
+        unsigned long int multiplier = 1000; // NOLINT
 
         if ((end0 != 'K')) {
           multiplier *= 1000;
@@ -201,8 +206,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
         return true;
 
       } else if ((pEnd[1] == 'b' || pEnd[1] == 'B') && (pEnd[2] == '\0')) {
-
-        unsigned long int multiplier = 1024;
+        unsigned long int multiplier = 1024; // NOLINT
 
         if ((end0 != 'K')) {
           multiplier *= 1024;
@@ -225,10 +229,10 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
   }
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_

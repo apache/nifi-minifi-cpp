@@ -18,13 +18,15 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROPERTYVALIDATION_H_
 #define LIBMINIFI_INCLUDE_CORE_PROPERTYVALIDATION_H_
 
+#include <limits>
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "core/Core.h"
 #include "core/state/Value.h"
 #include "TypedValues.h"
 #include "utils/StringUtils.h"
-#include <limits>
-#include <memory>
-#include <utility>
 
 namespace org {
 namespace apache {
@@ -68,13 +70,13 @@ class ValidationResult {
     std::string input_;
     friend class ValidationResult;
   };
- private:
 
+ private:
   bool valid_;
   std::string subject_;
   std::string input_;
 
-  ValidationResult(const Builder &builder)
+  ValidationResult(const Builder &builder) // NOLINT
       : valid_(builder.valid_),
         subject_(builder.subject_),
         input_(builder.input_) {
@@ -85,8 +87,7 @@ class ValidationResult {
 
 class PropertyValidator {
  public:
-
-  PropertyValidator(std::string name)
+  PropertyValidator(std::string name) // NOLINT
       : name_(std::move(name)) {
   }
   virtual ~PropertyValidator() = default;
@@ -109,7 +110,6 @@ class PropertyValidator {
       vn = input->getStringValue();
       return validate(subject, input->getStringValue());
     }
-
   }
 
   std::string name_;
@@ -132,12 +132,11 @@ class AlwaysValid : public PropertyValidator {
   ValidationResult validate(const std::string &subject, const std::string &input) const override {
     return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(always_valid_).build();
   }
-
 };
 
 class BooleanValidator : public PropertyValidator {
  public:
-  BooleanValidator(const std::string &name)
+  BooleanValidator(const std::string &name) // NOLINT
       : PropertyValidator(name) {
   }
 
@@ -157,7 +156,7 @@ class BooleanValidator : public PropertyValidator {
 
 class IntegerValidator : public PropertyValidator {
  public:
-  IntegerValidator(const std::string &name)
+  IntegerValidator(const std::string &name) // NOLINT
       : PropertyValidator(name) {
   }
   ~IntegerValidator() override = default;
@@ -190,17 +189,15 @@ class UnsignedIntValidator : public PropertyValidator {
   ValidationResult validate(const std::string &subject, const std::string &input) const override {
     try {
       auto negative = input.find_first_of('-') != std::string::npos;
-      if (negative){
+      if (negative) {
         throw std::out_of_range("non negative expected");
       }
       std::stoul(input);
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(true).build();
     } catch (...) {
-
     }
     return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(false).build();
   }
-
 };
 
 class LongValidator : public PropertyValidator {
@@ -228,7 +225,6 @@ class LongValidator : public PropertyValidator {
 
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(res >= min_ && res <= max_).build();
     } catch (...) {
-
     }
     return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(false).build();
   }
@@ -252,7 +248,7 @@ class UnsignedLongValidator : public PropertyValidator {
   ValidationResult validate(const std::string &subject, const std::string &input) const override {
     try {
       auto negative = input.find_first_of('-') != std::string::npos;
-      if (negative){
+      if (negative) {
         throw std::out_of_range("non negative expected");
       }
       std::stoull(input);
@@ -265,7 +261,7 @@ class UnsignedLongValidator : public PropertyValidator {
 
 class DataSizeValidator : public PropertyValidator {
  public:
-  DataSizeValidator(const std::string &name)
+  DataSizeValidator(const std::string &name) // NOLINT
       : PropertyValidator(name) {
   }
   ~DataSizeValidator() override = default;
@@ -282,16 +278,16 @@ class DataSizeValidator : public PropertyValidator {
 
 class PortValidator : public LongValidator {
  public:
-  PortValidator(const std::string &name)
+  PortValidator(const std::string &name) // NOLINT
       : LongValidator(name, 1, 65535) {
   }
   ~PortValidator() override = default;
 };
 
-//Use only for specifying listen ports, where 0 means a randomly chosen one!
+// Use only for specifying listen ports, where 0 means a randomly chosen one!
 class ListenPortValidator : public LongValidator {
-public:
-  ListenPortValidator(const std::string &name)
+ public:
+  ListenPortValidator(const std::string &name) // NOLINT
     : LongValidator(name, 0, 65535) {
   }
   ~ListenPortValidator() override = default;
@@ -299,7 +295,7 @@ public:
 
 class TimePeriodValidator : public PropertyValidator {
  public:
-  TimePeriodValidator(const std::string &name)
+  TimePeriodValidator(const std::string &name) // NOLINT
       : PropertyValidator(name) {
   }
   ~TimePeriodValidator() override = default;
@@ -344,12 +340,12 @@ class StandardValidators {
     }
   }
 
-  static std::shared_ptr<PropertyValidator> PORT_VALIDATOR(){
+  static std::shared_ptr<PropertyValidator> PORT_VALIDATOR() {
     static std::shared_ptr<PropertyValidator> validator = std::make_shared<PortValidator>("PORT_VALIDATOR");
     return validator;
   }
 
-  static std::shared_ptr<PropertyValidator> LISTEN_PORT_VALIDATOR(){
+  static std::shared_ptr<PropertyValidator> LISTEN_PORT_VALIDATOR() {
     static std::shared_ptr<PropertyValidator> validator = std::make_shared<ListenPortValidator>("PORT_VALIDATOR");
     return validator;
   }
@@ -367,10 +363,10 @@ class StandardValidators {
   StandardValidators();
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_PROPERTYVALIDATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_PROPERTYVALIDATION_H_

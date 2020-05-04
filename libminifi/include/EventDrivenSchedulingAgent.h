@@ -17,8 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __EVENT_DRIVEN_SCHEDULING_AGENT_H__
-#define __EVENT_DRIVEN_SCHEDULING_AGENT_H__
+#ifndef LIBMINIFI_INCLUDE_EVENTDRIVENSCHEDULINGAGENT_H_
+#define LIBMINIFI_INCLUDE_EVENTDRIVENSCHEDULINGAGENT_H_
+
+#include <memory>
+#include <string>
 
 #define DEFAULT_TIME_SLICE_MS 500
 
@@ -64,11 +67,10 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   EventDrivenSchedulingAgent &operator=(const EventDrivenSchedulingAgent &parent);
 
   std::chrono::milliseconds time_slice_;
-
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_EVENTDRIVENSCHEDULINGAGENT_H_

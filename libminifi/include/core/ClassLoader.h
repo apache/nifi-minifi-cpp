@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CLASSLOADER_H_
 #define LIBMINIFI_INCLUDE_CORE_CLASSLOADER_H_
 
+#include <utility>
 #include <mutex>
 #include <vector>
 #include <string>
@@ -31,8 +32,8 @@
 #define WIN32_LEAN_AND_MEAN 1
 #include <Windows.h>    // Windows specific libraries for collecting software metrics.
 #include <Psapi.h>
-#pragma comment( lib, "psapi.lib" )
-#define DLL_EXPORT __declspec(dllexport)  
+#pragma comment(lib, "psapi.lib" )
+#define DLL_EXPORT __declspec(dllexport)
 #endif
 #include "core/Core.h"
 #include "io/DataStream.h"
@@ -81,10 +82,8 @@ class ObjectFactoryInitializer {
  * creating processors from shared objects.
  */
 class ObjectFactory {
-
  public:
-
-  ObjectFactory(const std::string &group)
+  ObjectFactory(const std::string &group) // NOLINT
       : group_(group) {
   }
 
@@ -95,7 +94,6 @@ class ObjectFactory {
    * Virtual destructor.
    */
   virtual ~ObjectFactory() {
-
   }
 
   /**
@@ -103,7 +101,6 @@ class ObjectFactory {
    */
   virtual std::shared_ptr<CoreComponent> create(const std::string &name) {
     return nullptr;
-
   }
 
   /**
@@ -154,9 +151,7 @@ class ObjectFactory {
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) = 0;
 
  private:
-
   std::string group_;
-
 };
 /**
  * Factory that is used as an interface for
@@ -164,14 +159,12 @@ class ObjectFactory {
  */
 template<class T>
 class DefautObjectFactory : public ObjectFactory {
-
  public:
-
   DefautObjectFactory() {
     className = core::getClassName<T>();
   }
 
-  DefautObjectFactory(const std::string &group_name)
+  DefautObjectFactory(const std::string &group_name) // NOLINT
       : ObjectFactory(group_name) {
     className = core::getClassName<T>();
   }
@@ -179,7 +172,6 @@ class DefautObjectFactory : public ObjectFactory {
    * Virtual destructor.
    */
   virtual ~DefautObjectFactory() {
-
   }
 
   /**
@@ -242,7 +234,6 @@ class DefautObjectFactory : public ObjectFactory {
 
  protected:
   std::string className;
-
 };
 
 /**
@@ -257,9 +248,7 @@ typedef ObjectFactory* createFactory();
  * objects.
  */
 class ClassLoader {
-
  public:
-
   static ClassLoader &getDefaultClassLoader();
 
   /**
@@ -423,7 +412,6 @@ class ClassLoader {
   T *instantiateRaw(const std::string &class_name, utils::Identifier & uuid);
 
  protected:
-
 #ifdef WIN32
 
   // base_object doesn't have a handle
@@ -446,12 +434,11 @@ class ClassLoader {
 
     current_error_ = std::string(messageBuffer, size);
 
-    //Free the buffer.
+    // Free the buffer.
     LocalFree(messageBuffer);
   }
 
-  void *dlsym(void *handle, const char *name)
-  {
+  void *dlsym(void *handle, const char *name) {
     FARPROC symbol;
     HMODULE hModule;
 
@@ -460,8 +447,7 @@ class ClassLoader {
     if (symbol == nullptr) {
       store_error();
 
-      for (auto hndl : resource_mapping_)
-      {
+      for (auto hndl : resource_mapping_) {
         symbol = GetProcAddress((HMODULE)hndl.first, name);
         if (symbol != nullptr) {
           break;
@@ -470,13 +456,12 @@ class ClassLoader {
     }
 
 #ifdef _MSC_VER
-#pragma warning( suppress: 4054 )
+#pragma warning(suppress: 4054 )
 #endif
-    return (void*)symbol;
+    return reinterpret_cast<void*>(symbol);
   }
 
-  const char *dlerror(void)
-  {
+  const char *dlerror(void) {
     std::lock_guard<std::mutex> lock(internal_mutex_);
 
     error_str_ = current_error_;
@@ -491,8 +476,7 @@ class ClassLoader {
     HMODULE object;
     char * current_error = NULL;
     uint32_t uMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-    if (nullptr == file)
-    {
+    if (nullptr == file) {
       HMODULE allModules[1024];
       HANDLE current_process_id = GetCurrentProcess();
       DWORD cbNeeded;
@@ -501,25 +485,19 @@ class ClassLoader {
       if (!object)
       store_error();
       if (EnumProcessModules(current_process_id, allModules,
-              sizeof(allModules), &cbNeeded) != 0)
-      {
-
-        for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++)
-        {
+              sizeof(allModules), &cbNeeded) != 0) {
+        for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++) {
           TCHAR szModName[MAX_PATH];
 
           // Get the full path to the module's file.
           resource_mapping_.insert(std::make_pair(allModules[i], "minifi-system"));
         }
       }
-    }
-    else
-    {
+    } else {
       char lpFileName[MAX_PATH];
       int i;
 
-      for (i = 0; i < sizeof(lpFileName) - 1; i++)
-      {
+      for (i = 0; i < sizeof(lpFileName) - 1; i++) {
         if (!file[i])
         break;
         else if (file[i] == '/')
@@ -538,12 +516,10 @@ class ClassLoader {
     /* Return to previous state of the error-mode bit flags. */
     SetErrorMode(uMode);
 
-    return (void *)object;
-
+    return reinterpret_cast<void*>(object);
   }
 
-  int dlclose(void *handle)
-  {
+  int dlclose(void *handle) {
     std::lock_guard<std::mutex> lock(internal_mutex_);
 
     HMODULE object = (HMODULE)handle;
@@ -556,7 +532,7 @@ class ClassLoader {
 
     ret = !ret;
 
-    return (int)ret;
+    return static_cast<int>(ret);
   }
 
 #endif
@@ -635,10 +611,10 @@ T *ClassLoader::instantiateRaw(const std::string &class_name, utils::Identifier 
   }
 }
 
-}/* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CLASSLOADER_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CLASSLOADER_H_

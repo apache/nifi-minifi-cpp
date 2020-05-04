@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_MONITORS_H
-#define NIFI_MINIFI_CPP_MONITORS_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_MONITORS_H_
+#define LIBMINIFI_INCLUDE_UTILS_MONITORS_H_
 
 #include <chrono>
 #include <atomic>
@@ -38,15 +38,12 @@ template<typename T>
 class AfterExecute {
  public:
   virtual ~AfterExecute() {
-
   }
 
-  explicit AfterExecute() {
-
+  AfterExecute() {
   }
 
   explicit AfterExecute(AfterExecute &&other) {
-
   }
   virtual bool isFinished(const T &result) = 0;
   virtual bool isCancelled(const T &result) = 0;
@@ -62,18 +59,18 @@ class AfterExecute {
  */
 class TimerAwareMonitor : public utils::AfterExecute<std::chrono::milliseconds> {
  public:
-  TimerAwareMonitor(std::atomic<bool> *run_monitor)
+  TimerAwareMonitor(std::atomic<bool> *run_monitor) // NOLINT
       : current_wait_(std::chrono::milliseconds(0)),
         run_monitor_(run_monitor) {
   }
-  virtual bool isFinished(const std::chrono::milliseconds &result) override {
+  bool isFinished(const std::chrono::milliseconds &result) override {
     current_wait_.store(result);
     if (*run_monitor_) {
       return false;
     }
     return true;
   }
-  virtual bool isCancelled(const std::chrono::milliseconds &result) override {
+  bool isCancelled(const std::chrono::milliseconds &result) override {
     if (*run_monitor_) {
       return false;
     }
@@ -83,28 +80,28 @@ class TimerAwareMonitor : public utils::AfterExecute<std::chrono::milliseconds> 
    * Time to wait before re-running this task if necessary
    * @return milliseconds since epoch after which we are eligible to re-run this task.
    */
-  virtual std::chrono::milliseconds wait_time() override {
+  std::chrono::milliseconds wait_time() override {
     return current_wait_.load();
   }
- protected:
 
+ protected:
   std::atomic<std::chrono::milliseconds> current_wait_;
   std::atomic<bool> *run_monitor_;
 };
 
 class SingleRunMonitor : public utils::AfterExecute<bool>{
  public:
-  SingleRunMonitor(std::chrono::milliseconds retry_interval = std::chrono::milliseconds(100))
+  SingleRunMonitor(std::chrono::milliseconds retry_interval = std::chrono::milliseconds(100)) // NOLINT
       : retry_interval_(retry_interval) {
   }
 
-  virtual bool isFinished(const bool &result) override {
+  bool isFinished(const bool &result) override {
     return result;
   }
-  virtual bool isCancelled(const bool &result) override {
+  bool isCancelled(const bool &result) override {
     return false;
   }
-  virtual std::chrono::milliseconds wait_time() override {
+  std::chrono::milliseconds wait_time() override {
     return retry_interval_;
   }
  protected:
@@ -132,8 +129,8 @@ struct TaskRescheduleInfo {
   }
 
 #if defined(WIN32)
- // https://developercommunity.visualstudio.com/content/problem/60897/c-shared-state-futuresstate-default-constructs-the.html
- // Because of this bug we need to have this object default constructible, which makes no sense otherwise. Hack.
+// https://developercommunity.visualstudio.com/content/problem/60897/c-shared-state-futuresstate-default-constructs-the.html
+// Because of this bug we need to have this object default constructible, which makes no sense otherwise. Hack.
  private:
   TaskRescheduleInfo() : wait_time_(std::chrono::milliseconds(0)), finished_(true) {}
   friend class std::_Associated_state<TaskRescheduleInfo>;
@@ -144,21 +141,21 @@ class ComplexMonitor : public utils::AfterExecute<TaskRescheduleInfo> {
  public:
   ComplexMonitor() = default;
 
-  virtual bool isFinished(const TaskRescheduleInfo &result) override {
+  bool isFinished(const TaskRescheduleInfo &result) override {
     if (result.finished_) {
       return true;
     }
     current_wait_.store(result.wait_time_);
     return false;
   }
-  virtual bool isCancelled(const TaskRescheduleInfo &result) override {
+  bool isCancelled(const TaskRescheduleInfo &result) override {
     return false;
   }
   /**
    * Time to wait before re-running this task if necessary
    * @return milliseconds since epoch after which we are eligible to re-run this task.
    */
-  virtual std::chrono::milliseconds wait_time() override {
+  std::chrono::milliseconds wait_time() override {
     return current_wait_.load();
   }
 
@@ -166,10 +163,10 @@ class ComplexMonitor : public utils::AfterExecute<TaskRescheduleInfo> {
   std::atomic<std::chrono::milliseconds> current_wait_ {std::chrono::milliseconds(0)};
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif //NIFI_MINIFI_CPP_MONITORS_H
+#endif  // LIBMINIFI_INCLUDE_UTILS_MONITORS_H_

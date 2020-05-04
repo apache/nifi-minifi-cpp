@@ -17,8 +17,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LOG_ATTRIBUTE_H__
-#define __LOG_ATTRIBUTE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LOGATTRIBUTE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LOGATTRIBUTE_H_
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -87,8 +92,9 @@ class LogAttribute : public core::Processor {
     } else if (logStr == "error") {
       level = LogAttrLevelError;
       return true;
-    } else
+    } else {
       return false;
+    }
   }
   // Nest Callback Class for read stream
   class ReadCallback : public InputStreamCallback {
@@ -113,13 +119,11 @@ class LogAttribute : public core::Processor {
   };
 
  public:
-  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
   // OnTrigger method, implemented by NiFi LogAttribute
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   // Initialize, over write by NiFi LogAttribute
-  virtual void initialize(void) override;
-
- protected:
+  void initialize(void) override;
 
  private:
   uint64_t flowfiles_to_log_;
@@ -131,10 +135,10 @@ class LogAttribute : public core::Processor {
 
 REGISTER_RESOURCE(LogAttribute, "Logs attributes of flow files in the MiNiFi application log.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LOGATTRIBUTE_H_

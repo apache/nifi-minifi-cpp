@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONCURRENT_QUEUE_H
-#define LIBMINIFI_INCLUDE_CONCURRENT_QUEUE_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_MINIFICONCURRENTQUEUE_H_
+#define LIBMINIFI_INCLUDE_UTILS_MINIFICONCURRENTQUEUE_H_
+
 
 #include <chrono>
 #include <deque>
@@ -24,7 +25,7 @@
 #include <utility>
 #include <stdexcept>
 
-#include <utils/TryMoveCall.h>
+#include "utils/TryMoveCall.h"
 
 namespace org {
 namespace apache {
@@ -37,7 +38,7 @@ namespace utils {
 template <typename T>
 class ConcurrentQueue {
  public:
-  explicit ConcurrentQueue() = default;
+  ConcurrentQueue() = default;
 
   ConcurrentQueue(const ConcurrentQueue& other) = delete;
   ConcurrentQueue& operator=(const ConcurrentQueue& other) = delete;
@@ -87,8 +88,8 @@ class ConcurrentQueue {
   }
 
  private:
-   ConcurrentQueue(ConcurrentQueue&& other, std::lock_guard<std::mutex>&)
-    : queue_( std::move(other.queue_) ) {}
+  ConcurrentQueue(ConcurrentQueue&& other, std::lock_guard<std::mutex>&)
+    : queue_(std::move(other.queue_)) {}
 
  protected:
   void checkLock(std::unique_lock<std::mutex>& lck) const {
@@ -129,6 +130,7 @@ class ConcurrentQueue {
   }
 
   mutable std::mutex mtx_;
+
  private:
   std::deque<T> queue_;
 };
@@ -226,10 +228,10 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
   std::condition_variable cv_;
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif  // LIBMINIFI_INCLUDE_CONCURRENT_QUEUE_H
+#endif  // LIBMINIFI_INCLUDE_UTILS_MINIFICONCURRENTQUEUE_H_

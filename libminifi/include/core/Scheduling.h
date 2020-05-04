@@ -29,7 +29,6 @@ namespace core {
  * with respect to scheduling the entity to run.
  */
 enum ScheduledState {
-
   /**
    * Entity cannot be scheduled to run
    */
@@ -56,9 +55,9 @@ enum SchedulingStrategy {
   CRON_DRIVEN
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_CORE_SCHEDULING_H_ */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_CORE_SCHEDULING_H_

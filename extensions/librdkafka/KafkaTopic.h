@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_KAFKATOPIC_H
-#define NIFI_MINIFI_CPP_KAFKATOPIC_H
+#ifndef EXTENSIONS_LIBRDKAFKA_KAFKATOPIC_H_
+#define EXTENSIONS_LIBRDKAFKA_KAFKATOPIC_H_
 
-#include "rdkafka.h"
+#include "rdkafka.h" // NOLINT
 
 #include "utils/gsl.h"
 
@@ -48,10 +48,10 @@ class KafkaTopic {
   gsl::owner<rd_kafka_topic_t*> topic_reference_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif //NIFI_MINIFI_CPP_KAFKATOPIC_H
+#endif  // EXTENSIONS_LIBRDKAFKA_KAFKATOPIC_H_

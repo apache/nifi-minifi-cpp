@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_DELETERS_H
-#define LIBMINIFI_INCLUDE_UTILS_DELETERS_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_DELETERS_H_
+#define LIBMINIFI_INCLUDE_UTILS_DELETERS_H_
 
 #include <cstdlib>
 #ifdef WIN32
@@ -54,9 +54,9 @@ struct ifaddrs_deleter {
 };
 #endif /* !WIN32 */
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif // LIBMINIFI_INCLUDE_UTILS_DELETERS_H
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_UTILS_DELETERS_H_

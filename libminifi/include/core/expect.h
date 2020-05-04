@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CAPI_EXPECT_H_
-#define LIBMINIFI_INCLUDE_CAPI_EXPECT_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_EXPECT_H_
+#define LIBMINIFI_INCLUDE_CORE_EXPECT_H_
 
 
 // various likely/unlikely pragmas I've carried over the years.
@@ -29,4 +29,4 @@
 #define UNLIKELY(x) (x)
 #endif
 
-#endif /* LIBMINIFI_INCLUDE_CAPI_EXPECT_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_EXPECT_H_

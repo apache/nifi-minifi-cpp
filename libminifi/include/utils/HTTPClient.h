@@ -15,8 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_
-#define LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
+#define LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
+
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
@@ -77,10 +82,7 @@ enum class SSLVersion : uint8_t {
 
 struct HTTPHeaderResponse {
  public:
-  HTTPHeaderResponse(int max)
-   : max_tokens_(max)
-   , parsed(false) {
-  }
+  HTTPHeaderResponse(int max) : max_tokens_(max) , parsed(false) {} // NOLINT
 
   /* Deprecated, headers are stored internally and can be accessed by getHeaderLines or getHeaderMap */
   DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void append(const std::string &header) {
@@ -138,7 +140,7 @@ struct HTTPHeaderResponse {
         size_t separator_pos = header_line.find(':');
         if (separator_pos == std::string::npos) {
           if (!last_key.empty() && (header_line[0] == ' ' || header_line[0] == '\t')) {
-            /* This is a "folded header", which is deprecated (https://www.ietf.org/rfc/rfc7230.txt) but here we are */
+            // This is a "folded header", which is deprecated (https://www.ietf.org/rfc/rfc7230.txt) but here we are
             header_mapping_[last_key].append(" " + utils::StringUtils::trim(header_line));
           }
           continue;
@@ -159,7 +161,6 @@ struct HTTPHeaderResponse {
  * HTTP Response object
  */
 class HTTPRequestResponse {
-
   std::vector<char> data;
   std::condition_variable space_available_;
   std::mutex data_mutex_;
@@ -167,7 +168,6 @@ class HTTPRequestResponse {
   size_t max_queue;
 
  public:
-
   static const size_t CALLBACK_ABORT = 0x10000000;
 
   const std::vector<char> &getData() {
@@ -176,12 +176,10 @@ class HTTPRequestResponse {
 
   HTTPRequestResponse(const HTTPRequestResponse &other)
       : max_queue(other.max_queue) {
-
   }
 
-  HTTPRequestResponse(size_t max)
+  HTTPRequestResponse(size_t max) // NOLINT
       : max_queue(max) {
-
   }
   /**
    * Receive HTTP Response.
@@ -215,7 +213,7 @@ class HTTPRequestResponse {
       if (p == nullptr) {
         return CALLBACK_ABORT;
       }
-      HTTPUploadCallback *callback = (HTTPUploadCallback *) p;
+      HTTPUploadCallback *callback = reinterpret_cast<HTTPUploadCallback*>(p);
       if (callback->stop) {
         return CALLBACK_ABORT;
       }
@@ -253,7 +251,6 @@ class HTTPRequestResponse {
   }
 
   size_t write_content(char* ptr, size_t size, size_t nmemb) {
-
     if (data.size() + (size * nmemb) > max_queue) {
       std::unique_lock<std::mutex> lock(data_mutex_);
       space_available_.wait(lock, [&] {return data.size() + (size*nmemb) < max_queue;});
@@ -261,16 +258,15 @@ class HTTPRequestResponse {
     data.insert(data.end(), ptr, ptr + size * nmemb);
     return size * nmemb;
   }
-
 };
 
 class BaseHTTPClient {
-public:
+ public:
   explicit BaseHTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) {
     response_code = -1;
   }
 
-  explicit BaseHTTPClient() {
+  BaseHTTPClient() {
     response_code = -1;
   }
 
@@ -325,7 +321,6 @@ public:
   }
 
   virtual void appendHeader(const std::string &new_header) {
-
   }
 
   virtual void set_request_method(const std::string method) {
@@ -353,7 +348,6 @@ public:
 
   virtual const std::vector<std::string> &getHeaders() {
     return headers_;
-
   }
 
   virtual const std::map<std::string, std::string> &getParsedHeaders() {
@@ -369,17 +363,16 @@ public:
   virtual inline bool matches(const std::string &value, const std::string &sregex) {
     return false;
   }
-
 };
 
 extern std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password);
 
 extern void parse_url(const std::string *url, std::string *host, int *port, std::string *protocol);
 extern void parse_url(const std::string *url, std::string *host, int *port, std::string *protocol, std::string *path, std::string *query);
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_

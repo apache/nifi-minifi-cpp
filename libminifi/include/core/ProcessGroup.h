@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROCESS_GROUP_H__
-#define __PROCESS_GROUP_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSGROUP_H_
+#define LIBMINIFI_INCLUDE_CORE_PROCESSGROUP_H_
 
+#include <memory>
+#include <string>
 #include <vector>
 #include <queue>
 #include <map>
@@ -161,7 +163,7 @@ class ProcessGroup {
   }
   // Get UUID
   bool getUUID(utils::Identifier &uuid) {
-    if (uuid_ == nullptr){
+    if (uuid_ == nullptr) {
       return false;
     }
     uuid = uuid_;
@@ -172,9 +174,9 @@ class ProcessGroup {
     return config_version_;
   }
   // Start Processing
-  void startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler);
+  void startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
   // Stop Processing
-  void stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler);
+  void stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
   // Whether it is root process group
   bool isRootProcessGroup();
   // set parent process group
@@ -227,7 +229,7 @@ class ProcessGroup {
   void getConnections(std::map<std::string, std::shared_ptr<Connectable>> &connectionMap);
 
  protected:
-  void startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler);
+  void startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
 
   // A global unique identifier
   utils::Identifier uuid_;
@@ -265,7 +267,6 @@ class ProcessGroup {
   core::controller::ControllerServiceMap controller_service_map_;
 
  private:
-
   // Mutex for protection
   std::recursive_mutex mutex_;
   // Logger
@@ -277,9 +278,9 @@ class ProcessGroup {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   std::unique_ptr<utils::CallBackTimer> onScheduleTimer_;
 };
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSGROUP_H_

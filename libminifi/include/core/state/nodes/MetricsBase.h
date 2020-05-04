@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_METRICS_METRICSBASE_H_
-#define LIBMINIFI_INCLUDE_METRICS_METRICSBASE_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_
 
+#include <utility>
 #include <vector>
 #include <memory>
 #include <string>
@@ -43,7 +44,7 @@ class ResponseNode : public core::Connectable {
         is_array_(false) {
   }
 
-  ResponseNode(const std::string& name)
+  ResponseNode(const std::string& name) // NOLINT
       : core::Connectable(name),
         is_array_(false) {
   }
@@ -53,7 +54,6 @@ class ResponseNode : public core::Connectable {
         is_array_(false) {
   }
   virtual ~ResponseNode() {
-
   }
 
   virtual std::vector<SerializedResponseNode> serialize() = 0;
@@ -76,13 +76,11 @@ class ResponseNode : public core::Connectable {
   }
 
  protected:
-
   bool is_array_;
 
   void setArray(bool array) {
     is_array_ = array;
   }
-
 };
 
 /**
@@ -93,7 +91,7 @@ class DeviceInformation : public ResponseNode {
   DeviceInformation(const std::string& name, utils::Identifier & uuid)
       : ResponseNode(name, uuid) {
   }
-  DeviceInformation(const std::string& name)
+  DeviceInformation(const std::string& name) // NOLINT
       : ResponseNode(name) {
   }
 };
@@ -103,7 +101,7 @@ class DeviceInformation : public ResponseNode {
  */
 class ObjectNode : public ResponseNode {
  public:
-  ObjectNode(std::string name, utils::Identifier uuid = utils::Identifier())
+  ObjectNode(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : ResponseNode(name, uuid) {
   }
 
@@ -127,7 +125,7 @@ class ObjectNode : public ResponseNode {
       }
       serialized.push_back(std::move(inner_node));
     }
-    //serialized.push_back(std::move(outer_node));
+    // serialized.push_back(std::move(outer_node));
     return serialized;
   }
 
@@ -137,7 +135,6 @@ class ObjectNode : public ResponseNode {
 
  protected:
   std::vector<std::shared_ptr<ResponseNode>> nodes_;
-
 };
 
 /**
@@ -146,9 +143,7 @@ class ObjectNode : public ResponseNode {
  */
 class ResponseNodeSource {
  public:
-
   ResponseNodeSource() {
-
   }
 
   virtual ~ResponseNodeSource() {
@@ -165,7 +160,6 @@ class ResponseNodeSource {
   virtual int16_t getResponseNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector) = 0;
 
   virtual int16_t getMetricNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector) = 0;
-
 };
 
 /**
@@ -174,9 +168,7 @@ class ResponseNodeSource {
  */
 class MetricsNodeSource : public ResponseNodeSource {
  public:
-
   MetricsNodeSource() {
-
   }
 
   virtual ~MetricsNodeSource() {
@@ -195,14 +187,11 @@ class MetricsNodeSource : public ResponseNodeSource {
   }
 
   virtual int16_t getMetricNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector) = 0;
-
 };
 
 class NodeReporter {
  public:
-
   NodeReporter() {
-
   }
 
   virtual ~NodeReporter() {
@@ -234,7 +223,6 @@ class NodeReporter {
  */
 class ResponseNodeSink {
  public:
-
   virtual ~ResponseNodeSink() {
   }
   /**
@@ -258,11 +246,11 @@ class ResponseNodeSink {
   virtual int16_t setMetricsNodes(const std::shared_ptr<ResponseNode> &metrics) = 0;
 };
 
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_C2_METRICS_METRICSBASE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_

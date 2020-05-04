@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_CALLBACKTIMER_H
-#define NIFI_MINIFI_CPP_CALLBACKTIMER_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
+#define LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
 
 #include <mutex>
 #include <condition_variable>
@@ -30,8 +30,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-class CallBackTimer
-{
+class CallBackTimer {
  public:
   CallBackTimer(std::chrono::milliseconds interval, const std::function<void(void)>& func);
 
@@ -43,7 +42,7 @@ class CallBackTimer
 
   bool is_running() const;
 
-private:
+ private:
   bool execute_;
   std::function<void(void)> func_;
   std::thread thd_;
@@ -54,11 +53,11 @@ private:
   const std::chrono::milliseconds interval_;
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif //NIFI_MINIFI_CPP_CALLBACKTIMER_H
+#endif  // LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
 

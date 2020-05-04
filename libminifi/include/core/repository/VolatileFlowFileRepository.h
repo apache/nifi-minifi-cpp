@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEFLOWFILEREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEFLOWFILEREPOSITORY_H_
 
+#include <memory>
+#include <string>
+
 #include "VolatileRepository.h"
 #include "FlowFileRecord.h"
 
@@ -38,9 +41,7 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
   MAX_REPOSITORY_STORAGE_SIZE,
                                       uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
-        VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod)
-
-  {
+        VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod) {
     purge_required_ = true;
     content_repo_ = nullptr;
   }
@@ -68,11 +69,9 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
 
   void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
     content_repo_ = content_repo;
-
   }
 
  protected:
-
   virtual void emplace(RepoValue<std::string> &old_value) {
     std::string buffer;
     old_value.emplace(buffer);
@@ -81,13 +80,12 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
   }
 
   std::shared_ptr<core::ContentRepository> content_repo_;
-
 };
-} /* namespace repository */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace repository
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEFLOWFILEREPOSITORY_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEFLOWFILEREPOSITORY_H_

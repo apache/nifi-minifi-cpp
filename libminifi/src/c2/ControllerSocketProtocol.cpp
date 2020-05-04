@@ -300,8 +300,8 @@ int16_t ControllerSocketProtocol::heartbeat(const C2Payload &payload) {
   return 0;
 }
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

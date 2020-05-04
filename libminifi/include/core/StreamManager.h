@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_
 #define LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_
 
+#include <memory>
+#include <string>
+
 #include "properties/Configure.h"
 #include "ResourceClaim.h"
 #include "io/DataStream.h"
@@ -82,13 +85,12 @@ class StreamManager {
   virtual void decrementStreamCount(const std::shared_ptr<T> &streamId) = 0;
 
   virtual bool exists(const std::shared_ptr<T> &streamId) = 0;
-
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_

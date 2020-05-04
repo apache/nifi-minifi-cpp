@@ -17,15 +17,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __EXCEPTION_H__
-#define __EXCEPTION_H__
+#ifndef LIBMINIFI_INCLUDE_EXCEPTION_H_
+#define LIBMINIFI_INCLUDE_EXCEPTION_H_
 
-#include "utils/StringUtils.h"
-#include <sstream>
-#include <exception>
-#include <stdexcept>
 #include <errno.h>
 #include <string.h>
+
+#include <exception>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -67,8 +70,8 @@ struct Exception : public std::runtime_error {
   { }
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_EXCEPTION_H_

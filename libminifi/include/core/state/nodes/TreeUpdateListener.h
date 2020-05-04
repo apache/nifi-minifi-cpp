@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_METRICS_H_
-#define LIBMINIFI_INCLUDE_C2_METRICS_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_TREEUPDATELISTENER_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_TREEUPDATELISTENER_H_
 
+#include <memory>
+#include <utility>
 #include <vector>
 
 #include "../nodes/MetricsBase.h"
@@ -35,9 +37,8 @@ namespace response {
  */
 class MetricsUpdate : public Update {
  public:
-  MetricsUpdate(UpdateStatus status)
+  MetricsUpdate(UpdateStatus status) // NOLINT
       : Update(status) {
-
   }
   virtual bool validate() {
     return true;
@@ -52,11 +53,9 @@ class OperationWatcher : public utils::AfterExecute<Update> {
 
   explicit OperationWatcher(OperationWatcher && other)
       : running_(std::move(other.running_)) {
-
   }
 
   ~OperationWatcher() {
-
   }
 
   virtual bool isFinished(const Update &result) {
@@ -72,14 +71,13 @@ class OperationWatcher : public utils::AfterExecute<Update> {
 
  protected:
   std::atomic<bool> *running_;
-
 };
 
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_C2_METRICS_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_TREEUPDATELISTENER_H_

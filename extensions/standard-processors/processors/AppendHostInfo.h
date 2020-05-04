@@ -17,8 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __APPEND_HOSTINFO_H__
-#define __APPEND_HOSTINFO_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_
+
+#include <memory>
+#include <string>
 
 #include "core/Property.h"
 #include "FlowFileRecord.h"
@@ -41,7 +44,7 @@ class AppendHostInfo : public core::Processor {
   /*!
    * Create a new processor
    */
-  AppendHostInfo(std::string name, utils::Identifier uuid = utils::Identifier())
+  AppendHostInfo(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<AppendHostInfo>::getLogger()) {
   }
@@ -64,8 +67,6 @@ class AppendHostInfo : public core::Processor {
   // Initialize, over write by NiFi AppendHostInfo
   virtual void initialize(void);
 
- protected:
-
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
@@ -73,10 +74,10 @@ class AppendHostInfo : public core::Processor {
 
 REGISTER_RESOURCE(AppendHostInfo, "Appends host information such as IP address and hostname as an attribute to incoming flowfiles.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_

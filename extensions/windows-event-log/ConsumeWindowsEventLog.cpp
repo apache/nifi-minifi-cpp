@@ -623,8 +623,8 @@ void ConsumeWindowsEventLog::LogWindowsError(std::string error) const
   LocalFree(lpMsg);
 }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

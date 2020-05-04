@@ -15,13 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_TYPES_PROPERTYVALUE_H_
-#define LIBMINIFI_INCLUDE_CORE_TYPES_PROPERTYVALUE_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
+#define LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
 
-#include "state/Value.h"
-#include "PropertyValidation.h"
+#include <memory>
+#include <string>
 #include <typeindex>
+
+#include "PropertyValidation.h"
+#include "state/Value.h"
 #include "TypedValues.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -137,7 +141,7 @@ class PropertyValue : public state::response::ValueNode {
    * createValue
    */
   template<typename T>
-  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string>::value,PropertyValue&>::type {
+  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string>::value, PropertyValue&>::type {
     if (value_ == nullptr) {
       type_id = std::type_index(typeid(T));
       value_ = minifi::state::response::createValue(ref);
@@ -155,7 +159,6 @@ class PropertyValue : public state::response::ValueNode {
          */
         throw std::runtime_error("Invalid conversion");
       }
-
     }
     return *this;
   }
@@ -165,7 +168,7 @@ class PropertyValue : public state::response::ValueNode {
   std::is_same<T, uint32_t >::value ||
   std::is_same<T, uint64_t >::value ||
   std::is_same<T, int64_t >::value ||
-  std::is_same<T, bool >::value,PropertyValue&>::type {
+  std::is_same<T, bool >::value, PropertyValue&>::type {
     if (value_ == nullptr) {
       type_id = std::type_index(typeid(T));
       value_ = minifi::state::response::createValue(ref);
@@ -190,7 +193,7 @@ class PropertyValue : public state::response::ValueNode {
   template<typename T>
   auto operator=(const T ref) -> typename std::enable_if<
   std::is_same<T, char* >::value ||
-  std::is_same<T, const char* >::value,PropertyValue&>::type {
+  std::is_same<T, const char* >::value, PropertyValue&>::type {
     // translated these into strings
     return operator=<std::string>(std::string(ref));
   }
@@ -198,14 +201,13 @@ class PropertyValue : public state::response::ValueNode {
   template<typename T>
   auto operator=(const std::string &ref) -> typename std::enable_if<
   std::is_same<T, DataSizeValue >::value ||
-  std::is_same<T, TimePeriodValue >::value,PropertyValue&>::type {
+  std::is_same<T, TimePeriodValue >::value, PropertyValue&>::type {
     value_ = std::make_shared<T>(ref);
     type_id = value_->getTypeIndex();
     return *this;
   }
 
  protected:
-
   std::type_index type_id;
   std::shared_ptr<PropertyValidator> validator_;
 };
@@ -214,10 +216,10 @@ inline std::string conditional_conversion(const PropertyValue &v) {
   return v.getValue()->getStringValue();
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_TYPES_PROPERTYVALUE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_

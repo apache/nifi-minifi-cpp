@@ -15,9 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __GET_TCP_H__
-#define __GET_TCP_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETTCP_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETTCP_H_
 
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 #include <atomic>
 
 #include "../core/state/nodes/MetricsBase.h"
@@ -26,7 +30,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
-#include "concurrentqueue.h"
+#include "concurrentqueue.h" // NOLINT
 #include "utils/ThreadPool.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "controllers/SSLContextService.h"
@@ -53,7 +57,6 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
   }
 
   virtual bool isFinished(const int &result) {
-
     if (result == -1 || result == 0 || !running_) {
       std::lock_guard<std::mutex> lock(*mutex_);
       list_->erase(endpoint_);
@@ -89,7 +92,6 @@ class DataHandlerCallback : public OutputStreamCallback {
   }
 
   virtual ~DataHandlerCallback() {
-
   }
 
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) {
@@ -103,9 +105,8 @@ class DataHandlerCallback : public OutputStreamCallback {
 
 class DataHandler {
  public:
-  DataHandler(std::shared_ptr<core::ProcessSessionFactory> sessionFactory)
+  DataHandler(std::shared_ptr<core::ProcessSessionFactory> sessionFactory) // NOLINT
       : sessionFactory_(sessionFactory) {
-
   }
   static const char *SOURCE_ENDPOINT_ATTRIBUTE;
 
@@ -113,7 +114,6 @@ class DataHandler {
 
  private:
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
-
 };
 
 class GetTCPMetrics : public state::response::ResponseNode {
@@ -132,7 +132,6 @@ class GetTCPMetrics : public state::response::ResponseNode {
     input_bytes_ = 0;
   }
   virtual ~GetTCPMetrics() {
-
   }
   virtual std::string getName() const {
     return core::Connectable::getName();
@@ -168,7 +167,6 @@ class GetTCPMetrics : public state::response::ResponseNode {
   std::atomic<size_t> iterations_;
   std::atomic<size_t> accepted_files_;
   std::atomic<size_t> input_bytes_;
-
 };
 
 // GetTCP Class
@@ -240,11 +238,9 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
   int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector);
 
  protected:
-
   virtual void notifyStop();
 
  private:
-
   std::function<int()> f_ex;
 
   std::atomic<bool> running_;
@@ -283,16 +279,15 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
   // as the top level time.
 
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 REGISTER_RESOURCE(GetTCP, "Establishes a TCP Server that defines and retrieves one or more byte messages from clients");
 
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETTCP_H_

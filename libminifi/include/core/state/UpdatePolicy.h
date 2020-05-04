@@ -18,6 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_UPDATEPOLICY_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_UPDATEPOLICY_H_
 
+#include <memory>
+#include <string>
+#include <utility>
 #include <unordered_map>
 
 namespace org {
@@ -40,7 +43,6 @@ class UpdatePolicyBuilder;
  */
 class UpdatePolicy {
  public:
-
   explicit UpdatePolicy(bool enable_all)
       : enable_all_(enable_all) {
   }
@@ -67,7 +69,6 @@ class UpdatePolicy {
   }
 
  protected:
-
   explicit UpdatePolicy(const UpdatePolicy &other)
       : enable_all_(other.enable_all_), properties_(other.properties_) {
   }
@@ -92,7 +93,6 @@ class UpdatePolicy {
   bool enable_all_;
 
   std::unordered_map<std::string, UPDATE_POLICY> properties_;
-
 };
 
 /**
@@ -122,7 +122,6 @@ class UpdatePolicyBuilder {
 
 
  protected:
-
   explicit UpdatePolicyBuilder(const UpdatePolicyBuilder &other)
       : current_policy_(other.current_policy_) {
   }
@@ -135,10 +134,10 @@ class UpdatePolicyBuilder {
   std::shared_ptr<UpdatePolicy> current_policy_;
 };
 
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_UPDATEPOLICY_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_UPDATEPOLICY_H_

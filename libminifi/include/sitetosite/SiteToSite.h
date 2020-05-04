@@ -15,8 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_SITETOSITE_SITETOSITE_H_
-#define LIBMINIFI_INCLUDE_CORE_SITETOSITE_SITETOSITE_H_
+#ifndef LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITE_H_
+#define LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITE_H_
+
+#include <memory>
+#include <string>
+#include <utility>
 
 #include "controllers/SSLContextService.h"
 #include "Peer.h"
@@ -188,7 +192,7 @@ typedef enum {
   // transaction indicators
   CONTINUE_TRANSACTION = 10,
   FINISH_TRANSACTION = 11,
-  CONFIRM_TRANSACTION = 12,// "Explanation" of this code is the checksum
+  CONFIRM_TRANSACTION = 12,  // "Explanation" of this code is the checksum
   TRANSACTION_FINISHED = 13,
   TRANSACTION_FINISHED_BUT_DESTINATION_FULL = 14,
   CANCEL_TRANSACTION = 15,
@@ -211,14 +215,15 @@ typedef enum {
 // Respond Code Class
 typedef struct {
   RespondCode code;
-  const char *description;bool hasDescription;
+  const char *description;
+  bool hasDescription;
 } RespondCodeContext;
 
 
 
 // Request Type Str
 class SiteToSiteRequest {
-public:
+ public:
   static const char *RequestTypeStr[MAX_REQUEST_TYPE];
   static RespondCodeContext respondCodeContext[21];
 };
@@ -313,11 +318,9 @@ class Transaction {
   bool _dataAvailable;
 
  protected:
-
   org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcStream;
 
  private:
-
   // Transaction Direction
   TransferDirection _direction;
 
@@ -384,7 +387,6 @@ class SiteToSiteClientConfiguration {
   }
 
  protected:
-
   std::shared_ptr<io::StreamFactory> stream_factory_;
 
   std::shared_ptr<Peer> peer_;
@@ -405,10 +407,10 @@ class SiteToSiteClientConfiguration {
 #pragma GCC diagnostic pop
 #endif
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace sitetosite
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_SITETOSITE_SITETOSITE_H_ */
+#endif  // LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITE_H_

@@ -14,14 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_
-#define LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_
+#define LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_
+
+#include <string>
+#include <utility>
 #include <iostream>
 #include <cstring>
 #include <functional>
 #ifdef WIN32
-	#include <cwctype>
-	#include <cctype>
+  #include <cwctype>
+  #include <cctype>
 #endif
 #include <algorithm>
 #include <sstream>
@@ -50,25 +53,23 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-namespace {
-  template<class Char>
-  struct string_traits;
-  template<>
-  struct string_traits<char>{
-    template<class T>
-    static std::string convert_to_string(T&& t){
-      return std::to_string(std::forward<T>(t));
-    }
-  };
+template<class Char>
+struct string_traits;
+template<>
+struct string_traits<char>{
+  template<class T>
+  static std::string convert_to_string(T&& t){
+    return std::to_string(std::forward<T>(t));
+  }
+};
 
-  template<>
-  struct string_traits<wchar_t>{
-    template<class T>
-    static std::wstring convert_to_string(T&& t){
-      return std::to_wstring(std::forward<T>(t));
-    }
-  };
-}
+template<>
+struct string_traits<wchar_t>{
+  template<class T>
+  static std::wstring convert_to_string(T&& t){
+    return std::to_wstring(std::forward<T>(t));
+  }
+};
 
 /**
  * Stateless String utility class.
@@ -159,7 +160,7 @@ class StringUtils {
     std::string newString;
     for (int i = 0; i < len; i += 2) {
       std::string sstr = in.substr(i, 2);
-      char chr = (char) (int) strtol(sstr.c_str(), 0x00, 16);
+      char chr = (char) (int) strtol(sstr.c_str(), 0x00, 16); // NOLINT
       newString.push_back(chr);
     }
     return newString;
@@ -178,13 +179,12 @@ class StringUtils {
   static size_t size(const CharT* str) noexcept { return std::char_traits<CharT>::length(str); }
 
   struct detail {
-
   // add all args
   template<typename... SizeT>
   static size_t sum(SizeT... ns) {
     size_t result = 0;
     (void)(std::initializer_list<size_t>{( result += ns )...});
-    return result; // (ns + ...)
+    return result;  // (ns + ...)
   }
 
   #ifndef _MSC_VER
@@ -238,7 +238,7 @@ class StringUtils {
   static std::basic_string<CharT> join_pack(const Strs&... strs) {
     std::basic_string<CharT> result;
     result.reserve(sum(size(strs)...));
-    (void)(std::initializer_list<int>{( result.append(strs) ,0)...});
+    (void)(std::initializer_list<int>{( result.append(strs) , 0)...});
     return result;
   }
   }; /* struct detail */
@@ -276,15 +276,15 @@ class StringUtils {
     typedef typename U::const_iterator ITtype;
     ITtype it = container.cbegin();
     std::basic_stringstream<TChar> sstream;
-    while(it != container.cend()) {
+    while (it != container.cend()) {
       sstream << (*it);
       ++it;
-      if(it != container.cend()) {
+      if (it != container.cend()) {
         sstream << separator;
       }
     }
     return sstream.str();
-  };
+  }
 
   /**
    * Just a wrapper for the above function to be able to create separator from const char* or const wchar_t*
@@ -292,7 +292,7 @@ class StringUtils {
   template<class TChar, class U, typename std::enable_if<std::is_same<typename U::value_type, std::basic_string<TChar>>::value>::type* = nullptr>
   static std::basic_string<TChar> join(const TChar* separator, const U& container) {
     return join(std::basic_string<TChar>(separator), container);
-  };
+  }
 
 
   /**
@@ -309,10 +309,10 @@ class StringUtils {
     typedef typename U::const_iterator ITtype;
     ITtype it = container.cbegin();
     std::basic_stringstream<TChar> sstream;
-    while(it != container.cend()) {
+    while (it != container.cend()) {
       sstream << string_traits<TChar>::convert_to_string(*it);
       ++it;
-      if(it != container.cend()) {
+      if (it != container.cend()) {
         sstream << separator;
       }
     }
@@ -326,7 +326,7 @@ class StringUtils {
       typename std::enable_if<!std::is_same<U, std::basic_string<TChar>>::value>::type* = nullptr>
   static std::basic_string<TChar> join(const TChar* separator, const U& container) {
     return join(std::basic_string<TChar>(separator), container);
-  };
+  }
 
   /**
    * Hexdecodes the hexencoded string in data, ignoring every character that is not [0-9a-fA-F]
@@ -523,12 +523,11 @@ class StringUtils {
        0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
        0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30,
        0x31, 0x32, 0x33, ILGL, ILGL, ILGL, ILGL, ILGL};
-
 };
 
-} /* namespace utils */
+}  // namespace utils
 
-namespace core{
+namespace core {
 enum TimeUnit {
   DAY,
   HOUR,
@@ -538,10 +537,10 @@ enum TimeUnit {
   NANOSECOND
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_

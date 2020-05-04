@@ -17,9 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __CONNECTION_H__
-#define __CONNECTION_H__
+#ifndef LIBMINIFI_INCLUDE_CONNECTION_H_
+#define LIBMINIFI_INCLUDE_CONNECTION_H_
 
+#include <memory>
+#include <set>
+#include <string>
 #include <vector>
 #include <queue>
 #include <map>
@@ -30,7 +33,6 @@
 #include "core/Connectable.h"
 #include "core/logging/Logger.h"
 #include "core/Relationship.h"
-#include "core/Connectable.h"
 #include "core/FlowFile.h"
 #include "core/Repository.h"
 
@@ -169,9 +171,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   // Drain the flow records
   void drain();
 
-  void yield() override {
-
-  }
+  void yield() override {}
 
   bool isWorkAvailable() override {
     return !isEmpty();
@@ -218,10 +218,9 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   // Only support pass by reference or pointer
   Connection(const Connection &parent);
   Connection &operator=(const Connection &parent);
-
 };
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_CONNECTION_H_

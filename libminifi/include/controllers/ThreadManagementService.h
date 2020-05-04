@@ -17,6 +17,8 @@
  */
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_
+
+#include <string>
 #include <iostream>
 #include <memory>
 #include "core/Resource.h"
@@ -50,7 +52,6 @@ class ThreadManagementService : public core::controller::ControllerService {
   explicit ThreadManagementService(const std::string &name, const std::shared_ptr<Configure> &configuration)
       : ControllerService(name),
         logger_(logging::LoggerFactory<ThreadManagementService>::getLogger()) {
-
   }
 
   /**
@@ -96,7 +97,6 @@ class ThreadManagementService : public core::controller::ControllerService {
   }
 
   void yield() {
-
   }
 
   bool isRunning() {
@@ -108,21 +108,19 @@ class ThreadManagementService : public core::controller::ControllerService {
   }
 
   virtual void onEnable() {
-
   }
 
  protected:
-
   std::atomic<int> thread_count_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controllers
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_

@@ -17,6 +17,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_
 #define LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_
 
+#include <string>
+#include <vector>
+
 #include "core/Core.h"
 #include "core/Property.h"
 
@@ -51,10 +54,10 @@ struct ProcessorConfig {
   std::vector<core::Property> properties;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_

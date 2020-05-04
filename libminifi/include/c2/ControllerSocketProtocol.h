@@ -18,6 +18,11 @@
 #ifndef LIBMINIFI_INCLUDE_C2_CONTROLLERSOCKETPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_C2_CONTROLLERSOCKETPROTOCOL_H_
 
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "core/Resource.h"
 #include "HeartBeatReporter.h"
 #include "io/StreamFactory.h"
@@ -35,11 +40,9 @@ namespace c2 {
  */
 class ControllerSocketProtocol : public HeartBeatReporter {
  public:
-
-  ControllerSocketProtocol(std::string name, utils::Identifier uuid = utils::Identifier())
+  ControllerSocketProtocol(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : HeartBeatReporter(name, uuid),
         logger_(logging::LoggerFactory<ControllerSocketProtocol>::getLogger()) {
-
   }
 
   /**
@@ -58,7 +61,6 @@ class ControllerSocketProtocol : public HeartBeatReporter {
   virtual int16_t heartbeat(const C2Payload &payload);
 
  protected:
-
   /**
    * Parses content from the content response.
    */
@@ -79,16 +81,15 @@ class ControllerSocketProtocol : public HeartBeatReporter {
   std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 };
 
 REGISTER_RESOURCE(ControllerSocketProtocol, "Creates a reporter that can handle basic c2 operations for a localized environment through a simple TCP socket.");
 
-} /* namesapce c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_C2_CONTROLLERSOCKETPROTOCOL_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_CONTROLLERSOCKETPROTOCOL_H_

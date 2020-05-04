@@ -14,52 +14,68 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
+#define LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
 
-#include <sstream>
 #include <fstream>
+#include <memory>
+#include <sstream>
+#include <tuple>
+#include <utility>
 #include <vector>
+
 #ifdef BOOST_VERSION
 #include <boost/filesystem.hpp>
+
 #else
-#include <cstring>
-#include <cstdlib>
 #include <errno.h>
+
+#include <cstdlib>
+#include <cstring>
+
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
-	#define WIN32_LEAN_AND_MEAN
+  #define WIN32_LEAN_AND_MEAN
 #endif
+#include <Windows.h>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
-#include <Windows.h>
+
 #pragma comment(lib, "Ws2_32.lib")
 #else
+#include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <utime.h>
-#include <dirent.h>
+
 #endif
 #endif
 #include <cstdio>
+
 #ifndef WIN32
 #include <unistd.h>
+
 #endif
 #include <fcntl.h>
+
 #ifdef WIN32
 #include <direct.h>
-#include "utils/Id.h"
+#include <sys/stat.h>  // stat // NOLINT
+#include <sys/types.h> // NOLINT
+#include <sys/utime.h>  // _utime64
+#include <tchar.h>  // _tcscpy,_tcscat,_tcscmp
+#include <windows.h>  // winapi
+
+#include <algorithm>  // replace
+#include <string>  // string
+
 #include "properties/Properties.h"
-#include <windows.h> // winapi
-#include <sys/stat.h> // stat
-#include <tchar.h> // _tcscpy,_tcscat,_tcscmp
-#include <string> // string
-#include <algorithm> // replace
-#include <sys/types.h>
-#include <sys/utime.h> // _utime64
+#include "utils/Id.h"
+
 #endif
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
+
 #endif
 
 #include "core/logging/LoggerConfiguration.h"
@@ -90,8 +106,8 @@ class FileUtils {
     return mkdir(path.c_str(), 0700);
 #endif
   }
- public:
 
+ public:
   FileUtils() = delete;
 
   /*
@@ -99,8 +115,7 @@ class FileUtils {
    * @param force_posix returns the posix path separator ('/'), even when not on posix. Useful when dealing with remote posix paths.
    * @return the path separator character
    */
-  static char get_separator(bool force_posix = false)
-  {
+  static char get_separator(bool force_posix = false) {
 #ifdef WIN32
     if (force_posix) {
       return '/';
@@ -116,8 +131,7 @@ class FileUtils {
 #ifdef WIN32
     char tempBuffer[MAX_PATH];
     const auto ret = GetTempPath(MAX_PATH, tempBuffer);
-    if (ret <= MAX_PATH && ret != 0)
-    {
+    if (ret <= MAX_PATH && ret != 0) {
       const std::string tempDirectory = tempBuffer
           + minifi::utils::IdGenerator::getIdGenerator()->generate().to_string();
       create_dir(tempDirectory);
@@ -136,15 +150,13 @@ class FileUtils {
       if (boost::filesystem::exists(path)) {
         if (delete_files_recursively) {
           boost::filesystem::remove_all(path);
-        }
-        else {
+        } else {
           boost::filesystem::remove(path);
         }
       }
-    } catch(boost::filesystem::filesystem_error const & e)
-    {
+    } catch(boost::filesystem::filesystem_error const & e) {
       return -1;
-      //display error message
+      // display error message
     }
     return 0;
 #elif defined(WIN32)
@@ -153,31 +165,26 @@ class FileUtils {
     DWORD Attributes;
     std::string str;
 
-	
+
     std::stringstream pathstr;
     pathstr << path << "\\*";
     str = pathstr.str();
-    //List files
+    // List files
     hFind = FindFirstFile(str.c_str(), &FindFileData);
-    if (hFind != INVALID_HANDLE_VALUE)
-    {
+    if (hFind != INVALID_HANDLE_VALUE) {
       do {
-        if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0)
-        {
+        if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0) {
           std::stringstream strs;
           strs << path << "\\" << FindFileData.cFileName;
           str = strs.str();
 
           Attributes = GetFileAttributes(str.c_str());
-          if (Attributes & FILE_ATTRIBUTE_DIRECTORY)
-          {
-            //is directory
+          if (Attributes & FILE_ATTRIBUTE_DIRECTORY) {
+            // is directory
             delete_dir(str, delete_files_recursively);
-          }
-          else
-          {
+          } else {
             remove(str.c_str());
-            //not directory
+            // not directory
           }
         }
       }while (FindNextFile(hFind, &FindFileData));
@@ -291,12 +298,9 @@ class FileUtils {
   static int create_dir(const std::string& path, bool recursive = true) {
 #ifdef BOOST_VERSION
     boost::filesystem::path dir(path);
-    if(boost::filesystem::create_directory(dir))
-    {
+    if (boost::filesystem::create_directory(dir)) {
       return 0;
-    }
-    else
-    {
+    } else {
       return -1;
     }
 #else
@@ -415,8 +419,7 @@ class FileUtils {
         logger->log_info("Adding %s to paths", path);
         if (S_ISDIR(statbuf.st_mode)) {
           addFilesMatchingExtension(logger, path, extension, accruedFiles);
-        }
-        else {
+        } else {
           if (utils::StringUtils::endsWith(path, extension)) {
             logger->log_info("Adding %s to paths", path);
             accruedFiles.push_back(path);
@@ -430,7 +433,6 @@ class FileUtils {
 
   static std::vector<std::pair<std::string, std::string>> list_dir_all(const std::string& dir, const std::shared_ptr<logging::Logger> &logger,
                                                                        bool recursive = true)  {
-
     std::vector<std::pair<std::string, std::string>> fileList;
     auto lambda = [&fileList] (const std::string &path, const std::string &filename) {
       fileList.push_back(make_pair(path, filename));
@@ -447,9 +449,8 @@ class FileUtils {
    * Callback is called for every file found: first argument is the path of the directory, second is the filename
    * Return value of the callback is used to continue (true) or stop (false) listing
    */
-  static void list_dir(const std::string& dir, std::function<bool (const std::string&, const std::string&)> callback,
+  static void list_dir(const std::string& dir, std::function<bool(const std::string&, const std::string&)> callback,
                        const std::shared_ptr<logging::Logger> &logger, bool recursive = true) {
-
     logger->log_debug("Performing file listing against %s", dir);
 #ifndef WIN32
     DIR *d = opendir(dir.c_str());
@@ -460,7 +461,6 @@ class FileUtils {
 
     struct dirent *entry;
     while ((entry = readdir(d)) != NULL) {
-
       std::string d_name = entry->d_name;
       std::string path = dir + get_separator() + d_name;
 
@@ -489,7 +489,7 @@ class FileUtils {
     std::string pathToSearch = dir + "\\*.*";
     hFind = FindFirstFileA(pathToSearch.c_str(), &FindFileData);
 
-    if(hFind == INVALID_HANDLE_VALUE) {
+    if (hFind == INVALID_HANDLE_VALUE) {
       logger->log_warn("Failed to open directory: %s", dir.c_str());
       return;
     }
@@ -506,8 +506,7 @@ class FileUtils {
           if (recursive) {
             list_dir(path, callback, logger, recursive);
           }
-        }
-        else {
+        } else {
           if (!callback(dir, FindFileData.cFileName)) {
             break;
           }
@@ -613,7 +612,7 @@ class FileUtils {
     return child_path;
   }
 
-  static bool is_hidden(const std::string& path){
+  static bool is_hidden(const std::string& path) {
 #ifdef WIN32
     DWORD attributes = GetFileAttributesA(path.c_str());
     return ((attributes != INVALID_FILE_ATTRIBUTES)  && ((attributes & FILE_ATTRIBUTE_HIDDEN) != 0));
@@ -696,13 +695,13 @@ class FileUtils {
     return {};
   }
 #endif /* WIN32 */
-};
+}; // NOLINT
 
-} /* namespace file */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace file
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_

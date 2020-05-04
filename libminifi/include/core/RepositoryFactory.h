@@ -19,6 +19,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
 
+#include <memory>
+#include <string>
+
 #include "core/ContentRepository.h"
 #include "core/Repository.h"
 #include "Core.h"
@@ -46,10 +49,10 @@ std::shared_ptr<core::Repository> createRepository(const std::string configurati
  */
 std::shared_ptr<core::ContentRepository> createContentRepository(const std::string configuration_class_name, bool fail_safe = false, const std::string repo_name = "");
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_

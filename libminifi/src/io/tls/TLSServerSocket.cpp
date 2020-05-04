@@ -135,8 +135,8 @@ void TLSServerSocket::close_fd(int fd) {
   close_ssl(fd);
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

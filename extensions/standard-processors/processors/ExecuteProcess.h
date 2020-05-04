@@ -17,29 +17,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __EXECUTE_PROCESS_H__
-#define __EXECUTE_PROCESS_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_
 
-#include <stdio.h>
-#include <string>
 #include <errno.h>
-#include <chrono>
-#include <thread>
-#include <iostream>
-#include <sys/types.h>
 #include <signal.h>
+#include <stdio.h>
+#include <sys/types.h>
+
+#include <chrono>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <thread>
+
 #ifndef WIN32
 #include <sys/wait.h>
-#include <sys/types.h>
-#include <signal.h>
+
 #endif
-#include "io/BaseStream.h"
-#include "FlowFileRecord.h"
+#include "core/Core.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
 #include "core/Resource.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "FlowFileRecord.h"
+#include "io/BaseStream.h"
 
 namespace org {
 namespace apache {
@@ -55,7 +57,7 @@ class ExecuteProcess : public core::Processor {
   /*!
    * Create a new processor
    */
-  ExecuteProcess(std::string name, utils::Identifier uuid = utils::Identifier())
+  ExecuteProcess(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ExecuteProcess>::getLogger()) {
     _redirectErrorStream = false;
@@ -89,7 +91,7 @@ class ExecuteProcess : public core::Processor {
     }
     char *_data;
     uint64_t _dataSize;
-    //void process(std::ofstream *stream) {
+    // void process(std::ofstream *stream) {
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       int64_t ret = 0;
       if (_data && _dataSize > 0)
@@ -103,8 +105,6 @@ class ExecuteProcess : public core::Processor {
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   // Initialize, over write by NiFi ExecuteProcess
   virtual void initialize(void);
-
- protected:
 
  private:
   // Logger
@@ -125,14 +125,12 @@ class ExecuteProcess : public core::Processor {
 
 REGISTER_RESOURCE(ExecuteProcess, "Runs an operating system command specified by the user and writes the output of that command to a FlowFile. If the command is expected to be long-running,"
                   "the Processor can output the partial data on a specified interval. When this option is used, the output is expected to be in textual format,"
-                  "as it typically does not make sense to split binary data on arbitrary time-based intervals.")
-;
+                  "as it typically does not make sense to split binary data on arbitrary time-based intervals.");
 #endif
-}
-/* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_

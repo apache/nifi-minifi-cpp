@@ -15,26 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROPERTY_H__
-#define __PROPERTY_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
+#define LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
+
+#include <math.h>
+#include <stdlib.h>
 
 #include <algorithm>
-#include "core/Core.h"
-#include "PropertyValidation.h"
-#include <sstream>
-#include <typeindex>
-#include <string>
-#include <vector>
-#include <queue>
+#include <atomic>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
-#include <atomic>
-#include <functional>
+#include <queue>
 #include <set>
-#include <stdlib.h>
-#include <math.h>
+#include <sstream>
+#include <string>
+#include <typeindex>
+#include <utility>
+#include <vector>
 
+#include "core/Core.h"
+#include "PropertyValidation.h"
 #include "PropertyValue.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
@@ -48,7 +50,6 @@ namespace core {
 class PropertyBuilder;
 
 class Property {
-
  public:
   /*!
    * Create a new property
@@ -305,8 +306,9 @@ class Property {
       timeunit = DAY;
       output = ival;
       return true;
-    } else
+    } else {
       return false;
+    }
   }
 
 // Convert String
@@ -359,8 +361,9 @@ class Property {
       timeunit = DAY;
       output = ival;
       return true;
-    } else
+    } else {
       return false;
+    }
   }
 
   static bool StringToDateTime(const std::string& input, int64_t& output) {
@@ -449,7 +452,6 @@ class Property {
   }
 
  protected:
-
   /**
    * Coerce default values at construction.
    */
@@ -484,10 +486,9 @@ class Property {
   std::vector<std::string> types_;
   bool supports_el_;
   bool is_transient_;
+
  private:
-
   friend class PropertyBuilder;
-
 };
 
 template<typename T>
@@ -495,7 +496,6 @@ class ConstrainedProperty;
 
 class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
  public:
-
   static std::shared_ptr<PropertyBuilder> createProperty(const std::string &name) {
     std::shared_ptr<PropertyBuilder> builder = std::unique_ptr<PropertyBuilder>(new PropertyBuilder());
     builder->prop.name_ = name;
@@ -575,19 +575,19 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
   }
 
   std::shared_ptr<PropertyBuilder> withExclusiveProperty(const std::string &property, const std::string regex) {
-    prop.exclusive_of_properties_.push_back( { property, regex });
+    prop.exclusive_of_properties_.push_back({ property, regex });
     return shared_from_this();
   }
 
   Property &&build() {
     return std::move(prop);
   }
+
  private:
   Property prop;
 
   PropertyBuilder() {
   }
-
 };
 
 template<typename T>
@@ -648,23 +648,21 @@ class ConstrainedProperty : public std::enable_shared_from_this<ConstrainedPrope
     return std::move(prop);
   }
 
-  ConstrainedProperty(const std::shared_ptr<PropertyBuilder> &builder)
+  ConstrainedProperty(const std::shared_ptr<PropertyBuilder> &builder) // NOLINT
       : builder_(builder) {
-
   }
 
  protected:
-
   std::vector<PropertyValue> allowed_values_;
   std::shared_ptr<PropertyBuilder> builder_;
 
   friend class PropertyBuilder;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_PROPERTY_H_

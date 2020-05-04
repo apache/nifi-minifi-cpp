@@ -17,40 +17,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FLOW_CONTROLLER_H__
-#define __FLOW_CONTROLLER_H__
+#ifndef LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_
+#define LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_
 
+#include <algorithm>
+#include <atomic>
+#include <map>
+#include <memory>
+#include <mutex>
 #include <cstdio>
+#include <queue>
+#include <set>
+#include <string>
 #include <utility>
 #include <vector>
-#include <queue>
-#include <map>
-#include <mutex>
-#include <atomic>
-#include <algorithm>
-#include <set>
 
-#include "properties/Configure.h"
-#include "core/Relationship.h"
-#include "FlowFileRecord.h"
 #include "Connection.h"
-#include "core/Processor.h"
-#include "core/logging/Logger.h"
-#include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
-#include "core/ProcessGroup.h"
-#include "core/FlowConfiguration.h"
 #include "core/controller/ControllerServiceNode.h"
 #include "core/controller/ControllerServiceProvider.h"
-#include "TimerDrivenSchedulingAgent.h"
-#include "EventDrivenSchedulingAgent.h"
-#include "CronDrivenSchedulingAgent.h"
-#include "FlowControlProtocol.h"
+#include "core/FlowConfiguration.h"
+#include "core/logging/Logger.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessGroup.h"
+#include "core/Processor.h"
+#include "core/ProcessSession.h"
 #include "core/Property.h"
-#include "core/state/nodes/MetricsBase.h"
-#include "utils/Id.h"
-#include "core/state/UpdateController.h"
+#include "core/Relationship.h"
 #include "core/state/nodes/FlowInformation.h"
+#include "core/state/nodes/MetricsBase.h"
+#include "core/state/UpdateController.h"
+#include "CronDrivenSchedulingAgent.h"
+#include "EventDrivenSchedulingAgent.h"
+#include "FlowControlProtocol.h"
+#include "FlowFileRecord.h"
+#include "properties/Configure.h"
+#include "TimerDrivenSchedulingAgent.h"
+#include "utils/Id.h"
 
 namespace org {
 namespace apache {
@@ -323,7 +325,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   void stopC2();
 
  protected:
-
   void loadC2ResponseConfiguration();
 
   void loadC2ResponseConfiguration(const std::string &prefix);
@@ -419,10 +420,9 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::unique_ptr<state::UpdateController> c2_agent_;
 };
 
-}
-/* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_

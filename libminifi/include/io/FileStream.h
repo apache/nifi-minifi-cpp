@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_TLS_FILESTREAM_H_
-#define LIBMINIFI_INCLUDE_IO_TLS_FILESTREAM_H_
+#ifndef LIBMINIFI_INCLUDE_IO_FILESTREAM_H_
+#define LIBMINIFI_INCLUDE_IO_FILESTREAM_H_
 
+#include <memory>
+#include <vector>
 #include <fstream>
 #include <string>
 #include "BaseStream.h"
@@ -105,7 +107,6 @@ class FileStream : public io::BaseStream {
   }
 
  protected:
-
   /**
    * Creates a vector and returns the vector using the provided
    * type name.
@@ -133,10 +134,10 @@ class FileStream : public io::BaseStream {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_IO_TLS_FILESTREAM_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_FILESTREAM_H_

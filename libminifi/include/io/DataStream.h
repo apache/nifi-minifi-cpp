@@ -43,10 +43,10 @@ class DataStream {
    * Constructor
    **/
   explicit DataStream(const uint8_t *buf, const uint32_t buflen) {
-    writeData((uint8_t*) buf, buflen);
+    writeData(const_cast<uint8_t*>(buf), buflen);
   }
 
-  virtual short initialize() {
+  virtual short initialize() { // NOLINT
     buffer.clear();
     readBuffer = 0;
     return 0;
@@ -120,13 +120,12 @@ class DataStream {
   uint32_t readBuffer = 0;
 
  private:
-
-   int doReadData(uint8_t *buf, int buflen) noexcept;
+  int doReadData(uint8_t *buf, int buflen) noexcept;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_DATASTREAM_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_DATASTREAM_H_

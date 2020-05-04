@@ -14,18 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_KEYVALUE_KeyValueStoreService_H_
-#define LIBMINIFI_INCLUDE_KEYVALUE_KeyValueStoreService_H_
-
-#include "core/Core.h"
-#include "properties/Configure.h"
-#include "core/controller/ControllerService.h"
+#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_KEYVALUESTORESERVICE_H_
+#define LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_KEYVALUESTORESERVICE_H_
 
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
 #include <cstdint>
 #include <functional>
+
+#include "core/Core.h"
+#include "properties/Configure.h"
+#include "core/controller/ControllerService.h"
 
 namespace org {
 namespace apache {
@@ -40,9 +40,9 @@ class KeyValueStoreService : public core::controller::ControllerService {
 
   virtual ~KeyValueStoreService();
 
-  virtual void yield() override;
-  virtual bool isRunning() override;
-  virtual bool isWorkAvailable() override;
+  void yield() override;
+  bool isRunning() override;
+  bool isWorkAvailable() override;
 
   virtual bool set(const std::string& key, const std::string& value) = 0;
 
@@ -57,10 +57,10 @@ class KeyValueStoreService : public core::controller::ControllerService {
   virtual bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) = 0;
 };
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controllers
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_KEYVALUE_KeyValueStoreService_H_ */
+#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_KEYVALUESTORESERVICE_H_

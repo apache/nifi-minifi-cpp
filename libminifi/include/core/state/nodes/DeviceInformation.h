@@ -21,35 +21,39 @@
 #include "core/Resource.h"
 
 #ifndef WIN32
+#if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
+#include <net/if_dl.h>
+#include <net/if_types.h>
+#endif
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <sys/utsname.h>
-#if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
-#include <net/if_dl.h>
-#include <net/if_types.h>
-#endif
-#include <ifaddrs.h>
-#include <net/if.h> 
-#include <unistd.h>
-#include <netinet/in.h>
 
-#include <sys/socket.h>
-#include <netdb.h>
 #include <ifaddrs.h>
+#include <net/if.h>
+#include <netdb.h>
 #include <unistd.h>
+
 #else
 #pragma comment(lib, "iphlpapi.lib")
 #include <iphlpapi.h>
+
 #endif
-#include <functional>
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include <set>
+#include <string>
+#include <vector>
 #include <fstream>
-#include <sstream>
+#include <functional>
 #include <map>
+#include <sstream>
+
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
 #include "io/ClientSocket.h"
@@ -106,14 +110,13 @@ class Device {
       ip_ = ip;
       break;
     }
-
   }
 
   std::string canonical_hostname_;
   std::string ip_;
   std::string device_id_;
- protected:
 
+ protected:
   std::vector<std::string> getIpAddresses() {
     static std::vector<std::string> ips;
     if (ips.empty()) {
@@ -143,13 +146,13 @@ class Device {
       std::set<std::string> macs;
 
       ULONG adapterLen = sizeof(IP_ADAPTER_INFO);
-      adapterPtr = (IP_ADAPTER_INFO *)malloc(sizeof(IP_ADAPTER_INFO));
+      adapterPtr = reinterpret_cast<IP_ADAPTER_INFO*>(malloc(sizeof(IP_ADAPTER_INFO)));
       if (adapterPtr == NULL) {
         return ips;
       }
       if (GetAdaptersInfo(adapterPtr, &adapterLen) == ERROR_BUFFER_OVERFLOW) {
         free(adapterPtr);
-        adapterPtr = (IP_ADAPTER_INFO *)malloc(adapterLen);
+        adapterPtr = reinterpret_cast<IP_ADAPTER_INFO*>(malloc(adapterLen));
         if (adapterPtr == NULL) {
           return ips;
         }
@@ -172,7 +175,6 @@ class Device {
 
 #if __linux__
   std::string getDeviceId() {
-
     std::hash<std::string> hash_fn;
     std::string macs;
     struct ifaddrs *ifaddr, *ifa;
@@ -204,7 +206,6 @@ class Device {
           printf("getnameinfo() failed: %s\n", gai_strerror(s));
           exit(EXIT_FAILURE);
         }
-
       }
     }
 
@@ -223,7 +224,7 @@ class Device {
     const struct ifreq* const end = it + (ifc.ifc_len / sizeof(struct ifreq));
 
     for (; it != end; ++it) {
-      strcpy(ifr.ifr_name, it->ifr_name);
+      strcpy(ifr.ifr_name, it->ifr_name); // NOLINT
       if (ioctl(sock, SIOCGIFFLAGS, &ifr) == 0) {
         if (!(ifr.ifr_flags & IFF_LOOPBACK)) {  // don't count loopback
           if (ioctl(sock, SIOCGIFHWADDR, &ifr) == 0) {
@@ -232,7 +233,7 @@ class Device {
             memcpy(mac, ifr.ifr_hwaddr.sa_data, 6);
 
             char mac_add[13];
-            snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+            snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]); // NOLINT
 
             macs += mac_add;
           }
@@ -246,7 +247,7 @@ class Device {
 
     return std::to_string(hash_fn(macs));
   }
-#elif( defined(__unix__) || defined(__APPLE__) || defined(__MACH__) || defined(BSD))  // should work on bsd variants as well
+#elif(defined(__unix__) || defined(__APPLE__) || defined(__MACH__) || defined(BSD))  // should work on bsd variants as well
   std::string getDeviceId() {
     ifaddrs* iflist;
     std::hash<std::string> hash_fn;
@@ -254,8 +255,8 @@ class Device {
 
     if (getifaddrs(&iflist) == 0) {
       for (ifaddrs* cur = iflist; cur; cur = cur->ifa_next) {
-        if (cur->ifa_addr && (cur->ifa_addr->sa_family == AF_LINK) && ((sockaddr_dl*) cur->ifa_addr)->sdl_alen) {
-          sockaddr_dl* sdl = (sockaddr_dl*) cur->ifa_addr;
+        if (cur->ifa_addr && (cur->ifa_addr->sa_family == AF_LINK) && (reinterpret_cast<sockaddr_dl*>(cur->ifa_addr))->sdl_alen) {
+          sockaddr_dl* sdl = reinterpret_cast<sockaddr_dl*>(cur->ifa_addr);
 
           if (sdl->sdl_type != IFT_ETHER) {
             continue;
@@ -264,8 +265,8 @@ class Device {
           char mac[32];
           memcpy(mac, LLADDR(sdl), sdl->sdl_alen);
           char mac_add[13];
-          snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-          ///macs += mac_add;
+          snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]); // NOLINT
+          // macs += mac_add;
           macs.insert(mac_add);
         }
       }
@@ -289,13 +290,13 @@ class Device {
     std::set<std::string> macs;
 
     ULONG adapterLen = sizeof(IP_ADAPTER_INFO);
-    adapterPtr = (IP_ADAPTER_INFO *)malloc(sizeof(IP_ADAPTER_INFO));
+    adapterPtr = reinterpret_cast<IP_ADAPTER_INFO*>(malloc(sizeof(IP_ADAPTER_INFO)));
     if (adapterPtr == NULL) {
       return "";
     }
     if (GetAdaptersInfo(adapterPtr, &adapterLen) == ERROR_BUFFER_OVERFLOW) {
       free(adapterPtr);
-      adapterPtr = (IP_ADAPTER_INFO *)malloc(adapterLen);
+      adapterPtr = reinterpret_cast<IP_ADAPTER_INFO*>(malloc(adapterLen));
       if (adapterPtr == NULL) {
         return "";
       }
@@ -305,7 +306,7 @@ class Device {
       adapter = adapterPtr;
       while (adapter) {
         char mac_add[13];
-        snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", adapter->Address[0], adapter->Address[1], adapter->Address[2], adapter->Address[3], adapter->Address[4], adapter->Address[5]);
+        snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", adapter->Address[0], adapter->Address[1], adapter->Address[2], adapter->Address[3], adapter->Address[4], adapter->Address[5]); // NOLINT
         macs.insert(mac_add);
         adapter = adapter->Next;
       }
@@ -332,7 +333,6 @@ class Device {
  */
 class DeviceInfoNode : public DeviceInformation {
  public:
-
   DeviceInfoNode(std::string name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
     static Device device;
@@ -341,7 +341,7 @@ class DeviceInfoNode : public DeviceInformation {
     device_id_ = device.device_id_;
   }
 
-  DeviceInfoNode(const std::string &name)
+  DeviceInfoNode(const std::string &name) // NOLINT
       : DeviceInformation(name) {
     static Device device;
     hostname_ = device.canonical_hostname_;
@@ -419,8 +419,7 @@ class DeviceInfoNode : public DeviceInformation {
     SerializedResponseNode arch;
     arch.name = "machinearch";
 
-    switch (si.wProcessorArchitecture)
-    {
+    switch (si.wProcessorArchitecture) {
 #ifdef PROCESSOR_ARCHITECTURE_ARM
       case PROCESSOR_ARCHITECTURE_ARM:
       arch.value = "arm32";
@@ -470,7 +469,6 @@ class DeviceInfoNode : public DeviceInformation {
   }
 
  protected:
-
   /**
    * Have found various ways of identifying different operating system variants
    * so these were either pulled from header files or online.
@@ -499,11 +497,11 @@ class DeviceInfoNode : public DeviceInformation {
 
 REGISTER_RESOURCE(DeviceInfoNode, "Node part of an AST that defines device characteristics to the C2 protocol");
 
-} /* namespace metrics */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
