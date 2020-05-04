@@ -23,7 +23,9 @@
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <string>
+
 #include "HashContent.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
