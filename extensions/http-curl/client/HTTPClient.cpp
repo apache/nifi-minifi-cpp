@@ -268,7 +268,7 @@ bool HTTPClient::submit() {
   if (keep_alive_probe_.count() > 0) {
     const auto keepAlive = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_probe_);
     const auto keepIdle = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_idle_);
-    logger_->log_debug("Setting keep alive to %" PRIu64 " seconds", keepAlive.count());
+    logger_->log_debug("Setting keep alive to %" PRId64 " seconds", keepAlive.count());
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 1L);
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPINTVL, keepAlive.count());
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPIDLE, keepIdle.count());
