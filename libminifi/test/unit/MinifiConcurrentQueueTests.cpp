@@ -136,9 +136,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
   std::thread getDequeueWaitForConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
       const std::size_t max_read_attempts = 6;
-      std::size_t attemt_num = 0;
-      while (results.size() < 3 && attemt_num < max_read_attempts) {
-        ++attemt_num;
+      for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
         std::string s;
         if (queue.dequeueWaitFor(s, std::chrono::milliseconds(3))) {
           results.push_back(s);
@@ -150,9 +148,9 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
   std::thread getConsumeWaitForConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results]() {
       const std::size_t max_read_attempts = 6;
-      std::size_t attemt_num = 0;
-      while (results.size() < 3 && attemt_num < max_read_attempts) {
-        ++attemt_num;
+      std::size_t attempt_num = 0;
+      while (results.size() < 3 && attempt_num < max_read_attempts) {
+        ++attempt_num;
         std::string s;
         queue.consumeWaitFor([&results] (const std::string& s) { results.push_back(s); }, std::chrono::milliseconds(3));
       }
@@ -176,12 +174,12 @@ TEST_CASE("TestConcurrentQueue", "[TestConcurrentQueue]") {
       std::string s { "Unchanged" };
 
       SECTION("tryDequeue on empty queue returns false") {
-        REQUIRE(false == queue.tryDequeue(s));
+        REQUIRE(!queue.tryDequeue(s));
       }
 
       SECTION("consume on empty queue returns false") {
         bool ret = queue.consume([&s] (const std::string& elem) { s = elem; });
-        REQUIRE(false == ret);
+        REQUIRE(!ret);
       }
       REQUIRE(s == "Unchanged");
     }
@@ -308,7 +306,7 @@ TEST_CASE("TestConditionConcurrentQueue::testProducerConsumer", "[TestConditionC
     lock.unlock();
     producer.join();
 
-    REQUIRE(0 == results.size());
+    REQUIRE(results.empty());
   }
 }
 
