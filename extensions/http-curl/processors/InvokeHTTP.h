@@ -142,9 +142,9 @@ class InvokeHTTP : public core::Processor {
   // attribute to send regex
   std::string attribute_to_send_regex_;
   // connection timeout
-  std::chrono::milliseconds connect_timeout_ms_{DEFAULT_TIMEOUT_MS};
+  std::chrono::milliseconds connect_timeout_ms_{20000};
   // read timeout.
-  std::chrono::milliseconds read_timeout_ms_{DEFAULT_TIMEOUT_MS};
+  std::chrono::milliseconds read_timeout_ms_{20000};
   // attribute in which response body will be added
   std::string put_attribute_name_;
   // determine if we always output a response.
@@ -159,7 +159,6 @@ class InvokeHTTP : public core::Processor {
   bool disable_peer_verification_{false};
  private:
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<InvokeHTTP>::getLogger()};
-  const std::chrono::milliseconds DEFAULT_TIMEOUT_MS{20000};
 };
 
 REGISTER_RESOURCE(InvokeHTTP,"An HTTP client processor which can interact with a configurable HTTP Endpoint. "

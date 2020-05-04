@@ -34,14 +34,14 @@ public:
       : CoapIntegrationBase(6000) {
   }
 
-  virtual void testSetup() {
+  virtual void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<LogTestController>();
     LogTestController::getInstance().setTrace<minifi::processors::InvokeHTTP>();
     LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
   }
 
-  virtual void cleanup() {
+  virtual void cleanup() override {
   }
 
   void setProperties(std::shared_ptr<core::Processor> proc) {
@@ -100,7 +100,7 @@ public:
 
 class VerifyInvokeHTTPOKResponse : public VerifyInvokeHTTP {
 public:
-  virtual void runAssertions() {
+  virtual void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invokehttp.status.code value:201"));
     assert(LogTestController::getInstance().contains("response code 201"));
   }
@@ -108,14 +108,14 @@ public:
 
 class VerifyCouldNotConnectInvokeHTTP : public VerifyInvokeHTTP {
 public:
-  virtual void runAssertions() {
+  virtual void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invoke_http value:failure"));
   }
 };
 
 class VerifyNoRetryInvokeHTTP : public VerifyInvokeHTTP {
 public:
-  virtual void runAssertions() {
+  virtual void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invokehttp.status.message value:HTTP/1.1 404 Not Found"));
     assert(LogTestController::getInstance().contains("isSuccess: 0, response code 404"));
   }
@@ -123,7 +123,7 @@ public:
 
 class VerifyRetryInvokeHTTP : public VerifyInvokeHTTP {
 public:
-  virtual void runAssertions() {
+  virtual void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invokehttp.status.message value:HTTP/1.1 501 Not Implemented"));
     assert(LogTestController::getInstance().contains("isSuccess: 0, response code 501"));
   }
@@ -131,7 +131,7 @@ public:
 
 class VerifyRWTimeoutInvokeHTTP : public VerifyInvokeHTTP {
 public:
-  virtual void runAssertions() {
+  virtual void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invoke_http value:failure"));
     assert(LogTestController::getInstance().contains("failed Timeout was reached"));
   }
