@@ -18,12 +18,16 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_EXECUTEPYPROC_H
-#define NIFI_MINIFI_CPP_EXECUTEPYPROC_H
+#ifndef EXTENSIONS_SCRIPT_PYTHON_EXECUTEPYTHONPROCESSOR_H_
+#define EXTENSIONS_SCRIPT_PYTHON_EXECUTEPYTHONPROCESSOR_H_
 
-#include <concurrentqueue.h>
-#include <core/Resource.h>
-#include <core/Processor.h>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "concurrentqueue.h" // NOLINT
+#include "core/Resource.h"
+#include "core/Processor.h"
 
 #include "../ScriptEngine.h"
 #include "../ScriptProcessContext.h"
@@ -48,14 +52,15 @@ class ExecutePythonProcessor : public core::Processor {
   }
 
   static core::Property ScriptFile;
+  static core::Property ScriptBody;
   static core::Property ModuleDirectory;
 
   static core::Relationship Success;
   static core::Relationship Failure;
 
-  virtual void initialize() override;
-  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void initialize() override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
   void setSupportsDynamicProperties() {
     python_dynamic_ = true;
@@ -82,12 +87,11 @@ class ExecutePythonProcessor : public core::Processor {
     return description_;
   }
 
-  virtual bool supportsDynamicProperties() override {
+  bool supportsDynamicProperties() override {
     return false;
   }
 
  private:
-
   std::vector<core::Property> python_properties_;
 
   std::string description_;
@@ -99,11 +103,18 @@ class ExecutePythonProcessor : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<logging::Logger> python_logger_;
 
-  std::string script_engine_;
-  std::string script_file_;
+  std::string script_to_exec_;
   std::string module_directory_;
 
-  moodycamel::ConcurrentQueue<std::shared_ptr<script::ScriptEngine>> script_engine_q_;
+  moodycamel::ConcurrentQueue<std::shared_ptr<python::PythonScriptEngine>> script_engine_q_;
+
+  std::shared_ptr<python::PythonScriptEngine> getScriptEngine();
+  void handleEngineNoLongerInUse(std::shared_ptr<python::PythonScriptEngine>&& engine);
+  void appendPathForImportModules();
+  void loadScriptFromFile(const std::string& file_path);
+  void loadScript();
+  void reloadScriptIfUsingScriptFileProperty();
+
 
   template<typename T>
   std::shared_ptr<T> createEngine() const {
@@ -114,26 +125,6 @@ class ExecutePythonProcessor : public core::Processor {
     engine->bind("REL_FAILURE", Failure);
 
     return engine;
-  }
-
-  void triggerEngineProcessor(const std::shared_ptr<script::ScriptEngine> &engine, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) const {
-    auto typed_engine = std::static_pointer_cast<python::PythonScriptEngine>(engine);
-    typed_engine->onTrigger(context, session);
-  }
-
-  void triggerSchedule(const std::shared_ptr<script::ScriptEngine> &engine, const std::shared_ptr<core::ProcessContext> &context) const {
-    auto typed_engine = std::static_pointer_cast<python::PythonScriptEngine>(engine);
-    typed_engine->onSchedule(context);
-  }
-
-  void triggerInitialize(const std::shared_ptr<script::ScriptEngine> &engine, const std::shared_ptr<core::Processor> &proc) const {
-    auto typed_engine = std::static_pointer_cast<python::PythonScriptEngine>(engine);
-    typed_engine->onInitialize(proc);
-  }
-
-  void triggerDescribe(const std::shared_ptr<script::ScriptEngine> &engine, const std::shared_ptr<core::Processor> &proc) const {
-    auto typed_engine = std::static_pointer_cast<python::PythonScriptEngine>(engine);
-    typed_engine->describe(proc);
   }
 };
 
@@ -151,4 +142,4 @@ REGISTER_RESOURCE(
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_EXECUTEPYPROC_H
+#endif  // EXTENSIONS_SCRIPT_PYTHON_EXECUTEPYTHONPROCESSOR_H_

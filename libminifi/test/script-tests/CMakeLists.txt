@@ -18,7 +18,14 @@
 #
 
 if (NOT DISABLE_PYTHON_SCRIPTING)
-	file(GLOB EXECUTESCRIPT_PYTHON_INTEGRATION_TESTS  "Python*.cpp")
+	file(GLOB EXECUTESCRIPT_PYTHON_INTEGRATION_TESTS  "TestExecuteScriptProcessorWithPythonScript.cpp")
+	file(GLOB EXECUTEPYTHONPROCESSOR_UNIT_TESTS  "ExecutePythonProcessorTests.cpp")
+	file(GLOB PY_SOURCES  "python/*.cpp")
+	find_package(PythonLibs 3.5)
+	if (NOT PYTHONLIBS_FOUND)
+		find_package(PythonLibs 3.0 REQUIRED)
+	endif()
+	file(COPY "${CMAKE_SOURCE_DIR}/libminifi/test/script-tests/test_scripts" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/")
 endif()
 
 if (ENABLE_LUA_SCRIPTING)
@@ -42,6 +49,28 @@ FOREACH(testfile ${EXECUTESCRIPT_PYTHON_INTEGRATION_TESTS})
 	add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
 
+FOREACH(testfile ${EXECUTEPYTHONPROCESSOR_UNIT_TESTS})
+	get_filename_component(testfilename "${testfile}" NAME_WE)
+	add_executable("${testfilename}" "${testfile}")
+
+	include_directories(${PYTHON_INCLUDE_DIR})
+	include_directories(../../thirdparty/pybind11/include)
+	include_directories(python)
+	add_definitions(-DPYTHON_SUPPORT)
+
+	target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/script")
+	target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
+	target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/script/python")
+	target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/thirdparty/pybind11/include")
+
+	target_wholearchive_library(${testfilename} minifi-script-extensions)
+	target_wholearchive_library(${testfilename} minifi-standard-processors)
+
+	createTests("${testfilename}")
+	add_test(NAME "${testfilename}" COMMAND "${testfilename}"  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+	MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
+ENDFOREACH()
+
 FOREACH(testfile ${EXECUTESCRIPT_LUA_INTEGRATION_TESTS})
 	get_filename_component(testfilename "${testfile}" NAME_WE)
 	add_executable("${testfilename}" "${testfile}")
@@ -57,4 +86,4 @@ FOREACH(testfile ${EXECUTESCRIPT_LUA_INTEGRATION_TESTS})
 	add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
 
-message("-- Finished building ${PYTHON_EXECUTESCRIPT-EXTENSIONS_TEST_COUNT} Python ExecuteScript related test file(s)...")
+message("-- Finished building ${EXTENSIONS_TEST_COUNT} Python ExecuteScript related test file(s)...")
