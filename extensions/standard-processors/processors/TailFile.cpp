@@ -298,6 +298,18 @@ void TailFile::initialize() {
 }
 
 void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+  std::unique_lock<std::mutex> lock(tailFileMutex_, std::try_to_lock);
+  if (!lock.owns_lock()) {
+    logger_->log_warn("'onSchedule' is called before previous 'onSchedule' call is finished.");
+    context->yield();
+    return;
+  }
+
+  stateManager_ = context->getStateManager();
+  if (!stateManager_) {
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
+  }
+
   std::string mode;
   context->getProperty(Mode.getName(), mode);
   isMultiChanging_ = ModeMultiplFiles == mode;
@@ -345,12 +357,15 @@ std::vector<std::string> TailFile::lookup(core::ProcessContext &context) {
 }
 
 void TailFile::recoverState(core::ProcessContext& context) {
-  const auto filesToTail = lookup(context);
+  std::unordered_map<std::string, std::string> stateMap;
+  if (stateManager_->get(stateMap)) {
+    const auto filesToTail = lookup(context);
 
-  auto& stateMap = getStateMap();
-
-  initStates(filesToTail, stateMap, stateMap.empty(), startPosition_);
-  recoverState(context, filesToTail, stateMap);
+    initStates(filesToTail, stateMap, stateMap.empty(), startPosition_);
+    recoverState(context, filesToTail, stateMap);
+  } else {
+    logger_->log_info("Found no stored state");
+  }
 }
 
 void TailFile::initStates(const std::vector<std::string>& filesToTail, const std::unordered_map<std::string, std::string>& statesMap, bool isCleared, const std::string& startPosition) {
@@ -532,7 +547,7 @@ void TailFile::cleanup() {
 }
 
 void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
+  std::unique_lock<std::mutex> lock(tailFileMutex_, std::try_to_lock);
   if (!lock.owns_lock()) {
     logger_->log_warn("'onTrigger' is called before previous 'onTrigger' call is finished.");
     context->yield();
@@ -542,7 +557,12 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   if (isMultiChanging_) {
     auto timeSinceLastLookup = getTimeMillis() - lastLookup_;
     if (timeSinceLastLookup > lookupFrequency_) {
-      initStates(lookup(*context), getStateMap(), false, startPosition_);
+      std::unordered_map<std::string, std::string> stateMap;
+      if (stateManager_->get(stateMap)) {
+        initStates(lookup(*context), stateMap, false, startPosition_);
+      } else {
+        logger_->log_info("Found no stored state");
+      }
     }
   }
 
@@ -916,13 +936,14 @@ std::vector<std::string> TailFile::getRolledOffFiles(core::ProcessContext& conte
 }
 
 void TailFile::persistState(const std::shared_ptr<TailFileObject>& tfo, core::ProcessContext& context) {
-  auto& stateMap = getStateMap();
-
   const auto state = tfo->getState().toStateMap(tfo->getFilenameIndex());
 
-  for (auto const& el : state) {
+  std::unordered_map<std::string, std::string> stateMap;
+  for (auto const& el: state) {
     stateMap.insert(el);
   }
+
+  stateManager_->set(stateMap);
 }
 
 bool TailFile::createReader(std::ifstream& reader, const std::string& filename, uint64_t position) {
@@ -1140,10 +1161,6 @@ bool TailFile::getFileSize(const std::string& filename, uint64_t& size) {
 
   size = fileInfo.st_size;
   return true;
-}
-
-std::unordered_map<std::string, std::string>& TailFile::getStateMap() {
-  return stateMap_;
 }
 
 } /* namespace processors */

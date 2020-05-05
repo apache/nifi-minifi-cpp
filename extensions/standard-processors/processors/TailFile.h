@@ -61,7 +61,6 @@ class TailFile: public core::Processor {
   static core::Relationship Success;
 
  public:
-
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>  &session) override;
   void initialize() override;
@@ -87,14 +86,10 @@ class TailFile: public core::Processor {
   bool getFileSizeLastModifiedTime(const std::string& filename, uint64_t& size, uint64_t& lastModifiedTime);
   bool getFileSize(const std::string& filename, uint64_t& size);
 
-  // Will be substituted by RocksDB controller service.
-  std::unordered_map<std::string, std::string>& getStateMap();
  private:
-  // Used by 'getStateMap()' for testing until RocksDB controller service is used instead of 'getStateMap'.
-  std::unordered_map<std::string, std::string> stateMap_;
-
   std::unordered_map<std::string, std::shared_ptr<TailFileObject>> states_;
-  std::mutex onTriggerMutex_;
+  std::shared_ptr<core::CoreComponentStateManager> stateManager_;
+  std::mutex tailFileMutex_;
   std::string baseDirectory_;
   std::string fileName_;
   bool recursive_{};
