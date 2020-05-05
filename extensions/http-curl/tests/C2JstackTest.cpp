@@ -24,18 +24,18 @@
 
 class VerifyC2DescribeJstack : public VerifyC2Describe {
  public:
-  virtual void runAssertions() {
+  virtual void runAssertions() override {
     assert(LogTestController::getInstance().contains("SchedulingAgent"));
   }
 };
 
 class DescribeJstackHandler : public HeartbeatHandler {
  public:
-  virtual void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) {
+  virtual void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
     sendHeartbeatResponse("DESCRIBE", "jstack", "889398", conn);
   }
 
-  virtual void handleAcknowledge(const rapidjson::Document& root) {
+  virtual void handleAcknowledge(const rapidjson::Document& root) override {
     assert(root.HasMember("Flowcontroller threadpool #0"));
   }
 };

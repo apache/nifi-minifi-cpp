@@ -35,7 +35,7 @@ class VerifyC2Server : public CoapIntegrationBase {
     dir = testController.createTempDirectory(format);
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
     std::fstream file;
@@ -45,16 +45,16 @@ class VerifyC2Server : public CoapIntegrationBase {
     file.close();
   }
 
-  void cleanup() {
+  void cleanup() override {
     unlink(ss.str().c_str());
   }
 
-  void runAssertions() {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("Import offset 0") == true);
     assert(LogTestController::getInstance().contains("Outputting success and response") == true);
   }
 
-  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
     std::shared_ptr<core::Processor> proc = pg->findProcessor("invoke");
     assert(proc != nullptr);
 

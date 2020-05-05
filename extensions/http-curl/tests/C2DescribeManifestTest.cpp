@@ -24,14 +24,15 @@
 
 class DescribeManifestHandler: public HeartbeatHandler {
 public:
-  virtual void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) {
+  virtual void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
     sendHeartbeatResponse("DESCRIBE", "manifest", "889345", conn);
   }
 
-  virtual void handleAcknowledge(const rapidjson::Document& root) {
+  virtual void handleAcknowledge(const rapidjson::Document& root) override {
     verifyJsonHasAgentManifest(root);
   }
 };
+
 int main(int argc, char **argv) {
   cmd_args args = parse_cmdline_args(argc, argv, "heartbeat");
   VerifyC2Describe harness;

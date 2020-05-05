@@ -122,7 +122,7 @@ void CoapIntegrationBase::setUrl(const std::string& url, CivetHandler *handler) 
 
 class VerifyC2Base : public CoapIntegrationBase {
  public:
-  void testSetup() override {
+  virtual void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<LogTestController>();
   }
@@ -163,25 +163,25 @@ class VerifyC2Update : public CoapIntegrationBase {
       : CoapIntegrationBase(waitTime) {
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setInfo<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::utils::HTTPClient>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
   }
 
-  void configureC2() {
+  void configureC2() override {
     configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
     configuration->set("nifi.c2.enable", "true");
     configuration->set("nifi.c2.agent.class", "test");
     configuration->set("nifi.c2.agent.heartbeat.period", "1000");
   }
 
-  void cleanup() {
+  void cleanup() override {
     LogTestController::getInstance().reset();
   }
 
-  void runAssertions() {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("Starting to reload Flow Controller with flow control name MiNiFi Flow, version"));
   }
 };
@@ -192,17 +192,17 @@ class VerifyC2UpdateAgent : public VerifyC2Update {
       : VerifyC2Update(waitTime) {
   }
 
-  void configureC2() {
+  void configureC2() override {
     VerifyC2Update::configureC2();
     configuration->set("nifi.c2.agent.update.allow","true");
     configuration->set("c2.agent.update.command", "echo \"verification command\"");
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
   }
 
-  void runAssertions() {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("removing file"));
     assert(LogTestController::getInstance().contains("May not have command processor"));
   }
@@ -214,18 +214,18 @@ public:
       : VerifyC2Update(waitTime) {
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setInfo<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
     utils::file::FileUtils::create_dir("content_repository");
   }
 
-  void runAssertions() {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("Invalid configuration payload"));
     assert(LogTestController::getInstance().contains("update failed"));
   }
 
-  void cleanup() {
+  void cleanup() override {
     utils::file::FileUtils::delete_dir("content_repository", true);
     VerifyC2Update::cleanup();
   }

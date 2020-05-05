@@ -27,7 +27,7 @@
 
 class LightWeightC2Handler : public HeartbeatHandler {
  public:
-  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *)  {
+  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) override {
     if (calls_ == 0) {
       verifyJsonHasAgentManifest(root);
     } else {
@@ -42,7 +42,7 @@ class LightWeightC2Handler : public HeartbeatHandler {
 
 class VerifyC2Heartbeat : public VerifyC2Base {
  public:
-  virtual void testSetup() {
+  virtual void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTProtocol>();
@@ -50,20 +50,20 @@ class VerifyC2Heartbeat : public VerifyC2Base {
     VerifyC2Base::testSetup();
   }
 
-  void runAssertions() {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("Received Ack from Server"));
     assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component invoke"));
     assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component FlowController"));
   }
 
-  void configureFullHeartbeat() {
+  void configureFullHeartbeat() override {
     configuration->set("nifi.c2.full.heartbeat", "true");
   }
 };
 
 class VerifyLightWeightC2Heartbeat : public VerifyC2Heartbeat {
 public:
-  void configureFullHeartbeat() {
+  void configureFullHeartbeat() override {
     configuration->set("nifi.c2.full.heartbeat", "false");
   }
 };

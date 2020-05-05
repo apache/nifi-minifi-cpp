@@ -430,7 +430,7 @@ class HeartbeatHandler : public CivetHandler {
     }
   }
 
-  bool handlePost(CivetServer *, struct mg_connection *conn) {
+  bool handlePost(CivetServer *, struct mg_connection *conn) override {
     verify(conn);
     sendStopOperation(conn);
     return true;
@@ -443,7 +443,7 @@ class C2UpdateHandler : public CivetHandler {
     : test_file_location_(test_file_location) {
   }
 
-  bool handlePost(CivetServer *server, struct mg_connection *conn) {
+  bool handlePost(CivetServer *server, struct mg_connection *conn) override {
     calls_++;
     if (!response_.empty()) {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
@@ -458,7 +458,7 @@ class C2UpdateHandler : public CivetHandler {
     return true;
   }
 
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
     std::ifstream myfile(test_file_location_.c_str(), std::ios::in | std::ios::binary);
     if (myfile.good()) {
       std::string str((std::istreambuf_iterator<char>(myfile)), (std::istreambuf_iterator<char>()));
@@ -492,7 +492,7 @@ public:
    : C2UpdateHandler(test_file_location) {
  }
 
- bool handlePost(CivetServer *server, struct mg_connection *conn) {
+ bool handlePost(CivetServer *server, struct mg_connection *conn) override {
    calls_++;
    const auto data = readPayload(conn);
 
