@@ -39,7 +39,6 @@
 #include <regex.h>
 #endif
 #include <chrono>
-#include <limits>
 
 #include "utils/ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
@@ -257,7 +256,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   HTTPReadCallback *callback{nullptr};
   HTTPUploadCallback *write_callback_{nullptr};
   int64_t http_code{0};
-  ByteOutputCallback read_callback_{std::numeric_limits<int>::max()};
+  ByteOutputCallback read_callback_{INT_MAX};
   utils::HTTPHeaderResponse header_response_{-1};
 
   CURLcode res{CURLE_OK};
