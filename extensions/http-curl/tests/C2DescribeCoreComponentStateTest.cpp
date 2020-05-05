@@ -27,8 +27,7 @@
 
 class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
  public:
-  explicit VerifyC2DescribeCoreComponentState(bool isSecure)
-      : VerifyC2Describe(isSecure) {
+  VerifyC2DescribeCoreComponentState() {
     char format[] = "/var/tmp/ssth.XXXXXX";
     temp_dir_ = testController.createTempDirectory(format);
 
@@ -58,16 +57,11 @@ class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
 
 class DescribeCoreComponentStateHandler: public HeartbeatHandler {
  public:
-
-  explicit DescribeCoreComponentStateHandler(bool isSecure)
-      : HeartbeatHandler(isSecure) {
-  }
-
-  virtual void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) {
+  virtual void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
     sendHeartbeatResponse("DESCRIBE", "corecomponentstate", "889345", conn);
   }
 
-  virtual void handleAcknowledge(const rapidjson::Document& root) {
+  virtual void handleAcknowledge(const rapidjson::Document& root) override {
     assert(root.HasMember("corecomponentstate"));
 
     auto assertExpectedTailFileState = [&](const char* uuid, const char* name, const char* position) {
@@ -102,11 +96,11 @@ int main(int argc, char **argv) {
     isSecure = true;
   }
 
-  VerifyC2DescribeCoreComponentState harness(isSecure);
+  VerifyC2DescribeCoreComponentState harness;
 
   harness.setKeyDir(key_dir);
 
-  DescribeCoreComponentStateHandler responder(isSecure);
+  DescribeCoreComponentStateHandler responder;
 
   harness.setUrl(url, &responder);
 
