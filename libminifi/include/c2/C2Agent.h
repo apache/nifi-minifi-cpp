@@ -34,13 +34,15 @@
 #include "C2Protocol.h"
 #include "io/validation.h"
 #include "HeartBeatReporter.h"
-#include "utils/ThreadPool.h"
 #include "utils/Id.h"
+#include "utils/MinifiConcurrentQueue.h"
+#include "utils/ThreadPool.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+
 namespace c2 {
 
 #define C2_AGENT_UPDATE_NAME "C2UpdatePolicy"
@@ -128,16 +130,14 @@ class C2Agent : public state::UpdateController {
    * Enqueues a C2 server response for us to evaluate and parse.
    */
   void enqueue_c2_server_response(C2Payload &&resp) {
-    std::lock_guard<std::timed_mutex> lock(queue_mutex);
-    responses.push_back(std::move(resp));
+    responses.enqueue(std::move(resp));
   }
 
   /**
    * Enqueues a c2 payload for a response to the C2 server.
    */
   void enqueue_c2_response(C2Payload &&resp) {
-    std::lock_guard<std::timed_mutex> lock(request_mutex);
-    requests.push_back(std::move(resp));
+    requests.enqueue(std::move(resp));
   }
 
   /**
@@ -179,17 +179,12 @@ class C2Agent : public state::UpdateController {
    * Device information stored in the metrics format
    */
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> device_information_;
-  // queue mutex
-  std::timed_mutex queue_mutex;
-
-  // queue mutex
-  std::timed_mutex request_mutex;
 
   // responses for the the C2 agent.
-  std::vector<C2Payload> responses;
+  utils::ConcurrentQueue<C2Payload> responses;
 
   // requests that originate from the C2 server.
-  std::vector<C2Payload> requests;
+  utils::ConcurrentQueue<C2Payload> requests;
 
   // heart beat period.
   int64_t heart_beat_period_;

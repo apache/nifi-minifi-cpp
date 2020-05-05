@@ -17,6 +17,7 @@
  */
 
 #include "c2/C2Agent.h"
+
 #include <csignal>
 #include <utility>
 #include <limits>
@@ -24,6 +25,7 @@
 #include <map>
 #include <string>
 #include <memory>
+
 #include "c2/ControllerSocketProtocol.h"
 #include "core/ProcessContext.h"
 #include "core/CoreComponentState.h"
@@ -33,8 +35,8 @@
 #include "utils/file/DiffUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
-#include "utils/HTTPClient.h"
 #include "utils/GeneralUtils.h"
+#include "utils/HTTPClient.h"
 #include "utils/Monitors.h"
 
 namespace org {
@@ -75,54 +77,56 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
 
   c2_producer_ = [&]() {
     // place priority on messages to send to the c2 server
-      if (protocol_.load() != nullptr && request_mutex.try_lock_for(std::chrono::seconds(1))) {
-        std::lock_guard<std::timed_mutex> lock(request_mutex, std::adopt_lock);
-        if (!requests.empty()) {
-          int count = 0;
-          do {
-            const C2Payload payload(std::move(requests.back()));
-            requests.pop_back();
-            try {
-              C2Payload && response = protocol_.load()->consumePayload(payload);
-              enqueue_c2_server_response(std::move(response));
-            }
-            catch(const std::exception &e) {
-              logger_->log_error("Exception occurred while consuming payload. error: %s", e.what());
-            }
-            catch(...) {
-              logger_->log_error("Unknonwn exception occurred while consuming payload.");
-            }
-          }while(!requests.empty() && ++count < max_c2_responses);
+    if (protocol_.load() != nullptr) {
+      std::vector<C2Payload> payload_batch;
+      payload_batch.reserve(max_c2_responses);
+      auto getRequestPayload = [&payload_batch] (C2Payload&& payload) { payload_batch.emplace_back(std::move(payload)); };
+      for (std::size_t attempt_num = 0; attempt_num < max_c2_responses; ++attempt_num) {
+        if (!requests.consume(getRequestPayload)) {
+          break;
         }
       }
+      std::for_each(
+        std::make_move_iterator(payload_batch.begin()),
+        std::make_move_iterator(payload_batch.end()),
+        [&] (C2Payload&& payload) {
+          try {
+            C2Payload && response = protocol_.load()->consumePayload(std::move(payload));
+            enqueue_c2_server_response(std::move(response));
+          }
+          catch(const std::exception &e) {
+            logger_->log_error("Exception occurred while consuming payload. error: %s", e.what());
+          }
+          catch(...) {
+            logger_->log_error("Unknonwn exception occurred while consuming payload.");
+          }
+      });
+
       try {
         performHeartBeat();
       }
-      catch(const std::exception &e) {
+      catch (const std::exception &e) {
         logger_->log_error("Exception occurred while performing heartbeat. error: %s", e.what());
       }
-      catch(...) {
+      catch (...) {
         logger_->log_error("Unknonwn exception occurred while performing heartbeat.");
       }
+    }
 
-      checkTriggers();
+    checkTriggers();
 
-      return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(heart_beat_period_));
-    };
+    return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(heart_beat_period_));
+  };
+
   functions_.push_back(c2_producer_);
 
-  c2_consumer_ = [&]() {
-    if ( queue_mutex.try_lock_for(std::chrono::seconds(1)) ) {
-      C2Payload payload(Operation::HEARTBEAT);
-      {
-        std::lock_guard<std::timed_mutex> lock(queue_mutex, std::adopt_lock);
-        if (responses.empty()) {
-          return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
-        }
-        payload = std::move(responses.back());
-        responses.pop_back();
+  c2_consumer_ = [&] {
+    if (false == responses.empty()) {
+      const auto call_extractPayload = [this](C2Payload&& payload) { extractPayload(std::move(payload)); };
+      const auto consume_success = responses.consume(call_extractPayload);
+      if (!consume_success) {
+        extractPayload(C2Payload{ Operation::HEARTBEAT });
       }
-      extractPayload(std::move(payload));
     }
     return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
   };
