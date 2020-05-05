@@ -19,13 +19,13 @@
  * limitations under the License.
  */
 
-#include <memory>
 #include <set>
-#include <utility>
-#include <exception>
 #include <stdexcept>
+#include <utility>
 
 #include "ExecutePythonProcessor.h"
+
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -35,7 +35,11 @@ namespace python {
 namespace processors {
 
 core::Property ExecutePythonProcessor::ScriptFile("Script File",  // NOLINT
-    R"(Path to script file to execute)", "");
+    R"(Path to script file to execute.
+                                            Only one of Script File or Script Body may be used)", "");
+core::Property ExecutePythonProcessor::ScriptBody("Script Body",  // NOLINT
+    R"(Script to execute.
+                                            Only one of Script File or Script Body may be used)", "");
 core::Property ExecutePythonProcessor::ModuleDirectory("Module Directory",  // NOLINT
     R"(Comma-separated list of paths to files and/or directories which
                                                  contain modules required by the script)", "");
@@ -46,141 +50,174 @@ core::Relationship ExecutePythonProcessor::Failure("failure", "Script failures")
 void ExecutePythonProcessor::initialize() {
   // initialization requires that we do a little leg work prior to onSchedule
   // so that we can provide manifest our processor identity
-  std::set<core::Property> properties;
+  if (getProperties().empty()) {
+    setSupportedProperties({
+      ScriptFile,
+      ScriptBody,
+      ModuleDirectory
+    });
+    setAcceptAllProperties();
+    setSupportedRelationships({
+      Success,
+      Failure
+    });
+    valid_init_ = false;
+    return;
+  }
 
-  std::string prop;
-  getProperty(ScriptFile.getName(), prop);
+  python_logger_ = logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
 
-  properties.insert(ScriptFile);
-  properties.insert(ModuleDirectory);
-  setSupportedProperties(properties);
+  getProperty(ModuleDirectory.getName(), module_directory_);
 
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(Failure);
-  setSupportedRelationships(std::move(relationships));
-  setAcceptAllProperties();
-  if (!prop.empty()) {
-    setProperty(ScriptFile, prop);
-    std::shared_ptr<script::ScriptEngine> engine;
-    python_logger_ = logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
-
-    engine = createEngine<python::PythonScriptEngine>();
-
-    if (engine == nullptr) {
-      throw std::runtime_error("No script engine available");
-    }
-
-    try {
-      engine->evalFile(prop);
-      auto me = shared_from_this();
-      triggerDescribe(engine, me);
-      triggerInitialize(engine, me);
+  valid_init_ = false;
+  appendPathForImportModules();
+  loadScript();
+  try {
+    if ("" != script_to_exec_) {
+      std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
+      engine->eval(script_to_exec_);
+      auto shared_this = shared_from_this();
+      engine->describe(shared_this);
+      engine->onInitialize(shared_this);
+      handleEngineNoLongerInUse(std::move(engine));
       valid_init_ = true;
-    } catch (std::exception &exception) {
-      logger_->log_error("Caught Exception %s", exception.what());
-      engine = nullptr;
-      std::rethrow_exception(std::current_exception());
-      valid_init_ = false;
-    } catch (...) {
-      logger_->log_error("Caught Exception");
-      engine = nullptr;
-      std::rethrow_exception(std::current_exception());
-      valid_init_ = false;
     }
-
+  }
+  catch (const std::exception& exception) {
+    logger_->log_error("Caught Exception: %s", exception.what());
+    std::rethrow_exception(std::current_exception());
+  }
+  catch (...) {
+    logger_->log_error("Caught Exception");
+    std::rethrow_exception(std::current_exception());
   }
 }
 
 void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (!valid_init_) {
-    throw std::runtime_error("Could not correctly in initialize " + getName());
+    throw std::runtime_error("Could not correctly initialize " + getName());
   }
-  context->getProperty(ScriptFile.getName(), script_file_);
-  context->getProperty(ModuleDirectory.getName(), module_directory_);
-  if (script_file_.empty() && script_engine_.empty()) {
-    logger_->log_error("Script File must be defined");
-    return;
-  }
-
   try {
-    std::shared_ptr<script::ScriptEngine> engine;
-
-    // Use an existing engine, if one is available
-    if (script_engine_q_.try_dequeue(engine)) {
-      logger_->log_debug("Using available %s script engine instance", script_engine_);
-    } else {
-      logger_->log_info("Creating new %s script instance", script_engine_);
-      logger_->log_info("Approximately %d %s script instances created for this processor", script_engine_q_.size_approx(), script_engine_);
-
-      engine = createEngine<python::PythonScriptEngine>();
-
-      if (engine == nullptr) {
-        throw std::runtime_error("No script engine available");
-      }
-
-      if (!script_file_.empty()) {
-        engine->evalFile(script_file_);
-      } else {
-        throw std::runtime_error("No Script File is available to execute");
-      }
+    // TODO(hunyadi): When using "Script File" property, we currently re-read the script file content every time the processor is on schedule. This should change to single-read when we release 1.0.0
+    // https://issues.apache.org/jira/browse/MINIFICPP-1223
+    reloadScriptIfUsingScriptFileProperty();
+    if (script_to_exec_.empty()) {
+      throw std::runtime_error("Neither Script Body nor Script File is available to execute");
     }
+    std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
 
-    triggerSchedule(engine, context);
+    engine->eval(script_to_exec_);
+    engine->onSchedule(context);
 
-    // Make engine available for use again
-    if (script_engine_q_.size_approx() < getMaxConcurrentTasks()) {
-      logger_->log_debug("Releasing %s script engine", script_engine_);
-      script_engine_q_.enqueue(engine);
-    } else {
-      logger_->log_info("Destroying script engine because it is no longer needed");
-    }
-  } catch (std::exception &exception) {
-    logger_->log_error("Caught Exception %s", exception.what());
-  } catch (...) {
+    handleEngineNoLongerInUse(std::move(engine));
+  }
+  catch (const std::exception& exception) {
+    logger_->log_error("Caught Exception: %s", exception.what());
+  }
+  catch (...) {
     logger_->log_error("Caught Exception");
   }
 }
 
 void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  if (!valid_init_) {
+    throw std::runtime_error("Could not correctly initialize " + getName());
+  }
   try {
-    std::shared_ptr<script::ScriptEngine> engine;
-
-    // Use an existing engine, if one is available
-    if (script_engine_q_.try_dequeue(engine)) {
-      logger_->log_debug("Using available %s script engine instance", script_engine_);
-    } else {
-      logger_->log_info("Creating new %s script instance", script_engine_);
-      logger_->log_info("Approximately %d %s script instances created for this processor", script_engine_q_.size_approx(), script_engine_);
-
-      engine = createEngine<python::PythonScriptEngine>();
-
-      if (engine == nullptr) {
-        throw std::runtime_error("No script engine available");
-      }
-
-      if (!script_file_.empty()) {
-        engine->evalFile(script_file_);
-      } else {
-        throw std::runtime_error("No Script File is available to execute");
-      }
+    // TODO(hunyadi): When using "Script File" property, we currently re-read the script file content every time the processor is on schedule. This should change to single-read when we release 1.0.0
+    // https://issues.apache.org/jira/browse/MINIFICPP-1223
+    reloadScriptIfUsingScriptFileProperty();
+    if (script_to_exec_.empty()) {
+      throw std::runtime_error("Neither Script Body nor Script File is available to execute");
     }
 
-    triggerEngineProcessor(engine, context, session);
-
-    // Make engine available for use again
-    if (script_engine_q_.size_approx() < getMaxConcurrentTasks()) {
-      logger_->log_debug("Releasing %s script engine", script_engine_);
-      script_engine_q_.enqueue(engine);
-    } else {
-      logger_->log_info("Destroying script engine because it is no longer needed");
-    }
-  } catch (std::exception &exception) {
-    logger_->log_error("Caught Exception %s", exception.what());
+    std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
+    engine->onTrigger(context, session);
+    handleEngineNoLongerInUse(std::move(engine));
+  }
+  catch (const std::exception &exception) {
+    logger_->log_error("Caught Exception: %s", exception.what());
     this->yield();
-  } catch (...) {
+  }
+  catch (...) {
     logger_->log_error("Caught Exception");
     this->yield();
+  }
+}
+
+// TODO(hunyadi): This is potentially not what we want. See https://issues.apache.org/jira/browse/MINIFICPP-1222
+std::shared_ptr<python::PythonScriptEngine> ExecutePythonProcessor::getScriptEngine() {
+  std::shared_ptr<python::PythonScriptEngine> engine;
+  // Use an existing engine, if one is available
+  if (script_engine_q_.try_dequeue(engine)) {
+    logger_->log_debug("Using available [%p] script engine instance", engine.get());
+    return engine;
+  }
+  engine = createEngine<python::PythonScriptEngine>();
+  logger_->log_info("Created new [%p] script instance", engine.get());
+  logger_->log_info("Approximately %d script instances created for this processor", script_engine_q_.size_approx());
+  if (engine == nullptr) {
+    throw std::runtime_error("No script engine available");
+  }
+  return engine;
+}
+
+void ExecutePythonProcessor::handleEngineNoLongerInUse(std::shared_ptr<python::PythonScriptEngine>&& engine) {
+  // Make engine available for use again
+  if (script_engine_q_.size_approx() < getMaxConcurrentTasks()) {
+    logger_->log_debug("Releasing [%p] script engine", engine.get());
+    script_engine_q_.enqueue(engine);
+  } else {
+    logger_->log_info("Destroying script engine because it is no longer needed");
+  }
+}
+
+void ExecutePythonProcessor::appendPathForImportModules() {
+  // TODO(hunyadi): I have spent some time trying to figure out pybind11, but
+  // could not get this working yet. It is up to be implemented later
+  // https://issues.apache.org/jira/browse/MINIFICPP-1224
+  if ("" != module_directory_) {
+    logger_ -> log_error("Not supported property: Module Directory.");
+  }
+
+}
+
+void ExecutePythonProcessor::loadScriptFromFile(const std::string& file_path) {
+  std::ifstream file_handle(file_path);
+  if (!file_handle.is_open()) {
+    script_to_exec_ = "";
+    throw std::runtime_error("Failed to read Script File: " + file_path);
+  }
+  script_to_exec_ = std::string{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>())};
+  file_handle.close();
+}
+
+void ExecutePythonProcessor::loadScript() {
+  std::string script_file;
+  std::string script_body;
+  getProperty(ScriptFile.getName(), script_file);
+  getProperty(ScriptBody.getName(), script_body);
+  if ("" != script_file) {
+    if ("" != script_body) {
+      throw std::runtime_error("Only one of Script File or Script Body may be used");
+    }
+    loadScriptFromFile(script_file);
+    return;
+  }
+  if ("" != script_body) {
+    script_to_exec_ = script_body;
+    return;
+  }
+  throw std::runtime_error("Neither Script Body nor Script File is available to execute");
+}
+
+void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {
+  std::string script_file;
+  std::string script_body;
+  getProperty(ScriptFile.getName(), script_file);
+  getProperty(ScriptBody.getName(), script_body);
+  if ("" !=  script_file && "" == script_body) {
+    loadScriptFromFile(script_file);
   }
 }
 

@@ -29,6 +29,15 @@
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
 
+// ,-------------------------------------------------------------,
+// | ! |                      Disclaimer                     | ! |
+// |---'                                                     '---'
+// |                                                             |
+// | This file contains tests for the "ExecuteScript" processor, |
+// |         not for the "ExecutePython" processor.              |
+// |                                                             |
+// '-------------------------------------------------------------'
+
 TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") { // NOLINT
   TestController testController;
 
