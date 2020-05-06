@@ -32,7 +32,7 @@ namespace utils {
 template<typename /* FunType */, typename T, typename = void>
 struct TryMoveCall {
     template<typename Fun>
-    static void call(Fun&& fun, T& elem) { std::forward<Fun>(fun)(elem); }
+    static auto call(Fun&& fun, T& elem) -> decltype(std::forward<Fun>(fun)(elem)) { return std::forward<Fun>(fun)(elem); }
 };
 
 // 1.) std::declval looks similar to this: template<typename T> T&& declval();.
@@ -52,7 +52,7 @@ struct TryMoveCall {
 template<typename FunType, typename T>
 struct TryMoveCall<FunType, T, void_t<decltype(std::declval<FunType>()(std::declval<T>()))>> {
     template<typename Fun>
-    static void call(Fun&& fun, T& elem) { std::forward<Fun>(fun)(std::move(elem)); }
+    static auto call(Fun&& fun, T& elem) -> decltype(std::forward<Fun>(fun)(std::move(elem))) { return std::forward<Fun>(fun)(std::move(elem)); }
 };
 } /* namespace utils */
 } /* namespace minifi */

@@ -57,7 +57,6 @@ T exchange(T& obj, U&& new_value) {
   return old_value;
 }
 
-// partial detection idiom impl
 template<typename...>
 using void_t = void;
 

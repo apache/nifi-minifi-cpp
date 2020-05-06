@@ -189,6 +189,7 @@ class StringUtils {
 
   #ifndef _MSC_VER
 
+  // partial detection idiom impl, from cppreference.com
   struct nonesuch{};
 
   template<typename Default, typename Void, template<class...> class Op, typename... Args>

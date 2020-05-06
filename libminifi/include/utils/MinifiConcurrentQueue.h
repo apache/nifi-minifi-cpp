@@ -23,7 +23,6 @@
 #include <condition_variable>
 #include <utility>
 #include <stdexcept>
-#include <type_traits>
 
 #include <utils/TryMoveCall.h>
 
