@@ -242,15 +242,19 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
     logger_->log_info("Stop Flow Controller");
     if (this->root_)
       this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
-    this->flow_file_repo_->stop();
-    this->provenance_repo_->stop();
     // stop after we've attempted to stop the processors.
     this->timer_scheduler_->stop();
     this->event_scheduler_->stop();
     this->cron_scheduler_->stop();
+    thread_pool_.shutdown();
+    /* STOP! Before you change it, consider the following:
+     * -Stopping the schedulers doesn't actually quit the onTrigger functions of processors
+     * -They only guarantee that the processors are not scheduled any more
+     * -After the threadpool is stopped we can make sure that processors don't need repos and controllers anymore */
+    this->flow_file_repo_->stop();
+    this->provenance_repo_->stop();
     // stop the ControllerServices
     this->controller_service_provider_->disableAllControllerServices();
-    thread_pool_.shutdown();
     running_ = false;
   }
   return 0;
