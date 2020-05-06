@@ -55,6 +55,10 @@ Processors:
       run duration nanos: 0
       auto-terminated relationships list: 
           - success
+          - retry
+          - failure
+          - response
+          - no retry
       Properties:
           HTTP Method: POST
           Use Chunked Encoding: true
