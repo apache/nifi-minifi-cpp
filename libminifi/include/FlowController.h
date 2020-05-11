@@ -21,6 +21,7 @@
 #define __FLOW_CONTROLLER_H__
 
 #include <stdio.h>
+#include <utility>
 #include <vector>
 #include <queue>
 #include <map>
@@ -68,21 +69,22 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Flow controller constructor
    */
   explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                          std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode);
+                          std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo, std::string name, bool headless_mode);
 
   explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
                           std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo)
-      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), content_repo, DEFAULT_ROOT_GROUP_NAME, false) {
+      : FlowController(std::move(provenance_repo), std::move(flow_file_repo), std::move(configure), std::move(flow_configuration), std::move(content_repo), DEFAULT_ROOT_GROUP_NAME, false) {
   }
 
   explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
                           std::unique_ptr<core::FlowConfiguration> flow_configuration)
-      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), std::make_shared<core::repository::FileSystemRepository>(), DEFAULT_ROOT_GROUP_NAME, false) {
-    content_repo_->initialize(configure);
+      : FlowController(std::move(provenance_repo), std::move(flow_file_repo), std::move(configure), std::move(flow_configuration),
+          std::make_shared<core::repository::FileSystemRepository>(), DEFAULT_ROOT_GROUP_NAME, false) {
+    content_repo_->initialize(configuration_);
   }
 
   // Destructor
-  virtual ~FlowController();
+  ~FlowController() override;
 
   // Get the provenance repository
   virtual std::shared_ptr<core::Repository> getProvenanceRepository() {
@@ -98,7 +100,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   virtual void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr, bool reload = false);
 
   // Whether the Flow Controller is start running
-  virtual bool isRunning() {
+  bool isRunning() override {
     return running_.load() || updating_.load();
   }
 
@@ -107,29 +109,26 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
     return initialized_.load();
   }
   // Start to run the Flow Controller which internally start the root process group and all its children
-  virtual int16_t start();
-  virtual int16_t pause() {
+  int16_t start() override;
+  int16_t pause() override {
     return -1;
   }
   // Unload the current flow YAML, clean the root process group and all its children
-  virtual int16_t stop(bool force, uint64_t timeToWait = 0);
-  virtual int16_t applyUpdate(const std::string &source, const std::string &configuration);
-  virtual int16_t drainRepositories() {
-
+  int16_t stop(bool force, uint64_t timeToWait = 0) override;
+  int16_t applyUpdate(const std::string &source, const std::string &configuration) override;
+  int16_t drainRepositories() override {
     return -1;
   }
 
-  virtual std::vector<std::shared_ptr<state::StateController>> getComponents(const std::string &name);
+  std::vector<std::shared_ptr<state::StateController>> getComponents(const std::string &name) override;
 
-  virtual std::vector<std::shared_ptr<state::StateController>> getAllComponents();
+  std::vector<std::shared_ptr<state::StateController>> getAllComponents() override;
 
-  virtual int16_t clearConnection(const std::string &connection);
+  int16_t clearConnection(const std::string &connection) override;
 
-  virtual int16_t applyUpdate(const std::string &source, const std::shared_ptr<state::Update> &updateController) {
-    return -1;
-  }
+  int16_t applyUpdate(const std::string &source, const std::shared_ptr<state::Update>&) override { return -1; }
   // Asynchronous function trigger unloading and wait for a period of time
-  virtual void waitUnload(const uint64_t timeToWaitMs);
+  virtual void waitUnload(uint64_t timeToWaitMs);
   // Unload the current flow xml, clean the root process group and all its children
   virtual void unload();
   // Load new xml
@@ -137,12 +136,12 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // update property value
   void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue) {
     if (root_ != nullptr)
-      root_->updatePropertyValue(processorName, propertyName, propertyValue);
+      root_->updatePropertyValue(std::move(processorName), std::move(propertyName), std::move(propertyValue));
   }
 
   // set SerialNumber
   void setSerialNumber(std::string number) {
-    serial_number_ = number;
+    serial_number_ = std::move(number);
   }
 
   // get serial number as string
@@ -157,18 +156,18 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   bool applyConfiguration(const std::string &source, const std::string &configurePayload);
 
   // get name
-  std::string getName() const {
+  std::string getName() const override {
     if (root_ != nullptr)
       return root_->getName();
     else
       return "";
   }
 
-  virtual std::string getComponentName() const {
+  std::string getComponentName() const override {
     return "FlowController";
   }
 
-  virtual std::string getComponentUUID() const {
+  std::string getComponentUUID() const override {
     utils::Identifier ident;
     root_->getUUID(ident);
     return ident.to_string();
@@ -188,7 +187,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * @param id service identifier
    * @param firstTimeAdded first time this CS was added
    */
-  virtual std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &type, const std::string &fullType, const std::string &id, bool firstTimeAdded);
+  std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &type, const std::string &fullType, const std::string &id, bool firstTimeAdded) override;
 
   /**
    * controller service provider
@@ -198,125 +197,125 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * @param serviceNode service node to be removed.
    */
 
-  virtual void removeControllerService(const std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  void removeControllerService(const std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
 
   /**
    * Enables the controller service services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
 
   /**
    * Enables controller services
    * @param serviceNoden vector of service nodes which will be enabled, along with linked services.
    */
-  virtual void enableControllerServices(std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> serviceNodes);
+  void enableControllerServices(std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> serviceNodes) override;
 
   /**
    * Disables controller services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
 
   /**
    * Removes all controller services.
    */
-  virtual void clearControllerServices();
+  void clearControllerServices() override;
 
   /**
    * Gets all controller services.
    */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices();
+  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices() override;
 
-  virtual std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier);
+  std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier) override;
 
   /**
    * Gets controller service node specified by <code>id</code>
    * @param id service identifier
    * @return shared pointer to the controller service node or nullptr if it does not exist.
    */
-  virtual std::shared_ptr<core::controller::ControllerServiceNode> getControllerServiceNode(const std::string &id);
+  std::shared_ptr<core::controller::ControllerServiceNode> getControllerServiceNode(const std::string &id) override;
 
-  virtual void verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  void verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
 
   /**
    * Unschedules referencing components.
    */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> unscheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> unscheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
 
   /**
    * Verify can disable referencing components
    * @param serviceNode service node whose referenced components will be scheduled.
    */
-  virtual void verifyCanDisableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  void verifyCanDisableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
 
   /**
    * Disables referencing components
    * @param serviceNode service node whose referenced components will be scheduled.
    */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
 
   /**
    * Verify can enable referencing components
    * @param serviceNode service node whose referenced components will be scheduled.
    */
-  virtual void verifyCanEnableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  void verifyCanEnableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode>&) override;
 
   /**
    * Determines if the controller service specified by identifier is enabled.
    */
-  bool isControllerServiceEnabled(const std::string &identifier);
+  bool isControllerServiceEnabled(const std::string &identifier) override;
 
   /**
    * Enables referencing components
    * @param serviceNode service node whose referenced components will be scheduled.
    */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> enableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> enableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
 
   /**
    * Schedules referencing components
    * @param serviceNode service node whose referenced components will be scheduled.
    */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> scheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> scheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
 
   /**
    * Returns controller service components referenced by serviceIdentifier from the embedded
    * controller service provider;
    */
-  std::shared_ptr<core::controller::ControllerService> getControllerServiceForComponent(const std::string &serviceIdentifier, const std::string &componentId);
+  std::shared_ptr<core::controller::ControllerService> getControllerServiceForComponent(const std::string &serviceIdentifier, const std::string &componentId) override;
 
   /**
    * Enables all controller services for the provider.
    */
-  virtual void enableAllControllerServices();
+  void enableAllControllerServices() override;
 
   /**
    * Disables all controller services for the provider.
    */
-  virtual void disableAllControllerServices();
+  void disableAllControllerServices() override;
 
   /**
    * Retrieves metrics node
    * @return metrics response node
    */
-  virtual std::shared_ptr<state::response::ResponseNode> getMetricsNode(const std::string& metricsClass) const;
+  std::shared_ptr<state::response::ResponseNode> getMetricsNode(const std::string& metricsClass) const override;
 
   /**
    * Retrieves root nodes configured to be included in heartbeat
    * @param includeManifest -- determines if manifest is to be included
    * @return a list of response nodes
    */
-  virtual std::vector<std::shared_ptr<state::response::ResponseNode>> getHeartbeatNodes(bool includeManifest) const;
+  std::vector<std::shared_ptr<state::response::ResponseNode>> getHeartbeatNodes(bool includeManifest) const override;
 
   /**
    * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
    * @return the agent manifest response node
    */
-  virtual std::shared_ptr<state::response::ResponseNode> getAgentManifest() const;
+  std::shared_ptr<state::response::ResponseNode> getAgentManifest() const override;
 
-  virtual uint64_t getUptime();
+  uint64_t getUptime() override;
 
-  virtual std::vector<BackTrace> getTraces();
+  std::vector<BackTrace> getTraces() override;
 
   void initializeC2();
 
@@ -334,8 +333,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   void loadFlowRepo();
 
   void initializeExternalComponents();
-
-  std::shared_ptr<state::response::ResponseNode> getAgentInformation() const;
 
   /**
    * Initializes flow controller paths.
