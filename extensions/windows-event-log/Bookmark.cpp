@@ -68,13 +68,13 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
 
   const unique_evt_handle hEvent = [this,&hEventResults] {
     DWORD dwReturned{};
-    EVT_HANDLE hEvent{};
+    EVT_HANDLE hEvent{ nullptr };
     if (!EvtNext(hEventResults.get(), 1, &hEvent, INFINITE, 0, &dwReturned)) {
       LOG_LAST_ERROR(EvtNext);
-      return unique_evt_handle{ nullptr };
     }
     return unique_evt_handle{ hEvent };
   }();
+  if (!hEvent) { return; }
 
   ok_ = saveBookmark(hEvent.get());
 }
@@ -90,9 +90,9 @@ void Bookmark::evt_deleter::operator()(EVT_HANDLE evt) const noexcept {
 }
   
 EVT_HANDLE Bookmark::getBookmarkHandleFromXML() {
-  if (!(hBookmark_ = unique_evt_handle{ EvtCreateBookmark(bookmarkXml_.c_str()) })) {
+  hBookmark_ = unique_evt_handle{ EvtCreateBookmark(bookmarkXml_.c_str()) };
+  if (!hBookmark_) {
     LOG_LAST_ERROR(EvtCreateBookmark);
-    return 0;
   }
 
   return hBookmark_.get();
