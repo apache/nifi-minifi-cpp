@@ -38,7 +38,7 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
   }
 
   if (!bookmarkXml_.empty()) {
-    if (hBookmark_ = EvtCreateBookmark(bookmarkXml_.c_str())) {
+    if (hBookmark_ = unique_evt_handle{ EvtCreateBookmark(bookmarkXml_.c_str()) }) {
       ok_ = true;
       return;
     }
@@ -50,56 +50,51 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
     state_manager_->set(state_map);
   }
 
-  if (!(hBookmark_ = EvtCreateBookmark(0))) {
+  if (!(hBookmark_ = unique_evt_handle{ EvtCreateBookmark(0) })) {
     LOG_LAST_ERROR(EvtCreateBookmark);
     return;
   }
 
-  const auto hEventResults = EvtQuery(0, channel.c_str(), query.c_str(), EvtQueryChannelPath);
+  const auto hEventResults = unique_evt_handle{ EvtQuery(0, channel.c_str(), query.c_str(), EvtQueryChannelPath) };
   if (!hEventResults) {
     LOG_LAST_ERROR(EvtQuery);
     return;
   }
-  const utils::ScopeGuard guard_hEventResults([hEventResults]() { EvtClose(hEventResults); });
 
-  if (!EvtSeek(hEventResults, 0, 0, 0, processOldEvents? EvtSeekRelativeToFirst : EvtSeekRelativeToLast)) {
+  if (!EvtSeek(hEventResults.get(), 0, 0, 0, processOldEvents? EvtSeekRelativeToFirst : EvtSeekRelativeToLast)) {
     LOG_LAST_ERROR(EvtSeek);
     return;
   }
 
-  DWORD dwReturned{};
-  EVT_HANDLE hEvent{};
-  if (!EvtNext(hEventResults, 1, &hEvent, INFINITE, 0, &dwReturned)) {
-    LOG_LAST_ERROR(EvtNext);
-    return;
-  }
+  const unique_evt_handle hEvent = [this,&hEventResults] {
+    DWORD dwReturned{};
+    EVT_HANDLE hEvent{ nullptr };
+    if (!EvtNext(hEventResults.get(), 1, &hEvent, INFINITE, 0, &dwReturned)) {
+      LOG_LAST_ERROR(EvtNext);
+    }
+    return unique_evt_handle{ hEvent };
+  }();
 
-  ok_ = saveBookmark(hEvent);
+  ok_ = hEvent && saveBookmark(hEvent.get());
 }
 
-Bookmark::~Bookmark() {
-  if (hBookmark_) {
-    EvtClose(hBookmark_);
-  }
-}
+Bookmark::~Bookmark() = default;
 
-Bookmark::operator bool() const {
+Bookmark::operator bool() const noexcept {
   return ok_;
+}
+
+void Bookmark::evt_deleter::operator()(EVT_HANDLE evt) const noexcept {
+  EvtClose(evt);
 }
   
 EVT_HANDLE Bookmark::getBookmarkHandleFromXML() {
-  if (hBookmark_) {
-    EvtClose(hBookmark_);
-    hBookmark_ = 0;
-  }
-
-  hBookmark_ = EvtCreateBookmark(bookmarkXml_.c_str());
-  if (!(hBookmark_ = EvtCreateBookmark(bookmarkXml_.c_str()))) {
+  hBookmark_ = unique_evt_handle{ EvtCreateBookmark(bookmarkXml_.c_str()) };
+  if (!hBookmark_) {
     LOG_LAST_ERROR(EvtCreateBookmark);
-    return 0;
   }
 
-  return hBookmark_;
+  return hBookmark_.get();
 }
 
 bool Bookmark::saveBookmarkXml(const std::wstring& bookmarkXml) {
@@ -122,7 +117,7 @@ bool Bookmark::saveBookmark(EVT_HANDLE hEvent)
 }
 
 bool Bookmark::getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml) {
-  if (!EvtUpdateBookmark(hBookmark_, hEvent)) {
+  if (!EvtUpdateBookmark(hBookmark_.get(), hEvent)) {
     LOG_LAST_ERROR(EvtUpdateBookmark);
     return false;
   }
@@ -131,14 +126,14 @@ bool Bookmark::getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml) {
   DWORD bufferSize{};
   DWORD bufferUsed{};
   DWORD propertyCount{};
-  if (!EvtRender(0, hBookmark_, EvtRenderBookmark, bufferSize, 0, &bufferUsed, &propertyCount)) {
+  if (!EvtRender(nullptr, hBookmark_.get(), EvtRenderBookmark, bufferSize, nullptr, &bufferUsed, &propertyCount)) {
     DWORD status = ERROR_SUCCESS;
     if (ERROR_INSUFFICIENT_BUFFER == (status = GetLastError())) {
       bufferSize = bufferUsed;
 
       std::vector<wchar_t> buf(bufferSize / 2 + 1);
 
-      if (!EvtRender(0, hBookmark_, EvtRenderBookmark, bufferSize, &buf[0], &bufferUsed, &propertyCount)) {
+      if (!EvtRender(nullptr, hBookmark_.get(), EvtRenderBookmark, bufferSize, &buf[0], &bufferUsed, &propertyCount)) {
         LOG_LAST_ERROR(EvtRender);
         return false;
       }

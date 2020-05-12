@@ -306,7 +306,10 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     session->commit();
     logger_->log_debug("processQueue commit took %" PRId64 " ms", timeDiff());
 
-    pBookmark_->saveBookmarkXml(bookmarkXml);
+    const bool successful_save = pBookmark_->saveBookmarkXml(bookmarkXml);
+    if (!successful_save) {
+      logger_->log_error("Failed to save bookmark xml");
+    }
 
     if (session->outgoingConnectionsFull("success")) {
       logger_->log_debug("outgoingConnectionsFull");
@@ -334,7 +337,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   auto hBookmark = pBookmark_->getBookmarkHandleFromXML();
   if (!hBookmark) {
-    // Unrecovarable error.
+    // Unrecoverable error.
     pBookmark_.reset();
     return;
   }
