@@ -27,6 +27,7 @@
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "utils/ScopeGuard.h"
+#include "utils/GeneralUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
@@ -180,13 +181,11 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
     logger_->log_debug("PublishKafka: AttributeNameRegex [%s]", value);
   }
 
-  // Future Improvement: Get rid of key since we only need to store one connection with current design.
   key_.brokers_ = brokers;
   key_.client_id_ = client_id;
 
-  std::unique_ptr<KafkaLease> lease = connection_pool_.getOrCreateConnection(key_);
-  std::shared_ptr<KafkaConnection> conn = lease->getConn();
-  configureNewConnection(conn, context);
+  conn_ = utils::make_unique<KafkaConnection>(key_);
+  configureNewConnection(context);
 
   logger_->log_debug("Successfully configured PublishKafka");
 }
@@ -198,6 +197,7 @@ void PublishKafka::notifyStop() {
   for (auto& messages : messages_set_) {
     messages->interrupt();
   }
+  conn_.reset();
 }
 
 /**
@@ -215,7 +215,7 @@ void PublishKafka::messageDeliveryCallback(rd_kafka_t* rk, const rd_kafka_messag
   delete func;
 }
 
-bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection> &conn, const std::shared_ptr<core::ProcessContext> &context) {
+bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessContext> &context) {
   std::string value;
   int64_t valInt;
   std::string valueConf;
@@ -231,7 +231,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
     rd_kafka_conf_destroy(conf_);
   });
 
-  auto key = conn->getKey();
+  auto key = conn_->getKey();
 
   if (key->brokers_.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "There are no brokers");
@@ -434,12 +434,12 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
   // The producer took ownership of the configuration, we must not free it
   confGuard.disable();
 
-  conn->setConnection(producer);
+  conn_->setConnection(producer);
 
   return true;
 }
 
-bool PublishKafka::createNewTopic(const std::shared_ptr<KafkaConnection> &conn, const std::shared_ptr<core::ProcessContext> &context, const std::string& topic_name) {
+bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &context, const std::string& topic_name) {
   rd_kafka_topic_conf_t* topic_conf_ = rd_kafka_topic_conf_new();
   if (topic_conf_ == nullptr) {
     logger_->log_error("Failed to create rd_kafka_topic_conf_t object");
@@ -508,7 +508,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<KafkaConnection> &conn, 
     }
   }
 
-  rd_kafka_topic_t* topic_reference = rd_kafka_topic_new(conn->getConnection(), topic_name.c_str(), topic_conf_);
+  rd_kafka_topic_t* topic_reference = rd_kafka_topic_new(conn_->getConnection(), topic_name.c_str(), topic_conf_);
   if (topic_reference == nullptr) {
     rd_kafka_resp_err_t resp_err = rd_kafka_last_error();
     logger_->log_error("PublishKafka: failed to create topic %s, error: %s", topic_name.c_str(), rd_kafka_err2str(resp_err));
@@ -520,7 +520,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<KafkaConnection> &conn, 
 
   std::shared_ptr<KafkaTopic> kafkaTopicref = std::make_shared<KafkaTopic>(topic_reference);
 
-  conn->putTopic(topic_name, kafkaTopicref);
+  conn_->putTopic(topic_name, kafkaTopicref);
 
   return true;
 }
@@ -533,16 +533,8 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     return;
   }
 
+  std::lock_guard<std::mutex> lock_connection(connection_mutex_);
   logger_->log_debug("PublishKafka onTrigger");
-
-  std::unique_ptr<KafkaLease> lease = connection_pool_.getOrCreateConnection(key_);
-  if (lease == nullptr) {
-    logger_->log_info("This connection is used by another thread.");
-    context->yield();
-    return;
-  }
-
-  std::shared_ptr<KafkaConnection> conn = lease->getConn();
 
   // Collect FlowFiles to process
   uint64_t actual_bytes = 0U;
@@ -591,8 +583,8 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
 
     // Add topic to the connection if needed
-    if (!conn->hasTopic(topic)) {
-      if (!createNewTopic(conn, context, topic)) {
+    if (!conn_->hasTopic(topic)) {
+      if (!createNewTopic(context, topic)) {
         logger_->log_error("Failed to add topic %s", topic);
         messages->modifyResult(flow_file_index, [](FlowFileResult& flow_file_result) {
           flow_file_result.flow_file_error = true;
@@ -609,7 +601,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       kafkaKey = flowFile->getUUIDStr();
     }
 
-    auto thisTopic = conn->getTopic(topic);
+    auto thisTopic = conn_->getTopic(topic);
     if (thisTopic == nullptr) {
       logger_->log_error("Topic %s is invalid", topic);
       messages->modifyResult(flow_file_index, [](FlowFileResult& flow_file_result) {
@@ -621,7 +613,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     bool failEmptyFlowFiles = true;
     context->getProperty(FailEmptyFlowFiles.getName(), failEmptyFlowFiles);
 
-    PublishKafka::ReadCallback callback(max_flow_seg_size_, kafkaKey, thisTopic->getTopic(), conn->getConnection(), *flowFile,
+    PublishKafka::ReadCallback callback(max_flow_seg_size_, kafkaKey, thisTopic->getTopic(), conn_->getConnection(), *flowFile,
                                         attributeNameRegex_, messages, flow_file_index, failEmptyFlowFiles);
     session->read(flowFile, &callback);
 

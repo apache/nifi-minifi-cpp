@@ -30,7 +30,7 @@
 #include "core/logging/Logger.h"
 #include "utils/RegexUtils.h"
 #include "rdkafka.h"
-#include "KafkaPool.h"
+#include "KafkaConnection.h"
 #include <atomic>
 #include <map>
 #include <set>
@@ -70,7 +70,6 @@ class PublishKafka : public core::Processor {
    */
   explicit PublishKafka(std::string name, utils::Identifier uuid = utils::Identifier())
       : core::Processor(std::move(name), uuid),
-        connection_pool_(5),
         logger_(logging::LoggerFactory<PublishKafka>::getLogger()),
         interrupted_(false) {
   }
@@ -344,16 +343,17 @@ class PublishKafka : public core::Processor {
 
  protected:
 
-  bool configureNewConnection(const std::shared_ptr<KafkaConnection> &conn, const std::shared_ptr<core::ProcessContext> &context);
-  bool createNewTopic(const std::shared_ptr<KafkaConnection> &conn, const std::shared_ptr<core::ProcessContext> &context, const std::string& topic_name);
+  bool configureNewConnection(const std::shared_ptr<core::ProcessContext> &context);
+  bool createNewTopic(const std::shared_ptr<core::ProcessContext> &context, const std::string& topic_name);
 
  private:
   static void messageDeliveryCallback(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage, void* opaque);
 
   std::shared_ptr<logging::Logger> logger_;
 
-  KafkaPool connection_pool_;
   KafkaConnectionKey key_;
+  std::unique_ptr<KafkaConnection> conn_;
+  std::mutex connection_mutex_;
 
   uint32_t batch_size_;
   uint64_t target_batch_payload_size_;

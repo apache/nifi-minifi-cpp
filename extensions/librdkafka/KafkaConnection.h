@@ -71,17 +71,9 @@ class KafkaConnection {
 
   static void logCallback(const rd_kafka_t* rk, int level, const char* /*fac*/, const char* buf);
 
-  bool tryUse();
-
-  friend class KafkaLease;
-
  private:
 
   std::shared_ptr<logging::Logger> logger_;
-
-  std::mutex lease_mutex_;
-
-  bool lease_;
 
   bool initialized_;
 
@@ -119,24 +111,6 @@ class KafkaConnection {
         }
     });
   }
-};
-
-class KafkaLease {
-  public:
-    ~KafkaLease() {
-      std::lock_guard<std::mutex> lock(conn_->lease_mutex_);
-      conn_->lease_ = false;
-    }
-    std::shared_ptr<KafkaConnection> getConn() const {
-      return conn_;
-    }
-    friend class KafkaPool;
-  private:
-    KafkaLease(std::shared_ptr<KafkaConnection> conn) // This one should be private, and only KafkaPool can call (friend).
-            : conn_(conn) {
-    }
-
-    std::shared_ptr<KafkaConnection> conn_;
 };
 
 } /* namespace processors */
