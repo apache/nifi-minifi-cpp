@@ -17,6 +17,14 @@
     -- after downloading the mojo model from h2o3, the following packages
        are needed to execute the model to do batch or real-time scoring
 
+    Make all packages available on your machine:
+
+    sudo apt-get -y update
+
+    Install Java to include open source H2O-3 algorithms:
+    
+    sudo apt-get -y install openjdk-8-jdk
+
     Install Datatable and pandas:
 
     pip install datatable
