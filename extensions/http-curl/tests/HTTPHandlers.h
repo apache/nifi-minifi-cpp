@@ -26,6 +26,7 @@
 #include "rapidjson/document.h"
 #include <cinttypes>
 #include <utility>
+#include "HTTPUtils.h"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
@@ -74,8 +75,9 @@ class SiteToSiteLocationResponder : public CivetHandler {
 class PeerResponder : public CivetHandler {
  public:
 
-  explicit PeerResponder(std::string base_url)
-      : base_url(std::move(base_url)) {
+  explicit PeerResponder(std::string base_url) {
+    std::string scheme;
+    assert(parse_http_components(base_url, port, scheme, path));
   }
 
   bool handleGet(CivetServer *server, struct mg_connection *conn) {
@@ -85,7 +87,7 @@ class PeerResponder : public CivetHandler {
 #else
 	  std::string hostname = "localhost";
 #endif
-    std::string site2site_rest_resp = "{\"peers\" : [{ \"hostname\": \"" + hostname + "\", \"port\": 8099,  \"secure\": false, \"flowFileCount\" : 0 }] }";
+    std::string site2site_rest_resp = "{\"peers\" : [{ \"hostname\": \"" + hostname + "\", \"port\": " + port + ",  \"secure\": false, \"flowFileCount\" : 0 }] }";
     std::stringstream headers;
     headers << "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nConnection: close\r\n\r\n";
     mg_printf(conn, "%s", headers.str().c_str());
@@ -95,6 +97,8 @@ class PeerResponder : public CivetHandler {
 
  protected:
   std::string base_url;
+  std::string port;
+  std::string path;
 };
 
 class SiteToSiteBaseResponder : public CivetHandler {

@@ -133,7 +133,7 @@ class VerifyRWTimeoutInvokeHTTP : public VerifyInvokeHTTP {
 public:
   virtual void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invoke_http value:failure"));
-    assert(LogTestController::getInstance().contains("failed Timeout was reached"));
+    assert(LogTestController::getInstance().contains("limit (1000ms) reached, terminating connection"));
   }
 };
 
