@@ -33,38 +33,41 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// TailFile Class
+struct TailState {
+  TailState(std::string path, std::string file_name, uint64_t position, uint64_t timestamp,
+            uint64_t mtime, uint64_t checksum)
+      : path_(std::move(path)), file_name_(std::move(file_name)), position_(position), timestamp_(timestamp),
+        mtime_(mtime), checksum_(checksum) {}
 
+  TailState() : TailState("", "", 0, 0, 0, 0) {}
 
-typedef struct {
+  std::string fileNameWithPath() const {
+    return path_ + utils::file::FileUtils::get_separator() + file_name_;
+  }
+
   std::string path_;
-  std::string current_file_name_;
-  uint64_t currentTailFilePosition_;
-  uint64_t currentTailFileModificationTime_;
-} TailState;
+  std::string file_name_;
+  uint64_t position_;
+  uint64_t timestamp_;
+  uint64_t mtime_;
+  uint64_t checksum_;
+};
 
-// Matched File Item for Roll over check
-typedef struct {
-  std::string fileName;
-  uint64_t modifiedTime;
-} TailMatchedFileItem;
-
-
+enum class Mode {
+  SINGLE, MULTIPLE, UNDEFINED
+};
 
 class TailFile : public core::Processor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
+
   explicit TailFile(std::string name, utils::Identifier uuid = utils::Identifier())
-      : core::Processor(name, uuid),
+      : core::Processor(std::move(name), uuid),
         logger_(logging::LoggerFactory<TailFile>::getLogger()) {
     state_recovered_ = false;
   }
-  // Destructor
-  virtual ~TailFile() {
-  }
+
+  ~TailFile() override = default;
+
   // Processor Name
   static constexpr char const* ProcessorName = "TailFile";
   // Supported Properties
@@ -76,9 +79,6 @@ class TailFile : public core::Processor {
   // Supported Relationships
   static core::Relationship Success;
 
- public:
-
-  bool acceptFile(const std::string &filter, const std::string &file);
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
@@ -89,7 +89,7 @@ class TailFile : public core::Processor {
   // OnTrigger method, implemented by NiFi TailFile
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>  &session) override;
   // Initialize, over write by NiFi TailFile
-  void initialize(void) override;
+  void initialize() override;
   // recoverState
   bool recoverState(const std::shared_ptr<core::ProcessContext>& context);
   // storeState
@@ -113,15 +113,37 @@ class TailFile : public core::Processor {
 
   static const int BUFFER_SIZE = 512;
 
-  // Utils functions for parse state file
-  std::string trimLeft(const std::string& s);
-  std::string trimRight(const std::string& s);
-  void parseStateFileLine(char *buf);
-  /**
-   * Check roll over for the provided file.
-   */
-  void checkRollOver(const std::shared_ptr<core::ProcessContext>& context, TailState &file, const std::string &base_file_name);
+  Mode tail_mode_ = Mode::UNDEFINED;
+
+  std::string file_to_tail_;
+
+  std::string base_dir_;
+
+  void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
+
   std::shared_ptr<logging::Logger> logger_;
+
+  std::vector<TailState> findRotatedFiles(const TailState &state) const;
+
+  // returns true if any flow files were created
+  bool processFile(const std::shared_ptr<core::ProcessContext> &context,
+                   const std::shared_ptr<core::ProcessSession> &session,
+                   const std::string &fileName,
+                   TailState &state);
+
+  // returns true if any flow files were created
+  bool processSingleFile(const std::shared_ptr<core::ProcessContext> &context,
+                         const std::shared_ptr<core::ProcessSession> &session,
+                         const std::string &fileName,
+                         TailState &state);
+
+  bool getStateFromStateManager(std::map<std::string, TailState> &state) const;
+
+  bool getStateFromLegacyStateFile(std::map<std::string, TailState> &new_tail_states) const;
+
+  void checkForRemovedFiles();
+
+  void checkForNewFiles();
 };
 
 REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting data from the file as it is written to the file. The file is expected to be textual."
@@ -129,7 +151,7 @@ REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting dat
                   " as is generally the case with log files, an optional Rolling Filename Pattern can be used to retrieve data from files that have rolled over, even if the rollover"
                   " occurred while NiFi was not running (provided that the data still exists upon restart of NiFi). It is generally advisable to set the Run Schedule to a few seconds,"
                   " rather than running with the default value of 0 secs, as this Processor will consume a lot of resources if scheduled very aggressively. At this time, this Processor"
-                  " does not support ingesting files that have been compressed when 'rolled over'.");
+                  " does not support ingesting files that have been compressed when 'rolled over'.")
 
 } /* namespace processors */
 } /* namespace minifi */

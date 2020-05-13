@@ -644,6 +644,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
 
           if (crc) {
             *crc = crcStream->getCRC();
+            *crc = crc32(*crc, reinterpret_cast<unsigned char*>(&inputDelimiter), 1);
           }
 
           std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
