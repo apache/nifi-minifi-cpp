@@ -74,9 +74,8 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
     }
     return unique_evt_handle{ hEvent };
   }();
-  if (!hEvent) { return; }
 
-  ok_ = saveBookmark(hEvent.get());
+  ok_ = hEvent && saveBookmark(hEvent.get());
 }
 
 Bookmark::~Bookmark() = default;
