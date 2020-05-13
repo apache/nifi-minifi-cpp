@@ -225,7 +225,7 @@ TEST_CASE("FileUtils::file_size works", "[file_size]") {
   std::string test_file = dir + FileUtils::get_separator() + "test.txt";
   REQUIRE(FileUtils::file_size(test_file) == 0);
 
-  std::ofstream test_file_stream(test_file);
+  std::ofstream test_file_stream(test_file, std::ios::out | std::ios::binary);
   test_file_stream << "foo\n";
   test_file_stream.flush();
 
@@ -254,7 +254,7 @@ TEST_CASE("FileUtils::computeChecksum works", "[computeChecksum]") {
   std::string test_file = dir + FileUtils::get_separator() + "test.txt";
   REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
 
-  std::ofstream test_file_stream{test_file};
+  std::ofstream test_file_stream{test_file, std::ios::out | std::ios::binary};
   test_file_stream << "foo\n";
   test_file_stream.flush();
 
@@ -275,7 +275,7 @@ TEST_CASE("FileUtils::computeChecksum works", "[computeChecksum]") {
   std::string another_file = dir + FileUtils::get_separator() + "another_test.txt";
   REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
 
-  std::ofstream another_file_stream{another_file};
+  std::ofstream another_file_stream{another_file, std::ios::out | std::ios::binary};
   another_file_stream << "foo\nfoobar\nbaz\n";   // starts with the same bytes as test_file
   another_file_stream.close();
 
@@ -299,7 +299,7 @@ TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
   std::string test_file = dir + FileUtils::get_separator() + "test.txt";
   REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
 
-  std::ofstream test_file_stream{test_file};
+  std::ofstream test_file_stream{test_file, std::ios::out | std::ios::binary};
   test_file_stream << std::string(4096, 'x');
   test_file_stream.flush();
 
@@ -322,7 +322,7 @@ TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
   std::string another_file = dir + FileUtils::get_separator() + "another_test.txt";
   REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
 
-  std::ofstream another_file_stream{another_file};
+  std::ofstream another_file_stream{another_file, std::ios::out | std::ios::binary};
   another_file_stream << std::string(8192, 'x');   // starts with the same bytes as test_file
   another_file_stream.close();
 

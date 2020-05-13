@@ -16,8 +16,11 @@
  */
 
 #include "utils/file/FileUtils.h"
-#include <iostream>
+
 #include <zlib.h>
+
+#include <algorithm>
+#include <iostream>
 
 namespace org {
 namespace apache {
@@ -27,8 +30,8 @@ namespace utils {
 namespace file {
 
   uint64_t FileUtils::computeChecksum(std::string file_name, uint64_t up_to_position) {
-    constexpr std::size_t BUFFER_SIZE = 4096u;
-    std::array<char, BUFFER_SIZE> buffer;
+    constexpr uint64_t BUFFER_SIZE = 4096u;
+    std::array<char, (std::size_t) BUFFER_SIZE> buffer;
 
     std::ifstream stream{file_name, std::ios::in | std::ios::binary};
 
@@ -36,7 +39,8 @@ namespace file {
     uint64_t remaining_bytes_to_be_read = up_to_position;
 
     while (stream && remaining_bytes_to_be_read > 0) {
-      stream.read(buffer.data(), std::min(BUFFER_SIZE, remaining_bytes_to_be_read));
+      using std::min;  // for min(), to work around https://docs.microsoft.com/en-us/windows/win32/multimedia/min
+      stream.read(buffer.data(), min(BUFFER_SIZE, remaining_bytes_to_be_read));
       uint64_t bytes_read = stream.gcount();
       checksum = crc32(checksum, reinterpret_cast<unsigned char*>(buffer.data()), bytes_read);
       remaining_bytes_to_be_read -= bytes_read;

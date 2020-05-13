@@ -35,11 +35,11 @@ class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
     test_file_1_ = utils::file::FileUtils::concat_path(temp_dir_, "test1.txt");
     test_file_2_ = utils::file::FileUtils::concat_path(temp_dir_, "test2.txt");
 
-    std::ofstream f1(test_file_1_);
-    f1 << "foo";
+    std::ofstream f1(test_file_1_, std::ios::out | std::ios::binary);
+    f1 << "foo\n";
 
-    std::ofstream f2(test_file_2_);
-    f2 << "foobar";
+    std::ofstream f2(test_file_2_, std::ios::out | std::ios::binary);
+    f2 << "foobar\n";
   }
 
  protected:
@@ -81,8 +81,8 @@ class DescribeCoreComponentStateHandler: public HeartbeatHandler {
       assert(strlen(tf["file.0.current"].GetString()) > 0U);
     };
 
-    assertExpectedTailFileState("2438e3c8-015a-1000-79ca-83af40ec1993", "test1.txt", "3");
-    assertExpectedTailFileState("2438e3c8-015a-1000-79ca-83af40ec1994", "test2.txt", "6");
+    assertExpectedTailFileState("2438e3c8-015a-1000-79ca-83af40ec1993", "test1.txt", "4");
+    assertExpectedTailFileState("2438e3c8-015a-1000-79ca-83af40ec1994", "test2.txt", "7");
   }
 };
 

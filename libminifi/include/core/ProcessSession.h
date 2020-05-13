@@ -132,6 +132,8 @@ class ProcessSession : public ReferenceContainer {
   // Restore content previously stashed to a key
   void restore(const std::string &key, const std::shared_ptr<core::FlowFile> &flow);
 
+  bool existsFlowFileInRelationship(const Relationship &relationship);
+
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer
   ProcessSession(const ProcessSession &parent) = delete;

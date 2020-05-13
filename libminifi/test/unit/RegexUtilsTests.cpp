@@ -79,6 +79,5 @@ TEST_CASE("Regex::matchesFullInput works correctly", "[matchesFullInput]") {
   REQUIRE(Regex::matchesFullInput("np", "input") == false);
   REQUIRE(Regex::matchesFullInput(".*np.*", "input") == true);
   REQUIRE(Regex::matchesFullInput("(in|out)put", "input") == true);
-  REQUIRE(Regex::matchesFullInput("inp\\w*", "input") == true);
   REQUIRE(Regex::matchesFullInput("inpu[aeiou]*", "input") == false);
 }

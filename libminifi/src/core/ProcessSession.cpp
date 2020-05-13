@@ -972,6 +972,13 @@ bool ProcessSession::outgoingConnectionsFull(const std::string& relationship) {
   return false;
 }
 
+bool ProcessSession::existsFlowFileInRelationship(const Relationship &relationship) {
+  return std::any_of(_transferRelationship.begin(), _transferRelationship.end(),
+      [&relationship](const std::map<std::string, Relationship>::value_type &key_value_pair) {
+        return relationship == key_value_pair.second;
+  });
+}
+
 }  // namespace core
 }  // namespace minifi
 }  // namespace nifi

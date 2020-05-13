@@ -75,6 +75,15 @@ class Relationship {
   }
 
   Relationship &operator=(const Relationship &other) = default;
+
+  bool operator==(const Relationship &other) const {
+    return name_ == other.name_;
+  }
+
+  bool operator!=(const Relationship &other) const {
+    return !(*this == other);
+  }
+
   // Whether it is a undefined relationship
   bool isRelationshipUndefined() {
     return isRelationshipNameUndefined(name_);
