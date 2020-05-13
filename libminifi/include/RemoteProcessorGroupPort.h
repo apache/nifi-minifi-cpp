@@ -108,6 +108,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   static core::Property SSLContext;
   static core::Property port;
   static core::Property portUUID;
+  static core::Property idleTimeout;
   // Supported Relationships
   static core::Relationship relation;
  public:
@@ -210,6 +211,8 @@ class RemoteProcessorGroupPort : public core::Processor {
   std::string local_network_interface_;
 
   utils::Identifier protocol_uuid_;
+
+  std::chrono::milliseconds idle_timeout_{};
 
   // rest API end point info
   std::vector<struct RPG> nifi_instances_;

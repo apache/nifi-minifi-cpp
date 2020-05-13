@@ -26,6 +26,7 @@
 #include "rapidjson/document.h"
 #include <cinttypes>
 #include <utility>
+#include "HTTPUtils.h"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
@@ -74,8 +75,9 @@ class SiteToSiteLocationResponder : public CivetHandler {
 class PeerResponder : public CivetHandler {
  public:
 
-  explicit PeerResponder(std::string base_url)
-      : base_url(std::move(base_url)) {
+  explicit PeerResponder(std::string base_url) {
+    std::string scheme;
+    assert(parse_http_components(base_url, port, scheme, path));
   }
 
   bool handleGet(CivetServer *server, struct mg_connection *conn) {
@@ -85,7 +87,7 @@ class PeerResponder : public CivetHandler {
 #else
 	  std::string hostname = "localhost";
 #endif
-    std::string site2site_rest_resp = "{\"peers\" : [{ \"hostname\": \"" + hostname + "\", \"port\": 8099,  \"secure\": false, \"flowFileCount\" : 0 }] }";
+    std::string site2site_rest_resp = "{\"peers\" : [{ \"hostname\": \"" + hostname + "\", \"port\": " + port + ",  \"secure\": false, \"flowFileCount\" : 0 }] }";
     std::stringstream headers;
     headers << "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nConnection: close\r\n\r\n";
     mg_printf(conn, "%s", headers.str().c_str());
@@ -95,6 +97,8 @@ class PeerResponder : public CivetHandler {
 
  protected:
   std::string base_url;
+  std::string port;
+  std::string path;
 };
 
 class SiteToSiteBaseResponder : public CivetHandler {
@@ -121,7 +125,7 @@ class SiteToSiteBaseResponder : public CivetHandler {
 class TransactionResponder : public CivetHandler {
  public:
 
-  explicit TransactionResponder(std::string base_url, std::string port_id, bool input_port, bool wrong_uri, bool empty_transaction_uri)
+  explicit TransactionResponder(std::string base_url, std::string port_id, bool input_port, bool wrong_uri = false, bool empty_transaction_uri = false)
       : base_url(std::move(base_url)),
         wrong_uri(wrong_uri),
         empty_transaction_uri(empty_transaction_uri),
@@ -183,7 +187,7 @@ class TransactionResponder : public CivetHandler {
 class FlowFileResponder : public CivetHandler {
  public:
 
-  explicit FlowFileResponder(bool input_port, bool wrong_uri, bool invalid_checksum)
+  explicit FlowFileResponder(bool input_port, bool wrong_uri = false, bool invalid_checksum = false)
       : wrong_uri(wrong_uri),
         input_port(input_port),
         invalid_checksum(invalid_checksum),
@@ -471,12 +475,27 @@ public:
   }
 };
 
-class InvokeHTTPResponseTimeoutHandler : public CivetHandler {
+class TimeoutingHTTPHandler : public CivetHandler {
 public:
-    InvokeHTTPResponseTimeoutHandler(std::chrono::milliseconds wait_ms)
-        : wait_(wait_ms) {
-    }
+  TimeoutingHTTPHandler(std::chrono::milliseconds wait_ms)
+      : wait_(wait_ms) {
+  }
   bool handlePost(CivetServer *, struct mg_connection *conn) {
+    std::this_thread::sleep_for(wait_);
+    mg_printf(conn, "HTTP/1.1 201 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+    return true;
+  }
+  bool handleGet(CivetServer *, struct mg_connection *conn) {
+    std::this_thread::sleep_for(wait_);
+    mg_printf(conn, "HTTP/1.1 201 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+    return true;
+  }
+  bool handleDelete(CivetServer *, struct mg_connection *conn) {
+    std::this_thread::sleep_for(wait_);
+    mg_printf(conn, "HTTP/1.1 201 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+    return true;
+  }
+  bool handlePut(CivetServer *, struct mg_connection *conn) {
     std::this_thread::sleep_for(wait_);
     mg_printf(conn, "HTTP/1.1 201 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
     return true;

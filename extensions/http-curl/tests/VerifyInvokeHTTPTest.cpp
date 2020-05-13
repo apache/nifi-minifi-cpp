@@ -133,7 +133,7 @@ class VerifyRWTimeoutInvokeHTTP : public VerifyInvokeHTTP {
 public:
   virtual void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invoke_http value:failure"));
-    assert(LogTestController::getInstance().contains("failed Timeout was reached"));
+    assert(LogTestController::getInstance().contains("limit (1000ms) reached, terminating connection"));
   }
 };
 
@@ -192,7 +192,7 @@ int main(int argc, char ** argv) {
   }
 
   {
-    InvokeHTTPResponseTimeoutHandler handler(std::chrono::milliseconds(4000));
+    TimeoutingHTTPHandler handler(std::chrono::milliseconds(4000));
     VerifyRWTimeoutInvokeHTTP harness;
     run(harness, url, test_file_location, key_dir, &handler);
   }

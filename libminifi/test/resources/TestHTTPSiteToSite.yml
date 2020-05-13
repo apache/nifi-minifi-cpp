@@ -23,7 +23,7 @@ Processors:
       class: org.apache.nifi.processors.standard.GenerateFlowFile
       max concurrent tasks: 1
       scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1 sec
+      scheduling period: 5 sec
       penalization period: 30 sec
       yield period: 10 sec
       run duration nanos: 0

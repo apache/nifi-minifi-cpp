@@ -249,7 +249,12 @@ bool HTTPClient::submit() {
   }
 
   if (read_timeout_ms_.count() > 0) {
-    curl_easy_setopt(http_session_, CURLOPT_TIMEOUT_MS, read_timeout_ms_.count());
+    progress_.reset();
+    curl_easy_setopt(http_session_, CURLOPT_NOPROGRESS, 0);
+    curl_easy_setopt(http_session_, CURLOPT_XFERINFOFUNCTION, onProgress);
+    curl_easy_setopt(http_session_, CURLOPT_XFERINFODATA, (void*)this);
+  }else{
+    curl_easy_setopt(http_session_, CURLOPT_NOPROGRESS, 1);
   }
   if (headers_ != nullptr) {
     headers_ = curl_slist_append(headers_, "Expect:");
@@ -328,6 +333,27 @@ void HTTPClient::set_request_method(const std::string method) {
   } else {
     curl_easy_setopt(http_session_, CURLOPT_CUSTOMREQUEST, my_method.c_str());
   }
+}
+
+int HTTPClient::onProgress(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow){
+  HTTPClient& client = *(HTTPClient*)(clientp);
+  auto now = std::chrono::steady_clock::now();
+  auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - client.progress_.last_transferred_);
+  if(dlnow != client.progress_.downloaded_data_ || ulnow != client.progress_.uploaded_data_){
+    // did transfer data
+    client.progress_.last_transferred_ = now;
+    client.progress_.downloaded_data_ = dlnow;
+    client.progress_.uploaded_data_ = ulnow;
+    return 0;
+  }
+  // did not transfer data
+  if(elapsed.count() > client.read_timeout_ms_.count()){
+    // timeout
+    client.logger_->log_error("HTTP operation has been idle for %dms, limit (%dms) reached, terminating connection\n",
+      (int)elapsed.count(), (int)client.read_timeout_ms_.count());
+    return 1;
+  }
+  return 0;
 }
 
 bool HTTPClient::matches(const std::string &value, const std::string &sregex) {

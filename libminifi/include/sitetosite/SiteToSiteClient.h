@@ -151,6 +151,13 @@ class SiteToSiteClient : public core::Connectable {
   }
 
   /**
+   * Sets the idle timeout.
+   */
+   void setIdleTimeout(std::chrono::milliseconds timeout) {
+     idle_timeout_ = timeout;
+   }
+
+  /**
    * Sets the base peer for this interface.
    */
   virtual void setPeer(std::unique_ptr<SiteToSitePeer> peer) {
@@ -245,6 +252,9 @@ class SiteToSiteClient : public core::Connectable {
 
   // portId
   utils::Identifier port_id_;
+
+  // idleTimeout
+  std::chrono::milliseconds idle_timeout_{};
 
   // Peer Connection
   std::unique_ptr<SiteToSitePeer> peer_;
