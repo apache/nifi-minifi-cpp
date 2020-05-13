@@ -93,6 +93,7 @@ static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConf
 
         ptr->setPortId(uuid);
         ptr->setPeer(std::move(peer));
+        ptr->setIdleTimeout(client_configuration.getIdleTimeout());
         return ptr;
       }
       return nullptr;

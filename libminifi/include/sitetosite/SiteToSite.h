@@ -361,6 +361,14 @@ class SiteToSiteClientConfiguration {
     return stream_factory_;
   }
 
+  void setIdleTimeout(std::chrono::milliseconds timeout) {
+    idle_timeout_ = timeout;
+  }
+
+  std::chrono::milliseconds getIdleTimeout() const {
+    return idle_timeout_;
+  }
+
   // setInterface
   void setInterface(std::string &ifc) {
     local_network_interface_ = ifc;
@@ -384,6 +392,8 @@ class SiteToSiteClientConfiguration {
   CLIENT_TYPE client_type_;
 
   std::string local_network_interface_;
+
+  std::chrono::milliseconds idle_timeout_{};
 
   // secore comms
 

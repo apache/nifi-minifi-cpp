@@ -175,6 +175,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
       logger_->log_info("HTTP Site2Site setup http proxy host %s", this->peer_->getHTTPProxy().host);
       http_client_->setHTTPProxy(this->peer_->getHTTPProxy());
     }
+    http_client_->setReadTimeout(idle_timeout_);
     return http_client_;
   }
 

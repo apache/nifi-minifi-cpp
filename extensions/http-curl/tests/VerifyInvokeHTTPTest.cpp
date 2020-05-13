@@ -192,7 +192,7 @@ int main(int argc, char ** argv) {
   }
 
   {
-    InvokeHTTPResponseTimeoutHandler handler(std::chrono::milliseconds(4000));
+    TimeoutingHTTPHandler handler(std::chrono::milliseconds(4000));
     VerifyRWTimeoutInvokeHTTP harness;
     run(harness, url, test_file_location, key_dir, &handler);
   }

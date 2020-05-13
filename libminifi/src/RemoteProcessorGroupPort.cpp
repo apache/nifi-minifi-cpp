@@ -58,6 +58,9 @@ core::Property RemoteProcessorGroupPort::hostName("Host Name", "Remote Host Name
 core::Property RemoteProcessorGroupPort::SSLContext("SSL Context Service", "The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.", "");
 core::Property RemoteProcessorGroupPort::port("Port", "Remote Port", "");
 core::Property RemoteProcessorGroupPort::portUUID("Port UUID", "Specifies remote NiFi Port UUID.", "");
+core::Property RemoteProcessorGroupPort::idleTimeout(
+            core::PropertyBuilder::createProperty("Idle Timeout")->withDescription("Max idle time for remote service")->isRequired(false)
+                    ->withDefaultValue<core::TimePeriodValue>("15 s")->build());
 core::Relationship RemoteProcessorGroupPort::relation;
 
 std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextProtocol(bool create = true) {
@@ -77,6 +80,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
           sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host, rpg.port_, ssl_service != nullptr), this->getInterface(),
                                                            client_type_);
           config.setHTTPProxy(this->proxy_);
+          config.setIdleTimeout(idle_timeout_);
           nextProtocol = sitetosite::createClient(config);
         }
       } else if (peer_index_ >= 0) {
@@ -89,6 +93,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
           peer_index_ = 0;
         }
         config.setHTTPProxy(this->proxy_);
+        config.setIdleTimeout(idle_timeout_);
         nextProtocol = sitetosite::createClient(config);
       } else {
         logger_->log_debug("Refreshing the peer list since there are none configured.");
@@ -120,6 +125,7 @@ void RemoteProcessorGroupPort::initialize() {
   properties.insert(port);
   properties.insert(SSLContext);
   properties.insert(portUUID);
+  properties.insert(idleTimeout);
   setSupportedProperties(properties);
 // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -154,10 +160,22 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
   } else {
     std::string secureStr;
     bool is_secure = false;
-    if (configure_->get(Configure::nifi_remote_input_secure, secureStr) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr, is_secure)) {
+    if (configure_->get(Configure::nifi_remote_input_secure, secureStr) &&
+        org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr, is_secure)) {
       ssl_service = std::make_shared<minifi::controllers::SSLContextService>(RPG_SSL_CONTEXT_SERVICE_NAME, configure_);
       ssl_service->onEnable();
     }
+  }
+  {
+    uint64_t idleTimeoutVal;
+    std::string idleTimeoutStr;
+    if (!context->getProperty(idleTimeout.getName(), idleTimeoutStr)
+        || !core::Property::getTimeMSFromString(idleTimeoutStr, idleTimeoutVal)) {
+      logger_->log_debug("%s attribute is invalid, so default value of %s will be used", idleTimeout.getName(),
+                         idleTimeout.getValue());
+      assert(core::Property::getTimeMSFromString(idleTimeout.getValue(), idleTimeoutVal));
+    }
+    idle_timeout_ = std::chrono::milliseconds(idleTimeoutVal);
   }
 
   std::lock_guard<std::mutex> lock(peer_mutex_);
@@ -200,6 +218,7 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
       }
       logger_->log_trace("Creating client");
       config.setHTTPProxy(this->proxy_);
+      config.setIdleTimeout(idle_timeout_);
       nextProtocol = sitetosite::createClient(config);
       logger_->log_trace("Created client, moving into available protocols");
       returnProtocol(std::move(nextProtocol));
@@ -306,6 +325,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
       // use a connection timeout. if this times out we will simply attempt re-connection
       // so no need for configuration parameter that isn't already defined in Processor
       client->setConnectionTimeout(std::chrono::milliseconds(10000));
+      client->setReadTimeout(idle_timeout_);
 
       token = utils::get_token(client.get(), this->rest_user_name_, this->rest_password_);
       logger_->log_debug("Token from NiFi REST Api endpoint %s,  %s", loginUrl.str(), token);
@@ -324,6 +344,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     // use a connection timeout. if this times out we will simply attempt re-connection
     // so no need for configuration parameter that isn't already defined in Processor
     client->setConnectionTimeout(std::chrono::milliseconds(10000));
+    client->setReadTimeout(idle_timeout_);
     if (!proxy_.host.empty()) {
       client->setHTTPProxy(proxy_);
     }
@@ -384,6 +405,7 @@ void RemoteProcessorGroupPort::refreshPeerList() {
                                                    this->getInterface(), client_type_);
   config.setSecurityContext(ssl_service);
   config.setHTTPProxy(this->proxy_);
+  config.setIdleTimeout(idle_timeout_);
   protocol = sitetosite::createClient(config);
 
   if (protocol)

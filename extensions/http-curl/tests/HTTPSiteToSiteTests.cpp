@@ -52,8 +52,8 @@
 
 class SiteToSiteTestHarness : public CoapIntegrationBase {
  public:
-  explicit SiteToSiteTestHarness(bool isSecure)
-      : CoapIntegrationBase(2000), isSecure(isSecure) {
+  explicit SiteToSiteTestHarness(bool isSecure, std::chrono::milliseconds waitTime = std::chrono::milliseconds{2000})
+      : CoapIntegrationBase(waitTime.count()), isSecure(isSecure) {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }
@@ -100,7 +100,8 @@ struct test_profile {
   }
 
   bool allFalse() const {
-    return !flow_url_broken && !transaction_url_broken && !empty_transaction_url && !no_delete && !invalid_checksum;
+    return !flow_url_broken && !transaction_url_broken &&
+      !empty_transaction_url && !no_delete && !invalid_checksum;
   }
   // tests for a broken flow file url
   bool flow_url_broken;
@@ -117,9 +118,13 @@ struct test_profile {
 void run_variance(std::string test_file_location, bool isSecure, std::string url, const struct test_profile &profile) {
   SiteToSiteTestHarness harness(isSecure);
 
+  std::string in_port = "471deef6-2a6e-4a7d-912a-81cc17e3a204";
+  std::string out_port = "471deef6-2a6e-4a7d-912a-81cc17e3a203";
+
   SiteToSiteLocationResponder *responder = new SiteToSiteLocationResponder(isSecure);
 
-  TransactionResponder *transaction_response = new TransactionResponder(url, "471deef6-2a6e-4a7d-912a-81cc17e3a204", true, profile.transaction_url_broken, profile.empty_transaction_url);
+  TransactionResponder *transaction_response = new TransactionResponder(url, in_port,
+      true, profile.transaction_url_broken, profile.empty_transaction_url);
 
   std::string transaction_id = transaction_response->getTransactionId();
 
@@ -134,11 +139,11 @@ void run_variance(std::string test_file_location, bool isSecure, std::string url
 
   harness.setUrl(controller_loc, responder);
 
-  std::string transaction_url = url + "/data-transfer/input-ports/471deef6-2a6e-4a7d-912a-81cc17e3a204/transactions";
-  std::string action_url = url + "/site-to-site/input-ports/471deef6-2a6e-4a7d-912a-81cc17e3a204/transactions";
+  std::string transaction_url = url + "/data-transfer/input-ports/" + in_port + "/transactions";
+  std::string action_url = url + "/site-to-site/input-ports/" + in_port + "/transactions";
 
-  std::string transaction_output_url = url + "/data-transfer/output-ports/471deef6-2a6e-4a7d-912a-81cc17e3a203/transactions";
-  std::string action_output_url = url + "/site-to-site/output-ports/471deef6-2a6e-4a7d-912a-81cc17e3a203/transactions";
+  std::string transaction_output_url = url + "/data-transfer/output-ports/" + out_port + "/transactions";
+  std::string action_output_url = url + "/site-to-site/output-ports/" + out_port + "/transactions";
 
   harness.setUrl(transaction_url, transaction_response);
 
@@ -154,7 +159,8 @@ void run_variance(std::string test_file_location, bool isSecure, std::string url
   flowResponder->setFlowUrl(flow_url);
   auto producedFlows = flowResponder->getFlows();
 
-  TransactionResponder *transaction_response_output = new TransactionResponder(url, "471deef6-2a6e-4a7d-912a-81cc17e3a203", false, profile.transaction_url_broken, profile.empty_transaction_url);
+  TransactionResponder *transaction_response_output = new TransactionResponder(url, out_port,
+      false, profile.transaction_url_broken, profile.empty_transaction_url);
   std::string transaction_output_id = transaction_response_output->getTransactionId();
   transaction_response_output->setFeed(producedFlows);
 
