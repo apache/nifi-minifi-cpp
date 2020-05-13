@@ -315,14 +315,15 @@ int main(int argc, char **argv) {
    * yield without the need for a more complex construct and
    * a spin lock
    */
-  if (sem_wait(running) == -1)
-    perror("sem_wait");
+  int ret_val;
+  while ((ret_val = sem_wait(running)) == -1 && errno == EINTR);
+  if(ret_val == -1) perror("sem_wait");
 
-  if (sem_close(running) == -1)
-    perror("sem_close");
+  while ((ret_val = sem_close(running)) == -1 && errno == EINTR);
+  if(ret_val == -1) perror("sem_close");
 
-  if (sem_unlink("/MiNiFiMain") == -1)
-    perror("sem_unlink");
+  while ((ret_val = sem_unlink("/MiNiFiMain")) == -1 && errno == EINTR);
+  if(ret_val == -1) perror("sem_unlink");
 
   /**
    * Trigger unload -- wait stop_wait_time
