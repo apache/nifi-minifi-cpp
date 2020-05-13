@@ -41,7 +41,7 @@ void KafkaConnection::remove() {
 }
 
 void KafkaConnection::removeConnection() {
-  logger_->log_debug("KafkaConnection::removeConnection START: Client = %s -- Broker = %s", key_.client_id_, key_.brokers_);
+  logger_->log_trace("KafkaConnection::removeConnection START: Client = %s -- Broker = %s", key_.client_id_, key_.brokers_);
   stopPoll();
   if (kafka_connection_) {
     rd_kafka_flush(kafka_connection_, 10 * 1000); /* wait for max 10 seconds */
@@ -52,7 +52,7 @@ void KafkaConnection::removeConnection() {
     kafka_connection_ = nullptr;
   }
   initialized_ = false;
-  logger_->log_debug("KafkaConnection::removeConnection FINISH: Client = %s -- Broker = %s", key_.client_id_, key_.brokers_);
+  logger_->log_trace("KafkaConnection::removeConnection FINISH: Client = %s -- Broker = %s", key_.client_id_, key_.brokers_);
 }
 
 bool KafkaConnection::initialized() const {
