@@ -145,6 +145,19 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
     });
   }
 
+    std::thread getDequeueWaitUntilConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
+    return std::thread([&queue, &results] {
+      const std::size_t max_read_attempts = 6;
+      for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
+        std::string s;
+        const std::chrono::system_clock::time_point timeout_point = std::chrono::system_clock::now() + std::chrono::milliseconds(3);
+        if (queue.dequeueWaitUntil(s, timeout_point)) {
+          results.push_back(s);
+        }
+      }
+    });
+  }
+
   std::thread getConsumeWaitForConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results]() {
       const std::size_t max_read_attempts = 6;
@@ -265,6 +278,9 @@ TEST_CASE("TestConditionConcurrentQueue::testProducerConsumer", "[TestConditionC
     }
     SECTION("using dequeueWaitFor") {
       consumer = getDequeueWaitForConsumerThread(queue, results);
+    }
+    SECTION("using dequeueWaitUntil") {
+      consumer = getDequeueWaitUntilConsumerThread(queue, results);
     }
     SECTION("using consumeWaitFor") {
       consumer = getConsumeWaitForConsumerThread(queue, results);

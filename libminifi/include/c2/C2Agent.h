@@ -34,21 +34,16 @@
 #include "C2Protocol.h"
 #include "io/validation.h"
 #include "HeartBeatReporter.h"
-#include "utils/ThreadPool.h"
 #include "utils/Id.h"
+#include "utils/MinifiConcurrentQueue.h"
+#include "utils/ThreadPool.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
-namespace utils {
-template <typename T>
-class ConditionConcurrentQueue;
-}
-
 namespace c2 {
-
 
 #define C2_AGENT_UPDATE_NAME "C2UpdatePolicy"
 /**
