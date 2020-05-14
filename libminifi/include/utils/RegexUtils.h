@@ -52,6 +52,8 @@ class Regex {
   const std::vector<std::string>& getResult() const;
   const std::string& getSuffix() const;
 
+  static bool matchesFullInput(const std::string &regex, const std::string &input);
+
  private:
   std::string pat_;
   std::string suffix_;
