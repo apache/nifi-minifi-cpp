@@ -253,6 +253,8 @@ bool HTTPClient::submit() {
     curl_easy_setopt(http_session_, CURLOPT_NOPROGRESS, 0);
     curl_easy_setopt(http_session_, CURLOPT_XFERINFOFUNCTION, onProgress);
     curl_easy_setopt(http_session_, CURLOPT_XFERINFODATA, (void*)this);
+  }else{
+    curl_easy_setopt(http_session_, CURLOPT_NOPROGRESS, 1);
   }
   if (headers_ != nullptr) {
     headers_ = curl_slist_append(headers_, "Expect:");
