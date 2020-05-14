@@ -22,7 +22,7 @@
 #include <vector>
 #include <regex>
 
-#if (__cplusplus > 201103L) || defined(_WIN32)
+#if (__cplusplus > 201103L) || defined(_WIN32) || (defined(__GNUC__) && __GNUC__ >= 5)
 #define NO_MORE_REGFREEE
 #endif
 
@@ -52,6 +52,8 @@ public:
   bool match(const std::string &pattern);
   const std::vector<std::string>& getResult() const;
   const std::string& getSuffix() const;
+
+  static bool matchesFullInput(const std::string &regex, const std::string &input);
 
  private:
   std::string pat_;
