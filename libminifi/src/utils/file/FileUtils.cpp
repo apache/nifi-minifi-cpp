@@ -14,10 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 
-#include <string>
+#include "utils/file/FileUtils.h"
+
+#include <zlib.h>
+
+#include <algorithm>
+#include <iostream>
 
 namespace org {
 namespace apache {
@@ -25,34 +28,30 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 namespace file {
-namespace PathUtils {
 
-/**
- * Extracts the filename and path performing some validation of the path and output to ensure
- * we don't provide invalid results.
- * @param path input path
- * @param filePath output file path
- * @param fileName output file name
- * @return result of the operation.
- */
-bool getFileNameAndPath(const std::string &path, std::string &filePath, std::string &fileName);
+uint64_t FileUtils::computeChecksum(const std::string &file_name, uint64_t up_to_position) {
+  constexpr uint64_t BUFFER_SIZE = 4096u;
+  std::array<char, std::size_t{BUFFER_SIZE}> buffer;
 
-/**
- * Resolves the supplied path to an absolute pathname using the native OS functions
- * (realpath(3) on *nix, GetFullPathNameA on Windows)
- * @param path the name of the file
- * @return the canonicalized absolute pathname on success, empty string on failure
- */
-std::string getFullPath(const std::string& path);
+  std::ifstream stream{file_name, std::ios::in | std::ios::binary};
 
-std::string globToRegex(std::string glob);
+  uint64_t checksum = 0;
+  uint64_t remaining_bytes_to_be_read = up_to_position;
 
-}  // namespace PathUtils
+  while (stream && remaining_bytes_to_be_read > 0) {
+    // () around std::min are needed because Windows.h defines min (and max) as a macro
+    stream.read(buffer.data(), (std::min)(BUFFER_SIZE, remaining_bytes_to_be_read));
+    uint64_t bytes_read = stream.gcount();
+    checksum = crc32(checksum, reinterpret_cast<unsigned char*>(buffer.data()), bytes_read);
+    remaining_bytes_to_be_read -= bytes_read;
+  }
+
+  return checksum;
+}
+
 }  // namespace file
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_

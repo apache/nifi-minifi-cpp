@@ -84,10 +84,16 @@ std::string PathUtils::getFullPath(const std::string& path) {
 #endif
 }
 
+std::string PathUtils::globToRegex(std::string glob) {
+  utils::StringUtils::replaceAll(glob, ".", "\\.");
+  utils::StringUtils::replaceAll(glob, "*", ".*");
+  utils::StringUtils::replaceAll(glob, "?", ".");
+  return glob;
+}
+
 }  // namespace file
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-

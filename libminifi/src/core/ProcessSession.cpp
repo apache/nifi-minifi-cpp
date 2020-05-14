@@ -217,7 +217,9 @@ void ProcessSession::remove(const std::shared_ptr<core::FlowFile> &flow) {
   } else {
     logger_->log_debug("Flow does not contain content. no resource claim to decrement.");
   }
-  process_context_->getFlowFileRepository()->Delete(flow->getUUIDStr());
+  if (_addedFlowFiles.find(flow->getUUIDStr()) == _addedFlowFiles.end()) {
+    process_context_->getFlowFileRepository()->Delete(flow->getUUIDStr());
+  }
   _deletedFlowFiles[flow->getUUIDStr()] = flow;
   std::string reason = process_context_->getProcessorNode()->getName() + " drop flow record " + flow->getUUIDStr();
   provenance_report_->drop(flow, reason);
@@ -648,7 +650,20 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
 }
 
 void ProcessSession::import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> &flows, bool keepSource, uint64_t offset, char inputDelimiter) {
+// this function calls a deprecated function, but it is itself deprecated, so suppress warnings
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
   import(source, flows, offset, inputDelimiter);
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
   logger_->log_trace("Closed input %s, keeping source ? %i", source, keepSource);
   if (!keepSource) {
     std::remove(source.c_str());
@@ -970,6 +985,13 @@ bool ProcessSession::outgoingConnectionsFull(const std::string& relationship) {
     }
   }
   return false;
+}
+
+bool ProcessSession::existsFlowFileInRelationship(const Relationship &relationship) {
+  return std::any_of(_transferRelationship.begin(), _transferRelationship.end(),
+      [&relationship](const std::map<std::string, Relationship>::value_type &key_value_pair) {
+        return relationship == key_value_pair.second;
+  });
 }
 
 }  // namespace core

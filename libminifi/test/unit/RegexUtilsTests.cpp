@@ -71,3 +71,13 @@ TEST_CASE("TestRegexUtils::check_mode", "[regex4]") {
   Regex r2(rgx1, mode);
   REQUIRE(r2.match(pat));
 }
+
+TEST_CASE("Regex::matchesFullInput works correctly", "[matchesFullInput]") {
+  REQUIRE(Regex::matchesFullInput("", "") == true);
+  REQUIRE(Regex::matchesFullInput("", "input") == false);
+  REQUIRE(Regex::matchesFullInput(".*", "input") == true);
+  REQUIRE(Regex::matchesFullInput("np", "input") == false);
+  REQUIRE(Regex::matchesFullInput(".*np.*", "input") == true);
+  REQUIRE(Regex::matchesFullInput("(in|out)put", "input") == true);
+  REQUIRE(Regex::matchesFullInput("inpu[aeiou]*", "input") == false);
+}

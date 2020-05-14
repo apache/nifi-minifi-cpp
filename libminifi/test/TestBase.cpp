@@ -303,6 +303,11 @@ std::shared_ptr<core::FlowFile> TestPlan::getCurrentFlowFile() {
   return current_flowfile_;
 }
 
+
+std::shared_ptr<core::ProcessContext> TestPlan::getCurrentContext() {
+  return processor_contexts_.at(location);
+}
+
 std::shared_ptr<minifi::Connection> TestPlan::buildFinalConnection(std::shared_ptr<core::Processor> processor, bool setDest) {
   std::stringstream connection_name;
   std::shared_ptr<core::Processor> last = processor;

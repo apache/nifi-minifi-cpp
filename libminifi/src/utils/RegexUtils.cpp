@@ -158,6 +158,16 @@ const std::vector<std::string>& Regex::getResult() const { return results_; }
 
 const std::string& Regex::getSuffix() const { return suffix_; }
 
+bool Regex::matchesFullInput(const std::string &regex, const std::string &input) {
+#ifdef NO_MORE_REGFREEE
+  std::regex re{regex};
+  return std::regex_match(input, re);
+#else
+  Regex rgx('^' + regex + '$');
+  return rgx.match(input);
+#endif
+}
+
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */

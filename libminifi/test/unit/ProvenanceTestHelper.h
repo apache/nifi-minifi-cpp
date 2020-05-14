@@ -23,6 +23,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -32,6 +33,7 @@
 #include "FlowController.h"
 #include "properties/Configure.h"
 #include "provenance/Provenance.h"
+
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Woverloaded-virtual"
@@ -49,16 +51,16 @@ class TestRepository : public core::Repository {
       : core::SerializableComponent("repo_name"),
         Repository("repo_name", "./dir", 1000, 100, 0) {
   }
-  // initialize
-  bool initialize() {
+
+  bool initialize(const std::shared_ptr<minifi::Configure> &) override {
     return true;
   }
 
-  void start() {
+  void start() override {
     running_ = true;
   }
 
-  void stop() {
+  void stop() override {
     running_ = false;
   }
 
@@ -66,19 +68,19 @@ class TestRepository : public core::Repository {
     repo_full_ = true;
   }
 
-  // Destructor
-  virtual ~TestRepository() = default;
+  ~TestRepository() override = default;
 
-  virtual bool isNoop() {
+  bool isNoop() override {
     return false;
   }
 
-  bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
-    repositoryResults.insert(std::pair<std::string, std::string>(key, std::string((const char*) buf, bufLen)));
+  bool Put(std::string key, const uint8_t *buf, size_t bufLen) override {
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
+    repository_results_.emplace(key, std::string{reinterpret_cast<const char*>(buf), bufLen});
     return true;
   }
 
-  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) {
+  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) override {
     for (const auto& item: data) {
       if (!Put(item.first, item.second->getBuffer(), item.second->getSize())) {
         return false;
@@ -87,19 +89,20 @@ class TestRepository : public core::Repository {
     return true;
   }
 
-  virtual bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) {
+  bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) override {
     return Put(key, buffer, bufferSize);
   }
 
-  // Delete
-  bool Delete(std::string key) {
-    repositoryResults.erase(key);
+  bool Delete(std::string key) override {
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
+    repository_results_.erase(key);
     return true;
   }
-  // Get
-  bool Get(const std::string &key, std::string &value) {
-    auto result = repositoryResults.find(key);
-    if (result != repositoryResults.end()) {
+
+  bool Get(const std::string &key, std::string &value) override {
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
+    auto result = repository_results_.find(key);
+    if (result != repository_results_.end()) {
       value = result->second;
       return true;
     } else {
@@ -107,60 +110,65 @@ class TestRepository : public core::Repository {
     }
   }
 
-  virtual bool Serialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t max_size) {
+  bool Serialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t max_size) override {
     return false;
   }
 
-  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
+  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) override {
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
     max_size = 0;
-    for (auto entry : repositoryResults) {
-      std::shared_ptr<core::SerializableComponent> eventRead = store.at(max_size);
-
-      if (eventRead->DeSerialize((uint8_t*) entry.second.data(), entry.second.length())) {
-      }
-      if (+max_size >= store.size()) {
+    for (const auto &entry : repository_results_) {
+      if (max_size >= store.size()) {
         break;
       }
+      std::shared_ptr<core::SerializableComponent> eventRead = store.at(max_size);
+      if (eventRead->DeSerialize((uint8_t*) entry.second.data(), entry.second.length())) {
+      }
+      ++max_size;
     }
     return true;
   }
 
-  virtual bool Serialize(const std::shared_ptr<core::SerializableComponent> &store) {
+  bool Serialize(const std::shared_ptr<core::SerializableComponent> &store) override {
     return false;
   }
 
-  virtual bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &store) {
+  bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &store) override {
     std::string value;
     Get(store->getUUIDStr(), value);
-    store->DeSerialize(reinterpret_cast<uint8_t*>(const_cast<char*>(value.c_str())), value.size());
+    store->DeSerialize(reinterpret_cast<const uint8_t*>(value.c_str()), value.size());
     return true;
   }
 
-  virtual bool DeSerialize(const uint8_t *buffer, const size_t bufferSize) {
+  bool DeSerialize(const uint8_t *buffer, const size_t bufferSize) override {
     return false;
   }
 
-  const std::map<std::string, std::string> &getRepoMap() const {
-    return repositoryResults;
+  std::map<std::string, std::string> getRepoMap() const {
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
+    return repository_results_;
   }
 
   void getProvenanceRecord(std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, int maxSize) {
-    for (auto entry : repositoryResults) {
-      if (records.size() >= (uint64_t)maxSize)
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
+    for (const auto &entry : repository_results_) {
+      if (records.size() >= static_cast<uint64_t>(maxSize))
         break;
       std::shared_ptr<provenance::ProvenanceEventRecord> eventRead = std::make_shared<provenance::ProvenanceEventRecord>();
 
-      if (eventRead->DeSerialize((uint8_t*) entry.second.data(), entry.second.length())) {
+      if (eventRead->DeSerialize(reinterpret_cast<const uint8_t*>(entry.second.data()), entry.second.length())) {
         records.push_back(eventRead);
       }
     }
   }
 
-  void run() {
+  void run() override {
     // do nothing
   }
+
  protected:
-  std::map<std::string, std::string> repositoryResults;
+  mutable std::mutex repository_results_mutex_;
+  std::map<std::string, std::string> repository_results_;
 };
 
 class TestFlowRepository : public core::Repository {
@@ -169,27 +177,29 @@ class TestFlowRepository : public core::Repository {
       : core::SerializableComponent("ff"),
         core::Repository("ff", "./dir", 1000, 100, 0) {
   }
-  // initialize
-  bool initialize() {
+
+  bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {
     return true;
   }
 
-  // Destructor
-  virtual ~TestFlowRepository() = default;
+  ~TestFlowRepository() override = default;
 
-  bool Put(std::string key, uint8_t *buf, int bufLen) {
-    repositoryResults.insert(std::pair<std::string, std::string>(key, std::string((const char*) buf, bufLen)));
+  bool Put(std::string key, const uint8_t *buf, size_t bufLen) override {
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
+    repository_results_.emplace(key, std::string{reinterpret_cast<const char*>(buf), bufLen});
     return true;
   }
   // Delete
-  bool Delete(std::string key) {
-    repositoryResults.erase(key);
+  bool Delete(std::string key) override {
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
+    repository_results_.erase(key);
     return true;
   }
-  // Get
-  bool Get(std::string key, std::string &value) {
-    auto result = repositoryResults.find(key);
-    if (result != repositoryResults.end()) {
+
+  bool Get(const std::string &key, std::string &value) override {
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
+    auto result = repository_results_.find(key);
+    if (result != repository_results_.end()) {
       value = result->second;
       return true;
     } else {
@@ -197,30 +207,34 @@ class TestFlowRepository : public core::Repository {
     }
   }
 
-  const std::map<std::string, std::string> &getRepoMap() const {
-    return repositoryResults;
+  std::map<std::string, std::string> getRepoMap() const {
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
+    return repository_results_;
   }
 
   void getProvenanceRecord(std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, int maxSize) {
-    for (auto entry : repositoryResults) {
-      if (records.size() >= (uint64_t)maxSize)
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
+    for (const auto &entry : repository_results_) {
+      if (records.size() >= static_cast<uint64_t>(maxSize))
         break;
       std::shared_ptr<provenance::ProvenanceEventRecord> eventRead = std::make_shared<provenance::ProvenanceEventRecord>();
 
-      if (eventRead->DeSerialize((uint8_t*) entry.second.data(), entry.second.length())) {
+      if (eventRead->DeSerialize(reinterpret_cast<const uint8_t*>(entry.second.data()), entry.second.length())) {
         records.push_back(eventRead);
       }
     }
   }
 
-  void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
+  void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override {
   }
 
-  void run() {
+  void run() override {
     // do nothing
   }
+
  protected:
-  std::map<std::string, std::string> repositoryResults;
+  mutable std::mutex repository_results_mutex_;
+  std::map<std::string, std::string> repository_results_;
 };
 
 class TestFlowController : public minifi::FlowController {
@@ -229,37 +243,38 @@ class TestFlowController : public minifi::FlowController {
   TestFlowController(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo)
       : minifi::FlowController(repo, flow_file_repo, std::make_shared<minifi::Configure>(), nullptr, std::make_shared<core::repository::VolatileContentRepository>(), "", true) {
   }
-  ~TestFlowController() = default;
-  void load() {
 
+  ~TestFlowController() override = default;
+
+  void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr, bool reload = false) override {
   }
 
-  int16_t start() {
+  int16_t start() override {
     running_.store(true);
     return 0;
   }
 
-  int16_t stop(bool force, uint64_t timeToWait = 0) {
+  int16_t stop(bool force, uint64_t timeToWait = 0) override {
     running_.store(false);
     return 0;
   }
-  void waitUnload(const uint64_t timeToWaitMs) {
+  void waitUnload(const uint64_t timeToWaitMs) override {
     stop(true);
   }
 
-  int16_t pause() {
+  int16_t pause() override {
     return -1;
   }
 
-  void unload() {
+  void unload() override {
     stop(true);
   }
 
-  void reload(std::string file) {
+  void reload(std::string file) override {
 
   }
 
-  bool isRunning() {
+  bool isRunning() override {
     return true;
   }
 
@@ -278,8 +293,9 @@ class TestFlowController : public minifi::FlowController {
   std::shared_ptr<minifi::Connection> createConnection(std::string name, utils::Identifier &  uuid) {
     return 0;
   }
+
  protected:
-  void initializePaths(const std::string &adjustedFilename) {
+  void initializePaths(const std::string &adjustedFilename) override {
   }
 };
 #if defined(__clang__)

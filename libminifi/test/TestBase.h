@@ -266,6 +266,8 @@ class TestPlan {
 
   std::shared_ptr<core::FlowFile> getCurrentFlowFile();
 
+  std::shared_ptr<core::ProcessContext> getCurrentContext();
+
   std::shared_ptr<core::Repository> getFlowRepo() {
     return flow_repo_;
   }

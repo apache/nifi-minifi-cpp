@@ -338,3 +338,30 @@ TEST_CASE("TestStringUtils::testJoinPackNegative", "[test join_pack negative]") 
               == "rvalue c string, c string, rval std::string, std::string, char array");
 }
  */
+
+TEST_CASE("StringUtils::replaceOne works correctly", "[replaceOne]") {
+  REQUIRE(utils::StringUtils::replaceOne("", "x", "y") == "");
+  REQUIRE(utils::StringUtils::replaceOne("banana", "a", "_") == "b_nana");
+  REQUIRE(utils::StringUtils::replaceOne("banana", "b", "_") == "_anana");
+  REQUIRE(utils::StringUtils::replaceOne("banana", "x", "y") == "banana");
+  REQUIRE(utils::StringUtils::replaceOne("banana", "an", "") == "bana");
+  REQUIRE(utils::StringUtils::replaceOne("banana", "an", "AN") == "bANana");
+  REQUIRE(utils::StringUtils::replaceOne("banana", "an", "***") == "b***ana");
+  REQUIRE(utils::StringUtils::replaceOne("banana", "banana", "kiwi") == "kiwi");
+  REQUIRE(utils::StringUtils::replaceOne("banana", "banana", "grapefruit") == "grapefruit");
+}
+
+TEST_CASE("StringUtils::replaceAll works correctly", "[replaceAll]") {
+  auto replaceAll = [](std::string input, const std::string &from, const std::string &to) -> std::string {
+    return utils::StringUtils::replaceAll(input, from, to);
+  };
+  REQUIRE(replaceAll("", "x", "y") == "");
+  REQUIRE(replaceAll("banana", "a", "_") == "b_n_n_");
+  REQUIRE(replaceAll("banana", "b", "_") == "_anana");
+  REQUIRE(replaceAll("banana", "x", "y") == "banana");
+  REQUIRE(replaceAll("banana", "an", "") == "ba");
+  REQUIRE(replaceAll("banana", "an", "AN") == "bANANa");
+  REQUIRE(replaceAll("banana", "an", "***") == "b******a");
+  REQUIRE(replaceAll("banana", "banana", "kiwi") == "kiwi");
+  REQUIRE(replaceAll("banana", "banana", "grapefruit") == "grapefruit");
+}
