@@ -350,7 +350,7 @@ int HTTPClient::onProgress(void *clientp, curl_off_t dltotal, curl_off_t dlnow, 
   if(elapsed.count() > client.read_timeout_ms_.count()){
     // timeout
     client.logger_->log_error("HTTP operation has been idle for %dms, limit (%dms) reached, terminating connection\n",
-        elapsed.count(), client.read_timeout_ms_.count());
+      (int)elapsed.count(), (int)client.read_timeout_ms_.count());
     return 1;
   }
   return 0;
