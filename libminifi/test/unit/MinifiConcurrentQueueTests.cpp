@@ -120,12 +120,13 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
     });
   }
 
-  std::thread getReaddingDequeueConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
-    return std::thread([&queue, &results] {
+  std::thread getReaddingDequeueConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results, std::atomic_int& results_size) {
+    return std::thread([&queue, &results, &results_size] {
       std::string s;
       while (queue.dequeueWait(s)) {
         if (!std::count(results.begin(), results.end(), s)) {
           results.push_back(s);
+          results_size = results.size();
         }
         // The consumer is busy enqueing so noone is waiting for this ;(
         queue.enqueue(std::move(s));
@@ -279,12 +280,16 @@ TEST_CASE("TestConditionConcurrentQueue::testProducerConsumer", "[TestConditionC
 
   /* The same test as above, but covering the ConditionConcurrentQueue */
   SECTION("with readd") {
-    std::thread consumer { getReaddingDequeueConsumerThread(queue, results) };
+    std::atomic_int results_size;
+    std::thread consumer { getReaddingDequeueConsumerThread(queue, results, results_size) };
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     std::thread producer { getSimpleProducerThread(queue) };
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    producer.join();
+    std::this_thread::sleep_for(std::chrono::milliseconds(9));
+    while (results_size < 3) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
     queue.stop();
+    producer.join();
     consumer.join();
 
     REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
