@@ -68,9 +68,14 @@ int DescriptorStream::writeData(uint8_t *value, int size) {
 template<typename T>
 inline std::vector<uint8_t> DescriptorStream::readBuffer(const T& t) {
   std::vector<uint8_t> buf;
-  buf.resize(sizeof t);
-  readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
+  readBuffer(buf, t);
   return buf;
+}
+
+template<typename T>
+inline int DescriptorStream::readBuffer(std::vector<uint8_t>& buf, const T& t) {
+  buf.resize(sizeof t);
+  return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
 }
 
 int DescriptorStream::readData(std::vector<uint8_t> &buf, int buflen) {
@@ -120,7 +125,9 @@ int DescriptorStream::read(uint8_t &value) {
  * @return resulting read size
  **/
 int DescriptorStream::read(uint16_t &base_value, bool is_little_endian) {
-  auto buf = readBuffer(base_value);
+  std::vector<uint8_t> buf;
+  auto ret = readBuffer(buf, base_value);
+  if (ret <= 0) return ret;
   if (is_little_endian) {
     base_value = (buf[0] << 8) | buf[1];
   } else {
@@ -157,7 +164,9 @@ int DescriptorStream::read(uint8_t *value, int len) {
  * @return resulting read size
  **/
 int DescriptorStream::read(uint32_t &value, bool is_little_endian) {
-  auto buf = readBuffer(value);
+  std::vector<uint8_t> buf;
+  auto ret = readBuffer(buf, value);
+  if (ret <= 0) return ret;
   if (is_little_endian) {
     value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
   } else {
@@ -173,7 +182,9 @@ int DescriptorStream::read(uint32_t &value, bool is_little_endian) {
  * @return resulting read size
  **/
 int DescriptorStream::read(uint64_t &value, bool is_little_endian) {
-  auto buf = readBuffer(value);
+  std::vector<uint8_t> buf;
+  auto ret = readBuffer(buf, value);
+  if (ret <= 0) return ret;
 
   if (is_little_endian) {
     value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48) | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32) | ((uint64_t) (buf[4] & 255) << 24)

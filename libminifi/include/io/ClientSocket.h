@@ -249,7 +249,16 @@ class Socket : public BaseStream {
    * @returns vector.
    */
   template<typename T>
-  std::vector<uint8_t> readBuffer(const T&);
+  std::vector<uint8_t> readBuffer(const T& t);
+
+  /**
+   * Populates the vector using the provided type name.
+   * @param buf output buffer
+   * @param t incoming object
+   * @returns number of bytes read.
+   */
+  template<typename T>
+  int readBuffer(std::vector<uint8_t>& buf, const T& t);
 
   /**
    * Creates a connection using the addr object

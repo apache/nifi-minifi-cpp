@@ -91,8 +91,8 @@ protected:
 };
 
 struct defaulted_handler{
-  CivetHandler* handler = nullptr;
-  CivetHandler* get(CivetHandler *def) const {
+  ServerAwareHandler* handler = nullptr;
+  ServerAwareHandler* get(ServerAwareHandler *def) const {
     if(handler)return handler;
     return def;
   }

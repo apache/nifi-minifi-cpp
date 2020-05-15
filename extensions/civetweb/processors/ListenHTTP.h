@@ -69,9 +69,9 @@ class ListenHTTP : public core::Processor {
   // Supported Relationships
   static core::Relationship Success;
 
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-  void initialize();
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void initialize() override;
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   std::string getPort() const;
   bool isSecure() const;
 
@@ -201,6 +201,8 @@ class ListenHTTP : public core::Processor {
     }
     return 0;
   }
+ protected:
+  void notifyStop() override;
 
  private:
   // Logger

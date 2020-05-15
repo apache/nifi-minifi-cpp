@@ -153,9 +153,20 @@ class CRCStream : public BaseStream {
   template<typename K>
   std::vector<uint8_t> readBuffer(const K& t) {
     std::vector<uint8_t> buf;
-    buf.resize(sizeof t);
-    readData((uint8_t*) &buf[0], sizeof(t));
+    readBuffer(buf, t);
     return buf;
+  }
+
+  /**
+   * Populates the vector using the provided type name.
+   * @param buf output buffer
+   * @param t incoming object
+   * @returns number of bytes read.
+   */
+  template<typename K>
+  int readBuffer(std::vector<uint8_t>& buf, const K& t) {
+    buf.resize(sizeof t);
+    return readData((uint8_t*) &buf[0], sizeof(t));
   }
 
   uint64_t crc_;
@@ -259,7 +270,9 @@ template<typename T>
 int CRCStream<T>::read(uint64_t &value, bool is_little_endian) {
   if (disable_encoding_)
     is_little_endian = false;
-  auto buf = readBuffer(value);
+  std::vector<uint8_t> buf;
+  auto ret = readBuffer(buf, value);
+  if(ret <= 0)return ret;
 
   if (is_little_endian) {
     value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48) | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32) | ((uint64_t) (buf[4] & 255) << 24)
@@ -275,7 +288,9 @@ template<typename T>
 int CRCStream<T>::read(uint32_t &value, bool is_little_endian) {
   if (disable_encoding_)
     is_little_endian = false;
-  auto buf = readBuffer(value);
+  std::vector<uint8_t> buf;
+  auto ret = readBuffer(buf, value);
+  if(ret <= 0)return ret;
 
   if (is_little_endian) {
     value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
@@ -290,7 +305,9 @@ template<typename T>
 int CRCStream<T>::read(uint16_t &value, bool is_little_endian) {
   if (disable_encoding_)
     is_little_endian = false;
-  auto buf = readBuffer(value);
+  std::vector<uint8_t> buf;
+  auto ret = readBuffer(buf, value);
+  if(ret <= 0)return ret;
 
   if (is_little_endian) {
     value = (buf[0] << 8) | buf[1];

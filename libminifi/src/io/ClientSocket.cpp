@@ -528,9 +528,14 @@ int Socket::writeData(uint8_t *value, int size) {
 template<typename T>
 inline std::vector<uint8_t> Socket::readBuffer(const T& t) {
   std::vector<uint8_t> buf;
-  buf.resize(sizeof t);
-  readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
+  readBuffer(buf, t);
   return buf;
+}
+
+template<typename T>
+inline int Socket::readBuffer(std::vector<uint8_t>& buf, const T& t) {
+  buf.resize(sizeof t);
+  return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
 }
 
 int Socket::write(uint64_t base_value, bool is_little_endian) {
@@ -546,7 +551,9 @@ int Socket::write(uint16_t base_value, bool is_little_endian) {
 }
 
 int Socket::read(uint64_t &value, bool is_little_endian) {
-  auto buf = readBuffer(value);
+  std::vector<uint8_t> buf;
+  auto ret = readBuffer(buf, value);
+  if(ret <= 0)return ret;
 
   if (is_little_endian) {
     value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48) | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32) | ((uint64_t) (buf[4] & 255) << 24)
@@ -559,7 +566,9 @@ int Socket::read(uint64_t &value, bool is_little_endian) {
 }
 
 int Socket::read(uint32_t &value, bool is_little_endian) {
-  auto buf = readBuffer(value);
+  std::vector<uint8_t> buf;
+  auto ret = readBuffer(buf, value);
+  if(ret <= 0)return ret;
 
   if (is_little_endian) {
     value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
@@ -570,7 +579,9 @@ int Socket::read(uint32_t &value, bool is_little_endian) {
 }
 
 int Socket::read(uint16_t &value, bool is_little_endian) {
-  auto buf = readBuffer(value);
+  std::vector<uint8_t> buf;
+  auto ret = readBuffer(buf, value);
+  if(ret <= 0)return ret;
 
   if (is_little_endian) {
     value = (buf[0] << 8) | buf[1];

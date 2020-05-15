@@ -108,17 +108,15 @@ class CivetStream : public io::BaseStream {
  protected:
 
   /**
-   * Creates a vector and returns the vector using the provided
-   * type name.
+   * Populates the vector using the provided type name.
+   * @param buf output buffer
    * @param t incoming object
-   * @returns vector.
+   * @returns number of bytes read
    */
   template<typename T>
-  inline std::vector<uint8_t> readBuffer(const T& t) {
-    std::vector<uint8_t> buf;
+  inline int readBuffer(std::vector<uint8_t>& buf, const T& t) {
     buf.resize(sizeof t);
-    readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
-    return buf;
+    return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
   }
 
   //size_t pos;
