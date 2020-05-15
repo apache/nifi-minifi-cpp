@@ -316,6 +316,7 @@ void C2Agent::performHeartBeat() {
       metrics = reporter->getHeartbeatNodes(false);
     }
 
+    payload.reservePayloads(metrics.size());
     for (const auto& metric : metrics) {
       C2Payload child_metric_payload(Operation::HEARTBEAT);
       child_metric_payload.setLabel(metric->getName());
@@ -336,6 +337,8 @@ void C2Agent::performHeartBeat() {
 }
 
 void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container, bool is_collapsible) {
+  const auto payloads = std::count_if(begin(metrics), end(metrics), [](const state::response::SerializedResponseNode& metric) { return !metric.children.empty(); });
+  metric_payload.reservePayloads(metric_payload.getNestedPayloads().size() + payloads);
   for (const auto &metric : metrics) {
     if (metric.children.size() > 0) {
       C2Payload child_metric_payload(metric_payload.getOperation());
