@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <limits>
 
 #include "../core/state/Value.h"
 #include "core/state/UpdateController.h"
@@ -53,51 +54,44 @@ enum Direction {
   RECEIVE
 };
 
-class C2ContentResponse {
- public:
-  C2ContentResponse(Operation op);
+struct C2ContentResponse {
+  explicit C2ContentResponse(Operation op)
+      :op{ op }
+  {}
 
-  C2ContentResponse(const C2ContentResponse &other);
-
-  C2ContentResponse(const C2ContentResponse &&other);
-
-  C2ContentResponse & operator=(const C2ContentResponse &&other);
-
-  C2ContentResponse & operator=(const C2ContentResponse &other);
-
-  inline bool operator==(const C2ContentResponse &rhs) const {
-    if (op != rhs.op)
-      return false;
-    if (required != rhs.required)
-      return false;
-    if (ident != rhs.ident)
-      return false;
-    if (name != rhs.name)
-      return false;
-    if (operation_arguments != rhs.operation_arguments)
-      return false;
-    return true;
+  bool operator==(const C2ContentResponse &rhs) const {
+    return op == rhs.op
+        && required == rhs.required
+        && ident == rhs.ident
+        && name == rhs.name
+        && operation_arguments == rhs.operation_arguments;
   }
 
-  inline bool operator!=(const C2ContentResponse &rhs) const {
-    return !(*this == rhs);
-  }
+  bool operator!=(const C2ContentResponse &rhs) const { return !(*this == rhs); }
 
   Operation op;
   // determines if the operation is required
-  bool required;
+  bool required{ false };
   // identifier
   std::string ident;
   // delay before running
-  uint32_t delay;
+  uint32_t delay{ 0 };
   // max time before this response will no longer be honored.
-  uint64_t ttl;
+  uint64_t ttl{ std::numeric_limits<uint64_t>::max() };
   // name applied to commands
   std::string name;
   // commands that correspond with the operation.
   std::map<std::string, state::response::ValueNode> operation_arguments;
-//  std::vector<std::string> content;
 };
+
+namespace detail {
+template<typename T>
+struct is_nothrow_movable : std::integral_constant<bool,
+    std::is_nothrow_move_constructible<T>::value && std::is_nothrow_move_assignable<T>::value> {
+};
+
+static_assert(is_nothrow_movable<C2ContentResponse>::value, "C2ContentResponse must be nothrow movable");
+}  // namespace detail
 
 /**
  * C2Payload is an update for the state manager.
@@ -108,161 +102,104 @@ class C2ContentResponse {
  */
 class C2Payload : public state::Update {
  public:
-  virtual ~C2Payload() {
-
-  }
-
-  C2Payload(Operation op, const std::string &identifier, bool resp = false, bool isRaw = false);
-
-  C2Payload(Operation op, state::UpdateState state,const std::string &identifier, bool resp = false, bool isRaw = false);
-
-  C2Payload(Operation op, bool resp = false, bool isRaw = false);
-
+  C2Payload(Operation op, std::string identifier, bool resp = false, bool isRaw = false);
+  C2Payload(Operation op, state::UpdateState state, std::string identifier, bool resp = false, bool isRaw = false);
+  explicit C2Payload(Operation op, bool resp = false, bool isRaw = false);
   C2Payload(Operation op, state::UpdateState state, bool resp = false, bool isRaw = false);
 
-  C2Payload(const C2Payload &other) = default;
+  C2Payload(const C2Payload&) = default;
+  C2Payload(C2Payload&&) noexcept = default;
+  C2Payload &operator=(const C2Payload&) = default;
+  C2Payload &operator=(C2Payload&&) noexcept = default;
 
-  C2Payload(C2Payload &&other) = default;
+  ~C2Payload() override = default;
 
-  void setIdentifier(const std::string &ident);
+  void setIdentifier(std::string ident) { ident_ = std::move(ident); }
+  std::string getIdentifier() const { return ident_; }
 
-  std::string getIdentifier() const;
-
-  void setLabel(const std::string label) {
-    label_ = label;
-  }
-
-  std::string getLabel() const {
-    return label_;
-  }
+  void setLabel(std::string label) { label_ = std::move(label); }
+  std::string getLabel() const { return label_; }
 
   /**
    * Gets the operation for this payload. May be nested or a single operation.
    */
-  Operation getOperation() const;
+  Operation getOperation() const noexcept { return op_; }
 
   /**
    * Validate the payload, if necessary and/or possible.
    */
-  virtual bool validate();
+  bool validate() override { return true; }
 
   /**
    * Get content responses from this payload.
    */
-  const std::vector<C2ContentResponse> &getContent() const;
+  const std::vector<C2ContentResponse> &getContent() const noexcept { return content_; }
 
   /**
    * Add a content response to this payload.
    */
-  void addContent(const C2ContentResponse &&content, bool collapsible = true);
+  void addContent(C2ContentResponse&&, bool collapsible = true);
 
   /**
    * Determines if this object contains raw data.
    */
-  bool isRaw() const;
+  bool isRaw() const noexcept { return raw_; }
 
   /**
    * Sets raw data within this object.
    */
-  void setRawData(const std::string &data);
-
-  /**
-   * Sets raw data from a vector within this object.
-   */
-  void setRawData(const std::vector<char> &data);
-
-  /**
-   * Sets raw data from a vector of uint8_t within this object.
-   */
-  void setRawData(const std::vector<uint8_t> &data);
+  void setRawData(const std::string&);
+  void setRawData(const std::vector<char>&);
+  void setRawData(const std::vector<uint8_t>&);
 
   /**
    * Returns raw data.
    */
-  std::vector<char> getRawData() const;
+  std::vector<char> getRawData() const { return raw_data_; }
 
   /**
    * Add a nested payload.
    * @param payload payload to move into this object.
    */
-  void addPayload(const C2Payload &&payload);
+  void addPayload(C2Payload &&payload);
 
-  bool isCollapsible() const {
-    return is_collapsible_;
-  }
+  bool isCollapsible() const noexcept { return is_collapsible_; }
+  void setCollapsible(bool is_collapsible) noexcept { is_collapsible_ = is_collapsible; }
 
-  void setCollapsible(bool is_collapsible) {
-    is_collapsible_ = is_collapsible;
-  }
+  bool isContainer() const noexcept { return is_container_; }
+  void setContainer(bool is_container) noexcept { is_container_ = is_container; }
 
-  bool isContainer() const {
-    return is_container_;
-  }
-
-  void setContainer(bool is_container) {
-    is_container_ = is_container;
-  }
   /**
    * Get nested payloads.
    */
-  const std::vector<C2Payload> &getNestedPayloads() const;
+  const std::vector<C2Payload> &getNestedPayloads() const noexcept { return payloads_; }
 
-  C2Payload &operator=(C2Payload &&other) = default;
-  C2Payload &operator=(const C2Payload &other) = default;
-
-  inline bool operator==(const C2Payload &rhs) const {
-    if (op_ != rhs.op_) {
-      return false;
-    }
-    if (ident_ != rhs.ident_) {
-      return false;
-    }
-    if (label_ != rhs.label_) {
-      return false;
-    }
-    if (payloads_ != rhs.payloads_) {
-      return false;
-    }
-    if (content_ != rhs.content_) {
-      return false;
-    }
-    if (raw_ != rhs.raw_) {
-      return false;
-    }
-    if (raw_data_ != rhs.raw_data_) {
-      return false;
-    }
-    return true;
+  bool operator==(const C2Payload &rhs) const {
+    return op_ == rhs.op_
+        && ident_ == rhs.ident_
+        && label_ == rhs.label_
+        && payloads_ == rhs.payloads_
+        && content_ == rhs.content_
+        && raw_ == rhs.raw_
+        && raw_data_ == rhs.raw_data_;
   }
 
-  inline bool operator!=(const C2Payload &rhs) const {
-    return !(*this == rhs);
-  }
+  bool operator!=(const C2Payload &rhs) const { return !(*this == rhs); }
 
  protected:
-
-  // identifier for this payload.
-  std::string ident_;
-
+  std::string ident_;  // identifier for this payload.
   std::string label_;
-
   std::vector<C2Payload> payloads_;
-
   std::vector<C2ContentResponse> content_;
-
   Operation op_;
-
-  bool raw_;
-
+  bool raw_{ false };
   std::vector<char> raw_data_;
-
-  bool isResponse;
-
-  bool is_container_;
-
-  bool is_collapsible_;
-
+  bool isResponse{ false };
+  bool is_container_{ false };
+  bool is_collapsible_{ true };
 };
+
+static_assert(detail::is_nothrow_movable<C2Payload>::value, "C2Payload must be nothrow movable");
 
 } /* namesapce c2 */
 } /* namespace minifi */
