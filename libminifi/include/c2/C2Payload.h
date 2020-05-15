@@ -59,12 +59,9 @@ struct C2ContentResponse {
       :op{ op }
   {}
 
-  bool operator==(const C2ContentResponse &rhs) const {
-    return op == rhs.op
-        && required == rhs.required
-        && ident == rhs.ident
-        && name == rhs.name
-        && operation_arguments == rhs.operation_arguments;
+  bool operator==(const C2ContentResponse &other) const {
+    return std::tie(this->op, this->required, this->ident, this->name, this->operation_arguments)
+        == std::tie(other.op, other.required, other.ident, other.name, other.operation_arguments);
   }
 
   bool operator!=(const C2ContentResponse &rhs) const { return !(*this == rhs); }
@@ -174,14 +171,9 @@ class C2Payload : public state::Update {
    */
   const std::vector<C2Payload> &getNestedPayloads() const noexcept { return payloads_; }
 
-  bool operator==(const C2Payload &rhs) const {
-    return op_ == rhs.op_
-        && ident_ == rhs.ident_
-        && label_ == rhs.label_
-        && payloads_ == rhs.payloads_
-        && content_ == rhs.content_
-        && raw_ == rhs.raw_
-        && raw_data_ == rhs.raw_data_;
+  bool operator==(const C2Payload &other) const {
+    return std::tie(this->op_, this->ident_, this->label_, this->payloads_, this->content_, this->raw_, this->raw_data_)
+        == std::tie(other.op_, other.ident_, other.label_, other.payloads_, other.content_, other.raw_, other.raw_data_);
   }
 
   bool operator!=(const C2Payload &rhs) const { return !(*this == rhs); }
