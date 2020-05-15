@@ -226,11 +226,11 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   static int onProgress(void *client, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
 
   struct Progress{
-    std::chrono::high_resolution_clock::time_point last_transferred_;
+    std::chrono::steady_clock::time_point last_transferred_;
     curl_off_t uploaded_data_;
     curl_off_t downloaded_data_;
     void reset(){
-      last_transferred_ = std::chrono::high_resolution_clock::now();
+      last_transferred_ = std::chrono::steady_clock::now();
       uploaded_data_ = 0;
       downloaded_data_ = 0;
     }
