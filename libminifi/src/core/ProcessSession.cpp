@@ -19,6 +19,7 @@
  */
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionReadCallback.h"
+#include "io/CRCStream.h"
 #include <ctime>
 #include <vector>
 #include <map>
@@ -440,7 +441,7 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
   }
 }
 
-void ProcessSession::import(std::string source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource, uint64_t offset) {
+void ProcessSession::import(std::string source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource, uint64_t offset, uint64_t *crc) {
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
   size_t size = getpagesize();
   std::vector<uint8_t> charBuffer(size);
@@ -450,8 +451,8 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
     std::ifstream input;
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
     claim->increaseFlowFileRecordOwnedCount();
-    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim);
-    if (nullptr == stream) {
+    std::shared_ptr<io::BaseStream> baseStream = process_context_->getContentRepository()->write(claim);
+    if (nullptr == baseStream) {
       claim->decreaseFlowFileRecordOwnedCount();
       rollback();
       return;
@@ -466,6 +467,14 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
           invalidWrite = true;
         }
       }
+
+      io::BaseStream *stream = baseStream.get();
+      std::unique_ptr<io::CRCStream<io::BaseStream>> crcStream;
+      if (crc) {
+        crcStream = utils::make_unique<io::CRCStream<io::BaseStream>>(stream, *crc);
+        stream = crcStream.get();
+      }
+
       while (input.good()) {
         input.read(reinterpret_cast<char*>(charBuffer.data()), size);
         if (input) {
@@ -496,6 +505,11 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
 
         stream->closeStream();
         input.close();
+
+        if (crc) {
+          *crc = crcStream->getCRC();
+        }
+
         if (!keepSource)
           std::remove(source.c_str());
         std::stringstream details;
@@ -527,9 +541,9 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
   }
 }
 
-void ProcessSession::import(const std::string& source, std::vector<std::shared_ptr<FlowFileRecord>> &flows, uint64_t offset, char inputDelimiter) {
+void ProcessSession::import(const std::string& source, std::vector<std::shared_ptr<FlowFileRecord>> &flows, uint64_t offset, char inputDelimiter, uint64_t *crc) {
   std::shared_ptr<ResourceClaim> claim;
-  std::shared_ptr<io::BaseStream> stream;
+  std::shared_ptr<io::BaseStream> baseStream;
   std::shared_ptr<FlowFileRecord> flowFile;
 
   std::vector<uint8_t> buffer(getpagesize());
@@ -588,14 +602,22 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
             startTime = getTimeMillis();
             claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
           }
-          if (stream == nullptr) {
-            stream = process_context_->getContentRepository()->write(claim);
+          if (baseStream == nullptr) {
+            baseStream = process_context_->getContentRepository()->write(claim);
           }
-          if (stream == nullptr) {
+          if (baseStream == nullptr) {
             logger_->log_error("Stream is null");
             rollback();
             return;
           }
+
+          io::BaseStream *stream = baseStream.get();
+          std::unique_ptr<io::CRCStream<io::BaseStream>> crcStream;
+          if (crc) {
+            crcStream = utils::make_unique<io::CRCStream<io::BaseStream>>(stream, *crc);
+            stream = crcStream.get();
+          }
+
           if (stream->write(begin, len) != len) {
             logger_->log_error("Error while writing");
             stream->closeStream();
@@ -619,6 +641,11 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
           logging::LOG_DEBUG(logger_) << "Import offset " << flowFile->getOffset() << " length " << flowFile->getSize() << " content " << flowFile->getResourceClaim()->getContentFullPath()
                                       << ", FlowFile UUID " << flowFile->getUUIDStr();
           stream->closeStream();
+
+          if (crc) {
+            *crc = crcStream->getCRC();
+          }
+
           std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
           uint64_t endTime = getTimeMillis();
           provenance_report_->modifyContent(flowFile, details, endTime - startTime);
@@ -626,7 +653,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
 
           /* Reset these to start processing the next FlowFile with a clean slate */
           flowFile.reset();
-          stream.reset();
+          baseStream.reset();
           claim.reset();
 
           /* Skip delimiter */
