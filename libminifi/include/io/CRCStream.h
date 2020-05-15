@@ -52,6 +52,7 @@ class CRCStream : public BaseStream {
    * it will exceed our lifetime.
    */
   explicit CRCStream(T *child_stream);
+  explicit CRCStream(T *child_stream, uint64_t initial_crc);
 
   CRCStream(CRCStream<T>&&) noexcept;
 
@@ -136,6 +137,10 @@ class CRCStream : public BaseStream {
    */
   int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE) override;
 
+  const uint64_t getSize() const override { return child_stream_->getSize(); }
+
+  void closeStream() override { child_stream_->closeStream(); }
+
   short initialize() override { // NOLINT
     child_stream_->initialize();
     reset();
@@ -186,6 +191,13 @@ CRCStream<T>::CRCStream(T *child_stream)
     : child_stream_(child_stream),
       disable_encoding_(false) {
   crc_ = crc32(0L, Z_NULL, 0);
+}
+
+template<typename T>
+CRCStream<T>::CRCStream(T *child_stream, uint64_t initial_crc)
+    : crc_(initial_crc),
+      child_stream_(child_stream),
+      disable_encoding_(false) {
 }
 
 template<typename T>
