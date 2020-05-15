@@ -243,13 +243,13 @@ class Socket : public BaseStream {
   explicit Socket(const std::shared_ptr<SocketContext> &context, std::string hostname, uint16_t port, uint16_t listeners);
 
   /**
-   * Creates a vector and returns the vector using the provided
-   * type name.
+   * Populates the vector using the provided type name.
+   * @param buf output buffer
    * @param t incoming object
-   * @returns vector.
+   * @returns number of bytes read.
    */
   template<typename T>
-  std::vector<uint8_t> readBuffer(const T&);
+  int readBuffer(std::vector<uint8_t>&, const T&);
 
   /**
    * Creates a connection using the addr object

@@ -49,7 +49,7 @@
 #include "../tests/TestServer.h"
 #include "HTTPIntegrationBase.h"
 
-class Responder : public CivetHandler {
+class Responder : public ServerAwareHandler {
  public:
   explicit Responder(bool isSecure)
       : isSecure(isSecure) {

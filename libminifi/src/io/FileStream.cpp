@@ -119,11 +119,9 @@ int FileStream::writeData(uint8_t *value, int size) {
 }
 
 template<typename T>
-inline std::vector<uint8_t> FileStream::readBuffer(const T& t) {
-  std::vector<uint8_t> buf;
+inline int FileStream::readBuffer(std::vector<uint8_t>& buf, const T& t) {
   buf.resize(sizeof t);
-  readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
-  return buf;
+  return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
 }
 
 int FileStream::readData(std::vector<uint8_t> &buf, int buflen) {

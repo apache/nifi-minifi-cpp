@@ -27,6 +27,7 @@
 #include <cinttypes>
 #include <utility>
 #include "HTTPUtils.h"
+#include "ServerAwareHandler.h"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
@@ -45,7 +46,7 @@ struct FlowObj {
   std::vector<uint8_t> data;
 };
 
-class SiteToSiteLocationResponder : public CivetHandler {
+class SiteToSiteLocationResponder : public ServerAwareHandler {
  public:
   explicit SiteToSiteLocationResponder(bool isSecure)
       : isSecure(isSecure) {
@@ -72,7 +73,7 @@ class SiteToSiteLocationResponder : public CivetHandler {
   bool isSecure;
 };
 
-class PeerResponder : public CivetHandler {
+class PeerResponder : public ServerAwareHandler {
  public:
 
   explicit PeerResponder(std::string base_url) {
@@ -101,7 +102,7 @@ class PeerResponder : public CivetHandler {
   std::string path;
 };
 
-class SiteToSiteBaseResponder : public CivetHandler {
+class SiteToSiteBaseResponder : public ServerAwareHandler {
  public:
 
   explicit SiteToSiteBaseResponder(std::string base_url)
@@ -122,7 +123,7 @@ class SiteToSiteBaseResponder : public CivetHandler {
   std::string base_url;
 };
 
-class TransactionResponder : public CivetHandler {
+class TransactionResponder : public ServerAwareHandler {
  public:
 
   explicit TransactionResponder(std::string base_url, std::string port_id, bool input_port, bool wrong_uri = false, bool empty_transaction_uri = false)
@@ -184,7 +185,7 @@ class TransactionResponder : public CivetHandler {
   moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> *flow_files_feed_;
 };
 
-class FlowFileResponder : public CivetHandler {
+class FlowFileResponder : public ServerAwareHandler {
  public:
 
   explicit FlowFileResponder(bool input_port, bool wrong_uri = false, bool invalid_checksum = false)
@@ -210,25 +211,36 @@ class FlowFileResponder : public CivetHandler {
       minifi::io::CivetStream civet_stream(conn);
       minifi::io::CRCStream < minifi::io::CivetStream > stream(&civet_stream);
       uint32_t num_attributes;
+      int read;
       uint64_t total_size = 0;
-      total_size += stream.read(num_attributes);
+      read = stream.read(num_attributes);
+      if(!isServerRunning())return false;
+      assert(read > 0); total_size += read;
 
       auto flow = std::make_shared<FlowObj>();
 
       for (int i = 0; i < num_attributes; i++) {
         std::string name, value;
-        total_size += stream.readUTF(name, true);
-        total_size += stream.readUTF(value, true);
+        read = stream.readUTF(name, true);
+        if(!isServerRunning())return false;
+        assert(read > 0); total_size += read;
+        read = stream.readUTF(value, true);
+        if(!isServerRunning())return false;
+        assert(read > 0); total_size += read;
         flow->attributes[name] = value;
       }
       uint64_t length;
-      total_size += stream.read(length);
+      read = stream.read(length);
+      if(!isServerRunning())return false;
+      assert(read > 0); total_size += read;
 
       total_size += length;
       flow->data.resize(length);
       flow->total_size = total_size;
 
-      assert(stream.readData(flow->data.data(), length) == length);
+      read = stream.readData(flow->data.data(), length);
+      if(!isServerRunning())return false;
+      assert(read == length);
 
       assert(flow->attributes["path"] == ".");
       assert(!flow->attributes["uuid"].empty());
@@ -309,7 +321,7 @@ class FlowFileResponder : public CivetHandler {
   moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> *flow_files_feed_;
 };
 
-class DeleteTransactionResponder : public CivetHandler {
+class DeleteTransactionResponder : public ServerAwareHandler {
  public:
 
   explicit DeleteTransactionResponder(std::string base_url, std::string response_code, int expected_resp_code)
@@ -348,7 +360,7 @@ class DeleteTransactionResponder : public CivetHandler {
   std::string response_code;
 };
 
-class HeartbeatHandler : public CivetHandler {
+class HeartbeatHandler : public ServerAwareHandler {
  public:
   explicit HeartbeatHandler(bool isSecure)
       : isSecure(isSecure) {
@@ -448,10 +460,10 @@ class HeartbeatHandler : public CivetHandler {
   bool isSecure;
 };
 
-class InvokeHTTPCouldNotConnectHandler : public CivetHandler {
+class InvokeHTTPCouldNotConnectHandler : public ServerAwareHandler {
 };
 
-class InvokeHTTPResponseOKHandler : public CivetHandler {
+class InvokeHTTPResponseOKHandler : public ServerAwareHandler {
 public:
   bool handlePost(CivetServer *, struct mg_connection *conn) {
     mg_printf(conn, "HTTP/1.1 201 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
@@ -459,7 +471,7 @@ public:
   }
 };
 
-class InvokeHTTPResponse404Handler : public CivetHandler {
+class InvokeHTTPResponse404Handler : public ServerAwareHandler {
 public:
   bool handlePost(CivetServer *, struct mg_connection *conn) {
     mg_printf(conn, "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
@@ -467,7 +479,7 @@ public:
   }
 };
 
-class InvokeHTTPResponse501Handler : public CivetHandler {
+class InvokeHTTPResponse501Handler : public ServerAwareHandler {
 public:
   bool handlePost(CivetServer *, struct mg_connection *conn) {
     mg_printf(conn, "HTTP/1.1 501 Not Implemented\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
@@ -475,7 +487,7 @@ public:
   }
 };
 
-class TimeoutingHTTPHandler : public CivetHandler {
+class TimeoutingHTTPHandler : public ServerAwareHandler {
 public:
   TimeoutingHTTPHandler(std::chrono::milliseconds wait_ms)
       : wait_(wait_ms) {

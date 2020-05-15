@@ -23,6 +23,7 @@
 #include "integration/IntegrationBase.h"
 #include "c2/C2Agent.h"
 #include "protocols/RESTSender.h"
+#include "ServerAwareHandler.h"
 
 int log_message(const struct mg_connection *conn, const char *message) {
   puts(message);
@@ -40,9 +41,10 @@ class CoapIntegrationBase : public IntegrationBase {
         server(nullptr) {
   }
 
-  void setUrl(const std::string& url, CivetHandler *handler);
+  void setUrl(const std::string& url, ServerAwareHandler *handler);
 
   void shutdownBeforeFlowController() override {
+    is_server_running = false;
     stop_webserver(server);
   }
 
@@ -55,17 +57,19 @@ class CoapIntegrationBase : public IntegrationBase {
   }
 
  protected:
+  std::atomic_bool is_server_running;
   CivetServer *server;
 };
 
-void CoapIntegrationBase::setUrl(const std::string& url, CivetHandler *handler) {
-
+void CoapIntegrationBase::setUrl(const std::string& url, ServerAwareHandler *handler) {
+  handler->initServerFlag(is_server_running);
   parse_http_components(url, port, scheme, path);
   struct mg_callbacks callback{};
   if (server != nullptr) {
     server->addHandler(path, handler);
     return;
   }
+  is_server_running = true;
   if (scheme == "https" && !key_dir.empty()) {
     std::string cert = "";
     cert = key_dir + "nifi-cert.pem";

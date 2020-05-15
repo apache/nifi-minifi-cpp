@@ -80,11 +80,9 @@ int RocksDbStream::writeData(uint8_t *value, int size) {
 }
 
 template<typename T>
-inline std::vector<uint8_t> RocksDbStream::readBuffer(const T& t) {
-  std::vector<uint8_t> buf;
+inline int RocksDbStream::readBuffer(std::vector<uint8_t>& buf, const T& t) {
   buf.resize(sizeof t);
-  readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
-  return buf;
+  return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
 }
 
 int RocksDbStream::readData(std::vector<uint8_t> &buf, int buflen) {
