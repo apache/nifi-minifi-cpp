@@ -45,7 +45,7 @@ template<typename T>
 class RepoValue {
  public:
 
-  explicit RepoValue() {
+  RepoValue() {
   }
 
   /**

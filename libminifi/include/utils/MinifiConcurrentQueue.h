@@ -37,7 +37,7 @@ namespace utils {
 template <typename T>
 class ConcurrentQueue {
  public:
-  explicit ConcurrentQueue() = default;
+  ConcurrentQueue() = default;
 
   ConcurrentQueue(const ConcurrentQueue& other) = delete;
   ConcurrentQueue& operator=(const ConcurrentQueue& other) = delete;

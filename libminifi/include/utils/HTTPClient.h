@@ -270,7 +270,7 @@ public:
     response_code = -1;
   }
 
-  explicit BaseHTTPClient() {
+  BaseHTTPClient() {
     response_code = -1;
   }
 

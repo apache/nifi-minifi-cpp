@@ -41,7 +41,7 @@ class AfterExecute {
 
   }
 
-  explicit AfterExecute() {
+  AfterExecute() {
 
   }
 

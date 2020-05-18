@@ -45,7 +45,7 @@ namespace response {
 class FlowVersion : public DeviceInformation {
  public:
 
-  explicit FlowVersion()
+  FlowVersion()
       : DeviceInformation("FlowVersion") {
     setFlowVersion("", "", getUUIDStr());
   }
