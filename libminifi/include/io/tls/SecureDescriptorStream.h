@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_SECUREDESCRIPTORSTREAM_H_
-#define LIBMINIFI_INCLUDE_IO_SECUREDESCRIPTORSTREAM_H_
+#ifndef LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_
+#define LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -193,4 +193,4 @@ class SecureDescriptorStream : public io::BaseStream {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_IO_SECUREDESCRIPTORSTREAM_H_ */
+#endif /* LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_ */

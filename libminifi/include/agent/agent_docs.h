@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef AGENT_DOCS_H
-#define AGENT_DOCS_H
+#ifndef LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_
+#define LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_
 #include <string>
 #include <stdlib.h>
 #include <utils/StringUtils.h>

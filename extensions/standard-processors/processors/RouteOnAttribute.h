@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __ROUTE_ON_ATTRIBUTE_H__
-#define __ROUTE_ON_ATTRIBUTE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_ROUTEONATTRIBUTE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_ROUTEONATTRIBUTE_H_
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -79,4 +79,4 @@ REGISTER_RESOURCE(RouteOnAttribute, "Routes FlowFiles based on their Attributes 
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* __ROUTE_ON_ATTRIBUTE_H__ */
+#endif /* EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_ROUTEONATTRIBUTE_H_ */

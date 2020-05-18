@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROPERTY_H__
-#define __PROPERTY_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
+#define LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
 
 #include <algorithm>
 #include "core/Core.h"

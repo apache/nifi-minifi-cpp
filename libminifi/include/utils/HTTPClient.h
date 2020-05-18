@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_
-#define LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
+#define LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
 
 #include "ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
@@ -382,4 +382,4 @@ extern void parse_url(const std::string *url, std::string *host, int *port, std:
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_ */
+#endif /* LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_ */

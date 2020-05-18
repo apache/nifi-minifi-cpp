@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FLOW_CONTROL_PROTOCOL_H__
-#define __FLOW_CONTROL_PROTOCOL_H__
+#ifndef LIBMINIFI_INCLUDE_FLOWCONTROLPROTOCOL_H_
+#define LIBMINIFI_INCLUDE_FLOWCONTROLPROTOCOL_H_
 
 #include <stdio.h>
 #include <sys/types.h>

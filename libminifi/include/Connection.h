@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __CONNECTION_H__
-#define __CONNECTION_H__
+#ifndef LIBMINIFI_INCLUDE_CONNECTION_H_
+#define LIBMINIFI_INCLUDE_CONNECTION_H_
 
 #include <vector>
 #include <queue>

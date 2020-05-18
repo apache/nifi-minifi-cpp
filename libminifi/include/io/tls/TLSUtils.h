@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_TLSUTILS_H_
-#define LIBMINIFI_INCLUDE_IO_TLSUTILS_H_
+#ifndef LIBMINIFI_INCLUDE_IO_TLS_TLSUTILS_H_
+#define LIBMINIFI_INCLUDE_IO_TLS_TLSUTILS_H_
 
 #include <atomic>
 #include <cstdint>
@@ -37,4 +37,4 @@ int pemPassWordCb(char *buf, int size, int rwflag, void *userdata);
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_IO_TLSUTILS_H_ */
+#endif /* LIBMINIFI_INCLUDE_IO_TLS_TLSUTILS_H_ */

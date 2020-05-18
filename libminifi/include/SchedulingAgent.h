@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SCHEDULING_AGENT_H__
-#define __SCHEDULING_AGENT_H__
+#ifndef LIBMINIFI_INCLUDE_SCHEDULINGAGENT_H_
+#define LIBMINIFI_INCLUDE_SCHEDULINGAGENT_H_
 
 #include <set>
 #include <vector>

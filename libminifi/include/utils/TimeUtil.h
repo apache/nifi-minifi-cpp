@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __TIME_UTIL_H__
-#define __TIME_UTIL_H__
+#ifndef LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_
+#define LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_
 
 #include <time.h>
 #include <cstdio>

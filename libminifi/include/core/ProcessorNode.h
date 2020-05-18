@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_PROCESSOR_PROCESSORNODE_H_
-#define LIBMINIFI_INCLUDE_PROCESSOR_PROCESSORNODE_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSORNODE_H_
+#define LIBMINIFI_INCLUDE_CORE_PROCESSORNODE_H_
 
 #include "ConfigurableComponent.h"
 #include "Connectable.h"
@@ -303,4 +303,4 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_PROCESSOR_PROCESSORNODE_H_ */
+#endif /* LIBMINIFI_INCLUDE_CORE_PROCESSORNODE_H_ */

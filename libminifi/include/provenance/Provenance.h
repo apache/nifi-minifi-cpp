@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROVENANCE_H__
-#define __PROVENANCE_H__
+#ifndef LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_
+#define LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_
 
 #include <atomic>
 #include <cstdint>

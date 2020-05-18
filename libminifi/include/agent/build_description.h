@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BUILD_DESCRPTION_H
-#define BUILD_DESCRPTION_H
+#ifndef LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_
+#define LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_
 
 #include <vector>
 #include "core/expect.h"
@@ -168,4 +168,4 @@ class BuildDescription {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* BUILD_DESCRPTION_H */
+#endif /* LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_ */

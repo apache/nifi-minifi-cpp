@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __GET_FILE_H__
-#define __GET_FILE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETFILE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETFILE_H_
 
 #include <atomic>
 

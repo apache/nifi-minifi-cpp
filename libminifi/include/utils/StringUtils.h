@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_
-#define LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_
+#define LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_
 #include <iostream>
 #include <cstring>
 #include <functional>
@@ -544,4 +544,4 @@ enum TimeUnit {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_ */
+#endif /* LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_ */

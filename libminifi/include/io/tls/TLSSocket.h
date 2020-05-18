@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
-#define LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
+#ifndef LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_
+#define LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -189,4 +189,4 @@ class TLSSocket : public Socket {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_ */
+#endif /* LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_ */

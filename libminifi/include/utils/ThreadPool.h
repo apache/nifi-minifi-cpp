@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_THREAD_POOL_H
-#define LIBMINIFI_INCLUDE_THREAD_POOL_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_
+#define LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_
 
 #include <chrono>
 #include <sstream>

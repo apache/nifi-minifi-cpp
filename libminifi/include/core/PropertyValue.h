@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_TYPES_PROPERTYVALUE_H_
-#define LIBMINIFI_INCLUDE_CORE_TYPES_PROPERTYVALUE_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
+#define LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
 
 #include "state/Value.h"
 #include "PropertyValidation.h"
@@ -220,4 +220,4 @@ inline std::string conditional_conversion(const PropertyValue &v) {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_TYPES_PROPERTYVALUE_H_ */
+#endif /* LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_ */

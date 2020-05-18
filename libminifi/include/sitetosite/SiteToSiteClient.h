@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_SITETOSITE_SITETOSITECLIENT_H_
-#define LIBMINIFI_INCLUDE_CORE_SITETOSITE_SITETOSITECLIENT_H_
+#ifndef LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITECLIENT_H_
+#define LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITECLIENT_H_
 
 #include "Peer.h"
 #include "SiteToSite.h"
@@ -351,4 +351,4 @@ class ReadCallback : public InputStreamCallback {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_SITETOSITE_SITETOSITECLIENT_H_ */
+#endif /* LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITECLIENT_H_ */

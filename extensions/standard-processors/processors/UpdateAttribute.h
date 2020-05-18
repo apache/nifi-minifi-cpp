@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __UPDATE_ATTRIBUTE_H__
-#define __UPDATE_ATTRIBUTE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_UPDATEATTRIBUTE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_UPDATEATTRIBUTE_H_
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -76,4 +76,4 @@ REGISTER_RESOURCE(UpdateAttribute, "This processor updates the attributes of a F
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* __UPDATE_ATTRIBUTE_H__ */
+#endif /* EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_UPDATEATTRIBUTE_H_ */

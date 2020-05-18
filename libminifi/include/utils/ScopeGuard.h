@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SCOPE_GUARD_H__
-#define __SCOPE_GUARD_H__
+#ifndef LIBMINIFI_INCLUDE_UTILS_SCOPEGUARD_H_
+#define LIBMINIFI_INCLUDE_UTILS_SCOPEGUARD_H_
 
 #include <functional>
 

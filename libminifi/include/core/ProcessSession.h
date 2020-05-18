@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROCESS_SESSION_H__
-#define __PROCESS_SESSION_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSSESSION_H_
+#define LIBMINIFI_INCLUDE_CORE_PROCESSSESSION_H_
 
 #include <utility>
 #include <vector>

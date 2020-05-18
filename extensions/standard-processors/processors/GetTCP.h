@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __GET_TCP_H__
-#define __GET_TCP_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETTCP_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETTCP_H_
 
 #include <atomic>
 

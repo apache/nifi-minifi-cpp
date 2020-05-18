@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
+#define LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
 
 #include <sstream>
 #include <fstream>
@@ -705,4 +705,4 @@ class FileUtils {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_ */
+#endif /* LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_ */

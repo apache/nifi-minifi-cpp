@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __APPEND_HOSTINFO_H__
-#define __APPEND_HOSTINFO_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_
 
 #include "core/Property.h"
 #include "FlowFileRecord.h"

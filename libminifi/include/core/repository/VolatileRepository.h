@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VolatileRepository_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VolatileRepository_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEREPOSITORY_H_
+#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEREPOSITORY_H_
 
 #include "core/Repository.h"
 #include <chrono>
@@ -421,4 +421,4 @@ void VolatileRepository<T>::start() {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_VolatileRepository_H_ */
+#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEREPOSITORY_H_ */

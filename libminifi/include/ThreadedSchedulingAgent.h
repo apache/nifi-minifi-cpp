@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __THREADED_SCHEDULING_AGENT_H__
-#define __THREADED_SCHEDULING_AGENT_H__
+#ifndef LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_
+#define LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_
 
 #include <chrono>
 #include "properties/Configure.h"

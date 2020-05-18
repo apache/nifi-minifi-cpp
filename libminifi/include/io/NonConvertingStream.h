@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_IO_NonConvertingStream_H_
-#define LIBMINIFI_INCLUDE_IO_NonConvertingStream_H_
+#ifndef LIBMINIFI_INCLUDE_IO_NONCONVERTINGSTREAM_H_
+#define LIBMINIFI_INCLUDE_IO_NONCONVERTINGSTREAM_H_
 #include <iostream>
 #include <cstdint>
 #include "EndianCheck.h"
@@ -197,4 +197,4 @@ class NonConvertingStream : public BaseStream  {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_NonConvertingStream_H_ */
+#endif /* LIBMINIFI_INCLUDE_IO_NONCONVERTINGSTREAM_H_ */

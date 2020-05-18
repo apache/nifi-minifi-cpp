@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __GENERATE_FLOW_FILE_H__
-#define __GENERATE_FLOW_FILE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GENERATEFLOWFILE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GENERATEFLOWFILE_H_
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"

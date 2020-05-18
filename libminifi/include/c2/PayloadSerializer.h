@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_MQTT_PROTOCOL_PAYLOADSERIALIZER_H_
-#define EXTENSIONS_MQTT_PROTOCOL_PAYLOADSERIALIZER_H_
+#ifndef LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_
+#define LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_
 
 #include "core/state/Value.h"
 #include "c2/C2Protocol.h"
@@ -321,4 +321,4 @@ class PayloadSerializer {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* EXTENSIONS_MQTT_PROTOCOL_PAYLOADSERIALIZER_H_ */
+#endif /* LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_ */

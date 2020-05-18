@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PUT_FILE_H__
-#define __PUT_FILE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_PUTFILE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_PUTFILE_H_
 
 #include <utility>
 

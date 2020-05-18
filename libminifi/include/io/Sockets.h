@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_SOCKET_H_
-#define LIBMINIFI_INCLUDE_IO_SOCKET_H_
+#ifndef LIBMINIFI_INCLUDE_IO_SOCKETS_H_
+#define LIBMINIFI_INCLUDE_IO_SOCKETS_H_
 
 #include "io/ClientSocket.h"
 #include "ServerSocket.h"

@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SITE_TO_SITE_PROVENANCE_REPORTING_TASK_H__
-#define __SITE_TO_SITE_PROVENANCE_REPORTING_TASK_H__ 
+#ifndef LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_
+#define LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_ 
 
 #include <mutex>
 #include <memory>

@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CRON_DRIVEN_SCHEDULING_AGENT_H__
-#define CRON_DRIVEN_SCHEDULING_AGENT_H__
+#ifndef LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_
+#define LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_
 
 #include "core/logging/Logger.h"
 #include "core/Processor.h"

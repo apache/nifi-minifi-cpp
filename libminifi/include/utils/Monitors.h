@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_MONITORS_H
-#define NIFI_MINIFI_CPP_MONITORS_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_MONITORS_H_
+#define LIBMINIFI_INCLUDE_UTILS_MONITORS_H_
 
 #include <chrono>
 #include <atomic>
@@ -172,4 +172,4 @@ class ComplexMonitor : public utils::AfterExecute<TaskRescheduleInfo> {
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_MONITORS_H
+#endif //LIBMINIFI_INCLUDE_UTILS_MONITORS_H_

@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LOGGER_H__
-#define __LOGGER_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGER_H_
+#define LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGER_H_
 
 #include <mutex>
 #include <memory>

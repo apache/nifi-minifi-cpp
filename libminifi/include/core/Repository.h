@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __REPOSITORY_H__
-#define __REPOSITORY_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_
+#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_
 
 #include <atomic>
 #include <cstdint>

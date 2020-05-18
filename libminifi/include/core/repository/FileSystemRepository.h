@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_FileSystemRepository_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_FileSystemRepository_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_
+#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_
 
 #include "core/Core.h"
 #include "../ContentRepository.h"
@@ -71,4 +71,4 @@ class FileSystemRepository : public core::ContentRepository, public core::CoreCo
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_FileSystemRepository_H_ */
+#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_ */

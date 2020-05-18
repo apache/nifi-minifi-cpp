@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONCURRENT_QUEUE_H
-#define LIBMINIFI_INCLUDE_CONCURRENT_QUEUE_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_MINIFICONCURRENTQUEUE_H_
+#define LIBMINIFI_INCLUDE_UTILS_MINIFICONCURRENTQUEUE_H_
 
 #include <chrono>
 #include <deque>
@@ -232,4 +232,4 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
 } /* namespace apache */
 } /* namespace org */
 
-#endif  // LIBMINIFI_INCLUDE_CONCURRENT_QUEUE_H
+#endif  // LIBMINIFI_INCLUDE_UTILS_MINIFICONCURRENTQUEUE_H_

@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NIFI_MINIFI_CPP_HashContent_H
-#define NIFI_MINIFI_CPP_HashContent_H
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_HASHCONTENT_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_HASHCONTENT_H_
 
 #ifdef OPENSSL_SUPPORT
 
@@ -188,4 +188,4 @@ REGISTER_RESOURCE(HashContent,"HashContent calculates the checksum of the conten
 
 #endif //OPENSSL_SUPPORT
 
-#endif //NIFI_MINIFI_CPP_HashContent_H
+#endif //EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_HASHCONTENT_H_

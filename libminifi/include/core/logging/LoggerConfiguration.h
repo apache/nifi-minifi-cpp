@@ -18,8 +18,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LOGGER_CONFIGURATION_H__
-#define __LOGGER_CONFIGURATION_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGERCONFIGURATION_H_
+#define LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGERCONFIGURATION_H_
 
 #include <map>
 #include <mutex>

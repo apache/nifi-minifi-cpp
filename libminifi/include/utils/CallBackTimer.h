@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_CALLBACKTIMER_H
-#define NIFI_MINIFI_CPP_CALLBACKTIMER_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
+#define LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
 
 #include <mutex>
 #include <condition_variable>
@@ -60,5 +60,5 @@ private:
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_CALLBACKTIMER_H
+#endif //LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
 

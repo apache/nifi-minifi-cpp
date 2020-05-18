@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_IO_REGEXUTILS_H_
-#define LIBMINIFI_INCLUDE_IO_REGEXUTILS_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_REGEXUTILS_H_
+#define LIBMINIFI_INCLUDE_UTILS_REGEXUTILS_H_
 
 #include <string>
 #include <vector>
@@ -80,4 +80,4 @@ public:
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_IO_REGEXUTILS_H_ */
+#endif /* LIBMINIFI_INCLUDE_UTILS_REGEXUTILS_H_ */

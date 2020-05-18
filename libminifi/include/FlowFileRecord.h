@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FLOW_FILE_RECORD_H__
-#define __FLOW_FILE_RECORD_H__
+#ifndef LIBMINIFI_INCLUDE_FLOWFILERECORD_H_
+#define LIBMINIFI_INCLUDE_FLOWFILERECORD_H_
 
 #include <vector>
 #include <queue>

@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROCESSOR_H__
-#define __PROCESSOR_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSOR_H_
+#define LIBMINIFI_INCLUDE_CORE_PROCESSOR_H_
 
 #include <vector>
 #include <queue>

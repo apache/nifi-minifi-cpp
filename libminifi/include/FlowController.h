@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FLOW_CONTROLLER_H__
-#define __FLOW_CONTROLLER_H__
+#ifndef LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_
+#define LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_
 
 #include <cstdio>
 #include <utility>

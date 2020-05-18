@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RECORD_H
-#define RECORD_H
+#ifndef LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
+#define LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
 
 #include "utils/TimeUtil.h"
 #include "ResourceClaim.h"
@@ -335,4 +335,4 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
 } /* namespace apache */
 } /* namespace org */
 
-#endif // RECORD_H
+#endif // LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_

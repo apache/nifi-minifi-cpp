@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __RELATIONSHIP_H__
-#define __RELATIONSHIP_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_RELATIONSHIP_H_
+#define LIBMINIFI_INCLUDE_CORE_RELATIONSHIP_H_
 
 #include <string>
 #include <vector>

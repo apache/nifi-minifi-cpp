@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SITE2SITE_CLIENT_PROTOCOL_H__
-#define __SITE2SITE_CLIENT_PROTOCOL_H__
+#ifndef LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_
+#define LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_
 
 #include <stdio.h>
 #include <sys/types.h>

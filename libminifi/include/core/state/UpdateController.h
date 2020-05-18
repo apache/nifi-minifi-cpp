@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UPDATECONTROLLER_H_
-#define LIBMINIFI_INCLUDE_UPDATECONTROLLER_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_UPDATECONTROLLER_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_UPDATECONTROLLER_H_
 
 #include <string>
 #include "utils/ThreadPool.h"

@@ -16,8 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_GENERAL_UTILS_H
-#define LIBMINIFI_INCLUDE_UTILS_GENERAL_UTILS_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_
+#define LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_
 
 #include <memory>
 #include <type_traits>
@@ -71,4 +71,4 @@ using std::exchange;
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_GENERAL_UTILS_H */
+#endif /* LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_ */

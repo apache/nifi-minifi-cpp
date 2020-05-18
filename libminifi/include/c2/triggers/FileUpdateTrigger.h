@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_TRIGGERS_FILESYSTEMTRIGGER_H_
-#define LIBMINIFI_INCLUDE_C2_TRIGGERS_FILESYSTEMTRIGGER_H_
+#ifndef LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_
+#define LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_
 #include <atomic>
 #include "c2/C2Trigger.h"
 #include "utils/StringUtils.h"
@@ -123,4 +123,4 @@ REGISTER_RESOURCE(FileUpdateTrigger, "Defines a file update trigger when the las
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_TRIGGERS_FILESYSTEMTRIGGER_H_ */
+#endif /* LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_ */

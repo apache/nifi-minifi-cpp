@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PROCESS_CONTEXT_H__
-#define __PROCESS_CONTEXT_H__
+#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_
+#define LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_
 
 #include <vector>
 #include <queue>

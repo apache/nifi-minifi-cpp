@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LISTEN_SYSLOG_H__
-#define __LISTEN_SYSLOG_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LISTENSYSLOG_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LISTENSYSLOG_H_
 
 #include <stdio.h>
 #include <sys/types.h>

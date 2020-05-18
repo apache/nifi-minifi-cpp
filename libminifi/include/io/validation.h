@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VALIDATION_H
-#define VALIDATION_H
+#ifndef LIBMINIFI_INCLUDE_IO_VALIDATION_H_
+#define LIBMINIFI_INCLUDE_IO_VALIDATION_H_
 #include <functional>
 #include <type_traits>
 #include <string>
