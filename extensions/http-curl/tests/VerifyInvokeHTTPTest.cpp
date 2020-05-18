@@ -138,10 +138,10 @@ public:
 };
 
 void run(VerifyInvokeHTTP& harness,
-         const std::string& url,
-         const std::string& test_file_location,
-         const std::string& key_dir,
-         ServerAwareHandler * handler) {
+    const std::string& url,
+    const std::string& test_file_location,
+    const std::string& key_dir,
+    ServerAwareHandler * handler) {
 
   harness.setKeyDir(key_dir);
   harness.setUrl(url, handler);

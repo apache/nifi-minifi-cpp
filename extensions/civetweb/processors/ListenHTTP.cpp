@@ -487,6 +487,11 @@ std::string ListenHTTP::getPort() const {
   return listeningPort;
 }
 
+void ListenHTTP::notifyStop() {
+  server_.reset();
+  handler_.reset();
+}
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

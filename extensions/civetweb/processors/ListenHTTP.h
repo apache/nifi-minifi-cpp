@@ -201,6 +201,8 @@ class ListenHTTP : public core::Processor {
     }
     return 0;
   }
+ protected:
+  void notifyStop() override;
 
  private:
   // Logger
