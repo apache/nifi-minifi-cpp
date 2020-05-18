@@ -59,6 +59,11 @@ struct C2ContentResponse {
       :op{ op }
   {}
 
+  C2ContentResponse(const C2ContentResponse&) = default;
+  C2ContentResponse(C2ContentResponse&&) = default;
+  C2ContentResponse& operator=(const C2ContentResponse&) = default;
+  C2ContentResponse& operator=(C2ContentResponse&&) = default;
+
   bool operator==(const C2ContentResponse &other) const {
     return std::tie(this->op, this->required, this->ident, this->name, this->operation_arguments)
         == std::tie(other.op, other.required, other.ident, other.name, other.operation_arguments);
@@ -74,21 +79,12 @@ struct C2ContentResponse {
   // delay before running
   uint32_t delay{ 0 };
   // max time before this response will no longer be honored.
-  uint64_t ttl{ std::numeric_limits<uint64_t>::max() };
+  uint64_t ttl{ (std::numeric_limits<uint64_t>::max)() };
   // name applied to commands
   std::string name;
   // commands that correspond with the operation.
   std::map<std::string, state::response::ValueNode> operation_arguments;
 };
-
-namespace detail {
-template<typename T>
-struct is_nothrow_movable : std::integral_constant<bool,
-    std::is_nothrow_move_constructible<T>::value && std::is_nothrow_move_assignable<T>::value> {
-};
-
-static_assert(is_nothrow_movable<C2ContentResponse>::value, "C2ContentResponse must be nothrow movable");
-}  // namespace detail
 
 /**
  * C2Payload is an update for the state manager.
@@ -105,9 +101,9 @@ class C2Payload : public state::Update {
   C2Payload(Operation op, state::UpdateState state, bool resp = false, bool isRaw = false);
 
   C2Payload(const C2Payload&) = default;
-  C2Payload(C2Payload&&) noexcept = default;
+  C2Payload(C2Payload&&) = default;
   C2Payload &operator=(const C2Payload&) = default;
-  C2Payload &operator=(C2Payload&&) noexcept = default;
+  C2Payload &operator=(C2Payload&&) = default;
 
   ~C2Payload() override = default;
 
@@ -171,6 +167,8 @@ class C2Payload : public state::Update {
    */
   const std::vector<C2Payload> &getNestedPayloads() const noexcept { return payloads_; }
 
+  void reservePayloads(size_t new_capacity) { payloads_.reserve(new_capacity); }
+
   bool operator==(const C2Payload &other) const {
     return std::tie(this->op_, this->ident_, this->label_, this->payloads_, this->content_, this->raw_, this->raw_data_)
         == std::tie(other.op_, other.ident_, other.label_, other.payloads_, other.content_, other.raw_, other.raw_data_);
@@ -190,8 +188,6 @@ class C2Payload : public state::Update {
   bool is_container_{ false };
   bool is_collapsible_{ true };
 };
-
-static_assert(detail::is_nothrow_movable<C2Payload>::value, "C2Payload must be nothrow movable");
 
 } /* namesapce c2 */
 } /* namespace minifi */

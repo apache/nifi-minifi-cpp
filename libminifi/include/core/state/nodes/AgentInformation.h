@@ -669,16 +669,10 @@ protected:
   }
 
   std::vector<SerializedResponseNode> getAgentManifest() const {
-    std::vector<SerializedResponseNode> serialized;
-    AgentManifest manifest("manifest");
-
     SerializedResponseNode agentManifest;
     agentManifest.name = "agentManifest";
-    for (auto &ser : manifest.serialize()) {
-      agentManifest.children.push_back(std::move(ser));
-    }
-    serialized.push_back(agentManifest);
-    return serialized;
+    agentManifest.children = AgentManifest{"manifest"}.serialize();
+    return std::vector<SerializedResponseNode>{ agentManifest };
   }
 
   std::vector<SerializedResponseNode> getAgentStatus() const {
