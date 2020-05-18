@@ -238,4 +238,4 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const{
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_

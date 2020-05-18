@@ -133,4 +133,4 @@ static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<
 
 #endif
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_IO_VALIDATION_H_

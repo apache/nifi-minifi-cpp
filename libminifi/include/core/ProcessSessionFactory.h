@@ -61,4 +61,4 @@ class ProcessSessionFactory {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONFACTORY_H_

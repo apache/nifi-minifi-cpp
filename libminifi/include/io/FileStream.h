@@ -139,4 +139,4 @@ class FileStream : public io::BaseStream {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_IO_FILESTREAM_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_FILESTREAM_H_

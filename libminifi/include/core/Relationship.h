@@ -104,4 +104,4 @@ class Relationship {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_RELATIONSHIP_H_

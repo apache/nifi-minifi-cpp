@@ -163,4 +163,4 @@ class SchedulingAgent {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_SCHEDULINGAGENT_H_

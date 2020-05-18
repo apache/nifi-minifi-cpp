@@ -205,4 +205,4 @@ int AtomicEntryStream<T>::readData(uint8_t *buf, int buflen) {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_IO_ATOMICENTRYSTREAM_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_ATOMICENTRYSTREAM_H_

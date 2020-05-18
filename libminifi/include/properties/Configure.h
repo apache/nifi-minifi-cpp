@@ -115,4 +115,4 @@ class Configure : public Properties {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_PROPERTIES_CONFIGURE_H_

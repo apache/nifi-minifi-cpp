@@ -63,4 +63,4 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_TIMERDRIVENSCHEDULINGAGENT_H_

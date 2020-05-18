@@ -193,4 +193,4 @@ REGISTER_RESOURCE(SSLContextService, "Controller service that provides SSL/TLS c
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_

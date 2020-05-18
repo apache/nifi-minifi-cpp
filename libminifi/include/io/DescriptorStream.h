@@ -189,4 +189,4 @@ class DescriptorStream : public io::BaseStream {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_IO_DESCRIPTORSTREAM_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_DESCRIPTORSTREAM_H_

@@ -551,4 +551,4 @@ class ProvenanceReporter {
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_

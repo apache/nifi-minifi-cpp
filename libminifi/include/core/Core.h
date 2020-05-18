@@ -250,4 +250,4 @@ namespace utils = org::apache::nifi::minifi::utils;
 
 namespace provenance = org::apache::nifi::minifi::provenance;
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CORE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CORE_H_

@@ -667,4 +667,4 @@ class ConstrainedProperty : public std::enable_shared_from_this<ConstrainedPrope
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_PROPERTY_H_

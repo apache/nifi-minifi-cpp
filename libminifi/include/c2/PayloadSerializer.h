@@ -321,4 +321,4 @@ class PayloadSerializer {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_

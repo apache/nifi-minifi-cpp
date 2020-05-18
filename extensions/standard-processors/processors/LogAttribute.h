@@ -137,4 +137,4 @@ REGISTER_RESOURCE(LogAttribute, "Logs attributes of flow files in the MiNiFi app
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LOGATTRIBUTE_H_

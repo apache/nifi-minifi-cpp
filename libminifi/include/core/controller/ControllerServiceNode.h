@@ -132,4 +132,4 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_

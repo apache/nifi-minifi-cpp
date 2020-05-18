@@ -198,4 +198,4 @@ class Connectable : public CoreComponent {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_

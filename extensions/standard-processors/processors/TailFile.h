@@ -137,4 +137,4 @@ REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting dat
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_TAILFILE_H_

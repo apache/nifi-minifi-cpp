@@ -373,4 +373,4 @@ class StandardValidators {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_PROPERTYVALIDATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_PROPERTYVALIDATION_H_

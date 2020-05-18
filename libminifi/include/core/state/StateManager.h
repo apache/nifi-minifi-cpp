@@ -137,4 +137,4 @@ class StateManager : public response::NodeReporter, public response::ResponseNod
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_CONTROLLABLE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_STATEMANAGER_H_

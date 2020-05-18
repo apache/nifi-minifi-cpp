@@ -168,4 +168,4 @@ class BuildDescription {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_ */
+#endif  // LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_

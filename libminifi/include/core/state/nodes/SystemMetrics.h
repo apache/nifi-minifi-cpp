@@ -115,4 +115,4 @@ REGISTER_RESOURCE(SystemInformation, "Node part of an AST that defines the Syste
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_METRICS_QUEUEMETRICS_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_SYSTEMMETRICS_H_

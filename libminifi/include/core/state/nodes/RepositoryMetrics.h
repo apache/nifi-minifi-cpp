@@ -98,4 +98,4 @@ class RepositoryMetrics : public ResponseNode {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_METRICS_RepositoryMetrics_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_

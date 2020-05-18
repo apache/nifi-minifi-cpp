@@ -224,4 +224,4 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_CONNECTION_H_

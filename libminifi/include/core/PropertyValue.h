@@ -220,4 +220,4 @@ inline std::string conditional_conversion(const PropertyValue &v) {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_

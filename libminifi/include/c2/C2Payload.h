@@ -195,4 +195,4 @@ class C2Payload : public state::Update {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_C2PAYLOAD_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_C2PAYLOAD_H_

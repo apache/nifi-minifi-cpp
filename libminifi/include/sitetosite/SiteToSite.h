@@ -411,4 +411,4 @@ class SiteToSiteClientConfiguration {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITE_H_ */
+#endif  // LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITE_H_

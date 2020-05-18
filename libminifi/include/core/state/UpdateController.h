@@ -284,4 +284,4 @@ class UpdateController {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_UPDATECONTROLLER_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_UPDATECONTROLLER_H_

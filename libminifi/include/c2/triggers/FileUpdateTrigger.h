@@ -123,4 +123,4 @@ REGISTER_RESOURCE(FileUpdateTrigger, "Defines a file update trigger when the las
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_

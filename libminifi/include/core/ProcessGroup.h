@@ -282,4 +282,4 @@ class ProcessGroup {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSGROUP_H_

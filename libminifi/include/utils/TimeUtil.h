@@ -143,4 +143,4 @@ inline bool getDateTimeStr(int64_t unix_timestamp, std::string& date_time_str) {
   return true;
 }
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_

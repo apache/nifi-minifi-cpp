@@ -99,4 +99,4 @@ REGISTER_RESOURCE(ExtractText,"Extracts the content of a FlowFile and places it 
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXTRACTTEXT_H_

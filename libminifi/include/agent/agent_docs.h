@@ -61,4 +61,4 @@ class AgentDocs {
 }
 }
 }
-#endif
+#endif  // LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_

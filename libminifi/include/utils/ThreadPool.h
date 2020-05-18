@@ -368,4 +368,4 @@ class ThreadPool {
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_

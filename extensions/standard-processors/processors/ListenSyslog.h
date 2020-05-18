@@ -228,4 +228,4 @@ REGISTER_RESOURCE(ListenSyslog,"Listens for Syslog messages being sent to a give
 
 #endif
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LISTENSYSLOG_H_

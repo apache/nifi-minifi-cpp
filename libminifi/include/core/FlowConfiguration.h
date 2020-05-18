@@ -186,5 +186,5 @@ class FlowConfiguration : public CoreComponent {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
 

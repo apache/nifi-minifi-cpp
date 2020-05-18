@@ -122,4 +122,4 @@ REGISTER_RESOURCE(PutFile,"Writes the contents of a FlowFile to the local file s
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_PUTFILE_H_

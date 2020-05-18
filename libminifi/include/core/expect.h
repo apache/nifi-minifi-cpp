@@ -29,4 +29,4 @@
 #define UNLIKELY(x) (x)
 #endif
 
-#endif /* LIBMINIFI_INCLUDE_CORE_EXPECT_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_EXPECT_H_

@@ -135,4 +135,4 @@ REGISTER_RESOURCE(ExecuteProcess, "Runs an operating system command specified by
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_

@@ -262,4 +262,4 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_

@@ -167,4 +167,4 @@ class ControllerService : public ConfigurableComponent, public Connectable {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICE_H_

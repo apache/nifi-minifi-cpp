@@ -295,4 +295,4 @@ REGISTER_RESOURCE(GetTCP, "Establishes a TCP Server that defines and retrieves o
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETTCP_H_

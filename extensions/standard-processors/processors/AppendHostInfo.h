@@ -79,4 +79,4 @@ REGISTER_RESOURCE(AppendHostInfo, "Appends host information such as IP address a
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_

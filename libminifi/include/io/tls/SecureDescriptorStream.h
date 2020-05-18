@@ -193,4 +193,4 @@ class SecureDescriptorStream : public io::BaseStream {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_

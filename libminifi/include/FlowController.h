@@ -425,4 +425,4 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_

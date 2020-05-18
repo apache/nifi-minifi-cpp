@@ -49,4 +49,4 @@ namespace core {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONREADCALLBACK_H_

@@ -346,4 +346,4 @@ class YamlConfiguration : public FlowConfiguration {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_

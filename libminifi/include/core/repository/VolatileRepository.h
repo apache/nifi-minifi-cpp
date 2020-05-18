@@ -421,4 +421,4 @@ void VolatileRepository<T>::start() {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEREPOSITORY_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEREPOSITORY_H_

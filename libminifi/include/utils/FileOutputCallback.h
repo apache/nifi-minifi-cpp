@@ -74,4 +74,4 @@ class FileOutputCallback : public ByteOutputCallback {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_FILEOUTPUTCALLBACK_H_

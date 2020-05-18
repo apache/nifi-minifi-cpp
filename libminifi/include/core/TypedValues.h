@@ -231,4 +231,4 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_

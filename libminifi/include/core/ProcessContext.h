@@ -351,4 +351,4 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_

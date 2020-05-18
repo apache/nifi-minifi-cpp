@@ -382,4 +382,4 @@ extern void parse_url(const std::string *url, std::string *host, int *port, std:
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_

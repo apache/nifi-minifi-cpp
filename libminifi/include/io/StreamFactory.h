@@ -99,4 +99,4 @@ class StreamFactory {
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_IO_STREAMFACTORY_H_

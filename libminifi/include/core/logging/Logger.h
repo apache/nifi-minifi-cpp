@@ -216,4 +216,4 @@ class Logger : public BaseLogger {
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGER_H_

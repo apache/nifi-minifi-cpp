@@ -167,5 +167,5 @@ class TraceResolver {
   std::condition_variable trace_condition_;
 };
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_
 

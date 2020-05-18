@@ -206,4 +206,4 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_FLOWFILERECORD_H_

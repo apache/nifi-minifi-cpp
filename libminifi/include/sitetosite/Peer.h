@@ -396,4 +396,4 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_ */
+#endif  // LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_

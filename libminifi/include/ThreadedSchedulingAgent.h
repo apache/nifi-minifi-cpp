@@ -81,4 +81,4 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_

@@ -103,4 +103,4 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_

@@ -129,4 +129,4 @@ class DataStream {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_DATASTREAM_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_DATASTREAM_H_

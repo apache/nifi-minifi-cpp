@@ -71,4 +71,4 @@ struct Exception : public std::runtime_error {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_EXCEPTION_H_

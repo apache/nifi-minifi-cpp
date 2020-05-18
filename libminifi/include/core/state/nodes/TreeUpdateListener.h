@@ -82,4 +82,4 @@ class OperationWatcher : public utils::AfterExecute<Update> {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_TREEUPDATELISTENER_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_TREEUPDATELISTENER_H_

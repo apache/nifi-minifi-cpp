@@ -71,4 +71,4 @@ using std::exchange;
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_

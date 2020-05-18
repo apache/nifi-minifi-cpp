@@ -73,4 +73,4 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_

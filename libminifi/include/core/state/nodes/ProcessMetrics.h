@@ -103,4 +103,4 @@ REGISTER_RESOURCE(ProcessMetrics, "Node part of an AST that defines the Processo
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_METRICS_QUEUEMETRICS_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_PROCESSMETRICS_H_

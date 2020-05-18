@@ -506,4 +506,4 @@ REGISTER_RESOURCE(DeviceInfoNode, "Node part of an AST that defines device chara
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_

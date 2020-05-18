@@ -265,4 +265,4 @@ class ResponseNodeSink {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_METRICS_METRICSBASE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_

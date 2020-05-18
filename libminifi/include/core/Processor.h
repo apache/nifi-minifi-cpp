@@ -319,4 +319,4 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSOR_H_

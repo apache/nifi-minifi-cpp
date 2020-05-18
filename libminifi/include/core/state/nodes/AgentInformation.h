@@ -747,4 +747,4 @@ REGISTER_RESOURCE(AgentInformation, "Node part of an AST that defines all agent 
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_

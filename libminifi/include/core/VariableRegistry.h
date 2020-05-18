@@ -102,4 +102,4 @@ class VariableRegistry {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_VARIABLEREGISTRY_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_VARIABLEREGISTRY_H_

@@ -65,4 +65,4 @@ class StaticClassType {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_RESOURCE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_RESOURCE_H_

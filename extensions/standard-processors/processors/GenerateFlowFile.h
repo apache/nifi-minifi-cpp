@@ -101,4 +101,4 @@ REGISTER_RESOURCE(GenerateFlowFile, "This processor creates FlowFiles with rando
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GENERATEFLOWFILE_H_

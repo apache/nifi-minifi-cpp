@@ -508,4 +508,4 @@ struct SerializedResponseNode {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_VALUE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_VALUE_H_

@@ -189,4 +189,4 @@ class TLSSocket : public Socket {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_

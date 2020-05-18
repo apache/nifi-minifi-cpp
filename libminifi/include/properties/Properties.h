@@ -140,4 +140,4 @@ class Properties {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_PROPERTIES_PROPERTIES_H_

@@ -267,4 +267,4 @@ class FlowControlProtocol {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_FLOWCONTROLPROTOCOL_H_

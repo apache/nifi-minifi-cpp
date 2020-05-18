@@ -43,4 +43,4 @@ struct ScopeGuard : ::gsl::final_action<std::function<void()>> {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_UTILS_SCOPEGUARD_H_

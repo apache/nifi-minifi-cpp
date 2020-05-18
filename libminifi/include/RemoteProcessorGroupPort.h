@@ -245,4 +245,4 @@ class RemoteProcessorGroupPort : public core::Processor {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_REMOTEPROCESSORGROUPPORT_H_

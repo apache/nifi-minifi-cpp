@@ -196,4 +196,4 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_

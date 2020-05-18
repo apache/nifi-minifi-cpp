@@ -130,4 +130,4 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_RESOURCECLAIM_H_

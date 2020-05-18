@@ -641,4 +641,4 @@ T *ClassLoader::instantiateRaw(const std::string &class_name, utils::Identifier 
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CLASSLOADER_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CLASSLOADER_H_

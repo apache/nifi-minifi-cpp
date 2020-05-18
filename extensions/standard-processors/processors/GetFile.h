@@ -198,4 +198,4 @@ REGISTER_RESOURCE(GetFile,"Creates FlowFiles from files in a directory. MiNiFi w
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETFILE_H_

@@ -57,4 +57,4 @@ struct ProcessorConfig {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_

@@ -87,4 +87,4 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXTBUILDER_H_
