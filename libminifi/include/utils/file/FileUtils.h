@@ -243,6 +243,21 @@ class FileUtils {
     return 0;
   }
 
+  static uint64_t file_size(const std::string &path) {
+#ifdef WIN32
+    struct _stat result;
+    if (_stat(path.c_str(), &result) == 0) {
+      return result.st_size;
+    }
+#else
+    struct stat result;
+    if (stat(path.c_str(), &result) == 0) {
+      return result.st_size;
+    }
+#endif
+    return 0;
+  }
+
   static bool set_last_write_time(const std::string &path, uint64_t write_time) {
 #ifdef WIN32
     struct __utimbuf64 utim;
@@ -696,6 +711,8 @@ class FileUtils {
     return {};
   }
 #endif /* WIN32 */
+
+  static uint64_t computeChecksum(std::string file_name, uint64_t up_to_position);
 };
 
 } /* namespace file */

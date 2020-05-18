@@ -26,6 +26,7 @@
 #include "utils/file/PathUtils.h"
 #include "utils/ScopeGuard.h"
 #include "utils/Environment.h"
+#include "utils/TimeUtil.h"
 
 using org::apache::nifi::minifi::utils::file::FileUtils;
 
@@ -177,4 +178,158 @@ TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
   REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath(".\\.\\test1"));
   REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath(".\\test2\\..\\test1"));
 #endif
+}
+
+TEST_CASE("FileUtils::last_write_time works", "[last_write_time]") {
+  uint64_t timeBeforeWrite = getTimeMillis() / 1000;
+
+  TestController testController;
+
+  char format[] = "/tmp/gt.XXXXXX";
+  std::string dir = testController.createTempDirectory(format);
+
+  std::string test_file = dir + FileUtils::get_separator() + "test.txt";
+  REQUIRE(FileUtils::last_write_time(test_file) == 0);
+
+  std::ofstream test_file_stream(test_file);
+  test_file_stream << "foo\n";
+  test_file_stream.flush();
+
+  uint64_t timeAfterFirstWrite = getTimeMillis() / 1000;
+
+  uint64_t first_mtime = FileUtils::last_write_time(test_file);
+  REQUIRE(first_mtime >= timeBeforeWrite);
+  REQUIRE(first_mtime <= timeAfterFirstWrite);
+
+  test_file_stream << "bar\n";
+  test_file_stream.flush();
+
+  uint64_t timeAfterSecondWrite = getTimeMillis() / 1000;
+
+  uint64_t second_mtime = FileUtils::last_write_time(test_file);
+  REQUIRE(second_mtime >= first_mtime);
+  REQUIRE(second_mtime >= timeAfterFirstWrite);
+  REQUIRE(second_mtime <= timeAfterSecondWrite);
+
+  test_file_stream.close();
+  uint64_t third_mtime = FileUtils::last_write_time(test_file);
+  REQUIRE(third_mtime == second_mtime);
+}
+
+TEST_CASE("FileUtils::file_size works", "[file_size]") {
+  TestController testController;
+
+  char format[] = "/tmp/gt.XXXXXX";
+  std::string dir = testController.createTempDirectory(format);
+
+  std::string test_file = dir + FileUtils::get_separator() + "test.txt";
+  REQUIRE(FileUtils::file_size(test_file) == 0);
+
+  std::ofstream test_file_stream(test_file);
+  test_file_stream << "foo\n";
+  test_file_stream.flush();
+
+  REQUIRE(FileUtils::file_size(test_file) == 4);
+
+  test_file_stream << "foobar\n";
+  test_file_stream.flush();
+
+  REQUIRE(FileUtils::file_size(test_file) == 11);
+
+  test_file_stream.close();
+
+  REQUIRE(FileUtils::file_size(test_file) == 11);
+}
+
+TEST_CASE("FileUtils::computeChecksum works", "[computeChecksum]") {
+  constexpr uint64_t CHECKSUM_OF_0_BYTES = 0u;
+  constexpr uint64_t CHECKSUM_OF_4_BYTES = 2117232040u;
+  constexpr uint64_t CHECKSUM_OF_11_BYTES = 3461392622u;
+
+  TestController testController;
+
+  char format[] = "/tmp/gt.XXXXXX";
+  std::string dir = testController.createTempDirectory(format);
+
+  std::string test_file = dir + FileUtils::get_separator() + "test.txt";
+  REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
+
+  std::ofstream test_file_stream{test_file};
+  test_file_stream << "foo\n";
+  test_file_stream.flush();
+
+  REQUIRE(FileUtils::computeChecksum(test_file, 4) == CHECKSUM_OF_4_BYTES);
+
+  test_file_stream << "foobar\n";
+  test_file_stream.flush();
+
+  REQUIRE(FileUtils::computeChecksum(test_file, 11) == CHECKSUM_OF_11_BYTES);
+
+  test_file_stream.close();
+
+  REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
+  REQUIRE(FileUtils::computeChecksum(test_file, 4) == CHECKSUM_OF_4_BYTES);
+  REQUIRE(FileUtils::computeChecksum(test_file, 11) == CHECKSUM_OF_11_BYTES);
+
+
+  std::string another_file = dir + FileUtils::get_separator() + "another_test.txt";
+  REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
+
+  std::ofstream another_file_stream{another_file};
+  another_file_stream << "foo\nfoobar\nbaz\n";   // starts with the same bytes as test_file
+  another_file_stream.close();
+
+  REQUIRE(FileUtils::computeChecksum(another_file, 0) == CHECKSUM_OF_0_BYTES);
+  REQUIRE(FileUtils::computeChecksum(another_file, 4) == CHECKSUM_OF_4_BYTES);
+  REQUIRE(FileUtils::computeChecksum(another_file, 11) == CHECKSUM_OF_11_BYTES);
+}
+
+TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
+  constexpr uint64_t CHECKSUM_OF_0_BYTES = 0u;
+  constexpr uint64_t CHECKSUM_OF_4095_BYTES = 1902799545u;
+  constexpr uint64_t CHECKSUM_OF_4096_BYTES = 1041266625u;
+  constexpr uint64_t CHECKSUM_OF_4097_BYTES = 1619129554u;
+  constexpr uint64_t CHECKSUM_OF_8192_BYTES = 305726917u;
+
+  TestController testController;
+
+  char format[] = "/tmp/gt.XXXXXX";
+  std::string dir = testController.createTempDirectory(format);
+
+  std::string test_file = dir + FileUtils::get_separator() + "test.txt";
+  REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
+
+  std::ofstream test_file_stream{test_file};
+  test_file_stream << std::string(4096, 'x');
+  test_file_stream.flush();
+
+  REQUIRE(FileUtils::computeChecksum(test_file, 4095) == CHECKSUM_OF_4095_BYTES);
+  REQUIRE(FileUtils::computeChecksum(test_file, 4096) == CHECKSUM_OF_4096_BYTES);
+
+  test_file_stream << 'x';
+  test_file_stream.flush();
+
+  REQUIRE(FileUtils::computeChecksum(test_file, 4097) == CHECKSUM_OF_4097_BYTES);
+
+  test_file_stream.close();
+
+  REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
+  REQUIRE(FileUtils::computeChecksum(test_file, 4095) == CHECKSUM_OF_4095_BYTES);
+  REQUIRE(FileUtils::computeChecksum(test_file, 4096) == CHECKSUM_OF_4096_BYTES);
+  REQUIRE(FileUtils::computeChecksum(test_file, 4097) == CHECKSUM_OF_4097_BYTES);
+
+
+  std::string another_file = dir + FileUtils::get_separator() + "another_test.txt";
+  REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
+
+  std::ofstream another_file_stream{another_file};
+  another_file_stream << std::string(8192, 'x');   // starts with the same bytes as test_file
+  another_file_stream.close();
+
+  REQUIRE(FileUtils::computeChecksum(another_file, 0) == CHECKSUM_OF_0_BYTES);
+  REQUIRE(FileUtils::computeChecksum(another_file, 4095) == CHECKSUM_OF_4095_BYTES);
+  REQUIRE(FileUtils::computeChecksum(another_file, 4096) == CHECKSUM_OF_4096_BYTES);
+  REQUIRE(FileUtils::computeChecksum(another_file, 4097) == CHECKSUM_OF_4097_BYTES);
+  REQUIRE(FileUtils::computeChecksum(another_file, 8192) == CHECKSUM_OF_8192_BYTES);
+  REQUIRE(FileUtils::computeChecksum(another_file, 9000) == CHECKSUM_OF_8192_BYTES);
 }
