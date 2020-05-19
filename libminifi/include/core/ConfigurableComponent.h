@@ -217,8 +217,7 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const 
      if (item.getValue().getValue() != nullptr) {
        logger_->log_debug("Component %s property name %s value %s", name, item.getName(), item.getValue().to_string());
        return true;
-     }
-     else {
+     } else {
        logger_->log_warn("Component %s property name %s, empty value", name, item.getName());
        return false;
      }

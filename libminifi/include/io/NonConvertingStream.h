@@ -172,8 +172,7 @@ class NonConvertingStream : public BaseStream  {
   const uint64_t getSize() const override {
       if (composable_stream_ == this) {
         return buffer.size();
-      }
-      else {
+      } else {
         return composable_stream_->getSize();
       }
     }

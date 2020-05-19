@@ -134,8 +134,7 @@ class FileUtils {
       if (boost::filesystem::exists(path)) {
         if (delete_files_recursively) {
           boost::filesystem::remove_all(path);
-        }
-        else {
+        } else {
           boost::filesystem::remove(path);
         }
       }
@@ -167,8 +166,7 @@ class FileUtils {
           if (Attributes & FILE_ATTRIBUTE_DIRECTORY) {
             // is directory
             delete_dir(str, delete_files_recursively);
-          }
-          else {
+          } else {
             remove(str.c_str());
             // not directory
           }
@@ -286,8 +284,7 @@ class FileUtils {
     boost::filesystem::path dir(path);
     if (boost::filesystem::create_directory(dir)) {
       return 0;
-    }
-    else {
+    } else {
       return -1;
     }
 #else
@@ -406,8 +403,7 @@ class FileUtils {
         logger->log_info("Adding %s to paths", path);
         if (S_ISDIR(statbuf.st_mode)) {
           addFilesMatchingExtension(logger, path, extension, accruedFiles);
-        }
-        else {
+        } else {
           if (utils::StringUtils::endsWith(path, extension)) {
             logger->log_info("Adding %s to paths", path);
             accruedFiles.push_back(path);
@@ -494,8 +490,7 @@ class FileUtils {
           if (recursive) {
             list_dir(path, callback, logger, recursive);
           }
-        }
-        else {
+        } else {
           if (!callback(dir, FindFileData.cFileName)) {
             break;
           }

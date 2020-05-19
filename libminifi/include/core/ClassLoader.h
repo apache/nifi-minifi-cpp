@@ -492,8 +492,7 @@ class ClassLoader {
           resource_mapping_.insert(std::make_pair(allModules[i], "minifi-system"));
         }
       }
-    }
-    else {
+    } else {
       char lpFileName[MAX_PATH];
       int i;
 

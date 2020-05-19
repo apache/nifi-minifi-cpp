@@ -102,8 +102,7 @@ class SiteToSiteClient : public core::Connectable {
 #else
     if (direction == SEND) {
       return transferFlowFiles(context, session);
-    }
-    else {
+    } else {
       return receiveFlowFiles(context, session);
     }
 #endif

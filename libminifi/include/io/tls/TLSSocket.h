@@ -166,8 +166,7 @@ class TLSSocket : public Socket {
     if (UNLIKELY(listeners_ > 0)) {
       std::lock_guard<std::mutex> lock(ssl_mutex_);
       return ssl_map_[fd];
-    }
-    else {
+    } else {
       return ssl_;
     }
   }
