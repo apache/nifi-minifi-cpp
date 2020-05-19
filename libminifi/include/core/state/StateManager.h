@@ -81,12 +81,12 @@ class StateManager : public response::NodeReporter, public response::ResponseNod
    */
   virtual int16_t getResponseNodes(std::vector<std::shared_ptr<response::ResponseNode>> &metric_vector, uint16_t metricsClass);
 
-  virtual std::string getVersion(){
+  virtual std::string getVersion() {
     return "";
   }
 
  protected:
-  void shutdownState(){
+  void shutdownState() {
     listener_thread_pool_.shutdown();
     metrics_maps_.clear();
     updateControllers.clear();

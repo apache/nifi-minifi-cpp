@@ -26,7 +26,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace io {
-namespace tls{
+namespace tls {
 
 int pemPassWordCb(char *buf, int size, int rwflag, void *userdata);
 

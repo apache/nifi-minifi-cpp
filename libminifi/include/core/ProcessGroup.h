@@ -161,7 +161,7 @@ class ProcessGroup {
   }
   // Get UUID
   bool getUUID(utils::Identifier &uuid) {
-    if (uuid_ == nullptr){
+    if (uuid_ == nullptr) {
       return false;
     }
     uuid = uuid_;

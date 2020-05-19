@@ -45,12 +45,12 @@ class ServerSocket : public BaseServerSocket, public Socket {
 
   virtual ~ServerSocket();
 
-  virtual int16_t initialize(bool loopbackOnly){
+  virtual int16_t initialize(bool loopbackOnly) {
     is_loopback_only_ = loopbackOnly;
     return Socket::initialize();
   }
 
-  virtual int16_t initialize(){
+  virtual int16_t initialize() {
     return Socket::initialize();
   }
 

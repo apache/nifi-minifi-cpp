@@ -76,7 +76,7 @@ class C2Agent : public state::UpdateController {
    */
   void performHeartBeat();
 
-  int64_t getHeartBeatDelay(){
+  int64_t getHeartBeatDelay() {
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     return heart_beat_period_;
   }

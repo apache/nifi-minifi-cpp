@@ -78,7 +78,7 @@ static auto IsNullOrEmpty(T *object) {
 * Determines if the variable is null or ::empty()
 */
 template<typename T>
-static auto IsNullOrEmpty(std::shared_ptr<T> object){
+static auto IsNullOrEmpty(std::shared_ptr<T> object) {
 	return (nullptr == object || nullptr == object.get());
 }
 

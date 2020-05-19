@@ -60,7 +60,7 @@ static std::unique_ptr<SiteToSiteClient> createRawSocket(const SiteToSiteClientC
   utils::Identifier uuid;
   client_configuration.getPeer()->getPortId(uuid);
   auto rsptr = createStreamingPeer(client_configuration);
-  if (nullptr == rsptr){
+  if (nullptr == rsptr) {
     return nullptr;
   }
   auto ptr = std::unique_ptr<SiteToSiteClient>(new RawSiteToSiteClient(std::move(rsptr)));

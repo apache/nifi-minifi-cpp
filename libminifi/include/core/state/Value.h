@@ -87,7 +87,7 @@ class Value {
 
   virtual bool getValue(uint32_t &ref) {
     const auto negative = string_value.find_first_of('-') != std::string::npos;
-     if (negative){
+     if (negative) {
        return false;
      }
     ref = std::stoul(string_value);
@@ -106,7 +106,7 @@ class Value {
 
   virtual bool getValue(uint64_t &ref) {
     const auto negative = string_value.find_first_of('-') != std::string::npos;
-     if (negative){
+     if (negative) {
        return false;
      }
     ref = std::stoull(string_value);
@@ -139,7 +139,7 @@ class UInt32Value : public Value {
      * is only created with a validator and type, we **should** be okay.
      */
     const auto negative = strvalue.find_first_of('-') != std::string::npos;
-     if (negative){
+     if (negative) {
        throw std::out_of_range("negative value detected");
      }
     setTypeId<uint32_t>();
@@ -298,7 +298,7 @@ class UInt64Value : public Value {
      * is only created with a validator and type, we **should** be okay.
      */
     const auto negative = strvalue.find_first_of('-') != std::string::npos;
-     if (negative){
+     if (negative) {
        throw std::out_of_range("negative value detected");
      }
     setTypeId<uint64_t>();

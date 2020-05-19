@@ -146,7 +146,7 @@ class Connectable : public CoreComponent {
    * Returns theflow version
    * @returns flow version. can be null if a flow version is not tracked.
    */
-  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const{
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const {
     return connectable_version_;
   }
 

@@ -105,7 +105,7 @@ class ControllerService : public ConfigurableComponent, public Connectable {
     current_state_ = ENABLED;
   }
 
-  virtual ~ControllerService(){
+  virtual ~ControllerService() {
     notifyStop();
   }
 
@@ -143,7 +143,7 @@ class ControllerService : public ConfigurableComponent, public Connectable {
     return false;
   }
 
-  void setLinkedControllerServices( const std::vector<std::shared_ptr<controller::ControllerService> > &services ){
+  void setLinkedControllerServices( const std::vector<std::shared_ptr<controller::ControllerService> > &services ) {
     linked_services_ = services;
   }
 

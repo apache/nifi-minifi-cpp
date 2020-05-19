@@ -330,7 +330,7 @@ class Socket : public BaseStream {
     static SocketInitializer initialized;
   }
 #else
-  static void initialize_socket(){}
+  static void initialize_socket() {}
 #endif /* WIN32 */
 
   static std::string init_hostname() {

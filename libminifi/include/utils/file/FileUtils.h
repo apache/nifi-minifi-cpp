@@ -610,7 +610,7 @@ class FileUtils {
     return child_path;
   }
 
-  static bool is_hidden(const std::string& path){
+  static bool is_hidden(const std::string& path) {
 #ifdef WIN32
     DWORD attributes = GetFileAttributesA(path.c_str());
     return ((attributes != INVALID_FILE_ATTRIBUTES)  && ((attributes & FILE_ATTRIBUTE_HIDDEN) != 0));

@@ -187,7 +187,7 @@ class UnsignedIntValidator : public PropertyValidator {
   ValidationResult validate(const std::string &subject, const std::string &input) const override {
     try {
       auto negative = input.find_first_of('-') != std::string::npos;
-      if (negative){
+      if (negative) {
         throw std::out_of_range("non negative expected");
       }
       std::stoul(input);
@@ -246,7 +246,7 @@ class UnsignedLongValidator : public PropertyValidator {
   ValidationResult validate(const std::string &subject, const std::string &input) const override {
     try {
       auto negative = input.find_first_of('-') != std::string::npos;
-      if (negative){
+      if (negative) {
         throw std::out_of_range("non negative expected");
       }
       std::stoull(input);
@@ -338,12 +338,12 @@ class StandardValidators {
     }
   }
 
-  static std::shared_ptr<PropertyValidator> PORT_VALIDATOR(){
+  static std::shared_ptr<PropertyValidator> PORT_VALIDATOR() {
     static std::shared_ptr<PropertyValidator> validator = std::make_shared<PortValidator>("PORT_VALIDATOR");
     return validator;
   }
 
-  static std::shared_ptr<PropertyValidator> LISTEN_PORT_VALIDATOR(){
+  static std::shared_ptr<PropertyValidator> LISTEN_PORT_VALIDATOR() {
     static std::shared_ptr<PropertyValidator> validator = std::make_shared<ListenPortValidator>("PORT_VALIDATOR");
     return validator;
   }

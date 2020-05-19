@@ -238,7 +238,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSession> &session) {
     onTrigger(context.get(), session.get());
   }
-  virtual void onTrigger(ProcessContext *context, ProcessSession *session){
+  virtual void onTrigger(ProcessContext *context, ProcessSession *session) {
   }
   // Initialize, overridden by NiFi Process Designer
   virtual void initialize() {

@@ -37,12 +37,12 @@ class TLSServerSocket : public BaseServerSocket, public TLSSocket {
 
   virtual ~TLSServerSocket();
 
-  int16_t initialize(bool loopbackOnly){
+  int16_t initialize(bool loopbackOnly) {
     is_loopback_only_ = loopbackOnly;
     return TLSSocket::initialize();
   }
 
-  virtual int16_t initialize(){
+  virtual int16_t initialize() {
     return TLSSocket::initialize();
   }
 

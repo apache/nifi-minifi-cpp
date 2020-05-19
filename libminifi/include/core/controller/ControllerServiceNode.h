@@ -46,7 +46,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
         ConfigurableComponent(),
         active(false),
         configuration_(configuration),
-        controller_service_(service){
+        controller_service_(service) {
     if (service == nullptr || IsNullOrEmpty(service.get())) {
       throw Exception(GENERAL_EXCEPTION, "Service must be properly configured");
     }

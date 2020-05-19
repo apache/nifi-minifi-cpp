@@ -180,7 +180,7 @@ class ConfigurableComponent {
   }
 
  protected:
-  void setAcceptAllProperties(){
+  void setAcceptAllProperties() {
     accept_all_properties_ = true;
   }
 
@@ -207,18 +207,18 @@ class ConfigurableComponent {
 };
 
 template<typename T>
-bool ConfigurableComponent::getProperty(const std::string name, T &value) const{
+bool ConfigurableComponent::getProperty(const std::string name, T &value) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
    auto &&it = properties_.find(name);
    if (it != properties_.end()) {
      Property item = it->second;
      value = static_cast<T>(item.getValue());
-     if (item.getValue().getValue() != nullptr){
+     if (item.getValue().getValue() != nullptr) {
        logger_->log_debug("Component %s property name %s value %s", name, item.getName(), item.getValue().to_string());
        return true;
      }
-     else{
+     else {
        logger_->log_warn("Component %s property name %s, empty value", name, item.getName());
        return false;
      }

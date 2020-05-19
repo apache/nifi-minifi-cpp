@@ -526,7 +526,7 @@ class StringUtils {
 
 } /* namespace utils */
 
-namespace core{
+namespace core {
 enum TimeUnit {
   DAY,
   HOUR,

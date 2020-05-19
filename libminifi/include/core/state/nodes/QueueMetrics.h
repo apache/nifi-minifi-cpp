@@ -49,7 +49,7 @@ class QueueMetrics : public ResponseNode {
       : ResponseNode("QueueMetrics") {
   }
 
-  virtual std::string getName() const{
+  virtual std::string getName() const {
     return "QueueMetrics";
   }
 

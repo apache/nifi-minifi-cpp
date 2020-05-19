@@ -170,10 +170,10 @@ class NonConvertingStream : public BaseStream  {
   int read(uint64_t &value, bool is_little_endian = false) override;
 
   const uint64_t getSize() const override {
-      if (composable_stream_ == this){
+      if (composable_stream_ == this) {
         return buffer.size();
       }
-      else{
+      else {
         return composable_stream_->getSize();
       }
     }

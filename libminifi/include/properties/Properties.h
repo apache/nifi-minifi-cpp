@@ -36,7 +36,7 @@ class Properties {
   virtual ~Properties() {
   }
 
-  virtual const std::string& getName() const{
+  virtual const std::string& getName() const {
     return name_;
   }
 
