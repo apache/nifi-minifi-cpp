@@ -183,7 +183,7 @@ class StringUtils {
   static size_t sum(SizeT... ns) {
     size_t result = 0;
     (void)(std::initializer_list<size_t>{( result += ns )...});
-    return result; // (ns + ...)
+    return result;  // (ns + ...)
   }
 
   #ifndef _MSC_VER

@@ -169,4 +169,4 @@ class ComplexMonitor : public utils::AfterExecute<TaskRescheduleInfo> {
 } /* namespace apache */
 } /* namespace org */
 
-#endif // LIBMINIFI_INCLUDE_UTILS_MONITORS_H_
+#endif  // LIBMINIFI_INCLUDE_UTILS_MONITORS_H_

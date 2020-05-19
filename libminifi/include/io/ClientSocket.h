@@ -298,7 +298,7 @@ class Socket : public BaseStream {
   io::NetworkInterface local_network_interface_;
 
   // connection information
-  SocketDescriptor socket_file_descriptor_{ INVALID_SOCKET }; // -1 on posix
+  SocketDescriptor socket_file_descriptor_{ INVALID_SOCKET };  // -1 on posix
 
   fd_set total_list_{};
   fd_set read_fds_{};

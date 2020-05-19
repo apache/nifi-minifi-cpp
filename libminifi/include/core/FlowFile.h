@@ -334,4 +334,4 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
 } /* namespace apache */
 } /* namespace org */
 
-#endif // LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
+#endif  // LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_

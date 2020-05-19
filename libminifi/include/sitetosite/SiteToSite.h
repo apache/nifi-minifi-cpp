@@ -188,7 +188,7 @@ typedef enum {
   // transaction indicators
   CONTINUE_TRANSACTION = 10,
   FINISH_TRANSACTION = 11,
-  CONFIRM_TRANSACTION = 12,// "Explanation" of this code is the checksum
+  CONFIRM_TRANSACTION = 12,  // "Explanation" of this code is the checksum
   TRANSACTION_FINISHED = 13,
   TRANSACTION_FINISHED_BUT_DESTINATION_FULL = 14,
   CANCEL_TRANSACTION = 15,

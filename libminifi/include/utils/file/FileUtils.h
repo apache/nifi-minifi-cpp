@@ -50,13 +50,13 @@
 #include <direct.h>
 #include "utils/Id.h"
 #include "properties/Properties.h"
-#include <windows.h> // winapi
-#include <sys/stat.h> // stat
-#include <tchar.h> // _tcscpy,_tcscat,_tcscmp
-#include <string> // string
-#include <algorithm> // replace
+#include <windows.h>  // winapi
+#include <sys/stat.h>  // stat
+#include <tchar.h>  // _tcscpy,_tcscat,_tcscmp
+#include <string>  // string
+#include <algorithm>  // replace
 #include <sys/types.h>
-#include <sys/utime.h> // _utime64
+#include <sys/utime.h>  // _utime64
 #endif
 #ifdef __APPLE__
 #include <mach-o/dyld.h>

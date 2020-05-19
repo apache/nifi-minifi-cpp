@@ -59,4 +59,4 @@ struct ifaddrs_deleter {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif // LIBMINIFI_INCLUDE_UTILS_DELETERS_H_
+#endif  // LIBMINIFI_INCLUDE_UTILS_DELETERS_H_

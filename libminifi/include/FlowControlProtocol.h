@@ -41,8 +41,8 @@ namespace minifi {
 class FlowController;
 
 #define DEFAULT_NIFI_SERVER_PORT 9000
-#define DEFAULT_REPORT_INTERVAL 1000 // 1 sec
-#define MAX_READ_TIMEOUT 30000 // 30 seconds
+#define DEFAULT_REPORT_INTERVAL 1000  // 1 sec
+#define MAX_READ_TIMEOUT 30000  // 30 seconds
 
 // FlowControl Protocol Msg Type
 typedef enum {
@@ -89,8 +89,8 @@ typedef enum {
 static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] = { "FLOW_SERIAL_NUMBER", "FLOW_YAML_NAME", "FLOW_YAML_CONTENT", "REPORT_INTERVAL", "PROCESSOR_NAME",
     "PROPERTY_NAME", "PROPERTY_VALUE", "REPORT_BLOB" };
 
-#define TYPE_HDR_LEN 4 // Fix Hdr Type
-#define TLV_HDR_LEN 8 // Type 4 bytes and Len 4 bytes
+#define TYPE_HDR_LEN 4  // Fix Hdr Type
+#define TLV_HDR_LEN 8  // Type 4 bytes and Len 4 bytes
 
 // FlowControl Protocol Msg Len
 inline int FlowControlMsgIDEncodingLen(FlowControlMsgID id, int payLoadLen) {
