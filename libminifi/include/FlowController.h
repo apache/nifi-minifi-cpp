@@ -418,7 +418,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::unique_ptr<state::UpdateController> c2_agent_;
 };
 
-}
+} // namespace minifi
 /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

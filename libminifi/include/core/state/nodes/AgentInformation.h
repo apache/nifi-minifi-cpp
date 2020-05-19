@@ -725,7 +725,7 @@ class AgentInformation : public AgentNode {
 
 REGISTER_RESOURCE(AgentInformation, "Node part of an AST that defines all agent information, to include the manifest, and bundle information as part of a healthy hearbeat.");
 
-} /* namespace metrics */
+} // namespace response
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */

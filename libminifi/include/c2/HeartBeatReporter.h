@@ -94,7 +94,7 @@ class HeartBeatReporter : public core::Connectable {
   std::shared_ptr<Configure> configuration_;
 };
 
-} /* namesapce c2 */
+} // namespace c2
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

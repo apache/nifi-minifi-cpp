@@ -93,7 +93,7 @@ class SchedulingDefaults : public DeviceInformation {
 };
 
 
-} /* namespace metrics */
+} // namespace response
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */

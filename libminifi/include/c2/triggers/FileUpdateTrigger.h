@@ -115,7 +115,7 @@ class FileUpdateTrigger : public C2Trigger {
 // add the trigger to the known resources.
 REGISTER_RESOURCE(FileUpdateTrigger, "Defines a file update trigger when the last write time of a file has been changed.")
 
-} /* namesapce c2 */
+} // namespace c2
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

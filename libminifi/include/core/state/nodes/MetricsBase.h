@@ -245,7 +245,7 @@ class ResponseNodeSink {
   virtual int16_t setMetricsNodes(const std::shared_ptr<ResponseNode> &metrics) = 0;
 };
 
-} /* namespace metrics */
+} // namespace response
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */

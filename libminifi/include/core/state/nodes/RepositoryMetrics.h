@@ -90,7 +90,7 @@ class RepositoryMetrics : public ResponseNode {
   std::map<std::string, std::shared_ptr<core::Repository>> repositories;
 };
 
-} /* namespace metrics */
+} // namespace response
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */

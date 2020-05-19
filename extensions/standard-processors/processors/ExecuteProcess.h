@@ -125,7 +125,7 @@ REGISTER_RESOURCE(ExecuteProcess, "Runs an operating system command specified by
                   "the Processor can output the partial data on a specified interval. When this option is used, the output is expected to be in textual format,"
                   "as it typically does not make sense to split binary data on arbitrary time-based intervals.");
 #endif
-}
+} // namespace processors
 /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

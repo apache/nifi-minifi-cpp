@@ -71,7 +71,6 @@ class OperationWatcher : public utils::AfterExecute<Update> {
   std::atomic<bool> *running_;
 };
 
-} /* namespace metrics */
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */

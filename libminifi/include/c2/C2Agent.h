@@ -242,7 +242,7 @@ class C2Agent : public state::UpdateController {
   const uint64_t C2RESPONSE_POLL_MS = 100;
 };
 
-} /* namesapce c2 */
+} // namespace c2
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

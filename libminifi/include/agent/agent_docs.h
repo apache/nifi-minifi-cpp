@@ -56,8 +56,8 @@ class AgentDocs {
     }
   }
 };
-}
-}
-}
-}
+} // namespace minifi
+} // namespace nifi
+} // namespace apache
+} // namespace org
 #endif  // LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_

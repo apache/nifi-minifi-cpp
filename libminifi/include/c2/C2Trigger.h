@@ -71,7 +71,7 @@ class C2Trigger : public core::Connectable{
   virtual C2Payload getAction() = 0;
 };
 
-} /* namesapce c2 */
+} // namespace c2
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

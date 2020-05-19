@@ -496,7 +496,7 @@ struct SerializedResponseNode {
   SerializedResponseNode &operator=(const SerializedResponseNode &other) = default;
 };
 
-} /* namespace metrics */
+} // namespace response
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */
