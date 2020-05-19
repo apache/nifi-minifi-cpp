@@ -159,8 +159,6 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
 
   int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) override;
 
- protected:
-
  private:
   std::shared_ptr<GetFileMetrics> metrics_;
 

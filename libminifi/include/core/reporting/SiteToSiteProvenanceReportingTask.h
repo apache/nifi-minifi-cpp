@@ -86,8 +86,6 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
     port_uuid = protocol_uuid_;
   }
 
- protected:
-
  private:
   int batch_size_;
 

@@ -96,8 +96,6 @@ class PutFile : public core::Processor {
    */
   std::string tmpWritePath(const std::string &filename, const std::string &directory) const;
 
- protected:
-
  private:
   std::string conflict_resolution_;
   bool try_mkdirs_ = true;

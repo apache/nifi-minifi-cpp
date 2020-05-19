@@ -139,8 +139,6 @@ class ListenSyslog : public core::Processor {
   // Initialize, over write by NiFi ListenSyslog
   virtual void initialize(void);
 
- protected:
-
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;

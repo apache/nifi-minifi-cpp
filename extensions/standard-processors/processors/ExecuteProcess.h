@@ -104,8 +104,6 @@ class ExecuteProcess : public core::Processor {
   // Initialize, over write by NiFi ExecuteProcess
   virtual void initialize(void);
 
- protected:
-
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;

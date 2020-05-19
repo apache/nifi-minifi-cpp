@@ -357,8 +357,6 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   SiteToSitePeer(const SiteToSitePeer &parent) = delete;
   SiteToSitePeer &operator=(const SiteToSitePeer &parent) = delete;
 
- protected:
-
  private:
   std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream_;
 

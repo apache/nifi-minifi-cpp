@@ -119,8 +119,6 @@ class LogAttribute : public core::Processor {
   // Initialize, over write by NiFi LogAttribute
   void initialize(void) override;
 
- protected:
-
  private:
   uint64_t flowfiles_to_log_;
   bool hexencode_;

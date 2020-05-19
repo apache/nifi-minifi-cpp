@@ -64,8 +64,6 @@ class AppendHostInfo : public core::Processor {
   // Initialize, over write by NiFi AppendHostInfo
   virtual void initialize(void);
 
- protected:
-
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;

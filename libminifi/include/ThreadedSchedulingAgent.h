@@ -65,8 +65,6 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
 
   virtual void stop();
 
- protected:
-
  private:
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
