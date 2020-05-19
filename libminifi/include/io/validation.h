@@ -126,7 +126,7 @@ static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<
 }
 
 template<typename T>
-static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<not empty_function_functor_checker<T>::has_empty_function && size_function_functor_checker<T>::has_size_function == 1, bool>::type {
+static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<not empty_function_functor_checker<T>::has_empty_function && size_function_functor_checker<T>::has_size_function == 1, bool>::type { // NOLINT
   return (nullptr == object || nullptr == object.get() || object->size() == 0);
 }
 

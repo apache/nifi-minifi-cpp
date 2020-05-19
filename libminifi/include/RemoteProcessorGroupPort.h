@@ -78,7 +78,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   /*!
    * Create a new processor
    */
-  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, std::string url, const std::shared_ptr<Configure> &configure, utils::Identifier uuid = utils::Identifier())
+  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, std::string url, const std::shared_ptr<Configure> &configure, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : core::Processor(name, uuid),
         configure_(configure),
         direction_(sitetosite::SEND),
