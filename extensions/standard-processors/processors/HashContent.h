@@ -185,6 +185,6 @@ REGISTER_RESOURCE(HashContent,"HashContent calculates the checksum of the conten
 } /* namespace apache */
 } /* namespace org */
 
-#endif //OPENSSL_SUPPORT
+#endif // OPENSSL_SUPPORT
 
-#endif //EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_HASHCONTENT_H_
+#endif // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_HASHCONTENT_H_

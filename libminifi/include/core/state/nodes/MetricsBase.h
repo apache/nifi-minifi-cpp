@@ -124,7 +124,7 @@ class ObjectNode : public ResponseNode {
       }
       serialized.push_back(std::move(inner_node));
     }
-    //serialized.push_back(std::move(outer_node));
+    // serialized.push_back(std::move(outer_node));
     return serialized;
   }
 

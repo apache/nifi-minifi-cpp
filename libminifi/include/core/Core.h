@@ -198,7 +198,7 @@ class CoreComponent {
    */
   bool getUUID(utils::Identifier &uuid) const;
 
-  //unsigned const char *getUUID();
+  // unsigned const char *getUUID();
   /**
    * Return the UUID string
    * @param constant reference to the UUID str

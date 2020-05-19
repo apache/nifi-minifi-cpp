@@ -285,7 +285,7 @@ class WriteCallback : public OutputStreamCallback {
       : _packet(packet) {
   }
   DataPacket *_packet;
-  //void process(std::ofstream *stream) {
+  // void process(std::ofstream *stream) {
   int64_t process(std::shared_ptr<io::BaseStream> stream) {
     uint8_t buffer[16384];
     int len = _packet->_size;

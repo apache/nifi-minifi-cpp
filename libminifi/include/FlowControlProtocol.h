@@ -66,7 +66,7 @@ inline const char *FlowControlMsgTypeToStr(FlowControlMsgType type) {
 
 // FlowControll Protocol Msg ID (Some Messages are fix length, Some are variable length (TLV)
 typedef enum {
-  //Fix length 8 bytes: client to server in register request, required field
+  // Fix length 8 bytes: client to server in register request, required field
   FLOW_SERIAL_NUMBER,
   // Flow YAML name TLV: client to server in register request and report request, required field
   FLOW_YML_NAME,

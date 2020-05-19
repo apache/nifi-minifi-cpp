@@ -141,7 +141,7 @@ class FileUtils {
       }
     } catch(boost::filesystem::filesystem_error const & e) {
       return -1;
-      //display error message
+      // display error message
     }
     return 0;
 #elif defined(WIN32)
@@ -154,7 +154,7 @@ class FileUtils {
     std::stringstream pathstr;
     pathstr << path << "\\*";
     str = pathstr.str();
-    //List files
+    // List files
     hFind = FindFirstFile(str.c_str(), &FindFileData);
     if (hFind != INVALID_HANDLE_VALUE) {
       do {
@@ -165,12 +165,12 @@ class FileUtils {
 
           Attributes = GetFileAttributes(str.c_str());
           if (Attributes & FILE_ATTRIBUTE_DIRECTORY) {
-            //is directory
+            // is directory
             delete_dir(str, delete_files_recursively);
           }
           else {
             remove(str.c_str());
-            //not directory
+            // not directory
           }
         }
       }while (FindNextFile(hFind, &FindFileData));

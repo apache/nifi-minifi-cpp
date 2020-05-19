@@ -59,5 +59,5 @@ private:
 } /* namespace apache */
 } /* namespace org */
 
-#endif //LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
+#endif // LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
 

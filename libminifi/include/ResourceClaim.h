@@ -51,7 +51,7 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   /*!
    * Create a new resource claim
    */
-  //explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory);
+  // explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory);
 
   explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager);
 

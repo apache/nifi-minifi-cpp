@@ -85,7 +85,7 @@ class InputStreamCallback {
  public:
   virtual ~InputStreamCallback() {
   }
-  //virtual void process(std::ifstream *stream) = 0;
+  // virtual void process(std::ifstream *stream) = 0;
 
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
 };

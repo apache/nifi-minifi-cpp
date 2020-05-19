@@ -273,7 +273,7 @@ class PayloadSerializer {
       for (uint32_t j = 0; j < args; j++) {
         std::string first, second;
         stream.readUTF(first);
-        //stream.readUTF(second);
+        // stream.readUTF(second);
         content.operation_arguments[first] = deserializeValueNode(&stream);
       }
       newPayload.addContent(std::move(content));

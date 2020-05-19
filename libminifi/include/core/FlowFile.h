@@ -313,7 +313,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   // Pointers to stashed content resource claims
   std::map<std::string, std::shared_ptr<ResourceClaim>> stashedContent_;
   // UUID string
-  //std::string uuid_str_;
+  // std::string uuid_str_;
   // UUID string for all parents
   std::set<std::string> lineage_Identifiers_;
 

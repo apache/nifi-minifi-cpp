@@ -148,7 +148,7 @@ class FlowConfiguration : public CoreComponent {
     for (auto sl_func : get_static_functions().statics_sl_funcs_) {
       core::ClassLoader::getDefaultClassLoader().registerResource("", sl_func);
     }
-    //get_static_functions().statics_sl_funcs_.clear();
+    // get_static_functions().statics_sl_funcs_.clear();
   }
 
  protected:

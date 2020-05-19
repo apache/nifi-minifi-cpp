@@ -54,7 +54,7 @@ class ProcessSession : public ReferenceContainer {
         logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
     logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());
     auto repo = process_context_->getProvenanceRepository();
-    //provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
+    // provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
     provenance_report_ = std::make_shared<provenance::ProvenanceReporter>(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
   }
 
@@ -75,7 +75,7 @@ class ProcessSession : public ReferenceContainer {
   // Create a new UUID FlowFile with no content resource claim and without parent
   std::shared_ptr<core::FlowFile> create();
   // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
-  //std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &&parent);
+  // std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &&parent);
   // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
   std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile> &parent);
   // Add a FlowFile to the session
