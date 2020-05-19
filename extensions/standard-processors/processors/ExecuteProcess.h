@@ -123,8 +123,7 @@ class ExecuteProcess : public core::Processor {
 
 REGISTER_RESOURCE(ExecuteProcess, "Runs an operating system command specified by the user and writes the output of that command to a FlowFile. If the command is expected to be long-running,"
                   "the Processor can output the partial data on a specified interval. When this option is used, the output is expected to be in textual format,"
-                  "as it typically does not make sense to split binary data on arbitrary time-based intervals.")
-;
+                  "as it typically does not make sense to split binary data on arbitrary time-based intervals.");
 #endif
 }
 /* namespace processors */

@@ -291,8 +291,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * internal connectable.
    */
   std::shared_ptr<Connectable> processor_;
-}
-;
+};
 
 } /* namespace core */
 } /* namespace minifi */

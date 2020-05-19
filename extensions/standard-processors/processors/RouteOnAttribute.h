@@ -53,8 +53,7 @@ class RouteOnAttribute : public core::Processor {
 
   virtual bool supportsDynamicProperties() {
     return true;
-  }
-  ;
+  };
 
   virtual bool supportsDynamicRelationships() {
     return true;

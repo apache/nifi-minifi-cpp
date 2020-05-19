@@ -304,7 +304,6 @@ class PayloadSerializer {
         return Operation::UPDATE;
       default:
         return Operation::HEARTBEAT;
-        ;
     }
   }
   PayloadSerializer();

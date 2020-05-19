@@ -194,8 +194,7 @@ class BaseStream : public DataStream, public Serializable {
    * Changed to private to facilitate easier management of composable_stream_ and make it immutable
    */
   DataStream *composable_stream_;
-}
-;
+};
 
 } /* namespace io */
 } /* namespace minifi */

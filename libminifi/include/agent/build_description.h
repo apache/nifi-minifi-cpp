@@ -156,8 +156,7 @@ class BuildDescription {
     }
     return class_mappings[group];
   }
-}
-;
+};
 
 } /* namespace minifi */
 } /* namespace nifi */
