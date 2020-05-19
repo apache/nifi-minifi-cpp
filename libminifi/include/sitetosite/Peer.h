@@ -158,7 +158,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
     yield_expiration_ = 0;
     timeout_ = 30000;  // 30 seconds
-    local_network_interface_= io::NetworkInterface(ifc, nullptr);
+    local_network_interface_ = io::NetworkInterface(ifc, nullptr);
   }
 
   explicit SiteToSitePeer(SiteToSitePeer &&ss)
@@ -186,7 +186,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   }
   // setInterface
   void setInterface(std::string &ifc) {
-    local_network_interface_ = io::NetworkInterface(ifc,nullptr);
+    local_network_interface_ = io::NetworkInterface(ifc, nullptr);
   }
   std::string getInterface() {
     return local_network_interface_.getInterface();

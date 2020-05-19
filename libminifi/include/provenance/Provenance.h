@@ -510,7 +510,7 @@ class ProvenanceReporter {
  protected:
   // allocate
   std::shared_ptr<ProvenanceEventRecord> allocate(ProvenanceEventRecord::ProvenanceEventType eventType, std::shared_ptr<core::FlowFile> flow) {
-    if(repo_->isNoop()) {
+    if (repo_->isNoop()) {
       return nullptr;
     }
 

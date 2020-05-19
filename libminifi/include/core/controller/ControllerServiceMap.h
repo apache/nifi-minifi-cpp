@@ -90,7 +90,7 @@ class ControllerServiceMap {
 
   void clear() {
     std::lock_guard<std::mutex> lock(mutex_);
-    for(const auto &node : controller_services_list_) {
+    for (const auto &node : controller_services_list_) {
       node->disable();
     }
     controller_services_.clear();

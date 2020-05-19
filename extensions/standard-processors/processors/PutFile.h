@@ -112,7 +112,7 @@ class PutFile : public core::Processor {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-REGISTER_RESOURCE(PutFile,"Writes the contents of a FlowFile to the local file system");
+REGISTER_RESOURCE(PutFile, "Writes the contents of a FlowFile to the local file system");
 
 } /* namespace processors */
 } /* namespace minifi */

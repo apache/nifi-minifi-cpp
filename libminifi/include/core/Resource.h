@@ -41,7 +41,7 @@ class StaticClassType {
   StaticClassType(const std::string &name, const std::string &description = "") { // NOLINT
     // Notify when the static member is created
     if (!description.empty()) {
-      minifi::AgentDocs::putDescription(name,description);
+      minifi::AgentDocs::putDescription(name, description);
     }
 #ifdef MODULE_NAME
     ClassLoader::getDefaultClassLoader().registerClass(name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>(MAKESTRING(MODULE_NAME))));
@@ -51,11 +51,11 @@ class StaticClassType {
   }
 };
 
-#define REGISTER_RESOURCE(CLASSNAME,DESC) \
+#define REGISTER_RESOURCE(CLASSNAME, DESC) \
         static core::StaticClassType<CLASSNAME> \
         CLASSNAME##_registrar( #CLASSNAME, DESC );
 
-#define REGISTER_RESOURCE_AS(CLASSNAME,NAME) \
+#define REGISTER_RESOURCE_AS(CLASSNAME, NAME) \
         static core::StaticClassType<CLASSNAME> \
         CLASSNAME##_registrar( #NAME );
 

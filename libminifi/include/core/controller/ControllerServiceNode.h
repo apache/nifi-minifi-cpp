@@ -87,7 +87,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
    * Returns true if we can be enabled.
    * Returns false if this ControllerServiceNode cannot be enabled.
    */
-  virtual bool canEnable()=0;
+  virtual bool canEnable() = 0;
 
   virtual bool enabled() {
     return active.load();

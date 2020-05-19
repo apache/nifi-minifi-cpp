@@ -197,15 +197,15 @@ class Logger : public BaseLogger {
   Logger& operator=(Logger const&);
 };
 
-#define LOG_DEBUG(x) LogBuilder(x.get(),logging::LOG_LEVEL::debug)
+#define LOG_DEBUG(x) LogBuilder(x.get(), logging::LOG_LEVEL::debug)
 
-#define LOG_INFO(x) LogBuilder(x.get(),logging::LOG_LEVEL::info)
+#define LOG_INFO(x) LogBuilder(x.get(), logging::LOG_LEVEL::info)
 
-#define LOG_TRACE(x) LogBuilder(x.get(),logging::LOG_LEVEL::trace)
+#define LOG_TRACE(x) LogBuilder(x.get(), logging::LOG_LEVEL::trace)
 
-#define LOG_ERROR(x) LogBuilder(x.get(),logging::LOG_LEVEL::err)
+#define LOG_ERROR(x) LogBuilder(x.get(), logging::LOG_LEVEL::err)
 
-#define LOG_WARN(x) LogBuilder(x.get(),logging::LOG_LEVEL::warn)
+#define LOG_WARN(x) LogBuilder(x.get(), logging::LOG_LEVEL::warn)
 
 } /* namespace logging */
 } /* namespace core */

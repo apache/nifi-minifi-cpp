@@ -444,7 +444,7 @@ class ValueNode {
   std::is_same<T, bool >::value ||
   std::is_same<T, char* >::value ||
   std::is_same<T, const char* >::value ||
-  std::is_same<T, std::string>::value,ValueNode&>::type {
+  std::is_same<T, std::string>::value, ValueNode&>::type {
     value_ = createValue(ref);
     return *this;
   }

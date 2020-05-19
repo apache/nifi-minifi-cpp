@@ -85,7 +85,7 @@ noexcept      : key_(std::move(other.key_)),
       /**
        * Sets the key, relacing the custom comparator if needed.
        */
-      void setKey(const T key, std::function<bool(T,T)> comparator = nullptr) {
+      void setKey(const T key, std::function<bool(T, T)> comparator = nullptr) {
         key_ = key;
         comparator_ = comparator;
       }
@@ -96,7 +96,7 @@ noexcept      : key_(std::move(other.key_)),
        * @return result of the comparison
        */
       inline bool isEqual(RepoValue<T> *other) {
-        return comparator_ == nullptr ? key_ == other->key_ : comparator_(key_,other->key_);
+        return comparator_ == nullptr ? key_ == other->key_ : comparator_(key_, other->key_);
       }
 
       /**
@@ -105,7 +105,7 @@ noexcept      : key_(std::move(other.key_)),
        * @return result of the comparison
        */
       inline bool isKey(T other) {
-        return comparator_ == nullptr ? key_ == other : comparator_(key_,other);
+        return comparator_ == nullptr ? key_ == other : comparator_(key_, other);
       }
 
       /**
@@ -157,7 +157,7 @@ noexcept      : key_(std::move(other.key_)),
 
     private:
       T key_;
-      std::function<bool(T,T)> comparator_;
+      std::function<bool(T, T)> comparator_;
       std::vector<uint8_t> buffer_;
     };
 

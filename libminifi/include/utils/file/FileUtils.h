@@ -284,7 +284,7 @@ class FileUtils {
   static int create_dir(const std::string& path, bool recursive = true) {
 #ifdef BOOST_VERSION
     boost::filesystem::path dir(path);
-    if(boost::filesystem::create_directory(dir)) {
+    if (boost::filesystem::create_directory(dir)) {
       return 0;
     }
     else {
@@ -477,7 +477,7 @@ class FileUtils {
     std::string pathToSearch = dir + "\\*.*";
     hFind = FindFirstFileA(pathToSearch.c_str(), &FindFileData);
 
-    if(hFind == INVALID_HANDLE_VALUE) {
+    if (hFind == INVALID_HANDLE_VALUE) {
       logger->log_warn("Failed to open directory: %s", dir.c_str());
       return;
     }

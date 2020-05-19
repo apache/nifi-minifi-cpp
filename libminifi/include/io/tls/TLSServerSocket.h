@@ -49,7 +49,7 @@ class TLSServerSocket : public BaseServerSocket, public TLSSocket {
   /**
    * Registers a call back and starts the read for the server socket.
    */
-  void registerCallback(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*,int *)> handler);
+  void registerCallback(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler);
 
   /**
    * Initializes the socket
@@ -58,7 +58,7 @@ class TLSServerSocket : public BaseServerSocket, public TLSSocket {
   virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler);
 
  private:
-  std::function<void(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*,int *)> handler)> fx;
+  std::function<void(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler)> fx;
 
   void close_fd(int fd );
 

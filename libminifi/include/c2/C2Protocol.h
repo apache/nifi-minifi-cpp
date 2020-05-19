@@ -48,7 +48,7 @@ class C2Protocol : public core::Connectable {
   /**
    * Update the configuration.
    */
-  virtual void update(const std::shared_ptr<Configure> &configure)=0;
+  virtual void update(const std::shared_ptr<Configure> &configure) = 0;
 
   /**
    * Send a C2 payload to the provided URI. The direction indicates to the protocol whether or not this a transmit or receive operation.

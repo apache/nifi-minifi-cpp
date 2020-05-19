@@ -200,7 +200,7 @@ class ListenSyslog : public core::Processor {
   int64_t _maxBatchSize;
   std::string _messageDelimiter;
   std::string _protocol;
-  int64_t _port;bool _parseMessages;
+  int64_t _port; bool _parseMessages;
   int _serverSocket;
   std::vector<int> _clientSockets;
   int _maxFds;
@@ -208,12 +208,12 @@ class ListenSyslog : public core::Processor {
   // thread
   std::thread *_thread;
   // whether to reset the server socket
-  bool _resetServerSocket;bool _serverTheadRunning;
+  bool _resetServerSocket; bool _serverTheadRunning;
   // buffer for read socket
   char _buffer[2048];
 };
 
-REGISTER_RESOURCE(ListenSyslog,"Listens for Syslog messages being sent to a given port over TCP or UDP. Incoming messages are checked against regular expressions for RFC5424 and RFC3164 formatted messages. "
+REGISTER_RESOURCE(ListenSyslog, "Listens for Syslog messages being sent to a given port over TCP or UDP. Incoming messages are checked against regular expressions for RFC5424 and RFC3164 formatted messages. "
                   "The format of each message is: (<PRIORITY>)(VERSION )(TIMESTAMP) (HOSTNAME) (BODY) where version is optional. The timestamp can be an RFC5424 timestamp with a format of "
                   "\"yyyy-MM-dd'T'HH:mm:ss.SZ\" or \"yyyy-MM-dd'T'HH:mm:ss.S+hh:mm\", or it can be an RFC3164 timestamp with a format of \"MMM d HH:mm:ss\". If an incoming messages matches "
                   "one of these patterns, the message will be parsed and the individual pieces will be placed in FlowFile attributes, with the original message in the content of the FlowFile. "

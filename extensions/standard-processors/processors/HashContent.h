@@ -55,11 +55,11 @@ namespace {
     size_t ret = 0;
     do {
       ret = stream->readData(buffer, HASH_BUFFER_SIZE);
-      if(ret > 0) {
+      if (ret > 0) {
         MD5_Update(&context, buffer, ret);
         ret_val.second += ret;
       }
-    } while(ret > 0);
+    } while (ret > 0);
 
     if (ret_val.second > 0) {
       unsigned char digest[MD5_DIGEST_LENGTH];
@@ -79,11 +79,11 @@ namespace {
     size_t ret = 0;
     do {
       ret = stream->readData(buffer, HASH_BUFFER_SIZE);
-      if(ret > 0) {
+      if (ret > 0) {
         SHA1_Update(&context, buffer, ret);
         ret_val.second += ret;
       }
-    } while(ret > 0);
+    } while (ret > 0);
 
     if (ret_val.second > 0) {
       unsigned char digest[SHA_DIGEST_LENGTH];
@@ -103,11 +103,11 @@ namespace {
     size_t ret ;
     do {
       ret = stream->readData(buffer, HASH_BUFFER_SIZE);
-      if(ret > 0) {
+      if (ret > 0) {
         SHA256_Update(&context, buffer, ret);
         ret_val.second += ret;
       }
-    } while(ret > 0);
+    } while (ret > 0);
 
     if (ret_val.second > 0) {
       unsigned char digest[SHA256_DIGEST_LENGTH];
@@ -177,7 +177,7 @@ class HashContent : public core::Processor {
   bool failOnEmpty_;
 };
 
-REGISTER_RESOURCE(HashContent,"HashContent calculates the checksum of the content of the flowfile and adds it as an attribute. Configuration options exist to select hashing algorithm and set the name of the attribute.");
+REGISTER_RESOURCE(HashContent, "HashContent calculates the checksum of the content of the flowfile and adds it as an attribute. Configuration options exist to select hashing algorithm and set the name of the attribute.");
 
 } /* namespace processors */
 } /* namespace minifi */

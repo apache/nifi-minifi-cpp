@@ -52,7 +52,7 @@ namespace sitetosite {
  */
 typedef struct Site2SitePeerStatus {
   std::string host_;
-  int port_;bool isSecure_;
+  int port_; bool isSecure_;
 } Site2SitePeerStatus;
 
 // RawSiteToSiteClient Class

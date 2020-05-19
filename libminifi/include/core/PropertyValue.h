@@ -137,7 +137,7 @@ class PropertyValue : public state::response::ValueNode {
    * createValue
    */
   template<typename T>
-  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string>::value,PropertyValue&>::type {
+  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string>::value, PropertyValue&>::type {
     if (value_ == nullptr) {
       type_id = std::type_index(typeid(T));
       value_ = minifi::state::response::createValue(ref);
@@ -164,7 +164,7 @@ class PropertyValue : public state::response::ValueNode {
   std::is_same<T, uint32_t >::value ||
   std::is_same<T, uint64_t >::value ||
   std::is_same<T, int64_t >::value ||
-  std::is_same<T, bool >::value,PropertyValue&>::type {
+  std::is_same<T, bool >::value, PropertyValue&>::type {
     if (value_ == nullptr) {
       type_id = std::type_index(typeid(T));
       value_ = minifi::state::response::createValue(ref);
@@ -189,7 +189,7 @@ class PropertyValue : public state::response::ValueNode {
   template<typename T>
   auto operator=(const T ref) -> typename std::enable_if<
   std::is_same<T, char* >::value ||
-  std::is_same<T, const char* >::value,PropertyValue&>::type {
+  std::is_same<T, const char* >::value, PropertyValue&>::type {
     // translated these into strings
     return operator=<std::string>(std::string(ref));
   }
@@ -197,7 +197,7 @@ class PropertyValue : public state::response::ValueNode {
   template<typename T>
   auto operator=(const std::string &ref) -> typename std::enable_if<
   std::is_same<T, DataSizeValue >::value ||
-  std::is_same<T, TimePeriodValue >::value,PropertyValue&>::type {
+  std::is_same<T, TimePeriodValue >::value, PropertyValue&>::type {
     value_ = std::make_shared<T>(ref);
     type_id = value_->getTypeIndex();
     return *this;

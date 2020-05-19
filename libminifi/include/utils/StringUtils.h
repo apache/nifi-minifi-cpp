@@ -237,7 +237,7 @@ class StringUtils {
   static std::basic_string<CharT> join_pack(const Strs&... strs) {
     std::basic_string<CharT> result;
     result.reserve(sum(size(strs)...));
-    (void)(std::initializer_list<int>{( result.append(strs) ,0)...});
+    (void)(std::initializer_list<int>{( result.append(strs) , 0)...});
     return result;
   }
   }; /* struct detail */
@@ -275,10 +275,10 @@ class StringUtils {
     typedef typename U::const_iterator ITtype;
     ITtype it = container.cbegin();
     std::basic_stringstream<TChar> sstream;
-    while(it != container.cend()) {
+    while (it != container.cend()) {
       sstream << (*it);
       ++it;
-      if(it != container.cend()) {
+      if (it != container.cend()) {
         sstream << separator;
       }
     }
@@ -308,10 +308,10 @@ class StringUtils {
     typedef typename U::const_iterator ITtype;
     ITtype it = container.cbegin();
     std::basic_stringstream<TChar> sstream;
-    while(it != container.cend()) {
+    while (it != container.cend()) {
       sstream << string_traits<TChar>::convert_to_string(*it);
       ++it;
-      if(it != container.cend()) {
+      if (it != container.cend()) {
         sstream << separator;
       }
     }

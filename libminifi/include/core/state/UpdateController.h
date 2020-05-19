@@ -157,7 +157,7 @@ class StateController {
   virtual ~StateController() {
   }
 
-  virtual std::string getComponentName() const= 0;
+  virtual std::string getComponentName() const = 0;
 
   virtual std::string getComponentUUID() const = 0;
   /**
