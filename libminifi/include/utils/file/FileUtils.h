@@ -437,7 +437,7 @@ class FileUtils {
    * Callback is called for every file found: first argument is the path of the directory, second is the filename
    * Return value of the callback is used to continue (true) or stop (false) listing
    */
-  static void list_dir(const std::string& dir, std::function<bool (const std::string&, const std::string&)> callback,
+  static void list_dir(const std::string& dir, std::function<bool(const std::string&, const std::string&)> callback,
                        const std::shared_ptr<logging::Logger> &logger, bool recursive = true) {
     logger->log_debug("Performing file listing against %s", dir);
 #ifndef WIN32

@@ -571,7 +571,7 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
   }
 
   std::shared_ptr<PropertyBuilder> withExclusiveProperty(const std::string &property, const std::string regex) {
-    prop.exclusive_of_properties_.push_back( { property, regex });
+    prop.exclusive_of_properties_.push_back({ property, regex });
     return shared_from_this();
   }
 

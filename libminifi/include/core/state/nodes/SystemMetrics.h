@@ -76,7 +76,7 @@ class SystemInformation : public DeviceInformation {
     SerializedResponseNode mem;
     mem.name = "physicalMem";
 #if defined(_SC_PHYS_PAGES) && defined(_SC_PAGESIZE)
-    size_t mema = (size_t) sysconf( _SC_PHYS_PAGES) * (size_t) sysconf( _SC_PAGESIZE);
+    size_t mema = (size_t) sysconf(_SC_PHYS_PAGES) * (size_t) sysconf(_SC_PAGESIZE);
 #endif
     mem.value = (uint32_t)mema;
 

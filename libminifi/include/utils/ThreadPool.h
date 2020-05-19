@@ -77,7 +77,7 @@ class Worker {
   /**
    * Move constructor for worker tasks
    */
-  Worker (Worker &&other) noexcept
+  Worker(Worker &&other) noexcept
       : identifier_(std::move(other.identifier_)),
         next_exec_time_(std::move(other.next_exec_time_)),
         task(std::move(other.task)),

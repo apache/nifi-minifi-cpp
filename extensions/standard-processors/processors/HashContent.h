@@ -165,7 +165,7 @@ class HashContent : public core::Processor {
    private:
     std::shared_ptr<core::FlowFile> flowFile_;
     const HashContent& parent_;
-   };
+};
 
  private:
   //! Logger

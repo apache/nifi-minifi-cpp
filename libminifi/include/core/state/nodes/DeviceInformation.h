@@ -243,7 +243,7 @@ class Device {
 
     return std::to_string(hash_fn(macs));
   }
-#elif( defined(__unix__) || defined(__APPLE__) || defined(__MACH__) || defined(BSD))  // should work on bsd variants as well
+#elif(defined(__unix__) || defined(__APPLE__) || defined(__MACH__) || defined(BSD))  // should work on bsd variants as well
   std::string getDeviceId() {
     ifaddrs* iflist;
     std::hash<std::string> hash_fn;

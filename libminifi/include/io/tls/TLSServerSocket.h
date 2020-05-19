@@ -60,7 +60,7 @@ class TLSServerSocket : public BaseServerSocket, public TLSSocket {
  private:
   std::function<void(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler)> fx;
 
-  void close_fd(int fd );
+  void close_fd(int fd);
 
   std::atomic<bool> running_;
 

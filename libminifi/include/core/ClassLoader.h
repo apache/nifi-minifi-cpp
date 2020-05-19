@@ -31,7 +31,7 @@
 #define WIN32_LEAN_AND_MEAN 1
 #include <Windows.h>    // Windows specific libraries for collecting software metrics.
 #include <Psapi.h>
-#pragma comment( lib, "psapi.lib" )
+#pragma comment(lib, "psapi.lib" )
 #define DLL_EXPORT __declspec(dllexport)
 #endif
 #include "core/Core.h"
@@ -455,7 +455,7 @@ class ClassLoader {
     }
 
 #ifdef _MSC_VER
-#pragma warning( suppress: 4054 )
+#pragma warning(suppress: 4054 )
 #endif
     return (void*)symbol;
   }

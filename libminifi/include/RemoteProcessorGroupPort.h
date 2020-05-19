@@ -158,7 +158,7 @@ class RemoteProcessorGroupPort : public core::Processor {
           port = 80;
         }
       }
-      nifi_instances_.push_back( { host, port, protocol });
+      nifi_instances_.push_back({ host, port, protocol });
     }
   }
   void setHTTPProxy(const utils::HTTPProxy &proxy) {
