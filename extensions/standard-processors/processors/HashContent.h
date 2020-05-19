@@ -136,8 +136,7 @@ class HashContent : public core::Processor {
   * Create a new processor
   */
   explicit HashContent(std::string name,  utils::Identifier uuid = utils::Identifier())
-  : Processor(name, uuid)
-  {
+  : Processor(name, uuid) {
     logger_ = logging::LoggerFactory<HashContent>::getLogger();
   }
   //! Processor Name

@@ -61,9 +61,7 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
         current_index_(0),
         max_count_(10000),
         max_size_(maxPartitionBytes * 0.75),
-        logger_(logging::LoggerFactory<VolatileRepository>::getLogger())
-
-  {
+        logger_(logging::LoggerFactory<VolatileRepository>::getLogger()) {
     purge_required_ = false;
   }
 

@@ -75,8 +75,7 @@ noexcept      : key_(std::move(other.key_)),
       comparator_(std::move(other.comparator_)) {
       }
 
-      ~RepoValue()
-      {
+      ~RepoValue() {
       }
 
       T &getKey() {
@@ -96,8 +95,7 @@ noexcept      : key_(std::move(other.key_)),
        * @param other object to compare against
        * @return result of the comparison
        */
-      inline bool isEqual(RepoValue<T> *other)
-      {
+      inline bool isEqual(RepoValue<T> *other) {
         return comparator_ == nullptr ? key_ == other->key_ : comparator_(key_,other->key_);
       }
 
@@ -106,8 +104,7 @@ noexcept      : key_(std::move(other.key_)),
        * @param other object to compare against
        * @return result of the comparison
        */
-      inline bool isKey(T other)
-      {
+      inline bool isKey(T other) {
         return comparator_ == nullptr ? key_ == other : comparator_(key_,other);
       }
 
@@ -132,8 +129,7 @@ noexcept      : key_(std::move(other.key_)),
         return buffer_.size();
       }
 
-      const uint8_t *getBuffer()
-      {
+      const uint8_t *getBuffer() {
         return buffer_.data();
       }
 
@@ -149,8 +145,7 @@ noexcept      : key_(std::move(other.key_)),
        * Appends ptr to the end of buffer.
        * @param ptr pointer containing data to add to buffer_
        */
-      void append(uint8_t *ptr, size_t size)
-      {
+      void append(uint8_t *ptr, size_t size) {
         buffer_.insert(buffer_.end(), ptr, ptr + size);
       }
 

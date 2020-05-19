@@ -29,8 +29,7 @@
 
 #ifdef BDIFF
 
-extern "C"
-{
+extern "C" {
 #include "bsdiff.h"
 #include "bspatch.h"
 }

@@ -313,8 +313,7 @@ class Socket : public BaseStream {
 
  private:
 #ifdef WIN32
-  struct SocketInitializer
-  {
+  struct SocketInitializer {
     SocketInitializer() {
       static WSADATA s_wsaData;
       const int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);

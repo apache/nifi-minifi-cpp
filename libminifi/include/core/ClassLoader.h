@@ -437,8 +437,7 @@ class ClassLoader {
     LocalFree(messageBuffer);
   }
 
-  void *dlsym(void *handle, const char *name)
-  {
+  void *dlsym(void *handle, const char *name) {
     FARPROC symbol;
     HMODULE hModule;
 
@@ -447,8 +446,7 @@ class ClassLoader {
     if (symbol == nullptr) {
       store_error();
 
-      for (auto hndl : resource_mapping_)
-      {
+      for (auto hndl : resource_mapping_) {
         symbol = GetProcAddress((HMODULE)hndl.first, name);
         if (symbol != nullptr) {
           break;
@@ -462,8 +460,7 @@ class ClassLoader {
     return (void*)symbol;
   }
 
-  const char *dlerror(void)
-  {
+  const char *dlerror(void) {
     std::lock_guard<std::mutex> lock(internal_mutex_);
 
     error_str_ = current_error_;
@@ -478,8 +475,7 @@ class ClassLoader {
     HMODULE object;
     char * current_error = NULL;
     uint32_t uMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-    if (nullptr == file)
-    {
+    if (nullptr == file) {
       HMODULE allModules[1024];
       HANDLE current_process_id = GetCurrentProcess();
       DWORD cbNeeded;
@@ -488,10 +484,8 @@ class ClassLoader {
       if (!object)
       store_error();
       if (EnumProcessModules(current_process_id, allModules,
-              sizeof(allModules), &cbNeeded) != 0)
-      {
-        for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++)
-        {
+              sizeof(allModules), &cbNeeded) != 0) {
+        for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++) {
           TCHAR szModName[MAX_PATH];
 
           // Get the full path to the module's file.
@@ -499,13 +493,11 @@ class ClassLoader {
         }
       }
     }
-    else
-    {
+    else {
       char lpFileName[MAX_PATH];
       int i;
 
-      for (i = 0; i < sizeof(lpFileName) - 1; i++)
-      {
+      for (i = 0; i < sizeof(lpFileName) - 1; i++) {
         if (!file[i])
         break;
         else if (file[i] == '/')
@@ -527,8 +519,7 @@ class ClassLoader {
     return (void *)object;
   }
 
-  int dlclose(void *handle)
-  {
+  int dlclose(void *handle) {
     std::lock_guard<std::mutex> lock(internal_mutex_);
 
     HMODULE object = (HMODULE)handle;

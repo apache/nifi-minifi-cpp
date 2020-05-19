@@ -415,8 +415,7 @@ class DeviceInfoNode : public DeviceInformation {
     SerializedResponseNode arch;
     arch.name = "machinearch";
 
-    switch (si.wProcessorArchitecture)
-    {
+    switch (si.wProcessorArchitecture) {
 #ifdef PROCESSOR_ARCHITECTURE_ARM
       case PROCESSOR_ARCHITECTURE_ARM:
       arch.value = "arm32";

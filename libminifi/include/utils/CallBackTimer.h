@@ -30,8 +30,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-class CallBackTimer
-{
+class CallBackTimer {
  public:
   CallBackTimer(std::chrono::milliseconds interval, const std::function<void(void)>& func);
 

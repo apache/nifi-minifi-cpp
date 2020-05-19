@@ -257,8 +257,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
       references.push_back(linked_node);
       std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> linked_references = findLinkedComponents(linked_node);
 
-      auto removal_predicate = [&linked_references](std::shared_ptr<core::controller::ControllerServiceNode> key) ->bool
-      {
+      auto removal_predicate = [&linked_references](std::shared_ptr<core::controller::ControllerServiceNode> key) ->bool {
         return std::find(linked_references.begin(), linked_references.end(), key) != linked_references.end();
       };
 

@@ -41,8 +41,7 @@ public:
      * Create a new processor
      */
     explicit ExtractText(std::string name,  utils::Identifier uuid = utils::Identifier())
-    : Processor(name, uuid)
-    {
+    : Processor(name, uuid) {
         logger_ = logging::LoggerFactory<ExtractText>::getLogger();
     }
     //! Processor Name

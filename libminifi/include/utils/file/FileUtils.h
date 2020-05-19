@@ -99,8 +99,7 @@ class FileUtils {
    * @param force_posix returns the posix path separator ('/'), even when not on posix. Useful when dealing with remote posix paths.
    * @return the path separator character
    */
-  static char get_separator(bool force_posix = false)
-  {
+  static char get_separator(bool force_posix = false) {
 #ifdef WIN32
     if (force_posix) {
       return '/';
@@ -116,8 +115,7 @@ class FileUtils {
 #ifdef WIN32
     char tempBuffer[MAX_PATH];
     const auto ret = GetTempPath(MAX_PATH, tempBuffer);
-    if (ret <= MAX_PATH && ret != 0)
-    {
+    if (ret <= MAX_PATH && ret != 0) {
       const std::string tempDirectory = tempBuffer
           + minifi::utils::IdGenerator::getIdGenerator()->generate().to_string();
       create_dir(tempDirectory);
@@ -141,8 +139,7 @@ class FileUtils {
           boost::filesystem::remove(path);
         }
       }
-    } catch(boost::filesystem::filesystem_error const & e)
-    {
+    } catch(boost::filesystem::filesystem_error const & e) {
       return -1;
       //display error message
     }
@@ -159,23 +156,19 @@ class FileUtils {
     str = pathstr.str();
     //List files
     hFind = FindFirstFile(str.c_str(), &FindFileData);
-    if (hFind != INVALID_HANDLE_VALUE)
-    {
+    if (hFind != INVALID_HANDLE_VALUE) {
       do {
-        if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0)
-        {
+        if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0) {
           std::stringstream strs;
           strs << path << "\\" << FindFileData.cFileName;
           str = strs.str();
 
           Attributes = GetFileAttributes(str.c_str());
-          if (Attributes & FILE_ATTRIBUTE_DIRECTORY)
-          {
+          if (Attributes & FILE_ATTRIBUTE_DIRECTORY) {
             //is directory
             delete_dir(str, delete_files_recursively);
           }
-          else
-          {
+          else {
             remove(str.c_str());
             //not directory
           }
@@ -291,12 +284,10 @@ class FileUtils {
   static int create_dir(const std::string& path, bool recursive = true) {
 #ifdef BOOST_VERSION
     boost::filesystem::path dir(path);
-    if(boost::filesystem::create_directory(dir))
-    {
+    if(boost::filesystem::create_directory(dir)) {
       return 0;
     }
-    else
-    {
+    else {
       return -1;
     }
 #else
