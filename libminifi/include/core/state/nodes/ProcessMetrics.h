@@ -42,12 +42,11 @@ namespace response {
  */
 class ProcessMetrics : public ResponseNode {
  public:
-
   ProcessMetrics(const std::string &name, utils::Identifier &uuid)
       : ResponseNode(name, uuid) {
   }
 
-  ProcessMetrics(const std::string &name)
+  ProcessMetrics(const std::string &name) // NOLINT
       : ResponseNode(name) {
   }
 
@@ -91,7 +90,6 @@ class ProcessMetrics : public ResponseNode {
   }
 
  protected:
-
 };
 
 REGISTER_RESOURCE(ProcessMetrics, "Node part of an AST that defines the Processor information and metrics subtree");

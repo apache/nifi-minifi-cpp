@@ -38,8 +38,7 @@ namespace c2 {
  */
 class FileUpdateTrigger : public C2Trigger {
  public:
-
-  FileUpdateTrigger(std::string name, utils::Identifier uuid = utils::Identifier())
+  FileUpdateTrigger(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : C2Trigger(name, uuid),
         last_update_(0),
         update_(false),

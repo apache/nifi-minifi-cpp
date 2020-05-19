@@ -205,7 +205,6 @@ class PropertyValue : public state::response::ValueNode {
   }
 
  protected:
-
   std::type_index type_id;
   std::shared_ptr<PropertyValidator> validator_;
 };

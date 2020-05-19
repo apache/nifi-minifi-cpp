@@ -36,7 +36,7 @@ class SchedulingDefaults : public DeviceInformation {
       : DeviceInformation(name, uuid) {
   }
 
-  SchedulingDefaults(const std::string &name)
+  SchedulingDefaults(const std::string &name) // NOLINT
       : DeviceInformation(name) {
   }
 

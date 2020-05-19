@@ -169,7 +169,6 @@ class HashContent : public core::Processor {
    };
 
  protected:
-
  private:
   //! Logger
   std::shared_ptr<logging::Logger> logger_;

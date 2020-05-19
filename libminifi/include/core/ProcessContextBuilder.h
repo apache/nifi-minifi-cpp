@@ -57,7 +57,7 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
  public:
   ProcessContextBuilder(const std::string &name, minifi::utils::Identifier &uuid);
 
-  ProcessContextBuilder(const std::string &name);
+  ProcessContextBuilder(const std::string &name); // NOLINT
 
   virtual ~ProcessContextBuilder() {
   }

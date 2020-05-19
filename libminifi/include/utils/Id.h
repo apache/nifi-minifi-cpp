@@ -52,8 +52,7 @@ namespace utils {
 template<typename T, typename C>
 class IdentifierBase {
  public:
-
-  IdentifierBase(T myid) {
+  IdentifierBase(T myid) { // NOLINT
     copyInto(myid);
   }
 
@@ -88,7 +87,6 @@ class IdentifierBase {
   }
 
  protected:
-
   void copyInto(const IdentifierBase &other) {
     memcpy(id_, other.id_, sizeof(T));
   }
@@ -110,7 +108,7 @@ typedef uint8_t UUID_FIELD[16];
 
 class Identifier : public IdentifierBase<UUID_FIELD, std::string> {
  public:
-  Identifier(UUID_FIELD u);
+  Identifier(UUID_FIELD u); // NOLINT
   Identifier();
   Identifier(const Identifier &other);
   Identifier(Identifier &&other);
@@ -119,7 +117,7 @@ class Identifier : public IdentifierBase<UUID_FIELD, std::string> {
    * I believe these exist to make windows builds happy -- need more testing
    * to ensure this doesn't cause any issues.
    */
-  Identifier(const IdentifierBase &other);
+  Identifier(const IdentifierBase &other); // NOLINT
   Identifier &operator=(const IdentifierBase &other);
 
   Identifier &operator=(const Identifier &other);
@@ -138,7 +136,6 @@ class Identifier : public IdentifierBase<UUID_FIELD, std::string> {
   const unsigned char * const toArray() const;
 
  protected:
-
   void build_string();
 
 };

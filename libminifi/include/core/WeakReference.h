@@ -34,7 +34,6 @@ namespace core {
  */
 class WeakReference {
  public:
-
   WeakReference(const WeakReference &other) = delete;
   WeakReference(WeakReference &&other) = default;
   WeakReference &operator=(const WeakReference &other) = delete;
@@ -87,7 +86,6 @@ class ReferenceContainer {
   }
 
  protected:
-
   std::mutex mutex;
 
   std::vector<std::shared_ptr<WeakReference> > references;

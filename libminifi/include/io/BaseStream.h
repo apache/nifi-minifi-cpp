@@ -46,7 +46,7 @@ class BaseStream : public DataStream, public Serializable {
       : composable_stream_(this) {
   }
 
-  BaseStream(DataStream *other)
+  BaseStream(DataStream *other) // NOLINT
       : composable_stream_(other) {
   }
 

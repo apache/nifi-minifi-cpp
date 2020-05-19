@@ -449,7 +449,6 @@ class Property {
   }
 
  protected:
-
   /**
    * Coerce default values at construction.
    */
@@ -485,7 +484,6 @@ class Property {
   bool supports_el_;
   bool is_transient_;
  private:
-
   friend class PropertyBuilder;
 
 };
@@ -495,7 +493,6 @@ class ConstrainedProperty;
 
 class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
  public:
-
   static std::shared_ptr<PropertyBuilder> createProperty(const std::string &name) {
     std::shared_ptr<PropertyBuilder> builder = std::unique_ptr<PropertyBuilder>(new PropertyBuilder());
     builder->prop.name_ = name;
@@ -648,13 +645,12 @@ class ConstrainedProperty : public std::enable_shared_from_this<ConstrainedPrope
     return std::move(prop);
   }
 
-  ConstrainedProperty(const std::shared_ptr<PropertyBuilder> &builder)
+  ConstrainedProperty(const std::shared_ptr<PropertyBuilder> &builder) // NOLINT
       : builder_(builder) {
 
   }
 
  protected:
-
   std::vector<PropertyValue> allowed_values_;
   std::shared_ptr<PropertyBuilder> builder_;
 

@@ -135,7 +135,6 @@ static const char MAGIC_BYTES[] = { 'N', 'i', 'F', 'i' };
 // Site2SitePeer Class
 class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
  public:
-
   SiteToSitePeer()
       : stream_(nullptr),
         host_(""),
@@ -361,9 +360,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   SiteToSitePeer &operator=(const SiteToSitePeer &parent) = delete;
 
  protected:
-
  private:
-
   std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream_;
 
   std::string host_;

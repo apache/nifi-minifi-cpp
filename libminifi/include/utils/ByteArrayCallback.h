@@ -122,7 +122,6 @@ class ByteOutputCallback : public OutputStreamCallback {
   size_t readFully(char *buffer, size_t size);
 
  protected:
-
   inline void write_and_notify(char *data, size_t size);
 
   inline size_t read_current_str(char *buffer, size_t size);

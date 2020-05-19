@@ -35,7 +35,7 @@ class SerializableComponent : public core::Connectable, public minifi::io::Seria
 
  public:
 
-  SerializableComponent(const std::string name)
+  explicit SerializableComponent(const std::string name) // NOLINT
         : core::Connectable(name) {
 
     }

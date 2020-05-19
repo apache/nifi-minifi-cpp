@@ -44,7 +44,6 @@ namespace repository {
 template<typename T>
 class RepoValue {
  public:
-
   RepoValue() {
   }
 
@@ -440,7 +439,6 @@ class AtomicEntry {
   }
 
  private:
-
   /**
    * Spin lock to unlock the current atomic entry.
    */

@@ -187,7 +187,6 @@ class FlowControlProtocol {
   }
 
  public:
-
   // SendRegisterRequest and Process Register Respond, return 0 for success
   int sendRegisterReq();
   // SendReportReq and Process Report Respond, return 0 for success

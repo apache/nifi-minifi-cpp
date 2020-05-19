@@ -32,7 +32,6 @@ namespace controller {
 
 class StandardControllerServiceNode : public ControllerServiceNode {
  public:
-
   explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, std::shared_ptr<ControllerServiceProvider> provider, const std::string &id,
                                          std::shared_ptr<Configure> configuration)
       : ControllerServiceNode(service, id, configuration),
@@ -83,7 +82,6 @@ class StandardControllerServiceNode : public ControllerServiceNode {
   }
 
  protected:
-
   // controller service provider.
   std::shared_ptr<ControllerServiceProvider> provider;
 

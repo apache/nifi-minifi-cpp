@@ -313,11 +313,9 @@ class Transaction {
   bool _dataAvailable;
 
  protected:
-
   org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcStream;
 
  private:
-
   // Transaction Direction
   TransferDirection _direction;
 
@@ -384,7 +382,6 @@ class SiteToSiteClientConfiguration {
   }
 
  protected:
-
   std::shared_ptr<io::StreamFactory> stream_factory_;
 
   std::shared_ptr<Peer> peer_;

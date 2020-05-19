@@ -120,7 +120,6 @@ class DataStream {
   uint32_t readBuffer = 0;
 
  private:
-
    int doReadData(uint8_t *buf, int buflen) noexcept;
 };
 

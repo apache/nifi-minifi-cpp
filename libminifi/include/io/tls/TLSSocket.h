@@ -56,7 +56,7 @@ class OpenSSLInitializer {
 
 class TLSContext : public SocketContext {
  public:
-  TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service = nullptr);
+  TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service = nullptr); // NOLINT
 
   virtual ~TLSContext() {
     if (nullptr != ctx)
@@ -84,7 +84,6 @@ class TLSContext : public SocketContext {
 
 class TLSSocket : public Socket {
  public:
-
   /**
    * Constructor that accepts host name, port and listeners. With this
    * contructor we will be creating a server socket
@@ -161,7 +160,6 @@ class TLSSocket : public Socket {
   void closeStream();  // override
 
  protected:
-
   int writeData(uint8_t *value, int size, int fd);
 
   SSL *get_ssl(int fd) {

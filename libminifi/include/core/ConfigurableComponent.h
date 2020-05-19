@@ -45,7 +45,6 @@ namespace core {
  */
 class ConfigurableComponent {
  public:
-
   ConfigurableComponent();
 
   explicit ConfigurableComponent(const ConfigurableComponent &&other);
@@ -182,7 +181,6 @@ class ConfigurableComponent {
   }
 
  protected:
-
   void setAcceptAllProperties(){
     accept_all_properties_ = true;
   }

@@ -51,7 +51,6 @@ namespace file {
  */
 class FileManager {
  public:
-
   FileManager() {
   }
 
@@ -110,7 +109,6 @@ class FileManager {
 
 
  protected:
-
   inline bool verify_not_exist(const std::string& name) {
 #ifdef WIN32
     struct _stat buffer;

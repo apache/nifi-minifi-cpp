@@ -44,12 +44,12 @@ namespace controllers {
 class SSLContext {
  public:
 #ifdef OPENSSL_SUPPORT
-  SSLContext(SSL_CTX *context)
+  SSLContext(SSL_CTX *context) // NOLINT
       : context_(context) {
 
   }
 #else
-	 SSLContext(void *context) {
+	 SSLContext(void *context) { // NOLINT
 
 	 }
 #endif
@@ -154,7 +154,6 @@ class SSLContextService : public core::controller::ControllerService {
   virtual void onEnable();
 
  protected:
-
   virtual void initializeTLS();
 
   std::mutex initialization_mutex_;

@@ -84,7 +84,6 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
   }
 
  private:
-
   bool persist_updates_;
   std::unique_ptr<state::UpdatePolicy> policy_;
   std::shared_ptr<logging::Logger> logger_;

@@ -58,7 +58,6 @@ enum ControllerServiceState {
  */
 class ControllerService : public ConfigurableComponent, public Connectable {
  public:
-
   /**
    * Controller Service constructor.
    */
@@ -151,7 +150,6 @@ class ControllerService : public ConfigurableComponent, public Connectable {
   }
 
  protected:
-
   std::vector<std::shared_ptr<controller::ControllerService> > linked_services_;
   std::shared_ptr<Configure> configuration_;
   std::atomic<ControllerServiceState> current_state_;

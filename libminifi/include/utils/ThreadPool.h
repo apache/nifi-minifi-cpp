@@ -164,7 +164,7 @@ class WorkerThread {
         name_(name) {
 
   }
-  WorkerThread(const std::string &name = "NamelessWorker")
+  WorkerThread(const std::string &name = "NamelessWorker") // NOLINT
       : is_running_(false),
         name_(name) {
 
@@ -183,7 +183,6 @@ class WorkerThread {
 template<typename T>
 class ThreadPool {
  public:
-
   ThreadPool(int max_worker_threads = 2, bool daemon_threads = false, const std::shared_ptr<core::controller::ControllerServiceProvider> &controller_service_provider = nullptr,
              const std::string &name = "NamelessPool")
       : daemon_threads_(daemon_threads),
@@ -292,7 +291,6 @@ class ThreadPool {
   }
 
  protected:
-
   std::thread createThread(std::function<void()> &&functor) {
     return std::thread([ functor ]() mutable {
       functor();

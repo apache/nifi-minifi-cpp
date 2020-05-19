@@ -46,7 +46,7 @@ namespace minifi {
  */
 class RPGLatch {
  public:
-  RPGLatch(bool increment = true) {
+  RPGLatch(bool increment = true) { // NOLINT
     static std::atomic<int> latch_count(0);
     count = &latch_count;
     if (increment)
@@ -180,7 +180,6 @@ class RemoteProcessorGroupPort : public core::Processor {
   }
 
  protected:
-
   /**
    * Non static in case anything is loaded when this object is re-scheduled
    */

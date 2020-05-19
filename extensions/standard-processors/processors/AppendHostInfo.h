@@ -41,7 +41,7 @@ class AppendHostInfo : public core::Processor {
   /*!
    * Create a new processor
    */
-  AppendHostInfo(std::string name, utils::Identifier uuid = utils::Identifier())
+  AppendHostInfo(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<AppendHostInfo>::getLogger()) {
   }
@@ -65,7 +65,6 @@ class AppendHostInfo : public core::Processor {
   virtual void initialize(void);
 
  protected:
-
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;

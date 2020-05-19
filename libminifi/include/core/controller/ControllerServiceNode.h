@@ -35,7 +35,6 @@ namespace controller {
 
 class ControllerServiceNode : public CoreComponent, public ConfigurableComponent {
  public:
-
   /**
    * Constructor for the controller service node.
    * @param service controller service reference
@@ -111,7 +110,6 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
   ControllerServiceNode(const ControllerServiceNode &other) = delete;
   ControllerServiceNode &operator=(const ControllerServiceNode &parent) = delete;
  protected:
-
   bool canEdit() {
     return true;
   }

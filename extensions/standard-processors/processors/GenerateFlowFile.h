@@ -38,7 +38,7 @@ class GenerateFlowFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  GenerateFlowFile(std::string name, utils::Identifier uuid = utils::Identifier())
+  GenerateFlowFile(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : Processor(name, uuid), logger_(logging::LoggerFactory<GenerateFlowFile>::getLogger()) {
     batchSize_ = 1;
     uniqueFlowFile_ = true;
@@ -60,9 +60,9 @@ class GenerateFlowFile : public core::Processor {
   // Nest Callback Class for write stream
   class WriteCallback : public OutputStreamCallback {
    public:
-    WriteCallback(std::vector<char> && data) : data_(std::move(data)) {
+    WriteCallback(std::vector<char> && data) : data_(std::move(data)) { // NOLINT
     }
-    WriteCallback(const std::vector<char>& data) : data_(data) {
+    WriteCallback(const std::vector<char>& data) : data_(data) { // NOLINT
     }
     std::vector<char> data_;
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
@@ -89,7 +89,6 @@ class GenerateFlowFile : public core::Processor {
   bool textData_;
 
  private:
-
   // logger instance
   std::shared_ptr<logging::Logger> logger_;
 };

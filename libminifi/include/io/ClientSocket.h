@@ -74,7 +74,7 @@ bool valid_socket(SocketDescriptor) noexcept;
  */
 class SocketContext {
  public:
-  SocketContext(const std::shared_ptr<Configure> &configure) {
+  SocketContext(const std::shared_ptr<Configure> &configure) { // NOLINT
   }
 };
 /**
@@ -231,7 +231,6 @@ class Socket : public BaseStream {
   virtual int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
  protected:
-
   /**
    * Constructor that accepts host name, port and listeners. With this
    * contructor we will be creating a server socket

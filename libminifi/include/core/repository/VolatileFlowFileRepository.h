@@ -72,7 +72,6 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
   }
 
  protected:
-
   virtual void emplace(RepoValue<std::string> &old_value) {
     std::string buffer;
     old_value.emplace(buffer);

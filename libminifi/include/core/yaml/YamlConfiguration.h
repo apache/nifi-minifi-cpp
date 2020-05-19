@@ -139,7 +139,6 @@ class YamlConfiguration : public FlowConfiguration {
   void validateComponentProperties(const std::shared_ptr<ConfigurableComponent> &component, const std::string &component_name, const std::string &yaml_section) const;
 
  protected:
-
   /**
    * Returns a shared pointer to a ProcessGroup object containing the
    * flow configuration. The rootYamlNode argument must point to

@@ -30,7 +30,7 @@ namespace c2 {
 
 class PayloadParseException : public std::runtime_error {
  public:
-  PayloadParseException(const std::string &msg)
+  PayloadParseException(const std::string &msg) // NOLINT
       : std::runtime_error(msg) {
   }
 
@@ -116,7 +116,6 @@ struct convert_if<bool> : public convert_if_base<bool, state::response::BoolValu
 class PayloadParser {
 
  public:
-
   static PayloadParser getInstance(const C2Payload &payload) {
     return PayloadParser(payload);
   }
@@ -174,8 +173,7 @@ class PayloadParser {
   PayloadParser(PayloadParser &&parser) = default;
 
  private:
-
-  PayloadParser(const C2Payload &payload)
+  PayloadParser(const C2Payload &payload) // NOLINT
       : ref_(payload) {
   }
 

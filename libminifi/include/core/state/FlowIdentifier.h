@@ -32,7 +32,6 @@ namespace state {
  */
 class FlowIdentifier {
  public:
-
   FlowIdentifier() = delete;
 
   /**
@@ -61,7 +60,6 @@ class FlowIdentifier {
     return flow_id_;
   }
  protected:
-
   explicit FlowIdentifier(const FlowIdentifier &other) {
     registry_url_ = other.registry_url_;
     bucket_id_ = other.bucket_id_;

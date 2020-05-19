@@ -112,7 +112,6 @@ class ThreadManagementService : public core::controller::ControllerService {
   }
 
  protected:
-
   std::atomic<int> thread_count_;
 
  private:

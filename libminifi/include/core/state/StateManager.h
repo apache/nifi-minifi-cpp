@@ -42,7 +42,6 @@ namespace state {
  */
 class StateManager : public response::NodeReporter, public response::ResponseNodeSink, public StateMonitor, public std::enable_shared_from_this<StateManager> {
  public:
-
   StateManager()
       : metrics_listener_(nullptr) {
 
@@ -89,7 +88,6 @@ class StateManager : public response::NodeReporter, public response::ResponseNod
   }
 
  protected:
-
   void shutdownState(){
     listener_thread_pool_.shutdown();
     metrics_maps_.clear();
@@ -116,7 +114,6 @@ class StateManager : public response::NodeReporter, public response::ResponseNod
   virtual bool startMetrics(const int64_t &delay);
 
  private:
-
   std::timed_mutex mutex_;
 
   std::map<std::string, std::shared_ptr<response::ResponseNode>> metrics_maps_;

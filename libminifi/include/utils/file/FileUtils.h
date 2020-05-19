@@ -91,7 +91,6 @@ class FileUtils {
 #endif
   }
  public:
-
   FileUtils() = delete;
 
   /*

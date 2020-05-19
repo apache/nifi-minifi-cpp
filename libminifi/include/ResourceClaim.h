@@ -48,7 +48,6 @@ extern void setDefaultDirectory(std::string);
 class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
 
  public:
-
   // Constructor
   /*!
    * Create a new resource claim
@@ -115,7 +114,6 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager_;
 
  private:
-
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation

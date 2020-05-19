@@ -284,7 +284,6 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   virtual ~ProcessorNode();
 
  protected:
-
   virtual bool canEdit() {
     return !processor_->isRunning();
   }

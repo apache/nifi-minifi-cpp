@@ -68,7 +68,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 
   Processor(std::string name, utils::Identifier &uuid);
 
-  Processor(std::string name);
+  Processor(std::string name); // NOLINT
   // Destructor
   virtual ~Processor() {
     notifyStop();
@@ -235,7 +235,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   }
 
  public:
-
   // OnTrigger method, implemented by NiFi Processor Designer
   virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSession> &session) {
     onTrigger(context.get(), session.get());
@@ -270,7 +269,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   }
 
  protected:
-
   virtual void notifyStop() {
 
   }
@@ -297,7 +295,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   std::string cron_period_;
 
  private:
-
   // Mutex for protection
   std::mutex mutex_;
   // Yield Expiration

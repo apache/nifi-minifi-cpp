@@ -177,7 +177,6 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   FlowFileRecord(const FlowFileRecord &parent) = delete;
 
  protected:
-
   // connection uuid
   std::string uuid_connection_;
   // Full path to the content

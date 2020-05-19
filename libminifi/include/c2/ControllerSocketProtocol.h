@@ -35,8 +35,7 @@ namespace c2 {
  */
 class ControllerSocketProtocol : public HeartBeatReporter {
  public:
-
-  ControllerSocketProtocol(std::string name, utils::Identifier uuid = utils::Identifier())
+  ControllerSocketProtocol(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : HeartBeatReporter(name, uuid),
         logger_(logging::LoggerFactory<ControllerSocketProtocol>::getLogger()) {
 
@@ -58,7 +57,6 @@ class ControllerSocketProtocol : public HeartBeatReporter {
   virtual int16_t heartbeat(const C2Payload &payload);
 
  protected:
-
   /**
    * Parses content from the content response.
    */
@@ -79,7 +77,6 @@ class ControllerSocketProtocol : public HeartBeatReporter {
   std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 };
 

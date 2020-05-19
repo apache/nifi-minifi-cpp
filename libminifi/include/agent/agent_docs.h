@@ -30,7 +30,6 @@ class AgentDocs {
   }
 
  public:
-
   /**
    * Updates the internal map with the feature description
    * @param feature feature ( CS or processor ) whose description is being provided.

@@ -115,7 +115,6 @@ class LinuxPowerManagerService : public ThreadManagementService {
   virtual void onEnable();
 
  protected:
-
   std::vector<std::pair<std::string, std::string>> paths_;
 
   bool enabled_;

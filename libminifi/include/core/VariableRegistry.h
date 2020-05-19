@@ -53,9 +53,7 @@ class VariableRegistry {
   }
 
  private:
-
  protected:
-
   void loadVariableRegistry() {
     std::string registry_values;
 

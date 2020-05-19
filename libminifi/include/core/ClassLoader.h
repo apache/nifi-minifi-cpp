@@ -83,8 +83,7 @@ class ObjectFactoryInitializer {
 class ObjectFactory {
 
  public:
-
-  ObjectFactory(const std::string &group)
+  ObjectFactory(const std::string &group) // NOLINT
       : group_(group) {
   }
 
@@ -154,7 +153,6 @@ class ObjectFactory {
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) = 0;
 
  private:
-
   std::string group_;
 
 };
@@ -166,12 +164,11 @@ template<class T>
 class DefautObjectFactory : public ObjectFactory {
 
  public:
-
   DefautObjectFactory() {
     className = core::getClassName<T>();
   }
 
-  DefautObjectFactory(const std::string &group_name)
+  DefautObjectFactory(const std::string &group_name) // NOLINT
       : ObjectFactory(group_name) {
     className = core::getClassName<T>();
   }
@@ -259,7 +256,6 @@ typedef ObjectFactory* createFactory();
 class ClassLoader {
 
  public:
-
   static ClassLoader &getDefaultClassLoader();
 
   /**
@@ -423,7 +419,6 @@ class ClassLoader {
   T *instantiateRaw(const std::string &class_name, utils::Identifier & uuid);
 
  protected:
-
 #ifdef WIN32
 
   // base_object doesn't have a handle

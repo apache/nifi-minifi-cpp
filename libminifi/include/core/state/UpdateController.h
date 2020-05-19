@@ -46,7 +46,7 @@ enum class UpdateState {
  */
 class UpdateStatus {
  public:
-  UpdateStatus(UpdateState state, int16_t reason = 0);
+  UpdateStatus(UpdateState state, int16_t reason = 0); // NOLINT
 
   UpdateStatus(const UpdateStatus &other);
 
@@ -69,12 +69,11 @@ class UpdateStatus {
 
 class Update {
  public:
-
   Update()
       : status_(UpdateStatus(UpdateState::INITIATE, 0)) {
   }
 
-  Update(UpdateStatus status)
+  Update(UpdateStatus status) // NOLINT
       : status_(status) {
 
   }
@@ -154,7 +153,6 @@ class UpdateRunner : public utils::AfterExecute<Update> {
     return delay_;
   }
  protected:
-
   std::atomic<bool> *running_;
 
   std::chrono::milliseconds delay_;
@@ -163,7 +161,6 @@ class UpdateRunner : public utils::AfterExecute<Update> {
 
 class StateController {
  public:
-
   virtual ~StateController() {
 
   }
@@ -255,7 +252,6 @@ class StateMonitor : public StateController {
  */
 class UpdateController {
  public:
-
   UpdateController()
       : controller_running_(false) {
   }

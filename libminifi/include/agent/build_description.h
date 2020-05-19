@@ -73,7 +73,6 @@ struct BundleDetails {
 
 class ExternalBuildDescription {
  private:
-
   static std::vector<struct BundleDetails> &getExternal() {
     static std::vector<struct BundleDetails> external_groups;
     return external_groups;
@@ -85,7 +84,6 @@ class ExternalBuildDescription {
   }
 
  public:
-
   static void addExternalComponent(struct BundleDetails details, const ClassDescription &description) {
     bool found = false;
     for (const auto &d : getExternal()) {

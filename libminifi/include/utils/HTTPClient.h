@@ -77,7 +77,7 @@ enum class SSLVersion : uint8_t {
 
 struct HTTPHeaderResponse {
  public:
-  HTTPHeaderResponse(int max)
+  HTTPHeaderResponse(int max) // NOLINT
    : max_tokens_(max)
    , parsed(false) {
   }
@@ -167,7 +167,6 @@ class HTTPRequestResponse {
   size_t max_queue;
 
  public:
-
   static const size_t CALLBACK_ABORT = 0x10000000;
 
   const std::vector<char> &getData() {
@@ -179,7 +178,7 @@ class HTTPRequestResponse {
 
   }
 
-  HTTPRequestResponse(size_t max)
+  HTTPRequestResponse(size_t max) // NOLINT
       : max_queue(max) {
 
   }

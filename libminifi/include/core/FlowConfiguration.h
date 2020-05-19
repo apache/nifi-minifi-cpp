@@ -152,7 +152,6 @@ class FlowConfiguration : public CoreComponent {
   }
 
  protected:
-
   void registerResource(const std::string &resource_function) {
     core::ClassLoader::getDefaultClassLoader().registerResource("", resource_function);
   }

@@ -55,7 +55,7 @@ class ExecuteProcess : public core::Processor {
   /*!
    * Create a new processor
    */
-  ExecuteProcess(std::string name, utils::Identifier uuid = utils::Identifier())
+  ExecuteProcess(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ExecuteProcess>::getLogger()) {
     _redirectErrorStream = false;
@@ -105,7 +105,6 @@ class ExecuteProcess : public core::Processor {
   virtual void initialize(void);
 
  protected:
-
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;

@@ -155,7 +155,6 @@ class DescriptorStream : public io::BaseStream {
   int readUTF(std::string &str, bool widen = false) override;
 
  protected:
-
   /**
    * Creates a vector and returns the vector using the provided
    * type name.
@@ -178,7 +177,6 @@ class DescriptorStream : public io::BaseStream {
   int fd_;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 
 };

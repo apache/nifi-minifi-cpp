@@ -72,7 +72,7 @@ class ComponentManifest : public DeviceInformation {
       : DeviceInformation(name, uuid) {
   }
 
-  ComponentManifest(const std::string &name)
+  ComponentManifest(const std::string &name) // NOLINT
       : DeviceInformation(name) {
   }
 
@@ -90,8 +90,8 @@ class ComponentManifest : public DeviceInformation {
     serialized.push_back(resp);
     return serialized;
   }
- protected:
 
+ protected:
   void serializeClassDescription(const std::vector<ClassDescription> &descriptions, const std::string name, SerializedResponseNode &response) const {
     if (!descriptions.empty()) {
       SerializedResponseNode type;
@@ -311,7 +311,7 @@ class ExternalManifest : public ComponentManifest {
       : ComponentManifest(name, uuid) {
   }
 
-  ExternalManifest(const std::string &name)
+  ExternalManifest(const std::string &name) // NOLINT
       : ComponentManifest(name) {
   }
 
@@ -334,7 +334,7 @@ class Bundles : public DeviceInformation {
     setArray(true);
   }
 
-  Bundles(const std::string &name)
+  Bundles(const std::string &name) // NOLINT
       : DeviceInformation(name) {
     setArray(true);
   }
@@ -408,13 +408,12 @@ class Bundles : public DeviceInformation {
  */
 class AgentStatus : public StateMonitorNode {
  public:
-
   AgentStatus(std::string name, utils::Identifier & uuid)
       : StateMonitorNode(name, uuid) {
 
   }
 
-  AgentStatus(const std::string &name)
+  AgentStatus(const std::string &name) // NOLINT
       : StateMonitorNode(name) {
   }
 
@@ -503,7 +502,6 @@ class AgentStatus : public StateMonitorNode {
 
 class AgentIdentifier {
  public:
-
   AgentIdentifier()
      : include_agent_manifest_(true) {
   }
@@ -528,7 +526,6 @@ class AgentIdentifier {
 
 class AgentMonitor {
  public:
-
   AgentMonitor()
       : monitor_(nullptr) {
 
@@ -553,12 +550,11 @@ class AgentMonitor {
  */
 class AgentManifest : public DeviceInformation {
  public:
-
   AgentManifest(const std::string& name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
   }
 
-  AgentManifest(const std::string &name)
+  AgentManifest(const std::string &name) // NOLINT
       : DeviceInformation(name) {
   }
 
@@ -634,10 +630,8 @@ class AgentManifest : public DeviceInformation {
   }
 };
 
-
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
 public:
-
   AgentNode(const std::string& name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
     setArray(false);

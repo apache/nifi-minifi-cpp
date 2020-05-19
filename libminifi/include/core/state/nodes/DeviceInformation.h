@@ -113,7 +113,6 @@ class Device {
   std::string ip_;
   std::string device_id_;
  protected:
-
   std::vector<std::string> getIpAddresses() {
     static std::vector<std::string> ips;
     if (ips.empty()) {
@@ -332,7 +331,6 @@ class Device {
  */
 class DeviceInfoNode : public DeviceInformation {
  public:
-
   DeviceInfoNode(std::string name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
     static Device device;
@@ -341,7 +339,7 @@ class DeviceInfoNode : public DeviceInformation {
     device_id_ = device.device_id_;
   }
 
-  DeviceInfoNode(const std::string &name)
+  DeviceInfoNode(const std::string &name) // NOLINT
       : DeviceInformation(name) {
     static Device device;
     hostname_ = device.canonical_hostname_;
@@ -470,7 +468,6 @@ class DeviceInfoNode : public DeviceInformation {
   }
 
  protected:
-
   /**
    * Have found various ways of identifying different operating system variants
    * so these were either pulled from header files or online.

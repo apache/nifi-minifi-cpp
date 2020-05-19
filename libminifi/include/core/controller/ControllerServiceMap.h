@@ -39,7 +39,6 @@ namespace controller {
  */
 class ControllerServiceMap {
  public:
-
   ControllerServiceMap() {
   }
 

@@ -105,7 +105,6 @@ class FileStream : public io::BaseStream {
   }
 
  protected:
-
   /**
    * Creates a vector and returns the vector using the provided
    * type name.

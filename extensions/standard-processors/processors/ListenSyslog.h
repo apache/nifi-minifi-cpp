@@ -64,7 +64,7 @@ class ListenSyslog : public core::Processor {
   /*!
    * Create a new processor
    */
-  ListenSyslog(std::string name,  utils::Identifier uuid = utils::Identifier())
+  ListenSyslog(std::string name,  utils::Identifier uuid = utils::Identifier()) // NOLINT
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ListenSyslog>::getLogger()) {
     _eventQueueByteSize = 0;
@@ -140,7 +140,6 @@ class ListenSyslog : public core::Processor {
   virtual void initialize(void);
 
  protected:
-
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;

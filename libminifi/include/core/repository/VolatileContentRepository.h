@@ -39,7 +39,6 @@ namespace repository {
  */
 class VolatileContentRepository : public core::ContentRepository, public virtual core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>> {
  public:
-
   static const char *minimal_locking;
 
   explicit VolatileContentRepository(std::string name = getClassName<VolatileContentRepository>())
@@ -103,7 +102,6 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
  protected:
-
   virtual void start();
 
   virtual void run();
@@ -114,7 +112,6 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   }
 
  private:
-
   bool minimize_locking_;
 
   // function pointers that are associated with the claims.

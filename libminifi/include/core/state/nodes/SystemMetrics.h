@@ -40,12 +40,11 @@ namespace response {
  */
 class SystemInformation : public DeviceInformation {
  public:
-
   SystemInformation(const std::string &name, utils::Identifier &  uuid)
       : DeviceInformation(name, uuid) {
   }
 
-  SystemInformation(const std::string &name)
+  SystemInformation(const std::string &name) // NOLINT
       : DeviceInformation(name) {
   }
 
@@ -104,7 +103,6 @@ class SystemInformation : public DeviceInformation {
   }
 
  protected:
-
 };
 
 REGISTER_RESOURCE(SystemInformation, "Node part of an AST that defines the System information and metrics subtree");

@@ -35,7 +35,7 @@ namespace response {
  */
 class MetricsUpdate : public Update {
  public:
-  MetricsUpdate(UpdateStatus status)
+  MetricsUpdate(UpdateStatus status) // NOLINT
       : Update(status) {
 
   }

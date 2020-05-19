@@ -144,7 +144,6 @@ typename std::enable_if<class_operations<T>::value, std::shared_ptr<T>>::type in
 class CoreComponent {
 
  public:
-
   /**
    * Constructor that sets the name and uuid.
    */

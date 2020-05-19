@@ -103,7 +103,7 @@ class DataHandlerCallback : public OutputStreamCallback {
 
 class DataHandler {
  public:
-  DataHandler(std::shared_ptr<core::ProcessSessionFactory> sessionFactory)
+  DataHandler(std::shared_ptr<core::ProcessSessionFactory> sessionFactory) // NOLINT
       : sessionFactory_(sessionFactory) {
 
   }
@@ -240,11 +240,9 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
   int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector);
 
  protected:
-
   virtual void notifyStop();
 
  private:
-
   std::function<int()> f_ex;
 
   std::atomic<bool> running_;

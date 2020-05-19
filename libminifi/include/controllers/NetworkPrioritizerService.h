@@ -92,7 +92,6 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
   virtual io::NetworkInterface getInterface(uint32_t size);
 
  protected:
-
   std::string get_nearest_interface(const std::vector<std::string> &ifcs);
 
   bool interface_online(const std::string &ifc);

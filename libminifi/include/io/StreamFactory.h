@@ -44,7 +44,6 @@ class AbstractStreamFactory {
  **/
 class StreamFactory {
  public:
-
   /**
    * Creates a socket and returns a unique ptr
    *
@@ -88,7 +87,7 @@ class StreamFactory {
   }
 
  protected:
-  StreamFactory(const std::shared_ptr<Configure> &configure);
+  StreamFactory(const std::shared_ptr<Configure> &configure); // NOLINT
 
   std::shared_ptr<AbstractStreamFactory> delegate_;
 };

@@ -43,7 +43,7 @@ class ResponseNode : public core::Connectable {
         is_array_(false) {
   }
 
-  ResponseNode(const std::string& name)
+  ResponseNode(const std::string& name) // NOLINT
       : core::Connectable(name),
         is_array_(false) {
   }
@@ -76,7 +76,6 @@ class ResponseNode : public core::Connectable {
   }
 
  protected:
-
   bool is_array_;
 
   void setArray(bool array) {
@@ -93,7 +92,7 @@ class DeviceInformation : public ResponseNode {
   DeviceInformation(const std::string& name, utils::Identifier & uuid)
       : ResponseNode(name, uuid) {
   }
-  DeviceInformation(const std::string& name)
+  DeviceInformation(const std::string& name) // NOLINT
       : ResponseNode(name) {
   }
 };
@@ -103,7 +102,7 @@ class DeviceInformation : public ResponseNode {
  */
 class ObjectNode : public ResponseNode {
  public:
-  ObjectNode(std::string name, utils::Identifier uuid = utils::Identifier())
+  ObjectNode(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : ResponseNode(name, uuid) {
   }
 
@@ -146,7 +145,6 @@ class ObjectNode : public ResponseNode {
  */
 class ResponseNodeSource {
  public:
-
   ResponseNodeSource() {
 
   }
@@ -174,7 +172,6 @@ class ResponseNodeSource {
  */
 class MetricsNodeSource : public ResponseNodeSource {
  public:
-
   MetricsNodeSource() {
 
   }
@@ -200,7 +197,6 @@ class MetricsNodeSource : public ResponseNodeSource {
 
 class NodeReporter {
  public:
-
   NodeReporter() {
 
   }
@@ -234,7 +230,6 @@ class NodeReporter {
  */
 class ResponseNodeSink {
  public:
-
   virtual ~ResponseNodeSink() {
   }
   /**

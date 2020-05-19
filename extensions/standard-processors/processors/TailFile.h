@@ -77,7 +77,6 @@ class TailFile : public core::Processor {
   static core::Relationship Success;
 
  public:
-
   bool acceptFile(const std::string &filter, const std::string &file);
   /**
    * Function that's executed when the processor is scheduled.
@@ -96,7 +95,6 @@ class TailFile : public core::Processor {
   bool storeState(const std::shared_ptr<core::ProcessContext>& context);
 
  private:
-
   static const char *CURRENT_STR;
   static const char *POSITION_STR;
   std::mutex tail_file_mutex_;

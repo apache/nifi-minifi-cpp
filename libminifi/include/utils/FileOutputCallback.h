@@ -59,7 +59,6 @@ class FileOutputCallback : public ByteOutputCallback {
   virtual void write(char *data, size_t size) override;
 
  private:
-
   std::string file_;
 
   std::ofstream file_stream_;

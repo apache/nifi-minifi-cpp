@@ -69,12 +69,11 @@ class ValidationResult {
     friend class ValidationResult;
   };
  private:
-
   bool valid_;
   std::string subject_;
   std::string input_;
 
-  ValidationResult(const Builder &builder)
+  ValidationResult(const Builder &builder) // NOLINT
       : valid_(builder.valid_),
         subject_(builder.subject_),
         input_(builder.input_) {
@@ -85,8 +84,7 @@ class ValidationResult {
 
 class PropertyValidator {
  public:
-
-  PropertyValidator(std::string name)
+  explicit PropertyValidator(std::string name)
       : name_(std::move(name)) {
   }
   virtual ~PropertyValidator() = default;
@@ -137,7 +135,7 @@ class AlwaysValid : public PropertyValidator {
 
 class BooleanValidator : public PropertyValidator {
  public:
-  BooleanValidator(const std::string &name)
+  BooleanValidator(const std::string &name) // NOLINT
       : PropertyValidator(name) {
   }
 
@@ -157,7 +155,7 @@ class BooleanValidator : public PropertyValidator {
 
 class IntegerValidator : public PropertyValidator {
  public:
-  IntegerValidator(const std::string &name)
+  IntegerValidator(const std::string &name) // NOLINT
       : PropertyValidator(name) {
   }
   ~IntegerValidator() override = default;
@@ -265,7 +263,7 @@ class UnsignedLongValidator : public PropertyValidator {
 
 class DataSizeValidator : public PropertyValidator {
  public:
-  DataSizeValidator(const std::string &name)
+  DataSizeValidator(const std::string &name) // NOLINT
       : PropertyValidator(name) {
   }
   ~DataSizeValidator() override = default;
@@ -282,7 +280,7 @@ class DataSizeValidator : public PropertyValidator {
 
 class PortValidator : public LongValidator {
  public:
-  PortValidator(const std::string &name)
+  PortValidator(const std::string &name) // NOLINT
       : LongValidator(name, 1, 65535) {
   }
   ~PortValidator() override = default;
@@ -291,7 +289,7 @@ class PortValidator : public LongValidator {
 //Use only for specifying listen ports, where 0 means a randomly chosen one!
 class ListenPortValidator : public LongValidator {
 public:
-  ListenPortValidator(const std::string &name)
+  ListenPortValidator(const std::string &name) // NOLINT
     : LongValidator(name, 0, 65535) {
   }
   ~ListenPortValidator() override = default;
@@ -299,7 +297,7 @@ public:
 
 class TimePeriodValidator : public PropertyValidator {
  public:
-  TimePeriodValidator(const std::string &name)
+  TimePeriodValidator(const std::string &name) // NOLINT
       : PropertyValidator(name) {
   }
   ~TimePeriodValidator() override = default;

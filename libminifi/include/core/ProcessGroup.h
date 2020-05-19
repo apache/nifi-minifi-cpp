@@ -265,7 +265,6 @@ class ProcessGroup {
   core::controller::ControllerServiceMap controller_service_map_;
 
  private:
-
   // Mutex for protection
   std::recursive_mutex mutex_;
   // Logger

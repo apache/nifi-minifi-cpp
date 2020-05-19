@@ -31,7 +31,7 @@ namespace minifi {
 
 class Properties {
  public:
-  Properties(const std::string& name = "");
+  Properties(const std::string& name = ""); // NOLINT
 
   virtual ~Properties() {
 
@@ -114,14 +114,12 @@ class Properties {
   bool persistProperties();
 
  protected:
-
   bool validateConfigurationFile(const std::string &file);
 
   std::map<std::string, std::string> properties_;
 
 
  private:
-
   std::atomic<bool> dirty_;
 
   std::string properties_file_;

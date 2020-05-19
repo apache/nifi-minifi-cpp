@@ -50,7 +50,7 @@ class windowseventlog_sink : public spdlog::sinks::base_sink<spdlog::details::nu
    virtual void _flush();
 
   public:
-   windowseventlog_sink(const std::string& source_name = "ApacheNiFiMiNiFi");
+   windowseventlog_sink(const std::string& source_name = "ApacheNiFiMiNiFi"); // NOLINT
 
    virtual ~windowseventlog_sink();
 

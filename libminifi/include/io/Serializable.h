@@ -65,7 +65,6 @@ namespace io {
 class Serializable {
 
  public:
-
   /**
    * write byte to stream
    * @return resulting write size

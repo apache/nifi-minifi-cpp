@@ -41,14 +41,13 @@ namespace response {
 
 class StateMonitorNode : public DeviceInformation {
  public:
-
   StateMonitorNode(std::string name, utils::Identifier &uuid)
       : DeviceInformation(name, uuid),
         monitor_(nullptr) {
 
   }
 
-  StateMonitorNode(const std::string &name)
+  StateMonitorNode(const std::string &name) // NOLINT
       : DeviceInformation(name),
         monitor_(nullptr) {
   }

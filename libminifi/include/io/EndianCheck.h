@@ -31,7 +31,6 @@ class EndiannessCheck {
  public:
   static bool IS_LITTLE;
  private:
-
   static bool is_little_endian() {
     /* do whatever is needed at static init time */
     unsigned int x = 1;

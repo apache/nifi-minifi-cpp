@@ -87,7 +87,6 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
   }
 
  protected:
-
  private:
   int batch_size_;
 

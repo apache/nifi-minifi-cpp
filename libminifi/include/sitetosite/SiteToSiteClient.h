@@ -54,7 +54,6 @@ class DataPacket {
 class SiteToSiteClient : public core::Connectable {
 
  public:
-
   SiteToSiteClient()
       : core::Connectable("SitetoSiteClient"),
         peer_state_(IDLE),
@@ -216,7 +215,6 @@ class SiteToSiteClient : public core::Connectable {
   virtual int16_t send(std::string transactionID, DataPacket *packet, const std::shared_ptr<FlowFileRecord> &flowFile, const std::shared_ptr<core::ProcessSession> &session);
 
  protected:
-
   // Cancel the transaction
   virtual void cancel(std::string transactionID);
   // Complete the transaction
@@ -288,7 +286,7 @@ class SiteToSiteClient : public core::Connectable {
 // Nest Callback Class for write stream
 class WriteCallback : public OutputStreamCallback {
  public:
-  WriteCallback(DataPacket *packet)
+  WriteCallback(DataPacket *packet) // NOLINT
       : _packet(packet) {
   }
   DataPacket *_packet;
@@ -315,7 +313,7 @@ class WriteCallback : public OutputStreamCallback {
 // Nest Callback Class for read stream
 class ReadCallback : public InputStreamCallback {
  public:
-  ReadCallback(DataPacket *packet)
+  ReadCallback(DataPacket *packet) // NOLINT
       : _packet(packet) {
   }
   DataPacket *_packet;

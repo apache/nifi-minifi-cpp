@@ -54,7 +54,6 @@ namespace file {
  */
 class DiffUtils {
  public:
-
   DiffUtils() = delete;
 
   static int apply_binary_diff(const char *file_original, const char *file_new, const char *result_file) {

@@ -90,7 +90,6 @@ class Relationship {
   }
 
  protected:
-
   // Name
   std::string name_;
   // Description

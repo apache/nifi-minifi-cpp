@@ -48,7 +48,6 @@ namespace repository {
 template<typename T>
 class VolatileRepository : public core::Repository, public std::enable_shared_from_this<VolatileRepository<T>> {
  public:
-
   static const char *volatile_repo_max_count;
   static const char *volatile_repo_max_bytes;
   // Constructor
@@ -141,7 +140,6 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
   }
 
  protected:
-
   virtual void emplace(RepoValue<T> &old_value) {
     std::lock_guard<std::mutex> lock(purge_mutex_);
     purge_list_.push_back(old_value.getKey());

@@ -323,7 +323,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   void stopC2();
 
  protected:
-
   void loadC2ResponseConfiguration();
 
   void loadC2ResponseConfiguration(const std::string &prefix);

@@ -36,7 +36,6 @@ namespace core {
  */
 class TraceableResource {
  public:
-
   virtual ~TraceableResource() = default;
   /**
    * Since SerializableComponents represent a runnable object, we should return traces

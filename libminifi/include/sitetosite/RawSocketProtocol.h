@@ -58,7 +58,6 @@ typedef struct Site2SitePeerStatus {
 // RawSiteToSiteClient Class
 class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
  public:
-
   // HandShakeProperty Str
   static const char *HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY];
 
@@ -66,7 +65,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   /*!
    * Create a new control protocol
    */
-  RawSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer)
+  RawSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer) // NOLINT
       : logger_(logging::LoggerFactory<RawSiteToSiteClient>::getLogger()) {
     peer_ = std::move(peer);
     _batchSize = 0;
@@ -163,7 +162,6 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   // bootstrap the protocol to the ready for transaction state by going through the state machine
   virtual bool bootstrap();
  protected:
-
   // establish
   virtual bool establish();
   // handShake

@@ -65,12 +65,11 @@ namespace response {
  */
 class BuildInformation : public DeviceInformation {
  public:
-
   BuildInformation(std::string name, utils::Identifier &uuid)
       : DeviceInformation(name, uuid) {
   }
 
-  BuildInformation(const std::string &name)
+  BuildInformation(const std::string &name) // NOLINT
       : DeviceInformation(name) {
   }
 

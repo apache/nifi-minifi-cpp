@@ -50,7 +50,6 @@ class VolatileProvenanceRepository : public VolatileRepository<std::string> {
     purge_list_.push_back(old_value.getKey());
   }
  private:
-
 };
 
 } /* namespace repository */

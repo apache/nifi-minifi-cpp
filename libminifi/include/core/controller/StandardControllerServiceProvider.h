@@ -40,7 +40,6 @@ namespace controller {
 
 class StandardControllerServiceProvider : public ControllerServiceProvider, public std::enable_shared_from_this<StandardControllerServiceProvider> {
  public:
-
   explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, std::shared_ptr<ProcessGroup> root_group, std::shared_ptr<Configure> configuration,
                                              std::shared_ptr<minifi::SchedulingAgent> agent, ClassLoader &loader = ClassLoader::getDefaultClassLoader())
       : ControllerServiceProvider(services),
@@ -199,7 +198,6 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   }
 
  protected:
-
   bool canEdit() {
     return false;
   }

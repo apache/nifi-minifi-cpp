@@ -39,7 +39,6 @@ namespace core {
  */
 class Connectable : public CoreComponent {
  public:
-
   explicit Connectable(const std::string &name);
 
   explicit Connectable(const std::string &name, const utils::Identifier &uuid);
@@ -153,7 +152,6 @@ class Connectable : public CoreComponent {
   }
 
  protected:
-
   // Penalization Period in MilliSecond
   std::atomic<uint64_t> _penalizationPeriodMsec;
 

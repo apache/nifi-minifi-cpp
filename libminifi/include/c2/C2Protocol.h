@@ -33,7 +33,6 @@ namespace c2 {
  */
 class C2Protocol : public core::Connectable {
  public:
-
   C2Protocol(const std::string &name, const utils::Identifier &uuid)
       : core::Connectable(name, uuid),
         running_(true) {
@@ -102,7 +101,6 @@ class C2Protocol : public core::Connectable {
   }
 
  protected:
-
   std::atomic<bool> running_;
 
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_;

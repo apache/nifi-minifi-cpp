@@ -40,7 +40,6 @@ class UpdatePolicyBuilder;
  */
 class UpdatePolicy {
  public:
-
   explicit UpdatePolicy(bool enable_all)
       : enable_all_(enable_all) {
   }
@@ -67,7 +66,6 @@ class UpdatePolicy {
   }
 
  protected:
-
   explicit UpdatePolicy(const UpdatePolicy &other)
       : enable_all_(other.enable_all_), properties_(other.properties_) {
   }
@@ -122,7 +120,6 @@ class UpdatePolicyBuilder {
 
 
  protected:
-
   explicit UpdatePolicyBuilder(const UpdatePolicyBuilder &other)
       : current_policy_(other.current_policy_) {
   }

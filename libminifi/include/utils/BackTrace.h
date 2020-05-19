@@ -46,7 +46,7 @@ class BackTrace {
  public:
   BackTrace() = default;
 
-  BackTrace(std::string name)
+  BackTrace(std::string name) // NOLINT
       : name_(std::move(name)) {
   }
 

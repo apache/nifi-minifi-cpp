@@ -37,7 +37,6 @@ namespace state {
  */
 class ProcessorController : public StateController {
  public:
-
   ProcessorController(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<SchedulingAgent> &scheduler);
 
   virtual ~ProcessorController();

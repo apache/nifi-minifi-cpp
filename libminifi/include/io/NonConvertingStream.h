@@ -42,7 +42,7 @@ class NonConvertingStream : public BaseStream  {
       : composable_stream_(this) {
   }
 
-  NonConvertingStream(DataStream *other)
+  NonConvertingStream(DataStream *other) // NOLINT
       : composable_stream_(other) {
   }
 

@@ -37,7 +37,6 @@ namespace controller {
 
 class ControllerServiceProvider : public CoreComponent, public ConfigurableComponent, public ControllerServiceLookup {
  public:
-
   explicit ControllerServiceProvider(const std::string &name)
       : CoreComponent(name),
         ConfigurableComponent() {
@@ -227,7 +226,6 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
   }
 
  protected:
-
   /**
    * verifies that linked services match the provided state.
    */

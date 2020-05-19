@@ -38,7 +38,6 @@ namespace processors {
 
 class PutFile : public core::Processor {
  public:
-
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_REPLACE = "replace";
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_IGNORE = "ignore";
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_FAIL = "fail";
@@ -48,7 +47,7 @@ class PutFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  PutFile(std::string name,  utils::Identifier uuid = utils::Identifier())
+  PutFile(std::string name,  utils::Identifier uuid = utils::Identifier()) // NOLINT
       : core::Processor(std::move(name), uuid),
         logger_(logging::LoggerFactory<PutFile>::getLogger()) {
   }
@@ -98,9 +97,7 @@ class PutFile : public core::Processor {
   std::string tmpWritePath(const std::string &filename, const std::string &directory) const;
 
  protected:
-
  private:
-
   std::string conflict_resolution_;
   bool try_mkdirs_ = true;
   int64_t max_dest_files_ = -1;

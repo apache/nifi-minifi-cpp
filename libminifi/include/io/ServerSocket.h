@@ -60,7 +60,6 @@ class ServerSocket : public BaseServerSocket, public Socket {
   virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler);
 
  private:
-
   void close_fd(int fd );
 
   std::atomic<bool> running_;

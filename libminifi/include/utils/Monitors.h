@@ -62,7 +62,7 @@ class AfterExecute {
  */
 class TimerAwareMonitor : public utils::AfterExecute<std::chrono::milliseconds> {
  public:
-  TimerAwareMonitor(std::atomic<bool> *run_monitor)
+  TimerAwareMonitor(std::atomic<bool> *run_monitor) // NOLINT
       : current_wait_(std::chrono::milliseconds(0)),
         run_monitor_(run_monitor) {
   }
@@ -87,14 +87,13 @@ class TimerAwareMonitor : public utils::AfterExecute<std::chrono::milliseconds> 
     return current_wait_.load();
   }
  protected:
-
   std::atomic<std::chrono::milliseconds> current_wait_;
   std::atomic<bool> *run_monitor_;
 };
 
 class SingleRunMonitor : public utils::AfterExecute<bool>{
  public:
-  SingleRunMonitor(std::chrono::milliseconds retry_interval = std::chrono::milliseconds(100))
+  SingleRunMonitor(std::chrono::milliseconds retry_interval = std::chrono::milliseconds(100)) // NOLINT
       : retry_interval_(retry_interval) {
   }
 

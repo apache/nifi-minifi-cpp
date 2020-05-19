@@ -143,7 +143,6 @@ class CRCStream : public BaseStream {
 
   void reset();
  protected:
-
   /**
    * Creates a vector and returns the vector using the provided
    * type name.

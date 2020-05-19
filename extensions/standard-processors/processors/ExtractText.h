@@ -85,7 +85,6 @@ public:
     };
 
 protected:
-
 private:
     //! Logger
     std::shared_ptr<logging::Logger> logger_;

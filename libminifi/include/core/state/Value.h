@@ -43,7 +43,6 @@ namespace response {
  */
 class Value {
  public:
-
   explicit Value(const std::string &value)
       : string_value(value),
         type_id(std::type_index(typeid(std::string))) {
@@ -77,7 +76,6 @@ class Value {
   static const std::type_index STRING_TYPE;
 
  protected:
-
   template<typename T>
   bool convertValueImpl(T &ref) {
     return getValue(ref);
@@ -152,7 +150,6 @@ class UInt32Value : public Value {
     return value;
   }
  protected:
-
   virtual bool getValue(uint32_t &ref) {
     ref = value;
     return true;
@@ -201,7 +198,6 @@ class IntValue : public Value {
   }
 
  protected:
-
   virtual bool getValue(int &ref) {
     ref = value;
     return true;
@@ -251,7 +247,6 @@ class BoolValue : public Value {
     return value;
   }
  protected:
-
   virtual bool getValue(int &ref) {
     return PreventSwearingInFutureRefactor(ref);
   }
@@ -313,7 +308,6 @@ class UInt64Value : public Value {
     return value;
   }
  protected:
-
   virtual bool getValue(int &ref) {
     return false;
   }
@@ -359,7 +353,6 @@ class Int64Value : public Value {
     return value;
   }
  protected:
-
   virtual bool getValue(int &ref) {
     return false;
   }
@@ -491,7 +484,7 @@ struct SerializedResponseNode {
   bool collapsible;
   std::vector<SerializedResponseNode> children;
 
-  SerializedResponseNode(bool collapsible = true)
+  SerializedResponseNode(bool collapsible = true) // NOLINT
       : array(false),
         collapsible(collapsible) {
   }

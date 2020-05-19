@@ -30,7 +30,6 @@ namespace c2 {
 
 class PayloadSerializer {
  public:
-
   /**
    * Static function that serializes the value nodes
    */
@@ -288,7 +287,6 @@ class PayloadSerializer {
     return true;
   }
  private:
-
   static Operation intToOp(int op) {
     switch (op) {
       case 1:

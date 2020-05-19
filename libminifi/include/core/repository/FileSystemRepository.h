@@ -34,7 +34,7 @@ namespace repository {
  */
 class FileSystemRepository : public core::ContentRepository, public core::CoreComponent {
  public:
-  FileSystemRepository(std::string name = getClassName<FileSystemRepository>())
+  FileSystemRepository(std::string name = getClassName<FileSystemRepository>()) // NOLINT
       : core::CoreComponent(name),
         logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
 
@@ -60,7 +60,6 @@ class FileSystemRepository : public core::ContentRepository, public core::CoreCo
   virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 };
 

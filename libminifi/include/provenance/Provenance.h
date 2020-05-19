@@ -392,7 +392,6 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   }
 
  protected:
-
   // Event type
   ProvenanceEventType _eventType;
   // Date at which the event was created
@@ -510,7 +509,6 @@ class ProvenanceReporter {
   void receive(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string sourceSystemFlowFileIdentifier, std::string detail, uint64_t processingDuration);
 
  protected:
-
   // allocate
   std::shared_ptr<ProvenanceEventRecord> allocate(ProvenanceEventRecord::ProvenanceEventType eventType, std::shared_ptr<core::FlowFile> flow) {
     if(repo_->isNoop()) {
@@ -530,7 +528,6 @@ class ProvenanceReporter {
   std::string _componentType;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
   // Incoming connection Iterator
   std::set<std::shared_ptr<ProvenanceEventRecord>> _events;

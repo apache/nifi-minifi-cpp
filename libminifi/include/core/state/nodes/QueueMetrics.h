@@ -37,12 +37,11 @@ namespace response {
  */
 class QueueMetrics : public ResponseNode {
  public:
-
   QueueMetrics(const std::string &name, utils::Identifier &  uuid)
       : ResponseNode(name, uuid) {
   }
 
-  QueueMetrics(const std::string &name)
+  QueueMetrics(const std::string &name) // NOLINT
       : ResponseNode(name) {
   }
 
