@@ -90,6 +90,7 @@ class FileUtils {
     return mkdir(path.c_str(), 0700);
 #endif
   }
+
  public:
   FileUtils() = delete;
 

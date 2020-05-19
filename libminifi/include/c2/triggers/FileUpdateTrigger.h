@@ -110,6 +110,7 @@ class FileUpdateTrigger : public C2Trigger {
   std::string file_;
   std::atomic<uint64_t> last_update_;
   std::atomic<bool> update_;
+
  private:
   std::shared_ptr<logging::Logger> logger_;
 };

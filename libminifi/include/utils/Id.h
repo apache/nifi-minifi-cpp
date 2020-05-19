@@ -152,9 +152,11 @@ class IdGenerator {
     static std::shared_ptr<IdGenerator> generator = std::shared_ptr<IdGenerator>(new IdGenerator());
     return generator;
   }
+
  protected:
   uint64_t getDeviceSegmentFromString(const std::string & str, int numBits) const;
   uint64_t getRandomDeviceSegment(int numBits) const;
+
  private:
   IdGenerator();
   int implementation_;

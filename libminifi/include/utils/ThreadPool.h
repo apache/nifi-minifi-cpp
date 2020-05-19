@@ -125,6 +125,7 @@ class Worker {
   const std::string &getIdentifier() const {
     return identifier_;
   }
+
 protected:
   std::string identifier_;
   std::chrono::time_point<std::chrono::steady_clock> next_exec_time_;

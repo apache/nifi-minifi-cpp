@@ -189,6 +189,7 @@ class BaseStream : public DataStream, public Serializable {
    * @return resulting read size
    **/
   virtual int readUTF(std::string &str, bool widen = false);
+
  protected:
   /**
    * Changed to private to facilitate easier management of composable_stream_ and make it immutable

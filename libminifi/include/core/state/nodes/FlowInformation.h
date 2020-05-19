@@ -117,6 +117,7 @@ class FlowVersion : public DeviceInformation {
     identifier = std::move(fv.identifier);
     return *this;
   }
+
  protected:
   mutable std::mutex guard;
 

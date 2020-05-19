@@ -149,6 +149,7 @@ class UInt32Value : public Value {
   uint32_t getValue() const {
     return value;
   }
+
  protected:
   virtual bool getValue(uint32_t &ref) {
     ref = value;
@@ -246,6 +247,7 @@ class BoolValue : public Value {
   bool getValue() const {
     return value;
   }
+
  protected:
   virtual bool getValue(int &ref) {
     return PreventSwearingInFutureRefactor(ref);
@@ -307,6 +309,7 @@ class UInt64Value : public Value {
   uint64_t getValue() const {
     return value;
   }
+
  protected:
   virtual bool getValue(int &ref) {
     return false;
@@ -352,6 +355,7 @@ class Int64Value : public Value {
   int64_t getValue() {
     return value;
   }
+
  protected:
   virtual bool getValue(int &ref) {
     return false;

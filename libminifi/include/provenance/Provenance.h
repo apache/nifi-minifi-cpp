@@ -155,6 +155,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     REPLAY
   };
   static const char *ProvenanceEventTypeStr[REPLAY + 1];
+
  public:
   // Constructor
   /*!

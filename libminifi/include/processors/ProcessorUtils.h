@@ -55,6 +55,7 @@ class ProcessorUtils {
     return returnPtr;
 
   }
+
  private:
   ProcessorUtils();
 };

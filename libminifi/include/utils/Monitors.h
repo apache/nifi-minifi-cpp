@@ -86,6 +86,7 @@ class TimerAwareMonitor : public utils::AfterExecute<std::chrono::milliseconds> 
   virtual std::chrono::milliseconds wait_time() override {
     return current_wait_.load();
   }
+
  protected:
   std::atomic<std::chrono::milliseconds> current_wait_;
   std::atomic<bool> *run_monitor_;

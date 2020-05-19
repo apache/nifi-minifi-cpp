@@ -112,6 +112,7 @@ class Device {
   std::string canonical_hostname_;
   std::string ip_;
   std::string device_id_;
+
  protected:
   std::vector<std::string> getIpAddresses() {
     static std::vector<std::string> ips;

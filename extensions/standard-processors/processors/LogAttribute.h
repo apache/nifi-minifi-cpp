@@ -120,6 +120,7 @@ class LogAttribute : public core::Processor {
   virtual void initialize(void) override;
 
  protected:
+
  private:
   uint64_t flowfiles_to_log_;
   bool hexencode_;

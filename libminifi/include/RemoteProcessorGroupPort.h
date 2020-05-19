@@ -111,6 +111,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   static core::Property idleTimeout;
   // Supported Relationships
   static core::Relationship relation;
+
  public:
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
   // OnTrigger method, implemented by NiFi RemoteProcessorGroupPort

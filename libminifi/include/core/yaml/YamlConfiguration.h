@@ -325,6 +325,7 @@ class YamlConfiguration : public FlowConfiguration {
 
  protected:
   std::shared_ptr<io::StreamFactory> stream_factory_;
+
  private:
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;

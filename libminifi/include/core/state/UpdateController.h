@@ -152,6 +152,7 @@ class UpdateRunner : public utils::AfterExecute<Update> {
   virtual std::chrono::milliseconds wait_time() {
     return delay_;
   }
+
  protected:
   std::atomic<bool> *running_;
 

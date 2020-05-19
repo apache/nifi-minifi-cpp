@@ -483,6 +483,7 @@ class Property {
   std::vector<std::string> types_;
   bool supports_el_;
   bool is_transient_;
+
  private:
   friend class PropertyBuilder;
 
@@ -579,6 +580,7 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
   Property &&build() {
     return std::move(prop);
   }
+
  private:
   Property prop;
 

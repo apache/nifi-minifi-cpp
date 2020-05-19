@@ -496,6 +496,7 @@ class AgentStatus : public StateMonitorNode {
 
     return serialized;
   }
+
  protected:
   std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
 };

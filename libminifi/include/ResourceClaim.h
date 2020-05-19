@@ -106,6 +106,7 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
     stream << claim->_contentFullPath;
     return stream;
   }
+
  protected:
   std::atomic<bool> deleted_;
   // Full path to the content

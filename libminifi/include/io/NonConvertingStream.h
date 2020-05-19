@@ -188,6 +188,7 @@ class NonConvertingStream : public BaseStream  {
    * @return resulting read size
    **/
   int readUTF(std::string &str, bool widen = false) override;
+
  protected:
   DataStream *composable_stream_;
 };

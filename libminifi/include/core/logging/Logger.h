@@ -180,6 +180,7 @@ class Logger : public BaseLogger {
   std::shared_ptr<LoggerControl> controller_;
 
   std::mutex mutex_;
+
  private:
   template<typename ... Args>
   inline void log(spdlog::level::level_enum level, const char * const format, const Args& ... args) {

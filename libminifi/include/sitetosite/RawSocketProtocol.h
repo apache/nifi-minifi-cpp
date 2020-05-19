@@ -161,6 +161,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
 
   // bootstrap the protocol to the ready for transaction state by going through the state machine
   virtual bool bootstrap();
+
  protected:
   // establish
   virtual bool establish();

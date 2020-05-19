@@ -174,6 +174,7 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<io::StreamFactory> stream_factory_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<state::response::FlowVersion> flow_version_;
+
  private:
   std::shared_ptr<logging::Logger> logger_;
 

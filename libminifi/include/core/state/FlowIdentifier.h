@@ -59,6 +59,7 @@ class FlowIdentifier {
   std::string getFlowId() const {
     return flow_id_;
   }
+
  protected:
   explicit FlowIdentifier(const FlowIdentifier &other) {
     registry_url_ = other.registry_url_;

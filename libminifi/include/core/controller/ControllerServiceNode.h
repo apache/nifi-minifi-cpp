@@ -109,6 +109,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
 
   ControllerServiceNode(const ControllerServiceNode &other) = delete;
   ControllerServiceNode &operator=(const ControllerServiceNode &parent) = delete;
+
  protected:
   bool canEdit() {
     return true;

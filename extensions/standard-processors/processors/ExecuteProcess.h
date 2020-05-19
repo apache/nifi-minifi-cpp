@@ -105,6 +105,7 @@ class ExecuteProcess : public core::Processor {
   virtual void initialize(void);
 
  protected:
+
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;

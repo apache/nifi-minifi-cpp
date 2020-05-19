@@ -129,6 +129,7 @@ class ConcurrentQueue {
   }
 
   mutable std::mutex mtx_;
+
  private:
   std::deque<T> queue_;
 };

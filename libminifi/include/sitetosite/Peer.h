@@ -124,6 +124,7 @@ class PeerStatus {
   bool getQueryForPeers() {
     return query_for_peers_;
   }
+
  protected:
   std::shared_ptr<Peer> peer_;
   uint32_t flow_file_count_;
@@ -360,6 +361,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   SiteToSitePeer &operator=(const SiteToSitePeer &parent) = delete;
 
  protected:
+
  private:
   std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream_;
 

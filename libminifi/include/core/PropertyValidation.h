@@ -68,6 +68,7 @@ class ValidationResult {
     std::string input_;
     friend class ValidationResult;
   };
+
  private:
   bool valid_;
   std::string subject_;

@@ -112,6 +112,7 @@ class SchedulingAgent {
 
   SchedulingAgent(const SchedulingAgent &parent) = delete;
   SchedulingAgent &operator=(const SchedulingAgent &parent) = delete;
+
  protected:
   // Mutex for protection
   std::mutex mutex_;

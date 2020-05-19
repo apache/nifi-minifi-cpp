@@ -286,6 +286,7 @@ class PayloadSerializer {
     payload = std::move(newPayload);
     return true;
   }
+
  private:
   static Operation intToOp(int op) {
     switch (op) {
