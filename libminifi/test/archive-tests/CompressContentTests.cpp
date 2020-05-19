@@ -41,9 +41,6 @@
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
 
-static const char* EXPECT_COMPRESS_CONTENT = "/tmp/minifi-expect-compresscontent.txt";
-static const char* COMPRESS_CONTENT = "/tmp/minifi-compresscontent";
-
 class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
  public:
   explicit ReadCallback(uint64_t size) :
@@ -91,851 +88,826 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
   int archive_buffer_size_;
 };
 
-TEST_CASE("CompressFileGZip", "[compressfiletest1]") {
-  try {
-    std::ofstream expectfile;
-    expectfile.open(EXPECT_COMPRESS_CONTENT);
+class CompressDecompressionTestController : public TestController{
+protected:
+  static std::string tempDir;
+  static std::string raw_content_path;
+  static std::string compressed_content_path;
+  static TestController global_controller;
+public:
+  class RawContent{
+    std::string content_;
+    RawContent(std::string&& content_): content_(std::move(content_)) {}
+    friend class CompressDecompressionTestController;
+  public:
+    bool operator==(const std::string& actual) const noexcept {
+      return content_ == actual;
+    }
+    bool operator!=(const std::string& actual) const noexcept {
+      return content_ != actual;
+    }
+  };
+
+  std::string rawContentPath() const {
+    return raw_content_path;
+  }
+
+  std::string compressedPath() const {
+    return compressed_content_path;
+  }
+
+  RawContent getRawContent() const {;
+    std::ifstream file;
+    file.open(raw_content_path, std::ios::in);
+    std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+    return {std::move(contents)};
+  }
+
+  virtual ~CompressDecompressionTestController() = 0;
+};
+
+CompressDecompressionTestController::~CompressDecompressionTestController() {}
+
+std::string CompressDecompressionTestController::tempDir = "";
+std::string CompressDecompressionTestController::raw_content_path = "";
+std::string CompressDecompressionTestController::compressed_content_path = "";
+TestController CompressDecompressionTestController::global_controller = {};
+
+class CompressTestController : public CompressDecompressionTestController{
+  void initContentWithRandomData(){
+    std::ofstream file;
+    file.open(raw_content_path);
 
     std::mt19937 gen(std::random_device { }());
     for (int i = 0; i < 100000; i++) {
-      expectfile << std::to_string(gen() % 100);
+      file << std::to_string(gen() % 100);
     }
-    expectfile.close();
-
-    TestController testController;
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<core::ProcessSession>();
-    LogTestController::getInstance().setTrace<core::ProcessContext>();
-    LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
-
-    std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
-
-    std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
-    std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-    processor->initialize();
-    utils::Identifier processoruuid;
-    REQUIRE(true == processor->getUUID(processoruuid));
-    utils::Identifier logAttributeuuid;
-    REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
-
-    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
-
-    content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
-    // connection from compress processor to log attribute
-    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->addRelationship(core::Relationship("success", "compress successful output"));
-    connection->setSource(processor);
-    connection->setDestination(logAttributeProcessor);
-    connection->setSourceUUID(processoruuid);
-    connection->setDestinationUUID(logAttributeuuid);
-    processor->addConnection(connection);
-    // connection to compress processor
-    std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
-    compressconnection->setDestination(processor);
-    compressconnection->setDestinationUUID(processoruuid);
-    processor->addConnection(compressconnection);
-
-    std::set<core::Relationship> autoTerminatedRelationships;
-    core::Relationship failure("failure", "");
-    autoTerminatedRelationships.insert(failure);
-    processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
-
-    processor->incrementActiveTasks();
-    processor->setScheduledState(core::ScheduledState::RUNNING);
-    logAttributeProcessor->incrementActiveTasks();
-    logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
-
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_GZIP);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
-
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
-    std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-    sessionGenFlowFile.import(EXPECT_COMPRESS_CONTENT, flow, true, 0);
-    income_connection->put(flow);
-
-    REQUIRE(processor->getName() == "compresscontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    auto session = std::make_shared<core::ProcessSession>(context);
-    processor->onTrigger(context, session);
-    session->commit();
-
-    // validate the compress content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() > 0);
-    {
-      REQUIRE(flow1->getSize() != flow->getSize());
-      std::string mime;
-      flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
-      REQUIRE(mime == "application/gzip");
-      ReadCallback callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      callback.archive_read();
-      std::string flowFileName = std::string(EXPECT_COMPRESS_CONTENT);
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::in);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-      REQUIRE(expectContents == contents);
-      // write the compress content for next test
-      std::ofstream file(COMPRESS_CONTENT);
-      file.write(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-      file.close();
-      file1.close();
-    }
-    LogTestController::getInstance().reset();
-  } catch (...) {
+    file.close();
   }
+public:
+  CompressTestController(){
+    char format[] = "/tmp/test.XXXXXX";
+    tempDir = global_controller.createTempDirectory(format);
+    REQUIRE(!tempDir.empty());
+    raw_content_path = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-compresscontent.txt");
+    compressed_content_path = utils::file::FileUtils::concat_path(tempDir, "minifi-compresscontent");
+    initContentWithRandomData();
+  }
+
+  template<class ...Args>
+  void writeCompressed(Args&& ...args){
+    std::ofstream file(compressed_content_path);
+    file.write(std::forward<Args>(args)...);
+    file.close();
+  }
+};
+
+class DecompressTestController : public CompressDecompressionTestController{
+public:
+  ~DecompressTestController(){
+    tempDir = "";
+    raw_content_path = "";
+    compressed_content_path = "";
+  }
+};
+
+TEST_CASE("CompressFileGZip", "[compressfiletest1]") {
+  CompressTestController testController;
+
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<core::ProcessContext>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
+
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+
+  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
+  std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  processor->initialize();
+  utils::Identifier processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier logAttributeuuid;
+  REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
+
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+
+  content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+  // connection from compress processor to log attribute
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
+  connection->addRelationship(core::Relationship("success", "compress successful output"));
+  connection->setSource(processor);
+  connection->setDestination(logAttributeProcessor);
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(logAttributeuuid);
+  processor->addConnection(connection);
+  // connection to compress processor
+  std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
+  compressconnection->setDestination(processor);
+  compressconnection->setDestinationUUID(processoruuid);
+  processor->addConnection(compressconnection);
+
+  std::set<core::Relationship> autoTerminatedRelationships;
+  core::Relationship failure("failure", "");
+  autoTerminatedRelationships.insert(failure);
+  processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
+
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  logAttributeProcessor->incrementActiveTasks();
+  logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
+
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_GZIP);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
+  std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
+  std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+  sessionGenFlowFile.import(testController.rawContentPath(), flow, true, 0);
+  income_connection->put(flow);
+
+  REQUIRE(processor->getName() == "compresscontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  auto session = std::make_shared<core::ProcessSession>(context);
+  processor->onTrigger(context, session);
+  session->commit();
+
+  // validate the compress content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() > 0);
+  {
+    REQUIRE(flow1->getSize() != flow->getSize());
+    std::string mime;
+    flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
+    REQUIRE(mime == "application/gzip");
+    ReadCallback callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
+    callback.archive_read();
+    std::string content(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
+    REQUIRE(testController.getRawContent() == content);
+    // write the compress content for next test
+    testController.writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+  }
+  LogTestController::getInstance().reset();
 }
 
 TEST_CASE("DecompressFileGZip", "[compressfiletest2]") {
-  try {
-    TestController testController;
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<core::ProcessSession>();
-    LogTestController::getInstance().setTrace<core::ProcessContext>();
-    LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
-    // LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::io::FileStream>();
+  DecompressTestController testController;
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<core::ProcessContext>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
+  // LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::io::FileStream>();
 
-    std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
-    std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-    processor->initialize();
-    utils::Identifier processoruuid;
-    REQUIRE(true == processor->getUUID(processoruuid));
-    utils::Identifier logAttributeuuid;
-    REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
+  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
+  std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  processor->initialize();
+  utils::Identifier processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier logAttributeuuid;
+  REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
-    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
-    content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
-    // connection from compress processor to log attribute
-    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->addRelationship(core::Relationship("success", "compress successful output"));
-    connection->setSource(processor);
-    connection->setDestination(logAttributeProcessor);
-    connection->setSourceUUID(processoruuid);
-    connection->setDestinationUUID(logAttributeuuid);
-    processor->addConnection(connection);
-    // connection to compress processor
-    std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
-    compressconnection->setDestination(processor);
-    compressconnection->setDestinationUUID(processoruuid);
-    processor->addConnection(compressconnection);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+  // connection from compress processor to log attribute
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
+  connection->addRelationship(core::Relationship("success", "compress successful output"));
+  connection->setSource(processor);
+  connection->setDestination(logAttributeProcessor);
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(logAttributeuuid);
+  processor->addConnection(connection);
+  // connection to compress processor
+  std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
+  compressconnection->setDestination(processor);
+  compressconnection->setDestinationUUID(processoruuid);
+  processor->addConnection(compressconnection);
 
-    std::set<core::Relationship> autoTerminatedRelationships;
-    core::Relationship failure("failure", "");
-    autoTerminatedRelationships.insert(failure);
-    processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
+  std::set<core::Relationship> autoTerminatedRelationships;
+  core::Relationship failure("failure", "");
+  autoTerminatedRelationships.insert(failure);
+  processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
 
-    processor->incrementActiveTasks();
-    processor->setScheduledState(core::ScheduledState::RUNNING);
-    logAttributeProcessor->incrementActiveTasks();
-    logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  logAttributeProcessor->incrementActiveTasks();
+  logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_GZIP);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_GZIP);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
 
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
-    std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-    sessionGenFlowFile.import(COMPRESS_CONTENT, flow, true, 0);
-    income_connection->put(flow);
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
+  std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
+  std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+  sessionGenFlowFile.import(testController.compressedPath(), flow, true, 0);
+  income_connection->put(flow);
 
-    REQUIRE(processor->getName() == "compresscontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    auto session = std::make_shared<core::ProcessSession>(context);
-    processor->onTrigger(context, session);
-    session->commit();
+  REQUIRE(processor->getName() == "compresscontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  auto session = std::make_shared<core::ProcessSession>(context);
+  processor->onTrigger(context, session);
+  session->commit();
 
-    // validate the compress content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() > 0);
-    {
-      REQUIRE(flow1->getSize() != flow->getSize());
-      std::string mime;
-      REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
-      ReadCallback callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      std::string flowFileName = std::string(EXPECT_COMPRESS_CONTENT);
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::in);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-      REQUIRE(expectContents == contents);
-      file1.close();
-    }
-    LogTestController::getInstance().reset();
-    unlink(COMPRESS_CONTENT);
-    unlink(EXPECT_COMPRESS_CONTENT);
-  } catch (...) {
+  // validate the compress content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() > 0);
+  {
+    REQUIRE(flow1->getSize() != flow->getSize());
+    std::string mime;
+    REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
+    ReadCallback callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
+    std::string content(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    REQUIRE(testController.getRawContent() == content);
   }
+  LogTestController::getInstance().reset();
 }
 
 TEST_CASE("CompressFileBZip", "[compressfiletest3]") {
-  try {
-    std::ofstream expectfile;
-    expectfile.open(EXPECT_COMPRESS_CONTENT);
+  CompressTestController testController;
 
-    std::mt19937 gen(std::random_device { }());
-    for (int i = 0; i < 100000; i++) {
-      expectfile << std::to_string(gen() % 100);
-    }
-    expectfile.close();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
 
-    TestController testController;
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<core::ProcessSession>();
-    LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
+  std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  processor->initialize();
+  utils::Identifier processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier logAttributeuuid;
+  REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
-    std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
-    std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-    processor->initialize();
-    utils::Identifier processoruuid;
-    REQUIRE(true == processor->getUUID(processoruuid));
-    utils::Identifier logAttributeuuid;
-    REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
 
-    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+  // connection from compress processor to log attribute
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
+  connection->addRelationship(core::Relationship("success", "compress successful output"));
+  connection->setSource(processor);
+  connection->setDestination(logAttributeProcessor);
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(logAttributeuuid);
+  processor->addConnection(connection);
+  // connection to compress processor
+  std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
+  compressconnection->setDestination(processor);
+  compressconnection->setDestinationUUID(processoruuid);
+  processor->addConnection(compressconnection);
 
-    content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
-    // connection from compress processor to log attribute
-    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->addRelationship(core::Relationship("success", "compress successful output"));
-    connection->setSource(processor);
-    connection->setDestination(logAttributeProcessor);
-    connection->setSourceUUID(processoruuid);
-    connection->setDestinationUUID(logAttributeuuid);
-    processor->addConnection(connection);
-    // connection to compress processor
-    std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
-    compressconnection->setDestination(processor);
-    compressconnection->setDestinationUUID(processoruuid);
-    processor->addConnection(compressconnection);
+  std::set<core::Relationship> autoTerminatedRelationships;
+  core::Relationship failure("failure", "");
+  autoTerminatedRelationships.insert(failure);
+  processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
 
-    std::set<core::Relationship> autoTerminatedRelationships;
-    core::Relationship failure("failure", "");
-    autoTerminatedRelationships.insert(failure);
-    processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  logAttributeProcessor->incrementActiveTasks();
+  logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    processor->incrementActiveTasks();
-    processor->setScheduledState(core::ScheduledState::RUNNING);
-    logAttributeProcessor->incrementActiveTasks();
-    logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_BZIP2);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
 
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_BZIP2);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
+  std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
+  std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+  sessionGenFlowFile.import(testController.rawContentPath(), flow, true, 0);
+  income_connection->put(flow);
 
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
-    std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-    sessionGenFlowFile.import(EXPECT_COMPRESS_CONTENT, flow, true, 0);
-    income_connection->put(flow);
+  REQUIRE(processor->getName() == "compresscontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  auto session = std::make_shared<core::ProcessSession>(context);
+  processor->onTrigger(context, session);
+  session->commit();
 
-    REQUIRE(processor->getName() == "compresscontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    auto session = std::make_shared<core::ProcessSession>(context);
-    processor->onTrigger(context, session);
-    session->commit();
-
-    // validate the compress content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() > 0);
-    {
-      REQUIRE(flow1->getSize() != flow->getSize());
-      std::string mime;
-      flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
-      REQUIRE(mime == "application/bzip2");
-      ReadCallback callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      callback.archive_read();
-      std::string flowFileName = std::string(EXPECT_COMPRESS_CONTENT);
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::in);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-      REQUIRE(expectContents == contents);
-      // write the compress content for next test
-      std::ofstream file(COMPRESS_CONTENT);
-      file.write(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-      file.close();
-      file1.close();
-    }
-    LogTestController::getInstance().reset();
-  } catch (...) {
+  // validate the compress content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() > 0);
+  {
+    REQUIRE(flow1->getSize() != flow->getSize());
+    std::string mime;
+    flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
+    REQUIRE(mime == "application/bzip2");
+    ReadCallback callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
+    callback.archive_read();
+    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
+    REQUIRE(testController.getRawContent() == contents);
+    // write the compress content for next test
+    testController.writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
   }
+  LogTestController::getInstance().reset();
 }
 
 
 TEST_CASE("DecompressFileBZip", "[compressfiletest4]") {
-  try {
-    TestController testController;
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<core::ProcessSession>();
-    LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
-    // LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::io::FileStream>();
+  DecompressTestController testController;
 
-    std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
+  // LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::io::FileStream>();
 
-    std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
-    std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-    processor->initialize();
-    utils::Identifier processoruuid;
-    REQUIRE(true == processor->getUUID(processoruuid));
-    utils::Identifier logAttributeuuid;
-    REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
-    content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
-    // connection from compress processor to log attribute
-    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->addRelationship(core::Relationship("success", "compress successful output"));
-    connection->setSource(processor);
-    connection->setDestination(logAttributeProcessor);
-    connection->setSourceUUID(processoruuid);
-    connection->setDestinationUUID(logAttributeuuid);
-    processor->addConnection(connection);
-    // connection to compress processor
-    std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
-    compressconnection->setDestination(processor);
-    compressconnection->setDestinationUUID(processoruuid);
-    processor->addConnection(compressconnection);
+  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
+  std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  processor->initialize();
+  utils::Identifier processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier logAttributeuuid;
+  REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
-    std::set<core::Relationship> autoTerminatedRelationships;
-    core::Relationship failure("failure", "");
-    autoTerminatedRelationships.insert(failure);
-    processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+  // connection from compress processor to log attribute
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
+  connection->addRelationship(core::Relationship("success", "compress successful output"));
+  connection->setSource(processor);
+  connection->setDestination(logAttributeProcessor);
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(logAttributeuuid);
+  processor->addConnection(connection);
+  // connection to compress processor
+  std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
+  compressconnection->setDestination(processor);
+  compressconnection->setDestinationUUID(processoruuid);
+  processor->addConnection(compressconnection);
 
-    processor->incrementActiveTasks();
-    processor->setScheduledState(core::ScheduledState::RUNNING);
-    logAttributeProcessor->incrementActiveTasks();
-    logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
+  std::set<core::Relationship> autoTerminatedRelationships;
+  core::Relationship failure("failure", "");
+  autoTerminatedRelationships.insert(failure);
+  processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
 
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_BZIP2);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  logAttributeProcessor->incrementActiveTasks();
+  logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
-    std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-    sessionGenFlowFile.import(COMPRESS_CONTENT, flow, true, 0);
-    income_connection->put(flow);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_BZIP2);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
 
-    REQUIRE(processor->getName() == "compresscontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    auto session = std::make_shared<core::ProcessSession>(context);
-    processor->onTrigger(context, session);
-    session->commit();
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
+  std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
+  std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+  sessionGenFlowFile.import(testController.compressedPath(), flow, true, 0);
+  income_connection->put(flow);
 
-    // validate the compress content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() > 0);
-    {
-      REQUIRE(flow1->getSize() != flow->getSize());
-      std::string mime;
-      REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
-      ReadCallback callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      std::string flowFileName = std::string(EXPECT_COMPRESS_CONTENT);
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::in);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-      REQUIRE(expectContents == contents);
-      file1.close();
-    }
-    LogTestController::getInstance().reset();
-    unlink(COMPRESS_CONTENT);
-    unlink(EXPECT_COMPRESS_CONTENT);
-  } catch (...) {
+  REQUIRE(processor->getName() == "compresscontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  auto session = std::make_shared<core::ProcessSession>(context);
+  processor->onTrigger(context, session);
+  session->commit();
+
+  // validate the compress content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() > 0);
+  {
+    REQUIRE(flow1->getSize() != flow->getSize());
+    std::string mime;
+    REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
+    ReadCallback callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
+    std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    REQUIRE(testController.getRawContent() == contents);
   }
+  LogTestController::getInstance().reset();
 }
 
 TEST_CASE("CompressFileLZMA", "[compressfiletest5]") {
-  try {
-    std::ofstream expectfile;
-    expectfile.open(EXPECT_COMPRESS_CONTENT);
+  CompressTestController testController;
 
-    std::mt19937 gen(std::random_device { }());
-    for (int i = 0; i < 100000; i++) {
-      expectfile << std::to_string(gen() % 100);
-    }
-    expectfile.close();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
 
-    TestController testController;
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<core::ProcessSession>();
-    LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
+  std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  processor->initialize();
+  utils::Identifier processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier logAttributeuuid;
+  REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
-    std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
-    std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-    processor->initialize();
-    utils::Identifier processoruuid;
-    REQUIRE(true == processor->getUUID(processoruuid));
-    utils::Identifier logAttributeuuid;
-    REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
 
-    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+  // connection from compress processor to log attribute
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
+  connection->addRelationship(core::Relationship("success", "compress successful output"));
+  connection->setSource(processor);
+  connection->setDestination(logAttributeProcessor);
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(logAttributeuuid);
+  processor->addConnection(connection);
+  // connection to compress processor
+  std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
+  compressconnection->setDestination(processor);
+  compressconnection->setDestinationUUID(processoruuid);
+  processor->addConnection(compressconnection);
 
-    content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
-    // connection from compress processor to log attribute
-    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->addRelationship(core::Relationship("success", "compress successful output"));
-    connection->setSource(processor);
-    connection->setDestination(logAttributeProcessor);
-    connection->setSourceUUID(processoruuid);
-    connection->setDestinationUUID(logAttributeuuid);
-    processor->addConnection(connection);
-    // connection to compress processor
-    std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
-    compressconnection->setDestination(processor);
-    compressconnection->setDestinationUUID(processoruuid);
-    processor->addConnection(compressconnection);
+  std::set<core::Relationship> autoTerminatedRelationships;
+  core::Relationship failure("failure", "");
+  autoTerminatedRelationships.insert(failure);
+  processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
 
-    std::set<core::Relationship> autoTerminatedRelationships;
-    core::Relationship failure("failure", "");
-    autoTerminatedRelationships.insert(failure);
-    processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  logAttributeProcessor->incrementActiveTasks();
+  logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    processor->incrementActiveTasks();
-    processor->setScheduledState(core::ScheduledState::RUNNING);
-    logAttributeProcessor->incrementActiveTasks();
-    logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_LZMA);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
 
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_LZMA);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
+  std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
+  std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+  sessionGenFlowFile.import(testController.rawContentPath(), flow, true, 0);
+  income_connection->put(flow);
 
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
-    std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-    sessionGenFlowFile.import(EXPECT_COMPRESS_CONTENT, flow, true, 0);
-    income_connection->put(flow);
+  REQUIRE(processor->getName() == "compresscontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  auto session = std::make_shared<core::ProcessSession>(context);
+  processor->onTrigger(context, session);
+  session->commit();
 
-    REQUIRE(processor->getName() == "compresscontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    auto session = std::make_shared<core::ProcessSession>(context);
-    processor->onTrigger(context, session);
-    session->commit();
-
-    if (LogTestController::getInstance().contains("compression not supported on this platform")) {
-      // platform not support LZMA
-      LogTestController::getInstance().reset();
-      return;
-    }
-
-    // validate the compress content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() > 0);
-    {
-      REQUIRE(flow1->getSize() != flow->getSize());
-      std::string mime;
-      flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
-      REQUIRE(mime == "application/x-lzma");
-      ReadCallback callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      callback.archive_read();
-      std::string flowFileName = std::string(EXPECT_COMPRESS_CONTENT);
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::in);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-      REQUIRE(expectContents == contents);
-      // write the compress content for next test
-      std::ofstream file(COMPRESS_CONTENT);
-      file.write(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-      file.close();
-      file1.close();
-    }
+  if (LogTestController::getInstance().contains("compression not supported on this platform")) {
+    // platform not support LZMA
     LogTestController::getInstance().reset();
-  } catch (...) {
+    return;
   }
+
+  // validate the compress content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() > 0);
+  {
+    REQUIRE(flow1->getSize() != flow->getSize());
+    std::string mime;
+    flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
+    REQUIRE(mime == "application/x-lzma");
+    ReadCallback callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
+    callback.archive_read();
+    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
+    REQUIRE(testController.getRawContent() == contents);
+    // write the compress content for next test
+    testController.writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+  }
+  LogTestController::getInstance().reset();
 }
 
 
 TEST_CASE("DecompressFileLZMA", "[compressfiletest6]") {
-  try {
-    TestController testController;
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<core::ProcessSession>();
-    LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
-    // LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::io::FileStream>();
+  DecompressTestController testController;
 
-    std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
+  // LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::io::FileStream>();
 
-    std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
-    std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-    processor->initialize();
-    utils::Identifier processoruuid;
-    REQUIRE(true == processor->getUUID(processoruuid));
-    utils::Identifier logAttributeuuid;
-    REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
-    content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
-    // connection from compress processor to log attribute
-    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->addRelationship(core::Relationship("success", "compress successful output"));
-    connection->setSource(processor);
-    connection->setDestination(logAttributeProcessor);
-    connection->setSourceUUID(processoruuid);
-    connection->setDestinationUUID(logAttributeuuid);
-    processor->addConnection(connection);
-    // connection to compress processor
-    std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
-    compressconnection->setDestination(processor);
-    compressconnection->setDestinationUUID(processoruuid);
-    processor->addConnection(compressconnection);
+  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
+  std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  processor->initialize();
+  utils::Identifier processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier logAttributeuuid;
+  REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
-    std::set<core::Relationship> autoTerminatedRelationships;
-    core::Relationship failure("failure", "");
-    autoTerminatedRelationships.insert(failure);
-    processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+  // connection from compress processor to log attribute
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
+  connection->addRelationship(core::Relationship("success", "compress successful output"));
+  connection->setSource(processor);
+  connection->setDestination(logAttributeProcessor);
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(logAttributeuuid);
+  processor->addConnection(connection);
+  // connection to compress processor
+  std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
+  compressconnection->setDestination(processor);
+  compressconnection->setDestinationUUID(processoruuid);
+  processor->addConnection(compressconnection);
 
-    processor->incrementActiveTasks();
-    processor->setScheduledState(core::ScheduledState::RUNNING);
-    logAttributeProcessor->incrementActiveTasks();
-    logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
+  std::set<core::Relationship> autoTerminatedRelationships;
+  core::Relationship failure("failure", "");
+  autoTerminatedRelationships.insert(failure);
+  processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
 
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_ATTRIBUTE);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  logAttributeProcessor->incrementActiveTasks();
+  logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
-    std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-    sessionGenFlowFile.import(COMPRESS_CONTENT, flow, true, 0);
-    flow->setAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), "application/x-lzma");
-    income_connection->put(flow);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_ATTRIBUTE);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
 
-    REQUIRE(processor->getName() == "compresscontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    auto session = std::make_shared<core::ProcessSession>(context);
-    processor->onTrigger(context, session);
-    session->commit();
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
+  std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
+  std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+  sessionGenFlowFile.import(testController.compressedPath(), flow, true, 0);
+  flow->setAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), "application/x-lzma");
+  income_connection->put(flow);
 
-    if (LogTestController::getInstance().contains("compression not supported on this platform")) {
-      // platform not support LZMA
-      LogTestController::getInstance().reset();
-      return;
-    }
+  REQUIRE(processor->getName() == "compresscontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  auto session = std::make_shared<core::ProcessSession>(context);
+  processor->onTrigger(context, session);
+  session->commit();
 
-    // validate the compress content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() > 0);
-    {
-      REQUIRE(flow1->getSize() != flow->getSize());
-      std::string mime;
-      REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
-      ReadCallback callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      std::string flowFileName = std::string(EXPECT_COMPRESS_CONTENT);
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::in);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-      REQUIRE(expectContents == contents);
-      file1.close();
-    }
+  if (LogTestController::getInstance().contains("compression not supported on this platform")) {
+    // platform not support LZMA
     LogTestController::getInstance().reset();
-    unlink(COMPRESS_CONTENT);
-    unlink(EXPECT_COMPRESS_CONTENT);
-  } catch (...) {
+    return;
   }
+
+  // validate the compress content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() > 0);
+  {
+    REQUIRE(flow1->getSize() != flow->getSize());
+    std::string mime;
+    REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
+    ReadCallback callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
+    std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    REQUIRE(testController.getRawContent() == contents);
+  }
+  LogTestController::getInstance().reset();
 }
 
 TEST_CASE("CompressFileXYLZMA", "[compressfiletest7]") {
-  try {
-    std::ofstream expectfile;
-    expectfile.open(EXPECT_COMPRESS_CONTENT);
+  CompressTestController testController;
 
-    std::mt19937 gen(std::random_device { }());
-    for (int i = 0; i < 100000; i++) {
-      expectfile << std::to_string(gen() % 100);
-    }
-    expectfile.close();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
 
-    TestController testController;
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<core::ProcessSession>();
-    LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
+  std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  processor->initialize();
+  utils::Identifier processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier logAttributeuuid;
+  REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
-    std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
-    std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-    processor->initialize();
-    utils::Identifier processoruuid;
-    REQUIRE(true == processor->getUUID(processoruuid));
-    utils::Identifier logAttributeuuid;
-    REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
 
-    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+  // connection from compress processor to log attribute
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
+  connection->addRelationship(core::Relationship("success", "compress successful output"));
+  connection->setSource(processor);
+  connection->setDestination(logAttributeProcessor);
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(logAttributeuuid);
+  processor->addConnection(connection);
+  // connection to compress processor
+  std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
+  compressconnection->setDestination(processor);
+  compressconnection->setDestinationUUID(processoruuid);
+  processor->addConnection(compressconnection);
 
-    content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
-    // connection from compress processor to log attribute
-    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->addRelationship(core::Relationship("success", "compress successful output"));
-    connection->setSource(processor);
-    connection->setDestination(logAttributeProcessor);
-    connection->setSourceUUID(processoruuid);
-    connection->setDestinationUUID(logAttributeuuid);
-    processor->addConnection(connection);
-    // connection to compress processor
-    std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
-    compressconnection->setDestination(processor);
-    compressconnection->setDestinationUUID(processoruuid);
-    processor->addConnection(compressconnection);
+  std::set<core::Relationship> autoTerminatedRelationships;
+  core::Relationship failure("failure", "");
+  autoTerminatedRelationships.insert(failure);
+  processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
 
-    std::set<core::Relationship> autoTerminatedRelationships;
-    core::Relationship failure("failure", "");
-    autoTerminatedRelationships.insert(failure);
-    processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  logAttributeProcessor->incrementActiveTasks();
+  logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    processor->incrementActiveTasks();
-    processor->setScheduledState(core::ScheduledState::RUNNING);
-    logAttributeProcessor->incrementActiveTasks();
-    logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_XZ_LZMA2);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
 
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_XZ_LZMA2);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
+  std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
+  std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+  sessionGenFlowFile.import(testController.rawContentPath(), flow, true, 0);
+  income_connection->put(flow);
 
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
-    std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-    sessionGenFlowFile.import(EXPECT_COMPRESS_CONTENT, flow, true, 0);
-    income_connection->put(flow);
+  REQUIRE(processor->getName() == "compresscontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  auto session = std::make_shared<core::ProcessSession>(context);
+  processor->onTrigger(context, session);
+  session->commit();
 
-    REQUIRE(processor->getName() == "compresscontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    auto session = std::make_shared<core::ProcessSession>(context);
-    processor->onTrigger(context, session);
-    session->commit();
-
-    if (LogTestController::getInstance().contains("compression not supported on this platform")) {
-      // platform not support LZMA
-      LogTestController::getInstance().reset();
-      return;
-    }
-
-    // validate the compress content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() > 0);
-    {
-      REQUIRE(flow1->getSize() != flow->getSize());
-      std::string mime;
-      flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
-      REQUIRE(mime == "application/x-xz");
-      ReadCallback callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      callback.archive_read();
-      std::string flowFileName = std::string(EXPECT_COMPRESS_CONTENT);
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::in);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-      REQUIRE(expectContents == contents);
-      // write the compress content for next test
-      std::ofstream file(COMPRESS_CONTENT);
-      file.write(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-      file.close();
-      file1.close();
-    }
+  if (LogTestController::getInstance().contains("compression not supported on this platform")) {
+    // platform not support LZMA
     LogTestController::getInstance().reset();
-  } catch (...) {
+    return;
   }
+
+  // validate the compress content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() > 0);
+  {
+    REQUIRE(flow1->getSize() != flow->getSize());
+    std::string mime;
+    flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
+    REQUIRE(mime == "application/x-xz");
+    ReadCallback callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
+    callback.archive_read();
+    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
+    REQUIRE(testController.getRawContent() == contents);
+    // write the compress content for next test
+    testController.writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+  }
+  LogTestController::getInstance().reset();
 }
 
 
 TEST_CASE("DecompressFileXYLZMA", "[compressfiletest8]") {
-  try {
-    TestController testController;
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<core::ProcessSession>();
-    LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
-    // LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::io::FileStream>();
+  DecompressTestController testController;
 
-    std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
+  // LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::io::FileStream>();
 
-    std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
-    std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-    processor->initialize();
-    utils::Identifier processoruuid;
-    REQUIRE(true == processor->getUUID(processoruuid));
-    utils::Identifier logAttributeuuid;
-    REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
-    content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
-    // connection from compress processor to log attribute
-    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->addRelationship(core::Relationship("success", "compress successful output"));
-    connection->setSource(processor);
-    connection->setDestination(logAttributeProcessor);
-    connection->setSourceUUID(processoruuid);
-    connection->setDestinationUUID(logAttributeuuid);
-    processor->addConnection(connection);
-    // connection to compress processor
-    std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
-    compressconnection->setDestination(processor);
-    compressconnection->setDestinationUUID(processoruuid);
-    processor->addConnection(compressconnection);
+  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
+  std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  processor->initialize();
+  utils::Identifier processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier logAttributeuuid;
+  REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
-    std::set<core::Relationship> autoTerminatedRelationships;
-    core::Relationship failure("failure", "");
-    autoTerminatedRelationships.insert(failure);
-    processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  // std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+  // connection from compress processor to log attribute
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
+  connection->addRelationship(core::Relationship("success", "compress successful output"));
+  connection->setSource(processor);
+  connection->setDestination(logAttributeProcessor);
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(logAttributeuuid);
+  processor->addConnection(connection);
+  // connection to compress processor
+  std::shared_ptr<minifi::Connection> compressconnection = std::make_shared<minifi::Connection>(repo, content_repo, "compressconnection");
+  compressconnection->setDestination(processor);
+  compressconnection->setDestinationUUID(processoruuid);
+  processor->addConnection(compressconnection);
 
-    processor->incrementActiveTasks();
-    processor->setScheduledState(core::ScheduledState::RUNNING);
-    logAttributeProcessor->incrementActiveTasks();
-    logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
+  std::set<core::Relationship> autoTerminatedRelationships;
+  core::Relationship failure("failure", "");
+  autoTerminatedRelationships.insert(failure);
+  processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
 
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_ATTRIBUTE);
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-    context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  logAttributeProcessor->incrementActiveTasks();
+  logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
-    std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-    sessionGenFlowFile.import(COMPRESS_CONTENT, flow, true, 0);
-    flow->setAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), "application/x-xz");
-    income_connection->put(flow);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_ATTRIBUTE);
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
 
-    REQUIRE(processor->getName() == "compresscontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    auto session = std::make_shared<core::ProcessSession>(context);
-    processor->onTrigger(context, session);
-    session->commit();
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
+  std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
+  std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+  sessionGenFlowFile.import(testController.compressedPath(), flow, true, 0);
+  flow->setAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), "application/x-xz");
+  income_connection->put(flow);
 
-    if (LogTestController::getInstance().contains("compression not supported on this platform")) {
-      // platform not support LZMA
-      LogTestController::getInstance().reset();
-      return;
-    }
+  REQUIRE(processor->getName() == "compresscontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  auto session = std::make_shared<core::ProcessSession>(context);
+  processor->onTrigger(context, session);
+  session->commit();
 
-    // validate the compress content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() > 0);
-    {
-      REQUIRE(flow1->getSize() != flow->getSize());
-      std::string mime;
-      REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
-      ReadCallback callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      std::string flowFileName = std::string(EXPECT_COMPRESS_CONTENT);
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::in);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-      REQUIRE(expectContents == contents);
-      file1.close();
-    }
+  if (LogTestController::getInstance().contains("compression not supported on this platform")) {
+    // platform not support LZMA
     LogTestController::getInstance().reset();
-    unlink(COMPRESS_CONTENT);
-    unlink(EXPECT_COMPRESS_CONTENT);
-  } catch (...) {
+    return;
   }
+
+  // validate the compress content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() > 0);
+  {
+    REQUIRE(flow1->getSize() != flow->getSize());
+    std::string mime;
+    REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
+    ReadCallback callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
+    std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    REQUIRE(testController.getRawContent() == contents);
+  }
+  LogTestController::getInstance().reset();
 }
 
 TEST_CASE("RawGzipCompressionDecompression", "[compressfiletest8]") {
