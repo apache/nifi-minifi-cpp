@@ -56,7 +56,7 @@
 #endif
 
 #ifdef _WIN32
-#ifndef WIN32_LEAN_AND_MEAN 
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
 // can't include cxxabi

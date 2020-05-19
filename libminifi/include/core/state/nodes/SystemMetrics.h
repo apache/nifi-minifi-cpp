@@ -97,7 +97,7 @@ class SystemInformation : public DeviceInformation {
 		serialized.push_back(systemInfo);
 #endif
     serialized.push_back(identifier);
-    
+
 
     return serialized;
   }

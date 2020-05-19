@@ -20,7 +20,7 @@
 
 #include "core/Resource.h"
 #include <functional>
-#if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
+#if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
 #endif

@@ -153,7 +153,7 @@ class FileUtils {
     DWORD Attributes;
     std::string str;
 
-	
+
     std::stringstream pathstr;
     pathstr << path << "\\*";
     str = pathstr.str();

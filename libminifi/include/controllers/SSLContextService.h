@@ -19,7 +19,7 @@
 #define LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
-#endif 
+#endif
 #ifdef OPENSSL_SUPPORT
 #include <openssl/err.h>
 #include <openssl/ssl.h>

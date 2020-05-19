@@ -32,7 +32,7 @@
 #include <Windows.h>    // Windows specific libraries for collecting software metrics.
 #include <Psapi.h>
 #pragma comment( lib, "psapi.lib" )
-#define DLL_EXPORT __declspec(dllexport)  
+#define DLL_EXPORT __declspec(dllexport)
 #endif
 #include "core/Core.h"
 #include "io/DataStream.h"

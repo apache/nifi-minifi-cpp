@@ -224,7 +224,7 @@ class SiteToSiteClient : public core::Connectable {
   virtual void deleteTransaction(std::string transactionID);
 
   virtual void tearDown() = 0;
-  
+
   // read Respond
   virtual int readResponse(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message);
   // write respond
@@ -291,7 +291,7 @@ class WriteCallback : public OutputStreamCallback {
     int len = _packet->_size;
     int total = 0;
     while (len > 0) {
-	  int size = len < 16384 ? len : 16384; 
+	  int size = len < 16384 ? len : 16384;
       int ret = _packet->transaction_->getStream().readData(buffer, size);
       if (ret != size) {
         logging::LOG_ERROR(_packet->logger_reference_) << "Site2Site Receive Flow Size " << size << " Failed " << ret << ", should have received " << len;

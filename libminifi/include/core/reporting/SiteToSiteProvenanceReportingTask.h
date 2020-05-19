@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 #ifndef LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_
-#define LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_ 
+#define LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_
 
 #include <mutex>
 #include <memory>
@@ -94,7 +94,7 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
   std::shared_ptr<logging::Logger> logger_;
 };
 
-// SiteToSiteProvenanceReportingTask 
+// SiteToSiteProvenanceReportingTask
 
 } /* namespace reporting */
 } /* namespace core */
