@@ -75,6 +75,13 @@ int SecureDescriptorStream::writeData(uint8_t *value, int size) {
 }
 
 template<typename T>
+inline std::vector<uint8_t> SecureDescriptorStream::readBuffer(const T& t) {
+  std::vector<uint8_t> buf;
+  readBuffer(buf, t);
+  return buf;
+}
+
+template<typename T>
 inline int SecureDescriptorStream::readBuffer(std::vector<uint8_t>& buf, const T& t) {
   buf.resize(sizeof t);
   return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));

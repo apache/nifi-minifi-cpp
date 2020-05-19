@@ -107,13 +107,22 @@ class FileStream : public io::BaseStream {
  protected:
 
   /**
+   * Creates a vector and returns the vector using the provided
+   * type name.
+   * @param t incoming object
+   * @returns vector.
+   */
+  template<typename T>
+  std::vector<uint8_t> readBuffer(const T& t);
+
+  /**
    * Populates the vector using the provided type name.
    * @param buf output buffer
    * @param t incoming object
    * @returns number of bytes read.
    */
   template<typename T>
-  int readBuffer(std::vector<uint8_t>&, const T&);
+  int readBuffer(std::vector<uint8_t>& buf, const T& t);
   std::recursive_mutex file_lock_;
   std::unique_ptr<std::fstream> file_stream_;
   size_t offset_;

@@ -145,6 +145,19 @@ class CRCStream : public BaseStream {
  protected:
 
   /**
+   * Creates a vector and returns the vector using the provided
+   * type name.
+   * @param t incoming object
+   * @returns vector.
+   */
+  template<typename K>
+  std::vector<uint8_t> readBuffer(const K& t) {
+    std::vector<uint8_t> buf;
+    readBuffer(buf, t);
+    return buf;
+  }
+
+  /**
    * Populates the vector using the provided type name.
    * @param buf output buffer
    * @param t incoming object
