@@ -210,8 +210,8 @@ template<typename T>
 bool ConfigurableComponent::getProperty(const std::string name, T &value) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
-   auto &&it = properties_.find(name);
-   if (it != properties_.end()) {
+  auto &&it = properties_.find(name);
+  if (it != properties_.end()) {
      Property item = it->second;
      value = static_cast<T>(item.getValue());
      if (item.getValue().getValue() != nullptr) {
@@ -222,10 +222,10 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const 
        logger_->log_warn("Component %s property name %s, empty value", name, item.getName());
        return false;
      }
-   } else {
+  } else {
      logger_->log_warn("Could not find property %s", name);
      return false;
-   }
+  }
 }
 
 } /* namespace core */

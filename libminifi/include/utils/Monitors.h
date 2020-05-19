@@ -129,8 +129,8 @@ struct TaskRescheduleInfo {
   }
 
 #if defined(WIN32)
- // https://developercommunity.visualstudio.com/content/problem/60897/c-shared-state-futuresstate-default-constructs-the.html
- // Because of this bug we need to have this object default constructible, which makes no sense otherwise. Hack.
+// https://developercommunity.visualstudio.com/content/problem/60897/c-shared-state-futuresstate-default-constructs-the.html
+// Because of this bug we need to have this object default constructible, which makes no sense otherwise. Hack.
  private:
   TaskRescheduleInfo() : wait_time_(std::chrono::milliseconds(0)), finished_(true) {}
   friend class std::_Associated_state<TaskRescheduleInfo>;

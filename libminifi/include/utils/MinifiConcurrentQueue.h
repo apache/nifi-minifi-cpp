@@ -87,7 +87,7 @@ class ConcurrentQueue {
   }
 
  private:
-   ConcurrentQueue(ConcurrentQueue&& other, std::lock_guard<std::mutex>&)
+  ConcurrentQueue(ConcurrentQueue&& other, std::lock_guard<std::mutex>&)
     : queue_(std::move(other.queue_) ) {}
 
  protected:

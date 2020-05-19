@@ -78,8 +78,8 @@ enum class SSLVersion : uint8_t {
 struct HTTPHeaderResponse {
  public:
   HTTPHeaderResponse(int max) // NOLINT
-   : max_tokens_(max)
-   , parsed(false) {
+  : max_tokens_(max)
+  , parsed(false) {
   }
 
   /* Deprecated, headers are stored internally and can be accessed by getHeaderLines or getHeaderMap */
