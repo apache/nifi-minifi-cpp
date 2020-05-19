@@ -283,7 +283,7 @@ class StringUtils {
       }
     }
     return sstream.str();
-  };
+  }
 
   /**
    * Just a wrapper for the above function to be able to create separator from const char* or const wchar_t*
@@ -291,7 +291,7 @@ class StringUtils {
   template<class TChar, class U, typename std::enable_if<std::is_same<typename U::value_type, std::basic_string<TChar>>::value>::type* = nullptr>
   static std::basic_string<TChar> join(const TChar* separator, const U& container) {
     return join(std::basic_string<TChar>(separator), container);
-  };
+  }
 
 
   /**
@@ -325,7 +325,7 @@ class StringUtils {
       typename std::enable_if<!std::is_same<U, std::basic_string<TChar>>::value>::type* = nullptr>
   static std::basic_string<TChar> join(const TChar* separator, const U& container) {
     return join(std::basic_string<TChar>(separator), container);
-  };
+  }
 
   /**
    * Hexdecodes the hexencoded string in data, ignoring every character that is not [0-9a-fA-F]

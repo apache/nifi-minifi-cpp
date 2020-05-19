@@ -96,7 +96,7 @@ static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConf
         return ptr;
       }
       return nullptr;
-  };
+  }
   return nullptr;
 }
 

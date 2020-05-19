@@ -68,7 +68,7 @@ class ExtractText : public core::Processor {
 
     virtual bool supportsDynamicProperties() {
       return true;
-    };
+    }
 
     class ReadCallback : public InputStreamCallback {
      public:

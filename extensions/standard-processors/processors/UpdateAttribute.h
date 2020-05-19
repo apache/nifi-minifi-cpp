@@ -53,7 +53,7 @@ class UpdateAttribute : public core::Processor {
 
   virtual bool supportsDynamicProperties() {
     return true;
-  };
+  }
 
   virtual void onSchedule(core::ProcessContext *context,
                           core::ProcessSessionFactory *sessionFactory);

@@ -679,7 +679,7 @@ class FileUtils {
     return {};
   }
 #endif /* WIN32 */
-};
+}; // NOLINT
 
 } /* namespace file */
 } /* namespace utils */
