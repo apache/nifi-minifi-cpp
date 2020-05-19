@@ -42,7 +42,7 @@ class CallBackTimer {
 
   bool is_running() const;
 
-private:
+ private:
   bool execute_;
   std::function<void(void)> func_;
   std::thread thd_;

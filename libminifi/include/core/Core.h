@@ -213,7 +213,7 @@ class CoreComponent {
   void loadComponent() {
   }
 
-protected:
+ protected:
   // A global unique identifier
   utils::Identifier uuid_;
   // UUID string

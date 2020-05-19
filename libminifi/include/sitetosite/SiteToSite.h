@@ -218,7 +218,7 @@ typedef struct {
 
 // Request Type Str
 class SiteToSiteRequest {
-public:
+ public:
   static const char *RequestTypeStr[MAX_REQUEST_TYPE];
   static RespondCodeContext respondCodeContext[21];
 };

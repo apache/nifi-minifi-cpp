@@ -35,7 +35,7 @@ namespace processors {
 
 //! ExtractText Class
 class ExtractText : public core::Processor {
-public:
+ public:
     //! Constructor
     /*!
      * Create a new processor
@@ -71,19 +71,19 @@ public:
     };
 
     class ReadCallback : public InputStreamCallback {
-    public:
+     public:
         ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ct, std::shared_ptr<logging::Logger> lgr);
         ~ReadCallback() {}
         int64_t process(std::shared_ptr<io::BaseStream> stream);
 
-    private:
+     private:
         std::shared_ptr<core::FlowFile> flowFile_;
         core::ProcessContext *ctx_;
         std::vector<uint8_t> buffer_;
         std::shared_ptr<logging::Logger> logger_;
     };
 
-private:
+ private:
     //! Logger
     std::shared_ptr<logging::Logger> logger_;
 };

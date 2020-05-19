@@ -259,7 +259,7 @@ class HTTPRequestResponse {
 };
 
 class BaseHTTPClient {
-public:
+ public:
   explicit BaseHTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) {
     response_code = -1;
   }

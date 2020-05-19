@@ -155,7 +155,7 @@ noexcept      : key_(std::move(other.key_)),
         return *this;
       }
 
-    private:
+ private:
       T key_;
       std::function<bool(T, T)> comparator_;
       std::vector<uint8_t> buffer_;

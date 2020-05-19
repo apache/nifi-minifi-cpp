@@ -36,7 +36,7 @@ namespace minifi {
 namespace utils {
 
 class Regex {
-public:
+ public:
   enum class Mode { ICASE };
 
   Regex();

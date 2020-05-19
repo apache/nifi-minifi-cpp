@@ -44,13 +44,13 @@ class windowseventlog_sink : public spdlog::sinks::base_sink<spdlog::details::nu
 
   WORD type_from_level(const spdlog::details::log_msg& msg) const;
 
-  protected:
+ protected:
    virtual void _sink_it(const spdlog::details::log_msg& msg);
 
    virtual void _flush();
 
-  public:
-   windowseventlog_sink(const std::string& source_name = "ApacheNiFiMiNiFi"); // NOLINT
+ public:
+   windowseventlog_sink(const std::string& source_name = "ApacheNiFiMiNiFi");
 
    virtual ~windowseventlog_sink();
 

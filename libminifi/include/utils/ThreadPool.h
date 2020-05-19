@@ -125,7 +125,7 @@ class Worker {
     return identifier_;
   }
 
-protected:
+ protected:
   std::string identifier_;
   std::chrono::time_point<std::chrono::steady_clock> next_exec_time_;
   std::function<T()> task;
