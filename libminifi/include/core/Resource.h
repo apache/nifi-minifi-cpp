@@ -37,7 +37,6 @@ namespace core {
 template<class T>
 class StaticClassType {
  public:
-
   StaticClassType(const std::string &name, const std::string &description = "") { // NOLINT
     // Notify when the static member is created
     if (!description.empty()) {
