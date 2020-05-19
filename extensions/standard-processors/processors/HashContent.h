@@ -100,7 +100,7 @@ namespace {
     SHA256_CTX context;
     SHA256_Init(&context);
 
-    size_t ret ;
+    size_t ret;
     do {
       ret = stream->readData(buffer, HASH_BUFFER_SIZE);
       if (ret > 0) {
