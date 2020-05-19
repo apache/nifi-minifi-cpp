@@ -47,15 +47,15 @@ class FileOutputCallback : public ByteOutputCallback {
   virtual ~FileOutputCallback() {
   }
 
-  virtual int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+  int64_t process(std::shared_ptr<io::BaseStream> stream) override;
 
-  virtual const std::vector<char> to_string() override;
+  const std::vector<char> to_string() override;
 
-  virtual void close() override;
+  void close() override;
 
-  virtual size_t getSize() override;
+  size_t getSize() override;
 
-  virtual void write(char *data, size_t size) override;
+  void write(char *data, size_t size) override;
 
  private:
   std::string file_;

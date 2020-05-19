@@ -76,9 +76,9 @@ class GenerateFlowFile : public core::Processor {
  public:
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   // OnTrigger method, implemented by NiFi GenerateFlowFile
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   // Initialize, over write by NiFi GenerateFlowFile
-  virtual void initialize(void) override;
+  void initialize(void) override;
 
  protected:
   std::vector<char> data_;

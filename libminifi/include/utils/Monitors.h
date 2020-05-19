@@ -63,14 +63,14 @@ class TimerAwareMonitor : public utils::AfterExecute<std::chrono::milliseconds> 
       : current_wait_(std::chrono::milliseconds(0)),
         run_monitor_(run_monitor) {
   }
-  virtual bool isFinished(const std::chrono::milliseconds &result) override {
+  bool isFinished(const std::chrono::milliseconds &result) override {
     current_wait_.store(result);
     if (*run_monitor_) {
       return false;
     }
     return true;
   }
-  virtual bool isCancelled(const std::chrono::milliseconds &result) override {
+  bool isCancelled(const std::chrono::milliseconds &result) override {
     if (*run_monitor_) {
       return false;
     }
@@ -80,7 +80,7 @@ class TimerAwareMonitor : public utils::AfterExecute<std::chrono::milliseconds> 
    * Time to wait before re-running this task if necessary
    * @return milliseconds since epoch after which we are eligible to re-run this task.
    */
-  virtual std::chrono::milliseconds wait_time() override {
+  std::chrono::milliseconds wait_time() override {
     return current_wait_.load();
   }
 
@@ -95,13 +95,13 @@ class SingleRunMonitor : public utils::AfterExecute<bool>{
       : retry_interval_(retry_interval) {
   }
 
-  virtual bool isFinished(const bool &result) override {
+  bool isFinished(const bool &result) override {
     return result;
   }
-  virtual bool isCancelled(const bool &result) override {
+  bool isCancelled(const bool &result) override {
     return false;
   }
-  virtual std::chrono::milliseconds wait_time() override {
+  std::chrono::milliseconds wait_time() override {
     return retry_interval_;
   }
  protected:
@@ -141,21 +141,21 @@ class ComplexMonitor : public utils::AfterExecute<TaskRescheduleInfo> {
  public:
   ComplexMonitor() = default;
 
-  virtual bool isFinished(const TaskRescheduleInfo &result) override {
+  bool isFinished(const TaskRescheduleInfo &result) override {
     if (result.finished_) {
       return true;
     }
     current_wait_.store(result.wait_time_);
     return false;
   }
-  virtual bool isCancelled(const TaskRescheduleInfo &result) override {
+  bool isCancelled(const TaskRescheduleInfo &result) override {
     return false;
   }
   /**
    * Time to wait before re-running this task if necessary
    * @return milliseconds since epoch after which we are eligible to re-run this task.
    */
-  virtual std::chrono::milliseconds wait_time() override {
+  std::chrono::milliseconds wait_time() override {
     return current_wait_.load();
   }
 
