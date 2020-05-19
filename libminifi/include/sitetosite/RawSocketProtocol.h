@@ -107,7 +107,6 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
     _timeOut = time;
     if (peer_)
       peer_->setTimeOut(time);
-
   }
 
   /**

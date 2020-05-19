@@ -45,7 +45,6 @@ class WeakReference {
   virtual void remove() = 0;
  protected:
   WeakReference() {
-
   }
 };
 
@@ -60,11 +59,9 @@ class WeakReference {
 class ReferenceContainer {
  public:
   ReferenceContainer() {
-
   }
 
   ~ReferenceContainer() {
-
   }
 
   void addReference(std::shared_ptr<WeakReference> ref) {
@@ -89,7 +86,6 @@ class ReferenceContainer {
   std::mutex mutex;
 
   std::vector<std::shared_ptr<WeakReference> > references;
-
 };
 
 }/* namespace core */

@@ -45,7 +45,6 @@ inline bool isRelationshipNameUndefined(std::string name) {
 
 // Relationship Class
 class Relationship {
-
  public:
   /*
    * Create a new relationship 

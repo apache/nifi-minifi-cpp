@@ -179,7 +179,6 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
 
  private:
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 template<typename T>
@@ -325,7 +324,6 @@ bool VolatileRepository<T>::Delete(T key) {
  */
 template<typename T>
 bool VolatileRepository<T>::Get(const T &key, std::string &value) {
-
   for (auto ent : value_vector_) {
     // let the destructor do the cleanup
     RepoValue<T> repo_value;

@@ -52,7 +52,6 @@ class DataPacket {
 };
 
 class SiteToSiteClient : public core::Connectable {
-
  public:
   SiteToSiteClient()
       : core::Connectable("SitetoSiteClient"),
@@ -73,7 +72,6 @@ class SiteToSiteClient : public core::Connectable {
   }
 
   virtual ~SiteToSiteClient() {
-
   }
 
   void setSSLContextService(const std::shared_ptr<minifi::controllers::SSLContextService> &context_service) {
@@ -189,7 +187,6 @@ class SiteToSiteClient : public core::Connectable {
   }
 
   virtual void yield() {
-
   }
 
   /**
@@ -279,8 +276,6 @@ class SiteToSiteClient : public core::Connectable {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
-
-
 };
 
 // Nest Callback Class for write stream

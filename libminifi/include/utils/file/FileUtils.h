@@ -430,7 +430,6 @@ class FileUtils {
 
   static std::vector<std::pair<std::string, std::string>> list_dir_all(const std::string& dir, const std::shared_ptr<logging::Logger> &logger,
                                                                        bool recursive = true)  {
-
     std::vector<std::pair<std::string, std::string>> fileList;
     auto lambda = [&fileList] (const std::string &path, const std::string &filename) {
       fileList.push_back(make_pair(path, filename));
@@ -449,7 +448,6 @@ class FileUtils {
    */
   static void list_dir(const std::string& dir, std::function<bool (const std::string&, const std::string&)> callback,
                        const std::shared_ptr<logging::Logger> &logger, bool recursive = true) {
-
     logger->log_debug("Performing file listing against %s", dir);
 #ifndef WIN32
     DIR *d = opendir(dir.c_str());
@@ -460,7 +458,6 @@ class FileUtils {
 
     struct dirent *entry;
     while ((entry = readdir(d)) != NULL) {
-
       std::string d_name = entry->d_name;
       std::string path = dir + get_separator() + d_name;
 

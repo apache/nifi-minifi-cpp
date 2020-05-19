@@ -216,7 +216,6 @@ class FlowInformation : public FlowMonitor {
         repoNode.children.push_back(queueUUIDNode);
 
         queues.children.push_back(repoNode);
-
       }
       serialized.push_back(queues);
     }

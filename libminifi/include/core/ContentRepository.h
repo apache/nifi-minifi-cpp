@@ -37,7 +37,6 @@ namespace core {
 class ContentRepository : public StreamManager<minifi::ResourceClaim> {
  public:
   virtual ~ContentRepository() {
-
   }
 
   /**

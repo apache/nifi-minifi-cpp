@@ -137,7 +137,6 @@ class Identifier : public IdentifierBase<UUID_FIELD, std::string> {
 
  protected:
   void build_string();
-
 };
 
 class IdGenerator {

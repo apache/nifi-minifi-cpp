@@ -46,7 +46,6 @@ extern void setDefaultDirectory(std::string);
 
 // ResourceClaim Class
 class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
-
  public:
   // Constructor
   /*!
@@ -68,7 +67,6 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   // decreaseFlowFileRecordOwenedCount
   void decreaseFlowFileRecordOwnedCount() {
     claim_manager_->decrementStreamCount(shared_from_this());
-
   }
   // getFlowFileRecordOwenedCount
   uint64_t getFlowFileRecordOwnedCount() {
@@ -87,7 +85,6 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
     if (!deleted_) {
       deleted_ = true;
     }
-
   }
 
   bool exists() {

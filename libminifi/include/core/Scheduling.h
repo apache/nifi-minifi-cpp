@@ -29,7 +29,6 @@ namespace core {
  * with respect to scheduling the entity to run.
  */
 enum ScheduledState {
-
   /**
    * Entity cannot be scheduled to run
    */

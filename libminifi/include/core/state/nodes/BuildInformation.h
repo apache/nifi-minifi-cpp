@@ -95,7 +95,6 @@ class BuildInformation : public DeviceInformation {
     SerializedResponseNode compiler;
     compiler.name = "compiler";
     {
-
       SerializedResponseNode compiler_command;
       compiler_command.name = "compiler_command";
       compiler_command.value = AgentBuild::COMPILER;
@@ -111,7 +110,6 @@ class BuildInformation : public DeviceInformation {
       compiler.children.push_back(compiler_command);
       compiler.children.push_back(compiler_version);
       compiler.children.push_back(compiler_flags);
-
     }
     SerializedResponseNode device_id;
     device_id.name = "device_id";

@@ -38,7 +38,6 @@ class ControllerSocketProtocol : public HeartBeatReporter {
   ControllerSocketProtocol(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
       : HeartBeatReporter(name, uuid),
         logger_(logging::LoggerFactory<ControllerSocketProtocol>::getLogger()) {
-
   }
 
   /**

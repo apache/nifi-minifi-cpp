@@ -33,7 +33,6 @@ class PayloadParseException : public std::runtime_error {
   PayloadParseException(const std::string &msg) // NOLINT
       : std::runtime_error(msg) {
   }
-
 };
 
 template<typename T, typename C>
@@ -114,7 +113,6 @@ struct convert_if<bool> : public convert_if_base<bool, state::response::BoolValu
  * Note that this isn't functionally complete.
  */
 class PayloadParser {
-
  public:
   static PayloadParser getInstance(const C2Payload &payload) {
     return PayloadParser(payload);

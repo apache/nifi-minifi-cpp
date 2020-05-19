@@ -57,7 +57,6 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
       }
       master_list_.clear();
     }
-
   }
 
   /**

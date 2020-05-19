@@ -173,7 +173,6 @@ noexcept      : key_(std::move(other.key_)),
      **/
 template<typename T>
 class AtomicEntry {
-
  public:
   /**
    * Constructor that accepts a max size and an atomic counter for the total
@@ -251,7 +250,6 @@ class AtomicEntry {
         try_unlock();
         return false;
       }
-
     }
     ref_count_ = 1;
     value_.setKey(str, comparator);
@@ -364,7 +362,6 @@ class AtomicEntry {
       if (accumulated_repo_size_ != nullptr) {
         *accumulated_repo_size_ -= bufferSize;
       }
-
     }
     try_unlock();
     return ref;
@@ -376,7 +373,6 @@ class AtomicEntry {
     size = value_.getBufferSize();
     try_unlock();
     return size;
-
   }
 
   /**

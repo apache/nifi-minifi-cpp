@@ -182,7 +182,6 @@ class SecureDescriptorStream : public io::BaseStream {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 } /* namespace io */

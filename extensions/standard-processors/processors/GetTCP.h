@@ -53,7 +53,6 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
   }
 
   virtual bool isFinished(const int &result) {
-
     if (result == -1 || result == 0 || !running_) {
       std::lock_guard<std::mutex> lock(*mutex_);
       list_->erase(endpoint_);
@@ -89,7 +88,6 @@ class DataHandlerCallback : public OutputStreamCallback {
   }
 
   virtual ~DataHandlerCallback() {
-
   }
 
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) {
@@ -105,7 +103,6 @@ class DataHandler {
  public:
   DataHandler(std::shared_ptr<core::ProcessSessionFactory> sessionFactory) // NOLINT
       : sessionFactory_(sessionFactory) {
-
   }
   static const char *SOURCE_ENDPOINT_ATTRIBUTE;
 
@@ -113,7 +110,6 @@ class DataHandler {
 
  private:
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
-
 };
 
 class GetTCPMetrics : public state::response::ResponseNode {
@@ -132,7 +128,6 @@ class GetTCPMetrics : public state::response::ResponseNode {
     input_bytes_ = 0;
   }
   virtual ~GetTCPMetrics() {
-
   }
   virtual std::string getName() const {
     return core::Connectable::getName();
@@ -168,7 +163,6 @@ class GetTCPMetrics : public state::response::ResponseNode {
   std::atomic<size_t> iterations_;
   std::atomic<size_t> accepted_files_;
   std::atomic<size_t> input_bytes_;
-
 };
 
 // GetTCP Class
@@ -281,7 +275,6 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
   // as the top level time.
 
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 REGISTER_RESOURCE(GetTCP, "Establishes a TCP Server that defines and retrieves one or more byte messages from clients");

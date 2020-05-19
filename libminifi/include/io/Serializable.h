@@ -63,7 +63,6 @@ namespace io {
  *
  */
 class Serializable {
-
  public:
   /**
    * write byte to stream

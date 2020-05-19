@@ -53,7 +53,6 @@ class ProcessorUtils {
     returnPtr->setStreamFactory(stream_factory);
 
     return returnPtr;
-
   }
 
  private:

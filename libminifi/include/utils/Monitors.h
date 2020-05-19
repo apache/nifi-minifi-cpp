@@ -38,15 +38,12 @@ template<typename T>
 class AfterExecute {
  public:
   virtual ~AfterExecute() {
-
   }
 
   AfterExecute() {
-
   }
 
   explicit AfterExecute(AfterExecute &&other) {
-
   }
   virtual bool isFinished(const T &result) = 0;
   virtual bool isCancelled(const T &result) = 0;

@@ -251,7 +251,6 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * @param referenceNode reference node from whcih we will find linked references.
    */
   std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> findLinkedComponents(std::shared_ptr<core::controller::ControllerServiceNode> &referenceNode) {
-
     std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references;
 
     for (std::shared_ptr<core::controller::ControllerServiceNode> linked_node : referenceNode->getLinkedControllerServices()) {
@@ -271,7 +270,6 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
   }
 
   std::shared_ptr<ControllerServiceMap> controller_map_;
-
 };
 
 } /* namespace controller */

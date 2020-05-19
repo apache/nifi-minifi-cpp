@@ -50,7 +50,6 @@ static std::unique_ptr<SiteToSitePeer> createStreamingPeer(const SiteToSiteClien
   auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(std::move(str), client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(),
       client_configuration.getInterface()));
   return peer;
-
 }
 
 /**

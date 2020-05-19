@@ -90,7 +90,6 @@ class SchedulingDefaults : public DeviceInformation {
 
     return serialized;
   }
-
 };
 
 

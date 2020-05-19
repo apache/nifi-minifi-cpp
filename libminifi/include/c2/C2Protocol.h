@@ -36,7 +36,6 @@ class C2Protocol : public core::Connectable {
   C2Protocol(const std::string &name, const utils::Identifier &uuid)
       : core::Connectable(name, uuid),
         running_(true) {
-
   }
 
   virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
@@ -44,7 +43,6 @@ class C2Protocol : public core::Connectable {
     configuration_ = configure;
   }
   virtual ~C2Protocol() {
-
   }
 
   /**
@@ -89,7 +87,6 @@ class C2Protocol : public core::Connectable {
   void waitForWork(uint64_t timeoutMs);
 
   virtual void yield() {
-
   }
 
   /**

@@ -53,7 +53,6 @@ class ResponseNode : public core::Connectable {
         is_array_(false) {
   }
   virtual ~ResponseNode() {
-
   }
 
   virtual std::vector<SerializedResponseNode> serialize() = 0;
@@ -81,7 +80,6 @@ class ResponseNode : public core::Connectable {
   void setArray(bool array) {
     is_array_ = array;
   }
-
 };
 
 /**
@@ -136,7 +134,6 @@ class ObjectNode : public ResponseNode {
 
  protected:
   std::vector<std::shared_ptr<ResponseNode>> nodes_;
-
 };
 
 /**
@@ -146,7 +143,6 @@ class ObjectNode : public ResponseNode {
 class ResponseNodeSource {
  public:
   ResponseNodeSource() {
-
   }
 
   virtual ~ResponseNodeSource() {
@@ -163,7 +159,6 @@ class ResponseNodeSource {
   virtual int16_t getResponseNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector) = 0;
 
   virtual int16_t getMetricNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector) = 0;
-
 };
 
 /**
@@ -173,7 +168,6 @@ class ResponseNodeSource {
 class MetricsNodeSource : public ResponseNodeSource {
  public:
   MetricsNodeSource() {
-
   }
 
   virtual ~MetricsNodeSource() {
@@ -192,13 +186,11 @@ class MetricsNodeSource : public ResponseNodeSource {
   }
 
   virtual int16_t getMetricNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector) = 0;
-
 };
 
 class NodeReporter {
  public:
   NodeReporter() {
-
   }
 
   virtual ~NodeReporter() {

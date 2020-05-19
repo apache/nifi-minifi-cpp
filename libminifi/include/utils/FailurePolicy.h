@@ -28,7 +28,6 @@ namespace utils {
  *
  */
 enum FailurePolicy {
-
   /**
    * DO NOTHING
    */

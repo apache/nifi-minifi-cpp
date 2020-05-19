@@ -37,11 +37,9 @@ class ByteInputCallBack : public InputStreamCallback {
   }
 
   virtual ~ByteInputCallBack() {
-
   }
 
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) {
-
     stream->seek(0);
 
     if (stream->getSize() > 0) {
@@ -53,11 +51,9 @@ class ByteInputCallBack : public InputStreamCallback {
     ptr = (char*) &vec[0];
 
     return vec.size();
-
   }
 
   virtual void seek(size_t pos) {
-
   }
 
   virtual void write(std::string content) {
@@ -145,14 +141,12 @@ class ByteOutputCallback : public OutputStreamCallback {
   moodycamel::ConcurrentQueue<std::string> queue_;
 
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 class StreamOutputCallback : public ByteOutputCallback {
  public:
   explicit StreamOutputCallback(size_t max_size, bool wait_on_read = false)
       : ByteOutputCallback(max_size, wait_on_read) {
-
   }
 
   virtual void write(char *data, size_t size);

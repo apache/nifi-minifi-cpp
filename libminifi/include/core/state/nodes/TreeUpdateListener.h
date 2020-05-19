@@ -37,7 +37,6 @@ class MetricsUpdate : public Update {
  public:
   MetricsUpdate(UpdateStatus status) // NOLINT
       : Update(status) {
-
   }
   virtual bool validate() {
     return true;
@@ -52,11 +51,9 @@ class OperationWatcher : public utils::AfterExecute<Update> {
 
   explicit OperationWatcher(OperationWatcher && other)
       : running_(std::move(other.running_)) {
-
   }
 
   ~OperationWatcher() {
-
   }
 
   virtual bool isFinished(const Update &result) {
@@ -72,7 +69,6 @@ class OperationWatcher : public utils::AfterExecute<Update> {
 
  protected:
   std::atomic<bool> *running_;
-
 };
 
 } /* namespace metrics */

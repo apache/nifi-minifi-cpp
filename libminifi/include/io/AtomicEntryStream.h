@@ -111,7 +111,6 @@ class AtomicEntryStream : public BaseStream {
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 template<typename T>
@@ -149,10 +148,8 @@ int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
       }
       return size;
     }
-
   }
   return -1;
-
 }
 
 template<typename T>
@@ -194,7 +191,6 @@ int AtomicEntryStream<T>::readData(uint8_t *buf, int buflen) {
       entry_->decrementOwnership();
       return len;
     }
-
   }
   return -1;
 }

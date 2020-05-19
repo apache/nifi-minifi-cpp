@@ -84,7 +84,6 @@ class BaseLogger {
   virtual void log_string(LOG_LEVEL level, std::string str) = 0;
 
   virtual bool should_log(const LOG_LEVEL &level);
-
 };
 
 /**

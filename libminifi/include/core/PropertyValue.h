@@ -155,7 +155,6 @@ class PropertyValue : public state::response::ValueNode {
          */
         throw std::runtime_error("Invalid conversion");
       }
-
     }
     return *this;
   }

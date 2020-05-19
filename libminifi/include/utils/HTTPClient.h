@@ -159,7 +159,6 @@ struct HTTPHeaderResponse {
  * HTTP Response object
  */
 class HTTPRequestResponse {
-
   std::vector<char> data;
   std::condition_variable space_available_;
   std::mutex data_mutex_;
@@ -175,12 +174,10 @@ class HTTPRequestResponse {
 
   HTTPRequestResponse(const HTTPRequestResponse &other)
       : max_queue(other.max_queue) {
-
   }
 
   HTTPRequestResponse(size_t max) // NOLINT
       : max_queue(max) {
-
   }
   /**
    * Receive HTTP Response.
@@ -252,7 +249,6 @@ class HTTPRequestResponse {
   }
 
   size_t write_content(char* ptr, size_t size, size_t nmemb) {
-
     if (data.size() + (size * nmemb) > max_queue) {
       std::unique_lock<std::mutex> lock(data_mutex_);
       space_available_.wait(lock, [&] {return data.size() + (size*nmemb) < max_queue;});
@@ -260,7 +256,6 @@ class HTTPRequestResponse {
     data.insert(data.end(), ptr, ptr + size * nmemb);
     return size * nmemb;
   }
-
 };
 
 class BaseHTTPClient {
@@ -324,7 +319,6 @@ public:
   }
 
   virtual void appendHeader(const std::string &new_header) {
-
   }
 
   virtual void set_request_method(const std::string method) {
@@ -352,7 +346,6 @@ public:
 
   virtual const std::vector<std::string> &getHeaders() {
     return headers_;
-
   }
 
   virtual const std::map<std::string, std::string> &getParsedHeaders() {
@@ -368,7 +361,6 @@ public:
   virtual inline bool matches(const std::string &value, const std::string &sregex) {
     return false;
   }
-
 };
 
 extern std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password);

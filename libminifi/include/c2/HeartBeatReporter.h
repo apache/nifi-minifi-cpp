@@ -76,7 +76,6 @@ class HeartBeatReporter : public core::Connectable {
   void waitForWork(uint64_t timeoutMs);
 
   virtual void yield() {
-
   }
 
   /**

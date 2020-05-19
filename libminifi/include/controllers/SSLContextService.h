@@ -46,12 +46,9 @@ class SSLContext {
 #ifdef OPENSSL_SUPPORT
   SSLContext(SSL_CTX *context) // NOLINT
       : context_(context) {
-
   }
 #else
-	 SSLContext(void *context) { // NOLINT
-
-	 }
+ 	SSLContext(void *context) {}
 #endif
   ~SSLContext() {
 #ifdef OPENSSL_SUPPORT
@@ -136,7 +133,6 @@ class SSLContextService : public core::controller::ControllerService {
   const std::string &getCACertificate();
 
   void yield() {
-
   }
 
   bool isRunning() {

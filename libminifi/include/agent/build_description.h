@@ -40,7 +40,6 @@ class ClassDescription {
         dynamic_properties_(dyn_prop),
         dynamic_relationships_(false),
         is_controller_service_(false) {
-
   }
   explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, std::vector<core::Relationship> class_relationships, bool dyn_prop, bool dyn_rel)
       : class_name_(name),
@@ -157,7 +156,6 @@ class BuildDescription {
     }
     return class_mappings[group];
   }
-
 }
 ;
 

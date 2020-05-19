@@ -40,7 +40,6 @@ namespace io {
  * Extensions may be thread safe and thus shareable, but that is up to the implementation.
  */
 class BaseStream : public DataStream, public Serializable {
-
  public:
   BaseStream()
       : composable_stream_(this) {

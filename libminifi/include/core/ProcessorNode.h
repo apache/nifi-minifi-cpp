@@ -81,7 +81,6 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
       ret = processor_cast->setProperty(name, value);
 
     return ret;
-
   }
 
   /**
@@ -292,7 +291,6 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * internal connectable.
    */
   std::shared_ptr<Connectable> processor_;
-
 }
 ;
 

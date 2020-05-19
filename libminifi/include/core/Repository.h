@@ -216,7 +216,6 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   }
 
   virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
-
   }
 
   virtual uint64_t getRepoSize();

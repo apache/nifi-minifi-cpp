@@ -44,7 +44,6 @@ class StateMonitorNode : public DeviceInformation {
   StateMonitorNode(std::string name, utils::Identifier &uuid)
       : DeviceInformation(name, uuid),
         monitor_(nullptr) {
-
   }
 
   StateMonitorNode(const std::string &name) // NOLINT

@@ -52,7 +52,6 @@ namespace provenance {
 class ProvenanceEventRecord : public core::SerializableComponent {
  public:
   enum ProvenanceEventType {
-
     /**
      * A CREATE event is used when a FlowFile is generated from data that was
      * not received from a remote system or external process
@@ -365,7 +364,6 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &repo);
 
   uint64_t getEventTime(const uint8_t *buffer, const size_t bufferSize) {
-
     int size = bufferSize > 72 ? 72 : bufferSize;
     org::apache::nifi::minifi::io::DataStream outStream(buffer, size);
 

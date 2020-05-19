@@ -68,7 +68,6 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
 
   void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
     content_repo_ = content_repo;
-
   }
 
  protected:
@@ -80,7 +79,6 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
   }
 
   std::shared_ptr<core::ContentRepository> content_repo_;
-
 };
 } /* namespace repository */
 } /* namespace core */

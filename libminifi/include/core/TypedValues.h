@@ -201,7 +201,6 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
         return true;
 
       } else if ((pEnd[1] == 'b' || pEnd[1] == 'B') && (pEnd[2] == '\0')) {
-
         unsigned long int multiplier = 1024;
 
         if ((end0 != 'K')) {

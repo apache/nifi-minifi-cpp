@@ -53,7 +53,6 @@ namespace core {
 #endif
 
 class YamlConfiguration : public FlowConfiguration {
-
  public:
   explicit YamlConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
                              std::shared_ptr<io::StreamFactory> stream_factory, std::shared_ptr<Configure> configuration, const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
@@ -66,7 +65,6 @@ class YamlConfiguration : public FlowConfiguration {
   }
 
   virtual ~YamlConfiguration() {
-
   }
 
   /**

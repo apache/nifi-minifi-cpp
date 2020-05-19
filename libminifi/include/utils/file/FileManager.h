@@ -60,8 +60,6 @@ class FileManager {
     }
   }
   std::string unique_file(const std::string &location, bool keep = false) {
-
-	 
     if (!IsNullOrEmpty(location)) {
       std::string file_name = location + FILE_SEPARATOR + non_repeating_string_generator_.generate();
       while (!verify_not_exist(file_name)) {

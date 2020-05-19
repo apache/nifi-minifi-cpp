@@ -90,7 +90,6 @@ class UpdatePolicy {
   bool enable_all_;
 
   std::unordered_map<std::string, UPDATE_POLICY> properties_;
-
 };
 
 /**

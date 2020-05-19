@@ -106,7 +106,6 @@ class Device {
       ip_ = ip;
       break;
     }
-
   }
 
   std::string canonical_hostname_;
@@ -172,7 +171,6 @@ class Device {
 
 #if __linux__
   std::string getDeviceId() {
-
     std::hash<std::string> hash_fn;
     std::string macs;
     struct ifaddrs *ifaddr, *ifa;
@@ -204,7 +202,6 @@ class Device {
           printf("getnameinfo() failed: %s\n", gai_strerror(s));
           exit(EXIT_FAILURE);
         }
-
       }
     }
 

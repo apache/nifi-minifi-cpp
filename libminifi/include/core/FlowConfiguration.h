@@ -177,7 +177,6 @@ class FlowConfiguration : public CoreComponent {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 } /* namespace core */

@@ -105,13 +105,11 @@ class PeerStatus {
       : peer_(peer),
         flow_file_count_(flow_file_count),
         query_for_peers_(query_for_peers) {
-
   }
   PeerStatus(const PeerStatus &&other)
       : peer_(std::move(other.peer_)),
         flow_file_count_(std::move(other.flow_file_count_)),
         query_for_peers_(std::move(other.query_for_peers_)) {
-
   }
   const std::shared_ptr<Peer> &getPeer() const {
     return peer_;
@@ -141,7 +139,6 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
         host_(""),
         port_(-1),
         logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
-
   }
   /*
    * Create a new site2site peer

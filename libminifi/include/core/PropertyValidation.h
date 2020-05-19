@@ -108,7 +108,6 @@ class PropertyValidator {
       vn = input->getStringValue();
       return validate(subject, input->getStringValue());
     }
-
   }
 
   std::string name_;
@@ -131,7 +130,6 @@ class AlwaysValid : public PropertyValidator {
   ValidationResult validate(const std::string &subject, const std::string &input) const override {
     return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(always_valid_).build();
   }
-
 };
 
 class BooleanValidator : public PropertyValidator {
@@ -195,11 +193,9 @@ class UnsignedIntValidator : public PropertyValidator {
       std::stoul(input);
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(true).build();
     } catch (...) {
-
     }
     return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(false).build();
   }
-
 };
 
 class LongValidator : public PropertyValidator {
@@ -227,7 +223,6 @@ class LongValidator : public PropertyValidator {
 
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(res >= min_ && res <= max_).build();
     } catch (...) {
-
     }
     return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(false).build();
   }

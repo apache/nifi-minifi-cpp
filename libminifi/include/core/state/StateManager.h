@@ -44,11 +44,9 @@ class StateManager : public response::NodeReporter, public response::ResponseNod
  public:
   StateManager()
       : metrics_listener_(nullptr) {
-
   }
 
   virtual ~StateManager() {
-
   }
 
   /**
@@ -123,7 +121,6 @@ class StateManager : public response::NodeReporter, public response::ResponseNod
   std::unique_ptr<state::response::TreeUpdateListener> metrics_listener_;
 
   utils::ThreadPool<Update> listener_thread_pool_;
-
 };
 
 

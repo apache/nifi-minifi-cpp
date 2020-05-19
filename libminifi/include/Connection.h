@@ -169,9 +169,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   // Drain the flow records
   void drain();
 
-  void yield() override {
-
-  }
+  void yield() override {}
 
   bool isWorkAvailable() override {
     return !isEmpty();
@@ -218,7 +216,6 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   // Only support pass by reference or pointer
   Connection(const Connection &parent);
   Connection &operator=(const Connection &parent);
-
 };
 } /* namespace minifi */
 } /* namespace nifi */

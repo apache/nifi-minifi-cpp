@@ -34,7 +34,6 @@ class Properties {
   Properties(const std::string& name = ""); // NOLINT
 
   virtual ~Properties() {
-
   }
 
   virtual const std::string& getName() const{

@@ -147,7 +147,6 @@ class LoggerConfiguration {
       delegate_ = delegate;
     }
     const std::string name;
-
   };
 
   LoggerConfiguration();
@@ -158,7 +157,6 @@ class LoggerConfiguration {
   std::shared_ptr<LoggerImpl> logger_ = nullptr;
   std::shared_ptr<LoggerControl> controller_;
   bool shorten_names_;
-
 };
 
 template<typename T>

@@ -124,14 +124,12 @@ class ControllerService : public ConfigurableComponent, public Connectable {
    * Function is called when Controller Services are enabled and being run
    */
   virtual void onEnable() {
-
   }
 
   /**
    * Function is called when Controller Services are disabled
    */
   virtual void notifyStop() {
-
   }
 
   void setState(ControllerServiceState state) {

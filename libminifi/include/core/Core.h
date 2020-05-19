@@ -106,7 +106,6 @@ static inline std::string getClassName() {
 
 template<typename T>
 struct class_operations {
-
   template<typename Q = T>
   static std::true_type canDestruct(decltype(std::declval<Q>().~Q()) *) {
     return std::true_type();
@@ -142,7 +141,6 @@ typename std::enable_if<class_operations<T>::value, std::shared_ptr<T>>::type in
  * the functionality is localized here to avoid duplication
  */
 class CoreComponent {
-
  public:
   /**
    * Constructor that sets the name and uuid.
@@ -174,7 +172,6 @@ class CoreComponent {
   explicit CoreComponent(CoreComponent &&other) = default;
 
   virtual ~CoreComponent() {
-
   }
 
   // Get component name Name
@@ -211,7 +208,6 @@ class CoreComponent {
   }
 
   virtual void configure(const std::shared_ptr<Configure> &configuration) {
-
   }
 
   void loadComponent() {

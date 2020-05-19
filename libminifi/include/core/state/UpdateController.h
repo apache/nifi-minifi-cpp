@@ -37,7 +37,6 @@ enum class UpdateState {
   SET_ERROR,
   READ_ERROR,
   NESTED  // multiple updates embedded into one
-
 };
 
 /**
@@ -75,21 +74,17 @@ class Update {
 
   Update(UpdateStatus status) // NOLINT
       : status_(status) {
-
   }
 
   Update(const Update &other)
       : status_(other.status_) {
-
   }
 
   Update(const Update &&other)
       : status_(std::move(other.status_)) {
-
   }
 
   virtual ~Update() {
-
   }
 
   virtual bool validate() {
@@ -131,11 +126,9 @@ class UpdateRunner : public utils::AfterExecute<Update> {
   explicit UpdateRunner(UpdateRunner && other)
       : running_(std::move(other.running_)),
         delay_(std::move(other.delay_)) {
-
   }
 
   ~UpdateRunner() {
-
   }
 
   virtual bool isFinished(const Update &result) {
@@ -157,13 +150,11 @@ class UpdateRunner : public utils::AfterExecute<Update> {
   std::atomic<bool> *running_;
 
   std::chrono::milliseconds delay_;
-
 };
 
 class StateController {
  public:
   virtual ~StateController() {
-
   }
 
   virtual std::string getComponentName() const= 0;
@@ -192,7 +183,6 @@ class StateController {
 class StateMonitor : public StateController {
  public:
   virtual ~StateMonitor() {
-
   }
 
   std::atomic<bool> &isStateMonitorRunning() {
@@ -271,7 +261,6 @@ class UpdateController {
     return controller_running_;
   }
  protected:
-
   std::atomic<bool> controller_running_;
 };
 

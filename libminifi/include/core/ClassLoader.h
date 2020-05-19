@@ -81,7 +81,6 @@ class ObjectFactoryInitializer {
  * creating processors from shared objects.
  */
 class ObjectFactory {
-
  public:
   ObjectFactory(const std::string &group) // NOLINT
       : group_(group) {
@@ -94,7 +93,6 @@ class ObjectFactory {
    * Virtual destructor.
    */
   virtual ~ObjectFactory() {
-
   }
 
   /**
@@ -102,7 +100,6 @@ class ObjectFactory {
    */
   virtual std::shared_ptr<CoreComponent> create(const std::string &name) {
     return nullptr;
-
   }
 
   /**
@@ -154,7 +151,6 @@ class ObjectFactory {
 
  private:
   std::string group_;
-
 };
 /**
  * Factory that is used as an interface for
@@ -162,7 +158,6 @@ class ObjectFactory {
  */
 template<class T>
 class DefautObjectFactory : public ObjectFactory {
-
  public:
   DefautObjectFactory() {
     className = core::getClassName<T>();
@@ -176,7 +171,6 @@ class DefautObjectFactory : public ObjectFactory {
    * Virtual destructor.
    */
   virtual ~DefautObjectFactory() {
-
   }
 
   /**
@@ -239,7 +233,6 @@ class DefautObjectFactory : public ObjectFactory {
 
  protected:
   std::string className;
-
 };
 
 /**
@@ -254,7 +247,6 @@ typedef ObjectFactory* createFactory();
  * objects.
  */
 class ClassLoader {
-
  public:
   static ClassLoader &getDefaultClassLoader();
 
@@ -498,7 +490,6 @@ class ClassLoader {
       if (EnumProcessModules(current_process_id, allModules,
               sizeof(allModules), &cbNeeded) != 0)
       {
-
         for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++)
         {
           TCHAR szModName[MAX_PATH];
@@ -534,7 +525,6 @@ class ClassLoader {
     SetErrorMode(uMode);
 
     return (void *)object;
-
   }
 
   int dlclose(void *handle)

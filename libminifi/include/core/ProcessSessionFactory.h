@@ -53,7 +53,6 @@ class ProcessSessionFactory {
  private:
   // ProcessContext
   std::shared_ptr<ProcessContext> process_context_;
-
 };
 
 } /* namespace core */

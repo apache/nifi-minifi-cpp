@@ -63,7 +63,6 @@ class DiffUtils {
   static int binary_diff(const char *file_original, const char *file_other, const char *patchfile) {
     return -1;
   }
-
 };
 
 } /* namespace file */

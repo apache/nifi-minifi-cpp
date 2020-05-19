@@ -40,11 +40,9 @@ namespace controller {
 class ControllerServiceLookup {
  public:
   ControllerServiceLookup() {
-
   }
 
   virtual ~ControllerServiceLookup() {
-
   }
 
   /**
@@ -73,7 +71,6 @@ class ControllerServiceLookup {
    * @param identifier reference string for the controller service.
    */
   virtual const std::string getControllerServiceName(const std::string &identifier) = 0;
-
 };
 
 } /* namespace controller */

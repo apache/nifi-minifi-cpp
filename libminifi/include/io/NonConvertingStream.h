@@ -36,7 +36,6 @@ namespace io {
  * Extensions may be thread safe and thus shareable, but that is up to the implementation.
  */
 class NonConvertingStream : public BaseStream  {
-
  public:
   NonConvertingStream()
       : composable_stream_(this) {
@@ -47,7 +46,6 @@ class NonConvertingStream : public BaseStream  {
   }
 
   virtual ~NonConvertingStream() {
-
   }
   /**
    * write 4 bytes to stream
@@ -178,7 +176,6 @@ class NonConvertingStream : public BaseStream  {
       else{
         return composable_stream_->getSize();
       }
-
     }
 
   /**

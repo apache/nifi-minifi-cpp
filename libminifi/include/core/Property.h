@@ -48,7 +48,6 @@ namespace core {
 class PropertyBuilder;
 
 class Property {
-
  public:
   /*!
    * Create a new property
@@ -486,7 +485,6 @@ class Property {
 
  private:
   friend class PropertyBuilder;
-
 };
 
 template<typename T>
@@ -586,7 +584,6 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
 
   PropertyBuilder() {
   }
-
 };
 
 template<typename T>
@@ -649,7 +646,6 @@ class ConstrainedProperty : public std::enable_shared_from_this<ConstrainedPrope
 
   ConstrainedProperty(const std::shared_ptr<PropertyBuilder> &builder) // NOLINT
       : builder_(builder) {
-
   }
 
  protected:

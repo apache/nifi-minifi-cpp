@@ -45,7 +45,6 @@ class FileOutputCallback : public ByteOutputCallback {
   }
 
   virtual ~FileOutputCallback() {
-
   }
 
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) override;
@@ -64,7 +63,6 @@ class FileOutputCallback : public ByteOutputCallback {
   std::ofstream file_stream_;
 
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 } /* namespace utils */

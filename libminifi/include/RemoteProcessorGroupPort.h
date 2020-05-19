@@ -98,7 +98,6 @@ class RemoteProcessorGroupPort : public core::Processor {
   }
   // Destructor
   virtual ~RemoteProcessorGroupPort() {
-
   }
 
   // Processor Name

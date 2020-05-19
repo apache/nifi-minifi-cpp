@@ -67,7 +67,6 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
         root_group_(std::move(other.root_group_)),
         configuration_(other.configuration_),
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
-
   }
 
   void setRootGroup(std::shared_ptr<ProcessGroup> rg) {
@@ -79,11 +78,9 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   }
 
   std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &fullType, const std::string &id, bool firstTimeAdded) {
-
     std::shared_ptr<ControllerService> new_controller_service = extension_loader_.instantiate<ControllerService>(type, id);
 
     if (nullptr == new_controller_service) {
-
       new_controller_service = extension_loader_.instantiate<ControllerService>("ExecuteJavaControllerService", id);
       if (new_controller_service != nullptr) {
         new_controller_service->initialize();
@@ -99,14 +96,12 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
 
     controller_map_->put(id, new_service_node);
     return new_service_node;
-
   }
 
   std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
     if (serviceNode->canEnable()) {
       return agent_->enableControllerService(serviceNode);
     } else {
-
       std::future<utils::TaskRescheduleInfo> no_run = std::async(std::launch::deferred, utils::TaskRescheduleInfo::Done);
       return no_run;
     }

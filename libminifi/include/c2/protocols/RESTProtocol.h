@@ -64,11 +64,9 @@ class RESTProtocol {
  public:
   RESTProtocol()
       : minimize_updates_(false) {
-
   }
 
   virtual ~RESTProtocol() {
-
   }
 
  protected:

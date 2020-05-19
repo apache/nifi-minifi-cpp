@@ -82,7 +82,6 @@ class StreamManager {
   virtual void decrementStreamCount(const std::shared_ptr<T> &streamId) = 0;
 
   virtual bool exists(const std::shared_ptr<T> &streamId) = 0;
-
 };
 
 } /* namespace core */

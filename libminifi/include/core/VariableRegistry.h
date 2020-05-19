@@ -40,7 +40,6 @@ class VariableRegistry {
   }
 
   virtual ~VariableRegistry() {
-
   }
 
   bool getConfigurationProperty(const std::string &property, std::string &value) const {
@@ -92,7 +91,6 @@ class VariableRegistry {
   std::map<std::string, std::string> variable_registry_;
 
   std::shared_ptr<minifi::Configure> configuration_;
-
 };
 
 } /* namespace core */

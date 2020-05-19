@@ -66,7 +66,6 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   // Only support pass by reference or pointer
   CronDrivenSchedulingAgent(const CronDrivenSchedulingAgent &parent);
   CronDrivenSchedulingAgent &operator=(const CronDrivenSchedulingAgent &parent);
-
 };
 
 } /* namespace minifi */

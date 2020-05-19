@@ -72,7 +72,6 @@ class Worker {
   }
 
   virtual ~Worker() {
-
   }
 
   /**
@@ -163,12 +162,10 @@ class WorkerThread {
       : is_running_(false),
         thread_(std::move(thread)),
         name_(name) {
-
   }
   WorkerThread(const std::string &name = "NamelessWorker") // NOLINT
       : is_running_(false),
         name_(name) {
-
   }
   std::atomic<bool> is_running_;
   std::thread thread_;

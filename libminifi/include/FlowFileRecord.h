@@ -84,7 +84,6 @@ inline const char *FlowAttributeKey(FlowAttribute attribute) {
 class InputStreamCallback {
  public:
   virtual ~InputStreamCallback() {
-
   }
   //virtual void process(std::ifstream *stream) = 0;
 
@@ -93,10 +92,8 @@ class InputStreamCallback {
 class OutputStreamCallback {
  public:
   virtual ~OutputStreamCallback() {
-
   }
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
-
 };
 
 class FlowFileRecord : public core::FlowFile, public io::Serializable {
@@ -118,7 +115,6 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
         flow_repository_(flow_repository),
         content_repo_(content_repo),
         snapshot_("") {
-
   }
   // Destructor
   virtual ~FlowFileRecord();

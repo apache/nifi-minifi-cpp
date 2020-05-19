@@ -49,7 +49,6 @@ class Value {
   }
 
   virtual ~Value() {
-
   }
   std::string getStringValue() const {
     return string_value;
@@ -192,7 +191,6 @@ class IntValue : public Value {
   explicit IntValue(const std::string &strvalue)
       : Value(strvalue),
         value(std::stoi(strvalue)) {
-
   }
   int getValue() const {
     return value;

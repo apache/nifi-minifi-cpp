@@ -99,7 +99,6 @@ class ComponentManifest : public DeviceInformation {
       type.array = true;
       std::vector<SerializedResponseNode> serialized;
       for (auto group : descriptions) {
-
         SerializedResponseNode desc;
         desc.name = group.class_name_;
         SerializedResponseNode className;
@@ -110,7 +109,6 @@ class ComponentManifest : public DeviceInformation {
           SerializedResponseNode props;
           props.name = "propertyDescriptors";
           for (auto && prop : group.class_properties_) {
-
             SerializedResponseNode child;
             child.name = prop.first;
 
@@ -186,10 +184,8 @@ class ComponentManifest : public DeviceInformation {
                 allowed_type.children.push_back(typeNode);
                 allowed_type.children.push_back(bgroup);
                 allowed_type.children.push_back(artifact);
-
               }
               child.children.push_back(allowed_type);
-
             }
 
             child.children.push_back(descriptorName);
@@ -230,7 +226,6 @@ class ComponentManifest : public DeviceInformation {
                 allowedValues.children.push_back(allowableValue);
               }
               child.children.push_back(allowedValues);
-
             }
 
             props.children.push_back(child);
@@ -301,7 +296,6 @@ class ComponentManifest : public DeviceInformation {
       }
       response.children.push_back(type);
     }
-
   }
 };
 
@@ -400,7 +394,6 @@ class Bundles : public DeviceInformation {
 
     return serialized;
   }
-
 };
 
 /**
@@ -410,7 +403,6 @@ class AgentStatus : public StateMonitorNode {
  public:
   AgentStatus(std::string name, utils::Identifier & uuid)
       : StateMonitorNode(name, uuid) {
-
   }
 
   AgentStatus(const std::string &name) // NOLINT
@@ -463,7 +455,6 @@ class AgentStatus : public StateMonitorNode {
         repoNode.children.push_back(isRunning);
         repoNode.children.push_back(isFull);
         repositories.children.push_back(repoNode);
-
       }
       serialized.push_back(repositories);
     }
@@ -529,7 +520,6 @@ class AgentMonitor {
  public:
   AgentMonitor()
       : monitor_(nullptr) {
-
   }
   void addRepository(const std::shared_ptr<core::Repository> &repo) {
     if (nullptr != repo) {

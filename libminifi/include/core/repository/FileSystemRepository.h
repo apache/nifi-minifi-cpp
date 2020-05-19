@@ -37,10 +37,8 @@ class FileSystemRepository : public core::ContentRepository, public core::CoreCo
   FileSystemRepository(std::string name = getClassName<FileSystemRepository>()) // NOLINT
       : core::CoreComponent(name),
         logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
-
   }
   virtual ~FileSystemRepository() {
-
   }
 
   virtual bool initialize(const std::shared_ptr<minifi::Configure> &configuration);

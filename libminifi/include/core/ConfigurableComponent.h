@@ -177,7 +177,6 @@ class ConfigurableComponent {
   virtual ~ConfigurableComponent();
 
   virtual void initialize() {
-
   }
 
  protected:
@@ -205,7 +204,6 @@ class ConfigurableComponent {
   std::shared_ptr<logging::Logger> logger_;
 
   bool createDynamicProperty(const std::string &name, const std::string &value);
-
 };
 
 template<typename T>

@@ -59,7 +59,6 @@ namespace core {
 #define BUILDING_DLL 1
 // Processor Class
 class Processor : public Connectable, public ConfigurableComponent, public std::enable_shared_from_this<Processor> {
-
  public:
   // Constructor
   /*!
@@ -240,7 +239,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     onTrigger(context.get(), session.get());
   }
   virtual void onTrigger(ProcessContext *context, ProcessSession *session){
-
   }
   // Initialize, overridden by NiFi Process Designer
   virtual void initialize() {
@@ -270,7 +268,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 
  protected:
   virtual void notifyStop() {
-
   }
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory_;

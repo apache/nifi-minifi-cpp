@@ -56,7 +56,6 @@ class PayloadSerializer {
       stream->write(&type, 1);
       if (sub_type->getValue()) {
         type = 1;
-
       } else
         type = 0;
       stream->write(&type, 1);
@@ -238,7 +237,6 @@ class PayloadSerializer {
       }
       deserializePayload(subPayload, operation, identifier, stream);
       parent.addPayload(std::move(subPayload));
-
     }
     return true;
   }
@@ -308,7 +306,6 @@ class PayloadSerializer {
         return Operation::HEARTBEAT;
         ;
     }
-
   }
   PayloadSerializer();
   virtual ~PayloadSerializer();

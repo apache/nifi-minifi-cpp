@@ -32,21 +32,17 @@ namespace core {
  * Represents a component that is serializable and an extension point of core Component
  */
 class SerializableComponent : public core::Connectable, public minifi::io::Serializable {
-
  public:
 
   explicit SerializableComponent(const std::string name) // NOLINT
         : core::Connectable(name) {
-
     }
 
   SerializableComponent(const std::string name, utils::Identifier &uuid )
       : core::Connectable(name, uuid) {
-
   }
 
   virtual ~SerializableComponent() {
-
   }
 
   /**
@@ -83,7 +79,6 @@ class SerializableComponent : public core::Connectable, public minifi::io::Seria
   }
 
   virtual void yield() {
-
   }
 
   /**
@@ -100,7 +95,6 @@ class SerializableComponent : public core::Connectable, public minifi::io::Seria
   virtual bool isWorkAvailable() {
     return true;
   }
-
 };
 
 } /* namespace core */

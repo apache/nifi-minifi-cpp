@@ -50,7 +50,6 @@ class ThreadManagementService : public core::controller::ControllerService {
   explicit ThreadManagementService(const std::string &name, const std::shared_ptr<Configure> &configuration)
       : ControllerService(name),
         logger_(logging::LoggerFactory<ThreadManagementService>::getLogger()) {
-
   }
 
   /**
@@ -96,7 +95,6 @@ class ThreadManagementService : public core::controller::ControllerService {
   }
 
   void yield() {
-
   }
 
   bool isRunning() {
@@ -108,7 +106,6 @@ class ThreadManagementService : public core::controller::ControllerService {
   }
 
   virtual void onEnable() {
-
   }
 
  protected:

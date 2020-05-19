@@ -233,7 +233,6 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Yield
    */
   virtual void yield() {
-
   }
   /**
    * Determines if we are connected and operating

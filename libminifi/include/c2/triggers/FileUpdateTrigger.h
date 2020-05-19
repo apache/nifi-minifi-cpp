@@ -52,7 +52,6 @@ class FileUpdateTrigger : public C2Trigger {
       } else {
         logger_->log_trace("Could not configure file");
       }
-
     }
   }
 
@@ -95,7 +94,6 @@ class FileUpdateTrigger : public C2Trigger {
    */
 
   virtual void yield() {
-
   }
 
   /**

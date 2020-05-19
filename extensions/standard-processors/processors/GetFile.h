@@ -64,7 +64,6 @@ class GetFileMetrics : public state::response::ResponseNode {
     input_bytes_ = 0;
   }
   virtual ~GetFileMetrics() {
-
   }
   std::string getName() const override {
     return core::Connectable::getName();
@@ -100,7 +99,6 @@ class GetFileMetrics : public state::response::ResponseNode {
   std::atomic<size_t> iterations_;
   std::atomic<size_t> accepted_files_;
   std::atomic<size_t> input_bytes_;
-
 };
 
 // GetFile Class

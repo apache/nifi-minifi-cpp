@@ -64,7 +64,6 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   EventDrivenSchedulingAgent &operator=(const EventDrivenSchedulingAgent &parent);
 
   std::chrono::milliseconds time_slice_;
-
 };
 
 } /* namespace minifi */
