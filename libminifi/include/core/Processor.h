@@ -99,9 +99,9 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // Set Processor Scheduling Period in Nano Second
   void setSchedulingPeriodNano(uint64_t period) {
     uint64_t minPeriod = MINIMUM_SCHEDULING_NANOS;
-	// std::max has some variances on c++11-c++14 and then c++14 onward.
+  // std::max has some variances on c++11-c++14 and then c++14 onward.
     // to avoid macro conditional checks we can use this simple conditional expr.
-	scheduling_period_nano_ = period > minPeriod ? period : minPeriod;
+  scheduling_period_nano_ = period > minPeriod ? period : minPeriod;
   }
   // Get Processor Scheduling Period in Nano Second
   uint64_t getSchedulingPeriodNano(void) {

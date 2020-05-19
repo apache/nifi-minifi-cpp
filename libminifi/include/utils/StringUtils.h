@@ -20,8 +20,8 @@
 #include <cstring>
 #include <functional>
 #ifdef WIN32
-	#include <cwctype>
-	#include <cctype>
+  #include <cwctype>
+  #include <cctype>
 #endif
 #include <algorithm>
 #include <sstream>

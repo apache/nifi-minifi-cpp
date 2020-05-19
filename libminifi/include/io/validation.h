@@ -62,7 +62,7 @@ class size_function_functor_checker {
 #ifdef WIN32
 
 static auto IsNullOrEmpty(std::string object) {
-	return object.empty();
+  return object.empty();
 }
 
 /**
@@ -70,7 +70,7 @@ static auto IsNullOrEmpty(std::string object) {
 */
 template<typename T>
 static auto IsNullOrEmpty(T *object) {
-	return (nullptr == object);
+  return (nullptr == object);
 }
 
 
@@ -79,7 +79,7 @@ static auto IsNullOrEmpty(T *object) {
 */
 template<typename T>
 static auto IsNullOrEmpty(std::shared_ptr<T> object) {
-	return (nullptr == object || nullptr == object.get());
+  return (nullptr == object || nullptr == object.get());
 }
 
 
@@ -90,7 +90,7 @@ static auto IsNullOrEmpty(std::shared_ptr<T> object) {
 */
 template<typename T>
 static auto IsNullOrEmpty(T &object) -> typename std::enable_if<empty_function_functor_checker<T>::has_empty_function == 1, bool>::type {
-	return object.empty();
+  return object.empty();
 }
 /**
  * Determines if the variable is null or ::empty()
@@ -122,7 +122,7 @@ static auto IsNullOrEmpty(T *object) -> typename std::enable_if<not empty_functi
 */
 template<typename T>
 static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<not empty_function_functor_checker<T>::has_empty_function, bool>::type {
-	return (nullptr == object || nullptr == object.get());
+  return (nullptr == object || nullptr == object.get());
 }
 
 template<typename T>

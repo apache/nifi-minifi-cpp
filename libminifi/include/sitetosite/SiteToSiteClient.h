@@ -94,18 +94,18 @@ class SiteToSiteClient : public core::Connectable {
    */
   virtual bool transfer(TransferDirection direction, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
 #ifndef WIN32
-	  if (__builtin_expect(direction == SEND, 1)) {
+    if (__builtin_expect(direction == SEND, 1)) {
       return transferFlowFiles(context, session);
     } else {
       return receiveFlowFiles(context, session);
     }
 #else
-	  if (direction == SEND) {
-		  return transferFlowFiles(context, session);
-	  }
-	  else {
-		  return receiveFlowFiles(context, session);
-	  }
+    if (direction == SEND) {
+      return transferFlowFiles(context, session);
+    }
+    else {
+      return receiveFlowFiles(context, session);
+    }
 #endif
   }
 
@@ -291,7 +291,7 @@ class WriteCallback : public OutputStreamCallback {
     int len = _packet->_size;
     int total = 0;
     while (len > 0) {
-	  int size = len < 16384 ? len : 16384;
+    int size = len < 16384 ? len : 16384;
       int ret = _packet->transaction_->getStream().readData(buffer, size);
       if (ret != size) {
         logging::LOG_ERROR(_packet->logger_reference_) << "Site2Site Receive Flow Size " << size << " Failed " << ret << ", should have received " << len;

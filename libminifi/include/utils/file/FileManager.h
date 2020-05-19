@@ -29,11 +29,11 @@
 #include "utils/StringUtils.h"
 
 #ifndef FILE_SEPARATOR
-	#ifdef WIN32
-	#define FILE_SEPARATOR "\\"
-	#else
-	#define FILE_SEPARATOR "/"
-	#endif
+  #ifdef WIN32
+  #define FILE_SEPARATOR "\\"
+  #else
+  #define FILE_SEPARATOR "/"
+  #endif
 #endif
 
 
@@ -69,12 +69,12 @@ class FileManager {
         unique_files_.push_back(file_name);
       return file_name;
     } else {
-	  std::string tmpDir = "/tmp";
-	  #ifdef WIN32
-			TCHAR lpTempPathBuffer[MAX_PATH];
-			GetTempPath(MAX_PATH, lpTempPathBuffer);
-			tmpDir = lpTempPathBuffer;
-	  #endif
+    std::string tmpDir = "/tmp";
+    #ifdef WIN32
+      TCHAR lpTempPathBuffer[MAX_PATH];
+      GetTempPath(MAX_PATH, lpTempPathBuffer);
+      tmpDir = lpTempPathBuffer;
+    #endif
       std::string file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
       while (!verify_not_exist(file_name)) {
         file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
@@ -89,12 +89,12 @@ class FileManager {
 #ifdef BOOST_VERSION
     return boost::filesystem::unique_path().native();
 #else
-	  std::string tmpDir = "/tmp";
-	#ifdef WIN32
-		  TCHAR lpTempPathBuffer[MAX_PATH];
-		  GetTempPath(MAX_PATH, lpTempPathBuffer);
-		  tmpDir = lpTempPathBuffer;
-	#endif
+    std::string tmpDir = "/tmp";
+  #ifdef WIN32
+      TCHAR lpTempPathBuffer[MAX_PATH];
+      GetTempPath(MAX_PATH, lpTempPathBuffer);
+      tmpDir = lpTempPathBuffer;
+  #endif
     std::string file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
     while (!verify_not_exist(file_name)) {
       file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();

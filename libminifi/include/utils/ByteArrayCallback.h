@@ -100,7 +100,7 @@ class ByteOutputCallback : public OutputStreamCallback {
   }
 
   virtual ~ByteOutputCallback() {
-	  close();
+    close();
   }
 
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
