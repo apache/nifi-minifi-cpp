@@ -100,7 +100,7 @@ class ProcessMetrics : public ResponseNode {
 
 REGISTER_RESOURCE(ProcessMetrics, "Node part of an AST that defines the Processor information and metrics subtree");
 
-} // namespace response
+}  // namespace response
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */

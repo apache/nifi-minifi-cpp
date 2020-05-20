@@ -308,7 +308,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} // namespace core
+}  // namespace core
 /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

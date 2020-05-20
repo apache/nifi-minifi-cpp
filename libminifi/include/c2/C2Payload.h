@@ -191,7 +191,7 @@ class C2Payload : public state::Update {
   bool is_collapsible_{ true };
 };
 
-} // namespace c2
+}  // namespace c2
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

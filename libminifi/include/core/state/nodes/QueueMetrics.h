@@ -103,7 +103,7 @@ class QueueMetrics : public ResponseNode {
   std::map<std::string, std::shared_ptr<minifi::Connection>> connections;
 };
 
-} // namespace response
+}  // namespace response
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */

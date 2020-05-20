@@ -61,7 +61,7 @@ class StateMonitorNode : public DeviceInformation {
   std::shared_ptr<state::StateMonitor> monitor_;
 };
 
-} // namespace response
+}  // namespace response
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */

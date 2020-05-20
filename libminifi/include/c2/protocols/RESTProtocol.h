@@ -98,7 +98,7 @@ class RESTProtocol {
   std::map<std::string, C2Payload> nested_payloads_;
 };
 
-} // namespace c2
+}  // namespace c2
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

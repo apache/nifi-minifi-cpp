@@ -116,7 +116,7 @@ namespace {
     }
     return ret_val;
   }
-} // namespace
+}  // namespace
 
 
 namespace org {

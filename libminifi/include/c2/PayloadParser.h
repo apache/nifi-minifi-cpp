@@ -185,7 +185,7 @@ class PayloadParser {
   std::string component_to_get_;
 };
 
-} // namespace c2
+}  // namespace c2
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

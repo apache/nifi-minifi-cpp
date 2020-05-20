@@ -72,7 +72,7 @@ namespace {
       return std::to_wstring(std::forward<T>(t));
     }
   };
-} // namespace
+}  // namespace
 
 /**
  * Stateless String utility class.
@@ -540,7 +540,7 @@ enum TimeUnit {
   NANOSECOND
 };
 
-} // namespace core
+}  // namespace core
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

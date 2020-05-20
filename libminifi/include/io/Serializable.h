@@ -49,7 +49,7 @@ namespace {
     return htonll_r(i);
 #endif
   }
-} // namespace
+}  // namespace
 
 namespace org {
 namespace apache {

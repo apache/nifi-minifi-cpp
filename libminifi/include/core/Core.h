@@ -227,11 +227,11 @@ class CoreComponent {
 
 namespace logging {
 }
-} // namespace core
-} // namespace minifi
-} // namespace nifi
-} // namespace apache
-} // namespace org
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 namespace fileutils = org::apache::nifi::minifi::utils::file;
 

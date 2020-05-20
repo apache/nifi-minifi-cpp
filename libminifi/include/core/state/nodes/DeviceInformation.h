@@ -500,7 +500,7 @@ class DeviceInfoNode : public DeviceInformation {
 
 REGISTER_RESOURCE(DeviceInfoNode, "Node part of an AST that defines device characteristics to the C2 protocol");
 
-} // namespace response
+}  // namespace response
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */

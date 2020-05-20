@@ -196,7 +196,7 @@ class Connectable : public CoreComponent {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} // namespace core
+}  // namespace core
 /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
