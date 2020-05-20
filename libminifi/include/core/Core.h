@@ -20,11 +20,12 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
+#include <properties/Configure.h>
+
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <properties/Configure.h>
 
 #ifdef WIN32
 #pragma comment(lib, "shlwapi.lib")
@@ -62,6 +63,7 @@
 // can't include cxxabi
 #else
 #include <cxxabi.h>
+
 #endif
 
 #include "utils/Id.h"

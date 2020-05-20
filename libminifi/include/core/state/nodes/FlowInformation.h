@@ -18,30 +18,31 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
 
+#include <functional>
 #include <memory>
-
 #include <string>
-
 #include <utility>
-
 #include <vector>
 
 #include "core/Resource.h"
-#include <functional>
+
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
+
 #endif
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sstream>
+#include <string.h>
+
 #include <map>
+#include <sstream>
+
+#include "../FlowIdentifier.h"
 #include "../nodes/MetricsBase.h"
+#include "../nodes/StateMonitor.h"
 #include "Connection.h"
 #include "io/ClientSocket.h"
-#include "../nodes/StateMonitor.h"
-#include "../FlowIdentifier.h"
 
 namespace org {
 namespace apache {

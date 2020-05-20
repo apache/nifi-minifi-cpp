@@ -18,19 +18,19 @@
 #ifndef LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_
 
-#include <memory>
+#include <openssl/err.h>
+#include <openssl/ssl.h>
 
+#include <cstdint>
+#include <iostream>
+#include <memory>
+#include <string>
 #include <vector>
 
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <iostream>
-#include <cstdint>
-#include <string>
-#include "io/EndianCheck.h"
-#include "io/BaseStream.h"
-#include "io/Serializable.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "io/BaseStream.h"
+#include "io/EndianCheck.h"
+#include "io/Serializable.h"
 
 namespace org {
 namespace apache {

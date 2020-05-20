@@ -20,15 +20,14 @@
 
 #ifdef WIN32
 
-#include "spdlog/common.h"
-#include "spdlog/sinks/base_sink.h"
-#include "spdlog/details/log_msg.h"
-#include "spdlog/details/null_mutex.h"
-
 #include <Windows.h>
 
 #include <string>
 
+#include "spdlog/common.h"
+#include "spdlog/details/log_msg.h"
+#include "spdlog/details/null_mutex.h"
+#include "spdlog/sinks/base_sink.h"
 
 namespace org {
 namespace apache {

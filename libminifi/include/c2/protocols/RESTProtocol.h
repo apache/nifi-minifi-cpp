@@ -19,30 +19,27 @@
 #define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 
 #include <map>
-
-#include <vector>
-
 #include <stdexcept>
+#include <vector>
 
 #ifdef RAPIDJSON_ASSERT
 #undef RAPIDJSON_ASSERT
 #endif
 #define RAPIDJSON_ASSERT(x) if(!(x)) throw std::logic_error("rapidjson exception"); //NOLINT
 
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/prettywriter.h"
-
-#include <string>
 #include <mutex>
+#include <string>
 
-#include "utils/ByteArrayCallback.h"
 #include "c2/C2Protocol.h"
 #include "c2/HeartBeatReporter.h"
 #include "controllers/SSLContextService.h"
-#include "utils/HTTPClient.h"
 #include "Exception.h"
+#include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+#include "utils/ByteArrayCallback.h"
+#include "utils/HTTPClient.h"
 
 namespace org {
 namespace apache {

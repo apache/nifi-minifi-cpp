@@ -20,28 +20,30 @@
 #ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_
 
-#include <memory>
-
-#include <stdio.h>
-#include <string>
 #include <errno.h>
+#include <signal.h>
+#include <stdio.h>
+#include <sys/types.h>
+
 #include <chrono>
-#include <thread>
 #include <iostream>
-#include <sys/types.h>
-#include <signal.h>
+#include <memory>
+#include <string>
+#include <thread>
+
 #ifndef WIN32
-#include <sys/wait.h>
-#include <sys/types.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #endif
-#include "io/BaseStream.h"
-#include "FlowFileRecord.h"
+#include "core/Core.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
 #include "core/Resource.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "FlowFileRecord.h"
+#include "io/BaseStream.h"
 
 namespace org {
 namespace apache {

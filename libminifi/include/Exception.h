@@ -20,14 +20,15 @@
 #ifndef LIBMINIFI_INCLUDE_EXCEPTION_H_
 #define LIBMINIFI_INCLUDE_EXCEPTION_H_
 
+#include <errno.h>
+#include <string.h>
+
+#include <exception>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 
 #include "utils/StringUtils.h"
-#include <sstream>
-#include <exception>
-#include <stdexcept>
-#include <errno.h>
-#include <string.h>
 
 namespace org {
 namespace apache {

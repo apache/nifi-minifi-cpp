@@ -19,50 +19,48 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_
 
 #include <memory>
-
 #include <string>
-
 #include <utility>
-
 #include <vector>
 
 #include "core/Resource.h"
 
 #ifndef WIN32
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
+
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
+
 #endif
 #include <ifaddrs.h>
 #include <net/if.h>
-#include <unistd.h>
-#include <netinet/in.h>
-
-#include <sys/socket.h>
 #include <netdb.h>
-#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <unistd.h>
+
 #endif
-#include <functional>
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sstream>
-#include <sstream>
+#include <string.h>
+
+#include <functional>
 #include <map>
-#include "core/state/nodes/MetricsBase.h"
-#include "Connection.h"
-#include "io/ClientSocket.h"
-#include "agent/agent_version.h"
+#include <sstream>
+
 #include "agent/agent_docs.h"
+#include "agent/agent_version.h"
 #include "agent/build_description.h"
+#include "Connection.h"
 #include "core/ClassLoader.h"
-#include "core/state/nodes/StateMonitor.h"
 #include "core/ProcessorConfig.h"
+#include "core/state/nodes/MetricsBase.h"
+#include "core/state/nodes/StateMonitor.h"
+#include "io/ClientSocket.h"
 #include "SchedulingNodes.h"
 
 namespace org {

@@ -18,21 +18,19 @@
 #ifndef LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_
 
-#include <map>
-
-#include <memory>
-
-#include <string>
-
-#include <vector>
-
-#include <openssl/ssl.h>
 #include <openssl/err.h>
-#include "controllers/SSLContextService.h"
+#include <openssl/ssl.h>
+
 #include <atomic>
 #include <cstdint>
-#include "io/ClientSocket.h"
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "controllers/SSLContextService.h"
 #include "core/expect.h"
+#include "io/ClientSocket.h"
 #include "properties/Configure.h"
 
 namespace org {

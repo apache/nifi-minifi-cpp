@@ -17,55 +17,65 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
 
-#include <memory>
-
-#include <tuple>
-
-#include <utility>
-
-#include <sstream>
 #include <fstream>
+#include <memory>
+#include <sstream>
+#include <tuple>
+#include <utility>
 #include <vector>
+
 #ifdef BOOST_VERSION
 #include <boost/filesystem.hpp>
+
 #else
-#include <cstring>
-#include <cstdlib>
 #include <errno.h>
+
+#include <cstdlib>
+#include <cstring>
+
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
   #define WIN32_LEAN_AND_MEAN
 #endif
+#include <Windows.h>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
-#include <Windows.h>
+
 #pragma comment(lib, "Ws2_32.lib")
 #else
+#include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <utime.h>
-#include <dirent.h>
+
 #endif
 #endif
 #include <cstdio>
+
 #ifndef WIN32
 #include <unistd.h>
+
 #endif
 #include <fcntl.h>
+
 #ifdef WIN32
 #include <direct.h>
-#include "utils/Id.h"
-#include "properties/Properties.h"
-#include <windows.h>  // winapi
 #include <sys/stat.h>  // stat
-#include <tchar.h>  // _tcscpy,_tcscat,_tcscmp
-#include <string>  // string
-#include <algorithm>  // replace
 #include <sys/types.h>
 #include <sys/utime.h>  // _utime64
+#include <tchar.h>  // _tcscpy,_tcscat,_tcscmp
+#include <windows.h>  // winapi
+
+#include <algorithm>  // replace
+#include <string>  // string
+
+#include "properties/Properties.h"
+#include "utils/Id.h"
+
 #endif
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
+
 #endif
 
 #include "core/logging/LoggerConfiguration.h"

@@ -18,27 +18,25 @@
 #ifndef LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
 #define LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
 
-#include <map>
+#include <errno.h>
+#include <stdio.h>
 
+#include <atomic>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
 #include <utility>
 
-#include <stdio.h>
-#include <string>
-#include <errno.h>
-#include <string>
-#include <mutex>
-#include <atomic>
-#include <memory>
-#include "io/EndianCheck.h"
-
-#include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "properties/Configure.h"
-#include "io/ClientSocket.h"
+#include "core/Property.h"
 #include "io/BaseStream.h"
+#include "io/ClientSocket.h"
 #include "io/DataStream.h"
-#include "utils/TimeUtil.h"
+#include "io/EndianCheck.h"
+#include "properties/Configure.h"
 #include "utils/HTTPClient.h"
+#include "utils/TimeUtil.h"
 
 namespace org {
 namespace apache {

@@ -21,15 +21,13 @@
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXTRACTTEXT_H_
 
 #include <memory>
-
 #include <string>
+#include <vector>
 
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-
-#include <vector>
+#include "FlowFileRecord.h"
 
 namespace org {
 namespace apache {

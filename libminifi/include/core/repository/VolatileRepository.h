@@ -18,23 +18,20 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEREPOSITORY_H_
 
-#include <limits>
-
-#include <memory>
-
-#include <string>
-
-#include <utility>
-
-#include "core/Repository.h"
 #include <chrono>
-#include <vector>
+#include <limits>
 #include <map>
-#include "core/SerializableComponent.h"
-#include "core/Core.h"
-#include "Connection.h"
-#include "utils/StringUtils.h"
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "AtomicRepoEntries.h"
+#include "Connection.h"
+#include "core/Core.h"
+#include "core/Repository.h"
+#include "core/SerializableComponent.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {

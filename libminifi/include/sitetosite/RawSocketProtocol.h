@@ -20,32 +20,29 @@
 #ifndef LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_
 
-#include <map>
-
-#include <memory>
-
-#include <utility>
-
-#include <vector>
-
+#include <errno.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <string>
-#include <errno.h>
-#include <chrono>
-#include <thread>
-#include <algorithm>
 
-#include "SiteToSite.h"
-#include "SiteToSiteClient.h"
-#include "core/Property.h"
-#include "properties/Configure.h"
-#include "FlowFileRecord.h"
+#include <algorithm>
+#include <chrono>
+#include <map>
+#include <memory>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
+
 #include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Property.h"
+#include "FlowFileRecord.h"
 #include "io/CRCStream.h"
 #include "Peer.h"
+#include "properties/Configure.h"
+#include "SiteToSite.h"
+#include "SiteToSiteClient.h"
 #include "utils/Id.h"
 
 namespace org {

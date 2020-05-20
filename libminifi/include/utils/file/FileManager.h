@@ -18,16 +18,19 @@
 #define LIBMINIFI_INCLUDE_UTILS_FILE_FILEMANAGER_H_
 
 #include <string>
-
 #include <vector>
 
 #ifdef BOOST_VERSION
 #include <boost/filesystem.hpp>
+
 #else
 #include <cstdlib>
+
 #endif
-#include <cstdio>
 #include <fcntl.h>
+
+#include <cstdio>
+
 #include "io/validation.h"
 #include "utils/Id.h"
 #include "utils/StringUtils.h"

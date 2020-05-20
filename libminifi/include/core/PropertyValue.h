@@ -19,13 +19,13 @@
 #define LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
 
 #include <memory>
-
 #include <string>
-
-#include "state/Value.h"
-#include "PropertyValidation.h"
 #include <typeindex>
+
+#include "PropertyValidation.h"
+#include "state/Value.h"
 #include "TypedValues.h"
+
 namespace org {
 namespace apache {
 namespace nifi {

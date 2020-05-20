@@ -19,12 +19,12 @@
 #define LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_
 
 #include <algorithm>
-
 #include <string>
+#include <typeindex>
 
 #include "state/Value.h"
-#include <typeindex>
 #include "utils/StringUtils.h"
+
 namespace org {
 namespace apache {
 namespace nifi {

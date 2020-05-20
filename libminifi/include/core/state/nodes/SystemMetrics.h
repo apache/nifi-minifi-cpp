@@ -18,19 +18,21 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_SYSTEMMETRICS_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_SYSTEMMETRICS_H_
 
+#include <map>
+#include <sstream>
 #include <string>
-
 #include <vector>
 
 #include "core/Resource.h"
-#include <sstream>
-#include <map>
+
 #ifndef _WIN32
 #include <sys/utsname.h>
+
 #endif
+#include "../nodes/DeviceInformation.h"
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
-#include "../nodes/DeviceInformation.h"
+
 namespace org {
 namespace apache {
 namespace nifi {

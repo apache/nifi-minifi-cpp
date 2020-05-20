@@ -20,21 +20,20 @@
 #ifndef LIBMINIFI_INCLUDE_FLOWCONTROLPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_FLOWCONTROLPROTOCOL_H_
 
-#include <memory>
-
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/types.h>
 
-#include <fcntl.h>
-#include <string>
-#include <errno.h>
 #include <chrono>
-#include <thread>
 #include <cinttypes>
+#include <memory>
+#include <string>
+#include <thread>
 
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Property.h"
 #include "properties/Configure.h"
-#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {

@@ -19,43 +19,44 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
 
 #include <set>
-
 #include <string>
-
 #include <vector>
 
 #include "core/Resource.h"
 
 #ifndef WIN32
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <sys/utsname.h>
+
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
+
 #endif
 #include <ifaddrs.h>
 #include <net/if.h>
-#include <unistd.h>
-#include <netinet/in.h>
-
-#include <sys/socket.h>
 #include <netdb.h>
-#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <unistd.h>
+
 #else
 #pragma comment(lib, "iphlpapi.lib")
 #include <iphlpapi.h>
+
 #endif
-#include <functional>
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include <fstream>
-#include <sstream>
+#include <functional>
 #include <map>
+#include <sstream>
+
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
 #include "io/ClientSocket.h"

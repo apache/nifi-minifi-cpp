@@ -17,21 +17,26 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_DIFFUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_DIFFUTILS_H_
 
-#include <sstream>
 #include <fstream>
+#include <sstream>
+
 #ifdef BOOST_VERSION
 #include <boost/filesystem.hpp>
+
 #else
 #include <cstdlib>
+
 #endif
-#include <cstdio>
 #include <fcntl.h>
+
+#include <cstdio>
 
 #ifdef BDIFF
 
 extern "C" {
 #include "bsdiff.h"
 #include "bspatch.h"
+
 }
 #else
 int apply_bsdiff_patch(const char *oldfile, const char *newfile, const char *patch) {

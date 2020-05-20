@@ -18,15 +18,15 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROPERTYVALIDATION_H_
 #define LIBMINIFI_INCLUDE_CORE_PROPERTYVALIDATION_H_
 
+#include <limits>
+#include <memory>
 #include <string>
+#include <utility>
 
 #include "core/Core.h"
 #include "core/state/Value.h"
 #include "TypedValues.h"
 #include "utils/StringUtils.h"
-#include <limits>
-#include <memory>
-#include <utility>
 
 namespace org {
 namespace apache {

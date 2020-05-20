@@ -22,21 +22,21 @@
 
 #ifdef OPENSSL_SUPPORT
 
+#include <openssl/md5.h>
+#include <openssl/sha.h>
+#include <stdint.h>
+
 #include <iomanip>
 #include <map>
 #include <memory>
-#include <string>
 #include <sstream>
+#include <string>
 #include <utility>
-#include <stdint.h>
 
-#include <openssl/md5.h>
-#include <openssl/sha.h>
-
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "FlowFileRecord.h"
 #include "io/BaseStream.h"
 #include "utils/StringUtils.h"
 

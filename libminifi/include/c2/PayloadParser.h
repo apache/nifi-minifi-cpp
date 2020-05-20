@@ -19,12 +19,11 @@
 #define LIBMINIFI_INCLUDE_C2_PAYLOADPARSER_H_
 
 #include <memory>
-
+#include <string>
 #include <vector>
 
 #include "C2Payload.h"
 #include "core/state/Value.h"
-#include <string>
 
 namespace org {
 namespace apache {

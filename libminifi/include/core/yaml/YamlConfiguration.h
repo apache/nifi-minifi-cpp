@@ -19,18 +19,18 @@
 #define LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
 
 #include <memory>
-
-#include "core/ProcessorConfig.h"
-#include "yaml-cpp/yaml.h"
-#include "Exception.h"
-#include "core/FlowConfiguration.h"
-#include "sitetosite/SiteToSite.h"
 #include <string>
-#include "io/validation.h"
-#include "io/StreamFactory.h"
+
+#include "core/FlowConfiguration.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/ProcessorConfig.h"
+#include "Exception.h"
+#include "io/StreamFactory.h"
+#include "io/validation.h"
+#include "sitetosite/SiteToSite.h"
 #include "utils/Id.h"
 #include "utils/StringUtils.h"
+#include "yaml-cpp/yaml.h"
 
 namespace org {
 namespace apache {

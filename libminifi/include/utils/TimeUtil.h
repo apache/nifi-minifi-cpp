@@ -17,16 +17,16 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_
 #define LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_
 
-#include <string>
-
-#include <time.h>
-#include <cstdio>
 #include <string.h>
-#include <iomanip>
-#include <sstream>
-#include <chrono>
+#include <time.h>
+
 #include <array>
+#include <chrono>
+#include <cstdio>
+#include <iomanip>
 #include <limits>
+#include <sstream>
+#include <string>
 
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 

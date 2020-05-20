@@ -20,20 +20,18 @@
 #ifndef LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_
 #define LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_
 
+#include <chrono>
 #include <map>
-
 #include <memory>
-
 #include <string>
 
 #include "core/logging/Logger.h"
-#include "core/Processor.h"
 #include "core/ProcessContext.h"
+#include "core/Processor.h"
 #include "core/ProcessSessionFactory.h"
-#include "ThreadedSchedulingAgent.h"
-#include <chrono>
-
 #include "Cron.h"
+#include "ThreadedSchedulingAgent.h"
+
 namespace org {
 namespace apache {
 namespace nifi {

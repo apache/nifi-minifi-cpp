@@ -20,35 +20,37 @@
 #ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LISTENSYSLOG_H_
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LISTENSYSLOG_H_
 
-#include <memory>
-
-#include <queue>
-
-#include <string>
-
-#include <vector>
-
 #include <stdio.h>
 #include <sys/types.h>
+
+#include <memory>
+#include <queue>
+#include <string>
+#include <vector>
+
 #ifndef WIN32
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/select.h>
+#include <sys/socket.h>
 #include <sys/time.h>
+
 #else
 #include <WinSock2.h>
+
 #endif
 #include <errno.h>
 #include <sys/types.h>
+
 #include <chrono>
 #include <thread>
-#include "FlowFileRecord.h"
+
+#include "core/Core.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
 #include "core/Resource.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "FlowFileRecord.h"
 
 #ifndef WIN32
 

@@ -1,8 +1,9 @@
-#include <string>
-#include <memory>
-#include <vector>
 #include <core/ConfigurableComponent.h>
 #include <core/Processor.h>
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace org {
 namespace apache {

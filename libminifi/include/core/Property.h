@@ -18,25 +18,25 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
 #define LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
 
-#include <utility>
+#include <math.h>
+#include <stdlib.h>
 
 #include <algorithm>
-#include "core/Core.h"
-#include "PropertyValidation.h"
-#include <sstream>
-#include <typeindex>
-#include <string>
-#include <vector>
-#include <queue>
+#include <atomic>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
-#include <atomic>
-#include <functional>
+#include <queue>
 #include <set>
-#include <stdlib.h>
-#include <math.h>
+#include <sstream>
+#include <string>
+#include <typeindex>
+#include <utility>
+#include <vector>
 
+#include "core/Core.h"
+#include "PropertyValidation.h"
 #include "PropertyValue.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"

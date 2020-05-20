@@ -18,22 +18,23 @@
 #ifndef LIBMINIFI_INCLUDE_IO_CRCSTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_CRCSTREAM_H_
 
+#include <zlib.h>
+
 #include <algorithm>
-
+#include <memory>
 #include <utility>
-
 #include <vector>
 
-#include <zlib.h>
-#include <memory>
 #ifdef WIN32
 #include <winsock2.h>
+
 #else
 #include <arpa/inet.h>
+
 #endif
 #include "BaseStream.h"
-#include "Serializable.h"
 #include "Exception.h"
+#include "Serializable.h"
 
 namespace org {
 namespace apache {

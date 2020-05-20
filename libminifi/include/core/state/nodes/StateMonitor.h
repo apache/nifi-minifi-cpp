@@ -18,23 +18,22 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_
 
-#include <memory>
-
-#include <string>
-
-#include "core/Resource.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <sstream>
 #include <map>
+#include <memory>
+#include <sstream>
+#include <string>
+
 #include "../nodes/MetricsBase.h"
-#include "Connection.h"
-#include "io/ClientSocket.h"
 #include "agent/agent_version.h"
 #include "agent/build_description.h"
+#include "Connection.h"
 #include "core/ClassLoader.h"
+#include "core/Resource.h"
 #include "core/state/UpdateController.h"
+#include "io/ClientSocket.h"
 
 namespace org {
 namespace apache {

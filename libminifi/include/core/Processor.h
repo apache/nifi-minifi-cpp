@@ -18,34 +18,34 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROCESSOR_H_
 #define LIBMINIFI_INCLUDE_CORE_PROCESSOR_H_
 
-#include <string>
-
-#include <vector>
-#include <queue>
-#include <map>
-#include <mutex>
-#include <memory>
-#include <condition_variable>
-#include <atomic>
-#include <algorithm>
-#include <set>
-#include <chrono>
-#include <functional>
-
-#include "Core.h"
 #include <utils/Id.h>
-#include "Connectable.h"
+
+#include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <functional>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <set>
+#include <stack>
+#include <string>
+#include <vector>
+
 #include "ConfigurableComponent.h"
-#include "io/StreamFactory.h"
-#include "Property.h"
-#include "utils/TimeUtil.h"
-#include "Relationship.h"
+#include "Connectable.h"
 #include "Connection.h"
+#include "Core.h"
+#include "io/StreamFactory.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
 #include "ProcessSessionFactory.h"
+#include "Property.h"
+#include "Relationship.h"
 #include "Scheduling.h"
-#include <stack>
+#include "utils/TimeUtil.h"
 
 namespace org {
 namespace apache {
