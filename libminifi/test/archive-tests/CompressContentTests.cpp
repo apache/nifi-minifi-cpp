@@ -76,7 +76,7 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
     archive_read_open_memory(a, buffer_, read_size_);
     struct archive_entry *ae;
 
-	assert(archive_read_next_header(a, &ae) == ARCHIVE_OK);
+	  REQUIRE(archive_read_next_header(a, &ae) == ARCHIVE_OK);
     int size = archive_entry_size(ae);
     archive_buffer_ = new char[size];
     archive_buffer_size_ = size;
@@ -152,7 +152,7 @@ public:
   CompressTestController(){
     char format[] = "/tmp/test.XXXXXX";
     tempDir = global_controller.createTempDirectory(format);
-    assert(!tempDir.empty());
+    REQUIRE(!tempDir.empty());
     raw_content_path = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-compresscontent.txt");
     compressed_content_path = utils::file::FileUtils::concat_path(tempDir, "minifi-compresscontent");
     initContentWithRandomData();
