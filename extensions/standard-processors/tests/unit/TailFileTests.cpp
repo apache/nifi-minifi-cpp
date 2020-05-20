@@ -913,6 +913,69 @@ TEST_CASE("TailFile rotation works with multiple input files", "[rotation][multi
   REQUIRE(LogTestController::getInstance().contains("color.34-43.log"));
 }
 
+TEST_CASE("TailFile handles the Rolling Filename Pattern property correctly", "[rotation]") {
+  TestController testController;
+
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setTrace<processors::TailFile>();
+  LogTestController::getInstance().setTrace<processors::LogAttribute>();
+  auto plan = testController.createPlan();
+
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+
+  std::string test_file = createTempFile(dir, "test.log", "some stuff\n");
+  std::string another_unrelated_file = createTempFile(dir, "test.txt", "unrelated stuff\n");
+
+  // Build MiNiFi processing graph
+  auto tail_file = plan->addProcessor("TailFile", "Tail");
+  plan->setProperty(tail_file, processors::TailFile::Delimiter.getName(), "\n");
+  plan->setProperty(tail_file, processors::TailFile::FileName.getName(), test_file);
+
+  std::vector<std::string> expected_log_lines;
+
+  SECTION("If no pattern is set, we use the default, which is ${filename}.*, so the unrelated file will be picked up") {
+    expected_log_lines = std::vector<std::string>{"Logged 2 flow files",
+                                                  "test.rolled.11-24.log",
+                                                  "test.0-15.txt"};
+  }
+
+  SECTION("If a pattern is set to exclude the unrelated file, we no longer pick it up") {
+    plan->setProperty(tail_file, processors::TailFile::RollingFilenamePattern.getName(), "${filename}.*.log");
+
+    expected_log_lines = std::vector<std::string>{"Logged 1 flow file",
+                                                  "test.rolled.11-24.log"};
+  }
+
+  SECTION("We can also set the pattern to not include the file name") {
+    plan->setProperty(tail_file, processors::TailFile::RollingFilenamePattern.getName(), "other_roll??.log");
+
+    expected_log_lines = std::vector<std::string>{"Logged 1 flow file",
+                                                  "other_rolled.11-24.log"};
+  }
+
+  auto log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
+  plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
+  REQUIRE(LogTestController::getInstance().contains("test.0-10.log"));
+
+  appendTempFile(dir, "test.log", "one more line\n");
+  renameTempFile(dir, "test.log", "test.rolled.log");
+  createTempFile(dir, "other_rolled.log", "some stuff\none more line\n");  // same contents as test.rolled.log
+
+  plan->reset();
+  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+
+  testController.runSession(plan, true);
+
+  for (const auto &log_line : expected_log_lines) {
+    REQUIRE(LogTestController::getInstance().contains(log_line));
+  }
+}
+
 TEST_CASE("TailFile yields if no work is done", "[yield]") {
   TestController testController;
 

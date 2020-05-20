@@ -48,8 +48,10 @@ namespace minifi {
 namespace processors {
 
 core::Property TailFile::FileName("File to Tail", "Fully-qualified filename of the file that should be tailed when using single file mode, or a file regex when using multifile mode", "");
+
 core::Property TailFile::StateFile("State File", "DEPRECATED. Only use it for state migration from the legacy state file.",
                                    "TailFileState");
+
 core::Property TailFile::Delimiter("Input Delimiter", "Specifies the character that should be used for delimiting the data being tailed"
                                    "from the incoming file."
                                    "If none is specified, data will be ingested as it becomes available.",
@@ -63,6 +65,16 @@ core::Property TailFile::TailMode(
         ->withAllowableValue<std::string>("Single file")->withAllowableValue("Multiple file")->withDefaultValue("Single file")->build());
 
 core::Property TailFile::BaseDirectory(core::PropertyBuilder::createProperty("tail-base-directory", "Base Directory")->isRequired(false)->build());
+
+core::Property TailFile::RollingFilenamePattern(
+    core::PropertyBuilder::createProperty("Rolling Filename Pattern")
+        ->withDescription("If the file to tail \"rolls over\" as would be the case with log files, this filename pattern will be used to "
+        "identify files that have rolled over so MiNiFi can read the remaining of the rolled-over file and then continue with the new log file. "
+        "This pattern supports the wildcard characters * and ?, it also supports the notation ${filename} to specify a pattern based on the name of the file "
+        "(without extension), and will assume that the files that have rolled over live in the same directory as the file being tailed.")
+        ->isRequired(false)
+        ->withDefaultValue<std::string>("${filename}.*")
+        ->build());
 
 core::Relationship TailFile::Success("success", "All files are routed to success");
 
@@ -112,6 +124,7 @@ namespace {
       return "";
     }
   }
+
 }  // namespace
 
 void TailFile::initialize() {
@@ -122,6 +135,7 @@ void TailFile::initialize() {
   properties.insert(Delimiter);
   properties.insert(TailMode);
   properties.insert(BaseDirectory);
+  properties.insert(RollingFilenamePattern);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -173,6 +187,10 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "File to tail must be a fully qualified file");
     }
   }
+
+  std::string rolling_filename_pattern_glob;
+  context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
+  rolling_filename_pattern_ = utils::file::PathUtils::globToRegex(rolling_filename_pattern_glob);
 }
 
 void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const {
@@ -335,8 +353,8 @@ std::vector<TailState> TailFile::findRotatedFiles(const TailState &state) const 
   logger_->log_trace("Searching for files rolled over");
 
   std::size_t last_dot_position = state.file_name_.find_last_of('.');
-  // TODO(fgerlits) pattern should come from a property, with ${filename}-substitution
-  std::string pattern = state.file_name_.substr(0, last_dot_position) + "\\..*";
+  std::string base_name = state.file_name_.substr(0, last_dot_position);
+  std::string pattern = utils::file::PathUtils::replacePlaceholderWithBaseName(rolling_filename_pattern_, base_name);
 
   std::vector<TailState> matched_files;
   auto collect_matching_files = [&](const std::string &path, const std::string &file_name) -> bool {

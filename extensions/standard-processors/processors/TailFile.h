@@ -76,6 +76,7 @@ class TailFile : public core::Processor {
   static core::Property Delimiter;
   static core::Property TailMode;
   static core::Property BaseDirectory;
+  static core::Property RollingFilenamePattern;
   // Supported Relationships
   static core::Relationship Success;
 
@@ -119,9 +120,11 @@ class TailFile : public core::Processor {
 
   std::string base_dir_;
 
-  void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
+  std::string rolling_filename_pattern_;
 
   std::shared_ptr<logging::Logger> logger_;
+
+  void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
 
   std::vector<TailState> findRotatedFiles(const TailState &state) const;
 
