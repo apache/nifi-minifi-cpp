@@ -48,6 +48,7 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
     buffer_size_ = size;
     buffer_ = new uint8_t[buffer_size_];
     archive_buffer_ = nullptr;
+	archive_buffer_size_ = 0;
   }
   ~ReadCallback() {
     if (buffer_)
@@ -56,13 +57,16 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
       delete[] archive_buffer_;
   }
   int64_t process(std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
+	int64_t total_read = 0;
     int64_t ret = 0;
-    ret = stream->read(buffer_, buffer_size_);
-    if (stream)
-      read_size_ = stream->getSize();
-    else
-      read_size_ = buffer_size_;
-    return ret;
+	do {
+		ret = stream->read(buffer_ + read_size_, buffer_size_ - read_size_);
+		if (ret == 0) break;
+		if (ret < 0) return ret;
+		read_size_ += ret;
+		total_read += ret;
+	} while (buffer_size_ != read_size_);
+    return total_read;
   }
   void archive_read() {
     struct archive *a;
@@ -72,12 +76,11 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
     archive_read_open_memory(a, buffer_, read_size_);
     struct archive_entry *ae;
 
-    if (archive_read_next_header(a, &ae) == ARCHIVE_OK) {
-      int size = archive_entry_size(ae);
-      archive_buffer_ = new char[size];
-      archive_buffer_size_ = size;
-      archive_read_data(a, archive_buffer_, size);
-    }
+	assert(archive_read_next_header(a, &ae) == ARCHIVE_OK);
+    int size = archive_entry_size(ae);
+    archive_buffer_ = new char[size];
+    archive_buffer_size_ = size;
+    archive_read_data(a, archive_buffer_, size);
     archive_read_free(a);
   }
 
@@ -118,7 +121,7 @@ public:
 
   RawContent getRawContent() const {;
     std::ifstream file;
-    file.open(raw_content_path, std::ios::in);
+    file.open(raw_content_path, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     file.close();
     return {std::move(contents)};
@@ -137,9 +140,9 @@ TestController CompressDecompressionTestController::global_controller = {};
 class CompressTestController : public CompressDecompressionTestController{
   void initContentWithRandomData(){
     std::ofstream file;
-    file.open(raw_content_path);
+    file.open(raw_content_path, std::ios::binary);
 
-    std::mt19937 gen(std::random_device { }());
+    std::mt19937 gen((int)0x454);
     for (int i = 0; i < 100000; i++) {
       file << std::to_string(gen() % 100);
     }
@@ -149,7 +152,7 @@ public:
   CompressTestController(){
     char format[] = "/tmp/test.XXXXXX";
     tempDir = global_controller.createTempDirectory(format);
-    REQUIRE(!tempDir.empty());
+    assert(!tempDir.empty());
     raw_content_path = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-compresscontent.txt");
     compressed_content_path = utils::file::FileUtils::concat_path(tempDir, "minifi-compresscontent");
     initContentWithRandomData();
@@ -157,7 +160,7 @@ public:
 
   template<class ...Args>
   void writeCompressed(Args&& ...args){
-    std::ofstream file(compressed_content_path);
+    std::ofstream file(compressed_content_path, std::ios::binary);
     file.write(std::forward<Args>(args)...);
     file.close();
   }

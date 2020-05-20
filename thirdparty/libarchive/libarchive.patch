@@ -114,3 +114,19 @@ diff -rupN orig/libarchive/archive_read_support_format_rar5.c patched/libarchive
  	}
  
  	return ARCHIVE_OK;
+diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
+--- orig/CMakeLists.txt	2020-05-20 12:05:26.929079900 +0200
++++ patched/CMakeLists.txt	2020-05-20 12:06:39.394626800 +0200
+@@ -87,11 +87,7 @@ SET(CMAKE_REQUIRED_DEFINITIONS)
+ SET(CMAKE_REQUIRED_INCLUDES)
+ SET(CMAKE_REQUIRED_LIBRARIES)
+ SET(CMAKE_REQUIRED_FLAGS)
+-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+-  OPTION(ENABLE_WERROR "Treat warnings as errors - default is ON for Debug, OFF otherwise." ON)
+-else ()
+-  OPTION(ENABLE_WERROR "Treat warnings as errors - default is ON for Debug, OFF otherwise." OFF)
+-endif ()
++SET(ENABLE_WERROR OFF)
+ 
+ # Especially for early development, we want to be a little
+ # aggressive about diagnosing build problems; this can get
