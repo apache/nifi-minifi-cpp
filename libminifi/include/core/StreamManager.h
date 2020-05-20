@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_
 #define LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_
 
+#include <memory>
+
+#include <string>
+
 #include "properties/Configure.h"
 #include "ResourceClaim.h"
 #include "io/DataStream.h"

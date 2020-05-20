@@ -18,6 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEMAP_H_
 #define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEMAP_H_
 
+#include <memory>
+
+#include <set>
+
+#include <vector>
+
 #include <map>
 #include <string>
 #include "ControllerServiceNode.h"

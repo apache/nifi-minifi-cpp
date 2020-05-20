@@ -18,6 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONTENTREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_CONTENTREPOSITORY_H_
 
+#include <map>
+
+#include <memory>
+
+#include <string>
+
 #include "properties/Configure.h"
 #include "ResourceClaim.h"
 #include "io/DataStream.h"

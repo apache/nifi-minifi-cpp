@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 
+#include <map>
+
+#include <vector>
+
 #include <stdexcept>
 
 #ifdef RAPIDJSON_ASSERT

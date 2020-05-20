@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
 #define LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
 
+#include <map>
+
+#include <utility>
+
 #include <stdio.h>
 #include <string>
 #include <errno.h>

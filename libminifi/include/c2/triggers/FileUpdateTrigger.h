@@ -17,6 +17,10 @@
  */
 #ifndef LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_
 #define LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_
+
+#include <memory>
+
+#include <string>
 #include <atomic>
 #include "c2/C2Trigger.h"
 #include "utils/StringUtils.h"

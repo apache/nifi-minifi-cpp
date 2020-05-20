@@ -18,6 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_LINUXPOWERMANAGEMENTSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_LINUXPOWERMANAGEMENTSERVICE_H_
 
+#include <string>
+
+#include <utility>
+
+#include <vector>
+
 #include <iostream>
 #include <memory>
 #include "core/Resource.h"

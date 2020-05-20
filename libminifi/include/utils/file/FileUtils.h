@@ -17,6 +17,12 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
 
+#include <memory>
+
+#include <tuple>
+
+#include <utility>
+
 #include <sstream>
 #include <fstream>
 #include <vector>

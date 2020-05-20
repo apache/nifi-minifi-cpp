@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
 #define LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
 
+#include <utility>
+
 #include <algorithm>
 #include "core/Core.h"
 #include "PropertyValidation.h"

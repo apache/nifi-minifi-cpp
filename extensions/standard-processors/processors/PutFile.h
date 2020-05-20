@@ -20,6 +20,10 @@
 #ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_PUTFILE_H_
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_PUTFILE_H_
 
+#include <memory>
+
+#include <string>
+
 #include <utility>
 
 #include "FlowFileRecord.h"

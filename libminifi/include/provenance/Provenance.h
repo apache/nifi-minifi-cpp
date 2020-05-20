@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_
 #define LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_
 
+#include <memory>
+
 #include <atomic>
 #include <cstdint>
 #include <cstring>

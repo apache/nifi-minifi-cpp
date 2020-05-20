@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_
 
+#include <string>
+
+#include <vector>
+
 
 #include "MetricsBase.h"
 #include "core/ProcessorConfig.h"

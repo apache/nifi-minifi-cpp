@@ -17,6 +17,8 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_MINIFICONCURRENTQUEUE_H_
 #define LIBMINIFI_INCLUDE_UTILS_MINIFICONCURRENTQUEUE_H_
 
+#include <utility>
+
 #include <chrono>
 #include <deque>
 #include <mutex>

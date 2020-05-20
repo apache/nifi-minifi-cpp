@@ -15,6 +15,10 @@
  */
 #ifndef LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_
 #define LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_
+
+#include <map>
+
+#include <utility>
 #include <string>
 #include <stdlib.h>
 #include <utils/StringUtils.h>

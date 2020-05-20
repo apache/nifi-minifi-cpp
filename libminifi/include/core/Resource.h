@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_RESOURCE_H_
 #define LIBMINIFI_INCLUDE_CORE_RESOURCE_H_
 
+#include <memory>
+
+#include <string>
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif

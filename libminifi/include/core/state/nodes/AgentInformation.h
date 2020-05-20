@@ -18,6 +18,14 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_
 
+#include <memory>
+
+#include <string>
+
+#include <utility>
+
+#include <vector>
+
 #include "core/Resource.h"
 
 #ifndef WIN32

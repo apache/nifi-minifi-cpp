@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
 #define LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
 
+#include <memory>
+
+#include <string>
+
 #include "state/Value.h"
 #include "PropertyValidation.h"
 #include <typeindex>

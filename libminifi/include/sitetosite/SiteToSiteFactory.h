@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITEFACTORY_H_
 #define LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITEFACTORY_H_
 
+#include <utility>
+
 #include "RawSocketProtocol.h"
 #include "SiteToSite.h"
 #include <memory>

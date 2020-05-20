@@ -21,6 +21,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGERCONFIGURATION_H_
 #define LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGERCONFIGURATION_H_
 
+#include <memory>
+
+#include <vector>
+
 #include <map>
 #include <mutex>
 #include <string>

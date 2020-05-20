@@ -17,6 +17,8 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_
 #define LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_
 
+#include <string>
+
 #include <time.h>
 #include <cstdio>
 #include <string.h>

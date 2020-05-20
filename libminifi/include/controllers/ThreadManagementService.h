@@ -17,6 +17,8 @@
  */
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_
+
+#include <string>
 #include <iostream>
 #include <memory>
 #include "core/Resource.h"

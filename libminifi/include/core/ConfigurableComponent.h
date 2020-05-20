@@ -19,6 +19,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_
 #define LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_
 
+#include <string>
+
+#include <vector>
+
 #include "Core.h"
 #include <mutex>
 #include <iostream>

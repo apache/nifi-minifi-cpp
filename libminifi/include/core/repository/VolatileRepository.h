@@ -18,6 +18,14 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEREPOSITORY_H_
 
+#include <limits>
+
+#include <memory>
+
+#include <string>
+
+#include <utility>
+
 #include "core/Repository.h"
 #include <chrono>
 #include <vector>

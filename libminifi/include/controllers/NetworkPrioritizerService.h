@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_NETWORKPRIORITIZERSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_NETWORKPRIORITIZERSERVICE_H_
 
+#include <string>
+
+#include <vector>
+
 #include <iostream>
 #include <memory>
 #include <limits>

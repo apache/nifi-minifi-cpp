@@ -18,6 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILECONTENTREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILECONTENTREPOSITORY_H_
 
+#include <map>
+
+#include <memory>
+
+#include <string>
+
 #include "core/Core.h"
 #include "AtomicRepoEntries.h"
 #include "io/AtomicEntryStream.h"

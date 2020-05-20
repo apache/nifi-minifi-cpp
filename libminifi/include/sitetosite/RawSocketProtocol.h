@@ -20,6 +20,14 @@
 #ifndef LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_
 
+#include <map>
+
+#include <memory>
+
+#include <utility>
+
+#include <vector>
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <string>

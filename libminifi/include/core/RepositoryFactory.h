@@ -19,6 +19,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
 
+#include <memory>
+
+#include <string>
+
 #include "core/ContentRepository.h"
 #include "core/Repository.h"
 #include "Core.h"

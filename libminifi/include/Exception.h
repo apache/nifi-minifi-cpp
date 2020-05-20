@@ -20,6 +20,8 @@
 #ifndef LIBMINIFI_INCLUDE_EXCEPTION_H_
 #define LIBMINIFI_INCLUDE_EXCEPTION_H_
 
+#include <string>
+
 #include "utils/StringUtils.h"
 #include <sstream>
 #include <exception>

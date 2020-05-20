@@ -20,6 +20,14 @@
 #ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GENERATEFLOWFILE_H_
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GENERATEFLOWFILE_H_
 
+#include <memory>
+
+#include <string>
+
+#include <utility>
+
+#include <vector>
+
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"

@@ -18,6 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_
 #define LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_
 
+#include <map>
+
+#include <memory>
+
+#include <string>
+
 #include <vector>
 #include "core/expect.h"
 

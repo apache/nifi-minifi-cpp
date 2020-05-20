@@ -18,6 +18,10 @@
 
 #ifndef LIBMINIFI_INCLUDE_IO_NONCONVERTINGSTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_NONCONVERTINGSTREAM_H_
+
+#include <string>
+
+#include <vector>
 #include <iostream>
 #include <cstdint>
 #include "EndianCheck.h"

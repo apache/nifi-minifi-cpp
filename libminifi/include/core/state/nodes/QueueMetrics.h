@@ -18,6 +18,14 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_
 
+#include <memory>
+
+#include <string>
+
+#include <utility>
+
+#include <vector>
+
 #include <sstream>
 #include <map>
 

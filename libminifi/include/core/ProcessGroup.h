@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROCESSGROUP_H_
 #define LIBMINIFI_INCLUDE_CORE_PROCESSGROUP_H_
 
+#include <memory>
+
+#include <string>
+
 #include <vector>
 #include <queue>
 #include <map>

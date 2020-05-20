@@ -20,6 +20,8 @@
 #ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_
 
+#include <memory>
+
 #include <stdio.h>
 #include <string>
 #include <errno.h>

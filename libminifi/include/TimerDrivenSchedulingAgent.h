@@ -20,6 +20,8 @@
 #ifndef LIBMINIFI_INCLUDE_TIMERDRIVENSCHEDULINGAGENT_H_
 #define LIBMINIFI_INCLUDE_TIMERDRIVENSCHEDULINGAGENT_H_
 
+#include <memory>
+
 #include "core/logging/Logger.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"

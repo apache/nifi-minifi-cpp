@@ -20,6 +20,8 @@
 #ifndef __CONFIGURE_H__
 #define __CONFIGURE_H__
 
+#include <string>
+
 #include <mutex>
 #include "properties/Properties.h"
 

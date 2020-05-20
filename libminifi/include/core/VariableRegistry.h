@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_VARIABLEREGISTRY_H_
 #define LIBMINIFI_INCLUDE_CORE_VARIABLEREGISTRY_H_
 
+#include <memory>
+
+#include <string>
+
 #include <map>
 #include "properties/Configure.h"
 #include "utils/StringUtils.h"

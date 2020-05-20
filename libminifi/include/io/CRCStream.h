@@ -18,6 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_IO_CRCSTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_CRCSTREAM_H_
 
+#include <algorithm>
+
+#include <utility>
+
+#include <vector>
+
 #include <zlib.h>
 #include <memory>
 #ifdef WIN32

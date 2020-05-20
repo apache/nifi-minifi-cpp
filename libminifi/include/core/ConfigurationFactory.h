@@ -19,6 +19,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_
 #define LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_
 
+#include <memory>
+
+#include <string>
+
 #include "FlowConfiguration.h"
 #include  <type_traits>
 

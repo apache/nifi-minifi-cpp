@@ -18,6 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_C2_C2AGENT_H_
 #define LIBMINIFI_INCLUDE_C2_C2AGENT_H_
 
+#include <map>
+
+#include <string>
+
+#include <vector>
+
 #include <utility>
 #include <functional>
 #include <future>

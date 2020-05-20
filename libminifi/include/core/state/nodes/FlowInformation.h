@@ -18,6 +18,14 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
 
+#include <memory>
+
+#include <string>
+
+#include <utility>
+
+#include <vector>
+
 #include "core/Resource.h"
 #include <functional>
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))

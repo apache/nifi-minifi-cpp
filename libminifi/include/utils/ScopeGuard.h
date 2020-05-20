@@ -20,6 +20,8 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_SCOPEGUARD_H_
 #define LIBMINIFI_INCLUDE_UTILS_SCOPEGUARD_H_
 
+#include <utility>
+
 #include <functional>
 
 #include "gsl.h"

@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_BUILDINFORMATION_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_BUILDINFORMATION_H_
 
+#include <string>
+
+#include <vector>
+
 #include "core/Resource.h"
 
 #ifndef WIN32

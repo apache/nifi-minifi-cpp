@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
 #define LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
 
+#include <memory>
+
 #include "core/ProcessorConfig.h"
 #include "yaml-cpp/yaml.h"
 #include "Exception.h"

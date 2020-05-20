@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_PROCESSORCONTROLLER_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_PROCESSORCONTROLLER_H_
 
+#include <string>
+
 #include <memory>
 #include "core/Processor.h"
 #include "SchedulingAgent.h"

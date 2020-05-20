@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_IO_FILESTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_FILESTREAM_H_
 
+#include <memory>
+
+#include <vector>
+
 #include <fstream>
 #include <string>
 #include "BaseStream.h"

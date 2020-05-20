@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_
 
+#include <utility>
+
 #include <cstdint>
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN

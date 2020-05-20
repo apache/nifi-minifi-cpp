@@ -19,6 +19,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_WEAKREFERENCE_H_
 #define LIBMINIFI_INCLUDE_CORE_WEAKREFERENCE_H_
 
+#include <memory>
+
 #include  <type_traits>
 #include <vector>
 

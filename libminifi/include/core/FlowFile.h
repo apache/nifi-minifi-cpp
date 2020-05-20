@@ -18,6 +18,14 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
 #define LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
 
+#include <map>
+
+#include <memory>
+
+#include <set>
+
+#include <string>
+
 #include "utils/TimeUtil.h"
 #include "ResourceClaim.h"
 #include "Connectable.h"

@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_UPDATEPOLICYCONTROLLERSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_UPDATEPOLICYCONTROLLERSERVICE_H_
 
+#include <string>
+
 #include <iostream>
 #include <memory>
 #include <limits>

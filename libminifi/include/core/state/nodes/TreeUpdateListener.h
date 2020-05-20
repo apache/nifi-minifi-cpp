@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_TREEUPDATELISTENER_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_TREEUPDATELISTENER_H_
 
+#include <memory>
+
+#include <utility>
+
 #include <vector>
 
 #include "../nodes/MetricsBase.h"

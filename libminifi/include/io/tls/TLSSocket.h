@@ -18,6 +18,14 @@
 #ifndef LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_
 
+#include <map>
+
+#include <memory>
+
+#include <string>
+
+#include <vector>
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include "controllers/SSLContextService.h"

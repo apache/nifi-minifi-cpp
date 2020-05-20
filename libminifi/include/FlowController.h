@@ -20,13 +20,13 @@
 #ifndef LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_
 #define LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_
 
-#include <cstdio>
 #include <utility>
 #include <vector>
 #include <queue>
 #include <map>
 #include <mutex>
 #include <atomic>
+#include <cstdio>
 #include <algorithm>
 #include <set>
 

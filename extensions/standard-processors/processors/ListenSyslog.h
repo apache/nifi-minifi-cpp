@@ -20,6 +20,14 @@
 #ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LISTENSYSLOG_H_
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LISTENSYSLOG_H_
 
+#include <memory>
+
+#include <queue>
+
+#include <string>
+
+#include <vector>
+
 #include <stdio.h>
 #include <sys/types.h>
 #ifndef WIN32

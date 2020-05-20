@@ -20,6 +20,12 @@
 #ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_TAILFILE_H_
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_TAILFILE_H_
 
+#include <map>
+
+#include <memory>
+
+#include <string>
+
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"

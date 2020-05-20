@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CLASSLOADER_H_
 #define LIBMINIFI_INCLUDE_CORE_CLASSLOADER_H_
 
+#include <utility>
+
 #include <mutex>
 #include <vector>
 #include <string>

@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_C2_C2PROTOCOL_H_
 #define LIBMINIFI_INCLUDE_C2_C2PROTOCOL_H_
 
+#include <memory>
+
+#include <string>
+
 #include "C2Payload.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "properties/Configure.h"

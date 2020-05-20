@@ -18,6 +18,8 @@
 
 #ifndef LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_
+
+#include <memory>
 #include <cstdint>
 #include <vector>
 

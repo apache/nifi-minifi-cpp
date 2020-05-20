@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_
 
+#include <string>
+
 
 namespace org {
 namespace apache {

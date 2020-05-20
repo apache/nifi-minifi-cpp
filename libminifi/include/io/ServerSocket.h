@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_
 
+#include <memory>
+
+#include <string>
+
 #include "io/ClientSocket.h"
 
 namespace org {

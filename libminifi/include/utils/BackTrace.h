@@ -17,6 +17,8 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_
 #define LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_
 
+#include <string>
+
 #ifdef HAS_EXECINFO
 #include <execinfo.h>
 #include <csignal>

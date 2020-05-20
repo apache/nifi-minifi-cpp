@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_
 
+#include <string>
+
+#include <utility>
+
 #include  <cstddef>
 #include <cstring>
 #include <iostream>

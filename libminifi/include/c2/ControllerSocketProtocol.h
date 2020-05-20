@@ -18,6 +18,14 @@
 #ifndef LIBMINIFI_INCLUDE_C2_CONTROLLERSOCKETPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_C2_CONTROLLERSOCKETPROTOCOL_H_
 
+#include <map>
+
+#include <memory>
+
+#include <string>
+
+#include <vector>
+
 #include "core/Resource.h"
 #include "HeartBeatReporter.h"
 #include "io/StreamFactory.h"

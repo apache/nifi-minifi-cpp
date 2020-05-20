@@ -17,6 +17,12 @@
 #ifndef LIBMINIFI_INCLUDE_IO_STREAMFACTORY_H_
 #define LIBMINIFI_INCLUDE_IO_STREAMFACTORY_H_
 
+#include <memory>
+
+#include <string>
+
+#include <utility>
+
 #include "properties/Configure.h"
 #include "Sockets.h"
 #include "utils/StringUtils.h"

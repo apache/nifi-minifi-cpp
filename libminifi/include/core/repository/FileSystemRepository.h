@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_
 
+#include <memory>
+
+#include <string>
+
 #include "core/Core.h"
 #include "../ContentRepository.h"
 #include "properties/Configure.h"

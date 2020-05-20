@@ -20,6 +20,12 @@
 #ifndef LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_
 #define LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_
 
+#include <memory>
+
+#include <set>
+
+#include <string>
+
 #include <chrono>
 #include "properties/Configure.h"
 #include "core/logging/LoggerConfiguration.h"

@@ -17,6 +17,10 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_FILEMANAGER_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_FILEMANAGER_H_
 
+#include <string>
+
+#include <vector>
+
 #ifdef BOOST_VERSION
 #include <boost/filesystem.hpp>
 #else

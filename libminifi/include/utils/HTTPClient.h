@@ -18,6 +18,14 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
 #define LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
 
+#include <map>
+
+#include <memory>
+
+#include <string>
+
+#include <vector>
+
 #include "ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
 #include "core/Deprecated.h"

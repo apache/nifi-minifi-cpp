@@ -18,6 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITE_H_
 #define LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITE_H_
 
+#include <memory>
+
+#include <string>
+
+#include <utility>
+
 #include "controllers/SSLContextService.h"
 #include "Peer.h"
 #include "core/Property.h"

@@ -18,6 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEPROVIDER_H_
 #define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEPROVIDER_H_
 
+#include <memory>
+
+#include <string>
+
+#include <utility>
+
 #include <future>
 #include <vector>
 #include "core/Core.h"

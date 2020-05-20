@@ -20,6 +20,8 @@
 #ifndef LIBMINIFI_INCLUDE_FLOWCONTROLPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_FLOWCONTROLPROTOCOL_H_
 
+#include <memory>
+
 #include <stdio.h>
 #include <sys/types.h>
 

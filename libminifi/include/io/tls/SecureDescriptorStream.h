@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_
 
+#include <memory>
+
+#include <vector>
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <iostream>

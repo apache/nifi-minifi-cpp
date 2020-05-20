@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_C2_C2TRIGGER_H_
 #define LIBMINIFI_INCLUDE_C2_C2TRIGGER_H_
 
+#include <memory>
+
+#include <string>
+
 #include "core/Connectable.h"
 #include "c2/C2Payload.h"
 #include "properties/Configure.h"

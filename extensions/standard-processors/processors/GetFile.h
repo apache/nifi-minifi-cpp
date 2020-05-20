@@ -18,6 +18,14 @@
 #ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETFILE_H_
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETFILE_H_
 
+#include <memory>
+
+#include <queue>
+
+#include <string>
+
+#include <vector>
+
 #include <atomic>
 
 #include "core/state/nodes/MetricsBase.h"

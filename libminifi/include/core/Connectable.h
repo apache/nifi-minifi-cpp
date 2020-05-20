@@ -19,6 +19,14 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_
 #define LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_
 
+#include <map>
+
+#include <memory>
+
+#include <string>
+
+#include <vector>
+
 #include <set>
 #include "Core.h"
 #include <condition_variable>

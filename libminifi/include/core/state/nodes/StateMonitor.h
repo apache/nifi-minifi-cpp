@@ -18,6 +18,10 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_
 
+#include <memory>
+
+#include <string>
+
 #include "core/Resource.h"
 #include <stdio.h>
 #include <stdlib.h>

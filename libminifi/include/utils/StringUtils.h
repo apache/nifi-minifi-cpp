@@ -16,6 +16,10 @@
  */
 #ifndef LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_
+
+#include <string>
+
+#include <utility>
 #include <iostream>
 #include <cstring>
 #include <functional>
