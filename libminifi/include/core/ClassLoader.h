@@ -459,7 +459,7 @@ class ClassLoader {
 #ifdef _MSC_VER
 #pragma warning(suppress: 4054 )
 #endif
-    return (void*)symbol;
+    return reinterpret_cast<void*>(symbol);
   }
 
   const char *dlerror(void) {
@@ -517,7 +517,7 @@ class ClassLoader {
     /* Return to previous state of the error-mode bit flags. */
     SetErrorMode(uMode);
 
-    return (void *)object;
+    return reinterpret_cast<void*>(object);
   }
 
   int dlclose(void *handle) {
@@ -533,7 +533,7 @@ class ClassLoader {
 
     ret = !ret;
 
-    return (int)ret;
+    return static_cast<int>(ret);
   }
 
 #endif

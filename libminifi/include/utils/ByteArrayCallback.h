@@ -23,7 +23,7 @@
 
 #include <vector>
 
-#include "concurrentqueue.h"
+#include "concurrentqueue.h" // NOLINT
 #include "FlowFileRecord.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -54,7 +54,7 @@ class ByteInputCallBack : public InputStreamCallback {
       stream->readData(reinterpret_cast<uint8_t*>(vec.data()), stream->getSize());
     }
 
-    ptr = (char*) &vec[0];
+    ptr = reinterpret_cast<char*>(&vec[0]);
 
     return vec.size();
   }

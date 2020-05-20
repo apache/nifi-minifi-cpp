@@ -18,29 +18,23 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
 
-#include <set>
-#include <string>
-#include <vector>
-
 #include "core/Resource.h"
 
 #ifndef WIN32
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/utsname.h>
-
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
-
 #endif
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <sys/utsname.h>
+
 #include <ifaddrs.h>
 #include <net/if.h>
 #include <netdb.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
 #include <unistd.h>
 
 #else
@@ -52,6 +46,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <set>
+#include <string>
+#include <vector>
 #include <fstream>
 #include <functional>
 #include <map>
@@ -149,13 +146,13 @@ class Device {
       std::set<std::string> macs;
 
       ULONG adapterLen = sizeof(IP_ADAPTER_INFO);
-      adapterPtr = (IP_ADAPTER_INFO *)malloc(sizeof(IP_ADAPTER_INFO));
+      adapterPtr = reinterpret_cast<IP_ADAPTER_INFO*>(malloc(sizeof(IP_ADAPTER_INFO)));
       if (adapterPtr == NULL) {
         return ips;
       }
       if (GetAdaptersInfo(adapterPtr, &adapterLen) == ERROR_BUFFER_OVERFLOW) {
         free(adapterPtr);
-        adapterPtr = (IP_ADAPTER_INFO *)malloc(adapterLen);
+        adapterPtr = reinterpret_cast<IP_ADAPTER_INFO*>(malloc(adapterLen));
         if (adapterPtr == NULL) {
           return ips;
         }
@@ -227,7 +224,7 @@ class Device {
     const struct ifreq* const end = it + (ifc.ifc_len / sizeof(struct ifreq));
 
     for (; it != end; ++it) {
-      strcpy(ifr.ifr_name, it->ifr_name);
+      strcpy(ifr.ifr_name, it->ifr_name); // NOLINT
       if (ioctl(sock, SIOCGIFFLAGS, &ifr) == 0) {
         if (!(ifr.ifr_flags & IFF_LOOPBACK)) {  // don't count loopback
           if (ioctl(sock, SIOCGIFHWADDR, &ifr) == 0) {
@@ -236,7 +233,7 @@ class Device {
             memcpy(mac, ifr.ifr_hwaddr.sa_data, 6);
 
             char mac_add[13];
-            snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+            snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]); // NOLINT
 
             macs += mac_add;
           }
@@ -258,8 +255,8 @@ class Device {
 
     if (getifaddrs(&iflist) == 0) {
       for (ifaddrs* cur = iflist; cur; cur = cur->ifa_next) {
-        if (cur->ifa_addr && (cur->ifa_addr->sa_family == AF_LINK) && ((sockaddr_dl*) cur->ifa_addr)->sdl_alen) {
-          sockaddr_dl* sdl = (sockaddr_dl*) cur->ifa_addr;
+        if (cur->ifa_addr && (cur->ifa_addr->sa_family == AF_LINK) && (reinterpret_cast<sockaddr_dl*>(cur->ifa_addr))->sdl_alen) {
+          sockaddr_dl* sdl = reinterpret_cast<sockaddr_dl*>(cur->ifa_addr);
 
           if (sdl->sdl_type != IFT_ETHER) {
             continue;
@@ -268,7 +265,7 @@ class Device {
           char mac[32];
           memcpy(mac, LLADDR(sdl), sdl->sdl_alen);
           char mac_add[13];
-          snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+          snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]); // NOLINT
           // /macs += mac_add;
           macs.insert(mac_add);
         }
@@ -293,13 +290,13 @@ class Device {
     std::set<std::string> macs;
 
     ULONG adapterLen = sizeof(IP_ADAPTER_INFO);
-    adapterPtr = (IP_ADAPTER_INFO *)malloc(sizeof(IP_ADAPTER_INFO));
+    adapterPtr = reinterpret_cast<IP_ADAPTER_INFO*>(malloc(sizeof(IP_ADAPTER_INFO)));
     if (adapterPtr == NULL) {
       return "";
     }
     if (GetAdaptersInfo(adapterPtr, &adapterLen) == ERROR_BUFFER_OVERFLOW) {
       free(adapterPtr);
-      adapterPtr = (IP_ADAPTER_INFO *)malloc(adapterLen);
+      adapterPtr = reinterpret_cast<IP_ADAPTER_INFO*>(malloc(adapterLen));
       if (adapterPtr == NULL) {
         return "";
       }
@@ -309,7 +306,7 @@ class Device {
       adapter = adapterPtr;
       while (adapter) {
         char mac_add[13];
-        snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", adapter->Address[0], adapter->Address[1], adapter->Address[2], adapter->Address[3], adapter->Address[4], adapter->Address[5]);
+        snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", adapter->Address[0], adapter->Address[1], adapter->Address[2], adapter->Address[3], adapter->Address[4], adapter->Address[5]); // NOLINT
         macs.insert(mac_add);
         adapter = adapter->Next;
       }

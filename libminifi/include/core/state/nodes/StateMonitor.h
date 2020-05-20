@@ -68,4 +68,4 @@ class StateMonitorNode : public DeviceInformation {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_

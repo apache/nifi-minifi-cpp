@@ -104,4 +104,4 @@ class SchedulingDefaults : public DeviceInformation {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_

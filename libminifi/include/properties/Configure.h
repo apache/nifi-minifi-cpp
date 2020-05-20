@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __CONFIGURE_H__
-#define __CONFIGURE_H__
+#ifndef LIBMINIFI_INCLUDE_PROPERTIES_CONFIGURE_H_
+#define LIBMINIFI_INCLUDE_PROPERTIES_CONFIGURE_H_
 
 #include <string>
 

@@ -67,7 +67,6 @@ HTTPClient::~HTTPClient() {
 }
 
 void HTTPClient::forceClose() {
-
   if (nullptr != callback) {
     callback->stop = true;
   }
@@ -75,7 +74,6 @@ void HTTPClient::forceClose() {
   if (nullptr != write_callback_) {
     write_callback_->stop = true;
   }
-
 }
 
 int HTTPClient::debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr) {
@@ -142,7 +140,7 @@ bool HTTPClient::setSpecificSSLVersion(SSLVersion specific_version) {
 #endif
 }
 
-/* If not set, the default will be TLS 1.0, see https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html */
+// If not set, the default will be TLS 1.0, see https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html
 bool HTTPClient::setMinimumSSLVersion(SSLVersion minimum_version) {
   CURLcode ret = CURLE_UNKNOWN_OPTION;
   switch (minimum_version) {
@@ -186,7 +184,7 @@ void HTTPClient::setUploadCallback(HTTPUploadCallback *callbackObj) {
   logger_->log_debug("Setting callback for %s", url_);
   write_callback_ = callbackObj;
   if (method_ == "put" || method_ == "PUT") {
-    curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE, (curl_off_t ) callbackObj->ptr->getBufferSize());
+    curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE, (curl_off_t) callbackObj->ptr->getBufferSize());
   }
   curl_easy_setopt(http_session_, CURLOPT_READFUNCTION, &utils::HTTPRequestResponse::send_write);
   curl_easy_setopt(http_session_, CURLOPT_READDATA, static_cast<void*>(callbackObj));

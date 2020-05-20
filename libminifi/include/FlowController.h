@@ -46,7 +46,6 @@
 #include "core/state/nodes/FlowInformation.h"
 #include "core/state/nodes/MetricsBase.h"
 #include "core/state/UpdateController.h"
-#include "core/state/StateManager.h"
 #include "CronDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
@@ -422,7 +421,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 };
 
 }  // namespace minifi
-/* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */

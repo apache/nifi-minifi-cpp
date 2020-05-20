@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_CoreComponentState_H_
-#define LIBMINIFI_INCLUDE_CORE_CoreComponentState_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_CORECOMPONENTSTATE_H_
+#define LIBMINIFI_INCLUDE_CORE_CORECOMPONENTSTATE_H_
 
 #include "Core.h"
 
@@ -64,4 +64,4 @@ class CoreComponentStateManagerProvider {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CoreComponentState_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CORECOMPONENTSTATE_H_

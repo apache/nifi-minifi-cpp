@@ -64,8 +64,9 @@ class PayloadSerializer {
       stream->write(&type, 1);
       if (sub_type->getValue()) {
         type = 1;
-      } else
+      } else {
         type = 0;
+      }
       stream->write(&type, 1);
     } else {
       auto str = base_type->getStringValue();

@@ -40,7 +40,6 @@
 
 #endif
 #include <errno.h>
-#include <sys/types.h>
 
 #include <chrono>
 #include <thread>

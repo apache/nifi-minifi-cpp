@@ -33,21 +33,21 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
-  class ProcessSessionReadCallback : public InputStreamCallback {
-   public:
-       ProcessSessionReadCallback(const std::string &tmpFile, const std::string &destFile,
-                 std::shared_ptr<logging::Logger> logger);
-       ~ProcessSessionReadCallback();
-    virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
-    bool commit();
+class ProcessSessionReadCallback : public InputStreamCallback {
+ public:
+     ProcessSessionReadCallback(const std::string &tmpFile, const std::string &destFile,
+               std::shared_ptr<logging::Logger> logger);
+     ~ProcessSessionReadCallback();
+  virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
+  bool commit();
 
-   private:
-    std::shared_ptr<logging::Logger> logger_;
-    std::ofstream _tmpFileOs;
-    bool _writeSucceeded = false;
-    std::string _tmpFile;
-    std::string _destFile;
-  };
+ private:
+  std::shared_ptr<logging::Logger> logger_;
+  std::ofstream _tmpFileOs;
+  bool _writeSucceeded = false;
+  std::string _tmpFile;
+  std::string _destFile;
+};
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -28,28 +28,26 @@
 #include <arpa/inet.h>
 #endif
 
-namespace {
-  template<typename Integral, typename std::enable_if<
-      std::is_integral<Integral>::value && (sizeof(Integral) == 2), Integral>::type* = nullptr>
-  Integral byteSwap(Integral i) {
-    return htons(i);
-  }
-  template<typename Integral, typename std::enable_if<
-      std::is_integral<Integral>::value &&(sizeof(Integral) == 4), Integral>::type* = nullptr>
-  Integral byteSwap(Integral i) {
-    return htonl(i);
-  }
-  template<typename Integral, typename std::enable_if<
-      std::is_integral<Integral>::value && (sizeof(Integral) == 8), Integral>::type* = nullptr>
-  Integral byteSwap(Integral i) {
+template<typename Integral, typename std::enable_if<
+    std::is_integral<Integral>::value && (sizeof(Integral) == 2), Integral>::type* = nullptr>
+Integral byteSwap(Integral i) {
+  return htons(i);
+}
+template<typename Integral, typename std::enable_if<
+    std::is_integral<Integral>::value &&(sizeof(Integral) == 4), Integral>::type* = nullptr>
+Integral byteSwap(Integral i) {
+  return htonl(i);
+}
+template<typename Integral, typename std::enable_if<
+    std::is_integral<Integral>::value && (sizeof(Integral) == 8), Integral>::type* = nullptr>
+Integral byteSwap(Integral i) {
 #ifdef htonll
-    return htonll(i);
+  return htonll(i);
 #else
-    #define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
-    return htonll_r(i);
+  #define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
+  return htonll_r(i);
 #endif
-  }
-}  // namespace
+}
 
 namespace org {
 namespace apache {

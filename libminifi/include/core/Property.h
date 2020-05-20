@@ -306,8 +306,9 @@ class Property {
       timeunit = DAY;
       output = ival;
       return true;
-    } else
+    } else {
       return false;
+    }
   }
 
 // Convert String
@@ -360,8 +361,9 @@ class Property {
       timeunit = DAY;
       output = ival;
       return true;
-    } else
+    } else {
       return false;
+    }
   }
 
   static bool StringToDateTime(const std::string& input, int64_t& output) {

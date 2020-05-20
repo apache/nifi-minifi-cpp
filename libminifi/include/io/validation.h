@@ -30,7 +30,7 @@
 template<typename T>
 class empty_function_functor_checker {
   typedef char hasit;
-  typedef long doesnothaveit;
+  typedef long doesnothaveit; // NOLINT
 
   // look for the declared type
   template<typename O> static hasit test(decltype(&O::empty));
@@ -45,7 +45,7 @@ class empty_function_functor_checker {
 template<typename T>
 class size_function_functor_checker {
   typedef char hasit;
-  typedef long doesnothaveit;
+  typedef long doesnothaveit; // NOLINT
 
   // look for the declared type
   template<typename O> static hasit test(decltype(&O::size));
@@ -104,7 +104,7 @@ static auto IsNullOrEmpty(T *object) -> typename std::enable_if<empty_function_f
  * Determines if the variable is null or ::size() == 0
  */
 template<typename T>
-static auto IsNullOrEmpty(T *object) -> typename std::enable_if<not empty_function_functor_checker<T>::has_empty_function && size_function_functor_checker<T>::has_size_function == 1 , bool>::type {
+static auto IsNullOrEmpty(T *object) -> typename std::enable_if<!empty_function_functor_checker<T>::has_empty_function && size_function_functor_checker<T>::has_size_function == 1 , bool>::type {
   return (nullptr == object || object->size() == 0);
 }
 
@@ -113,7 +113,7 @@ static auto IsNullOrEmpty(T *object) -> typename std::enable_if<not empty_functi
  * Determines if the variable is null
  */
 template<typename T>
-static auto IsNullOrEmpty(T *object) -> typename std::enable_if<not empty_function_functor_checker<T>::has_empty_function && not size_function_functor_checker<T>::has_size_function , bool>::type {
+static auto IsNullOrEmpty(T *object) -> typename std::enable_if<!empty_function_functor_checker<T>::has_empty_function && !size_function_functor_checker<T>::has_size_function , bool>::type {
   return (nullptr == object);
 }
 
@@ -121,12 +121,12 @@ static auto IsNullOrEmpty(T *object) -> typename std::enable_if<not empty_functi
 * Determines if the variable is null or ::empty()
 */
 template<typename T>
-static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<not empty_function_functor_checker<T>::has_empty_function, bool>::type {
+static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<!empty_function_functor_checker<T>::has_empty_function, bool>::type {
   return (nullptr == object || nullptr == object.get());
 }
 
 template<typename T>
-static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<not empty_function_functor_checker<T>::has_empty_function && size_function_functor_checker<T>::has_size_function == 1, bool>::type { // NOLINT
+static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<!empty_function_functor_checker<T>::has_empty_function && size_function_functor_checker<T>::has_size_function == 1, bool>::type { // NOLINT
   return (nullptr == object || nullptr == object.get() || object->size() == 0);
 }
 

@@ -34,7 +34,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
-#include "concurrentqueue.h"
+#include "concurrentqueue.h" // NOLINT
 #include "utils/ThreadPool.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "controllers/SSLContextService.h"

@@ -75,10 +75,11 @@ class OperationWatcher : public utils::AfterExecute<Update> {
   std::atomic<bool> *running_;
 };
 
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_TREEUPDATELISTENER_H_

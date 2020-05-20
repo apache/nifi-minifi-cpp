@@ -27,9 +27,7 @@
 
 #ifndef WIN32
 #include <arpa/inet.h>
-#include <netinet/in.h>
 #include <sys/ioctl.h>
-#include <sys/socket.h>
 
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
@@ -429,9 +427,9 @@ class AgentStatus : public StateMonitorNode {
     SerializedResponseNode uptime;
 
     uptime.name = "uptime";
-    if (nullptr != monitor_)
+    if (nullptr != monitor_) {
       uptime.value = monitor_->getUptime();
-    else {
+    } else {
       uptime.value = "0";
     }
 
@@ -628,7 +626,7 @@ class AgentManifest : public DeviceInformation {
 };
 
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
-public:
+ public:
   AgentNode(const std::string& name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
     setArray(false);
@@ -639,8 +637,7 @@ public:
     setArray(false);
   }
 
-protected:
-
+ protected:
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
 
@@ -691,7 +688,6 @@ protected:
  */
 class AgentInformation : public AgentNode {
  public:
-
   AgentInformation(const std::string& name, utils::Identifier & uuid)
       : AgentNode(name, uuid),
         include_agent_status_(true) {
@@ -725,6 +721,7 @@ class AgentInformation : public AgentNode {
     }
     return serialized;
   }
+
  protected:
   bool include_agent_status_;
 };

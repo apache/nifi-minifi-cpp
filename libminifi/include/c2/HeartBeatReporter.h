@@ -104,4 +104,4 @@ class HeartBeatReporter : public core::Connectable {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_HEARTBEATREPORTER_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_HEARTBEATREPORTER_H_

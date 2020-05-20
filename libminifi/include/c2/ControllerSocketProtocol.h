@@ -95,4 +95,4 @@ REGISTER_RESOURCE(ControllerSocketProtocol, "Creates a reporter that can handle 
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_CONTROLLERSOCKETPROTOCOL_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_CONTROLLERSOCKETPROTOCOL_H_

@@ -14,15 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_KEYVALUE_PersistableKeyValueStoreService_H_
-#define LIBMINIFI_INCLUDE_KEYVALUE_PersistableKeyValueStoreService_H_
+#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_PERSISTABLEKEYVALUESTORESERVICE_H_
+#define LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_PERSISTABLEKEYVALUESTORESERVICE_H_
+
+#include <string>
+#include <unordered_map>
 
 #include "KeyValueStoreService.h"
 #include "AbstractCoreComponentStateManagerProvider.h"
 #include "core/Core.h"
 #include "properties/Configure.h"
-
-#include <string>
 
 namespace org {
 namespace apache {
@@ -40,11 +41,11 @@ class PersistableKeyValueStoreService : virtual public KeyValueStoreService, pub
   virtual bool persist() = 0;
 
  protected:
-  virtual bool setImpl(const std::string& key, const std::string& value) override;
-  virtual bool getImpl(const std::string& key, std::string& value) override;
-  virtual bool getImpl(std::unordered_map<std::string, std::string>& kvs) override;
-  virtual bool removeImpl(const std::string& key) override;
-  virtual bool persistImpl() override;
+  bool setImpl(const std::string& key, const std::string& value) override;
+  bool getImpl(const std::string& key, std::string& value) override;
+  bool getImpl(std::unordered_map<std::string, std::string>& kvs) override;
+  bool removeImpl(const std::string& key) override;
+  bool persistImpl() override;
 };
 
 } /* namespace controllers */
@@ -53,4 +54,4 @@ class PersistableKeyValueStoreService : virtual public KeyValueStoreService, pub
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_KEYVALUE_PersistableKeyValueStoreService_H_ */
+#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_PERSISTABLEKEYVALUESTORESERVICE_H_ */

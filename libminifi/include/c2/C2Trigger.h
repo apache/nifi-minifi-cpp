@@ -81,4 +81,4 @@ class C2Trigger : public core::Connectable{
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_C2TRIGGER_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_C2TRIGGER_H_

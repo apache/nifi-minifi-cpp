@@ -17,7 +17,6 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_MINIFICONCURRENTQUEUE_H_
 #define LIBMINIFI_INCLUDE_UTILS_MINIFICONCURRENTQUEUE_H_
 
-#include <utility>
 
 #include <chrono>
 #include <deque>
@@ -26,7 +25,7 @@
 #include <utility>
 #include <stdexcept>
 
-#include <utils/TryMoveCall.h>
+#include "utils/TryMoveCall.h"
 
 namespace org {
 namespace apache {

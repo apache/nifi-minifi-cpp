@@ -54,25 +54,23 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-namespace {
-  template<class Char>
-  struct string_traits;
-  template<>
-  struct string_traits<char>{
-    template<class T>
-    static std::string convert_to_string(T&& t){
-      return std::to_string(std::forward<T>(t));
-    }
-  };
+template<class Char>
+struct string_traits;
+template<>
+struct string_traits<char>{
+  template<class T>
+  static std::string convert_to_string(T&& t){
+    return std::to_string(std::forward<T>(t));
+  }
+};
 
-  template<>
-  struct string_traits<wchar_t>{
-    template<class T>
-    static std::wstring convert_to_string(T&& t){
-      return std::to_wstring(std::forward<T>(t));
-    }
-  };
-}  // namespace
+template<>
+struct string_traits<wchar_t>{
+  template<class T>
+  static std::wstring convert_to_string(T&& t){
+    return std::to_wstring(std::forward<T>(t));
+  }
+};
 
 /**
  * Stateless String utility class.
@@ -163,7 +161,7 @@ class StringUtils {
     std::string newString;
     for (int i = 0; i < len; i += 2) {
       std::string sstr = in.substr(i, 2);
-      char chr = (char) (int) strtol(sstr.c_str(), 0x00, 16);
+      char chr = (char) (int) strtol(sstr.c_str(), 0x00, 16); // NOLINT
       newString.push_back(chr);
     }
     return newString;

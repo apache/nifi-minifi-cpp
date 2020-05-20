@@ -60,7 +60,7 @@ inline std::string getTimeStr(uint64_t msec, bool enforce_locale = false) {
 
   std::string ret = date;
   date[0] = '\0';
-  sprintf(date, ".%03llu", (unsigned long long) msec);
+  sprintf(date, ".%03llu", (unsigned long long) msec); // NOLINT
 
   ret += date;
   return ret;
@@ -111,7 +111,7 @@ inline int64_t parseDateTimeStr(const std::string &str) {
 
   /* Get local timezone offset */
   time_t utc = time(nullptr);
-  struct tm now_tm = *gmtime(&utc);
+  struct tm now_tm = *gmtime(&utc); // NOLINT
   now_tm.tm_isdst = 0;
   time_t local = mktime(&now_tm);
   if (local == -1) {
@@ -132,7 +132,7 @@ inline bool getDateTimeStr(int64_t unix_timestamp, std::string& date_time_str) {
     return false;
   }
   time_t time = static_cast<time_t>(unix_timestamp);
-  struct tm* gmt = gmtime(&time);
+  struct tm* gmt = gmtime(&time); // NOLINT
   if (gmt == nullptr) {
     return false;
   }

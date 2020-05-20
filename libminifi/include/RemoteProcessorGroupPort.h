@@ -30,7 +30,7 @@
 #include <memory>
 #include <stack>
 #include "utils/HTTPClient.h"
-#include "concurrentqueue.h"
+#include "concurrentqueue.h" // NOLINT
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"

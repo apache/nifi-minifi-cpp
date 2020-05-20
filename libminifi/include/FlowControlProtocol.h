@@ -174,8 +174,9 @@ class FlowControlProtocol {
       if (core::Property::StringToTime(value, _reportInterval, unit) && core::Property::ConvertTimeUnitToMS(_reportInterval, unit, _reportInterval)) {
         logger_->log_info("NiFi server report interval: [%" PRId64 "] ms", _reportInterval);
       }
-    } else
+    } else {
       _reportInterval = 0;
+    }
   }
 
   FlowControlProtocol(const FlowControlProtocol&) = delete;
@@ -242,7 +243,7 @@ class FlowControlProtocol {
   uint8_t *encode(uint8_t *buf, const std::string& value) {
     // add the \0 for size
     buf = encode(buf, value.size() + 1);
-    buf = encode(buf, (uint8_t *) value.c_str(), value.size() + 1);
+    buf = encode(buf, const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(value.c_str())), value.size() + 1);
     return buf;
   }
 

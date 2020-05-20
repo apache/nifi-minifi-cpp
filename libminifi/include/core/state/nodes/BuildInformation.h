@@ -24,24 +24,23 @@
 #include "core/Resource.h"
 
 #ifndef WIN32
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
 
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
-
 #endif
+
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <ifaddrs.h>
+#include <netinet/in.h>
 #include <net/if.h>
 #include <netdb.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
 #include <unistd.h>
 
 #endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -138,4 +137,4 @@ REGISTER_RESOURCE(BuildInformation, "Node part of an AST that defines the pertin
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_BUILDINFORMATION_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_BUILDINFORMATION_H_

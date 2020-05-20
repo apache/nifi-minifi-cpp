@@ -165,7 +165,7 @@ class SSLContextService : public core::controller::ControllerService {
 
 #ifdef OPENSSL_SUPPORT
   static std::string getLatestOpenSSLErrorString() {
-    unsigned long err = ERR_peek_last_error();
+    unsigned long err = ERR_peek_last_error(); // NOLINT
     if (err == 0U) {
       return "";
     }

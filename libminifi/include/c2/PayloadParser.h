@@ -191,4 +191,4 @@ class PayloadParser {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_PAYLOADPARSER_H_ */
+#endif  // LIBMINIFI_INCLUDE_C2_PAYLOADPARSER_H_

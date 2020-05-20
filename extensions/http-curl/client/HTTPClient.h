@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __HTTP_UTILS_H__
-#define __HTTP_UTILS_H__
+#ifndef EXTENSIONS_HTTP_CURL_CLIENT_HTTPCLIENT_H_
+#define EXTENSIONS_HTTP_CURL_CLIENT_HTTPCLIENT_H_
 
 #include "utils/HTTPClient.h"
 #ifdef WIN32
@@ -29,16 +29,18 @@
 #else
 #include <curl/curl.h>
 #endif
-#include <vector>
-#include <iostream>
-#include <string>
 #include <curl/easy.h>
+#include <vector>
+#include <memory>
+#include <iostream>
+#include <map>
+#include <chrono>
+#include <string>
 #ifdef WIN32
 #include <regex>
 #else
 #include <regex.h>
 #endif
-#include <chrono>
 
 #include "utils/ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
@@ -63,52 +65,51 @@ namespace utils {
  */
 class HTTPClient : public BaseHTTPClient, public core::Connectable {
  public:
-
   HTTPClient();
 
   HTTPClient(std::string name, utils::Identifier uuid);
 
-  HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
+  explicit HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
 
   ~HTTPClient();
 
   static int debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr);
 
-  virtual void setVerbose(bool use_stderr = false) override;
+  void setVerbose(bool use_stderr = false) override;
 
   void forceClose();
 
-  virtual void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) override;
+  void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) override;
 
   // This is a bad API and deprecated. Use the std::chrono variant of this
   // It is assumed that the value of timeout provided to this function
   // is in seconds units
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setConnectionTimeout(int64_t timeout) override;
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setConnectionTimeout(int64_t timeout) override;
 
   // This is a bad API and deprecated. Use the std::chrono variant of this
   // It is assumed that the value of timeout provided to this function
   // is in seconds units
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setReadTimeout(int64_t timeout) override;
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setReadTimeout(int64_t timeout) override;
 
-  virtual void setConnectionTimeout(std::chrono::milliseconds timeout) override;
+  void setConnectionTimeout(std::chrono::milliseconds timeout) override;
 
-  virtual void setReadTimeout(std::chrono::milliseconds timeout) override;
+  void setReadTimeout(std::chrono::milliseconds timeout) override;
 
-  virtual void setUploadCallback(HTTPUploadCallback *callbackObj) override;
+  void setUploadCallback(HTTPUploadCallback *callbackObj) override;
 
   virtual void setReadCallback(HTTPReadCallback *callbackObj);
 
   struct curl_slist *build_header_list(std::string regex, const std::map<std::string, std::string> &attributes);
 
-  virtual void setContentType(std::string content_type) override;
+  void setContentType(std::string content_type) override;
 
-  virtual std::string escape(std::string string_to_escape) override;
+  std::string escape(std::string string_to_escape) override;
 
-  virtual void setPostFields(const std::string& input) override;
+  void setPostFields(const std::string& input) override;
 
   void setHeaders(struct curl_slist *list);
 
-  virtual void appendHeader(const std::string &new_header) override;
+  void appendHeader(const std::string &new_header) override;
 
   void appendHeader(const std::string &key, const std::string &value);
 
@@ -161,7 +162,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void setInterface(const std::string &);
 
-  virtual const std::map<std::string, std::string> &getParsedHeaders() override {
+  const std::map<std::string, std::string> &getParsedHeaders() override {
     return header_response_.getHeaderMap();
   }
 
@@ -186,7 +187,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() override {
+  bool isRunning() override {
     return true;
   }
 
@@ -197,15 +198,14 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   void waitForWork(uint64_t timeoutMs) {
   }
 
-  virtual void yield() override {
-
+  void yield() override {
   }
 
   /**
    * Determines if work is available by this connectable
    * @return boolean if work is available.
    */
-  virtual bool isWorkAvailable() override {
+  bool isWorkAvailable() override {
     return true;
   }
 
@@ -239,7 +239,6 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   Progress progress_;
 
  protected:
-
   inline bool matches(const std::string &value, const std::string &sregex) override;
 
   static CURLcode configure_ssl_context(CURL *curl, void *ctx, void *param) {
@@ -293,4 +292,4 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // EXTENSIONS_HTTP_CURL_CLIENT_HTTPCLIENT_H_

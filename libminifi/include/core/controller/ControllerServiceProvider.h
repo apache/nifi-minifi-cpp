@@ -199,8 +199,9 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
     std::shared_ptr<ControllerServiceNode> node = getControllerServiceNode(identifier);
     if (nullptr != node) {
       return linkedServicesAre(ENABLED, node);
-    } else
+    } else {
       return false;
+    }
   }
 
   /**
@@ -211,16 +212,18 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
     std::shared_ptr<ControllerServiceNode> node = getControllerServiceNode(identifier);
     if (nullptr != node) {
       return linkedServicesAre(ENABLING, node);
-    } else
+    } else {
       return false;
+    }
   }
 
   virtual const std::string getControllerServiceName(const std::string &identifier) {
     std::shared_ptr<ControllerService> node = getControllerService(identifier);
     if (nullptr != node) {
       return node->getName();
-    } else
+    } else {
       return "";
+    }
   }
 
   virtual void enableAllControllerServices() = 0;

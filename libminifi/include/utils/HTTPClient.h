@@ -146,7 +146,7 @@ struct HTTPHeaderResponse {
         size_t separator_pos = header_line.find(':');
         if (separator_pos == std::string::npos) {
           if (!last_key.empty() && (header_line[0] == ' ' || header_line[0] == '\t')) {
-            /* This is a "folded header", which is deprecated(https:  // www.ietf.org/rfc/rfc7230.txt) but here we are */
+            // This is a "folded header", which is deprecated(https:  // www.ietf.org/rfc/rfc7230.txt) but here we are
             header_mapping_[last_key].append(" " + utils::StringUtils::trim(header_line));
           }
           continue;
@@ -219,7 +219,7 @@ class HTTPRequestResponse {
       if (p == nullptr) {
         return CALLBACK_ABORT;
       }
-      HTTPUploadCallback *callback = (HTTPUploadCallback *) p;
+      HTTPUploadCallback *callback = reinterpret_cast<HTTPUploadCallback*>(p);
       if (callback->stop) {
         return CALLBACK_ABORT;
       }

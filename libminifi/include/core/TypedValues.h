@@ -134,8 +134,9 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
       timeunit = DAY;
       output = ival;
       return true;
-    } else
+    } else {
       return false;
+    }
   }
 };
 
@@ -187,7 +188,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
       return true;
     } else if ((end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T') || (end0 == 'P')) {
       if (pEnd[1] == '\0') {
-        unsigned long int multiplier = 1000;
+        unsigned long int multiplier = 1000; // NOLINT
 
         if ((end0 != 'K')) {
           multiplier *= 1000;
@@ -205,7 +206,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
         return true;
 
       } else if ((pEnd[1] == 'b' || pEnd[1] == 'B') && (pEnd[2] == '\0')) {
-        unsigned long int multiplier = 1024;
+        unsigned long int multiplier = 1024; // NOLINT
 
         if ((end0 != 'K')) {
           multiplier *= 1024;

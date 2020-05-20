@@ -159,9 +159,9 @@ class SiteToSiteClient : public core::Connectable {
   /**
    * Sets the idle timeout.
    */
-   void setIdleTimeout(std::chrono::milliseconds timeout) {
+  void setIdleTimeout(std::chrono::milliseconds timeout) {
      idle_timeout_ = timeout;
-   }
+  }
 
   /**
    * Sets the base peer for this interface.

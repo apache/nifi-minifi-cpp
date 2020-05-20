@@ -32,8 +32,6 @@
 #include <thread>
 
 #ifndef WIN32
-#include <signal.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 
 #endif
@@ -130,7 +128,6 @@ REGISTER_RESOURCE(ExecuteProcess, "Runs an operating system command specified by
                   "as it typically does not make sense to split binary data on arbitrary time-based intervals.");
 #endif
 }  // namespace processors
-/* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

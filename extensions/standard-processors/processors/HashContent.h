@@ -42,82 +42,82 @@
 
 using HashReturnType = std::pair<std::string, int64_t>;
 
-namespace {
 #define HASH_BUFFER_SIZE 16384
 
-  HashReturnType MD5Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
-    HashReturnType ret_val;
-    ret_val.second = 0;
-    uint8_t buffer[HASH_BUFFER_SIZE];
-    MD5_CTX context;
-    MD5_Init(&context);
+// Without puttng this into its own namespace, the code would export already defined symbols.
+namespace { // NOLINT
+HashReturnType MD5Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
+  HashReturnType ret_val;
+  ret_val.second = 0;
+  uint8_t buffer[HASH_BUFFER_SIZE];
+  MD5_CTX context;
+  MD5_Init(&context);
 
-    size_t ret = 0;
-    do {
-      ret = stream->readData(buffer, HASH_BUFFER_SIZE);
-      if (ret > 0) {
-        MD5_Update(&context, buffer, ret);
-        ret_val.second += ret;
-      }
-    } while (ret > 0);
-
-    if (ret_val.second > 0) {
-      unsigned char digest[MD5_DIGEST_LENGTH];
-      MD5_Final(digest, &context);
-      ret_val.first = utils::StringUtils::to_hex(digest, MD5_DIGEST_LENGTH, true /*uppercase*/);
+  size_t ret = 0;
+  do {
+    ret = stream->readData(buffer, HASH_BUFFER_SIZE);
+    if (ret > 0) {
+      MD5_Update(&context, buffer, ret);
+      ret_val.second += ret;
     }
-    return ret_val;
+  } while (ret > 0);
+
+  if (ret_val.second > 0) {
+    unsigned char digest[MD5_DIGEST_LENGTH];
+    MD5_Final(digest, &context);
+    ret_val.first = utils::StringUtils::to_hex(digest, MD5_DIGEST_LENGTH, true /*uppercase*/);
   }
+  return ret_val;
+}
 
-  HashReturnType SHA1Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
-    HashReturnType ret_val;
-    ret_val.second = 0;
-    uint8_t buffer[HASH_BUFFER_SIZE];
-    SHA_CTX context;
-    SHA1_Init(&context);
+HashReturnType SHA1Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
+  HashReturnType ret_val;
+  ret_val.second = 0;
+  uint8_t buffer[HASH_BUFFER_SIZE];
+  SHA_CTX context;
+  SHA1_Init(&context);
 
-    size_t ret = 0;
-    do {
-      ret = stream->readData(buffer, HASH_BUFFER_SIZE);
-      if (ret > 0) {
-        SHA1_Update(&context, buffer, ret);
-        ret_val.second += ret;
-      }
-    } while (ret > 0);
-
-    if (ret_val.second > 0) {
-      unsigned char digest[SHA_DIGEST_LENGTH];
-      SHA1_Final(digest, &context);
-      ret_val.first = utils::StringUtils::to_hex(digest, SHA_DIGEST_LENGTH, true /*uppercase*/);
+  size_t ret = 0;
+  do {
+    ret = stream->readData(buffer, HASH_BUFFER_SIZE);
+    if (ret > 0) {
+      SHA1_Update(&context, buffer, ret);
+      ret_val.second += ret;
     }
-    return ret_val;
+  } while (ret > 0);
+
+  if (ret_val.second > 0) {
+    unsigned char digest[SHA_DIGEST_LENGTH];
+    SHA1_Final(digest, &context);
+    ret_val.first = utils::StringUtils::to_hex(digest, SHA_DIGEST_LENGTH, true /*uppercase*/);
   }
+  return ret_val;
+}
 
-  HashReturnType SHA256Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
-    HashReturnType ret_val;
-    ret_val.second = 0;
-    uint8_t buffer[HASH_BUFFER_SIZE];
-    SHA256_CTX context;
-    SHA256_Init(&context);
+HashReturnType SHA256Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
+  HashReturnType ret_val;
+  ret_val.second = 0;
+  uint8_t buffer[HASH_BUFFER_SIZE];
+  SHA256_CTX context;
+  SHA256_Init(&context);
 
-    size_t ret;
-    do {
-      ret = stream->readData(buffer, HASH_BUFFER_SIZE);
-      if (ret > 0) {
-        SHA256_Update(&context, buffer, ret);
-        ret_val.second += ret;
-      }
-    } while (ret > 0);
-
-    if (ret_val.second > 0) {
-      unsigned char digest[SHA256_DIGEST_LENGTH];
-      SHA256_Final(digest, &context);
-      ret_val.first = utils::StringUtils::to_hex(digest, SHA256_DIGEST_LENGTH, true /*uppercase*/);
+  size_t ret;
+  do {
+    ret = stream->readData(buffer, HASH_BUFFER_SIZE);
+    if (ret > 0) {
+      SHA256_Update(&context, buffer, ret);
+      ret_val.second += ret;
     }
-    return ret_val;
+  } while (ret > 0);
+
+  if (ret_val.second > 0) {
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+    SHA256_Final(digest, &context);
+    ret_val.first = utils::StringUtils::to_hex(digest, SHA256_DIGEST_LENGTH, true /*uppercase*/);
   }
+  return ret_val;
+}
 }  // namespace
-
 
 namespace org {
 namespace apache {
@@ -165,7 +165,7 @@ class HashContent : public core::Processor {
    private:
     std::shared_ptr<core::FlowFile> flowFile_;
     const HashContent& parent_;
-};
+  };
 
  private:
   //! Logger

@@ -34,7 +34,7 @@ class EndiannessCheck {
   static bool is_little_endian() {
     /* do whatever is needed at static init time */
     unsigned int x = 1;
-    char *c = (char*) &x;
+    char *c = reinterpret_cast<char*>(&x);
     IS_LITTLE = *c == 1;
     return IS_LITTLE;
   }

@@ -95,8 +95,9 @@ class LogAttribute : public core::Processor {
     } else if (logStr == "error") {
       level = LogAttrLevelError;
       return true;
-    } else
+    } else {
       return false;
+    }
   }
   // Nest Callback Class for read stream
   class ReadCallback : public InputStreamCallback {

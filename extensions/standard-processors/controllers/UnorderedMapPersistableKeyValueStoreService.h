@@ -14,8 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __UNORDERED_MAP_PERSISTABLE_KEY_VALUE_STORE_SERVICE_H__
-#define __UNORDERED_MAP_PERSISTABLE_KEY_VALUE_STORE_SERVICE_H__
+#ifndef EXTENSIONS_STANDARD_PROCESSORS_CONTROLLERS_UNORDEREDMAPPERSISTABLEKEYVALUESTORESERVICE_H_
+#define EXTENSIONS_STANDARD_PROCESSORS_CONTROLLERS_UNORDEREDMAPPERSISTABLEKEYVALUESTORESERVICE_H_
+
+#include <unordered_map>
+#include <string>
+#include <mutex>
+#include <memory>
+#include <utility>
 
 #include "controllers/keyvalue/AbstractAutoPersistingKeyValueStoreService.h"
 #include "UnorderedMapKeyValueStoreService.h"
@@ -24,12 +30,6 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Resource.h"
-
-#include <unordered_map>
-#include <string>
-#include <mutex>
-#include <memory>
-#include <utility>
 
 namespace org {
 namespace apache {
@@ -48,19 +48,19 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
 
   static core::Property File;
 
-  virtual void onEnable() override;
-  virtual void initialize() override;
-  virtual void notifyStop() override;
+  void onEnable() override;
+  void initialize() override;
+  void notifyStop() override;
 
-  virtual bool set(const std::string& key, const std::string& value) override;
+  bool set(const std::string& key, const std::string& value) override;
 
-  virtual bool remove(const std::string& key) override;
+  bool remove(const std::string& key) override;
 
-  virtual bool clear() override;
+  bool clear() override;
 
-  virtual bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
+  bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
 
-  virtual bool persist() override;
+  bool persist() override;
 
  protected:
   static constexpr const char* FORMAT_VERSION_KEY = "__UnorderedMapPersistableKeyValueStoreService_FormatVersion";
@@ -85,4 +85,4 @@ REGISTER_RESOURCE(UnorderedMapPersistableKeyValueStoreService, "A persistable ke
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* __UNORDERED_MAP_PERSISTABLE_KEY_VALUE_STORE_SERVICE_H__ */
+#endif  // EXTENSIONS_STANDARD_PROCESSORS_CONTROLLERS_UNORDEREDMAPPERSISTABLEKEYVALUESTORESERVICE_H_

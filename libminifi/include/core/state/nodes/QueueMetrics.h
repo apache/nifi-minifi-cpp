@@ -110,4 +110,4 @@ class QueueMetrics : public ResponseNode {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_

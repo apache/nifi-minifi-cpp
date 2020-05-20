@@ -34,8 +34,8 @@
 #ifdef BDIFF
 
 extern "C" {
-#include "bsdiff.h"
-#include "bspatch.h"
+#include "bsdiff.h" // NOLINT
+#include "bspatch.h" // NOLINT
 
 }
 #else
@@ -76,4 +76,4 @@ class DiffUtils {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_FILE_DIFFUTILS_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_FILE_DIFFUTILS_H_

@@ -60,8 +60,8 @@
 
 #ifdef WIN32
 #include <direct.h>
-#include <sys/stat.h>  // stat
-#include <sys/types.h>
+#include <sys/stat.h>  // stat // NOLINT
+#include <sys/types.h> // NOLINT
 #include <sys/utime.h>  // _utime64
 #include <tchar.h>  // _tcscpy,_tcscat,_tcscmp
 #include <windows.h>  // winapi

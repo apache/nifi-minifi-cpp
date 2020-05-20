@@ -26,7 +26,7 @@
 #include "properties/Configure.h"
 #include "Sockets.h"
 #include "utils/StringUtils.h"
-#include "validation.h"
+#include "validation.h" // NOLINT
 #include "controllers/SSLContextService.h"
 #include "NetworkPrioritizer.h"
 namespace org {

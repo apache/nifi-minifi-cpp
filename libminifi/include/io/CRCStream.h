@@ -136,7 +136,7 @@ class CRCStream : public BaseStream {
    */
   int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE) override;
 
-  short initialize() override {
+  short initialize() override { // NOLINT
     child_stream_->initialize();
     reset();
     return 0;
@@ -173,7 +173,7 @@ class CRCStream : public BaseStream {
   template<typename K>
   int readBuffer(std::vector<uint8_t>& buf, const K& t) {
     buf.resize(sizeof t);
-    return readData((uint8_t*) &buf[0], sizeof(t));
+    return readData(reinterpret_cast<uint8_t*>(&buf[0]), sizeof(t));
   }
 
   uint64_t crc_;
@@ -279,7 +279,7 @@ int CRCStream<T>::read(uint64_t &value, bool is_little_endian) {
     is_little_endian = false;
   std::vector<uint8_t> buf;
   auto ret = readBuffer(buf, value);
-  if(ret <= 0)return ret;
+  if (ret <= 0) return ret;
 
   if (is_little_endian) {
     value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48) | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32) | ((uint64_t) (buf[4] & 255) << 24)
@@ -297,7 +297,7 @@ int CRCStream<T>::read(uint32_t &value, bool is_little_endian) {
     is_little_endian = false;
   std::vector<uint8_t> buf;
   auto ret = readBuffer(buf, value);
-  if(ret <= 0)return ret;
+  if (ret <= 0) return ret;
 
   if (is_little_endian) {
     value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
@@ -314,7 +314,7 @@ int CRCStream<T>::read(uint16_t &value, bool is_little_endian) {
     is_little_endian = false;
   std::vector<uint8_t> buf;
   auto ret = readBuffer(buf, value);
-  if(ret <= 0)return ret;
+  if (ret <= 0) return ret;
 
   if (is_little_endian) {
     value = (buf[0] << 8) | buf[1];
@@ -329,4 +329,4 @@ int CRCStream<T>::read(uint16_t &value, bool is_little_endian) {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_CRCSTREAM_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_CRCSTREAM_H_

@@ -24,7 +24,7 @@
 #include <vector>
 
 #include <fstream>
-#include "concurrentqueue.h"
+#include "concurrentqueue.h" // NOLINT
 #include "FlowFileRecord.h"
 #include "ByteArrayCallback.h"
 #include "core/logging/LoggerConfiguration.h"

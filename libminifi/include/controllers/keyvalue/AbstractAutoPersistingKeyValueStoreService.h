@@ -14,8 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_KEYVALUE_AbstractAutoPersistingKeyValueStoreService_H_
-#define LIBMINIFI_INCLUDE_KEYVALUE_AbstractAutoPersistingKeyValueStoreService_H_
+#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_ABSTRACTAUTOPERSISTINGKEYVALUESTORESERVICE_H_
+#define LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_ABSTRACTAUTOPERSISTINGKEYVALUESTORESERVICE_H_
+
+#include <string>
+#include <thread>
+#include <mutex>
+#include <memory>
+#include <utility>
 
 #include "PersistableKeyValueStoreService.h"
 #include "core/Core.h"
@@ -24,11 +30,6 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Resource.h"
 
-#include <string>
-#include <thread>
-#include <mutex>
-#include <memory>
-#include <utility>
 
 namespace org {
 namespace apache {
@@ -46,9 +47,9 @@ class AbstractAutoPersistingKeyValueStoreService : public PersistableKeyValueSto
   static core::Property AlwaysPersist;
   static core::Property AutoPersistenceInterval;
 
-  virtual void initialize() override;
-  virtual void onEnable() override;
-  virtual void notifyStop() override;
+  void initialize() override;
+  void onEnable() override;
+  void notifyStop() override;
 
  protected:
   bool always_persist_;
@@ -72,4 +73,4 @@ class AbstractAutoPersistingKeyValueStoreService : public PersistableKeyValueSto
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_KEYVALUE_AbstractAutoPersistingKeyValueStoreService_H_ */
+#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_ABSTRACTAUTOPERSISTINGKEYVALUESTORESERVICE_H_

@@ -23,6 +23,7 @@
 #include <mutex>
 #include <memory>
 #include <sstream>
+#include <utility>
 #include <iostream>
 
 #include "spdlog/common.h"

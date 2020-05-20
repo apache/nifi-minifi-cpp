@@ -70,9 +70,9 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   template<typename T>
   bool getProperty(const std::string &name, T &value) {
     const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
-    if (nullptr != processor_cast)
+    if (nullptr != processor_cast) {
       return processor_cast->getProperty<T>(name, value);
-    else {
+    } else {
       return ConfigurableComponent::getProperty<T>(name, value);
     }
   }

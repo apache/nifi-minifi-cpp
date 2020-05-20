@@ -149,4 +149,4 @@ REGISTER_RESOURCE(LinuxPowerManagerService, "Linux power management service that
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_LINUXPOWERMANAGEMENTSERVICE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_LINUXPOWERMANAGEMENTSERVICE_H_

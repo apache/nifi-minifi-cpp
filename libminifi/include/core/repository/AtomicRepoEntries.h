@@ -163,7 +163,7 @@ noexcept      : key_(std::move(other.key_)),
       T key_;
       std::function<bool(T, T)> comparator_;
       std::vector<uint8_t> buffer_;
-    };
+};
 
     /**
      * Purpose: Atomic Entry allows us to create a statically
