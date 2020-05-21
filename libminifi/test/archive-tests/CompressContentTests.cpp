@@ -123,22 +123,21 @@ class CompressDecompressionTestController : public TestController{
     return compressed_content_path;
   }
 
-  RawContent getRawContent() const {;
+  RawContent getRawContent() const {
     std::ifstream file;
     file.open(raw_content_path, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    file.close();
     return RawContent{std::move(contents)};
   }
 
   virtual ~CompressDecompressionTestController() = 0;
 };
 
-CompressDecompressionTestController::~CompressDecompressionTestController() {}
+CompressDecompressionTestController::~CompressDecompressionTestController() = default;
 
-std::string CompressDecompressionTestController::tempDir = "";
-std::string CompressDecompressionTestController::raw_content_path = "";
-std::string CompressDecompressionTestController::compressed_content_path = "";
+std::string CompressDecompressionTestController::tempDir;
+std::string CompressDecompressionTestController::raw_content_path;
+std::string CompressDecompressionTestController::compressed_content_path;
 
 class CompressTestController : public CompressDecompressionTestController {
   void initContentWithRandomData() {
@@ -150,7 +149,6 @@ class CompressTestController : public CompressDecompressionTestController {
     for (int i = 0; i < 100000; i++) {
       file << std::to_string(gen() % 100);
     }
-    file.close();
   }
 
  public:
@@ -167,7 +165,6 @@ class CompressTestController : public CompressDecompressionTestController {
   void writeCompressed(Args&& ...args){
     std::ofstream file(compressed_content_path, std::ios::binary);
     file.write(std::forward<Args>(args)...);
-    file.close();
   }
 };
 
@@ -999,10 +996,11 @@ TEST_CASE("RawGzipCompressionDecompression", "[compressfiletest8]") {
     content = content_ss.str();
   }
 
-  std::fstream file;
-  file.open(src_file, std::ios::out);
-  file << content;
-  file.close();
+  {
+    std::fstream file;
+    file.open(src_file, std::ios::out);
+    file << content;
+  }
 
   // Run flow
   testController.runSession(plan, true);
