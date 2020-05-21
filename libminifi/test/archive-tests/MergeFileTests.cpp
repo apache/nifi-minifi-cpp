@@ -63,84 +63,84 @@ void init_file_paths() {
 
 class FixedBuffer : public org::apache::nifi::minifi::InputStreamCallback {
  public:
-	FixedBuffer(std::size_t capacity) : capacity_(capacity) {
-		buf_ = new uint8_t[capacity_];
-	}
-	FixedBuffer(FixedBuffer&& other) : buf_(other.buf_), size_(other.size_), capacity_(other.capacity_) {
-		other.buf_ = nullptr;
-		other.size_ = 0;
-		other.capacity_ = 0;
-	}
-	~FixedBuffer() {
-		if (buf_) {
-			delete[] buf_;
-			buf_ = nullptr;
-		}
-	}
-	std::size_t size() const { return size_; }
-	std::size_t capacity() const { return capacity_; }
-	uint8_t* begin() const { return buf_; }
-	uint8_t* end() const { return buf_ + size_; }
+  explicit FixedBuffer(std::size_t capacity) : capacity_(capacity) {
+    buf_ = new uint8_t[capacity_];
+  }
+  FixedBuffer(FixedBuffer&& other) : buf_(other.buf_), size_(other.size_), capacity_(other.capacity_) {
+    other.buf_ = nullptr;
+    other.size_ = 0;
+    other.capacity_ = 0;
+  }
+  ~FixedBuffer() {
+    if (buf_) {
+      delete[] buf_;
+      buf_ = nullptr;
+    }
+  }
+  std::size_t size() const { return size_; }
+  std::size_t capacity() const { return capacity_; }
+  uint8_t* begin() const { return buf_; }
+  uint8_t* end() const { return buf_ + size_; }
 
-	template<class Input>
-	int write(Input input, std::size_t len) {
-		REQUIRE(size_ + len <= capacity_);
-		int total_read = 0;
-		do {
-			auto ret = input.read(end(), len);
-			if (ret == 0) break;
-			if (ret < 0) return ret;
-			size_ += ret;
-			len -= ret;
-			total_read += ret;
-		} while (size_ != capacity_);
-		return total_read;
-	}
-	operator std::string() const {
-		return { begin(), end() };
-	}
-	int64_t process(std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
-		return write(*stream.get(), capacity_);
-	}
+  template<class Input>
+  int write(Input input, std::size_t len) {
+    REQUIRE(size_ + len <= capacity_);
+    int total_read = 0;
+    do {
+      auto ret = input.read(end(), len);
+      if (ret == 0) break;
+      if (ret < 0) return ret;
+      size_ += ret;
+      len -= ret;
+      total_read += ret;
+    } while (size_ != capacity_);
+    return total_read;
+  }
+  operator std::string() const {
+    return { begin(), end() };
+  }
+  int64_t process(std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
+    return write(*stream.get(), capacity_);
+  }
 
  private:
-	uint8_t *buf_ = nullptr;
-	std::size_t size_ = 0;
-	std::size_t capacity_ = 0;
+  uint8_t *buf_ = nullptr;
+  std::size_t size_ = 0;
+  std::size_t capacity_ = 0;
 };
 
 std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
-	class ArchiveEntryReader {
-	 public:
-		ArchiveEntryReader(archive* arch) : arch(arch) {}
-		int read(uint8_t* out, std::size_t len) {
-			return archive_read_data(arch, out, len);
-		}
-	 private:
-		archive* arch;
-	};
-	std::vector<FixedBuffer> archive_contents;
-	struct archive *a;
-	a = archive_read_new();
-	archive_read_support_format_all(a);
-	archive_read_support_filter_all(a);
-	archive_read_open_memory(a, input.begin(), input.size());
-	struct archive_entry *ae;
+  class ArchiveEntryReader {
+   public:
+    explicit ArchiveEntryReader(archive* arch) : arch(arch) {}
+    int read(uint8_t* out, std::size_t len) {
+      return archive_read_data(arch, out, len);
+    }
+   private:
+    archive* arch;
+  };
+  std::vector<FixedBuffer> archive_contents;
+  struct archive *a;
+  a = archive_read_new();
+  archive_read_support_format_all(a);
+  archive_read_support_filter_all(a);
+  archive_read_open_memory(a, input.begin(), input.size());
+  struct archive_entry *ae;
 
-	while (archive_read_next_header(a, &ae) == ARCHIVE_OK) {
-		int size = archive_entry_size(ae);
-		FixedBuffer buf(size);
-		ArchiveEntryReader reader(a);
-		auto ret = buf.write(reader, buf.capacity());
-		REQUIRE(ret == size);
-		archive_contents.emplace_back(std::move(buf));
-	}
-	return archive_contents;
+  while (archive_read_next_header(a, &ae) == ARCHIVE_OK) {
+    int size = archive_entry_size(ae);
+    FixedBuffer buf(size);
+    ArchiveEntryReader reader(a);
+    auto ret = buf.write(reader, buf.capacity());
+    REQUIRE(ret == size);
+    archive_contents.emplace_back(std::move(buf));
+  }
+  return archive_contents;
 }
 
 class MergeTestController : public TestController {
  public:
-	MergeTestController() {
+  MergeTestController() {
     init_file_paths();
     LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::MergeContent>();
     LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
@@ -195,10 +195,8 @@ class MergeTestController : public TestController {
     context = std::make_shared<core::ProcessContext>(node, controller_service_provider, repo, repo, content_repo);
 
     input = std::static_pointer_cast<minifi::Connection>(node->getNextIncomingConnection());
-	}
-  ~MergeTestController() {
-
   }
+  ~MergeTestController() {}
   std::shared_ptr<core::ProcessContext> context;
   std::shared_ptr<core::ProcessorNode> node;
   std::shared_ptr<core::Processor> processor;
@@ -291,7 +289,7 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
   }
   REQUIRE(flow2->getSize() == 96);
   {
-	  FixedBuffer callback(flow2->getSize());
+    FixedBuffer callback(flow2->getSize());
     sessionGenFlowFile.read(flow2, &callback);
     std::ifstream file2;
     file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
@@ -398,7 +396,7 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
   std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
   REQUIRE(flow1->getSize() == 128);
   {
-	  FixedBuffer callback(flow1->getSize());
+    FixedBuffer callback(flow1->getSize());
     sessionGenFlowFile.read(flow1, &callback);
     std::ifstream file1;
     file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
@@ -507,7 +505,7 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
   std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
   REQUIRE(flow1->getSize() == 96);
   {
-	  FixedBuffer callback(flow1->getSize());
+    FixedBuffer callback(flow1->getSize());
     sessionGenFlowFile.read(flow1, &callback);
     std::ifstream file1;
     file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
@@ -518,7 +516,7 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
   }
   REQUIRE(flow2->getSize() == 64);
   {
-	  FixedBuffer callback(flow2->getSize());
+    FixedBuffer callback(flow2->getSize());
     sessionGenFlowFile.read(flow2, &callback);
     std::ifstream file2;
     file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
@@ -597,7 +595,7 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
   std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
   REQUIRE(flow1->getSize() == 96);
   {
-	  FixedBuffer callback(flow1->getSize());
+    FixedBuffer callback(flow1->getSize());
     sessionGenFlowFile.read(flow1, &callback);
     std::ifstream file1;
     file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
@@ -608,7 +606,7 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
   }
   REQUIRE(flow2->getSize() == 96);
   {
-	  FixedBuffer callback(flow2->getSize());
+    FixedBuffer callback(flow2->getSize());
     sessionGenFlowFile.read(flow2, &callback);
     std::ifstream file2;
     file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
@@ -688,9 +686,9 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
   std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
   REQUIRE(flow1->getSize() > 0);
   {
-	  FixedBuffer callback(flow1->getSize());
+    FixedBuffer callback(flow1->getSize());
     sessionGenFlowFile.read(flow1, &callback);
-	  auto archives = read_archives(callback);
+    auto archives = read_archives(callback);
     REQUIRE(archives.size() == 3);
     for (int i = 0; i < 3; i++) {
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
@@ -706,8 +704,8 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
   {
     FixedBuffer callback(flow2->getSize());
     sessionGenFlowFile.read(flow2, &callback);
-	  auto archives = read_archives(callback);
-	  REQUIRE(archives.size() == 3);
+    auto archives = read_archives(callback);
+    REQUIRE(archives.size() == 3);
     for (int i = 3; i < 6; i++) {
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
       std::ifstream file1;
@@ -790,7 +788,7 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
   {
     FixedBuffer callback(flow1->getSize());
     sessionGenFlowFile.read(flow1, &callback);
-	  auto archives = read_archives(callback);
+    auto archives = read_archives(callback);
     REQUIRE(archives.size() == 3);
     for (int i = 0; i < 3; i++) {
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
@@ -806,8 +804,8 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
   {
     FixedBuffer callback(flow2->getSize());
     sessionGenFlowFile.read(flow2, &callback);
-	  auto archives = read_archives(callback);
-	  REQUIRE(archives.size() == 3);
+    auto archives = read_archives(callback);
+    REQUIRE(archives.size() == 3);
     for (int i = 3; i < 6; i++) {
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
       std::ifstream file1;
