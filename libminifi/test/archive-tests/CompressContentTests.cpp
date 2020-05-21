@@ -92,20 +92,21 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
 };
 
 class CompressDecompressionTestController : public TestController{
-protected:
+ protected:
   static std::string tempDir;
   static std::string raw_content_path;
   static std::string compressed_content_path;
-  static TestController& get_global_controller(){
+  static TestController& get_global_controller() {
     static TestController controller;
     return controller;
   }
-public:
+
+ public:
   class RawContent{
     std::string content_;
-    RawContent(std::string&& content_): content_(std::move(content_)) {}
+    explicit RawContent(std::string&& content_): content_(std::move(content_)) {}
     friend class CompressDecompressionTestController;
-  public:
+   public:
     bool operator==(const std::string& actual) const noexcept {
       return content_ == actual;
     }
@@ -127,7 +128,7 @@ public:
     file.open(raw_content_path, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     file.close();
-    return {std::move(contents)};
+    return RawContent{std::move(contents)};
   }
 
   virtual ~CompressDecompressionTestController() = 0;
@@ -139,19 +140,21 @@ std::string CompressDecompressionTestController::tempDir = "";
 std::string CompressDecompressionTestController::raw_content_path = "";
 std::string CompressDecompressionTestController::compressed_content_path = "";
 
-class CompressTestController : public CompressDecompressionTestController{
-  void initContentWithRandomData(){
+class CompressTestController : public CompressDecompressionTestController {
+  void initContentWithRandomData() {
+    int random_seed = 0x454;
     std::ofstream file;
     file.open(raw_content_path, std::ios::binary);
 
-    std::mt19937 gen((int)0x454);
+    std::mt19937 gen(random_seed);
     for (int i = 0; i < 100000; i++) {
       file << std::to_string(gen() % 100);
     }
     file.close();
   }
-public:
-  CompressTestController(){
+
+ public:
+  CompressTestController() {
     char format[] = "/tmp/test.XXXXXX";
     tempDir = get_global_controller().createTempDirectory(format);
     REQUIRE(!tempDir.empty());
@@ -169,7 +172,7 @@ public:
 };
 
 class DecompressTestController : public CompressDecompressionTestController{
-public:
+ public:
   ~DecompressTestController(){
     tempDir = "";
     raw_content_path = "";
