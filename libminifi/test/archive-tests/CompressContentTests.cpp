@@ -48,7 +48,7 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
     buffer_size_ = size;
     buffer_ = new uint8_t[buffer_size_];
     archive_buffer_ = nullptr;
-	archive_buffer_size_ = 0;
+    archive_buffer_size_ = 0;
   }
   ~ReadCallback() {
     if (buffer_)
@@ -57,15 +57,15 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
       delete[] archive_buffer_;
   }
   int64_t process(std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
-	int64_t total_read = 0;
+    int64_t total_read = 0;
     int64_t ret = 0;
-	do {
-		ret = stream->read(buffer_ + read_size_, buffer_size_ - read_size_);
-		if (ret == 0) break;
-		if (ret < 0) return ret;
-		read_size_ += ret;
-		total_read += ret;
-	} while (buffer_size_ != read_size_);
+    do {
+      ret = stream->read(buffer_ + read_size_, buffer_size_ - read_size_);
+      if (ret == 0) break;
+      if (ret < 0) return ret;
+      read_size_ += ret;
+      total_read += ret;
+    } while (buffer_size_ != read_size_);
     return total_read;
   }
   void archive_read() {
@@ -76,7 +76,7 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
     archive_read_open_memory(a, buffer_, read_size_);
     struct archive_entry *ae;
 
-	  REQUIRE(archive_read_next_header(a, &ae) == ARCHIVE_OK);
+    REQUIRE(archive_read_next_header(a, &ae) == ARCHIVE_OK);
     int size = archive_entry_size(ae);
     archive_buffer_ = new char[size];
     archive_buffer_size_ = size;
@@ -96,7 +96,10 @@ protected:
   static std::string tempDir;
   static std::string raw_content_path;
   static std::string compressed_content_path;
-  static TestController global_controller;
+  static TestController& get_global_controller(){
+    static TestController controller;
+    return controller;
+  }
 public:
   class RawContent{
     std::string content_;
@@ -135,7 +138,6 @@ CompressDecompressionTestController::~CompressDecompressionTestController() {}
 std::string CompressDecompressionTestController::tempDir = "";
 std::string CompressDecompressionTestController::raw_content_path = "";
 std::string CompressDecompressionTestController::compressed_content_path = "";
-TestController CompressDecompressionTestController::global_controller = {};
 
 class CompressTestController : public CompressDecompressionTestController{
   void initContentWithRandomData(){
@@ -151,7 +153,7 @@ class CompressTestController : public CompressDecompressionTestController{
 public:
   CompressTestController(){
     char format[] = "/tmp/test.XXXXXX";
-    tempDir = global_controller.createTempDirectory(format);
+    tempDir = get_global_controller().createTempDirectory(format);
     REQUIRE(!tempDir.empty());
     raw_content_path = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-compresscontent.txt");
     compressed_content_path = utils::file::FileUtils::concat_path(tempDir, "minifi-compresscontent");
