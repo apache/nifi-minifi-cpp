@@ -37,20 +37,32 @@
 #include "../TestBase.h"
 #include "../unit/ProvenanceTestHelper.h"
 
-TestController globalController{};
+std::string FLOW_FILE;
+std::string EXPECT_MERGE_CONTENT_FIRST;
+std::string EXPECT_MERGE_CONTENT_SECOND;
+std::string HEADER_FILE;
+std::string FOOTER_FILE;
+std::string DEMARCATOR_FILE;
 
-char format[] = "/tmp/test.XXXXXX";
-const std::string tempDir = globalController.createTempDirectory(format);
-
-const std::string FLOW_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent");
-const std::string EXPECT_MERGE_CONTENT_FIRST = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-mergecontent1.txt");
-const std::string EXPECT_MERGE_CONTENT_SECOND = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-mergecontent2.txt");
-const std::string HEADER_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent.header");
-const std::string FOOTER_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent.footer");
-const std::string DEMARCATOR_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent.demarcator");
+void init_file_paths() {
+  struct Initializer {
+    Initializer() {
+      static TestController global_controller;
+      char format[] = "/tmp/test.XXXXXX";
+      std::string tempDir = global_controller.createTempDirectory(format);
+      FLOW_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent");
+      EXPECT_MERGE_CONTENT_FIRST = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-mergecontent1.txt");
+      EXPECT_MERGE_CONTENT_SECOND = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-mergecontent2.txt");
+      HEADER_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent.header");
+      FOOTER_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent.footer");
+      DEMARCATOR_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent.demarcator");
+    }
+  };
+  static Initializer initializer;
+}
 
 class FixedBuffer : public org::apache::nifi::minifi::InputStreamCallback {
-public:
+ public:
 	FixedBuffer(std::size_t capacity) : capacity_(capacity) {
 		buf_ = new uint8_t[capacity_];
 	}
@@ -90,7 +102,8 @@ public:
 	int64_t process(std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
 		return write(*stream.get(), capacity_);
 	}
-private:
+
+ private:
 	uint8_t *buf_ = nullptr;
 	std::size_t size_ = 0;
 	std::size_t capacity_ = 0;
@@ -98,12 +111,12 @@ private:
 
 std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
 	class ArchiveEntryReader {
-	public:
+	 public:
 		ArchiveEntryReader(archive* arch) : arch(arch) {}
 		int read(uint8_t* out, std::size_t len) {
 			return archive_read_data(arch, out, len);
 		}
-	private:
+	 private:
 		archive* arch;
 	};
 	std::vector<FixedBuffer> archive_contents;
@@ -126,8 +139,9 @@ std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
 }
 
 class MergeTestController : public TestController {
-public:
+ public:
 	MergeTestController() {
+    init_file_paths();
     LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::MergeContent>();
     LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<core::ProcessSession>();
@@ -182,7 +196,7 @@ public:
 
     input = std::static_pointer_cast<minifi::Connection>(node->getNextIncomingConnection());
 	}
-  ~MergeTestController(){
+  ~MergeTestController() {
 
   }
   std::shared_ptr<core::ProcessContext> context;
@@ -193,618 +207,618 @@ public:
 };
 
 TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
-    std::ofstream expectfileFirst;
-    std::ofstream expectfileSecond;
+  MergeTestController testController;
+  auto context = testController.context;
+  auto processor = testController.processor;
+  auto input = testController.input;
+  auto output = testController.output;
 
-    expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-    expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+  std::ofstream expectfileFirst;
+  std::ofstream expectfileSecond;
 
-    // Create and write to the test file
-    for (int i = 0; i < 6; i++) {
-      std::ofstream tmpfile;
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
-      for (int j = 0; j < 32; j++) {
-        tmpfile << std::to_string(i);
-        if (i < 3)
-          expectfileFirst << std::to_string(i);
-        else
-          expectfileSecond << std::to_string(i);
-      }
-      tmpfile.close();
-    }
-    expectfileFirst.close();
-    expectfileSecond.close();
+  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
 
-    MergeTestController testController;
-    auto context = testController.context;
-    auto processor = testController.processor;
-    auto input = testController.input;
-    auto output = testController.output;
-
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
-
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::FlowFile> record[6];
-
-    // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-    for (int i = 0; i < 6; i++) {
-      std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      sessionGenFlowFile.import(flowFileName, flow, true, 0);
-      // three bundle
+  // Create and write to the test file
+  for (int i = 0; i < 6; i++) {
+    std::ofstream tmpfile;
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    tmpfile.open(flowFileName.c_str(), std::ios::binary);
+    for (int j = 0; j < 32; j++) {
+      tmpfile << std::to_string(i);
       if (i < 3)
-        flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
+        expectfileFirst << std::to_string(i);
       else
-        flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
-      if (i < 3)
-        flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
-      else
-        flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
-      flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
-      record[i] = flow;
+        expectfileSecond << std::to_string(i);
     }
-    input->put(record[0]);
-    input->put(record[2]);
-    input->put(record[5]);
-    input->put(record[4]);
-    input->put(record[1]);
-    input->put(record[3]);
+    tmpfile.close();
+  }
+  expectfileFirst.close();
+  expectfileSecond.close();
 
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    for (int i = 0; i < 6; i++) {
-      auto session = std::make_shared<core::ProcessSession>(context);
-      processor->onTrigger(context, session);
-      session->commit();
-    }
-    // validate the merge content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-    std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() == 96);
-    {
-      FixedBuffer callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      std::ifstream file1;
-      file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents = callback;
-      REQUIRE(expectContents == contents);
-      file1.close();
-    }
-    REQUIRE(flow2->getSize() == 96);
-    {
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
+
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::FlowFile> record[6];
+
+  // Generate 6 flowfiles, first threes merged to one, second thress merged to one
+  for (int i = 0; i < 6; i++) {
+    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    sessionGenFlowFile.import(flowFileName, flow, true, 0);
+    // three bundle
+    if (i < 3)
+      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
+    else
+      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
+    if (i < 3)
+      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
+    else
+      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
+    flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
+    record[i] = flow;
+  }
+  input->put(record[0]);
+  input->put(record[2]);
+  input->put(record[5]);
+  input->put(record[4]);
+  input->put(record[1]);
+  input->put(record[3]);
+
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  for (int i = 0; i < 6; i++) {
+    auto session = std::make_shared<core::ProcessSession>(context);
+    processor->onTrigger(context, session);
+    session->commit();
+  }
+  // validate the merge content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() == 96);
+  {
+    FixedBuffer callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
+    std::ifstream file1;
+    file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
+    std::string expectContents = callback;
+    REQUIRE(expectContents == contents);
+    file1.close();
+  }
+  REQUIRE(flow2->getSize() == 96);
+  {
 	  FixedBuffer callback(flow2->getSize());
-      sessionGenFlowFile.read(flow2, &callback);
-      std::ifstream file2;
-      file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
-      std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
-      std::string expectContents = callback;
-      REQUIRE(expectContents == contents);
-      file2.close();
-    }
-    LogTestController::getInstance().reset();
+    sessionGenFlowFile.read(flow2, &callback);
+    std::ifstream file2;
+    file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+    std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
+    std::string expectContents = callback;
+    REQUIRE(expectContents == contents);
+    file2.close();
+  }
+  LogTestController::getInstance().reset();
 }
 
 TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
-    std::ofstream expectfileFirst;
-    std::ofstream expectfileSecond;
-    std::ofstream headerfile, footerfile, demarcatorfile;
-    expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-    expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
-    headerfile.open(HEADER_FILE, std::ios::binary);
-    headerfile << "header";
-    expectfileFirst << "header";
-    expectfileSecond << "header";
-    headerfile.close();
-    footerfile.open(FOOTER_FILE, std::ios::binary);
-    footerfile << "footer";
-    footerfile.close();
-    demarcatorfile.open(DEMARCATOR_FILE, std::ios::binary);
-    demarcatorfile << "demarcator";
-    demarcatorfile.close();
+  std::ofstream expectfileFirst;
+  std::ofstream expectfileSecond;
+  std::ofstream headerfile, footerfile, demarcatorfile;
+  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+  headerfile.open(HEADER_FILE, std::ios::binary);
+  headerfile << "header";
+  expectfileFirst << "header";
+  expectfileSecond << "header";
+  headerfile.close();
+  footerfile.open(FOOTER_FILE, std::ios::binary);
+  footerfile << "footer";
+  footerfile.close();
+  demarcatorfile.open(DEMARCATOR_FILE, std::ios::binary);
+  demarcatorfile << "demarcator";
+  demarcatorfile.close();
 
-    // Create and write to the test file
-    for (int i = 0; i < 6; i++) {
-      if (i != 0 && i <= 2)
-        expectfileFirst << "demarcator";
-      if (i != 3 && i >= 4)
-        expectfileSecond << "demarcator";
-      std::ofstream tmpfile;
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
-      for (int j = 0; j < 32; j++) {
-        tmpfile << std::to_string(i);
-        if (i < 3)
-          expectfileFirst << std::to_string(i);
-        else
-          expectfileSecond << std::to_string(i);
-      }
-      tmpfile.close();
-    }
-    expectfileFirst << "footer";
-    expectfileSecond << "footer";
-    expectfileFirst.close();
-    expectfileSecond.close();
-
-    MergeTestController testController;
-    auto context = testController.context;
-    auto processor = testController.processor;
-    auto input = testController.input;
-    auto output = testController.output;
-
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_FILENAME);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Header, HEADER_FILE);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Footer, FOOTER_FILE);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Demarcator, DEMARCATOR_FILE);
-
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::FlowFile> record[6];
-
-    // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-    for (int i = 0; i < 6; i++) {
-      std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      sessionGenFlowFile.import(flowFileName, flow, true, 0);
-      // three bundle
+  // Create and write to the test file
+  for (int i = 0; i < 6; i++) {
+    if (i != 0 && i <= 2)
+      expectfileFirst << "demarcator";
+    if (i != 3 && i >= 4)
+      expectfileSecond << "demarcator";
+    std::ofstream tmpfile;
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    tmpfile.open(flowFileName.c_str(), std::ios::binary);
+    for (int j = 0; j < 32; j++) {
+      tmpfile << std::to_string(i);
       if (i < 3)
-        flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
+        expectfileFirst << std::to_string(i);
       else
-        flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
-      if (i < 3)
-        flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
-      else
-        flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
-      flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
-      record[i] = flow;
+        expectfileSecond << std::to_string(i);
     }
-    input->put(record[0]);
-    input->put(record[2]);
-    input->put(record[5]);
-    input->put(record[4]);
-    input->put(record[1]);
-    input->put(record[3]);
+    tmpfile.close();
+  }
+  expectfileFirst << "footer";
+  expectfileSecond << "footer";
+  expectfileFirst.close();
+  expectfileSecond.close();
 
-    REQUIRE(processor->getName() == "mergecontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    for (int i = 0; i < 6; i++) {
-      auto session = std::make_shared<core::ProcessSession>(context);
-      processor->onTrigger(context, session);
-      session->commit();
-    }
-    // validate the merge content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-    std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() == 128);
-    {
+  MergeTestController testController;
+  auto context = testController.context;
+  auto processor = testController.processor;
+  auto input = testController.input;
+  auto output = testController.output;
+
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_FILENAME);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Header, HEADER_FILE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Footer, FOOTER_FILE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Demarcator, DEMARCATOR_FILE);
+
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::FlowFile> record[6];
+
+  // Generate 6 flowfiles, first threes merged to one, second thress merged to one
+  for (int i = 0; i < 6; i++) {
+    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    sessionGenFlowFile.import(flowFileName, flow, true, 0);
+    // three bundle
+    if (i < 3)
+      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
+    else
+      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
+    if (i < 3)
+      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
+    else
+      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
+    flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
+    record[i] = flow;
+  }
+  input->put(record[0]);
+  input->put(record[2]);
+  input->put(record[5]);
+  input->put(record[4]);
+  input->put(record[1]);
+  input->put(record[3]);
+
+  REQUIRE(processor->getName() == "mergecontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  for (int i = 0; i < 6; i++) {
+    auto session = std::make_shared<core::ProcessSession>(context);
+    processor->onTrigger(context, session);
+    session->commit();
+  }
+  // validate the merge content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() == 128);
+  {
 	  FixedBuffer callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      std::ifstream file1;
-      file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents = callback;
-      REQUIRE(expectContents == contents);
-      file1.close();
-    }
-    REQUIRE(flow2->getSize() == 128);
-    {
-      FixedBuffer callback(flow2->getSize());
-      sessionGenFlowFile.read(flow2, &callback);
-      std::ifstream file2;
-      file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
-      std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
-      std::string expectContents = callback;
-      REQUIRE(expectContents == contents);
-      file2.close();
-    }
-    LogTestController::getInstance().reset();
+    sessionGenFlowFile.read(flow1, &callback);
+    std::ifstream file1;
+    file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
+    std::string expectContents = callback;
+    REQUIRE(expectContents == contents);
+    file1.close();
+  }
+  REQUIRE(flow2->getSize() == 128);
+  {
+    FixedBuffer callback(flow2->getSize());
+    sessionGenFlowFile.read(flow2, &callback);
+    std::ifstream file2;
+    file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+    std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
+    std::string expectContents = callback;
+    REQUIRE(expectContents == contents);
+    file2.close();
+  }
+  LogTestController::getInstance().reset();
 }
 
 TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
-    std::ofstream expectfileFirst;
-    std::ofstream expectfileSecond;
+  std::ofstream expectfileFirst;
+  std::ofstream expectfileSecond;
 
-    expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-    expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
 
-    // Create and write to the test file, drop record 4
-    for (int i = 0; i < 6; i++) {
-      if (i == 4)
-        continue;
-      std::ofstream tmpfile;
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
-      for (int j = 0; j < 32; j++) {
-        tmpfile << std::to_string(i);
-        if (i < 3)
-          expectfileFirst << std::to_string(i);
-        else
-          expectfileSecond << std::to_string(i);
-      }
-      tmpfile.close();
-    }
-    expectfileFirst.close();
-    expectfileSecond.close();
-
-    MergeTestController testController;
-    auto context = testController.context;
-    auto processor = testController.processor;
-    auto input = testController.input;
-    auto output = testController.output;
-
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MaxBinAge, "1 sec");
-
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::FlowFile> record[6];
-
-    // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-    for (int i = 0; i < 6; i++) {
-      if (i == 4)
-        continue;
-      std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      sessionGenFlowFile.import(flowFileName, flow, true, 0);
-      // three bundle
+  // Create and write to the test file, drop record 4
+  for (int i = 0; i < 6; i++) {
+    if (i == 4)
+      continue;
+    std::ofstream tmpfile;
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    tmpfile.open(flowFileName.c_str(), std::ios::binary);
+    for (int j = 0; j < 32; j++) {
+      tmpfile << std::to_string(i);
       if (i < 3)
-        flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
+        expectfileFirst << std::to_string(i);
       else
-        flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
-      if (i < 3)
-        flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
-      else
-        flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
-      flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
-      record[i] = flow;
+        expectfileSecond << std::to_string(i);
     }
-    input->put(record[0]);
-    input->put(record[2]);
-    input->put(record[5]);
-    input->put(record[1]);
-    input->put(record[3]);
+    tmpfile.close();
+  }
+  expectfileFirst.close();
+  expectfileSecond.close();
 
-    REQUIRE(processor->getName() == "mergecontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    for (int i = 0; i < 6; i++) {
-      if (i == 4)
-        continue;
-      auto session = std::make_shared<core::ProcessSession>(context);
-      processor->onTrigger(context, session);
-      session->commit();
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    {
-      auto session = std::make_shared<core::ProcessSession>(context);
-      processor->onTrigger(context, session);
-    }
-    // validate the merge content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-    std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() == 96);
-    {
-		FixedBuffer callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      std::ifstream file1;
-      file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents = callback;
-      REQUIRE(expectContents == contents);
-      file1.close();
-    }
-    REQUIRE(flow2->getSize() == 64);
-    {
-		FixedBuffer callback(flow2->getSize());
-      sessionGenFlowFile.read(flow2, &callback);
-      std::ifstream file2;
-      file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
-      std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
-      std::string expectContents = callback;
-      REQUIRE(expectContents == contents);
-      file2.close();
-    }
-    LogTestController::getInstance().reset();
+  MergeTestController testController;
+  auto context = testController.context;
+  auto processor = testController.processor;
+  auto input = testController.input;
+  auto output = testController.output;
+
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MaxBinAge, "1 sec");
+
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::FlowFile> record[6];
+
+  // Generate 6 flowfiles, first threes merged to one, second thress merged to one
+  for (int i = 0; i < 6; i++) {
+    if (i == 4)
+      continue;
+    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    sessionGenFlowFile.import(flowFileName, flow, true, 0);
+    // three bundle
+    if (i < 3)
+      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
+    else
+      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
+    if (i < 3)
+      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
+    else
+      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
+    flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
+    record[i] = flow;
+  }
+  input->put(record[0]);
+  input->put(record[2]);
+  input->put(record[5]);
+  input->put(record[1]);
+  input->put(record[3]);
+
+  REQUIRE(processor->getName() == "mergecontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  for (int i = 0; i < 6; i++) {
+    if (i == 4)
+      continue;
+    auto session = std::make_shared<core::ProcessSession>(context);
+    processor->onTrigger(context, session);
+    session->commit();
+  }
+  std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+  {
+    auto session = std::make_shared<core::ProcessSession>(context);
+    processor->onTrigger(context, session);
+  }
+  // validate the merge content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() == 96);
+  {
+	  FixedBuffer callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
+    std::ifstream file1;
+    file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
+    std::string expectContents = callback;
+    REQUIRE(expectContents == contents);
+    file1.close();
+  }
+  REQUIRE(flow2->getSize() == 64);
+  {
+	  FixedBuffer callback(flow2->getSize());
+    sessionGenFlowFile.read(flow2, &callback);
+    std::ifstream file2;
+    file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+    std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
+    std::string expectContents = callback;
+    REQUIRE(expectContents == contents);
+    file2.close();
+  }
+  LogTestController::getInstance().reset();
 }
 
 TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
-    std::ofstream expectfileFirst;
-    std::ofstream expectfileSecond;
-    expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-    expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+  std::ofstream expectfileFirst;
+  std::ofstream expectfileSecond;
+  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
 
-    // Create and write to the test file
-    for (int i = 0; i < 6; i++) {
-      std::ofstream tmpfile;
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
-      for (int j = 0; j < 32; j++) {
-        tmpfile << std::to_string(i);
-        if (i < 3)
-          expectfileFirst << std::to_string(i);
-        else
-          expectfileSecond << std::to_string(i);
-      }
-      tmpfile.close();
+  // Create and write to the test file
+  for (int i = 0; i < 6; i++) {
+    std::ofstream tmpfile;
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    tmpfile.open(flowFileName.c_str(), std::ios::binary);
+    for (int j = 0; j < 32; j++) {
+      tmpfile << std::to_string(i);
+      if (i < 3)
+        expectfileFirst << std::to_string(i);
+      else
+        expectfileSecond << std::to_string(i);
     }
-    expectfileFirst.close();
-    expectfileSecond.close();
+    tmpfile.close();
+  }
+  expectfileFirst.close();
+  expectfileSecond.close();
 
-    MergeTestController testController;
-    auto context = testController.context;
-    auto processor = testController.processor;
-    auto input = testController.input;
-    auto output = testController.output;
+  MergeTestController testController;
+  auto context = testController.context;
+  auto processor = testController.processor;
+  auto input = testController.input;
+  auto output = testController.output;
 
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::FlowFile> record[6];
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::FlowFile> record[6];
 
-    // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-    for (int i = 0; i < 6; i++) {
-      std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      sessionGenFlowFile.import(flowFileName, flow, true, 0);
-      flow->setAttribute("tag", "tag");
-      record[i] = flow;
-    }
-    input->put(record[0]);
-    input->put(record[1]);
-    input->put(record[2]);
-    input->put(record[3]);
-    input->put(record[4]);
-    input->put(record[5]);
+  // Generate 6 flowfiles, first threes merged to one, second thress merged to one
+  for (int i = 0; i < 6; i++) {
+    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    sessionGenFlowFile.import(flowFileName, flow, true, 0);
+    flow->setAttribute("tag", "tag");
+    record[i] = flow;
+  }
+  input->put(record[0]);
+  input->put(record[1]);
+  input->put(record[2]);
+  input->put(record[3]);
+  input->put(record[4]);
+  input->put(record[5]);
 
-    REQUIRE(processor->getName() == "mergecontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    for (int i = 0; i < 6; i++) {
-      auto session = std::make_shared<core::ProcessSession>(context);
-      processor->onTrigger(context, session);
-      session->commit();
-    }
-    // validate the merge content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-    std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() == 96);
-    {
-		FixedBuffer callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
-      std::ifstream file1;
-      file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents = callback;
-      REQUIRE(expectContents == contents);
-      file1.close();
-    }
-    REQUIRE(flow2->getSize() == 96);
-    {
-		FixedBuffer callback(flow2->getSize());
-      sessionGenFlowFile.read(flow2, &callback);
-      std::ifstream file2;
-      file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
-      std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
-      std::string expectContents = callback;
-      REQUIRE(expectContents == contents);
-      file2.close();
-    }
-    LogTestController::getInstance().reset();
+  REQUIRE(processor->getName() == "mergecontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  for (int i = 0; i < 6; i++) {
+    auto session = std::make_shared<core::ProcessSession>(context);
+    processor->onTrigger(context, session);
+    session->commit();
+  }
+  // validate the merge content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() == 96);
+  {
+	  FixedBuffer callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
+    std::ifstream file1;
+    file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
+    std::string expectContents = callback;
+    REQUIRE(expectContents == contents);
+    file1.close();
+  }
+  REQUIRE(flow2->getSize() == 96);
+  {
+	  FixedBuffer callback(flow2->getSize());
+    sessionGenFlowFile.read(flow2, &callback);
+    std::ifstream file2;
+    file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+    std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
+    std::string expectContents = callback;
+    REQUIRE(expectContents == contents);
+    file2.close();
+  }
+  LogTestController::getInstance().reset();
 }
 
 
 TEST_CASE("MergeFileTar", "[mergefiletest4]") {
-    std::ofstream expectfileFirst;
-    std::ofstream expectfileSecond;
-    expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-    expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+  std::ofstream expectfileFirst;
+  std::ofstream expectfileSecond;
+  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
 
-    // Create and write to the test file
-    for (int i = 0; i < 6; i++) {
-      std::ofstream tmpfile;
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
-      for (int j = 0; j < 32; j++) {
-        tmpfile << std::to_string(i);
-        if (i < 3)
-          expectfileFirst << std::to_string(i);
-        else
-          expectfileSecond << std::to_string(i);
-      }
-      tmpfile.close();
+  // Create and write to the test file
+  for (int i = 0; i < 6; i++) {
+    std::ofstream tmpfile;
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    tmpfile.open(flowFileName.c_str(), std::ios::binary);
+    for (int j = 0; j < 32; j++) {
+      tmpfile << std::to_string(i);
+      if (i < 3)
+        expectfileFirst << std::to_string(i);
+      else
+        expectfileSecond << std::to_string(i);
     }
-    expectfileFirst.close();
-    expectfileSecond.close();
+    tmpfile.close();
+  }
+  expectfileFirst.close();
+  expectfileSecond.close();
 
-    MergeTestController testController;
-    auto context = testController.context;
-    auto processor = testController.processor;
-    auto input = testController.input;
-    auto output = testController.output;
+  MergeTestController testController;
+  auto context = testController.context;
+  auto processor = testController.processor;
+  auto input = testController.input;
+  auto output = testController.output;
 
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_TAR_VALUE);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_TAR_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::FlowFile> record[6];
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::FlowFile> record[6];
 
-    // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-    for (int i = 0; i < 6; i++) {
-      std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      sessionGenFlowFile.import(flowFileName, flow, true, 0);
-      flow->setAttribute("tag", "tag");
-      record[i] = flow;
-    }
-    input->put(record[0]);
-    input->put(record[1]);
-    input->put(record[2]);
-    input->put(record[3]);
-    input->put(record[4]);
-    input->put(record[5]);
+  // Generate 6 flowfiles, first threes merged to one, second thress merged to one
+  for (int i = 0; i < 6; i++) {
+    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    sessionGenFlowFile.import(flowFileName, flow, true, 0);
+    flow->setAttribute("tag", "tag");
+    record[i] = flow;
+  }
+  input->put(record[0]);
+  input->put(record[1]);
+  input->put(record[2]);
+  input->put(record[3]);
+  input->put(record[4]);
+  input->put(record[5]);
 
-    REQUIRE(processor->getName() == "mergecontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    for (int i = 0; i < 6; i++) {
-      auto session = std::make_shared<core::ProcessSession>(context);
-      processor->onTrigger(context, session);
-      session->commit();
-    }
-    // validate the merge content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-    std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() > 0);
-    {
-		FixedBuffer callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
+  REQUIRE(processor->getName() == "mergecontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  for (int i = 0; i < 6; i++) {
+    auto session = std::make_shared<core::ProcessSession>(context);
+    processor->onTrigger(context, session);
+    session->commit();
+  }
+  // validate the merge content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() > 0);
+  {
+	  FixedBuffer callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
 	  auto archives = read_archives(callback);
-      REQUIRE(archives.size() == 3);
-      for (int i = 0; i < 3; i++) {
-        std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-        std::ifstream file1;
-        file1.open(flowFileName, std::ios::binary);
-        std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-        std::string expectContents = archives[i];
-        REQUIRE(expectContents == contents);
-        file1.close();
-      }
+    REQUIRE(archives.size() == 3);
+    for (int i = 0; i < 3; i++) {
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      std::ifstream file1;
+      file1.open(flowFileName, std::ios::binary);
+      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
+      std::string expectContents = archives[i];
+      REQUIRE(expectContents == contents);
+      file1.close();
     }
-    REQUIRE(flow2->getSize() > 0);
-    {
-      FixedBuffer callback(flow2->getSize());
-      sessionGenFlowFile.read(flow2, &callback);
+  }
+  REQUIRE(flow2->getSize() > 0);
+  {
+    FixedBuffer callback(flow2->getSize());
+    sessionGenFlowFile.read(flow2, &callback);
 	  auto archives = read_archives(callback);
 	  REQUIRE(archives.size() == 3);
-      for (int i = 3; i < 6; i++) {
-        std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-        std::ifstream file1;
-        file1.open(flowFileName, std::ios::binary);
-        std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-        std::string expectContents = archives[i-3];
-        REQUIRE(expectContents == contents);
-        file1.close();
-      }
+    for (int i = 3; i < 6; i++) {
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      std::ifstream file1;
+      file1.open(flowFileName, std::ios::binary);
+      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
+      std::string expectContents = archives[i-3];
+      REQUIRE(expectContents == contents);
+      file1.close();
     }
-    LogTestController::getInstance().reset();
+  }
+  LogTestController::getInstance().reset();
 }
 
 TEST_CASE("MergeFileZip", "[mergefiletest5]") {
-    std::ofstream expectfileFirst;
-    std::ofstream expectfileSecond;
-    expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-    expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+  std::ofstream expectfileFirst;
+  std::ofstream expectfileSecond;
+  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
 
-    // Create and write to the test file
-    for (int i = 0; i < 6; i++) {
-      std::ofstream tmpfile;
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
-      for (int j = 0; j < 32; j++) {
-        tmpfile << std::to_string(i);
-        if (i < 3)
-          expectfileFirst << std::to_string(i);
-        else
-          expectfileSecond << std::to_string(i);
-      }
-      tmpfile.close();
+  // Create and write to the test file
+  for (int i = 0; i < 6; i++) {
+    std::ofstream tmpfile;
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    tmpfile.open(flowFileName.c_str(), std::ios::binary);
+    for (int j = 0; j < 32; j++) {
+      tmpfile << std::to_string(i);
+      if (i < 3)
+        expectfileFirst << std::to_string(i);
+      else
+        expectfileSecond << std::to_string(i);
     }
-    expectfileFirst.close();
-    expectfileSecond.close();
+    tmpfile.close();
+  }
+  expectfileFirst.close();
+  expectfileSecond.close();
 
-    MergeTestController testController;
-    auto context = testController.context;
-    auto processor = testController.processor;
-    auto input = testController.input;
-    auto output = testController.output;
+  MergeTestController testController;
+  auto context = testController.context;
+  auto processor = testController.processor;
+  auto input = testController.input;
+  auto output = testController.output;
 
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_ZIP_VALUE);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
-    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_ZIP_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-    core::ProcessSession sessionGenFlowFile(context);
-    std::shared_ptr<core::FlowFile> record[6];
+  core::ProcessSession sessionGenFlowFile(context);
+  std::shared_ptr<core::FlowFile> record[6];
 
-    // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-    for (int i = 0; i < 6; i++) {
-      std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      sessionGenFlowFile.import(flowFileName, flow, true, 0);
-      flow->setAttribute("tag", "tag");
-      record[i] = flow;
-    }
-    input->put(record[0]);
-    input->put(record[1]);
-    input->put(record[2]);
-    input->put(record[3]);
-    input->put(record[4]);
-    input->put(record[5]);
+  // Generate 6 flowfiles, first threes merged to one, second thress merged to one
+  for (int i = 0; i < 6; i++) {
+    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+    sessionGenFlowFile.import(flowFileName, flow, true, 0);
+    flow->setAttribute("tag", "tag");
+    record[i] = flow;
+  }
+  input->put(record[0]);
+  input->put(record[1]);
+  input->put(record[2]);
+  input->put(record[3]);
+  input->put(record[4]);
+  input->put(record[5]);
 
-    REQUIRE(processor->getName() == "mergecontent");
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    for (int i = 0; i < 6; i++) {
-      auto session = std::make_shared<core::ProcessSession>(context);
-      processor->onTrigger(context, session);
-      session->commit();
-    }
-    // validate the merge content
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-    std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
-    REQUIRE(flow1->getSize() > 0);
-    {
-      FixedBuffer callback(flow1->getSize());
-      sessionGenFlowFile.read(flow1, &callback);
+  REQUIRE(processor->getName() == "mergecontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  for (int i = 0; i < 6; i++) {
+    auto session = std::make_shared<core::ProcessSession>(context);
+    processor->onTrigger(context, session);
+    session->commit();
+  }
+  // validate the merge content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1->getSize() > 0);
+  {
+    FixedBuffer callback(flow1->getSize());
+    sessionGenFlowFile.read(flow1, &callback);
 	  auto archives = read_archives(callback);
-      REQUIRE(archives.size() == 3);
-      for (int i = 0; i < 3; i++) {
-        std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-        std::ifstream file1;
-        file1.open(flowFileName, std::ios::binary);
-        std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-        std::string expectContents = archives[i];
-        REQUIRE(expectContents == contents);
-        file1.close();
-      }
+    REQUIRE(archives.size() == 3);
+    for (int i = 0; i < 3; i++) {
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      std::ifstream file1;
+      file1.open(flowFileName, std::ios::binary);
+      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
+      std::string expectContents = archives[i];
+      REQUIRE(expectContents == contents);
+      file1.close();
     }
-    REQUIRE(flow2->getSize() > 0);
-    {
-      FixedBuffer callback(flow2->getSize());
-      sessionGenFlowFile.read(flow2, &callback);
+  }
+  REQUIRE(flow2->getSize() > 0);
+  {
+    FixedBuffer callback(flow2->getSize());
+    sessionGenFlowFile.read(flow2, &callback);
 	  auto archives = read_archives(callback);
 	  REQUIRE(archives.size() == 3);
-      for (int i = 3; i < 6; i++) {
-        std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-        std::ifstream file1;
-        file1.open(flowFileName, std::ios::binary);
-        std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-        std::string expectContents = archives[i-3];
-        REQUIRE(expectContents == contents);
-        file1.close();
-      }
+    for (int i = 3; i < 6; i++) {
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      std::ifstream file1;
+      file1.open(flowFileName, std::ios::binary);
+      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
+      std::string expectContents = archives[i-3];
+      REQUIRE(expectContents == contents);
+      file1.close();
     }
-    LogTestController::getInstance().reset();
+  }
+  LogTestController::getInstance().reset();
 }
 
 
