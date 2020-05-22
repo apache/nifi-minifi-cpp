@@ -91,6 +91,12 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
   int archive_buffer_size_;
 };
 
+/**
+ * There is strong coupling between these compression and decompression
+ * tests. Some compression tests also set up the stage for the subsequent
+ * decompression test. Each such test controller should either be
+ * CompressTestController or a DecompressTestController.
+ */
 class CompressDecompressionTestController : public TestController{
  protected:
   static std::string tempDir;
