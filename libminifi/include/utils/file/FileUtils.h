@@ -129,18 +129,25 @@ class FileUtils {
 
   static std::string create_temp_directory(char* format) {
 #ifdef WIN32
-    char tempBuffer[MAX_PATH];
-    const auto ret = GetTempPath(MAX_PATH, tempBuffer);
-    if (ret <= MAX_PATH && ret != 0) {
-      const std::string tempDirectory = tempBuffer
-          + minifi::utils::IdGenerator::getIdGenerator()->generate().to_string();
-      create_dir(tempDirectory);
-      return tempDirectory;
-    }
-    return {};
+    const std::string tempDirectory = concat_path(get_temp_directory(),
+      minifi::utils::IdGenerator::getIdGenerator()->generate().to_string());
+    create_dir(tempDirectory);
+    return tempDirectory;
 #else
     if (mkdtemp(format) == nullptr) { return ""; }
     return format;
+#endif
+  }
+
+  static std::string get_temp_directory() {
+#ifdef WIN32
+    char tempBuffer[MAX_PATH];
+    const auto ret = GetTempPath(MAX_PATH, tempBuffer);
+    if (ret > MAX_PATH || ret == 0)
+      throw std::runtime_error("Couldn't locate temporary directory path");
+    return tempBuffer;
+#else
+    return "/tmp";
 #endif
   }
 
