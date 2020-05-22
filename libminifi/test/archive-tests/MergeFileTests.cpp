@@ -82,6 +82,10 @@ class FixedBuffer : public org::apache::nifi::minifi::InputStreamCallback {
   uint8_t* begin() const { return buf_; }
   uint8_t* end() const { return buf_ + size_; }
 
+  std::string to_string() const {
+    return {begin(), end()};
+  }
+
   template<class Input>
   int write(Input input, std::size_t len) {
     REQUIRE(size_ + len <= capacity_);
@@ -95,9 +99,6 @@ class FixedBuffer : public org::apache::nifi::minifi::InputStreamCallback {
       total_read += ret;
     } while (size_ != capacity_);
     return total_read;
-  }
-  operator std::string() const {
-    return { begin(), end() };
   }
   int64_t process(std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
     return write(*stream.get(), capacity_);
@@ -173,10 +174,10 @@ class MergeTestController : public TestController {
     output->setDestinationUUID(logAttributeuuid);
     processor->addConnection(output);
     // input to merge processor
-    auto mergeconnection = std::make_shared<minifi::Connection>(repo, content_repo, "mergeconnection");
-    mergeconnection->setDestination(processor);
-    mergeconnection->setDestinationUUID(processoruuid);
-    processor->addConnection(mergeconnection);
+    input = std::make_shared<minifi::Connection>(repo, content_repo, "mergeinput");
+    input->setDestination(processor);
+    input->setDestinationUUID(processoruuid);
+    processor->addConnection(input);
 
     std::set<core::Relationship> autoTerminatedRelationships;
     core::Relationship original("original", "");
@@ -193,8 +194,6 @@ class MergeTestController : public TestController {
     node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider = nullptr;
     context = std::make_shared<core::ProcessContext>(node, controller_service_provider, repo, repo, content_repo);
-
-    input = std::static_pointer_cast<minifi::Connection>(node->getNextIncomingConnection());
   }
   ~MergeTestController() {}
   std::shared_ptr<core::ProcessContext> context;
@@ -211,28 +210,24 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
   auto input = testController.input;
   auto output = testController.output;
 
-  std::ofstream expectfileFirst;
-  std::ofstream expectfileSecond;
+  {
+    std::ofstream expectfileFirst(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::ofstream expectfileSecond(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
 
-  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
-
-  // Create and write to the test file
-  for (int i = 0; i < 6; i++) {
-    std::ofstream tmpfile;
-    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-    tmpfile.open(flowFileName.c_str(), std::ios::binary);
-    for (int j = 0; j < 32; j++) {
-      tmpfile << std::to_string(i);
-      if (i < 3)
-        expectfileFirst << std::to_string(i);
-      else
-        expectfileSecond << std::to_string(i);
+    // Create and write to the test file
+    for (int i = 0; i < 6; i++) {
+      std::ofstream tmpfile;
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      for (int j = 0; j < 32; j++) {
+        tmpfile << std::to_string(i);
+        if (i < 3)
+          expectfileFirst << std::to_string(i);
+        else
+          expectfileSecond << std::to_string(i);
+      }
     }
-    tmpfile.close();
   }
-  expectfileFirst.close();
-  expectfileSecond.close();
 
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
@@ -280,67 +275,55 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
   {
     FixedBuffer callback(flow1->getSize());
     sessionGenFlowFile.read(flow1, &callback);
-    std::ifstream file1;
-    file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::ifstream file1(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-    std::string expectContents = callback;
-    REQUIRE(expectContents == contents);
-    file1.close();
+    REQUIRE(callback.to_string() == contents);
   }
   REQUIRE(flow2->getSize() == 96);
   {
     FixedBuffer callback(flow2->getSize());
     sessionGenFlowFile.read(flow2, &callback);
-    std::ifstream file2;
-    file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+    std::ifstream file2(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
-    std::string expectContents = callback;
-    REQUIRE(expectContents == contents);
-    file2.close();
+    REQUIRE(callback.to_string() == contents);
   }
   LogTestController::getInstance().reset();
 }
 
 TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
-  std::ofstream expectfileFirst;
-  std::ofstream expectfileSecond;
-  std::ofstream headerfile, footerfile, demarcatorfile;
-  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
-  headerfile.open(HEADER_FILE, std::ios::binary);
-  headerfile << "header";
-  expectfileFirst << "header";
-  expectfileSecond << "header";
-  headerfile.close();
-  footerfile.open(FOOTER_FILE, std::ios::binary);
-  footerfile << "footer";
-  footerfile.close();
-  demarcatorfile.open(DEMARCATOR_FILE, std::ios::binary);
-  demarcatorfile << "demarcator";
-  demarcatorfile.close();
+  {
+    std::ofstream expectfileFirst(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::ofstream expectfileSecond(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+    std::ofstream headerfile(HEADER_FILE, std::ios::binary);
+    std::ofstream footerfile(FOOTER_FILE, std::ios::binary);
+    std::ofstream demarcatorfile(DEMARCATOR_FILE, std::ios::binary);
+    headerfile << "header";
+    expectfileFirst << "header";
+    expectfileSecond << "header";
+    footerfile << "footer";
+    demarcatorfile << "demarcator";
 
-  // Create and write to the test file
-  for (int i = 0; i < 6; i++) {
-    if (i != 0 && i <= 2)
-      expectfileFirst << "demarcator";
-    if (i != 3 && i >= 4)
-      expectfileSecond << "demarcator";
-    std::ofstream tmpfile;
-    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-    tmpfile.open(flowFileName.c_str(), std::ios::binary);
-    for (int j = 0; j < 32; j++) {
-      tmpfile << std::to_string(i);
-      if (i < 3)
-        expectfileFirst << std::to_string(i);
-      else
-        expectfileSecond << std::to_string(i);
+
+    // Create and write to the test file
+    for (int i = 0; i < 6; i++) {
+      if (i != 0 && i <= 2)
+        expectfileFirst << "demarcator";
+      if (i != 3 && i >= 4)
+        expectfileSecond << "demarcator";
+      std::ofstream tmpfile;
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      for (int j = 0; j < 32; j++) {
+        tmpfile << std::to_string(i);
+        if (i < 3)
+          expectfileFirst << std::to_string(i);
+        else
+          expectfileSecond << std::to_string(i);
+      }
     }
-    tmpfile.close();
+    expectfileFirst << "footer";
+    expectfileSecond << "footer";
   }
-  expectfileFirst << "footer";
-  expectfileSecond << "footer";
-  expectfileFirst.close();
-  expectfileSecond.close();
 
   MergeTestController testController;
   auto context = testController.context;
@@ -398,52 +381,42 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
   {
     FixedBuffer callback(flow1->getSize());
     sessionGenFlowFile.read(flow1, &callback);
-    std::ifstream file1;
-    file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::ifstream file1(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-    std::string expectContents = callback;
-    REQUIRE(expectContents == contents);
-    file1.close();
+    REQUIRE(callback.to_string() == contents);
   }
   REQUIRE(flow2->getSize() == 128);
   {
     FixedBuffer callback(flow2->getSize());
     sessionGenFlowFile.read(flow2, &callback);
-    std::ifstream file2;
-    file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+    std::ifstream file2(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
-    std::string expectContents = callback;
-    REQUIRE(expectContents == contents);
-    file2.close();
+    REQUIRE(callback.to_string() == contents);
   }
   LogTestController::getInstance().reset();
 }
 
 TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
-  std::ofstream expectfileFirst;
-  std::ofstream expectfileSecond;
+  {
+    std::ofstream expectfileFirst(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::ofstream expectfileSecond(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
 
-  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
-
-  // Create and write to the test file, drop record 4
-  for (int i = 0; i < 6; i++) {
-    if (i == 4)
-      continue;
-    std::ofstream tmpfile;
-    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-    tmpfile.open(flowFileName.c_str(), std::ios::binary);
-    for (int j = 0; j < 32; j++) {
-      tmpfile << std::to_string(i);
-      if (i < 3)
-        expectfileFirst << std::to_string(i);
-      else
-        expectfileSecond << std::to_string(i);
+    // Create and write to the test file, drop record 4
+    for (int i = 0; i < 6; i++) {
+      if (i == 4)
+        continue;
+      std::ofstream tmpfile;
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      for (int j = 0; j < 32; j++) {
+        tmpfile << std::to_string(i);
+        if (i < 3)
+          expectfileFirst << std::to_string(i);
+        else
+          expectfileSecond << std::to_string(i);
+      }
     }
-    tmpfile.close();
   }
-  expectfileFirst.close();
-  expectfileSecond.close();
 
   MergeTestController testController;
   auto context = testController.context;
@@ -507,49 +480,40 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
   {
     FixedBuffer callback(flow1->getSize());
     sessionGenFlowFile.read(flow1, &callback);
-    std::ifstream file1;
-    file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::ifstream file1(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-    std::string expectContents = callback;
-    REQUIRE(expectContents == contents);
-    file1.close();
+    REQUIRE(callback.to_string() == contents);
   }
   REQUIRE(flow2->getSize() == 64);
   {
     FixedBuffer callback(flow2->getSize());
     sessionGenFlowFile.read(flow2, &callback);
-    std::ifstream file2;
-    file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+    std::ifstream file2(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
-    std::string expectContents = callback;
-    REQUIRE(expectContents == contents);
-    file2.close();
+    REQUIRE(callback.to_string() == contents);
   }
   LogTestController::getInstance().reset();
 }
 
 TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
-  std::ofstream expectfileFirst;
-  std::ofstream expectfileSecond;
-  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+  {
+    std::ofstream expectfileFirst(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::ofstream expectfileSecond(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
 
-  // Create and write to the test file
-  for (int i = 0; i < 6; i++) {
-    std::ofstream tmpfile;
-    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-    tmpfile.open(flowFileName.c_str(), std::ios::binary);
-    for (int j = 0; j < 32; j++) {
-      tmpfile << std::to_string(i);
-      if (i < 3)
-        expectfileFirst << std::to_string(i);
-      else
-        expectfileSecond << std::to_string(i);
+    // Create and write to the test file
+    for (int i = 0; i < 6; i++) {
+      std::ofstream tmpfile;
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      for (int j = 0; j < 32; j++) {
+        tmpfile << std::to_string(i);
+        if (i < 3)
+          expectfileFirst << std::to_string(i);
+        else
+          expectfileSecond << std::to_string(i);
+      }
     }
-    tmpfile.close();
   }
-  expectfileFirst.close();
-  expectfileSecond.close();
 
   MergeTestController testController;
   auto context = testController.context;
@@ -597,50 +561,41 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
   {
     FixedBuffer callback(flow1->getSize());
     sessionGenFlowFile.read(flow1, &callback);
-    std::ifstream file1;
-    file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::ifstream file1(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-    std::string expectContents = callback;
-    REQUIRE(expectContents == contents);
-    file1.close();
+    REQUIRE(callback.to_string() == contents);
   }
   REQUIRE(flow2->getSize() == 96);
   {
     FixedBuffer callback(flow2->getSize());
     sessionGenFlowFile.read(flow2, &callback);
-    std::ifstream file2;
-    file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+    std::ifstream file2(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
-    std::string expectContents = callback;
-    REQUIRE(expectContents == contents);
-    file2.close();
+    REQUIRE(callback.to_string() == contents);
   }
   LogTestController::getInstance().reset();
 }
 
 
 TEST_CASE("MergeFileTar", "[mergefiletest4]") {
-  std::ofstream expectfileFirst;
-  std::ofstream expectfileSecond;
-  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+  {
+    std::ofstream expectfileFirst(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::ofstream expectfileSecond(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
 
-  // Create and write to the test file
-  for (int i = 0; i < 6; i++) {
-    std::ofstream tmpfile;
-    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-    tmpfile.open(flowFileName.c_str(), std::ios::binary);
-    for (int j = 0; j < 32; j++) {
-      tmpfile << std::to_string(i);
-      if (i < 3)
-        expectfileFirst << std::to_string(i);
-      else
-        expectfileSecond << std::to_string(i);
+    // Create and write to the test file
+    for (int i = 0; i < 6; i++) {
+      std::ofstream tmpfile;
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      for (int j = 0; j < 32; j++) {
+        tmpfile << std::to_string(i);
+        if (i < 3)
+          expectfileFirst << std::to_string(i);
+        else
+          expectfileSecond << std::to_string(i);
+      }
     }
-    tmpfile.close();
   }
-  expectfileFirst.close();
-  expectfileSecond.close();
 
   MergeTestController testController;
   auto context = testController.context;
@@ -692,12 +647,9 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
     REQUIRE(archives.size() == 3);
     for (int i = 0; i < 3; i++) {
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::binary);
+      std::ifstream file1(flowFileName, std::ios::binary);
       std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents = archives[i];
-      REQUIRE(expectContents == contents);
-      file1.close();
+      REQUIRE(archives[i].to_string() == contents);
     }
   }
   REQUIRE(flow2->getSize() > 0);
@@ -708,39 +660,33 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
     REQUIRE(archives.size() == 3);
     for (int i = 3; i < 6; i++) {
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::binary);
+      std::ifstream file1(flowFileName, std::ios::binary);
       std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents = archives[i-3];
-      REQUIRE(expectContents == contents);
-      file1.close();
+      REQUIRE(archives[i-3].to_string() == contents);
     }
   }
   LogTestController::getInstance().reset();
 }
 
 TEST_CASE("MergeFileZip", "[mergefiletest5]") {
-  std::ofstream expectfileFirst;
-  std::ofstream expectfileSecond;
-  expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
-  expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
+  {
+    std::ofstream expectfileFirst(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
+    std::ofstream expectfileSecond(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
 
-  // Create and write to the test file
-  for (int i = 0; i < 6; i++) {
-    std::ofstream tmpfile;
-    std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-    tmpfile.open(flowFileName.c_str(), std::ios::binary);
-    for (int j = 0; j < 32; j++) {
-      tmpfile << std::to_string(i);
-      if (i < 3)
-        expectfileFirst << std::to_string(i);
-      else
-        expectfileSecond << std::to_string(i);
+    // Create and write to the test file
+    for (int i = 0; i < 6; i++) {
+      std::ofstream tmpfile;
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      for (int j = 0; j < 32; j++) {
+        tmpfile << std::to_string(i);
+        if (i < 3)
+          expectfileFirst << std::to_string(i);
+        else
+          expectfileSecond << std::to_string(i);
+      }
     }
-    tmpfile.close();
   }
-  expectfileFirst.close();
-  expectfileSecond.close();
 
   MergeTestController testController;
   auto context = testController.context;
@@ -792,12 +738,9 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
     REQUIRE(archives.size() == 3);
     for (int i = 0; i < 3; i++) {
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::binary);
+      std::ifstream file1(flowFileName, std::ios::binary);
       std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents = archives[i];
-      REQUIRE(expectContents == contents);
-      file1.close();
+      REQUIRE(archives[i].to_string() == contents);
     }
   }
   REQUIRE(flow2->getSize() > 0);
@@ -808,12 +751,9 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
     REQUIRE(archives.size() == 3);
     for (int i = 3; i < 6; i++) {
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      std::ifstream file1;
-      file1.open(flowFileName, std::ios::binary);
+      std::ifstream file1(flowFileName, std::ios::binary);
       std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
-      std::string expectContents = archives[i-3];
-      REQUIRE(expectContents == contents);
-      file1.close();
+      REQUIRE(archives[i-3].to_string() == contents);
     }
   }
   LogTestController::getInstance().reset();
