@@ -46,7 +46,8 @@ function(use_bundled_libarchive SOURCE_DIR BINARY_DIR)
             -DENABLE_XATTR=ON
             -DENABLE_ACL=ON
             -DENABLE_ICONV=OFF
-            -DENABLE_TEST=OFF)
+            -DENABLE_TEST=OFF
+            -DENABLE_WERROR=OFF)
 
     if (OPENSSL_OFF)
         list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_OPENSSL=OFF)
