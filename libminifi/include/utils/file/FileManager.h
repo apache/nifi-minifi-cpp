@@ -34,6 +34,7 @@
 #include "io/validation.h"
 #include "utils/Id.h"
 #include "utils/StringUtils.h"
+#include "utils/file/FileUtils.h"
 
 #ifndef FILE_SEPARATOR
   #ifdef WIN32
@@ -67,45 +68,25 @@ class FileManager {
     }
   }
   std::string unique_file(const std::string &location, bool keep = false) {
-    if (!IsNullOrEmpty(location)) {
-      std::string file_name = location + FILE_SEPARATOR + non_repeating_string_generator_.generate();
-      while (!verify_not_exist(file_name)) {
-        file_name = location + FILE_SEPARATOR + non_repeating_string_generator_.generate();
-      }
-      if (!keep)
-        unique_files_.push_back(file_name);
-      return file_name;
-    } else {
-      std::string tmpDir = "/tmp";
-#ifdef WIN32
-      TCHAR lpTempPathBuffer[MAX_PATH];
-      GetTempPath(MAX_PATH, lpTempPathBuffer);
-      tmpDir = lpTempPathBuffer;
-#endif
-      std::string file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
-      while (!verify_not_exist(file_name)) {
-        file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
-      }
-      if (!keep) {
-        unique_files_.push_back(file_name);
-      }
-      return file_name;
+    const std::string& dir = !IsNullOrEmpty(location) ? location : utils::file::FileUtils::get_temp_directory();
+
+    std::string file_name = utils::file::FileUtils::concat_path(dir, non_repeating_string_generator_.generate());
+    while (!verify_not_exist(file_name)) {
+      file_name = utils::file::FileUtils::concat_path(dir, non_repeating_string_generator_.generate());
     }
+    if (!keep)
+      unique_files_.push_back(file_name);
+    return file_name;
   }
 
   std::string unique_file(bool keep = false) {
 #ifdef BOOST_VERSION
     return boost::filesystem::unique_path().native();
 #else
-    std::string tmpDir = "/tmp";
-#ifdef WIN32
-    TCHAR lpTempPathBuffer[MAX_PATH];
-    GetTempPath(MAX_PATH, lpTempPathBuffer);
-    tmpDir = lpTempPathBuffer;
-#endif
-    std::string file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
+	  std::string tmpDir = utils::file::FileUtils::get_temp_directory();
+    std::string file_name = utils::file::FileUtils::concat_path(tmpDir, non_repeating_string_generator_.generate());
     while (!verify_not_exist(file_name)) {
-      file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
+      file_name = utils::file::FileUtils::concat_path(tmpDir, non_repeating_string_generator_.generate());
     }
     if (!keep) {
       unique_files_.push_back(file_name);

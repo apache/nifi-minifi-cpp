@@ -73,11 +73,13 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
     std::shared_ptr<TestPlan> plan = testController.createPlan();
     std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    char dir1[] = "/tmp/gt.XXXXXX";
-    char dir2[] = "/tmp/gt.XXXXXX";
-    char dir3[] = "/tmp/gt.XXXXXX";
+    std::string dir1 = [&] {char format[] = "/tmp/gt.XXXXXX"; return testController.createTempDirectory(format); }();
+    std::string dir2 = [&] {char format[] = "/tmp/gt.XXXXXX"; return testController.createTempDirectory(format); }();
+    std::string dir3 = [&] {char format[] = "/tmp/gt.XXXXXX"; return testController.createTempDirectory(format); }();
 
-    REQUIRE(!testController.createTempDirectory(dir1).empty());
+    REQUIRE(!dir1.empty());
+    REQUIRE(!dir2.empty());
+    REQUIRE(!dir3.empty());
     std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir1);
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
@@ -85,7 +87,6 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
     std::shared_ptr<core::Processor> fprocessor = plan->addProcessor("FocusArchiveEntry", "focusarchiveCreate", core::Relationship("success", "description"), true);
     plan->setProperty(fprocessor, org::apache::nifi::minifi::processors::FocusArchiveEntry::Path.getName(), FOCUSED_FILE);
 
-    REQUIRE(!testController.createTempDirectory(dir2).empty());
     std::shared_ptr<core::Processor> putfile1 = plan->addProcessor("PutFile", "PutFile1", core::Relationship("success", "description"), true);
     plan->setProperty(putfile1, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir2);
     plan->setProperty(putfile1, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(),
@@ -93,15 +94,12 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
 
     std::shared_ptr<core::Processor> ufprocessor = plan->addProcessor("UnfocusArchiveEntry", "unfocusarchiveCreate", core::Relationship("success", "description"), true);
 
-    REQUIRE(!testController.createTempDirectory(dir3).empty());
     std::shared_ptr<core::Processor> putfile2 = plan->addProcessor("PutFile", "PutFile2", core::Relationship("success", "description"), true);
     plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir3);
     plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(),
                       org::apache::nifi::minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
 
-    std::stringstream ss1;
-    ss1 << dir1 << "/" << TEST_ARCHIVE_NAME;
-    std::string archive_path_1 = ss1.str();
+    std::string archive_path_1 = utils::file::FileUtils::concat_path(dir1, TEST_ARCHIVE_NAME);
 
     TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES, FILE_CONTENT);
     build_test_archive(archive_path_1, test_archive_map);
@@ -112,9 +110,7 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
     plan->runNextProcessor();  // FocusArchive
     plan->runNextProcessor();  // PutFile 1 (focused)
 
-    std::stringstream ss2;
-    ss2 << dir2 << "/" << FOCUSED_FILE;
-    std::ifstream ifs(ss2.str().c_str(), std::ios::in | std::ios::binary | std::ios::ate);
+    std::ifstream ifs(utils::file::FileUtils::concat_path(dir2, FOCUSED_FILE), std::ios::in | std::ios::binary | std::ios::ate);
 
     std::ifstream::pos_type size = ifs.tellg();
     int64_t bufsize {size};
@@ -128,8 +124,6 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
     plan->runNextProcessor();  // UnfocusArchive
     plan->runNextProcessor();  // PutFile 2 (unfocused)
 
-    std::stringstream ss3;
-    ss3 << dir3 << "/" << TEST_ARCHIVE_NAME;
-    std::string archive_path_2 = ss3.str();
+    std::string archive_path_2 = utils::file::FileUtils::concat_path(dir3, TEST_ARCHIVE_NAME);
     REQUIRE(check_archive_contents(archive_path_2, test_archive_map));
 }

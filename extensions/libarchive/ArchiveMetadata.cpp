@@ -149,7 +149,7 @@ void ArchiveMetadata::loadJson(const rapidjson::Value& metadataDoc) {
 
 void ArchiveMetadata::seedTempPaths(fileutils::FileManager *file_man, bool keep = false) {
     for (auto& entry : entryMetadata)
-        entry.tmpFileName.assign(file_man->unique_file("/tmp/", keep));
+        entry.tmpFileName.assign(file_man->unique_file(keep));
 }
 
 ArchiveStack ArchiveStack::fromJson(const rapidjson::Value& input) {
