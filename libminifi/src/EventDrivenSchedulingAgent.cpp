@@ -29,6 +29,13 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
+void EventDrivenSchedulingAgent::schedule(std::shared_ptr<core::Processor> processor) {
+  if (!processor->hasIncomingConnections()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "EventDrivenSchedulingAgent cannot schedule processor without incoming connection!");
+  }
+  ThreadedSchedulingAgent::schedule(processor);
+}
+
 utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                          const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (this->running_) {
