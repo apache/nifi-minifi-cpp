@@ -450,7 +450,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Batch Size|10||The maximum number of files to pull in each iteration|
 |File Filter|[^\.].*||Only files whose names match the given regular expression will be picked up|
 |Ignore Hidden Files|true||Indicates whether or not hidden files should be ignored|
-|**Input Directory**|.||The input directory from which to pull files<br/>**Supports Expression Language: true**|
+|**Input Directory**|||The input directory from which to pull files<br/>**Supports Expression Language: true**|
 |Keep Source File|false||If true, the file is not deleted after it has been copied to the Content Repository|
 |Maximum File Age|0 sec||The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored|
 |Maximum File Size|0 B||The maximum size that a file can be in order to be pulled|

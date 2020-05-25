@@ -56,7 +56,7 @@ core::Property GetFile::BatchSize(
     core::PropertyBuilder::createProperty("Batch Size")->withDescription("The maximum number of files to pull in each iteration")->withDefaultValue<uint32_t>(10)->build());
 
 core::Property GetFile::Directory(
-    core::PropertyBuilder::createProperty("Input Directory")->withDescription("The input directory from which to pull files")->isRequired(true)->supportsExpressionLanguage(true)->withDefaultValue(".")
+    core::PropertyBuilder::createProperty("Input Directory")->withDescription("The input directory from which to pull files")->isRequired(true)->supportsExpressionLanguage(true)
         ->build());
 
 core::Property GetFile::IgnoreHiddenFile(
@@ -145,6 +145,13 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
 
   if (context->getProperty(FileFilter.getName(), value)) {
     request_.fileFilter = value;
+  }
+
+  if (!context->getProperty(Directory.getName(), value)) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory property is missing");
+  }
+  if (!utils::file::FileUtils::is_directory(value.c_str())) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory \"" + value + "\" is not a directory");
   }
 }
 
