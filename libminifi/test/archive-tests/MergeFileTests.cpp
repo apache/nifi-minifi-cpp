@@ -64,23 +64,16 @@ void init_file_paths() {
 class FixedBuffer : public org::apache::nifi::minifi::InputStreamCallback {
  public:
   explicit FixedBuffer(std::size_t capacity) : capacity_(capacity) {
-    buf_ = new uint8_t[capacity_];
+    buf_.reset(new uint8_t[capacity_]);
   }
-  FixedBuffer(FixedBuffer&& other) : buf_(other.buf_), size_(other.size_), capacity_(other.capacity_) {
-    other.buf_ = nullptr;
+  FixedBuffer(FixedBuffer&& other) : buf_(std::move(other.buf_)), size_(other.size_), capacity_(other.capacity_) {
     other.size_ = 0;
     other.capacity_ = 0;
   }
-  ~FixedBuffer() {
-    if (buf_) {
-      delete[] buf_;
-      buf_ = nullptr;
-    }
-  }
   std::size_t size() const { return size_; }
   std::size_t capacity() const { return capacity_; }
-  uint8_t* begin() const { return buf_; }
-  uint8_t* end() const { return buf_ + size_; }
+  uint8_t* begin() const { return buf_.get(); }
+  uint8_t* end() const { return buf_.get() + size_; }
 
   std::string to_string() const {
     return {begin(), end()};
@@ -105,7 +98,7 @@ class FixedBuffer : public org::apache::nifi::minifi::InputStreamCallback {
   }
 
  private:
-  uint8_t *buf_ = nullptr;
+  std::unique_ptr<uint8_t[]> buf_;
   std::size_t size_ = 0;
   std::size_t capacity_ = 0;
 };
