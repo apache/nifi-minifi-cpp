@@ -89,10 +89,10 @@ class PublishKafka : public core::Processor {
   static core::Property BatchSize;
   static core::Property TargetBatchPayloadSize;
   static core::Property AttributeNameRegex;
-  static core::Property QueueBufferMaxTime;
-  static core::Property QueueBufferMaxSize;
-  static core::Property QueueBufferMaxMessage;
-  static core::Property CompressCodec;
+  static const core::Property QueueBufferMaxTime;
+  static const core::Property QueueBufferMaxSize;
+  static const core::Property QueueBufferMaxMessage;
+  static const core::Property CompressCodec;
   static core::Property MaxFlowSegSize;
   static core::Property SecurityProtocol;
   static core::Property SecurityCA;

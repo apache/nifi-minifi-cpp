@@ -82,10 +82,33 @@ core::Property PublishKafka::TargetBatchPayloadSize(
     core::PropertyBuilder::createProperty("Target Batch Payload Size")->withDescription("The target total payload size for a batch. 0 B means unlimited (Batch Size is still applied).")
         ->isRequired(false)->withDefaultValue<core::DataSizeValue>("512 KB")->build());
 core::Property PublishKafka::AttributeNameRegex("Attributes to Send as Headers", "Any attribute whose name matches the regex will be added to the Kafka messages as a Header", "");
-core::Property PublishKafka::QueueBufferMaxTime("Queue Buffering Max Time", "Delay to wait for messages in the producer queue to accumulate before constructing message batches", "");
-core::Property PublishKafka::QueueBufferMaxSize("Queue Max Buffer Size", "Maximum total message size sum allowed on the producer queue", "");
-core::Property PublishKafka::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the producer queue", "");
-core::Property PublishKafka::CompressCodec("Compress Codec", "compression codec to use for compressing message sets", COMPRESSION_CODEC_NONE);
+
+const core::Property PublishKafka::QueueBufferMaxTime(
+        core::PropertyBuilder::createProperty("Queue Buffering Max Time")->
+        isRequired(false)->
+        withDefaultValue<core::TimePeriodValue>("10 sec")->
+        withDescription("Delay to wait for messages in the producer queue to accumulate before constructing message batches")->
+        build());
+const core::Property PublishKafka::QueueBufferMaxSize(
+        core::PropertyBuilder::createProperty("Queue Max Buffer Size")->
+        isRequired(false)->
+        withDefaultValue<core::DataSizeValue>("1 MB")->
+        withDescription("Maximum total message size sum allowed on the producer queue")->
+        build());
+const core::Property PublishKafka::QueueBufferMaxMessage(
+        core::PropertyBuilder::createProperty("Queue Max Message")->
+        isRequired(false)->
+        withDefaultValue<uint64_t>(1000)->
+        withDescription("Maximum number of messages allowed on the producer queue")->
+        build());
+const core::Property PublishKafka::CompressCodec(
+        core::PropertyBuilder::createProperty("Compress Codec")->
+        isRequired(false)->
+        withDefaultValue<std::string>(COMPRESSION_CODEC_NONE)->
+        withAllowableValues<std::string>({COMPRESSION_CODEC_NONE, COMPRESSION_CODEC_GZIP, COMPRESSION_CODEC_SNAPPY})->
+        withDescription("compression codec to use for compressing message sets")->
+        build());
+
 core::Property PublishKafka::MaxFlowSegSize(
     core::PropertyBuilder::createProperty("Max Flow Segment Size")->withDescription("Maximum flow content payload segment size for the kafka record. 0 B means unlimited.")
         ->isRequired(false)->withDefaultValue<core::DataSizeValue>("0 B")->build());
