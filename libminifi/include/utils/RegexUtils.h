@@ -19,15 +19,14 @@
 #ifndef LIBMINIFI_INCLUDE_IO_REGEXUTILS_H_
 #define LIBMINIFI_INCLUDE_IO_REGEXUTILS_H_
 
+#include <string>
 #include <vector>
-#include <regex>
 
-#if (__cplusplus > 201103L) || defined(_WIN32)
-#define NO_MORE_REGFREEE
-#endif
-
-#ifndef NO_MORE_REGFREEE
+#if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9))
 #include <regex.h>
+#else
+#include <regex>
+#define NO_MORE_REGFREEE
 #endif
 
 namespace org {
