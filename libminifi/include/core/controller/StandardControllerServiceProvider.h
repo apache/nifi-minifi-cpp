@@ -19,9 +19,7 @@
 #define LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICEPROVIDER_H_
 
 #include <string>
-
 #include <utility>
-
 #include <iostream>
 #include <memory>
 #include <vector>

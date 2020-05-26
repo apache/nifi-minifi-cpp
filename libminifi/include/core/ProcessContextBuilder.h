@@ -19,7 +19,6 @@
 #define LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXTBUILDER_H_
 
 #include <string>
-
 #include <vector>
 #include <queue>
 #include <map>

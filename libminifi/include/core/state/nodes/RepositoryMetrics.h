@@ -19,13 +19,9 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
 
 #include <memory>
-
 #include <string>
-
 #include <utility>
-
 #include <vector>
-
 #include <sstream>
 #include <map>
 

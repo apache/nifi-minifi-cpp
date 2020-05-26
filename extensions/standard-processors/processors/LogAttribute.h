@@ -21,11 +21,8 @@
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LOGATTRIBUTE_H_
 
 #include <memory>
-
 #include <string>
-
 #include <utility>
-
 #include <vector>
 
 #include "FlowFileRecord.h"

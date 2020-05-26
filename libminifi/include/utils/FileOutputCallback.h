@@ -18,11 +18,8 @@
 #define LIBMINIFI_INCLUDE_UTILS_FILEOUTPUTCALLBACK_H_
 
 #include <memory>
-
 #include <string>
-
 #include <vector>
-
 #include <fstream>
 #include "concurrentqueue.h" // NOLINT
 #include "FlowFileRecord.h"

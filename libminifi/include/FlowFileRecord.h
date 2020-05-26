@@ -21,9 +21,7 @@
 #define LIBMINIFI_INCLUDE_FLOWFILERECORD_H_
 
 #include <memory>
-
 #include <string>
-
 #include <vector>
 #include <queue>
 #include <map>

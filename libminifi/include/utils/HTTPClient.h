@@ -19,11 +19,8 @@
 #define LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
 
 #include <map>
-
 #include <memory>
-
 #include <string>
-
 #include <vector>
 
 #include "ByteArrayCallback.h"

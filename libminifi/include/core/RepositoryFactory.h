@@ -20,7 +20,6 @@
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
 
 #include <memory>
-
 #include <string>
 
 #include "core/ContentRepository.h"

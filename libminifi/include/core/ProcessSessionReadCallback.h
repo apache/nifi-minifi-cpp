@@ -21,7 +21,6 @@
 #define LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONREADCALLBACK_H_
 
 #include <memory>
-
 #include <string>
 
 #include "core/logging/LoggerConfiguration.h"

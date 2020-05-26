@@ -21,7 +21,6 @@
 #define LIBMINIFI_INCLUDE_PROPERTIES_CONFIGURE_H_
 
 #include <string>
-
 #include <mutex>
 #include "properties/Properties.h"
 

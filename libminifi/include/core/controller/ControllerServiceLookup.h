@@ -19,9 +19,7 @@
 #define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICELOOKUP_H_
 
 #include <memory>
-
 #include <string>
-
 #include <map>
 #include "core/Core.h"
 #include "core/ConfigurableComponent.h"

@@ -19,13 +19,9 @@
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETTCP_H_
 
 #include <map>
-
 #include <memory>
-
 #include <string>
-
 #include <vector>
-
 #include <atomic>
 
 #include "../core/state/nodes/MetricsBase.h"

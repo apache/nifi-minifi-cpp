@@ -18,7 +18,6 @@
 #define LIBMINIFI_INCLUDE_UTILS_ID_H_
 
 #include <utility>
-
 #include <cstddef>
 #include <atomic>
 #include <memory>

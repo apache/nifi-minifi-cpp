@@ -19,7 +19,6 @@
 #define LIBMINIFI_INCLUDE_C2_HEARTBEATREPORTER_H_
 
 #include <memory>
-
 #include <string>
 
 #include "C2Protocol.h"

@@ -19,7 +19,6 @@
 #define LIBMINIFI_INCLUDE_CORE_RESOURCE_H_
 
 #include <memory>
-
 #include <string>
 
 #ifndef WIN32_LEAN_AND_MEAN

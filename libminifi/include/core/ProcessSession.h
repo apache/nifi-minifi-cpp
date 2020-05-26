@@ -19,9 +19,7 @@
 #define LIBMINIFI_INCLUDE_CORE_PROCESSSESSION_H_
 
 #include <memory>
-
 #include <string>
-
 #include <utility>
 #include <vector>
 #include <queue>

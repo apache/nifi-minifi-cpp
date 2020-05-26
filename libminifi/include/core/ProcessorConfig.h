@@ -18,7 +18,6 @@
 #define LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_
 
 #include <string>
-
 #include <vector>
 
 #include "core/Core.h"

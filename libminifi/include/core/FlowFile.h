@@ -19,11 +19,8 @@
 #define LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
 
 #include <map>
-
 #include <memory>
-
 #include <set>
-
 #include <string>
 
 #include "utils/TimeUtil.h"

@@ -21,7 +21,6 @@
 #define LIBMINIFI_INCLUDE_EVENTDRIVENSCHEDULINGAGENT_H_
 
 #include <memory>
-
 #include <string>
 
 #define DEFAULT_TIME_SLICE_MS 500

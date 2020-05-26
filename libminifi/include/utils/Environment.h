@@ -18,7 +18,6 @@
 #define LIBMINIFI_INCLUDE_UTILS_ENVIRONMENT_H_
 
 #include <utility>
-
 #include <functional>
 #include <string>
 

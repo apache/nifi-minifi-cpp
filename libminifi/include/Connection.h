@@ -21,11 +21,8 @@
 #define LIBMINIFI_INCLUDE_CONNECTION_H_
 
 #include <memory>
-
 #include <set>
-
 #include <string>
-
 #include <vector>
 #include <queue>
 #include <map>

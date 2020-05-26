@@ -20,11 +20,8 @@
 #define LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_
 
 #include <memory>
-
 #include <string>
-
 #include <utility>
-
 #include <vector>
 
 #include "core/state/Value.h"

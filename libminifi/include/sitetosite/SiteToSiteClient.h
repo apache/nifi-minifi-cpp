@@ -20,13 +20,9 @@
 #define LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITECLIENT_H_
 
 #include <map>
-
 #include <memory>
-
 #include <string>
-
 #include <utility>
-
 #include <vector>
 
 #include "Peer.h"

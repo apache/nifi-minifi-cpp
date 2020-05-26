@@ -21,9 +21,7 @@
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_ROUTEONATTRIBUTE_H_
 
 #include <map>
-
 #include <memory>
-
 #include <string>
 
 #include "FlowFileRecord.h"

@@ -19,7 +19,6 @@
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEFLOWFILEREPOSITORY_H_
 
 #include <memory>
-
 #include <string>
 
 #include "VolatileRepository.h"

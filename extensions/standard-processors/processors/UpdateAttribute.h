@@ -21,9 +21,7 @@
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_UPDATEATTRIBUTE_H_
 
 #include <memory>
-
 #include <string>
-
 #include <vector>
 
 #include "FlowFileRecord.h"

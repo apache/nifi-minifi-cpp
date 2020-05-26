@@ -19,9 +19,7 @@
 #define LIBMINIFI_INCLUDE_CORE_CONTENTREPOSITORY_H_
 
 #include <map>
-
 #include <memory>
-
 #include <string>
 
 #include "properties/Configure.h"

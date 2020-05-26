@@ -19,11 +19,8 @@
 #define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICE_H_
 
 #include <memory>
-
 #include <string>
-
 #include <vector>
-
 #include <set>
 #include "properties/Configure.h"
 #include "core/Core.h"

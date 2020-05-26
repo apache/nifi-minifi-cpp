@@ -21,7 +21,6 @@
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_
 
 #include <memory>
-
 #include <string>
 
 #include "core/Property.h"

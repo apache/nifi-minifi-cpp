@@ -19,11 +19,8 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_UPDATECONTROLLER_H_
 
 #include <memory>
-
 #include <utility>
-
 #include <vector>
-
 #include <string>
 #include "utils/ThreadPool.h"
 #include "utils/BackTrace.h"

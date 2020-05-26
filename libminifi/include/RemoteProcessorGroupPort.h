@@ -21,11 +21,8 @@
 #define LIBMINIFI_INCLUDE_REMOTEPROCESSORGROUPPORT_H_
 
 #include <string>
-
 #include <utility>
-
 #include <vector>
-
 #include <mutex>
 #include <memory>
 #include <stack>

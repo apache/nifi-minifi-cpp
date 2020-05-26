@@ -19,7 +19,6 @@
 #define LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICENODE_H_
 
 #include <memory>
-
 #include <string>
 
 #include "core/Core.h"

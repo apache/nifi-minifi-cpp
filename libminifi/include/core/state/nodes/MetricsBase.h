@@ -19,7 +19,6 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_
 
 #include <utility>
-
 #include <vector>
 #include <memory>
 #include <string>

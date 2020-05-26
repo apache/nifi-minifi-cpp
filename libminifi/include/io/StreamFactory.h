@@ -18,9 +18,7 @@
 #define LIBMINIFI_INCLUDE_IO_STREAMFACTORY_H_
 
 #include <memory>
-
 #include <string>
-
 #include <utility>
 
 #include "properties/Configure.h"

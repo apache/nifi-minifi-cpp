@@ -21,9 +21,7 @@
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_
 
 #include <memory>
-
 #include <utility>
-
 #include <atomic>
 #include <cstdint>
 #include <cstring>

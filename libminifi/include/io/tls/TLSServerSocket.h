@@ -19,9 +19,7 @@
 #define LIBMINIFI_INCLUDE_IO_TLS_TLSSERVERSOCKET_H_
 
 #include <memory>
-
 #include <string>
-
 #include <vector>
 
 #include "TLSSocket.h"

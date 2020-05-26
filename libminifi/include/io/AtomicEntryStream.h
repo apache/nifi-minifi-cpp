@@ -19,9 +19,7 @@
 #define LIBMINIFI_INCLUDE_IO_ATOMICENTRYSTREAM_H_
 
 #include <memory>
-
 #include <vector>
-
 #include <mutex>
 #include <cstring>
 #include <algorithm>

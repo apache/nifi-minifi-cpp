@@ -18,9 +18,7 @@
 #define LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_
 
 #include <memory>
-
 #include <string>
-
 #include <vector>
 
 #include "concurrentqueue.h" // NOLINT

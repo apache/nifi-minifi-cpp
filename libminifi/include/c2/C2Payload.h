@@ -19,7 +19,6 @@
 #define LIBMINIFI_INCLUDE_C2_C2PAYLOAD_H_
 
 #include <vector>
-
 #include <memory>
 #include <utility>
 #include <string>

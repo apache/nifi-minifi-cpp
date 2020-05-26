@@ -20,7 +20,6 @@
 #define LIBMINIFI_INCLUDE_IO_BASESTREAM_H_
 
 #include <string>
-
 #include <vector>
 #include <iostream>
 #include <cstdint>

@@ -19,7 +19,6 @@
 #define LIBMINIFI_INCLUDE_CORE_SERIALIZABLECOMPONENT_H_
 
 #include <memory>
-
 #include <string>
 
 #include "io/Serializable.h"

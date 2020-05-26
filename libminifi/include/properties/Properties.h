@@ -21,9 +21,7 @@
 #define LIBMINIFI_INCLUDE_PROPERTIES_PROPERTIES_H_
 
 #include <memory>
-
 #include <vector>
-
 #include <string>
 #include <map>
 #include "core/logging/Logger.h"

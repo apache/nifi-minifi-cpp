@@ -19,9 +19,7 @@
 #define LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
 
 #include <memory>
-
 #include <string>
-
 #include <vector>
 
 #include "core/Core.h"

@@ -19,9 +19,7 @@
 #define LIBMINIFI_INCLUDE_IO_DESCRIPTORSTREAM_H_
 
 #include <memory>
-
 #include <vector>
-
 #include <iostream>
 #include <cstdint>
 #include <string>

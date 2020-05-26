@@ -18,11 +18,8 @@
 #define LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_
 
 #include <memory>
-
 #include <string>
-
 #include <utility>
-
 #include <chrono>
 #include <sstream>
 #include <iostream>

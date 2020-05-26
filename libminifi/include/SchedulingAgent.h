@@ -21,9 +21,7 @@
 #define LIBMINIFI_INCLUDE_SCHEDULINGAGENT_H_
 
 #include <memory>
-
 #include <string>
-
 #include <set>
 #include <vector>
 #include <map>

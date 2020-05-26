@@ -19,7 +19,6 @@
 #define LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGER_H_
 
 #include <string>
-
 #include <mutex>
 #include <memory>
 #include <sstream>
