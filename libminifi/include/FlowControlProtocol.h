@@ -264,8 +264,8 @@ class FlowControlProtocol {
   bool running_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_FLOWCONTROLPROTOCOL_H_

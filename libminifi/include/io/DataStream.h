@@ -123,9 +123,9 @@ class DataStream {
   int doReadData(uint8_t *buf, int buflen) noexcept;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_IO_DATASTREAM_H_

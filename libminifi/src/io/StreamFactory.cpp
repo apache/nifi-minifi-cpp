@@ -91,8 +91,8 @@ StreamFactory::StreamFactory(const std::shared_ptr<Configure> &configure) {
     delegate_ = std::make_shared<SocketCreator<Socket, SocketContext>>(configure);
   }
 }
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

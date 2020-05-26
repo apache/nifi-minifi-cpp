@@ -100,11 +100,11 @@ class SerializableComponent : public core::Connectable, public minifi::io::Seria
   }
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_SERIALIZABLECOMPONENT_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_SERIALIZABLECOMPONENT_H_
 

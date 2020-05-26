@@ -128,9 +128,9 @@ REGISTER_RESOURCE(ExecuteProcess, "Runs an operating system command specified by
                   "as it typically does not make sense to split binary data on arbitrary time-based intervals.");
 #endif
 }  // namespace processors
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_

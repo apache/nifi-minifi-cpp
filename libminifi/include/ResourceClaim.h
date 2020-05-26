@@ -122,8 +122,8 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   static utils::NonRepeatingStringGenerator non_repeating_string_generator_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_RESOURCECLAIM_H_

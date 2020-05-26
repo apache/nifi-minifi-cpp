@@ -69,10 +69,10 @@ class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from
   bool deserialize(const std::string& serialized, std::unordered_map<std::string, std::string>& kvs);
 };
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controllers
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_ABSTRACTCORECOMPONENTSTATEMANAGERPROVIDER_H_

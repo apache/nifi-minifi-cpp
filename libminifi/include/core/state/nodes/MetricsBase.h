@@ -247,10 +247,10 @@ class ResponseNodeSink {
 };
 
 }  // namespace response
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_

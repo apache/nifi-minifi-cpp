@@ -69,11 +69,11 @@ class DiffUtils {
   }
 };
 
-} /* namespace file */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace file
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_FILE_DIFFUTILS_H_

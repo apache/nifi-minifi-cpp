@@ -198,9 +198,9 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   static std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_FLOWFILERECORD_H_

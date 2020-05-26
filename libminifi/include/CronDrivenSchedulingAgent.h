@@ -72,8 +72,8 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   CronDrivenSchedulingAgent &operator=(const CronDrivenSchedulingAgent &parent);
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_

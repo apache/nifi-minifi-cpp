@@ -75,9 +75,9 @@ class C2Trigger : public core::Connectable{
 };
 
 }  // namespace c2
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_C2_C2TRIGGER_H_

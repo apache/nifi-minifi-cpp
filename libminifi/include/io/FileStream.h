@@ -134,10 +134,10 @@ class FileStream : public io::BaseStream {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_IO_FILESTREAM_H_

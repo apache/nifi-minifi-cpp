@@ -165,9 +165,9 @@ class ProcessSession : public ReferenceContainer {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_CORE_PROCESSSESSION_H_

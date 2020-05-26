@@ -67,10 +67,10 @@ class AbstractAutoPersistingKeyValueStoreService : public PersistableKeyValueSto
   void stopPersistingThread();
 };
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controllers
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_ABSTRACTAUTOPERSISTINGKEYVALUESTORESERVICE_H_

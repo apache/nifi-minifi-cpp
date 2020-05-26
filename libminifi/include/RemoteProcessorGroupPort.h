@@ -243,8 +243,8 @@ class RemoteProcessorGroupPort : public core::Processor {
   static const char* RPG_SSL_CONTEXT_SERVICE_NAME;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_REMOTEPROCESSORGROUPPORT_H_

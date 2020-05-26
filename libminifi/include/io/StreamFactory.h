@@ -96,10 +96,10 @@ class StreamFactory {
   std::shared_ptr<AbstractStreamFactory> delegate_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_IO_STREAMFACTORY_H_

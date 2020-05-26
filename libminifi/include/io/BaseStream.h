@@ -199,9 +199,9 @@ class BaseStream : public DataStream, public Serializable {
   DataStream *composable_stream_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_BASESTREAM_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_BASESTREAM_H_

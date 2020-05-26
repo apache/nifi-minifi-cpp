@@ -316,10 +316,10 @@ class PayloadSerializer {
   virtual ~PayloadSerializer();
 };
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_

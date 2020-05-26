@@ -91,8 +91,8 @@ ProcessSessionReadCallback::~ProcessSessionReadCallback() {
   unlink(_tmpFile.c_str());
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

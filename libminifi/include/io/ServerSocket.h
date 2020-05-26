@@ -72,9 +72,9 @@ class ServerSocket : public BaseServerSocket, public Socket {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_

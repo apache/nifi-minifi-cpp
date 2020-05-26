@@ -110,10 +110,10 @@ HashContent::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile
     parent_(parent)
   {}
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // OPENSSL_SUPPORT

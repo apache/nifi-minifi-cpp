@@ -194,9 +194,9 @@ class Connectable : public CoreComponent {
 
 }  // namespace core
 /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_

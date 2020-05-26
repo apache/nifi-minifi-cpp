@@ -69,8 +69,8 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   std::chrono::milliseconds time_slice_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_EVENTDRIVENSCHEDULINGAGENT_H_

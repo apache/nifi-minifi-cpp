@@ -177,11 +177,11 @@ class LoggerFactory {
   }
 };
 
-} /* namespace logging */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace logging
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGERCONFIGURATION_H_

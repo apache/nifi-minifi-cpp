@@ -92,10 +92,10 @@ cat <<EOF >> "$out_dir/agent_version.h"
   }
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
 EOF

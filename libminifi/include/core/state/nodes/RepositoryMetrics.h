@@ -95,10 +95,10 @@ class RepositoryMetrics : public ResponseNode {
 };
 
 }  // namespace response
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_

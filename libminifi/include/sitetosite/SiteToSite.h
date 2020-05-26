@@ -406,10 +406,10 @@ class SiteToSiteClientConfiguration {
 #pragma GCC diagnostic pop
 #endif
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace sitetosite
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITE_H_

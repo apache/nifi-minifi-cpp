@@ -284,10 +284,10 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 REGISTER_RESOURCE(GetTCP, "Establishes a TCP Server that defines and retrieves one or more byte messages from clients");
 
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETTCP_H_

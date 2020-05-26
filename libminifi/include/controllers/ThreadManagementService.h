@@ -117,10 +117,10 @@ class ThreadManagementService : public core::controller::ControllerService {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controllers
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_

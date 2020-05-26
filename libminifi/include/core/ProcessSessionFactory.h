@@ -55,9 +55,9 @@ class ProcessSessionFactory {
   std::shared_ptr<ProcessContext> process_context_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONFACTORY_H_

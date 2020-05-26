@@ -93,10 +93,10 @@ class VariableRegistry {
   std::shared_ptr<minifi::Configure> configuration_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_VARIABLEREGISTRY_H_

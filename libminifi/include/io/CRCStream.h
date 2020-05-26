@@ -324,9 +324,9 @@ int CRCStream<T>::read(uint16_t &value, bool is_little_endian) {
   return sizeof(value);
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_IO_CRCSTREAM_H_

@@ -118,10 +118,10 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
   std::map<std::string, uint32_t> count_map_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONTENTREPOSITORY_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CONTENTREPOSITORY_H_

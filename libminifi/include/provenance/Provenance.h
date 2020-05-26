@@ -542,10 +542,10 @@ class ProvenanceReporter {
 
 // Provenance Repository
 
-} /* namespace provenance */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace provenance
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_

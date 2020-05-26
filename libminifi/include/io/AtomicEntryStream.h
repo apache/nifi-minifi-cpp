@@ -197,10 +197,10 @@ int AtomicEntryStream<T>::readData(uint8_t *buf, int buflen) {
   return -1;
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_IO_ATOMICENTRYSTREAM_H_

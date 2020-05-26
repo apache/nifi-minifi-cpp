@@ -100,9 +100,9 @@ class GenerateFlowFile : public core::Processor {
 
 REGISTER_RESOURCE(GenerateFlowFile, "This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GENERATEFLOWFILE_H_

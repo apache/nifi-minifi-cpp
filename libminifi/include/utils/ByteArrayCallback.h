@@ -158,10 +158,10 @@ class StreamOutputCallback : public ByteOutputCallback {
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_

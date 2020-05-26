@@ -71,11 +71,11 @@ class ProcessorController : public StateController {
   std::shared_ptr<SchedulingAgent> scheduler_;
 };
 
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_PROCESSORCONTROLLER_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_PROCESSORCONTROLLER_H_
 

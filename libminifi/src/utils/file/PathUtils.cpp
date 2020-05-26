@@ -84,10 +84,10 @@ std::string PathUtils::getFullPath(const std::string& path) {
 #endif
 }
 
-} /* namespace file */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace file
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 

@@ -219,8 +219,8 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   Connection(const Connection &parent);
   Connection &operator=(const Connection &parent);
 };
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_CONNECTION_H_

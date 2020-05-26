@@ -68,10 +68,10 @@ class FileOutputCallback : public ByteOutputCallback {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_FILEOUTPUTCALLBACK_H_

@@ -40,9 +40,9 @@ class EndiannessCheck {
   }
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_ENDIANCHECK_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_ENDIANCHECK_H_

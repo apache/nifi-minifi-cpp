@@ -102,9 +102,9 @@ class ZlibDecompressStream : public ZlibBaseStream {
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ZlibDecompressStream>::getLogger()};
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif /* LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_ */

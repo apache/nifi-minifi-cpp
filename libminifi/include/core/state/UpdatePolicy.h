@@ -134,10 +134,10 @@ class UpdatePolicyBuilder {
   std::shared_ptr<UpdatePolicy> current_policy_;
 };
 
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_UPDATEPOLICY_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_STATE_UPDATEPOLICY_H_

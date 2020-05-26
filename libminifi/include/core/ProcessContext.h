@@ -346,9 +346,9 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   bool initialized_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_

@@ -230,10 +230,10 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const 
   }
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_

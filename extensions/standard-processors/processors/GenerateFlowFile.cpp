@@ -139,8 +139,8 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
   }
 }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

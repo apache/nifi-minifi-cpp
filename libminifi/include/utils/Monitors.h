@@ -163,10 +163,10 @@ class ComplexMonitor : public utils::AfterExecute<TaskRescheduleInfo> {
   std::atomic<std::chrono::milliseconds> current_wait_ {std::chrono::milliseconds(0)};
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_MONITORS_H_

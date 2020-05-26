@@ -102,10 +102,10 @@ static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConf
   return nullptr;
 }
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace sitetosite
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITEFACTORY_H_ */
+#endif  // LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITEFACTORY_H_

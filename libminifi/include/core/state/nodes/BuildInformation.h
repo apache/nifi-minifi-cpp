@@ -131,10 +131,10 @@ class BuildInformation : public DeviceInformation {
 REGISTER_RESOURCE(BuildInformation, "Node part of an AST that defines the pertinent build information for this agent binary");
 
 }  // namespace response
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_BUILDINFORMATION_H_

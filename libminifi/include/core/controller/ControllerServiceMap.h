@@ -117,11 +117,11 @@ class ControllerServiceMap {
   std::map<std::string, std::shared_ptr<ControllerServiceNode>> controller_services_;
 };
 
-} /* namespace controller */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controller
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEMAP_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEMAP_H_

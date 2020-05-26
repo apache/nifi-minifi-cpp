@@ -30,11 +30,11 @@ namespace tls {
 
 int pemPassWordCb(char *buf, int size, int rwflag, void *userdata);
 
-} /* namespace tls */
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace tls
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_IO_TLS_TLSUTILS_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_TLS_TLSUTILS_H_

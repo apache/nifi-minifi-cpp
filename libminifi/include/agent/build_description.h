@@ -161,9 +161,9 @@ class BuildDescription {
   }
 }; // NOLINT
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_

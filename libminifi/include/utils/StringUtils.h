@@ -525,7 +525,7 @@ class StringUtils {
        0x31, 0x32, 0x33, ILGL, ILGL, ILGL, ILGL, ILGL};
 };
 
-} /* namespace utils */
+}  // namespace utils
 
 namespace core {
 enum TimeUnit {
@@ -538,9 +538,9 @@ enum TimeUnit {
 };
 
 }  // namespace core
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_

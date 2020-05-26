@@ -697,11 +697,11 @@ class FileUtils {
 #endif /* WIN32 */
 }; // NOLINT
 
-} /* namespace file */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace file
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_

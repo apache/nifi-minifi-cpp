@@ -83,9 +83,9 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
   std::shared_ptr<core::ContentRepository> content_repo_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXTBUILDER_H_

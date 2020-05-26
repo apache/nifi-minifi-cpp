@@ -333,10 +333,10 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   static std::shared_ptr<utils::NonRepeatingStringGenerator> numeric_id_generator_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_

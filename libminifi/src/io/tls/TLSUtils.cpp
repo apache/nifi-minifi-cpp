@@ -50,9 +50,9 @@ int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
   return -1;
 }
 
-} /* namespace tls */
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace tls
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

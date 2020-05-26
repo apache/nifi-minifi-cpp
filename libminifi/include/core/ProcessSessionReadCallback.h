@@ -47,9 +47,9 @@ class ProcessSessionReadCallback : public InputStreamCallback {
   std::string _tmpFile;
   std::string _destFile;
 };
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONREADCALLBACK_H_

@@ -128,8 +128,8 @@ void KafkaConnection::logCallback(const rd_kafka_t* rk, int level, const char* /
   }
 }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

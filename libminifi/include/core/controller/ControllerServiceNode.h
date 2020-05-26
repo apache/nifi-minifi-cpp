@@ -129,11 +129,11 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
   std::vector<std::shared_ptr<ConfigurableComponent> > linked_components_;
 };
 
-} /* namespace controller */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controller
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_

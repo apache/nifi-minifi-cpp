@@ -216,10 +216,10 @@ inline std::string conditional_conversion(const PropertyValue &v) {
   return v.getValue()->getStringValue();
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_

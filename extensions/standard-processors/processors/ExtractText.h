@@ -92,10 +92,10 @@ class ExtractText : public core::Processor {
 
 REGISTER_RESOURCE(ExtractText, "Extracts the content of a FlowFile and places it into an attribute.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXTRACTTEXT_H_

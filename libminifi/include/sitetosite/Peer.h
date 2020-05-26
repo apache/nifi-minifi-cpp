@@ -386,10 +386,10 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace sitetosite
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_

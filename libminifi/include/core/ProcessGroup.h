@@ -278,9 +278,9 @@ class ProcessGroup {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   std::unique_ptr<utils::CallBackTimer> onScheduleTimer_;
 };
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_CORE_PROCESSGROUP_H_

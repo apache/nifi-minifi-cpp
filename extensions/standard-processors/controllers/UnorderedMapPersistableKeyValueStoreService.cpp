@@ -254,8 +254,8 @@ bool UnorderedMapPersistableKeyValueStoreService::load() {
   return true;
 }
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controllers
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

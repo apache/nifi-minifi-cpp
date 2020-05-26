@@ -135,10 +135,10 @@ class LogAttribute : public core::Processor {
 
 REGISTER_RESOURCE(LogAttribute, "Logs attributes of flow files in the MiNiFi application log.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LOGATTRIBUTE_H_

@@ -491,11 +491,11 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   }
 }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #if defined(__clang__)
 #pragma clang diagnostic pop

@@ -421,8 +421,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 };
 
 }  // namespace minifi
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_

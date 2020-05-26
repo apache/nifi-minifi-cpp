@@ -109,9 +109,9 @@ class C2Protocol : public core::Connectable {
 };
 
 }  // namespace c2
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_C2_C2PROTOCOL_H_

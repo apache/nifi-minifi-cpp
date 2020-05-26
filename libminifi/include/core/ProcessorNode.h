@@ -298,10 +298,10 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   std::shared_ptr<Connectable> processor_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_PROCESSORNODE_H_

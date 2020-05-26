@@ -192,9 +192,9 @@ class C2Payload : public state::Update {
 };
 
 }  // namespace c2
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_C2_C2PAYLOAD_H_

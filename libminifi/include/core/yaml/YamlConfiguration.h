@@ -340,10 +340,10 @@ class YamlConfiguration : public FlowConfiguration {
   void raiseComponentError(const std::string &component_name, const std::string &yaml_section, const std::string &reason) const;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_

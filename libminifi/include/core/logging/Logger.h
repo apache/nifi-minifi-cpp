@@ -209,11 +209,11 @@ class Logger : public BaseLogger {
 
 #define LOG_WARN(x) LogBuilder(x.get(), logging::LOG_LEVEL::warn)
 
-} /* namespace logging */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace logging
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGER_H_

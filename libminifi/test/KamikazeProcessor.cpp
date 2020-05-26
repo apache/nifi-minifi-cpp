@@ -77,8 +77,8 @@ void KamikazeProcessor::onUnSchedule() {
   logger_->log_error("%s", OnUnScheduleLogStr);
 }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

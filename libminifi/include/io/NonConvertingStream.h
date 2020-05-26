@@ -192,9 +192,9 @@ class NonConvertingStream : public BaseStream  {
   DataStream *composable_stream_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_NONCONVERTINGSTREAM_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_NONCONVERTINGSTREAM_H_

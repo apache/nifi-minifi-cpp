@@ -73,9 +73,9 @@ class TLSServerSocket : public BaseServerSocket, public TLSSocket {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_TLS_TLSSERVERSOCKET_H_ */
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+#endif  // LIBMINIFI_INCLUDE_IO_TLS_TLSSERVERSOCKET_H_

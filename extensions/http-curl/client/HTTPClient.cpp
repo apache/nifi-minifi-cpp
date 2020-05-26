@@ -417,8 +417,8 @@ void HTTPClient::setInterface(const std::string &ifc) {
   curl_easy_setopt(http_session_, CURLOPT_INTERFACE, ifc.c_str());
 }
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

@@ -43,10 +43,10 @@ class TraceableResource {
   virtual BackTrace getTraces() = 0;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
-#endif /* LIBMINIFI_INCLUDE_CORE_TRACEABLERESOURCE_H_ */
+#endif  // LIBMINIFI_INCLUDE_CORE_TRACEABLERESOURCE_H_

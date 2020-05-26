@@ -972,8 +972,8 @@ bool ProcessSession::outgoingConnectionsFull(const std::string& relationship) {
   return false;
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

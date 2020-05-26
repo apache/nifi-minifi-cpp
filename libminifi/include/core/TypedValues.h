@@ -229,10 +229,10 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
   }
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_

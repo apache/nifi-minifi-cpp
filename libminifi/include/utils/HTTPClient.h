@@ -372,10 +372,10 @@ extern std::string get_token(utils::BaseHTTPClient *client, std::string username
 
 extern void parse_url(const std::string *url, std::string *host, int *port, std::string *protocol);
 extern void parse_url(const std::string *url, std::string *host, int *port, std::string *protocol, std::string *path, std::string *query);
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_

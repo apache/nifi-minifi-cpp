@@ -78,8 +78,8 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   std::set<std::string> processors_running_;  // Set just for easy usage
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 #endif  // LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_

@@ -246,9 +246,9 @@ class C2Agent : public state::UpdateController {
 };
 
 }  // namespace c2
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_C2_C2AGENT_H_

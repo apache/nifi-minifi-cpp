@@ -196,9 +196,9 @@ bool VolatileContentRepository::remove(const std::shared_ptr<minifi::ResourceCla
   return false;
 }
 
-} /* namespace repository */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace repository
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
