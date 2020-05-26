@@ -154,8 +154,7 @@ std::shared_ptr<python::PythonScriptEngine> ExecutePythonProcessor::getScriptEng
     return engine;
   }
   engine = createEngine<python::PythonScriptEngine>();
-  logger_->log_info("Created new [%p] script instance", engine.get());
-  logger_->log_info("Approximately %d script instances created for this processor", script_engine_q_.size_approx());
+  logger_->log_info("Created new [%p] script engine instance. Number of instances: approx. %d / %d.", engine.get(), script_engine_q_.size_approx(), getMaxConcurrentTasks());
   if (engine == nullptr) {
     throw std::runtime_error("No script engine available");
   }
