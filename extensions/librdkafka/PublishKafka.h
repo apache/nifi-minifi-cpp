@@ -79,36 +79,36 @@ class PublishKafka : public core::Processor {
   static constexpr char const* ProcessorName = "PublishKafka";
 
   // Supported Properties
-  static core::Property SeedBrokers;
-  static core::Property Topic;
-  static core::Property DeliveryGuarantee;
-  static core::Property MaxMessageSize;
-  static core::Property RequestTimeOut;
-  static core::Property MessageTimeOut;
-  static core::Property ClientName;
-  static core::Property BatchSize;
-  static core::Property TargetBatchPayloadSize;
-  static core::Property AttributeNameRegex;
+  static const core::Property SeedBrokers;
+  static const core::Property Topic;
+  static const core::Property DeliveryGuarantee;
+  static const core::Property MaxMessageSize;
+  static const core::Property RequestTimeOut;
+  static const core::Property MessageTimeOut;
+  static const core::Property ClientName;
+  static const core::Property BatchSize;
+  static const core::Property TargetBatchPayloadSize;
+  static const core::Property AttributeNameRegex;
   static const core::Property QueueBufferMaxTime;
   static const core::Property QueueBufferMaxSize;
   static const core::Property QueueBufferMaxMessage;
   static const core::Property CompressCodec;
-  static core::Property MaxFlowSegSize;
-  static core::Property SecurityProtocol;
-  static core::Property SecurityCA;
-  static core::Property SecurityCert;
-  static core::Property SecurityPrivateKey;
-  static core::Property SecurityPrivateKeyPassWord;
-  static core::Property KerberosServiceName;
-  static core::Property KerberosPrincipal;
-  static core::Property KerberosKeytabPath;
-  static core::Property MessageKeyField;
-  static core::Property DebugContexts;
+  static const core::Property MaxFlowSegSize;
+  static const core::Property SecurityProtocol;
+  static const core::Property SecurityCA;
+  static const core::Property SecurityCert;
+  static const core::Property SecurityPrivateKey;
+  static const core::Property SecurityPrivateKeyPassWord;
+  static const core::Property KerberosServiceName;
+  static const core::Property KerberosPrincipal;
+  static const core::Property KerberosKeytabPath;
+  static const core::Property MessageKeyField;
+  static const core::Property DebugContexts;
   static const core::Property FailEmptyFlowFiles;
 
   // Supported Relationships
-  static core::Relationship Failure;
-  static core::Relationship Success;
+  static const core::Relationship Failure;
+  static const core::Relationship Success;
 
   // Message
   enum class MessageStatus : uint8_t {
