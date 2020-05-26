@@ -36,8 +36,7 @@ namespace core {
  */
 class SerializableComponent : public core::Connectable, public minifi::io::Serializable {
  public:
-
-  explicit SerializableComponent(const std::string name) // NOLINT
+  SerializableComponent(const std::string name) // NOLINT
         : core::Connectable(name) {
     }
 

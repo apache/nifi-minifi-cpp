@@ -56,7 +56,6 @@ class ProcessSession : public ReferenceContainer {
         logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
     logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());
     auto repo = process_context_->getProvenanceRepository();
-    // provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
     provenance_report_ = std::make_shared<provenance::ProvenanceReporter>(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
   }
 

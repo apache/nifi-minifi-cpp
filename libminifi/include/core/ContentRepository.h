@@ -106,7 +106,7 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
     if (count != count_map_.end() && count->second > 0) {
       count_map_[str] = count->second - 1;
     } else {
-  count_map_.erase(str);
+      count_map_.erase(str);
     }
   }
 

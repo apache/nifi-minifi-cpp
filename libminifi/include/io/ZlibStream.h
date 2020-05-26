@@ -107,4 +107,4 @@ class ZlibDecompressStream : public ZlibBaseStream {
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-#endif /* LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_ */
+#endif  // LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_

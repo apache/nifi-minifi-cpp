@@ -18,7 +18,6 @@
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
 
-#include <string>
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
@@ -31,6 +30,7 @@
 #endif
 #include <iostream>
 #include <memory>
+#include <string>
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "io/validation.h"

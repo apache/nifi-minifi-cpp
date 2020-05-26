@@ -207,7 +207,8 @@ class ListenSyslog : public core::Processor {
   int64_t _maxBatchSize;
   std::string _messageDelimiter;
   std::string _protocol;
-  int64_t _port; bool _parseMessages;
+  int64_t _port;
+  bool _parseMessages;
   int _serverSocket;
   std::vector<int> _clientSockets;
   int _maxFds;

@@ -215,7 +215,8 @@ typedef enum {
 // Respond Code Class
 typedef struct {
   RespondCode code;
-  const char *description; bool hasDescription;
+  const char *description;
+  bool hasDescription;
 } RespondCodeContext;
 
 

@@ -287,7 +287,7 @@ class PortValidator : public LongValidator {
 // Use only for specifying listen ports, where 0 means a randomly chosen one!
 class ListenPortValidator : public LongValidator {
  public:
-  ListenPortValidator(const std::string &name)
+  ListenPortValidator(const std::string &name) // NOLINT
     : LongValidator(name, 0, 65535) {
   }
   ~ListenPortValidator() override = default;
