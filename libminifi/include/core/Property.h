@@ -22,8 +22,14 @@
 #include <stdlib.h>
 
 #include <algorithm>
-#include <atomic>
-#include <functional>
+#include "core/Core.h"
+#include "PropertyValidation.h"
+#include "CachedValueValidator.h"
+#include <sstream>
+#include <typeindex>
+#include <string>
+#include <vector>
+#include <queue>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -53,6 +59,9 @@ class Property {
  public:
   /*!
    * Create a new property
+   * Pay special attention to when value is "true" or "false"
+   * as they will get coerced to the bool true and false, causing
+   * further overwrites to inherit the bool validator.
    */
   Property(std::string name, std::string description, std::string value, bool is_required, std::string valid_regex, std::vector<std::string> dependent_properties,
            std::vector<std::pair<std::string, std::string>> exclusive_of_properties)
@@ -130,41 +139,32 @@ class Property {
 
   template<typename T = std::string>
   void setValue(const T &value) {
-    PropertyValue vn = default_value_;
-    vn = value;
-    if (validator_) {
-      vn.setValidator(validator_);
-      ValidationResult result = validator_->validate(name_, vn.getValue());
-      if (!result.valid()) {
-        // throw some exception?
-      }
-    } else {
-      vn.setValidator(core::StandardValidators::VALID);
-    }
     if (!is_collection_) {
       values_.clear();
-      values_.push_back(vn);
+      values_.push_back(default_value_);
     } else {
-      values_.push_back(vn);
+      values_.push_back(default_value_);
     }
+    PropertyValue& vn = values_.back();
+    vn.setValidator(validator_ ? validator_ : core::StandardValidators::VALID);
+    vn = value;
+    ValidationResult result = vn.validate(name_);
+    if(!result.valid())
+      throw utils::InvalidValueException(name_ + " value validation failed");
   }
 
-  void setValue(PropertyValue &vn) {
-    if (validator_) {
-      vn.setValidator(validator_);
-      ValidationResult result = validator_->validate(name_, vn.getValue());
-      if (!result.valid()) {
-        // throw some exception?
-      }
-    } else {
-      vn.setValidator(core::StandardValidators::VALID);
-    }
+  void setValue(PropertyValue &newValue) {
     if (!is_collection_) {
       values_.clear();
-      values_.push_back(vn);
+      values_.push_back(newValue);
     } else {
-      values_.push_back(vn);
+      values_.push_back(newValue);
     }
+    PropertyValue& vn = values_.back();
+    vn.setValidator(validator_ ? validator_ : core::StandardValidators::VALID);
+    ValidationResult result = vn.validate(name_);
+    if (!result.valid())
+      throw utils::InvalidValueException(name_ + " value validation failed");
   }
   void setSupportsExpressionLanguage(bool supportEl);
 

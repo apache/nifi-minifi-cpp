@@ -18,8 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
 #define LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
 
-#include <memory>
-#include <string>
+#include "state/Value.h"
+#include "PropertyValidation.h"
+#include "CachedValueValidator.h"
 #include <typeindex>
 
 #include "PropertyValidation.h"
@@ -75,63 +76,74 @@ class PropertyValue : public state::response::ValueNode {
   }
 
   std::shared_ptr<PropertyValidator> getValidator() const {
-    return validator_;
+    return *validator_;
   }
 
   ValidationResult validate(const std::string &subject) const {
-    if (validator_) {
-      return validator_->validate(subject, getValue());
-    } else {
+    auto cachedResult = validator_.isValid();
+    if(cachedResult == CachedValueValidator::Result::SUCCESS){
       return ValidationResult::Builder::createBuilder().isValid(true).build();
     }
+    if(cachedResult == CachedValueValidator::Result::FAILURE){
+      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(getValue()->getStringValue()).isValid(false).build();
+    }
+    auto result = validator_->validate(subject, getValue());
+    validator_.setValidationResult(result.valid());
+    return result;
   }
 
   operator uint64_t() const {
+    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
     uint64_t res;
     if (value_->convertValue(res)) {
       return res;
     }
-    throw std::runtime_error("Invalid conversion to uint64_t for" + value_->getStringValue());
+    throw utils::ConversionException("Invalid conversion to uint64_t for" + value_->getStringValue());
   }
 
   operator int64_t() const {
+    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
     int64_t res;
     if (value_->convertValue(res)) {
       return res;
     }
-    throw std::runtime_error("Invalid conversion to int64_t");
+    throw utils::ConversionException("Invalid conversion to int64_t");
   }
 
   operator uint32_t() const {
+    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
     uint32_t res;
     if (value_->convertValue(res)) {
       return res;
     }
-    throw std::runtime_error("Invalid conversion to uint32_t for" + value_->getStringValue());
+    throw utils::ConversionException("Invalid conversion to uint32_t for" + value_->getStringValue());
   }
 
   operator int() const {
+    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
     int res;
     if (value_->convertValue(res)) {
       return res;
     }
-    throw std::runtime_error("Invalid conversion to int ");
+    throw utils::ConversionException("Invalid conversion to int ");
   }
 
   operator bool() const {
+    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
     bool res;
     if (value_->convertValue(res)) {
       return res;
     }
-    throw std::runtime_error("Invalid conversion to bool");
+    throw utils::ConversionException("Invalid conversion to bool");
+  }
+
+  operator std::string() const {
+    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
+    return to_string();
   }
 
   PropertyValue &operator=(PropertyValue &&o) = default;
   PropertyValue &operator=(const PropertyValue &o) = default;
-
-  operator std::string() const {
-    return to_string();
-  }
 
   std::type_index getTypeInfo() const {
     return type_id;
@@ -141,26 +153,29 @@ class PropertyValue : public state::response::ValueNode {
    * createValue
    */
   template<typename T>
-  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string>::value, PropertyValue&>::type {
-    if (value_ == nullptr) {
-      type_id = std::type_index(typeid(T));
-      value_ = minifi::state::response::createValue(ref);
-    } else {
-      type_id = std::type_index(typeid(T));
-      auto ret = convert(value_, ref);
-      if (ret != nullptr) {
-        value_ = ret;
+  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string>::value,PropertyValue&>::type {
+    validator_.clearValidationResult();
+    return WithAssignmentGuard(ref, [&] () -> PropertyValue& {
+      if (value_ == nullptr) {
+        type_id = std::type_index(typeid(T));
+        value_ = minifi::state::response::createValue(ref);
       } else {
-        /**
-         * This is a protection mechanism that allows us to fail properties that are strictly defined.
-         * To maintain backwards compatibility we allow strings to be set by way of the internal API
-         * We then rely on the developer of the processor to perform the conversion. We want to get away from
-         * this, so this exception will throw an exception, forcefully, when they specify types in properties.
-         */
-        throw std::runtime_error("Invalid conversion");
+        type_id = std::type_index(typeid(T));
+        auto ret = convert(value_, ref);
+        if (ret != nullptr) {
+          value_ = ret;
+        } else {
+          /**
+           * This is a protection mechanism that allows us to fail properties that are strictly defined.
+           * To maintain backwards compatibility we allow strings to be set by way of the internal API
+           * We then rely on the developer of the processor to perform the conversion. We want to get away from
+           * this, so this exception will throw an exception, forcefully, when they specify types in properties.
+           */
+          throw utils::ConversionException("Invalid conversion");
+        }
       }
-    }
-    return *this;
+      return *this;
+    });
   }
 
   template<typename T>
@@ -168,7 +183,8 @@ class PropertyValue : public state::response::ValueNode {
   std::is_same<T, uint32_t >::value ||
   std::is_same<T, uint64_t >::value ||
   std::is_same<T, int64_t >::value ||
-  std::is_same<T, bool >::value, PropertyValue&>::type {
+  std::is_same<T, bool >::value,PropertyValue&>::type {
+    validator_.clearValidationResult();
     if (value_ == nullptr) {
       type_id = std::type_index(typeid(T));
       value_ = minifi::state::response::createValue(ref);
@@ -184,7 +200,7 @@ class PropertyValue : public state::response::ValueNode {
       } else {
         // this is not the place to perform translation. There are other places within
         // the code where we can do assignments and transformations from "10" to (int)10;
-        throw std::runtime_error("Assigning invalid types");
+        throw utils::ConversionException("Assigning invalid types");
       }
     }
     return *this;
@@ -201,15 +217,40 @@ class PropertyValue : public state::response::ValueNode {
   template<typename T>
   auto operator=(const std::string &ref) -> typename std::enable_if<
   std::is_same<T, DataSizeValue >::value ||
-  std::is_same<T, TimePeriodValue >::value, PropertyValue&>::type {
-    value_ = std::make_shared<T>(ref);
-    type_id = value_->getTypeIndex();
-    return *this;
+  std::is_same<T, TimePeriodValue >::value,PropertyValue&>::type {
+    validator_.clearValidationResult();
+    return WithAssignmentGuard(ref, [&] () -> PropertyValue& {
+      value_ = std::make_shared<T>(ref);
+      type_id = value_->getTypeIndex();
+      return *this;
+    });
+  }
+
+ private:
+
+  bool isValueUsable() const {
+    if (!value_) return false;
+    if (validator_.isValid() == CachedValueValidator::Result::FAILURE) return false;
+    if (validator_.isValid() == CachedValueValidator::Result::SUCCESS) return true;
+    return validate("__unknown__").valid();
+  }
+
+  template<typename Fn>
+  auto WithAssignmentGuard(const std::string& ref, Fn&& functor) -> decltype(std::forward<Fn>(functor)()) {
+    // TODO: as soon as c++17 comes jump to a RAII implementation
+    // as we will need std::uncaught_exceptions()
+    try{
+      return std::forward<Fn>(functor)();
+    }catch(const utils::ValueException&){
+      type_id = std::type_index(typeid(std::string));
+      value_ = minifi::state::response::createValue(ref);
+      throw;
+    }
   }
 
  protected:
   std::type_index type_id;
-  std::shared_ptr<PropertyValidator> validator_;
+  CachedValueValidator validator_;
 };
 
 inline std::string conditional_conversion(const PropertyValue &v) {

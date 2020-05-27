@@ -24,6 +24,7 @@
 
 #include "core/ConfigurableComponent.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/ScopeGuard.h"
 
 namespace org {
 namespace apache {
@@ -71,11 +72,12 @@ bool ConfigurableComponent::setProperty(const std::string name, std::string valu
 
   if (it != properties_.end()) {
     Property orig_property = it->second;
-    Property new_property = orig_property;
+    Property& new_property = it->second;
+    utils::ScopeGuard onExit([&]{
+      onPropertyModified(orig_property, new_property);
+      logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
+    });
     new_property.setValue(value);
-    properties_[new_property.getName()] = new_property;
-    onPropertyModified(orig_property, new_property);
-    logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
     return true;
   } else {
     if (accept_all_properties_) {
@@ -103,11 +105,12 @@ bool ConfigurableComponent::updateProperty(const std::string &name, const std::s
 
   if (it != properties_.end()) {
     Property orig_property = it->second;
-    Property new_property = orig_property;
+    Property& new_property = it->second;
+    utils::ScopeGuard onExit([&] {
+      onPropertyModified(orig_property, new_property);
+      logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
+    });
     new_property.addValue(value);
-    properties_[new_property.getName()] = new_property;
-    onPropertyModified(orig_property, new_property);
-    logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
     return true;
   } else {
     return false;
@@ -126,11 +129,12 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
 
   if (it != properties_.end()) {
     Property orig_property = it->second;
-    Property new_property = orig_property;
+    Property& new_property = it->second;
+    utils::ScopeGuard onExit([&] {
+      onPropertyModified(orig_property, new_property);
+      logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), value, new_property.getValue().to_string());
+    });
     new_property.setValue(value);
-    properties_[new_property.getName()] = new_property;
-    onPropertyModified(orig_property, new_property);
-    logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), value, new_property.getValue().to_string());
     return true;
   } else {
     if (accept_all_properties_) {
@@ -154,11 +158,12 @@ bool ConfigurableComponent::setProperty(Property &prop, PropertyValue &value) {
 
   if (it != properties_.end()) {
     Property orig_property = it->second;
-    Property new_property = orig_property;
+    Property& new_property = it->second;
+    utils::ScopeGuard onExit([&] {
+      onPropertyModified(orig_property, new_property);
+      logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), new_property.getName(), value, new_property.getValue().to_string());
+    });
     new_property.setValue(value);
-    properties_[new_property.getName()] = new_property;
-    onPropertyModified(orig_property, new_property);
-    logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), new_property.getName(), value, new_property.getValue().to_string());
     return true;
   } else {
     if (accept_all_properties_) {
@@ -213,7 +218,16 @@ bool ConfigurableComponent::getDynamicProperty(const std::string name, std::stri
 
   auto &&it = dynamic_properties_.find(name);
   if (it != dynamic_properties_.end()) {
-    Property item = it->second;
+    const Property& item = it->second;
+    if (item.getValue().getValue() == nullptr) {
+      // empty property value
+      if (item.getRequired()) {
+        logger_->log_debug("Component %s required dynamic property %s is empty", name, item.getName());
+        throw std::runtime_error("Required dynamic property is empty: " + item.getName());
+      }
+      logger_->log_warn("Component %s dynamic property name %s, empty value", name, item.getName());
+      return false;
+    }
     value = item.getValue().to_string();
     logger_->log_debug("Component %s dynamic property name %s value %s", name, item.getName(), value);
     return true;
@@ -244,12 +258,13 @@ bool ConfigurableComponent::setDynamicProperty(const std::string name, std::stri
 
   if (it != dynamic_properties_.end()) {
     Property orig_property = it->second;
-    Property new_property = orig_property;
+    Property& new_property = it->second;
+    utils::ScopeGuard onExit([&] {
+      onDynamicPropertyModified(orig_property, new_property);
+      logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);
+    });
     new_property.setValue(value);
     new_property.setSupportsExpressionLanguage(true);
-    dynamic_properties_[new_property.getName()] = new_property;
-    onDynamicPropertyModified(orig_property, new_property);
-    logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);
     return true;
   } else {
     return createDynamicProperty(name, value);
@@ -262,12 +277,13 @@ bool ConfigurableComponent::updateDynamicProperty(const std::string &name, const
 
   if (it != dynamic_properties_.end()) {
     Property orig_property = it->second;
-    Property new_property = orig_property;
+    Property& new_property = it->second;
+    utils::ScopeGuard onExit([&] {
+      onDynamicPropertyModified(orig_property, new_property);
+      logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);
+    });
     new_property.addValue(value);
     new_property.setSupportsExpressionLanguage(true);
-    dynamic_properties_[new_property.getName()] = new_property;
-    onDynamicPropertyModified(orig_property, new_property);
-    logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);
     return true;
   } else {
     return createDynamicProperty(name, value);

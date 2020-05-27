@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <typeinfo>
+#include "utils/ValueUtils.h"
 
 namespace org {
 namespace apache {
@@ -86,35 +87,57 @@ class Value {
   }
 
   virtual bool getValue(uint32_t &ref) {
-    const auto negative = string_value.find_first_of('-') != std::string::npos;
-     if (negative) {
-       return false;
-     }
-    ref = std::stoul(string_value);
+    try{
+      uint32_t value;
+      utils::ValueParser(string_value).parseUInt32(value).parseEnd();
+      ref = value;
+    }catch(const utils::ParseException&){
+      return false;
+    }
     return true;
   }
 
   virtual bool getValue(int &ref) {
-    ref = std::stol(string_value);
+    try{
+      int value;
+      utils::ValueParser(string_value).parseInt(value).parseEnd();
+      ref = value;
+    }catch(const utils::ParseException&){
+      return false;
+    }
     return true;
   }
 
   virtual bool getValue(int64_t &ref) {
-    ref = std::stoll(string_value);
+    try{
+      int64_t value;
+      utils::ValueParser(string_value).parseLongLong(value).parseEnd();
+      ref = value;
+    }catch(const utils::ParseException&){
+      return false;
+    }
     return true;
   }
 
   virtual bool getValue(uint64_t &ref) {
-    const auto negative = string_value.find_first_of('-') != std::string::npos;
-     if (negative) {
-       return false;
-     }
-    ref = std::stoull(string_value);
+    try{
+      uint64_t value;
+      utils::ValueParser(string_value).parseUnsignedLongLong(value).parseEnd();
+      ref = value;
+    }catch(const utils::ParseException&){
+      return false;
+    }
     return true;
   }
 
   virtual bool getValue(bool &ref) {
-    std::istringstream(string_value) >> std::boolalpha >> ref;
+    try{
+      bool value;
+      utils::ValueParser(string_value).parseBool(value).parseEnd();
+      ref = value;
+    }catch(const utils::ParseException&) {
+      return false;
+    }
     return true;
   }
 
@@ -131,17 +154,8 @@ class UInt32Value : public Value {
   }
 
   explicit UInt32Value(const std::string &strvalue)
-      : Value(strvalue),
-        value(std::stoul(strvalue)) {
-    /**
-     * This is a fundamental change in that we would be changing where this error occurs.
-     * We should be prudent about breaking backwards compatibility, but since Uint32Value
-     * is only created with a validator and type, we **should** be okay.
-     */
-    const auto negative = strvalue.find_first_of('-') != std::string::npos;
-     if (negative) {
-       throw std::out_of_range("negative value detected");
-     }
+      : Value(strvalue) {
+    utils::ValueParser(strvalue).parseUInt32(value).parseEnd();
     setTypeId<uint32_t>();
   }
 
@@ -189,8 +203,8 @@ class IntValue : public Value {
   }
 
   explicit IntValue(const std::string &strvalue)
-      : Value(strvalue),
-        value(std::stoi(strvalue)) {
+      : Value(strvalue) {
+    utils::ValueParser(strvalue).parseInt(value).parseEnd();
   }
   int getValue() const {
     return value;
@@ -203,11 +217,9 @@ class IntValue : public Value {
   }
 
   virtual bool getValue(uint32_t &ref) {
-    if (value >= 0) {
-      ref = value;
-      return true;
-    }
-    return false;
+    if (value < 0) return false;
+    ref = value;
+    return true;
   }
 
   virtual bool getValue(int64_t &ref) {
@@ -237,9 +249,7 @@ class BoolValue : public Value {
 
   explicit BoolValue(const std::string &strvalue)
       : Value(strvalue) {
-    bool l;
-    std::istringstream(strvalue) >> std::boolalpha >> l;
-    value = l;  // avoid warnings
+    utils::ValueParser(strvalue).parseBool(value).parseEnd();
   }
 
   bool getValue() const {
@@ -292,15 +302,7 @@ class UInt64Value : public Value {
   explicit UInt64Value(const std::string &strvalue)
       : Value(strvalue),
         value(std::stoull(strvalue)) {
-    /**
-     * This is a fundamental change in that we would be changing where this error occurs.
-     * We should be prudent about breaking backwards compatibility, but since Uint64Value
-     * is only created with a validator and type, we **should** be okay.
-     */
-    const auto negative = strvalue.find_first_of('-') != std::string::npos;
-     if (negative) {
-       throw std::out_of_range("negative value detected");
-     }
+    utils::ValueParser(strvalue).parseUnsignedLongLong(value).parseEnd();
     setTypeId<uint64_t>();
   }
 
@@ -345,8 +347,8 @@ class Int64Value : public Value {
     setTypeId<int64_t>();
   }
   explicit Int64Value(const std::string &strvalue)
-      : Value(strvalue),
-        value(std::stoll(strvalue)) {
+      : Value(strvalue) {
+    utils::ValueParser(strvalue).parseLongLong(value).parseEnd();
     setTypeId<int64_t>();
   }
 
@@ -369,11 +371,9 @@ class Int64Value : public Value {
   }
 
   virtual bool getValue(uint64_t &ref) {
-    if (value >= 0) {
-      ref = value;
-      return true;
-    }
-    return false;
+    if (value < 0) return false;
+    ref = value;
+    return true;
   }
 
   virtual bool getValue(bool &ref) {
