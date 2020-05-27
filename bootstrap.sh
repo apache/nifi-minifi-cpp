@@ -406,7 +406,7 @@ CMAKE_BUILD_COMMAND="${CMAKE_COMMAND} "
 
 if [ "${USE_NINJA}" = "${TRUE}" ]; then 
 	 echo "use ninja"
-   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -GNinja "
+   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DFORCE_COLORED_OUTPUT=ON -GNinja "
 fi
 
 build_cmake_command(){

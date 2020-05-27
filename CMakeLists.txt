@@ -54,6 +54,21 @@ option(DISABLE_CURL "Disables libCurl Properties." OFF)
 
 option(USE_GOLD_LINKER "Use Gold Linker" OFF)
 option(INSTALLER_MERGE_MODULES "Creates installer with merge modules" OFF)
+# This is needed for ninja:
+# By default, neither Clang or GCC will add ANSI-formatted colors to your output if they detect
+# the output medium is not a terminal. This means no coloring when using a generator
+# different than "GNU Makefiles".
+option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." FALSE)
+if (${FORCE_COLORED_OUTPUT})
+	message("CMAKE_CXX_COMPILER_ID is ${CMAKE_CXX_COMPILER_ID}")
+	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	   add_compile_options (-fdiagnostics-color=always)
+	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	   add_compile_options (-fcolor-diagnostics)
+	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+	   add_compile_options (-fcolor-diagnostics)
+	endif ()
+endif ()
 
 cmake_dependent_option(ASAN_BUILD "Uses AddressSanitizer to instrument the code" OFF "NOT WIN32" OFF)
 
