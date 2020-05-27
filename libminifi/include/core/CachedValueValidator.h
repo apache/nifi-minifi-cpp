@@ -37,7 +37,7 @@ class CachedValueValidator{
 
   CachedValueValidator() = default;
   CachedValueValidator(const CachedValueValidator& other) : validator_(other.validator_) {}
-  CachedValueValidator(CachedValueValidator&& other) : validator_(std::move(other.validator_)) {}
+  CachedValueValidator(CachedValueValidator&& other) noexcept : validator_(std::move(other.validator_)) {}
   CachedValueValidator& operator=(const CachedValueValidator& other) {
     validator_ = other.validator_;
     validation_result_ = Result::RECOMPUTE;
