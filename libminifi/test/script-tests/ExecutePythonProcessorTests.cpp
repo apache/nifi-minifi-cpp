@@ -29,18 +29,13 @@
 #include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
+#include "utils/TestUtils.h"
 
 namespace {
-
-#include <unistd.h>
-#define GetCurrentDir getcwd
-
-std::string GetCurrentWorkingDir(void) {
-  char buff[FILENAME_MAX];
-  GetCurrentDir(buff, FILENAME_MAX);
-  std::string current_working_dir(buff);
-  return current_working_dir;
-}
+using org::apache::nifi::minifi::utils::createTempDir;
+using org::apache::nifi::minifi::utils::putFileToDir;
+using org::apache::nifi::minifi::utils::createTempDirWithFile;
+using org::apache::nifi::minifi::utils::getFileContent;
 
 class ExecutePythonProcessorTestBase {
  public:
@@ -63,53 +58,23 @@ class ExecutePythonProcessorTestBase {
       plan_ = testController_->createPlan();
     }
 
-    std::string createTempDir() {
-      char dirtemplate[] = "/tmp/gt.XXXXXX";
-      std::string temp_dir = testController_->createTempDirectory(dirtemplate);
-      REQUIRE(!temp_dir.empty());
-      struct stat buffer;
-      REQUIRE(-1 != stat(temp_dir.c_str(), &buffer));
-      REQUIRE(S_ISDIR(buffer.st_mode));
-      return temp_dir;
-    }
-
-    std::string putFileToDir(const std::string& dir_path, const std::string& file_name, const std::string& content) {
-      std::string file_path(dir_path + utils::file::FileUtils::get_separator() + file_name);
-      std::ofstream out_file(file_path);
-      if (out_file.is_open()) {
-        out_file << content;
-        out_file.close();
-      }
-      return file_path;
-    }
-
-    std::string createTempDirWithFile(const std::string& file_name, const std::string& content) {
-      std::string temp_dir = createTempDir();
-      putFileToDir(temp_dir, file_name, content);
-      return temp_dir;
-    }
-
-    std::string getFileContent(const std::string& file_name) {
-      std::ifstream file_handle(file_name);
-      REQUIRE(file_handle.is_open());
-      const std::string file_content{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>())};
-      file_handle.close();
-      return file_content;
-    }
-
     std::string getScriptFullPath(const std::string& script_file_name) {
       return SCRIPT_FILES_DIRECTORY + utils::file::FileUtils::get_separator() + script_file_name;
     }
 
-    const std::string TEST_FILE_NAME{ "test_file.txt" };
-    const std::string TEST_FILE_CONTENT{ "Test text\n" };
-    const std::string SCRIPT_FILES_DIRECTORY{ "test_scripts" };
+    static const std::string TEST_FILE_NAME;
+    static const std::string TEST_FILE_CONTENT;
+    static const std::string SCRIPT_FILES_DIRECTORY;
 
     std::unique_ptr<TestController> testController_;
     std::shared_ptr<TestPlan> plan_;
     LogTestController& logTestController_;
     std::shared_ptr<logging::Logger> logger_;
 };
+
+const std::string ExecutePythonProcessorTestBase::TEST_FILE_NAME{ "test_file.txt" };
+const std::string ExecutePythonProcessorTestBase::TEST_FILE_CONTENT{ "Test text\n" };
+const std::string ExecutePythonProcessorTestBase::SCRIPT_FILES_DIRECTORY{ "test_scripts" };
 
 class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
  public:
@@ -123,8 +88,8 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
  protected:
   void testSimpleFilePassthrough(const Expectation expectation, const core::Relationship& execute_python_out_conn, const std::string& used_as_script_file, const std::string& used_as_script_body) {
     reInitialize();
-    const std::string input_dir = createTempDirWithFile(TEST_FILE_NAME, TEST_FILE_CONTENT);
-    const std::string output_dir = createTempDir();
+    const std::string input_dir = createTempDirWithFile(testController_.get(), TEST_FILE_NAME, TEST_FILE_CONTENT);
+    const std::string output_dir = createTempDir(testController_.get());
 
     addGetFileProcessorToPlan(input_dir);
     if (Expectation::PROCESSOR_INITIALIZATION_EXCEPTION == expectation) {
@@ -151,7 +116,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
   }
   void testsStatefulProcessor() {
     reInitialize();
-    const std::string output_dir = createTempDir();
+    const std::string output_dir = createTempDir(testController_.get());
 
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor");
     plan_->setProperty(executePythonProcessor, org::apache::nifi::minifi::python::processors::ExecutePythonProcessor::ScriptFile.getName(), getScriptFullPath("stateful_processor.py"));
@@ -201,16 +166,6 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
 
 // Test for python processors for simple passthrough cases
 //
-// +-----------+     +--------------------------+       +-----------+
-// |  Getfile  |   .-+  ExecutePythonProcessor  |     .-+  PutFile  |
-// +-----------+  /  +  -  -  -  -  -  -  -  -  +    /  +-----------+
-// |  success  +-°   |    Attribute: Script     |   /   |  success  +-+ checked
-// +-----------+     +--------------------------+  /    +-----------+
-//                   |         success          +-°
-//                   +--------------------------+
-//                   |         failure          +-X either success or failure is hooked up
-//                   +--------------------------+
-//
 // testSimpleFilePassthrough(OUTPUT_FILE_MATCHES_INPUT, SUCCESS, "", "passthrough_processor_transfering_to_success.py");
 //
 // translates to
@@ -228,22 +183,16 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Simple file passthrough", "[
   const core::Relationship SUCCESS {"success", "description"};
   const core::Relationship FAILURE{"failure", "description"};
 
-  // For the tests "" is threated as none-provided since no optional implementation was ported to the project yet
+  // For the tests "" is treated as none-provided since no optional implementation was ported to the project yet
 
-  ////////////////////////////////////////////////////////////
-  // 0. Neither valid script file nor script body provided  //
-  ////////////////////////////////////////////////////////////
-
+  // 0. Neither valid script file nor script body provided
   //                                          TEST EXPECTATION  OUT_REL        USE_AS_SCRIPT_FILE  USE_AS_SCRIPT_BODY
   testSimpleFilePassthrough(PROCESSOR_INITIALIZATION_EXCEPTION, SUCCESS,                       "", "");  // NOLINT
   testSimpleFilePassthrough(PROCESSOR_INITIALIZATION_EXCEPTION, FAILURE,                       "", "");  // NOLINT
   testSimpleFilePassthrough(PROCESSOR_INITIALIZATION_EXCEPTION, SUCCESS, "non_existent_script.py", "");  // NOLINT
   testSimpleFilePassthrough(PROCESSOR_INITIALIZATION_EXCEPTION, FAILURE, "non_existent_script.py", "");  // NOLINT
 
-  ///////////////////////////////////////
-  // 1. Using script file as attribute //
-  ///////////////////////////////////////
-
+  // 1. Using script file as attribute
   //                                      TEST EXPECTATION  OUT_REL                                 USE_AS_SCRIPT_FILE  USE_AS_SCRIPT_BODY
   testSimpleFilePassthrough(     OUTPUT_FILE_MATCHES_INPUT, SUCCESS, "passthrough_processor_transfering_to_success.py", "");  // NOLINT
   testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, FAILURE, "passthrough_processor_transfering_to_success.py", "");  // NOLINT
@@ -251,10 +200,7 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Simple file passthrough", "[
   testSimpleFilePassthrough(     OUTPUT_FILE_MATCHES_INPUT, FAILURE, "passthrough_processor_transfering_to_failure.py", "");  // NOLINT
   testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, FAILURE,                   "non_transferring_processor.py", "");  // NOLINT
 
-  ///////////////////////////////////////
-  // 2. Using script body as attribute //
-  ///////////////////////////////////////
-
+  // 2. Using script body as attribute
   //                                      TEST EXPECTATION  OUT_REL  SCRIPT_FILE                        USE_AS_SCRIPT_BODY
   testSimpleFilePassthrough(     OUTPUT_FILE_MATCHES_INPUT, SUCCESS, "", "passthrough_processor_transfering_to_success.py");  // NOLINT 
   testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, FAILURE, "", "passthrough_processor_transfering_to_success.py");  // NOLINT 
@@ -262,10 +208,8 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Simple file passthrough", "[
   testSimpleFilePassthrough(     OUTPUT_FILE_MATCHES_INPUT, FAILURE, "", "passthrough_processor_transfering_to_failure.py");  // NOLINT 
   testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, FAILURE, "",                   "non_transferring_processor.py");  // NOLINT
 
-  ////////////////////////////////
-  // 3. Setting both attributes //
-  ////////////////////////////////
-
+  // 3. Setting both attributes
+  //                                          TEST EXPECTATION  OUT_REL                                        SCRIPT_FILE                                 USE_AS_SCRIPT_BODY
   testSimpleFilePassthrough(PROCESSOR_INITIALIZATION_EXCEPTION, SUCCESS, "passthrough_processor_transfering_to_success.py", "passthrough_processor_transfering_to_success.py");  // NOLINT
 }
 
