@@ -39,14 +39,29 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property MergeContent::MergeStrategy("Merge Strategy", "Defragment or Bin-Packing Algorithm", MERGE_STRATEGY_DEFRAGMENT);
-core::Property MergeContent::MergeFormat("Merge Format", "Merge Format", MERGE_FORMAT_CONCAT_VALUE);
+core::Property MergeContent::MergeStrategy(
+  core::PropertyBuilder::createProperty("Merge Strategy")
+  ->withDescription("Defragment or Bin-Packing Algorithm")
+  ->withAllowableValues<std::string>({MERGE_STRATEGY_DEFRAGMENT, MERGE_STRATEGY_BIN_PACK})
+  ->withDefaultValue(MERGE_STRATEGY_DEFRAGMENT)->build());
+core::Property MergeContent::MergeFormat(
+  core::PropertyBuilder::createProperty("Merge Format")
+  ->withDescription("Merge Format")
+  ->withAllowableValues<std::string>({MERGE_FORMAT_CONCAT_VALUE, MERGE_FORMAT_TAR_VALUE, MERGE_FORMAT_ZIP_VALUE})
+  ->withDefaultValue(MERGE_FORMAT_CONCAT_VALUE)->build());
 core::Property MergeContent::CorrelationAttributeName("Correlation Attribute Name", "Correlation Attribute Name", "");
-core::Property MergeContent::DelimiterStratgey("Delimiter Strategy", "Determines if Header, Footer, and Demarcator should point to files", DELIMITER_STRATEGY_FILENAME);
+core::Property MergeContent::DelimiterStrategy(
+  core::PropertyBuilder::createProperty("Delimiter Strategy")
+  ->withDescription("Determines if Header, Footer, and Demarcator should point to files")
+  ->withAllowableValues<std::string>({DELIMITER_STRATEGY_FILENAME, DELIMITER_STRATEGY_TEXT})
+  ->withDefaultValue(DELIMITER_STRATEGY_FILENAME)->build());
 core::Property MergeContent::Header("Header File", "Filename specifying the header to use", "");
 core::Property MergeContent::Footer("Footer File", "Filename specifying the footer to use", "");
 core::Property MergeContent::Demarcator("Demarcator File", "Filename specifying the demarcator to use", "");
-core::Property MergeContent::KeepPath("Keep Path", "If using the Zip or Tar Merge Format, specifies whether or not the FlowFiles' paths should be included in their entry", "false");
+core::Property MergeContent::KeepPath(
+  core::PropertyBuilder::createProperty("Keep Path")
+  ->withDescription("If using the Zip or Tar Merge Format, specifies whether or not the FlowFiles' paths should be included in their entry")
+  ->withDefaultValue(false)->build());
 core::Relationship MergeContent::Merge("merged", "The FlowFile containing the merged content");
 const char *BinaryConcatenationMerge::mimeType = "application/octet-stream";
 const char *TarMerge::mimeType = "application/tar";
@@ -64,7 +79,7 @@ void MergeContent::initialize() {
   properties.insert(MergeStrategy);
   properties.insert(MergeFormat);
   properties.insert(CorrelationAttributeName);
-  properties.insert(DelimiterStratgey);
+  properties.insert(DelimiterStrategy);
   properties.insert(Header);
   properties.insert(Footer);
   properties.insert(Demarcator);
@@ -106,7 +121,7 @@ void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessio
       this->correlationAttributeName_ = value;
   }
   value = "";
-  if (context->getProperty(DelimiterStratgey.getName(), value) && !value.empty()) {
+  if (context->getProperty(DelimiterStrategy.getName(), value) && !value.empty()) {
       this->delimiterStratgey_ = value;
   }
   value = "";

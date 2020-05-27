@@ -39,7 +39,7 @@ static core::Property RemoteServer;
 static core::Property Port;
 static core::Property MaxQueueSize;
 
-core::Property CoapConnectorService::RemoteServer(core::PropertyBuilder::createProperty("Remote Server")->withDescription("Remote CoAP server")->isRequired(true)->build());
+core::Property CoapConnectorService::RemoteServer(core::PropertyBuilder::createProperty("Remote Server")->withDescription("Remote CoAP server")->isRequired(false)->build());
 core::Property CoapConnectorService::Port(
     core::PropertyBuilder::createProperty("Remote Port")->withDescription("Remote CoAP server port")->withDefaultValue<uint64_t>(8181)->isRequired(true)->build());
 core::Property CoapConnectorService::MaxQueueSize(

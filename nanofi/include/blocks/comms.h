@@ -23,9 +23,11 @@
 #include "../api/nanofi.h"
 #include "core/processors.h"
 
-#define SUCCESS 0x00
-#define FINISHED_EARLY 0x01
-#define FAIL 0x02
+enum {
+  SUCCESS = 0x00,
+  FINISHED_EARLY = 0x01,
+  FAIL = 0x02
+};
 
 typedef int transmission_stop(void *);
 

@@ -282,7 +282,7 @@ class MergeContent : public processors::BinFiles {
   static core::Property MergeStrategy;
   static core::Property MergeFormat;
   static core::Property CorrelationAttributeName;
-  static core::Property DelimiterStratgey;
+  static core::Property DelimiterStrategy;
   static core::Property KeepPath;
   static core::Property Header;
   static core::Property Footer;
