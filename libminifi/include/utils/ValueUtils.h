@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include "PropertyErrors.h"
 #include <type_traits>
+#include <limits>
 
 namespace org {
 namespace apache {
@@ -58,7 +59,7 @@ class ValueParser {
       char *end;
       long result{std::strtol(str.c_str() + offset, &end, 10)};
       offset = end - str.c_str();
-      if (result < std::numeric_limits<int>::min() || result > std::numeric_limits<int>::max()) {
+      if (result < (std::numeric_limits<int>::min)() || result > (std::numeric_limits<int>::max)()) {
         throw ParseException("Cannot convert long to int");
       }
       out = {static_cast<int>(result)};
@@ -107,7 +108,7 @@ class ValueParser {
       char *end;
       unsigned long result{std::strtoul(str.c_str() + offset, &end, 10)};
       offset = end - str.c_str();
-      if (result > std::numeric_limits<uint32_t>::max()) {
+      if (result > (std::numeric_limits<uint32_t>::max)()) {
         throw ParseException("Cannot convert unsigned long to uint32_t");
       }
       out = {static_cast<uint32_t>(result)};
