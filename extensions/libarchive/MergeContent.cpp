@@ -42,7 +42,7 @@ namespace processors {
 core::Property MergeContent::MergeStrategy(
   core::PropertyBuilder::createProperty("Merge Strategy")
   ->withDescription("Defragment or Bin-Packing Algorithm")
-  ->withAllowableValues<std::string>({MERGE_STRATEGY_DEFRAGMENT, MERGE_STRATEGY_DEFRAGMENT})
+  ->withAllowableValues<std::string>({MERGE_STRATEGY_DEFRAGMENT, MERGE_STRATEGY_BIN_PACK})
   ->withDefaultValue(MERGE_STRATEGY_DEFRAGMENT)->build());
 core::Property MergeContent::MergeFormat(
   core::PropertyBuilder::createProperty("Merge Format")
