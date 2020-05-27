@@ -18,8 +18,6 @@
 #include <utility>
 #include <memory>
 #include <string>
-#include <vector>
-#include <set>
 #include <fstream>
 
 #include "TestBase.h"
@@ -95,3 +93,12 @@ TEST_CASE("GetFile: MaxSize", "[getFileFifo]") {  // NOLINT
 #endif
 }
 
+
+TEST_CASE("GetFile: Directory", "[getFileDir]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setTrace<processors::GetFile>();
+  auto plan = testController.createPlan();
+  auto get_file = plan->addProcessor("GetFile", "Get");
+  REQUIRE_THROWS_AS(plan->runNextProcessor(), minifi::Exception);
+}
