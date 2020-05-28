@@ -151,7 +151,7 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory property is missing");
   }
   if (!utils::file::FileUtils::is_directory(value.c_str())) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory \"" + value + "\" does not exist");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory \"" + value + "\" is not a directory");
   }
 }
 
