@@ -45,6 +45,7 @@ struct GetFileRequest {
   uint64_t pollInterval = 0;
   uint64_t batchSize = 10;
   std::string fileFilter = "[^\\.].*";
+  std::string inputDirectory;
 };
 
 class GetFileMetrics : public state::response::ResponseNode {
@@ -153,11 +154,10 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   // Initialize, over write by NiFi GetFile
   virtual void initialize(void);
   /**
-   * performs a listeing on the directory.
-   * @param dir directory to list
+   * performs a listing on the directory.
    * @param request get file request.
    */
-  void performListing(std::string dir, const GetFileRequest &request);
+  void performListing(const GetFileRequest &request);
 
   int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector);
 
