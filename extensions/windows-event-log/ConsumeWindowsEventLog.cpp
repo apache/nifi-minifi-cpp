@@ -52,6 +52,7 @@ namespace processors {
 
 // ConsumeWindowsEventLog
 const std::string ConsumeWindowsEventLog::ProcessorName("ConsumeWindowsEventLog");
+const int EVT_NEXT_TIMEOUT_MS = 500;
 
 core::Property ConsumeWindowsEventLog::Channel(
   core::PropertyBuilder::createProperty("Channel")->
@@ -351,9 +352,13 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   while (true) {
     EVT_HANDLE hEvent{};
     DWORD dwReturned{};
-    if (!EvtNext(hEventResults, 1, &hEvent, INFINITE, 0, &dwReturned)) {
+    if (!EvtNext(hEventResults, 1, &hEvent, EVT_NEXT_TIMEOUT_MS, 0, &dwReturned)) {
       if (ERROR_NO_MORE_ITEMS != GetLastError()) {
-        LOG_LAST_ERROR(EvtNext);
+        LogWindowsError("Failed to get next event");
+        continue; 
+        /* According to MS this iteration should only end when the return value is false AND 
+         the error code is NO_MORE_ITEMS. See the following page for further details:
+         https://docs.microsoft.com/en-us/windows/win32/api/winevt/nf-winevt-evtnext */
       }
       break;
     }
@@ -599,7 +604,7 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
   }
 }
 
-void ConsumeWindowsEventLog::LogWindowsError()
+void ConsumeWindowsEventLog::LogWindowsError(std::string error) const
 {
   auto error_id = GetLastError();
   LPVOID lpMsg;
@@ -613,7 +618,7 @@ void ConsumeWindowsEventLog::LogWindowsError()
     (LPTSTR)&lpMsg,
     0, NULL);
 
-  logger_->log_error("Error %x: %s\n", (int)error_id, (char *)lpMsg);
+  logger_->log_error((error + " %x: %s\n").c_str(), (int)error_id, (char *)lpMsg);
 
   LocalFree(lpMsg);
 }

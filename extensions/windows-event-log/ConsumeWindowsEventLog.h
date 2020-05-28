@@ -103,7 +103,7 @@ protected:
   void putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session);
   wel::WindowsEventLogHandler getEventLogHandler(const std::string & name);
   bool insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string &value);
-  void LogWindowsError();
+  void LogWindowsError(std::string error = "Error") const;
   bool createEventRender(EVT_HANDLE eventHandle, EventRender& eventRender);
   void substituteXMLPercentageItems(pugi::xml_document& doc);
 
