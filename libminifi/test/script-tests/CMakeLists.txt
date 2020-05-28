@@ -18,7 +18,7 @@
 #
 
 if (NOT DISABLE_PYTHON_SCRIPTING)
-	file(GLOB EXECUTESCRIPT_PYTHON_INTEGRATION_TESTS  "Python*.cpp")
+	file(GLOB EXECUTESCRIPT_PYTHON_INTEGRATION_TESTS  "TestExecuteScriptProcessorWithPythonScript.cpp")
 	file(GLOB EXECUTEPYTHONPROCESSOR_UNIT_TESTS  "ExecutePythonProcessorTests.cpp")
 	file(GLOB PY_SOURCES  "python/*.cpp")
 	find_package(PythonLibs 3.5)
@@ -86,4 +86,4 @@ FOREACH(testfile ${EXECUTESCRIPT_LUA_INTEGRATION_TESTS})
 	add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
 
-message("-- Finished building ${PYTHON_EXECUTESCRIPT-EXTENSIONS_TEST_COUNT} Python ExecuteScript related test file(s)...")
+message("-- Finished building ${EXTENSIONS_TEST_COUNT} Python ExecuteScript related test file(s)...")
