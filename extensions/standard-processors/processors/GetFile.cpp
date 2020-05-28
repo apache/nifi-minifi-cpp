@@ -153,6 +153,7 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
   if (!utils::file::FileUtils::is_directory(value.c_str())) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory \"" + value + "\" is not a directory");
   }
+  request_.inputDirectory = value;
 }
 
 void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
@@ -160,23 +161,19 @@ void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
   metrics_->iterations_++;
 
-  logger_->log_debug("Is listing empty %i", isListingEmpty());
-  if (isListingEmpty()) {
+  const bool isDirEmptyBeforePoll = isListingEmpty();
+  logger_->log_debug("Is listing empty before polling directory %i", isDirEmptyBeforePoll);
+  if (isDirEmptyBeforePoll) {
     if (request_.pollInterval == 0 || (getTimeMillis() - last_listing_time_) > request_.pollInterval) {
-      std::string directory;
-      const std::shared_ptr<core::FlowFile> flow_file;
-      if (context->getProperty(Directory, directory, flow_file)) {
-        logger_->log_warn("Resolved missing Input Directory property value");
-        performListing(directory, request_);
-        last_listing_time_.store(getTimeMillis());
-      } else {
-        return;
-      }
+      performListing(request_);
+      last_listing_time_.store(getTimeMillis());
     }
   }
-  logger_->log_debug("Is listing empty %i", isListingEmpty());
 
-  if (!isListingEmpty()) {
+  const bool isDirEmptyAfterPoll = isListingEmpty();
+  logger_->log_debug("Is listing empty after polling directory %i", isDirEmptyAfterPoll);
+
+  if (!isDirEmptyAfterPoll) {
     try {
       std::queue<std::string> list;
       pollListing(list, request_);
@@ -269,7 +266,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
   return false;
 }
 
-void GetFile::performListing(std::string dir, const GetFileRequest &request) {
+void GetFile::performListing(const GetFileRequest &request) {
   auto callback = [this, request](const std::string& dir, const std::string& filename) -> bool {
     std::string fullpath = dir + utils::file::FileUtils::get_separator() + filename;
     if (acceptFile(fullpath, filename, request)) {
@@ -277,7 +274,7 @@ void GetFile::performListing(std::string dir, const GetFileRequest &request) {
     }
     return isRunning();
   };
-  utils::file::FileUtils::list_dir(dir, callback, logger_, request.recursive);
+  utils::file::FileUtils::list_dir(request.inputDirectory, callback, logger_, request.recursive);
 }
 
 int16_t GetFile::getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) {

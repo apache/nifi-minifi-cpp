@@ -45,6 +45,7 @@ struct GetFileRequest {
   uint64_t pollInterval = 0;
   uint64_t batchSize = 10;
   std::string fileFilter = "[^\\.].*";
+  std::string inputDirectory;
 };
 
 class GetFileMetrics : public state::response::ResponseNode {
@@ -111,12 +112,13 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
    */
   explicit GetFile(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
+        metrics_(std::make_shared<GetFileMetrics>()),
+        last_listing_time_(0),
         logger_(logging::LoggerFactory<GetFile>::getLogger()) {
-    metrics_ = std::make_shared<GetFileMetrics>();
   }
   // Destructor
-  virtual ~GetFile() {
-  }
+  ~GetFile() override = default;
+
   // Processor Name
   static constexpr char const* ProcessorName = "GetFile";
   // Supported Properties
@@ -152,11 +154,10 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   // Initialize, over write by NiFi GetFile
   virtual void initialize(void);
   /**
-   * performs a listeing on the directory.
-   * @param dir directory to list
+   * performs a listing on the directory.
    * @param request get file request.
    */
-  void performListing(std::string dir, const GetFileRequest &request);
+  void performListing(const GetFileRequest &request);
 
   int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector);
 
@@ -168,11 +169,6 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
 
   // Queue for store directory list
   std::queue<std::string> _dirList;
-  // Get Listing size
-  uint64_t getListingSize() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return _dirList.size();
-  }
   // Whether the directory listing is empty
   bool isListingEmpty();
   // Put full path file name into directory listing
