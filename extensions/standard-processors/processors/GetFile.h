@@ -111,12 +111,13 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
    */
   explicit GetFile(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
+        metrics_(std::make_shared<GetFileMetrics>()),
+        last_listing_time_(0),
         logger_(logging::LoggerFactory<GetFile>::getLogger()) {
-    metrics_ = std::make_shared<GetFileMetrics>();
   }
   // Destructor
-  virtual ~GetFile() {
-  }
+  ~GetFile() override = default;
+
   // Processor Name
   static constexpr char const* ProcessorName = "GetFile";
   // Supported Properties
@@ -168,11 +169,6 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
 
   // Queue for store directory list
   std::queue<std::string> _dirList;
-  // Get Listing size
-  uint64_t getListingSize() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return _dirList.size();
-  }
   // Whether the directory listing is empty
   bool isListingEmpty();
   // Put full path file name into directory listing

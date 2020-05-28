@@ -160,23 +160,20 @@ void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
   metrics_->iterations_++;
 
-  logger_->log_debug("Is listing empty %i", isListingEmpty());
-  if (isListingEmpty()) {
+  const bool isDirEmptyBeforePoll = isListingEmpty();
+  logger_->log_debug("Is listing empty before polling directory %i", isDirEmptyBeforePoll);
+  if (isDirEmptyBeforePoll) {
     if (request_.pollInterval == 0 || (getTimeMillis() - last_listing_time_) > request_.pollInterval) {
       std::string directory;
-      const std::shared_ptr<core::FlowFile> flow_file;
-      if (context->getProperty(Directory, directory, flow_file)) {
-        logger_->log_warn("Resolved missing Input Directory property value");
-        performListing(directory, request_);
-        last_listing_time_.store(getTimeMillis());
-      } else {
-        return;
-      }
+      performListing(directory, request_);
+      last_listing_time_.store(getTimeMillis());
     }
   }
-  logger_->log_debug("Is listing empty %i", isListingEmpty());
 
-  if (!isListingEmpty()) {
+  const bool isDirEmptyAfterPoll = isListingEmpty();
+  logger_->log_debug("Is listing empty after polling directory %i", isDirEmptyAfterPoll);
+
+  if (!isDirEmptyAfterPoll) {
     try {
       std::queue<std::string> list;
       pollListing(list, request_);
