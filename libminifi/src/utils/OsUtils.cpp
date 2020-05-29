@@ -17,8 +17,11 @@
  */
 
 #include "utils/OsUtils.h"
+
 #include <iostream>
 #include <map>
+
+#include "utils/ScopeGuard.h"
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -77,6 +80,7 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
     }
     // First call to LookupAccountSid to get the buffer sizes.
     PSID pSidOwner = NULL;
+    const utils::ScopeGuard guard_pSidOwner([&pSidOwner]() { if (pSidOwner != NULL) { LocalFree(pSidOwner); } });
     if (ConvertStringSidToSidA(name.c_str(), &pSidOwner)) {
       SID_NAME_USE sidType = SidTypeUnknown;
       DWORD windowsAccountNameSize = 0, dwwindowsDomainSize = 0;
