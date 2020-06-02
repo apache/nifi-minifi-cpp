@@ -132,7 +132,7 @@ class CompressDecompressionTestController : public TestController{
   RawContent getRawContent() const {
     std::ifstream file;
     file.open(raw_content_path, std::ios::binary);
-    std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string contents{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
     return RawContent{std::move(contents)};
   }
 
@@ -146,7 +146,7 @@ std::string CompressDecompressionTestController::raw_content_path;
 std::string CompressDecompressionTestController::compressed_content_path;
 
 class CompressTestController : public CompressDecompressionTestController {
-  void initContentWithRandomData() {
+  static void initContentWithRandomData() {
     int random_seed = 0x454;
     std::ofstream file;
     file.open(raw_content_path, std::ios::binary);
@@ -1002,11 +1002,7 @@ TEST_CASE("RawGzipCompressionDecompression", "[compressfiletest8]") {
     content = content_ss.str();
   }
 
-  {
-    std::fstream file;
-    file.open(src_file, std::ios::out);
-    file << content;
-  }
+  std::ofstream{ src_file } << content;
 
   // Run flow
   testController.runSession(plan, true);
