@@ -27,6 +27,7 @@
 #include "PropertyErrors.h"
 #include <type_traits>
 #include <limits>
+#include "GeneralUtils.h"
 
 namespace org {
 namespace apache {
@@ -36,9 +37,6 @@ namespace utils {
 
 class ValueParser {
  private:
-  template< class... >
-  using void_t = void;
-
   template<typename From, typename To, typename = void>
   struct is_non_narrowing_convertible: std::false_type {
     static_assert(std::is_integral<From>::value && std::is_integral<To>::value, "Checks only integral values");
@@ -138,42 +136,17 @@ class ValueParser {
 
   template<typename Out>
   ValueParser& parseBool(Out& out){
-    const char* options[] = {"false", "true"};
-    const bool values[] = {false, true};
-    auto index = parseAny(options);
-    if(index == -1)throw ParseException("Couldn't parse bool");
-    out = values[index];
+    parseSpace();
+    if (std::strncmp(str.c_str() + offset, "false", std::strlen("false")) == 0) {
+      offset += std::strlen("false");
+      out = false;
+    } else if (std::strncmp(str.c_str() + offset, "true", std::strlen("true")) == 0) {
+      offset += std::strlen("true");
+      out = true;
+    } else {
+      throw ParseException("Couldn't parse bool");
+    }
     return *this;
-  }
-
-  int parseAny(const std::vector<std::string> &options) {
-    parseSpace();
-    for (std::size_t optionIdx = 0; optionIdx < options.size(); ++optionIdx) {
-      const auto &option = options[optionIdx];
-      if (offset + option.length() <= str.length()) {
-        if (std::equal(option.begin(), option.end(), str.begin() + offset)) {
-          offset += option.length();
-          return optionIdx;
-        }
-      }
-    }
-    return -1;
-  }
-
-  template<std::size_t N>
-  int parseAny(const char* (&options)[N]) {
-    parseSpace();
-    for (std::size_t optionIdx = 0; optionIdx < N; ++optionIdx) {
-      const auto &option = options[optionIdx];
-      auto len = std::strlen(option);
-      if (offset + len <= str.length()) {
-        if (std::equal(option, option + len, str.begin() + offset)) {
-          offset += len;
-          return optionIdx;
-        }
-      }
-    }
-    return -1;
   }
 
   void parseEnd(){

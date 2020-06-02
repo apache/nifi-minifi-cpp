@@ -25,20 +25,15 @@ namespace org{
 namespace apache{
 namespace nifi{
 namespace minifi{
+
 namespace core{
+
 class PropertyValue;
 class ConfigurableComponent;
 class Property;
-}
-}
-}
-}
-}
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+} /* namespace core */
+
 namespace utils {
 
 class ValueException: public Exception{

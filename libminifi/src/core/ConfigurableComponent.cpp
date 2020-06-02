@@ -68,7 +68,7 @@ bool ConfigurableComponent::getProperty(const std::string &name, Property &prop)
  */
 bool ConfigurableComponent::setProperty(const std::string name, std::string value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
-  auto &&it = properties_.find(name);
+  auto it = properties_.find(name);
 
   if (it != properties_.end()) {
     Property orig_property = it->second;

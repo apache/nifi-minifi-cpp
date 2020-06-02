@@ -48,13 +48,6 @@ TEST_CASE("Converting invalid PropertyValue") {
   REQUIRE_THROWS_AS(static_cast<int>(prop.getValue()), utils::InvalidValueException);
 }
 
-TEST_CASE("Parsing int") {
-  auto prop = PropertyBuilder::createProperty("prop")
-    ->withDefaultValue<int>(0)
-    ->build();
-  REQUIRE_THROWS_AS(prop.setValue("not int"), utils::ParseException);
-}
-
 TEST_CASE("Parsing int has baggage after") {
   auto prop = PropertyBuilder::createProperty("prop")
     ->withDefaultValue<int>(0)

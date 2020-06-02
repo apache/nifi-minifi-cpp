@@ -237,7 +237,7 @@ class PropertyValue : public state::response::ValueNode {
 
   template<typename Fn>
   auto WithAssignmentGuard(const std::string& ref, Fn&& functor) -> decltype(std::forward<Fn>(functor)()) {
-    // TODO: as soon as c++17 comes jump to a RAII implementation
+    // TODO(adebreceni): as soon as c++17 comes jump to a RAII implementation
     // as we will need std::uncaught_exceptions()
     try{
       return std::forward<Fn>(functor)();

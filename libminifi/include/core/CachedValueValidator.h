@@ -67,7 +67,7 @@ class CachedValueValidator{
   }
 
   operator bool() const {
-    return (bool)validator_;
+    return static_cast<bool>(validator_);
   }
 
   const std::shared_ptr<PropertyValidator>& operator*() const {
@@ -83,7 +83,7 @@ class CachedValueValidator{
   }
 
   Result isValid() const {
-    if(!validator_ || validation_result_ == Result::SUCCESS){
+    if(!validator_){
       return Result::SUCCESS;
     }
     return validation_result_;
