@@ -53,85 +53,80 @@ class ValueParser {
   template<typename Out>
   ValueParser& parseInt(Out& out) {
     static_assert(is_non_narrowing_convertible<int, Out>::value, "Expected lossless conversion from int");
-    try {
-      char *end;
-      long result{std::strtol(str.c_str() + offset, &end, 10)};
-      offset = end - str.c_str();
-      if (result < (std::numeric_limits<int>::min)() || result > (std::numeric_limits<int>::max)()) {
-        throw ParseException("Cannot convert long to int");
-      }
-      out = {static_cast<int>(result)};
-      return *this;
-    }catch(...){
-      throw ParseException("Could not parse int");
+    long result;
+    auto len = safeCallConverter(std::strtol, result);
+    if ( len == 0 ) {
+      throw ParseException("Couldn't parse int");
     }
+    if (result < (std::numeric_limits<int>::min)() || result > (std::numeric_limits<int>::max)()) {
+      throw ParseException("Cannot convert long to int");
+    }
+    offset += len;
+    out = {static_cast<int>(result)};
+    return *this;
   }
 
   template<typename Out>
   ValueParser& parseLong(Out& out) {
     static_assert(is_non_narrowing_convertible<long, Out>::value, "Expected lossless conversion from long");
-    try {
-      char *end;
-      long result{std::strtol(str.c_str() + offset, &end, 10)};
-      offset = end - str.c_str();
-      out = {result};
-      return *this;
-    }catch(...){
-      throw ParseException("Could not parse long");
+    long result;
+    auto len = safeCallConverter(std::strtol, result);
+    if ( len == 0 ) {
+      throw ParseException("Couldn't parse long");
     }
+    offset += len;
+    out = {result};
+    return *this;
   }
 
   template<typename Out>
   ValueParser& parseLongLong(Out& out) {
     static_assert(is_non_narrowing_convertible<long long, Out>::value, "Expected lossless conversion from long long");
-    try {
-      char *end;
-      long long result{std::strtoll(str.c_str() + offset, &end, 10)};
-      offset = end - str.c_str();
-      out = {result};
-      return *this;
-    }catch(...){
-      throw ParseException("Could not parse long long");
+    long long result;
+    auto len = safeCallConverter(std::strtoll, result);
+    if ( len == 0 ) {
+      throw ParseException("Couldn't parse long long");
     }
+    offset += len;
+    out = {result};
+    return *this;
   }
 
   template<typename Out>
   ValueParser& parseUInt32(Out& out) {
     static_assert(is_non_narrowing_convertible<uint32_t, Out>::value, "Expected lossless conversion from uint32_t");
-    try {
-      parseSpace();
-      if (offset < str.length() && str[offset] == '-') {
-        throw ParseException("Not an unsigned long");
-      }
-      char *end;
-      unsigned long result{std::strtoul(str.c_str() + offset, &end, 10)};
-      offset = end - str.c_str();
-      if (result > (std::numeric_limits<uint32_t>::max)()) {
-        throw ParseException("Cannot convert unsigned long to uint32_t");
-      }
-      out = {static_cast<uint32_t>(result)};
-      return *this;
-    }catch(...){
-      throw ParseException("Could not parse unsigned long");
+    parseSpace();
+    if (offset < str.length() && str[offset] == '-') {
+      throw ParseException("Not an unsigned long");
     }
+    unsigned long result;
+    auto len = safeCallConverter(std::strtoul, result);
+    if ( len == 0 ) {
+      throw ParseException("Couldn't parse uint32_t");
+    }
+    if (result > (std::numeric_limits<uint32_t>::max)()) {
+      throw ParseException("Cannot convert unsigned long to uint32_t");
+    }
+    offset += len;
+    out = {static_cast<uint32_t>(result)};
+    return *this;
   }
 
   template<typename Out>
   ValueParser& parseUnsignedLongLong(Out& out) {
     static_assert(is_non_narrowing_convertible<unsigned long long, Out>::value, "Expected lossless conversion from unsigned long long");
-    try {
-      parseSpace();
-      if (offset < str.length() && str[offset] == '-') {
-        throw ParseException("Not an unsigned long");
-      }
-      char *end;
-      unsigned long long result{std::strtoull(str.c_str() + offset, &end, 10)};
-      offset = end - str.c_str();
-      out = {result};
-      return *this;
-    }catch(...){
-      throw ParseException("Could not parse unsigned long long");
+    parseSpace();
+    if (offset < str.length() && str[offset] == '-') {
+      throw ParseException("Not an unsigned long");
     }
+    unsigned long long result;
+    auto len = safeCallConverter(std::strtoull, result);
+    if ( len == 0 ) {
+      throw ParseException("Couldn't parse unsigned long long");
+    }
+    offset += len;
+    out = {result};
+    return *this;
   }
 
   template<typename Out>
@@ -157,6 +152,26 @@ class ValueParser {
   }
 
  private:
+  /**
+   *
+   * @tparam T
+   * @param converter
+   * @param out
+   * @return the number of characters used during conversion, 0 for error
+   */
+  template<typename T>
+  std::size_t safeCallConverter(T (*converter)(const char* begin, char** end, int base), T& out) {
+    const char* const begin = str.c_str() + offset;
+    char* end;
+    errno = 0;
+    T result = converter(begin, &end, 10);
+    if (end == begin || errno == ERANGE) {
+      return 0;
+    }
+    out = result;
+    return end - begin;
+  }
+
   void parseSpace() {
     while (offset < str.length() && std::isspace(str[offset])) {
       ++offset;
