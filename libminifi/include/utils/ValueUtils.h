@@ -158,7 +158,9 @@ class ValueParser {
 
  private:
   void parseSpace() {
-    while (offset < str.length() && std::isspace(str[offset]))++offset;
+    while (offset < str.length() && std::isspace(str[offset])) {
+      ++offset;
+    }
   }
 
   const std::string& str;
