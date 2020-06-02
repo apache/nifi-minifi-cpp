@@ -93,48 +93,23 @@ class PropertyValue : public state::response::ValueNode {
   }
 
   operator uint64_t() const {
-    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
-    uint64_t res;
-    if (value_->convertValue(res)) {
-      return res;
-    }
-    throw utils::ConversionException("Invalid conversion to uint64_t for" + value_->getStringValue());
+    return convertImpl<uint64_t>("uint64_t");
   }
 
   operator int64_t() const {
-    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
-    int64_t res;
-    if (value_->convertValue(res)) {
-      return res;
-    }
-    throw utils::ConversionException("Invalid conversion to int64_t");
+    return convertImpl<int64_t>("int64_t");
   }
 
   operator uint32_t() const {
-    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
-    uint32_t res;
-    if (value_->convertValue(res)) {
-      return res;
-    }
-    throw utils::ConversionException("Invalid conversion to uint32_t for" + value_->getStringValue());
+    return convertImpl<uint32_t>("uint32_t");
   }
 
   operator int() const {
-    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
-    int res;
-    if (value_->convertValue(res)) {
-      return res;
-    }
-    throw utils::ConversionException("Invalid conversion to int ");
+    return convertImpl<int>("int");
   }
 
   operator bool() const {
-    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
-    bool res;
-    if (value_->convertValue(res)) {
-      return res;
-    }
-    throw utils::ConversionException("Invalid conversion to bool");
+    return convertImpl<bool>("bool");
   }
 
   operator std::string() const {
@@ -227,6 +202,16 @@ class PropertyValue : public state::response::ValueNode {
   }
 
  private:
+
+  template<typename T>
+  T convertImpl(const char* const type_name) const {
+    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
+    T res;
+    if (value_->convertValue(res)) {
+      return res;
+    }
+    throw utils::ConversionException(std::string{"Invalid conversion to "} + type_name + " for " + value_->getStringValue());
+  }
 
   bool isValueUsable() const {
     if (!value_) return false;
