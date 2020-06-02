@@ -99,11 +99,10 @@ class SystemInformation : public DeviceInformation {
       arch.value = std::string(buf.machine);
     }
 
-      systemInfo.children.push_back(arch);
+    systemInfo.children.push_back(arch);
     serialized.push_back(systemInfo);
 #endif
     serialized.push_back(identifier);
-
 
     return serialized;
   }

@@ -90,7 +90,7 @@ class ReferenceContainer {
   std::vector<std::shared_ptr<WeakReference> > references;
 };
 
-}/* namespace core */
+}  // namespace core
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

@@ -266,7 +266,7 @@ class Device {
           memcpy(mac, LLADDR(sdl), sdl->sdl_alen);
           char mac_add[13];
           snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]); // NOLINT
-          // /macs += mac_add;
+          // macs += mac_add;
           macs.insert(mac_add);
         }
       }

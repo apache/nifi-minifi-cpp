@@ -74,8 +74,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * @param id controller service identifier.
    * @return shared pointer to the controller service node.
    */
-  virtual std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &longType, const std::string &id,
-  bool firstTimeAdded) = 0;
+  virtual std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &longType, const std::string &id, bool firstTimeAdded) = 0;
 
   /**
    * Gets a controller service node wrapping the controller service

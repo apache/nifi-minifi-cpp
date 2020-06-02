@@ -43,7 +43,7 @@ class DataStream {
    * Constructor
    **/
   explicit DataStream(const uint8_t *buf, const uint32_t buflen) {
-    writeData(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(buf)), buflen);
+    writeData(const_cast<uint8_t*>(buf), buflen);
   }
 
   virtual short initialize() { // NOLINT

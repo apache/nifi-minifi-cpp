@@ -61,7 +61,7 @@ class StaticClassType {
         static core::StaticClassType<CLASSNAME> \
         CLASSNAME##_registrar(#NAME);
 
-}/* namespace core */
+}  // namespace core
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

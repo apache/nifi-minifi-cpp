@@ -56,7 +56,7 @@ struct LoggerNamespace {
         children(std::map<std::string, std::shared_ptr<LoggerNamespace>>()) {
   }
 };
-};  // namespace internal
+}  // namespace internal
 
 class LoggerProperties : public Properties {
  public:

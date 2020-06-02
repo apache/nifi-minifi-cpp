@@ -87,7 +87,7 @@ class ValidationResult {
 
 class PropertyValidator {
  public:
-  explicit PropertyValidator(std::string name)
+  PropertyValidator(std::string name) // NOLINT
       : name_(std::move(name)) {
   }
   virtual ~PropertyValidator() = default;

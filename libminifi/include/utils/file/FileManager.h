@@ -76,18 +76,19 @@ class FileManager {
         unique_files_.push_back(file_name);
       return file_name;
     } else {
-    std::string tmpDir = "/tmp";
-    #ifdef WIN32
+      std::string tmpDir = "/tmp";
+#ifdef WIN32
       TCHAR lpTempPathBuffer[MAX_PATH];
       GetTempPath(MAX_PATH, lpTempPathBuffer);
       tmpDir = lpTempPathBuffer;
-    #endif
+#endif
       std::string file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
       while (!verify_not_exist(file_name)) {
         file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
       }
-      if (!keep)
+      if (!keep) {
         unique_files_.push_back(file_name);
+      }
       return file_name;
     }
   }
@@ -97,17 +98,18 @@ class FileManager {
     return boost::filesystem::unique_path().native();
 #else
     std::string tmpDir = "/tmp";
-  #ifdef WIN32
-      TCHAR lpTempPathBuffer[MAX_PATH];
-      GetTempPath(MAX_PATH, lpTempPathBuffer);
-      tmpDir = lpTempPathBuffer;
-  #endif
+#ifdef WIN32
+    TCHAR lpTempPathBuffer[MAX_PATH];
+    GetTempPath(MAX_PATH, lpTempPathBuffer);
+    tmpDir = lpTempPathBuffer;
+#endif
     std::string file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
     while (!verify_not_exist(file_name)) {
       file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
     }
-    if (!keep)
+    if (!keep) {
       unique_files_.push_back(file_name);
+    }
     return file_name;
 #endif
   }

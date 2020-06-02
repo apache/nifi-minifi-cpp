@@ -34,9 +34,9 @@ namespace minifi {
 namespace core {
 class ProcessSessionReadCallback : public InputStreamCallback {
  public:
-     ProcessSessionReadCallback(const std::string &tmpFile, const std::string &destFile,
-               std::shared_ptr<logging::Logger> logger);
-     ~ProcessSessionReadCallback();
+  ProcessSessionReadCallback(const std::string &tmpFile, const std::string &destFile,
+      std::shared_ptr<logging::Logger> logger);
+  ~ProcessSessionReadCallback();
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
   bool commit();
 

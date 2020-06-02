@@ -173,7 +173,7 @@ class CRCStream : public BaseStream {
   template<typename K>
   int readBuffer(std::vector<uint8_t>& buf, const K& t) {
     buf.resize(sizeof t);
-    return readData(reinterpret_cast<uint8_t*>(&buf[0]), sizeof(t));
+    return readData(reinterpret_cast<uint8_t*>(buf.data()), sizeof(t));
   }
 
   uint64_t crc_;

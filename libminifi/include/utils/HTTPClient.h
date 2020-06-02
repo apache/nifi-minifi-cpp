@@ -82,10 +82,7 @@ enum class SSLVersion : uint8_t {
 
 struct HTTPHeaderResponse {
  public:
-  HTTPHeaderResponse(int max) // NOLINT
-  : max_tokens_(max)
-  , parsed(false) {
-  }
+  HTTPHeaderResponse(int max) : max_tokens_(max) , parsed(false) {} // NOLINT
 
   /* Deprecated, headers are stored internally and can be accessed by getHeaderLines or getHeaderMap */
   DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void append(const std::string &header) {
@@ -143,7 +140,7 @@ struct HTTPHeaderResponse {
         size_t separator_pos = header_line.find(':');
         if (separator_pos == std::string::npos) {
           if (!last_key.empty() && (header_line[0] == ' ' || header_line[0] == '\t')) {
-            // This is a "folded header", which is deprecated(https:  // www.ietf.org/rfc/rfc7230.txt) but here we are
+            // This is a "folded header", which is deprecated (https://www.ietf.org/rfc/rfc7230.txt) but here we are
             header_mapping_[last_key].append(" " + utils::StringUtils::trim(header_line));
           }
           continue;
