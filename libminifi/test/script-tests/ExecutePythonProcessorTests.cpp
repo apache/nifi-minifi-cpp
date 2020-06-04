@@ -120,7 +120,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
 
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor");
     plan_->setProperty(executePythonProcessor, org::apache::nifi::minifi::python::processors::ExecutePythonProcessor::ScriptFile.getName(), getScriptFullPath("stateful_processor.py"));
-    executePythonProcessor -> initialize();
+    executePythonProcessor->initialize();
 
     addPutFileProcessorToPlan(core::Relationship("success", "description"), output_dir);
     plan_->runNextProcessor();  // ExecutePythonProcessor
@@ -153,7 +153,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     if ("" != used_as_script_body) {
         plan_->setProperty(executePythonProcessor, org::apache::nifi::minifi::python::processors::ExecutePythonProcessor::ScriptBody.getName(), getFileContent(getScriptFullPath(used_as_script_body)));
     }
-    executePythonProcessor -> initialize();
+    executePythonProcessor->initialize();
     return executePythonProcessor;
   }
 

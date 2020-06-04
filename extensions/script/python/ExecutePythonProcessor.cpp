@@ -70,7 +70,7 @@ void ExecutePythonProcessor::initialize() {
   appendPathForImportModules();
   loadScript();
   try {
-    if ("" != script_to_exec_) {
+    if (script_to_exec_.size()) {
       std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
       engine->eval(script_to_exec_);
       auto shared_this = shared_from_this();
@@ -95,8 +95,6 @@ void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessConte
     throw std::runtime_error("Could not correctly initialize " + getName());
   }
   try {
-    // TODO(hunyadi): When using "Script File" property, we currently re-read the script file content every time the processor is on schedule. This should change to single-read when we release 1.0.0
-    // https://issues.apache.org/jira/browse/MINIFICPP-1223
     reloadScriptIfUsingScriptFileProperty();
     if (script_to_exec_.empty()) {
       throw std::runtime_error("Neither Script Body nor Script File is available to execute");
@@ -121,7 +119,7 @@ void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContex
     throw std::runtime_error("Could not correctly initialize " + getName());
   }
   try {
-    // TODO(hunyadi): When using "Script File" property, we currently re-read the script file content every time the processor is on schedule. This should change to single-read when we release 1.0.0
+    // TODO(hunyadi): When using "Script File" property, we currently re-read the script file content every time the processor is triggered. This should change to single-read when we release 1.0.0
     // https://issues.apache.org/jira/browse/MINIFICPP-1223
     reloadScriptIfUsingScriptFileProperty();
     if (script_to_exec_.empty()) {
@@ -172,7 +170,7 @@ void ExecutePythonProcessor::appendPathForImportModules() {
   // TODO(hunyadi): I have spent some time trying to figure out pybind11, but
   // could not get this working yet. It is up to be implemented later
   // https://issues.apache.org/jira/browse/MINIFICPP-1224
-  if ("" != module_directory_) {
+  if (module_directory_.size()) {
     logger_->log_error("Not supported property: Module Directory.");
   }
 
@@ -184,8 +182,7 @@ void ExecutePythonProcessor::loadScriptFromFile(const std::string& file_path) {
     script_to_exec_ = "";
     throw std::runtime_error("Failed to read Script File: " + file_path);
   }
-  script_to_exec_ = std::string{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>())};
-  file_handle.close();
+  script_to_exec_ = std::string{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>()) };
 }
 
 void ExecutePythonProcessor::loadScript() {
@@ -193,14 +190,14 @@ void ExecutePythonProcessor::loadScript() {
   std::string script_body;
   getProperty(ScriptFile.getName(), script_file);
   getProperty(ScriptBody.getName(), script_body);
-  if ("" != script_file) {
-    if ("" != script_body) {
+  if (script_file.size()) {
+    if (script_body.size()) {
       throw std::runtime_error("Only one of Script File or Script Body may be used");
     }
     loadScriptFromFile(script_file);
     return;
   }
-  if ("" != script_body) {
+  if (script_body.size()) {
     script_to_exec_ = script_body;
     return;
   }
@@ -212,7 +209,7 @@ void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {
   std::string script_body;
   getProperty(ScriptFile.getName(), script_file);
   getProperty(ScriptBody.getName(), script_body);
-  if ("" !=  script_file && "" == script_body) {
+  if (script_file.size() && script_body.empty()) {
     loadScriptFromFile(script_file);
   }
 }
