@@ -120,6 +120,16 @@ std::string StringUtils::replaceEnvironmentVariables(std::string& original_strin
   return source_string;
 }
 
+std::string StringUtils::replaceOne(const std::string &input, const std::string &from, const std::string &to) {
+  std::size_t found_at_position = input.find(from);
+  if (found_at_position != std::string::npos) {
+    std::string input_copy = input;
+    return input_copy.replace(found_at_position, from.size(), to);
+  } else {
+    return input;
+  }
+}
+
 std::string& StringUtils::replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string) {
   std::size_t loc = 0;
   std::size_t lastFound;

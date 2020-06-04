@@ -40,12 +40,15 @@ namespace minifi {
 namespace processors {
 
 struct TailState {
-  TailState(std::string path, std::string file_name, uint64_t position, uint64_t timestamp,
-            uint64_t mtime, uint64_t checksum)
-      : path_(std::move(path)), file_name_(std::move(file_name)), position_(position), timestamp_(timestamp),
-        mtime_(mtime), checksum_(checksum) {}
+  TailState(std::string path, std::string file_name, uint64_t position,
+            std::chrono::system_clock::time_point last_read_time,
+            uint64_t checksum)
+      : path_(std::move(path)), file_name_(std::move(file_name)), position_(position), last_read_time_(last_read_time), checksum_(checksum) {}
 
-  TailState() : TailState("", "", 0, 0, 0, 0) {}
+  TailState(std::string path, std::string file_name)
+      : TailState{std::move(path), std::move(file_name), 0, std::chrono::system_clock::time_point{}, 0} {}
+
+  TailState() = default;
 
   std::string fileNameWithPath() const {
     return path_ + utils::file::FileUtils::get_separator() + file_name_;
@@ -53,10 +56,9 @@ struct TailState {
 
   std::string path_;
   std::string file_name_;
-  uint64_t position_;
-  uint64_t timestamp_;
-  uint64_t mtime_;
-  uint64_t checksum_;
+  uint64_t position_ = 0;
+  std::chrono::system_clock::time_point last_read_time_;
+  uint64_t checksum_ = 0;
 };
 
 enum class Mode {

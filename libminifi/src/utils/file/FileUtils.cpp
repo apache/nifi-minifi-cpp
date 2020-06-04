@@ -29,25 +29,25 @@ namespace minifi {
 namespace utils {
 namespace file {
 
-  uint64_t FileUtils::computeChecksum(std::string file_name, uint64_t up_to_position) {
-    constexpr uint64_t BUFFER_SIZE = 4096u;
-    std::array<char, (std::size_t) BUFFER_SIZE> buffer;
+uint64_t FileUtils::computeChecksum(const std::string &file_name, uint64_t up_to_position) {
+  constexpr uint64_t BUFFER_SIZE = 4096u;
+  std::array<char, std::size_t{BUFFER_SIZE}> buffer;
 
-    std::ifstream stream{file_name, std::ios::in | std::ios::binary};
+  std::ifstream stream{file_name, std::ios::in | std::ios::binary};
 
-    uint64_t checksum = 0;
-    uint64_t remaining_bytes_to_be_read = up_to_position;
+  uint64_t checksum = 0;
+  uint64_t remaining_bytes_to_be_read = up_to_position;
 
-    while (stream && remaining_bytes_to_be_read > 0) {
-      using std::min;  // for min(), to work around https://docs.microsoft.com/en-us/windows/win32/multimedia/min
-      stream.read(buffer.data(), min(BUFFER_SIZE, remaining_bytes_to_be_read));
-      uint64_t bytes_read = stream.gcount();
-      checksum = crc32(checksum, reinterpret_cast<unsigned char*>(buffer.data()), bytes_read);
-      remaining_bytes_to_be_read -= bytes_read;
-    }
-
-    return checksum;
+  while (stream && remaining_bytes_to_be_read > 0) {
+    // () around std::min are needed because Windows.h defines min (and max) as a macro
+    stream.read(buffer.data(), (std::min)(BUFFER_SIZE, remaining_bytes_to_be_read));
+    uint64_t bytes_read = stream.gcount();
+    checksum = crc32(checksum, reinterpret_cast<unsigned char*>(buffer.data()), bytes_read);
+    remaining_bytes_to_be_read -= bytes_read;
   }
+
+  return checksum;
+}
 
 }  // namespace file
 }  // namespace utils
@@ -55,4 +55,3 @@ namespace file {
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-

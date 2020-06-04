@@ -28,30 +28,6 @@
 #include <iostream>
 #include "utils/file/FileUtils.h"
 
-namespace {
-  std::string replaceOne(const std::string &input, const std::string &from, const std::string &to) {
-    std::size_t found_at_position = input.find(from);
-    if (found_at_position != std::string::npos) {
-      std::string input_copy = input;
-      return input_copy.replace(found_at_position, from.size(), to);
-    } else {
-      return input;
-    }
-  }
-
-  void replaceAll(std::string &input, const std::string &from, const std::string &to) {
-    std::size_t position = 0;
-    while (position < input.size()) {
-      position = input.find(from, position);
-      if (position == std::string::npos) {
-        return;
-      }
-      input.replace(position, from.size(), to);
-      position += to.size();
-    }
-  }
-}  // namespace
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -108,17 +84,11 @@ std::string PathUtils::getFullPath(const std::string& path) {
 #endif
 }
 
-std::string PathUtils::globToRegex(const std::string &glob) {
-  std::string glob_copy = glob;
-  replaceAll(glob_copy, ".", "\\.");
-  replaceAll(glob_copy, "*", ".*");
-  replaceAll(glob_copy, "?", ".");
-  return glob_copy;
-}
-
-std::string PathUtils::replacePlaceholderWithBaseName(const std::string &pattern, const std::string& base_name) {
-  static const std::string PLACEHOLDER = "${filename}";
-  return replaceOne(pattern, PLACEHOLDER, base_name);
+std::string PathUtils::globToRegex(std::string glob) {
+  utils::StringUtils::replaceAll(glob, ".", "\\.");
+  utils::StringUtils::replaceAll(glob, "*", ".*");
+  utils::StringUtils::replaceAll(glob, "?", ".");
+  return glob;
 }
 
 }  // namespace file
@@ -127,4 +97,3 @@ std::string PathUtils::replacePlaceholderWithBaseName(const std::string &pattern
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-

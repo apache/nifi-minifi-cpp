@@ -45,9 +45,7 @@ bool getFileNameAndPath(const std::string &path, std::string &filePath, std::str
  */
 std::string getFullPath(const std::string& path);
 
-std::string globToRegex(const std::string &glob);
-
-std::string replacePlaceholderWithBaseName(const std::string &pattern, const std::string& base_name);
+std::string globToRegex(std::string glob);
 
 }  // namespace PathUtils
 }  // namespace file

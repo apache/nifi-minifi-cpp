@@ -30,9 +30,3 @@ TEST_CASE("PathUtils::globToRegex works", "[globToRegex]") {
   REQUIRE(PathUtils::globToRegex("Replace*Multiple*Asterisks") == "Replace.*Multiple.*Asterisks");
   REQUIRE(PathUtils::globToRegex("ReplaceQuestionMark?.txt") == "ReplaceQuestionMark.\\.txt");
 }
-
-TEST_CASE("PathUtils::replacePlaceholderWithBaseName works", "[replacePlaceholderWithBaseName]") {
-    REQUIRE(PathUtils::replacePlaceholderWithBaseName("NoPlaceholder.txt", "xxx") == "NoPlaceholder.txt");
-    REQUIRE(PathUtils::replacePlaceholderWithBaseName("${filename}.txt", "xxx") == "xxx.txt");
-    REQUIRE(PathUtils::replacePlaceholderWithBaseName("${filename}_${filename}.txt", "xxx") == "xxx_${filename}.txt");
-}

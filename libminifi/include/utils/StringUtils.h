@@ -141,6 +141,8 @@ class StringUtils {
 
   static std::string replaceEnvironmentVariables(std::string& original_string);
 
+  static std::string replaceOne(const std::string &input, const std::string &from, const std::string &to);
+
   static std::string& replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string);
 
   inline static bool endsWithIgnoreCase(const std::string &value, const std::string & endString) {

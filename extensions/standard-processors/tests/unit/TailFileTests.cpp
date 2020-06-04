@@ -48,29 +48,29 @@ static const char *TMP_FILE = "minifi-tmpfile.txt";
 static const char *STATE_FILE = "minifi-state-file.txt";
 
 namespace {
-  std::string createTempFile(const std::string &directory, const std::string &file_name, const std::string &contents,
-      std::ios_base::openmode open_mode = std::ios::out | std::ios::binary) {
-    std::string full_file_name = directory + utils::file::FileUtils::get_separator() + file_name;
-    std::ofstream tmpfile{full_file_name, open_mode};
-    tmpfile << contents;
-    return full_file_name;
-  }
+std::string createTempFile(const std::string &directory, const std::string &file_name, const std::string &contents,
+    std::ios_base::openmode open_mode = std::ios::out | std::ios::binary) {
+  std::string full_file_name = directory + utils::file::FileUtils::get_separator() + file_name;
+  std::ofstream tmpfile{full_file_name, open_mode};
+  tmpfile << contents;
+  return full_file_name;
+}
 
-  void appendTempFile(const std::string &directory, const std::string &file_name, const std::string &contents,
-      std::ios_base::openmode open_mode = std::ios::app | std::ios::binary) {
-    createTempFile(directory, file_name, contents, open_mode);
-  }
+void appendTempFile(const std::string &directory, const std::string &file_name, const std::string &contents,
+    std::ios_base::openmode open_mode = std::ios::app | std::ios::binary) {
+  createTempFile(directory, file_name, contents, open_mode);
+}
 
-  void removeFile(const std::string &directory, const std::string &file_name) {
-    std::string full_file_name = directory + utils::file::FileUtils::get_separator() + file_name;
-    std::remove(full_file_name.c_str());
-  }
+void removeFile(const std::string &directory, const std::string &file_name) {
+  std::string full_file_name = directory + utils::file::FileUtils::get_separator() + file_name;
+  std::remove(full_file_name.c_str());
+}
 
-  void renameTempFile(const std::string &directory, const std::string &old_file_name, const std::string &new_file_name) {
-    std::string old_full_file_name = directory + utils::file::FileUtils::get_separator() + old_file_name;
-    std::string new_full_file_name = directory + utils::file::FileUtils::get_separator() + new_file_name;
-    rename(old_full_file_name.c_str(), new_full_file_name.c_str());
-  }
+void renameTempFile(const std::string &directory, const std::string &old_file_name, const std::string &new_file_name) {
+  std::string old_full_file_name = directory + utils::file::FileUtils::get_separator() + old_file_name;
+  std::string new_full_file_name = directory + utils::file::FileUtils::get_separator() + new_file_name;
+  rename(old_full_file_name.c_str(), new_full_file_name.c_str());
+}
 }  // namespace
 
 TEST_CASE("TailFile reads the file until the first delimiter", "[simple]") {
@@ -144,7 +144,7 @@ TEST_CASE("TailFile picks up the second line if a delimiter is written while it 
 
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
 
   plan->reset(true);  // start a new but with state file
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
@@ -154,7 +154,7 @@ TEST_CASE("TailFile picks up the second line if a delimiter is written while it 
   appendStream << std::endl;
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.14-34.txt"));
 
   LogTestController::getInstance().reset();
 }
@@ -190,7 +190,7 @@ TEST_CASE("TailFile re-reads the file if the state is deleted between runs", "[s
 
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
 
   plan->reset(true);  // start a new but with state file
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
@@ -200,7 +200,7 @@ TEST_CASE("TailFile re-reads the file if the state is deleted between runs", "[s
   testController.runSession(plan, true);
 
   // if we lose state we restart
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
 }
 
 TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs", "[state]") {
@@ -236,7 +236,7 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
   testController.runSession(plan, true);
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
 
   std::string filePath, fileName;
   REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file.str(), filePath, fileName));
@@ -253,7 +253,7 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
     testController.runSession(plan, true);
 
     // if we lose state we restart
-    REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.14-34.txt"));
   }
   for (int i = 14; i < 34; i++) {
     plan->reset(true);  // start a new but with state file
@@ -267,7 +267,7 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
 
   plan->runCurrentProcessor();
   for (int i = 14; i < 34; i++) {
-    REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile." + std::to_string(i) + "-34.txt"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile." + std::to_string(i) + "-34.txt"));
   }
 }
 
@@ -315,7 +315,7 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
     newstatefile.close();
 
     testController.runSession(plan, true);
-    REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.14-34.txt"));
 
     std::unordered_map<std::string, std::string> state;
     REQUIRE(plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->get(state));
@@ -393,7 +393,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs"
   plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), first_test_file);
   testController.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
-  REQUIRE(LogTestController::getInstance().contains("first.0-17.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:first.0-17.log"));
 
   SECTION("The new file gets picked up") {
     std::string second_test_file = createTempFile(directory, "second.log", "my second log line\n");
@@ -402,7 +402,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs"
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
-    REQUIRE(LogTestController::getInstance().contains("second.0-18.log"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:second.0-18.log"));
   }
 
   SECTION("The old file will no longer be tailed") {
@@ -440,8 +440,8 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs 
   createTempFile(directory, "first.animal.log", "hippopotamus\n");
   testController.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("first.fruit.0-5.log"));
-  REQUIRE(LogTestController::getInstance().contains("first.animal.0-12.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:first.fruit.0-5.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:first.animal.0-12.log"));
 
   appendTempFile(directory, "first.fruit.log", "banana\n");
   appendTempFile(directory, "first.animal.log", "hedgehog\n");
@@ -452,7 +452,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs 
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
-    REQUIRE(LogTestController::getInstance().contains("first.fruit.6-12.log"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:first.fruit.6-12.log"));
   }
 
   SECTION("If a new file matches the new regex, we start tailing it") {
@@ -461,8 +461,8 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs 
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow file"));
-    REQUIRE(LogTestController::getInstance().contains("first.fruit.6-12.log"));
-    REQUIRE(LogTestController::getInstance().contains("second.fruit.0-6.log"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:first.fruit.6-12.log"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:second.fruit.0-6.log"));
   }
 }
 
@@ -854,9 +854,9 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
 
   // Find the last flow file in the rotated file, and then pick up the new file
   REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("testfifo.txt.28-34.1"));
-  REQUIRE(LogTestController::getInstance().contains("testfifo.0-4.txt"));
-  REQUIRE(LogTestController::getInstance().contains("testfifo.5-8.txt"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:testfifo.txt.28-34.1"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:testfifo.0-4.txt"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:testfifo.5-8.txt"));
 }
 
 TEST_CASE("TailFile finds and finishes multiple rotated files and continues with the new log file", "[rotation]") {
@@ -888,8 +888,8 @@ TEST_CASE("TailFile finds and finishes multiple rotated files and continues with
   testController.runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("fruits.0-5.log"));
-  REQUIRE(LogTestController::getInstance().contains("fruits.6-12.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.0-5.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.6-12.log"));
 
   test_file_stream_0 << "Pear" << DELIM;
   test_file_stream_0.close();
@@ -914,10 +914,10 @@ TEST_CASE("TailFile finds and finishes multiple rotated files and continues with
   testController.runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 4 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("fruits.0.13-17.log"));   // Pear
-  REQUIRE(LogTestController::getInstance().contains("fruits.1.0-9.log"));     // Pineapple
-  REQUIRE(LogTestController::getInstance().contains("fruits.1.10-14.log"));   // Kiwi
-  REQUIRE(LogTestController::getInstance().contains("fruits.0-8.log"));       // Apricot
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.0.13-17.log"));   // Pear
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.1.0-9.log"));     // Pineapple
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.1.10-14.log"));   // Kiwi
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.0-8.log"));       // Apricot
 }
 
 TEST_CASE("TailFile ignores old rotated files", "[rotation]") {
@@ -948,7 +948,7 @@ TEST_CASE("TailFile ignores old rotated files", "[rotation]") {
 
   testController.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
-  REQUIRE(!LogTestController::getInstance().contains("2019-08-20"));
+  REQUIRE(!LogTestController::getInstance().contains("key:filename value:test.2019-08-20"));
 
   std::string rotated_log_file_name = dir + utils::file::FileUtils::get_separator() + "test.2020-05-18";
   REQUIRE(rename(log_file_name.c_str(), rotated_log_file_name.c_str()) == 0);
@@ -959,7 +959,7 @@ TEST_CASE("TailFile ignores old rotated files", "[rotation]") {
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
   testController.runSession(plan, true);
-  REQUIRE(!LogTestController::getInstance().contains("2019-08-20"));
+  REQUIRE(!LogTestController::getInstance().contains("key:filename value:test.2019-08-20"));
 
   LogTestController::getInstance().reset();
 }
@@ -993,15 +993,15 @@ TEST_CASE("TailFile rotation works with multiple input files", "[rotation][multi
   testController.runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged " + std::to_string(3 + 2 + 4) + " flow files"));
-  REQUIRE(LogTestController::getInstance().contains("fruit.0-5.log"));
-  REQUIRE(LogTestController::getInstance().contains("fruit.6-10.log"));
-  REQUIRE(LogTestController::getInstance().contains("fruit.11-17.log"));
-  REQUIRE(LogTestController::getInstance().contains("animal.0-4.log"));
-  REQUIRE(LogTestController::getInstance().contains("animal.5-12.log"));
-  REQUIRE(LogTestController::getInstance().contains("color.0-3.log"));
-  REQUIRE(LogTestController::getInstance().contains("color.4-8.log"));
-  REQUIRE(LogTestController::getInstance().contains("color.9-15.log"));
-  REQUIRE(LogTestController::getInstance().contains("color.16-22.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruit.0-5.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruit.6-10.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruit.11-17.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:animal.0-4.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:animal.5-12.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:color.0-3.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:color.4-8.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:color.9-15.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:color.16-22.log"));
 
   appendTempFile(dir, "fruit.log", "orange\n");
   appendTempFile(dir, "animal.log", "axolotl\n");
@@ -1020,12 +1020,12 @@ TEST_CASE("TailFile rotation works with multiple input files", "[rotation][multi
   testController.runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 6 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("fruit.18-24.0"));
-  REQUIRE(LogTestController::getInstance().contains("fruit.0-5.log"));
-  REQUIRE(LogTestController::getInstance().contains("animal.13-20.0"));
-  REQUIRE(LogTestController::getInstance().contains("animal.0-8.log"));
-  REQUIRE(LogTestController::getInstance().contains("color.23-33.log"));
-  REQUIRE(LogTestController::getInstance().contains("color.34-43.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruit.18-24.0"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruit.0-5.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:animal.13-20.0"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:animal.0-8.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:color.23-33.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:color.34-43.log"));
 }
 
 TEST_CASE("TailFile handles the Rolling Filename Pattern property correctly", "[rotation]") {
@@ -1075,7 +1075,7 @@ TEST_CASE("TailFile handles the Rolling Filename Pattern property correctly", "[
   testController.runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
-  REQUIRE(LogTestController::getInstance().contains("test.0-10.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:test.0-10.log"));
 
   appendTempFile(dir, "test.log", "one more line\n");
   renameTempFile(dir, "test.log", "test.rolled.log");
@@ -1311,11 +1311,11 @@ TEST_CASE("TailFile handles the Delimiter setting correctly", "[delimiter]") {
 
     if (delimiter.empty()) {
       REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
-      REQUIRE(LogTestController::getInstance().contains("test.0-6.log"));
+      REQUIRE(LogTestController::getInstance().contains("key:filename value:test.0-6.log"));
     } else {
       REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
-      REQUIRE(LogTestController::getInstance().contains("test.0-3.log"));
-      REQUIRE(LogTestController::getInstance().contains("test.4-7.log"));
+      REQUIRE(LogTestController::getInstance().contains("key:filename value:test.0-3.log"));
+      REQUIRE(LogTestController::getInstance().contains("key:filename value:test.4-7.log"));
     }
   }
 }

@@ -52,7 +52,7 @@ class CRCStream : public BaseStream {
    * it will exceed our lifetime.
    */
   explicit CRCStream(T *child_stream);
-  explicit CRCStream(T *child_stream, uint64_t initial_crc);
+  CRCStream(T *child_stream, uint64_t initial_crc);
 
   CRCStream(CRCStream<T>&&) noexcept;
 

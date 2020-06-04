@@ -180,8 +180,11 @@ TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
 #endif
 }
 
-TEST_CASE("FileUtils::last_write_time works", "[last_write_time]") {
-  uint64_t timeBeforeWrite = getTimeMillis() / 1000;
+TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_write_time][last_write_time_point]") {
+  using namespace std::chrono;
+
+  uint64_t time_before_write = getTimeMillis() / 1000;
+  time_point<system_clock, seconds> time_point_before_write = time_point_cast<seconds>(system_clock::now());
 
   TestController testController;
 
@@ -190,30 +193,45 @@ TEST_CASE("FileUtils::last_write_time works", "[last_write_time]") {
 
   std::string test_file = dir + FileUtils::get_separator() + "test.txt";
   REQUIRE(FileUtils::last_write_time(test_file) == 0);
+  REQUIRE(FileUtils::last_write_time_point(test_file) == (time_point<system_clock, seconds>{}));
 
   std::ofstream test_file_stream(test_file);
   test_file_stream << "foo\n";
   test_file_stream.flush();
 
-  uint64_t timeAfterFirstWrite = getTimeMillis() / 1000;
+  uint64_t time_after_first_write = getTimeMillis() / 1000;
+  time_point<system_clock, seconds> time_point_after_first_write = time_point_cast<seconds>(system_clock::now());
 
   uint64_t first_mtime = FileUtils::last_write_time(test_file);
-  REQUIRE(first_mtime >= timeBeforeWrite);
-  REQUIRE(first_mtime <= timeAfterFirstWrite);
+  REQUIRE(first_mtime >= time_before_write);
+  REQUIRE(first_mtime <= time_after_first_write);
+
+  time_point<system_clock, seconds> first_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  REQUIRE(first_mtime_time_point >= time_point_before_write);
+  REQUIRE(first_mtime_time_point <= time_point_after_first_write);
 
   test_file_stream << "bar\n";
   test_file_stream.flush();
 
-  uint64_t timeAfterSecondWrite = getTimeMillis() / 1000;
+  uint64_t time_after_second_write = getTimeMillis() / 1000;
+  time_point<system_clock, seconds> time_point_after_second_write = time_point_cast<seconds>(system_clock::now());
 
   uint64_t second_mtime = FileUtils::last_write_time(test_file);
   REQUIRE(second_mtime >= first_mtime);
-  REQUIRE(second_mtime >= timeAfterFirstWrite);
-  REQUIRE(second_mtime <= timeAfterSecondWrite);
+  REQUIRE(second_mtime >= time_after_first_write);
+  REQUIRE(second_mtime <= time_after_second_write);
+
+  time_point<system_clock, seconds> second_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  REQUIRE(second_mtime_time_point >= first_mtime_time_point);
+  REQUIRE(second_mtime_time_point >= time_point_after_first_write);
+  REQUIRE(second_mtime_time_point <= time_point_after_second_write);
 
   test_file_stream.close();
   uint64_t third_mtime = FileUtils::last_write_time(test_file);
   REQUIRE(third_mtime == second_mtime);
+
+  time_point<system_clock, seconds> third_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  REQUIRE(third_mtime_time_point == second_mtime_time_point);
 }
 
 TEST_CASE("FileUtils::file_size works", "[file_size]") {

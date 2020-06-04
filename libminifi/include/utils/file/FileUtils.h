@@ -257,6 +257,10 @@ class FileUtils {
     return 0;
   }
 
+  static std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> last_write_time_point(const std::string &path) {
+    return std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>{std::chrono::seconds{last_write_time(path)}};
+  }
+
   static uint64_t file_size(const std::string &path) {
 #ifdef WIN32
     struct _stat result;
@@ -718,7 +722,7 @@ class FileUtils {
   }
 #endif /* WIN32 */
 
-  static uint64_t computeChecksum(std::string file_name, uint64_t up_to_position);
+  static uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position);
 }; // NOLINT
 
 }  // namespace file
