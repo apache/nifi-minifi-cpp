@@ -181,10 +181,10 @@ class C2Agent : public state::UpdateController {
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> device_information_;
 
   // responses for the the C2 agent.
-  utils::ConditionConcurrentQueue<C2Payload> responses;
+  utils::ConcurrentQueue<C2Payload> responses;
 
   // requests that originate from the C2 server.
-  utils::ConditionConcurrentQueue<C2Payload> requests;
+  utils::ConcurrentQueue<C2Payload> requests;
 
   // heart beat period.
   int64_t heart_beat_period_;

@@ -81,9 +81,8 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
       std::vector<C2Payload> payload_batch;
       payload_batch.reserve(max_c2_responses);
       auto getRequestPayload = [&payload_batch] (C2Payload&& payload) { payload_batch.emplace_back(std::move(payload)); };
-      const std::chrono::system_clock::time_point timeout_point = std::chrono::system_clock::now() + std::chrono::seconds(1);
       for (std::size_t attempt_num = 0; attempt_num < max_c2_responses; ++attempt_num) {
-        if (!requests.consumeWaitUntil(getRequestPayload, timeout_point)) {
+        if (!requests.consume(getRequestPayload)) {
           break;
         }
       }
@@ -124,7 +123,7 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
   c2_consumer_ = [&] {
     if (false == responses.empty()) {
       const auto call_extractPayload = [this](C2Payload&& payload) { extractPayload(std::move(payload)); };
-      const auto consume_success = responses.consumeWaitFor(call_extractPayload, std::chrono::seconds{1});
+      const auto consume_success = responses.consume(call_extractPayload);
       if (!consume_success) {
         extractPayload(C2Payload{ Operation::HEARTBEAT });
       }
