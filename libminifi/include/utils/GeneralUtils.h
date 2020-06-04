@@ -24,7 +24,7 @@
 #include <utility>
 #include <functional>
 
-#include "gsl.h"
+#include "gsl.h" // NOLINT
 
 namespace org {
 namespace apache {

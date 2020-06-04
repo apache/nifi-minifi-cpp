@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_GSL_H
-#define LIBMINIFI_INCLUDE_UTILS_GSL_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_GSL_H_
+#define LIBMINIFI_INCLUDE_UTILS_GSL_H_
 
 #include <gsl-lite/gsl-lite.hpp>
 
@@ -31,4 +31,4 @@ namespace gsl = ::gsl_lite;
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_GSL_H */
+#endif  // LIBMINIFI_INCLUDE_UTILS_GSL_H_

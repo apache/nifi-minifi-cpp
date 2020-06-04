@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Property.h"

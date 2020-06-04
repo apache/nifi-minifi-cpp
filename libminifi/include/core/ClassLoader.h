@@ -611,7 +611,7 @@ T *ClassLoader::instantiateRaw(const std::string &class_name, utils::Identifier 
   }
 }
 
-}/* namespace core */
+}  // namespace core
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

@@ -17,9 +17,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PUT_KAFKA_H__
-#define __PUT_KAFKA_H__
+#ifndef EXTENSIONS_LIBRDKAFKA_PUBLISHKAFKA_H_
+#define EXTENSIONS_LIBRDKAFKA_PUBLISHKAFKA_H_
 
+#include <atomic>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <set>
+#include <string>
+#include <condition_variable>
+#include <utility>
+#include <vector>
+
+#include "utils/GeneralUtils.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -29,16 +41,8 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
 #include "utils/RegexUtils.h"
-#include "rdkafka.h"
+#include "rdkafka.h" // NOLINT
 #include "KafkaConnection.h"
-#include <atomic>
-#include <map>
-#include <set>
-#include <mutex>
-#include <cstdint>
-#include <condition_variable>
-#include <utility>
-#include <utils/gsl.h>
 
 namespace org {
 namespace apache {
@@ -209,7 +213,7 @@ class PublishKafka : public core::Processor {
       if (!result) { throw std::bad_alloc{}; }
 
       for (const auto& kv : flow_file.getAttributes()) {
-        if(attribute_name_regex.match(kv.first)) {
+        if (attribute_name_regex.match(kv.first)) {
           rd_kafka_header_add(result, kv.first.c_str(), kv.first.size(), kv.second.c_str(), kv.second.size());
         }
       }
@@ -325,8 +329,7 @@ class PublishKafka : public core::Processor {
   };
 
  public:
-
-  virtual bool supportsDynamicProperties() override {
+  bool supportsDynamicProperties() override {
     return true;
   }
 
@@ -336,13 +339,12 @@ class PublishKafka : public core::Processor {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  virtual void initialize() override;
-  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  virtual void notifyStop() override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void initialize() override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void notifyStop() override;
 
  protected:
-
   bool configureNewConnection(const std::shared_ptr<core::ProcessContext> &context);
   bool createNewTopic(const std::shared_ptr<core::ProcessContext> &context, const std::string& topic_name);
 
@@ -374,4 +376,4 @@ REGISTER_RESOURCE(PublishKafka, "This Processor puts the contents of a FlowFile 
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // EXTENSIONS_LIBRDKAFKA_PUBLISHKAFKA_H_
