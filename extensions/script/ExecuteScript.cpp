@@ -40,16 +40,13 @@ namespace minifi {
 namespace processors {
 
 core::Property ExecuteScript::ScriptEngine("Script Engine",  // NOLINT
-                                           "The engine to execute scripts (python, lua)", "python");
+    R"(The engine to execute scripts (python, lua))", "python");
 core::Property ExecuteScript::ScriptFile("Script File",  // NOLINT
-                                         R"(Path to script file to execute.
-                                            Only one of Script File or Script Body may be used)", "");
+    R"(Path to script file to execute. Only one of Script File or Script Body may be used)", "");
 core::Property ExecuteScript::ScriptBody("Script Body",  // NOLINT
-                                         R"(Body of script to execute.
-                                            Only one of Script File or Script Body may be used)", "");
+    R"(Body of script to execute. Only one of Script File or Script Body may be used)", "");
 core::Property ExecuteScript::ModuleDirectory("Module Directory",  // NOLINT
-                                              R"(Comma-separated list of paths to files and/or directories which
-                                                 contain modules required by the script)", "");
+    R"(Comma-separated list of paths to files and/or directories which contain modules required by the script)", "");
 
 core::Relationship ExecuteScript::Success("success", "Script successes");  // NOLINT
 core::Relationship ExecuteScript::Failure("failure", "Script failures");  // NOLINT

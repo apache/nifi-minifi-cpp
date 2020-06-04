@@ -19,14 +19,8 @@
 #include <string>
 
 #include "../../test/TestBase.h"
-
-#ifdef WIN32
-#include <direct.h>
-#define GetCurrentDir _getcwd
-#else
-#include <unistd.h>
-#define GetCurrentDir getcwd
-#endif
+#include "utils/file/FileUtils.h"
+#include "utils/Environment.h"
 
 namespace org {
 namespace apache {
@@ -34,25 +28,16 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-std::string getCurrentWorkingDir(void) {
-  char buff[FILENAME_MAX];
-  GetCurrentDir(buff, FILENAME_MAX);
-  std::string current_working_dir(buff);
-  return current_working_dir;
-}
-
 std::string createTempDir(TestController* testController) {
   char dirtemplate[] = "/tmp/gt.XXXXXX";
   std::string temp_dir = testController->createTempDirectory(dirtemplate);
   REQUIRE(!temp_dir.empty());
-  struct stat buffer;
-  REQUIRE(-1 != stat(temp_dir.c_str(), &buffer));
-  REQUIRE(S_ISDIR(buffer.st_mode));
+  REQUIRE(file::FileUtils::is_directory(temp_dir.c_str()));
   return temp_dir;
 }
 
 std::string putFileToDir(const std::string& dir_path, const std::string& file_name, const std::string& content) {
-  std::string file_path(dir_path + utils::file::FileUtils::get_separator() + file_name);
+  std::string file_path(dir_path + file::FileUtils::get_separator() + file_name);
   std::ofstream out_file(file_path);
   if (out_file.is_open()) {
     out_file << content;

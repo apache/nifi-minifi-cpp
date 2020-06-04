@@ -35,14 +35,11 @@ namespace python {
 namespace processors {
 
 core::Property ExecutePythonProcessor::ScriptFile("Script File",  // NOLINT
-    R"(Path to script file to execute.
-                                            Only one of Script File or Script Body may be used)", "");
+    R"(Path to script file to execute. Only one of Script File or Script Body may be used)", "");
 core::Property ExecutePythonProcessor::ScriptBody("Script Body",  // NOLINT
-    R"(Script to execute.
-                                            Only one of Script File or Script Body may be used)", "");
+    R"(Script to execute. Only one of Script File or Script Body may be used)", "");
 core::Property ExecutePythonProcessor::ModuleDirectory("Module Directory",  // NOLINT
-    R"(Comma-separated list of paths to files and/or directories which
-                                                 contain modules required by the script)", "");
+    R"(Comma-separated list of paths to files and/or directories which contain modules required by the script)", "");
 
 core::Relationship ExecutePythonProcessor::Success("success", "Script successes");  // NOLINT
 core::Relationship ExecutePythonProcessor::Failure("failure", "Script failures");  // NOLINT
@@ -176,7 +173,7 @@ void ExecutePythonProcessor::appendPathForImportModules() {
   // could not get this working yet. It is up to be implemented later
   // https://issues.apache.org/jira/browse/MINIFICPP-1224
   if ("" != module_directory_) {
-    logger_ -> log_error("Not supported property: Module Directory.");
+    logger_->log_error("Not supported property: Module Directory.");
   }
 
 }
