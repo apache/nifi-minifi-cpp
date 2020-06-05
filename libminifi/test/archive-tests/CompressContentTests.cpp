@@ -99,9 +99,9 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
  */
 class CompressDecompressionTestController : public TestController{
  protected:
-  static std::string tempDir;
-  static std::string raw_content_path;
-  static std::string compressed_content_path;
+  static std::string tempDir_;
+  static std::string raw_content_path_;
+  static std::string compressed_content_path_;
   static TestController& get_global_controller() {
     static TestController controller;
     return controller;
@@ -122,16 +122,16 @@ class CompressDecompressionTestController : public TestController{
   };
 
   std::string rawContentPath() const {
-    return raw_content_path;
+    return raw_content_path_;
   }
 
   std::string compressedPath() const {
-    return compressed_content_path;
+    return compressed_content_path_;
   }
 
   RawContent getRawContent() const {
     std::ifstream file;
-    file.open(raw_content_path, std::ios::binary);
+    file.open(raw_content_path_, std::ios::binary);
     std::string contents{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
     return RawContent{std::move(contents)};
   }
@@ -141,35 +141,36 @@ class CompressDecompressionTestController : public TestController{
 
 CompressDecompressionTestController::~CompressDecompressionTestController() = default;
 
-std::string CompressDecompressionTestController::tempDir;
-std::string CompressDecompressionTestController::raw_content_path;
-std::string CompressDecompressionTestController::compressed_content_path;
+std::string CompressDecompressionTestController::tempDir_;
+std::string CompressDecompressionTestController::raw_content_path_;
+std::string CompressDecompressionTestController::compressed_content_path_;
 
 class CompressTestController : public CompressDecompressionTestController {
   static void initContentWithRandomData() {
     int random_seed = 0x454;
     std::ofstream file;
-    file.open(raw_content_path, std::ios::binary);
+    file.open(raw_content_path_, std::ios::binary);
 
     std::mt19937 gen(random_seed);
+    std::uniform_int_distribution<> dis(0, 99);
     for (int i = 0; i < 100000; i++) {
-      file << std::to_string(gen() % 100);
+      file << std::to_string(dis(gen));
     }
   }
 
  public:
   CompressTestController() {
     char format[] = "/tmp/test.XXXXXX";
-    tempDir = get_global_controller().createTempDirectory(format);
-    REQUIRE(!tempDir.empty());
-    raw_content_path = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-compresscontent.txt");
-    compressed_content_path = utils::file::FileUtils::concat_path(tempDir, "minifi-compresscontent");
+    tempDir_ = get_global_controller().createTempDirectory(format);
+    REQUIRE(!tempDir_.empty());
+    raw_content_path_ = utils::file::FileUtils::concat_path(tempDir_, "minifi-expect-compresscontent.txt");
+    compressed_content_path_ = utils::file::FileUtils::concat_path(tempDir_, "minifi-compresscontent");
     initContentWithRandomData();
   }
 
   template<class ...Args>
   void writeCompressed(Args&& ...args){
-    std::ofstream file(compressed_content_path, std::ios::binary);
+    std::ofstream file(compressed_content_path_, std::ios::binary);
     file.write(std::forward<Args>(args)...);
   }
 };
@@ -177,9 +178,9 @@ class CompressTestController : public CompressDecompressionTestController {
 class DecompressTestController : public CompressDecompressionTestController{
  public:
   ~DecompressTestController(){
-    tempDir = "";
-    raw_content_path = "";
-    compressed_content_path = "";
+    tempDir_ = "";
+    raw_content_path_ = "";
+    compressed_content_path_ = "";
   }
 };
 
