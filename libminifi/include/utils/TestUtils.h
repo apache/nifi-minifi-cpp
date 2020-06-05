@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include <string>
 
 #include "../../test/TestBase.h"
@@ -38,7 +40,7 @@ std::string createTempDir(TestController* testController) {
 
 std::string putFileToDir(const std::string& dir_path, const std::string& file_name, const std::string& content) {
   std::string file_path(dir_path + file::FileUtils::get_separator() + file_name);
-  std::ofstream out_file(file_path);
+  std::ofstream out_file(file_path, std::ios::binary | std::ios::out);
   if (out_file.is_open()) {
     out_file << content;
   }
@@ -52,7 +54,7 @@ std::string createTempDirWithFile(TestController* testController, const std::str
 }
 
 std::string getFileContent(const std::string& file_name) {
-  std::ifstream file_handle(file_name);
+  std::ifstream file_handle(file_name, std::ios::binary | std::ios::in);
   REQUIRE(file_handle.is_open());
   const std::string file_content{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>()) };
   return file_content;
