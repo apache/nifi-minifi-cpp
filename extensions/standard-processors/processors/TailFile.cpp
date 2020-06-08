@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <queue>
 #include <map>
 #include <unordered_map>
@@ -34,6 +35,7 @@
 #include <utility>
 #include <vector>
 
+#include "io/CRCStream.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
 #include "utils/TimeUtil.h"
@@ -42,10 +44,6 @@
 #include "TailFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-
-#ifndef S_ISDIR
-#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
-#endif
 
 namespace org {
 namespace apache {
@@ -166,6 +164,151 @@ struct TailStateWithMtime {
 
   TailState tail_state_;
   TimePoint mtime_;
+};
+
+void openFile(const std::string &file_name, uint64_t offset, std::ifstream &input_stream, const std::shared_ptr<logging::Logger> &logger) {
+  logger->log_debug("Opening %s", file_name);
+  input_stream.open(file_name.c_str(), std::fstream::in | std::fstream::binary);
+  if (!input_stream.is_open() || !input_stream.good()) {
+    input_stream.close();
+    throw Exception(FILE_OPERATION_EXCEPTION, "Could not open file: " + file_name);
+  }
+  if (offset != 0U) {
+    input_stream.seekg(offset, std::ifstream::beg);
+    if (!input_stream.good()) {
+      logger->log_error("Seeking to %lu failed for file %s (does file/filesystem support seeking?)", offset, file_name);
+      throw Exception(FILE_OPERATION_EXCEPTION, "Could not seek file " + file_name + " to offset " + std::to_string(offset));
+    }
+  }
+}
+
+class FileReaderCallback : public OutputStreamCallback {
+ public:
+  FileReaderCallback(const std::string &file_name,
+                     uint64_t offset,
+                     char input_delimiter,
+                     uint64_t checksum)
+    : input_delimiter_(input_delimiter),
+      checksum_(checksum),
+      logger_(logging::LoggerFactory<TailFile>::getLogger()) {
+    openFile(file_name, offset, input_stream_, logger_);
+  }
+
+  int64_t process(std::shared_ptr<io::BaseStream> output_stream) override {
+    io::CRCStream<io::BaseStream> crc_stream{output_stream.get(), checksum_};
+
+    uint64_t num_bytes_written = 0;
+    bool found_delimiter = false;
+
+    while (hasMoreToRead() && !found_delimiter) {
+      if (begin == end) {
+        input_stream_.read(reinterpret_cast<char *>(buffer.data()), buffer.size());
+
+        std::streamsize num_bytes_read = input_stream_.gcount();
+        logger_->log_trace("Read %d bytes of input", num_bytes_read);
+
+        begin = buffer.data();
+        end = begin + num_bytes_read;
+      }
+
+      uint8_t *delimiter_pos = std::find(begin, end, input_delimiter_);
+      found_delimiter = (delimiter_pos != end);
+
+      ptrdiff_t zlen{std::distance(begin, delimiter_pos)};
+      if (found_delimiter) {
+        zlen += 1;
+      }
+      if (zlen < (std::numeric_limits<int>::min)() || zlen > (std::numeric_limits<int>::max)()) {
+        logger_->log_error("narrowing conversion failed");
+      }
+      const int len = zlen;
+
+      crc_stream.write(begin, len);
+      num_bytes_written += len;
+      begin += len;
+    }
+
+    if (found_delimiter) {
+      checksum_ = crc_stream.getCRC();
+    } else {
+      latest_flow_file_ends_with_delimiter_ = false;
+    }
+
+    return num_bytes_written;
+  }
+
+  uint64_t checksum() const {
+    return checksum_;
+  }
+
+  bool hasMoreToRead() const {
+    return begin != end || input_stream_.good();
+  }
+
+  bool useLatestFlowFile() const {
+    return latest_flow_file_ends_with_delimiter_;
+  }
+
+ private:
+  char input_delimiter_;
+  uint64_t checksum_;
+  std::ifstream input_stream_;
+  std::shared_ptr<logging::Logger> logger_;
+
+  constexpr static std::size_t BUFFER_SIZE = 4096;
+  std::array<uint8_t, BUFFER_SIZE> buffer;
+  uint8_t *begin = buffer.data();
+  uint8_t *end = buffer.data();
+
+  bool latest_flow_file_ends_with_delimiter_ = true;
+};
+
+class WholeFileReaderCallback : public OutputStreamCallback {
+ public:
+  WholeFileReaderCallback(const std::string &file_name,
+                          uint64_t offset,
+                          uint64_t checksum)
+    : checksum_(checksum),
+      logger_(logging::LoggerFactory<TailFile>::getLogger()) {
+    openFile(file_name, offset, input_stream_, logger_);
+  }
+
+  uint64_t checksum() const {
+    return checksum_;
+  }
+
+  int64_t process(std::shared_ptr<io::BaseStream> output_stream) override {
+    constexpr std::size_t BUFFER_SIZE = 4096;
+    std::array<uint8_t, BUFFER_SIZE> buffer;
+
+    io::CRCStream<io::BaseStream> crc_stream{output_stream.get(), checksum_};
+
+    uint64_t num_bytes_written = 0;
+
+    while (input_stream_.good()) {
+      input_stream_.read(reinterpret_cast<char *>(buffer.data()), buffer.size());
+
+      std::streamsize num_bytes_read = input_stream_.gcount();
+      logger_->log_trace("Read %d bytes of input", num_bytes_read);
+
+      if (num_bytes_read < (std::numeric_limits<int>::min)() || num_bytes_read > (std::numeric_limits<int>::max)()) {
+        logger_->log_error("narrowing conversion failed");
+      }
+      const int len = num_bytes_read;
+
+      crc_stream.write(buffer.data(), len);
+      num_bytes_written += len;
+    }
+
+    checksum_ = crc_stream.getCRC();
+
+    return num_bytes_written;
+  }
+
+ private:
+  uint64_t checksum_;
+  std::ifstream input_stream_;
+  std::shared_ptr<logging::Logger> logger_;
 };
 }  // namespace
 
@@ -533,43 +676,60 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessContext> &co
     char delim = delimiter_[0];
     logger_->log_trace("Looking for delimiter 0x%X", delim);
 
-    std::vector<std::shared_ptr<FlowFileRecord>> flowFiles;
-    uint64_t checksum = state.checksum_;
-    session->import(full_file_name, flowFiles, state.position_, delim, true, &checksum);
-    logger_->log_info("%u flowfiles were received from TailFile input", flowFiles.size());
+    std::size_t num_flow_files = 0;
+    FileReaderCallback file_reader{full_file_name, state.position_, delim, state.checksum_};
+    TailState state_copy{state};
 
-    for (auto &ffr : flowFiles) {
-      logger_->log_info("TailFile %s for %u bytes", fileName, ffr->getSize());
-      std::string logName = baseName + "." + std::to_string(state.position_) + "-" +
-                            std::to_string(state.position_ + ffr->getSize() - 1) + "." + extension;
-      ffr->updateKeyedAttribute(PATH, state.path_);
-      ffr->addKeyedAttribute(ABSOLUTE_PATH, full_file_name);
-      ffr->updateKeyedAttribute(FILENAME, logName);
-      session->transfer(ffr, Success);
-      state.position_ += ffr->getSize();
-      state.last_read_time_ = std::chrono::system_clock::now();
-      state.checksum_ = checksum;
-      storeState(context);
+    while (file_reader.hasMoreToRead()) {
+      auto flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
+      session->write(flow_file, &file_reader);
+
+      if (file_reader.useLatestFlowFile()) {
+        updateFlowFileAttributes(full_file_name, state_copy, fileName, baseName, extension, flow_file);
+        session->transfer(flow_file, Success);
+        updateStateAttributes(state_copy, flow_file->getSize(), file_reader.checksum());
+
+        ++num_flow_files;
+
+      } else {
+        session->remove(flow_file);
+      }
     }
+
+    state = state_copy;
+    storeState(context);
+
+    logger_->log_info("%u flowfiles were received from TailFile input", num_flow_files);
+
   } else {
-    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
-    if (flowFile) {
-      flowFile->updateKeyedAttribute(PATH, state.path_);
-      flowFile->addKeyedAttribute(ABSOLUTE_PATH, full_file_name);
-      uint64_t checksum = state.checksum_;
-      session->import(full_file_name, flowFile, true, state.position_, &checksum);
-      session->transfer(flowFile, Success);
-      logger_->log_info("TailFile %s for %llu bytes", fileName, flowFile->getSize());
-      std::string logName = baseName + "." + std::to_string(state.position_) + "-" +
-                            std::to_string(state.position_ + flowFile->getSize()) + "."
-                            + extension;
-      flowFile->updateKeyedAttribute(FILENAME, logName);
-      state.position_ += flowFile->getSize();
-      state.last_read_time_ = std::chrono::system_clock::now();
-      state.checksum_ = checksum;
-      storeState(context);
-    }
+    WholeFileReaderCallback file_reader{full_file_name, state.position_, state.checksum_};
+    auto flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
+    session->write(flow_file, &file_reader);
+
+    updateFlowFileAttributes(full_file_name, state, fileName, baseName, extension, flow_file);
+    session->transfer(flow_file, Success);
+    updateStateAttributes(state, flow_file->getSize(), file_reader.checksum());
+
+    storeState(context);
   }
+}
+
+void TailFile::updateFlowFileAttributes(const std::string &full_file_name, const TailState &state,
+                                        const std::string &fileName, const std::string &baseName,
+                                        const std::string &extension,
+                                        std::shared_ptr<FlowFileRecord> &flow_file) const {
+  logger_->log_info("TailFile %s for %u bytes", fileName, flow_file->getSize());
+  std::string logName = baseName + "." + std::to_string(state.position_) + "-" +
+                        std::to_string(state.position_ + flow_file->getSize() - 1) + "." + extension;
+  flow_file->updateKeyedAttribute(PATH, state.path_);
+  flow_file->addKeyedAttribute(ABSOLUTE_PATH, full_file_name);
+  flow_file->updateKeyedAttribute(FILENAME, logName);
+}
+
+void TailFile::updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const {
+  state.position_ += size;
+  state.last_read_time_ = std::chrono::system_clock::now();
+  state.checksum_ = checksum;
 }
 
 void TailFile::checkForRemovedFiles() {

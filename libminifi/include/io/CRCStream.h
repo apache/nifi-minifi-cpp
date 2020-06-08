@@ -93,6 +93,8 @@ class CRCStream : public BaseStream {
    */
   int writeData(uint8_t *value, int size) override;
 
+  using BaseStream::write;
+
   /**
    * write 4 bytes to stream
    * @param base_value non encoded value

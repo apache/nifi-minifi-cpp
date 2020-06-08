@@ -104,7 +104,7 @@ TEST_CASE("TailFile reads the file until the first delimiter", "[simple]") {
 
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
-  REQUIRE(records.size() == 2);
+  REQUIRE(records.size() == 5);  // line 1: CREATE, MODIFY; line 2: CREATE, MODIFY, DROP
 
   testController.runSession(plan, false);
 
@@ -1319,7 +1319,7 @@ TEST_CASE("TailFile handles the Delimiter setting correctly", "[delimiter]") {
 
     if (delimiter.empty()) {
       REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
-      REQUIRE(LogTestController::getInstance().contains("key:filename value:test.0-6.log"));
+      REQUIRE(LogTestController::getInstance().contains("key:filename value:test.0-5.log"));
     } else {
       REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
       REQUIRE(LogTestController::getInstance().contains("key:filename value:test.0-3.log"));

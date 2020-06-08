@@ -163,6 +163,12 @@ class TailFile : public core::Processor {
   void checkForRemovedFiles();
 
   void checkForNewFiles();
+
+  void updateFlowFileAttributes(const std::string &full_file_name, const TailState &state, const std::string &fileName,
+                                const std::string &baseName, const std::string &extension,
+                                std::shared_ptr<FlowFileRecord> &flow_file) const;
+
+  void updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const;
 };
 
 REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting data from the file as it is written to the file. The file is expected to be textual."
