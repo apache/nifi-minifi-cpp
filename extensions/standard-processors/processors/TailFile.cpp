@@ -422,7 +422,7 @@ bool TailFile::storeState(const std::shared_ptr<core::ProcessContext>& context) 
 
 std::vector<TailState> TailFile::findRotatedFiles(const TailState &state) const {
   logger_->log_debug("Searching for files rolled over; last read time is %llu",
-      std::chrono::time_point_cast<std::chrono::seconds>(state.last_read_time_));
+      std::chrono::time_point_cast<std::chrono::seconds>(state.last_read_time_).time_since_epoch().count());
 
   std::size_t last_dot_position = state.file_name_.find_last_of('.');
   std::string base_name = state.file_name_.substr(0, last_dot_position);

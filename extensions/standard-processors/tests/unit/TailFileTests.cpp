@@ -833,14 +833,14 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
 
   REQUIRE(LogTestController::getInstance().contains(std::string("Logged ") + std::to_string(expected_pieces) + " flow files"));
 
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));  // make sure the new file gets newer modification time
+
   in_file_stream << DELIM;
   in_file_stream.close();
 
   std::string rotated_file = (in_file + ".1");
 
   REQUIRE(rename(in_file.c_str(), rotated_file.c_str()) == 0);
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(1000));  // make sure the new file gets newer modification time
 
   std::ofstream new_in_file_stream(in_file, std::ios::out | std::ios::binary);
   new_in_file_stream << "five" << DELIM << "six" << DELIM;
@@ -890,6 +890,8 @@ TEST_CASE("TailFile finds and finishes multiple rotated files and continues with
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.0-5.log"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.6-12.log"));
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   test_file_stream_0 << "Pear" << DELIM;
   test_file_stream_0.close();
@@ -1003,6 +1005,8 @@ TEST_CASE("TailFile rotation works with multiple input files", "[rotation][multi
   REQUIRE(LogTestController::getInstance().contains("key:filename value:color.9-15.log"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:color.16-22.log"));
 
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
   appendTempFile(dir, "fruit.log", "orange\n");
   appendTempFile(dir, "animal.log", "axolotl\n");
   appendTempFile(dir, "color.log", "aquamarine\n");
@@ -1040,7 +1044,6 @@ TEST_CASE("TailFile handles the Rolling Filename Pattern property correctly", "[
   auto dir = testController.createTempDirectory(format);
 
   std::string test_file = createTempFile(dir, "test.log", "some stuff\n");
-  std::string another_unrelated_file = createTempFile(dir, "test.txt", "unrelated stuff\n");
 
   // Build MiNiFi processing graph
   auto tail_file = plan->addProcessor("TailFile", "Tail");
@@ -1077,8 +1080,11 @@ TEST_CASE("TailFile handles the Rolling Filename Pattern property correctly", "[
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:test.0-10.log"));
 
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
   appendTempFile(dir, "test.log", "one more line\n");
   renameTempFile(dir, "test.log", "test.rolled.log");
+  createTempFile(dir, "test.txt", "unrelated stuff\n");
   createTempFile(dir, "other_rolled.log", "some stuff\none more line\n");  // same contents as test.rolled.log
 
   plan->reset();
@@ -1248,6 +1254,8 @@ TEST_CASE("TailFile doesn't yield if work was done on rotated files only", "[yie
 
   plan->reset();
   tail_file->clearYield();
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   SECTION("File rotated but not written => yield") {
     renameTempFile(temp_directory, "test.log", "test.1");
