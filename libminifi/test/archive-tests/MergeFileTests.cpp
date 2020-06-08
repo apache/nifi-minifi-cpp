@@ -464,6 +464,7 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
   {
     auto session = std::make_shared<core::ProcessSession>(context);
     processor->onTrigger(context, session);
+    session->commit();
   }
   // validate the merge content
   std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
@@ -751,7 +752,3 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
   }
   LogTestController::getInstance().reset();
 }
-
-
-
-

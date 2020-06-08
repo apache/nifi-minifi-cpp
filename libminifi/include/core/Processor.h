@@ -215,8 +215,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // Whether flow file queue full in any of the outgoin connection
   bool flowFilesOutGoingFull();
 
-  // Get outgoing connections based on relationship name
-  std::set<std::shared_ptr<Connection> > getOutGoingConnections(std::string relationship);
   // Add connection
   bool addConnection(std::shared_ptr<Connectable> connection);
   // Remove connection

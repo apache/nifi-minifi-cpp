@@ -164,23 +164,22 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ss.str(), content_repo);
 
-  minifi::FlowFileRecord record(repository, content_repo, attributes, claim);
+  {
+    minifi::FlowFileRecord record(repository, content_repo, attributes, claim);
 
-  record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
+    record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-  record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
+    record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-  REQUIRE(record.Serialize());
+    REQUIRE(record.Serialize());
 
-  claim->decreaseFlowFileRecordOwnedCount();
+    REQUIRE(repository->Delete(record.getUUIDStr()));
+    claim->decreaseFlowFileRecordOwnedCount();
 
-  claim->decreaseFlowFileRecordOwnedCount();
+    repository->flush();
 
-  repository->Delete(record.getUUIDStr());
-
-  repository->flush();
-
-  repository->stop();
+    repository->stop();
+  }
 
   std::ifstream fileopen(ss.str(), std::ios::in);
   REQUIRE(!fileopen.good());
@@ -272,7 +271,9 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
+  core::Relationship inputRel{"Input", "dummy"};
   std::shared_ptr<minifi::Connection> input = std::make_shared<minifi::Connection>(ff_repository, content_repo, "Input");
+  input->setRelationship(inputRel);
 
   auto root = std::make_shared<core::ProcessGroup>(core::ProcessGroupType::ROOT_PROCESS_GROUP, "root");
   root->addConnection(input);
@@ -292,13 +293,18 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
    */
   {
     std::shared_ptr<core::Processor> processor = std::make_shared<core::Processor>("dummy");
+    utils::Identifier uuid;
+    REQUIRE(processor->getUUID(uuid));
+    input->setSourceUUID(uuid);
+    processor->addConnection(input);
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, prov_repo, ff_repository, content_repo);
     core::ProcessSession sessionGenFlowFile(context);
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     sessionGenFlowFile.importFrom(content, flow);
-    input->put(flow);  // stores it in the flowFileRepository
+    sessionGenFlowFile.transfer(flow, inputRel);
+    sessionGenFlowFile.commit();
   }
 
   // remove flow from the connection but it is still present in the

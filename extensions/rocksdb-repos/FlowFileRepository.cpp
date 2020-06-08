@@ -81,10 +81,10 @@ void FlowFileRepository::flush() {
     return;  // Stop here - don't delete from content repo while we have records in FF repo
   }
 
-  if (nullptr != content_repo_) {
+  if (content_repo_) {
     for (const auto &ffr : purgeList) {
       auto claim = ffr->getResourceClaim();
-      if (claim != nullptr) {
+      if (claim) {
         content_repo_->removeIfOrphaned(claim);
       }
     }
@@ -148,22 +148,27 @@ void FlowFileRepository::prune_stored_flowfiles() {
     std::string key = it->key().ToString();
     if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
       logger_->log_debug("Found connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
-      auto search = connectionMap.find(eventRead->getConnectionUuid());
-      if (!corrupt_checkpoint && search != connectionMap.end()) {
+      bool found = false;
+      auto search = containers.find(eventRead->getConnectionUuid());
+      found = (search != containers.end());
+      if (!found) {
+        // for backward compatibility
+        search = connectionMap.find(eventRead->getConnectionUuid());
+        found = (search != connectionMap.end());
+      }
+      if (!corrupt_checkpoint && found) {
         // we find the connection for the persistent flowfile, create the flowfile and enqueue that
         std::shared_ptr<core::FlowFile> flow_file_ref = std::static_pointer_cast<core::FlowFile>(eventRead);
         eventRead->setStoredToRepository(true);
         search->second->put(eventRead);
       } else {
         logger_->log_warn("Could not find connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
-        if (eventRead->getContentFullPath().length() > 0) {
-          if (nullptr != eventRead->getResourceClaim()) {
-            content_repo_->remove(eventRead->getResourceClaim());
-          }
-        }
+        auto claim = eventRead->getResourceClaim();
+        if (claim) claim->decreaseFlowFileRecordOwnedCount();
         keys_to_delete.enqueue(key);
       }
     } else {
+      // failed to deserialize FlowFile, cannot clear claim
       keys_to_delete.enqueue(key);
     }
   }

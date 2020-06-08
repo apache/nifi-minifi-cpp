@@ -160,7 +160,7 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   }
 
   const std::string getContentFullPath() {
-    return content_full_fath_;
+    return claim_ ? claim_->getContentFullPath() : "";
   }
 
   /**
@@ -175,8 +175,6 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
  protected:
   // connection uuid
   std::string uuid_connection_;
-  // Full path to the content
-  std::string content_full_fath_;
 
   // Local flow sequence ID
   static std::atomic<uint64_t> local_flow_seq_number_;

@@ -194,7 +194,7 @@ class BinManager {
   bool offer(const std::string &group, std::shared_ptr<core::FlowFile> flow);
   // gather ready bins once the bin are full enough or exceed bin age
   void gatherReadyBins();
-  // remove oldest bin
+  // marks oldest bin as ready
   void removeOldestBin();
   // get ready bin from binManager
   void getReadyBin(std::deque<std::unique_ptr<Bin>> &retBins);
@@ -218,6 +218,8 @@ class BinManager {
 
 // BinFiles Class
 class BinFiles : public core::Processor {
+ protected:
+  static core::Relationship Self;
  public:
   // Constructor
   /*!
@@ -262,14 +264,18 @@ class BinFiles : public core::Processor {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   // OnTrigger method, implemented by NiFi BinFiles
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
   }
   // OnTrigger method, implemented by NiFi BinFiles
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   // Initialize, over write by NiFi BinFiles
-  virtual void initialize(void);
+  void initialize(void) override;
+
+  void put(std::shared_ptr<core::Connectable> flow) override;
+
+  std::set<std::shared_ptr<core::Connectable>> getOutGoingConnections(const std::string &relationship) const override;
 
  protected:
   // Allows general pre-processing of a flow file before it is offered to a bin. This is called before getGroupId().
@@ -284,14 +290,29 @@ class BinFiles : public core::Processor {
   }
   // transfer flows to failure in bin
   void transferFlowsToFail(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
-  // add flows to session
+  // moves owned flows to session
   void addFlowsToSession(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
 
   BinManager binManager_;
 
  private:
+  class FlowFileStore{
+   public:
+    /**
+     * Returns the already-preprocessed FlowFiles that got restored on restart from the FlowFileRepository
+     * @return the resurrected persisted FlowFiles
+     */
+    std::unordered_set<std::shared_ptr<core::FlowFile>> getNewFlowFiles();
+    void put(std::shared_ptr<core::FlowFile>& flowFile);
+   private:
+    std::atomic_bool has_new_flow_file_{false};
+    std::mutex flow_file_mutex_;
+    std::unordered_set<std::shared_ptr<core::FlowFile>> incoming_files_;
+  };
+
   std::shared_ptr<logging::Logger> logger_;
   int maxBinCount_;
+  FlowFileStore file_store_;
 };
 
 REGISTER_RESOURCE(BinFiles, "Bins flow files into buckets based on the number of entries or size of entries");

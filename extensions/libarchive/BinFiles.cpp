@@ -46,6 +46,7 @@ core::Property BinFiles::MaxBinAge("Max Bin Age", "The maximum age of a Bin that
 core::Property BinFiles::MaxBinCount("Maximum number of Bins", "Specifies the maximum number of bins that can be held in memory at any one time", "100");
 core::Relationship BinFiles::Original("original", "The FlowFiles that were used to create the bundle");
 core::Relationship BinFiles::Failure("failure", "If the bundle cannot be created, all FlowFiles that would have been used to create the bundle will be transferred to failure");
+core::Relationship BinFiles::Self("__self__", "Marks the FlowFile to be owned by this processor");
 const char *BinFiles::FRAGMENT_COUNT_ATTRIBUTE = "fragment.count";
 const char *BinFiles::FRAGMENT_ID_ATTRIBUTE = "fragment.identifier";
 const char *BinFiles::FRAGMENT_INDEX_ATTRIBUTE = "fragment.index";
@@ -153,7 +154,7 @@ void BinManager::gatherReadyBins() {
 void BinManager::removeOldestBin() {
   std::lock_guard < std::mutex > lock(mutex_);
   uint64_t olddate = ULLONG_MAX;
-  std::unique_ptr < std::deque<std::unique_ptr<Bin>>>*oldqueue;
+  std::unique_ptr < std::deque<std::unique_ptr<Bin>>>* oldqueue;
   for (std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>>>::iterator it=groupBinMap_.begin(); it !=groupBinMap_.end(); ++it) {
     std::unique_ptr < std::deque<std::unique_ptr<Bin>>>&queue = it->second;
     if (!queue->empty()) {
@@ -235,6 +236,28 @@ bool BinManager::offer(const std::string &group, std::shared_ptr<core::FlowFile>
 }
 
 void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  // Rollback is not viable for this processor!!
+  {
+    // process resurrected FlowFiles first
+    auto flowFiles = file_store_.getNewFlowFiles();
+    // these are already processed FlowFiles, that we own
+    bool hadFailure = false;
+    for (auto &file : flowFiles) {
+      std::string groupId = getGroupId(context.get(), file);
+      bool offer = this->binManager_.offer(groupId, file);
+      if (!offer) {
+        session->transfer(file, Failure);
+        hadFailure = true;
+      } else {
+        // no need to route successfully captured such files as we already own them
+      }
+    }
+    if (hadFailure) {
+      context->yield();
+      return;
+    }
+  }
+
   std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast < FlowFileRecord > (session->get());
 
   if (flow != nullptr) {
@@ -247,9 +270,8 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
       context->yield();
       return;
     }
-
-    // remove the flowfile from the process session, it add to merge session later.
-    session->remove(flow);
+    // assuming ownership over the incoming flowFile
+    session->transfer(flow, Self);
   }
 
   // migrate bin to ready bin
@@ -266,18 +288,19 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   binManager_.getReadyBin(readyBins);
 
   // process the ready bin
-  if (!readyBins.empty()) {
+  while (!readyBins.empty()) {
     // create session for merge
+    // we have to create a new session
+    // for each merge as a rollback erases all
+    // previously added files
     core::ProcessSession mergeSession(context);
-    while (!readyBins.empty()) {
-      std::unique_ptr<Bin> bin = std::move(readyBins.front());
-      readyBins.pop_front();
-      // add bin's flows to the session
-      this->addFlowsToSession(context.get(), &mergeSession, bin);
-      logger_->log_debug("BinFiles start to process bin %s for group %s", bin->getUUIDStr(), bin->getGroupId());
-      if (!this->processBin(context.get(), &mergeSession, bin))
-          this->transferFlowsToFail(context.get(), &mergeSession, bin);
-    }
+    std::unique_ptr<Bin> bin = std::move(readyBins.front());
+    readyBins.pop_front();
+    // add bin's flows to the session
+    this->addFlowsToSession(context.get(), &mergeSession, bin);
+    logger_->log_debug("BinFiles start to process bin %s for group %s", bin->getUUIDStr(), bin->getGroupId());
+    if (!this->processBin(context.get(), &mergeSession, bin))
+      this->transferFlowsToFail(context.get(), &mergeSession, bin);
     mergeSession.commit();
   }
 }
@@ -295,6 +318,43 @@ void BinFiles::addFlowsToSession(core::ProcessContext *context, core::ProcessSes
   for (auto flow : flows) {
     session->add(flow);
   }
+}
+
+void BinFiles::put(std::shared_ptr<core::Connectable> flow) {
+  auto flowFile = std::dynamic_pointer_cast<core::FlowFile>(flow);
+  if (!flowFile) return;
+  if (flowFile->getOriginalConnection()) {
+    // onTrigger assumed ownership over a FlowFile
+    // don't have to do anything
+    return;
+  }
+  // no original connection i.e. we are during restore
+  file_store_.put(flowFile);
+}
+
+void BinFiles::FlowFileStore::put(std::shared_ptr<core::FlowFile>& flowFile) {
+  {
+    std::lock_guard<std::mutex> guard(flow_file_mutex_);
+    incoming_files_.emplace(std::move(flowFile));
+  }
+  has_new_flow_file_.store(true, std::memory_order_release);
+}
+
+std::unordered_set<std::shared_ptr<core::FlowFile>> BinFiles::FlowFileStore::getNewFlowFiles() {
+  bool hasNewFlowFiles = true;
+  if (!has_new_flow_file_.compare_exchange_strong(hasNewFlowFiles, false, std::memory_order_acquire, std::memory_order_relaxed)) {
+    return {};
+  }
+  std::lock_guard<std::mutex> guard(flow_file_mutex_);
+  return std::move(incoming_files_);
+}
+
+std::set<std::shared_ptr<core::Connectable>> BinFiles::getOutGoingConnections(const std::string &relationship) const {
+  auto result = core::Connectable::getOutGoingConnections(relationship);
+  if (relationship == Self.getName()) {
+    result.insert(std::static_pointer_cast<core::Connectable>(std::const_pointer_cast<core::Processor>(shared_from_this())));
+  }
+  return result;
 }
 
 } /* namespace processors */
