@@ -164,23 +164,22 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ss.str(), content_repo);
 
-  minifi::FlowFileRecord record(repository, content_repo, attributes, claim);
+  {
+    minifi::FlowFileRecord record(repository, content_repo, attributes, claim);
 
-  record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
+    record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-  record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
+    record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-  REQUIRE(record.Serialize());
+    REQUIRE(record.Serialize());
 
-  claim->decreaseFlowFileRecordOwnedCount();
+    REQUIRE(repository->Delete(record.getUUIDStr()));
+    claim->decreaseFlowFileRecordOwnedCount();
 
-  claim->decreaseFlowFileRecordOwnedCount();
+    repository->flush();
 
-  repository->Delete(record.getUUIDStr());
-
-  repository->flush();
-
-  repository->stop();
+    repository->stop();
+  }
 
   std::ifstream fileopen(ss.str(), std::ios::in);
   REQUIRE(!fileopen.good());

@@ -194,7 +194,7 @@ class BinManager {
   bool offer(const std::string &group, std::shared_ptr<core::FlowFile> flow);
   // gather ready bins once the bin are full enough or exceed bin age
   void gatherReadyBins();
-  // remove oldest bin
+  // marks oldest bin as ready
   void removeOldestBin();
   // get ready bin from binManager
   void getReadyBin(std::deque<std::unique_ptr<Bin>> &retBins);

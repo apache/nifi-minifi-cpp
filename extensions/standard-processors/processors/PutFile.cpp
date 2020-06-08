@@ -103,6 +103,8 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     return;
   }
 
+  session->remove(flowFile);
+
   std::string directory;
 
   if (!context->getProperty(Directory, directory, flowFile)) {

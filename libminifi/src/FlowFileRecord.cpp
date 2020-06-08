@@ -45,7 +45,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
       content_repo_(content_repo),
       flow_repository_(flow_repository) {
   id_ = local_flow_seq_number_.load();
-  claim_ = claim;
+  claim_.set(*this, claim);
   // Increase the local ID for the flow record
   ++local_flow_seq_number_;
   // Populate the default attributes
@@ -59,12 +59,6 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
   }
 
   snapshot_ = false;
-
-  if (claim_ != nullptr) {
-    // Increase the flow file record owned count for the resource claim
-    claim_->increaseFlowFileRecordOwnedCount();
-    content_full_fath_ = claim->getContentFullPath();
-  }
 }
 
 FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event,
@@ -82,10 +76,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
   offset_ = event->getOffset();
   event->getUUID(uuid_);
   uuid_connection_ = uuidConnection;
-  if (event->getResourceClaim()) {
-    event->getResourceClaim()->increaseFlowFileRecordOwnedCount();
-    content_full_fath_ = event->getResourceClaim()->getContentFullPath();
-  }
+  claim_.set(*this, event->getResourceClaim());
   if (event->getFlowIdentifier()) {
     std::string attr;
     event->getAttribute(FlowAttributeKey(FlowAttribute::FLOW_ID), attr);
@@ -102,6 +93,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
       snapshot_(""),
       content_repo_(content_repo),
       flow_repository_(flow_repository) {
+  claim_.set(*this, event->getResourceClaim());
   if (event->getFlowIdentifier()) {
     std::string attr;
     event->getAttribute(FlowAttributeKey(FlowAttribute::FLOW_ID), attr);
@@ -118,28 +110,27 @@ FlowFileRecord::~FlowFileRecord() {
     logger_->log_debug("Delete FlowFile UUID %s", uuidStr_);
   else
     logger_->log_debug("Delete SnapShot FlowFile UUID %s", uuidStr_);
-  if (claim_) {
-    releaseClaim(claim_);
-  } else {
+
+  if (!claim_) {
     logger_->log_debug("Claim is null ptr for %s", uuidStr_);
   }
 
+  claim_.set(*this, nullptr);
+
   // Disown stash claims
-  for (const auto &stashPair : stashedContent_) {
-    releaseClaim(stashPair.second);
+  for (auto &stashPair : stashedContent_) {
+    auto& stashClaim = stashPair.second;
+    stashClaim.set(*this, nullptr);
   }
 }
 
 void FlowFileRecord::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
   // Decrease the flow file record owned count for the resource claim
-  claim_->decreaseFlowFileRecordOwnedCount();
-  std::string value;
-  logger_->log_debug("Delete Resource Claim %s, %s, attempt %llu", getUUIDStr(), claim_->getContentFullPath(), claim_->getFlowFileRecordOwnedCount());
-  if (claim_->getFlowFileRecordOwnedCount() <= 0) {
-    // we cannot rely on the stored variable here since we aren't guaranteed atomicity
-    if (flow_repository_ != nullptr && !flow_repository_->Get(uuidStr_, value)) {
-      logger_->log_debug("Delete Resource Claim %s", claim_->getContentFullPath());
-      content_repo_->remove(claim_);
+  claim->decreaseFlowFileRecordOwnedCount();
+  logger_->log_debug("Detaching Resource Claim %s, %s, attempt %llu", getUUIDStr(), claim->getContentFullPath(), claim->getFlowFileRecordOwnedCount());
+  if (content_repo_) {
+    if (content_repo_->removeIfOrphaned(claim)) {
+      logger_->log_debug("Deleted Resource Claim %s", claim->getContentFullPath());
     }
   }
 }
@@ -187,7 +178,6 @@ bool FlowFileRecord::getKeyedAttribute(FlowAttribute key, std::string &value) {
 FlowFileRecord &FlowFileRecord::operator=(const FlowFileRecord &other) {
   core::FlowFile::operator=(other);
   uuid_connection_ = other.uuid_connection_;
-  content_full_fath_ = other.content_full_fath_;
   snapshot_ = other.snapshot_;
   return *this;
 }
@@ -260,7 +250,7 @@ bool FlowFileRecord::Serialize(io::DataStream &outStream) {
     }
   }
 
-  ret = writeUTF(this->content_full_fath_, &outStream);
+  ret = writeUTF(this->getContentFullPath(), &outStream);
   if (ret <= 0) {
     return false;
   }
@@ -291,6 +281,8 @@ bool FlowFileRecord::Serialize() {
 
   if (flow_repository_->Put(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
     logger_->log_debug("NiFi FlowFile Store event %s size %llu success", uuidStr_, outStream.getSize());
+    // on behalf of the persisted record instance
+    if (claim_) claim_->increaseFlowFileRecordOwnedCount();
     return true;
   } else {
     logger_->log_error("NiFi FlowFile Store event %s size %llu fail", uuidStr_, outStream.getSize());
@@ -351,7 +343,8 @@ bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
     this->attributes_[key] = value;
   }
 
-  ret = readUTF(this->content_full_fath_, &outStream);
+  std::string content_full_path;
+  ret = readUTF(content_full_path, &outStream);
   if (ret <= 0) {
     return false;
   }
@@ -366,9 +359,7 @@ bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
     return false;
   }
 
-  if (nullptr == claim_) {
-    claim_ = std::make_shared<ResourceClaim>(content_full_fath_, content_repo_, true);
-  }
+  claim_.set(*this, std::make_shared<ResourceClaim>(content_full_path, content_repo_, true));
   return true;
 }
 

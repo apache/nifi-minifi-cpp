@@ -110,6 +110,8 @@ void CompressContent::onTrigger(const std::shared_ptr<core::ProcessContext> &con
     return;
   }
 
+  session->remove(flowFile);
+
   std::string compressFormat = compressFormat_;
   if (compressFormat_ == COMPRESSION_FORMAT_ATTRIBUTE) {
     std::string attr;
@@ -202,7 +204,6 @@ void CompressContent::onTrigger(const std::shared_ptr<core::ProcessContext> &con
     }
     logger_->log_debug("Compress Content processing success for the flow with UUID %s name %s", processFlowFile->getUUIDStr(), fileName);
     session->transfer(processFlowFile, Success);
-    session->remove(flowFile);
   }
 }
 

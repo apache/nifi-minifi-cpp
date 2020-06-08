@@ -153,7 +153,7 @@ void BinManager::gatherReadyBins() {
 void BinManager::removeOldestBin() {
   std::lock_guard < std::mutex > lock(mutex_);
   uint64_t olddate = ULLONG_MAX;
-  std::unique_ptr < std::deque<std::unique_ptr<Bin>>>*oldqueue;
+  std::unique_ptr < std::deque<std::unique_ptr<Bin>>>* oldqueue;
   for (std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>>>::iterator it=groupBinMap_.begin(); it !=groupBinMap_.end(); ++it) {
     std::unique_ptr < std::deque<std::unique_ptr<Bin>>>&queue = it->second;
     if (!queue->empty()) {
@@ -247,9 +247,6 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
       context->yield();
       return;
     }
-
-    // remove the flowfile from the process session, it add to merge session later.
-    session->remove(flow);
   }
 
   // migrate bin to ready bin
@@ -266,19 +263,14 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   binManager_.getReadyBin(readyBins);
 
   // process the ready bin
-  if (!readyBins.empty()) {
-    // create session for merge
-    core::ProcessSession mergeSession(context);
-    while (!readyBins.empty()) {
-      std::unique_ptr<Bin> bin = std::move(readyBins.front());
-      readyBins.pop_front();
-      // add bin's flows to the session
-      this->addFlowsToSession(context.get(), &mergeSession, bin);
-      logger_->log_debug("BinFiles start to process bin %s for group %s", bin->getUUIDStr(), bin->getGroupId());
-      if (!this->processBin(context.get(), &mergeSession, bin))
-          this->transferFlowsToFail(context.get(), &mergeSession, bin);
-    }
-    mergeSession.commit();
+  while (!readyBins.empty()) {
+    std::unique_ptr<Bin> bin = std::move(readyBins.front());
+    readyBins.pop_front();
+    // add bin's flows to the session
+    this->addFlowsToSession(context.get(), session.get(), bin);
+    logger_->log_debug("BinFiles start to process bin %s for group %s", bin->getUUIDStr(), bin->getGroupId());
+    if (!this->processBin(context.get(), session.get(), bin))
+        this->transferFlowsToFail(context.get(), session.get(), bin);
   }
 }
 
@@ -294,6 +286,10 @@ void BinFiles::addFlowsToSession(core::ProcessContext *context, core::ProcessSes
   std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
   for (auto flow : flows) {
     session->add(flow);
+    // preemptively mark them for deletion
+    // transferring them to a relationship will
+    // cancel deletion
+    session->remove(flow);
   }
 }
 

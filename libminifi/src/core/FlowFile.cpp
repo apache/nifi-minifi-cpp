@@ -64,9 +64,7 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
   size_ = other.size_;
   penaltyExpiration_ms_ = other.penaltyExpiration_ms_;
   attributes_ = other.attributes_;
-  claim_ = other.claim_;
-  if (claim_ != nullptr)
-    this->claim_->increaseFlowFileRecordOwnedCount();
+  claim_.set(*this, other.claim_);
   uuidStr_ = other.uuidStr_;
   connection_ = other.connection_;
   original_connection_ = other.original_connection_;
@@ -95,18 +93,18 @@ void FlowFile::setDeleted(const bool deleted) {
 }
 
 std::shared_ptr<ResourceClaim> FlowFile::getResourceClaim() {
-  return claim_;
+  return claim_.get();
 }
 
 void FlowFile::clearResourceClaim() {
-  claim_ = nullptr;
+  claim_.set(*this, nullptr);
 }
-void FlowFile::setResourceClaim(std::shared_ptr<ResourceClaim> &claim) {
-  claim_ = claim;
+void FlowFile::setResourceClaim(const std::shared_ptr<ResourceClaim> &claim) {
+  claim_.set(*this, claim);
 }
 
 std::shared_ptr<ResourceClaim> FlowFile::getStashClaim(const std::string &key) {
-  return stashedContent_[key];
+  return stashedContent_[key].get();
 }
 
 void FlowFile::setStashClaim(const std::string &key, const std::shared_ptr<ResourceClaim> &claim) {
@@ -114,14 +112,17 @@ void FlowFile::setStashClaim(const std::string &key, const std::shared_ptr<Resou
     logger_->log_warn("Stashing content of record %s to existing key %s; "
                       "existing content will be overwritten",
                       getUUIDStr().c_str(), key.c_str());
-    releaseClaim(getStashClaim(key));
   }
 
-  stashedContent_[key] = claim;
+  stashedContent_[key].set(*this, claim);
 }
 
 void FlowFile::clearStashClaim(const std::string &key) {
-  stashedContent_.erase(key);
+  auto claimIt = stashedContent_.find(key);
+  if (claimIt != stashedContent_.end()) {
+    claimIt->second.set(*this, nullptr);
+    stashedContent_.erase(claimIt);
+  }
 }
 
 bool FlowFile::hasStashClaim(const std::string &key) {

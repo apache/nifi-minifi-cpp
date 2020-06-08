@@ -35,9 +35,56 @@ namespace minifi {
 namespace core {
 
 class FlowFile : public core::Connectable, public ReferenceContainer {
+ private:
+  class FlowFileOwnedResourceClaimPtr{
+   public:
+    FlowFileOwnedResourceClaimPtr() = default;
+    explicit FlowFileOwnedResourceClaimPtr(const std::shared_ptr<ResourceClaim>& claim) : claim_(claim) {
+      if (claim_) claim_->increaseFlowFileRecordOwnedCount();
+    }
+    explicit FlowFileOwnedResourceClaimPtr(std::shared_ptr<ResourceClaim>&& claim) : claim_(std::move(claim)) {
+      if (claim_) claim_->increaseFlowFileRecordOwnedCount();
+    }
+    FlowFileOwnedResourceClaimPtr(const FlowFileOwnedResourceClaimPtr& ref) : claim_(ref.claim_) {
+      if (claim_) claim_->increaseFlowFileRecordOwnedCount();
+    }
+    FlowFileOwnedResourceClaimPtr(FlowFileOwnedResourceClaimPtr&& ref) : claim_(std::move(ref.claim_)) {
+      // taking ownership of claim, no need to increment/decrement
+    }
+    FlowFileOwnedResourceClaimPtr& operator=(const FlowFileOwnedResourceClaimPtr& ref) = delete;
+    FlowFileOwnedResourceClaimPtr& operator=(FlowFileOwnedResourceClaimPtr&& ref) = delete;
+
+    FlowFileOwnedResourceClaimPtr& set(FlowFile& owner, const FlowFileOwnedResourceClaimPtr& ref) {
+      return set(owner, ref.claim_);
+    }
+    FlowFileOwnedResourceClaimPtr& set(FlowFile& owner, const std::shared_ptr<ResourceClaim>& newClaim) {
+      auto oldClaim = claim_;
+      claim_ = newClaim;
+      // the order of increase/release is important
+      if (claim_) claim_->increaseFlowFileRecordOwnedCount();
+      if (oldClaim) owner.releaseClaim(oldClaim);
+      return *this;
+    }
+    const std::shared_ptr<ResourceClaim>& get() const {
+      return claim_;
+    }
+    const std::shared_ptr<ResourceClaim>& operator->() const {
+      return claim_;
+    }
+    operator bool() const noexcept {
+      return static_cast<bool>(claim_);
+    }
+    ~FlowFileOwnedResourceClaimPtr() {
+      // allow the owner FlowFile to manually release the claim
+      // while logging stuff and removing it from repositories
+      assert(!claim_);
+    }
+   private:
+    std::shared_ptr<ResourceClaim> claim_;
+  };
  public:
   FlowFile();
-  ~FlowFile();
+  virtual ~FlowFile();
   FlowFile& operator=(const FlowFile& other);
 
   /**
@@ -48,7 +95,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   /**
    * Sets _claim to the inbound claim argument
    */
-  void setResourceClaim(std::shared_ptr<ResourceClaim> &claim);
+  void setResourceClaim(const std::shared_ptr<ResourceClaim> &claim);
 
   /**
    * clear the resource claim
@@ -314,9 +361,9 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   // Attributes key/values pairs for the flow record
   std::map<std::string, std::string> attributes_;
   // Pointer to the associated content resource claim
-  std::shared_ptr<ResourceClaim> claim_;
+  FlowFileOwnedResourceClaimPtr claim_;
   // Pointers to stashed content resource claims
-  std::map<std::string, std::shared_ptr<ResourceClaim>> stashedContent_;
+  std::map<std::string, FlowFileOwnedResourceClaimPtr> stashedContent_;
   // UUID string
   // std::string uuid_str_;
   // UUID string for all parents

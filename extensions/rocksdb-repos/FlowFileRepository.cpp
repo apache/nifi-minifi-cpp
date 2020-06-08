@@ -81,10 +81,10 @@ void FlowFileRepository::flush() {
     return;  // Stop here - don't delete from content repo while we have records in FF repo
   }
 
-  if (nullptr != content_repo_) {
+  if (content_repo_) {
     for (const auto &ffr : purgeList) {
       auto claim = ffr->getResourceClaim();
-      if (claim != nullptr) {
+      if (claim) {
         content_repo_->removeIfOrphaned(claim);
       }
     }
@@ -156,14 +156,12 @@ void FlowFileRepository::prune_stored_flowfiles() {
         search->second->put(eventRead);
       } else {
         logger_->log_warn("Could not find connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
-        if (eventRead->getContentFullPath().length() > 0) {
-          if (nullptr != eventRead->getResourceClaim()) {
-            content_repo_->remove(eventRead->getResourceClaim());
-          }
-        }
+        auto claim = eventRead->getResourceClaim();
+        if (claim) claim->decreaseFlowFileRecordOwnedCount();
         keys_to_delete.enqueue(key);
       }
     } else {
+      // failed to deserialize FlowFile, cannot clear claim
       keys_to_delete.enqueue(key);
     }
   }

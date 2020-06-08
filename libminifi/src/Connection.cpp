@@ -205,7 +205,12 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
       continue;
     }
 
-    ff->setStoredToRepository(true);
+    if (!ff->isStored()) {
+      auto claim = ff->getResourceClaim();
+      // increment on behalf of the persisted instance
+      if (claim) claim->increaseFlowFileRecordOwnedCount();
+      ff->setStoredToRepository(true);
+    }
 
     if (dest_connectable_) {
       logger_->log_debug("Notifying %s that flowfiles were inserted", dest_connectable_->getName());
@@ -228,8 +233,10 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
         // Flow record expired
         expiredFlowRecords.insert(item);
         logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
-        if (flow_repository_->Delete(item->getUUIDStr())) {
+        if (item->isStored() && flow_repository_->Delete(item->getUUIDStr())) {
           item->setStoredToRepository(false);
+          auto claim = item->getResourceClaim();
+          if (claim) claim->decreaseFlowFileRecordOwnedCount();
         }
       } else {
         // Flow record not expired
@@ -268,10 +275,12 @@ void Connection::drain(bool delete_permanently) {
   while (!queue_.empty()) {
     std::shared_ptr<core::FlowFile> item = queue_.front();
     queue_.pop();
-    logger_->log_debug("Delete flow file UUID %s from connection %s", item->getUUIDStr(), name_);
+    logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
     if (delete_permanently) {
-      if (flow_repository_->Delete(item->getUUIDStr())) {
+      if (item->isStored() && flow_repository_->Delete(item->getUUIDStr())) {
         item->setStoredToRepository(false);
+        auto claim = item->getResourceClaim();
+        if (claim) claim->decreaseFlowFileRecordOwnedCount();
       }
     }
   }
