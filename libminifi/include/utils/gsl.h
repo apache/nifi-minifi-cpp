@@ -14,44 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef LIBMINIFI_INCLUDE_UTILS_GSL_H
+#define LIBMINIFI_INCLUDE_UTILS_GSL_H
 
-#ifndef NIFI_MINIFI_CPP_KAFKATOPIC_H
-#define NIFI_MINIFI_CPP_KAFKATOPIC_H
-
-#include "rdkafka.h"
-
-#include "utils/gsl.h"
+#include <gsl-lite/gsl-lite.hpp>
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace processors {
 
-class KafkaTopic {
- public:
-  explicit KafkaTopic(gsl::owner<rd_kafka_topic_t*> topic_reference)
-      : topic_reference_(topic_reference) {
-  }
+namespace gsl = ::gsl_lite;
 
-  ~KafkaTopic() {
-    if (topic_reference_) {
-      rd_kafka_topic_destroy(topic_reference_);
-    }
-  }
-
-  rd_kafka_topic_t *getTopic() const {
-    return topic_reference_;
-  }
-
- private:
-  gsl::owner<rd_kafka_topic_t*> topic_reference_;
-};
-
-} /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_KAFKATOPIC_H
+#endif /* LIBMINIFI_INCLUDE_UTILS_GSL_H */

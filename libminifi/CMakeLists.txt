@@ -111,7 +111,7 @@ if(WIN32)
         target_include_directories(core-minifi PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include")
 endif()
 
-target_link_libraries(core-minifi ${CMAKE_DL_LIBS} yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog cron Threads::Threads)
+target_link_libraries(core-minifi ${CMAKE_DL_LIBS} yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog cron Threads::Threads gsl-lite)
 if(NOT WIN32)
 	target_link_libraries(core-minifi OSSP::libuuid++)
 endif()

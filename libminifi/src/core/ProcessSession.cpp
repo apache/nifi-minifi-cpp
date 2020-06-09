@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "core/ProcessSessionReadCallback.h"
+#include "utils/gsl.h"
 
 /* This implementation is only for native Windows systems.  */
 #if (defined _WIN32 || defined __WIN32__) && !defined __CYGWIN__
@@ -538,18 +539,16 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
   std::vector<uint8_t> buffer(getpagesize());
   try {
     try {
-      std::ifstream input;
+      std::ifstream input{source, std::ios::in | std::ios::binary};
       logger_->log_debug("Opening %s", source);
-      input.open(source.c_str(), std::fstream::in | std::fstream::binary);
       if (!input.is_open() || !input.good()) {
-        input.close();
-        throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
+        throw Exception(FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("File Import Error: failed to open file \'", source, "\'"));
       }
       if (offset != 0U) {
         input.seekg(offset, std::ifstream::beg);
         if (!input.good()) {
           logger_->log_error("Seeking to %lu failed for file %s (does file/filesystem support seeking?)", offset, source);
-          throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
+          throw Exception(FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("File Import Error: Couldn't seek to offset ", std::to_string(offset)));
         }
       }
       uint64_t startTime = 0U;
@@ -570,11 +569,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         while (true) {
           startTime = getTimeMillis();
           uint8_t* delimiterPos = std::find(begin, end, static_cast<uint8_t>(inputDelimiter));
-          const ptrdiff_t zlen{ delimiterPos - begin };
-          if (zlen < std::numeric_limits<int>::min() || zlen > std::numeric_limits<int>::max()) {
-            logger_->log_error("narrowing conversion failed");
-          }
-          const int len = zlen;
+          const auto len = gsl::narrow<int>(delimiterPos - begin);
 
           logging::LOG_TRACE(logger_) << "Read input of " << read << " length is " << len << " is at end?" << (delimiterPos == end);
           /*

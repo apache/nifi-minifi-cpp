@@ -72,6 +72,15 @@ endif ()
 
 cmake_dependent_option(ASAN_BUILD "Uses AddressSanitizer to instrument the code" OFF "NOT WIN32" OFF)
 
+# Option: STRICT_GSL_CHECKS
+# AUDIT: Enable all checks, including gsl_ExpectsAudit() and gsl_EnsuresAudit()
+# ON: Enable all checks, excluding gsl_ExpectsAudit() and gsl_EnsuresAudit() (GSL default)
+# DEBUG_ONLY: Like ON in the Debug configuration, OFF in others (MiNiFi C++ default)
+# OFF: Throw on contract checking and assertion failures instead of calling std::terminate()
+set(STRICT_GSL_CHECKS "DEBUG_ONLY" CACHE STRING "Contract checking and assertion failures call terminate")
+list(APPEND STRICT_GSL_CHECKS_Values AUDIT ON DEBUG_ONLY OFF)
+set_property(CACHE STRICT_GSL_CHECKS PROPERTY STRINGS ${STRICT_GSL_CHECKS_Values})
+
 # Use ccache if present
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
@@ -279,6 +288,25 @@ target_include_directories(cron INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdpart
 # cxxopts
 add_library(cxxopts INTERFACE)
 target_include_directories(cxxopts INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cxxopts/include")
+
+# gsl-lite
+add_library(gsl-lite INTERFACE)
+target_include_directories(gsl-lite INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gsl-lite-0.37.0/include")
+
+# Add necessary definitions based on the value of STRICT_GSL_CHECKS, see gsl-lite README for more details
+list(APPEND GslDefinitions gsl_CONFIG_DEFAULTS_VERSION=1)
+list(APPEND GslDefinitionsNonStrict gsl_CONFIG_CONTRACT_VIOLATION_THROWS gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1)
+if (STRICT_GSL_CHECKS STREQUAL "AUDIT")
+	list(APPEND GslDefinitions gsl_CONFIG_CONTRACT_CHECKING_AUDIT)
+endif()
+if (NOT STRICT_GSL_CHECKS)  # OFF (or any other falsey string) matches, AUDIT/ON/DEBUG_ONLY don't match
+	list(APPEND GslDefinitions ${GslDefinitionsNonStrict})
+endif()
+if (STRICT_GSL_CHECKS STREQUAL "DEBUG_ONLY")
+	list(APPEND GslDefinitions $<$<NOT:$<CONFIG:Debug>>:${GslDefinitionsNonStrict}>)
+endif()
+target_compile_definitions(gsl-lite INTERFACE ${GslDefinitions})
+
 
 #### Extensions ####
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)

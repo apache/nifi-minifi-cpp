@@ -61,9 +61,9 @@ bool KafkaConnection::initialized() const {
   return initialized_;
 }
 
-void KafkaConnection::setConnection(rd_kafka_t *producer) {
+void KafkaConnection::setConnection(gsl::owner<rd_kafka_t*> producer) {
   removeConnection();
-  kafka_connection_ = producer;
+  kafka_connection_ = producer;  // kafka_connection_ takes ownership from producer
   initialized_ = true;
   modifyLoggers([&](std::unordered_map<const rd_kafka_t*, std::weak_ptr<logging::Logger>>& loggers) {
     loggers[producer] = logger_;

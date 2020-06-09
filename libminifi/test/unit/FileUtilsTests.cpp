@@ -24,7 +24,7 @@
 #include "core/Core.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
-#include "utils/ScopeGuard.h"
+#include "utils/gsl.h"
 #include "utils/Environment.h"
 
 using org::apache::nifi::minifi::utils::file::FileUtils;
@@ -158,7 +158,7 @@ TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
   const std::string cwd = utils::Environment::getCurrentWorkingDirectory();
 
   REQUIRE(utils::Environment::setCurrentWorkingDirectory(tempDir.c_str()));
-  utils::ScopeGuard cwdGuard([&cwd]() {
+  const auto cwdGuard = gsl::finally([&cwd]() {
     utils::Environment::setCurrentWorkingDirectory(cwd.c_str());
   });
 
