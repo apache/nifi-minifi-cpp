@@ -22,11 +22,9 @@
 #include <thread>
 #include <utility>
 #include <memory>
-#include <iostream>
-#include "Exception.h"
 #include "core/Processor.h"
-#include "utils/ScopeGuard.h"
 #include "utils/GeneralUtils.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -113,7 +111,7 @@ bool SchedulingAgent::onTrigger(const std::shared_ptr<core::Processor> &processo
     schedule_it = scheduled_processors_.emplace(processor).first;
   }
 
-  utils::ScopeGuard guard([this, &schedule_it](){
+  const auto guard = gsl::finally([this, &schedule_it](){
     std::lock_guard<std::mutex> lock(watchdog_mtx_);
     scheduled_processors_.erase(schedule_it);
   });

@@ -38,7 +38,6 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-// Forwarder declaration
 class FlowController;
 
 #define DEFAULT_NIFI_SERVER_PORT 9000
@@ -62,7 +61,7 @@ inline const char *FlowControlMsgTypeToStr(FlowControlMsgType type) {
   if (type < MAX_FLOW_CONTROL_MSG_TYPE)
     return FlowControlMsgTypeStr[type];
   else
-    return NULL;
+    return nullptr;
 }
 
 // FlowControll Protocol Msg ID (Some Messages are fix length, Some are variable length (TLV)
@@ -87,7 +86,7 @@ typedef enum {
 } FlowControlMsgID;
 
 // FlowControl Protocol Msg ID String
-static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] = { "FLOW_SERIAL_NUMBER", "FLOW_YAML_NAME", "FLOW_YAML_CONTENT", "REPORT_INTERVAL", "PROCESSOR_NAME"
+static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] = { "FLOW_SERIAL_NUMBER", "FLOW_YAML_NAME", "FLOW_YAML_CONTENT", "REPORT_INTERVAL", "PROCESSOR_NAME",
     "PROPERTY_NAME", "PROPERTY_VALUE", "REPORT_BLOB" };
 
 #define TYPE_HDR_LEN 4 // Fix Hdr Type
@@ -110,7 +109,7 @@ inline const char *FlowControlMsgIdToStr(FlowControlMsgID id) {
   if (id < MAX_FLOW_MSG_ID)
     return FlowControlMsgIDStr[id];
   else
-    return NULL;
+    return nullptr;
 }
 
 // Flow Control Respond status code
@@ -131,7 +130,7 @@ inline const char *FlowControlRespCodeToStr(FlowControlRespCode code) {
   if (code < MAX_RESP_CODE)
     return FlowControlRespCodeStr[code];
   else
-    return NULL;
+    return nullptr;
 }
 
 // Common FlowControlProtocol Header
@@ -157,8 +156,6 @@ class FlowControlProtocol {
     _serverPort = DEFAULT_NIFI_SERVER_PORT;
     _registered = false;
     _seqNumber = 0;
-    _reportBlob = NULL;
-    _reportBlobLen = 0;
     _reportInterval = DEFAULT_REPORT_INTERVAL;
     running_ = false;
 
@@ -179,15 +176,14 @@ class FlowControlProtocol {
     } else
       _reportInterval = 0;
   }
+
+  FlowControlProtocol(const FlowControlProtocol&) = delete;
+  FlowControlProtocol& operator=(FlowControlProtocol) = delete;
+
   // Destructor
   virtual ~FlowControlProtocol() {
     stop();
-    if (_socket)
-      close(_socket);
-    if (_reportBlob)
-      delete[] _reportBlob;
-    if (this->_thread)
-      delete this->_thread;
+    if (_socket) close(_socket);
   }
 
  public:
@@ -203,20 +199,11 @@ class FlowControlProtocol {
   // Set Report BLOB for periodically report
   void setReportBlob(char *blob, int len) {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (_reportBlob && _reportBlobLen >= len) {
-      memcpy(_reportBlob, blob, len);
-      _reportBlobLen = len;
-    } else {
-      if (_reportBlob)
-        delete[] _reportBlob;
-      _reportBlob = new char[len];
-      _reportBlobLen = len;
-    }
+    _reportBlob.resize(len);
+    memcpy(_reportBlob.data(), blob, len);
   }
   // Run function for the thread
   static void run(FlowControlProtocol *protocol);
-
- protected:
 
  private:
   // Connect to the socket, return sock descriptor if success, 0 for failure
@@ -237,57 +224,43 @@ class FlowControlProtocol {
     *buf++ = (value & 0x000000FF);
     return buf;
   }
+
   // encode uint32_t
   uint8_t *decode(uint8_t *buf, uint32_t &value) {
     value = ((buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]));
     return (buf + 4);
   }
+
   // encode byte array
   uint8_t *encode(uint8_t *buf, uint8_t *bufArray, int size) {
     memcpy(buf, bufArray, size);
     buf += size;
     return buf;
   }
+
   // encode std::string
-  uint8_t *encode(uint8_t *buf, std::string value) {
+  uint8_t *encode(uint8_t *buf, const std::string& value) {
     // add the \0 for size
     buf = encode(buf, value.size() + 1);
     buf = encode(buf, (uint8_t *) value.c_str(), value.size() + 1);
     return buf;
   }
-  // Mutex for protection
+
   std::mutex mutex_;
-  // Logger
   std::shared_ptr<logging::Logger> logger_;
   // NiFi server Name
   std::string _serverName;
   // NiFi server port
   uint16_t _serverPort;
-  // Serial Number
-  uint8_t _serialNumber[8];
-  // socket to server
-  int _socket;
-  // report interal in msec
-  int64_t _reportInterval;
-  // whether it was registered to the NiFi server
-  bool _registered;
-  // seq number
+  uint8_t _serialNumber[8] = {0};
+  int _socket;  // to server
+  int64_t _reportInterval;  // in msec
+  bool _registered;  // whether it was registered to the NiFi server
   uint32_t _seqNumber;
-  // FlowController
-  FlowController *_controller = NULL;
-  // report Blob
-  char *_reportBlob;
-  // report Blob len;
-  int _reportBlobLen;
-  // thread
-  std::thread *_thread = NULL;
-  // whether it is running
+  FlowController *_controller = nullptr;
+  std::vector<char> _reportBlob;
+  std::thread _thread;
   bool running_;
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
-  FlowControlProtocol(const FlowControlProtocol &parent);
-  FlowControlProtocol &operator=(const FlowControlProtocol &parent);
-
 };
 
 } /* namespace minifi */

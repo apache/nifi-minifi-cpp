@@ -53,6 +53,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Connectable.h"
 #include "utils/HTTPClient.h"
+#include "utils/GeneralUtils.h"
 #include "io/NetworkPrioritizer.h"
 #include "io/validation.h"
 
@@ -79,7 +80,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       initialized_(false),
       provenance_repo_(provenance_repo),
       flow_file_repo_(flow_file_repo),
-      protocol_(0),
       controller_service_map_(std::make_shared<core::controller::ControllerServiceMap>()),
       thread_pool_(2, false, nullptr, "Flowcontroller threadpool"),
       timer_scheduler_(nullptr),
@@ -109,7 +109,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   c2_initialized_ = false;
   root_ = nullptr;
 
-  protocol_ = new FlowControlProtocol(this, configure);
+  protocol_ = utils::make_unique<FlowControlProtocol>(this, configure);
 
   if (!headless_mode) {
     std::string rawConfigFileString;
@@ -173,8 +173,7 @@ FlowController::~FlowController() {
   stop(true);
   stopC2();
   unload();
-  if (NULL != protocol_)
-    delete protocol_;
+  protocol_ = nullptr;
   flow_file_repo_ = nullptr;
   provenance_repo_ = nullptr;
 }

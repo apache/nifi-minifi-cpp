@@ -27,6 +27,7 @@
 #include "core/logging/Logger.h"
 #include "rdkafka.h"
 #include "KafkaTopic.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -49,6 +50,9 @@ class KafkaConnection {
 
   explicit KafkaConnection(const KafkaConnectionKey &key);
 
+  KafkaConnection(const KafkaConnection&) = delete;
+  KafkaConnection& operator=(KafkaConnection) = delete;
+
   ~KafkaConnection();
 
   void remove();
@@ -57,7 +61,7 @@ class KafkaConnection {
 
   bool initialized() const;
 
-  void setConnection(rd_kafka_t *producer);
+  void setConnection(gsl::owner<rd_kafka_t*> producer);
 
   rd_kafka_t *getConnection() const;
 
@@ -81,7 +85,7 @@ class KafkaConnection {
 
   std::map<std::string, std::shared_ptr<KafkaTopic>> topics_;
 
-  rd_kafka_t *kafka_connection_;
+  gsl::owner<rd_kafka_t*> kafka_connection_;
 
   std::atomic<bool> poll_;
   std::thread thread_kafka_poll_;

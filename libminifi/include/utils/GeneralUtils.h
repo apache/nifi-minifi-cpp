@@ -24,6 +24,8 @@
 #include <utility>
 #include <functional>
 
+#include "gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -45,8 +47,7 @@ T intdiv_ceil(T numerator, T denominator) {
   return numerator / denominator + (numerator % denominator > 0);
 }
 
-template <typename T, typename = typename std::enable_if<std::is_pointer<T>::value>::type>
-using owner = T;
+using gsl::owner;
 
 #if __cplusplus < 201402L
 // from https://en.cppreference.com/w/cpp/utility/exchange

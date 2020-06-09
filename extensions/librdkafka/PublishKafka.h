@@ -38,7 +38,7 @@
 #include <cstdint>
 #include <condition_variable>
 #include <utility>
-#include <utils/GeneralUtils.h>
+#include <utils/gsl.h>
 
 namespace org {
 namespace apache {
@@ -205,7 +205,7 @@ class PublishKafka : public core::Processor {
     }
 
     static rd_kafka_headers_unique_ptr make_headers(const core::FlowFile& flow_file, utils::Regex& attribute_name_regex) {
-      const utils::owner<rd_kafka_headers_t*> result{ rd_kafka_headers_new(8) };
+      const gsl::owner<rd_kafka_headers_t*> result{ rd_kafka_headers_new(8) };
       if (!result) { throw std::bad_alloc{}; }
 
       for (const auto& kv : flow_file.getAttributes()) {
@@ -231,7 +231,7 @@ class PublishKafka : public core::Processor {
 
       allocate_message_object(segment_num);
 
-      const utils::owner<rd_kafka_headers_t*> hdrs_copy = rd_kafka_headers_copy(hdrs.get());
+      const gsl::owner<rd_kafka_headers_t*> hdrs_copy = rd_kafka_headers_copy(hdrs.get());
       const auto err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
                                          RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.release()), RD_KAFKA_V_END);
       if (err) {

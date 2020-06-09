@@ -5,6 +5,7 @@
 #include "wel/UnicodeConversion.h"
 #include "utils/file/FileUtils.h"
 #include "utils/ScopeGuard.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -68,7 +69,7 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
 
   const unique_evt_handle hEvent = [this,&hEventResults] {
     DWORD dwReturned{};
-    EVT_HANDLE hEvent{ nullptr };
+    gsl::owner<EVT_HANDLE> hEvent{ nullptr };
     if (!EvtNext(hEventResults.get(), 1, &hEvent, INFINITE, 0, &dwReturned)) {
       LOG_LAST_ERROR(EvtNext);
     }

@@ -22,39 +22,19 @@
 
 #include <functional>
 
+#include "gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
 
-class ScopeGuard {
- private:
-  bool enabled_;
-  std::function<void()> func_;
+struct ScopeGuard : ::gsl::final_action<std::function<void()>> {
+  using ::gsl::final_action<std::function<void()>>::final_action;
 
- public:
-  explicit ScopeGuard(std::function<void()>&& func)
-    : enabled_(true)
-    , func_(std::move(func)) {
-  }
-
-  ~ScopeGuard() {
-    if (enabled_) {
-      try {
-        func_();
-      } catch (...) {
-      }
-    }
-  }
-
-  ScopeGuard(const ScopeGuard&) = delete;
-  ScopeGuard(ScopeGuard&&) = delete;
-  ScopeGuard& operator=(const ScopeGuard&) = delete;
-  ScopeGuard& operator=(ScopeGuard&&) = delete;
-
-  void disable() {
-    enabled_ = false;
+  void disable() noexcept {
+    dismiss();
   }
 };
 

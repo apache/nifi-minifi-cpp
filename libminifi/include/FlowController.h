@@ -20,7 +20,7 @@
 #ifndef __FLOW_CONTROLLER_H__
 #define __FLOW_CONTROLLER_H__
 
-#include <stdio.h>
+#include <cstdio>
 #include <utility>
 #include <vector>
 #include <queue>
@@ -29,6 +29,7 @@
 #include <atomic>
 #include <algorithm>
 #include <set>
+
 #include "properties/Configure.h"
 #include "core/Relationship.h"
 #include "FlowFileRecord.h"
@@ -50,6 +51,7 @@
 #include "utils/Id.h"
 #include "core/state/UpdateController.h"
 #include "core/state/nodes/FlowInformation.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -382,7 +384,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // Site to Site Server Listener
   // Heart Beat
   // FlowControl Protocol
-  FlowControlProtocol *protocol_;
+  std::unique_ptr<FlowControlProtocol> protocol_;
 
   std::shared_ptr<Configure> configuration_;
 
