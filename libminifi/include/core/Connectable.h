@@ -74,7 +74,7 @@ class Connectable : public CoreComponent {
    */
   std::set<std::shared_ptr<Connectable>> getOutGoingConnections(const std::string &relationship) const;
 
-  void put(std::shared_ptr<Connectable> flow) {
+  virtual void put(std::shared_ptr<Connectable> flow) {
 
   }
 
