@@ -298,7 +298,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
     core::ProcessSession sessionGenFlowFile(context);
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     sessionGenFlowFile.importFrom(content, flow);
-    input->put(flow); // stores it in the flowFileRepository
+    input->put(flow);  // stores it in the flowFileRepository
   }
 
   // remove flow from the connection but it is still present in the
