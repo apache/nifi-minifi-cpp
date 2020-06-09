@@ -51,7 +51,6 @@
 #include "utils/Id.h"
 #include "core/state/UpdateController.h"
 #include "core/state/nodes/FlowInformation.h"
-#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
