@@ -66,11 +66,11 @@ class GetFileMetrics : public state::response::ResponseNode {
   virtual ~GetFileMetrics() {
 
   }
-  virtual std::string getName() const {
+  std::string getName() const override {
     return core::Connectable::getName();
   }
 
-  virtual std::vector<state::response::SerializedResponseNode> serialize() {
+  std::vector<state::response::SerializedResponseNode> serialize() override {
     std::vector<state::response::SerializedResponseNode> resp;
 
     state::response::SerializedResponseNode iter;
@@ -143,23 +143,23 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   /**
    * Execution trigger for the GetFile Processor
    * @param context processor context
    * @param session processor session reference.
    */
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
 
   // Initialize, over write by NiFi GetFile
-  virtual void initialize(void);
+  void initialize(void) override;
   /**
    * performs a listing on the directory.
    * @param request get file request.
    */
   void performListing(const GetFileRequest &request);
 
-  int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector);
+  int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) override;
 
  protected:
 

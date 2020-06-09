@@ -152,7 +152,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   uint64_t getQueueDataSize() {
     return queued_data_size_;
   }
-  void put(std::shared_ptr<core::Connectable> flow) {
+  void put(std::shared_ptr<core::Connectable> flow) override {
     std::shared_ptr<core::FlowFile> ff = std::static_pointer_cast<core::FlowFile>(flow);
     if (nullptr != ff) {
       put(ff);
@@ -169,15 +169,15 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   // Drain the flow records
   void drain();
 
-  void yield() {
+  void yield() override {
 
   }
 
-  bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return !isEmpty();
   }
 
-  bool isRunning() {
+  bool isRunning() override {
     return true;
   }
 
