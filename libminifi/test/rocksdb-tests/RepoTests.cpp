@@ -283,6 +283,13 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   std::string data = "banana";
   minifi::io::DataStream content(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
 
+  /**
+   * Currently it is the Connection's responsibility to persist the incoming
+   * flowFiles to the FlowFileRepository. Upon restart the FlowFileRepository
+   * checks the persisted database and moves every FlowFile into the Connection
+   * that persisted it (if it can find it. We could have a different flow, in
+   * which case the bastard FlowFiles are deleted.)
+   */
   {
     std::shared_ptr<core::Processor> processor = std::make_shared<core::Processor>("dummy");
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
@@ -301,11 +308,18 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   REQUIRE(oldFlow);
   REQUIRE(expiredFiles.empty());
 
+  // this notifies the FlowFileRepository of the flow structure
+  // i.e. what Connections are present (more precisely what Connectables
+  // are present)
   flowController->load(root);
+  // this will first check the persisted repo and restore all FlowFiles
+  // that still has an owner Connectable
   ff_repository->start();
 
   std::this_thread::sleep_for(std::chrono::milliseconds{500});
 
+  // check if the @input Connection's FlowFile was restored
+  // upon the FlowFileRepository's startup
   auto newFlow = input->poll(expiredFiles);
   REQUIRE(newFlow);
   REQUIRE(expiredFiles.empty());
