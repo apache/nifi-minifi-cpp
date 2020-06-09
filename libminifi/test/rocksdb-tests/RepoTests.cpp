@@ -288,7 +288,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
    * flowFiles to the FlowFileRepository. Upon restart the FlowFileRepository
    * checks the persisted database and moves every FlowFile into the Connection
    * that persisted it (if it can find it. We could have a different flow, in
-   * which case the bastard FlowFiles are deleted.)
+   * which case the orphan FlowFiles are deleted.)
    */
   {
     std::shared_ptr<core::Processor> processor = std::make_shared<core::Processor>("dummy");
