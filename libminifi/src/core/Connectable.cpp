@@ -163,15 +163,37 @@ std::set<std::shared_ptr<Connectable>> Connectable::getOutGoingConnections(const
 }
 
 std::shared_ptr<Connectable> Connectable::getNextIncomingConnection() {
+  std::function<bool (const std::shared_ptr<Connectable> &)> filter = [](const std::shared_ptr<Connectable> &) {return true;};
+  return getNextIncomingConnectionWithPreference(filter);
+}
+
+std::shared_ptr<Connectable> Connectable::getNextIncomingConnectionWithPreference(std::function<bool(const std::shared_ptr<Connectable> &)> &condition) {
   std::lock_guard<std::mutex> lock(relationship_mutex_);
 
-  if (_incomingConnections.size() == 0)
-    return NULL;
+  if (_incomingConnections.empty())
+    return nullptr;
 
   if (incoming_connections_Iter == _incomingConnections.end())
     incoming_connections_Iter = _incomingConnections.begin();
 
-  std::shared_ptr<Connectable> ret = *incoming_connections_Iter;
+  bool foundPreferred = false;
+  auto startIter = incoming_connections_Iter;
+  std::shared_ptr<Connectable> ret;
+  do {
+    ret = *incoming_connections_Iter;
+    incoming_connections_Iter++;
+
+    if (incoming_connections_Iter == _incomingConnections.end())
+      incoming_connections_Iter = _incomingConnections.begin();
+
+    foundPreferred = condition(ret);
+  } while (!foundPreferred && incoming_connections_Iter != startIter);
+
+  if (foundPreferred) {
+    return ret;
+  }
+
+  ret = *incoming_connections_Iter;
   incoming_connections_Iter++;
 
   if (incoming_connections_Iter == _incomingConnections.end())

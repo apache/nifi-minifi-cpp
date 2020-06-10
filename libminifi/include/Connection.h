@@ -181,6 +181,10 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
     return true;
   }
 
+  bool isLoop() {
+    return source_connectable_ == dest_connectable_;
+  }
+
  protected:
   // Source Processor UUID
   utils::Identifier src_uuid_;

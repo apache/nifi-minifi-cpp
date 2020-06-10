@@ -233,6 +233,15 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   }
 
   /**
+   * If there is a connection that satisfies the condition
+   * it returns that otherwise returns the next connection
+   * @return next incoming connection
+   */
+  std::shared_ptr<Connectable> getNextIncomingConnectionWithPreference(std::function<bool(const std::shared_ptr<Connectable>&)>& condition) {
+    return processor_->getNextIncomingConnectionWithPreference(condition);
+  }
+
+  /**
    * @return true if incoming connections > 0
    */
   bool hasIncomingConnections() {

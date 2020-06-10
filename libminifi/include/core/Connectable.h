@@ -152,6 +152,8 @@ class Connectable : public CoreComponent {
     return connectable_version_;
   }
 
+  std::shared_ptr<Connectable> getNextIncomingConnectionWithPreference(std::function<bool(const std::shared_ptr<Connectable>&)>&);
+
  protected:
 
   // Penalization Period in MilliSecond

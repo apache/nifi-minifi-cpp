@@ -209,7 +209,8 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   }
   // Whether flow file queued in incoming connection
   bool flowFilesQueued();
-  // Whether flow file queue full in any of the outgoin connection
+  // Whether flow file queue full in any of the outgoing connection
+  // does not take self-loops into account
   bool flowFilesOutGoingFull();
 
   // Get outgoing connections based on relationship name

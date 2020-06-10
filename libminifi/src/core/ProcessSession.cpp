@@ -921,7 +921,11 @@ void ProcessSession::rollback() {
 }
 
 std::shared_ptr<core::FlowFile> ProcessSession::get() {
-  std::shared_ptr<Connectable> first = process_context_->getProcessorNode()->getNextIncomingConnection();
+  std::function<bool(const std::shared_ptr<Connectable>&)> fullSelfLoopFilter = [] (const std::shared_ptr<Connectable>& conn) {
+    auto connection = std::static_pointer_cast<Connection>(conn);
+    return connection && connection->isLoop() && connection->isFull();
+  };
+  std::shared_ptr<Connectable> first = process_context_->getProcessorNode()->getNextIncomingConnectionWithPreference(fullSelfLoopFilter);
 
   if (first == nullptr) {
     logger_->log_trace("Get is null for %s", process_context_->getProcessorNode()->getName());
@@ -959,7 +963,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
       _originalFlowFiles[snapshot->getUUIDStr()] = snapshot;
       return ret;
     }
-    current = std::static_pointer_cast<Connection>(process_context_->getProcessorNode()->getNextIncomingConnection());
+    current = std::static_pointer_cast<Connection>(process_context_->getProcessorNode()->getNextIncomingConnectionWithPreference(fullSelfLoopFilter));
   } while (current != nullptr && current != first);
 
   return nullptr;
