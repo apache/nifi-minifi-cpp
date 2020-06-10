@@ -20,25 +20,21 @@
 
 #pragma once
 
-#include <Objbase.h>
-#include <winevt.h>
-
-#include <codecvt>
-#include <mutex>
-#include <sstream>
-#include <regex>
-#include <unordered_map>
-
-#include "concurrentqueue.h"
-#include "pugixml.hpp"
-
 #include "core/Core.h"
+#include "wel/WindowsEventLog.h"
+#include "FlowFileRecord.h"
+#include "concurrentqueue.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "FlowFileRecord.h"
+#include "pugixml.hpp"
+#include <winevt.h>
+#include <sstream>
+#include <regex>
+#include <codecvt>
 #include "utils/OsUtils.h"
-#include "utils/gsl.h"
-#include "wel/WindowsEventLog.h"
+#include <Objbase.h>
+#include <mutex>
+#include <unordered_map>
 
 namespace org {
 namespace apache {
@@ -140,7 +136,7 @@ private:
   std::unique_ptr<Bookmark> pBookmark_;
   std::mutex onTriggerMutex_;
   std::unordered_map<std::string, std::string> xmlPercentageItemsResolutions_;
-  gsl::owner<HMODULE> hMsobjsDll_{};
+  HMODULE hMsobjsDll_{};
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");

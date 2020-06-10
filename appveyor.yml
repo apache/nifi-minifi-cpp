@@ -17,4 +17,4 @@ clone_folder: C:\projects\nifi-minifi-cpp
   
 build_script:
    - cd C:\projects\nifi-minifi-cpp
-   - win_build_vs.bat build
+   - win_build_vs.bat build /CI

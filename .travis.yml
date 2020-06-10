@@ -56,7 +56,7 @@ matrix:
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
         - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 4   && sudo make test ARGS="-j2 --output-on-failure"
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=ON .. && cmake --build . --parallel 4   && sudo make test ARGS="-j2 --output-on-failure"
     - os: linux
       dist: trusty
       sudo: required
@@ -86,13 +86,13 @@ matrix:
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
         - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j4 VERBOSE=1  && sudo make test ARGS="-j2 --output-on-failure"
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=ON .. && make -j4 VERBOSE=1  && sudo make test ARGS="-j2 --output-on-failure"
     - os: linux
       name: trusty static build with tests
       dist: trusty
       sudo: required
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j4 VERBOSE=1  && sudo make test ARGS="-j2 --output-on-failure"
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=ON .. && make -j4 VERBOSE=1  && sudo make test ARGS="-j2 --output-on-failure"
     - os: linux
       name: xenial shared build with tests
       dist: xenial
@@ -105,7 +105,7 @@ matrix:
           - openjdk-8-jdk
           - maven
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_MQTT=ON -DENABLE_COAP=ON .. &&  cmake --build . --parallel 4  && sudo make test ARGS="-j4 --output-on-failure"
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_MQTT=ON -DENABLE_COAP=ON -DSTRICT_GSL_CHECKS=AUDIT .. &&  cmake --build . --parallel 4  && sudo make test ARGS="-j4 --output-on-failure"
     - os: linux
       name: debian static package build
       dist: bionic
@@ -113,7 +113,7 @@ matrix:
       services:
         - docker
       script:
-        - mkdir -p build && cd build && cmake .. && make debian
+        - mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=ON .. && make debian
     - os: linux
       name: centos static package biuld
       dist: bionic
@@ -121,7 +121,7 @@ matrix:
       services:
         - docker
       script:
-        - mkdir -p build && cd build && cmake .. && make centos
+        - mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=ON .. && make centos
     - os: linux
       name: fedora static package build
       dist: bionic
@@ -129,7 +129,7 @@ matrix:
       services:
         - docker
       script:
-        - mkdir -p build && cd build && cmake .. && make fedora
+        - mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=ON .. && make fedora
     - os: linux
       name: bionic static package build
       dist: bionic
@@ -137,12 +137,12 @@ matrix:
       services:
         - docker
       script:
-        - mkdir -p build && cd build && cmake .. && make u18
+        - mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=ON .. && make u18
     - os: linux
       dist: xenial
       sudo: required
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS=ON .. &&  cmake --build . --parallel 4  && sudo make test ARGS="-j4 --output-on-failure"
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS=ON -DSTRICT_GSL_CHECKS=AUDIT .. &&  cmake --build . --parallel 4  && sudo make test ARGS="-j4 --output-on-failure"
     - os: osx
       osx_image: xcode10.3
       addons:
@@ -164,7 +164,7 @@ matrix:
       env:
         - CMAKE_BUILD_OPTIONS="${CMAKE_BUILD_OPTIONS} -DENABLE_LUA_SCRIPTING=1"
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 4 && sudo make test ARGS="-j4 --output-on-failure" && make linter
+        - ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=ON .. && cmake --build . --parallel 4 && sudo make test ARGS="-j4 --output-on-failure" && make linter
     - os: osx
       osx_image: xcode11.2
       addons:
@@ -186,4 +186,4 @@ matrix:
       env:
         - CMAKE_BUILD_OPTIONS="${CMAKE_BUILD_OPTIONS} -DENABLE_LUA_SCRIPTING=1"
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 4 && sudo make test ARGS="-j4 --output-on-failure" && make linter
+        - ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=ON .. && cmake --build . --parallel 4 && sudo make test ARGS="-j4 --output-on-failure" && make linter
