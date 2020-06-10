@@ -648,7 +648,20 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
 }
 
 void ProcessSession::import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> &flows, bool keepSource, uint64_t offset, char inputDelimiter) {
+// this function calls a deprecated function, but it is itself deprecated, so suppress warnings
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
   import(source, flows, offset, inputDelimiter);
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
   logger_->log_trace("Closed input %s, keeping source ? %i", source, keepSource);
   if (!keepSource) {
     std::remove(source.c_str());
