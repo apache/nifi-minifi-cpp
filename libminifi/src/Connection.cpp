@@ -148,17 +148,6 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
     logger_->log_debug("Enqueue flow file UUID %s to connection %s", flow->getUUIDStr(), name_);
   }
 
-  if (!flow->isStored()) {
-    // Save to the flowfile repo
-    FlowFileRecord event(flow_repository_, content_repo_, flow, this->uuidStr_);
-    if (event.Serialize()) {
-      flow->setStoredToRepository(true);
-    } else {
-      logger_->log_error("Failed to serialize FlowFileRecord to repo!");
-      throw Exception(PROCESS_SESSION_EXCEPTION, "Failed to put flowfile to repository");
-    }
-  }
-
   // Notify receiving processor that work may be available
   if (dest_connectable_) {
     logger_->log_debug("Notifying %s that %s was inserted", dest_connectable_->getName(), flow->getUUIDStr());
@@ -167,8 +156,6 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
 }
 
 void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
-  std::vector<std::pair<std::string, std::unique_ptr<io::DataStream>>> flowData;
-
   {
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -182,40 +169,12 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
       queued_data_size_ += ff->getSize();
 
       logger_->log_debug("Enqueue flow file UUID %s to connection %s", ff->getUUIDStr(), name_);
-
-      if (!ff->isStored()) {
-        // Save to the flowfile repo
-        FlowFileRecord event(flow_repository_, content_repo_, ff, this->uuidStr_);
-
-        std::unique_ptr<io::DataStream> stramptr(new io::DataStream());
-        event.Serialize(*stramptr.get());
-
-        flowData.emplace_back(event.getUUIDStr(), std::move(stramptr));
-      }
     }
   }
 
-  if (!flow_repository_->MultiPut(flowData)) {
-    logger_->log_error("Failed execute multiput on FF repo!");
-    throw Exception(PROCESS_SESSION_EXCEPTION, "Failed to put flowfiles to repository");
-  }
-
-  for (auto& ff : flows) {
-    if (drop_empty_ && ff->getSize() == 0) {
-      continue;
-    }
-
-    if (!ff->isStored()) {
-      auto claim = ff->getResourceClaim();
-      // increment on behalf of the persisted instance
-      if (claim) claim->increaseFlowFileRecordOwnedCount();
-      ff->setStoredToRepository(true);
-    }
-
-    if (dest_connectable_) {
-      logger_->log_debug("Notifying %s that flowfiles were inserted", dest_connectable_->getName());
-      dest_connectable_->notifyWork();
-    }
+  if (dest_connectable_) {
+    logger_->log_debug("Notifying %s that flowfiles were inserted", dest_connectable_->getName());
+    dest_connectable_->notifyWork();
   }
 }
 
@@ -233,11 +192,6 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
         // Flow record expired
         expiredFlowRecords.insert(item);
         logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
-        if (item->isStored() && flow_repository_->Delete(item->getUUIDStr())) {
-          item->setStoredToRepository(false);
-          auto claim = item->getResourceClaim();
-          if (claim) claim->decreaseFlowFileRecordOwnedCount();
-        }
       } else {
         // Flow record not expired
         if (item->isPenalized()) {

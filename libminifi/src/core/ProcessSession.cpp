@@ -88,8 +88,15 @@ std::shared_ptr<core::FlowFile> ProcessSession::create() {
 }
 
 void ProcessSession::add(const std::shared_ptr<core::FlowFile> &record) {
+  if (didProvide(record)) {
+    throw Exception(ExceptionType::PROCESSOR_EXCEPTION, "Mustn't add file that was provided by this session");
+  }
   _addedFlowFiles[record->getUUIDStr()] = record;
   record->setDeleted(false);
+}
+
+bool ProcessSession::didProvide(const std::shared_ptr<core::FlowFile> &flow) {
+  return _updatedFlowFiles.find(flow->getUUIDStr()) != _updatedFlowFiles.end();
 }
 
 std::shared_ptr<core::FlowFile> ProcessSession::create(const std::shared_ptr<core::FlowFile> &parent) {
@@ -235,6 +242,23 @@ void ProcessSession::transfer(const std::shared_ptr<core::FlowFile> &flow, Relat
   logging::LOG_INFO(logger_) << "Transferring " << flow->getUUIDStr() << " from " << process_context_->getProcessorNode()->getName() << " to relationship " << relationship.getName();
   _transferRelationship[flow->getUUIDStr()] = relationship;
   flow->setDeleted(false);
+}
+
+void ProcessSession::notifyFlowFileAccess(const std::shared_ptr<core::FlowFile> &flow) {
+  flow->setDeleted(false);
+  _updatedFlowFiles[flow->getUUIDStr()] = flow;
+  std::map<std::string, std::string> empty;
+  std::shared_ptr<core::FlowFile> snapshot = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);
+  auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
+  if (flow_version != nullptr) {
+    auto flow_id = flow_version->getFlowId();
+    std::string attr = FlowAttributeKey(FLOW_ID);
+    snapshot->setAttribute(attr, flow_version->getFlowId());
+  }
+  logger_->log_debug("Create Snapshot FlowFile with UUID %s", snapshot->getUUIDStr());
+  snapshot = flow;
+  // save a snapshot
+  _originalFlowFiles[snapshot->getUUIDStr()] = snapshot;
 }
 
 void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
@@ -803,9 +827,9 @@ void ProcessSession::commit() {
       }
     }
 
-    std::map<std::shared_ptr<Connection>, std::vector<std::shared_ptr<FlowFile>>> connectionQueues;
+    std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<FlowFile>>> connectionQueues;
 
-    std::shared_ptr<Connection> connection = nullptr;
+    std::shared_ptr<Connectable> connection = nullptr;
     // Complete process the added and update flow files for the session, send the flow file to its queue
     for (const auto &it : _updatedFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
@@ -814,7 +838,7 @@ void ProcessSession::commit() {
         continue;
       }
 
-      connection = std::static_pointer_cast<Connection>(record->getConnection());
+      connection = record->getConnection();
       if ((connection) != nullptr) {
         connectionQueues[connection].push_back(record);
       }
@@ -825,7 +849,7 @@ void ProcessSession::commit() {
       if (record->isDeleted()) {
         continue;
       }
-      connection = std::static_pointer_cast<Connection>(record->getConnection());
+      connection = record->getConnection();
       if ((connection) != nullptr) {
         connectionQueues[connection].push_back(record);
       }
@@ -837,7 +861,7 @@ void ProcessSession::commit() {
       if (record->isDeleted()) {
         continue;
       }
-      connection = std::static_pointer_cast<Connection>(record->getConnection());
+      connection = record->getConnection();
       if ((connection) != nullptr) {
         connectionQueues[connection].push_back(record);
       }
@@ -855,8 +879,17 @@ void ProcessSession::commit() {
         }
     }
 
+    persistFlowFilesBeforeTransfer(connectionQueues);
+
     for (auto& cq : connectionQueues) {
-      cq.first->multiPut(cq.second);
+      auto connection = std::dynamic_pointer_cast<Connection>(cq.first);
+      if (connection) {
+        connection->multiPut(cq.second);
+      } else {
+        for (auto& file : cq.second) {
+          cq.first->put(file);
+        }
+      }
     }
 
     // All done
@@ -882,14 +915,14 @@ void ProcessSession::commit() {
 void ProcessSession::rollback() {
   // new FlowFiles are only persisted during commit
   // no need to delete them here
-  std::map<std::shared_ptr<Connection>, std::vector<std::shared_ptr<FlowFile>>> connectionQueues;
+  std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<FlowFile>>> connectionQueues;
 
   try {
-    std::shared_ptr<Connection> connection = nullptr;
+    std::shared_ptr<Connectable> connection = nullptr;
     // Requeue the snapshot of the flowfile back
     for (const auto &it : _originalFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
-      connection = std::static_pointer_cast<Connection>(record->getOriginalConnection());
+      connection = record->getOriginalConnection();
       if ((connection) != nullptr) {
         std::shared_ptr<FlowFileRecord> flowf = std::static_pointer_cast<FlowFileRecord>(record);
         flowf->setSnapShot(false);
@@ -902,8 +935,16 @@ void ProcessSession::rollback() {
       it.second->setDeleted(false);
     }
 
+    // put everything back where it came from
     for (auto& cq : connectionQueues) {
-      cq.first->multiPut(cq.second);
+      auto connection = std::dynamic_pointer_cast<Connection>(cq.first);
+      if (connection) {
+        connection->multiPut(cq.second);
+      } else {
+        for (auto& flow : cq.second) {
+          cq.first->put(flow);
+        }
+      }
     }
 
     _originalFlowFiles.clear();
@@ -919,6 +960,65 @@ void ProcessSession::rollback() {
   } catch (...) {
     logger_->log_warn("Caught Exception during process session rollback");
     throw;
+  }
+}
+
+void ProcessSession::persistFlowFilesBeforeTransfer(std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile> > > &transactionMap) {
+  std::vector<std::pair<std::string, std::unique_ptr<io::DataStream>>> flowData;
+
+  auto flowFileRepo = process_context_->getFlowFileRepository();
+  auto contentRepo = process_context_->getContentRepository();
+
+  for (auto& transaction : transactionMap) {
+    const std::shared_ptr<Connectable>& target = transaction.first;
+    std::shared_ptr<Connection> connection = std::dynamic_pointer_cast<Connection>(target);
+    const bool shouldDropEmptyFiles = connection ? connection->getDropEmptyFlowFiles() : false;
+    auto& flows = transaction.second;
+    for (auto &ff : flows) {
+      if (shouldDropEmptyFiles && ff->getSize() == 0) {
+        // the receiver will drop this FF
+        continue;
+      }
+      if (!ff->isStored()) {
+        FlowFileRecord event(flowFileRepo, contentRepo, ff, target->getUUIDStr());
+
+        std::unique_ptr<io::DataStream> stream(new io::DataStream());
+        event.Serialize(*stream);
+
+        flowData.emplace_back(event.getUUIDStr(), std::move(stream));
+      }
+    }
+  }
+
+  if (!flowFileRepo->MultiPut(flowData)) {
+    logger_->log_error("Failed execute multiput on FF repo!");
+    throw Exception(PROCESS_SESSION_EXCEPTION, "Failed to put flowfiles to repository");
+  }
+
+  for (auto& transaction : transactionMap) {
+    const std::shared_ptr<Connectable>& target = transaction.first;
+    std::shared_ptr<Connection> connection = std::dynamic_pointer_cast<Connection>(target);
+    const bool shouldDropEmptyFiles = connection ? connection->getDropEmptyFlowFiles() : false;
+    auto& flows = transaction.second;
+    for (auto &ff : flows) {
+      if (shouldDropEmptyFiles && ff->getSize() == 0) {
+        // the receiver promised to drop this FF, no need for it anymore
+        if (ff->isStored()) {
+          flowFileRepo->Delete(ff->getUUIDStr());
+          auto claim = ff->getResourceClaim();
+          // decrement on behalf of the persisted-instance-to-be-deleted
+          if (claim) claim->decreaseFlowFileRecordOwnedCount();
+          ff->setStoredToRepository(false);
+        }
+        continue;
+      }
+      if (!ff->isStored()) {
+        auto claim = ff->getResourceClaim();
+        // increment on behalf of the persisted instance
+        if (claim) claim->increaseFlowFileRecordOwnedCount();
+        ff->setStoredToRepository(true);
+      }
+    }
   }
 }
 
@@ -941,24 +1041,17 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
         std::stringstream details;
         details << process_context_->getProcessorNode()->getName() << " expire flow record " << record->getUUIDStr();
         provenance_report_->expire(record, details.str());
+        // there is no rolling back expired FlowFiles
+        if (record->isStored() && process_context_->getFlowFileRepository()->Delete(record->getUUIDStr())) {
+          record->setStoredToRepository(false);
+          auto claim = record->getResourceClaim();
+          if (claim) claim->decreaseFlowFileRecordOwnedCount();
+        }
       }
     }
     if (ret) {
       // add the flow record to the current process session update map
-      ret->setDeleted(false);
-      _updatedFlowFiles[ret->getUUIDStr()] = ret;
-      std::map<std::string, std::string> empty;
-      std::shared_ptr<core::FlowFile> snapshot = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);
-      auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
-      if (flow_version != nullptr) {
-        auto flow_id = flow_version->getFlowId();
-        std::string attr = FlowAttributeKey(FLOW_ID);
-        snapshot->setAttribute(attr, flow_version->getFlowId());
-      }
-      logger_->log_debug("Create Snapshot FlowFile with UUID %s", snapshot->getUUIDStr());
-      snapshot = ret;
-      // save a snapshot
-      _originalFlowFiles[snapshot->getUUIDStr()] = snapshot;
+      notifyFlowFileAccess(ret);
       return ret;
     }
     current = std::static_pointer_cast<Connection>(process_context_->getProcessorNode()->pickIncomingConnection());

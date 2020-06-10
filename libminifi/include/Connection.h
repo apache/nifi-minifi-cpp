@@ -154,7 +154,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
     return queued_data_size_;
   }
   void put(std::shared_ptr<core::Connectable> flow) override {
-    std::shared_ptr<core::FlowFile> ff = std::static_pointer_cast<core::FlowFile>(flow);
+    std::shared_ptr<core::FlowFile> ff = std::dynamic_pointer_cast<core::FlowFile>(flow);
     if (nullptr != ff) {
       put(ff);
     }

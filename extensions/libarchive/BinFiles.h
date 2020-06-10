@@ -218,6 +218,8 @@ class BinManager {
 
 // BinFiles Class
 class BinFiles : public core::Processor {
+ protected:
+  static core::Relationship Self;
  public:
   // Constructor
   /*!
@@ -262,14 +264,16 @@ class BinFiles : public core::Processor {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   // OnTrigger method, implemented by NiFi BinFiles
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
   }
   // OnTrigger method, implemented by NiFi BinFiles
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   // Initialize, over write by NiFi BinFiles
-  virtual void initialize(void);
+  void initialize(void) override;
+
+  void put(std::shared_ptr<core::Connectable> flow) override;
 
  protected:
   // Allows general pre-processing of a flow file before it is offered to a bin. This is called before getGroupId().
@@ -284,14 +288,40 @@ class BinFiles : public core::Processor {
   }
   // transfer flows to failure in bin
   void transferFlowsToFail(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
-  // add flows to session
+  // moves owned flows to session
   void addFlowsToSession(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
 
   BinManager binManager_;
 
  private:
+  class FlowFileStore{
+   public:
+    struct ModifiableFlowFiles{
+      ModifiableFlowFiles(std::unordered_set<std::shared_ptr<core::FlowFile>>& files_, std::unique_lock<std::mutex>&& lock_)
+      : files_(files_),
+        lock_(std::move(lock_)) {}
+      std::unordered_set<std::shared_ptr<core::FlowFile>>& files_;
+     private:
+      std::unique_lock<std::mutex> lock_;
+    };
+    /**
+     * Returns the already-preprocessed FlowFiles that got restored on restart from the FlowFileRepository
+     * @param session to be notified upon access, so it can restore the content on any Failure
+     * @return the resurrected persisted FlowFiles
+     */
+    std::unordered_set<std::shared_ptr<core::FlowFile>> getNewFlowFiles(std::shared_ptr<BinFiles> owner, const std::shared_ptr<core::ProcessSession>& session);
+    ModifiableFlowFiles getLiveFlowFiles();
+    void put(std::shared_ptr<core::FlowFile>& flowFile);
+   private:
+    std::atomic_bool has_new_flow_file_{false};
+    std::mutex flow_file_mutex_;
+    std::unordered_set<std::shared_ptr<core::FlowFile>> incoming_files_;
+    std::unordered_set<std::shared_ptr<core::FlowFile>> live_files_;
+  };
+
   std::shared_ptr<logging::Logger> logger_;
   int maxBinCount_;
+  FlowFileStore file_store_;
 };
 
 REGISTER_RESOURCE(BinFiles, "Bins flow files into buckets based on the number of entries or size of entries");

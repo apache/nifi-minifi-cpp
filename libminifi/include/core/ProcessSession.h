@@ -59,10 +59,10 @@ class ProcessSession : public ReferenceContainer {
     provenance_report_ = std::make_shared<provenance::ProvenanceReporter>(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
   }
 
-// Destructor
+  // Destructor
   virtual ~ProcessSession();
 
-// Commit the session
+  // Commit the session
   void commit();
   // Roll Back the session
   void rollback();
@@ -70,7 +70,7 @@ class ProcessSession : public ReferenceContainer {
   std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() {
     return provenance_report_;
   }
-  //
+  void notifyFlowFileAccess(const std::shared_ptr<core::FlowFile>& flow);
   // Get the FlowFile from the highest priority queue
   virtual std::shared_ptr<core::FlowFile> get();
   // Create a new UUID FlowFile with no content resource claim and without parent
@@ -81,7 +81,9 @@ class ProcessSession : public ReferenceContainer {
   std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile> &parent);
   // Add a FlowFile to the session
   virtual void add(const std::shared_ptr<core::FlowFile> &flow);
-// Clone a new UUID FlowFile from parent both for content resource claim and attributes
+  // Checks if we queried the given FlowFile in this session
+  bool didProvide(const std::shared_ptr<core::FlowFile>& flow);
+  // Clone a new UUID FlowFile from parent both for content resource claim and attributes
   std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent);
   // Clone a new UUID FlowFile from parent for attributes and sub set of parent content resource claim
   std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent, int64_t offset, int64_t size);
@@ -140,21 +142,22 @@ class ProcessSession : public ReferenceContainer {
   ProcessSession &operator=(const ProcessSession &parent) = delete;
 
  protected:
-// FlowFiles being modified by current process session
-  std::map<std::string, std::shared_ptr<core::FlowFile> > _updatedFlowFiles;
+  // FlowFiles being modified by current process session
+  std::map<std::string, std::shared_ptr<core::FlowFile>> _updatedFlowFiles;
   // Copy of the original FlowFiles being modified by current process session as above
-  std::map<std::string, std::shared_ptr<core::FlowFile> > _originalFlowFiles;
+  std::map<std::string, std::shared_ptr<core::FlowFile>> _originalFlowFiles;
   // FlowFiles being added by current process session
-  std::map<std::string, std::shared_ptr<core::FlowFile> > _addedFlowFiles;
+  std::map<std::string, std::shared_ptr<core::FlowFile>> _addedFlowFiles;
   // FlowFiles being deleted by current process session
-  std::map<std::string, std::shared_ptr<core::FlowFile> > _deletedFlowFiles;
+  std::map<std::string, std::shared_ptr<core::FlowFile>> _deletedFlowFiles;
   // FlowFiles being transfered to the relationship
   std::map<std::string, Relationship> _transferRelationship;
   // FlowFiles being cloned for multiple connections per relationship
-  std::map<std::string, std::shared_ptr<core::FlowFile> > _clonedFlowFiles;
+  std::map<std::string, std::shared_ptr<core::FlowFile>> _clonedFlowFiles;
 
  private:
-// Clone the flow file during transfer to multiple connections for a relationship
+  void persistFlowFilesBeforeTransfer(std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap);
+  // Clone the flow file during transfer to multiple connections for a relationship
   std::shared_ptr<core::FlowFile> cloneDuringTransfer(std::shared_ptr<core::FlowFile> &parent);
   // ProcessContext
   std::shared_ptr<ProcessContext> process_context_;

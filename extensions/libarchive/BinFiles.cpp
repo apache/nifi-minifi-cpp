@@ -46,6 +46,7 @@ core::Property BinFiles::MaxBinAge("Max Bin Age", "The maximum age of a Bin that
 core::Property BinFiles::MaxBinCount("Maximum number of Bins", "Specifies the maximum number of bins that can be held in memory at any one time", "100");
 core::Relationship BinFiles::Original("original", "The FlowFiles that were used to create the bundle");
 core::Relationship BinFiles::Failure("failure", "If the bundle cannot be created, all FlowFiles that would have been used to create the bundle will be transferred to failure");
+core::Relationship BinFiles::Self("__self__", "Marks the FlowFile to be owned by this processor");
 const char *BinFiles::FRAGMENT_COUNT_ATTRIBUTE = "fragment.count";
 const char *BinFiles::FRAGMENT_ID_ATTRIBUTE = "fragment.identifier";
 const char *BinFiles::FRAGMENT_INDEX_ATTRIBUTE = "fragment.index";
@@ -70,6 +71,8 @@ void BinFiles::initialize() {
   relationships.insert(Original);
   relationships.insert(Failure);
   setSupportedRelationships(relationships);
+
+  out_going_connections_[Self.getName()].insert(shared_from_this());
 }
 
 void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
@@ -235,6 +238,36 @@ bool BinManager::offer(const std::string &group, std::shared_ptr<core::FlowFile>
 }
 
 void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  {
+    // process resurrected FlowFiles first
+    std::unordered_set<std::shared_ptr<core::FlowFile>> newLiveFiles;
+    auto flowFiles = file_store_.getNewFlowFiles(std::static_pointer_cast<BinFiles>(shared_from_this()), session);
+    // these are already processed FlowFiles
+    bool hadFailure = false;
+    for (auto &file : flowFiles) {
+      std::string groupId = getGroupId(context.get(), file);
+      bool offer = this->binManager_.offer(groupId, file);
+      if (!offer) {
+        session->transfer(file, Failure);
+        hadFailure = true;
+      } else {
+        // assuming ownership over the flowFile
+        session->transfer(file, Self);
+        newLiveFiles.emplace(file);
+      }
+    }
+    if (!newLiveFiles.empty()) {
+      auto liveFiles = file_store_.getLiveFlowFiles();
+      for (auto &file : newLiveFiles) {
+        liveFiles.files_.emplace(file);
+      }
+    }
+    if (hadFailure) {
+      context->yield();
+      return;
+    }
+  }
+
   std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast < FlowFileRecord > (session->get());
 
   if (flow != nullptr) {
@@ -247,6 +280,11 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
       context->yield();
       return;
     }
+
+    // assuming ownership over the flowFile
+    session->transfer(flow, Self);
+
+    file_store_.getLiveFlowFiles().files_.emplace(flow);
   }
 
   // migrate bin to ready bin
@@ -284,13 +322,55 @@ void BinFiles::transferFlowsToFail(core::ProcessContext *context, core::ProcessS
 
 void BinFiles::addFlowsToSession(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin) {
   std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
+  auto liveFiles = file_store_.getLiveFlowFiles();
   for (auto flow : flows) {
-    session->add(flow);
-    // preemptively mark them for deletion
-    // transferring them to a relationship will
-    // cancel deletion
-    session->remove(flow);
+    liveFiles.files_.erase(flow);
+    if (session->didProvide(flow)) {
+      // we mustn't add this to the session it just came from
+      continue;
+    }
+    auto thisAsConnectable = std::static_pointer_cast<core::Connectable>(shared_from_this());
+    flow->setOriginalConnection(thisAsConnectable);
+    session->notifyFlowFileAccess(flow);
   }
+}
+
+void BinFiles::put(std::shared_ptr<core::Connectable> flow) {
+  auto flowFile = std::dynamic_pointer_cast<core::FlowFile>(flow);
+  if (flowFile) {
+    file_store_.put(flowFile);
+  }
+}
+
+void BinFiles::FlowFileStore::put(std::shared_ptr<core::FlowFile>& flowFile) {
+  std::lock_guard<std::mutex> guard(flow_file_mutex_);
+  auto it = live_files_.find(flowFile);
+  if (it != live_files_.end()) {
+    // a previous session finally sent us the FlowFile for
+    // safekeeping
+    return;
+  }
+  incoming_files_.emplace(std::move(flowFile));
+  has_new_flow_file_.store(true, std::memory_order_release);
+}
+
+std::unordered_set<std::shared_ptr<core::FlowFile>> BinFiles::FlowFileStore::getNewFlowFiles(std::shared_ptr<BinFiles> owner, const std::shared_ptr<core::ProcessSession> &session) {
+  bool hasNewFlowFiles = true;
+  if (!has_new_flow_file_.compare_exchange_strong(hasNewFlowFiles, false, std::memory_order_acquire, std::memory_order_relaxed)) {
+    return {};
+  }
+  std::lock_guard<std::mutex> guard(flow_file_mutex_);
+  for (auto& file : incoming_files_) {
+    auto ownerAsConnectable = std::static_pointer_cast<core::Connectable>(owner);
+    file->setOriginalConnection(ownerAsConnectable);
+    session->notifyFlowFileAccess(file);
+  }
+  return std::move(incoming_files_);
+}
+
+BinFiles::FlowFileStore::ModifiableFlowFiles BinFiles::FlowFileStore::getLiveFlowFiles() {
+  std::unique_lock<std::mutex> lock(flow_file_mutex_);
+  return {live_files_, std::move(lock)};
 }
 
 } /* namespace processors */
