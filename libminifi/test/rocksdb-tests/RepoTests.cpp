@@ -271,7 +271,9 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
+  core::Relationship inputRel{"Input", "dummy"};
   std::shared_ptr<minifi::Connection> input = std::make_shared<minifi::Connection>(ff_repository, content_repo, "Input");
+  input->setRelationship(inputRel);
 
   auto root = std::make_shared<core::ProcessGroup>(core::ProcessGroupType::ROOT_PROCESS_GROUP, "root");
   root->addConnection(input);
@@ -291,13 +293,18 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
    */
   {
     std::shared_ptr<core::Processor> processor = std::make_shared<core::Processor>("dummy");
+    utils::Identifier uuid;
+    REQUIRE(processor->getUUID(uuid));
+    input->setSourceUUID(uuid);
+    processor->addConnection(input);
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, prov_repo, ff_repository, content_repo);
     core::ProcessSession sessionGenFlowFile(context);
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     sessionGenFlowFile.importFrom(content, flow);
-    input->put(flow);  // stores it in the flowFileRepository
+    sessionGenFlowFile.transfer(flow, inputRel);
+    sessionGenFlowFile.commit();
   }
 
   // remove flow from the connection but it is still present in the
