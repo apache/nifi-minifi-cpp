@@ -27,15 +27,15 @@
 #include "core/RepositoryFactory.h"
 #include "FlowFileRecord.h"
 #include "FlowFileRepository.h"
-#include "provenance/Provenance.h"
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
 #include "../../extensions/libarchive/MergeContent.h"
 #include "../test/BufferReader.h"
 
-using namespace org::apache::nifi::minifi;
-using namespace processors;
+using Connection = minifi::Connection;
+using MergeContent = minifi::processors::MergeContent;
+
 struct TestFlow{
   TestFlow(const std::shared_ptr<core::repository::FlowFileRepository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<core::Repository>& prov_repo)
       : ff_repository(ff_repository), content_repo(content_repo), prov_repo(prov_repo) {
