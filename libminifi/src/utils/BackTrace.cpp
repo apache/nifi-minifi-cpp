@@ -30,6 +30,8 @@
 #include <utility>
 #endif
 
+#include <nonstd/optional.hpp>
+
 #ifdef HAS_EXECINFO
 namespace {
   /**
@@ -37,15 +39,15 @@ namespace {
    * @param symbol_name the mangled name of the symbol
    * @return the demangled name on success, empty string on failure
    */
-  std::string demangle_symbol(const char* symbol_name) {
+  nonstd::optional<std::string> demangle_symbol(const char* symbol_name) {
     int status;
     char* demangled = abi::__cxa_demangle(symbol_name, nullptr, nullptr, &status);
     if (status == 0) {
       std::string demangled_name = demangled;
       free(demangled);
-      return demangled_name;
+      return { demangled_name };
     } else {
-      return "";
+      return nonstd::nullopt;
     }
   }
 }  // namespace
@@ -61,7 +63,6 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
   /* We can skip the signal handler, call to pull_trace, and the first entry for backtrace_symbols */
   for (int i = frames_to_skip; i < trace_size; i++) {
     const char* file_name = "???";
-    const char* symbol_name = nullptr;
     uintptr_t symbol_offset = 0;
 
     /* Translate the address to symbolic information */
@@ -74,7 +75,7 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
 #endif
     if (res == 0 || dl_info.dli_fname == nullptr || dl_info.dli_fname[0] == '\0') {
       /* We could not determine symbolic information for this address*/
-      TraceResolver::getResolver().addTraceLine(file_name, symbol_name, symbol_offset);
+      TraceResolver::getResolver().addTraceLine(file_name, nullptr, symbol_offset);
       continue;
     }
 
@@ -89,19 +90,9 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
       }
     }
 
-    /* Determine the symbol name */
-    std::string demangled_symbol_name;
+    std::string symbol_name;
     if (dl_info.dli_sname != nullptr) {
-      symbol_name = dl_info.dli_sname;
-
-      /* Try to demangle the symbol name */
-      demangled_symbol_name = demangle_symbol(symbol_name);
-      if (!demangled_symbol_name.empty()) {
-        symbol_name = demangled_symbol_name.c_str();
-      }
-    } else {
-      /* If we could not determine the symbol name, we will use the filename instead */
-      symbol_name = file_name;
+      symbol_name = demangle_symbol(dl_info.dli_sname).value_or(std::string(file_name));
     }
 
     /* Determine our offset */
@@ -124,7 +115,7 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
     }
     symbol_offset = reinterpret_cast<uintptr_t>(stack_buffer[i]) - base_address;
 
-    TraceResolver::getResolver().addTraceLine(file_name, symbol_name, symbol_offset);
+    TraceResolver::getResolver().addTraceLine(file_name, symbol_name.c_str(), symbol_offset);
   }
 #endif
 }
