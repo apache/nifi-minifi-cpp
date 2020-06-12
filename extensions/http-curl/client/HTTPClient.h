@@ -261,9 +261,9 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
   std::string url_;
-  std::chrono::milliseconds connect_timeout_ms_{0};
+  std::chrono::milliseconds connect_timeout_ms_{30000};
   // read timeout.
-  std::chrono::milliseconds read_timeout_ms_{0};
+  std::chrono::milliseconds read_timeout_ms_{30000};
   char *content_type_str_{nullptr};
   std::string content_type_;
   struct curl_slist *headers_{nullptr};

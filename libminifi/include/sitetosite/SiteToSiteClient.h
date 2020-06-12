@@ -254,7 +254,7 @@ class SiteToSiteClient : public core::Connectable {
   utils::Identifier port_id_;
 
   // idleTimeout
-  std::chrono::milliseconds idle_timeout_{};
+  std::chrono::milliseconds idle_timeout_{15000};
 
   // Peer Connection
   std::unique_ptr<SiteToSitePeer> peer_;

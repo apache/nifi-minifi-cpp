@@ -94,3 +94,4 @@ add_test(NAME SiteToSiteRestTest COMMAND SiteToSiteRestTest "${TEST_RESOURCES}/T
 add_test(NAME ControllerServiceIntegrationTests COMMAND ControllerServiceIntegrationTests "${TEST_RESOURCES}/TestControllerServices.yml" "${TEST_RESOURCES}/")
 add_test(NAME ThreadPoolAdjust COMMAND ThreadPoolAdjust "${TEST_RESOURCES}/ThreadPoolAdjust.yml" "${TEST_RESOURCES}/")
 add_test(NAME VerifyInvokeHTTPTest COMMAND VerifyInvokeHTTPTest "${TEST_RESOURCES}/TestInvokeHTTPPost.yml")
+add_test(NAME AbsoluteTimeoutTest COMMAND AbsoluteTimeoutTest)
