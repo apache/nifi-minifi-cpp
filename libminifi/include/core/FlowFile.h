@@ -95,7 +95,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   /**
    * Sets _claim to the inbound claim argument
    */
-  void setResourceClaim(const std::shared_ptr<ResourceClaim> &claim);
+  void setResourceClaim(const std::shared_ptr<ResourceClaim>& claim);
 
   /**
    * clear the resource claim
@@ -106,22 +106,22 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Returns a pointer to this flow file record's
    * claim at the given stash key
    */
-  std::shared_ptr<ResourceClaim> getStashClaim(const std::string &key);
+  std::shared_ptr<ResourceClaim> getStashClaim(const std::string& key);
 
   /**
    * Sets the given stash key to the inbound claim argument
    */
-  void setStashClaim(const std::string &key, const std::shared_ptr<ResourceClaim> &claim);
+  void setStashClaim(const std::string& key, const std::shared_ptr<ResourceClaim>& claim);
 
   /**
    * Clear the resource claim at the given stash key
    */
-  void clearStashClaim(const std::string &key);
+  void clearStashClaim(const std::string& key);
 
   /**
    * Return true if the given stash claim exists
    */
-  bool hasStashClaim(const std::string &key);
+  bool hasStashClaim(const std::string& key);
 
   /**
    * Decrease the flow file record owned count for the resource claim and, if 
@@ -132,7 +132,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   /**
    * Get lineage identifiers
    */
-  std::set<std::string> &getlineageIdentifiers();
+  std::set<std::string>& getlineageIdentifiers();
 
   /**
    * Returns whether or not this flow file record
@@ -181,7 +181,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * @param value value to set
    * @return result of finding key
    */
-  bool getAttribute(std::string key, std::string &value) const;
+  bool getAttribute(std::string key, std::string& value) const;
 
   /**
    * Updates the value in the attribute map that corresponds
@@ -202,7 +202,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   /**
    * setAttribute, if attribute already there, update it, else, add it
    */
-  void setAttribute(const std::string &key, const std::string &value) {
+  void setAttribute(const std::string& key, const std::string& value) {
     attributes_[key] = value;
   }
 
@@ -226,7 +226,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * adds an attribute if it does not exist
    *
    */
-  bool addAttribute(const std::string &key, const std::string &value);
+  bool addAttribute(const std::string& key, const std::string& value);
 
   /**
    * Set the size of this record.
@@ -267,7 +267,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    */
   uint64_t getOffset() const;
 
-  bool getUUID(utils::Identifier &other) {
+  bool getUUID(utils::Identifier& other) {
     other = uuid_;
     return true;
   }
@@ -305,13 +305,13 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Sets the original connection with a shared pointer.
    * @param connection shared connection.
    */
-  void setConnection(std::shared_ptr<core::Connectable> &connection);
+  void setConnection(std::shared_ptr<core::Connectable>& connection);
 
   /**
    * Sets the original connection with a shared pointer.
    * @param connection shared connection.
    */
-  void setConnection(std::shared_ptr<core::Connectable> &&connection);
+  void setConnection(std::shared_ptr<core::Connectable>&& connection);
 
   /**
    * Returns the connection referenced by this record.
@@ -322,7 +322,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Sets the original connection with a shared pointer.
    * @param connection shared connection.
    */
-  void setOriginalConnection(std::shared_ptr<core::Connectable> &connection);
+  void setOriginalConnection(std::shared_ptr<core::Connectable>& connection);
   /**
    * Returns the original connection referenced by this record.
    * @return shared original connection pointer.

@@ -99,15 +99,15 @@ std::shared_ptr<ResourceClaim> FlowFile::getResourceClaim() {
 void FlowFile::clearResourceClaim() {
   claim_.set(*this, nullptr);
 }
-void FlowFile::setResourceClaim(const std::shared_ptr<ResourceClaim> &claim) {
+void FlowFile::setResourceClaim(const std::shared_ptr<ResourceClaim>& claim) {
   claim_.set(*this, claim);
 }
 
-std::shared_ptr<ResourceClaim> FlowFile::getStashClaim(const std::string &key) {
+std::shared_ptr<ResourceClaim> FlowFile::getStashClaim(const std::string& key) {
   return stashedContent_[key].get();
 }
 
-void FlowFile::setStashClaim(const std::string &key, const std::shared_ptr<ResourceClaim> &claim) {
+void FlowFile::setStashClaim(const std::string& key, const std::shared_ptr<ResourceClaim>& claim) {
   if (hasStashClaim(key)) {
     logger_->log_warn("Stashing content of record %s to existing key %s; "
                       "existing content will be overwritten",
@@ -117,7 +117,7 @@ void FlowFile::setStashClaim(const std::string &key, const std::shared_ptr<Resou
   stashedContent_[key].set(*this, claim);
 }
 
-void FlowFile::clearStashClaim(const std::string &key) {
+void FlowFile::clearStashClaim(const std::string& key) {
   auto claimIt = stashedContent_.find(key);
   if (claimIt != stashedContent_.end()) {
     claimIt->second.set(*this, nullptr);
@@ -125,7 +125,7 @@ void FlowFile::clearStashClaim(const std::string &key) {
   }
 }
 
-bool FlowFile::hasStashClaim(const std::string &key) {
+bool FlowFile::hasStashClaim(const std::string& key) {
   return stashedContent_.find(key) != stashedContent_.end();
 }
 
@@ -141,11 +141,11 @@ uint64_t FlowFile::getlineageStartDate() const {
   return lineage_start_date_;
 }
 
-std::set<std::string> &FlowFile::getlineageIdentifiers() {
+std::set<std::string>& FlowFile::getlineageIdentifiers() {
   return lineage_Identifiers_;
 }
 
-bool FlowFile::getAttribute(std::string key, std::string &value) const {
+bool FlowFile::getAttribute(std::string key, std::string& value) const {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
     value = it->second;
@@ -184,7 +184,7 @@ bool FlowFile::updateAttribute(const std::string key, const std::string value) {
   }
 }
 
-bool FlowFile::addAttribute(const std::string &key, const std::string &value) {
+bool FlowFile::addAttribute(const std::string& key, const std::string& value) {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
     // attribute already there in the map
@@ -203,7 +203,7 @@ void FlowFile::setLineageStartDate(const uint64_t date) {
  * Sets the original connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setOriginalConnection(std::shared_ptr<core::Connectable> &connection) {
+void FlowFile::setOriginalConnection(std::shared_ptr<core::Connectable>& connection) {
   original_connection_ = connection;
 }
 
@@ -211,7 +211,7 @@ void FlowFile::setOriginalConnection(std::shared_ptr<core::Connectable> &connect
  * Sets the connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setConnection(std::shared_ptr<core::Connectable> &connection) {
+void FlowFile::setConnection(std::shared_ptr<core::Connectable>& connection) {
   connection_ = connection;
 }
 
@@ -219,7 +219,7 @@ void FlowFile::setConnection(std::shared_ptr<core::Connectable> &connection) {
  * Sets the connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setConnection(std::shared_ptr<core::Connectable> &&connection) {
+void FlowFile::setConnection(std::shared_ptr<core::Connectable>&& connection) {
   connection_ = connection;
 }
 

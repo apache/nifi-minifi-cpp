@@ -499,18 +499,24 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
 
   std::vector<uint8_t> buffer(getpagesize());
   try {
-    try {
-      std::ifstream input{source, std::ios::in | std::ios::binary};
-      logger_->log_debug("Opening %s", source);
-      if (!input.is_open() || !input.good()) {
-        throw Exception(FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("File Import Error: failed to open file \'", source, "\'"));
+    std::ifstream input{source, std::ios::in | std::ios::binary};
+    logger_->log_debug("Opening %s", source);
+    if (!input.is_open() || !input.good()) {
+      throw Exception(FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("File Import Error: failed to open file \'", source, "\'"));
+    }
+    if (offset != 0U) {
+      input.seekg(offset, std::ifstream::beg);
+      if (!input.good()) {
+        logger_->log_error("Seeking to %lu failed for file %s (does file/filesystem support seeking?)", offset, source);
+        throw Exception(FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("File Import Error: Couldn't seek to offset ", std::to_string(offset)));
       }
-      if (offset != 0U) {
-        input.seekg(offset, std::ifstream::beg);
-        if (!input.good()) {
-          logger_->log_error("Seeking to %lu failed for file %s (does file/filesystem support seeking?)", offset, source);
-          throw Exception(FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("File Import Error: Couldn't seek to offset ", std::to_string(offset)));
-        }
+    }
+    uint64_t startTime = 0U;
+    while (input.good()) {
+      input.read(reinterpret_cast<char*>(buffer.data()), buffer.size());
+      std::streamsize read = input.gcount();
+      if (read < 0) {
+        throw Exception(FILE_OPERATION_EXCEPTION, "std::ifstream::gcount returned negative value");
       }
       if (read == 0) {
         logger_->log_trace("Finished reading input %s", source);
@@ -523,11 +529,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
       while (true) {
         startTime = getTimeMillis();
         uint8_t* delimiterPos = std::find(begin, end, static_cast<uint8_t>(inputDelimiter));
-        const ptrdiff_t zlen{ delimiterPos - begin };
-        if (zlen < std::numeric_limits<int>::min() || zlen > std::numeric_limits<int>::max()) {
-          logger_->log_error("narrowing conversion failed");
-        }
-        const int len = zlen;
+        const auto len = gsl::narrow<int>(delimiterPos - begin);
 
         logging::LOG_TRACE(logger_) << "Read input of " << read << " length is " << len << " is at end?" << (delimiterPos == end);
         /*
@@ -538,41 +540,6 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         if (delimiterPos == end && (input.eof() || len == 0)) {
           break;
         }
-        uint8_t* begin = buffer.data();
-        uint8_t* end = begin + read;
-        while (true) {
-          startTime = getTimeMillis();
-          uint8_t* delimiterPos = std::find(begin, end, static_cast<uint8_t>(inputDelimiter));
-          const auto len = gsl::narrow<int>(delimiterPos - begin);
-
-          logging::LOG_TRACE(logger_) << "Read input of " << read << " length is " << len << " is at end?" << (delimiterPos == end);
-          /*
-           * We do not want to process the rest of the buffer after the last delimiter if
-           *  - we have reached EOF in the file (we would discard it anyway)
-           *  - there is nothing to process (the last character in the buffer is a delimiter)
-           */
-          if (delimiterPos == end && (input.eof() || len == 0)) {
-            break;
-          }
-
-          /* Create claim and stream if needed and append data */
-          if (claim == nullptr) {
-            startTime = getTimeMillis();
-            claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
-          }
-          if (stream == nullptr) {
-            stream = process_context_->getContentRepository()->write(claim);
-          }
-          if (stream == nullptr) {
-            logger_->log_error("Stream is null");
-            rollback();
-            return;
-          }
-          if (stream->write(begin, len) != len) {
-            logger_->log_error("Error while writing");
-            stream->closeStream();
-            throw Exception(FILE_OPERATION_EXCEPTION, "File Export Error creating Flowfile");
-          }
 
         /* Create claim and stream if needed and append data */
         if (claim == nullptr) {
@@ -980,8 +947,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(std::map<std::shared_ptr<Con
     for (auto &ff : flows) {
       if (shouldDropEmptyFiles && ff->getSize() == 0) {
         // the receiver promised to drop this FF, no need for it anymore
-        if (ff->isStored()) {
-          flowFileRepo->Delete(ff->getUUIDStr());
+        if (ff->isStored() && flowFileRepo->Delete(ff->getUUIDStr())) {
           auto claim = ff->getResourceClaim();
           // decrement on behalf of the persisted-instance-to-be-deleted
           if (claim) claim->decreaseFlowFileRecordOwnedCount();
