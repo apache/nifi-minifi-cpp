@@ -49,6 +49,7 @@ This software includes third party software subject to the following copyrights:
 - OpenSSL build files for cmake used for Android Builds - Copyright (C) 2007-2012 LuaDist and Copyright (C) 2013 Brian Sidebotham
 - Android tool chain cmake build files - Copyright (c) 2010-2011, Ethan Rublee and Copyright (c) 2011-2014, Andrey Kamaev
 - gsl-lite - Copyright (c) 2015 Martin Moene and Copyright (c) 2015 Microsoft Corporation. All rights reserved.
+- optional-lite - Copyright (c) 2015-2018 Martin Moene under the Boost Software License
 
 The licenses for these third party components are included in LICENSE.txt
 
