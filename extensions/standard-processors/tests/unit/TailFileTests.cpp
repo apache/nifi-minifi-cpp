@@ -907,7 +907,7 @@ TEST_CASE("TailFile finds and finishes multiple rotated files and continues with
   REQUIRE(rename(test_file.c_str(), second_rotated_file.c_str()) == 0);
 
   std::ofstream test_file_stream_2(test_file, std::ios::binary);
-  test_file_stream_2 << "Apricont" << DELIM;
+  test_file_stream_2 << "Apricot" << DELIM;
   test_file_stream_2.close();
 
   plan->reset();
@@ -919,7 +919,7 @@ TEST_CASE("TailFile finds and finishes multiple rotated files and continues with
   REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.0.13-17.log"));   // Pear
   REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.1.0-9.log"));     // Pineapple
   REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.1.10-14.log"));   // Kiwi
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.0-8.log"));       // Apricot
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.0-7.log"));       // Apricot
 }
 
 TEST_CASE("TailFile ignores old rotated files", "[rotation]") {
