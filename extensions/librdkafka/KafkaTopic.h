@@ -48,10 +48,10 @@ class KafkaTopic {
   gsl::owner<rd_kafka_topic_t*> topic_reference_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // EXTENSIONS_LIBRDKAFKA_KAFKATOPIC_H_

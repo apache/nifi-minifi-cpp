@@ -117,10 +117,10 @@ class KafkaConnection {
   }
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // EXTENSIONS_LIBRDKAFKA_KAFKACONNECTION_H_

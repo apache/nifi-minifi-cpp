@@ -26,9 +26,9 @@ namespace minifi {
 
 namespace gsl = ::gsl_lite;
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_GSL_H_

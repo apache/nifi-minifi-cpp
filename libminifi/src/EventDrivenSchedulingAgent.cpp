@@ -57,7 +57,7 @@ utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(const std::shared_ptr<
   return utils::TaskRescheduleInfo::Done();
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

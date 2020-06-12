@@ -40,7 +40,7 @@ class AfterExecute {
   virtual ~AfterExecute() {
   }
 
-  AfterExecute() {
+  explicit AfterExecute() {
   }
 
   explicit AfterExecute(AfterExecute &&other) {

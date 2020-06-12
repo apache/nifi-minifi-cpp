@@ -146,7 +146,7 @@ void SchedulingAgent::watchDogFunc() {
   }
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
