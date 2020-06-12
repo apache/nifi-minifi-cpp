@@ -39,7 +39,6 @@ using MergeContent = minifi::processors::MergeContent;
 struct TestFlow{
   TestFlow(const std::shared_ptr<core::repository::FlowFileRepository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<core::Repository>& prov_repo)
       : ff_repository(ff_repository), content_repo(content_repo), prov_repo(prov_repo) {
-
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
 
     // setup MERGE processor
@@ -121,6 +120,7 @@ struct TestFlow{
   std::shared_ptr<Connection> input;
   std::shared_ptr<Connection> output;
   std::shared_ptr<core::ProcessGroup> root;
+
  private:
   static utils::Identifier& mergeProcUUID() {static auto id = utils::IdGenerator::getIdGenerator()->generate(); return id;}
   static utils::Identifier& inputProcUUID() {static auto id = utils::IdGenerator::getIdGenerator()->generate(); return id;}
