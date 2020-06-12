@@ -96,7 +96,7 @@ struct defaulted_handler{
     if(handler)return handler;
     return def;
   }
-  void set(std::chrono::milliseconds timeout) {
+  void set(std::vector<std::chrono::milliseconds> timeout) {
     handler = new TimeoutingHTTPHandler(timeout);
   }
 };
@@ -184,31 +184,31 @@ int main(int argc, char **argv) {
 
   {
     timeout_test_profile profile;
-    profile.base_.set(timeout);
+    profile.base_.set({timeout});
     run_timeout_variance(test_file_location, isSecure, url, profile);
   }
 
   {
     timeout_test_profile profile;
-    profile.flow_.set(timeout);
+    profile.flow_.set({timeout});
     run_timeout_variance(test_file_location, isSecure, url, profile);
   }
 
   {
     timeout_test_profile profile;
-    profile.transaction_.set(timeout);
+    profile.transaction_.set({timeout});
     run_timeout_variance(test_file_location, isSecure, url, profile);
   }
 
   {
     timeout_test_profile profile;
-    profile.delete_.set(timeout);
+    profile.delete_.set({timeout});
     run_timeout_variance(test_file_location, isSecure, url, profile);
   }
 
   {
     timeout_test_profile profile;
-    profile.peer_.set(timeout);
+    profile.peer_.set({timeout});
     run_timeout_variance(test_file_location, isSecure, url, profile);
   }
 

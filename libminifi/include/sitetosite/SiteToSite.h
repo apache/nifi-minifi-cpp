@@ -393,7 +393,7 @@ class SiteToSiteClientConfiguration {
 
   std::string local_network_interface_;
 
-  std::chrono::milliseconds idle_timeout_{};
+  std::chrono::milliseconds idle_timeout_{15000};
 
   // secore comms
 

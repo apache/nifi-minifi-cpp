@@ -243,10 +243,13 @@ void HTTPClient::setUseChunkedEncoding() {
 bool HTTPClient::submit() {
   if (IsNullOrEmpty(url_))
     return false;
+
+  int absoluteTimeout = std::max(0LL, 3 * read_timeout_ms_.count());
+
   curl_easy_setopt(http_session_, CURLOPT_NOSIGNAL, 1);
-  if (connect_timeout_ms_.count() > 0) {
-    curl_easy_setopt(http_session_, CURLOPT_CONNECTTIMEOUT_MS, connect_timeout_ms_.count());
-  }
+  // setting it to 0 will result in the default 300 second timeout
+  curl_easy_setopt(http_session_, CURLOPT_CONNECTTIMEOUT_MS, std::max(0LL, connect_timeout_ms_.count()));
+  curl_easy_setopt(http_session_, CURLOPT_TIMEOUT_MS, absoluteTimeout);
 
   if (read_timeout_ms_.count() > 0) {
     progress_.reset();
@@ -254,6 +257,7 @@ bool HTTPClient::submit() {
     curl_easy_setopt(http_session_, CURLOPT_XFERINFOFUNCTION, onProgress);
     curl_easy_setopt(http_session_, CURLOPT_XFERINFODATA, (void*)this);
   }else{
+    // the user explicitly set it to 0
     curl_easy_setopt(http_session_, CURLOPT_NOPROGRESS, 1);
   }
   if (headers_ != nullptr) {
@@ -288,6 +292,9 @@ bool HTTPClient::submit() {
   }
   curl_easy_getinfo(http_session_, CURLINFO_RESPONSE_CODE, &http_code);
   curl_easy_getinfo(http_session_, CURLINFO_CONTENT_TYPE, &content_type_str_);
+  if (res == CURLE_OPERATION_TIMEDOUT) {
+    logger_->log_error("HTTP operation timed out, with absolute timeout %dms\n", absoluteTimeout);
+  }
   if (res != CURLE_OK) {
     logger_->log_error("curl_easy_perform() failed %s on %s, error code %d\n", curl_easy_strerror(res), url_, res);
     return false;

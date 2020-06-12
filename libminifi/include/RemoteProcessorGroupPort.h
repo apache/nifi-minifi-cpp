@@ -212,7 +212,7 @@ class RemoteProcessorGroupPort : public core::Processor {
 
   utils::Identifier protocol_uuid_;
 
-  std::chrono::milliseconds idle_timeout_{};
+  std::chrono::milliseconds idle_timeout_{15000};
 
   // rest API end point info
   std::vector<struct RPG> nifi_instances_;
