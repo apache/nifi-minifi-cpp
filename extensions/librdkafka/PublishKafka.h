@@ -221,10 +221,10 @@ class PublishKafka : public core::Processor {
     }
 
     rd_kafka_resp_err_t produce(const size_t segment_num, std::vector<unsigned char>& buffer, const size_t buflen) const {
-      const auto messages_copy = this->messages_;
+      const std::shared_ptr<Messages> messages_ptr_copy = this->messages_;
       const auto flow_file_index_copy = this->flow_file_index_;
-      const auto produce_callback = [messages_copy, flow_file_index_copy, segment_num](rd_kafka_t * /*rk*/, const rd_kafka_message_t *rkmessage) {
-        messages_copy->modifyResult(flow_file_index_copy, [segment_num, rkmessage](FlowFileResult &flow_file) {
+      const auto produce_callback = [messages_ptr_copy, flow_file_index_copy, segment_num](rd_kafka_t * /*rk*/, const rd_kafka_message_t *rkmessage) {
+        messages_ptr_copy->modifyResult(flow_file_index_copy, [segment_num, rkmessage](FlowFileResult &flow_file) {
           auto &message = flow_file.messages.at(segment_num);
           message.err_code = rkmessage->err;
           message.status = message.err_code == 0 ? MessageStatus::MESSAGESTATUS_SUCCESS : MessageStatus::MESSAGESTATUS_ERROR;
@@ -237,9 +237,13 @@ class PublishKafka : public core::Processor {
 
       const gsl::owner<rd_kafka_headers_t*> hdrs_copy = rd_kafka_headers_copy(hdrs.get());
       const auto err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
-                                         RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.release()), RD_KAFKA_V_END);
-      if (err) {
-        // the message only takes ownership of the headers in case of success
+                                         RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.get()), RD_KAFKA_V_END);
+      if (err == RD_KAFKA_RESP_ERR_NO_ERROR) {
+        // in case of failure, messageDeliveryCallback is not called and callback_ptr will delete the callback
+        // in case of success, messageDeliveryCallback takes ownership of the callback, so we no longer need to delete it
+        (void)callback_ptr.release();
+      } else {
+        // in case of failure, rd_kafka_producev doesn't take ownership of the headers, so we need to delete them
         rd_kafka_headers_destroy(hdrs_copy);
       }
       return err;
