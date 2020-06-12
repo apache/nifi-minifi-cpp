@@ -1,6 +1,6 @@
 
 /**
- * @file ConsumeWindowsEventLog.h
+ * @file XMLString.h
  * ConsumeWindowsEventLog class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more

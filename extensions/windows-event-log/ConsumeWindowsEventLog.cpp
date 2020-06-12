@@ -173,6 +173,15 @@ ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::I
   writePlainText_ = false;
 }
 
+void ConsumeWindowsEventLog::notifyStop() {
+  logger_->log_trace("start notifyStop"); 
+  pBookmark_.reset();
+  if (hMsobjsDll_) {
+    FreeLibrary(hMsobjsDll_);
+  }
+  logger_->log_trace("finish notifyStop"); 
+}
+
 ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
   if (hMsobjsDll_) {
     FreeLibrary(hMsobjsDll_);
@@ -267,12 +276,12 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
     context->getProperty(BookmarkRootDirectory.getName(), bookmarkDir);
     if (bookmarkDir.empty()) {
       logger_->log_error("State Directory is empty");
-      return;
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "State Directory is empty");
     }
     pBookmark_ = std::make_unique<Bookmark>(wstrChannel_, wstrQuery_, bookmarkDir, getUUIDStr(), processOldEvents, state_manager_, logger_);
     if (!*pBookmark_) {
       pBookmark_.reset();
-      return;
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bookmark is empty");
     }
   }
 
@@ -280,11 +289,13 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %" PRIu64, maxBufferSize_);
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + channel_ + "?" + query;
+  logger_->log_trace("Successfully configured CWEL");
 }
 
 
 void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   if (!pBookmark_) {
+    logger_->log_debug("pBookmark_ is null");
     context->yield();
     return;
   }
@@ -294,6 +305,8 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     logger_->log_warn("processor was triggered before previous listing finished, configuration should be revised!");
     return;
   }
+
+  logger_->log_trace("CWEL onTrigger");
 
   struct TimeDiff {
     auto operator()() const {
@@ -336,10 +349,13 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
   const utils::ScopeGuard guard_hEventResults([hEventResults]() { EvtClose(hEventResults); });
 
+  logger_->log_trace("Retrieved results in Channel: %ls with Query: %ls", wstrChannel_.c_str(), wstrQuery_.c_str());
+
   auto hBookmark = pBookmark_->getBookmarkHandleFromXML();
   if (!hBookmark) {
-    // Unrecoverable error.
+    logger_->log_error("hBookmark is null, unrecoverable error!"); 
     pBookmark_.reset();
+    // TODO: it's strange that this processor return without context->yield()..
     return;
   }
 
@@ -348,7 +364,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     return;
   }
 
-  // Enumerate the events in the result set after the bookmarked event.
+  logger_->log_trace("Enumerating the events in the result set after the bookmarked event.");
   while (true) {
     EVT_HANDLE hEvent{};
     DWORD dwReturned{};
@@ -363,7 +379,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
       break;
     }
     const utils::ScopeGuard guard_hEvent([hEvent]() { EvtClose(hEvent); });
-
+    logger_->log_trace("Succesfully get the next hEvent, performing event rendering");
     EventRender eventRender;
     std::wstring newBookmarkXml;
     if (createEventRender(hEvent, eventRender) && pBookmark_->getNewBookmarkXml(hEvent, newBookmarkXml)) {
@@ -381,6 +397,8 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     }
   }
 
+  logger_->log_trace("Finish enumerating events.");
+
   if (eventCount > commitAndSaveBookmarkCount) {
     commitAndSaveBookmark(bookmarkXml);
   }
@@ -388,8 +406,10 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
 wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
   std::lock_guard<std::mutex> lock(cache_mutex_);
+  logger_->log_trace("Getting Event Log Handler corresponding to %s", name.c_str());
   auto provider = providers_.find(name);
   if (provider != std::end(providers_)) {
+    logger_->log_trace("Found the handler");
     return provider->second;
   }
 
@@ -397,7 +417,7 @@ wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std
   LPCWSTR widechar = temp_wstring.c_str();
 
   providers_[name] = wel::WindowsEventLogHandler(EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0));
-
+  logger_->log_trace("Not found the handler -> created handler for %s", name.c_str());
   return providers_[name];
 } 
 
@@ -491,6 +511,7 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
 }
 
 bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& eventRender) {
+  logger_->log_trace("Rendering an event");
   DWORD size = 0;
   DWORD used = 0;
   DWORD propertyCount = 0;
@@ -512,6 +533,8 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
     return false;
   }
 
+  logger_->log_debug("Event rendered with size %" PRIu32 ". Performing doc traversing...", size);
+
   std::string xml = wel::to_string(&buf[0]);
 
   pugi::xml_document doc;
@@ -529,7 +552,11 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
   // resolve the event metadata
   doc.traverse(walker);
 
+  logger_->log_debug("Finish doc traversing, performing writing...");
+
   if (writePlainText_) {
+    logger_->log_trace("Writing event in plain text");
+
     auto handler = getEventLogHandler(providerName);
     auto message = handler.getEventMessage(hEvent);
 
@@ -547,10 +574,13 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
       eventRender.rendered_text_ += "Message" + header_delimiter_ + " ";
       eventRender.rendered_text_ += message;
     }
+    logger_->log_trace("Finish writing in plain text");
   }
 
   if (writeXML_) {
+    logger_->log_trace("Writing event in XML");
     substituteXMLPercentageItems(doc);
+    logger_->log_trace("Finish substituting \%\% in XML");
 
     if (resolve_as_attributes_) {
       eventRender.matched_fields_ = walker.getFieldValues();
@@ -561,6 +591,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
     xml = writer.xml_;
 
     eventRender.text_ = std::move(xml);
+    logger_->log_trace("Finish writing in XML");
   }
 
   return true;
@@ -582,6 +613,7 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
 
   if (writeXML_) {
     auto flowFile = session.create();
+    logger_->log_trace("Writing rendered XML to a flow file");
 
     session.write(flowFile, &WriteCallback(eventRender.text_));
     for (const auto &fieldMapping : eventRender.matched_fields_) {
@@ -596,6 +628,7 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
 
   if (writePlainText_) {
     auto flowFile = session.create();
+    logger_->log_trace("Writing rendered plain text to a flow file");
 
     session.write(flowFile, &WriteCallback(eventRender.rendered_text_));
     session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");

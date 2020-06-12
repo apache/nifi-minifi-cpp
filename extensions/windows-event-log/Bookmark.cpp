@@ -1,3 +1,5 @@
+// TODO: Where is our License O_O
+
 #include "Bookmark.h"
 
 #include <direct.h>
@@ -121,8 +123,8 @@ bool Bookmark::getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml) {
     LOG_LAST_ERROR(EvtUpdateBookmark);
     return false;
   }
-
   // Render the bookmark as an XML string that can be persisted.
+  logger_->log_trace("Rendering new bookmark");
   DWORD bufferSize{};
   DWORD bufferUsed{};
   DWORD propertyCount{};
