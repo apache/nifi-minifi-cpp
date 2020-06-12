@@ -296,27 +296,16 @@ class BinFiles : public core::Processor {
  private:
   class FlowFileStore{
    public:
-    struct ModifiableFlowFiles{
-      ModifiableFlowFiles(std::unordered_set<std::shared_ptr<core::FlowFile>>& files_, std::unique_lock<std::mutex>&& lock_)
-      : files_(files_),
-        lock_(std::move(lock_)) {}
-      std::unordered_set<std::shared_ptr<core::FlowFile>>& files_;
-     private:
-      std::unique_lock<std::mutex> lock_;
-    };
     /**
      * Returns the already-preprocessed FlowFiles that got restored on restart from the FlowFileRepository
-     * @param session to be notified upon access, so it can restore the content on any Failure
      * @return the resurrected persisted FlowFiles
      */
-    std::unordered_set<std::shared_ptr<core::FlowFile>> getNewFlowFiles(std::shared_ptr<BinFiles> owner, const std::shared_ptr<core::ProcessSession>& session);
-    ModifiableFlowFiles getLiveFlowFiles();
+    std::unordered_set<std::shared_ptr<core::FlowFile>> getNewFlowFiles();
     void put(std::shared_ptr<core::FlowFile>& flowFile);
    private:
     std::atomic_bool has_new_flow_file_{false};
     std::mutex flow_file_mutex_;
     std::unordered_set<std::shared_ptr<core::FlowFile>> incoming_files_;
-    std::unordered_set<std::shared_ptr<core::FlowFile>> live_files_;
   };
 
   std::shared_ptr<logging::Logger> logger_;

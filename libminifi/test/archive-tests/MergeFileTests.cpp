@@ -752,7 +752,3 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
   }
   LogTestController::getInstance().reset();
 }
-
-
-
-

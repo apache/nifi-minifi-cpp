@@ -88,15 +88,11 @@ std::shared_ptr<core::FlowFile> ProcessSession::create() {
 }
 
 void ProcessSession::add(const std::shared_ptr<core::FlowFile> &record) {
-  if (didProvide(record)) {
+  if (_updatedFlowFiles.find(record->getUUIDStr()) != _updatedFlowFiles.end()) {
     throw Exception(ExceptionType::PROCESSOR_EXCEPTION, "Mustn't add file that was provided by this session");
   }
   _addedFlowFiles[record->getUUIDStr()] = record;
   record->setDeleted(false);
-}
-
-bool ProcessSession::didProvide(const std::shared_ptr<core::FlowFile> &flow) {
-  return _updatedFlowFiles.find(flow->getUUIDStr()) != _updatedFlowFiles.end();
 }
 
 std::shared_ptr<core::FlowFile> ProcessSession::create(const std::shared_ptr<core::FlowFile> &parent) {
@@ -242,23 +238,6 @@ void ProcessSession::transfer(const std::shared_ptr<core::FlowFile> &flow, Relat
   logging::LOG_INFO(logger_) << "Transferring " << flow->getUUIDStr() << " from " << process_context_->getProcessorNode()->getName() << " to relationship " << relationship.getName();
   _transferRelationship[flow->getUUIDStr()] = relationship;
   flow->setDeleted(false);
-}
-
-void ProcessSession::notifyFlowFileAccess(const std::shared_ptr<core::FlowFile> &flow) {
-  flow->setDeleted(false);
-  _updatedFlowFiles[flow->getUUIDStr()] = flow;
-  std::map<std::string, std::string> empty;
-  std::shared_ptr<core::FlowFile> snapshot = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);
-  auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
-  if (flow_version != nullptr) {
-    auto flow_id = flow_version->getFlowId();
-    std::string attr = FlowAttributeKey(FLOW_ID);
-    snapshot->setAttribute(attr, flow_version->getFlowId());
-  }
-  logger_->log_debug("Create Snapshot FlowFile with UUID %s", snapshot->getUUIDStr());
-  snapshot = flow;
-  // save a snapshot
-  _originalFlowFiles[snapshot->getUUIDStr()] = snapshot;
 }
 
 void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
@@ -979,14 +958,12 @@ void ProcessSession::persistFlowFilesBeforeTransfer(std::map<std::shared_ptr<Con
         // the receiver will drop this FF
         continue;
       }
-      if (!ff->isStored()) {
-        FlowFileRecord event(flowFileRepo, contentRepo, ff, target->getUUIDStr());
+      FlowFileRecord event(flowFileRepo, contentRepo, ff, target->getUUIDStr());
 
-        std::unique_ptr<io::DataStream> stream(new io::DataStream());
-        event.Serialize(*stream);
+      std::unique_ptr<io::DataStream> stream(new io::DataStream());
+      event.Serialize(*stream);
 
-        flowData.emplace_back(event.getUUIDStr(), std::move(stream));
-      }
+      flowData.emplace_back(event.getUUIDStr(), std::move(stream));
     }
   }
 
@@ -1051,7 +1028,20 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
     }
     if (ret) {
       // add the flow record to the current process session update map
-      notifyFlowFileAccess(ret);
+      ret->setDeleted(false);
+      _updatedFlowFiles[ret->getUUIDStr()] = ret;
+      std::map<std::string, std::string> empty;
+      std::shared_ptr<core::FlowFile> snapshot = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);
+      auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
+      if (flow_version != nullptr) {
+        auto flow_id = flow_version->getFlowId();
+        std::string attr = FlowAttributeKey(FLOW_ID);
+        snapshot->setAttribute(attr, flow_version->getFlowId());
+      }
+      logger_->log_debug("Create Snapshot FlowFile with UUID %s", snapshot->getUUIDStr());
+      snapshot = ret;
+      // save a snapshot
+      _originalFlowFiles[snapshot->getUUIDStr()] = snapshot;
       return ret;
     }
     current = std::static_pointer_cast<Connection>(process_context_->getProcessorNode()->pickIncomingConnection());

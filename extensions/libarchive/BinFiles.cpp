@@ -238,11 +238,11 @@ bool BinManager::offer(const std::string &group, std::shared_ptr<core::FlowFile>
 }
 
 void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  // Rollback is not viable for this processor!!
   {
     // process resurrected FlowFiles first
-    std::unordered_set<std::shared_ptr<core::FlowFile>> newLiveFiles;
-    auto flowFiles = file_store_.getNewFlowFiles(std::static_pointer_cast<BinFiles>(shared_from_this()), session);
-    // these are already processed FlowFiles
+    auto flowFiles = file_store_.getNewFlowFiles();
+    // these are already processed FlowFiles, that we own
     bool hadFailure = false;
     for (auto &file : flowFiles) {
       std::string groupId = getGroupId(context.get(), file);
@@ -251,15 +251,7 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
         session->transfer(file, Failure);
         hadFailure = true;
       } else {
-        // assuming ownership over the flowFile
-        session->transfer(file, Self);
-        newLiveFiles.emplace(file);
-      }
-    }
-    if (!newLiveFiles.empty()) {
-      auto liveFiles = file_store_.getLiveFlowFiles();
-      for (auto &file : newLiveFiles) {
-        liveFiles.files_.emplace(file);
+        // no need to route successfully captured such files as we already own them
       }
     }
     if (hadFailure) {
@@ -280,11 +272,8 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
       context->yield();
       return;
     }
-
-    // assuming ownership over the flowFile
+    // assuming ownership over the incoming flowFile
     session->transfer(flow, Self);
-
-    file_store_.getLiveFlowFiles().files_.emplace(flow);
   }
 
   // migrate bin to ready bin
@@ -302,13 +291,19 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   // process the ready bin
   while (!readyBins.empty()) {
+    // create session for merge
+    // we have to create a new session
+    // for each merge as a rollback erases all
+    // previously added files
+    core::ProcessSession mergeSession(context);
     std::unique_ptr<Bin> bin = std::move(readyBins.front());
     readyBins.pop_front();
     // add bin's flows to the session
-    this->addFlowsToSession(context.get(), session.get(), bin);
+    this->addFlowsToSession(context.get(), &mergeSession, bin);
     logger_->log_debug("BinFiles start to process bin %s for group %s", bin->getUUIDStr(), bin->getGroupId());
-    if (!this->processBin(context.get(), session.get(), bin))
-        this->transferFlowsToFail(context.get(), session.get(), bin);
+    if (!this->processBin(context.get(), &mergeSession, bin))
+      this->transferFlowsToFail(context.get(), &mergeSession, bin);
+    mergeSession.commit();
   }
 }
 
@@ -322,55 +317,38 @@ void BinFiles::transferFlowsToFail(core::ProcessContext *context, core::ProcessS
 
 void BinFiles::addFlowsToSession(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin) {
   std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
-  auto liveFiles = file_store_.getLiveFlowFiles();
   for (auto flow : flows) {
-    liveFiles.files_.erase(flow);
-    if (session->didProvide(flow)) {
-      // we mustn't add this to the session it just came from
-      continue;
-    }
-    auto thisAsConnectable = std::static_pointer_cast<core::Connectable>(shared_from_this());
-    flow->setOriginalConnection(thisAsConnectable);
-    session->notifyFlowFileAccess(flow);
+    session->add(flow);
   }
 }
 
 void BinFiles::put(std::shared_ptr<core::Connectable> flow) {
   auto flowFile = std::dynamic_pointer_cast<core::FlowFile>(flow);
-  if (flowFile) {
-    file_store_.put(flowFile);
+  if (!flowFile) return;
+  if (flowFile->getOriginalConnection()) {
+    // onTrigger assumed ownership over a FlowFile
+    // don't have to do anything
+    return;
   }
+  // no original connection i.e. we are during restore
+  file_store_.put(flowFile);
 }
 
 void BinFiles::FlowFileStore::put(std::shared_ptr<core::FlowFile>& flowFile) {
-  std::lock_guard<std::mutex> guard(flow_file_mutex_);
-  auto it = live_files_.find(flowFile);
-  if (it != live_files_.end()) {
-    // a previous session finally sent us the FlowFile for
-    // safekeeping
-    return;
+  {
+    std::lock_guard<std::mutex> guard(flow_file_mutex_);
+    incoming_files_.emplace(std::move(flowFile));
   }
-  incoming_files_.emplace(std::move(flowFile));
   has_new_flow_file_.store(true, std::memory_order_release);
 }
 
-std::unordered_set<std::shared_ptr<core::FlowFile>> BinFiles::FlowFileStore::getNewFlowFiles(std::shared_ptr<BinFiles> owner, const std::shared_ptr<core::ProcessSession> &session) {
+std::unordered_set<std::shared_ptr<core::FlowFile>> BinFiles::FlowFileStore::getNewFlowFiles() {
   bool hasNewFlowFiles = true;
   if (!has_new_flow_file_.compare_exchange_strong(hasNewFlowFiles, false, std::memory_order_acquire, std::memory_order_relaxed)) {
     return {};
   }
   std::lock_guard<std::mutex> guard(flow_file_mutex_);
-  for (auto& file : incoming_files_) {
-    auto ownerAsConnectable = std::static_pointer_cast<core::Connectable>(owner);
-    file->setOriginalConnection(ownerAsConnectable);
-    session->notifyFlowFileAccess(file);
-  }
   return std::move(incoming_files_);
-}
-
-BinFiles::FlowFileStore::ModifiableFlowFiles BinFiles::FlowFileStore::getLiveFlowFiles() {
-  std::unique_lock<std::mutex> lock(flow_file_mutex_);
-  return {live_files_, std::move(lock)};
 }
 
 } /* namespace processors */

@@ -355,6 +355,10 @@ void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connecta
     connectionMap[connection->getUUIDStr()] = connection;
     connectionMap[connection->getName()] = connection;
   }
+  for (auto processor : processors_) {
+    // processors can also own FlowFiles
+    connectionMap[processor->getUUIDStr()] = processor;
+  }
   for (auto processGroup : child_process_groups_) {
     processGroup->getConnections(connectionMap);
   }

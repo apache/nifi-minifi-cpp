@@ -70,7 +70,6 @@ class ProcessSession : public ReferenceContainer {
   std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() {
     return provenance_report_;
   }
-  void notifyFlowFileAccess(const std::shared_ptr<core::FlowFile>& flow);
   // Get the FlowFile from the highest priority queue
   virtual std::shared_ptr<core::FlowFile> get();
   // Create a new UUID FlowFile with no content resource claim and without parent
@@ -81,8 +80,6 @@ class ProcessSession : public ReferenceContainer {
   std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile> &parent);
   // Add a FlowFile to the session
   virtual void add(const std::shared_ptr<core::FlowFile> &flow);
-  // Checks if we queried the given FlowFile in this session
-  bool didProvide(const std::shared_ptr<core::FlowFile>& flow);
   // Clone a new UUID FlowFile from parent both for content resource claim and attributes
   std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent);
   // Clone a new UUID FlowFile from parent for attributes and sub set of parent content resource claim
