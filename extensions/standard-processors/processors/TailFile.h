@@ -61,6 +61,8 @@ struct TailState {
   uint64_t checksum_ = 0;
 };
 
+std::ostream& operator<<(std::ostream &os, const TailState &tail_state);
+
 enum class Mode {
   SINGLE, MULTIPLE, UNDEFINED
 };
@@ -90,19 +92,25 @@ class TailFile : public core::Processor {
 
   /**
    * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
+   * @param context process context, provides eg. configuration.
+   * @param sessionFactory process session factory that is used when creating ProcessSession objects.
    */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  // OnTrigger method, implemented by NiFi TailFile
+
+  /**
+   * Function that's executed on each invocation of the processor.
+   * @param context process context, provides eg. configuration.
+   * @param session session object, provides eg. ways to interact with flow files.
+   */
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>  &session) override;
-  // Initialize, over write by NiFi TailFile
+
   void initialize() override;
-  // recoverState
+
   bool recoverState(const std::shared_ptr<core::ProcessContext>& context);
-  // storeState
-  bool storeState(const std::shared_ptr<core::ProcessContext>& context);
+
+  void logState();
+
+  bool storeState();
 
   std::chrono::milliseconds getLookupFrequency() const;
 
@@ -139,20 +147,16 @@ class TailFile : public core::Processor {
 
   void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
 
-  void processRotatedFiles(const std::shared_ptr<core::ProcessContext> &context,
-                           const std::shared_ptr<core::ProcessSession> &session,
-                           TailState &state);
+  void processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
 
   std::vector<TailState> findRotatedFiles(const TailState &state) const;
 
-  void processFile(const std::shared_ptr<core::ProcessContext> &context,
-                   const std::shared_ptr<core::ProcessSession> &session,
+  void processFile(const std::shared_ptr<core::ProcessSession> &session,
                    const std::string &full_file_name,
                    TailState &state);
 
-  void processSingleFile(const std::shared_ptr<core::ProcessContext> &context,
-                         const std::shared_ptr<core::ProcessSession> &session,
-                         const std::string &fileName,
+  void processSingleFile(const std::shared_ptr<core::ProcessSession> &session,
+                         const std::string &full_file_name,
                          TailState &state);
 
   bool getStateFromStateManager(std::map<std::string, TailState> &state) const;

@@ -454,8 +454,6 @@ bool TailFile::recoverState(const std::shared_ptr<core::ProcessContext>& context
     return false;
   }
 
-  logger_->log_debug("load state succeeded");
-
   if (tail_mode_ == Mode::SINGLE) {
     if (tail_states_.size() == 1) {
       auto state_it = tail_states_.begin();
@@ -471,8 +469,8 @@ bool TailFile::recoverState(const std::shared_ptr<core::ProcessContext>& context
     tail_states_ = std::move(new_tail_states);
   }
 
-  // Save the state to the state manager
-  storeState(context);
+  logState();
+  storeState();
 
   return true;
 }
@@ -536,7 +534,21 @@ bool TailFile::getStateFromLegacyStateFile(const std::shared_ptr<core::ProcessCo
   return true;
 }
 
-bool TailFile::storeState(const std::shared_ptr<core::ProcessContext>& context) {
+void TailFile::logState() {
+  logger_->log_info("State of the TailFile processor %s:", name_);
+  for (const auto& key_value_pair : tail_states_) {
+    logging::LOG_INFO(logger_) << key_value_pair.first << " => { " << key_value_pair.second << " }";
+  }
+}
+
+std::ostream& operator<<(std::ostream &os, const TailState &tail_state) {
+  os << "name: " << tail_state.file_name_
+      << ", position: " << tail_state.position_
+      << ", checksum: " << tail_state.checksum_;
+  return os;
+}
+
+bool TailFile::storeState() {
   std::unordered_map<std::string, std::string> state;
   size_t i = 0;
   for (const auto& tail_state : tail_states_) {
@@ -601,7 +613,7 @@ std::vector<TailState> TailFile::findRotatedFiles(const TailState &state) const 
   return matched_files;
 }
 
-void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &, const std::shared_ptr<core::ProcessSession> &session) {
   std::lock_guard<std::mutex> tail_lock(tail_file_mutex_);
 
   if (tail_mode_ == Mode::MULTIPLE) {
@@ -617,7 +629,7 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   // iterate over file states. may modify them
   for (auto &state : tail_states_) {
-    processFile(context, session, state.first, state.second);
+    processFile(session, state.first, state.second);
   }
 
   if (!session->existsFlowFileInRelationship(Success)) {
@@ -625,30 +637,26 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   }
 }
 
-void TailFile::processFile(const std::shared_ptr<core::ProcessContext> &context,
-                           const std::shared_ptr<core::ProcessSession> &session,
+void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
                            const std::string &full_file_name,
                            TailState &state) {
   if (utils::file::FileUtils::file_size(full_file_name) < state.position_) {
-    processRotatedFiles(context, session, state);
+    processRotatedFiles(session, state);
   }
 
-  processSingleFile(context, session, full_file_name, state);
+  processSingleFile(session, full_file_name, state);
 }
 
-void TailFile::processRotatedFiles(const std::shared_ptr<core::ProcessContext> &context,
-                                   const std::shared_ptr<core::ProcessSession> &session,
-                                   TailState &state) {
+void TailFile::processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state) {
     std::vector<TailState> rotated_file_states = findRotatedFiles(state);
     for (TailState &file_state : rotated_file_states) {
-      processSingleFile(context, session, file_state.fileNameWithPath(), file_state);
+      processSingleFile(session, file_state.fileNameWithPath(), file_state);
     }
     state.position_ = 0;
     state.checksum_ = 0;
 }
 
-void TailFile::processSingleFile(const std::shared_ptr<core::ProcessContext> &context,
-                                 const std::shared_ptr<core::ProcessSession> &session,
+void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &session,
                                  const std::string &full_file_name,
                                  TailState &state) {
   std::string fileName = state.file_name_;
@@ -688,7 +696,7 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessContext> &co
     }
 
     state = state_copy;
-    storeState(context);
+    storeState();
 
     logger_->log_info("%zu flowfiles were received from TailFile input", num_flow_files);
 
@@ -701,7 +709,7 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessContext> &co
     session->transfer(flow_file, Success);
     updateStateAttributes(state, flow_file->getSize(), file_reader.checksum());
 
-    storeState(context);
+    storeState();
   }
 }
 
