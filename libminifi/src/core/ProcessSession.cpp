@@ -217,7 +217,9 @@ void ProcessSession::remove(const std::shared_ptr<core::FlowFile> &flow) {
   } else {
     logger_->log_debug("Flow does not contain content. no resource claim to decrement.");
   }
-  process_context_->getFlowFileRepository()->Delete(flow->getUUIDStr());
+  if (_addedFlowFiles.find(flow->getUUIDStr()) == _addedFlowFiles.end()) {
+    process_context_->getFlowFileRepository()->Delete(flow->getUUIDStr());
+  }
   _deletedFlowFiles[flow->getUUIDStr()] = flow;
   std::string reason = process_context_->getProcessorNode()->getName() + " drop flow record " + flow->getUUIDStr();
   provenance_report_->drop(flow, reason);
