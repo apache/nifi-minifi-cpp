@@ -244,11 +244,11 @@ bool HTTPClient::submit() {
   if (IsNullOrEmpty(url_))
     return false;
 
-  int absoluteTimeout = std::max(0LL, 3 * read_timeout_ms_.count());
+  int absoluteTimeout = std::max(0, 3 * static_cast<int>(read_timeout_ms_.count()));
 
   curl_easy_setopt(http_session_, CURLOPT_NOSIGNAL, 1);
   // setting it to 0 will result in the default 300 second timeout
-  curl_easy_setopt(http_session_, CURLOPT_CONNECTTIMEOUT_MS, std::max(0LL, connect_timeout_ms_.count()));
+  curl_easy_setopt(http_session_, CURLOPT_CONNECTTIMEOUT_MS, std::max(0, static_cast<int>(connect_timeout_ms_.count())));
   curl_easy_setopt(http_session_, CURLOPT_TIMEOUT_MS, absoluteTimeout);
 
   if (read_timeout_ms_.count() > 0) {
