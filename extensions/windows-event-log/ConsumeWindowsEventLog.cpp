@@ -178,6 +178,7 @@ void ConsumeWindowsEventLog::notifyStop() {
   pBookmark_.reset();
   if (hMsobjsDll_) {
     FreeLibrary(hMsobjsDll_);
+    hMsobjsDll_ = nullptr;
   }
   logger_->log_trace("finish notifyStop"); 
 }
@@ -345,6 +346,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   const auto hEventResults = EvtQuery(0, wstrChannel_.c_str(), wstrQuery_.c_str(), EvtQueryChannelPath);
   if (!hEventResults) {
     LOG_LAST_ERROR(EvtQuery);
+    context->yield();
     return;
   }
   const utils::ScopeGuard guard_hEventResults([hEventResults]() { EvtClose(hEventResults); });
@@ -355,12 +357,13 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   if (!hBookmark) {
     logger_->log_error("hBookmark is null, unrecoverable error!"); 
     pBookmark_.reset();
-    // TODO: it's strange that this processor return without context->yield()..
+    context->yield();
     return;
   }
 
   if (!EvtSeek(hEventResults, 1, hBookmark, 0, EvtSeekRelativeToBookmark)) {
     LOG_LAST_ERROR(EvtSeek);
+    context->yield();
     return;
   }
 
@@ -389,6 +392,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
       if (batch_commit_size_ != 0U && (eventCount % batch_commit_size_ == 0)) {
         if (!commitAndSaveBookmark(bookmarkXml)) {
+          context->yield();
           return;
         }
 
