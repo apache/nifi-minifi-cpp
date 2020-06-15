@@ -35,7 +35,7 @@ namespace utils {
 #if __cplusplus < 201402L
 template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {
-  return std::unique_ptr<T>{ new T{ std::forward<Args>(args)... } };
+  return std::unique_ptr<T>{ new T(std::forward<Args>(args)...) };
 }
 #else
 using std::make_unique;
@@ -57,13 +57,16 @@ T exchange(T& obj, U&& new_value) {
   obj = std::forward<U>(new_value);
   return old_value;
 }
-
-template<typename...>
-using void_t = void;
-
 #else
 using std::exchange;
 #endif /* < C++14 */
+
+#if __cplusplus < 201703L
+template<typename...>
+using void_t = void;
+#else
+using std::void_t;
+#endif /* < C++17 */
 
 }  // namespace utils
 }  // namespace minifi
