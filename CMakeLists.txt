@@ -309,7 +309,7 @@ target_compile_definitions(gsl-lite INTERFACE ${GslDefinitions})
 
 # optional-lite
 add_library(optional-lite INTERFACE)
-target_include_directories(optional-lite INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/optional-lite/include")
+target_include_directories(optional-lite INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/optional-lite-3.2.0/include")
 
 #### Extensions ####
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)

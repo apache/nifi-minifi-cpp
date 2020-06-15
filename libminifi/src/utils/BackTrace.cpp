@@ -90,10 +90,9 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
       }
     }
 
-    std::string symbol_name;
-    if (dl_info.dli_sname != nullptr) {
-      symbol_name = demangle_symbol(dl_info.dli_sname).value_or(std::string(file_name));
-    }
+    const std::string symbol_name = dl_info.dli_sname
+        ? demangle_symbol(dl_info.dli_sname).value_or(file_name)
+        : file_name;
 
     /* Determine our offset */
     uintptr_t base_address = 0;

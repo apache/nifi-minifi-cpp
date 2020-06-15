@@ -227,17 +227,16 @@ namespace nonstd {
 
 // Compiler versions:
 //
-// MSVC++  6.0  _MSC_VER == 1200  optional_COMPILER_MSVC_VERSION ==  60  (Visual Studio 6.0)
-// MSVC++  7.0  _MSC_VER == 1300  optional_COMPILER_MSVC_VERSION ==  70  (Visual Studio .NET 2002)
-// MSVC++  7.1  _MSC_VER == 1310  optional_COMPILER_MSVC_VERSION ==  71  (Visual Studio .NET 2003)
-// MSVC++  8.0  _MSC_VER == 1400  optional_COMPILER_MSVC_VERSION ==  80  (Visual Studio 2005)
-// MSVC++  9.0  _MSC_VER == 1500  optional_COMPILER_MSVC_VERSION ==  90  (Visual Studio 2008)
-// MSVC++ 10.0  _MSC_VER == 1600  optional_COMPILER_MSVC_VERSION == 100  (Visual Studio 2010)
-// MSVC++ 11.0  _MSC_VER == 1700  optional_COMPILER_MSVC_VERSION == 110  (Visual Studio 2012)
-// MSVC++ 12.0  _MSC_VER == 1800  optional_COMPILER_MSVC_VERSION == 120  (Visual Studio 2013)
-// MSVC++ 14.0  _MSC_VER == 1900  optional_COMPILER_MSVC_VERSION == 140  (Visual Studio 2015)
-// MSVC++ 14.1  _MSC_VER >= 1910  optional_COMPILER_MSVC_VERSION == 141  (Visual Studio 2017)
-// MSVC++ 14.2  _MSC_VER >= 1920  optional_COMPILER_MSVC_VERSION == 142  (Visual Studio 2019)
+// MSVC++ 6.0  _MSC_VER == 1200 (Visual Studio 6.0)
+// MSVC++ 7.0  _MSC_VER == 1300 (Visual Studio .NET 2002)
+// MSVC++ 7.1  _MSC_VER == 1310 (Visual Studio .NET 2003)
+// MSVC++ 8.0  _MSC_VER == 1400 (Visual Studio 2005)
+// MSVC++ 9.0  _MSC_VER == 1500 (Visual Studio 2008)
+// MSVC++ 10.0 _MSC_VER == 1600 (Visual Studio 2010)
+// MSVC++ 11.0 _MSC_VER == 1700 (Visual Studio 2012)
+// MSVC++ 12.0 _MSC_VER == 1800 (Visual Studio 2013)
+// MSVC++ 14.0 _MSC_VER == 1900 (Visual Studio 2015)
+// MSVC++ 14.1 _MSC_VER >= 1910 (Visual Studio 2017)
 
 #if defined(_MSC_VER ) && !defined(__clang__)
 # define optional_COMPILER_MSVC_VER      (_MSC_VER )
@@ -293,8 +292,6 @@ namespace nonstd {
 #define optional_CPP11_140  (optional_CPP11_OR_GREATER_ || optional_COMPILER_MSVC_VER >= 1900)
 #define optional_CPP11_141  (optional_CPP11_OR_GREATER_ || optional_COMPILER_MSVC_VER >= 1910)
 
-#define optional_CPP11_140_490  ((optional_CPP11_OR_GREATER_ && optional_COMPILER_GNUC_VERSION >= 490) || (optional_COMPILER_MSVC_VER >= 1910))
-
 #define optional_CPP14_000  (optional_CPP14_OR_GREATER)
 #define optional_CPP17_000  (optional_CPP17_OR_GREATER)
 
@@ -304,8 +301,7 @@ namespace nonstd {
 #define optional_HAVE_IS_DEFAULT        optional_CPP11_140
 #define optional_HAVE_NOEXCEPT          optional_CPP11_140
 #define optional_HAVE_NULLPTR           optional_CPP11_100
-#define optional_HAVE_REF_QUALIFIER     optional_CPP11_140_490
-#define optional_HAVE_INITIALIZER_LIST  optional_CPP11_140
+#define optional_HAVE_REF_QUALIFIER     optional_CPP11_140
 
 // Presence of C++14 language features:
 
@@ -401,7 +397,7 @@ namespace nonstd {
     template< bool B = (__VA_ARGS__), typename std::enable_if<B, int>::type = 0 >
 
 #define optional_REQUIRES_T(...) \
-    , typename std::enable_if< (__VA_ARGS__), int >::type = 0
+    , typename = typename std::enable_if< (__VA_ARGS__), nonstd::optional_lite::detail::enabler >::type
 
 #define optional_REQUIRES_R(R, ...) \
     typename std::enable_if< (__VA_ARGS__), R>::type
@@ -432,16 +428,6 @@ namespace std11 {
     template<         typename T, typename F > struct conditional<false, T, F> { typedef F type; };
 #endif // optional_HAVE_CONDITIONAL
 
-// gcc < 5:
-#if optional_CPP11_OR_GREATER
-#if optional_BETWEEN( optional_COMPILER_GNUC_VERSION, 1, 500 )
-    template< typename T > struct is_trivially_copy_constructible : std::true_type{};
-    template< typename T > struct is_trivially_move_constructible : std::true_type{};
-#else
-    using std::is_trivially_copy_constructible;
-    using std::is_trivially_move_constructible;
-#endif
-#endif
 } // namespace std11
 
 #if optional_CPP11_OR_GREATER
@@ -521,6 +507,12 @@ template< typename T >
 class optional;
 
 namespace detail {
+
+// for optional_REQUIRES_T
+
+#if optional_CPP11_OR_GREATER
+enum class enabler{};
+#endif
 
 // C++11 emulation:
 
@@ -751,7 +743,7 @@ union storage_t
         return * value_ptr();
     }
 
-#if optional_HAVE( REF_QUALIFIER )
+#if optional_CPP11_OR_GREATER
 
     optional_nodiscard value_type const && value() const optional_refref_qual
     {
@@ -869,15 +861,13 @@ public:
     {}
 
     // 2 - copy-construct
+    optional_constexpr14 optional( optional const & other
 #if optional_CPP11_OR_GREATER
-    // template< typename U = T
-    //     optional_REQUIRES_T(
-    //         std::is_copy_constructible<U>::value
-    //         || std11::is_trivially_copy_constructible<U>::value
-    //     )
-    // >
+        optional_REQUIRES_A(
+            true || std::is_copy_constructible<T>::value
+        )
 #endif
-    optional_constexpr14 optional( optional const & other )
+    )
     : has_value_( other.has_value() )
     {
         if ( other.has_value() )
@@ -889,15 +879,12 @@ public:
 #if optional_CPP11_OR_GREATER
 
     // 3 (C++11) - move-construct from optional
-    template< typename U = T
-        optional_REQUIRES_T(
-            std::is_move_constructible<U>::value
-            || std11::is_trivially_move_constructible<U>::value
+    optional_constexpr14 optional( optional && other
+        optional_REQUIRES_A(
+            true || std::is_move_constructible<T>::value
         )
-    >
-    optional_constexpr14 optional( optional && other )
-    // NOLINTNEXTLINE( performance-noexcept-move-constructor )
-        noexcept( std::is_nothrow_move_constructible<T>::value )
+        // NOLINTNEXTLINE( performance-noexcept-move-constructor )
+    ) noexcept( std::is_nothrow_move_constructible<T>::value )
     : has_value_( other.has_value() )
     {
         if ( other.has_value() )
@@ -907,8 +894,9 @@ public:
     }
 
     // 4a (C++11) - explicit converting copy-construct from optional
-    template< typename U
-        optional_REQUIRES_T(
+    template< typename U >
+    explicit optional( optional<U> const & other
+        optional_REQUIRES_A(
             std::is_constructible<T, U const &>::value
             && !std::is_constructible<T, optional<U> &          >::value
             && !std::is_constructible<T, optional<U> &&         >::value
@@ -920,8 +908,7 @@ public:
             && !std::is_convertible<     optional<U> const &&, T>::value
             && !std::is_convertible<               U const & , T>::value /*=> explicit */
         )
-    >
-    explicit optional( optional<U> const & other )
+    )
     : has_value_( other.has_value() )
     {
         if ( other.has_value() )
@@ -932,9 +919,11 @@ public:
 #endif // optional_CPP11_OR_GREATER
 
     // 4b (C++98 and later) - non-explicit converting copy-construct from optional
-    template< typename U
+    template< typename U >
+    // NOLINTNEXTLINE( google-explicit-constructor, hicpp-explicit-conversions )
+    optional( optional<U> const & other
 #if optional_CPP11_OR_GREATER
-        optional_REQUIRES_T(
+        optional_REQUIRES_A(
             std::is_constructible<T, U const &>::value
             && !std::is_constructible<T, optional<U> &          >::value
             && !std::is_constructible<T, optional<U> &&         >::value
@@ -947,9 +936,7 @@ public:
             &&  std::is_convertible<               U const & , T>::value /*=> non-explicit */
         )
 #endif // optional_CPP11_OR_GREATER
-    >
-    // NOLINTNEXTLINE( google-explicit-constructor, hicpp-explicit-conversions )
-    /*non-explicit*/ optional( optional<U> const & other )
+    )
     : has_value_( other.has_value() )
     {
         if ( other.has_value() )
@@ -961,8 +948,9 @@ public:
 #if optional_CPP11_OR_GREATER
 
     // 5a (C++11) - explicit converting move-construct from optional
-    template< typename U
-        optional_REQUIRES_T(
+    template< typename U >
+    explicit optional( optional<U> && other
+        optional_REQUIRES_A(
             std::is_constructible<T, U &&>::value
             && !std::is_constructible<T, optional<U> &          >::value
             && !std::is_constructible<T, optional<U> &&         >::value
@@ -974,8 +962,6 @@ public:
             && !std::is_convertible<     optional<U> const &&, T>::value
             && !std::is_convertible<                     U &&, T>::value /*=> explicit */
         )
-    >
-    explicit optional( optional<U> && other
     )
     : has_value_( other.has_value() )
     {
@@ -986,8 +972,10 @@ public:
     }
 
     // 5a (C++11) - non-explicit converting move-construct from optional
-    template< typename U
-        optional_REQUIRES_T(
+    template< typename U >
+    // NOLINTNEXTLINE( google-explicit-constructor, hicpp-explicit-conversions )
+    optional( optional<U> && other
+        optional_REQUIRES_A(
             std::is_constructible<T, U &&>::value
             && !std::is_constructible<T, optional<U> &          >::value
             && !std::is_constructible<T, optional<U> &&         >::value
@@ -999,9 +987,7 @@ public:
             && !std::is_convertible<     optional<U> const &&, T>::value
             &&  std::is_convertible<                     U &&, T>::value /*=> non-explicit */
         )
-    >
-    // NOLINTNEXTLINE( google-explicit-constructor, hicpp-explicit-conversions )
-    /*non-explicit*/ optional( optional<U> && other )
+    )
     : has_value_( other.has_value() )
     {
         if ( other.has_value() )
@@ -1033,30 +1019,30 @@ public:
     {}
 
     // 8a (C++11) - explicit move construct from value
-    template< typename U = T
-        optional_REQUIRES_T(
+    template< typename U = value_type >
+    optional_constexpr explicit optional( U && value
+        optional_REQUIRES_A(
             std::is_constructible<T, U&&>::value
             && !std::is_same<typename std20::remove_cvref<U>::type, nonstd_lite_in_place_t(U)>::value
             && !std::is_same<typename std20::remove_cvref<U>::type, optional<T>>::value
             && !std::is_convertible<U&&, T>::value /*=> explicit */
         )
-    >
-    optional_constexpr explicit optional( U && value )
+    )
     : has_value_( true )
     , contained( T{ std::forward<U>( value ) } )
     {}
 
     // 8b (C++11) - non-explicit move construct from value
-    template< typename U = T
-        optional_REQUIRES_T(
+    template< typename U = value_type >
+    // NOLINTNEXTLINE( google-explicit-constructor, hicpp-explicit-conversions )
+    optional_constexpr optional( U && value
+        optional_REQUIRES_A(
             std::is_constructible<T, U&&>::value
             && !std::is_same<typename std20::remove_cvref<U>::type, nonstd_lite_in_place_t(U)>::value
             && !std::is_same<typename std20::remove_cvref<U>::type, optional<T>>::value
             && std::is_convertible<U&&, T>::value /*=> non-explicit */
         )
-    >
-    // NOLINTNEXTLINE( google-explicit-constructor, hicpp-explicit-conversions )
-    optional_constexpr /*non-explicit*/ optional( U && value )
+    )
     : has_value_( true )
     , contained( std::forward<U>( value ) )
     {}
@@ -1297,7 +1283,7 @@ public:
             contained.value();
     }
 
-#if optional_HAVE( REF_QUALIFIER )
+#if optional_HAVE( REF_QUALIFIER )  &&  ( !optional_COMPILER_GNUC_VERSION || optional_COMPILER_GNUC_VERSION >= 490 )
 
     optional_constexpr value_type const && operator *() const optional_refref_qual
     {
@@ -1673,10 +1659,7 @@ optional<T> make_optional( T const & value )
 using optional_lite::optional;
 using optional_lite::nullopt_t;
 using optional_lite::nullopt;
-
-#if ! optional_CONFIG_NO_EXCEPTIONS
 using optional_lite::bad_optional_access;
-#endif
 
 using optional_lite::make_optional;
 
