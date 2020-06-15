@@ -139,3 +139,11 @@ char * get_current_working_directory() {
     free(cwd);
     return NULL;
 }
+
+int change_current_working_directory(const char *path) {
+#ifdef WIN32
+  return _chdir(path);
+#else
+  return chdir(path);
+#endif
+}

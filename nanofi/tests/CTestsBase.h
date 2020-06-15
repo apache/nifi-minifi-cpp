@@ -29,6 +29,7 @@
 #include "core/file_utils.h"
 #include "api/ecu.h"
 #include "api/nanofi.h"
+#include "TestBase.h"
 
 class FileManager {
 public:
@@ -122,6 +123,30 @@ public:
 private:
     nifi_instance * instance_;
     standalone_processor * processor_;
+};
+
+class TestControllerWithTemporaryWorkingDirectory {
+public:
+  TestControllerWithTemporaryWorkingDirectory()
+    : old_cwd_(get_current_working_directory())
+  {
+    char format[] = "/tmp/ctest_temp_dir.XXXXXX";
+    std::string temp_dir = test_controller_.createTempDirectory(format);
+    int result = change_current_working_directory(temp_dir.c_str());
+    if (result != 0) {
+      throw std::runtime_error("Could not change to temporary directory " + temp_dir);
+    }
+  }
+
+  ~TestControllerWithTemporaryWorkingDirectory()
+  {
+    chdir(old_cwd_);
+    free(old_cwd_);
+  }
+
+private:
+  TestController test_controller_;
+  char *old_cwd_;
 };
 
 struct processor_params * invoke_processor(TailFileTestResourceManager& mgr, const char * filePath) {
