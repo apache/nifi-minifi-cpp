@@ -30,16 +30,18 @@
 #include <utility>
 #endif
 
-#include <nonstd/optional.hpp>
+#include "utils/OptionalUtils.h"
 
 #ifdef HAS_EXECINFO
 namespace {
+  using org::apache::nifi::minifi::utils::optional;
+  using org::apache::nifi::minifi::utils::nullopt;
   /**
    * Demangles a symbol name using the cxx abi.
    * @param symbol_name the mangled name of the symbol
    * @return the demangled name on success, empty string on failure
    */
-  nonstd::optional<std::string> demangle_symbol(const char* symbol_name) {
+  optional<std::string> demangle_symbol(const char* symbol_name) {
     int status;
     char* demangled = abi::__cxa_demangle(symbol_name, nullptr, nullptr, &status);
     if (status == 0) {
@@ -47,7 +49,7 @@ namespace {
       free(demangled);
       return { demangled_name };
     } else {
-      return nonstd::nullopt;
+      return {};
     }
   }
 }  // namespace

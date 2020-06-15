@@ -21,17 +21,19 @@
 #include <utility>
 
 #include <nonstd/optional.hpp>
-#include "utils/GeneralUtils.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
+using nonstd::optional;
+using nonstd::nullopt;
 
 template<typename T>
-nonstd::optional<typename remove_cvref<T>::type> optional_from_nullable(T&& obj) {
-  return obj ? nonstd::optional<typename remove_cvref<T>::type>{ std::forward<T>(obj) } : nonstd::nullopt;
+optional<typename gsl_lite::remove_cvref<T>::type> optional_from_nullable(T&& obj) {
+  return obj ? optional<typename gsl_lite::remove_cvref<T>::type>{ std::forward<T>(obj) } : nullopt;
 }
 
 }  // namespace utils
