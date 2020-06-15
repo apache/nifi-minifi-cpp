@@ -89,7 +89,7 @@ bool run_archive_test(OrderedTestArchive input_archive, OrderedTestArchive outpu
     plan->runNextProcessor();  // ManipulateArchive
     plan->runNextProcessor();  // PutFile 2 (manipulated)
 
-    std::string output_path =utils::file::FileUtils::concat_path(dir2, TEST_ARCHIVE_NAME);
+    std::string output_path = utils::file::FileUtils::concat_path(dir2, TEST_ARCHIVE_NAME);
     return check_archive_contents(output_path, output_archive, check_attributes);
 }
 

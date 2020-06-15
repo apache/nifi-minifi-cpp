@@ -82,17 +82,9 @@ class FileManager {
   std::string unique_file(bool keep = false) {
 #ifdef BOOST_VERSION
     return boost::filesystem::unique_path().native();
-#else
-	  std::string tmpDir = utils::file::FileUtils::get_temp_directory();
-    std::string file_name = utils::file::FileUtils::concat_path(tmpDir, non_repeating_string_generator_.generate());
-    while (!verify_not_exist(file_name)) {
-      file_name = utils::file::FileUtils::concat_path(tmpDir, non_repeating_string_generator_.generate());
-    }
-    if (!keep) {
-      unique_files_.push_back(file_name);
-    }
-    return file_name;
-#endif
+#else  // BOOST_VERSION
+    return unique_file(std::string{}, keep);
+#endif  // BOOST_VERSION
   }
 
 
