@@ -71,6 +71,13 @@ int make_dir(const char * path);
  */
 char * get_current_working_directory();
 
+/**
+ * Change the current working directory.
+ * @path can be relative or absolute
+ * @return 0 on success, non-zero on error
+ */
+int change_current_working_directory(const char *path);
+
 #ifdef __cplusplus
 }
 #endif

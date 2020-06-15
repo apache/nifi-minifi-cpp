@@ -27,7 +27,7 @@
  */
 
 TEST_CASE("Test tailfile delimited. Empty file", "[tailfileDelimitedEmptyFileTest]") {
-
+    TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
     const char * delimiter = ";";
@@ -43,7 +43,7 @@ TEST_CASE("Test tailfile delimited. Empty file", "[tailfileDelimitedEmptyFileTes
 }
 
 TEST_CASE("Test tailfile delimited. File has less than 4096 chars", "[tailfileDelimitedLessThan4096Chars]") {
-
+    TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
     const char * delimiter = ";";
@@ -65,7 +65,7 @@ TEST_CASE("Test tailfile delimited. File has less than 4096 chars", "[tailfileDe
 }
 
 TEST_CASE("Test tailfile delimited. Simple test", "[tailfileDelimitedSimpleTest]") {
-
+    TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
     const char * delimiter = ";";
@@ -105,7 +105,7 @@ TEST_CASE("Test tailfile delimited. Simple test", "[tailfileDelimitedSimpleTest]
 }
 
 TEST_CASE("Test tailfile delimited. trailing non delimited string", "[tailfileNonDelimitedTest]") {
-
+    TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
     const char * delimiter = ";";
@@ -148,7 +148,7 @@ TEST_CASE("Test tailfile delimited. trailing non delimited string", "[tailfileNo
 }
 
 TEST_CASE("Test tailfile delimited 4096 chars non delimited", "[tailfileDelimitedSimpleTest]") {
-
+    TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
     const char * delimiter = ";";
@@ -212,7 +212,7 @@ TEST_CASE("Test tailfile delimited 4096 chars non delimited", "[tailfileDelimite
 }
 
 TEST_CASE("Test tailfile delimited. string starting with delimiter", "[tailfileDelimiterStartStringTest]") {
-
+    TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
     const char * delimiter = ";";

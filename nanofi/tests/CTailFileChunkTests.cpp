@@ -35,7 +35,7 @@
  */
 
 TEST_CASE("Test tailfile chunk size 4096, file size 8KB", "[tailfileChunk8KBFileSize]") {
-
+    TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
     const char * file = "./e.txt";
     const char * chunksize = "4096";
@@ -67,7 +67,7 @@ TEST_CASE("Test tailfile chunk size 4096, file size 8KB", "[tailfileChunk8KBFile
 }
 
 TEST_CASE("Test tailfile chunk size 4096, file size less than 8KB", "[tailfileChunkFileSizeLessThan8KB]") {
-
+    TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
     const char * file = "./e.txt";
     const char * chunksize = "4096";
@@ -103,7 +103,7 @@ TEST_CASE("Test tailfile chunk size 4096, file size less than 8KB", "[tailfileCh
 }
 
 TEST_CASE("Test tailfile chunk size 512, file size equal to 4608B", "[tailfileChunkFileSize8KB]") {
-
+    TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
     const char * file = "./e.txt";
     const char * chunksize = "512";
