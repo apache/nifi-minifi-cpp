@@ -137,14 +137,6 @@ public:
   }
 };
 
-class VerifyAbsoluteTimeoutInvokeHTTP : public VerifyInvokeHTTP {
- public:
-  virtual void runAssertions() override {
-    assert(LogTestController::getInstance().contains("key:invoke_http value:failure"));
-    assert(LogTestController::getInstance().contains("HTTP operation timed out, with absolute timeout 3000ms"));
-  }
-};
-
 void run(VerifyInvokeHTTP& harness,
     const std::string& url,
     const std::string& test_file_location,
@@ -199,28 +191,11 @@ int main(int argc, char ** argv) {
     run(harness, url, test_file_location, key_dir, &handler);
   }
 
-  auto readTimeoutThread = std::thread([&]{
+  {
     TimeoutingHTTPHandler handler({std::chrono::milliseconds(4000)});
     VerifyRWTimeoutInvokeHTTP harness;
     run(harness, url, test_file_location, key_dir, &handler);
-  });
-
-  auto absoluteTimeoutThread = std::thread([&]{
-    // Idle Timeout is 1 second but there is an absolute timeout 3 times that
-    TimeoutingHTTPHandler handler({
-      std::chrono::milliseconds(500),
-      std::chrono::milliseconds(500),
-      std::chrono::milliseconds(500),
-      std::chrono::milliseconds(500),
-      std::chrono::milliseconds(500),
-      std::chrono::milliseconds(500),
-      std::chrono::milliseconds(500)});
-    VerifyAbsoluteTimeoutInvokeHTTP harness;
-    run(harness, url, test_file_location, key_dir, &handler);
-  });
-
-  readTimeoutThread.join();
-  absoluteTimeoutThread.join();
+  }
 
   return 0;
 }
