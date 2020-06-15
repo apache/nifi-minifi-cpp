@@ -177,8 +177,11 @@ void ConsumeWindowsEventLog::notifyStop() {
   logger_->log_trace("start notifyStop"); 
   pBookmark_.reset();
   if (hMsobjsDll_) {
-    FreeLibrary(hMsobjsDll_);
-    hMsobjsDll_ = nullptr;
+    if (FreeLibrary(hMsobjsDll_)) {
+      hMsobjsDll_ = nullptr;
+    } else {
+      LOG_LAST_ERROR(LoadLibrary);
+    }
   }
   logger_->log_trace("finish notifyStop"); 
 }
