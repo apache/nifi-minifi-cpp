@@ -111,17 +111,17 @@ if(WIN32)
         target_include_directories(core-minifi PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include")
 endif()
 
-target_link_libraries(core-minifi ${CMAKE_DL_LIBS} yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog cron Threads::Threads gsl-lite)
+list(APPEND LIBMINIFI_LIBRARIES yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog cron Threads::Threads gsl-lite)
 if(NOT WIN32)
-	target_link_libraries(core-minifi OSSP::libuuid++)
+	list(APPEND LIBMINIFI_LIBRARIES OSSP::libuuid++)
 endif()
 if (NOT OPENSSL_OFF)
-	target_link_libraries(core-minifi OpenSSL::SSL)
+	list(APPEND LIBMINIFI_LIBRARIES OpenSSL::SSL)
 endif()
+target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${LIBMINIFI_LIBRARIES})
+
 
 add_library(minifi STATIC ${PROCESSOR_SOURCES})
-
-
 target_link_libraries(minifi core-minifi)
 if (WIN32)
 	set_target_properties(minifi PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
@@ -132,18 +132,10 @@ endif()
 SET (LIBMINIFI core-minifi PARENT_SCOPE)
 
 if (ENABLE_PYTHON AND NOT STATIC_BUILD)
-#### shared
 	add_library(core-minifi-shared SHARED ${SOURCES})
-	target_link_libraries(core-minifi-shared ${CMAKE_DL_LIBS} yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog cron Threads::Threads)
-	if(NOT WIN32)
-		target_link_libraries(core-minifi-shared OSSP::libuuid++)
-	endif()
-	if (NOT OPENSSL_OFF)
-		target_link_libraries(core-minifi-shared OpenSSL::SSL)
-	endif()
+	target_link_libraries(core-minifi-shared ${CMAKE_DL_LIBS} ${LIBMINIFI_LIBRARIES})
 
 	add_library(minifi-shared SHARED ${PROCESSOR_SOURCES})
-
 	target_link_libraries(minifi-shared core-minifi-shared)
 	if (WIN32)
 		set_target_properties(minifi-shared PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
