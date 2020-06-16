@@ -31,6 +31,20 @@ namespace utils = org::apache::nifi::minifi::utils;
 
 namespace {
 
+  template <typename Function, typename Duration>
+  bool becomesTrueWithinTimeout(const Function &condition, Duration timeout) {
+    auto start_time = std::chrono::steady_clock::now();
+    while (std::chrono::steady_clock::now() < start_time + timeout) {
+      if (condition()) {
+        return true;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds{1});
+    }
+    return false;
+  }
+
+}  // namespace
+
 namespace MinifiConcurrentQueueTestProducersConsumers {
 
   // Producers
@@ -302,7 +316,10 @@ TEST_CASE("TestConcurrentQueue: test untimed waiting consumers", "[ProducerConsu
   }
 
   producer.join();
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+  auto queue_is_empty = [&queue]() { return queue.empty(); };
+  REQUIRE(becomesTrueWithinTimeout(queue_is_empty, std::chrono::seconds{1}));
+
   queue.stop();
   consumer.join();
 
@@ -318,10 +335,10 @@ TEST_CASE("TestConcurrentQueue: test the readding dequeue consumer", "[ProducerC
   std::thread consumer { getReaddingDequeueConsumerThread(queue, results, results_size) };
   std::this_thread::sleep_for(std::chrono::milliseconds(1));
   std::thread producer { getSimpleProducerThread(queue) };
-  std::this_thread::sleep_for(std::chrono::milliseconds(9));
-  while (results_size < 3) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  }
+
+  auto we_have_all_results = [&results_size]() { return results_size >= 3; };
+  REQUIRE(becomesTrueWithinTimeout(we_have_all_results, std::chrono::seconds{1}));
+
   queue.stop();
   producer.join();
   consumer.join();
@@ -389,9 +406,8 @@ TEST_CASE("TestConcurrentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
   producer.join();
   relay.join();
 
-  while (cqueue.size() > 0) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(0));
-  }
+  auto queue_is_empty = [&cqueue]() { return cqueue.empty(); };
+  REQUIRE(becomesTrueWithinTimeout(queue_is_empty, std::chrono::seconds{1}));
 
   cqueue.stop();
   consumer.join();
