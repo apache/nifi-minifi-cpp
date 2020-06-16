@@ -331,7 +331,7 @@ TEST_CASE("TestConcurrentQueue: test the readding dequeue consumer", "[ProducerC
   utils::ConditionConcurrentQueue<std::string> queue(true);
   std::vector<std::string> results;
 
-  std::atomic_int results_size;
+  std::atomic_int results_size{0};
   std::thread consumer { getReaddingDequeueConsumerThread(queue, results, results_size) };
   std::this_thread::sleep_for(std::chrono::milliseconds(1));
   std::thread producer { getSimpleProducerThread(queue) };
