@@ -177,7 +177,6 @@ TEST_CASE("TestConcurrentQueue", "[TestConcurrentQueue]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
 
   utils::ConcurrentQueue<std::string> queue;
-  std::vector<std::string> results;
 
   SECTION("empty queue") {
     SECTION("default initialized queue is empty") {
@@ -234,7 +233,7 @@ TEST_CASE("TestConcurrentQueue", "[TestConcurrentQueue]") {
   }
 }
 
-TEST_CASE("TestConcurrentQueue::testProducerConsumer", "[TestConcurrentQueueProducerConsumer]") {
+TEST_CASE("TestConcurrentQueue: test simple producer and consumer", "[ProducerConsumer]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConcurrentQueue<std::string> queue;
   std::vector<std::string> results;
@@ -263,72 +262,93 @@ TEST_CASE("TestConcurrentQueue::testProducerConsumer", "[TestConcurrentQueueProd
   REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
 }
 
-TEST_CASE("TestConditionConcurrentQueue::testProducerConsumer", "[TestConditionConcurrentQueueProducerConsumer]") {
+TEST_CASE("TestConcurrentQueue: test timed waiting consumers", "[ProducerConsumer]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConditionConcurrentQueue<std::string> queue(true);
   std::vector<std::string> results;
 
-  SECTION("consumers fetching data from producers is synchronized and fifo") {
-    std::thread producer { getSimpleProducerThread(queue) };
-    std::thread consumer;
-    SECTION("using dequeueWait") {
-      consumer = getDequeueWaitConsumerThread(queue, results);
-    }
-    SECTION("using consumeWait") {
-      consumer = getConsumeWaitConsumerThread(queue, results);
-    }
-    SECTION("using dequeueWaitFor") {
-      consumer = getDequeueWaitForConsumerThread(queue, results);
-    }
-    SECTION("using dequeueWaitUntil") {
-      consumer = getDequeueWaitUntilConsumerThread(queue, results);
-    }
-    SECTION("using consumeWaitFor") {
-      consumer = getConsumeWaitForConsumerThread(queue, results);
-    }
-    producer.join();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    queue.stop();
-    consumer.join();
+  std::thread producer { getSimpleProducerThread(queue) };
+  std::thread consumer;
 
-    REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
+  SECTION("using dequeueWaitFor") {
+    consumer = getDequeueWaitForConsumerThread(queue, results);
+  }
+  SECTION("using dequeueWaitUntil") {
+    consumer = getDequeueWaitUntilConsumerThread(queue, results);
+  }
+  SECTION("using consumeWaitFor") {
+    consumer = getConsumeWaitForConsumerThread(queue, results);
   }
 
-  /* The same test as above, but covering the ConditionConcurrentQueue */
-  SECTION("with readd") {
-    std::atomic_int results_size;
-    std::thread consumer { getReaddingDequeueConsumerThread(queue, results, results_size) };
+  producer.join();
+  consumer.join();
+
+  REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
+}
+
+TEST_CASE("TestConcurrentQueue: test untimed waiting consumers", "[ProducerConsumer]") {
+  using namespace MinifiConcurrentQueueTestProducersConsumers;
+  utils::ConditionConcurrentQueue<std::string> queue(true);
+  std::vector<std::string> results;
+
+  std::thread producer { getSimpleProducerThread(queue) };
+  std::thread consumer;
+
+  SECTION("using dequeueWait") {
+    consumer = getDequeueWaitConsumerThread(queue, results);
+  }
+  SECTION("using consumeWait") {
+    consumer = getConsumeWaitConsumerThread(queue, results);
+  }
+
+  producer.join();
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  queue.stop();
+  consumer.join();
+
+  REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
+}
+
+TEST_CASE("TestConcurrentQueue: test the readding dequeue consumer", "[ProducerConsumer]") {
+  using namespace MinifiConcurrentQueueTestProducersConsumers;
+  utils::ConditionConcurrentQueue<std::string> queue(true);
+  std::vector<std::string> results;
+
+  std::atomic_int results_size;
+  std::thread consumer { getReaddingDequeueConsumerThread(queue, results, results_size) };
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  std::thread producer { getSimpleProducerThread(queue) };
+  std::this_thread::sleep_for(std::chrono::milliseconds(9));
+  while (results_size < 3) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    std::thread producer { getSimpleProducerThread(queue) };
-    std::this_thread::sleep_for(std::chrono::milliseconds(9));
-    while (results_size < 3) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    queue.stop();
-    producer.join();
-    consumer.join();
-
-    REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
   }
+  queue.stop();
+  producer.join();
+  consumer.join();
 
-  // Blocked producers
-  SECTION("consumer times out when using waitFor and time is up") {
-    std::mutex mutex;
-    std::unique_lock<std::mutex> lock(mutex);
-    std::thread producer{ getBlockedProducerThread(queue, mutex) };
-    std::thread consumer;
-    SECTION("using dequeueWaitFor") {
-      consumer = getDequeueWaitForConsumerThread(queue, results);
-    }
-    SECTION("using consumeWaitFor") {
-      consumer = getConsumeWaitForConsumerThread(queue, results);
-    }
-    consumer.join();
-    lock.unlock();
-    producer.join();
+  REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
+}
 
-    REQUIRE(results.empty());
+TEST_CASE("TestConcurrentQueue: test waiting consumers with blocked producer", "[ProducerConsumer]") {
+  using namespace MinifiConcurrentQueueTestProducersConsumers;
+  utils::ConditionConcurrentQueue<std::string> queue(true);
+  std::vector<std::string> results;
+
+  std::mutex mutex;
+  std::unique_lock<std::mutex> lock(mutex);
+  std::thread producer{ getBlockedProducerThread(queue, mutex) };
+  std::thread consumer;
+  SECTION("using dequeueWaitFor") {
+    consumer = getDequeueWaitForConsumerThread(queue, results);
   }
+  SECTION("using consumeWaitFor") {
+    consumer = getConsumeWaitForConsumerThread(queue, results);
+  }
+  consumer.join();
+  lock.unlock();
+  producer.join();
+
+  REQUIRE(results.empty());
 }
 
 TEST_CASE("TestConcurrentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
@@ -378,4 +398,3 @@ TEST_CASE("TestConcurrentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
 
   REQUIRE(source == target);
 }
-}  // anon namespace
