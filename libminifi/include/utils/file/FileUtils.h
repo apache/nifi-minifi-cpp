@@ -129,7 +129,7 @@ class FileUtils {
 
   static std::string create_temp_directory(char* format) {
 #ifdef WIN32
-    const std::string tempDirectory = concat_path(get_temp_directory(), 
+    const std::string tempDirectory = concat_path(get_temp_directory(),
       minifi::utils::IdGenerator::getIdGenerator()->generate().to_string());
     create_dir(tempDirectory);
     return tempDirectory;
