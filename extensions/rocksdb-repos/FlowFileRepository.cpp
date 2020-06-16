@@ -122,27 +122,26 @@ void FlowFileRepository::run() {
 }
 
 void FlowFileRepository::prune_stored_flowfiles() {
-  rocksdb::DB* stored_database_ = nullptr;
-  utils::ScopeGuard db_guard([&stored_database_]() {
-    delete stored_database_;
-  });
+  std::unique_ptr<rocksdb::DB> stored_database;
+  rocksdb::DB* used_database;
   bool corrupt_checkpoint = false;
   if (nullptr != checkpoint_) {
     rocksdb::Options options;
     options.create_if_missing = true;
     options.use_direct_io_for_flush_and_compaction = true;
     options.use_direct_reads = true;
-    rocksdb::Status status = rocksdb::DB::OpenForReadOnly(options, FLOWFILE_CHECKPOINT_DIRECTORY, &stored_database_);
+    rocksdb::Status status = rocksdb::DB::OpenForReadOnly(options, FLOWFILE_CHECKPOINT_DIRECTORY, &used_database);
+    stored_database.reset(used_database);
     if (!status.ok()) {
-      stored_database_ = db_;
-      db_guard.disable();
+      used_database = db_;
+      stored_database.release();
     }
   } else {
     logger_->log_trace("Could not open checkpoint as object doesn't exist. Likely not needed or file system error.");
     return;
   }
 
-  rocksdb::Iterator* it = stored_database_->NewIterator(rocksdb::ReadOptions());
+  rocksdb::Iterator* it = used_database->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
     std::string key = it->key().ToString();

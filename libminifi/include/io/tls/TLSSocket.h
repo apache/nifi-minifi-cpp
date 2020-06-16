@@ -64,13 +64,10 @@ class TLSContext : public SocketContext {
  public:
   TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service = nullptr); // NOLINT
 
-  virtual ~TLSContext() {
-    if (nullptr != ctx)
-      SSL_CTX_free(ctx);
-  }
+  virtual ~TLSContext() = default;
 
   SSL_CTX *getContext() {
-    return ctx;
+    return ctx.get();
   }
 
   int16_t getError() {
@@ -80,10 +77,13 @@ class TLSContext : public SocketContext {
   int16_t initialize(bool server_method = false);
 
  private:
+  static void deleteContext(SSL_CTX* ptr) { SSL_CTX_free(ptr); };
+
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<Configure> configure_;
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
-  SSL_CTX *ctx;
+  using Context = std::unique_ptr<SSL_CTX, decltype(&deleteContext)>;
+  Context ctx;
 
   int16_t error_value;
 };

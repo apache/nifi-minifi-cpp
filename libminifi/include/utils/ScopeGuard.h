@@ -33,10 +33,6 @@ namespace utils {
 
 struct ScopeGuard : ::gsl::final_action<std::function<void()>> {
   using ::gsl::final_action<std::function<void()>>::final_action;
-
-  void disable() noexcept {
-    dismiss();
-  }
 };
 
 }  // namespace utils

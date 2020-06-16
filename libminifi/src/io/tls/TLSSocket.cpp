@@ -45,7 +45,7 @@ namespace io {
 TLSContext::TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service)
     : SocketContext(configure),
       error_value(TLS_GOOD),
-      ctx(nullptr),
+      ctx(nullptr, deleteContext),
       logger_(logging::LoggerFactory<TLSContext>::getLogger()),
       configure_(configure),
       ssl_service_(std::move(ssl_service)) {
@@ -72,17 +72,12 @@ int16_t TLSContext::initialize(bool server_method) {
   }
   const SSL_METHOD *method;
   method = server_method ? TLSv1_2_server_method() : TLSv1_2_client_method();
-  ctx = SSL_CTX_new(method);
+  ctx = Context(SSL_CTX_new(method), deleteContext);
   if (ctx == nullptr) {
     logger_->log_error("Could not create SSL context, error: %s.", std::strerror(errno));
     error_value = TLS_ERROR_CONTEXT;
     return error_value;
   }
-
-  utils::ScopeGuard ctxGuard([this]() {
-    SSL_CTX_free(ctx);
-    ctx = nullptr;
-  });
 
   if (needClientCert) {
     std::string certificate;
@@ -91,11 +86,11 @@ int16_t TLSContext::initialize(bool server_method) {
     std::string caCertificate;
 
     if (ssl_service_ != nullptr) {
-      if (!ssl_service_->configure_ssl_context(ctx)) {
+      if (!ssl_service_->configure_ssl_context(ctx.get())) {
         error_value = TLS_ERROR_CERT_ERROR;
         return error_value;
       }
-      ctxGuard.disable();
+      ctx.release();
       error_value = TLS_GOOD;
       return 0;
     }
@@ -106,8 +101,8 @@ int16_t TLSContext::initialize(bool server_method) {
         return error_value;
     }
     // load certificates and private key in PEM format
-    if (SSL_CTX_use_certificate_chain_file(ctx, certificate.c_str()) <= 0) {
-      logger_->log_error("Could not load certificate %s, for %X and %X error : %s", certificate, this, ctx, std::strerror(errno));
+    if (SSL_CTX_use_certificate_chain_file(ctx.get(), certificate.c_str()) <= 0) {
+      logger_->log_error("Could not load certificate %s, for %X and %X error : %s", certificate, this, ctx.get(), std::strerror(errno));
       error_value = TLS_ERROR_CERT_MISSING;
       return error_value;
     }
@@ -120,25 +115,25 @@ int16_t TLSContext::initialize(bool server_method) {
         file.close();
         passphrase = password;
       }
-      SSL_CTX_set_default_passwd_cb(ctx, io::tls::pemPassWordCb);
-      SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase);
+      SSL_CTX_set_default_passwd_cb(ctx.get(), io::tls::pemPassWordCb);
+      SSL_CTX_set_default_passwd_cb_userdata(ctx.get(), &passphrase);
     }
 
-    int retp = SSL_CTX_use_PrivateKey_file(ctx, privatekey.c_str(), SSL_FILETYPE_PEM);
+    int retp = SSL_CTX_use_PrivateKey_file(ctx.get(), privatekey.c_str(), SSL_FILETYPE_PEM);
     if (retp != 1) {
       logger_->log_error("Could not create load private key,%i on %s error : %s", retp, privatekey, std::strerror(errno));
       error_value = TLS_ERROR_KEY_ERROR;
       return error_value;
     }
     // verify private key
-    if (!SSL_CTX_check_private_key(ctx)) {
+    if (!SSL_CTX_check_private_key(ctx.get())) {
       logger_->log_error("Private key does not match the public certificate, error : %s", std::strerror(errno));
       error_value = TLS_ERROR_KEY_ERROR;
       return error_value;
     }
     // load CA certificates
     if (ssl_service_ != nullptr || configure_->get(Configure::nifi_security_client_ca_certificate, caCertificate)) {
-      retp = SSL_CTX_load_verify_locations(ctx, caCertificate.c_str(), 0);
+      retp = SSL_CTX_load_verify_locations(ctx.get(), caCertificate.c_str(), 0);
       if (retp == 0) {
         logger_->log_error("Can not load CA certificate, Exiting, error : %s", std::strerror(errno));
         error_value = TLS_ERROR_CERT_ERROR;
@@ -146,9 +141,9 @@ int16_t TLSContext::initialize(bool server_method) {
       }
     }
 
-    logger_->log_debug("Load/Verify Client Certificate OK. for %X and %X", this, ctx);
+    logger_->log_debug("Load/Verify Client Certificate OK. for %X and %X", this, ctx.get());
   }
-  ctxGuard.disable();
+  ctx.release();
   error_value = TLS_GOOD;
   return 0;
 }
