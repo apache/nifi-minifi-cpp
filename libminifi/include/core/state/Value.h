@@ -87,55 +87,55 @@ class Value {
   }
 
   virtual bool getValue(uint32_t &ref) {
-    try{
+    try {
       uint32_t value;
       utils::ValueParser(string_value).parseUInt32(value).parseEnd();
       ref = value;
-    }catch(const utils::ParseException&){
+    } catch(const utils::ParseException&) {
       return false;
     }
     return true;
   }
 
   virtual bool getValue(int &ref) {
-    try{
+    try {
       int value;
       utils::ValueParser(string_value).parseInt(value).parseEnd();
       ref = value;
-    }catch(const utils::ParseException&){
+    } catch(const utils::ParseException&) {
       return false;
     }
     return true;
   }
 
   virtual bool getValue(int64_t &ref) {
-    try{
+    try {
       int64_t value;
       utils::ValueParser(string_value).parseLongLong(value).parseEnd();
       ref = value;
-    }catch(const utils::ParseException&){
+    } catch(const utils::ParseException&) {
       return false;
     }
     return true;
   }
 
   virtual bool getValue(uint64_t &ref) {
-    try{
+    try {
       uint64_t value;
       utils::ValueParser(string_value).parseUnsignedLongLong(value).parseEnd();
       ref = value;
-    }catch(const utils::ParseException&){
+    } catch(const utils::ParseException&) {
       return false;
     }
     return true;
   }
 
   virtual bool getValue(bool &ref) {
-    try{
+    try {
       bool value;
       utils::ValueParser(string_value).parseBool(value).parseEnd();
       ref = value;
-    }catch(const utils::ParseException&) {
+    } catch(const utils::ParseException&) {
       return false;
     }
     return true;

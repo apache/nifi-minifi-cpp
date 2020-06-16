@@ -16,10 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_CACHEDVALUEVALIDATOR_H
-#define NIFI_MINIFI_CPP_CACHEDVALUEVALIDATOR_H
+#ifndef LIBMINIFI_INCLUDE_CORE_CACHEDVALUEVALIDATOR_H_
+#define LIBMINIFI_INCLUDE_CORE_CACHEDVALUEVALIDATOR_H_
 
 #include "PropertyValidation.h"
+#include <utility>
+#include <memory>
 
 namespace org {
 namespace apache {
@@ -49,8 +51,8 @@ class CachedValueValidator{
     return *this;
   }
 
-  CachedValueValidator(const std::shared_ptr<PropertyValidator>& other) : validator_(other) {}
-  CachedValueValidator(std::shared_ptr<PropertyValidator>&& other) : validator_(std::move(other)) {}
+  explicit CachedValueValidator(const std::shared_ptr<PropertyValidator>& other) : validator_(other) {}
+  explicit CachedValueValidator(std::shared_ptr<PropertyValidator>&& other) : validator_(std::move(other)) {}
   CachedValueValidator& operator=(const std::shared_ptr<PropertyValidator>& new_validator) {
     validator_ = new_validator;
     validation_result_ = Result::RECOMPUTE;
@@ -83,7 +85,7 @@ class CachedValueValidator{
   }
 
   Result isValid() const {
-    if(!validator_){
+    if (!validator_) {
       return Result::SUCCESS;
     }
     return validation_result_;
@@ -100,4 +102,4 @@ class CachedValueValidator{
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_CACHEDVALUEVALIDATOR_H
+#endif  // LIBMINIFI_INCLUDE_CORE_CACHEDVALUEVALIDATOR_H_

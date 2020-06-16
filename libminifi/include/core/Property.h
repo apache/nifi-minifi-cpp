@@ -18,18 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
 #define LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
 
-#include <math.h>
-#include <stdlib.h>
-
+#include <cmath>
+#include <cstdlib>
 #include <algorithm>
-#include "core/Core.h"
-#include "PropertyValidation.h"
-#include "CachedValueValidator.h"
-#include <sstream>
-#include <typeindex>
-#include <string>
-#include <vector>
-#include <queue>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -41,6 +32,7 @@
 #include <utility>
 #include <vector>
 
+#include "CachedValueValidator.h"
 #include "core/Core.h"
 #include "PropertyValidation.h"
 #include "PropertyValue.h"
@@ -149,8 +141,9 @@ class Property {
     vn.setValidator(validator_ ? validator_ : core::StandardValidators::VALID);
     vn = value;
     ValidationResult result = vn.validate(name_);
-    if(!result.valid())
+    if (!result.valid()) {
       throw utils::InvalidValueException(name_ + " value validation failed");
+    }
   }
 
   void setValue(PropertyValue &newValue) {
@@ -163,8 +156,9 @@ class Property {
     PropertyValue& vn = values_.back();
     vn.setValidator(validator_ ? validator_ : core::StandardValidators::VALID);
     ValidationResult result = vn.validate(name_);
-    if (!result.valid())
+    if (!result.valid()) {
       throw utils::InvalidValueException(name_ + " value validation failed");
+    }
   }
   void setSupportsExpressionLanguage(bool supportEl);
 

@@ -213,25 +213,25 @@ template<typename T>
 bool ConfigurableComponent::getProperty(const std::string name, T &value) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
-   auto &&it = properties_.find(name);
-   if (it != properties_.end()) {
-     const Property& item = it->second;
-     if (item.getValue().getValue() == nullptr) {
-       // empty value
-       if (item.getRequired()) {
-         logger_->log_debug("Component %s required property %s is empty", name, item.getName());
-         throw utils::RequiredPropertyMissingException("Required property is empty: " + item.getName());
-       }
-       logger_->log_warn("Component %s property name %s, empty value", name, item.getName());
-       return false;
-     }
-     logger_->log_debug("Component %s property name %s value %s", name, item.getName(), item.getValue().to_string());
-     // cast throws if the value is invalid
-     value = static_cast<T>(item.getValue());
-     return true;
-   } else {
-     logger_->log_warn("Could not find property %s", name);
-     return false;
+  auto &&it = properties_.find(name);
+  if (it != properties_.end()) {
+    const Property& item = it->second;
+    if (item.getValue().getValue() == nullptr) {
+      // empty value
+      if (item.getRequired()) {
+        logger_->log_debug("Component %s required property %s is empty", name, item.getName());
+        throw utils::RequiredPropertyMissingException("Required property is empty: " + item.getName());
+      }
+      logger_->log_warn("Component %s property name %s, empty value", name, item.getName());
+      return false;
+    }
+    logger_->log_debug("Component %s property name %s value %s", name, item.getName(), item.getValue().to_string());
+    // cast throws if the value is invalid
+    value = static_cast<T>(item.getValue());
+    return true;
+  } else {
+    logger_->log_warn("Could not find property %s", name);
+    return false;
   }
 }
 

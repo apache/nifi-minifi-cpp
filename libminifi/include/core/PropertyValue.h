@@ -18,11 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
 #define LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
 
-#include "state/Value.h"
-#include "PropertyValidation.h"
-#include "CachedValueValidator.h"
 #include <typeindex>
+#include <string>
+#include <utility>
+#include <memory>
 
+#include "CachedValueValidator.h"
 #include "PropertyValidation.h"
 #include "state/Value.h"
 #include "TypedValues.h"
@@ -81,10 +82,10 @@ class PropertyValue : public state::response::ValueNode {
 
   ValidationResult validate(const std::string &subject) const {
     auto cachedResult = validator_.isValid();
-    if(cachedResult == CachedValueValidator::Result::SUCCESS){
+    if (cachedResult == CachedValueValidator::Result::SUCCESS) {
       return ValidationResult::Builder::createBuilder().isValid(true).build();
     }
-    if(cachedResult == CachedValueValidator::Result::FAILURE){
+    if (cachedResult == CachedValueValidator::Result::FAILURE) {
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(getValue()->getStringValue()).isValid(false).build();
     }
     auto result = validator_->validate(subject, getValue());
@@ -113,7 +114,9 @@ class PropertyValue : public state::response::ValueNode {
   }
 
   operator std::string() const {
-    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
+    if (!isValueUsable()) {
+      throw utils::InvalidValueException("Cannot convert invalid value");
+    }
     return to_string();
   }
 
@@ -128,7 +131,7 @@ class PropertyValue : public state::response::ValueNode {
    * createValue
    */
   template<typename T>
-  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string>::value,PropertyValue&>::type {
+  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string>::value, PropertyValue&>::type {
     validator_.clearValidationResult();
     return WithAssignmentGuard(ref, [&] () -> PropertyValue& {
       if (value_ == nullptr) {
@@ -158,7 +161,7 @@ class PropertyValue : public state::response::ValueNode {
   std::is_same<T, uint32_t >::value ||
   std::is_same<T, uint64_t >::value ||
   std::is_same<T, int64_t >::value ||
-  std::is_same<T, bool >::value,PropertyValue&>::type {
+  std::is_same<T, bool >::value, PropertyValue&>::type {
     validator_.clearValidationResult();
     if (value_ == nullptr) {
       type_id = std::type_index(typeid(T));
@@ -192,7 +195,7 @@ class PropertyValue : public state::response::ValueNode {
   template<typename T>
   auto operator=(const std::string &ref) -> typename std::enable_if<
   std::is_same<T, DataSizeValue >::value ||
-  std::is_same<T, TimePeriodValue >::value,PropertyValue&>::type {
+  std::is_same<T, TimePeriodValue >::value, PropertyValue&>::type {
     validator_.clearValidationResult();
     return WithAssignmentGuard(ref, [&] () -> PropertyValue& {
       value_ = std::make_shared<T>(ref);
@@ -202,15 +205,16 @@ class PropertyValue : public state::response::ValueNode {
   }
 
  private:
-
   template<typename T>
   T convertImpl(const char* const type_name) const {
-    if(!isValueUsable())throw utils::InvalidValueException("Cannot convert invalid value");
+    if (!isValueUsable()) {
+      throw utils::InvalidValueException("Cannot convert invalid value");
+    }
     T res;
     if (value_->convertValue(res)) {
       return res;
     }
-    throw utils::ConversionException(std::string{"Invalid conversion to "} + type_name + " for " + value_->getStringValue());
+    throw utils::ConversionException(std::string("Invalid conversion to ") + type_name + " for " + value_->getStringValue());
   }
 
   bool isValueUsable() const {
@@ -224,9 +228,9 @@ class PropertyValue : public state::response::ValueNode {
   auto WithAssignmentGuard(const std::string& ref, Fn&& functor) -> decltype(std::forward<Fn>(functor)()) {
     // TODO(adebreceni): as soon as c++17 comes jump to a RAII implementation
     // as we will need std::uncaught_exceptions()
-    try{
+    try {
       return std::forward<Fn>(functor)();
-    }catch(const utils::ValueException&){
+    } catch(const utils::ValueException&) {
       type_id = std::type_index(typeid(std::string));
       value_ = minifi::state::response::createValue(ref);
       throw;

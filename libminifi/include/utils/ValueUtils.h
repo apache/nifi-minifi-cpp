@@ -16,17 +16,18 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_VALUEUTILS_H
-#define NIFI_MINIFI_CPP_VALUEUTILS_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_VALUEUTILS_H_
+#define LIBMINIFI_INCLUDE_UTILS_VALUEUTILS_H_
 
 #include <exception>
 #include <string>
 #include <cstring>
 #include <vector>
 #include <cstdlib>
-#include "PropertyErrors.h"
 #include <type_traits>
 #include <limits>
+
+#include "PropertyErrors.h"
 #include "GeneralUtils.h"
 
 namespace org {
@@ -43,17 +44,17 @@ class ValueParser {
   };
 
   template<typename From, typename To>
-  struct is_non_narrowing_convertible<From, To, void_t<decltype(To{std::declval<From>()})>>: std::true_type{
+  struct is_non_narrowing_convertible<From, To, void_t<decltype(To{std::declval<From>()})>>: std::true_type {
     static_assert(std::is_integral<From>::value && std::is_integral<To>::value, "Checks only integral values");
   };
-  
+
  public:
-  ValueParser(const std::string& str, std::size_t offset = 0): str(str), offset(offset) {}
+  explicit ValueParser(const std::string& str, std::size_t offset = 0): str(str), offset(offset) {}
 
   template<typename Out>
   ValueParser& parseInt(Out& out) {
     static_assert(is_non_narrowing_convertible<int, Out>::value, "Expected lossless conversion from int");
-    long result;
+    long result;  // NOLINT
     auto len = safeCallConverter(std::strtol, result);
     if ( len == 0 ) {
       throw ParseException("Couldn't parse int");
@@ -68,8 +69,8 @@ class ValueParser {
 
   template<typename Out>
   ValueParser& parseLong(Out& out) {
-    static_assert(is_non_narrowing_convertible<long, Out>::value, "Expected lossless conversion from long");
-    long result;
+    static_assert(is_non_narrowing_convertible<long, Out>::value, "Expected lossless conversion from long");  // NOLINT
+    long result;  // NOLINT
     auto len = safeCallConverter(std::strtol, result);
     if ( len == 0 ) {
       throw ParseException("Couldn't parse long");
@@ -81,8 +82,8 @@ class ValueParser {
 
   template<typename Out>
   ValueParser& parseLongLong(Out& out) {
-    static_assert(is_non_narrowing_convertible<long long, Out>::value, "Expected lossless conversion from long long");
-    long long result;
+    static_assert(is_non_narrowing_convertible<long long, Out>::value, "Expected lossless conversion from long long");  // NOLINT
+    long long result;  // NOLINT
     auto len = safeCallConverter(std::strtoll, result);
     if ( len == 0 ) {
       throw ParseException("Couldn't parse long long");
@@ -99,7 +100,7 @@ class ValueParser {
     if (offset < str.length() && str[offset] == '-') {
       throw ParseException("Not an unsigned long");
     }
-    unsigned long result;
+    unsigned long result;  // NOLINT
     auto len = safeCallConverter(std::strtoul, result);
     if ( len == 0 ) {
       throw ParseException("Couldn't parse uint32_t");
@@ -114,12 +115,12 @@ class ValueParser {
 
   template<typename Out>
   ValueParser& parseUnsignedLongLong(Out& out) {
-    static_assert(is_non_narrowing_convertible<unsigned long long, Out>::value, "Expected lossless conversion from unsigned long long");
+    static_assert(is_non_narrowing_convertible<unsigned long long, Out>::value, "Expected lossless conversion from unsigned long long");  // NOLINT
     parseSpace();
     if (offset < str.length() && str[offset] == '-') {
       throw ParseException("Not an unsigned long");
     }
-    unsigned long long result;
+    unsigned long long result;  // NOLINT
     auto len = safeCallConverter(std::strtoull, result);
     if ( len == 0 ) {
       throw ParseException("Couldn't parse unsigned long long");
@@ -130,7 +131,7 @@ class ValueParser {
   }
 
   template<typename Out>
-  ValueParser& parseBool(Out& out){
+  ValueParser& parseBool(Out& out) {
     parseSpace();
     if (std::strncmp(str.c_str() + offset, "false", std::strlen("false")) == 0) {
       offset += std::strlen("false");
@@ -144,9 +145,9 @@ class ValueParser {
     return *this;
   }
 
-  void parseEnd(){
+  void parseEnd() {
     parseSpace();
-    if(offset < str.length()){
+    if (offset < str.length()) {
       throw ParseException("Expected to parse till the end");
     }
   }
@@ -180,7 +181,6 @@ class ValueParser {
 
   const std::string& str;
   std::size_t offset;
-
 };
 
 
@@ -190,4 +190,4 @@ class ValueParser {
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_VALUEUTILS_H
+#endif  // LIBMINIFI_INCLUDE_UTILS_VALUEUTILS_H_

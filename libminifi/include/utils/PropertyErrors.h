@@ -16,17 +16,19 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_PROPERTYERRORS_H
-#define NIFI_MINIFI_CPP_PROPERTYERRORS_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_PROPERTYERRORS_H_
+#define LIBMINIFI_INCLUDE_UTILS_PROPERTYERRORS_H_
+
+#include <string>
 
 #include "Exception.h"
 
-namespace org{
-namespace apache{
-namespace nifi{
-namespace minifi{
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
 
-namespace core{
+namespace core {
 
 class PropertyValue;
 class ConfigurableComponent;
@@ -38,8 +40,8 @@ namespace utils {
 
 class ValueException: public Exception{
  private:
-  ValueException(const std::string& err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
-  ValueException(const char* err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
+  explicit ValueException(const std::string& err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
+  explicit ValueException(const char* err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
 
   // base class already has a virtual destructor
 
@@ -50,8 +52,8 @@ class ValueException: public Exception{
 
 class PropertyException: public Exception{
  private:
-  PropertyException(const std::string& err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
-  PropertyException(const char* err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
+  explicit PropertyException(const std::string& err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
+  explicit PropertyException(const char* err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
 
   // base class already has a virtual destructor
 
@@ -63,8 +65,8 @@ class PropertyException: public Exception{
  */
 class ConversionException : public ValueException{
  private:
-  ConversionException(const std::string& err): ValueException(err) {}
-  ConversionException(const char* err): ValueException(err) {}
+  explicit ConversionException(const std::string& err): ValueException(err) {}
+  explicit ConversionException(const char* err): ValueException(err) {}
 
   friend class core::PropertyValue;
   friend class ParseException;
@@ -75,8 +77,8 @@ class ConversionException : public ValueException{
  */
 class ParseException : public ConversionException{
  private:
-  ParseException(const std::string& err): ConversionException(err) {}
-  ParseException(const char* err): ConversionException(err) {}
+  explicit ParseException(const std::string& err): ConversionException(err) {}
+  explicit ParseException(const char* err): ConversionException(err) {}
 
   friend class ValueParser;
 };
@@ -86,8 +88,8 @@ class ParseException : public ConversionException{
  */
 class InvalidValueException : public ValueException{
  private:
-  InvalidValueException(const std::string& err): ValueException(err) {}
-  InvalidValueException(const char* err): ValueException(err) {}
+  explicit InvalidValueException(const std::string& err): ValueException(err) {}
+  explicit InvalidValueException(const char* err): ValueException(err) {}
 
   friend class core::PropertyValue;
   friend class core::Property;
@@ -98,8 +100,8 @@ class InvalidValueException : public ValueException{
  */
 class RequiredPropertyMissingException : public PropertyException{
  private:
-  RequiredPropertyMissingException(const std::string& err): PropertyException(err) {}
-  RequiredPropertyMissingException(const char* err): PropertyException(err) {}
+  explicit RequiredPropertyMissingException(const std::string& err): PropertyException(err) {}
+  explicit RequiredPropertyMissingException(const char* err): PropertyException(err) {}
 
   friend class core::ConfigurableComponent;
 };
@@ -110,4 +112,4 @@ class RequiredPropertyMissingException : public PropertyException{
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_PROPERTYERRORS_H
+#endif  // LIBMINIFI_INCLUDE_UTILS_PROPERTYERRORS_H_
