@@ -64,7 +64,6 @@ using std::exchange;
 #if __cplusplus < 201703L
 template<typename...>
 using void_t = void;
-
 #else
 using std::void_t;
 #endif /* < C++17 */
