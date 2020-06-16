@@ -31,7 +31,7 @@
 #include "core/Property.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
-#include "utils/ScopeGuard.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -56,30 +56,30 @@ void SSLContextService::initialize() {
 bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
   if (!IsNullOrEmpty(certificate)) {
     if (isFileTypeP12(certificate)) {
-      BIO* fp = BIO_new(BIO_s_file());
+      auto fp_deleter = [](BIO* ptr) { BIO_free(ptr); };
+      std::unique_ptr<BIO, decltype(fp_deleter)> fp(BIO_new(BIO_s_file()), fp_deleter);
       if (fp == nullptr) {
         logging::LOG_ERROR(logger_) << "Failed create new file BIO, " << getLatestOpenSSLErrorString();
         return false;
       }
-      utils::ScopeGuard fp_guard([fp]() { BIO_free(fp); });
-      if (BIO_read_filename(fp, certificate.c_str()) <= 0) {
+      if (BIO_read_filename(fp.get(), certificate.c_str()) <= 0) {
         logging::LOG_ERROR(logger_) << "Failed to read certificate file " << certificate << ", " << getLatestOpenSSLErrorString();
         return false;
       }
-      PKCS12* p12 = d2i_PKCS12_bio(fp, nullptr);
+      auto p12_deleter = [](PKCS12* ptr) { PKCS12_free(ptr); };
+      std::unique_ptr<PKCS12, decltype(p12_deleter)> p12(d2i_PKCS12_bio(fp.get(), nullptr), p12_deleter);
       if (p12 == nullptr) {
         logging::LOG_ERROR(logger_) << "Failed to DER decode certificate file " << certificate << ", " << getLatestOpenSSLErrorString();
         return false;
       }
-      utils::ScopeGuard p12_guard([p12]() { PKCS12_free(p12); });
       EVP_PKEY* pkey = nullptr;
       X509* cert = nullptr;
       STACK_OF(X509)* ca = nullptr;
-      if (!PKCS12_parse(p12, passphrase_.c_str(), &pkey, &cert, &ca)) {
+      if (!PKCS12_parse(p12.get(), passphrase_.c_str(), &pkey, &cert, &ca)) {
         logging::LOG_ERROR(logger_) << "Failed to parse certificate file " << certificate << " as PKCS#12, " << getLatestOpenSSLErrorString();
         return false;
       }
-      utils::ScopeGuard certs_guard([pkey, cert, ca]() {
+      const auto certs_guard = gsl::finally([pkey, cert, ca]() {
         EVP_PKEY_free(pkey);
         X509_free(cert);
         sk_X509_pop_free(ca, X509_free);
@@ -89,13 +89,13 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
         return false;
       }
       while (ca != nullptr && sk_X509_num(ca) > 0) {
-        X509 *cacert = sk_X509_pop(ca);
-        utils::ScopeGuard cacert_guard([cacert]() { X509_free(cacert); });
-        if (SSL_CTX_add_extra_chain_cert(ctx, cacert) != 1) {
+        auto x509_deleter = [](X509* ptr) { X509_free(ptr); };
+        std::unique_ptr<X509, decltype(x509_deleter)> cacert(sk_X509_pop(ca), x509_deleter);
+        if (SSL_CTX_add_extra_chain_cert(ctx, cacert.get()) != 1) {
           logging::LOG_ERROR(logger_) << "Failed to set additional certificate from  " << certificate << ", " << getLatestOpenSSLErrorString();
           return false;
         }
-        cacert_guard.disable();
+        cacert.release();
       }
       if (SSL_CTX_use_PrivateKey(ctx, pkey) != 1) {
         logging::LOG_ERROR(logger_) << "Failed to set private key from  " << certificate << ", " << getLatestOpenSSLErrorString();
