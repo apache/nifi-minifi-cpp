@@ -74,7 +74,6 @@ class HttpResponder : public CivetHandler {
 };
 
 int main(int argc, char **argv) {
-  init_webserver();
   LogTestController::getInstance().setDebug<core::Processor>();
   LogTestController::getInstance().setDebug<core::ProcessSession>();
   LogTestController::getInstance().setDebug<utils::HTTPClient>();
@@ -121,27 +120,27 @@ int main(int argc, char **argv) {
   inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
   HttpResponder h_ex;
   std::string port, scheme, path;
-  CivetServer *server = nullptr;
+  std::unique_ptr<TestServer> server;
   parse_http_components(url, port, scheme, path);
-  struct mg_callbacks callback{};
-    if (scheme == "https") {
-      std::string cert;
-      cert = key_dir + "nifi-cert.pem";
-      memset(&callback, 0, sizeof(callback));
-      callback.init_ssl = ssl_enable;
-      std::string https_port = port + "s";
-      callback.log_message = log_message;
-      server = start_webserver(https_port, path, &h_ex, &callback, cert, cert);
-    } else {
-      server = start_webserver(port, path, &h_ex);
-    }
+  CivetCallbacks callback{};
+  if (scheme == "https") {
+    std::string cert;
+    cert = key_dir + "nifi-cert.pem";
+    memset(&callback, 0, sizeof(callback));
+    callback.init_ssl = ssl_enable;
+    std::string https_port = port + "s";
+    callback.log_message = log_message;
+    server = utils::make_unique<TestServer>(https_port, path, &h_ex, &callback, cert, cert);
+  } else {
+    server = utils::make_unique<TestServer>(port, path, &h_ex);
+  }
   controller->load();
   controller->start();
   waitToVerifyProcessor();
 
   controller->waitUnload(60000);
   if (url.find("localhost") == std::string::npos) {
-    stop_webserver(server);
+    server.reset();
     exit(1);
   }
   std::string logs = LogTestController::getInstance().log_output.str();
@@ -152,6 +151,5 @@ int main(int argc, char **argv) {
   assert(logs.find("key:flow.id") != std::string::npos);
 
   LogTestController::getInstance().reset();
-  stop_webserver(server);
   return 0;
 }

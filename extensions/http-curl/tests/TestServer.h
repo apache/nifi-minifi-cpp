@@ -24,65 +24,81 @@
 #include "CivetServer.h"
 #include "civetweb.h"
 #include "HTTPUtils.h"
+#include "ServerAwareHandler.h"
 
+/**
+ * A wrapper around CivetServer which notifies Handlers before shutdown,
+ * so they wouldn't get stuck (if a handler returns after shutdown is
+ * initiated it might get stuck inside worker_thread_run > consume_socket)
+ */
+class TestServer{
+  struct CivetLibrary{
+    CivetLibrary() {
+      if (getCounter()++ == 0) {
+        mg_init_library(0);
+      }
+    }
+    ~CivetLibrary() {
+      if (--getCounter() == 0) {
+        mg_exit_library();
+      }
+    }
+   private:
+    static std::atomic<int>& getCounter() {
+      static std::atomic<int> counter{0};
+      return counter;
+    }
+  };
+ public:
+  TestServer(std::string &port, std::string &rooturi, CivetHandler *handler, CivetCallbacks *callbacks, std::string &cert, std::string &ca_cert) {
 
-/* Server context handle */
-static std::string resp_str;
-
-void init_webserver() {
-  mg_init_library(0);
-}
-
-
-CivetServer * start_webserver(std::string &port, std::string &rooturi, CivetHandler *handler, struct mg_callbacks *callbacks, std::string &cert, std::string &ca_cert) {
-  const char *options[] = { "document_root", ".", "listening_ports", port.c_str(), "error_log_file",
-      "error.log", "ssl_certificate", ca_cert.c_str(), "ssl_protocol_version", "4", "ssl_cipher_list",
-      "ALL", "request_timeout_ms", "10000", "enable_auth_domain_check", "no", "ssl_verify_peer", "no", 0 };
-// ECDH+AESGCM+AES256:!aNULL:!MD5:!DSS
-  std::vector<std::string> cpp_options;
-  for (size_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
-    cpp_options.push_back(options[i]);
-  }
-
-  if (!mg_check_feature(2)) {
-      fprintf(stderr,
-              "Error: Embedded example built with SSL support, "
-              "but civetweb library build without.\n");
-      return 0;
+    if (!mg_check_feature(2)) {
+      throw std::runtime_error("Error: Embedded example built with SSL support, "
+                               "but civetweb library build without.\n");
     }
 
 
-  //mg_init_library(MG_FEATURES_SSL);
+    //mg_init_library(MG_FEATURES_SSL);
 
-  CivetServer *server = new CivetServer(cpp_options, (CivetCallbacks*)callbacks);
+    // ECDH+AESGCM+AES256:!aNULL:!MD5:!DSS
+    std::vector<std::string> cpp_options{ "document_root", ".", "listening_ports", port, "error_log_file",
+                              "error.log", "ssl_certificate", ca_cert, "ssl_protocol_version", "4", "ssl_cipher_list",
+                              "ALL", "request_timeout_ms", "10000", "enable_auth_domain_check", "no", "ssl_verify_peer", "no"};
+    server_ = utils::make_unique<CivetServer>(cpp_options, callbacks);
 
-  server->addHandler(rooturi, handler);
-
-  return server;
-
-}
-
-CivetServer * start_webserver(std::string &port, std::string &rooturi, CivetHandler *handler) {
-  const char *options[] = { "document_root", ".", "listening_ports", port.c_str(), 0 };
-
-  std::vector<std::string> cpp_options;
-  for (size_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
-    cpp_options.push_back(options[i]);
+    addHandler(rooturi, handler);
   }
-  CivetServer *server = new CivetServer(cpp_options);
 
-  server->addHandler(rooturi, handler);
+  TestServer(std::string &port, std::string &rooturi, CivetHandler *handler) {
+    std::vector<std::string> cpp_options{"document_root", ".", "listening_ports", port};
+    server_ = utils::make_unique<CivetServer>(cpp_options);
 
-  return server;
+    addHandler(rooturi, handler);
+  }
 
-}
+  void addHandler(const std::string& uri, CivetHandler* handler) {
+    handlers_.push_back(handler);
+    server_->addHandler(uri, handler);
+  }
 
-static void stop_webserver(CivetServer *server) {
-  if (server != nullptr)
-    delete server;
+  std::vector<int> getListeningPorts() {
+    return server_->getListeningPorts();
+  }
 
-  /* Un-initialize the library */
-  mg_exit_library();
-}
+  ~TestServer() {
+    for (auto handler : handlers_) {
+      auto serverAwareHandler = dynamic_cast<ServerAwareHandler*>(handler);
+      if (serverAwareHandler) serverAwareHandler->stop();
+    }
+
+  }
+ private:
+  // server_ depends on lib_ (the library initializer)
+  // so their order matters
+  CivetLibrary lib_;
+  std::unique_ptr<CivetServer> server_;
+
+  std::vector<CivetHandler*> handlers_;
+};
 
 #endif

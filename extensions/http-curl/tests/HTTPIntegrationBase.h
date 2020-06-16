@@ -44,8 +44,7 @@ class CoapIntegrationBase : public IntegrationBase {
   void setUrl(const std::string& url, ServerAwareHandler *handler);
 
   void shutdownBeforeFlowController() override {
-    is_server_running = false;
-    stop_webserver(server);
+    server.reset();
   }
 
   std::string getWebPort() {
@@ -57,19 +56,16 @@ class CoapIntegrationBase : public IntegrationBase {
   }
 
  protected:
-  std::atomic_bool is_server_running;
-  CivetServer *server;
+  std::unique_ptr<TestServer> server;
 };
 
 void CoapIntegrationBase::setUrl(const std::string& url, ServerAwareHandler *handler) {
-  handler->initServerFlag(is_server_running);
   parse_http_components(url, port, scheme, path);
-  struct mg_callbacks callback{};
+  CivetCallbacks callback{};
   if (server != nullptr) {
     server->addHandler(path, handler);
     return;
   }
-  is_server_running = true;
   if (scheme == "https" && !key_dir.empty()) {
     std::string cert = "";
     cert = key_dir + "nifi-cert.pem";
@@ -77,9 +73,9 @@ void CoapIntegrationBase::setUrl(const std::string& url, ServerAwareHandler *han
     callback.init_ssl = ssl_enable;
     port += "s";
     callback.log_message = log_message;
-    server = start_webserver(port, path, handler, &callback, cert, cert);
+    server = utils::make_unique<TestServer>(port, path, handler, &callback, cert, cert);
   } else {
-    server = start_webserver(port, path, handler);
+    server = utils::make_unique<TestServer>(port, path, handler);
   }
   if (port == "0" || port == "0s") {
     bool secure = (port == "0s");

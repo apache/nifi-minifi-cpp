@@ -35,7 +35,7 @@ int main() {
     std::chrono::milliseconds(500)
   });
 
-  auto server = start_webserver(port, rootURI, &handler);
+  TestServer server(port, rootURI, &handler);
 
   auto plan = controller.createPlan();
 
