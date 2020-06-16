@@ -174,7 +174,8 @@ ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::I
 }
 
 void ConsumeWindowsEventLog::notifyStop() {
-  logger_->log_trace("start notifyStop"); 
+  std::lock_guard<std::mutex> lock(onTriggerMutex_);
+  logger_->log_trace("start notifyStop");
   pBookmark_.reset();
   if (hMsobjsDll_) {
     if (FreeLibrary(hMsobjsDll_)) {
