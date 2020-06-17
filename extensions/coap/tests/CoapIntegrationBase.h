@@ -105,9 +105,9 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
       callback.init_ssl = ssl_enable;
       port += "s";
       callback.log_message = log_message;
-      server = std::make_unique<TestServer>(port, path, handler, &callback, cert, cert);
+      server = utils::make_unique<TestServer>(port, path, handler, &callback, cert, cert);
     } else {
-      server = std::make_unique<TestServer>(port, path, handler);
+      server = utils::make_unique<TestServer>(port, path, handler);
     }
   }
 }
