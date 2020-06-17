@@ -75,7 +75,8 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
 
   std::thread getSimpleTryDequeConsumerThread(utils::ConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
-      while (results.size() < 3) {
+      constexpr std::size_t max_read_attempts = 1000;
+      for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
         std::string s;
         if (queue.tryDequeue(s)) {
           results.push_back(s);
@@ -88,8 +89,8 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
 
   std::thread getSimpleConsumeConsumerThread(utils::ConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
-      while (results.size() < 3) {
-        std::string s;
+      constexpr std::size_t max_read_attempts = 1000;
+      for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
         if (!queue.consume([&results] (const std::string& s) { results.push_back(s); })) {
           std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
@@ -108,12 +109,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
 
   std::thread getConsumeWaitConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
-      while (results.size() < 3) {
-        std::string s;
-        if (!queue.consumeWait([&results] (const std::string& s) { results.push_back(s); })) {
-          std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-      }
+      while (queue.consumeWait([&results] (const std::string& s) { results.push_back(s); })) continue;
     });
   }
 
@@ -150,22 +146,22 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
 
   std::thread getDequeueWaitForConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
-      const std::size_t max_read_attempts = 6;
+      constexpr std::size_t max_read_attempts = 1000;
       for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
         std::string s;
-        if (queue.dequeueWaitFor(s, std::chrono::milliseconds(3))) {
+        if (queue.dequeueWaitFor(s, std::chrono::milliseconds(1))) {
           results.push_back(s);
         }
       }
     });
   }
 
-    std::thread getDequeueWaitUntilConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
+  std::thread getDequeueWaitUntilConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
-      const std::size_t max_read_attempts = 6;
+      constexpr std::size_t max_read_attempts = 1000;
       for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
         std::string s;
-        const std::chrono::system_clock::time_point timeout_point = std::chrono::system_clock::now() + std::chrono::milliseconds(3);
+        const std::chrono::system_clock::time_point timeout_point = std::chrono::system_clock::now() + std::chrono::milliseconds(1);
         if (queue.dequeueWaitUntil(s, timeout_point)) {
           results.push_back(s);
         }
@@ -175,12 +171,9 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
 
   std::thread getConsumeWaitForConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results]() {
-      const std::size_t max_read_attempts = 6;
-      std::size_t attempt_num = 0;
-      while (results.size() < 3 && attempt_num < max_read_attempts) {
-        ++attempt_num;
-        std::string s;
-        queue.consumeWaitFor([&results] (const std::string& s) { results.push_back(s); }, std::chrono::milliseconds(3));
+      constexpr std::size_t max_read_attempts = 1000;
+      for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
+        queue.consumeWaitFor([&results] (const std::string& s) { results.push_back(s); }, std::chrono::milliseconds(1));
       }
     });
   }
