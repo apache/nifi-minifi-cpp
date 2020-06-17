@@ -35,7 +35,7 @@ int main() {
     std::chrono::milliseconds(500)
   });
 
-  CivetServer* server = start_webserver(port, rootURI, &handler);
+  TestServer server(port, rootURI, &handler);
 
   auto plan = controller.createPlan();
 
@@ -47,6 +47,4 @@ int main() {
   plan->runNextProcessor();
 
   assert(LogTestController::getInstance().contains("HTTP operation timed out, with absolute timeout 3000ms"));
-
-  delete server;
 }

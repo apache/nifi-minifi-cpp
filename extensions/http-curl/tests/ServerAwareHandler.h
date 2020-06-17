@@ -21,16 +21,25 @@
 
 class ServerAwareHandler: public CivetHandler{
 protected:
-  const std::atomic_bool *is_server_running{nullptr};
-  bool isServerRunning(){
-    assert(is_server_running);
-    return *is_server_running;
+  void sleep_for(std::chrono::milliseconds time) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    stop_signal_.wait_for(lock, time, [&] {return terminate_.load();});
   }
+
+  bool isServerRunning() {
+    return !terminate_.load();
+  }
+
 public:
-  void initServerFlag(std::atomic_bool& is_running){
-    assert(is_server_running == nullptr);
-    is_server_running = &is_running;
+  void stop(){
+    terminate_ = true;
+    stop_signal_.notify_all();
   }
+
+ private:
+  std::mutex mutex_;
+  std::condition_variable stop_signal_;
+  std::atomic_bool terminate_{false};
 };
 
 #endif //NIFI_MINIFI_CPP_SERVERAWAREHANDLER_H

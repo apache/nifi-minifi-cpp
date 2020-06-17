@@ -42,7 +42,7 @@ class CoapIntegrationBase : public IntegrationBase {
   void setUrl(std::string url, CivetHandler *handler);
 
   void shutdownBeforeFlowController() override {
-    stop_webserver(server);
+    server.reset();
   }
 
   virtual void run(std::string test_file_location) override {
@@ -86,7 +86,7 @@ class CoapIntegrationBase : public IntegrationBase {
   }
 
  protected:
-  CivetServer *server;
+  std::unique_ptr<TestServer> server;
 };
 
 void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
@@ -105,9 +105,9 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
       callback.init_ssl = ssl_enable;
       port += "s";
       callback.log_message = log_message;
-      server = start_webserver(port, path, handler, &callback, cert, cert);
+      server = std::make_unique<TestServer>(port, path, handler, &callback, cert, cert);
     } else {
-      server = start_webserver(port, path, handler);
+      server = std::make_unique<TestServer>(port, path, handler);
     }
   }
 }
