@@ -31,8 +31,8 @@ namespace utils = org::apache::nifi::minifi::utils;
 
 namespace {
 
-  template <typename Function, typename Duration>
-  bool becomesTrueWithinTimeout(const Function &condition, Duration timeout) {
+  template<typename Function, typename Rep, typename Period>
+  bool becomesTrueWithinTimeout(const Function &condition, std::chrono::duration<Rep, Period> timeout) {
     auto start_time = std::chrono::steady_clock::now();
     while (std::chrono::steady_clock::now() < start_time + timeout) {
       if (condition()) {
