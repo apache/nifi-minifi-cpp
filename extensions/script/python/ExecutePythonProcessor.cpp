@@ -173,7 +173,6 @@ void ExecutePythonProcessor::appendPathForImportModules() {
   if (module_directory_.size()) {
     logger_->log_error("Not supported property: Module Directory.");
   }
-
 }
 
 void ExecutePythonProcessor::loadScriptFromFile(const std::string& file_path) {

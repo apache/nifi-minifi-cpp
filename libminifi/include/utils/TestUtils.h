@@ -39,7 +39,7 @@ std::string createTempDir(TestController* testController) {
 }
 
 std::string putFileToDir(const std::string& dir_path, const std::string& file_name, const std::string& content) {
-  std::string file_path(dir_path + file::FileUtils::get_separator() + file_name);
+  std::string file_path(file::FileUtils::concat_path(dir_path, file_name));
   std::ofstream out_file(file_path, std::ios::binary | std::ios::out);
   if (out_file.is_open()) {
     out_file << content;

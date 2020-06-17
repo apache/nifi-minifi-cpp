@@ -39,37 +39,37 @@ using org::apache::nifi::minifi::utils::getFileContent;
 
 class ExecutePythonProcessorTestBase {
  public:
-    ExecutePythonProcessorTestBase() :
-      logTestController_(LogTestController::getInstance()),
-      logger_(logging::LoggerFactory<org::apache::nifi::minifi::python::processors::ExecutePythonProcessor>::getLogger()) {
-      reInitialize();
-    }
-    virtual ~ExecutePythonProcessorTestBase() {
-      logTestController_.reset();
-      logTestController_.setDebug<TestPlan>();
-      logTestController_.setDebug<minifi::python::processors::ExecutePythonProcessor>();
-      logTestController_.setDebug<minifi::processors::PutFile>();
-      logTestController_.setDebug<minifi::processors::PutFile::ReadCallback>();
-    }
+  ExecutePythonProcessorTestBase() :
+    logTestController_(LogTestController::getInstance()),
+    logger_(logging::LoggerFactory<org::apache::nifi::minifi::python::processors::ExecutePythonProcessor>::getLogger()) {
+    reInitialize();
+  }
+  virtual ~ExecutePythonProcessorTestBase() {
+    logTestController_.reset();
+    logTestController_.setDebug<TestPlan>();
+    logTestController_.setDebug<minifi::python::processors::ExecutePythonProcessor>();
+    logTestController_.setDebug<minifi::processors::PutFile>();
+    logTestController_.setDebug<minifi::processors::PutFile::ReadCallback>();
+  }
 
  protected:
-    void reInitialize() {
-      testController_.reset(new TestController());
-      plan_ = testController_->createPlan();
-    }
+  void reInitialize() {
+    testController_.reset(new TestController());
+    plan_ = testController_->createPlan();
+  }
 
-    std::string getScriptFullPath(const std::string& script_file_name) {
-      return SCRIPT_FILES_DIRECTORY + utils::file::FileUtils::get_separator() + script_file_name;
-    }
+  std::string getScriptFullPath(const std::string& script_file_name) {
+    return SCRIPT_FILES_DIRECTORY + utils::file::FileUtils::get_separator() + script_file_name;
+  }
 
-    static const std::string TEST_FILE_NAME;
-    static const std::string TEST_FILE_CONTENT;
-    static const std::string SCRIPT_FILES_DIRECTORY;
+  static const std::string TEST_FILE_NAME;
+  static const std::string TEST_FILE_CONTENT;
+  static const std::string SCRIPT_FILES_DIRECTORY;
 
-    std::unique_ptr<TestController> testController_;
-    std::shared_ptr<TestPlan> plan_;
-    LogTestController& logTestController_;
-    std::shared_ptr<logging::Logger> logger_;
+  std::unique_ptr<TestController> testController_;
+  std::shared_ptr<TestPlan> plan_;
+  LogTestController& logTestController_;
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 const std::string ExecutePythonProcessorTestBase::TEST_FILE_NAME{ "test_file.txt" };
