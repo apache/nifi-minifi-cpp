@@ -24,7 +24,7 @@
 
 #include "core/ConfigurableComponent.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/ScopeGuard.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -73,7 +73,7 @@ bool ConfigurableComponent::setProperty(const std::string name, std::string valu
   if (it != properties_.end()) {
     Property orig_property = it->second;
     Property& new_property = it->second;
-    utils::ScopeGuard onExit([&]{
+    auto onExit = gsl::finally([&]{
       onPropertyModified(orig_property, new_property);
       logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
     });
@@ -106,7 +106,7 @@ bool ConfigurableComponent::updateProperty(const std::string &name, const std::s
   if (it != properties_.end()) {
     Property orig_property = it->second;
     Property& new_property = it->second;
-    utils::ScopeGuard onExit([&] {
+    auto onExit = gsl::finally([&] {
       onPropertyModified(orig_property, new_property);
       logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
     });
@@ -130,7 +130,7 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
   if (it != properties_.end()) {
     Property orig_property = it->second;
     Property& new_property = it->second;
-    utils::ScopeGuard onExit([&] {
+    auto onExit = gsl::finally([&] {
       onPropertyModified(orig_property, new_property);
       logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), value, new_property.getValue().to_string());
     });
@@ -159,7 +159,7 @@ bool ConfigurableComponent::setProperty(Property &prop, PropertyValue &value) {
   if (it != properties_.end()) {
     Property orig_property = it->second;
     Property& new_property = it->second;
-    utils::ScopeGuard onExit([&] {
+    auto onExit = gsl::finally([&] {
       onPropertyModified(orig_property, new_property);
       logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), new_property.getName(), value, new_property.getValue().to_string());
     });
@@ -259,7 +259,7 @@ bool ConfigurableComponent::setDynamicProperty(const std::string name, std::stri
   if (it != dynamic_properties_.end()) {
     Property orig_property = it->second;
     Property& new_property = it->second;
-    utils::ScopeGuard onExit([&] {
+    auto onExit = gsl::finally([&] {
       onDynamicPropertyModified(orig_property, new_property);
       logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);
     });
@@ -278,7 +278,7 @@ bool ConfigurableComponent::updateDynamicProperty(const std::string &name, const
   if (it != dynamic_properties_.end()) {
     Property orig_property = it->second;
     Property& new_property = it->second;
-    utils::ScopeGuard onExit([&] {
+    auto onExit = gsl::finally([&] {
       onDynamicPropertyModified(orig_property, new_property);
       logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);
     });

@@ -68,7 +68,7 @@ class CachedValueValidator{
     return validator_;
   }
 
-  operator bool() const {
+  explicit operator bool() const {
     return static_cast<bool>(validator_);
   }
 
