@@ -58,11 +58,11 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   virtual ~Connection() = default;
 
   // Set Source Processor UUID
-  void setSourceUUID(utils::Identifier &uuid) {
+  void setSourceUUID(const utils::Identifier& uuid) {
     src_uuid_ = uuid;
   }
   // Set Destination Processor UUID
-  void setDestinationUUID(utils::Identifier &uuid) {
+  void setDestinationUUID(const utils::Identifier& uuid) {
     dest_uuid_ = uuid;
   }
   // Get Source Processor UUID
