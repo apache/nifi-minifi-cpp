@@ -30,6 +30,7 @@ namespace minifi {
 namespace utils {
 using nonstd::optional;
 using nonstd::nullopt;
+using nonstd::make_optional;
 
 template<typename T>
 optional<typename gsl_lite::remove_cvref<T>::type> optional_from_ptr(T&& obj) {

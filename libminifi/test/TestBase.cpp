@@ -168,6 +168,30 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
   return addProcessor(processor_name, uuid, name, relationships, linkToPrevious);
 }
 
+std::shared_ptr<minifi::Connection> TestPlan::addConnection(const std::shared_ptr<core::Processor>& source_proc, const core::Relationship& source_relationship, const std::shared_ptr<core::Processor>& destination_proc) {
+  std::stringstream connection_name;
+  connection_name << source_proc->getUUIDStr() << "-to-" << destination_proc->getUUIDStr();
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
+
+  connection->addRelationship(source_relationship);
+
+  // link the connections so that we can test results at the end for this
+  connection->setSource(source_proc);
+  connection->setDestination(destination_proc);
+
+  utils::Identifier uuid_copy_src, uuid_copy_dest;
+  source_proc->getUUID(uuid_copy_src);
+  connection->setSourceUUID(uuid_copy_src);
+  destination_proc->getUUID(uuid_copy_dest);
+  connection->setDestinationUUID(uuid_copy_dest);
+  source_proc->addConnection(connection);
+  if (source_proc != destination_proc) {
+    destination_proc->addConnection(connection);
+  }
+  relationships_.push_back(connection);
+  return connection;
+}
+
 std::shared_ptr<core::controller::ControllerServiceNode> TestPlan::addController(const std::string &controller_name, const std::string &name) {
   if (finalized) {
     return nullptr;

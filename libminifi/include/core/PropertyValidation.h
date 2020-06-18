@@ -259,6 +259,22 @@ class UnsignedLongValidator : public PropertyValidator {
   }
 };
 
+class NonBlankValidator : public PropertyValidator {
+ public:
+  explicit NonBlankValidator(const std::string& name)
+      : PropertyValidator(name) {
+  }
+  ~NonBlankValidator() override = default;
+
+  ValidationResult validate(const std::string& subject, const std::shared_ptr<minifi::state::response::Value>& input) const final {
+    return validate(subject, input->getStringValue());
+  }
+
+  ValidationResult validate(const std::string& subject, const std::string& input) const final {
+    return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(utils::StringUtils::trimLeft(input).size()).build();
+  }
+};
+
 class DataSizeValidator : public PropertyValidator {
  public:
   DataSizeValidator(const std::string &name) // NOLINT
@@ -334,6 +350,11 @@ class StandardValidators {
     } else {
       return org::apache::nifi::minifi::core::StandardValidators::VALID_VALIDATOR();
     }
+  }
+
+  static const gsl::not_null<std::shared_ptr<PropertyValidator>>& NON_BLANK_VALIDATOR() {
+    static gsl::not_null<std::shared_ptr<PropertyValidator>> validator(std::make_shared<NonBlankValidator>("NON_BLANK_VALIDATOR"));
+    return validator;
   }
 
   static const gsl::not_null<std::shared_ptr<PropertyValidator>>& VALID_VALIDATOR() {

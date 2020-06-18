@@ -38,6 +38,7 @@
 - [PutOPCProcessor](#putopcprocessor)
 - [PutSFTP](#putsftp)
 - [PutSQL](#putsql)
+- [RetryFlowFile](#retryflowfile)
 - [RouteOnAttribute](#routeonattribute)
 - [TailFile](#tailfile)
 - [UnfocusArchiveEntry](#unfocusarchiveentry)
@@ -1007,6 +1008,42 @@ In the list below, the names of required properties appear in bold. Any other pr
 |retry|Failures which might work if retried|
 |success|After a successful put SQL operation, FlowFiles are sent here|
 
+
+## RetryFlowFile
+
+### Description
+
+FlowFiles passed to this Processor have a 'Retry Attribute' value checked against a configured 'Maximum Retries' value. If the current attribute value is below the configured maximum, the FlowFile is passed to a retry relationship. The FlowFile may or may not be penalized in that condition. If the FlowFile's attribute value exceeds the configured maximum, the FlowFile will be passed to a 'retries_exceeded' relationship. WARNING: If the incoming FlowFile has a non-numeric value in the configured 'Retry Attribute' attribute, it will be reset to '1'. You may choose to fail the FlowFile instead of performing the reset. Additional dynamic properties can be defined for any attributes you wish to add to the FlowFiles transferred to 'retries_exceeded'. These attributes support attribute expression language.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|Retry Attribute|"flowfile.retries"||The name of the attribute that contains the current retry count for the FlowFile. WARNING: If the name matches an attribute already on the FlowFile that does not contain a numerical value, the processor will either overwrite that attribute with '1' or fail based on configuration.<br/>**Supports Expression Language: true**|
+|Maximum Retries|3||The maximum number of times a FlowFile can be retried before being passed to the 'retries_exceeded' relationship.<br/>**Supports Expression Language: true**|
+|Penalize Retries|true||"If set to 'true', this Processor will penalize input FlowFiles before passing them to the 'retry' relationship. This does not apply to the 'retries_exceeded' relationship.|
+|Fail on Non-numerical Overwrite|false||If the FlowFile already has the attribute defined in 'Retry Attribute' that is *not* a number, fail the FlowFile instead of resetting that value to '1'.|
+|Reuse Mode|"Fail on Reuse"|"Fail on Reuse"<br/>"Warn on Reuse"<br/>"Reset Reuse"<br/>|Defines how the Processor behaves if the retry FlowFile has a different retry UUID than the instance that received the FlowFile. This generally means that the attribute was not reset after being successfully retried by a previous instance of this processor. Warn on reuse and Fail on Reuse both resets the retry property value to 1 and marks the flowfile to be last retried by this processor.|
+### Relationships
+
+| Name | Description |
+| - | - |
+|retry|Input FlowFile has not exceeded the configured maximum retry count, pass this relationship back to the input Processor to create a limited feedback loop.|
+|retries_exceeded|Input FlowFile has exceeded the configured maximum retry count, do not pass this relationship back to the input Processor to terminate the limited feedback loop.|
+|failure|The processor is configured such that a non-numerical value on 'Retry Attribute' results in a failure instead of resetting that value to '1'. This will immediately terminate the limited feedback loop. Might also include when 'Maximum Retries' contains attribute expression language that does not resolve to an Integer.|
+### Dynamic Properties:
+
+| Name | Value | Description |
+| - | - | - |
+|Exceeded FlowFile Attribute Key|The value of the attribute added to the FlowFile|One or more dynamic properties can be used to add attributes to FlowFiles passed to the 'retries_exceeded' relationship.<br/>**Supports Expression Language: true**|
+### Writes Attributes:
+
+| Name | Description |
+| - | - |
+|Retry Attribute|User defined retry attribute is updated with the current retry count|
+|Retry Attribute .uuid|	User defined retry attribute with .uuid that determines what processor retried the FlowFile last|
 
 ## RouteOnAttribute
 
