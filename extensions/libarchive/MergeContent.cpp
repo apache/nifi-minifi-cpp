@@ -50,7 +50,7 @@ core::Property MergeContent::MergeFormat(
   ->withAllowableValues<std::string>({MERGE_FORMAT_CONCAT_VALUE, MERGE_FORMAT_TAR_VALUE, MERGE_FORMAT_ZIP_VALUE})
   ->withDefaultValue(MERGE_FORMAT_CONCAT_VALUE)->build());
 core::Property MergeContent::CorrelationAttributeName("Correlation Attribute Name", "Correlation Attribute Name", "");
-core::Property MergeContent::DelimiterStratgey(
+core::Property MergeContent::DelimiterStrategy(
   core::PropertyBuilder::createProperty("Delimiter Strategy")
   ->withDescription("Determines if Header, Footer, and Demarcator should point to files")
   ->withAllowableValues<std::string>({DELIMITER_STRATEGY_FILENAME, DELIMITER_STRATEGY_TEXT})
@@ -79,7 +79,7 @@ void MergeContent::initialize() {
   properties.insert(MergeStrategy);
   properties.insert(MergeFormat);
   properties.insert(CorrelationAttributeName);
-  properties.insert(DelimiterStratgey);
+  properties.insert(DelimiterStrategy);
   properties.insert(Header);
   properties.insert(Footer);
   properties.insert(Demarcator);
@@ -121,7 +121,7 @@ void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessio
       this->correlationAttributeName_ = value;
   }
   value = "";
-  if (context->getProperty(DelimiterStratgey.getName(), value) && !value.empty()) {
+  if (context->getProperty(DelimiterStrategy.getName(), value) && !value.empty()) {
       this->delimiterStratgey_ = value;
   }
   value = "";

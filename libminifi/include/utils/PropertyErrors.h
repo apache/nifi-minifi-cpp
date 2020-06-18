@@ -37,75 +37,61 @@ class Property;
 } /* namespace core */
 
 namespace utils {
+namespace internal {
 
-class ValueException: public Exception{
- private:
-  explicit ValueException(const std::string& err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
-  explicit ValueException(const char* err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
+class ValueException : public Exception {
+ protected:
+  explicit ValueException(const std::string& err) : Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
+  explicit ValueException(const char* err) : Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
 
   // base class already has a virtual destructor
-
-  friend class ParseException;
-  friend class ConversionException;
-  friend class InvalidValueException;
 };
 
-class PropertyException: public Exception{
- private:
-  explicit PropertyException(const std::string& err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
-  explicit PropertyException(const char* err): Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
+class PropertyException : public Exception {
+ protected:
+  explicit PropertyException(const std::string& err) : Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
+  explicit PropertyException(const char* err) : Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
 
   // base class already has a virtual destructor
-
-  friend class RequiredPropertyMissingException;
 };
 
 /**
  * Thrown during converting from and to Value
  */
-class ConversionException : public ValueException{
- private:
-  explicit ConversionException(const std::string& err): ValueException(err) {}
-  explicit ConversionException(const char* err): ValueException(err) {}
-
-  friend class core::PropertyValue;
-  friend class ParseException;
+class ConversionException : public ValueException {
+ public:
+  explicit ConversionException(const std::string& err) : ValueException(err) {}
+  explicit ConversionException(const char* err) : ValueException(err) {}
 };
 
 /**
  * Represents std::string -> Value conversion errors
  */
-class ParseException : public ConversionException{
- private:
-  explicit ParseException(const std::string& err): ConversionException(err) {}
-  explicit ParseException(const char* err): ConversionException(err) {}
-
-  friend class ValueParser;
+class ParseException : public ConversionException {
+ public:
+  explicit ParseException(const std::string& err) : ConversionException(err) {}
+  explicit ParseException(const char* err) : ConversionException(err) {}
 };
 
 /**
  * Thrown when trying to access invalid Values.
  */
-class InvalidValueException : public ValueException{
- private:
-  explicit InvalidValueException(const std::string& err): ValueException(err) {}
-  explicit InvalidValueException(const char* err): ValueException(err) {}
-
-  friend class core::PropertyValue;
-  friend class core::Property;
+class InvalidValueException : public ValueException {
+ public:
+  explicit InvalidValueException(const std::string& err) : ValueException(err) {}
+  explicit InvalidValueException(const char* err) : ValueException(err) {}
 };
 
 /**
  * When querying missing properties marked required.
  */
-class RequiredPropertyMissingException : public PropertyException{
- private:
-  explicit RequiredPropertyMissingException(const std::string& err): PropertyException(err) {}
-  explicit RequiredPropertyMissingException(const char* err): PropertyException(err) {}
-
-  friend class core::ConfigurableComponent;
+class RequiredPropertyMissingException : public PropertyException {
+ public:
+  explicit RequiredPropertyMissingException(const std::string& err) : PropertyException(err) {}
+  explicit RequiredPropertyMissingException(const char* err) : PropertyException(err) {}
 };
 
+} /* namespace internal */
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */

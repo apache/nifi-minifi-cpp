@@ -43,6 +43,8 @@ namespace response {
  * representation is needed.
  */
 class Value {
+  using ParseException = utils::internal::ParseException;
+
  public:
   explicit Value(const std::string &value)
       : string_value(value),
@@ -89,9 +91,9 @@ class Value {
   virtual bool getValue(uint32_t &ref) {
     try {
       uint32_t value;
-      utils::ValueParser(string_value).parseUInt32(value).parseEnd();
+      utils::internal::ValueParser(string_value).parseUInt32(value).parseEnd();
       ref = value;
-    } catch(const utils::ParseException&) {
+    } catch(const ParseException&) {
       return false;
     }
     return true;
@@ -100,9 +102,9 @@ class Value {
   virtual bool getValue(int &ref) {
     try {
       int value;
-      utils::ValueParser(string_value).parseInt(value).parseEnd();
+      utils::internal::ValueParser(string_value).parseInt(value).parseEnd();
       ref = value;
-    } catch(const utils::ParseException&) {
+    } catch(const ParseException&) {
       return false;
     }
     return true;
@@ -111,9 +113,9 @@ class Value {
   virtual bool getValue(int64_t &ref) {
     try {
       int64_t value;
-      utils::ValueParser(string_value).parseLongLong(value).parseEnd();
+      utils::internal::ValueParser(string_value).parseLongLong(value).parseEnd();
       ref = value;
-    } catch(const utils::ParseException&) {
+    } catch(const ParseException&) {
       return false;
     }
     return true;
@@ -122,9 +124,9 @@ class Value {
   virtual bool getValue(uint64_t &ref) {
     try {
       uint64_t value;
-      utils::ValueParser(string_value).parseUnsignedLongLong(value).parseEnd();
+      utils::internal::ValueParser(string_value).parseUnsignedLongLong(value).parseEnd();
       ref = value;
-    } catch(const utils::ParseException&) {
+    } catch(const ParseException&) {
       return false;
     }
     return true;
@@ -133,9 +135,9 @@ class Value {
   virtual bool getValue(bool &ref) {
     try {
       bool value;
-      utils::ValueParser(string_value).parseBool(value).parseEnd();
+      utils::internal::ValueParser(string_value).parseBool(value).parseEnd();
       ref = value;
-    } catch(const utils::ParseException&) {
+    } catch(const ParseException&) {
       return false;
     }
     return true;
@@ -155,7 +157,7 @@ class UInt32Value : public Value {
 
   explicit UInt32Value(const std::string &strvalue)
       : Value(strvalue) {
-    utils::ValueParser(strvalue).parseUInt32(value).parseEnd();
+    utils::internal::ValueParser(strvalue).parseUInt32(value).parseEnd();
     setTypeId<uint32_t>();
   }
 
@@ -204,7 +206,7 @@ class IntValue : public Value {
 
   explicit IntValue(const std::string &strvalue)
       : Value(strvalue) {
-    utils::ValueParser(strvalue).parseInt(value).parseEnd();
+    utils::internal::ValueParser(strvalue).parseInt(value).parseEnd();
   }
   int getValue() const {
     return value;
@@ -249,7 +251,7 @@ class BoolValue : public Value {
 
   explicit BoolValue(const std::string &strvalue)
       : Value(strvalue) {
-    utils::ValueParser(strvalue).parseBool(value).parseEnd();
+    utils::internal::ValueParser(strvalue).parseBool(value).parseEnd();
   }
 
   bool getValue() const {
@@ -302,7 +304,7 @@ class UInt64Value : public Value {
   explicit UInt64Value(const std::string &strvalue)
       : Value(strvalue),
         value(std::stoull(strvalue)) {
-    utils::ValueParser(strvalue).parseUnsignedLongLong(value).parseEnd();
+    utils::internal::ValueParser(strvalue).parseUnsignedLongLong(value).parseEnd();
     setTypeId<uint64_t>();
   }
 
@@ -348,7 +350,7 @@ class Int64Value : public Value {
   }
   explicit Int64Value(const std::string &strvalue)
       : Value(strvalue) {
-    utils::ValueParser(strvalue).parseLongLong(value).parseEnd();
+    utils::internal::ValueParser(strvalue).parseLongLong(value).parseEnd();
     setTypeId<int64_t>();
   }
 

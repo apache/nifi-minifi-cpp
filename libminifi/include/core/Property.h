@@ -142,7 +142,7 @@ class Property {
     vn = value;
     ValidationResult result = vn.validate(name_);
     if (!result.valid()) {
-      throw utils::InvalidValueException(name_ + " value validation failed");
+      throw utils::internal::InvalidValueException(name_ + " value validation failed");
     }
   }
 
@@ -157,7 +157,7 @@ class Property {
     vn.setValidator(validator_ ? validator_ : core::StandardValidators::VALID);
     ValidationResult result = vn.validate(name_);
     if (!result.valid()) {
-      throw utils::InvalidValueException(name_ + " value validation failed");
+      throw utils::internal::InvalidValueException(name_ + " value validation failed");
     }
   }
   void setSupportsExpressionLanguage(bool supportEl);

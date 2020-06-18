@@ -63,6 +63,8 @@ static inline std::shared_ptr<state::response::Value> convert(const std::shared_
  * and value translation.
  */
 class PropertyValue : public state::response::ValueNode {
+  using CachedValueValidator = internal::CachedValueValidator;
+
  public:
   PropertyValue()
       : type_id(std::type_index(typeid(std::string))) {
@@ -115,7 +117,7 @@ class PropertyValue : public state::response::ValueNode {
 
   operator std::string() const {
     if (!isValueUsable()) {
-      throw utils::InvalidValueException("Cannot convert invalid value");
+      throw utils::internal::InvalidValueException("Cannot convert invalid value");
     }
     return to_string();
   }
@@ -149,7 +151,7 @@ class PropertyValue : public state::response::ValueNode {
            * We then rely on the developer of the processor to perform the conversion. We want to get away from
            * this, so this exception will throw an exception, forcefully, when they specify types in properties.
            */
-          throw utils::ConversionException("Invalid conversion");
+          throw utils::internal::ConversionException("Invalid conversion");
         }
       }
       return *this;
@@ -178,7 +180,7 @@ class PropertyValue : public state::response::ValueNode {
       } else {
         // this is not the place to perform translation. There are other places within
         // the code where we can do assignments and transformations from "10" to (int)10;
-        throw utils::ConversionException("Assigning invalid types");
+        throw utils::internal::ConversionException("Assigning invalid types");
       }
     }
     return *this;
@@ -208,13 +210,13 @@ class PropertyValue : public state::response::ValueNode {
   template<typename T>
   T convertImpl(const char* const type_name) const {
     if (!isValueUsable()) {
-      throw utils::InvalidValueException("Cannot convert invalid value");
+      throw utils::internal::InvalidValueException("Cannot convert invalid value");
     }
     T res;
     if (value_->convertValue(res)) {
       return res;
     }
-    throw utils::ConversionException(std::string("Invalid conversion to ") + type_name + " for " + value_->getStringValue());
+    throw utils::internal::ConversionException(std::string("Invalid conversion to ") + type_name + " for " + value_->getStringValue());
   }
 
   bool isValueUsable() const {
@@ -230,7 +232,7 @@ class PropertyValue : public state::response::ValueNode {
     // as we will need std::uncaught_exceptions()
     try {
       return std::forward<Fn>(functor)();
-    } catch(const utils::ValueException&) {
+    } catch(const utils::internal::ValueException&) {
       type_id = std::type_index(typeid(std::string));
       value_ = minifi::state::response::createValue(ref);
       throw;

@@ -29,7 +29,13 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-class CachedValueValidator{
+class PropertyValue;
+
+namespace internal {
+
+class CachedValueValidator {
+  friend class core::PropertyValue;
+
  public:
   enum class Result {
     FAILURE,
@@ -38,26 +44,39 @@ class CachedValueValidator{
   };
 
   CachedValueValidator() = default;
+
   CachedValueValidator(const CachedValueValidator& other) : validator_(other.validator_) {}
+
   CachedValueValidator(CachedValueValidator&& other) noexcept : validator_(std::move(other.validator_)) {}
+
   CachedValueValidator& operator=(const CachedValueValidator& other) {
+    if (this == &other) {
+      return *this;
+    }
     validator_ = other.validator_;
     validation_result_ = Result::RECOMPUTE;
     return *this;
   }
+
   CachedValueValidator& operator=(CachedValueValidator&& other) {
+    if (this == &other) {
+      return *this;
+    }
     validator_ = std::move(other.validator_);
     validation_result_ = Result::RECOMPUTE;
     return *this;
   }
 
   explicit CachedValueValidator(const std::shared_ptr<PropertyValidator>& other) : validator_(other) {}
+
   explicit CachedValueValidator(std::shared_ptr<PropertyValidator>&& other) : validator_(std::move(other)) {}
+
   CachedValueValidator& operator=(const std::shared_ptr<PropertyValidator>& new_validator) {
     validator_ = new_validator;
     validation_result_ = Result::RECOMPUTE;
     return *this;
   }
+
   CachedValueValidator& operator=(std::shared_ptr<PropertyValidator>&& new_validator) {
     validator_ = std::move(new_validator);
     validation_result_ = Result::RECOMPUTE;
@@ -76,11 +95,12 @@ class CachedValueValidator{
     return validator_;
   }
 
+ private:
   void setValidationResult(bool success) const {
     validation_result_ = success ? Result::SUCCESS : Result::FAILURE;
   }
 
-  void clearValidationResult() const {
+  void clearValidationResult() {
     validation_result_ = Result::RECOMPUTE;
   }
 
@@ -91,11 +111,11 @@ class CachedValueValidator{
     return validation_result_;
   }
 
- private:
   std::shared_ptr<PropertyValidator> validator_;
   mutable Result validation_result_{Result::RECOMPUTE};
 };
 
+} /* namespace internal */
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -220,7 +220,7 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const 
       // empty value
       if (item.getRequired()) {
         logger_->log_debug("Component %s required property %s is empty", name, item.getName());
-        throw utils::RequiredPropertyMissingException("Required property is empty: " + item.getName());
+        throw utils::internal::RequiredPropertyMissingException("Required property is empty: " + item.getName());
       }
       logger_->log_warn("Component %s property name %s, empty value", name, item.getName());
       return false;

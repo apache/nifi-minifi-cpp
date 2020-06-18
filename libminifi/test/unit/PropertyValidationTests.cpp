@@ -27,13 +27,14 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+using namespace utils::internal;
 /**
  * This Tests checks a deprecated behavior that should be removed
  * in the next major release.
  */
 TEST_CASE("Some default values get coerced to typed variants") {
   auto prop = Property("prop", "d", "true");
-  REQUIRE_THROWS_AS(prop.setValue("banana"), utils::ConversionException);
+  REQUIRE_THROWS_AS(prop.setValue("banana"), ConversionException);
 
   const std::string SPACE = " ";
   auto prop2 = Property("prop", "d", SPACE + "true");
@@ -44,15 +45,15 @@ TEST_CASE("Converting invalid PropertyValue") {
   auto prop = PropertyBuilder::createProperty("prop")
     ->withDefaultValue<int>(0)
     ->build();
-  REQUIRE_THROWS_AS(prop.setValue("not int"), utils::ParseException);
-  REQUIRE_THROWS_AS(static_cast<int>(prop.getValue()), utils::InvalidValueException);
+  REQUIRE_THROWS_AS(prop.setValue("not int"), ParseException);
+  REQUIRE_THROWS_AS(static_cast<int>(prop.getValue()), InvalidValueException);
 }
 
 TEST_CASE("Parsing int has baggage after") {
   auto prop = PropertyBuilder::createProperty("prop")
     ->withDefaultValue<int>(0)
     ->build();
-  REQUIRE_THROWS_AS(prop.setValue("55almost int"), utils::ParseException);
+  REQUIRE_THROWS_AS(prop.setValue("55almost int"), ParseException);
 }
 
 TEST_CASE("Parsing int has spaces") {
@@ -67,14 +68,14 @@ TEST_CASE("Parsing int out of range") {
   auto prop = PropertyBuilder::createProperty("prop")
   ->withDefaultValue<int>(0)
   ->build();
-  REQUIRE_THROWS_AS(prop.setValue("  5000000000  "), utils::ParseException);
+  REQUIRE_THROWS_AS(prop.setValue("  5000000000  "), ParseException);
 }
 
 TEST_CASE("Parsing bool has baggage after") {
   auto prop = PropertyBuilder::createProperty("prop")
     ->withDefaultValue<bool>(true)
     ->build();
-  REQUIRE_THROWS_AS(prop.setValue("false almost bool"), utils::ParseException);
+  REQUIRE_THROWS_AS(prop.setValue("false almost bool"), ParseException);
 }
 
 class TestConfigurableComponent : public ConfigurableComponent {
@@ -129,7 +130,7 @@ TEST_CASE("Missing Required Without Default") {
   TestConfigurableComponent component;
   component.setSupportedProperties({prop});
   std::string value;
-  REQUIRE_THROWS_AS(component.getProperty(prop.getName(), value), utils::RequiredPropertyMissingException);
+  REQUIRE_THROWS_AS(component.getProperty(prop.getName(), value), RequiredPropertyMissingException);
 }
 
 TEST_CASE("Missing Optional Without Default") {
@@ -161,9 +162,9 @@ TEST_CASE("Invalid With Default") {
     ->build();
   TestConfigurableComponent component;
   component.setSupportedProperties({prop});
-  REQUIRE_THROWS_AS(component.setProperty("prop", "banana"), utils::ParseException);
+  REQUIRE_THROWS_AS(component.setProperty("prop", "banana"), ParseException);
   std::string value;
-  REQUIRE_THROWS_AS(component.getProperty(prop.getName(), value), utils::InvalidValueException);
+  REQUIRE_THROWS_AS(component.getProperty(prop.getName(), value), InvalidValueException);
 }
 
 TEST_CASE("Valid With Default") {
@@ -185,7 +186,7 @@ TEST_CASE("Invalid conversion") {
   TestConfigurableComponent component;
   component.setSupportedProperties({prop});
   bool value;
-  REQUIRE_THROWS_AS(component.getProperty(prop.getName(), value), utils::ConversionException);
+  REQUIRE_THROWS_AS(component.getProperty(prop.getName(), value), ConversionException);
 }
 
 TEST_CASE("Write Invalid Then Override With Valid") {
@@ -195,7 +196,7 @@ TEST_CASE("Write Invalid Then Override With Valid") {
   ->build();
   TestConfigurableComponent component;
   component.setSupportedProperties({prop});
-  REQUIRE_THROWS_AS(component.setProperty(prop.getName(), "banana"), utils::ConversionException);
+  REQUIRE_THROWS_AS(component.setProperty(prop.getName(), "banana"), ConversionException);
   component.setProperty(prop.getName(), "98");
   int value;
   REQUIRE(component.getProperty(prop.getName(), value));
@@ -212,7 +213,7 @@ TEST_CASE("Property Change notification gets called even on erroneous assignment
   component.setPropertyModifiedCallback([&] (const Property&, const Property&) {
     ++callbackCount;
   });
-  REQUIRE_THROWS_AS(component.setProperty(prop.getName(), "banana"), utils::ConversionException);
+  REQUIRE_THROWS_AS(component.setProperty(prop.getName(), "banana"), ConversionException);
   REQUIRE(callbackCount == 1);
 }
 
@@ -226,7 +227,7 @@ TEST_CASE("Correctly Typed Property With Invalid Validation") {
   component.setPropertyModifiedCallback([&] (const Property&, const Property&) {
     ++callbackCount;
   });
-  REQUIRE_THROWS_AS(component.setProperty(prop.getName(), "20"), utils::InvalidValueException);
+  REQUIRE_THROWS_AS(component.setProperty(prop.getName(), "20"), InvalidValueException);
   REQUIRE(callbackCount == 1);
 }
 
