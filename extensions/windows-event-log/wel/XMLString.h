@@ -1,4 +1,3 @@
-
 /**
  * @file XMLString.h
  * ConsumeWindowsEventLog class declaration

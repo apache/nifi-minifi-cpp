@@ -1,6 +1,6 @@
 /**
- * @file ConsumeWindowsEventLog.h
- * ConsumeWindowsEventLog class declaration
+ * @file MetadataWalker.h
+ * MetadataWalker class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
