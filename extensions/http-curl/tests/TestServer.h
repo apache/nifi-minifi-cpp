@@ -58,21 +58,17 @@ class TestServer{
     }
 
 
-    //mg_init_library(MG_FEATURES_SSL);
-
     // ECDH+AESGCM+AES256:!aNULL:!MD5:!DSS
-    std::vector<std::string> cpp_options{ "document_root", ".", "listening_ports", port, "error_log_file",
+    const std::vector<std::string> cpp_options{ "document_root", ".", "listening_ports", port, "error_log_file",
                               "error.log", "ssl_certificate", ca_cert, "ssl_protocol_version", "4", "ssl_cipher_list",
                               "ALL", "request_timeout_ms", "10000", "enable_auth_domain_check", "no", "ssl_verify_peer", "no"};
     server_ = utils::make_unique<CivetServer>(cpp_options, callbacks);
-
     addHandler(rooturi, handler);
   }
 
-  TestServer(std::string &port, std::string &rooturi, CivetHandler *handler) {
-    std::vector<std::string> cpp_options{"document_root", ".", "listening_ports", port};
+  TestServer(const std::string& port, const std::string& rooturi, CivetHandler* handler) {
+    const std::vector<std::string> cpp_options{"document_root", ".", "listening_ports", port};
     server_ = utils::make_unique<CivetServer>(cpp_options);
-
     addHandler(rooturi, handler);
   }
 
@@ -90,7 +86,6 @@ class TestServer{
       auto serverAwareHandler = dynamic_cast<ServerAwareHandler*>(handler);
       if (serverAwareHandler) serverAwareHandler->stop();
     }
-
   }
  private:
   // server_ depends on lib_ (the library initializer)

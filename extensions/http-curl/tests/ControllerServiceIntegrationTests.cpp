@@ -19,20 +19,15 @@
 #undef NDEBUG
 #include <cassert>
 #include <chrono>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <utility>
 #include <thread>
-#include <type_traits>
 #include <vector>
 
 #include "core/controller/ControllerServiceMap.h"
-#include "core/controller/StandardControllerServiceNode.h"
 #include "core/controller/StandardControllerServiceProvider.h"
 #include "controllers/SSLContextService.h"
-#include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessGroup.h"
 #include "core/Resource.h"
 #include "core/yaml/YamlConfiguration.h"
@@ -40,50 +35,38 @@
 #include "properties/Configure.h"
 #include "unit/MockClasses.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "integration/IntegrationBase.h"
 
 REGISTER_RESOURCE(MockControllerService, "");
 REGISTER_RESOURCE(MockProcessor, "");
-
-std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(std::shared_ptr<core::controller::ControllerServiceProvider> provider, const std::string id) {
-  std::shared_ptr<core::controller::ControllerService> service = std::make_shared<MockControllerService>();
-  std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(service, provider, id,
-                                                                                                                                                std::make_shared<minifi::Configure>());
-  return testNode;
-}
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(2));
 }
 
 int main(int argc, char **argv) {
-  std::string test_file_location;
-  std::string key_dir;
-
-  if (argc > 2) {
-    test_file_location = argv[1];
-    key_dir = argv[1];
-  }
+  const cmd_args args = parse_cmdline_args(argc, argv);
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
-  configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
+  configuration->set(minifi::Configure::nifi_flow_configuration_file, args.test_file);
   std::string client_cert = "cn.crt.pem";
   std::string priv_key_file = "cn.ckey.pem";
   std::string passphrase = "cn.pass";
   std::string ca_cert = "nifi-cert.pem";
-  configuration->set(minifi::Configure::nifi_security_client_certificate, test_file_location);
+  configuration->set(minifi::Configure::nifi_security_client_certificate, args.test_file);
   configuration->set(minifi::Configure::nifi_security_client_private_key, priv_key_file);
   configuration->set(minifi::Configure::nifi_security_client_pass_phrase, passphrase);
-  configuration->set(minifi::Configure::nifi_default_directory, key_dir);
+  configuration->set(minifi::Configure::nifi_default_directory, args.key_dir);
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
   std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
+      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file));
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr),
@@ -94,11 +77,9 @@ int main(int argc, char **argv) {
   disabled = false;
   std::shared_ptr<core::controller::ControllerServiceMap> map = std::make_shared<core::controller::ControllerServiceMap>();
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
+  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
 
-  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
-  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
-  ptr.release();
+  std::shared_ptr<core::ProcessGroup> pg(yaml_config.getRoot(args.test_file));
 
   std::shared_ptr<core::controller::StandardControllerServiceProvider> provider = std::make_shared<core::controller::StandardControllerServiceProvider>(map, pg, std::make_shared<minifi::Configure>());
   std::shared_ptr<core::controller::ControllerServiceNode> mockNode = pg->findControllerService("MockItLikeIts1995");

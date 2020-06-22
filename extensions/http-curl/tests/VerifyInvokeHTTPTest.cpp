@@ -24,7 +24,6 @@
 #include "processors/LogAttribute.h"
 #include "core/state/ProcessorController.h"
 
-#include "../tests/TestServer.h"
 #include "CivetServer.h"
 #include "HTTPIntegrationBase.h"
 
@@ -34,14 +33,14 @@ public:
       : CoapIntegrationBase(6000) {
   }
 
-  virtual void testSetup() override {
+  void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<LogTestController>();
     LogTestController::getInstance().setTrace<minifi::processors::InvokeHTTP>();
     LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
   }
 
-  virtual void cleanup() override {
+  void cleanup() override {
   }
 
   void setProperties(std::shared_ptr<core::Processor> proc) {
@@ -76,7 +75,7 @@ public:
     setProperties(processorController->getProcessor());
   }
 
-  virtual void run(std::string flow_yml_path) override {
+  void run(std::string flow_yml_path) override {
     setupFlow(flow_yml_path);
     startFlowController();
 
@@ -100,7 +99,7 @@ public:
 
 class VerifyInvokeHTTPOKResponse : public VerifyInvokeHTTP {
 public:
-  virtual void runAssertions() override {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invokehttp.status.code value:201"));
     assert(LogTestController::getInstance().contains("response code 201"));
   }
@@ -108,14 +107,14 @@ public:
 
 class VerifyCouldNotConnectInvokeHTTP : public VerifyInvokeHTTP {
 public:
-  virtual void runAssertions() override {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invoke_http value:failure"));
   }
 };
 
 class VerifyNoRetryInvokeHTTP : public VerifyInvokeHTTP {
 public:
-  virtual void runAssertions() override {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invokehttp.status.message value:HTTP/1.1 404 Not Found"));
     assert(LogTestController::getInstance().contains("isSuccess: 0, response code 404"));
   }
@@ -123,7 +122,7 @@ public:
 
 class VerifyRetryInvokeHTTP : public VerifyInvokeHTTP {
 public:
-  virtual void runAssertions() override {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invokehttp.status.message value:HTTP/1.1 501 Not Implemented"));
     assert(LogTestController::getInstance().contains("isSuccess: 0, response code 501"));
   }
@@ -131,7 +130,7 @@ public:
 
 class VerifyRWTimeoutInvokeHTTP : public VerifyInvokeHTTP {
 public:
-  virtual void runAssertions() override {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("key:invoke_http value:failure"));
     assert(LogTestController::getInstance().contains("limit (1000ms) reached, terminating connection"));
   }
@@ -149,24 +148,16 @@ void run(VerifyInvokeHTTP& harness,
 }
 
 int main(int argc, char ** argv) {
-  std::string key_dir, test_file_location, url;
-  if (argc > 1) {
-    test_file_location = argv[1];
-    url = "http://localhost:0/minifi";
-    if (argc > 2) {
-      key_dir = argv[2];
-      url = "https://localhost:0/minifi";
-    }
-  }
+  const cmd_args args = parse_cmdline_args(argc, argv);
 
   // Stop civet server to simulate
   // unreachable remote end point
   {
     InvokeHTTPCouldNotConnectHandler handler;
     VerifyCouldNotConnectInvokeHTTP harness;
-    harness.setKeyDir(key_dir);
-    harness.setUrl(url, &handler);
-    harness.setupFlow(test_file_location);
+    harness.setKeyDir(args.key_dir);
+    harness.setUrl(args.url, &handler);
+    harness.setupFlow(args.test_file);
     harness.shutdownBeforeFlowController();
     harness.startFlowController();
     harness.waitToVerifyProcessor();
@@ -176,25 +167,25 @@ int main(int argc, char ** argv) {
   {
     InvokeHTTPResponseOKHandler handler;
     VerifyInvokeHTTPOKResponse harness;
-    run(harness, url, test_file_location, key_dir, &handler);
+    run(harness, args.url, args.test_file, args.key_dir, &handler);
   }
 
   {
     InvokeHTTPResponse404Handler handler;
     VerifyNoRetryInvokeHTTP harness;
-    run(harness, url, test_file_location, key_dir, &handler);
+    run(harness, args.url, args.test_file, args.key_dir, &handler);
   }
 
   {
     InvokeHTTPResponse501Handler handler;
     VerifyRetryInvokeHTTP harness;
-    run(harness, url, test_file_location, key_dir, &handler);
+    run(harness, args.url, args.test_file, args.key_dir, &handler);
   }
 
   {
-    TimeoutingHTTPHandler handler({std::chrono::milliseconds(4000)});
+    TimeoutingHTTPHandler handler({std::chrono::seconds(4)});
     VerifyRWTimeoutInvokeHTTP harness;
-    run(harness, url, test_file_location, key_dir, &handler);
+    run(harness, args.url, args.test_file, args.key_dir, &handler);
   }
 
   return 0;

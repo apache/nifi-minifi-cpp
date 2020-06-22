@@ -51,7 +51,7 @@ class SiteToSiteLocationResponder : public ServerAwareHandler {
   explicit SiteToSiteLocationResponder(bool isSecure)
       : isSecure(isSecure) {
   }
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
     std::string site2site_rest_resp = "{"
         "\"revision\": {"
         "\"clientId\": \"483d53eb-53ec-4e93-b4d4-1fc3d23dae6f\""
@@ -81,7 +81,7 @@ class PeerResponder : public ServerAwareHandler {
     assert(parse_http_components(base_url, port, scheme, path));
   }
 
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
 	
 #ifdef WIN32
 	  std::string hostname = org::apache::nifi::minifi::io::Socket::getMyHostName();
@@ -109,7 +109,7 @@ class SiteToSiteBaseResponder : public ServerAwareHandler {
       : base_url(std::move(base_url)) {
   }
 
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
     std::string site2site_rest_resp =
         "{\"controller\":{\"id\":\"96dab149-0162-1000-7924-ed3122d6ea2b\",\"name\":\"NiFi Flow\",\"comments\":\"\",\"runningCount\":3,\"stoppedCount\":6,\"invalidCount\":1,\"disabledCount\":0,\"inputPortCount\":1,\"outputPortCount\":1,\"remoteSiteListeningPort\":10443,\"siteToSiteSecure\":false,\"instanceId\":\"13881505-0167-1000-be72-aa29341a3e9a\",\"inputPorts\":[{\"id\":\"471deef6-2a6e-4a7d-912a-81cc17e3a204\",\"name\":\"RPGIN\",\"comments\":\"\",\"state\":\"RUNNING\"}],\"outputPorts\":[{\"id\":\"9cf15a63-0166-1000-1b29-027406d96013\",\"name\":\"ddsga\",\"comments\":\"\",\"state\":\"STOPPED\"}]}}";
     std::stringstream headers;
@@ -145,7 +145,7 @@ class TransactionResponder : public ServerAwareHandler {
     }
   }
 
-  bool handlePost(CivetServer *server, struct mg_connection *conn) {
+  bool handlePost(CivetServer *server, struct mg_connection *conn) override {
     std::string site2site_rest_resp;
     std::stringstream headers;
     headers << "HTTP/1.1 201 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nX-Location-Uri-Intent: ";
@@ -203,7 +203,7 @@ class FlowFileResponder : public ServerAwareHandler {
     flow_files_feed_ = feed;
   }
 
-  bool handlePost(CivetServer *server, struct mg_connection *conn) {
+  bool handlePost(CivetServer *server, struct mg_connection *conn) override {
     std::string site2site_rest_resp;
     std::stringstream headers;
 
@@ -263,7 +263,7 @@ class FlowFileResponder : public ServerAwareHandler {
     return true;
   }
 
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
 
     if (flow_files_feed_->size_approx() > 0) {
       std::shared_ptr<FlowObj> flowobj;
@@ -294,7 +294,6 @@ class FlowFileResponder : public ServerAwareHandler {
         stream.write(length);
         stream.writeData(flow->data.data(), length);
       }
-      auto ret = mg_write(conn, serializer.getBuffer(), total);
     } else {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nConnection: "
                 "close\r\nContent-Length: 0\r\n");
@@ -337,7 +336,7 @@ class DeleteTransactionResponder : public ServerAwareHandler {
         response_code(std::move(response_code)) {
   }
 
-  bool handleDelete(CivetServer *server, struct mg_connection *conn) {
+  bool handleDelete(CivetServer *server, struct mg_connection *conn) override {
     std::string site2site_rest_resp;
     std::stringstream headers;
     std::string resp;
@@ -360,23 +359,19 @@ class DeleteTransactionResponder : public ServerAwareHandler {
   std::string response_code;
 };
 
+std::string readPayload(struct mg_connection *conn) {
+  std::string response;
+  int readBytes;
+
+  std::array<char, 1024> buffer;
+  while ((readBytes = mg_read(conn, buffer.data(), buffer.size())) > 0) {
+    response.append(buffer.data(), readBytes);
+  }
+  return response;
+}
+
 class HeartbeatHandler : public ServerAwareHandler {
  public:
-  explicit HeartbeatHandler(bool isSecure)
-      : isSecure(isSecure) {
-  }
-
-  std::string readPost(struct mg_connection *conn) {
-    std::string response;
-    int readBytes;
-
-    char buffer[1024];
-    while ((readBytes = mg_read(conn, buffer, sizeof(buffer))) > 0) {
-      response.append(buffer, (readBytes / sizeof(char)));
-    }
-    return response;
-  }
-
   void sendStopOperation(struct mg_connection *conn) {
     std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
         "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
@@ -415,7 +410,7 @@ class HeartbeatHandler : public ServerAwareHandler {
         }
 
         auto group = minifi::BuildDescription::getClassDescriptions(str);
-        for (auto proc : group.processors_) {
+        for (const auto& proc : group.processors_) {
           assert(std::find(classes.begin(), classes.end(), proc.class_name_) != std::end(classes));
           found = true;
         }
@@ -433,7 +428,7 @@ class HeartbeatHandler : public ServerAwareHandler {
   }
 
   void verify(struct mg_connection *conn) {
-    auto post_data = readPost(conn);
+    auto post_data = readPayload(conn);
     //std::cerr << post_data << std::endl;
     if (!IsNullOrEmpty(post_data)) {
       rapidjson::Document root;
@@ -450,14 +445,78 @@ class HeartbeatHandler : public ServerAwareHandler {
     }
   }
 
-  bool handlePost(CivetServer *, struct mg_connection *conn) {
+  bool handlePost(CivetServer *, struct mg_connection *conn) override {
     verify(conn);
     sendStopOperation(conn);
     return true;
   }
+};
 
- protected:
-  bool isSecure;
+class C2UpdateHandler : public ServerAwareHandler {
+ public:
+  explicit C2UpdateHandler(const std::string& test_file_location)
+    : test_file_location_(test_file_location) {
+  }
+
+  bool handlePost(CivetServer *server, struct mg_connection *conn) override {
+    calls_++;
+    if (!response_.empty()) {
+      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+                response_.length());
+      mg_printf(conn, "%s", response_.c_str());
+      response_.clear();
+    } else {
+      mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n");
+    }
+
+    return true;
+  }
+
+  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
+    std::ifstream myfile(test_file_location_.c_str(), std::ios::in | std::ios::binary);
+    if (myfile.good()) {
+      std::string str((std::istreambuf_iterator<char>(myfile)), (std::istreambuf_iterator<char>()));
+      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+                str.length());
+      mg_printf(conn, "%s", str.c_str());
+    } else {
+      mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n");
+    }
+
+    return true;
+  }
+
+  virtual void setC2RestResponse(const std::string& url, const std::string& name) {
+    response_ = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
+        "\"operation\" : \"update\", "
+        "\"operationid\" : \"8675309\", "
+        "\"name\": \"" + name + "\", \"content\": { \"location\": \"" + url + "\"}}]}";
+  }
+
+  std::atomic<size_t> calls_{0};
+ private:
+  std::string test_file_location_;
+  std::string response_;
+};
+
+class C2FailedUpdateHandler : public C2UpdateHandler {
+public:
+ explicit C2FailedUpdateHandler(const std::string& test_file_location)
+   : C2UpdateHandler(test_file_location) {
+ }
+
+ bool handlePost(CivetServer *server, struct mg_connection *conn) override {
+   calls_++;
+   const auto data = readPayload(conn);
+
+   if (data.find("operationState") != std::string::npos) {
+     assert(data.find("state\": \"NOT_APPLIED") != std::string::npos);
+   }
+
+   return C2UpdateHandler::handlePost(server, conn);
+ }
 };
 
 class InvokeHTTPCouldNotConnectHandler : public ServerAwareHandler {
@@ -465,7 +524,7 @@ class InvokeHTTPCouldNotConnectHandler : public ServerAwareHandler {
 
 class InvokeHTTPResponseOKHandler : public ServerAwareHandler {
 public:
-  bool handlePost(CivetServer *, struct mg_connection *conn) {
+  bool handlePost(CivetServer *, struct mg_connection *conn) override {
     mg_printf(conn, "HTTP/1.1 201 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
     return true;
   }
@@ -473,7 +532,7 @@ public:
 
 class InvokeHTTPResponse404Handler : public ServerAwareHandler {
 public:
-  bool handlePost(CivetServer *, struct mg_connection *conn) {
+  bool handlePost(CivetServer *, struct mg_connection *conn) override {
     mg_printf(conn, "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
     return true;
   }
@@ -481,7 +540,7 @@ public:
 
 class InvokeHTTPResponse501Handler : public ServerAwareHandler {
 public:
-  bool handlePost(CivetServer *, struct mg_connection *conn) {
+  bool handlePost(CivetServer *, struct mg_connection *conn) override {
     mg_printf(conn, "HTTP/1.1 501 Not Implemented\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
     return true;
   }
@@ -492,25 +551,25 @@ public:
   TimeoutingHTTPHandler(std::vector<std::chrono::milliseconds> wait_times)
       : wait_times_(wait_times) {
   }
-  bool handlePost(CivetServer *, struct mg_connection *conn) {
+  bool handlePost(CivetServer *, struct mg_connection *conn) override {
     respond(conn);
     return true;
   }
-  bool handleGet(CivetServer *, struct mg_connection *conn) {
+  bool handleGet(CivetServer *, struct mg_connection *conn) override {
     respond(conn);
     return true;
   }
-  bool handleDelete(CivetServer *, struct mg_connection *conn) {
+  bool handleDelete(CivetServer *, struct mg_connection *conn) override {
     respond(conn);
     return true;
   }
-  bool handlePut(CivetServer *, struct mg_connection *conn) {
+  bool handlePut(CivetServer *, struct mg_connection *conn) override {
     respond(conn);
     return true;
   }
  private:
   void respond(struct mg_connection *conn) {
-    if (wait_times_.size() > 0 && wait_times_[0].count() > 0) {
+    if (!wait_times_.empty() && wait_times_[0] > std::chrono::seconds(0)) {
       sleep_for(wait_times_[0]);
     }
     int chunk_count = std::max(static_cast<int>(wait_times_.size()) - 1, 0);

@@ -16,74 +16,26 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
 #undef NDEBUG
-#include <cassert>
-#include <utility>
-#include <chrono>
-#include <fstream>
 #include <memory>
 #include <string>
-#include <thread>
-#include <type_traits>
-#include <vector>
-#include <iostream>
 #include <sstream>
-#include "HTTPClient.h"
 #include "processors/InvokeHTTP.h"
 #include "TestBase.h"
-#include "utils/StringUtils.h"
-#include "core/Core.h"
-#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
-#include "FlowController.h"
 #include "properties/Configure.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
-#include "CivetServer.h"
-#include "RemoteProcessorGroupPort.h"
-#include "core/ConfigurableComponent.h"
-#include "controllers/SSLContextService.h"
 #include "TestServer.h"
-#include "c2/C2Agent.h"
-#include "protocols/RESTReceiver.h"
 #include "HTTPIntegrationBase.h"
-#include "processors/LogAttribute.h"
-
-class Responder : public CivetHandler {
- public:
-  explicit Responder(bool isSecure)
-      : isSecure(isSecure) {
-  }
-  bool handlePost(CivetServer *server, struct mg_connection *conn) {
-    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"name\" : \"invoke\"  }, "
-        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"name\" : \"FlowController\"  } ]}";
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-              resp.length());
-    mg_printf(conn, "%s", resp.c_str());
-    return true;
-  }
-
- protected:
-  bool isSecure;
-};
 
 class VerifyC2Server : public CoapIntegrationBase {
  public:
-  explicit VerifyC2Server(bool isSecure)
-      : isSecure(isSecure) {
+  explicit VerifyC2Server() {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }
 
-  void testSetup() {
-    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+  void testSetup() override {
     LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
-    LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
-    LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
     std::fstream file;
     ss << dir << "/" << "tstFile.ext";
@@ -92,25 +44,23 @@ class VerifyC2Server : public CoapIntegrationBase {
     file.close();
   }
 
-  void cleanup() {
+  void cleanup() override {
     unlink(ss.str().c_str());
   }
 
-  void runAssertions() {
-    assert(LogTestController::getInstance().contains("Import offset 0") == true);
-
-    assert(LogTestController::getInstance().contains("Outputting success and response") == true);
-
+  void runAssertions() override {
+    assert(LogTestController::getInstance().contains("Import offset 0"));
+    assert(LogTestController::getInstance().contains("Outputting success and response"));
   }
 
-  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
     std::shared_ptr<core::Processor> proc = pg->findProcessor("invoke");
     assert(proc != nullptr);
 
     std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
 
     assert(inv != nullptr);
-    std::string url = "";
+    std::string url;
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
     std::string port, scheme, path;
@@ -125,28 +75,17 @@ class VerifyC2Server : public CoapIntegrationBase {
   }
 
  protected:
-  bool isSecure;
   std::string dir;
   std::stringstream ss;
   TestController testController;
 };
 
 int main(int argc, char **argv) {
-  std::string key_dir, test_file_location, url;
-  if (argc > 1) {
-    test_file_location = argv[1];
-    if (argc > 2) {
-      key_dir = argv[2];
-    }
-  }
+  const cmd_args args = parse_cmdline_args(argc, argv);
 
-  bool isSecure = !key_dir.empty();
-
-  VerifyC2Server harness(isSecure);
-
-  harness.setKeyDir(key_dir);
-
-  harness.run(test_file_location);
+  VerifyC2Server harness;
+  harness.setKeyDir(args.key_dir);
+  harness.run(args.test_file);
 
   return 0;
 }

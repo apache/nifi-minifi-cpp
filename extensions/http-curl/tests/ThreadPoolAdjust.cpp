@@ -16,40 +16,17 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
 #undef NDEBUG
 #include <cassert>
-#include <utility>
-#include <chrono>
-#include <fstream>
-#include <memory>
 #include <string>
-#include <thread>
-#include <type_traits>
-#include <vector>
 #include <iostream>
-#include <sstream>
-#include "HTTPClient.h"
 #include "InvokeHTTP.h"
 #include "processors/ListenHTTP.h"
 #include "TestBase.h"
-#include "utils/StringUtils.h"
-#include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
-#include "properties/Configure.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
-#include "CivetServer.h"
-#include "RemoteProcessorGroupPort.h"
-#include "core/ConfigurableComponent.h"
-#include "controllers/SSLContextService.h"
-#include "TestServer.h"
 #include "HTTPIntegrationBase.h"
-#include "processors/InvokeHTTP.h"
-#include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 
 class HttpTestHarness : public IntegrationBase {
@@ -59,7 +36,7 @@ class HttpTestHarness : public IntegrationBase {
     dir = testController.createTempDirectory(format);
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<core::ProcessGroup>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -82,14 +59,14 @@ class HttpTestHarness : public IntegrationBase {
     configuration->set("nifi.flow.engine.threads", "1");
   }
 
-  void cleanup() {
+  void cleanup() override {
     unlink(ss.str().c_str());
   }
 
-  void runAssertions() {
-    assert(LogTestController::getInstance().contains("curl performed") == true);
-    assert(LogTestController::getInstance().contains("Size:1024 Offset:0") == true);
-    assert(LogTestController::getInstance().contains("Size:0 Offset:0") == false);
+  void runAssertions() override {
+    assert(LogTestController::getInstance().contains("curl performed"));
+    assert(LogTestController::getInstance().contains("Size:1024 Offset:0"));
+    assert(!LogTestController::getInstance().contains("Size:0 Offset:0"));
   }
 
  protected:
@@ -99,17 +76,9 @@ class HttpTestHarness : public IntegrationBase {
 };
 
 int main(int argc, char **argv) {
-  std::string key_dir, test_file_location, url;
-  if (argc > 1) {
-    test_file_location = argv[1];
-    key_dir = argv[2];
-  }
-
+  const cmd_args args = parse_cmdline_args(argc, argv);
   HttpTestHarness harness;
-
-  harness.setKeyDir(key_dir);
-
-  harness.run(test_file_location);
-
+  harness.setKeyDir(args.key_dir);
+  harness.run(args.test_file);
   return 0;
 }
