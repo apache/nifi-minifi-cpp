@@ -16,38 +16,17 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
 #undef NDEBUG
 #include <cassert>
-#include <utility>
-#include <chrono>
-#include <fstream>
 #include <memory>
 #include <string>
-#include <thread>
-#include <type_traits>
-#include <vector>
 #include <iostream>
-#include <sstream>
-#include "HTTPClient.h"
 #include "InvokeHTTP.h"
 #include "TestBase.h"
-#include "utils/StringUtils.h"
-#include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
-#include "FlowController.h"
-#include "properties/Configure.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
-#include "CivetServer.h"
-#include "RemoteProcessorGroupPort.h"
-#include "core/ConfigurableComponent.h"
-#include "controllers/SSLContextService.h"
 #include "TestServer.h"
 #include "protocols/RESTReceiver.h"
-#include "protocols/RESTSender.h"
 #include "c2/C2Agent.h"
 #include "processors/LogAttribute.h"
 #include "HTTPIntegrationBase.h"
@@ -60,7 +39,7 @@ class VerifyC2Server : public CoapIntegrationBase {
     dir = testController.createTempDirectory(format);
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
@@ -74,23 +53,22 @@ class VerifyC2Server : public CoapIntegrationBase {
     file.close();
   }
 
-  void cleanup() {
-    unlink(ss.str().c_str());
+  void cleanup() override {
   }
 
-  void runAssertions() {
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Could not instantiate null") == true);
-    assert(LogTestController::getInstance().contains("Class is RESTSender") == true);
+  void runAssertions() override {
+    assert(LogTestController::getInstance().contains("C2Agent] [debug] Could not instantiate null"));
+    assert(LogTestController::getInstance().contains("Class is RESTSender"));
   }
 
-  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
     std::shared_ptr<core::Processor> proc = pg->findProcessor("invoke");
     assert(proc != nullptr);
 
     std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
 
     assert(inv != nullptr);
-    std::string url = "";
+    std::string url;
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
     std::string port, scheme, path;
@@ -114,23 +92,12 @@ class VerifyC2Server : public CoapIntegrationBase {
 };
 
 int main(int argc, char **argv) {
-  std::string key_dir, test_file_location, url;
-  if (argc > 1) {
-    test_file_location = argv[1];
-    key_dir = argv[2];
-  }
-
-  bool isSecure = false;
-  if (url.find("https") != std::string::npos) {
-    isSecure = true;
-  }
+  const cmd_args args = parse_cmdline_args(argc, argv);
+  const bool isSecure = args.isUrlSecure();
 
   VerifyC2Server harness(isSecure);
-
-  harness.setKeyDir(key_dir);
-
-  harness.run(test_file_location);
-
+  harness.setKeyDir(args.key_dir);
+  harness.run(args.test_file);
   return 0;
 }
 

@@ -17,13 +17,12 @@
 # under the License.
 #
 
-file(GLOB CURL_UNIT_TESTS  "unit/*.cpp")
-file(GLOB CURL_INTEGRATION_TESTS "*.cpp")
+file(GLOB COAP_INTEGRATION_TESTS "*.cpp")
 
 SET(CURL_INT_TEST_COUNT 0)
 
 if (NOT DISABLE_CURL)
-FOREACH(testfile ${CURL_INTEGRATION_TESTS})
+FOREACH(testfile ${COAP_INTEGRATION_TESTS})
   	get_filename_component(testfilename "${testfile}" NAME_WE)
   	add_executable("${testfilename}" "${testfile}")
   	target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
