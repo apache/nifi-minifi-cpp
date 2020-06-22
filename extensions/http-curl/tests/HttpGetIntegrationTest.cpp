@@ -17,46 +17,31 @@
  */
 
 #define CURLOPT_SSL_VERIFYPEER_DISABLE 1
-#include <sys/stat.h>
 #undef NDEBUG
 #include <cassert>
 #include <utility>
 #include <chrono>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <thread>
-#include <type_traits>
 #include <vector>
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"
 #include "TestServer.h"
 #include "TestBase.h"
 #include "utils/StringUtils.h"
-#include "core/Core.h"
-#include "core/logging/Logger.h"
-#include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
-#include "processors/InvokeHTTP.h"
-#include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
+#include "HTTPIntegrationBase.h"
 
-void waitToVerifyProcessor() {
-  std::this_thread::sleep_for(std::chrono::seconds(10));
-}
-
-int log_message(const struct mg_connection *conn, const char *message) {
-  puts(message);
-  return 1;
-}
-
-int ssl_enable(void* /*ssl_context*/, void* /*user_data*/) {
-  puts("Enable ssl");
-  return 0;
+namespace {
+  void waitToVerifyProcessor() {
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+  }
 }
 
 class HttpResponder : public CivetHandler {
@@ -74,24 +59,22 @@ class HttpResponder : public CivetHandler {
 };
 
 int main(int argc, char **argv) {
+  const cmd_args args = parse_cmdline_args(argc, argv);
+
   LogTestController::getInstance().setDebug<core::Processor>();
   LogTestController::getInstance().setDebug<core::ProcessSession>();
   LogTestController::getInstance().setDebug<utils::HTTPClient>();
   LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
   LogTestController::getInstance().setDebug<minifi::processors::InvokeHTTP>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
-  std::string key_dir, test_file_location;
-  if (argc > 1) {
-    test_file_location = argv[1];
-    key_dir = argv[2];
-  }
+
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  configuration->set(minifi::Configure::nifi_default_directory, key_dir);
+  configuration->set(minifi::Configure::nifi_default_directory, args.key_dir);
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
-  configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
+  configuration->set(minifi::Configure::nifi_flow_configuration_file, args.test_file);
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
@@ -100,7 +83,7 @@ int main(int argc, char **argv) {
   content_repo->initialize(configuration);
 
   std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
+      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file));
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr),
@@ -108,9 +91,9 @@ int main(int argc, char **argv) {
                                                                                                 DEFAULT_ROOT_GROUP_NAME,
                                                                                                 true);
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
+  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
 
-  std::shared_ptr<core::Processor> proc = yaml_config.getRoot(test_file_location)->findProcessor("invoke");
+  std::shared_ptr<core::Processor> proc = yaml_config.getRoot(args.test_file)->findProcessor("invoke");
   assert(proc != nullptr);
 
   const auto inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
@@ -125,7 +108,7 @@ int main(int argc, char **argv) {
   CivetCallbacks callback{};
   if (scheme == "https") {
     std::string cert;
-    cert = key_dir + "nifi-cert.pem";
+    cert = args.key_dir + "nifi-cert.pem";
     memset(&callback, 0, sizeof(callback));
     callback.init_ssl = ssl_enable;
     std::string https_port = port + "s";

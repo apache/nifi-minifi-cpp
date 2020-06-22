@@ -27,8 +27,7 @@ int log_message(const struct mg_connection *conn, const char *message) {
   return 1;
 }
 
-int ssl_enable(void *ssl_context, void *user_data) {
-  struct ssl_ctx_st *ctx = (struct ssl_ctx_st *) ssl_context;
+int ssl_enable(void *ssl_context, void *) {
   return 0;
 }
 

@@ -17,35 +17,19 @@
  */
 
 #define CURLOPT_SSL_VERIFYPEER_DISABLE 1
-#include <sys/stat.h>
 #undef NDEBUG
 #include <cassert>
-#include <utility>
 #include <chrono>
-#include <fstream>
-#include <memory>
 #include <string>
-#include <thread>
-#include <type_traits>
 #include <vector>
 #include <iostream>
-#include <sstream>
-#include "HTTPClient.h"
-#include "CivetServer.h"
 #include "sitetosite/HTTPProtocol.h"
 #include "InvokeHTTP.h"
 #include "TestBase.h"
-#include "utils/StringUtils.h"
-#include "core/Core.h"
-#include "core/logging/Logger.h"
-#include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
-#include "properties/Configure.h"
 #include "io/StreamFactory.h"
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
-#include "TestServer.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "client/HTTPStream.h"
@@ -216,17 +200,10 @@ void run_variance(std::string test_file_location, bool isSecure, std::string url
 int main(int argc, char **argv) {
   transaction_id = 0;
   transaction_id_output = 0;
-  std::string key_dir, test_file_location, url;
-  if (argc > 1) {
-    test_file_location = argv[1];
-    key_dir = argv[2];
-    url = argv[3];
-  }
+  const cmd_args args = parse_cmdline_args_with_url(argc, argv);
 
-  bool isSecure = false;
-  if (url.find("https") != std::string::npos) {
-    isSecure = true;
-  }
+  // check https prefix
+  const bool isSecure = args.url.rfind("https://", 0) == 0;
 
 #ifdef WIN32
   if (url.find("localhost") != std::string::npos) {
@@ -237,37 +214,37 @@ int main(int argc, char **argv) {
 #endif
   {
     struct test_profile profile;
-    run_variance(test_file_location, isSecure, url, profile);
+    run_variance(args.test_file, isSecure, args.url, profile);
   }
 
   {
     struct test_profile profile;
     profile.flow_url_broken = true;
-    run_variance(test_file_location, isSecure, url, profile);
+    run_variance(args.test_file, isSecure, args.url, profile);
   }
 
   {
     struct test_profile profile;
     profile.empty_transaction_url = true;
-    run_variance(test_file_location, isSecure, url, profile);
+    run_variance(args.test_file, isSecure, args.url, profile);
   }
 
   {
     struct test_profile profile;
     profile.transaction_url_broken = true;
-    run_variance(test_file_location, isSecure, url, profile);
+    run_variance(args.test_file, isSecure, args.url, profile);
   }
 
   {
     struct test_profile profile;
     profile.no_delete = true;
-    run_variance(test_file_location, isSecure, url, profile);
+    run_variance(args.test_file, isSecure, args.url, profile);
   }
 
   {
     struct test_profile profile;
     profile.invalid_checksum = true;
-    run_variance(test_file_location, isSecure, url, profile);
+    run_variance(args.test_file, isSecure, args.url, profile);
   }
 
   return 0;

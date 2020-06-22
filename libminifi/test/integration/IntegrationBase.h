@@ -71,6 +71,9 @@ class IntegrationBase {
 
  protected:
 
+  virtual void configureC2() {
+  }
+
   virtual void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
 
   }
@@ -115,6 +118,9 @@ void IntegrationBase::run(std::string test_file_location) {
 
   configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
 
+  configureC2();
+  configureFullHeartbeat();
+
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
@@ -128,14 +134,8 @@ void IntegrationBase::run(std::string test_file_location) {
   state_dir = utils::file::FileUtils::create_temp_directory(state_dir_name_template);
   core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_service_provider, configuration, state_dir.c_str());
 
-  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
-  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
-
+  std::shared_ptr<core::ProcessGroup> pg(yaml_config.getRoot(test_file_location));
   queryRootProcessGroup(pg);
-
-  configureFullHeartbeat();
-
-  ptr.release();
 
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
@@ -152,6 +152,46 @@ void IntegrationBase::run(std::string test_file_location) {
 
   runAssertions();
   cleanup();
+}
+
+struct cmd_args {
+  std::string test_file;
+  std::string key_dir;
+  std::string bad_test_file;
+  std::string url;
+};
+
+cmd_args parse_basic_cmdline_args(int argc, char ** argv) {
+  cmd_args args;
+  if (argc > 1) {
+    args.test_file = argv[1];
+  }
+  if (argc > 2) {
+    args.key_dir = argv[2];
+  }
+  return args;
+}
+
+cmd_args parse_cmdline_args(int argc, char ** argv, const std::string& uri_path = "") {
+  cmd_args args = parse_basic_cmdline_args(argc, argv);
+  if (argc == 2) {
+    args.url = "http://localhost:0/" + uri_path;
+  }
+  if (argc > 2) {
+    args.url = "https://localhost:0/" + uri_path;
+  }
+  if (argc > 3) {
+    args.bad_test_file = argv[3];
+  }
+  return args;
+}
+
+cmd_args parse_cmdline_args_with_url(int argc, char ** argv) {
+  cmd_args args = parse_basic_cmdline_args(argc, argv);
+  if (argc > 3) {
+    args.url = argv[3];
+  }
+  return args;
 }
 
 #endif /* LIBMINIFI_TEST_INTEGRATION_INTEGRATIONBASE_H_ */

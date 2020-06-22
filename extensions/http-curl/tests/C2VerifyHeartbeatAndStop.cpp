@@ -27,13 +27,7 @@
 
 class LightWeightC2Handler : public HeartbeatHandler {
  public:
-  explicit LightWeightC2Handler(bool isSecure)
-      : HeartbeatHandler(isSecure) {
-  }
-
-  virtual ~LightWeightC2Handler() = default;
-
-  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *)  {
+  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) override {
     if (calls_ == 0) {
       verifyJsonHasAgentManifest(root);
     } else {
@@ -48,11 +42,7 @@ class LightWeightC2Handler : public HeartbeatHandler {
 
 class VerifyC2Heartbeat : public VerifyC2Base {
  public:
-  explicit VerifyC2Heartbeat(bool isSecure)
-      : VerifyC2Base(isSecure) {
-  }
-
-  virtual void testSetup() {
+  virtual void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTProtocol>();
@@ -60,56 +50,39 @@ class VerifyC2Heartbeat : public VerifyC2Base {
     VerifyC2Base::testSetup();
   }
 
-  void runAssertions() {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("Received Ack from Server"));
     assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component invoke"));
     assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component FlowController"));
   }
 
-  void configureFullHeartbeat() {
+  void configureFullHeartbeat() override {
     configuration->set("nifi.c2.full.heartbeat", "true");
   }
 };
 
 class VerifyLightWeightC2Heartbeat : public VerifyC2Heartbeat {
 public:
-  explicit VerifyLightWeightC2Heartbeat(bool isSecure)
-      : VerifyC2Heartbeat(isSecure) {
-  }
-
-  void configureFullHeartbeat() {
+  void configureFullHeartbeat() override {
     configuration->set("nifi.c2.full.heartbeat", "false");
   }
 };
 
 int main(int argc, char **argv) {
-  std::string key_dir, test_file_location, url;
-  url = "http://localhost:0/api/heartbeat";
-  if (argc > 1) {
-    test_file_location = argv[1];
-    if (argc > 2) {
-      url = "https://localhost:0/api/heartbeat";
-      key_dir = argv[2];
-    }
-  }
-
-  bool isSecure = false;
-  if (url.find("https") != std::string::npos) {
-    isSecure = true;
-  }
+  const cmd_args args = parse_cmdline_args(argc, argv, "heartbeat");
   {
-    VerifyC2Heartbeat harness(isSecure);
-    harness.setKeyDir(key_dir);
-    HeartbeatHandler responder(isSecure);
-    harness.setUrl(url, &responder);
-    harness.run(test_file_location);
+    VerifyC2Heartbeat harness;
+    harness.setKeyDir(args.key_dir);
+    HeartbeatHandler responder;
+    harness.setUrl(args.url, &responder);
+    harness.run(args.test_file);
   }
 
-  VerifyLightWeightC2Heartbeat harness(isSecure);
-  harness.setKeyDir(key_dir);
-  LightWeightC2Handler responder(isSecure);
-  harness.setUrl(url, &responder);
-  harness.run(test_file_location);
+  VerifyLightWeightC2Heartbeat harness;
+  harness.setKeyDir(args.key_dir);
+  LightWeightC2Handler responder;
+  harness.setUrl(args.url, &responder);
+  harness.run(args.test_file);
 
   return 0;
 }

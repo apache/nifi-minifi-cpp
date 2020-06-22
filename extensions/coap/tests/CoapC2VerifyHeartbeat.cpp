@@ -54,25 +54,6 @@
 #include "io/BaseStream.h"
 #include "concurrentqueue.h"
 
-class Responder : public CivetHandler {
- public:
-  explicit Responder(bool isSecure)
-      : isSecure(isSecure) {
-  }
-  bool handlePost(CivetServer *server, struct mg_connection *conn) {
-    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"name\" : \"invoke\"  }, "
-        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"name\" : \"FlowController\"  } ]}";
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-              resp.length());
-    mg_printf(conn, "%s", resp.c_str());
-    return true;
-  }
-
- protected:
-  bool isSecure;
-};
-
 class VerifyCoAPServer : public CoapIntegrationBase {
  public:
   explicit VerifyCoAPServer(bool isSecure)
@@ -198,22 +179,13 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 };
 
 int main(int argc, char **argv) {
-  std::string key_dir, test_file_location, url;
-  if (argc > 1) {
-    test_file_location = argv[1];
-    key_dir = argv[2];
-  }
+  const cmd_args args = parse_cmdline_args(argc, argv);
 
-  bool isSecure = false;
-  if (url.find("https") != std::string::npos) {
-    isSecure = true;
-  }
+  // check https prefix
+  const bool isSecure = args.url.rfind("https://", 0) == 0;
 
   VerifyCoAPServer harness(isSecure);
-
-  harness.setKeyDir(key_dir);
-
-  harness.run(test_file_location);
-
+  harness.setKeyDir(args.key_dir);
+  harness.run(args.test_file);
   return 0;
 }
