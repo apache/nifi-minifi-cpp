@@ -19,9 +19,11 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CACHEDVALUEVALIDATOR_H_
 #define LIBMINIFI_INCLUDE_CORE_CACHEDVALUEVALIDATOR_H_
 
-#include "PropertyValidation.h"
 #include <utility>
 #include <memory>
+#include <string>
+#include "PropertyValidation.h"
+#include "state/Value.h"
 
 namespace org {
 namespace apache {
@@ -83,10 +85,6 @@ class CachedValueValidator {
     return *this;
   }
 
-  const std::shared_ptr<PropertyValidator>& operator->() const {
-    return validator_;
-  }
-
   explicit operator bool() const {
     return static_cast<bool>(validator_);
   }
@@ -96,19 +94,25 @@ class CachedValueValidator {
   }
 
  private:
-  void setValidationResult(bool success) const {
-    validation_result_ = success ? Result::SUCCESS : Result::FAILURE;
-  }
-
-  void clearValidationResult() {
-    validation_result_ = Result::RECOMPUTE;
-  }
-
-  Result isValid() const {
-    if (!validator_) {
-      return Result::SUCCESS;
+  ValidationResult validate(const std::string& subject, const std::shared_ptr<state::response::Value>& value) const {
+    auto cachedResult = !validator_ ? Result::SUCCESS : validation_result_;
+    if (cachedResult == CachedValueValidator::Result::SUCCESS) {
+      return ValidationResult::Builder::createBuilder().isValid(true).build();
     }
-    return validation_result_;
+    if (cachedResult == CachedValueValidator::Result::FAILURE) {
+      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(value->getStringValue()).isValid(false).build();
+    }
+    auto result = validator_->validate(subject, value);
+    if (result.valid()) {
+      validation_result_ = Result::SUCCESS;
+    } else {
+      validation_result_ = Result::FAILURE;
+    }
+    return result;
+  }
+
+  void invalidateCachedResult() {
+    validation_result_ = Result::RECOMPUTE;
   }
 
   std::shared_ptr<PropertyValidator> validator_;

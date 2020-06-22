@@ -83,16 +83,7 @@ class PropertyValue : public state::response::ValueNode {
   }
 
   ValidationResult validate(const std::string &subject) const {
-    auto cachedResult = validator_.isValid();
-    if (cachedResult == CachedValueValidator::Result::SUCCESS) {
-      return ValidationResult::Builder::createBuilder().isValid(true).build();
-    }
-    if (cachedResult == CachedValueValidator::Result::FAILURE) {
-      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(getValue()->getStringValue()).isValid(false).build();
-    }
-    auto result = validator_->validate(subject, getValue());
-    validator_.setValidationResult(result.valid());
-    return result;
+    return validator_.validate(subject, getValue());
   }
 
   operator uint64_t() const {
@@ -134,7 +125,7 @@ class PropertyValue : public state::response::ValueNode {
    */
   template<typename T>
   auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string>::value, PropertyValue&>::type {
-    validator_.clearValidationResult();
+    validator_.invalidateCachedResult();
     return WithAssignmentGuard(ref, [&] () -> PropertyValue& {
       if (value_ == nullptr) {
         type_id = std::type_index(typeid(T));
@@ -164,7 +155,7 @@ class PropertyValue : public state::response::ValueNode {
   std::is_same<T, uint64_t >::value ||
   std::is_same<T, int64_t >::value ||
   std::is_same<T, bool >::value, PropertyValue&>::type {
-    validator_.clearValidationResult();
+    validator_.invalidateCachedResult();
     if (value_ == nullptr) {
       type_id = std::type_index(typeid(T));
       value_ = minifi::state::response::createValue(ref);
@@ -198,7 +189,7 @@ class PropertyValue : public state::response::ValueNode {
   auto operator=(const std::string &ref) -> typename std::enable_if<
   std::is_same<T, DataSizeValue >::value ||
   std::is_same<T, TimePeriodValue >::value, PropertyValue&>::type {
-    validator_.clearValidationResult();
+    validator_.invalidateCachedResult();
     return WithAssignmentGuard(ref, [&] () -> PropertyValue& {
       value_ = std::make_shared<T>(ref);
       type_id = value_->getTypeIndex();
@@ -221,8 +212,6 @@ class PropertyValue : public state::response::ValueNode {
 
   bool isValueUsable() const {
     if (!value_) return false;
-    if (validator_.isValid() == CachedValueValidator::Result::FAILURE) return false;
-    if (validator_.isValid() == CachedValueValidator::Result::SUCCESS) return true;
     return validate("__unknown__").valid();
   }
 
