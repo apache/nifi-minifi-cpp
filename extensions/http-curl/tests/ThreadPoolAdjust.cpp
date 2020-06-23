@@ -66,7 +66,7 @@ class HttpTestHarness : public IntegrationBase {
   void runAssertions() override {
     assert(LogTestController::getInstance().contains("curl performed"));
     assert(LogTestController::getInstance().contains("Size:1024 Offset:0"));
-    assert(LogTestController::getInstance().contains("Size:0 Offset:0"));
+    assert(!LogTestController::getInstance().contains("Size:0 Offset:0"));
   }
 
  protected:
