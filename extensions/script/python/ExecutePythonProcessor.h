@@ -25,9 +25,9 @@
 #include <string>
 #include <vector>
 
-#include <concurrentqueue.h> // NOLINT
-#include <core/Resource.h> // NOLINT
-#include <core/Processor.h> // NOLINT
+#include "concurrentqueue.h" // NOLINT
+#include "core/Resource.h"
+#include "core/Processor.h"
 
 #include "../ScriptEngine.h"
 #include "../ScriptProcessContext.h"

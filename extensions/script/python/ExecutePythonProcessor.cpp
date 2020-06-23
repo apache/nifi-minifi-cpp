@@ -197,6 +197,9 @@ void ExecutePythonProcessor::loadScript() {
   std::string script_body;
   getProperty(ScriptFile.getName(), script_file);
   getProperty(ScriptBody.getName(), script_body);
+  if (script_file.empty() && script_body.empty()) {
+    throw std::runtime_error("Neither Script Body nor Script File is available to execute");
+  }
   if (script_file.size()) {
     if (script_body.size()) {
       throw std::runtime_error("Only one of Script File or Script Body may be used");
@@ -204,11 +207,8 @@ void ExecutePythonProcessor::loadScript() {
     loadScriptFromFile(script_file);
     return;
   }
-  if (script_body.size()) {
-    script_to_exec_ = script_body;
-    return;
-  }
-  throw std::runtime_error("Neither Script Body nor Script File is available to execute");
+  script_to_exec_ = script_body;
+  return;
 }
 
 void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {

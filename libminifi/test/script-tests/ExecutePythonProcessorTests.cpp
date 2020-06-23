@@ -46,20 +46,20 @@ class ExecutePythonProcessorTestBase {
   }
   virtual ~ExecutePythonProcessorTestBase() {
     logTestController_.reset();
-    logTestController_.setDebug<TestPlan>();
-    logTestController_.setDebug<minifi::python::processors::ExecutePythonProcessor>();
-    logTestController_.setDebug<minifi::processors::PutFile>();
-    logTestController_.setDebug<minifi::processors::PutFile::ReadCallback>();
   }
 
  protected:
   void reInitialize() {
     testController_.reset(new TestController());
     plan_ = testController_->createPlan();
+    logTestController_.setDebug<TestPlan>();
+    logTestController_.setDebug<minifi::python::processors::ExecutePythonProcessor>();
+    logTestController_.setDebug<minifi::processors::PutFile>();
+    logTestController_.setDebug<minifi::processors::PutFile::ReadCallback>();
   }
 
   std::string getScriptFullPath(const std::string& script_file_name) {
-    return SCRIPT_FILES_DIRECTORY + utils::file::FileUtils::get_separator() + script_file_name;
+    return org::apache::nifi::minifi::utils::file::FileUtils::concat_path(SCRIPT_FILES_DIRECTORY, script_file_name);
   }
 
   static const std::string TEST_FILE_NAME;
@@ -131,7 +131,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     for (std::size_t i = 0; i < 10; ++i) {
       plan_->runCurrentProcessor();  // PutFile
       const std::string state_name = std::to_string(i);
-      const std::string output_file_path = output_dir + utils::file::FileUtils::get_separator() + state_name;
+      const std::string output_file_path = org::apache::nifi::minifi::utils::file::FileUtils::concat_path(output_dir, state_name);
       const std::string output_file_content{ getFileContent(output_file_path) };
       REQUIRE(output_file_content == state_name);
     }
