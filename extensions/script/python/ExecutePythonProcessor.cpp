@@ -34,15 +34,23 @@ namespace minifi {
 namespace python {
 namespace processors {
 
-core::Property ExecutePythonProcessor::ScriptFile("Script File",  // NOLINT
-    R"(Path to script file to execute. Only one of Script File or Script Body may be used)", "");
-core::Property ExecutePythonProcessor::ScriptBody("Script Body",  // NOLINT
-    R"(Script to execute. Only one of Script File or Script Body may be used)", "");
-core::Property ExecutePythonProcessor::ModuleDirectory("Module Directory",  // NOLINT
-    R"(Comma-separated list of paths to files and/or directories which contain modules required by the script)", "");
+core::Property ExecutePythonProcessor::ScriptFile(core::PropertyBuilder::createProperty("Script File")
+    ->withDescription("Path to script file to execute. Only one of Script File or Script Body may be used")
+    ->withDefaultValue("")
+    ->build());
 
-core::Relationship ExecutePythonProcessor::Success("success", "Script successes");  // NOLINT
-core::Relationship ExecutePythonProcessor::Failure("failure", "Script failures");  // NOLINT
+core::Property ExecutePythonProcessor::ScriptBody(core::PropertyBuilder::createProperty("Script Body")
+    ->withDescription("Script to execute. Only one of Script File or Script Body may be used")
+    ->withDefaultValue("")
+    ->build());
+
+core::Property ExecutePythonProcessor::ModuleDirectory(core::PropertyBuilder::createProperty("Module Directory")
+  ->withDescription("Comma-separated list of paths to files and/or directories which contain modules required by the script")
+  ->withDefaultValue("")
+  ->build());
+
+core::Relationship ExecutePythonProcessor::Success("success", "Script successes");
+core::Relationship ExecutePythonProcessor::Failure("failure", "Script failures");
 
 void ExecutePythonProcessor::initialize() {
   // initialization requires that we do a little leg work prior to onSchedule
