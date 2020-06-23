@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
 #undef NDEBUG
 #include <cassert>
 #include <string>
@@ -37,7 +36,7 @@ class HttpTestHarness : public IntegrationBase {
     dir = testController.createTempDirectory(format);
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<core::ProcessGroup>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -60,14 +59,14 @@ class HttpTestHarness : public IntegrationBase {
     configuration->set("nifi.flow.engine.threads", "1");
   }
 
-  void cleanup() {
+  void cleanup() override {
     unlink(ss.str().c_str());
   }
 
-  void runAssertions() {
-    assert(LogTestController::getInstance().contains("curl performed") == true);
-    assert(LogTestController::getInstance().contains("Size:1024 Offset:0") == true);
-    assert(LogTestController::getInstance().contains("Size:0 Offset:0") == false);
+  void runAssertions() override {
+    assert(LogTestController::getInstance().contains("curl performed"));
+    assert(LogTestController::getInstance().contains("Size:1024 Offset:0"));
+    assert(LogTestController::getInstance().contains("Size:0 Offset:0"));
   }
 
  protected:

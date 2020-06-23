@@ -98,7 +98,7 @@ void CoapIntegrationBase::setUrl(const std::string& url, ServerAwareHandler *han
 
 class VerifyC2Base : public CoapIntegrationBase {
  public:
-  virtual void testSetup() override {
+  void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<LogTestController>();
   }

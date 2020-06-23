@@ -27,7 +27,7 @@
 
 class LightWeightC2Handler : public HeartbeatHandler {
  public:
-  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) override {
+  void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) override {
     if (calls_ == 0) {
       verifyJsonHasAgentManifest(root);
     } else {
@@ -42,7 +42,7 @@ class LightWeightC2Handler : public HeartbeatHandler {
 
 class VerifyC2Heartbeat : public VerifyC2Base {
  public:
-  virtual void testSetup() override {
+  void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTProtocol>();

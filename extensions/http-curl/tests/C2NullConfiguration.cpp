@@ -39,7 +39,7 @@ class VerifyC2Server : public CoapIntegrationBase {
     dir = testController.createTempDirectory(format);
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
@@ -53,23 +53,23 @@ class VerifyC2Server : public CoapIntegrationBase {
     file.close();
   }
 
-  void cleanup() {
+  void cleanup() override {
     unlink(ss.str().c_str());
   }
 
-  void runAssertions() {
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Could not instantiate null") == true);
-    assert(LogTestController::getInstance().contains("Class is RESTSender") == true);
+  void runAssertions() override {
+    assert(LogTestController::getInstance().contains("C2Agent] [debug] Could not instantiate null"));
+    assert(LogTestController::getInstance().contains("Class is RESTSender"));
   }
 
-  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
     std::shared_ptr<core::Processor> proc = pg->findProcessor("invoke");
     assert(proc != nullptr);
 
     std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
 
     assert(inv != nullptr);
-    std::string url = "";
+    std::string url;
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
     std::string port, scheme, path;

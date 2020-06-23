@@ -36,7 +36,7 @@ class Responder : public ServerAwareHandler {
   explicit Responder(bool isSecure)
       : isSecure(isSecure) {
   }
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
     std::string site2site_rest_resp = "{"
         "\"revision\": {"
         "\"clientId\": \"483d53eb-53ec-4e93-b4d4-1fc3d23dae6f\""
@@ -67,7 +67,7 @@ class SiteToSiteTestHarness : public CoapIntegrationBase {
     dir = testController.createTempDirectory(format);
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setTrace<minifi::controllers::SSLContextService>();
@@ -81,17 +81,17 @@ class SiteToSiteTestHarness : public CoapIntegrationBase {
     file.close();
   }
 
-  void cleanup() {
+  void cleanup() override {
     unlink(ss.str().c_str());
   }
 
-  void runAssertions() {
+  void runAssertions() override {
     if (isSecure) {
-      assert(LogTestController::getInstance().contains("process group remote site2site port 10001, is secure 1") == true);
+      assert(LogTestController::getInstance().contains("process group remote site2site port 10001, is secure 1"));
     } else {
-      assert(LogTestController::getInstance().contains("process group remote site2site port 10001, is secure 0") == true);
+      assert(LogTestController::getInstance().contains("process group remote site2site port 10001, is secure 0"));
     }
-    assert(LogTestController::getInstance().contains("ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed ") == true);
+    assert(LogTestController::getInstance().contains("ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed "));
   }
 
  protected:

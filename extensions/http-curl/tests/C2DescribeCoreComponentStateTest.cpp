@@ -57,11 +57,11 @@ class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
 
 class DescribeCoreComponentStateHandler: public HeartbeatHandler {
  public:
-  virtual void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
+  void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
     sendHeartbeatResponse("DESCRIBE", "corecomponentstate", "889345", conn);
   }
 
-  virtual void handleAcknowledge(const rapidjson::Document& root) override {
+  void handleAcknowledge(const rapidjson::Document& root) override {
     assert(root.HasMember("corecomponentstate"));
 
     auto assertExpectedTailFileState = [&](const char* uuid, const char* name, const char* position) {

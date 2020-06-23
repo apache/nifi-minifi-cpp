@@ -174,25 +174,25 @@ void run_variance(std::string test_file_location, bool isSecure, std::string url
   std::stringstream assertStr;
   if (profile.allFalse()) {
     assertStr << "Site2Site transaction " << transaction_id << " peer finished transaction";
-    assert(LogTestController::getInstance().contains(assertStr.str()) == true);
+    assert(LogTestController::getInstance().contains(assertStr.str()));
   } else if (profile.empty_transaction_url) {
-    assert(LogTestController::getInstance().contains("Location is empty") == true);
+    assert(LogTestController::getInstance().contains("Location is empty"));
   } else if (profile.transaction_url_broken) {
-    assert(LogTestController::getInstance().contains("Could not create transaction, intent is ohstuff") == true);
+    assert(LogTestController::getInstance().contains("Could not create transaction, intent is ohstuff"));
   } else if (profile.invalid_checksum) {
     assertStr << "Site2Site transaction " << transaction_id << " peer confirm transaction with CRC Imawrongchecksumshortandstout";
-    assert(LogTestController::getInstance().contains(assertStr.str()) == true);
+    assert(LogTestController::getInstance().contains(assertStr.str()));
     assertStr.str(std::string());
     assertStr << "Site2Site transaction " << transaction_id << " CRC not matched";
-    assert(LogTestController::getInstance().contains(assertStr.str()) == true);
+    assert(LogTestController::getInstance().contains(assertStr.str()));
     assertStr.str(std::string());
     assertStr << "Site2Site delete transaction " << transaction_id;
-    assert(LogTestController::getInstance().contains(assertStr.str()) == true);
+    assert(LogTestController::getInstance().contains(assertStr.str()));
   } else if (profile.no_delete) {
-    assert(LogTestController::getInstance().contains("Received 401 response code from delete") == true);
+    assert(LogTestController::getInstance().contains("Received 401 response code from delete"));
   } else {
     assertStr << "Site2Site transaction " << transaction_id << " peer unknown respond code 254";
-    assert(LogTestController::getInstance().contains(assertStr.str()) == true);
+    assert(LogTestController::getInstance().contains(assertStr.str()));
   }
   LogTestController::getInstance().reset();
 }

@@ -81,8 +81,8 @@ struct defaulted_handler{
     if(handler)return handler;
     return def;
   }
-  void set(std::vector<std::chrono::milliseconds> timeout) {
-    handler = new TimeoutingHTTPHandler(timeout);
+  void set(std::vector<std::chrono::milliseconds>&& timeout) {
+    handler = new TimeoutingHTTPHandler(std::move(timeout));
   }
 };
 
@@ -137,7 +137,7 @@ void run_timeout_variance(std::string test_file_location, bool isSecure, std::st
 
   harness.run(test_file_location);
 
-  assert(LogTestController::getInstance().contains("limit (200ms) reached, terminating connection") == true);
+  assert(LogTestController::getInstance().contains("limit (200ms) reached, terminating connection"));
 
   LogTestController::getInstance().reset();
 }

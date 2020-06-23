@@ -24,11 +24,11 @@
 
 class DescribeManifestHandler: public HeartbeatHandler {
 public:
-  virtual void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
+  void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
     sendHeartbeatResponse("DESCRIBE", "manifest", "889345", conn);
   }
 
-  virtual void handleAcknowledge(const rapidjson::Document& root) override {
+  void handleAcknowledge(const rapidjson::Document& root) override {
     verifyJsonHasAgentManifest(root);
   }
 };

@@ -49,8 +49,8 @@ class VerifyC2Server : public CoapIntegrationBase {
   }
 
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("Import offset 0") == true);
-    assert(LogTestController::getInstance().contains("Outputting success and response") == true);
+    assert(LogTestController::getInstance().contains("Import offset 0"));
+    assert(LogTestController::getInstance().contains("Outputting success and response"));
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
@@ -60,7 +60,7 @@ class VerifyC2Server : public CoapIntegrationBase {
     std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
 
     assert(inv != nullptr);
-    std::string url = "";
+    std::string url;
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
     std::string port, scheme, path;
