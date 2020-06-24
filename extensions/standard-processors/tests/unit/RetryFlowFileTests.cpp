@@ -21,7 +21,6 @@
 #include <memory>
 #include <string>
 #include <set>
-#include <regex>
 
 #include "TestBase.h"
 
@@ -32,6 +31,7 @@
 #include "processors/LogAttribute.h"
 #include "utils/file/FileUtils.h"
 #include "utils/OptionalUtils.h"
+#include "utils/RegexUtils.h"
 #include "utils/TestUtils.h"
 
 namespace {
@@ -170,9 +170,8 @@ class RetryFlowFileTest {
   }
 
   bool flowfileWasPenalizedARetryflowfile() {
-    std::regex re(R"(\[org::apache::nifi::minifi::core::ProcessSession\] \[info\] Penalizing [0-9a-z\-]+ for \d*ms at retryflowfile)");
-    std::smatch m;
-    return std::regex_search(LogTestController::getInstance().log_output.str(), m, re);
+    utils::Regex re(R"(\[org::apache::nifi::minifi::core::ProcessSession\] \[info\] Penalizing [0-9a-z\-]+ for [0-9]*ms at retryflowfile)");
+    return re.match(LogTestController::getInstance().log_output.str());
   }
 
   bool retryFlowfileWarnedForReuse() {
