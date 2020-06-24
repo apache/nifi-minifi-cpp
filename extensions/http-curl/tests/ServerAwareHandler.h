@@ -26,7 +26,7 @@ protected:
     stop_signal_.wait_for(lock, time, [&] {return terminate_.load();});
   }
 
-  bool isServerRunning() {
+  bool isServerRunning() const {
     return !terminate_.load();
   }
 

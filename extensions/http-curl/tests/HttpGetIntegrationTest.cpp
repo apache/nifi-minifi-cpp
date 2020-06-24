@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
   std::string port, scheme, path;
   std::unique_ptr<TestServer> server;
   parse_http_components(url, port, scheme, path);
-  struct mg_callbacks callback{};
+  CivetCallbacks callback{};
   if (scheme == "https") {
     std::string cert;
     cert = key_dir + "nifi-cert.pem";

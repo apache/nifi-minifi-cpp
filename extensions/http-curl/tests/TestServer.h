@@ -44,21 +44,13 @@ class TestServer{
       }
     }
    private:
-    std::atomic<int>& getCounter() {
+    static std::atomic<int>& getCounter() {
       static std::atomic<int> counter{0};
       return counter;
     }
   };
  public:
-  TestServer(std::string &port, std::string &rooturi, CivetHandler *handler, struct mg_callbacks *callbacks, std::string &cert, std::string &ca_cert) {
-    const char *options[] = { "document_root", ".", "listening_ports", port.c_str(), "error_log_file",
-                              "error.log", "ssl_certificate", ca_cert.c_str(), "ssl_protocol_version", "4", "ssl_cipher_list",
-                              "ALL", "request_timeout_ms", "10000", "enable_auth_domain_check", "no", "ssl_verify_peer", "no", 0 };
-    // ECDH+AESGCM+AES256:!aNULL:!MD5:!DSS
-    std::vector<std::string> cpp_options;
-    for (size_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
-      cpp_options.emplace_back(options[i]);
-    }
+  TestServer(std::string &port, std::string &rooturi, CivetHandler *handler, CivetCallbacks *callbacks, std::string &cert, std::string &ca_cert) {
 
     if (!mg_check_feature(2)) {
       throw std::runtime_error("Error: Embedded example built with SSL support, "
@@ -68,25 +60,24 @@ class TestServer{
 
     //mg_init_library(MG_FEATURES_SSL);
 
-    server_ = utils::make_unique<CivetServer>(cpp_options, (CivetCallbacks*)callbacks);
+    // ECDH+AESGCM+AES256:!aNULL:!MD5:!DSS
+    std::vector<std::string> cpp_options{ "document_root", ".", "listening_ports", port, "error_log_file",
+                              "error.log", "ssl_certificate", ca_cert, "ssl_protocol_version", "4", "ssl_cipher_list",
+                              "ALL", "request_timeout_ms", "10000", "enable_auth_domain_check", "no", "ssl_verify_peer", "no"};
+    server_ = utils::make_unique<CivetServer>(cpp_options, callbacks);
 
     addHandler(rooturi, handler);
   }
 
   TestServer(std::string &port, std::string &rooturi, CivetHandler *handler) {
-    const char *options[] = {"document_root", ".", "listening_ports", port.c_str(), 0};
-
-    std::vector<std::string> cpp_options;
-    for (size_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
-      cpp_options.emplace_back(options[i]);
-    }
+    std::vector<std::string> cpp_options{"document_root", ".", "listening_ports", port};
     server_ = utils::make_unique<CivetServer>(cpp_options);
 
     addHandler(rooturi, handler);
   }
 
   void addHandler(const std::string& uri, CivetHandler* handler) {
-    handlers_.emplace_back(handler);
+    handlers_.push_back(handler);
     server_->addHandler(uri, handler);
   }
 
@@ -102,8 +93,11 @@ class TestServer{
 
   }
  private:
+  // server_ depends on lib_ (the library initializer)
+  // so their order matters
   CivetLibrary lib_;
   std::unique_ptr<CivetServer> server_;
+
   std::vector<CivetHandler*> handlers_;
 };
 

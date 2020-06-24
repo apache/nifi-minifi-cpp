@@ -61,7 +61,7 @@ class CoapIntegrationBase : public IntegrationBase {
 
 void CoapIntegrationBase::setUrl(const std::string& url, ServerAwareHandler *handler) {
   parse_http_components(url, port, scheme, path);
-  struct mg_callbacks callback{};
+  CivetCallbacks callback{};
   if (server != nullptr) {
     server->addHandler(path, handler);
     return;
