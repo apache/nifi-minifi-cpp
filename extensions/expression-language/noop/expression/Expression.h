@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_EXPRESSION_H
-#define NIFI_MINIFI_CPP_EXPRESSION_H
+#ifndef EXTENSIONS_EXPRESSIONLANGUAGE_NOOP_EXPRESSION_H
+#define EXTENSIONS_EXPRESSIONLANGUAGE_NOOP_EXPRESSION_H
 
 #include <core/FlowFile.h>
 #include <core/VariableRegistry.h>
@@ -47,4 +47,4 @@ class Expression {
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_EXPRESSION_H
+#endif  // EXTENSIONS_EXPRESSIONLANGUAGE_NOOP_EXPRESSION_H

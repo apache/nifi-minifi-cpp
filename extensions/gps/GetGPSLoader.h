@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_ROCKSDBLOADER_H
-#define EXTENSIONS_ROCKSDBLOADER_H
+#ifndef EXTENSIONS_GPS_GETGPSLOADER_H
+#define EXTENSIONS_GPS_GETGPSLOADER_H
 
 #include "GetGPS.h"
 #include "core/ClassLoader.h"
@@ -62,4 +62,4 @@ class GpsFactory : public core::ObjectFactory {
 extern "C" {
 DLL_EXPORT void *createGPSFactory(void);
 }
-#endif /* EXTENSIONS_ROCKSDBLOADER_H */
+#endif  // EXTENSIONS_GPS_GETGPSLOADER_H

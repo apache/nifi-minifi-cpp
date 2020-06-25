@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_ROCKSDBLOADER_H
-#define EXTENSIONS_ROCKSDBLOADER_H
+#ifndef EXTENSIONS_SENSORS_SENSORLOADER_H
+#define EXTENSIONS_SENSORS_SENSORLOADER_H
 
 #include "core/ClassLoader.h"
 #include "GetEnvironmentalSensors.h"
@@ -66,4 +66,4 @@ class SensorFactory : public core::ObjectFactory {
 extern "C" {
 DLL_EXPORT void *createSensorFactory(void);
 }
-#endif /* EXTENSIONS_ROCKSDBLOADER_H */
+#endif  // EXTENSIONS_SENSORS_SENSORLOADER_H

@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_
-#define LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_
+#ifndef EXTENSIONS_HTTPCURL_TESTS_HTTPINTEGRATIONBASE_H
+#define EXTENSIONS_HTTPCURL_TESTS_HTTPINTEGRATIONBASE_H
 
 #include "CivetServer.h"
 #include "integration/IntegrationBase.h"
@@ -206,4 +206,4 @@ public:
     VerifyC2Update::cleanup();
   }
 };
-#endif /* LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_ */
+#endif  // EXTENSIONS_HTTPCURL_TESTS_HTTPINTEGRATIONBASE_H

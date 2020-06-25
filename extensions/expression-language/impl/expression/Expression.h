@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_EXPRESSION_H
-#define NIFI_MINIFI_CPP_EXPRESSION_H
+#ifndef EXTENSIONS_EXPRESSIONLANGUAGE_IMPL_EXPRESSION_H
+#define EXTENSIONS_EXPRESSIONLANGUAGE_IMPL_EXPRESSION_H
 
 #define EXPRESSION_LANGUAGE_USE_REGEX
 
@@ -201,4 +201,4 @@ Expression make_function_composition(const Expression &arg, const std::vector<st
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_EXPRESSION_H
+#endif  // EXTENSIONS_EXPRESSIONLANGUAGE_IMPL_EXPRESSION_H
