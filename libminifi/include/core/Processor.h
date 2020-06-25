@@ -33,6 +33,8 @@
 #include <stack>
 #include <string>
 #include <vector>
+#include <unordered_set>
+#include <unordered_map>
 
 #include "ConfigurableComponent.h"
 #include "Connectable.h"
@@ -75,7 +77,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     notifyStop();
   }
 
-  bool isRunning();
+  bool isRunning() override;
   // Set Processor Scheduled State
   void setScheduledState(ScheduledState state);
   // Get Processor Scheduled State
@@ -182,7 +184,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     active_tasks_ = 0;
   }
   // Yield based on the yield period
-  void yield() {
+  void yield() override {
     yield_expiration_ = (getTimeMillis() + yield_period_msec_);
   }
   // Yield based on the input time
@@ -231,7 +233,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 
   void onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory);
 
-  virtual bool canEdit() {
+  bool canEdit() override {
     return !isRunning();
   }
 
@@ -243,7 +245,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   virtual void onTrigger(ProcessContext *context, ProcessSession *session) {
   }
   // Initialize, overridden by NiFi Process Designer
-  virtual void initialize() {
+  void initialize() override {
   }
   // Scheduled event hook, overridden by NiFi Process Designer
   virtual void onSchedule(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory) {
@@ -258,15 +260,19 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   }
 
   // Check all incoming connections for work
-  bool isWorkAvailable();
+  bool isWorkAvailable() override;
 
   void setStreamFactory(std::shared_ptr<minifi::io::StreamFactory> stream_factory) {
     stream_factory_ = stream_factory;
   }
 
-  virtual bool supportsDynamicProperties() {
+  bool supportsDynamicProperties() override {
     return false;
   }
+
+  bool isThrottledByBackpressure() const;
+
+  std::shared_ptr<Connectable> pickIncomingConnection() override;
 
  protected:
   virtual void notifyStop() {
@@ -305,6 +311,19 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   Processor &operator=(const Processor &parent);
 
  private:
+  static std::mutex& getGraphMutex() {
+    static std::mutex mutex{};
+    return mutex;
+  }
+
+  // must hold the graphMutex
+  void updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force = false);
+
+  static bool partOfCycle(const std::shared_ptr<Connection>& conn);
+
+  // an outgoing connection allows us to reach these nodes
+  std::unordered_map<std::shared_ptr<Connection>, std::unordered_set<std::shared_ptr<const Processor>>> reachable_processors_;
+
   std::shared_ptr<logging::Logger> logger_;
 };
 

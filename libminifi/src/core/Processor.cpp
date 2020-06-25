@@ -40,6 +40,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "io/StreamFactory.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -101,14 +102,27 @@ void Processor::setScheduledState(ScheduledState state) {
 }
 
 bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
-  bool ret = false;
+  enum class DidSet{
+    NONE,
+    DESTINATION,
+    SOURCE,
+  };
+  DidSet result = DidSet::NONE;
 
   if (isRunning()) {
     logger_->log_warn("Can not add connection while the process %s is running", name_);
     return false;
   }
   std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(getGraphMutex());
+
+  auto updateGraph = gsl::finally([&] {
+    if (result == DidSet::SOURCE) {
+      updateReachability(lock);
+    } else if (result == DidSet::DESTINATION) {
+      updateReachability(lock, true);
+    }
+  });
 
   utils::Identifier srcUUID;
   utils::Identifier destUUID;
@@ -124,7 +138,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
       connection->setDestination(shared_from_this());
       logger_->log_debug("Add connection %s into Processor %s incoming connection", connection->getName(), name_);
       incoming_connections_Iter = this->_incomingConnections.begin();
-      ret = true;
+      result = DidSet::DESTINATION;
     }
   }
   std::string source_uuid = srcUUID.to_string();
@@ -143,7 +157,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
           connection->setSource(shared_from_this());
           out_going_connections_[relationship] = existedConnection;
           logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
-          ret = true;
+          result = DidSet::SOURCE;
         }
       } else {
         // We do not have any outgoing connection for this relationship yet
@@ -152,11 +166,11 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
         connection->setSource(shared_from_this());
         out_going_connections_[relationship] = newConnection;
         logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
-        ret = true;
+        result = DidSet::SOURCE;
       }
     }
   }
-  return ret;
+  return result != DidSet::NONE;
 }
 
 void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
@@ -165,7 +179,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
     return;
   }
 
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(getGraphMutex());
 
   utils::Identifier srcUUID;
   utils::Identifier destUUID;
@@ -287,6 +301,109 @@ bool Processor::isWorkAvailable() {
   }
 
   return hasWork;
+}
+
+// must hold the graphMutex
+void Processor::updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force) {
+  bool didChange = force;
+  for (auto& outIt : out_going_connections_) {
+    for (auto& outConn : outIt.second) {
+      auto connection = std::dynamic_pointer_cast<Connection>(outConn);
+      if (!connection) {
+        continue;
+      }
+      auto dest = std::dynamic_pointer_cast<const Processor>(connection->getDestination());
+      if (!dest) {
+        continue;
+      }
+      if (reachable_processors_[connection].insert(dest).second) {
+        didChange = true;
+      }
+      for (auto& reachedIt : dest->reachable_processors_) {
+        for (auto &reached_proc : reachedIt.second) {
+          if (reachable_processors_[connection].insert(reached_proc).second) {
+            didChange = true;
+          }
+        }
+      }
+    }
+  }
+  if (didChange) {
+    // propagate the change to sources
+    for (auto& inConn : _incomingConnections) {
+      auto connection = std::dynamic_pointer_cast<Connection>(inConn);
+      if (!connection) {
+        continue;
+      }
+      auto source = std::dynamic_pointer_cast<Processor>(connection->getSource());
+      if (!source) {
+        continue;
+      }
+      source->updateReachability(graph_lock);
+    }
+  }
+}
+
+bool Processor::partOfCycle(const std::shared_ptr<Connection>& conn) {
+  auto source = std::dynamic_pointer_cast<Processor>(conn->getSource());
+  if (!source) {
+    return false;
+  }
+  auto it = source->reachable_processors_.find(conn);
+  if (it == source->reachable_processors_.end()) {
+    return false;
+  }
+  return it->second.find(source) != it->second.end();
+}
+
+bool Processor::isThrottledByBackpressure() const {
+  bool isThrottledByOutgoing = ([&] {
+    for (auto &outIt : out_going_connections_) {
+      for (auto &out : outIt.second) {
+        auto connection = std::dynamic_pointer_cast<Connection>(out);
+        if (!connection) {
+          continue;
+        }
+        if (connection->isFull()) {
+          return true;
+        }
+      }
+    }
+    return false;
+  })();
+  bool isForcedByIncomingCycle = ([&] {
+    for (auto &inConn : _incomingConnections) {
+      auto connection = std::dynamic_pointer_cast<Connection>(inConn);
+      if (!connection) {
+        continue;
+      }
+      if (partOfCycle(connection) && connection->isFull()) {
+        return true;
+      }
+    }
+    return false;
+  })();
+  return isThrottledByOutgoing && !isForcedByIncomingCycle;
+}
+
+std::shared_ptr<Connectable> Processor::pickIncomingConnection() {
+  std::lock_guard<std::mutex> rel_guard(relationship_mutex_);
+
+  auto beginIt = incoming_connections_Iter;
+  std::shared_ptr<Connectable> inConn;
+  do {
+    inConn = getNextIncomingConnectionImpl(rel_guard);
+    auto connection = std::dynamic_pointer_cast<Connection>(inConn);
+    if (!connection) {
+      continue;
+    }
+    if (partOfCycle(connection) && connection->isFull()) {
+      return inConn;
+    }
+  } while (incoming_connections_Iter != beginIt);
+
+  // we did not find a preferred connection
+  return getNextIncomingConnectionImpl(rel_guard);
 }
 
 }  // namespace core

@@ -931,7 +931,7 @@ void ProcessSession::rollback() {
 }
 
 std::shared_ptr<core::FlowFile> ProcessSession::get() {
-  std::shared_ptr<Connectable> first = process_context_->getProcessorNode()->getNextIncomingConnection();
+  std::shared_ptr<Connectable> first = process_context_->getProcessorNode()->pickIncomingConnection();
 
   if (first == nullptr) {
     logger_->log_trace("Get is null for %s", process_context_->getProcessorNode()->getName());
@@ -969,7 +969,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
       _originalFlowFiles[snapshot->getUUIDStr()] = snapshot;
       return ret;
     }
-    current = std::static_pointer_cast<Connection>(process_context_->getProcessorNode()->getNextIncomingConnection());
+    current = std::static_pointer_cast<Connection>(process_context_->getProcessorNode()->pickIncomingConnection());
   } while (current != nullptr && current != first);
 
   return nullptr;
