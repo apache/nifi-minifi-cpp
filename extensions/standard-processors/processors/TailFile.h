@@ -54,6 +54,10 @@ struct TailState {
     return path_ + utils::file::FileUtils::get_separator() + file_name_;
   }
 
+  int64_t lastReadTimeInMilliseconds() const {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(last_read_time_.time_since_epoch()).count();
+  }
+
   std::string path_;
   std::string file_name_;
   uint64_t position_ = 0;

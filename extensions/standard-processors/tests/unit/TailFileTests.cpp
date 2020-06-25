@@ -114,7 +114,7 @@ TEST_CASE("TailFile reads the file until the first delimiter", "[simple]") {
   LogTestController::getInstance().reset();
 }
 
-TEST_CASE("TailFile picks up the second line if a delimiter is written while it was down", "[state]") {
+TEST_CASE("TailFile picks up the second line if a delimiter is written between runs", "[state]") {
   // Create and write to the test file
   TestController testController;
   LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
@@ -326,7 +326,12 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
                                                                 {"file.0.position", "35"},
                                                                 {"file.0.current", temp_file},
                                                                 {"file.0.checksum", "1404369522"}};
-    REQUIRE(expected_state == state);
+    for (const auto& key_value_pair : expected_state) {
+      const auto it = state.find(key_value_pair.first);
+      REQUIRE(it != state.end());
+      REQUIRE(it->second == key_value_pair.second);
+    }
+    REQUIRE(state.find("file.0.last_read_time") != state.end());
   }
 
   SECTION("multiple") {
@@ -370,7 +375,13 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
                                                                 {"file.1.position", "35"},
                                                                 {"file.1.current", temp_file_2},
                                                                 {"file.1.checksum", "2289158555"}};
-    REQUIRE(expected_state == state);
+    for (const auto& key_value_pair : expected_state) {
+      const auto it = state.find(key_value_pair.first);
+      REQUIRE(it != state.end());
+      REQUIRE(it->second == key_value_pair.second);
+    }
+    REQUIRE(state.find("file.0.last_read_time") != state.end());
+    REQUIRE(state.find("file.1.last_read_time") != state.end());
   }
 }
 
@@ -1094,6 +1105,60 @@ TEST_CASE("TailFile handles the Rolling Filename Pattern property correctly", "[
 
   for (const auto &log_line : expected_log_lines) {
     REQUIRE(LogTestController::getInstance().contains(log_line));
+  }
+}
+
+TEST_CASE("TailFile finds and finishes the renamed file and continues with the new log file after a restart", "[rotation][restart]") {
+  TestController testController;
+
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setTrace<processors::TailFile>();
+  LogTestController::getInstance().setTrace<processors::LogAttribute>();
+
+  char log_dir_format[] = "/tmp/gt.XXXXXX";
+  auto log_dir = testController.createTempDirectory(log_dir_format);
+
+  std::string test_file_1 = createTempFile(log_dir, "test.1", "line one\nline two\nline three\n");  // old rotated file
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::string test_file = createTempFile(log_dir, "test.log", "line four\nline five\nline six\n");  // current log file
+
+  char state_dir_format[] = "/tmp/gt.XXXXXX";
+  auto state_dir = testController.createTempDirectory(state_dir_format);
+
+  utils::Identifier tail_file_uuid = utils::IdGenerator::getIdGenerator()->generate();
+  const core::Relationship success_relationship{"success", "everything is fine"};
+
+  {
+    auto test_plan = testController.createPlan(nullptr, state_dir.c_str());
+    auto tail_file = test_plan->addProcessor("TailFile", tail_file_uuid, "Tail", {success_relationship});
+    test_plan->setProperty(tail_file, processors::TailFile::FileName.getName(), test_file);
+    auto log_attr = test_plan->addProcessor("LogAttribute", "Log", success_relationship, true);
+    test_plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+    test_plan->setProperty(log_attr, processors::LogAttribute::LogPayload.getName(), "true");
+
+    testController.runSession(test_plan, true);
+    REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
+  }
+
+  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+
+  appendTempFile(log_dir, "test.log", "line seven\n");
+  renameTempFile(log_dir, "test.1", "test.2");
+  renameTempFile(log_dir, "test.log", "test.1");
+  createTempFile(log_dir, "test.log", "line eight is the last line\n");
+
+  {
+    auto test_plan = testController.createPlan(nullptr, state_dir.c_str());
+    auto tail_file = test_plan->addProcessor("TailFile", tail_file_uuid, "Tail", {success_relationship});
+    test_plan->setProperty(tail_file, processors::TailFile::FileName.getName(), test_file);
+    auto log_attr = test_plan->addProcessor("LogAttribute", "Log", success_relationship, true);
+    test_plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+    test_plan->setProperty(log_attr, processors::LogAttribute::LogPayload.getName(), "true");
+
+    testController.runSession(test_plan, true);
+    REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:test.29-39.1"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:test.0-27.log"));
   }
 }
 

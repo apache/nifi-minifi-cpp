@@ -120,6 +120,16 @@ bool containsKey(const Container &container, const Key &key) {
 }
 
 template <typename Container, typename Key>
+int64_t readOptionalInt64(const Container &container, const Key &key) {
+  const auto it = container.find(key);
+  if (it != container.end()) {
+    return std::stoll(it->second);
+  } else {
+    return 0;
+  }
+}
+
+template <typename Container, typename Key>
 uint64_t readOptionalUint64(const Container &container, const Key &key) {
   const auto it = container.find(key);
   if (it != container.end()) {
@@ -489,13 +499,16 @@ bool TailFile::getStateFromStateManager(std::map<std::string, TailState> &new_ta
         const std::string& current = state_map.at("file." + std::to_string(i) + ".current");
         uint64_t position = std::stoull(state_map.at("file." + std::to_string(i) + ".position"));
         uint64_t checksum = readOptionalUint64(state_map, "file." + std::to_string(i) + ".checksum");
+        std::chrono::system_clock::time_point last_read_time{std::chrono::milliseconds{
+            readOptionalInt64(state_map, "file." + std::to_string(i) + ".last_read_time")
+        }};
 
         std::string fileLocation, fileName;
         if (utils::file::PathUtils::getFileNameAndPath(current, fileLocation, fileName)) {
           logger_->log_debug("Received path %s, file %s", fileLocation, fileName);
-          new_tail_states.emplace(current, TailState{fileLocation, fileName, position, std::chrono::system_clock::time_point{}, checksum});
+          new_tail_states.emplace(current, TailState{fileLocation, fileName, position, last_read_time, checksum});
         } else {
-          new_tail_states.emplace(current, TailState{fileLocation, current, position, std::chrono::system_clock::time_point{}, checksum});
+          new_tail_states.emplace(current, TailState{fileLocation, current, position, last_read_time, checksum});
         }
       } catch (...) {
         continue;
@@ -544,7 +557,8 @@ void TailFile::logState() {
 std::ostream& operator<<(std::ostream &os, const TailState &tail_state) {
   os << "name: " << tail_state.file_name_
       << ", position: " << tail_state.position_
-      << ", checksum: " << tail_state.checksum_;
+      << ", checksum: " << tail_state.checksum_
+      << ", last_read_time: " << tail_state.lastReadTimeInMilliseconds();
   return os;
 }
 
@@ -556,6 +570,7 @@ bool TailFile::storeState() {
     state["file." + std::to_string(i) + ".name"] = tail_state.second.file_name_;
     state["file." + std::to_string(i) + ".position"] = std::to_string(tail_state.second.position_);
     state["file." + std::to_string(i) + ".checksum"] = std::to_string(tail_state.second.checksum_);
+    state["file." + std::to_string(i) + ".last_read_time"] = std::to_string(tail_state.second.lastReadTimeInMilliseconds());
     ++i;
   }
   if (!state_manager_->set(state)) {
@@ -566,8 +581,7 @@ bool TailFile::storeState() {
 }
 
 std::vector<TailState> TailFile::findRotatedFiles(const TailState &state) const {
-  const auto last_read_time_in_seconds = std::chrono::time_point_cast<std::chrono::seconds>(state.last_read_time_).time_since_epoch().count();
-  logger_->log_debug("Searching for files rolled over; last read time is %" PRId64, int64_t{last_read_time_in_seconds});
+  logger_->log_debug("Searching for files rolled over; last read time is %" PRId64, state.lastReadTimeInMilliseconds());
 
   std::size_t last_dot_position = state.file_name_.find_last_of('.');
   std::string base_name = state.file_name_.substr(0, last_dot_position);
