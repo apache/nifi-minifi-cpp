@@ -37,10 +37,7 @@
 namespace {
 using org::apache::nifi::minifi::utils::createTempDir;
 using org::apache::nifi::minifi::utils::optional;
-
-std::vector<std::pair<std::string, std::string>> list_dir_all(const std::string& dir, const std::shared_ptr<logging::Logger>& logger, bool recursive = true) {
-  return org::apache::nifi::minifi::utils::file::FileUtils::list_dir_all(dir, logger, recursive);
-}
+using org::apache::nifi::minifi::utils::file::FileUtils;
 
 class RetryFlowFileTest {
  public:
@@ -160,9 +157,9 @@ class RetryFlowFileTest {
     plan_->runNextProcessor();  // PutFile
     plan_->runNextProcessor();  // LogAttribute
 
-    REQUIRE((RetryFlowFile::Retry.getName() == exp_outbound_relationship.getName() ? 1 : 0) == list_dir_all(retry_dir, logger_).size());
-    REQUIRE((RetryFlowFile::RetriesExceeded.getName() == exp_outbound_relationship.getName() ? 1 : 0) == list_dir_all(retries_exceeded_dir, logger_).size());
-    REQUIRE((RetryFlowFile::Failure.getName() == exp_outbound_relationship.getName() ? 1 : 0) == list_dir_all(failure_dir, logger_).size());
+    REQUIRE((RetryFlowFile::Retry.getName() == exp_outbound_relationship.getName() ? 1 : 0) == FileUtils::list_dir_all(retry_dir, logger_).size());
+    REQUIRE((RetryFlowFile::RetriesExceeded.getName() == exp_outbound_relationship.getName() ? 1 : 0) == FileUtils::list_dir_all(retries_exceeded_dir, logger_).size());
+    REQUIRE((RetryFlowFile::Failure.getName() == exp_outbound_relationship.getName() ? 1 : 0) == FileUtils::list_dir_all(failure_dir, logger_).size());
     REQUIRE((RetryFlowFile::RetriesExceeded.getName() == exp_outbound_relationship.getName()) == logContainsText("key:retries_exceeded_property_key_1 value:retries_exceeded_property_value_1"));
     REQUIRE((RetryFlowFile::RetriesExceeded.getName() == exp_outbound_relationship.getName()) == logContainsText("key:retries_exceeded_property_key_2 value:retries_exceeded_property_value_2"));
     REQUIRE(exp_penalty_on_flowfile == flowfileWasPenalizedARetryflowfile());
@@ -181,7 +178,7 @@ class RetryFlowFileTest {
   }
 
   bool retryFlowfileWarnedForReuse() {
-    const std::string pattern = "[org::apache::nifi::minifi::processors::RetryFlowFile] [warning] Reusing retry attribute that belongs to different processor. Resetting value to 1.";
+    const std::string pattern = "[org::apache::nifi::minifi::processors::RetryFlowFile] [warning] Reusing retry attribute that belongs to different processor. Resetting value to 0.";
     return logContainsText(pattern);
   }
 

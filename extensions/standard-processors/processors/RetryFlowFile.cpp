@@ -106,31 +106,20 @@ void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSessio
     return;
   }
   uint64_t retry_property_value = maybe_retry_property_value.value_or(0);
-  if (updateUUIDMarkerAndCheckFailOnReuse(flow_file)) {
+  if (updateUUIDMarkerAndCheckFailOnReuse(flow_file, retry_property_value)) {
     session->transfer(flow_file, Failure);
     return;
   }
 
   if (retry_property_value < maximum_retries_) {
-    try {
-      flow_file->setAttribute(retry_attribute_, std::to_string(gsl::narrow_cast<uint64_t>(retry_property_value + 1)));
-    }
-    catch(const gsl::narrowing_error& e) {
-      logger_->log_error("Narrowing Exception: %s", e.what());
-      session->transfer(flow_file, Failure);
-      return;
-    }
+    flow_file->setAttribute(retry_attribute_, std::to_string(retry_property_value + 1));
     if (penalize_retries_) {
       session->penalize(flow_file);
     }
     session->transfer(flow_file, Retry);
     return;
   }
-  if (!setRetriesExceededAttributesOnFlowFile(context, flow_file)) {
-    session->transfer(flow_file, Failure);
-    yield();
-    return;
-  }
+  setRetriesExceededAttributesOnFlowFile(context, flow_file);
   session->transfer(flow_file, RetriesExceeded);
 }
 
@@ -165,7 +154,7 @@ utils::optional<uint64_t> RetryFlowFile::getRetryPropertyValue(const std::shared
 }
 
 // Returns true on fail on reuse scenario
-bool RetryFlowFile::updateUUIDMarkerAndCheckFailOnReuse(const std::shared_ptr<FlowFileRecord>& flow_file) const {
+bool RetryFlowFile::updateUUIDMarkerAndCheckFailOnReuse(const std::shared_ptr<FlowFileRecord>& flow_file, uint64_t& retry_value) const {
   const std::string last_retried_by_property_name = retry_attribute_ + ".uuid";
   const std::string current_processor_uuid = getUUIDStr();
   std::string last_retried_by_uuid;
@@ -178,29 +167,23 @@ bool RetryFlowFile::updateUUIDMarkerAndCheckFailOnReuse(const std::shared_ptr<Fl
         return true;
       }
       if (reuse_mode_ == WARN_ON_REUSE) {
-        logger_->log_warn("Reusing retry attribute that belongs to different processor. Resetting value to 1.");
+        logger_->log_warn("Reusing retry attribute that belongs to different processor. Resetting value to 0.");
       } else {  // Assuming reuse_mode_ == RESET_REUSE
-        logger_->log_debug("Reusing retry attribute that belongs to different processor. Resetting value to 1.");
+        logger_->log_debug("Reusing retry attribute that belongs to different processor. Resetting value to 0.");
       }
+      retry_value = 0;
     }
   }
   flow_file->setAttribute(last_retried_by_property_name, getUUIDStr());
   return false;
 }
 
-bool RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<FlowFileRecord>& flow_file) const {
-  try {
-    for (const auto& attribute : exceeded_flowfile_attribute_keys_) {
-      std::string value;
-      context->getDynamicProperty(attribute, value, flow_file);
-      flow_file->setAttribute(attribute.getName(), value);
-      logger_->log_info("Set attribute '%s' of flow file '%s' with value '%s'", attribute.getName(), flow_file->getUUIDStr(), value);
-    }
-    return true;
-  }
-  catch (const std::exception& e) {
-    logger_->log_error("Caught exception while updating attributes: %s", e.what());
-    return false;
+void RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<FlowFileRecord>& flow_file) const {
+  for (const auto& attribute : exceeded_flowfile_attribute_keys_) {
+    std::string value;
+    context->getDynamicProperty(attribute, value, flow_file);
+    flow_file->setAttribute(attribute.getName(), value);
+    logger_->log_info("Set attribute '%s' of flow file '%s' with value '%s'", attribute.getName(), flow_file->getUUIDStr(), value);
   }
 }
 

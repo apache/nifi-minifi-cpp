@@ -168,7 +168,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
   return addProcessor(processor_name, uuid, name, relationships, linkToPrevious);
 }
 
-std::shared_ptr<minifi::Connection> TestPlan::addConnection(const std::shared_ptr<core::Processor> source_proc, const core::Relationship& source_relationship, const std::shared_ptr<core::Processor>& destination_proc) {
+std::shared_ptr<minifi::Connection> TestPlan::addConnection(const std::shared_ptr<core::Processor>& source_proc, const core::Relationship& source_relationship, const std::shared_ptr<core::Processor>& destination_proc) {
   std::stringstream connection_name;
   connection_name << source_proc->getUUIDStr() << "-to-" << destination_proc->getUUIDStr();
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
