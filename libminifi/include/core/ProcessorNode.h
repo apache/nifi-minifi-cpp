@@ -236,6 +236,10 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     return processor_->getNextIncomingConnection();
   }
 
+  std::shared_ptr<Connectable> pickIncomingConnection() {
+    return processor_->pickIncomingConnection();
+  }
+
   /**
    * @return true if incoming connections > 0
    */

@@ -99,9 +99,9 @@ class IdentifierBase {
     memcpy(other, id_, sizeof(T));
   }
 
-  C converted_;
+  C converted_{};
 
-  T id_;
+  T id_{};
 };
 
 typedef uint8_t UUID_FIELD[16];

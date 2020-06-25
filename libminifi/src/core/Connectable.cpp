@@ -163,9 +163,12 @@ std::set<std::shared_ptr<Connectable>> Connectable::getOutGoingConnections(const
 
 std::shared_ptr<Connectable> Connectable::getNextIncomingConnection() {
   std::lock_guard<std::mutex> lock(relationship_mutex_);
+  return getNextIncomingConnectionImpl(lock);
+}
 
+std::shared_ptr<Connectable> Connectable::getNextIncomingConnectionImpl(const std::lock_guard<std::mutex>& relatioship_mutex_lock) {
   if (_incomingConnections.size() == 0)
-    return NULL;
+    return nullptr;
 
   if (incoming_connections_Iter == _incomingConnections.end())
     incoming_connections_Iter = _incomingConnections.begin();
@@ -177,6 +180,10 @@ std::shared_ptr<Connectable> Connectable::getNextIncomingConnection() {
     incoming_connections_Iter = _incomingConnections.begin();
 
   return ret;
+}
+
+std::shared_ptr<Connectable> Connectable::pickIncomingConnection() {
+  return getNextIncomingConnection();
 }
 
 } /* namespace core */

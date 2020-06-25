@@ -24,6 +24,8 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_set>
+#include <unordered_map>
 #include "Core.h"
 #include <condition_variable>
 #include "core/logging/Logger.h"
@@ -85,6 +87,8 @@ class Connectable : public CoreComponent {
    * @return next incoming connection
    */
   std::shared_ptr<Connectable> getNextIncomingConnection();
+
+  virtual std::shared_ptr<Connectable> pickIncomingConnection();
 
   /**
    * @return true if incoming connections > 0
@@ -155,6 +159,8 @@ class Connectable : public CoreComponent {
   }
 
  protected:
+  // must hold the relationship_mutex_ before calling this
+  std::shared_ptr<Connectable> getNextIncomingConnectionImpl(const std::lock_guard<std::mutex>& relationship_mutex_lock);
   // Penalization Period in MilliSecond
   std::atomic<uint64_t> _penalizationPeriodMsec;
 

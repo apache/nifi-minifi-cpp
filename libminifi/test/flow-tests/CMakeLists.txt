@@ -18,14 +18,23 @@
 #
 
 file(GLOB FLOW_TESTS  "*.cpp")
+
 SET(FLOW_TEST_COUNT 0)
+
 FOREACH(testfile ${FLOW_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
-    add_executable("${testfilename}" "${testfile}")
+    add_executable("${testfilename}" "${testfile}" )
+    target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test/")
+    target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors/")
     createTests("${testfilename}")
-    target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
     target_wholearchive_library(${testfilename} minifi-standard-processors)
+    if (NOT DISABLE_ROCKSDB)
+        target_wholearchive_library(${testfilename} minifi-rocksdb-repos)
+    endif()
+
+    target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
     MATH(EXPR FLOW_TEST_COUNT "${FLOW_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
-message("-- Finished building ${FLOW_TEST_COUNT} flow related test file(s)...")
+message("-- Finished building ${FLOW_TEST_COUNT} flow test file(s)...")
+

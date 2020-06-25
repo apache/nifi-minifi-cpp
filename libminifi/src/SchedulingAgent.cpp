@@ -98,7 +98,7 @@ bool SchedulingAgent::onTrigger(const std::shared_ptr<core::Processor> &processo
     // No work to do, yield
     return true;
   }
-  if (hasTooMuchOutGoing(processor)) {
+  if (processor->isThrottledByBackpressure()) {
     logger_->log_debug("backpressure applied because too much outgoing for %s", processor->getUUIDStr());
     // need to apply backpressure
     return true;
