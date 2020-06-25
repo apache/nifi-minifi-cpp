@@ -100,12 +100,12 @@ void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSessio
   }
 
   bool failure_due_to_non_numerical_retry;
-  uint64_t retry_property_value;
-  std::tie(retry_property_value, failure_due_to_non_numerical_retry) = getRetryPropertyValue(flow_file);
-  if (failure_due_to_non_numerical_retry) {
+  utils::optional<uint64_t> maybe_retry_property_value = getRetryPropertyValue(flow_file);
+  if (!maybe_retry_property_value) {
     session->transfer(flow_file, Failure);
     return;
   }
+  uint64_t retry_property_value = maybe_retry_property_value.value_or(0);
   if (updateUUIDMarkerAndCheckFailOnReuse(flow_file)) {
     session->transfer(flow_file, Failure);
     return;
@@ -135,38 +135,37 @@ void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSessio
 }
 
 void RetryFlowFile::readDynamicPropertyKeys(core::ProcessContext* context) {
-  exceeded_flowfile_attribute_keys.clear();
+  exceeded_flowfile_attribute_keys_.clear();
   const std::vector<std::string> dynamic_prop_keys = context->getDynamicPropertyKeys();
   logger_->log_info("RetryFlowFile registering %d keys", dynamic_prop_keys.size());
   for (const auto& key : dynamic_prop_keys) {
-    exceeded_flowfile_attribute_keys.emplace_back(core::PropertyBuilder::createProperty(key)->withDescription("auto generated")->supportsExpressionLanguage(true)->build());
+    exceeded_flowfile_attribute_keys_.emplace_back(core::PropertyBuilder::createProperty(key)->withDescription("auto generated")->supportsExpressionLanguage(true)->build());
     logger_->log_info("RetryFlowFile registered attribute '%s'", key);
   }
 }
 
-// Returns (1, true) on non-numerical or out-of-bounds retry value
-std::pair<uint64_t, bool> RetryFlowFile::getRetryPropertyValue(const std::shared_ptr<FlowFileRecord>& flow_file) {
+utils::optional<uint64_t> RetryFlowFile::getRetryPropertyValue(const std::shared_ptr<FlowFileRecord>& flow_file) const {
   std::string value_as_string;
   try {
     if (flow_file->getAttribute(retry_attribute_, value_as_string)) {
-      return std::make_pair(std::stoul(value_as_string), false);
+      return utils::make_optional<uint64_t>(std::stoull(value_as_string));
     }
   }
   catch(const std::invalid_argument&) {
     if (fail_on_non_numerical_overwrite_) {
       logger_->log_info("Non-numerical retry property in RetryFlowFile. Sending flowfile to failure...", value_as_string);
-      return std::make_pair(1, true);
+      return {};
     }
-    logger_->log_info("Non-numerical retry property in RetryFlowFile: overwriting %s with 1.", value_as_string);
+    logger_->log_info("Non-numerical retry property in RetryFlowFile: overwriting %s with 0.", value_as_string);
   }
   catch(const std::out_of_range&) {
     logger_->log_error("Narrowing Exception for %s, treating it as non-numerical value", value_as_string);
   }
-  return std::make_pair(1, false);
+  return utils::make_optional<uint64_t>(0);
 }
 
 // Returns true on fail on reuse scenario
-bool RetryFlowFile::updateUUIDMarkerAndCheckFailOnReuse(const std::shared_ptr<FlowFileRecord>& flow_file) {
+bool RetryFlowFile::updateUUIDMarkerAndCheckFailOnReuse(const std::shared_ptr<FlowFileRecord>& flow_file) const {
   const std::string last_retried_by_property_name = retry_attribute_ + ".uuid";
   const std::string current_processor_uuid = getUUIDStr();
   std::string last_retried_by_uuid;
@@ -189,9 +188,9 @@ bool RetryFlowFile::updateUUIDMarkerAndCheckFailOnReuse(const std::shared_ptr<Fl
   return false;
 }
 
-bool RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<FlowFileRecord>& flow_file) {
+bool RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<FlowFileRecord>& flow_file) const {
   try {
-    for (const auto& attribute : exceeded_flowfile_attribute_keys) {
+    for (const auto& attribute : exceeded_flowfile_attribute_keys_) {
       std::string value;
       context->getDynamicProperty(attribute, value, flow_file);
       flow_file->setAttribute(attribute.getName(), value);

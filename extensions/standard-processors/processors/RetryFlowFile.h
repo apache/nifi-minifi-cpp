@@ -32,6 +32,7 @@
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -87,18 +88,17 @@ class RetryFlowFile : public core::Processor {
 
  private:
   void readDynamicPropertyKeys(core::ProcessContext* context);
-  // Returns (1, true) on non-numerical or out-of-bounds retry value
-  std::pair<uint64_t, bool> getRetryPropertyValue(const std::shared_ptr<FlowFileRecord>& flow_file);
+  utils::optional<uint64_t> getRetryPropertyValue(const std::shared_ptr<FlowFileRecord>& flow_file) const;
   // Returns true on fail on reuse scenario
-  bool updateUUIDMarkerAndCheckFailOnReuse(const std::shared_ptr<FlowFileRecord>& flow_file);
-  bool setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<FlowFileRecord>& flow_file);
+  bool updateUUIDMarkerAndCheckFailOnReuse(const std::shared_ptr<FlowFileRecord>& flow_file) const;
+  bool setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<FlowFileRecord>& flow_file) const;
 
   std::string retry_attribute_;
   uint64_t maximum_retries_ = 3;  // The real default value is set by the default on the MaximumRetries property
   bool penalize_retries_ =  true;  // The real default value is set by the default on the PenalizeRetries property
   bool fail_on_non_numerical_overwrite_ = false;  // The real default value is set by the default on the FailOnNonNumericalOverwrite property
   std::string reuse_mode_;
-  std::vector<core::Property> exceeded_flowfile_attribute_keys;
+  std::vector<core::Property> exceeded_flowfile_attribute_keys_;
 
   std::shared_ptr<logging::Logger> logger_;
 };
