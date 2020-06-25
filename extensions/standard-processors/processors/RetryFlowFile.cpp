@@ -90,7 +90,7 @@ void RetryFlowFile::onSchedule(core::ProcessContext* context, core::ProcessSessi
   context->getProperty(PenalizeRetries.getName(), penalize_retries_);
   context->getProperty(FailOnNonNumericalOverwrite.getName(), fail_on_non_numerical_overwrite_);
   context->getProperty(ReuseMode.getName(), reuse_mode_);
-  readDynamicProperties(context);
+  readDynamicPropertyKeys(context);
 }
 
 void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
@@ -134,7 +134,7 @@ void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSessio
   session->transfer(flow_file, RetriesExceeded);
 }
 
-void RetryFlowFile::readDynamicProperties(core::ProcessContext* context) {
+void RetryFlowFile::readDynamicPropertyKeys(core::ProcessContext* context) {
   exceeded_flowfile_attribute_keys.clear();
   const std::vector<std::string> dynamic_prop_keys = context->getDynamicPropertyKeys();
   logger_->log_info("RetryFlowFile registering %d keys", dynamic_prop_keys.size());
@@ -144,6 +144,7 @@ void RetryFlowFile::readDynamicProperties(core::ProcessContext* context) {
   }
 }
 
+// Returns (1, true) on non-numerical or out-of-bounds retry value
 std::pair<uint64_t, bool> RetryFlowFile::getRetryPropertyValue(const std::shared_ptr<FlowFileRecord>& flow_file) {
   std::string value_as_string;
   try {
@@ -164,6 +165,7 @@ std::pair<uint64_t, bool> RetryFlowFile::getRetryPropertyValue(const std::shared
   return std::make_pair(1, false);
 }
 
+// Returns true on fail on reuse scenario
 bool RetryFlowFile::updateUUIDMarkerAndCheckFailOnReuse(const std::shared_ptr<FlowFileRecord>& flow_file) {
   const std::string last_retried_by_property_name = retry_attribute_ + ".uuid";
   const std::string current_processor_uuid = getUUIDStr();

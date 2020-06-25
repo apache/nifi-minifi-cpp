@@ -116,6 +116,12 @@ class RetryFlowFileTest {
     plan_->addConnection(putfile_on_retry, success, log_attribute);
     plan_->addConnection(putfile_on_retries_exceeded, success, log_attribute);
     plan_->addConnection(putfile_on_failure, success, log_attribute);
+
+
+    update->setAutoTerminatedRelationships({failure});
+    putfile_on_retry->setAutoTerminatedRelationships({failure});
+    putfile_on_retries_exceeded->setAutoTerminatedRelationships({failure});
+    putfile_on_failure->setAutoTerminatedRelationships({failure});
     log_attribute->setAutoTerminatedRelationships({success});
 
     // Properties
