@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_ROCKSDBLOADER_H
-#define EXTENSIONS_ROCKSDBLOADER_H
+#ifndef EXTENSIONS_ROCKSDBREPOS_ROCKSDBLOADER_H
+#define EXTENSIONS_ROCKSDBREPOS_ROCKSDBLOADER_H
 
 #include "DatabaseContentRepository.h"
 #include "FlowFileRepository.h"
@@ -80,4 +80,4 @@ class RocksDBFactory : public core::ObjectFactory {
 extern "C" {
 DLL_EXPORT void *createRocksDBFactory(void);
 }
-#endif /* EXTENSIONS_ROCKSDBLOADER_H */
+#endif  // EXTENSIONS_ROCKSDBREPOS_ROCKSDBLOADER_H

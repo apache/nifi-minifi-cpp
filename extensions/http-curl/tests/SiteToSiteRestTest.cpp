@@ -59,8 +59,8 @@ class Responder : public ServerAwareHandler {
   bool isSecure;
 };
 
-class SiteToSiteTestHarness : public CoapIntegrationBase {
- public:
+class SiteToSiteTestHarness : public HTTPIntegrationBase {
+public:
   explicit SiteToSiteTestHarness(bool isSecure)
       : isSecure(isSecure) {
     char format[] = "/tmp/ssth.XXXXXX";

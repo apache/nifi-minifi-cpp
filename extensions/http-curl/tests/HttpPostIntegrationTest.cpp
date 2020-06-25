@@ -29,8 +29,8 @@
 #include "FlowController.h"
 #include "HTTPIntegrationBase.h"
 
-class HttpTestHarness : public CoapIntegrationBase {
- public:
+class HttpTestHarness : public HTTPIntegrationBase {
+public:
   HttpTestHarness() {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);

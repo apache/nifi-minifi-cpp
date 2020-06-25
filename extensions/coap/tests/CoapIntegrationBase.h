@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_
-#define LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_
+#ifndef EXTENSIONS_COAP_TESTS_COAPINTEGRATIONBASE_H
+#define EXTENSIONS_COAP_TESTS_COAPINTEGRATIONBASE_H
 
 #include "../tests/TestServer.h"
 #include "CivetServer.h"
@@ -111,4 +111,4 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
   }
 }
 
-#endif /* LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_ */
+#endif  // EXTENSIONS_COAP_TESTS_COAPINTEGRATIONBASE_H

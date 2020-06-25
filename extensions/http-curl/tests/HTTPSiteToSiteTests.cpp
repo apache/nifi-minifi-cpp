@@ -34,10 +34,10 @@
 #include "HTTPHandlers.h"
 #include "client/HTTPStream.h"
 
-class SiteToSiteTestHarness : public CoapIntegrationBase {
- public:
+class SiteToSiteTestHarness : public HTTPIntegrationBase {
+public:
   explicit SiteToSiteTestHarness(bool isSecure, std::chrono::milliseconds waitTime = std::chrono::milliseconds{2000})
-      : CoapIntegrationBase(waitTime.count()), isSecure(isSecure) {
+      : HTTPIntegrationBase(waitTime.count()), isSecure(isSecure) {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }

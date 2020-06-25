@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_
-#define LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_
+#ifndef EXTENSIONS_HTTPCURL_TESTS_HTTPINTEGRATIONBASE_H
+#define EXTENSIONS_HTTPCURL_TESTS_HTTPINTEGRATIONBASE_H
 
 #include "CivetServer.h"
 #include "integration/IntegrationBase.h"
@@ -35,14 +35,14 @@ int ssl_enable(void* /*ssl_context*/, void* /*user_data*/) {
   return 0;
 }
 
-class CoapIntegrationBase : public IntegrationBase {
- public:
-  explicit CoapIntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS)
+class HTTPIntegrationBase : public IntegrationBase {
+public:
+  explicit HTTPIntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS)
       : IntegrationBase(waitTime),
         server(nullptr) {
   }
 
-  void setUrl(const std::string& url, ServerAwareHandler *handler);
+  void setUrl(const std::string &url, ServerAwareHandler *handler);
 
   void shutdownBeforeFlowController() override {
     server.reset();
@@ -66,7 +66,7 @@ class CoapIntegrationBase : public IntegrationBase {
   std::unique_ptr<TestServer> server;
 };
 
-void CoapIntegrationBase::setUrl(const std::string& url, ServerAwareHandler *handler) {
+void HTTPIntegrationBase::setUrl(const std::string &url, ServerAwareHandler *handler) {
   parse_http_components(url, port, scheme, path);
   CivetCallbacks callback{};
   if (server) {
@@ -96,8 +96,8 @@ void CoapIntegrationBase::setUrl(const std::string& url, ServerAwareHandler *han
   configuration->set("nifi.c2.rest.url.ack", c2_url);
 }
 
-class VerifyC2Base : public CoapIntegrationBase {
- public:
+class VerifyC2Base : public HTTPIntegrationBase {
+public:
   void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<LogTestController>();
@@ -133,10 +133,10 @@ class VerifyC2Describe : public VerifyC2Base {
   }
 };
 
-class VerifyC2Update : public CoapIntegrationBase {
- public:
+class VerifyC2Update : public HTTPIntegrationBase {
+public:
   explicit VerifyC2Update(uint64_t waitTime)
-      : CoapIntegrationBase(waitTime) {
+      : HTTPIntegrationBase(waitTime) {
   }
 
   void testSetup() override {
@@ -206,4 +206,4 @@ public:
     VerifyC2Update::cleanup();
   }
 };
-#endif /* LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_ */
+#endif  // EXTENSIONS_HTTPCURL_TESTS_HTTPINTEGRATIONBASE_H
