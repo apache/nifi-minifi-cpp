@@ -27,7 +27,7 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
-#include "rdkafka.h" // NOLINT
+#include "rdkafka.h"
 #include "KafkaTopic.h"
 #include "utils/gsl.h"
 

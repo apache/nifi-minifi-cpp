@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "concurrentqueue.h" // NOLINT
+#include "concurrentqueue.h"
 #include "FlowFileRecord.h"
 #include "core/logging/LoggerConfiguration.h"
 

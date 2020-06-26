@@ -18,7 +18,7 @@
 #ifndef EXTENSIONS_LIBRDKAFKA_KAFKATOPIC_H_
 #define EXTENSIONS_LIBRDKAFKA_KAFKATOPIC_H_
 
-#include "rdkafka.h" // NOLINT
+#include "rdkafka.h"
 
 #include "utils/gsl.h"
 

@@ -34,8 +34,8 @@
 #ifdef BDIFF
 
 extern "C" {
-#include "bsdiff.h" // NOLINT
-#include "bspatch.h" // NOLINT
+#include "bsdiff.h"
+#include "bspatch.h"
 
 }
 #else

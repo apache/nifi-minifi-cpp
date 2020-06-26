@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#include "concurrentqueue.h" // NOLINT
+#include "concurrentqueue.h"
 #include "core/Resource.h"
 #include "core/Processor.h"
 
