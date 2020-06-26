@@ -222,10 +222,10 @@ bool ConfigurableComponent::getDynamicProperty(const std::string name, std::stri
     if (item.getValue().getValue() == nullptr) {
       // empty property value
       if (item.getRequired()) {
-        logger_->log_debug("Component %s required dynamic property %s is empty", name, item.getName());
+        logger_->log_error("Component %s required dynamic property %s is empty", name, item.getName());
         throw std::runtime_error("Required dynamic property is empty: " + item.getName());
       }
-      logger_->log_warn("Component %s dynamic property name %s, empty value", name, item.getName());
+      logger_->log_debug("Component %s dynamic property name %s, empty value", name, item.getName());
       return false;
     }
     value = item.getValue().to_string();

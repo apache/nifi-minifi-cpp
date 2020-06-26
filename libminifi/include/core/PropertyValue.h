@@ -67,14 +67,12 @@ class PropertyValue : public state::response::ValueNode {
 
  public:
   PropertyValue()
-      : type_id(std::type_index(typeid(std::string))) {
-    validator_ = StandardValidators::VALID;
-  }
+      : type_id(std::type_index(typeid(std::string))) {}
 
   PropertyValue(const PropertyValue &o) = default;
   PropertyValue(PropertyValue &&o) noexcept = default;
 
-  void setValidator(const std::shared_ptr<PropertyValidator> &val) {
+  void setValidator(const gsl::not_null<std::shared_ptr<PropertyValidator>> &val) {
     validator_ = val;
   }
 

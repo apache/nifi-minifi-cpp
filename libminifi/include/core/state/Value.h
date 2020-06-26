@@ -91,7 +91,7 @@ class Value {
   virtual bool getValue(uint32_t &ref) {
     try {
       uint32_t value;
-      utils::internal::ValueParser(string_value).parseUInt32(value).parseEnd();
+      utils::internal::ValueParser(string_value).parse(value).parseEnd();
       ref = value;
     } catch(const ParseException&) {
       return false;
@@ -102,7 +102,7 @@ class Value {
   virtual bool getValue(int &ref) {
     try {
       int value;
-      utils::internal::ValueParser(string_value).parseInt(value).parseEnd();
+      utils::internal::ValueParser(string_value).parse(value).parseEnd();
       ref = value;
     } catch(const ParseException&) {
       return false;
@@ -113,7 +113,7 @@ class Value {
   virtual bool getValue(int64_t &ref) {
     try {
       int64_t value;
-      utils::internal::ValueParser(string_value).parseLongLong(value).parseEnd();
+      utils::internal::ValueParser(string_value).parse(value).parseEnd();
       ref = value;
     } catch(const ParseException&) {
       return false;
@@ -124,7 +124,7 @@ class Value {
   virtual bool getValue(uint64_t &ref) {
     try {
       uint64_t value;
-      utils::internal::ValueParser(string_value).parseUnsignedLongLong(value).parseEnd();
+      utils::internal::ValueParser(string_value).parse(value).parseEnd();
       ref = value;
     } catch(const ParseException&) {
       return false;
@@ -135,7 +135,7 @@ class Value {
   virtual bool getValue(bool &ref) {
     try {
       bool value;
-      utils::internal::ValueParser(string_value).parseBool(value).parseEnd();
+      utils::internal::ValueParser(string_value).parse(value).parseEnd();
       ref = value;
     } catch(const ParseException&) {
       return false;
@@ -157,7 +157,7 @@ class UInt32Value : public Value {
 
   explicit UInt32Value(const std::string &strvalue)
       : Value(strvalue) {
-    utils::internal::ValueParser(strvalue).parseUInt32(value).parseEnd();
+    utils::internal::ValueParser(strvalue).parse(value).parseEnd();
     setTypeId<uint32_t>();
   }
 
@@ -206,7 +206,7 @@ class IntValue : public Value {
 
   explicit IntValue(const std::string &strvalue)
       : Value(strvalue) {
-    utils::internal::ValueParser(strvalue).parseInt(value).parseEnd();
+    utils::internal::ValueParser(strvalue).parse(value).parseEnd();
   }
   int getValue() const {
     return value;
@@ -251,7 +251,7 @@ class BoolValue : public Value {
 
   explicit BoolValue(const std::string &strvalue)
       : Value(strvalue) {
-    utils::internal::ValueParser(strvalue).parseBool(value).parseEnd();
+    utils::internal::ValueParser(strvalue).parse(value).parseEnd();
   }
 
   bool getValue() const {
@@ -302,9 +302,8 @@ class UInt64Value : public Value {
   }
 
   explicit UInt64Value(const std::string &strvalue)
-      : Value(strvalue),
-        value(std::stoull(strvalue)) {
-    utils::internal::ValueParser(strvalue).parseUnsignedLongLong(value).parseEnd();
+      : Value(strvalue) {
+    utils::internal::ValueParser(strvalue).parse(value).parseEnd();
     setTypeId<uint64_t>();
   }
 
@@ -350,7 +349,7 @@ class Int64Value : public Value {
   }
   explicit Int64Value(const std::string &strvalue)
       : Value(strvalue) {
-    utils::internal::ValueParser(strvalue).parseLongLong(value).parseEnd();
+    utils::internal::ValueParser(strvalue).parse(value).parseEnd();
     setTypeId<int64_t>();
   }
 

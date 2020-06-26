@@ -315,16 +315,12 @@ class TimePeriodValidator : public PropertyValidator {
 
 class StandardValidators {
  public:
-  static std::shared_ptr<PropertyValidator> VALID;
-
-  static const std::shared_ptr<PropertyValidator> &getValidator(const std::shared_ptr<minifi::state::response::Value> &input) {
+  static const gsl::not_null<std::shared_ptr<PropertyValidator>> &getValidator(const std::shared_ptr<minifi::state::response::Value> &input) {
     static StandardValidators init;
     if (std::dynamic_pointer_cast<core::DataSizeValue>(input) != nullptr) {
       return init.DATA_SIZE_VALIDATOR;
     } else if (std::dynamic_pointer_cast<core::TimePeriodValue>(input) != nullptr) {
       return init.TIME_PERIOD_VALIDATOR;
-    } else if (std::dynamic_pointer_cast<core::DataSizeValue>(input) != nullptr) {
-      return init.DATA_SIZE_VALIDATOR;
     } else if (std::dynamic_pointer_cast<minifi::state::response::BoolValue>(input) != nullptr) {
       return init.BOOLEAN_VALIDATOR;
     } else if (std::dynamic_pointer_cast<minifi::state::response::IntValue>(input) != nullptr) {
@@ -336,29 +332,34 @@ class StandardValidators {
     } else if (std::dynamic_pointer_cast<minifi::state::response::UInt64Value>(input) != nullptr) {
       return init.UNSIGNED_LONG_VALIDATOR;
     } else {
-      return org::apache::nifi::minifi::core::StandardValidators::VALID;
+      return org::apache::nifi::minifi::core::StandardValidators::VALID_VALIDATOR();
     }
   }
 
-  static std::shared_ptr<PropertyValidator> PORT_VALIDATOR() {
-    static std::shared_ptr<PropertyValidator> validator = std::make_shared<PortValidator>("PORT_VALIDATOR");
+  static const gsl::not_null<std::shared_ptr<PropertyValidator>>& VALID_VALIDATOR() {
+    static gsl::not_null<std::shared_ptr<PropertyValidator>> validator(std::make_shared<AlwaysValid>(true, "VALID"));
     return validator;
   }
 
-  static std::shared_ptr<PropertyValidator> LISTEN_PORT_VALIDATOR() {
-    static std::shared_ptr<PropertyValidator> validator = std::make_shared<ListenPortValidator>("PORT_VALIDATOR");
+  static gsl::not_null<std::shared_ptr<PropertyValidator>> PORT_VALIDATOR() {
+    static gsl::not_null<std::shared_ptr<PropertyValidator>> validator(std::make_shared<PortValidator>("PORT_VALIDATOR"));
+    return validator;
+  }
+
+  static gsl::not_null<std::shared_ptr<PropertyValidator>> LISTEN_PORT_VALIDATOR() {
+    static gsl::not_null<std::shared_ptr<PropertyValidator>> validator(std::make_shared<ListenPortValidator>("PORT_VALIDATOR"));
     return validator;
   }
 
  private:
-  std::shared_ptr<PropertyValidator> INVALID;
-  std::shared_ptr<PropertyValidator> INTEGER_VALIDATOR;
-  std::shared_ptr<PropertyValidator> UNSIGNED_INT_VALIDATOR;
-  std::shared_ptr<PropertyValidator> LONG_VALIDATOR;
-  std::shared_ptr<PropertyValidator> UNSIGNED_LONG_VALIDATOR;
-  std::shared_ptr<PropertyValidator> BOOLEAN_VALIDATOR;
-  std::shared_ptr<PropertyValidator> DATA_SIZE_VALIDATOR;
-  std::shared_ptr<PropertyValidator> TIME_PERIOD_VALIDATOR;
+  gsl::not_null<std::shared_ptr<PropertyValidator>> INVALID;
+  gsl::not_null<std::shared_ptr<PropertyValidator>> INTEGER_VALIDATOR;
+  gsl::not_null<std::shared_ptr<PropertyValidator>> UNSIGNED_INT_VALIDATOR;
+  gsl::not_null<std::shared_ptr<PropertyValidator>> LONG_VALIDATOR;
+  gsl::not_null<std::shared_ptr<PropertyValidator>> UNSIGNED_LONG_VALIDATOR;
+  gsl::not_null<std::shared_ptr<PropertyValidator>> BOOLEAN_VALIDATOR;
+  gsl::not_null<std::shared_ptr<PropertyValidator>> DATA_SIZE_VALIDATOR;
+  gsl::not_null<std::shared_ptr<PropertyValidator>> TIME_PERIOD_VALIDATOR;
 
   StandardValidators();
 };

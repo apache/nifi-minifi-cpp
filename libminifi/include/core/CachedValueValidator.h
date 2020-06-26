@@ -55,8 +55,7 @@ class CachedValueValidator {
     if (this == &other) {
       return *this;
     }
-    validator_ = other.validator_;
-    validation_result_ = Result::RECOMPUTE;
+    setValidator(other.validator_);
     return *this;
   }
 
@@ -64,8 +63,7 @@ class CachedValueValidator {
     if (this == &other) {
       return *this;
     }
-    validator_ = std::move(other.validator_);
-    validation_result_ = Result::RECOMPUTE;
+    setValidator(std::move(other.validator_));
     return *this;
   }
 
@@ -73,33 +71,32 @@ class CachedValueValidator {
 
   explicit CachedValueValidator(std::shared_ptr<PropertyValidator>&& other) : validator_(std::move(other)) {}
 
-  CachedValueValidator& operator=(const std::shared_ptr<PropertyValidator>& new_validator) {
-    validator_ = new_validator;
-    validation_result_ = Result::RECOMPUTE;
+  CachedValueValidator& operator=(const gsl::not_null<std::shared_ptr<PropertyValidator>>& new_validator) {
+    setValidator(new_validator);
     return *this;
   }
 
-  CachedValueValidator& operator=(std::shared_ptr<PropertyValidator>&& new_validator) {
-    validator_ = std::move(new_validator);
-    validation_result_ = Result::RECOMPUTE;
+  CachedValueValidator& operator=(gsl::not_null<std::shared_ptr<PropertyValidator>>&& new_validator) {
+    setValidator(std::move(new_validator));
     return *this;
   }
 
-  explicit operator bool() const {
-    return static_cast<bool>(validator_);
-  }
-
-  const std::shared_ptr<PropertyValidator>& operator*() const {
+  const gsl::not_null<std::shared_ptr<PropertyValidator>>& operator*() const {
     return validator_;
   }
 
  private:
+  template<typename T>
+  void setValidator(T&& newValidator) {
+    invalidateCachedResult();
+    validator_ = std::forward<T>(newValidator);
+  }
+
   ValidationResult validate(const std::string& subject, const std::shared_ptr<state::response::Value>& value) const {
-    auto cachedResult = !validator_ ? Result::SUCCESS : validation_result_;
-    if (cachedResult == CachedValueValidator::Result::SUCCESS) {
+    if (validation_result_ == CachedValueValidator::Result::SUCCESS) {
       return ValidationResult::Builder::createBuilder().isValid(true).build();
     }
-    if (cachedResult == CachedValueValidator::Result::FAILURE) {
+    if (validation_result_ == CachedValueValidator::Result::FAILURE) {
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(value->getStringValue()).isValid(false).build();
     }
     auto result = validator_->validate(subject, value);
@@ -115,7 +112,7 @@ class CachedValueValidator {
     validation_result_ = Result::RECOMPUTE;
   }
 
-  std::shared_ptr<PropertyValidator> validator_;
+  gsl::not_null<std::shared_ptr<PropertyValidator>> validator_{StandardValidators::VALID_VALIDATOR()};
   mutable Result validation_result_{Result::RECOMPUTE};
 };
 

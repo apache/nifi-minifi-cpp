@@ -38,6 +38,7 @@
 #include "PropertyValue.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -85,9 +86,7 @@ class Property {
         is_required_(false),
         is_collection_(true),
         supports_el_(false),
-        is_transient_(false) {
-    validator_ = StandardValidators::VALID;
-  }
+        is_transient_(false) {}
 
   Property(Property &&other) = default;
 
@@ -99,9 +98,7 @@ class Property {
         is_required_(false),
         is_collection_(false),
         supports_el_(false),
-        is_transient_(false) {
-    validator_ = StandardValidators::VALID;
-  }
+        is_transient_(false) {}
 
   virtual ~Property() = default;
 
@@ -138,7 +135,7 @@ class Property {
       values_.push_back(default_value_);
     }
     PropertyValue& vn = values_.back();
-    vn.setValidator(validator_ ? validator_ : core::StandardValidators::VALID);
+    vn.setValidator(validator_);
     vn = value;
     ValidationResult result = vn.validate(name_);
     if (!result.valid()) {
@@ -154,7 +151,7 @@ class Property {
       values_.push_back(newValue);
     }
     PropertyValue& vn = values_.back();
-    vn.setValidator(validator_ ? validator_ : core::StandardValidators::VALID);
+    vn.setValidator(validator_);
     ValidationResult result = vn.validate(name_);
     if (!result.valid()) {
       throw utils::internal::InvalidValueException(name_ + " value validation failed");
@@ -458,7 +455,7 @@ class Property {
       validator_ = StandardValidators::getValidator(ret.getValue());
     } else {
       ret = value;
-      validator_ = StandardValidators::VALID;
+      validator_ = StandardValidators::VALID_VALIDATOR();
     }
     return ret;
   }
@@ -472,7 +469,7 @@ class Property {
   bool is_collection_;
   PropertyValue default_value_;
   std::vector<PropertyValue> values_;
-  std::shared_ptr<PropertyValidator> validator_;
+  gsl::not_null<std::shared_ptr<PropertyValidator>> validator_{StandardValidators::VALID_VALIDATOR()};
   std::string display_name_;
   std::vector<PropertyValue> allowed_values_;
   // types represents the allowable types for this property
@@ -523,8 +520,8 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
     prop.default_value_ = df;
 
     if (validator != nullptr) {
-      prop.default_value_.setValidator(validator);
-      prop.validator_ = validator;
+      prop.default_value_.setValidator(gsl::make_not_null(validator));
+      prop.validator_ = gsl::make_not_null(validator);
     } else {
       prop.validator_ = StandardValidators::getValidator(prop.default_value_.getValue());
       prop.default_value_.setValidator(prop.validator_);

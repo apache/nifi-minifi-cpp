@@ -52,9 +52,7 @@ class ValueParser {
  public:
   explicit ValueParser(const std::string& str, std::size_t offset = 0) : str(str), offset(offset) {}
 
-  template<typename Out>
-  ValueParser& parseInt(Out& out) {
-    static_assert(is_non_narrowing_convertible<int, Out>::value, "Expected lossless conversion from int");
+  ValueParser& parse(int& out) {  // NOLINT
     long result;  // NOLINT
     auto len = safeCallConverter(std::strtol, result);
     if (len == 0) {
@@ -64,39 +62,33 @@ class ValueParser {
       throw ParseException("Cannot convert long to int");
     }
     offset += len;
-    out = {static_cast<int>(result)};
+    out = static_cast<int>(result);
     return *this;
   }
 
-  template<typename Out>
-  ValueParser& parseLong(Out& out) {
-    static_assert(is_non_narrowing_convertible<long, Out>::value, "Expected lossless conversion from long");  // NOLINT
+  ValueParser& parse(long& out) {  // NOLINT
     long result;  // NOLINT
     auto len = safeCallConverter(std::strtol, result);
     if (len == 0) {
       throw ParseException("Couldn't parse long");
     }
     offset += len;
-    out = {result};
+    out = result;
     return *this;
   }
 
-  template<typename Out>
-  ValueParser& parseLongLong(Out& out) {
-    static_assert(is_non_narrowing_convertible<long long, Out>::value, "Expected lossless conversion from long long");  // NOLINT
+  ValueParser& parse(long long& out) {  // NOLINT
     long long result;  // NOLINT
     auto len = safeCallConverter(std::strtoll, result);
     if (len == 0) {
       throw ParseException("Couldn't parse long long");
     }
     offset += len;
-    out = {result};
+    out = result;
     return *this;
   }
 
-  template<typename Out>
-  ValueParser& parseUInt32(Out& out) {
-    static_assert(is_non_narrowing_convertible<uint32_t, Out>::value, "Expected lossless conversion from uint32_t");
+  ValueParser& parse(uint32_t & out) {
     skipWhitespace();
     if (offset < str.length() && str[offset] == '-') {
       throw ParseException("Not an unsigned long");
@@ -110,13 +102,11 @@ class ValueParser {
       throw ParseException("Cannot convert unsigned long to uint32_t");
     }
     offset += len;
-    out = {static_cast<uint32_t>(result)};
+    out = static_cast<uint32_t>(result);
     return *this;
   }
 
-  template<typename Out>
-  ValueParser& parseUnsignedLongLong(Out& out) {
-    static_assert(is_non_narrowing_convertible<unsigned long long, Out>::value, "Expected lossless conversion from unsigned long long");  // NOLINT
+  ValueParser& parse(unsigned long long& out) {  // NOLINT
     skipWhitespace();
     if (offset < str.length() && str[offset] == '-') {
       throw ParseException("Not an unsigned long");
@@ -127,12 +117,11 @@ class ValueParser {
       throw ParseException("Couldn't parse unsigned long long");
     }
     offset += len;
-    out = {result};
+    out = result;
     return *this;
   }
 
-  template<typename Out>
-  ValueParser& parseBool(Out& out) {
+  ValueParser& parse(bool& out) {
     skipWhitespace();
     if (std::strncmp(str.c_str() + offset, "false", std::strlen("false")) == 0) {
       offset += std::strlen("false");

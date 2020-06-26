@@ -40,7 +40,7 @@ namespace utils {
 namespace internal {
 
 class ValueException : public Exception {
- protected:
+ public:
   explicit ValueException(const std::string& err) : Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
   explicit ValueException(const char* err) : Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
 
@@ -48,7 +48,7 @@ class ValueException : public Exception {
 };
 
 class PropertyException : public Exception {
- protected:
+ public:
   explicit PropertyException(const std::string& err) : Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
   explicit PropertyException(const char* err) : Exception(ExceptionType::GENERAL_EXCEPTION, err) {}
 
@@ -59,36 +59,28 @@ class PropertyException : public Exception {
  * Thrown during converting from and to Value
  */
 class ConversionException : public ValueException {
- public:
-  explicit ConversionException(const std::string& err) : ValueException(err) {}
-  explicit ConversionException(const char* err) : ValueException(err) {}
+  using ValueException::ValueException;
 };
 
 /**
  * Represents std::string -> Value conversion errors
  */
 class ParseException : public ConversionException {
- public:
-  explicit ParseException(const std::string& err) : ConversionException(err) {}
-  explicit ParseException(const char* err) : ConversionException(err) {}
+  using ConversionException::ConversionException;
 };
 
 /**
  * Thrown when trying to access invalid Values.
  */
 class InvalidValueException : public ValueException {
- public:
-  explicit InvalidValueException(const std::string& err) : ValueException(err) {}
-  explicit InvalidValueException(const char* err) : ValueException(err) {}
+  using ValueException::ValueException;
 };
 
 /**
  * When querying missing properties marked required.
  */
 class RequiredPropertyMissingException : public PropertyException {
- public:
-  explicit RequiredPropertyMissingException(const std::string& err) : PropertyException(err) {}
-  explicit RequiredPropertyMissingException(const char* err) : PropertyException(err) {}
+  using PropertyException::PropertyException;
 };
 
 } /* namespace internal */
