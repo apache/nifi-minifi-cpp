@@ -59,8 +59,8 @@ Connections:
   - name: Gen
     id: 2438e3c8-015a-1001-79ca-83af40ec1993
     source name: Generator
-    source relationship name: success
     destination name: A
+    source relationship name: success
     max work queue size: 1
     max work queue data size: 1 MB
     flowfile expiration: 0
@@ -73,7 +73,7 @@ Connections:
     max work queue data size: 1 MB
     flowfile expiration: 0
   - name: Loop_Banana
-    id: 2438e3c8-015a-1001-79ca-83af40ec1994
+    id: 2438e3c8-015a-1001-79ca-83af40ec1995
     source name: A
     destination name: A
     source relationship name: banana
@@ -98,10 +98,13 @@ TEST_CASE("Flow with two loops", "[MultiLoopFlow]") {
 
   Flow flow = createFlow(yamlPath);
 
-  std::this_thread::sleep_for(std::chrono::milliseconds{2000});
-
   auto procGenerator = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator>(flow.root_->findProcessor("Generator"));
   auto procA = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(flow.root_->findProcessor("A"));
+
+  int tryCount = 0;
+  while (tryCount++ < 10 && !(procA->trigger_count.load() > 15)) {
+    std::this_thread::sleep_for(std::chrono::milliseconds{1000});
+  }
 
   REQUIRE(procGenerator->trigger_count.load() <= 3);
   REQUIRE(procA->trigger_count.load() > 15);

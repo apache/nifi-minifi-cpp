@@ -72,8 +72,8 @@ Connections:
   - name: Gen
     id: 2438e3c8-015a-1001-79ca-83af40ec1993
     source name: Generator
-    source relationship name: success
     destination name: A
+    source relationship name: success
     max work queue size: 1
     max work queue data size: 1 MB
     flowfile expiration: 0
@@ -111,13 +111,16 @@ TEST_CASE("Flow with two long cycle", "[FlowWithCycle]") {
 
   Flow flow = createFlow(yamlPath);
 
-  std::this_thread::sleep_for(std::chrono::milliseconds{3000});
-
   auto procGenerator = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator>(flow.root_->findProcessor("Generator"));
   auto procA = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(flow.root_->findProcessor("A"));
   auto procB = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(flow.root_->findProcessor("B"));
 
+  int tryCount = 0;
+  while (tryCount++ < 10 && !(procA->trigger_count.load() >= 10 && procB->trigger_count.load() >= 10)) {
+    std::this_thread::sleep_for(std::chrono::milliseconds{1000});
+  }
+
   REQUIRE(procGenerator->trigger_count.load() <= 3);
-  REQUIRE(procA->trigger_count.load() > 10);
-  REQUIRE(procB->trigger_count.load() > 10);
+  REQUIRE(procA->trigger_count.load() >= 10);
+  REQUIRE(procB->trigger_count.load() >= 10);
 }

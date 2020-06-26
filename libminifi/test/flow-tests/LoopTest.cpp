@@ -58,8 +58,8 @@ Connections:
   - name: Gen
     id: 2438e3c8-015a-1001-79ca-83af40ec1993
     source name: Generator
-    source relationship name: success
     destination name: A
+    source relationship name: success
     max work queue size: 1
     max work queue data size: 1 MB
     flowfile expiration: 0
@@ -89,11 +89,15 @@ TEST_CASE("Flow with a single loop", "[SingleLoopFlow]") {
 
   Flow flow = createFlow(yamlPath);
 
-  std::this_thread::sleep_for(std::chrono::milliseconds{2000});
-
   auto procGenerator = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator>(flow.root_->findProcessor("Generator"));
   auto procA = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(flow.root_->findProcessor("A"));
 
+  int tryCount = 0;
+  // wait for the procA to get triggered 15 times
+  while (tryCount++ < 10 && !(procA->trigger_count.load() >= 15)) {
+    std::this_thread::sleep_for(std::chrono::milliseconds{1000});
+  }
+
   REQUIRE(procGenerator->trigger_count.load() <= 2);
-  REQUIRE(procA->trigger_count.load() > 15);
+  REQUIRE(procA->trigger_count.load() >= 15);
 }
