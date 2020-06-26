@@ -19,11 +19,11 @@
 #include <memory>
 #include <string>
 
-#include <processors/GetFile.h> // NOLINT
-#include <processors/LogAttribute.h> // NOLINT
-#include <processors/PutFile.h> // NOLINT
-#include <tensorflow/cc/framework/scope.h> // NOLINT
-#include <tensorflow/cc/ops/standard_ops.h> // NOLINT
+#include "processors/GetFile.h"
+#include "processors/LogAttribute.h"
+#include "processors/PutFile.h"
+#include "tensorflow/cc/framework/scope.h"
+#include "tensorflow/cc/ops/standard_ops.h"
 #include "TFApplyGraph.h"
 #include <TFConvertImageToTensor.h>
 #include <TFExtractTopLabels.h>

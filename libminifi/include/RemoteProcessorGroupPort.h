@@ -27,7 +27,7 @@
 #include <memory>
 #include <stack>
 #include "utils/HTTPClient.h"
-#include "concurrentqueue.h" // NOLINT
+#include "concurrentqueue.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"

@@ -41,7 +41,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
 #include "utils/RegexUtils.h"
-#include "rdkafka.h" // NOLINT
+#include "rdkafka.h"
 #include "KafkaConnection.h"
 
 namespace org {

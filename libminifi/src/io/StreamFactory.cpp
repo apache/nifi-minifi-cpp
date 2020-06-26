@@ -22,7 +22,7 @@
 #include <mutex>
 #include <string>
 
-#include <utils/GeneralUtils.h> // NOLINT
+#include "utils/GeneralUtils.h"
 #ifdef OPENSSL_SUPPORT
 #include "io/tls/TLSSocket.h"
 #endif
