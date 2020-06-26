@@ -89,8 +89,6 @@ class RetryFlowFile : public core::Processor {
  private:
   void readDynamicPropertyKeys(core::ProcessContext* context);
   utils::optional<uint64_t> getRetryPropertyValue(const std::shared_ptr<FlowFileRecord>& flow_file) const;
-  // Returns true on fail on reuse scenario
-  bool updateUUIDMarkerAndCheckFailOnReuse(const std::shared_ptr<FlowFileRecord>& flow_file, uint64_t& retry_value) const;
   void setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<FlowFileRecord>& flow_file) const;
 
   std::string retry_attribute_;

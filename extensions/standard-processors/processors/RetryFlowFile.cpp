@@ -106,9 +106,25 @@ void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSessio
     return;
   }
   uint64_t retry_property_value = maybe_retry_property_value.value_or(0);
-  if (updateUUIDMarkerAndCheckFailOnReuse(flow_file, retry_property_value)) {
-    session->transfer(flow_file, Failure);
-    return;
+  const std::string last_retried_by_property_name = retry_attribute_ + ".uuid";
+  const std::string current_processor_uuid = getUUIDStr();
+  std::string last_retried_by_uuid;
+  if (flow_file->getAttribute(last_retried_by_property_name, last_retried_by_uuid)) {
+    if (last_retried_by_uuid != current_processor_uuid) {
+      if (reuse_mode_ == FAIL_ON_REUSE) {
+        logger_->log_error("FlowFile %s was previously retried with the same attribute by a different "
+            "processor (uuid: %s, current uuid: %s). Transfering flowfile to 'failure'...",
+            flow_file->getUUIDStr(), last_retried_by_uuid, current_processor_uuid);
+        session->transfer(flow_file, Failure);
+        return;
+      }
+      if (reuse_mode_ == WARN_ON_REUSE) {
+        logger_->log_warn("Reusing retry attribute that belongs to different processor. Resetting value to 0.");
+      } else {  // Assuming reuse_mode_ == RESET_REUSE
+        logger_->log_debug("Reusing retry attribute that belongs to different processor. Resetting value to 0.");
+      }
+      retry_property_value = 0;
+    }
   }
 
   if (retry_property_value < maximum_retries_) {
@@ -151,31 +167,6 @@ utils::optional<uint64_t> RetryFlowFile::getRetryPropertyValue(const std::shared
     logger_->log_error("Narrowing Exception for %s, treating it as non-numerical value", value_as_string);
   }
   return utils::make_optional<uint64_t>(0);
-}
-
-// Returns true on fail on reuse scenario
-bool RetryFlowFile::updateUUIDMarkerAndCheckFailOnReuse(const std::shared_ptr<FlowFileRecord>& flow_file, uint64_t& retry_value) const {
-  const std::string last_retried_by_property_name = retry_attribute_ + ".uuid";
-  const std::string current_processor_uuid = getUUIDStr();
-  std::string last_retried_by_uuid;
-  if (flow_file->getAttribute(last_retried_by_property_name, last_retried_by_uuid)) {
-    if (last_retried_by_uuid != current_processor_uuid) {
-      if (reuse_mode_ == FAIL_ON_REUSE) {
-        logger_->log_error("FlowFile %s was previously retried with the same attribute by a different "
-            "processor (uuid: %s, current uuid: %s). Transfering flowfile to 'failure'...",
-            flow_file->getUUIDStr(), last_retried_by_uuid, current_processor_uuid);
-        return true;
-      }
-      if (reuse_mode_ == WARN_ON_REUSE) {
-        logger_->log_warn("Reusing retry attribute that belongs to different processor. Resetting value to 0.");
-      } else {  // Assuming reuse_mode_ == RESET_REUSE
-        logger_->log_debug("Reusing retry attribute that belongs to different processor. Resetting value to 0.");
-      }
-      retry_value = 0;
-    }
-  }
-  flow_file->setAttribute(last_retried_by_property_name, getUUIDStr());
-  return false;
 }
 
 void RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<FlowFileRecord>& flow_file) const {
