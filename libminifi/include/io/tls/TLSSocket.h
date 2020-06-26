@@ -77,7 +77,7 @@ class TLSContext : public SocketContext {
   int16_t initialize(bool server_method = false);
 
  private:
-  static void deleteContext(SSL_CTX* ptr) { SSL_CTX_free(ptr); };
+  static void deleteContext(SSL_CTX* ptr) { SSL_CTX_free(ptr); }
 
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<Configure> configure_;
