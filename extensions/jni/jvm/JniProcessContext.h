@@ -39,7 +39,8 @@ struct JniProcessContext {
       : nifi_processor_(nullptr),
         cslookup_(nullptr),
         processor_(nullptr),
-        context_(nullptr) = default;
+        context_(nullptr) {
+  }
 
   jclass clazz_;
   jobject nifi_processor_;

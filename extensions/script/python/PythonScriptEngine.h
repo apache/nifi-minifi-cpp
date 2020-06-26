@@ -42,7 +42,8 @@ namespace py = pybind11;
 struct Interpreter {
 
   Interpreter()
-      : guard_(false) {}
+      : guard_(false) {
+  }
 
   ~Interpreter() = default;
 

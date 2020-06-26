@@ -69,9 +69,9 @@ class UpdatePolicy {
   }
 
  protected:
-  explicit UpdatePolicy(const UpdatePolicy &other) = default;
+  UpdatePolicy(const UpdatePolicy &other) = default;
 
-  explicit UpdatePolicy(const UpdatePolicy &&other)
+  UpdatePolicy(UpdatePolicy &&other)
       : enable_all_(std::move(other.enable_all_)),
         properties_(std::move(other.properties_)) {
   }
@@ -120,7 +120,7 @@ class UpdatePolicyBuilder {
 
 
  protected:
-  explicit UpdatePolicyBuilder(const UpdatePolicyBuilder &other) = default;
+  UpdatePolicyBuilder(const UpdatePolicyBuilder &other) = default;
 
   explicit UpdatePolicyBuilder(bool enable_all) {
     current_policy_ = std::make_shared<UpdatePolicy>(enable_all);

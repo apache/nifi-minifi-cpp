@@ -159,7 +159,8 @@ SourceInitiatedSubscriptionListener::Handler::Handler(SourceInitiatedSubscriptio
 
 SourceInitiatedSubscriptionListener::SubscriberData::SubscriberData()
     : bookmark_(nullptr)
-    , subscription_(nullptr) = default;
+    , subscription_(nullptr) {
+}
 
 SourceInitiatedSubscriptionListener::SubscriberData::~SubscriberData() {
   clearSubscription();

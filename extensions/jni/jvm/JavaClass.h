@@ -46,7 +46,8 @@ class JavaClass {
  public:
 
   JavaClass()
-      : class_ref_(nullptr) = default;
+      : class_ref_(nullptr) {
+  }
 
   /**
    * Initializes the java class with the name ( package + class name )
