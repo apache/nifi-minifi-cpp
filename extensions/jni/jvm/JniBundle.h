@@ -47,8 +47,7 @@ class JniBundle {
       : details_(details) {
   }
 
-  JniBundle() {
-  }
+  JniBundle() = default;
 
   /**
    * Add a description to this bundle

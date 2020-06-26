@@ -46,9 +46,7 @@ class JavaClass {
  public:
 
   JavaClass()
-      : class_ref_(nullptr) {
-
-  }
+      : class_ref_(nullptr) = default;
 
   /**
    * Initializes the java class with the name ( package + class name )
@@ -62,8 +60,7 @@ class JavaClass {
     cnstrctr = jenv->GetMethodID(class_ref_, "<init>", "()V");
   }
 
-  ~JavaClass() {
-  }
+  ~JavaClass() = default;
 
   std::string getName() const {
     return name_;

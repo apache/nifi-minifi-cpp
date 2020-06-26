@@ -122,8 +122,7 @@ FetchSFTP::FetchSFTP(std::string name, utils::Identifier uuid /*= utils::Identif
   logger_ = logging::LoggerFactory<FetchSFTP>::getLogger();
 }
 
-FetchSFTP::~FetchSFTP() {
-}
+FetchSFTP::~FetchSFTP() = default;
 
 void FetchSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   parseCommonPropertiesOnSchedule(context);
@@ -156,8 +155,7 @@ FetchSFTP::WriteCallback::WriteCallback(const std::string& remote_file,
     , client_(client) {
 }
 
-FetchSFTP::WriteCallback::~WriteCallback() {
-}
+FetchSFTP::WriteCallback::~WriteCallback() = default;
 
 int64_t FetchSFTP::WriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
   if (!client_.getFile(remote_file_, *stream)) {

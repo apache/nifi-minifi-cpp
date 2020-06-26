@@ -52,8 +52,7 @@ Connectable::Connectable(const Connectable &&other)
   strategy_ = other.strategy_.load();
 }
 
-Connectable::~Connectable() {
-}
+Connectable::~Connectable() = default;
 
 bool Connectable::setSupportedRelationships(const std::set<core::Relationship> &relationships) {
   if (isRunning()) {

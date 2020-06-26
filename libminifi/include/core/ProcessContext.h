@@ -87,8 +87,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     state_manager_provider_ = getStateManagerProvider(logger_, controller_service_provider_, configuration);
   }
   // Destructor
-  virtual ~ProcessContext() {
-  }
+  virtual ~ProcessContext() = default;
   // Get Processor associated with the Process Context
   std::shared_ptr<ProcessorNode> getProcessorNode() const {
     return processor_node_;

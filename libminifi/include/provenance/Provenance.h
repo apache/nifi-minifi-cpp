@@ -169,8 +169,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   }
 
   // Destructor
-  virtual ~ProvenanceEventRecord() {
-  }
+  virtual ~ProvenanceEventRecord() = default;
   // Get the Event ID
   std::string getEventId() {
     return uuidStr_;

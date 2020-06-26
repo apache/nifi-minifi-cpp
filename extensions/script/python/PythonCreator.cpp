@@ -38,8 +38,7 @@ namespace python {
 #define W_OK    2       /* Test for write permission.  */
 #define F_OK    0       /* Test for existence.  */
 #endif
-PythonCreator::~PythonCreator() {
-}
+PythonCreator::~PythonCreator() = default;
 
 } /* namespace python */
 } /* namespace minifi */

@@ -67,8 +67,7 @@ class TailFile : public core::Processor {
     state_recovered_ = false;
   }
   // Destructor
-  virtual ~TailFile() {
-  }
+  virtual ~TailFile() = default;
   // Processor Name
   static constexpr char const* ProcessorName = "TailFile";
   // Supported Properties

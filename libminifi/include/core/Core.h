@@ -172,8 +172,7 @@ class CoreComponent {
 
   explicit CoreComponent(CoreComponent &&other) = default;
 
-  virtual ~CoreComponent() {
-  }
+  virtual ~CoreComponent() = default;
 
   // Get component name Name
   virtual std::string getName() const;

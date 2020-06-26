@@ -33,7 +33,7 @@ JSONSQLWriter::JSONSQLWriter(bool pretty)
   : pretty_(pretty), jsonPayload_(rapidjson::kArrayType) {
 }
 
-JSONSQLWriter::~JSONSQLWriter() {}
+JSONSQLWriter::~JSONSQLWriter() = default;
 
 void JSONSQLWriter::beginProcessRow() {
   jsonRow_ = rapidjson::kObjectType;

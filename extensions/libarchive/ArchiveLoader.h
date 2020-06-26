@@ -27,9 +27,7 @@
 
 class ArchiveFactory : public core::ObjectFactory {
  public:
-  ArchiveFactory() {
-
-  }
+  ArchiveFactory() = default;
 
   /**
    * Gets the name of the object.

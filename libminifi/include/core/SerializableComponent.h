@@ -44,8 +44,7 @@ class SerializableComponent : public core::Connectable, public minifi::io::Seria
       : core::Connectable(name, uuid) {
   }
 
-  virtual ~SerializableComponent() {
-  }
+  virtual ~SerializableComponent() = default;
 
   /**
    * Serialize this object into the the store

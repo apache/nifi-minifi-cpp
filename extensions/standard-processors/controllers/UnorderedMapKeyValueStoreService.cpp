@@ -40,8 +40,7 @@ UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(const std::st
   initialize();
 }
 
-UnorderedMapKeyValueStoreService::~UnorderedMapKeyValueStoreService() {
-}
+UnorderedMapKeyValueStoreService::~UnorderedMapKeyValueStoreService() = default;
 
 bool UnorderedMapKeyValueStoreService::set(const std::string& key, const std::string& value) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);

@@ -42,13 +42,9 @@ class MockControllerService : public core::controller::ControllerService {
       : ControllerService(name) {
 
   }
-  MockControllerService() {
+  MockControllerService() = default;
 
-  }
-
-  ~MockControllerService() {
-
-  }
+  ~MockControllerService() = default;
 
   virtual void initialize() {
     core::controller::ControllerService::initialize();
@@ -91,9 +87,7 @@ class MockProcessor : public core::Processor {
     setTriggerWhenEmpty(true);
   }
 
-  ~MockProcessor() {
-
-  }
+  ~MockProcessor() = default;
 
   virtual void initialize() {
     core::Property property("linkedService", "Linked service");

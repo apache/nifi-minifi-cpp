@@ -216,8 +216,7 @@ QueryDatabaseTable::QueryDatabaseTable(const std::string& name, utils::Identifie
   : SQLProcessor(name, uuid) {
 }
 
-QueryDatabaseTable::~QueryDatabaseTable() {
-}
+QueryDatabaseTable::~QueryDatabaseTable() = default;
 
 void QueryDatabaseTable::initialize() {
   //! Set the supported properties

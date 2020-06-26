@@ -192,8 +192,7 @@ ListSFTP::ListSFTP(std::string name, utils::Identifier uuid /*= utils::Identifie
   logger_ = logging::LoggerFactory<ListSFTP>::getLogger();
 }
 
-ListSFTP::~ListSFTP() {
-}
+ListSFTP::~ListSFTP() = default;
 
 void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   parseCommonPropertiesOnSchedule(context);

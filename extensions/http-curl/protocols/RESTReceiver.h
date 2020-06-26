@@ -57,9 +57,7 @@ class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
   class ListeningProtocol : public CivetHandler {
 
    public:
-    ListeningProtocol() {
-
-    }
+    ListeningProtocol() = default;
 
     bool handleGet(CivetServer *server, struct mg_connection *conn) {
       std::string currentvalue;

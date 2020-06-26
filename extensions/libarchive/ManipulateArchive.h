@@ -51,7 +51,7 @@ public:
 		logger_(logging::LoggerFactory<ManipulateArchive>::getLogger()) {
 	}
 	//! Destructor
-	virtual ~ManipulateArchive() {}
+	virtual ~ManipulateArchive() = default;
 
 	//! Processor Name
 	static constexpr char const* ProcessorName = "ManipulateArchive";

@@ -55,7 +55,7 @@ public:
     return ret;
   }
 
-  SupportedProperties() {}
+  SupportedProperties() = default;
 
   template <typename Arg, typename ...Args>
   SupportedProperties(Arg& arg, Args&... args) {

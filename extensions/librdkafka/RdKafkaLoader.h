@@ -27,8 +27,7 @@
 
 class RdKafkaFactory : public core::ObjectFactory {
  public:
-  RdKafkaFactory() {
-  }
+  RdKafkaFactory() = default;
 
   /**
    * Gets the name of the object.

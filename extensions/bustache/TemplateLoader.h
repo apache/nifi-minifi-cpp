@@ -23,9 +23,7 @@
 
 class TemplateFactory : public core::ObjectFactory {
  public:
-  TemplateFactory() {
-
-  }
+  TemplateFactory() = default;
 
   /**
    * Gets the name of the object.

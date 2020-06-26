@@ -48,8 +48,7 @@ namespace processors {
 class MergeBin {
 public:
 
-  virtual ~MergeBin(){
-  }
+  virtual ~MergeBin() = default;
 
   virtual std::string getMergedContentType() = 0;
   // merge the flows in the bin
@@ -72,8 +71,7 @@ public:
     ReadCallback(uint64_t size, std::shared_ptr<io::BaseStream> stream)
         : buffer_size_(size), stream_(stream) {
     }
-    ~ReadCallback() {
-    }
+    ~ReadCallback() = default;
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       uint8_t buffer[4096U];
       int64_t ret = 0;
@@ -145,8 +143,7 @@ public:
     ReadCallback(uint64_t size, struct archive *arch, struct archive_entry *entry) :
         buffer_size_(size), arch_(arch), entry_(entry) {
     }
-    ~ReadCallback() {
-    }
+    ~ReadCallback() = default;
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       uint8_t buffer[4096U];
       int64_t ret = 0;
@@ -177,8 +174,7 @@ public:
       size_ = 0;
       stream_ = nullptr;
     }
-    ~WriteCallback() {
-    }
+    ~WriteCallback() = default;
 
     std::string merge_type_;
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
@@ -279,8 +275,7 @@ class MergeContent : public processors::BinFiles {
     keepPath_ = false;
   }
   // Destructor
-  virtual ~MergeContent() {
-  }
+  virtual ~MergeContent() = default;
   // Processor Name
   static constexpr char const* ProcessorName = "MergeContent";
   // Supported Properties

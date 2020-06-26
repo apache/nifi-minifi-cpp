@@ -82,9 +82,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
     peer_state_ = READY;
   }
   // Destructor
-  virtual ~HttpSiteToSiteClient() {
-
-  }
+  virtual ~HttpSiteToSiteClient() = default;
 
   void setPeer(std::unique_ptr<SiteToSitePeer> peer) override {
     peer_ = std::move(peer);

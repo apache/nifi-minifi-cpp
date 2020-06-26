@@ -25,8 +25,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-ProcessorUtils::ProcessorUtils() {
-}
+ProcessorUtils::ProcessorUtils() = default;
 
 } /* namespace processors */
 } /* namespace minifi */

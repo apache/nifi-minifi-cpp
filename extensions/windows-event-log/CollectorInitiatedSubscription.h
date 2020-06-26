@@ -47,9 +47,7 @@ public:
   CollectorInitiatedSubscription(const std::string& name, utils::Identifier uuid = utils::Identifier());
 
   //! Destructor
-  virtual ~CollectorInitiatedSubscription()
-  {
-  }
+  virtual ~CollectorInitiatedSubscription() = default;
 
   //! Processor Name
   static const std::string ProcessorName;

@@ -53,8 +53,7 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
   explicit SocketAfterExecute(SocketAfterExecute && other) {
   }
 
-  ~SocketAfterExecute() {
-  }
+  ~SocketAfterExecute() = default;
 
   virtual bool isFinished(const int &result) {
     if (result == -1 || result == 0 || !running_) {
@@ -91,8 +90,7 @@ class DataHandlerCallback : public OutputStreamCallback {
         size_(size) {
   }
 
-  virtual ~DataHandlerCallback() {
-  }
+  virtual ~DataHandlerCallback() = default;
 
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) {
     return stream->write(message_, size_);
@@ -131,8 +129,7 @@ class GetTCPMetrics : public state::response::ResponseNode {
     accepted_files_ = 0;
     input_bytes_ = 0;
   }
-  virtual ~GetTCPMetrics() {
-  }
+  virtual ~GetTCPMetrics() = default;
   virtual std::string getName() const {
     return core::Connectable::getName();
   }
@@ -190,8 +187,7 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
     metrics_ = std::make_shared<GetTCPMetrics>();
   }
 // Destructor
-  virtual ~GetTCP() {
-  }
+  virtual ~GetTCP() = default;
 // Processor Name
   static constexpr char const* ProcessorName = "GetTCP";
 

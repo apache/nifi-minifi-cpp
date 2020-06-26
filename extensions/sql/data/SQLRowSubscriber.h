@@ -27,7 +27,7 @@ namespace minifi {
 namespace sql {
 
 struct SQLRowSubscriber {
-  virtual ~SQLRowSubscriber() {}
+  virtual ~SQLRowSubscriber() = default;
   virtual void beginProcessRow() = 0;
   virtual void endProcessRow() = 0;
   virtual void processColumnName(const std::string& name) = 0;

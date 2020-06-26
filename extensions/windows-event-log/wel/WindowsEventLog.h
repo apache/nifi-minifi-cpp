@@ -63,8 +63,7 @@ typedef std::vector<std::pair<METADATA, std::string>> METADATA_NAMES;
 class WindowsEventLogHandler
 {
 public:
-  WindowsEventLogHandler() : metadata_provider_(nullptr){
-  }
+  WindowsEventLogHandler() : metadata_provider_(nullptr) = default;
 
   explicit WindowsEventLogHandler(EVT_HANDLE metadataProvider) : metadata_provider_(metadataProvider) {
   }

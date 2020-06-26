@@ -66,8 +66,7 @@ class YamlConfiguration : public FlowConfiguration {
     }
   }
 
-  virtual ~YamlConfiguration() {
-  }
+  virtual ~YamlConfiguration() = default;
 
   /**
    * Returns a shared pointer to a ProcessGroup object containing the

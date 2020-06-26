@@ -33,8 +33,7 @@ namespace core {
 
 class TransformableValue {
  public:
-  TransformableValue() {
-  }
+  TransformableValue() = default;
 };
 
 

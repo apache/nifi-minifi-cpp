@@ -29,9 +29,7 @@
  */
 class ExpressionObjectFactory : public core::ObjectFactory {
  public:
-  ExpressionObjectFactory() {
-
-  }
+  ExpressionObjectFactory() = default;
 
   /**
    * Gets the name of the object.

@@ -47,9 +47,7 @@ public:
 	: core::Processor(name, uuid), logger_(logging::LoggerFactory<TailEventLog>::getLogger()),max_events_(1){
 	}
 	//! Destructor
-	virtual ~TailEventLog()
-	{
-	}
+	virtual ~TailEventLog() = default;
 	//! Processor Name
 	static const std::string ProcessorName;
 	//! Supported Properties

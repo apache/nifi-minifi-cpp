@@ -49,8 +49,7 @@ class AppendHostInfo : public core::Processor {
         logger_(logging::LoggerFactory<AppendHostInfo>::getLogger()) {
   }
   // Destructor
-  virtual ~AppendHostInfo() {
-  }
+  virtual ~AppendHostInfo() = default;
   // Processor Name
   static constexpr char const* ProcessorName = "AppendHostInfo";
   // Supported Properties

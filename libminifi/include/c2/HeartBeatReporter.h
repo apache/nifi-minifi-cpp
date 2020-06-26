@@ -51,8 +51,7 @@ class HeartBeatReporter : public core::Connectable {
     update_sink_ = updateSink;
     configuration_ = configure;
   }
-  virtual ~HeartBeatReporter() {
-  }
+  virtual ~HeartBeatReporter() = default;
   /**
    * Send a C2 payloadd to the provided URI. The direction indicates to the protocol whether or not this a transmit or receive operation.
    * Depending on the protocol this may mean different things.

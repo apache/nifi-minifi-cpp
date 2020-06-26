@@ -188,7 +188,7 @@ class MergeTestController : public TestController {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider = nullptr;
     context = std::make_shared<core::ProcessContext>(node, controller_service_provider, repo, repo, content_repo);
   }
-  ~MergeTestController() {}
+  ~MergeTestController() = default;
   std::shared_ptr<core::ProcessContext> context;
   std::shared_ptr<core::ProcessorNode> node;
   std::shared_ptr<core::Processor> processor;

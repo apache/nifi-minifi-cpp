@@ -52,8 +52,7 @@ class ConvertJSONAck : public ConvertBase {
         logger_(logging::LoggerFactory<ConvertJSONAck>::getLogger()) {
   }
   // Destructor
-  virtual ~ConvertJSONAck() {
-  }
+  virtual ~ConvertJSONAck() = default;
   // Processor Name
   static constexpr char const* ProcessorName = "ConvertJSONAck";
 
@@ -72,10 +71,8 @@ class ConvertJSONAck : public ConvertBase {
 
   class ReadCallback : public InputStreamCallback {
    public:
-    ReadCallback() {
-    }
-    ~ReadCallback() {
-    }
+    ReadCallback() = default;
+    ~ReadCallback() = default;
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       int64_t ret = 0;
       if (nullptr == stream)

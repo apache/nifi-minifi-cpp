@@ -46,9 +46,7 @@ public:
 		gpsdWaitTime_ = 50000000;
 	}
 	//! Destructor
-	virtual ~GetGPS()
-	{
-	}
+	virtual ~GetGPS() = default;
 	//! Processor Name
 	static const std::string ProcessorName;
 	//! Supported Properties

@@ -209,8 +209,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   }
 }
 
-ListenHTTP::~ListenHTTP() {
-}
+ListenHTTP::~ListenHTTP() = default;
 
 void ListenHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->get());

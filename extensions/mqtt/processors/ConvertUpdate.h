@@ -54,8 +54,7 @@ class ConvertUpdate : public ConvertBase {
     : ConvertBase(name, uuid), logger_(logging::LoggerFactory<ConvertUpdate>::getLogger()) {
   }
   // Destructor
-  virtual ~ConvertUpdate() {
-  }
+  virtual ~ConvertUpdate() = default;
 
   static core::Property SSLContext;
   // Processor Name

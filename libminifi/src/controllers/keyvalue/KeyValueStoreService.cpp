@@ -31,8 +31,7 @@ KeyValueStoreService::KeyValueStoreService(const std::string& name, utils::Ident
     : ControllerService(name, uuid) {
 }
 
-KeyValueStoreService::~KeyValueStoreService() {
-}
+KeyValueStoreService::~KeyValueStoreService() = default;
 
 void KeyValueStoreService::yield() {
 }

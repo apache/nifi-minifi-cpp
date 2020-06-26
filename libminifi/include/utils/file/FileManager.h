@@ -59,8 +59,7 @@ namespace file {
  */
 class FileManager {
  public:
-  FileManager() {
-  }
+  FileManager() = default;
 
   ~FileManager() {
     for (auto file : unique_files_) {

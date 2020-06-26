@@ -30,8 +30,7 @@ PersistableKeyValueStoreService::PersistableKeyValueStoreService(const std::stri
     : KeyValueStoreService(name, uuid) {
 }
 
-PersistableKeyValueStoreService::~PersistableKeyValueStoreService() {
-}
+PersistableKeyValueStoreService::~PersistableKeyValueStoreService() = default;
 
 bool PersistableKeyValueStoreService::setImpl(const std::string& key, const std::string& value) {
   return set(key, value);

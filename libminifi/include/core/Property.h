@@ -586,8 +586,7 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
  private:
   Property prop;
 
-  PropertyBuilder() {
-  }
+  PropertyBuilder() = default;
 };
 
 template<typename T>

@@ -26,9 +26,7 @@
 class AWSObjectFactory : public core::ObjectFactory {
 
  public:
-  AWSObjectFactory() {
-
-  }
+  AWSObjectFactory() = default;
 
   /**
    * Gets the name of the object.

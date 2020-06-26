@@ -67,9 +67,7 @@ class TestRepository : public core::Repository {
   }
 
   // Destructor
-  virtual ~TestRepository() {
-
-  }
+  virtual ~TestRepository() = default;
 
   virtual bool isNoop() {
     return false;
@@ -177,9 +175,7 @@ class TestFlowRepository : public core::Repository {
   }
 
   // Destructor
-  virtual ~TestFlowRepository() {
-
-  }
+  virtual ~TestFlowRepository() = default;
 
   bool Put(std::string key, uint8_t *buf, int bufLen) {
     repositoryResults.insert(std::pair<std::string, std::string>(key, std::string((const char*) buf, bufLen)));
@@ -233,9 +229,7 @@ class TestFlowController : public minifi::FlowController {
   TestFlowController(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo)
       : minifi::FlowController(repo, flow_file_repo, std::make_shared<minifi::Configure>(), nullptr, std::make_shared<core::repository::VolatileContentRepository>(), "", true) {
   }
-  ~TestFlowController() {
-
-  }
+  ~TestFlowController() = default;
   void load() {
 
   }

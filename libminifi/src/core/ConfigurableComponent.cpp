@@ -43,8 +43,7 @@ ConfigurableComponent::ConfigurableComponent(const ConfigurableComponent &&other
       logger_(logging::LoggerFactory<ConfigurableComponent>::getLogger()) {
 }
 
-ConfigurableComponent::~ConfigurableComponent() {
-}
+ConfigurableComponent::~ConfigurableComponent() = default;
 
 bool ConfigurableComponent::getProperty(const std::string &name, Property &prop) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);

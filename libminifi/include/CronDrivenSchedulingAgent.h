@@ -50,8 +50,7 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
       : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration, thread_pool) {
   }
   // Destructor
-  virtual ~CronDrivenSchedulingAgent() {
-  }
+  virtual ~CronDrivenSchedulingAgent() = default;
   // Run function for the thread
   utils::TaskRescheduleInfo run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
       const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;

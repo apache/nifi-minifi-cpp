@@ -25,9 +25,7 @@
 
 class SensorFactory : public core::ObjectFactory {
  public:
-  SensorFactory() {
-
-  }
+  SensorFactory() = default;
 
   /**
    * Gets the name of the object.

@@ -40,8 +40,7 @@ class ByteInputCallBack : public InputStreamCallback {
       : ptr(nullptr) {
   }
 
-  virtual ~ByteInputCallBack() {
-  }
+  virtual ~ByteInputCallBack() = default;
 
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) {
     stream->seek(0);

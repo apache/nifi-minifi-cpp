@@ -31,11 +31,7 @@ UpdateStatus::UpdateStatus(UpdateState state, int16_t reason)
       reason_(reason) {
 }
 
-UpdateStatus::UpdateStatus(const UpdateStatus &other)
-    : error_(other.error_),
-      reason_(other.reason_),
-      state_(other.state_) {
-}
+UpdateStatus::UpdateStatus(const UpdateStatus &other) = default;
 
 UpdateStatus::UpdateStatus(const UpdateStatus &&other)
     : error_(std::move(other.error_)),
@@ -62,12 +58,7 @@ UpdateStatus &UpdateStatus::operator=(const UpdateStatus &&other) {
   return *this;
 }
 
-UpdateStatus &UpdateStatus::operator=(const UpdateStatus &other) {
-  error_ = other.error_;
-  reason_ = other.reason_;
-  state_ = other.state_;
-  return *this;
-}
+UpdateStatus &UpdateStatus::operator=(const UpdateStatus &other) = default;
 
 } /* namespace state */
 } /* namespace minifi */

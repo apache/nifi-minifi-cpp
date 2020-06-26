@@ -50,8 +50,7 @@ class CoapQuery {
         message_(std::move(message)) {
 
   }
-  virtual ~CoapQuery() {
-  }
+  virtual ~CoapQuery() = default;
   CoapQuery(const CoapQuery &qry) = delete;
   CoapQuery(CoapQuery &&qry) = default;
 

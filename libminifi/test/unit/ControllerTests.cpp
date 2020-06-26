@@ -32,8 +32,7 @@ class TestStateController : public minifi::state::StateController {
   TestStateController()
       : is_running(false) {
   }
-  virtual ~TestStateController() {
-  }
+  virtual ~TestStateController() = default;
 
   virtual std::string getComponentName() const {
     return "TestStateController";

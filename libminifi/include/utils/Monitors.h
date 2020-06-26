@@ -37,11 +37,9 @@ namespace utils {
 template<typename T>
 class AfterExecute {
  public:
-  virtual ~AfterExecute() {
-  }
+  virtual ~AfterExecute() = default;
 
-  AfterExecute() {
-  }
+  AfterExecute() = default;
 
   explicit AfterExecute(AfterExecute &&other) {
   }

@@ -44,7 +44,7 @@ class ApplyTemplate : public core::Processor {
   ApplyTemplate(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ApplyTemplate>::getLogger()) {}
-  ~ApplyTemplate() {}
+  ~ApplyTemplate() = default;
   static constexpr char const *ProcessorName = "ApplyTemplate";
 
   //! Supported Properties

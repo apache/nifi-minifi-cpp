@@ -59,8 +59,7 @@ class CoapResponse {
 
   CoapResponse(CoapResponse &&other) = default;
 
-  ~CoapResponse() {
-  }
+  ~CoapResponse() = default;
 
   /**
    * Retrieve the size of the coap response.

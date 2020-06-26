@@ -46,8 +46,7 @@ class ODBCConnection : public sql::Connection {
       session_ = std::make_unique<soci::session>(getSessionParameters());
   }
 
-  virtual ~ODBCConnection() {
-  }
+  virtual ~ODBCConnection() = default;
 
   bool connected(std::string& exception) const override {
     try {

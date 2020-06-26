@@ -30,8 +30,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
   std::queue<std::string> server_responses_;
   std::queue<std::string> client_responses_;
  public:
-  SiteToSiteResponder() {
-  }
+  SiteToSiteResponder() = default;
   // initialize
   virtual short initialize() {
     return 1;

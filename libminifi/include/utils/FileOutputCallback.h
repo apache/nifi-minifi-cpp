@@ -47,8 +47,7 @@ class FileOutputCallback : public ByteOutputCallback {
         logger_(logging::LoggerFactory<FileOutputCallback>::getLogger()) {
   }
 
-  virtual ~FileOutputCallback() {
-  }
+  virtual ~FileOutputCallback() = default;
 
   int64_t process(std::shared_ptr<io::BaseStream> stream) override;
 

@@ -25,7 +25,7 @@
 
 class SQLFactory : public core::ObjectFactory {
  public:
-  SQLFactory() {}
+  SQLFactory() = default;
 
   /**
    * Gets the name of the object.

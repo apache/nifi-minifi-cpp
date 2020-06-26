@@ -185,8 +185,7 @@ IdGenerator::IdGenerator()
 #endif
 }
 
-IdGenerator::~IdGenerator() {
-}
+IdGenerator::~IdGenerator() = default;
 
 uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int numBits) const {
   uint64_t deviceSegment = 0;

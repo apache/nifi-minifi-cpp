@@ -42,9 +42,7 @@ class COAPObjectFactoryInitializer : public core::ObjectFactoryInitializer {
  */
 class COAPObjectFactory : public core::ObjectFactory {
  public:
-  COAPObjectFactory() {
-
-  }
+  COAPObjectFactory() = default;
 
   /**
    * Gets the name of the object.

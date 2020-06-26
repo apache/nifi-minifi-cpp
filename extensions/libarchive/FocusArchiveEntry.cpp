@@ -266,8 +266,7 @@ FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor, fileut
   _archiveMetadata = archiveMetadata;
 }
 
-FocusArchiveEntry::ReadCallback::~ReadCallback() {
-}
+FocusArchiveEntry::ReadCallback::~ReadCallback() = default;
 
 } /* namespace processors */
 } /* namespace minifi */

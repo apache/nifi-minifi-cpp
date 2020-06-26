@@ -53,8 +53,7 @@ class FocusArchiveEntry : public core::Processor {
     logger_(logging::LoggerFactory<FocusArchiveEntry>::getLogger()) {
   }
   //! Destructor
-  virtual ~FocusArchiveEntry()   {
-  }
+  virtual ~FocusArchiveEntry()   = default;
   //! Processor Name
   static constexpr char const* ProcessorName = "FocusArchiveEntry";
   //! Supported Properties

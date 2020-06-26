@@ -48,8 +48,7 @@ class NonConvertingStream : public BaseStream  {
       : composable_stream_(other) {
   }
 
-  virtual ~NonConvertingStream() {
-  }
+  virtual ~NonConvertingStream() = default;
   /**
    * write 4 bytes to stream
    * @param base_value non encoded value

@@ -53,8 +53,7 @@ class LogAttribute : public core::Processor {
         logger_(logging::LoggerFactory<LogAttribute>::getLogger()) {
   }
   // Destructor
-  virtual ~LogAttribute() {
-  }
+  virtual ~LogAttribute() = default;
   // Processor Name
   static constexpr char const* ProcessorName = "LogAttribute";
   // Supported Properties

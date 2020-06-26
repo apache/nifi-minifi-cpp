@@ -55,8 +55,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid,
                       utils::Identifier & srcUUID, utils::Identifier & destUUID);
   // Destructor
-  virtual ~Connection() {
-  }
+  virtual ~Connection() = default;
 
   // Set Source Processor UUID
   void setSourceUUID(utils::Identifier &uuid) {

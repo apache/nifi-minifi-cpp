@@ -35,8 +35,7 @@ class Properties {
  public:
   Properties(const std::string& name = ""); // NOLINT
 
-  virtual ~Properties() {
-  }
+  virtual ~Properties() = default;
 
   virtual const std::string& getName() const {
     return name_;

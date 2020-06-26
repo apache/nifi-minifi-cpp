@@ -64,8 +64,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
         controller_map_(std::move(other.controller_map_)) {
   }
 
-  virtual ~ControllerServiceProvider() {
-  }
+  virtual ~ControllerServiceProvider() = default;
 
   /**
    * Creates a controller service node wrapping the controller service

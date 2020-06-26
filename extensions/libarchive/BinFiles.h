@@ -229,8 +229,7 @@ class BinFiles : public core::Processor {
     maxBinCount_ = 100;
   }
   // Destructor
-  virtual ~BinFiles() {
-  }
+  virtual ~BinFiles() = default;
   // Processor Name
   static constexpr char const* ProcessorName = "BinFiles";
   // Supported Properties

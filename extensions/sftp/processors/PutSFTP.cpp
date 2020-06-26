@@ -167,8 +167,7 @@ PutSFTP::PutSFTP(std::string name, utils::Identifier uuid /*= utils::Identifier(
   logger_ = logging::LoggerFactory<PutSFTP>::getLogger();
 }
 
-PutSFTP::~PutSFTP() {
-}
+PutSFTP::~PutSFTP() = default;
 
 void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   parseCommonPropertiesOnSchedule(context);
@@ -210,8 +209,7 @@ PutSFTP::ReadCallback::ReadCallback(const std::string& target_path,
     , conflict_resolution_(conflict_resolution) {
 }
 
-PutSFTP::ReadCallback::~ReadCallback() {
-}
+PutSFTP::ReadCallback::~ReadCallback() = default;
 
 int64_t PutSFTP::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
   if (!client_.putFile(target_path_,

@@ -62,8 +62,7 @@ void SensorBase::onSchedule(const std::shared_ptr<core::ProcessContext> &context
 
 }
 
-SensorBase::~SensorBase() {
-}
+SensorBase::~SensorBase() = default;
 
 void SensorBase::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
 }

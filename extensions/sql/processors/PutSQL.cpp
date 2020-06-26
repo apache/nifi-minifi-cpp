@@ -62,8 +62,7 @@ PutSQL::PutSQL(const std::string& name, utils::Identifier uuid)
   : SQLProcessor(name, uuid) {
 }
 
-PutSQL::~PutSQL() {
-}
+PutSQL::~PutSQL() = default;
 
 void PutSQL::initialize() {
   //! Set the supported properties

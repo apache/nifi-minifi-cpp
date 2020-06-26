@@ -62,8 +62,7 @@ namespace core {
  */
 class ObjectFactoryInitializer {
  public:
-  virtual ~ObjectFactoryInitializer() {
-  }
+  virtual ~ObjectFactoryInitializer() = default;
 
   /**
    * This function is be called before the ObjectFactory is used.
@@ -87,14 +86,12 @@ class ObjectFactory {
       : group_(group) {
   }
 
-  ObjectFactory() {
-  }
+  ObjectFactory() = default;
 
   /**
    * Virtual destructor.
    */
-  virtual ~ObjectFactory() {
-  }
+  virtual ~ObjectFactory() = default;
 
   /**
    * Create a shared pointer to a new processor.
@@ -171,8 +168,7 @@ class DefautObjectFactory : public ObjectFactory {
   /**
    * Virtual destructor.
    */
-  virtual ~DefautObjectFactory() {
-  }
+  virtual ~DefautObjectFactory() = default;
 
   /**
    * Create a shared pointer to a new processor.

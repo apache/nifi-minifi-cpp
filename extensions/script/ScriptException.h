@@ -44,8 +44,7 @@ class ScriptException : public std::exception {
       : error_(std::move(errorMsg)) {
   }
 
-  virtual ~ScriptException() noexcept {
-  }
+  virtual ~ScriptException() noexcept = default;
 
   virtual const char * what() const noexcept {
     return error_.c_str();

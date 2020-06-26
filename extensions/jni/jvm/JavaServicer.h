@@ -35,9 +35,7 @@ namespace jni {
  */
 class JavaServicer {
  public:
-  virtual ~JavaServicer() {
-
-  }
+  virtual ~JavaServicer() = default;
   virtual JNIEnv *attach() = 0;
   virtual void detach()  = 0;
   virtual jobject getClassLoader() = 0;
