@@ -42,9 +42,7 @@ class ConfigurationContext : public core::controller::ControllerService {
       : core::controller::ControllerService(name, id) {
   }
 
-  virtual ~ConfigurationContext() {
-
-  }
+  virtual ~ConfigurationContext() = default;
   virtual jobject getClassInstance() = 0;
 };
 

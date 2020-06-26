@@ -66,8 +66,7 @@ class IdentifierBase {
     copyInto(other.id_);
   }
 
-  IdentifierBase() {
-  }
+  IdentifierBase() = default;
 
   IdentifierBase &operator=(const IdentifierBase &other) {
     copyInto(other.id_);

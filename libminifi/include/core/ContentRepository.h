@@ -40,8 +40,7 @@ namespace core {
  */
 class ContentRepository : public StreamManager<minifi::ResourceClaim> {
  public:
-  virtual ~ContentRepository() {
-  }
+  virtual ~ContentRepository() = default;
 
   /**
    * initialize this content repository using the provided configuration.

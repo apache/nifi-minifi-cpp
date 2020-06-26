@@ -41,8 +41,7 @@ class VariableRegistry {
     }
   }
 
-  virtual ~VariableRegistry() {
-  }
+  virtual ~VariableRegistry() = default;
 
   bool getConfigurationProperty(const std::string &property, std::string &value) const {
     auto prop = variable_registry_.find(property);

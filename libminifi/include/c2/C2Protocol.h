@@ -45,8 +45,7 @@ class C2Protocol : public core::Connectable {
     controller_ = controller;
     configuration_ = configure;
   }
-  virtual ~C2Protocol() {
-  }
+  virtual ~C2Protocol() = default;
 
   /**
    * Update the configuration.

@@ -23,11 +23,9 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-PayloadSerializer::PayloadSerializer() {
-}
+PayloadSerializer::PayloadSerializer() = default;
 
-PayloadSerializer::~PayloadSerializer() {
-}
+PayloadSerializer::~PayloadSerializer() = default;
 
 } /* namespace c2 */
 } /* namespace minifi */

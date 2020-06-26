@@ -56,8 +56,7 @@ class ProcessMetrics : public ResponseNode {
       : ResponseNode(name) {
   }
 
-  ProcessMetrics() {
-  }
+  ProcessMetrics() = default;
 
   virtual std::string getName() const {
     return "ProcessMetrics";

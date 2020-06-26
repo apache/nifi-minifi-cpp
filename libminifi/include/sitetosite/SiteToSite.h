@@ -253,8 +253,7 @@ class Transaction {
     uuid_str_ = uuid_.to_string();
   }
   // Destructor
-  virtual ~Transaction() {
-  }
+  virtual ~Transaction() = default;
   // getUUIDStr
   std::string getUUIDStr() {
     return uuid_str_;

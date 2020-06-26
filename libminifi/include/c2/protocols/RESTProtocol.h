@@ -67,8 +67,7 @@ class RESTProtocol {
       : minimize_updates_(false) {
   }
 
-  virtual ~RESTProtocol() {
-  }
+  virtual ~RESTProtocol() = default;
 
  protected:
   virtual rapidjson::Value getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc);

@@ -49,8 +49,7 @@ public:
     : ConvertBase(name, uuid), logger_(logging::LoggerFactory<ConvertHeartBeat>::getLogger()) {
   }
   // Destructor
-  virtual ~ConvertHeartBeat() {
-  }
+  virtual ~ConvertHeartBeat() = default;
   // Processor Name
   static constexpr char const* ProcessorName = "ConvertHeartBeat";
 

@@ -24,9 +24,7 @@
 
 class PcapFactory : public core::ObjectFactory {
  public:
-  PcapFactory() {
-
-  }
+  PcapFactory() = default;
 
   /**
    * Gets the name of the object.

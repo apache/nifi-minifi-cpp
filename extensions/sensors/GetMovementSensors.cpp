@@ -61,8 +61,7 @@ void GetMovementSensors::initialize() {
   setSupportedRelationships(relationships);
 }
 
-GetMovementSensors::~GetMovementSensors() {
-}
+GetMovementSensors::~GetMovementSensors() = default;
 
 void GetMovementSensors::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   auto flow_file_ = session->create();

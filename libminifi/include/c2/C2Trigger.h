@@ -43,8 +43,7 @@ class C2Trigger : public core::Connectable{
   C2Trigger(std::string name, utils::Identifier uuid)
         : core::Connectable(name, uuid) {
   }
-  virtual ~C2Trigger() {
-  }
+  virtual ~C2Trigger() = default;
 
 
   /**

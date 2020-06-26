@@ -41,8 +41,7 @@ class FileSystemRepository : public core::ContentRepository, public core::CoreCo
       : core::CoreComponent(name),
         logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
   }
-  virtual ~FileSystemRepository() {
-  }
+  virtual ~FileSystemRepository() = default;
 
   virtual bool initialize(const std::shared_ptr<minifi::Configure> &configuration);
 

@@ -40,8 +40,7 @@ class Value {
   /**
    * Construct a default (NULL) value
    */
-  Value() {
-  }
+  Value() = default;
 
   /**
    * Construct a string value

@@ -55,8 +55,7 @@ class OperationWatcher : public utils::AfterExecute<Update> {
       : running_(std::move(other.running_)) {
   }
 
-  ~OperationWatcher() {
-  }
+  ~OperationWatcher() = default;
 
   virtual bool isFinished(const Update &result) {
     if (result.getStatus().getState() == UpdateState::READ_COMPLETE && running_) {

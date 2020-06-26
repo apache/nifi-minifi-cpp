@@ -28,8 +28,7 @@ MQTTC2Protocol::MQTTC2Protocol(std::string name, utils::Identifier uuid)
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }
 
-MQTTC2Protocol::~MQTTC2Protocol() {
-}
+MQTTC2Protocol::~MQTTC2Protocol() = default;
 
 void MQTTC2Protocol::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
   if (configure->get("nifi.c2.mqtt.connector.service", controller_service_name_)) {

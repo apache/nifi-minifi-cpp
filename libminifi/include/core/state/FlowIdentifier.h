@@ -63,17 +63,8 @@ class FlowIdentifier {
   }
 
  protected:
-  explicit FlowIdentifier(const FlowIdentifier &other) {
-    registry_url_ = other.registry_url_;
-    bucket_id_ = other.bucket_id_;
-    flow_id_ = other.flow_id_;
-  }
-  FlowIdentifier &operator=(const FlowIdentifier &other) {
-    registry_url_ = other.registry_url_;
-    bucket_id_ = other.bucket_id_;
-    flow_id_ = other.flow_id_;
-    return *this;
-  }
+  FlowIdentifier(const FlowIdentifier &other) = default;
+  FlowIdentifier &operator=(const FlowIdentifier &other) = default;
 
  private:
   std::string registry_url_;

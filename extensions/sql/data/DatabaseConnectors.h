@@ -43,8 +43,7 @@ class Statement {
     : session_(session), query_(query) {
   }
 
-  virtual ~Statement() {
-  }
+  virtual ~Statement() = default;
 
   soci::rowset<soci::row> execute() {
     return session_.prepare << query_;
@@ -62,8 +61,7 @@ class Session {
     : session_(session) {
   }
 
-  virtual ~Session() {
-  }
+  virtual ~Session() = default;
 
   void begin() {
     session_.begin();
@@ -87,8 +85,7 @@ protected:
 
 class Connection {
  public:
-  virtual ~Connection() {
-  }
+  virtual ~Connection() = default;
   virtual bool connected(std::string& exception) const = 0;
   virtual std::unique_ptr<Statement> prepareStatement(const std::string &query) const = 0;
   virtual std::unique_ptr<Session> getSession() const = 0;

@@ -32,8 +32,7 @@ ExpressionContextBuilder::ExpressionContextBuilder(const std::string &name)
     : core::ProcessContextBuilder(name) {
 }
 
-ExpressionContextBuilder::~ExpressionContextBuilder() {
-}
+ExpressionContextBuilder::~ExpressionContextBuilder() = default;
 
 std::shared_ptr<core::ProcessContext> ExpressionContextBuilder::build(const std::shared_ptr<ProcessorNode> &processor) {
   return std::make_shared<core::ProcessContextExpr>(processor, controller_service_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);

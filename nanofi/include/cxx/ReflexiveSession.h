@@ -46,8 +46,7 @@ class ReflexiveSession : public ProcessSession{
   }
 
 // Destructor
-  virtual ~ReflexiveSession() {
-  }
+  virtual ~ReflexiveSession() = default;
 
    virtual std::shared_ptr<core::FlowFile> get(){
      auto prevff = ff;

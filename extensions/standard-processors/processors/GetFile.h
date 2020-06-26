@@ -67,8 +67,7 @@ class GetFileMetrics : public state::response::ResponseNode {
     accepted_files_ = 0;
     input_bytes_ = 0;
   }
-  virtual ~GetFileMetrics() {
-  }
+  virtual ~GetFileMetrics() = default;
   std::string getName() const override {
     return core::Connectable::getName();
   }

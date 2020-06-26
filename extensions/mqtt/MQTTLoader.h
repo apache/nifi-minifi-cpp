@@ -28,9 +28,7 @@
 #include "ConvertUpdate.h"
 class MQTTFactory : public core::ObjectFactory {
  public:
-  MQTTFactory() {
-
-  }
+  MQTTFactory() = default;
 
   /**
    * Gets the name of the object.

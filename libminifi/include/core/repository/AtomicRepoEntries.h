@@ -47,8 +47,7 @@ namespace repository {
 template<typename T>
 class RepoValue {
  public:
-  RepoValue() {
-  }
+  RepoValue() = default;
 
   /**
    * Constructor that populates the item allowing for a custom key comparator.
@@ -78,8 +77,7 @@ noexcept      : key_(std::move(other.key_)),
       comparator_(std::move(other.comparator_)) {
       }
 
-      ~RepoValue() {
-      }
+      ~RepoValue() = default;
 
       T &getKey() {
         return key_;

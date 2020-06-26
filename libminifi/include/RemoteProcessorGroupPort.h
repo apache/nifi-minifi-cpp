@@ -100,8 +100,7 @@ class RemoteProcessorGroupPort : public core::Processor {
     setURL(url);
   }
   // Destructor
-  virtual ~RemoteProcessorGroupPort() {
-  }
+  virtual ~RemoteProcessorGroupPort() = default;
 
   // Processor Name
   static const char *ProcessorName;

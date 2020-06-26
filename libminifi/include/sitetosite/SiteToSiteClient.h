@@ -77,8 +77,7 @@ class SiteToSiteClient : public core::Connectable {
     _currentCodecVersionIndex = 0;
   }
 
-  virtual ~SiteToSiteClient() {
-  }
+  virtual ~SiteToSiteClient() = default;
 
   void setSSLContextService(const std::shared_ptr<minifi::controllers::SSLContextService> &context_service) {
     ssl_context_service_ = context_service;

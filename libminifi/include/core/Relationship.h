@@ -54,17 +54,13 @@ class Relationship {
         description_(description) {
   }
 
-  Relationship(const Relationship &other)
-      : name_(other.name_),
-        description_(other.description_) {
-  }
+  Relationship(const Relationship &other) = default;
 
   Relationship()
       : name_(UNDEFINED_RELATIONSHIP) {
   }
   // Destructor
-  ~Relationship() {
-  }
+  ~Relationship() = default;
   // Get Name for the relationship
   std::string getName() const {
     return name_;
@@ -78,11 +74,7 @@ class Relationship {
     return name_ < right.name_;
   }
 
-  Relationship &operator=(const Relationship &other) {
-    name_ = other.name_;
-    description_ = other.description_;
-    return *this;
-  }
+  Relationship &operator=(const Relationship &other) = default;
   // Whether it is a undefined relationship
   bool isRelationshipUndefined() {
     return isRelationshipNameUndefined(name_);

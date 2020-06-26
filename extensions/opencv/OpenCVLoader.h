@@ -39,9 +39,7 @@ class OpenCVObjectFactoryInitializer : public core::ObjectFactoryInitializer {
 
 class OpenCVObjectFactory : public core::ObjectFactory {
  public:
-  OpenCVObjectFactory() {
-
-  }
+  OpenCVObjectFactory() = default;
 
   /**
    * Gets the name of the object.

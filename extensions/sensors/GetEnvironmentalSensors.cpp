@@ -88,8 +88,7 @@ void GetEnvironmentalSensors::notifyStop() {
   delete pressure_sensor_;
 }
 
-GetEnvironmentalSensors::~GetEnvironmentalSensors() {
-}
+GetEnvironmentalSensors::~GetEnvironmentalSensors() = default;
 
 void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
 

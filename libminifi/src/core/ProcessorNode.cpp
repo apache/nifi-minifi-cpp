@@ -46,8 +46,7 @@ ProcessorNode::ProcessorNode(const ProcessorNode &&other)
       processor_(std::move(other.processor_)) {
 }
 
-ProcessorNode::~ProcessorNode() {
-}
+ProcessorNode::~ProcessorNode() = default;
 
 bool ProcessorNode::isWorkAvailable() {
   return processor_->isWorkAvailable();

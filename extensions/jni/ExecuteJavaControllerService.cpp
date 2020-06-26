@@ -69,8 +69,7 @@ void ExecuteJavaControllerService::initialize() {
 
 }
 
-ExecuteJavaControllerService::~ExecuteJavaControllerService() {
-}
+ExecuteJavaControllerService::~ExecuteJavaControllerService() = default;
 
 void ExecuteJavaControllerService::onEnable() {
   std::string controller_service_name;

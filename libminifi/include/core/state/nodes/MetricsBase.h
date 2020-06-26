@@ -53,8 +53,7 @@ class ResponseNode : public core::Connectable {
       : core::Connectable(name, uuid),
         is_array_(false) {
   }
-  virtual ~ResponseNode() {
-  }
+  virtual ~ResponseNode() = default;
 
   virtual std::vector<SerializedResponseNode> serialize() = 0;
 
@@ -143,11 +142,9 @@ class ObjectNode : public ResponseNode {
  */
 class ResponseNodeSource {
  public:
-  ResponseNodeSource() {
-  }
+  ResponseNodeSource() = default;
 
-  virtual ~ResponseNodeSource() {
-  }
+  virtual ~ResponseNodeSource() = default;
 
   /**
    * Retrieves all metrics from this source.
@@ -168,11 +165,9 @@ class ResponseNodeSource {
  */
 class MetricsNodeSource : public ResponseNodeSource {
  public:
-  MetricsNodeSource() {
-  }
+  MetricsNodeSource() = default;
 
-  virtual ~MetricsNodeSource() {
-  }
+  virtual ~MetricsNodeSource() = default;
 
   /**
    * Retrieves all metrics from this source.
@@ -191,11 +186,9 @@ class MetricsNodeSource : public ResponseNodeSource {
 
 class NodeReporter {
  public:
-  NodeReporter() {
-  }
+  NodeReporter() = default;
 
-  virtual ~NodeReporter() {
-  }
+  virtual ~NodeReporter() = default;
 
   /**
    * Retrieves metrics node
@@ -223,8 +216,7 @@ class NodeReporter {
  */
 class ResponseNodeSink {
  public:
-  virtual ~ResponseNodeSink() {
-  }
+  virtual ~ResponseNodeSink() = default;
   /**
    * Setter for nodes in this sink.
    * @param metrics metrics to insert into the current sink.

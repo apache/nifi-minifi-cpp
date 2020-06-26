@@ -74,8 +74,7 @@ class Worker {
         next_exec_time_(std::chrono::steady_clock::now()) {
   }
 
-  virtual ~Worker() {
-  }
+  virtual ~Worker() = default;
 
   /**
    * Move constructor for worker tasks

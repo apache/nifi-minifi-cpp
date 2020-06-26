@@ -45,8 +45,7 @@ struct Interpreter {
       : guard_(false) {
   }
 
-  ~Interpreter() {
-  }
+  ~Interpreter() = default;
 
   Interpreter(const Interpreter &other) = delete;
 
@@ -163,11 +162,9 @@ class PythonScriptEngine : public script::ScriptEngine {
 
   class TriggerInit {
    public:
-    TriggerInit() {
-    }
+    TriggerInit() = default;
 
-    ~TriggerInit() {
-    }
+    ~TriggerInit() = default;
 
    private:
     std::shared_ptr<script::ScriptProcessContext> script_context_;

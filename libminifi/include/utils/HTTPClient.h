@@ -270,8 +270,7 @@ class BaseHTTPClient {
     response_code = -1;
   }
 
-  virtual ~BaseHTTPClient() {
-  }
+  virtual ~BaseHTTPClient() = default;
 
   virtual void setVerbose(bool use_stderr = false) {
   }

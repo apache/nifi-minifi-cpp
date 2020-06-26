@@ -49,8 +49,7 @@ class C2CallbackAgent : public c2::C2Agent {
 
   explicit C2CallbackAgent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure);
 
-  virtual ~C2CallbackAgent() {
-  }
+  virtual ~C2CallbackAgent() = default;
 
   void setStopCallback(c2_ag_stop_callback *st){
     stop = st;

@@ -42,11 +42,9 @@ namespace controller {
  */
 class ControllerServiceMap {
  public:
-  ControllerServiceMap() {
-  }
+  ControllerServiceMap() = default;
 
-  virtual ~ControllerServiceMap() {
-  }
+  virtual ~ControllerServiceMap() = default;
 
   /**
    * Gets the controller service node using the <code>id</code>

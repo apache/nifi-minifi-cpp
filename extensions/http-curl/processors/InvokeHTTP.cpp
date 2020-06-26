@@ -247,8 +247,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
   }
 }
 
-InvokeHTTP::~InvokeHTTP() {
-}
+InvokeHTTP::~InvokeHTTP() = default;
 
 std::string InvokeHTTP::generateId() {
   utils::Identifier txId;

@@ -91,8 +91,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     }
   }
   // Destructor
-  virtual ~ProcessContext() {
-  }
+  virtual ~ProcessContext() = default;
   // Get Processor associated with the Process Context
   std::shared_ptr<ProcessorNode> getProcessorNode() const {
     return processor_node_;

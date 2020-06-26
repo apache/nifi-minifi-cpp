@@ -38,9 +38,7 @@ namespace jni {
 #define W_OK    2       /* Test for write permission.  */
 #define F_OK    0       /* Test for existence.  */
 #endif
-JVMCreator::~JVMCreator() {
-
-}
+JVMCreator::~JVMCreator() = default;
 
 } /* namespace jni */
 } /* namespace minifi */

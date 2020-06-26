@@ -53,8 +53,7 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
         logger_(logging::LoggerFactory<ThreadedSchedulingAgent>::getLogger()) {
   }
   // Destructor
-  virtual ~ThreadedSchedulingAgent() {
-  }
+  virtual ~ThreadedSchedulingAgent() = default;
 
   // Run function for the thread
   virtual utils::TaskRescheduleInfo run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,

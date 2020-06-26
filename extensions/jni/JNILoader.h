@@ -27,9 +27,7 @@
 
 class JNIFactory : public core::ObjectFactory {
  public:
-  JNIFactory() {
-
-  }
+  JNIFactory() = default;
 
   /**
    * Gets the name of the object.

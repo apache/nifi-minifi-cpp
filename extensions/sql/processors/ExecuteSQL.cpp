@@ -70,8 +70,7 @@ ExecuteSQL::ExecuteSQL(const std::string& name, utils::Identifier uuid)
   : SQLProcessor(name, uuid), max_rows_(0) {
 }
 
-ExecuteSQL::~ExecuteSQL() {
-}
+ExecuteSQL::~ExecuteSQL() = default;
 
 void ExecuteSQL::initialize() {
   //! Set the supported properties

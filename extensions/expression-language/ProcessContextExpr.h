@@ -51,8 +51,7 @@ class ProcessContextExpr : public core::ProcessContext {
         logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
   }
   // Destructor
-  virtual ~ProcessContextExpr() {
-  }
+  virtual ~ProcessContextExpr() = default;
   /**
    * Retrieves property using EL
    * @param property property

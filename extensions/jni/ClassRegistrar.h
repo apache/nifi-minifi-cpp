@@ -64,8 +64,7 @@ class ClassRegistrar {
     return false;
   }
  private:
-  ClassRegistrar() {
-  }
+  ClassRegistrar() = default;
 
   std::mutex mutex_;
   std::set<std::string> registered_classes_;

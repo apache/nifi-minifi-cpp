@@ -213,8 +213,7 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
   }
 }
 
-CapturePacket::~CapturePacket() {
-}
+CapturePacket::~CapturePacket() = default;
 
 void CapturePacket::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   CapturePacketMechanism *capture;

@@ -48,9 +48,7 @@ class HttpCurlObjectFactoryInitializer : public core::ObjectFactoryInitializer {
 
 class HttpCurlObjectFactory : public core::ObjectFactory {
  public:
-  HttpCurlObjectFactory() {
-
-  }
+  HttpCurlObjectFactory() = default;
 
   /**
    * Gets the name of the object.

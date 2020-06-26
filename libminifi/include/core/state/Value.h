@@ -48,8 +48,7 @@ class Value {
         type_id(std::type_index(typeid(std::string))) {
   }
 
-  virtual ~Value() {
-  }
+  virtual ~Value() = default;
   std::string getStringValue() const {
     return string_value;
   }

@@ -24,9 +24,7 @@
 
 class GpsFactory : public core::ObjectFactory {
  public:
-  GpsFactory() {
-
-  }
+  GpsFactory() = default;
 
   /**
    * Gets the name of the object.

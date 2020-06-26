@@ -30,8 +30,7 @@ ProcessorController::ProcessorController(const std::shared_ptr<core::Processor> 
       scheduler_(scheduler) {
 }
 
-ProcessorController::~ProcessorController() {
-}
+ProcessorController::~ProcessorController() = default;
 /**
  * Start the client
  */

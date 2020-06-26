@@ -50,9 +50,7 @@ class JniFlowFile : public core::WeakReference {
 
   }
 
-  virtual ~JniFlowFile() {
-
-  }
+  virtual ~JniFlowFile() = default;
 
   virtual void remove() override;
 
@@ -104,9 +102,7 @@ class JniByteOutStream : public minifi::OutputStreamCallback {
 
   }
 
-  virtual ~JniByteOutStream() {
-
-  }
+  virtual ~JniByteOutStream() = default;
   virtual int64_t process(std::shared_ptr<minifi::io::BaseStream> stream) {
     return stream->write((uint8_t*) bytes_, length_);
   }

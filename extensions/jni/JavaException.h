@@ -49,8 +49,7 @@ class JavaException : public std::exception {
   }
 
   // Destructor
-  virtual ~JavaException() noexcept {
-  }
+  virtual ~JavaException() noexcept = default;
   virtual const char * what() const noexcept {
     return message_.c_str();
   }

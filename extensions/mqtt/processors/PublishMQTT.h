@@ -50,8 +50,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     max_seg_size_ = ULLONG_MAX;
   }
   // Destructor
-  virtual ~PublishMQTT() {
-  }
+  virtual ~PublishMQTT() = default;
   // Processor Name
   static constexpr char const* ProcessorName = "PublishMQTT";
   // Supported Properties
@@ -75,8 +74,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
       status_ = 0;
       read_size_ = 0;
     }
-    ~ReadCallback() {
-    }
+    ~ReadCallback() = default;
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       if (flow_size_ < max_seg_size_)
         max_seg_size_ = flow_size_;

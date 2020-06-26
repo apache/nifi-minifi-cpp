@@ -25,8 +25,7 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-ClassLoader::ClassLoader() {
-}
+ClassLoader::ClassLoader() = default;
 
 ClassLoader &ClassLoader::getDefaultClassLoader() {
   static ClassLoader ret;

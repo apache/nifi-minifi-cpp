@@ -62,21 +62,12 @@ class UpdatePolicy {
     return enable_all_;
   }
 
-  UpdatePolicy &operator=(const UpdatePolicy &&other) {
-    enable_all_ = std::move(other.enable_all_);
-    properties_ = std::move(other.properties_);
-    return *this;
-  }
+  UpdatePolicy &operator=(UpdatePolicy &&other) = default;
 
  protected:
-  explicit UpdatePolicy(const UpdatePolicy &other)
-      : enable_all_(other.enable_all_), properties_(other.properties_) {
-  }
+  UpdatePolicy(const UpdatePolicy &other) = default;
 
-  explicit UpdatePolicy(const UpdatePolicy &&other)
-      : enable_all_(std::move(other.enable_all_)),
-        properties_(std::move(other.properties_)) {
-  }
+  UpdatePolicy(UpdatePolicy &&other) = default;
 
   UpdatePolicy() = delete;
 
@@ -122,10 +113,7 @@ class UpdatePolicyBuilder {
 
 
  protected:
-  explicit UpdatePolicyBuilder(const UpdatePolicyBuilder &other)
-      : current_policy_(other.current_policy_) {
-  }
-
+  UpdatePolicyBuilder(const UpdatePolicyBuilder &other) = default;
 
   explicit UpdatePolicyBuilder(bool enable_all) {
     current_policy_ = std::make_shared<UpdatePolicy>(enable_all);

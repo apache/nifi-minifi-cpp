@@ -59,9 +59,7 @@ class S3Singleton{
     return &init;
   }
  private:
-  S3Singleton(){
-
-  }
+  S3Singleton() = default;
 };
 
 } /* namespace processors */

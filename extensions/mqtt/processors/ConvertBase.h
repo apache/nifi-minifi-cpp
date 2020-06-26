@@ -49,8 +49,7 @@ class ConvertBase : public core::Processor, public minifi::c2::RESTProtocol {
       : core::Processor(name, uuid) {
   }
   // Destructor
-  virtual ~ConvertBase() {
-  }
+  virtual ~ConvertBase() = default;
   // Supported Properties
   static core::Property MQTTControllerService;
   static core::Property ListeningTopic;

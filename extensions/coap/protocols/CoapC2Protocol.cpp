@@ -37,8 +37,7 @@ CoapProtocol::CoapProtocol(const std::string &name, const utils::Identifier &uui
       logger_(logging::LoggerFactory<CoapProtocol>::getLogger()) {
 }
 
-CoapProtocol::~CoapProtocol() {
-}
+CoapProtocol::~CoapProtocol() = default;
 
 void CoapProtocol::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
   RESTSender::initialize(controller, configure);

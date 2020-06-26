@@ -41,11 +41,9 @@ namespace controller {
  */
 class ControllerServiceLookup {
  public:
-  ControllerServiceLookup() {
-  }
+  ControllerServiceLookup() = default;
 
-  virtual ~ControllerServiceLookup() {
-  }
+  virtual ~ControllerServiceLookup() = default;
 
   /**
    * Gets the controller service via the provided identifier.

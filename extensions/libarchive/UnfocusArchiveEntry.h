@@ -54,8 +54,7 @@ class UnfocusArchiveEntry : public core::Processor {
     logger_(logging::LoggerFactory<UnfocusArchiveEntry>::getLogger()){
   }
   //! Destructor
-  virtual ~UnfocusArchiveEntry() {
-  }
+  virtual ~UnfocusArchiveEntry() = default;
   //! Processor Name
   static constexpr char const* ProcessorName = "UnfocusArchiveEntry";
   //! Supported Relationships

@@ -52,8 +52,7 @@
 
 class LogTestController {
  public:
-  ~LogTestController() {
-  }
+  ~LogTestController() = default;
   static LogTestController& getInstance() {
     static LogTestController instance;
     return instance;

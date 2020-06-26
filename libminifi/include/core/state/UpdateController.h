@@ -79,16 +79,13 @@ class Update {
       : status_(status) {
   }
 
-  Update(const Update &other)
-      : status_(other.status_) {
-  }
+  Update(const Update &other) = default;
 
   Update(const Update &&other)
       : status_(std::move(other.status_)) {
   }
 
-  virtual ~Update() {
-  }
+  virtual ~Update() = default;
 
   virtual bool validate() {
     return true;
@@ -103,10 +100,7 @@ class Update {
     return *this;
   }
 
-  Update &operator=(const Update &other) {
-    status_ = other.status_;
-    return *this;
-  }
+  Update &operator=(const Update &other) = default;
 
  protected:
   UpdateStatus status_;
@@ -131,8 +125,7 @@ class UpdateRunner : public utils::AfterExecute<Update> {
         delay_(std::move(other.delay_)) {
   }
 
-  ~UpdateRunner() {
-  }
+  ~UpdateRunner() = default;
 
   virtual bool isFinished(const Update &result) {
     if ((result.getStatus().getState() == UpdateState::FULLY_APPLIED || result.getStatus().getState() == UpdateState::READ_COMPLETE) && *running_) {
@@ -157,8 +150,7 @@ class UpdateRunner : public utils::AfterExecute<Update> {
 
 class StateController {
  public:
-  virtual ~StateController() {
-  }
+  virtual ~StateController() = default;
 
   virtual std::string getComponentName() const = 0;
 
@@ -185,8 +177,7 @@ class StateController {
  */
 class StateMonitor : public StateController {
  public:
-  virtual ~StateMonitor() {
-  }
+  virtual ~StateMonitor() = default;
 
   std::atomic<bool> &isStateMonitorRunning() {
     return controller_running_;

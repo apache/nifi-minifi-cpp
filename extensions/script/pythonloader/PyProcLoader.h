@@ -27,8 +27,7 @@
 
 class PyProcFactory : public core::ObjectFactory {
  public:
-  PyProcFactory() {
-  }
+  PyProcFactory() = default;
 
   /**
    * Gets the name of the object.

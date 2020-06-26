@@ -60,8 +60,7 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
 
   ProcessContextBuilder(const std::string &name); // NOLINT
 
-  virtual ~ProcessContextBuilder() {
-  }
+  virtual ~ProcessContextBuilder() = default;
 
   std::shared_ptr<ProcessContextBuilder> withProvider(const std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider);
 

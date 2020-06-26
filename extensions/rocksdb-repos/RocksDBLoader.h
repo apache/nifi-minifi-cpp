@@ -27,9 +27,7 @@
 
 class RocksDBFactory : public core::ObjectFactory {
  public:
-  RocksDBFactory() {
-
-  }
+  RocksDBFactory() = default;
 
   /**
    * Gets the name of the object.

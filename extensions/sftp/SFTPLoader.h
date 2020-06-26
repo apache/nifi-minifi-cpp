@@ -31,9 +31,7 @@ class SFTPFactoryInitializer : public core::ObjectFactoryInitializer {
 
 class SFTPFactory : public core::ObjectFactory {
  public:
-  SFTPFactory() {
-
-  }
+  SFTPFactory() = default;
 
   /**
    * Gets the name of the object.

@@ -33,8 +33,7 @@ namespace core {
 
 class CoreComponentStateManager {
  public:
-  virtual ~CoreComponentStateManager() {
-  }
+  virtual ~CoreComponentStateManager() = default;
 
   virtual bool set(const std::unordered_map<std::string, std::string>& kvs) = 0;
 

@@ -47,7 +47,6 @@ class JavaClass {
 
   JavaClass()
       : class_ref_(nullptr) {
-
   }
 
   /**
@@ -62,8 +61,7 @@ class JavaClass {
     cnstrctr = jenv->GetMethodID(class_ref_, "<init>", "()V");
   }
 
-  ~JavaClass() {
-  }
+  ~JavaClass() = default;
 
   std::string getName() const {
     return name_;

@@ -168,8 +168,7 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
   java_servicer_->attach()->DeleteGlobalRef(initializer);
 }
 
-ExecuteJavaProcessor::~ExecuteJavaProcessor() {
-}
+ExecuteJavaProcessor::~ExecuteJavaProcessor() = default;
 
 JNINativeMethod ExecuteJavaProcessor::registerNativeMethod(const std::string &name, const std::string &params, const void *ptr) {
   JNINativeMethod mthd;

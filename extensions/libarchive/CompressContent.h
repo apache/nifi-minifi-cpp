@@ -61,8 +61,7 @@ public:
     , encapsulateInTar_(false) {
   }
   // Destructor
-  virtual ~CompressContent() {
-  }
+  virtual ~CompressContent() = default;
   // Processor Name
   static constexpr char const* ProcessorName = "CompressContent";
   // Supported Properties
@@ -83,8 +82,7 @@ public:
     ReadCallbackCompress(std::shared_ptr<core::FlowFile> &flow, struct archive *arch, struct archive_entry *entry) :
         flow_(flow), arch_(arch), entry_(entry), status_(0), logger_(logging::LoggerFactory<CompressContent>::getLogger()) {
     }
-    ~ReadCallbackCompress() {
-    }
+    ~ReadCallbackCompress() = default;
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       uint8_t buffer[4096U];
       int64_t ret = 0;
@@ -129,8 +127,7 @@ public:
         read_size_(0), offset_(0), flow_(flow) {
       origin_offset_ = flow_->getOffset();
     }
-    ~ReadCallbackDecompress() {
-    }
+    ~ReadCallbackDecompress() = default;
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       read_size_ = 0;
       stream->seek(offset_);
@@ -160,8 +157,7 @@ public:
       stream_ = nullptr;
       status_ = 0;
     }
-    ~WriteCallback() {
-    }
+    ~WriteCallback() = default;
 
     std::string compress_mode_;
     int64_t compress_level_;
