@@ -82,9 +82,13 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
         content_repo_(content_repo),
         processor_node_(processor),
         logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
+        configure_(configuration),
         initialized_(false) {
     repo_ = repo;
     state_manager_provider_ = getStateManagerProvider(logger_, controller_service_provider_, configuration);
+    if (!configure_) {
+      configure_ = std::make_shared<minifi::Configure>();
+    }
   }
   // Destructor
   virtual ~ProcessContext() {
