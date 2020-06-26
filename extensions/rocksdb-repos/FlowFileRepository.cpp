@@ -122,8 +122,8 @@ void FlowFileRepository::run() {
 }
 
 void FlowFileRepository::prune_stored_flowfiles() {
-  std::unique_ptr<rocksdb::DB> stored_database;
   rocksdb::DB* used_database;
+  std::unique_ptr<rocksdb::DB> stored_database;
   bool corrupt_checkpoint = false;
   if (nullptr != checkpoint_) {
     rocksdb::Options options;
@@ -131,10 +131,10 @@ void FlowFileRepository::prune_stored_flowfiles() {
     options.use_direct_io_for_flush_and_compaction = true;
     options.use_direct_reads = true;
     rocksdb::Status status = rocksdb::DB::OpenForReadOnly(options, FLOWFILE_CHECKPOINT_DIRECTORY, &used_database);
-    stored_database.reset(used_database);
-    if (!status.ok()) {
+    if (status.ok()) {
+      stored_database.reset(used_database);
+    } else {
       used_database = db_;
-      stored_database.release();
     }
   } else {
     logger_->log_trace("Could not open checkpoint as object doesn't exist. Likely not needed or file system error.");
