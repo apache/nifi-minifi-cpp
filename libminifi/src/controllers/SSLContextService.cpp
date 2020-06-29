@@ -79,7 +79,7 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
         logging::LOG_ERROR(logger_) << "Failed to parse certificate file " << certificate << " as PKCS#12, " << getLatestOpenSSLErrorString();
         return false;
       }
-      ::gsl::final_action<std::function<void()>> certs_guard([pkey, cert, ca]() {
+      const auto certs_guard = gsl::finally([pkey, cert, ca]() {
         EVP_PKEY_free(pkey);
         X509_free(cert);
         sk_X509_pop_free(ca, X509_free);
