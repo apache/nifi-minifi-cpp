@@ -326,3 +326,82 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
 
   LogTestController::getInstance().reset();
 }
+
+TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
+  using ConnectionMap = std::map<std::string, std::shared_ptr<core::Connectable>>;
+
+  class TestFlowFileRepository: public core::repository::FlowFileRepository{
+   public:
+    explicit TestFlowFileRepository(const std::string& name)
+        : core::SerializableComponent(name),
+          FlowFileRepository(name, FLOWFILE_REPOSITORY_DIRECTORY, MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
+                             MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 1) {}
+    void flush() override {
+      FlowFileRepository::flush();
+      if (onFlush_) {
+        onFlush_();
+      }
+    }
+    std::function<void()> onFlush_;
+  };
+
+  TestController testController;
+  char format[] = "/tmp/testRepo.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+
+  auto config = std::make_shared<minifi::Configure>();
+  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
+
+  auto connection = std::make_shared<minifi::Connection>(nullptr, nullptr, "Connection");
+  ConnectionMap connectionMap{{connection->getUUIDStr(), connection}};
+  // initialize repository
+  {
+    std::shared_ptr<TestFlowFileRepository> ff_repository = std::make_shared<TestFlowFileRepository>("flowFileRepository");
+
+    std::atomic<int> flush_counter{0};
+
+    std::atomic<bool> stop{false};
+    std::thread shutdown{[&] {
+      while (!stop.load()) {}
+      ff_repository->stop();
+    }};
+
+    ff_repository->onFlush_ = [&] {
+      if (++flush_counter != 1) {
+        return;
+      }
+      
+      for (int keyIdx = 0; keyIdx < 100; ++keyIdx) {
+        auto file = std::make_shared<minifi::FlowFileRecord>(ff_repository, nullptr);
+        file->setUuidConnection(connection->getUUIDStr());
+        // Serialize is sync
+        file->Serialize();
+        if (keyIdx % 2 == 0) {
+          // delete every second flowFile
+          ff_repository->Delete(file->getUUIDStr());
+        }
+      }
+      stop = true;
+      // wait for the shutdown thread to start waiting for the worker thread
+      std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    };
+
+    ff_repository->setConnectionMap(connectionMap);
+    ff_repository->initialize(config);
+    ff_repository->loadComponent(nullptr);
+    ff_repository->start();
+
+    shutdown.join();
+  }
+
+  // check if the deleted flowfiles are indeed deleted
+  {
+    std::shared_ptr<TestFlowFileRepository> ff_repository = std::make_shared<TestFlowFileRepository>("flowFileRepository");
+    ff_repository->setConnectionMap(connectionMap);
+    ff_repository->initialize(config);
+    ff_repository->loadComponent(nullptr);
+    ff_repository->start();
+    std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    REQUIRE(connection->getQueueSize() == 50);
+  }
+}

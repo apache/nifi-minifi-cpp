@@ -366,7 +366,7 @@ bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
     return false;
   }
 
-  if (nullptr == claim_) {
+  if (nullptr == claim_ && content_full_fath_.length() != 0) {
     claim_ = std::make_shared<ResourceClaim>(content_full_fath_, content_repo_, true);
   }
   return true;

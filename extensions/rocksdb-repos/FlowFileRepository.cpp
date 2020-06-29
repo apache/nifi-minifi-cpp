@@ -119,6 +119,7 @@ void FlowFileRepository::run() {
       last = now;
     }
   }
+  flush();
 }
 
 void FlowFileRepository::prune_stored_flowfiles() {
