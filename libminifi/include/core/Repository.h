@@ -242,7 +242,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   // thread
   std::thread thread_;
   // whether the monitoring thread is running for the repo while it was enabled
-  bool running_;
+  std::atomic<bool> running_;
   // whether stop accepting provenace event
   std::atomic<bool> repo_full_;
   // repoSize
