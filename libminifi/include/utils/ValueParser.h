@@ -28,7 +28,6 @@
 #include <limits>
 
 #include "PropertyErrors.h"
-#include "GeneralUtils.h"
 
 namespace org {
 namespace apache {
@@ -38,17 +37,6 @@ namespace utils {
 namespace internal {
 
 class ValueParser {
- private:
-  template<typename From, typename To, typename = void>
-  struct is_non_narrowing_convertible : std::false_type {
-    static_assert(std::is_integral<From>::value && std::is_integral<To>::value, "Checks only integral values");
-  };
-
-  template<typename From, typename To>
-  struct is_non_narrowing_convertible<From, To, void_t<decltype(To{std::declval<From>()})>> : std::true_type {
-    static_assert(std::is_integral<From>::value && std::is_integral<To>::value, "Checks only integral values");
-  };
-
  public:
   explicit ValueParser(const std::string& str, std::size_t offset = 0) : str(str), offset(offset) {}
 
@@ -62,26 +50,18 @@ class ValueParser {
       throw ParseException("Cannot convert long to int");
     }
     offset += len;
-    out = static_cast<int>(result);
-    return *this;
-  }
-
-  ValueParser& parse(long& out) {  // NOLINT
-    long result;  // NOLINT
-    auto len = safeCallConverter(std::strtol, result);
-    if (len == 0) {
-      throw ParseException("Couldn't parse long");
-    }
-    offset += len;
     out = result;
     return *this;
   }
 
-  ValueParser& parse(long long& out) {  // NOLINT
+  ValueParser& parse(int64_t& out) {
     long long result;  // NOLINT
     auto len = safeCallConverter(std::strtoll, result);
     if (len == 0) {
       throw ParseException("Couldn't parse long long");
+    }
+    if (result < (std::numeric_limits<int64_t>::min)() || result > (std::numeric_limits<int64_t>::max)()) {
+      throw ParseException("Cannot convert long long to int64_t");
     }
     offset += len;
     out = result;
@@ -102,11 +82,11 @@ class ValueParser {
       throw ParseException("Cannot convert unsigned long to uint32_t");
     }
     offset += len;
-    out = static_cast<uint32_t>(result);
+    out = result;
     return *this;
   }
 
-  ValueParser& parse(unsigned long long& out) {  // NOLINT
+  ValueParser& parse(uint64_t& out) {
     skipWhitespace();
     if (offset < str.length() && str[offset] == '-') {
       throw ParseException("Not an unsigned long");
@@ -115,6 +95,9 @@ class ValueParser {
     auto len = safeCallConverter(std::strtoull, result);
     if (len == 0) {
       throw ParseException("Couldn't parse unsigned long long");
+    }
+    if (result > (std::numeric_limits<uint64_t>::max)()) {
+      throw ParseException("Cannot convert unsigned long long to uint64_t");
     }
     offset += len;
     out = result;
