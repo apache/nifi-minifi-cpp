@@ -1,6 +1,4 @@
 /**
- * @file LoopTest.cpp
- * ProcessSession class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +16,7 @@
  * limitations under the License.
  */
 
+#undef NDEBUG
 #include "CustomProcessors.h"
 #include "FlowBuilder.h"
 
