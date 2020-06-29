@@ -62,19 +62,12 @@ class UpdatePolicy {
     return enable_all_;
   }
 
-  UpdatePolicy &operator=(const UpdatePolicy &&other) {
-    enable_all_ = std::move(other.enable_all_);
-    properties_ = std::move(other.properties_);
-    return *this;
-  }
+  UpdatePolicy &operator=(UpdatePolicy &&other) = default;
 
  protected:
   UpdatePolicy(const UpdatePolicy &other) = default;
 
-  UpdatePolicy(UpdatePolicy &&other)
-      : enable_all_(std::move(other.enable_all_)),
-        properties_(std::move(other.properties_)) {
-  }
+  UpdatePolicy(UpdatePolicy &&other) = default;
 
   UpdatePolicy() = delete;
 
