@@ -82,8 +82,7 @@ class TLSContext : public SocketContext {
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<Configure> configure_;
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
-  using Context = std::unique_ptr<SSL_CTX, decltype(&deleteContext)>;
-  Context ctx;
+  std::unique_ptr<SSL_CTX, decltype(&deleteContext)> ctx;
 
   int16_t error_value;
 };

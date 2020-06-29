@@ -72,7 +72,7 @@ int16_t TLSContext::initialize(bool server_method) {
   }
   const SSL_METHOD *method;
   method = server_method ? TLSv1_2_server_method() : TLSv1_2_client_method();
-  Context local_context = Context(SSL_CTX_new(method), deleteContext);
+  auto local_context = std::unique_ptr<SSL_CTX, decltype(&deleteContext)>(SSL_CTX_new(method), deleteContext);
   if (local_context == nullptr) {
     logger_->log_error("Could not create SSL context, error: %s.", std::strerror(errno));
     error_value = TLS_ERROR_CONTEXT;
@@ -90,7 +90,7 @@ int16_t TLSContext::initialize(bool server_method) {
         error_value = TLS_ERROR_CERT_ERROR;
         return error_value;
       }
-      ctx.swap(local_context);
+      ctx = std::move(local_context);
       error_value = TLS_GOOD;
       return 0;
     }
@@ -143,7 +143,7 @@ int16_t TLSContext::initialize(bool server_method) {
 
     logger_->log_debug("Load/Verify Client Certificate OK. for %X and %X", this, local_context.get());
   }
-  ctx.swap(local_context);
+  ctx = std::move(local_context);
   error_value = TLS_GOOD;
   return 0;
 }
