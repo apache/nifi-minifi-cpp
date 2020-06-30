@@ -778,6 +778,7 @@ TEST_CASE("TailFile onSchedule throws in Multiple mode if the Base Directory doe
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
   plan->setProperty(tailfile, processors::TailFile::TailMode.getName(), "Multiple file");
+  plan->setProperty(tailfile, processors::TailFile::FileName.getName(), ".*\\.log");
 
   SECTION("No Base Directory is set") {
     REQUIRE_THROWS(plan->runNextProcessor());
