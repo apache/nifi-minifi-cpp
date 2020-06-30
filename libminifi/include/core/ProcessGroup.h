@@ -228,6 +228,8 @@ class ProcessGroup {
 
   void getConnections(std::map<std::string, std::shared_ptr<Connectable>> &connectionMap);
 
+  void drainConnections();
+
  protected:
   void startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
 
