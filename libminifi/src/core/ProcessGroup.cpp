@@ -403,6 +403,16 @@ void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
   }
 }
 
+void ProcessGroup::drainConnections() {
+  for (auto &&connection : connections_) {
+    connection->drain();
+  }
+
+  for (std::set<ProcessGroup *>::iterator it = child_process_groups_.begin(); it != child_process_groups_.end(); ++it) {
+    (*it)->drainConnections();
+  }
+}
+
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

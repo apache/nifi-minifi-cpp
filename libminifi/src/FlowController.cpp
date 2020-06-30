@@ -250,6 +250,9 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
      * -Stopping the schedulers doesn't actually quit the onTrigger functions of processors
      * -They only guarantee that the processors are not scheduled any more
      * -After the threadpool is stopped we can make sure that processors don't need repos and controllers anymore */
+    if (this->root_) {
+      this->root_->drainConnections();
+    }
     this->flow_file_repo_->stop();
     this->provenance_repo_->stop();
     // stop the ControllerServices
