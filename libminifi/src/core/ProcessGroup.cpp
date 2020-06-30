@@ -92,13 +92,12 @@ ProcessGroup::~ProcessGroup() {
     onScheduleTimer_->stop();
   }
 
-  for (auto &&connection : connections_) {
+  for (auto&& connection : connections_) {
     connection->drain();
   }
 
-  for (std::set<ProcessGroup *>::iterator it = child_process_groups_.begin(); it != child_process_groups_.end(); ++it) {
-    ProcessGroup *processGroup(*it);
-    delete processGroup;
+  for (ProcessGroup* childGroup : child_process_groups_) {
+    delete childGroup;
   }
 }
 
@@ -404,12 +403,12 @@ void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
 }
 
 void ProcessGroup::drainConnections() {
-  for (auto &&connection : connections_) {
+  for (auto&& connection : connections_) {
     connection->drain();
   }
 
-  for (std::set<ProcessGroup *>::iterator it = child_process_groups_.begin(); it != child_process_groups_.end(); ++it) {
-    (*it)->drainConnections();
+  for (ProcessGroup* childGroup : child_process_groups_) {
+    childGroup->drainConnections();
   }
 }
 
