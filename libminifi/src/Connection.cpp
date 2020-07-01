@@ -262,15 +262,17 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
   return NULL;
 }
 
-void Connection::drain() {
+void Connection::drain(bool delete_permanently) {
   std::lock_guard<std::mutex> lock(mutex_);
 
   while (!queue_.empty()) {
     std::shared_ptr<core::FlowFile> item = queue_.front();
     queue_.pop();
-    logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
-    if (flow_repository_->Delete(item->getUUIDStr())) {
-      item->setStoredToRepository(false);
+    logger_->log_debug("Delete flow file UUID %s from connection %s", item->getUUIDStr(), name_);
+    if (delete_permanently) {
+      if (flow_repository_->Delete(item->getUUIDStr())) {
+        item->setStoredToRepository(false);
+      }
     }
   }
   queued_data_size_ = 0;

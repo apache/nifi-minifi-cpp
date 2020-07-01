@@ -93,7 +93,7 @@ ProcessGroup::~ProcessGroup() {
   }
 
   for (auto&& connection : connections_) {
-    connection->drain();
+    connection->drain(false);
   }
 
   for (ProcessGroup* childGroup : child_process_groups_) {
@@ -404,7 +404,7 @@ void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
 
 void ProcessGroup::drainConnections() {
   for (auto&& connection : connections_) {
-    connection->drain();
+    connection->drain(false);
   }
 
   for (ProcessGroup* childGroup : child_process_groups_) {

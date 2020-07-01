@@ -168,7 +168,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   // Poll the flow file from queue, the expired flow file record also being returned
   std::shared_ptr<core::FlowFile> poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords);
   // Drain the flow records
-  void drain();
+  void drain(bool delete_permanently);
 
   void yield() override {}
 

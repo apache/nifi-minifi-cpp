@@ -926,7 +926,7 @@ int16_t FlowController::clearConnection(const std::string &connection) {
     auto conn = connections.find(connection);
     if (conn != connections.end()) {
       logger_->log_info("Clearing connection %s", connection);
-      conn->second->drain();
+      conn->second->drain(true);
     }
   }
   return -1;
