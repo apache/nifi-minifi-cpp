@@ -71,8 +71,6 @@ void BinFiles::initialize() {
   relationships.insert(Original);
   relationships.insert(Failure);
   setSupportedRelationships(relationships);
-
-  out_going_connections_[Self.getName()].insert(shared_from_this());
 }
 
 void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
@@ -349,6 +347,14 @@ std::unordered_set<std::shared_ptr<core::FlowFile>> BinFiles::FlowFileStore::get
   }
   std::lock_guard<std::mutex> guard(flow_file_mutex_);
   return std::move(incoming_files_);
+}
+
+std::set<std::shared_ptr<core::Connectable>> BinFiles::getOutGoingConnections(const std::string &relationship) const {
+  auto result = core::Connectable::getOutGoingConnections(relationship);
+  if (relationship == Self.getName()) {
+    result.insert(std::static_pointer_cast<core::Connectable>(std::const_pointer_cast<core::Processor>(shared_from_this())));
+  }
+  return result;
 }
 
 } /* namespace processors */

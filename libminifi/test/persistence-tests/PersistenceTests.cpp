@@ -196,7 +196,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
     // the resurrected FlowFiles
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
 
-    // write two third file into the input
+    // write the third file into the input
     flow.write("three");
 
     flow.trigger();

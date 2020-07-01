@@ -24,22 +24,24 @@
 class BufferReader : public org::apache::nifi::minifi::InputStreamCallback {
  public:
   explicit BufferReader(std::vector<uint8_t>& buffer) : buffer_(buffer){}
-  template<class Input>
-  int write(Input input, std::size_t len) {
+
+  int write(org::apache::nifi::minifi::io::BaseStream& input, std::size_t len) {
     uint8_t tmpBuffer[4096]{};
+    std::size_t remaining_len = len;
     int total_read = 0;
-    do {
-      auto ret = input.read(tmpBuffer, std::min(len, sizeof(tmpBuffer)));
+    while (remaining_len > 0) {
+      auto ret = input.read(tmpBuffer, std::min(remaining_len, sizeof(tmpBuffer)));
       if (ret == 0) break;
       if (ret < 0) return ret;
-      len -= ret;
+      remaining_len -= ret;
       total_read += ret;
       auto prevSize = buffer_.size();
       buffer_.resize(prevSize + ret);
       std::move(tmpBuffer, tmpBuffer + ret, buffer_.data() + prevSize);
-    } while (len);
+    }
     return total_read;
   }
+
   int64_t process(std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
     return write(*stream.get(), stream->getSize());
   }

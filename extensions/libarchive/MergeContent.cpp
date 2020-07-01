@@ -91,8 +91,6 @@ void MergeContent::initialize() {
   relationships.insert(Failure);
   relationships.insert(Merge);
   setSupportedRelationships(relationships);
-
-  out_going_connections_[Self.getName()].insert(shared_from_this());
 }
 
 std::string MergeContent::readContent(std::string path) {
