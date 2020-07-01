@@ -17,6 +17,7 @@
  */
 #include "FlowFileRecord.h"
 #include "FlowFileRepository.h"
+#include "Connection.h"
 #include "utils/ScopeGuard.h"
 
 #include "rocksdb/options.h"
@@ -152,7 +153,10 @@ void FlowFileRepository::prune_stored_flowfiles() {
         // we find the connection for the persistent flowfile, create the flowfile and enqueue that
         std::shared_ptr<core::FlowFile> flow_file_ref = std::static_pointer_cast<core::FlowFile>(eventRead);
         eventRead->setStoredToRepository(true);
-        search->second->put(eventRead);
+        auto connection = std::static_pointer_cast<Connection>(search->second);
+        if (connection) {
+          connection->put(eventRead);
+        }
       } else {
         logger_->log_warn("Could not find connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
         if (eventRead->getContentFullPath().length() > 0) {

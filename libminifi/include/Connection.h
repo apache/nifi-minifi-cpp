@@ -153,12 +153,13 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   uint64_t getQueueDataSize() {
     return queued_data_size_;
   }
-  void put(std::shared_ptr<core::Connectable> flow) override {
+  /*
+  void put(std::shared_ptr<core::CoreComponent> flow) override {
     std::shared_ptr<core::FlowFile> ff = std::static_pointer_cast<core::FlowFile>(flow);
     if (nullptr != ff) {
       put(ff);
     }
-  }
+  } */
 
   // Put the flow file into queue
   void put(std::shared_ptr<core::FlowFile> flow);

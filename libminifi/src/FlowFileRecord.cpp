@@ -44,7 +44,6 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
     : FlowFile(),
       content_repo_(content_repo),
       flow_repository_(flow_repository) {
-  id_ = local_flow_seq_number_.load();
   claim_ = claim;
   // Increase the local ID for the flow record
   ++local_flow_seq_number_;
@@ -86,14 +85,14 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
     event->getResourceClaim()->increaseFlowFileRecordOwnedCount();
     content_full_fath_ = event->getResourceClaim()->getContentFullPath();
   }
-  if (event->getFlowIdentifier()) {
+  /*if (event->getFlowIdentifier()) {
     std::string attr;
     event->getAttribute(FlowAttributeKey(FlowAttribute::FLOW_ID), attr);
     setFlowIdentifier(event->getFlowIdentifier());
     if (!attr.empty()) {
       addKeyedAttribute(FlowAttribute::FLOW_ID, attr);
     }
-  }
+  } */
 }
 
 FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event)
@@ -102,14 +101,14 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
       snapshot_(""),
       content_repo_(content_repo),
       flow_repository_(flow_repository) {
-  if (event->getFlowIdentifier()) {
+  /*if (event->getFlowIdentifier()) {
     std::string attr;
     event->getAttribute(FlowAttributeKey(FlowAttribute::FLOW_ID), attr);
     setFlowIdentifier(event->getFlowIdentifier());
     if (!attr.empty()) {
       addKeyedAttribute(FlowAttribute::FLOW_ID, attr);
     }
-  }
+  } */
 }
 
 FlowFileRecord::~FlowFileRecord() {

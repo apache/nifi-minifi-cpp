@@ -34,7 +34,7 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-class FlowFile : public core::Connectable, public ReferenceContainer {
+class FlowFile : public core::CoreComponent, public ReferenceContainer {
  public:
   FlowFile();
   ~FlowFile();
@@ -230,10 +230,6 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
     return (penaltyExpiration_ms_ > 0 ? penaltyExpiration_ms_ > getTimeMillis() : false);
   }
 
-  uint64_t getId() const {
-    return id_;
-  }
-
   /**
    * Yield
    */
@@ -305,8 +301,6 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   // Size in bytes of the data corresponding to this flow file
   uint64_t size_;
   // A global unique identifier
-  // A local unique identifier
-  uint64_t id_;
   // Offset to the content
   uint64_t offset_;
   // Penalty expiration

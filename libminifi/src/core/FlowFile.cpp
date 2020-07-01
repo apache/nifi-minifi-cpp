@@ -34,7 +34,7 @@ std::shared_ptr<utils::NonRepeatingStringGenerator> FlowFile::numeric_id_generat
 std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
 
 FlowFile::FlowFile()
-    : Connectable("FlowFile"),
+    : CoreComponent("FlowFile"),
       size_(0),
       stored(false),
       offset_(0),
@@ -45,7 +45,6 @@ FlowFile::FlowFile()
       marked_delete_(false),
       connection_(nullptr),
       original_connection_() {
-  id_ = numeric_id_generator_->generateId();
   entry_date_ = getTimeMillis();
   event_time_ = entry_date_;
   lineage_start_date_ = entry_date_;
