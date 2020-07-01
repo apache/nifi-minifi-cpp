@@ -87,7 +87,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
 
  public:
   FlowFile();
-  virtual ~FlowFile();
+  ~FlowFile() override;
   FlowFile& operator=(const FlowFile& other);
 
   /**
@@ -287,12 +287,12 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   /**
    * Yield
    */
-  virtual void yield() {
+  void yield() override {
   }
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() {
+  bool isRunning() override {
     return true;
   }
 
@@ -300,7 +300,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Determines if work is available by this connectable
    * @return boolean if work is available.
    */
-  virtual bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return true;
   }
 
