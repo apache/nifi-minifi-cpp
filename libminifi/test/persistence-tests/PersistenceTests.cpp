@@ -49,7 +49,7 @@ struct TestFlow{
 
       merge->setProperty(MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
       merge->setProperty(MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
-      merge->setProperty(MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
+      merge->setProperty(MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
       merge->setProperty(MergeContent::MinEntries, "3");
       merge->setProperty(MergeContent::Header, "_Header_");
       merge->setProperty(MergeContent::Footer, "_Footer_");

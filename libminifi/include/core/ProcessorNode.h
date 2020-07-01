@@ -54,7 +54,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     return processor_;
   }
 
-  void yield() {
+  void yield() override {
     processor_->yield();
   }
 
@@ -107,7 +107,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Returns theflow version
    * @returns flow version. can be null if a flow version is not tracked.
    */
-  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const {
+  std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const override {
     if (processor_ != nullptr) {
       return processor_->getFlowIdentifier();
     } else {
@@ -224,7 +224,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Get outgoing connection based on relationship
    * @return set of outgoing connections.
    */
-  std::set<std::shared_ptr<Connectable>> getOutGoingConnections(std::string relationship) {
+  std::set<std::shared_ptr<Connectable>> getOutGoingConnections(const std::string& relationship) const override {
     return processor_->getOutGoingConnections(relationship);
   }
 
@@ -269,7 +269,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   }
 
 // Get Process Name
-  std::string getName() const {
+  std::string getName() const override {
     return processor_->getName();
   }
 
@@ -281,18 +281,18 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     processor_->setMaxConcurrentTasks(tasks);
   }
 
-  virtual bool supportsDynamicProperties() {
+  bool supportsDynamicProperties() override {
     return false;
   }
 
-  virtual bool isRunning();
+  bool isRunning() override;
 
-  virtual bool isWorkAvailable();
+  bool isWorkAvailable() override;
 
   virtual ~ProcessorNode();
 
  protected:
-  virtual bool canEdit() {
+  bool canEdit() override {
     return !processor_->isRunning();
   }
 

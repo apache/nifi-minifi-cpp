@@ -22,6 +22,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 
 #include "utils/TimeUtil.h"
 #include "ResourceClaim.h"
@@ -79,9 +80,11 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
       // while logging stuff and removing it from repositories
       assert(!claim_);
     }
+
    private:
     std::shared_ptr<ResourceClaim> claim_;
   };
+
  public:
   FlowFile();
   virtual ~FlowFile();
