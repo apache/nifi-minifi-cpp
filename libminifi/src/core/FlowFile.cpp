@@ -40,13 +40,11 @@ FlowFile::FlowFile()
       offset_(0),
       last_queue_date_(0),
       penaltyExpiration_ms_(0),
-      event_time_(0),
       claim_(nullptr),
       marked_delete_(false),
       connection_(nullptr),
       original_connection_() {
   entry_date_ = getTimeMillis();
-  event_time_ = entry_date_;
   lineage_start_date_ = entry_date_;
 }
 
@@ -66,7 +64,6 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
   claim_ = other.claim_;
   if (claim_ != nullptr)
     this->claim_->increaseFlowFileRecordOwnedCount();
-  uuidStr_ = other.uuidStr_;
   connection_ = other.connection_;
   original_connection_ = other.original_connection_;
   return *this;
@@ -130,9 +127,6 @@ bool FlowFile::hasStashClaim(const std::string &key) {
 // ! Get Entry Date
 uint64_t FlowFile::getEntryDate() const {
   return entry_date_;
-}
-uint64_t FlowFile::getEventTime() const {
-  return event_time_;
 }
 // ! Get Lineage Start Date
 uint64_t FlowFile::getlineageStartDate() const {

@@ -78,7 +78,6 @@ class ControllerService : public ConfigurableComponent, public Connectable {
         configuration_(std::make_shared<Configure>()) {
     current_state_ = DISABLED;
     uuid_ = id;
-    uuidStr_ = id;
   }
 
   /**

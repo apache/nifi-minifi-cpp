@@ -219,10 +219,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   bool addConnection(std::shared_ptr<Connectable> connection);
   // Remove connection
   void removeConnection(std::shared_ptr<Connectable> connection);
-  // Get the UUID as string
-  std::string getUUIDStr() const {
-    return uuidStr_;
-  }
   // Get the Next RoundRobin incoming connection
   std::shared_ptr<Connection> getNextIncomingConnection();
   // On Trigger

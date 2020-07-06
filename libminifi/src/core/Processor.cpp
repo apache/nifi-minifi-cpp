@@ -65,7 +65,7 @@ Processor::Processor(std::string name)
   active_tasks_ = 0;
   yield_expiration_ = 0;
   incoming_connections_Iter = this->_incomingConnections.begin();
-  logger_->log_debug("Processor %s created UUID %s", name_, uuidStr_);
+  logger_->log_debug("Processor %s created UUID %s", name_, getUUIDStr());
 }
 
 Processor::Processor(std::string name, utils::Identifier &uuid)
@@ -86,7 +86,7 @@ Processor::Processor(std::string name, utils::Identifier &uuid)
   active_tasks_ = 0;
   yield_expiration_ = 0;
   incoming_connections_Iter = this->_incomingConnections.begin();
-  logger_->log_debug("Processor %s created UUID %s with uuid %s", name_, uuidStr_, uuid.to_string());
+  logger_->log_debug("Processor %s created UUID %s with uuid %s", name_, getUUIDStr(), uuid.to_string());
 }
 
 bool Processor::isRunning() {

@@ -29,12 +29,10 @@ namespace core {
 // Set UUID
 void CoreComponent::setUUID(utils::Identifier &uuid) {
   uuid_ = uuid;
-  uuidStr_ = uuid_.to_string();
 }
 
 void CoreComponent::setUUIDStr(const std::string &uuidStr) {
   uuid_ = uuidStr;
-  uuidStr_ = uuidStr;
 }
 // Get UUID
 bool CoreComponent::getUUID(utils::Identifier &uuid) const {

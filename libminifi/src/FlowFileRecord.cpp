@@ -75,7 +75,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
   entry_date_ = event->getEntryDate();
   lineage_start_date_ = event->getlineageStartDate();
   lineage_Identifiers_ = event->getlineageIdentifiers();
-  uuidStr_ = event->getUUIDStr();
+  uuid_ = event->getUUIDStr();
   attributes_ = event->getAttributes();
   size_ = event->getSize();
   offset_ = event->getOffset();
@@ -112,15 +112,15 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
 }
 
 FlowFileRecord::~FlowFileRecord() {
-  logger_->log_debug("Destroying flow file record,  UUID %s", uuidStr_);
+  logger_->log_debug("Destroying flow file record,  UUID %s", getUUIDStr());
   if (!snapshot_)
-    logger_->log_debug("Delete FlowFile UUID %s", uuidStr_);
+    logger_->log_debug("Delete FlowFile UUID %s", getUUIDStr());
   else
-    logger_->log_debug("Delete SnapShot FlowFile UUID %s", uuidStr_);
+    logger_->log_debug("Delete SnapShot FlowFile UUID %s", getUUIDStr());
   if (claim_) {
     releaseClaim(claim_);
   } else {
-    logger_->log_debug("Claim is null ptr for %s", uuidStr_);
+    logger_->log_debug("Claim is null ptr for %s", getUUIDStr());
   }
 
   // Disown stash claims
@@ -136,7 +136,7 @@ void FlowFileRecord::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
   logger_->log_debug("Delete Resource Claim %s, %s, attempt %llu", getUUIDStr(), claim_->getContentFullPath(), claim_->getFlowFileRecordOwnedCount());
   if (claim_->getFlowFileRecordOwnedCount() <= 0) {
     // we cannot rely on the stored variable here since we aren't guaranteed atomicity
-    if (flow_repository_ != nullptr && !flow_repository_->Get(uuidStr_, value)) {
+    if (flow_repository_ != nullptr && !flow_repository_->Get(getUUIDStr(), value)) {
       logger_->log_debug("Delete Resource Claim %s", claim_->getContentFullPath());
       content_repo_->remove(claim_);
     }
@@ -206,9 +206,9 @@ bool FlowFileRecord::DeSerialize(std::string key) {
   ret = DeSerialize(stream);
 
   if (ret) {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s success", uuidStr_, stream.getSize(), uuid_connection_);
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s success", getUUIDStr(), stream.getSize(), uuid_connection_);
   } else {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s fail", uuidStr_, stream.getSize(), uuid_connection_);
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s fail", getUUIDStr(), stream.getSize(), uuid_connection_);
   }
 
   return ret;
@@ -232,7 +232,7 @@ bool FlowFileRecord::Serialize(io::DataStream &outStream) {
     return false;
   }
 
-  ret = writeUTF(this->uuidStr_, &outStream);
+  ret = writeUTF(this->getUUIDStr(), &outStream);
   if (ret <= 0) {
     return false;
   }
@@ -288,11 +288,11 @@ bool FlowFileRecord::Serialize() {
     return false;
   }
 
-  if (flow_repository_->Put(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
-    logger_->log_debug("NiFi FlowFile Store event %s size %llu success", uuidStr_, outStream.getSize());
+  if (flow_repository_->Put(getUUIDStr(), const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
+    logger_->log_debug("NiFi FlowFile Store event %s size %llu success", getUUIDStr(), outStream.getSize());
     return true;
   } else {
-    logger_->log_error("NiFi FlowFile Store event %s size %llu fail", uuidStr_, outStream.getSize());
+    logger_->log_error("NiFi FlowFile Store event %s size %llu fail", getUUIDStr(), outStream.getSize());
     return false;
   }
 
@@ -319,10 +319,12 @@ bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
     return false;
   }
 
-  ret = readUTF(this->uuidStr_, &outStream);
+  std::string uuidStr;
+  ret = readUTF(uuidStr, &outStream);
   if (ret <= 0) {
     return false;
   }
+  this->uuid_ = uuidStr;
 
   ret = readUTF(this->uuid_connection_, &outStream);
   if (ret <= 0) {

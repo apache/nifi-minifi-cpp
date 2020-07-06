@@ -155,14 +155,12 @@ class CoreComponent {
     } else {
       uuid_ = uuid;
     }
-    uuidStr_ = uuid_.to_string();
   }
 
   explicit CoreComponent(const std::string &name)
       : name_(name) {
     // Generate the global UUID for the flow record
     utils::IdGenerator::getIdGenerator()->generate(uuid_);
-    uuidStr_ = uuid_.to_string();
   }
 
   explicit CoreComponent(const CoreComponent &other) = default;
@@ -203,8 +201,8 @@ class CoreComponent {
    * Return the UUID string
    * @param constant reference to the UUID str
    */
-  const std::string & getUUIDStr() const {
-    return uuidStr_;
+  std::string getUUIDStr() const {
+    return uuid_.to_string();
   }
 
   virtual void configure(const std::shared_ptr<Configure> &configuration) {
@@ -216,8 +214,6 @@ class CoreComponent {
  protected:
   // A global unique identifier
   utils::Identifier uuid_;
-  // UUID string
-  std::string uuidStr_;
 
   // Connectable's name
   std::string name_;

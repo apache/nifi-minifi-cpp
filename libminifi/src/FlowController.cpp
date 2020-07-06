@@ -455,7 +455,7 @@ void FlowController::initializeC2() {
   std::string identifier_str;
   if (!configuration_->get("nifi.c2.agent.identifier", "c2.agent.identifier", identifier_str) || identifier_str.empty()) {
     // set to the flow controller's identifier
-    identifier_str = uuidStr_;
+    identifier_str = getUUIDStr();
   }
   configuration_->setAgentIdentifier(identifier_str);
 

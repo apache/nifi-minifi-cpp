@@ -106,12 +106,6 @@ class FlowFile : public core::CoreComponent, public ReferenceContainer {
    * @return entry date uint64_t
    */
   uint64_t getEntryDate() const;
-
-  /**
-   * Gets the event time.
-   * @return event time.
-   */
-  uint64_t getEventTime() const;
   /**
    * Get lineage start date
    * @return lineage start date uint64_t

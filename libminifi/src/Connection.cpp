@@ -150,7 +150,7 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
 
   if (!flow->isStored()) {
     // Save to the flowfile repo
-    FlowFileRecord event(flow_repository_, content_repo_, flow, this->uuidStr_);
+    FlowFileRecord event(flow_repository_, content_repo_, flow, this->getUUIDStr());
     if (event.Serialize()) {
       flow->setStoredToRepository(true);
     } else {
@@ -185,7 +185,7 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
 
       if (!ff->isStored()) {
         // Save to the flowfile repo
-        FlowFileRecord event(flow_repository_, content_repo_, ff, this->uuidStr_);
+        FlowFileRecord event(flow_repository_, content_repo_, ff, this->getUUIDStr());
 
         std::unique_ptr<io::DataStream> stramptr(new io::DataStream());
         event.Serialize(*stramptr.get());
