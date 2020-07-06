@@ -223,7 +223,7 @@ void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAg
 }
 
 void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
-                                  const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
+                                  const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler, const std::function<bool(const std::shared_ptr<Processor>&)>& filter) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   if (onScheduleTimer_) {
@@ -235,6 +235,9 @@ void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAge
   try {
     // Stop all the processor node, input and output ports
     for (const auto &processor : processors_) {
+      if (!filter(processor)) {
+        continue;
+      }
       logger_->log_debug("Stopping %s", processor->getName());
       switch (processor->getSchedulingStrategy()) {
         case TIMER_DRIVEN:
@@ -249,9 +252,8 @@ void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAge
       }
     }
 
-    for (std::set<ProcessGroup *>::iterator it = child_process_groups_.begin(); it != child_process_groups_.end(); ++it) {
-      ProcessGroup *processGroup(*it);
-      processGroup->stopProcessing(timeScheduler, eventScheduler, cronScheduler);
+    for (ProcessGroup* childGroup : child_process_groups_) {
+      childGroup->stopProcessing(timeScheduler, eventScheduler, cronScheduler, filter);
     }
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
@@ -401,6 +403,18 @@ void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
     if (destination && destination != source)
       destination->removeConnection(connection);
   }
+}
+
+std::size_t ProcessGroup::getTotalFlowFileCount() const {
+  std::size_t sum = 0;
+  for (auto& conn : connections_) {
+    sum += conn->getQueueSize();
+  }
+
+  for (ProcessGroup* childGroup : child_process_groups_) {
+    sum += childGroup->getTotalFlowFileCount();
+  }
+  return sum;
 }
 
 } /* namespace core */

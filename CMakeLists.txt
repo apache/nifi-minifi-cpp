@@ -766,6 +766,8 @@ endif()
 ## Add KeyValueStorageService tests
 registerTest("${TEST_DIR}/keyvalue-tests")
 
+registerTest("${TEST_DIR}/flow-tests")
+
 include(BuildDocs)
 
 include(DockerConfig)

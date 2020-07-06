@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <type_traits>
 #include <limits>
+#include <algorithm>
 
 #include "PropertyErrors.h"
 
@@ -155,6 +156,65 @@ class ValueParser {
   const std::string& str;
   std::size_t offset;
 };
+
+template<typename Out>
+bool StringToTime(const std::string& input, Out& output, core::TimeUnit& timeunit) {
+  if (input.size() == 0) {
+    return false;
+  }
+
+  const char* begin = input.c_str();
+  char *end;
+  errno = 0;
+  auto ival = std::strtoll(begin, &end, 0);
+  if (end == begin || errno == ERANGE) {
+    return false;
+  }
+
+  if (end[0] == '\0') {
+    return false;
+  }
+
+  while (*end == ' ') {
+    // Skip the space
+    end++;
+  }
+
+  std::string unit(end);
+  std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
+
+  if (unit == "sec" || unit == "s" || unit == "second" || unit == "seconds" || unit == "secs") {
+    timeunit = core::TimeUnit::SECOND;
+    output = ival;
+    return true;
+  } else if (unit == "msec" || unit == "ms" || unit == "millisecond" || unit == "milliseconds" || unit == "msecs") {
+    timeunit = core::TimeUnit::MILLISECOND;
+    output = ival;
+    return true;
+  } else if (unit == "min" || unit == "m" || unit == "mins" || unit == "minute" || unit == "minutes") {
+    timeunit = core::TimeUnit::MINUTE;
+    output = ival;
+    return true;
+  } else if (unit == "ns" || unit == "nano" || unit == "nanos" || unit == "nanoseconds") {
+    timeunit = core::TimeUnit::NANOSECOND;
+    output = ival;
+    return true;
+  } else if (unit == "ms" || unit == "milli" || unit == "millis" || unit == "milliseconds") {
+    timeunit = core::TimeUnit::MILLISECOND;
+    output = ival;
+    return true;
+  } else if (unit == "h" || unit == "hr" || unit == "hour" || unit == "hrs" || unit == "hours") {
+    timeunit = core::TimeUnit::HOUR;
+    output = ival;
+    return true;
+  } else if (unit == "d" || unit == "day" || unit == "days") {
+    timeunit = core::TimeUnit::DAY;
+    output = ival;
+    return true;
+  } else {
+    return false;
+  }
+}
 
 } /* namespace internal */
 } /* namespace utils */

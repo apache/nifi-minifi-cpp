@@ -63,6 +63,7 @@ class Configure : public Properties {
   static const char *nifi_administrative_yield_duration;
   static const char *nifi_bored_yield_duration;
   static const char *nifi_graceful_shutdown_seconds;
+  static const char *nifi_flowcontroller_drain_timeout;
   static const char *nifi_log_level;
   static const char *nifi_server_name;
   static const char *nifi_configuration_class_name;
