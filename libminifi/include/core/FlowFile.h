@@ -158,7 +158,9 @@ class FlowFile : public core::CoreComponent, public ReferenceContainer {
    * @return attributes.
    */
   std::map<std::string, std::string> getAttributes() const {
-    return attributes_;
+    auto ret_val = attributes_;
+    ret_val["uuid"] = getUUIDStr();
+    return ret_val;
   }
 
   /**

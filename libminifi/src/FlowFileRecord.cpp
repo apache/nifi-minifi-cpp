@@ -147,6 +147,12 @@ bool FlowFileRecord::addKeyedAttribute(FlowAttribute key, const std::string &val
   const char *keyStr = FlowAttributeKey(key);
   if (keyStr) {
     const std::string keyString = keyStr;
+    if (keyString == FlowAttributeKey(UUID)) {
+      if (value != getUUIDStr()) {
+        throw Exception(FLOW_EXCEPTION, "Trying to set different uuid attribute");
+      }
+      return true; // Do not store our own uuid
+    }
     return FlowFile::addAttribute(keyString, value);
   } else {
     return false;
@@ -167,6 +173,9 @@ bool FlowFileRecord::updateKeyedAttribute(FlowAttribute key, std::string value) 
   const char *keyStr = FlowAttributeKey(key);
   if (keyStr) {
     std::string keyString = keyStr;
+    if (keyString == FlowAttributeKey(UUID)) {
+      throw Exception(FLOW_EXCEPTION, "Updating uuid attribute is not allowed!");
+    }
     return FlowFile::updateAttribute(keyString, value);
   } else {
     return false;
@@ -177,6 +186,10 @@ bool FlowFileRecord::getKeyedAttribute(FlowAttribute key, std::string &value) {
   const char *keyStr = FlowAttributeKey(key);
   if (keyStr) {
     std::string keyString = keyStr;
+    if (keyString == FlowAttributeKey(UUID)) {
+      value = getUUIDStr();
+      return true;
+    }
     return FlowFile::getAttribute(keyString, value);
   } else {
     return false;
