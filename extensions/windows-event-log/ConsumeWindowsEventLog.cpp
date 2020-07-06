@@ -572,6 +572,9 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
 
       for (const auto &mapEntry : walker.getIdentifiers()) {
         // replace the identifiers with their translated strings.
+        if (mapEntry.first.empty() || mapEntry.second.empty()) {
+          continue;  // This is most probably a result of a failed ID resolution
+        }
         utils::StringUtils::replaceAll(message, mapEntry.first, mapEntry.second);
       }
       wel::WindowsEventLogHeader log_header(header_names_);

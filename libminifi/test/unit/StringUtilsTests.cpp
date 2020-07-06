@@ -349,6 +349,7 @@ TEST_CASE("StringUtils::replaceOne works correctly", "[replaceOne]") {
   REQUIRE(utils::StringUtils::replaceOne("banana", "an", "***") == "b***ana");
   REQUIRE(utils::StringUtils::replaceOne("banana", "banana", "kiwi") == "kiwi");
   REQUIRE(utils::StringUtils::replaceOne("banana", "banana", "grapefruit") == "grapefruit");
+  REQUIRE(utils::StringUtils::replaceOne("fruit", "", "grape") == "grapefruit");
 }
 
 TEST_CASE("StringUtils::replaceAll works correctly", "[replaceAll]") {
@@ -364,4 +365,6 @@ TEST_CASE("StringUtils::replaceAll works correctly", "[replaceAll]") {
   REQUIRE(replaceAll("banana", "an", "***") == "b******a");
   REQUIRE(replaceAll("banana", "banana", "kiwi") == "kiwi");
   REQUIRE(replaceAll("banana", "banana", "grapefruit") == "grapefruit");
+  REQUIRE(replaceAll("abc", "", "d") == "dadbdcd");
+  REQUIRE(replaceAll("banana", "", "") == "banana");
 }
