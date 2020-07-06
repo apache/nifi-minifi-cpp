@@ -15,29 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <sys/stat.h>
 #include <utility>
-#include <memory>
 #include <string>
-#include <vector>
-#include <set>
 #include <fstream>
-
 #include "utils/file/FileUtils.h"
 #include "TestBase.h"
-
-#include <chrono>
-#include <thread>
 #include "api/nanofi.h"
 
-std::string test_file_content = "C API raNdOMcaSe test d4t4 th1s is!";
-std::string test_file_name = "tstFile.ext";
+const std::string test_file_content = "C API raNdOMcaSe test d4t4 th1s is!";
+const std::string test_file_name = "tstFile.ext";
 
 static nifi_instance *create_instance_obj(const char *name = "random_instance") {
   nifi_port port;
   char port_str[] = "12345";
   port.port_id = port_str;
-  return create_instance("random_instance", &port);
+  return create_instance_repo("random_instance", &port, "volatilerepository");
 }
 
 static int failure_count = 0;
