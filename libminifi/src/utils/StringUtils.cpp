@@ -136,6 +136,9 @@ std::string& StringUtils::replaceAll(std::string& source_string, const std::stri
   while ((lastFound = source_string.find(from_string, loc)) != std::string::npos) {
     source_string.replace(lastFound, from_string.size(), to_string);
     loc = lastFound + to_string.size();
+    if (from_string.empty()) {
+      loc++;
+    }
   }
   return source_string;
 }
