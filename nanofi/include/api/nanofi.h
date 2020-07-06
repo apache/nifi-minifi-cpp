@@ -68,13 +68,17 @@ void set_terminate_callback(void (*terminate_callback)());
  * ##################################################################
  */
 
+nifi_instance *create_instance_repo(const char *url, nifi_port *port, const char* const repo_type);
+
 /**
  * Creates a new MiNiFi instance
  * @param url remote URL the instance connects to
  * @param port remote port the instance connects to
  * @return pointer to the new instance
  **/
-nifi_instance *create_instance(const char *url, nifi_port *port);
+inline nifi_instance *create_instance(const char *url, nifi_port *port){
+  return create_instance_repo(url, port, "filesystemrepository");
+}
 
 /**
  * Initialize remote connection of instance for transfers

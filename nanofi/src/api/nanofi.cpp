@@ -108,7 +108,7 @@ class DirectoryConfiguration {
  * @Deprecated for API version 0.2 in favor of the following prototype
  * nifi_instance *create_instance(nifi_port const *port) {
  */
-nifi_instance *create_instance(const char *url, nifi_port *port) {
+nifi_instance *create_instance_repo(const char *url, nifi_port *port, const char* const repo_type) {
   // make sure that we have a thread safe way of initializing the content directory
   DirectoryConfiguration::initialize();
 
@@ -118,7 +118,7 @@ nifi_instance *create_instance(const char *url, nifi_port *port) {
    * This API will gradually move away from C++, hence malloc is used for nifi_instance
    * Since minifi::Instance is currently being used, then we need to use new in that case.
    */
-  instance->instance_ptr = new minifi::Instance(url, port->port_id, "filesystemrepository");
+  instance->instance_ptr = new minifi::Instance(url, port->port_id, repo_type);
 
   NULL_CHECK(nullptr, instance->instance_ptr);
 
