@@ -34,14 +34,6 @@
 #include "utils/FailurePolicy.h"
 #include "utils/GeneralUtils.h"
 
-enum TimeUnit {
-  DAY,
-  HOUR,
-  MINUTE,
-  SECOND,
-  MILLISECOND,
-  NANOSECOND
-};
 #if defined(WIN32) || (__cplusplus >= 201103L && (!defined(__GLIBCXX__) || (__cplusplus >= 201402L) ||  (defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE > 4)))
 #define HAVE_REGEX_CPP 1
 #else
