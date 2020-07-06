@@ -151,21 +151,19 @@ void RetryFlowFile::readDynamicPropertyKeys(core::ProcessContext* context) {
 
 utils::optional<uint64_t> RetryFlowFile::getRetryPropertyValue(const std::shared_ptr<FlowFileRecord>& flow_file) const {
   std::string value_as_string;
+  flow_file->getAttribute(retry_attribute_, value_as_string);
+  uint64_t value;
   try {
-    if (flow_file->getAttribute(retry_attribute_, value_as_string)) {
-      return utils::make_optional<uint64_t>(std::stoull(value_as_string));
-    }
+    utils::internal::ValueParser(value_as_string).parse(value).parseEnd();
+    return utils::make_optional<uint64_t>(value);
   }
-  catch(const std::invalid_argument&) {
+  catch(const utils::internal::ParseException&) {
     if (fail_on_non_numerical_overwrite_) {
-      logger_->log_info("Non-numerical retry property in RetryFlowFile. Sending flowfile to failure...", value_as_string);
+      logger_->log_info("Non-numerical retry property in RetryFlowFile (value: %s). Sending flowfile to failure...", value_as_string);
       return {};
     }
-    logger_->log_info("Non-numerical retry property in RetryFlowFile: overwriting %s with 0.", value_as_string);
   }
-  catch(const std::out_of_range&) {
-    logger_->log_error("Narrowing Exception for %s, treating it as non-numerical value", value_as_string);
-  }
+  logger_->log_info("Non-numerical retry property in RetryFlowFile: overwriting %s with 0.", value_as_string);
   return utils::make_optional<uint64_t>(0);
 }
 
