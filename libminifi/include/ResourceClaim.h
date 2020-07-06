@@ -80,12 +80,6 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
     _contentFullPath = path;
   }
 
-  void deleteClaim() {
-    if (!deleted_) {
-      deleted_ = true;
-    }
-  }
-
   bool exists() {
     if (claim_manager_ == nullptr) {
       return false;
@@ -104,7 +98,6 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   }
 
  protected:
-  std::atomic<bool> deleted_;
   // Full path to the content
   std::string _contentFullPath;
 
