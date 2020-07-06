@@ -36,6 +36,8 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "utils/GeneralUtils.h"
+#include "utils/ValueParser.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -49,16 +51,18 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
   std::string yieldValue;
 
   if (configure_->get(Configure::nifi_administrative_yield_duration, yieldValue)) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(yieldValue, admin_yield_duration_, unit) && core::Property::ConvertTimeUnitToMS(admin_yield_duration_, unit, admin_yield_duration_)) {
+    utils::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
+    if (value) {
+      admin_yield_duration_ = value->getMilliseconds();
       logger_->log_debug("nifi_administrative_yield_duration: [%" PRId64 "] ms", admin_yield_duration_);
     }
   }
 
   bored_yield_duration_ = 0;
   if (configure_->get(Configure::nifi_bored_yield_duration, yieldValue)) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(yieldValue, bored_yield_duration_, unit) && core::Property::ConvertTimeUnitToMS(bored_yield_duration_, unit, bored_yield_duration_)) {
+    utils::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
+    if (value) {
+      bored_yield_duration_ = value->getMilliseconds();
       logger_->log_debug("nifi_bored_yield_duration: [%" PRId64 "] ms", bored_yield_duration_);
     }
   }

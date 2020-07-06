@@ -24,6 +24,9 @@
 
 #include "state/Value.h"
 #include "utils/StringUtils.h"
+#include "utils/ValueParser.h"
+#include "utils/PropertyErrors.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -49,13 +52,29 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
   explicit TimePeriodValue(const std::string &timeString)
       : state::response::UInt64Value(0) {
     TimeUnit units;
-    StringToTime(timeString, value, units);
+    if (!StringToTime(timeString, value, units)) {
+      throw utils::internal::ParseException("Couldn't parse TimePeriodValue");
+    }
     string_value = timeString;
-    ConvertTimeUnitToMS<uint64_t>(value, units, value);
+    if (!ConvertTimeUnitToMS<uint64_t>(value, units, value)) {
+      throw utils::internal::ConversionException("Couldn't convert TimePeriodValue to milliseconds");
+    }
   }
 
   explicit TimePeriodValue(uint64_t value)
       : state::response::UInt64Value(value) {
+  }
+
+  uint64_t getMilliseconds() const {
+    return getValue();
+  }
+
+  static utils::optional<TimePeriodValue> fromString(const std::string& str) {
+    try {
+      return TimePeriodValue(str);
+    } catch (const utils::internal::ValueException&) {
+      return utils::nullopt;
+    }
   }
 
   // Convert TimeUnit to MilliSecond
@@ -85,57 +104,7 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
   }
 
   static bool StringToTime(std::string input, uint64_t &output, TimeUnit &timeunit) {
-    if (input.size() == 0) {
-      return false;
-    }
-
-    const char *cvalue = input.c_str();
-    char *pEnd;
-    auto ival = std::strtoll(cvalue, &pEnd, 0);
-
-    if (pEnd[0] == '\0') {
-      return false;
-    }
-
-    while (*pEnd == ' ') {
-      // Skip the space
-      pEnd++;
-    }
-
-    std::string unit(pEnd);
-    std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
-
-    if (unit == "sec" || unit == "s" || unit == "second" || unit == "seconds" || unit == "secs") {
-      timeunit = SECOND;
-      output = ival;
-      return true;
-    } else if (unit == "msec" || unit == "ms" || unit == "millisecond" || unit == "milliseconds" || unit == "msecs") {
-      timeunit = MILLISECOND;
-      output = ival;
-      return true;
-    } else if (unit == "min" || unit == "m" || unit == "mins" || unit == "minute" || unit == "minutes") {
-      timeunit = MINUTE;
-      output = ival;
-      return true;
-    } else if (unit == "ns" || unit == "nano" || unit == "nanos" || unit == "nanoseconds") {
-      timeunit = NANOSECOND;
-      output = ival;
-      return true;
-    } else if (unit == "ms" || unit == "milli" || unit == "millis" || unit == "milliseconds") {
-      timeunit = MILLISECOND;
-      output = ival;
-      return true;
-    } else if (unit == "h" || unit == "hr" || unit == "hour" || unit == "hrs" || unit == "hours") {
-      timeunit = HOUR;
-      output = ival;
-      return true;
-    } else if (unit == "d" || unit == "day" || unit == "days") {
-      timeunit = DAY;
-      output = ival;
-      return true;
-    } else {
-      return false;
-    }
+    return utils::internal::StringToTime(input, output, timeunit);
   }
 };
 

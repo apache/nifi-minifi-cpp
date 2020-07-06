@@ -33,6 +33,7 @@ const char *Configure::nifi_flow_engine_event_driven_time_slice = "nifi.flow.eng
 const char *Configure::nifi_administrative_yield_duration = "nifi.administrative.yield.duration";
 const char *Configure::nifi_bored_yield_duration = "nifi.bored.yield.duration";
 const char *Configure::nifi_graceful_shutdown_seconds = "nifi.flowcontroller.graceful.shutdown.period";
+const char *Configure::nifi_flowcontroller_drain_timeout = "nifi.flowcontroller.drain.timeout";
 const char *Configure::nifi_log_level = "nifi.log.level";
 const char *Configure::nifi_server_name = "nifi.server.name";
 const char *Configure::nifi_configuration_class_name = "nifi.flow.configuration.class.name";

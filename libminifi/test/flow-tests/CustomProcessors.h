@@ -43,6 +43,7 @@ static core::Property BananaProbability = core::PropertyBuilder::createProperty(
 class ProcessorWithStatistics {
  public:
   std::atomic<int> trigger_count{0};
+  std::function<void()> onTriggerCb_;
 };
 
 class TestProcessor : public core::Processor, public ProcessorWithStatistics {
@@ -55,6 +56,9 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
   }
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override {
     ++trigger_count;
+    if (onTriggerCb_) {
+      onTriggerCb_();
+    }
     auto flowFile = session->get();
     if (!flowFile) return;
     std::random_device rd{};
@@ -92,6 +96,9 @@ class TestFlowFileGenerator : public processors::GenerateFlowFile, public Proces
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override {
     ++trigger_count;
+    if (onTriggerCb_) {
+      onTriggerCb_();
+    }
     GenerateFlowFile::onTrigger(context.get(), session.get());
   }
 };

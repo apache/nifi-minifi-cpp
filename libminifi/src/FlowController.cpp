@@ -201,7 +201,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
 
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   stop(true);
-  waitUnload(30000);
+  unload();
   controller_map_->clear();
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
@@ -239,8 +239,36 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
   if (running_) {
     // immediately indicate that we are not running
     logger_->log_info("Stop Flow Controller");
-    if (this->root_)
+    if (this->root_) {
+      // stop source processors first
+      this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_, [] (const std::shared_ptr<core::Processor>& proc) -> bool {
+        return !proc->hasIncomingConnections();
+      });
+      auto shutdown_start = std::chrono::steady_clock::now();
+      // we enable C2 to progressively increase the timeout
+      // in case it sees that waiting for a little longer could
+      // allow the FlowFiles to be processed
+      auto shutdown_timeout = [&]() -> std::chrono::milliseconds {
+        if (timeToWait != 0) {
+          return std::chrono::milliseconds{timeToWait};
+        }
+        utils::optional<core::TimePeriodValue> shutdown_timeout;
+        std::string shutdown_timeout_str;
+        if (configuration_->get(minifi::Configure::nifi_flowcontroller_drain_timeout, shutdown_timeout_str)) {
+          shutdown_timeout = core::TimePeriodValue::fromString(shutdown_timeout_str);
+        }
+        if (shutdown_timeout) {
+          return std::chrono::milliseconds{shutdown_timeout->getMilliseconds()};
+        }
+        return std::chrono::milliseconds{0};
+      };
+      std::size_t count;
+      while ((std::chrono::steady_clock::now() - shutdown_start) < shutdown_timeout() && (count = this->root_->getTotalFlowFileCount()) != 0) {
+        std::this_thread::sleep_for(shutdown_check_interval_);
+      }
+      // shutdown all other processors as well
       this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
+    }
     // stop after we've attempted to stop the processors.
     this->timer_scheduler_->stop();
     this->event_scheduler_->stop();
