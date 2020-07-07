@@ -20,16 +20,11 @@ function(use_bundled_open62541 SOURCE_DIR BINARY_DIR)
     set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/open62541/open62541.patch")
 
     # Define byproducts
-    get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
-
-    if ("${LIB64}" STREQUAL "TRUE" AND (NOT WIN32 AND NOT APPLE))
-        set(LIBSUFFIX 64)
-    endif()
-
     if (WIN32)
         set(BYPRODUCT "lib/open62541.lib")
     else()
-        set(BYPRODUCT "lib${LIBSUFFIX}/libopen62541.a")
+        include(GNUInstallDirs)
+        set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/libopen62541.a")
     endif()
 
     # Set build options

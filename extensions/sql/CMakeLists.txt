@@ -30,17 +30,15 @@ file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
 add_library(minifi-sql STATIC ${SOURCES})
 set_property(TARGET minifi-sql PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-# Get whether we should use lib64/ library paths
-get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
-
 if(WIN32)
 	find_package(ODBC REQUIRED)
 else()
 	# Build iODBC
 
 	# Define byproducts
-	if(LIB64 AND NOT APPLE)
-		set(IODBC_BYPRODUCT "lib64/libiodbc.a")
+	if(NOT APPLE)
+		include(GNUInstallDirs)
+		set(IODBC_BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/libiodbc.a")
 	else()
 		set(IODBC_BYPRODUCT "lib/libiodbc.a")
 	endif()
@@ -92,7 +90,10 @@ set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_CURRENT_SOURCE_DIR}/patch/soci.patc
 
 # Define byproducts
 if(NOT APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-	set(LIBSUFFIX 64)
+	include(GNUInstallDirs)
+	set(LIBDIR "${CMAKE_INSTALL_LIBDIR}")
+else()
+	set(LIBDIR "lib")
 endif()
 
 if (WIN32)
@@ -102,8 +103,8 @@ else()
 endif()
 
 set(SOCI_BYPRODUCTS
-		"lib${LIBSUFFIX}/libsoci_core${BYPRODUCT_SUFFIX}"
-		"lib${LIBSUFFIX}/libsoci_odbc${BYPRODUCT_SUFFIX}"
+		"${LIBDIR}/libsoci_core${BYPRODUCT_SUFFIX}"
+		"${LIBDIR}/libsoci_odbc${BYPRODUCT_SUFFIX}"
 		)
 
 set(SOCI_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/soci-install")

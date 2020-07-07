@@ -22,15 +22,11 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/rocksdb/rocksdb-BUILD.patch" && "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/rocksdb/channel-mutex-mutable.patch")
 
     # Define byproducts
-    get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
-    if ("${LIB64}" STREQUAL "TRUE" AND (NOT WIN32 AND NOT APPLE))
-        set(LIBSUFFIX 64)
-    endif()
-
     if (WIN32)
         set(BYPRODUCT "lib/rocksdb.lib")
     else()
-        set(BYPRODUCT "lib${LIBSUFFIX}/librocksdb.a")
+        include(GNUInstallDirs)
+        set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/librocksdb.a")
     endif()
 
     # Set build options
