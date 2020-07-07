@@ -22,16 +22,11 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     endif()
 
     # Define byproducts
-    get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
-
-    if ("${LIB64}" STREQUAL "TRUE" AND (NOT WIN32 AND NOT APPLE))
-        set(LIBSUFFIX 64)
-    endif()
-
     if (WIN32)
         set(BYPRODUCT "lib/libcurl.lib")
     else()
-        set(BYPRODUCT "lib${LIBSUFFIX}/libcurl.a")
+        include(GNUInstallDirs)
+        set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/libcurl.a")
     endif()
 
     # Set build options
