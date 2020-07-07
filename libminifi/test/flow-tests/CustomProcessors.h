@@ -25,7 +25,7 @@
 #include <YamlConfiguration.h>
 #include "core/Processor.h"
 #include "TestBase.h"
-#include "../../extensions/standard-processors/processors/GenerateFlowFile.h"
+#include "processors/GenerateFlowFile.h"
 
 namespace org {
 namespace apache {
@@ -36,9 +36,9 @@ namespace processors {
 static core::Relationship Apple{"apple", ""};
 static core::Relationship Banana{"banana", ""};
 // The probability that this processor routes to Apple
-static core::Property AppleProbability = core::PropertyBuilder::createProperty("AppleProbability")->withDefaultValue<int>(100)->build();
+static core::Property AppleProbability = core::PropertyBuilder::createProperty("AppleProbability")->withDefaultValue<int>(100)->isRequired(true)->build();
 // The probability that this processor routes to Banana
-static core::Property BananaProbability = core::PropertyBuilder::createProperty("BananaProbability")->withDefaultValue<int>(0)->build();
+static core::Property BananaProbability = core::PropertyBuilder::createProperty("BananaProbability")->withDefaultValue<int>(0)->isRequired(true)->build();
 
 class ProcessorWithStatistics {
  public:
@@ -73,9 +73,11 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
   }
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override {
     int apple;
-    assert(context->getProperty(AppleProbability.getName(), apple));
+    bool appleSuccess = context->getProperty(AppleProbability.getName(), apple);
+    assert(appleSuccess);
     int banana;
-    assert(context->getProperty(BananaProbability.getName(), banana));
+    bool bananaSuccess = context->getProperty(BananaProbability.getName(), banana);
+    assert(bananaSuccess);
     apple_probability_ = apple;
     banana_probability_ = banana;
   }

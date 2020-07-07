@@ -61,13 +61,4 @@ Flow createFlow(const std::string& yamlPath) {
   return Flow{std::move(controller), std::move(root)};
 }
 
-double calculateCongestion(const std::shared_ptr<minifi::Connection>& conn) {
-  auto max_count = conn->getMaxQueueSize();
-  auto max_size = conn->getMaxQueueDataSize();
-  auto curr_count = conn->getQueueSize();
-  auto curr_size = conn->getQueueDataSize();
-
-  return std::max(max_count != 0 ? ((double)curr_count)/max_count : 0.0, max_size != 0 ? ((double)curr_size)/max_size : 0.0);
-}
-
 #endif //NIFI_MINIFI_CPP_FLOWCREATOR_H

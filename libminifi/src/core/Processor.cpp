@@ -102,12 +102,12 @@ void Processor::setScheduledState(ScheduledState state) {
 }
 
 bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
-  enum class DidSet{
+  enum class SetAs{
     NONE,
-    DESTINATION,
-    SOURCE,
+    OUTPUT,
+    INPUT,
   };
-  DidSet result = DidSet::NONE;
+  SetAs result = SetAs::NONE;
 
   if (isRunning()) {
     logger_->log_warn("Can not add connection while the process %s is running", name_);
@@ -117,9 +117,9 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
   std::lock_guard<std::mutex> lock(getGraphMutex());
 
   auto updateGraph = gsl::finally([&] {
-    if (result == DidSet::SOURCE) {
+    if (result == SetAs::INPUT) {
       updateReachability(lock);
-    } else if (result == DidSet::DESTINATION) {
+    } else if (result == SetAs::OUTPUT) {
       updateReachability(lock, true);
     }
   });
@@ -138,7 +138,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
       connection->setDestination(shared_from_this());
       logger_->log_debug("Add connection %s into Processor %s incoming connection", connection->getName(), name_);
       incoming_connections_Iter = this->_incomingConnections.begin();
-      result = DidSet::DESTINATION;
+      result = SetAs::OUTPUT;
     }
   }
   std::string source_uuid = srcUUID.to_string();
@@ -157,7 +157,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
           connection->setSource(shared_from_this());
           out_going_connections_[relationship] = existedConnection;
           logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
-          result = DidSet::SOURCE;
+          result = SetAs::INPUT;
         }
       } else {
         // We do not have any outgoing connection for this relationship yet
@@ -166,11 +166,11 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
         connection->setSource(shared_from_this());
         out_going_connections_[relationship] = newConnection;
         logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
-        result = DidSet::SOURCE;
+        result = SetAs::INPUT;
       }
     }
   }
-  return result != DidSet::NONE;
+  return result != SetAs::NONE;
 }
 
 void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
