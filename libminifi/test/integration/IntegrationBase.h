@@ -155,6 +155,11 @@ void IntegrationBase::run(std::string test_file_location) {
 }
 
 struct cmd_args {
+  bool isUrlSecure() const {
+    // check https prefix
+    return url.rfind("https://", 0) == 0;
+  }
+
   std::string test_file;
   std::string key_dir;
   std::string bad_test_file;

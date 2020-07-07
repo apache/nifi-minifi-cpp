@@ -180,9 +180,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv);
-
-  // check https prefix
-  const bool isSecure = args.url.rfind("https://", 0) == 0;
+  const bool isSecure = args.isUrlSecure();
 
   VerifyCoAPServer harness(isSecure);
   harness.setKeyDir(args.key_dir);

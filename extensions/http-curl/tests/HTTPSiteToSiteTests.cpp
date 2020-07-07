@@ -201,9 +201,7 @@ int main(int argc, char **argv) {
   transaction_id = 0;
   transaction_id_output = 0;
   const cmd_args args = parse_cmdline_args_with_url(argc, argv);
-
-  // check https prefix
-  const bool isSecure = args.url.rfind("https://", 0) == 0;
+  const bool isSecure = args.isUrlSecure();
 
 #ifdef WIN32
   if (url.find("localhost") != std::string::npos) {
