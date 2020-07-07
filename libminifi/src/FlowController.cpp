@@ -262,8 +262,8 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
       };
       std::size_t count;
       while (shutdown_timer < shutdown_timeout() && (count = this->root_->getTotalFlowFileCount()) != 0) {
-        std::this_thread::sleep_for(std::chrono::milliseconds{1000});
-        shutdown_timer += std::chrono::milliseconds{1000};
+        std::this_thread::sleep_for(shutdown_check_interval_);
+        shutdown_timer += shutdown_check_interval_;
       }
       // shutdown all other processors as well
       this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);

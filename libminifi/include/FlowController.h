@@ -414,6 +414,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::chrono::steady_clock::time_point last_metrics_capture_;
 
  private:
+  std::chrono::milliseconds shutdown_check_interval_{1000};
+
   std::shared_ptr<logging::Logger> logger_;
   std::string serial_number_;
 
