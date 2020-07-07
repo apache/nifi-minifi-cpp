@@ -19,6 +19,7 @@
 #undef NDEBUG
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
+#include "utils/IntegrationTestUtils.h"
 
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "update");

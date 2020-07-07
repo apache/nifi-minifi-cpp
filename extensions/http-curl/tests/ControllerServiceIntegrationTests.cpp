@@ -15,6 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #undef NDEBUG
 #include <cassert>
@@ -36,6 +53,7 @@
 #include "unit/MockClasses.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "integration/IntegrationBase.h"
+#include "utils/IntegrationTestUtils.h"
 
 REGISTER_RESOURCE(MockControllerService, "");
 REGISTER_RESOURCE(MockProcessor, "");
@@ -45,6 +63,7 @@ void waitToVerifyProcessor() {
 }
 
 int main(int argc, char **argv) {
+  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
   const cmd_args args = parse_cmdline_args(argc, argv);
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
@@ -109,32 +128,32 @@ int main(int argc, char **argv) {
   assert(cs_id != nullptr);
   {
     std::lock_guard<std::mutex> lock(control_mutex);
-    controller->disableControllerService(cs_id);
-    disabled = true;
-    waitToVerifyProcessor();
-  }
-  {
-    std::lock_guard<std::mutex> lock(control_mutex);
     controller->enableControllerService(cs_id);
     disabled = false;
-    waitToVerifyProcessor();
   }
   std::shared_ptr<core::controller::ControllerServiceNode> mock_cont = controller->getControllerServiceNode("MockItLikeIts1995");
-  assert(cs_id->enabled());
-{
+  const bool test_success_01 = verifyEventHappenedInPollTime(std::chrono::seconds(4), [&cs_id] {
+    return cs_id->enabled();
+  });
+  {
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->disableReferencingServices(mock_cont);
     disabled = true;
-    waitToVerifyProcessor();
   }
-    assert(cs_id->enabled() == false);
-{
+  const bool test_success_02 = verifyEventHappenedInPollTime(std::chrono::seconds(2), [&cs_id] {
+    return !cs_id->enabled();
+  });
+  {
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->enableReferencingServices(mock_cont);
     disabled = false;
-    waitToVerifyProcessor();
   }
-  assert(cs_id->enabled() == true);
+  const bool test_success_03 = verifyEventHappenedInPollTime(std::chrono::seconds(2), [&cs_id] {
+    return cs_id->enabled();
+  });
+  assert(test_success_01);
+  assert(test_success_02);
+  assert(test_success_03);
 
   controller->waitUnload(60000);
   return 0;
