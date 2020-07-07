@@ -49,6 +49,7 @@
 #include "processors/LogAttribute.h"
 #include "io/tls/TLSSocket.h"
 #include "io/tls/TLSServerSocket.h"
+#include "utils/IntegrationTestUtils.h"
 
 class SecureSocketTest : public IntegrationBase {
  public:
@@ -76,9 +77,10 @@ class SecureSocketTest : public IntegrationBase {
   }
 
   void runAssertions() override {
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
     isRunning_ = false;
     server_socket_.reset();
-    assert(LogTestController::getInstance().contains("send succeed 20"));
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "send succeed 20"));
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {

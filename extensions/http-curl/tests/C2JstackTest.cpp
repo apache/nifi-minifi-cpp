@@ -21,11 +21,13 @@
 #include "TestBase.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
+#include "utils/IntegrationTestUtils.h"
 
 class VerifyC2DescribeJstack : public VerifyC2Describe {
  public:
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("SchedulingAgent"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "SchedulingAgent"));
   }
 };
 

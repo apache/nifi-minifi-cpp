@@ -41,6 +41,7 @@
 #include "processors/LogAttribute.h"
 #include "state/ProcessorController.h"
 #include "integration/IntegrationBase.h"
+#include "utils/IntegrationTestUtils.h"
 
 class TailFileTestHarness : public IntegrationBase {
  public:
@@ -69,9 +70,11 @@ class TailFileTestHarness : public IntegrationBase {
   }
 
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("5 flowfiles were received from TailFile input") == true);
-    assert(LogTestController::getInstance().contains("Looking for delimiter 0xA") == true);
-    assert(LogTestController::getInstance().contains("li\\ne5") == true);
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+        "5 flowfiles were received from TailFile input",
+        "Looking for delimiter 0xA",
+        "li\\ne5"));
   }
 
  protected:

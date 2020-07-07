@@ -43,6 +43,7 @@
 #include "core/state/ProcessorController.h"
 #include "../integration/IntegrationBase.h"
 #include "CapturePacket.h"
+#include "utils/IntegrationTestUtils.h"
 
 class PcapTestHarness : public IntegrationBase {
  public:
@@ -66,10 +67,13 @@ class PcapTestHarness : public IntegrationBase {
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("Starting capture") == true);
-    assert(LogTestController::getInstance().contains("Stopping capture") == true);
-    assert(LogTestController::getInstance().contains("Stopped device capture. clearing queues") == true);
-    assert(LogTestController::getInstance().contains("Accepting ") == true && LogTestController::getInstance().contains("because it matches .*") );
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+        "Starting capture",
+        "Stopping capture",
+        "Stopped device capture. clearing queues",
+        "Accepting ",
+        "because it matches .*"));
   }
 
   void updateProperties(std::shared_ptr<minifi::FlowController> fc) {

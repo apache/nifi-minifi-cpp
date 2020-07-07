@@ -66,8 +66,6 @@ TEST_CASE("GetFile: MaxSize", "[getFileFifo]") {  // NOLINT
   in_file_stream << "The quick brown fox jumps over the lazy dog" << std::endl;
   in_file_stream.close();
 
-  std::this_thread::sleep_for(std::chrono::seconds(2));
-
   in_file_stream.open(in_file + "2");
   in_file_stream << "The quick brown fox jumps over the lazy dog who is 2 legit to quit" << std::endl;
   in_file_stream.close();

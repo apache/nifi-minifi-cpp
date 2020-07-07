@@ -26,24 +26,9 @@
 #include "../TestBase.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/StringUtils.h"
+#include "utils/IntegrationTestUtils.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
-
-namespace {
-
-  template<typename Function, typename Rep, typename Period>
-  bool becomesTrueWithinTimeout(const Function &condition, std::chrono::duration<Rep, Period> timeout) {
-    auto start_time = std::chrono::steady_clock::now();
-    while (std::chrono::steady_clock::now() < start_time + timeout) {
-      if (condition()) {
-        return true;
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds{1});
-    }
-    return false;
-  }
-
-}  // namespace
 
 namespace MinifiConcurrentQueueTestProducersConsumers {
 
@@ -75,7 +60,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
 
   std::thread getSimpleTryDequeConsumerThread(utils::ConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
-      constexpr std::size_t max_read_attempts = 1000;
+      constexpr std::size_t max_read_attempts = 300;
       for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
         std::string s;
         if (queue.tryDequeue(s)) {
@@ -89,7 +74,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
 
   std::thread getSimpleConsumeConsumerThread(utils::ConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
-      constexpr std::size_t max_read_attempts = 1000;
+      constexpr std::size_t max_read_attempts = 300;
       for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
         if (!queue.consume([&results] (const std::string& s) { results.push_back(s); })) {
           std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -146,7 +131,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
 
   std::thread getDequeueWaitForConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
-      constexpr std::size_t max_read_attempts = 1000;
+      constexpr std::size_t max_read_attempts = 300;
       for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
         std::string s;
         if (queue.dequeueWaitFor(s, std::chrono::milliseconds(1))) {
@@ -158,7 +143,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
 
   std::thread getDequeueWaitUntilConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
-      constexpr std::size_t max_read_attempts = 1000;
+      constexpr std::size_t max_read_attempts = 300;
       for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
         std::string s;
         const std::chrono::system_clock::time_point timeout_point = std::chrono::system_clock::now() + std::chrono::milliseconds(1);
@@ -171,7 +156,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
 
   std::thread getConsumeWaitForConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results]() {
-      constexpr std::size_t max_read_attempts = 1000;
+      constexpr std::size_t max_read_attempts = 300;
       for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
         queue.consumeWaitFor([&results] (const std::string& s) { results.push_back(s); }, std::chrono::milliseconds(1));
       }
@@ -311,7 +296,7 @@ TEST_CASE("TestConcurrentQueue: test untimed waiting consumers", "[ProducerConsu
   producer.join();
 
   auto queue_is_empty = [&queue]() { return queue.empty(); };
-  REQUIRE(becomesTrueWithinTimeout(queue_is_empty, std::chrono::seconds{1}));
+  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), queue_is_empty));
 
   queue.stop();
   consumer.join();
@@ -330,7 +315,7 @@ TEST_CASE("TestConcurrentQueue: test the readding dequeue consumer", "[ProducerC
   std::thread producer { getSimpleProducerThread(queue) };
 
   auto we_have_all_results = [&results_size]() { return results_size >= 3; };
-  REQUIRE(becomesTrueWithinTimeout(we_have_all_results, std::chrono::seconds{1}));
+  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), we_have_all_results));
 
   queue.stop();
   producer.join();
@@ -366,7 +351,7 @@ TEST_CASE("TestConcurrentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
   std::mt19937 rng(dev());
   std::uniform_int_distribution<std::mt19937::result_type> dist(1, std::numeric_limits<int>::max());
 
-  std::vector<int> source(1000000);
+  std::vector<int> source(50000);
   std::vector<int> target;
 
   generate(source.begin(), source.end(), [&rng, &dist](){ return dist(rng); });
@@ -380,7 +365,7 @@ TEST_CASE("TestConcurrentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
 
   std::thread relay([&queue, &cqueue]() {
     size_t cnt = 0;
-    while (cnt < 1000000) {
+    while (cnt < 50000) {
       int i;
       if (queue.tryDequeue(i)) {
         cnt++;
@@ -400,7 +385,7 @@ TEST_CASE("TestConcurrentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
   relay.join();
 
   auto queue_is_empty = [&cqueue]() { return cqueue.empty(); };
-  REQUIRE(becomesTrueWithinTimeout(queue_is_empty, std::chrono::seconds{1}));
+  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), queue_is_empty));
 
   cqueue.stop();
   consumer.join();

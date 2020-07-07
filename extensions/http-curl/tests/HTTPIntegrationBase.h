@@ -24,6 +24,7 @@
 #include "protocols/RESTSender.h"
 #include "ServerAwareHandler.h"
 #include "TestBase.h"
+#include "utils/IntegrationTestUtils.h"
 #include "TestServer.h"
 
 int log_message(const struct mg_connection *conn, const char *message) {
@@ -130,6 +131,9 @@ class VerifyC2Describe : public VerifyC2Base {
   }
 
   void runAssertions() override {
+    // This class is never used for running assertions, but we are forced to wait for DescribeManifestHandler to verifyJsonHasAgentManifest
+    // if we were to log something on finished verification, we could poll on finding it 
+    std::this_thread::sleep_for(std::chrono::milliseconds(wait_time_));
   }
 };
 
@@ -158,7 +162,8 @@ public:
   }
 
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("Starting to reload Flow Controller with flow control name MiNiFi Flow, version"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(10), "Starting to reload Flow Controller with flow control name MiNiFi Flow, version"));
   }
 };
 
@@ -179,8 +184,8 @@ class VerifyC2UpdateAgent : public VerifyC2Update {
   }
 
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("removing file"));
-    assert(LogTestController::getInstance().contains("May not have command processor"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(10), "removing file", "May not have command processor"));
   }
 };
 
@@ -197,8 +202,8 @@ public:
   }
 
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("Invalid configuration payload"));
-    assert(LogTestController::getInstance().contains("update failed"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(10), "Invalid configuration payload", "update failed."));
   }
 
   void cleanup() override {

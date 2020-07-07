@@ -24,6 +24,7 @@
 #include "protocols/RESTReceiver.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
+#include "utils/IntegrationTestUtils.h"
 
 class LightWeightC2Handler : public HeartbeatHandler {
  public:
@@ -51,9 +52,11 @@ class VerifyC2Heartbeat : public VerifyC2Base {
   }
 
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("Received Ack from Server"));
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component invoke"));
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component FlowController"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+        "Received Ack from Server",
+        "C2Agent] [debug] Stopping component invoke",
+        "C2Agent] [debug] Stopping component FlowController"));
   }
 
   void configureFullHeartbeat() override {
@@ -62,7 +65,7 @@ class VerifyC2Heartbeat : public VerifyC2Base {
 };
 
 class VerifyLightWeightC2Heartbeat : public VerifyC2Heartbeat {
-public:
+ public:
   void configureFullHeartbeat() override {
     configuration->set("nifi.c2.full.heartbeat", "false");
   }

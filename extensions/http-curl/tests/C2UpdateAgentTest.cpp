@@ -34,6 +34,6 @@ int main(int argc, char **argv) {
 
   const auto then = std::chrono::system_clock::now();
   const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(then - start).count();
-  assert(handler.calls_ <= (seconds) + 1);
+  assert(handler.calls_ <= (seconds) + 2);
   return 0;
 }

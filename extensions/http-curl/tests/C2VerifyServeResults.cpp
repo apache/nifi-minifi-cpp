@@ -26,6 +26,7 @@
 #include "properties/Configure.h"
 #include "TestServer.h"
 #include "HTTPIntegrationBase.h"
+#include "utils/IntegrationTestUtils.h"
 
 class VerifyC2Server : public HTTPIntegrationBase {
 public:
@@ -49,8 +50,10 @@ public:
   }
 
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("Import offset 0"));
-    assert(LogTestController::getInstance().contains("Outputting success and response"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+        "Import offset 0",
+        "Outputting success and response"));
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {

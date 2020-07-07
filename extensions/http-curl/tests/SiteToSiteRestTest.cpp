@@ -30,6 +30,7 @@
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
 #include "HTTPIntegrationBase.h"
+#include "utils/IntegrationTestUtils.h"
 
 class Responder : public ServerAwareHandler {
  public:
@@ -86,12 +87,13 @@ public:
   }
 
   void runAssertions() override {
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
     if (isSecure) {
-      assert(LogTestController::getInstance().contains("process group remote site2site port 10001, is secure 1"));
+      assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "process group remote site2site port 10001, is secure 1"));
     } else {
-      assert(LogTestController::getInstance().contains("process group remote site2site port 10001, is secure 0"));
+      assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "process group remote site2site port 10001, is secure 0"));
     }
-    assert(LogTestController::getInstance().contains("ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed "));
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed "));
   }
 
  protected:

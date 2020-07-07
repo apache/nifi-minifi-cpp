@@ -53,6 +53,7 @@
 #include "CoapServer.h"
 #include "io/BaseStream.h"
 #include "concurrentqueue.h"
+#include "utils/IntegrationTestUtils.h"
 
 class VerifyCoAPServer : public CoapIntegrationBase {
  public:
@@ -82,12 +83,12 @@ class VerifyCoAPServer : public CoapIntegrationBase {
   }
 
   void runAssertions() {
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-    assert(LogTestController::getInstance().contains("Received ack. version 3. number of operations 1") == true);
-    assert(LogTestController::getInstance().contains("Received ack. version 3. number of operations 0") == true);
-    assert(LogTestController::getInstance().contains("Received error event from protocol") == true);
-    assert(LogTestController::getInstance().contains("Received op 1, with id id and operand operand") == true);
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(3),
+        "Received ack. version 3. number of operations 1",
+        "Received ack. version 3. number of operations 0",
+        "Received error event from protocol",
+        "Received op 1, with id id and operand operand"));
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {

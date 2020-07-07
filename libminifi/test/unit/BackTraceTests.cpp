@@ -75,7 +75,7 @@ TEST_CASE("BT1", "[TPT1]") {
 std::atomic<int> counter;
 
 int counterFunction() {
-  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  std::this_thread::sleep_for(std::chrono::milliseconds(150));
   return ++counter;
 }
 
@@ -83,7 +83,7 @@ TEST_CASE("BT2", "[TPT2]") {
   counter = 0;
   utils::ThreadPool<int> pool(4);
   pool.start();
-  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  std::this_thread::sleep_for(std::chrono::milliseconds(150));
   for (int i = 0; i < 3; i++) {
     std::function<int()> f_ex = counterFunction;
     std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(5));

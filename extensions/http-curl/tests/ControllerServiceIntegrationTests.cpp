@@ -36,6 +36,7 @@
 #include "unit/MockClasses.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "integration/IntegrationBase.h"
+#include "utils/IntegrationTestUtils.h"
 
 REGISTER_RESOURCE(MockControllerService, "");
 REGISTER_RESOURCE(MockProcessor, "");
@@ -45,6 +46,7 @@ void waitToVerifyProcessor() {
 }
 
 int main(int argc, char **argv) {
+  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
   const cmd_args args = parse_cmdline_args(argc, argv);
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
@@ -106,35 +108,27 @@ int main(int argc, char **argv) {
   assert(ssl_client->getCACertificate().length() > 0);
   // now let's disable one of the controller services.
   std::shared_ptr<core::controller::ControllerServiceNode> cs_id = controller->getControllerServiceNode("ID");
+  const auto checkCsIdEnabledMatchesDisabledFlag = [&cs_id] { return !disabled == cs_id->enabled(); };
   assert(cs_id != nullptr);
-  {
-    std::lock_guard<std::mutex> lock(control_mutex);
-    controller->disableControllerService(cs_id);
-    disabled = true;
-    waitToVerifyProcessor();
-  }
   {
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->enableControllerService(cs_id);
     disabled = false;
-    waitToVerifyProcessor();
   }
   std::shared_ptr<core::controller::ControllerServiceNode> mock_cont = controller->getControllerServiceNode("MockItLikeIts1995");
-  assert(cs_id->enabled());
-{
+  assert(verifyEventHappenedInPollTime(std::chrono::seconds(4), checkCsIdEnabledMatchesDisabledFlag));
+  {
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->disableReferencingServices(mock_cont);
     disabled = true;
-    waitToVerifyProcessor();
   }
-    assert(cs_id->enabled() == false);
-{
+  assert(verifyEventHappenedInPollTime(std::chrono::seconds(2), checkCsIdEnabledMatchesDisabledFlag));
+  {
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->enableReferencingServices(mock_cont);
     disabled = false;
-    waitToVerifyProcessor();
   }
-  assert(cs_id->enabled() == true);
+  assert(verifyEventHappenedInPollTime(std::chrono::seconds(2), checkCsIdEnabledMatchesDisabledFlag));
 
   controller->waitUnload(60000);
   return 0;

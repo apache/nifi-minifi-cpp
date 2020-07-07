@@ -26,9 +26,10 @@
 
 #include "CivetServer.h"
 #include "HTTPIntegrationBase.h"
+#include "utils/IntegrationTestUtils.h"
 
 class VerifyInvokeHTTP : public HTTPIntegrationBase {
-public:
+ public:
   VerifyInvokeHTTP()
       : HTTPIntegrationBase(6000) {
   }
@@ -55,7 +56,7 @@ public:
     std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
     configuration->set(minifi::Configure::nifi_flow_configuration_file, flow_yml_path);
-
+    configuration->set("c2.agent.heartbeat.period", "200");
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
@@ -79,7 +80,8 @@ public:
     setupFlow(flow_yml_path);
     startFlowController();
 
-    waitToVerifyProcessor();
+    runAssertions();
+
     shutdownBeforeFlowController();
     stopFlowController();
   }
@@ -92,47 +94,55 @@ public:
     flowController_->unload();
     flowController_->stopC2();
 
-    runAssertions();
     cleanup();
   }
 };
 
 class VerifyInvokeHTTPOKResponse : public VerifyInvokeHTTP {
-public:
+ public:
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("key:invokehttp.status.code value:201"));
-    assert(LogTestController::getInstance().contains("response code 201"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
+        "key:invokehttp.status.code value:201",
+        "response code 201"));
   }
 };
 
 class VerifyCouldNotConnectInvokeHTTP : public VerifyInvokeHTTP {
-public:
+ public:
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("key:invoke_http value:failure"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(6), "key:invoke_http value:failure"));
   }
 };
 
 class VerifyNoRetryInvokeHTTP : public VerifyInvokeHTTP {
-public:
+ public:
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("key:invokehttp.status.message value:HTTP/1.1 404 Not Found"));
-    assert(LogTestController::getInstance().contains("isSuccess: 0, response code 404"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
+        "key:invokehttp.status.message value:HTTP/1.1 404 Not Found",
+        "isSuccess: 0, response code 404"));
   }
 };
 
 class VerifyRetryInvokeHTTP : public VerifyInvokeHTTP {
-public:
+ public:
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("key:invokehttp.status.message value:HTTP/1.1 501 Not Implemented"));
-    assert(LogTestController::getInstance().contains("isSuccess: 0, response code 501"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
+        "key:invokehttp.status.message value:HTTP/1.1 501 Not Implemented",
+        "isSuccess: 0, response code 501"));
   }
 };
 
 class VerifyRWTimeoutInvokeHTTP : public VerifyInvokeHTTP {
-public:
+ public:
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("key:invoke_http value:failure"));
-    assert(LogTestController::getInstance().contains("limit (1000ms) reached, terminating connection"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
+        "key:invoke_http value:failure",
+        "limit (1000ms) reached, terminating connection"));
   }
 };
 
@@ -160,7 +170,7 @@ int main(int argc, char ** argv) {
     harness.setupFlow(args.test_file);
     harness.shutdownBeforeFlowController();
     harness.startFlowController();
-    harness.waitToVerifyProcessor();
+    harness.runAssertions();
     harness.stopFlowController();
   }
 
@@ -183,7 +193,7 @@ int main(int argc, char ** argv) {
   }
 
   {
-    TimeoutingHTTPHandler handler({std::chrono::seconds(4)});
+    TimeoutingHTTPHandler handler({std::chrono::seconds(2)});
     VerifyRWTimeoutInvokeHTTP harness;
     run(harness, args.url, args.test_file, args.key_dir, &handler);
   }

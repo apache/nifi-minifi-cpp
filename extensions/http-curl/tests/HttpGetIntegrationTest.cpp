@@ -36,12 +36,17 @@
 #include "unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "processors/LogAttribute.h"
-#include "HTTPIntegrationBase.h"
+#include "integration/IntegrationBase.h"
+#include "utils/IntegrationTestUtils.h"
 
-namespace {
-  void waitToVerifyProcessor() {
-    std::this_thread::sleep_for(std::chrono::seconds(10));
-  }
+int log_message(const struct mg_connection *conn, const char *message) {
+  puts(message);
+  return 1;
+}
+
+int ssl_enable(void* /*ssl_context*/, void* /*user_data*/) {
+  puts("Enable ssl");
+  return 0;
 }
 
 class HttpResponder : public CivetHandler {
@@ -59,6 +64,7 @@ class HttpResponder : public CivetHandler {
 };
 
 int main(int argc, char **argv) {
+  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   const cmd_args args = parse_cmdline_args(argc, argv);
 
   LogTestController::getInstance().setDebug<core::Processor>();
@@ -119,19 +125,19 @@ int main(int argc, char **argv) {
   }
   controller->load();
   controller->start();
-  waitToVerifyProcessor();
+  
+  assert(verifyLogLinePresenceInPollTime(
+      std::chrono::seconds(10),
+      "key:filename value:",
+      "key:invokehttp.request.url value:" + url,
+      "key:invokehttp.status.code value:200",
+      "key:flow.id"));
 
   controller->waitUnload(60000);
   if (url.find("localhost") == std::string::npos) {
     server.reset();
     exit(1);
   }
-  std::string logs = LogTestController::getInstance().log_output.str();
-
-  assert(logs.find("key:filename value:") != std::string::npos);
-  assert(logs.find("key:invokehttp.request.url value:" + url) != std::string::npos);
-  assert(logs.find("key:invokehttp.status.code value:200") != std::string::npos);
-  assert(logs.find("key:flow.id") != std::string::npos);
 
   LogTestController::getInstance().reset();
   return 0;
