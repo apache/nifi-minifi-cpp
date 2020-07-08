@@ -34,52 +34,7 @@
 #include "YamlConfiguration.h"
 #include "CustomProcessors.h"
 
-const char* drainConfig =
-R"(
-Flow Controller:
-    name: MiNiFi Flow
-    id: 2438e3c8-015a-1000-79ca-83af40ec1990
-Processors:
-  - name: Generator
-    id: 2438e3c8-015a-1000-79ca-83af40ec1991
-    class: org.apache.nifi.processors.standard.GenerateFlowFile
-    max concurrent tasks: 1
-    scheduling strategy: TIMER_DRIVEN
-    scheduling period: 100 ms
-    penalization period: 300 ms
-    yield period: 100 ms
-    run duration nanos: 0
-    auto-terminated relationships list:
-    Properties:
-      Batch Size: 10
-  - name: LogAttribute
-    id: 2438e3c8-015a-1000-79ca-83af40ec1992
-    class: org.apache.nifi.processors.standard.LogAttribute
-    max concurrent tasks: 1
-    scheduling strategy: TIMER_DRIVEN
-    scheduling period: 1000 sec
-    penalization period: 30 sec
-    yield period: 1 sec
-    run duration nanos: 0
-    auto-terminated relationships list:
-
-Connections:
-  - name: Gen
-    id: 2438e3c8-015a-1000-79ca-83af40ec1997
-    source name: Generator
-    source id: 2438e3c8-015a-1000-79ca-83af40ec1991
-    source relationship name: success
-    destination name: LogAttribute
-    destination id: 2438e3c8-015a-1000-79ca-83af40ec1992
-    max work queue size: 0
-    max work queue data size: 1 MB
-    flowfile expiration: 60 sec
-
-Remote Processing Groups:
-
-)";
-
-const char* shutdownConfig =
+const char* yamlConfig =
     R"(
 Flow Controller:
     name: MiNiFi Flow
@@ -125,7 +80,7 @@ Remote Processing Groups:
 
 class TestControllerWithFlow: public TestController{
  public:
-  TestControllerWithFlow(const char* yamlConfig) {
+  TestControllerWithFlow() {
     LogTestController::getInstance().setTrace<processors::TestProcessor>();
     LogTestController::getInstance().setTrace<processors::TestFlowFileGenerator>();
     LogTestController::getInstance().setTrace<minifi::Connection>();
@@ -164,9 +119,15 @@ class TestControllerWithFlow: public TestController{
 };
 
 TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
-  TestControllerWithFlow testController(drainConfig);
+  TestControllerWithFlow testController;
   auto controller = testController.controller_;
   auto root = testController.root_;
+
+  testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, "100 ms");
+
+  auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessor("TestProcessor"));
+  // prevent execution of the consumer processor
+  sinkProc->yield(10000);
 
   std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
 
@@ -176,6 +137,7 @@ TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
   controller->load(root);
   controller->start();
 
+  // wait for the generator to create some files
   std::this_thread::sleep_for(std::chrono::milliseconds{1000});
 
   for (auto& it : connectionMap) {
@@ -184,13 +146,15 @@ TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
 
   controller->stop(true);
 
+  REQUIRE(sinkProc->trigger_count == 0);
+
   for (auto& it : connectionMap) {
     REQUIRE(it.second->isEmpty());
   }
 }
 
 TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
-  TestControllerWithFlow testController(shutdownConfig);
+  TestControllerWithFlow testController;
   auto controller = testController.controller_;
   auto root = testController.root_;
 
@@ -219,7 +183,7 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
 }
 
 TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
-  TestControllerWithFlow testController(shutdownConfig);
+  TestControllerWithFlow testController;
   auto controller = testController.controller_;
   auto root = testController.root_;
 
@@ -258,7 +222,7 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
 }
 
 TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
-  TestControllerWithFlow testController(shutdownConfig);
+  TestControllerWithFlow testController;
   auto controller = testController.controller_;
   auto root = testController.root_;
 
