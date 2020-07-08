@@ -363,9 +363,9 @@ std::string readPayload(struct mg_connection *conn) {
   std::string response;
   int readBytes;
 
-  char buffer[1024];
-  while ((readBytes = mg_read(conn, buffer, sizeof(buffer))) > 0) {
-    response.append(buffer, (readBytes / sizeof(char)));
+  std::array<char, 1024> buffer;
+  while ((readBytes = mg_read(conn, buffer.data(), buffer.size())) > 0) {
+    response.append(buffer.data(), readBytes);
   }
   return response;
 }
