@@ -26,24 +26,9 @@
 #include "../TestBase.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/StringUtils.h"
+#include "utils/IntegrationTestUtils.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
-
-namespace {
-
-  template<typename Function, typename Rep, typename Period>
-  bool becomesTrueWithinTimeout(const Function &condition, std::chrono::duration<Rep, Period> timeout) {
-    auto start_time = std::chrono::steady_clock::now();
-    while (std::chrono::steady_clock::now() < start_time + timeout) {
-      if (condition()) {
-        return true;
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds{1});
-    }
-    return false;
-  }
-
-}  // namespace
 
 namespace MinifiConcurrentQueueTestProducersConsumers {
 
@@ -311,7 +296,7 @@ TEST_CASE("TestConcurrentQueue: test untimed waiting consumers", "[ProducerConsu
   producer.join();
 
   auto queue_is_empty = [&queue]() { return queue.empty(); };
-  REQUIRE(becomesTrueWithinTimeout(queue_is_empty, std::chrono::seconds{1}));
+  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), queue_is_empty));
 
   queue.stop();
   consumer.join();
@@ -330,7 +315,7 @@ TEST_CASE("TestConcurrentQueue: test the readding dequeue consumer", "[ProducerC
   std::thread producer { getSimpleProducerThread(queue) };
 
   auto we_have_all_results = [&results_size]() { return results_size >= 3; };
-  REQUIRE(becomesTrueWithinTimeout(we_have_all_results, std::chrono::seconds{1}));
+  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), we_have_all_results));
 
   queue.stop();
   producer.join();
@@ -400,7 +385,7 @@ TEST_CASE("TestConcurrentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
   relay.join();
 
   auto queue_is_empty = [&cqueue]() { return cqueue.empty(); };
-  REQUIRE(becomesTrueWithinTimeout(queue_is_empty, std::chrono::seconds{1}));
+  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), queue_is_empty));
 
   cqueue.stop();
   consumer.join();

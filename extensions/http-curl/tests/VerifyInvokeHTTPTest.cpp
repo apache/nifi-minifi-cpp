@@ -56,7 +56,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
     configuration->set(minifi::Configure::nifi_flow_configuration_file, flow_yml_path);
-
+    configuration->set("c2.agent.heartbeat.period", "200");
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
