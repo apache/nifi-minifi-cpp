@@ -33,6 +33,7 @@
 #include "../TestBase.h"
 #include "YamlConfiguration.h"
 #include "CustomProcessors.h"
+#include "TestControllerWithFlow.h"
 
 const char* yamlConfig =
     R"(
@@ -78,48 +79,8 @@ Connections:
 Remote Processing Groups:
 )";
 
-class TestControllerWithFlow: public TestController{
- public:
-  TestControllerWithFlow() {
-    LogTestController::getInstance().setTrace<processors::TestProcessor>();
-    LogTestController::getInstance().setTrace<processors::TestFlowFileGenerator>();
-    LogTestController::getInstance().setTrace<minifi::Connection>();
-
-    char format[] = "/tmp/flowTest.XXXXXX";
-    std::string dir = createTempDirectory(format);
-
-    std::string yamlPath = utils::file::FileUtils::concat_path(dir, "config.yml");
-    std::ofstream{yamlPath} << yamlConfig;
-
-    configuration_ = std::make_shared<minifi::Configure>();
-    std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
-    std::shared_ptr<core::Repository> ff_repo = std::make_shared<TestFlowRepository>();
-    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-
-    configuration_->set(minifi::Configure::nifi_flow_configuration_file, yamlPath);
-
-    REQUIRE(content_repo->initialize(configuration_));
-    std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration_);
-
-    std::unique_ptr<core::FlowConfiguration> flow = utils::make_unique<core::YamlConfiguration>(prov_repo, ff_repo, content_repo, stream_factory, configuration_, yamlPath);
-    root_ = flow->getRoot();
-    controller_ = std::make_shared<minifi::FlowController>(
-        prov_repo, ff_repo, configuration_,
-        std::move(flow),
-        content_repo, DEFAULT_ROOT_GROUP_NAME, true);
-  }
-
-  ~TestControllerWithFlow() {
-    LogTestController::getInstance().reset();
-  }
-
-  std::shared_ptr<minifi::Configure> configuration_;
-  std::shared_ptr<minifi::FlowController> controller_;
-  std::shared_ptr<core::ProcessGroup> root_;
-};
-
 TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
-  TestControllerWithFlow testController;
+  TestControllerWithFlow testController(yamlConfig);
   auto controller = testController.controller_;
   auto root = testController.root_;
 
@@ -134,8 +95,8 @@ TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
   root->getConnections(connectionMap);
   // adds the single connection to the map both by name and id
   REQUIRE(connectionMap.size() == 2);
-  controller->load(root);
-  controller->start();
+
+  testController.startFlow();
 
   // wait for the generator to create some files
   std::this_thread::sleep_for(std::chrono::milliseconds{1000});
@@ -154,7 +115,7 @@ TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
 }
 
 TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
-  TestControllerWithFlow testController;
+  TestControllerWithFlow testController(yamlConfig);
   auto controller = testController.controller_;
   auto root = testController.root_;
 
@@ -167,8 +128,7 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
   // before we could initiate the shutdown
   sinkProc->yield(100);
 
-  controller->load(root);
-  controller->start();
+  testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
   std::this_thread::sleep_for(std::chrono::milliseconds{50});
@@ -183,7 +143,7 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
 }
 
 TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
-  TestControllerWithFlow testController;
+  TestControllerWithFlow testController(yamlConfig);
   auto controller = testController.controller_;
   auto root = testController.root_;
 
@@ -206,8 +166,7 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
     }
   };
 
-  controller->load(root);
-  controller->start();
+  testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
   std::this_thread::sleep_for(std::chrono::milliseconds{50});
@@ -222,7 +181,7 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
 }
 
 TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
-  TestControllerWithFlow testController;
+  TestControllerWithFlow testController(yamlConfig);
   auto controller = testController.controller_;
   auto root = testController.root_;
 
@@ -247,8 +206,7 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
     }
   };
 
-  controller->load(root);
-  controller->start();
+  testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
   std::this_thread::sleep_for(std::chrono::milliseconds{50});

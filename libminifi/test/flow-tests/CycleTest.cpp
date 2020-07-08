@@ -18,7 +18,7 @@
 
 #undef NDEBUG
 #include "CustomProcessors.h"
-#include "FlowBuilder.h"
+#include "TestControllerWithFlow.h"
 
 // A flow with structure:
 //
@@ -97,22 +97,15 @@ Remote Processing Groups:
 )";
 
 TEST_CASE("Flow with two long cycle", "[FlowWithCycle]") {
-  TestController testController;
+  TestControllerWithFlow testController(flowConfigurationYaml);
+  testController.startFlow();
 
-  LogTestController::getInstance().setTrace<core::Processor>();
-  LogTestController::getInstance().setTrace<minifi::Connection>();
-  LogTestController::getInstance().setTrace<core::ProcessSession>();
+  auto controller = testController.controller_;
+  auto root = testController.root_;
 
-  char format[] = "/tmp/flow.XXXXXX";
-  std::string dir = testController.createTempDirectory(format);
-  std::string yamlPath = utils::file::FileUtils::concat_path(dir, "config.yml");
-  std::ofstream{yamlPath} << flowConfigurationYaml;
-
-  Flow flow = createFlow(yamlPath);
-
-  auto procGenerator = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator>(flow.root_->findProcessor("Generator"));
-  auto procA = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(flow.root_->findProcessor("A"));
-  auto procB = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(flow.root_->findProcessor("B"));
+  auto procGenerator = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator>(root->findProcessor("Generator"));
+  auto procA = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(root->findProcessor("A"));
+  auto procB = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(root->findProcessor("B"));
 
   int tryCount = 0;
   while (tryCount++ < 10 && !(procA->trigger_count.load() >= 10 && procB->trigger_count.load() >= 10)) {
