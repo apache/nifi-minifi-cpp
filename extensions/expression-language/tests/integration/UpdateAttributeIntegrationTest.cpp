@@ -33,6 +33,7 @@
 #include "integration/IntegrationBase.h"
 #include "ProcessContextExpr.h"
 #include "TestBase.h"
+#include "utils/IntegrationTestUtils.h"
 
 class TestHarness : public IntegrationBase {
  public:
@@ -46,9 +47,11 @@ class TestHarness : public IntegrationBase {
   void cleanup() override {}
 
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("key:route_check_attr value:good"));
-    assert(LogTestController::getInstance().contains("key:variable_attribute value:replacement_value"));
-    assert(LogTestController::getInstance().contains("ProcessSession rollback", std::chrono::seconds(1)) == false);  // No rollback happened
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+        "key:route_check_attr value:good",
+        "key:variable_attribute value:replacement_value"));
+    assert(false == verifyLogLinePresenceInPollTime(std::chrono::milliseconds(200), "ProcessSession rollback"));  // No rollback happened
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {

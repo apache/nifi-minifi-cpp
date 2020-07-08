@@ -26,31 +26,45 @@
 #include "../TestBase.h"
 #include "../KamikazeProcessor.h"
 #include "utils/StringUtils.h"
+#include "utils/IntegrationTestUtils.h"
 
 /*Verify behavior in case exceptions are thrown in onSchedule or onTrigger functions
  * KamikazeProcessor is a test processor to trigger errors in these functions */
 class KamikazeErrorHandlingTests : public IntegrationBase {
  public:
   void runAssertions() override {
-    std::string logs = LogTestController::getInstance().log_output.str();
+    using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+    assert(verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] {
+      const std::string logs = LogTestController::getInstance().log_output.str();
+      const auto result = utils::StringUtils::countOccurrences(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
+      const int occurrences = result.second;
+      if (occurrences <= 1) {  // Verify retry of onSchedule and onUnSchedule calls
+        return false;
+      }
+      return true;
+    }));
+    flowController_->updatePropertyValue("kamikaze", minifi::processors::KamikazeProcessor::ThrowInOnSchedule.getName(), "false");
 
-    auto result = utils::StringUtils::countOccurrences(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
-    size_t last_pos = result.first;
-    int occurrences = result.second;
-
-    assert(occurrences > 1);  // Verify retry of onSchedule and onUnSchedule calls
-
-    std::vector<std::string> must_appear_byorder_msgs = {minifi::processors::KamikazeProcessor::OnUnScheduleLogStr,
+    const std::vector<std::string> must_appear_byorder_msgs = {minifi::processors::KamikazeProcessor::OnUnScheduleLogStr,
                                                  minifi::processors::KamikazeProcessor::OnScheduleLogStr,
                                                  minifi::processors::KamikazeProcessor::OnTriggerExceptionStr,
                                                  "[warning] ProcessSession rollback for kamikaze executed"};
 
-    for (const auto &msg : must_appear_byorder_msgs) {
-      last_pos = logs.find(msg, last_pos);
-      assert(last_pos != std::string::npos);
-    }
+    const bool test_success = verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] {
+      const std::string logs = LogTestController::getInstance().log_output.str();
+      const auto result = utils::StringUtils::countOccurrences(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
+      size_t last_pos = result.first;
+      for (const std::string& msg : must_appear_byorder_msgs) {
+        last_pos = logs.find(msg, last_pos);
+        if (last_pos == std::string::npos)  {
+          return false;
+        }
+      }
+      return true;
+    });
+    assert(test_success);
 
-    assert(logs.find(minifi::processors::KamikazeProcessor::OnTriggerLogStr) == std::string::npos);
+    assert(LogTestController::getInstance().log_output.str().find(minifi::processors::KamikazeProcessor::OnTriggerLogStr) == std::string::npos);
   }
 
   void testSetup() override {
@@ -58,12 +72,6 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
     LogTestController::getInstance().setDebug<core::Processor>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();
     LogTestController::getInstance().setDebug<minifi::processors::KamikazeProcessor>();
-  }
-
-  void waitToVerifyProcessor() override {
-    std::this_thread::sleep_for(std::chrono::seconds(3));
-    flowController_->updatePropertyValue("kamikaze", minifi::processors::KamikazeProcessor::ThrowInOnSchedule.getName(), "false");
-    std::this_thread::sleep_for(std::chrono::seconds(3));
   }
 
   void cleanup() override {}

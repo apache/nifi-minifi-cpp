@@ -28,6 +28,7 @@
 #include "core/ProcessGroup.h"
 #include "FlowController.h"
 #include "HTTPIntegrationBase.h"
+#include "utils/IntegrationTestUtils.h"
 
 class HttpTestHarness : public HTTPIntegrationBase {
 public:
@@ -65,9 +66,11 @@ public:
   }
 
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("curl performed"));
-    assert(LogTestController::getInstance().contains("Size:1024 Offset:0"));
-    assert(!LogTestController::getInstance().contains("Size:0 Offset:0"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+      "curl performed",
+      "Size:1024 Offset:0"));
+    assert(false == verifyLogLinePresenceInPollTime(std::chrono::milliseconds(200), "Size:0 Offset:0"));
   }
 
  protected:

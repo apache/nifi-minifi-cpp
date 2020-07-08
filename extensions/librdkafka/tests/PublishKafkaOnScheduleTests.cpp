@@ -23,26 +23,39 @@
 #include "../../../libminifi/test/TestBase.h"
 #include "../PublishKafka.h"
 #include "utils/StringUtils.h"
+#include "utils/IntegrationTestUtils.h"
 
 class PublishKafkaOnScheduleTests : public IntegrationBase {
  public:
     virtual void runAssertions() {
-      std::string logs = LogTestController::getInstance().log_output.str();
+      using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+      assert(verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] {
+        const std::string logs = LogTestController::getInstance().log_output.str();
+        const auto result = utils::StringUtils::countOccurrences(logs, "value 1 is outside allowed range 1000..1000000000");
+        const int occurrences = result.second;
+        if (occurrences <= 1) {  // Verify retry of onSchedule and onUnSchedule calls
+          return false;
+        }
+        return true;
+      }));
+      flowController_->updatePropertyValue("kafka", minifi::processors::PublishKafka::MaxMessageSize.getName(), "1999");
+      const std::vector<std::string> must_appear_byorder_msgs = {"notifyStop called",
+          "Successfully configured PublishKafka",
+          "PublishKafka onTrigger"};
 
-      auto result = utils::StringUtils::countOccurrences(logs, "value 1 is outside allowed range 1000..1000000000");
-      size_t last_pos = result.first;
-      int occurrences = result.second;
-
-      assert(occurrences > 1);  // Verify retry of onSchedule and onUnSchedule calls
-
-      std::vector<std::string> must_appear_byorder_msgs = {"notifyStop called",
-                                                           "Successfully configured PublishKafka",
-                                                           "PublishKafka onTrigger"};
-
-      for (const auto &msg : must_appear_byorder_msgs) {
-        last_pos = logs.find(msg, last_pos);
-        assert(last_pos != std::string::npos);
-      }
+      const bool test_success = verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] {
+        const std::string logs = LogTestController::getInstance().log_output.str();
+        const auto result = utils::StringUtils::countOccurrences(logs, "value 1 is outside allowed range 1000..1000000000");
+        size_t last_pos = result.first;
+        for (const std::string& msg : must_appear_byorder_msgs) {
+          last_pos = logs.find(msg, last_pos);
+          if (last_pos == std::string::npos)  {
+            return false;
+          }
+        }
+        return true;
+      });
+      assert(test_success);
     }
 
     virtual void testSetup() {
@@ -50,12 +63,6 @@ class PublishKafkaOnScheduleTests : public IntegrationBase {
       LogTestController::getInstance().setDebug<core::Processor>();
       LogTestController::getInstance().setDebug<core::ProcessSession>();
       LogTestController::getInstance().setDebug<minifi::processors::PublishKafka>();
-    }
-
-    virtual void waitToVerifyProcessor() {
-      std::this_thread::sleep_for(std::chrono::seconds(3));
-      flowController_->updatePropertyValue("kafka", minifi::processors::PublishKafka::MaxMessageSize.getName(), "1999");
-      std::this_thread::sleep_for(std::chrono::seconds(3));
     }
 
     virtual void cleanup() {}

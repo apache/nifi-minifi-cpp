@@ -74,12 +74,12 @@ class CoapIntegrationBase : public IntegrationBase {
 
     controller->load();
     controller->start();
-    waitToVerifyProcessor();
+
+    runAssertions();
 
     shutdownBeforeFlowController();
     controller->waitUnload(wait_time_);
     controller->stopC2();
-    runAssertions();
 
     cleanup();
   }

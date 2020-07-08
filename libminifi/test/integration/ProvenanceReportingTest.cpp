@@ -38,12 +38,11 @@
 #include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "../TestBase.h"
-
-void waitToVerifyProcessor() {
-  std::this_thread::sleep_for(std::chrono::seconds(2));
-}
+#include "utils/IntegrationTestUtils.h"
 
 int main(int argc, char **argv) {
+  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+
   std::string test_file_location;
   if (argc > 1) {
     test_file_location = argv[1];
@@ -80,11 +79,10 @@ int main(int argc, char **argv) {
 
   controller->load();
   controller->start();
-  waitToVerifyProcessor();
+
+  assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(std::chrono::seconds(2)), "Add processor SiteToSiteProvenanceReportingTask into process group MiNiFi Flow"));
 
   controller->waitUnload(60000);
-  std::string logs = LogTestController::getInstance().log_output.str();
-  assert(logs.find("Add processor SiteToSiteProvenanceReportingTask into process group MiNiFi Flow") != std::string::npos);
   LogTestController::getInstance().reset();
   rmdir("./content_repository");
   rmdir("/tmp/aljs39/");

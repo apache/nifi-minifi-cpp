@@ -42,6 +42,7 @@
 #include "core/ConfigurableComponent.h"
 #include "../integration/IntegrationBase.h"
 #include "GetEnvironmentalSensors.h"
+#include "utils/IntegrationTestUtils.h"
 
 class PcapTestHarness : public IntegrationBase {
  public:
@@ -64,7 +65,9 @@ class PcapTestHarness : public IntegrationBase {
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("Initializing EnvironmentalSensors") == true);
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "Initializing EnvironmentalSensors"));
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {

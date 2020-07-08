@@ -84,10 +84,11 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 
   void runAssertions() {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Received ack. version 3. number of operations 1"));
-    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Received ack. version 3. number of operations 0"));
-    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Received error event from protocol"));
-    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Received op 1, with id id and operand operand"));
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(3),
+        "Received ack. version 3. number of operations 1",
+        "Received ack. version 3. number of operations 0",
+        "Received error event from protocol",
+        "Received op 1, with id id and operand operand"));
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {

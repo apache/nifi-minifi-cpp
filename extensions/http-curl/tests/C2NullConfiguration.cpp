@@ -30,6 +30,7 @@
 #include "c2/C2Agent.h"
 #include "processors/LogAttribute.h"
 #include "HTTPIntegrationBase.h"
+#include "utils/IntegrationTestUtils.h"
 
 class VerifyC2Server : public HTTPIntegrationBase {
 public:
@@ -57,8 +58,10 @@ public:
   }
 
   void runAssertions() override {
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Could not instantiate null"));
-    assert(LogTestController::getInstance().contains("Class is RESTSender"));
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+        "C2Agent] [debug] Could not instantiate null",
+        "Class is RESTSender"));
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {

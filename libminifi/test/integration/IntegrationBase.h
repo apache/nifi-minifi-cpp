@@ -55,10 +55,6 @@ class IntegrationBase {
 
   virtual void runAssertions() = 0;
 
-  virtual void waitToVerifyProcessor() {
-    std::this_thread::sleep_for(std::chrono::milliseconds(wait_time_));
-  }
-
  protected:
 
   virtual void configureC2() {
@@ -134,13 +130,13 @@ void IntegrationBase::run(std::string test_file_location) {
   flowController_->load();
   updateProperties(flowController_);
   flowController_->start();
-  waitToVerifyProcessor();
+
+  runAssertions();
 
   shutdownBeforeFlowController();
   flowController_->unload();
   flowController_->stopC2();
 
-  runAssertions();
   cleanup();
 }
 
