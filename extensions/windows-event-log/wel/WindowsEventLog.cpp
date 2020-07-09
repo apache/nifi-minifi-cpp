@@ -28,8 +28,7 @@ namespace nifi {
 namespace minifi {
 namespace wel {
 
-
-void WindowsEventLogMetadata::renderMetadata() {
+void WindowsEventLogMetadataImpl::renderMetadata() {
   DWORD status = ERROR_SUCCESS;
   DWORD dwBufferSize = 0;
   DWORD dwBufferUsed = 0;
@@ -120,6 +119,42 @@ void WindowsEventLogMetadata::renderMetadata() {
   }
 }
 
+std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const {
+  LPWSTR string_buffer = NULL;
+  DWORD string_buffer_size = 0;
+  DWORD string_buffer_used = 0;
+  DWORD result = 0;
+
+  std::string event_data;
+
+  if (metadata_ptr_ == NULL | event_ptr_ == NULL) {
+    return event_data;
+  }
+
+  if (!EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, NULL, flags, string_buffer_size, string_buffer, &string_buffer_used)) {
+    result = GetLastError();
+    if (ERROR_INSUFFICIENT_BUFFER == result) {
+      string_buffer_size = string_buffer_used;
+
+      string_buffer = (LPWSTR) malloc(string_buffer_size * sizeof(WCHAR));
+
+      if (string_buffer) {
+
+        if ((EvtFormatMessageKeyword == flags))
+          string_buffer[string_buffer_size - 1] = L'\0';
+
+        EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, NULL, flags, string_buffer_size, string_buffer, &string_buffer_used);
+        if ((EvtFormatMessageKeyword == flags))
+          string_buffer[string_buffer_used - 1] = L'\0';
+        std::wstring str(string_buffer);
+        event_data = std::string(str.begin(), str.end());
+        free(string_buffer);
+      }
+    }
+  }
+  return event_data;
+}
+
 std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const
 {
   std::string returnValue;
@@ -168,24 +203,6 @@ std::string WindowsEventLogHeader::createDefaultDelimiter(size_t max, size_t len
   else {
     return ": ";
   }
-}
-
-std::string WindowsEventLogHeader::getEventHeader(const WindowsEventLogMetadata * const metadata) const{
-  std::stringstream eventHeader;
-  size_t max = 1;
-  for (const auto &option : header_names_) {
-    max = (std::max(max, option.second.size()));
-  }
-  ++max; // increment by one to get space.
-  for (const auto &option : header_names_) {
-    auto name = option.second;
-    if (!name.empty()) {
-      eventHeader << name << (delimiter_.empty() ? createDefaultDelimiter(max, name.size()) : delimiter_);
-    }
-    eventHeader << utils::StringUtils::trim(metadata->getMetadata(option.first)) << std::endl;
-  }
-
-  return eventHeader.str();
 }
 
 EVT_HANDLE WindowsEventLogHandler::getMetadata() const {
