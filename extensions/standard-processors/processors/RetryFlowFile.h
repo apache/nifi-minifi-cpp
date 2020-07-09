@@ -44,6 +44,7 @@ class RetryFlowFile : public core::Processor {
  public:
   explicit RetryFlowFile(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
+        reuse_mode_log_level_(core::logging::LOG_LEVEL::warn),
         logger_(logging::LoggerFactory<RetryFlowFile>::getLogger()) {}
   // Destructor
   virtual ~RetryFlowFile() = default;
@@ -96,6 +97,7 @@ class RetryFlowFile : public core::Processor {
   bool penalize_retries_ =  true;  // The real default value is set by the default on the PenalizeRetries property
   bool fail_on_non_numerical_overwrite_ = false;  // The real default value is set by the default on the FailOnNonNumericalOverwrite property
   std::string reuse_mode_;
+  core::logging::LOG_LEVEL reuse_mode_log_level_;
   std::vector<core::Property> exceeded_flowfile_attribute_keys_;
 
   std::shared_ptr<logging::Logger> logger_;

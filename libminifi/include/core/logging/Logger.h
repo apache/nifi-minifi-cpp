@@ -169,9 +169,9 @@ class Logger : public BaseLogger {
 
   bool should_log(const LOG_LEVEL &level);
 
- protected:
   virtual void log_string(LOG_LEVEL level, std::string str);
 
+ protected:
   Logger(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller);
 
   Logger(std::shared_ptr<spdlog::logger> delegate); // NOLINT

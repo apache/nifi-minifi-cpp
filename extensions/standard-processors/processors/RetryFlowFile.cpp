@@ -99,13 +99,12 @@ void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSessio
     return;
   }
 
-  bool failure_due_to_non_numerical_retry;
   utils::optional<uint64_t> maybe_retry_property_value = getRetryPropertyValue(flow_file);
   if (!maybe_retry_property_value) {
     session->transfer(flow_file, Failure);
     return;
   }
-  uint64_t retry_property_value = maybe_retry_property_value.value_or(0);
+  uint64_t retry_property_value = maybe_retry_property_value.value();
   const std::string last_retried_by_property_name = retry_attribute_ + ".uuid";
   const std::string current_processor_uuid = getUUIDStr();
   std::string last_retried_by_uuid;
@@ -119,10 +118,11 @@ void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSessio
         return;
       }
       if (reuse_mode_ == WARN_ON_REUSE) {
-        logger_->log_warn("Reusing retry attribute that belongs to different processor. Resetting value to 0.");
+        reuse_mode_log_level_ = core::logging::LOG_LEVEL::warn;
       } else {  // Assuming reuse_mode_ == RESET_REUSE
-        logger_->log_debug("Reusing retry attribute that belongs to different processor. Resetting value to 0.");
+        reuse_mode_log_level_ = core::logging::LOG_LEVEL::debug;
       }
+      logger_->log_string(reuse_mode_log_level_, "Reusing retry attribute that belongs to different processor. Resetting value to 0.");
       retry_property_value = 0;
     }
   }
