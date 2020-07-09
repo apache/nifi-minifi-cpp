@@ -28,98 +28,82 @@
 #include "wel/XMLString.h"
 #include "pugixml.hpp"
 
-using namespace org::apache::nifi::minifi::wel;
-
+using wel = org::apache::nifi::minifi::wel;
 
 static std::string formatXml(const std::string &xml) {
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_string(xml.c_str());
+  pugi::xml_document doc;
+  pugi::xml_parse_result result = doc.load_string(xml.c_str());
 
-	if (result) {
-		XmlString writer;
-		doc.print(writer, "", pugi::format_raw); // no indentation or formatting
-		return writer.xml_;
-	}
-	return xml;
+  if (result) {
+    XmlString writer;
+    doc.print(writer, "", pugi::format_raw);  // no indentation or formatting
+    return writer.xml_;
+  }
+  return xml;
 }
 
 TEST_CASE("TestResolutions", "[Resolutions]") {
-	std::ifstream file("resources/nobodysid.xml");
-	std::string xml((std::istreambuf_iterator<char>(file)),
-		std::istreambuf_iterator<char>());
-	
-	SECTION("No resolution") {
-		REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
-	}
+  std::ifstream file("resources/nobodysid.xml");
+  std::string xml((std::istreambuf_iterator<char>(file)),
+    std::istreambuf_iterator<char>());
 
-	SECTION("Resolve nobody") {
-		std::ifstream resolvedfile("resources/withsids.xml");
-		std::string nobody((std::istreambuf_iterator<char>(resolvedfile)),
-			std::istreambuf_iterator<char>());
-		REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, true, true, ".*Sid") == formatXml(nobody));
-	}
+  SECTION("No resolution") {
+    REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
+  }
 
+  SECTION("Resolve nobody") {
+    std::ifstream resolvedfile("resources/withsids.xml");
+    std::string nobody((std::istreambuf_iterator<char>(resolvedfile)),
+      std::istreambuf_iterator<char>());
+    REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, true, true, ".*Sid") == formatXml(nobody));
+  }
 }
 
 TEST_CASE("TestNoData", "[NoDataBlock]") {
-	std::ifstream resolvedfile("resources/nodata.xml");
-	std::string xml((std::istreambuf_iterator<char>(resolvedfile)),
-		std::istreambuf_iterator<char>());
+  std::ifstream resolvedfile("resources/nodata.xml");
+  std::string xml((std::istreambuf_iterator<char>(resolvedfile)),
+    std::istreambuf_iterator<char>());
 
-
-	REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
-	
-
+  REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
 }
 
 TEST_CASE("TestInvalidXml", "[InvalidSet]") {
-	std::ifstream resolvedfile("resources/invalidxml.xml");
-	std::string xml((std::istreambuf_iterator<char>(resolvedfile)),
-		std::istreambuf_iterator<char>());
+  std::ifstream resolvedfile("resources/invalidxml.xml");
+  std::string xml((std::istreambuf_iterator<char>(resolvedfile)),
+    std::istreambuf_iterator<char>());
 
-
-	REQUIRE_THROWS(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
-
-
+  REQUIRE_THROWS(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
 }
 
 TEST_CASE("TestUnknownSid", "[InvalidSet]") {
-	std::ifstream resolvedfile("resources/unknownsid.xml");
-	std::string xml((std::istreambuf_iterator<char>(resolvedfile)),
-		std::istreambuf_iterator<char>());
+  std::ifstream resolvedfile("resources/unknownsid.xml");
+  std::string xml((std::istreambuf_iterator<char>(resolvedfile)),
+    std::istreambuf_iterator<char>());
 
-
-	REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
-
-
+  REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
 }
 
-
-
 TEST_CASE("TestMultipleSids", "[Resolutions]") {
-	std::ifstream unresolvedfile("resources/multiplesids.xml");
-	std::string xml((std::istreambuf_iterator<char>(unresolvedfile)),
-		std::istreambuf_iterator<char>());
+  std::ifstream unresolvedfile("resources/multiplesids.xml");
+  std::string xml((std::istreambuf_iterator<char>(unresolvedfile)),
+    std::istreambuf_iterator<char>());
 
-	std::string programmaticallyResolved;
+  std::string programmaticallyResolved;
 
-	pugi::xml_document doc;
-	xml = MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true);
-	pugi::xml_parse_result result = doc.load_string(xml.c_str());
+  pugi::xml_document doc;
+  xml = MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true);
+  pugi::xml_parse_result result = doc.load_string(xml.c_str());
 
-	for (const auto &node : doc.child("Event").child("EventData").children())
-	{
-		auto name = node.attribute("Name").as_string();
-		if (utils::StringUtils::equalsIgnoreCase("GroupMembership",name)) {
-			programmaticallyResolved = node.text().get();
-			break;
-		}
-	}
+  for (const auto &node : doc.child("Event").child("EventData").children()) {
+    auto name = node.attribute("Name").as_string();
+    if (utils::StringUtils::equalsIgnoreCase("GroupMembership", name)) {
+      programmaticallyResolved = node.text().get();
+      break;
+    }
+  }
 
-	std::string expected = "Nobody Everyone Null Authority";
+  std::string expected = "Nobody Everyone Null Authority";
 
-	// we are only testing mulitiple sid resolutions, not the resolution of other items. 
-	REQUIRE(expected == programmaticallyResolved);
-
-
+  // we are only testing mulitiple sid resolutions, not the resolution of other items.
+  REQUIRE(expected == programmaticallyResolved);
 }
