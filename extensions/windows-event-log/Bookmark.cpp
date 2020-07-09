@@ -102,10 +102,6 @@ Bookmark::operator bool() const noexcept {
   return ok_;
 }
 
-void Bookmark::evt_deleter::operator()(EVT_HANDLE evt) const noexcept {
-  EvtClose(evt);
-}
-  
 EVT_HANDLE Bookmark::getBookmarkHandleFromXML() {
   hBookmark_ = unique_evt_handle{ EvtCreateBookmark(bookmarkXml_.c_str()) };
   if (!hBookmark_) {

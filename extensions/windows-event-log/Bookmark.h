@@ -26,6 +26,7 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "wel/UniqueEvtHandle.h"
 
 namespace org {
 namespace apache {
@@ -45,16 +46,13 @@ public:
   /* non-owning */ EVT_HANDLE getBookmarkHandleFromXML();
   bool getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml);
   bool saveBookmarkXml(const std::wstring& bookmarkXml);
+
 private:
   bool saveBookmark(EVT_HANDLE hEvent);
   bool getBookmarkXmlFromFile(std::wstring& bookmarkXml);
 
-  struct evt_deleter {
-    void operator()(EVT_HANDLE) const noexcept;
-  };
-  using unique_evt_handle = std::unique_ptr<std::remove_pointer<EVT_HANDLE>::type, evt_deleter>;
+  using unique_evt_handle = wel::unique_evt_handle;
 
-private:
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::string filePath_;
