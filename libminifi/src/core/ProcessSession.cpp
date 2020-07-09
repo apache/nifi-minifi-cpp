@@ -266,15 +266,9 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
     uint64_t endTime = getTimeMillis();
     provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
   } catch (std::exception &exception) {
-    if (flow) {
-      flow->clearResourceClaim();
-    }
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
   } catch (...) {
-    if (flow) {
-      flow->clearResourceClaim();
-    }
     logger_->log_debug("Caught Exception during process session write");
     throw;
   }
@@ -400,15 +394,9 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
     auto endTime = getTimeMillis();
     provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
   } catch (std::exception &exception) {
-    if (flow) {
-      flow->clearResourceClaim();
-    }
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
   } catch (...) {
-    if (flow) {
-      flow->clearResourceClaim();
-    }
     logger_->log_debug("Caught Exception during process session write");
     throw;
   }
@@ -478,15 +466,9 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
       throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
     }
   } catch (std::exception &exception) {
-    if (flow) {
-      flow->clearResourceClaim();
-    }
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
   } catch (...) {
-    if (flow) {
-      flow->clearResourceClaim();
-    }
     logger_->log_debug("Caught Exception during process session write");
     throw;
   }
