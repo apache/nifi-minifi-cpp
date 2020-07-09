@@ -25,6 +25,7 @@
 #include "core/state/ProcessorController.h"
 #include "../TestBase.h"
 #include "../KamikazeProcessor.h"
+#include "utils/StringUtils.h"
 
 /*Verify behavior in case exceptions are thrown in onSchedule or onTrigger functions
  * KamikazeProcessor is a test processor to trigger errors in these functions */
@@ -33,7 +34,7 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
   void runAssertions() override {
     std::string logs = LogTestController::getInstance().log_output.str();
 
-    auto result = countPatInStr(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
+    auto result = utils::StringUtils::countOccurrences(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
     size_t last_pos = result.first;
     int occurrences = result.second;
 

@@ -368,3 +368,15 @@ TEST_CASE("StringUtils::replaceAll works correctly", "[replaceAll]") {
   REQUIRE(replaceAll("abc", "", "d") == "dadbdcd");
   REQUIRE(replaceAll("banana", "", "") == "banana");
 }
+
+TEST_CASE("StringUtils::countOccurrences works correctly", "[countOccurrences]") {
+  REQUIRE(utils::StringUtils::countOccurrences("", "a") == std::make_pair(size_t{0}, 0));
+  REQUIRE(utils::StringUtils::countOccurrences("abc", "a") == std::make_pair(size_t{0}, 1));
+  REQUIRE(utils::StringUtils::countOccurrences("abc", "b") == std::make_pair(size_t{1}, 1));
+  REQUIRE(utils::StringUtils::countOccurrences("abc", "x") == std::make_pair(size_t{0}, 0));
+  REQUIRE(utils::StringUtils::countOccurrences("banana", "a") == std::make_pair(size_t{5}, 3));
+  REQUIRE(utils::StringUtils::countOccurrences("banana", "an") == std::make_pair(size_t{3}, 2));
+  REQUIRE(utils::StringUtils::countOccurrences("aaaaaaaa", "aaa") == std::make_pair(size_t{3}, 2));  // overlapping occurrences are not counted
+  REQUIRE(utils::StringUtils::countOccurrences("abc", "") == std::make_pair(size_t{3}, 4));  // "" occurs at the start, between chars, and at the end
+  REQUIRE(utils::StringUtils::countOccurrences("", "") == std::make_pair(size_t{0}, 1));
+}

@@ -555,7 +555,8 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
 
   // this is a well known path. 
   std::string providerName = doc.child("Event").child("System").child("Provider").attribute("Name").value();
-  wel::MetadataWalker walker(getEventLogHandler(providerName).getMetadata(), channel_, hEvent, !resolve_as_attributes_, apply_identifier_function_, regex_);
+  wel::WindowsEventLogMetadataImpl metadata{getEventLogHandler(providerName).getMetadata(), hEvent};
+  wel::MetadataWalker walker{metadata, channel_, !resolve_as_attributes_, apply_identifier_function_, regex_};
 
   // resolve the event metadata
   doc.traverse(walker);
@@ -581,7 +582,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
       // set the delimiter
       log_header.setDelimiter(header_delimiter_);
       // render the header.
-      eventRender.rendered_text_ = log_header.getEventHeader(&walker);
+      eventRender.rendered_text_ = log_header.getEventHeader([&walker](wel::METADATA metadata) { return walker.getMetadata(metadata); });
       eventRender.rendered_text_ += "Message" + header_delimiter_ + " ";
       eventRender.rendered_text_ += message;
     }

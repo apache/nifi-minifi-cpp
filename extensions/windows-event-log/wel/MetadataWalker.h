@@ -45,10 +45,11 @@ namespace wel {
  * Defines a tree walker for the XML input
  *
  */
-class MetadataWalker : public pugi::xml_tree_walker, public WindowsEventLogMetadata {
+class MetadataWalker : public pugi::xml_tree_walker {
  public:
-  MetadataWalker(EVT_HANDLE metadata_ptr, const std::string &log_name, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex = "")
-      : WindowsEventLogMetadata(metadata_ptr, event_ptr, log_name),
+  MetadataWalker(const WindowsEventLogMetadata& windows_event_log_metadata, const std::string &log_name, bool update_xml, bool resolve, const std::string &regex = "")
+      : windows_event_log_metadata_(windows_event_log_metadata),
+        log_name_(log_name),
         regex_(regex),
         regex_str_(regex),
         update_xml_(update_xml),
@@ -63,36 +64,32 @@ class MetadataWalker : public pugi::xml_tree_walker, public WindowsEventLogMetad
 
   static std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex = "");
 	
-  virtual std::map<std::string, std::string> getFieldValues() const override;
+  std::map<std::string, std::string> getFieldValues() const;
 
-  virtual std::map<std::string, std::string> getIdentifiers() const override;
+  std::map<std::string, std::string> getIdentifiers() const;
 
-  virtual std::string getMetadata(METADATA metadata) const override;
-
+  std::string getMetadata(METADATA metadata) const;
 
  private:
+  std::vector<std::string> getIdentifiers(const std::string &text) const;
 
-   std::vector<std::string> getIdentifiers(const std::string &text) const ;
-
-
-    static std::string getString(const std::map<std::string, std::string> &map, const std::string &field) {
-      auto srch = map.find(field);
-      if (srch != std::end(map)) {
-        return srch->second;
-      }
-      return "N/A";
+  static std::string getString(const std::map<std::string, std::string> &map, const std::string &field) {
+    auto srch = map.find(field);
+    if (srch != std::end(map)) {
+      return srch->second;
+    }
+    return "N/A";
   }
+
   static std::string to_string(const wchar_t* pChar);
-   /**
+
+  /**
    * Updates text within the XML representation
    */
   void updateText(pugi::xml_node &node, const std::string &field_name, std::function<std::string(const std::string &)> &&fn);
 
-  /**
-   * Gets event data.
-   */
-  std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags);
-  
+  const WindowsEventLogMetadata& windows_event_log_metadata_;
+  std::string log_name_;
   std::regex regex_;
   std::string regex_str_;
   bool update_xml_;

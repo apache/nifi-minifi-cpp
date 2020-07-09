@@ -22,13 +22,14 @@
 #include "core/logging/Logger.h"
 #include "../../../libminifi/test/TestBase.h"
 #include "../PublishKafka.h"
+#include "utils/StringUtils.h"
 
 class PublishKafkaOnScheduleTests : public IntegrationBase {
  public:
     virtual void runAssertions() {
       std::string logs = LogTestController::getInstance().log_output.str();
 
-      auto result = countPatInStr(logs, "value 1 is outside allowed range 1000..1000000000");
+      auto result = utils::StringUtils::countOccurrences(logs, "value 1 is outside allowed range 1000..1000000000");
       size_t last_pos = result.first;
       int occurrences = result.second;
 

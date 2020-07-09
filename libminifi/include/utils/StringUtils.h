@@ -470,6 +470,20 @@ class StringUtils {
 
   static std::string replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map);
 
+  static std::pair<size_t, int> countOccurrences(const std::string &str, const std::string &pattern) {
+    if (pattern.empty()) {
+      return {str.size(), str.size() + 1};
+    }
+
+    size_t last_pos = 0;
+    int occurrences = 0;
+    for (size_t pos = 0; (pos = str.find(pattern, pos)) != std::string::npos; pos += pattern.size()) {
+      last_pos = pos;
+      ++occurrences;
+    }
+    return {last_pos, occurrences};
+  }
+
  private:
   inline static char nibble_to_hex(uint8_t nibble, bool uppercase) {
     if (nibble < 10) {
