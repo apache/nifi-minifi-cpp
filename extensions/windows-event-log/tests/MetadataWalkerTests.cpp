@@ -22,15 +22,19 @@
 #include <utility>
 #include <string>
 #include <set>
+
 #include "TestBase.h"
 #include "core/Core.h"
 #include "wel/MetadataWalker.h"
 #include "wel/XMLString.h"
 #include "pugixml.hpp"
 
-using wel = org::apache::nifi::minifi::wel;
+using MetadataWalker = org::apache::nifi::minifi::wel::MetadataWalker;
+using XmlString = org::apache::nifi::minifi::wel::XmlString;
 
-static std::string formatXml(const std::string &xml) {
+namespace {
+
+std::string formatXml(const std::string &xml) {
   pugi::xml_document doc;
   pugi::xml_parse_result result = doc.load_string(xml.c_str());
 
@@ -42,51 +46,48 @@ static std::string formatXml(const std::string &xml) {
   return xml;
 }
 
-TEST_CASE("TestResolutions", "[Resolutions]") {
-  std::ifstream file("resources/nobodysid.xml");
-  std::string xml((std::istreambuf_iterator<char>(file)),
-    std::istreambuf_iterator<char>());
+std::string readFile(const std::string &file_name) {
+  std::ifstream file(file_name);
+  return std::string{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+}
+
+}  // namespace
+
+TEST_CASE("MetadataWalker updates the Sid in the XML if both update_xml and resolve are true", "[updateXmlMetadata]") {
+  std::string xml = readFile("resources/nobodysid.xml");
 
   SECTION("No resolution") {
     REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
   }
 
   SECTION("Resolve nobody") {
-    std::ifstream resolvedfile("resources/withsids.xml");
-    std::string nobody((std::istreambuf_iterator<char>(resolvedfile)),
-      std::istreambuf_iterator<char>());
+    std::string nobody = readFile("resources/withsids.xml");
     REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, true, true, ".*Sid") == formatXml(nobody));
   }
 }
 
-TEST_CASE("TestNoData", "[NoDataBlock]") {
-  std::ifstream resolvedfile("resources/nodata.xml");
-  std::string xml((std::istreambuf_iterator<char>(resolvedfile)),
-    std::istreambuf_iterator<char>());
+TEST_CASE("MetadataWalker works even when there is no Data block", "[updateXmlMetadata]") {
+  std::string xml = readFile("resources/nodata.xml");
 
   REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
 }
 
-TEST_CASE("TestInvalidXml", "[InvalidSet]") {
-  std::ifstream resolvedfile("resources/invalidxml.xml");
-  std::string xml((std::istreambuf_iterator<char>(resolvedfile)),
-    std::istreambuf_iterator<char>());
+TEST_CASE("MetadataWalker throws if the input XML is invalid", "[updateXmlMetadata]") {
+  std::string xml = readFile("resources/invalidxml.xml");
 
   REQUIRE_THROWS(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
 }
 
-TEST_CASE("TestUnknownSid", "[InvalidSet]") {
-  std::ifstream resolvedfile("resources/unknownsid.xml");
-  std::string xml((std::istreambuf_iterator<char>(resolvedfile)),
-    std::istreambuf_iterator<char>());
+TEST_CASE("MetadataWalker will leave a Sid unchanged if it doesn't correspond to a user", "[updateXmlMetadata]") {
+  std::string xml = readFile("resources/unknownsid.xml");
 
   REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
+  REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, true, true) == formatXml(xml));
+  REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, true, true, ".*Sid") == formatXml(xml));
 }
 
-TEST_CASE("TestMultipleSids", "[Resolutions]") {
-  std::ifstream unresolvedfile("resources/multiplesids.xml");
-  std::string xml((std::istreambuf_iterator<char>(unresolvedfile)),
-    std::istreambuf_iterator<char>());
+TEST_CASE("MetadataWalker can replace multiple Sids", "[updateXmlMetadata]") {
+  std::string xml = readFile("resources/multiplesids.xml");
 
   std::string programmaticallyResolved;
 
