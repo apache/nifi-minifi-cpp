@@ -34,7 +34,7 @@ FOREACH(testfile ${FLOW_TESTS})
 
     target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
     MATH(EXPR FLOW_TEST_COUNT "${FLOW_TEST_COUNT}+1")
-    add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
+    add_test(NAME "${testfilename}" COMMAND "${testfilename}")
 ENDFOREACH()
 message("-- Finished building ${FLOW_TEST_COUNT} flow test file(s)...")
 
