@@ -405,10 +405,13 @@ void FlowController::loadFlowRepo() {
   if (this->flow_file_repo_ != nullptr) {
     logger_->log_debug("Getting connection map");
     std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap;
+    std::map<std::string, std::shared_ptr<core::Connectable>> containers;
     if (this->root_ != nullptr) {
       this->root_->getConnections(connectionMap);
+      this->root_->getFlowFileContainers(containers);
     }
     flow_file_repo_->setConnectionMap(connectionMap);
+    flow_file_repo_->setContainers(containers);
     flow_file_repo_->loadComponent(content_repo_);
   } else {
     logger_->log_debug("Flow file repository is not set");

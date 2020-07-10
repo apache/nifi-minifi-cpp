@@ -355,12 +355,22 @@ void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connecta
     connectionMap[connection->getUUIDStr()] = connection;
     connectionMap[connection->getName()] = connection;
   }
-  for (auto processor : processors_) {
-    // processors can also own FlowFiles
-    connectionMap[processor->getUUIDStr()] = processor;
-  }
   for (auto processGroup : child_process_groups_) {
     processGroup->getConnections(connectionMap);
+  }
+}
+
+void ProcessGroup::getFlowFileContainers(std::map<std::string, std::shared_ptr<Connectable>> &containers) const {
+  for (auto connection : connections_) {
+    containers[connection->getUUIDStr()] = connection;
+    containers[connection->getName()] = connection;
+  }
+  for (auto processor : processors_) {
+    // processors can also own FlowFiles
+    containers[processor->getUUIDStr()] = processor;
+  }
+  for (auto processGroup : child_process_groups_) {
+    processGroup->getFlowFileContainers(containers);
   }
 }
 

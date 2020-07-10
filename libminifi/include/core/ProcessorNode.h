@@ -236,7 +236,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     return processor_->getNextIncomingConnection();
   }
 
-  std::shared_ptr<Connectable> pickIncomingConnection() {
+  std::shared_ptr<Connectable> pickIncomingConnection() override {
     return processor_->pickIncomingConnection();
   }
 

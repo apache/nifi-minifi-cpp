@@ -228,6 +228,8 @@ class ProcessGroup {
 
   void getConnections(std::map<std::string, std::shared_ptr<Connectable>> &connectionMap);
 
+  void getFlowFileContainers(std::map<std::string, std::shared_ptr<Connectable>> &containers) const;
+
   void drainConnections();
 
   std::size_t getTotalFlowFileCount() const;

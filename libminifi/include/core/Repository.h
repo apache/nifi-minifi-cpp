@@ -117,6 +117,10 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     this->connectionMap = connectionMap;
   }
 
+  void setContainers(std::map<std::string, std::shared_ptr<core::Connectable>> &containers) {
+    this->containers = containers;
+  }
+
   virtual bool Get(const std::string &key, std::string &value) {
     return false;
   }
@@ -228,6 +232,8 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   Repository &operator=(const Repository &parent) = delete;
 
  protected:
+  std::map<std::string, std::shared_ptr<core::Connectable>> containers;
+
   std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap;
   // Mutex for protection
   std::mutex mutex_;

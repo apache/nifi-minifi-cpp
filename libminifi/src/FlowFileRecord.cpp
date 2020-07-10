@@ -128,10 +128,8 @@ void FlowFileRecord::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
   // Decrease the flow file record owned count for the resource claim
   claim->decreaseFlowFileRecordOwnedCount();
   logger_->log_debug("Detaching Resource Claim %s, %s, attempt %llu", getUUIDStr(), claim->getContentFullPath(), claim->getFlowFileRecordOwnedCount());
-  if (content_repo_) {
-    if (content_repo_->removeIfOrphaned(claim)) {
-      logger_->log_debug("Deleted Resource Claim %s", claim->getContentFullPath());
-    }
+  if (content_repo_ && content_repo_->removeIfOrphaned(claim)) {
+    logger_->log_debug("Deleted Resource Claim %s", claim->getContentFullPath());
   }
 }
 
