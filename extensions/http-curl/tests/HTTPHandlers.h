@@ -235,10 +235,10 @@ class FlowFileResponder : public ServerAwareHandler {
       assert(read > 0); total_size += read;
 
       total_size += length;
-      flow->data.resize(length);
+      flow->data.resize(gsl::narrow<size_t>(length));
       flow->total_size = total_size;
 
-      read = stream.readData(flow->data.data(), length);
+      read = stream.readData(flow->data.data(), gsl::narrow<int>(length));
       if(!isServerRunning())return false;
       assert(read == length);
 
@@ -291,7 +291,7 @@ class FlowFileResponder : public ServerAwareHandler {
         }
         uint64_t length = flow->data.size();
         stream.write(length);
-        stream.writeData(flow->data.data(), length);
+        stream.writeData(flow->data.data(), gsl::narrow<int>(length));
       }
     } else {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nConnection: "

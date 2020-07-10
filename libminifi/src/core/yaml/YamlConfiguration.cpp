@@ -454,7 +454,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, cor
   reportTask->setPortUUID(port_uuid);
 
   if (core::Property::StringToInt(batchSizeStr, lvalue)) {
-    reportTask->setBatchSize(lvalue);
+    reportTask->setBatchSize(gsl::narrow<int>(lvalue));
   }
 
   reportTask->initialize();

@@ -103,7 +103,7 @@ int RocksDbStream::readData(std::vector<uint8_t> &buf, int buflen) {
 
 int RocksDbStream::readData(uint8_t *buf, int buflen) {
   if (!IsNullOrEmpty(buf) && exists_) {
-    int amtToRead = buflen;
+    size_t amtToRead = buflen;
     if (offset_ >= value_.size()) {
       return 0;
     }
@@ -112,7 +112,7 @@ int RocksDbStream::readData(uint8_t *buf, int buflen) {
     }
     std::memcpy(buf, value_.data() + offset_, amtToRead);
     offset_ += amtToRead;
-    return amtToRead;
+    return gsl::narrow<int>(amtToRead);
   } else {
     return -1;
   }

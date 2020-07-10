@@ -40,7 +40,7 @@ int write_char(char value, cstream * stream);
 
 int write_buffer(const uint8_t *value, int len, cstream * stream);
 
-int writeUTF(const char * cstr, uint64_t len, enum Bool widen, cstream * stream);
+int writeUTF(const char * cstr, size_t length, enum Bool widen, cstream * stream);
 
 int read_char(char *value, cstream * stream);
 
@@ -56,7 +56,7 @@ int read_buffer(uint8_t *value, int len, cstream * stream);
 
 int readUTFLen(uint32_t * utflen, cstream * stream);
 
-int readUTF(char * buf, uint64_t buflen, cstream * stream);
+int readUTF(char * buf, uint32_t buflen, cstream * stream);
 
 void close_stream(cstream * stream);
 

@@ -75,15 +75,16 @@ void BinFiles::initialize() {
 
 void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
   std::string value;
-  int64_t valInt;
-  if (context->getProperty(MinSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
-    this->binManager_.setMinSize(valInt);
-    logger_->log_debug("BinFiles: MinSize [%d]", valInt);
+  int64_t valInt64;
+  int valInt;
+  if (context->getProperty(MinSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt64)) {
+    this->binManager_.setMinSize(valInt64);
+    logger_->log_debug("BinFiles: MinSize [%" PRId64 "]", valInt64);
   }
   value = "";
-  if (context->getProperty(MaxSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
-    this->binManager_.setMaxSize(valInt);
-    logger_->log_debug("BinFiles: MaxSize [%d]", valInt);
+  if (context->getProperty(MaxSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt64)) {
+    this->binManager_.setMaxSize(valInt64);
+    logger_->log_debug("BinFiles: MaxSize [%" PRId64 "]", valInt64);
   }
   value = "";
   if (context->getProperty(MinEntries.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
@@ -97,15 +98,15 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
   }
   value = "";
   if (context->getProperty(MaxBinCount.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
-    maxBinCount_ = static_cast<int> (valInt);
+    maxBinCount_ = valInt;
     logger_->log_debug("BinFiles: MaxBinCount [%d]", valInt);
   }
   value = "";
   if (context->getProperty(MaxBinAge.getName(), value) && !value.empty()) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
-      this->binManager_.setBinAge(valInt);
-      logger_->log_debug("BinFiles: MaxBinAge [%d]", valInt);
+    if (core::Property::StringToTime(value, valInt64, unit) && core::Property::ConvertTimeUnitToMS(valInt64, unit, valInt64)) {
+      this->binManager_.setBinAge(valInt64);
+      logger_->log_debug("BinFiles: MaxBinAge [%" PRId64 "]", valInt64);
     }
   }
 }

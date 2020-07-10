@@ -40,9 +40,9 @@ FileStream::FileStream(const std::string &path, bool append)
     file_stream_->open(path.c_str(), std::fstream::out | std::fstream::binary);
   file_stream_->seekg(0, file_stream_->end);
   file_stream_->seekp(0, file_stream_->end);
-  int len = file_stream_->tellg();
+  std::streamoff len = file_stream_->tellg();
   if (len > 0) {
-    length_ = len;
+    length_ = gsl::narrow<size_t>(len);
   } else {
     length_ = 0;
   }
@@ -61,9 +61,9 @@ FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enab
   }
   file_stream_->seekg(0, file_stream_->end);
   file_stream_->seekp(0, file_stream_->end);
-  int len = file_stream_->tellg();
+  std::streamoff len = file_stream_->tellg();
   if (len > 0) {
-    length_ = len;
+    length_ = gsl::narrow<size_t>(len);
   } else {
     length_ = 0;
   }
@@ -80,7 +80,7 @@ void FileStream::closeStream() {
 
 void FileStream::seek(uint64_t offset) {
   std::lock_guard<std::recursive_mutex> lock(file_lock_);
-  offset_ = offset;
+  offset_ = gsl::narrow<size_t>(offset);
   file_stream_->clear();
   file_stream_->seekg(offset_);
   file_stream_->seekp(offset_);
@@ -158,12 +158,12 @@ int FileStream::readData(uint8_t *buf, int buflen) {
       file_stream_->clear();
       file_stream_->seekg(0, file_stream_->end);
       file_stream_->seekp(0, file_stream_->end);
-      int len = file_stream_->tellg();
+      size_t len = gsl::narrow<size_t>(file_stream_->tellg());
       size_t ret = len - offset_;
       offset_ = len;
       length_ = len;
       logging::LOG_DEBUG(logger_) << path_ << " eof bit, ended at " << offset_;
-      return ret;
+      return gsl::narrow<int>(ret);
     } else {
       offset_ += buflen;
       file_stream_->seekp(offset_);

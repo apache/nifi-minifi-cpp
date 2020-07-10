@@ -131,7 +131,7 @@ bool check_archive_contents(std::string path, TAE_MAP_T entries, bool check_attr
     } else {
       read_names.push_back(name);
       TestArchiveEntry test_entry = it->second;
-      size_t size = archive_entry_size(entry);
+      size_t size = gsl::narrow<size_t>(archive_entry_size(entry));
 
       std::cout << "Checking archive entry: " << name << std::endl;
 

@@ -166,7 +166,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
       int reconnects = 0;
       do {
         if ( socket_ring_buffer_.try_dequeue(socket_ptr) ) {
-          int size_read = socket_ptr->readData(buffer, receive_buffer_size_, false);
+          int size_read = socket_ptr->readData(buffer, gsl::narrow<int>(receive_buffer_size_), false);
           if (size_read >= 0) {
             if (size_read > 0) {
               // determine cut location

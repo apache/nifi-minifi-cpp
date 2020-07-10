@@ -162,8 +162,8 @@ typedef struct {
 la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d, const void **buf) {
   auto data = static_cast<FocusArchiveEntryReadData *>(d);
   *buf = data->buf;
-  int64_t read = 0;
-  int64_t last_read = 0;
+  int read = 0;
+  int last_read = 0;
 
   do {
     last_read = data->stream->readData(reinterpret_cast<uint8_t *>(data->buf), 8196 - read);

@@ -194,9 +194,12 @@ Value expr_toLower(const std::vector<Value> &args) {
 
 Value expr_substring(const std::vector<Value> &args) {
   if (args.size() < 3) {
-    return Value(args[0].asString().substr(args[1].asUnsignedLong()));
+    size_t offset = gsl::narrow<size_t>(args[1].asUnsignedLong());
+    return Value(args[0].asString().substr(offset));
   } else {
-    return Value(args[0].asString().substr(args[1].asUnsignedLong(), args[2].asUnsignedLong()));
+    size_t offset = gsl::narrow<size_t>(args[1].asUnsignedLong());
+    size_t count = gsl::narrow<size_t>(args[2].asUnsignedLong());
+    return Value(args[0].asString().substr(offset, count));
   }
 }
 
@@ -269,7 +272,7 @@ Value expr_getDelimitedField(const std::vector<Value> &args) {
   std::string result;
   result.resize(1024);
 
-  for (uint64_t parse_pos = 0; parse_pos < subject.length(); parse_pos++) {
+  for (size_t parse_pos = 0; parse_pos < subject.length(); parse_pos++) {
     char cur_ch = subject[parse_pos];
 
     if (cur_ch == escape_ch) {
@@ -873,7 +876,7 @@ Value expr_toRadix(const std::vector<Value> &args) {
 }
 
 Value expr_fromRadix(const std::vector<Value> &args) {
-  auto radix = args[1].asSignedLong();
+  int radix = gsl::narrow<int>(args[1].asSignedLong());
 
   if (radix < 2 || radix > 36) {
     throw std::runtime_error("Cannot perform conversion due to invalid radix");

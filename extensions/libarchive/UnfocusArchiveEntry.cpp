@@ -202,7 +202,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(std::shared_ptr<io::BaseStre
     archive_entry_set_size(entry, entryMetadata.entrySize);
     archive_entry_set_uid(entry, entryMetadata.entryUID);
     archive_entry_set_gid(entry, entryMetadata.entryGID);
-    archive_entry_set_mtime(entry, entryMetadata.entryMTime, entryMetadata.entryMTimeNsec);
+    archive_entry_set_mtime(entry, entryMetadata.entryMTime, gsl::narrow<long>(entryMetadata.entryMTimeNsec));
 
     logger_->log_info("Writing %s with type %d, perms %d, size %d, uid %d, gid %d, mtime %d,%d", entryMetadata.entryName, entryMetadata.entryType, entryMetadata.entryPerm,
                       entryMetadata.entrySize, entryMetadata.entryUID, entryMetadata.entryGID, entryMetadata.entryMTime, entryMetadata.entryMTimeNsec);
@@ -218,7 +218,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(std::shared_ptr<io::BaseStre
 
       while (ifs.good()) {
         ifs.read(buf, sizeof(buf));
-        auto len = ifs.gcount();
+        size_t len = gsl::narrow<size_t>(ifs.gcount());
         int64_t written = archive_write_data(outputArchive, buf, len);
         if (written < 0) {
           logger_->log_error("UnfocusArchiveEntry failed to write data to "

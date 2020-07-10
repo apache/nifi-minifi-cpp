@@ -122,7 +122,7 @@ std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
   struct archive_entry *ae;
 
   while (archive_read_next_header(a, &ae) == ARCHIVE_OK) {
-    int size = archive_entry_size(ae);
+    int size = gsl::narrow<int>(archive_entry_size(ae));
     FixedBuffer buf(size);
     ArchiveEntryReader reader(a);
     auto ret = buf.write(reader, buf.capacity());
@@ -266,7 +266,7 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
   std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
   REQUIRE(flow1->getSize() == 96);
   {
-    FixedBuffer callback(flow1->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::ifstream file1(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
@@ -274,7 +274,7 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
   }
   REQUIRE(flow2->getSize() == 96);
   {
-    FixedBuffer callback(flow2->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
     sessionGenFlowFile.read(flow2, &callback);
     std::ifstream file2(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
@@ -372,7 +372,7 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
   std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
   REQUIRE(flow1->getSize() == 128);
   {
-    FixedBuffer callback(flow1->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::ifstream file1(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
@@ -380,7 +380,7 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
   }
   REQUIRE(flow2->getSize() == 128);
   {
-    FixedBuffer callback(flow2->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
     sessionGenFlowFile.read(flow2, &callback);
     std::ifstream file2(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
@@ -472,7 +472,7 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
   std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
   REQUIRE(flow1->getSize() == 96);
   {
-    FixedBuffer callback(flow1->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::ifstream file1(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
@@ -480,7 +480,7 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
   }
   REQUIRE(flow2->getSize() == 64);
   {
-    FixedBuffer callback(flow2->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
     sessionGenFlowFile.read(flow2, &callback);
     std::ifstream file2(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
@@ -553,7 +553,7 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
   std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
   REQUIRE(flow1->getSize() == 96);
   {
-    FixedBuffer callback(flow1->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::ifstream file1(EXPECT_MERGE_CONTENT_FIRST, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
@@ -561,7 +561,7 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
   }
   REQUIRE(flow2->getSize() == 96);
   {
-    FixedBuffer callback(flow2->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
     sessionGenFlowFile.read(flow2, &callback);
     std::ifstream file2(EXPECT_MERGE_CONTENT_SECOND, std::ios::binary);
     std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
@@ -635,7 +635,7 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
   std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
   REQUIRE(flow1->getSize() > 0);
   {
-    FixedBuffer callback(flow1->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     auto archives = read_archives(callback);
     REQUIRE(archives.size() == 3);
@@ -648,7 +648,7 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
   }
   REQUIRE(flow2->getSize() > 0);
   {
-    FixedBuffer callback(flow2->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
     sessionGenFlowFile.read(flow2, &callback);
     auto archives = read_archives(callback);
     REQUIRE(archives.size() == 3);
@@ -726,7 +726,7 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
   std::shared_ptr<core::FlowFile> flow2 = output->poll(expiredFlowRecords);
   REQUIRE(flow1->getSize() > 0);
   {
-    FixedBuffer callback(flow1->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     auto archives = read_archives(callback);
     REQUIRE(archives.size() == 3);
@@ -739,7 +739,7 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
   }
   REQUIRE(flow2->getSize() > 0);
   {
-    FixedBuffer callback(flow2->getSize());
+    FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
     sessionGenFlowFile.read(flow2, &callback);
     auto archives = read_archives(callback);
     REQUIRE(archives.size() == 3);

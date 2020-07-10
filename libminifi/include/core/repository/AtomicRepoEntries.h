@@ -122,7 +122,7 @@ noexcept      : key_(std::move(other.key_)),
        * buffer, the size of timestamp, and the general
        * system word size
        */
-      uint64_t size() {
+      size_t size() {
         return buffer_.size();
       }
 

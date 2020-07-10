@@ -434,7 +434,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
             break;
           }
         } else {
-          if (stream->write(reinterpret_cast<uint8_t*>(charBuffer.data()), input.gcount()) < 0) {
+          if (stream->write(reinterpret_cast<uint8_t*>(charBuffer.data()), gsl::narrow<int>(input.gcount())) < 0) {
             invalidWrite = true;
             break;
           }

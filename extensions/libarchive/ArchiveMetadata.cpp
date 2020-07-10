@@ -60,10 +60,10 @@ rapidjson::Value ArchiveEntryMetadata::toJson(rapidjson::Document::AllocatorType
 
 void ArchiveEntryMetadata::loadJson(const rapidjson::Value& entryVal) {
     entryName.assign(entryVal["entry_name"].GetString());
-    entryType = entryVal["entry_type"].GetUint64();
-    entryPerm = entryVal["entry_perm"].GetUint64();
+    entryType = gsl::narrow<mode_t>(entryVal["entry_type"].GetUint64());
+    entryPerm = gsl::narrow<mode_t>(entryVal["entry_perm"].GetUint64());
     entrySize = entryVal["entry_size"].GetUint64();
-    entryUID = entryVal["entry_uid"].GetUint64();
+    entryUID = gsl::narrow<uid_t>(entryVal["entry_uid"].GetUint64());
     entryGID = entryVal["entry_gid"].GetUint64();
     entryMTime = entryVal["entry_mtime"].GetUint64();
     entryMTimeNsec = entryVal["entry_mtime_nsec"].GetInt64();
@@ -138,7 +138,7 @@ void ArchiveMetadata::loadJson(const rapidjson::Value& metadataDoc) {
         archiveName.assign(itr->value.GetString());
 
     archiveFormatName.assign(metadataDoc["archive_format_name"].GetString());
-    archiveFormat = metadataDoc["archive_format"].GetUint64();
+    archiveFormat = gsl::narrow<int>(metadataDoc["archive_format"].GetUint64());
 
     focusedEntry = metadataDoc["focused_entry"].GetString();
   

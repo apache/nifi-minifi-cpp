@@ -51,7 +51,7 @@ class CivetStream : public io::BaseStream {
    */
   void seek(uint64_t offset) override { }
 
-  const uint64_t getSize() const override {
+  const size_t getSize() const override {
     return BaseStream::readBuffer;
   }
 

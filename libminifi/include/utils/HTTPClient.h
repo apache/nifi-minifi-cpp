@@ -262,12 +262,10 @@ class HTTPRequestResponse {
 
 class BaseHTTPClient {
  public:
-  explicit BaseHTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) {
-    response_code = -1;
+  explicit BaseHTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) : response_code(-1) {
   }
 
-  BaseHTTPClient() {
-    response_code = -1;
+  BaseHTTPClient() : response_code(-1) {
   }
 
   virtual ~BaseHTTPClient() = default;
@@ -307,7 +305,7 @@ class BaseHTTPClient {
     return false;
   }
 
-  virtual int64_t &getResponseCode() {
+  virtual int64_t getResponseCode() const {
     return response_code;
   }
 

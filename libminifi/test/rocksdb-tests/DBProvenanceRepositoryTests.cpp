@@ -76,7 +76,7 @@ TEST_CASE("Test size limit", "[sizeLimitTest]") {
 
   REQUIRE(provdb.initialize(configuration));
 
-  uint64_t keyCount = 500;
+  size_t keyCount = 500;
 
   provisionRepo(provdb, keyCount, 10240);
 
@@ -99,7 +99,7 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
 
   REQUIRE(provdb.initialize(configuration));
 
-  uint64_t keyCount = 500;
+  size_t keyCount = 500;
 
   provisionRepo(provdb, keyCount / 2, 102400);
 

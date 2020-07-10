@@ -54,7 +54,7 @@ bool SiteToSitePeer::Open() {
   if (stream_->initialize() < 0)
     return false;
 
-  uint16_t data_size = sizeof MAGIC_BYTES;
+  int data_size = gsl::narrow<int>(sizeof MAGIC_BYTES);
 
   if (stream_->writeData(reinterpret_cast<uint8_t *>(const_cast<char*>(MAGIC_BYTES)), data_size) != data_size) {
     return false;

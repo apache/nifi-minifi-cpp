@@ -226,11 +226,11 @@ void Socket::closeStream() {
     socket_file_descriptor_ = INVALID_SOCKET;
   }
   if (total_written_ > 0) {
-    local_network_interface_.log_write(total_written_);
+    local_network_interface_.log_write(gsl::narrow<uint32_t>(total_written_.load()));
     total_written_ = 0;
   }
   if (total_read_ > 0) {
-    local_network_interface_.log_read(total_read_);
+    local_network_interface_.log_read(gsl::narrow<uint32_t>(total_read_.load()));
     total_read_ = 0;
   }
 }

@@ -337,7 +337,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     const std::vector<char> &response_body = client.getResponseBody();
     const std::vector<std::string> &response_headers = client.getHeaders();
 
-    int64_t http_code = client.getResponseCode();
+    int http_code = gsl::narrow<int>(client.getResponseCode());
     const char *content_type = client.getContentType();
     flowFile->addAttribute(STATUS_CODE, std::to_string(http_code));
     if (!response_headers.empty())

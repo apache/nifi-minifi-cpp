@@ -135,7 +135,7 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   bool DeSerialize(const uint8_t *buffer, const int bufferSize);
   //! DeSerialize
   bool DeSerialize(io::DataStream &stream) {
-    return DeSerialize(stream.getBuffer(), stream.getSize());
+    return DeSerialize(stream.getBuffer(), gsl::narrow<int>(stream.getSize()));
   }
   //! DeSerialize
   bool DeSerialize(std::string key);

@@ -59,7 +59,7 @@ class RocksDbStream : public io::BaseStream {
    */
   void seek(uint64_t offset) override;
 
-  const uint64_t getSize() const override {
+  const size_t getSize() const override {
     return size_;
   }
 
@@ -156,7 +156,7 @@ class RocksDbStream : public io::BaseStream {
 
   bool exists_;
 
-  int64_t offset_;
+  size_t offset_;
 
   std::string value_;
 

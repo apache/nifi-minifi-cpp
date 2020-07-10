@@ -111,7 +111,7 @@ void GenerateFlowFile::onSchedule(const std::shared_ptr<core::ProcessContext> &c
   }
 
   if (!uniqueFlowFile_) {
-    data_.resize(fileSize_);
+    data_.resize(gsl::narrow<size_t>(fileSize_));
     generateData(data_, textData_);
   }
 }
@@ -126,7 +126,7 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
     }
     if (fileSize_ > 0) {
       if (uniqueFlowFile_) {
-        std::vector<char> data(fileSize_);
+        std::vector<char> data(gsl::narrow<size_t>(fileSize_));
         generateData(data, textData_);
         GenerateFlowFile::WriteCallback callback(std::move(data));
         session->write(flowFile, &callback);

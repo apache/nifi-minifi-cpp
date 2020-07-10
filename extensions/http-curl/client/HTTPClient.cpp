@@ -288,7 +288,9 @@ bool HTTPClient::submit() {
   if (callback == nullptr) {
     read_callback_.close();
   }
+  long http_code;
   curl_easy_getinfo(http_session_, CURLINFO_RESPONSE_CODE, &http_code);
+  http_code_ = http_code;
   curl_easy_getinfo(http_session_, CURLINFO_CONTENT_TYPE, &content_type_str_);
   if (res == CURLE_OPERATION_TIMEDOUT) {
     logger_->log_error("HTTP operation timed out, with absolute timeout %dms\n", absoluteTimeout);
@@ -306,8 +308,8 @@ CURLcode HTTPClient::getResponseResult() {
   return res;
 }
 
-int64_t &HTTPClient::getResponseCode() {
-  return http_code;
+int64_t HTTPClient::getResponseCode() const {
+  return http_code_;
 }
 
 const char *HTTPClient::getContentType() {

@@ -614,13 +614,3 @@ TEST_CASE("TestRPGWithoutHostInvalidPort", "[TestRPG5]") {
 TEST_CASE("TestRPGValid", "[TestRPG6]") {
   testRPGBypass("", "8080", "8080", false);
 }
-
-int fileSize(const char *add) {
-  std::ifstream mySource;
-  mySource.open(add, std::ios_base::binary);
-  mySource.seekg(0, std::ios_base::end);
-  int size = mySource.tellg();
-  mySource.close();
-  return size;
-}
-

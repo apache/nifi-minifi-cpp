@@ -137,7 +137,7 @@ class CRCStream : public BaseStream {
    */
   int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE) override;
 
-  const uint64_t getSize() const override { return child_stream_->getSize(); }
+  const size_t getSize() const override { return child_stream_->getSize(); }
 
   void closeStream() override { child_stream_->closeStream(); }
 
@@ -222,7 +222,7 @@ template<typename T>
 int CRCStream<T>::readData(uint8_t *buf, int buflen) {
   int ret = child_stream_->read(buf, buflen);
   if (ret > 0) {
-    crc_ = crc32(crc_, buf, ret);
+    crc_ = crc32(gsl::narrow<uLong>(crc_), buf, ret);
   }
   return ret;
 }
@@ -242,7 +242,7 @@ template<typename T>
 int CRCStream<T>::writeData(uint8_t *value, int size) {
   int ret = child_stream_->write(value, size);
   if (ret > 0) {
-    crc_ = crc32(crc_, value, ret);
+    crc_ = crc32(gsl::narrow<uLong>(crc_), value, ret);
   }
   return ret;
 }
@@ -252,7 +252,7 @@ void CRCStream<T>::reset() {
 }
 template<typename T>
 void CRCStream<T>::updateCRC(uint8_t *buffer, uint32_t length) {
-  crc_ = crc32(crc_, buffer, length);
+  crc_ = crc32(gsl::narrow<uLong>(crc_), buffer, length);
 }
 
 template<typename T>

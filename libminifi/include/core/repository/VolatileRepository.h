@@ -65,7 +65,7 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
         current_size_(0),
         current_index_(0),
         max_count_(10000),
-        max_size_(maxPartitionBytes * 0.75),
+        max_size_(static_cast<size_t>(maxPartitionBytes * 0.75)),
         logger_(logging::LoggerFactory<VolatileRepository>::getLogger()) {
     purge_required_ = false;
   }
@@ -214,7 +214,7 @@ bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configu
     strstream << Configure::nifi_volatile_repository_options << getName() << "." << volatile_repo_max_count;
     if (configure->get(strstream.str(), value)) {
       if (core::Property::StringToInt(value, max_cnt)) {
-        max_count_ = max_cnt;
+        max_count_ = gsl::narrow<uint32_t>(max_cnt);
       }
     }
 
@@ -227,7 +227,7 @@ bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configu
         if (max_bytes <= 0) {
           max_size_ = (std::numeric_limits<uint32_t>::max)();
         } else {
-          max_size_ = max_bytes;
+          max_size_ = gsl::narrow<size_t>(max_bytes);
         }
       }
     }

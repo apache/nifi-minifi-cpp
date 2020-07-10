@@ -112,11 +112,10 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
 
     std::ifstream ifs(utils::file::FileUtils::concat_path(dir2, FOCUSED_FILE), std::ios::in | std::ios::binary | std::ios::ate);
 
-    std::ifstream::pos_type size = ifs.tellg();
-    int64_t bufsize {size};
+    size_t size = gsl::narrow<size_t>(ifs.tellg());
     ifs.seekg(0, std::ios::beg);
-    char *content = new char[bufsize];
-    ifs.read(content, bufsize);
+    char *content = new char[size];
+    ifs.read(content, size);
 
     REQUIRE(size == strlen(FOCUSED_CONTENT));
     REQUIRE(memcmp(content, FOCUSED_CONTENT, size) == 0);

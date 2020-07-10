@@ -717,25 +717,24 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
     uint64_t len = 0;
 
-    uint64_t content_size = 0;
-
     if(ff != NULL) {
-      content_size = ff->size;
+      int content_size = (int) ff->size;
 
       uint8_t * content_buf = NULL;
 
       if(content_size > 0 && ff->crp != NULL) {
         content_buf = (uint8_t*)malloc(content_size*sizeof(uint8_t));
-        len = get_content(ff, content_buf, content_size);
-        if(len <= 0) {
+        int len_as_int = get_content(ff, content_buf, content_size);
+        if (len_as_int <= 0) {
           return -2;
         }
+        len = len_as_int;
         ret = write_uint64t(transaction, len);
         if (ret != 8) {
           logc(debug, "ret != 8");
           return -1;
         }
-        writeData(transaction, content_buf, len);
+        writeData(transaction, content_buf, len_as_int);
       }
 
     } else if (packet->payload_ != NULL && strlen(packet->payload_) > 0) {
@@ -746,7 +745,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
         return -1;
       }
 
-      ret = writeData(transaction, (uint8_t *)(packet->payload_), len);
+      ret = writeData(transaction, (uint8_t *)(packet->payload_), (int) len);
       if (ret != (int64_t)len) {
         logc(debug, "ret != len");
         return -1;

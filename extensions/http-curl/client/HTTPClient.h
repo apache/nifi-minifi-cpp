@@ -117,7 +117,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   CURLcode getResponseResult();
 
-  int64_t &getResponseCode() override;
+  int64_t getResponseCode() const override;
 
   const char *getContentType() override;
 
@@ -269,7 +269,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   struct curl_slist *headers_{nullptr};
   HTTPReadCallback *callback{nullptr};
   HTTPUploadCallback *write_callback_{nullptr};
-  int64_t http_code{0};
+  int64_t http_code_{0};
   ByteOutputCallback read_callback_{INT_MAX};
   utils::HTTPHeaderResponse header_response_{-1};
 

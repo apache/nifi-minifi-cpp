@@ -27,6 +27,7 @@
 
 #ifdef WIN32
 #include <winsock2.h>
+
 #else
 #include <arpa/inet.h>
 #endif
@@ -269,7 +270,7 @@ typedef struct {
   //org::apache::nifi::minifi::io::BaseStream* _stream;
   cstream * _stream;
 
-  uint64_t _crc;
+  uLong _crc;
 
   char _uuid_str[37];
 
@@ -367,7 +368,7 @@ static int write_UTF_len(CTransaction * transaction, const char * str, size_t le
 
   int ret;
   if (!widen) {
-    uint16_t shortlen = len;
+    uint16_t shortlen = (uint16_t)len;
     ret = write_uint16t(transaction, shortlen);
   } else {
     ret = write_uint32t(transaction, len);
@@ -380,7 +381,7 @@ static int write_UTF_len(CTransaction * transaction, const char * str, size_t le
   const uint8_t *underlyingPtr = (const uint8_t *)str;
 
   if (!widen) {
-    uint16_t short_length = len;
+    uint16_t short_length = (uint16_t)len;
     ret = writeData(transaction, underlyingPtr, short_length);
   } else {
     ret = writeData(transaction, underlyingPtr, len);

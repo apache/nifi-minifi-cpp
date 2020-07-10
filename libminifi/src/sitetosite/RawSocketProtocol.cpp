@@ -376,7 +376,7 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
         tearDown();
         return false;
       }
-      PeerStatus status(std::make_shared<Peer>(port_id_, host, port, secure), count, true);
+      PeerStatus status(std::make_shared<Peer>(port_id_, host, gsl::narrow<uint16_t>(port), secure != 0), count, true);
       peers.push_back(std::move(status));
       logging::LOG_TRACE(logger_) << "Site2Site Peer host " << host << " port " << port << " Secure " << std::to_string(secure);
     }
