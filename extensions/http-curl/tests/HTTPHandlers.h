@@ -219,7 +219,7 @@ class FlowFileResponder : public ServerAwareHandler {
 
       auto flow = std::make_shared<FlowObj>();
 
-      for (int i = 0; i < num_attributes; i++) {
+      for (uint32_t i = 0; i < num_attributes; i++) {
         std::string name, value;
         read = stream.readUTF(name, true);
         if(!isServerRunning())return false;
@@ -235,10 +235,10 @@ class FlowFileResponder : public ServerAwareHandler {
       assert(read > 0); total_size += read;
 
       total_size += length;
-      flow->data.resize(length);
+      flow->data.resize(gsl::narrow<size_t>(length));
       flow->total_size = total_size;
 
-      read = stream.readData(flow->data.data(), length);
+      read = stream.readData(flow->data.data(), gsl::narrow<int>(length));
       if(!isServerRunning())return false;
       assert(read == length);
 
@@ -267,7 +267,6 @@ class FlowFileResponder : public ServerAwareHandler {
 
     if (flow_files_feed_->size_approx() > 0) {
       std::shared_ptr<FlowObj> flowobj;
-      uint8_t buf[1];
       std::vector<std::shared_ptr<FlowObj>> flows;
       uint64_t total = 0;
 
@@ -292,7 +291,7 @@ class FlowFileResponder : public ServerAwareHandler {
         }
         uint64_t length = flow->data.size();
         stream.write(length);
-        stream.writeData(flow->data.data(), length);
+        stream.writeData(flow->data.data(), gsl::narrow<int>(length));
       }
     } else {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nConnection: "

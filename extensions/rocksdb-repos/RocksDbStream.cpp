@@ -90,7 +90,7 @@ int RocksDbStream::readData(std::vector<uint8_t> &buf, int buflen) {
     throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
   }
 
-  if (buf.size() < buflen) {
+  if (buf.size() < gsl::narrow<size_t>(buflen)) {
     buf.resize(buflen);
   }
   int ret = readData(buf.data(), buflen);
@@ -103,16 +103,16 @@ int RocksDbStream::readData(std::vector<uint8_t> &buf, int buflen) {
 
 int RocksDbStream::readData(uint8_t *buf, int buflen) {
   if (!IsNullOrEmpty(buf) && exists_) {
-    int amtToRead = buflen;
+    size_t amtToRead = gsl::narrow<size_t>(buflen);
     if (offset_ >= value_.size()) {
       return 0;
     }
-    if (buflen > value_.size() - offset_) {
+    if (amtToRead > value_.size() - offset_) {
       amtToRead = value_.size() - offset_;
     }
     std::memcpy(buf, value_.data() + offset_, amtToRead);
     offset_ += amtToRead;
-    return amtToRead;
+    return gsl::narrow<int>(amtToRead);
   } else {
     return -1;
   }

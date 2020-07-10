@@ -143,7 +143,7 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
     if (logPayload && flow->getSize() <= 1024 * 1024) {
       message << "\n" << "Payload:" << "\n";
-      ReadCallback callback(logger_, flow->getSize());
+      ReadCallback callback(logger_, gsl::narrow<size_t>(flow->getSize()));
       session->read(flow, &callback);
 
       std::string printable_payload;

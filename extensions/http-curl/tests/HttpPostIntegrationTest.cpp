@@ -18,6 +18,7 @@
 
 #undef NDEBUG
 #include <cassert>
+#include <cstdio>
 #include <string>
 #include <iostream>
 #include "InvokeHTTP.h"
@@ -62,7 +63,7 @@ public:
   }
 
   void cleanup() override {
-    unlink(ss.str().c_str());
+    std::remove(ss.str().c_str());
   }
 
   void runAssertions() override {

@@ -35,8 +35,7 @@
 
 class ListenHTTPTestsFixture {
  public:
-  ListenHTTPTestsFixture()
-   : tmp_dir_format(strdup("/tmp/gt.XXXXXX")) {
+  ListenHTTPTestsFixture() {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -50,6 +49,7 @@ class ListenHTTPTestsFixture {
     LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
 
     // Create temporary directories
+    char tmp_dir_format[] = "/tmp/gt.XXXXXX";
     tmp_dir = testController.createTempDirectory(tmp_dir_format);
     REQUIRE(!tmp_dir.empty());
 
@@ -92,7 +92,6 @@ class ListenHTTPTestsFixture {
   }
 
   virtual ~ListenHTTPTestsFixture() {
-    free(tmp_dir_format);
     LogTestController::getInstance().reset();
   }
 
@@ -169,7 +168,6 @@ class ListenHTTPTestsFixture {
   }
 
  protected:
-  char* tmp_dir_format;
   std::string tmp_dir;
   TestController testController;
   std::shared_ptr<TestPlan> plan;

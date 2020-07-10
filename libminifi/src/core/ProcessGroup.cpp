@@ -431,7 +431,7 @@ void ProcessGroup::drainConnections() {
 std::size_t ProcessGroup::getTotalFlowFileCount() const {
   std::size_t sum = 0;
   for (auto& conn : connections_) {
-    sum += conn->getQueueSize();
+    sum += gsl::narrow<std::size_t>(conn->getQueueSize());
   }
 
   for (const ProcessGroup* childGroup : child_process_groups_) {

@@ -219,7 +219,7 @@ std::shared_ptr<core::controller::ControllerServiceNode> TestPlan::addController
 
 bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value, bool dynamic) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
-  int32_t i = 0;
+  size_t i = 0;
   logger_->log_info("Attempting to set property %s %s for %s", prop, value, proc->getName());
   for (i = 0; i < processor_queue_.size(); i++) {
     if (processor_queue_.at(i) == proc) {
@@ -227,7 +227,7 @@ bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const st
     }
   }
 
-  if (i >= processor_queue_.size() || i < 0 || i >= processor_contexts_.size()) {
+  if (i >= processor_queue_.size() || i >= processor_contexts_.size()) {
     return false;
   }
 
@@ -289,7 +289,7 @@ bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::P
     processor->onTrigger(context, current_session);
   }
   current_session->commit();
-  return location + 1 < processor_queue_.size();
+  return gsl::narrow<size_t>(location + 1) < processor_queue_.size();
 }
 
 bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
@@ -313,7 +313,7 @@ bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core
     processor->onTrigger(context, current_session);
   }
   current_session->commit();
-  return location + 1 < processor_queue_.size();
+  return gsl::narrow<size_t>(location + 1) < processor_queue_.size();
 }
 
 std::set<std::shared_ptr<provenance::ProvenanceEventRecord>> TestPlan::getProvenanceRecords() {

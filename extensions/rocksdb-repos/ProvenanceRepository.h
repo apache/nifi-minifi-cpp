@@ -92,7 +92,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     // Rocksdb write buffers act as a log of database operation: grow till reaching the limit, serialized after
     // This shouldn't go above 16MB and the configured total size of the db should cap it as well
     int64_t max_buffer_size = 16 << 20;
-    options.write_buffer_size = std::min(max_buffer_size, max_partition_bytes_);
+    options.write_buffer_size = gsl::narrow<size_t>(std::min(max_buffer_size, max_partition_bytes_));
     options.max_write_buffer_number = 4;
     options.min_write_buffer_number_to_merge = 1;
 

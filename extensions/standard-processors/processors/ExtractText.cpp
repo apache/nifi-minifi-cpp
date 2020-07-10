@@ -41,8 +41,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-#define MAX_BUFFER_SIZE 4096
-#define MAX_CAPTURE_GROUP_SIZE 1024
+constexpr size_t MAX_BUFFER_SIZE = 4096;
+constexpr int MAX_CAPTURE_GROUP_SIZE = 1024;
 
 core::Property ExtractText::Attribute(core::PropertyBuilder::createProperty("Attribute")->withDescription("Attribute to set from content")->build());
 
@@ -132,7 +132,8 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
 
   while (read_size < size_limit) {
     // Don't read more than config limit or the size of the buffer
-    ret = stream->readData(buffer_, std::min<uint64_t>(size_limit - read_size, buffer_.size()));
+    int length = gsl::narrow<int>(std::min<uint64_t>(size_limit - read_size, buffer_.size()));
+    ret = stream->readData(buffer_, length);
 
     if (ret < 0) {
       return -1;  // Stream error
@@ -161,8 +162,9 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
     bool repeatingcapture;
     ctx_->getProperty(EnableRepeatingCaptureGroup.getName(), repeatingcapture);
 
-    int maxCaptureSize;
-    ctx_->getProperty(MaxCaptureGroupLen.getName(), maxCaptureSize);
+    int maxCaptureSizeProperty;
+    ctx_->getProperty(MaxCaptureGroupLen.getName(), maxCaptureSizeProperty);
+    size_t maxCaptureSize = gsl::narrow<size_t>(maxCaptureSizeProperty);
 
     std::string contentStr = contentStream.str();
 
@@ -217,7 +219,7 @@ ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile
     : flowFile_(std::move(flowFile)),
       ctx_(ctx),
       logger_(std::move(lgr)) {
-  buffer_.resize(std::min<uint64_t>(flowFile_->getSize(), MAX_BUFFER_SIZE));
+  buffer_.resize(std::min(gsl::narrow<size_t>(flowFile_->getSize()), MAX_BUFFER_SIZE));
 }
 
 }  // namespace processors

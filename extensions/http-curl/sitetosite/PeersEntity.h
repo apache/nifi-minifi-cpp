@@ -88,7 +88,7 @@ class PeersEntity {
 
           if (peer.HasMember("flowFileCount")) {
             if (peer["flowFileCount"].IsNumber()) {
-              flowFileCount = peer["flowFileCount"].GetInt64();
+              flowFileCount = gsl::narrow<int>(peer["flowFileCount"].GetInt64());
             } else {
               logger->log_debug("Could not parse flowFileCount, so we're going to continue without it");
             }

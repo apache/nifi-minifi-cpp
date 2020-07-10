@@ -59,7 +59,7 @@ TEST_CASE("Test StandardControllerServiceNode nullPtr", "[cs1]") {
 
   try {
     std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(nullptr, "ID", std::make_shared<minifi::Configure>());
-  } catch (minifi::Exception &ex) {
+  } catch (const minifi::Exception &) {
     return;
   }
 

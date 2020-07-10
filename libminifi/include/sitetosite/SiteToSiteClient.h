@@ -292,10 +292,10 @@ class WriteCallback : public OutputStreamCallback {
   // void process(std::ofstream *stream) {
   int64_t process(std::shared_ptr<io::BaseStream> stream) {
     uint8_t buffer[16384];
-    int len = _packet->_size;
-    int total = 0;
+    uint64_t len = _packet->_size;
+    uint64_t total = 0;
     while (len > 0) {
-      int size = len < 16384 ? len : 16384;
+      int size = len < 16384 ? static_cast<int>(len) : 16384;
       int ret = _packet->transaction_->getStream().readData(buffer, size);
       if (ret != size) {
         logging::LOG_ERROR(_packet->logger_reference_) << "Site2Site Receive Flow Size " << size << " Failed " << ret << ", should have received " << len;
@@ -305,7 +305,7 @@ class WriteCallback : public OutputStreamCallback {
       len -= size;
       total += size;
     }
-    logging::LOG_INFO(_packet->logger_reference_) << "Received " << len << " from stream";
+    logging::LOG_INFO(_packet->logger_reference_) << "Received " << total << " from stream";
     return len;
   }
 };

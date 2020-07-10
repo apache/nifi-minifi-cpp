@@ -71,8 +71,11 @@ class PersistableKeyValueStoreServiceTestsFixture {
     char format[] = "/var/tmp/state.XXXXXX";
     state_dir = testController.createTempDirectory(format);
     REQUIRE(false == state_dir.empty());
+#ifdef WIN32
+    REQUIRE(0 == _chdir(state_dir.c_str()));
+#else
     REQUIRE(0 == chdir(state_dir.c_str()));
-
+#endif
     loadYaml();
   }
 

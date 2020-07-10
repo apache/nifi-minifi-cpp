@@ -23,6 +23,8 @@
 #include <cstdint>
 #include <vector>
 #include "EndianCheck.h"
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -42,7 +44,7 @@ class DataStream {
   /**
    * Constructor
    **/
-  explicit DataStream(const uint8_t *buf, const uint32_t buflen) {
+  explicit DataStream(const uint8_t *buf, const int buflen) {
     writeData(const_cast<uint8_t*>(buf), buflen);
   }
 
@@ -53,7 +55,7 @@ class DataStream {
   }
 
   virtual void seek(uint64_t offset) {
-    readBuffer += offset;
+    readBuffer += gsl::narrow<uint32_t>(offset);
   }
 
   virtual void closeStream() { }
@@ -108,7 +110,7 @@ class DataStream {
    * Retrieve size of data stream
    * @return size of data stream
    **/
-  virtual const uint64_t getSize() const {
+  virtual const size_t getSize() const {
     return buffer.size();
   }
 

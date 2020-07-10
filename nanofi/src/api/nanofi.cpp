@@ -50,7 +50,7 @@ file_buffer file_to_buffer(const char *path) {
   NULL_CHECK(fb, path);
   FILE *fileptr;
   uint8_t *buffer;
-  uint64_t filelen;
+  size_t filelen;
 
   fileptr = fopen(path, "rb");
   NULL_CHECK(fb, fileptr);
@@ -321,7 +321,7 @@ flow_file_record * write_to_flow(const char * buff, size_t count, processor_cont
         return NULL;
     }
 
-    int ret = fwrite(buff, 1, count, ffp);
+    size_t ret = fwrite(buff, 1, count, ffp);
     if (ret < count) {
         fclose(ffp);
         free_flowfile(ffr);
@@ -419,7 +419,7 @@ int get_all_attributes(const flow_file_record* ff, attribute_set *target) {
   NULL_CHECK(0, ff, target);
   NULL_CHECK(0, ff->attributes, target->attributes);
   auto attribute_map = static_cast<string_map*>(ff->attributes);
-  int i = 0;
+  size_t i = 0;
   for (const auto& kv : *attribute_map) {
     if (i >= target->size) {
       break;
@@ -429,7 +429,7 @@ int get_all_attributes(const flow_file_record* ff, attribute_set *target) {
     target->attributes[i].value_size = kv.second.size();
     ++i;
   }
-  return i;
+  return gsl::narrow<int>(i);
 }
 
 /**
@@ -442,7 +442,7 @@ int8_t remove_attribute(flow_file_record *ff, const char *key) {
   NULL_CHECK(-1, ff, key);
   NULL_CHECK(-1, ff->attributes);
   auto attribute_map = static_cast<string_map*>(ff->attributes);
-  return attribute_map->erase(key) - 1;  // erase by key returns the number of elements removed (0 or 1)
+  return gsl::narrow<int8_t>(attribute_map->erase(key)) - 1;  // erase by key returns the number of elements removed (0 or 1)
 }
 
 int get_content(const flow_file_record* ff, uint8_t* target, int size) {
@@ -455,7 +455,7 @@ int get_content(const flow_file_record* ff, uint8_t* target, int size) {
     return stream->read(target, size);
   } else {
     file_buffer fb = file_to_buffer(ff->contentLocation);
-    size_t copy_size = size < fb.file_len ? size : fb.file_len;
+    size_t copy_size = size < fb.file_len ? size : gsl::narrow<size_t>(fb.file_len);
     memcpy(target, fb.buffer, copy_size*sizeof(uint8_t));
     free(fb.buffer);
     return copy_size;
@@ -499,7 +499,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
     } else {
       file_buffer fb = file_to_buffer(ff->contentLocation);
       stream = std::make_shared<minifi::io::DataStream>();
-      stream->writeData(fb.buffer, fb.file_len);
+      stream->writeData(fb.buffer, gsl::narrow<int>(fb.file_len));
       free(fb.buffer);
     }
   } else {
@@ -703,7 +703,7 @@ flow_file_record *invoke_ff(standalone_processor* proc, const flow_file_record *
     } else {
       ff_data->content_stream = std::make_shared<minifi::io::DataStream>();
       file_buffer fb = file_to_buffer(input_ff->contentLocation);
-      ff_data->content_stream->writeData(fb.buffer, fb.file_len);
+      ff_data->content_stream->writeData(fb.buffer, gsl::narrow<int>(fb.file_len));
       free(fb.buffer);
     }
 
@@ -730,7 +730,7 @@ flow_file_record *invoke_chunk(standalone_processor* proc, uint8_t* buf, uint64_
 
   auto ff_data = std::make_shared<flowfile_input_params>();
   ff_data->content_stream = std::make_shared<minifi::io::DataStream>();
-  ff_data->content_stream->writeData(buf, size);
+  ff_data->content_stream->writeData(buf, gsl::narrow<int>(size));
 
   plan->runNextProcessor(nullptr, ff_data);
   while (plan->runNextProcessor()) {

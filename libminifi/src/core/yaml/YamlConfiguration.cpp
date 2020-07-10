@@ -454,7 +454,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, cor
   reportTask->setPortUUID(port_uuid);
 
   if (core::Property::StringToInt(batchSizeStr, lvalue)) {
-    reportTask->setBatchSize(lvalue);
+    reportTask->setBatchSize(gsl::narrow<int>(lvalue));
   }
 
   reportTask->initialize();
@@ -479,7 +479,7 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
           try {
             checkRequiredField(&controllerServiceNode, "class", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
             type = controllerServiceNode["class"].as<std::string>();
-          } catch (const std::invalid_argument &e) {
+          } catch (const std::invalid_argument &) {
             checkRequiredField(&controllerServiceNode, "type", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
             type = controllerServiceNode["type"].as<std::string>();
             logger_->log_debug("Using type %s for controller service node", type);
@@ -514,7 +514,7 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
           }
           controller_services_->put(id, controller_service_node);
           controller_services_->put(name, controller_service_node);
-        } catch (YAML::InvalidNode &in) {
+        } catch (YAML::InvalidNode &) {
           throw Exception(ExceptionType::GENERAL_EXCEPTION, "Name, id, and class must be specified for controller services");
         }
       }

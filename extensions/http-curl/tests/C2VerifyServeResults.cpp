@@ -17,6 +17,7 @@
  */
 
 #undef NDEBUG
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <sstream>
@@ -46,7 +47,7 @@ public:
   }
 
   void cleanup() override {
-    unlink(ss.str().c_str());
+    std::remove(ss.str().c_str());
   }
 
   void runAssertions() override {

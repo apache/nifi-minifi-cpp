@@ -42,8 +42,6 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-#define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
-
 template<typename T>
 class CRCStream : public BaseStream {
  public:
@@ -139,7 +137,7 @@ class CRCStream : public BaseStream {
    */
   int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE) override;
 
-  const uint64_t getSize() const override { return child_stream_->getSize(); }
+  const size_t getSize() const override { return child_stream_->getSize(); }
 
   void closeStream() override { child_stream_->closeStream(); }
 
@@ -183,7 +181,7 @@ class CRCStream : public BaseStream {
     return readData(reinterpret_cast<uint8_t*>(buf.data()), sizeof(t));
   }
 
-  uint64_t crc_;
+  uLong crc_;
   T *child_stream_;
   bool disable_encoding_;
 };
@@ -197,7 +195,7 @@ CRCStream<T>::CRCStream(T *child_stream)
 
 template<typename T>
 CRCStream<T>::CRCStream(T *child_stream, uint64_t initial_crc)
-    : crc_(initial_crc),
+    : crc_(gsl::narrow<uLong>(initial_crc)),
       child_stream_(child_stream),
       disable_encoding_(false) {
 }
@@ -261,7 +259,7 @@ template<typename T>
 int CRCStream<T>::write(uint64_t base_value, bool is_little_endian) {
   if (disable_encoding_)
     is_little_endian = false;
-  const uint64_t value = is_little_endian == 1 ? htonll_r(base_value) : base_value;
+  const uint64_t value = is_little_endian == 1 ? byteSwap(base_value) : base_value;
   uint8_t bytes[sizeof value];
   std::copy(static_cast<const char*>(static_cast<const void*>(&value)), static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value, bytes);
   return writeData(bytes, sizeof value);
@@ -271,7 +269,7 @@ template<typename T>
 int CRCStream<T>::write(uint32_t base_value, bool is_little_endian) {
   if (disable_encoding_)
     is_little_endian = false;
-  const uint32_t value = is_little_endian ? htonl(base_value) : base_value;
+  const uint32_t value = is_little_endian ? byteSwap(base_value) : base_value;
   uint8_t bytes[sizeof value];
   std::copy(static_cast<const char*>(static_cast<const void*>(&value)), static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value, bytes);
   return writeData(bytes, sizeof value);
@@ -281,7 +279,7 @@ template<typename T>
 int CRCStream<T>::write(uint16_t base_value, bool is_little_endian) {
   if (disable_encoding_)
     is_little_endian = false;
-  const uint16_t value = is_little_endian == 1 ? htons(base_value) : base_value;
+  const uint16_t value = is_little_endian == 1 ? byteSwap(base_value) : base_value;
   uint8_t bytes[sizeof value];
   std::copy(static_cast<const char*>(static_cast<const void*>(&value)), static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value, bytes);
   return writeData(bytes, sizeof value);

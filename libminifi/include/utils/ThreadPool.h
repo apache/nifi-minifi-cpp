@@ -229,7 +229,7 @@ class ThreadPool {
   bool isTaskRunning(const std::string &identifier) const {
     try {
       return task_status_.at(identifier) == true;
-    } catch (const std::out_of_range &e) {
+    } catch (const std::out_of_range &) {
       return false;
     }
   }

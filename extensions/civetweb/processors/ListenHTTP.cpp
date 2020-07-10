@@ -467,7 +467,7 @@ int64_t ListenHTTP::WriteCallback::process(std::shared_ptr<io::BaseStream> strea
     }
 
     // Transfer buffer data to the output stream
-    stream->write(&buf[0], rlen);
+    stream->write(&buf[0], gsl::narrow<int>(rlen));
 
     nlen += rlen;
   }

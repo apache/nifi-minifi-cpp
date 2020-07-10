@@ -39,7 +39,7 @@ void generateData(std::vector<char>& data) {
 }
 
 void provisionRepo(minifi::provenance::ProvenanceRepository& repo, size_t number_of_records, size_t record_size) {
-  for (int i = 0; i < number_of_records; ++i) {
+  for (size_t i = 0; i < number_of_records; ++i) {
     std::vector<char> v(record_size);
     generateData(v);
     REQUIRE(repo.Put(std::to_string(i), reinterpret_cast<const uint8_t*>(v.data()), v.size()));
@@ -76,7 +76,7 @@ TEST_CASE("Test size limit", "[sizeLimitTest]") {
 
   REQUIRE(provdb.initialize(configuration));
 
-  uint64_t keyCount = 500;
+  size_t keyCount = 500;
 
   provisionRepo(provdb, keyCount, 10240);
 
@@ -99,7 +99,7 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
 
   REQUIRE(provdb.initialize(configuration));
 
-  uint64_t keyCount = 500;
+  size_t keyCount = 500;
 
   provisionRepo(provdb, keyCount / 2, 102400);
 

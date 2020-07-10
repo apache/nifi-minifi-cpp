@@ -52,7 +52,7 @@ token_list tokenize_string_tailfile(const char * str, char delim);
  * @param begin the beginning of the token
  * @param len the length of the token
  */
-void add_token_to_list(token_list * tks, const char * begin, uint64_t len);
+void add_token_to_list(token_list * tks, const char * begin, size_t len);
 
 /**
  * Deallocate one token node

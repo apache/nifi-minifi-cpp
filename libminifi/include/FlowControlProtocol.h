@@ -35,6 +35,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Property.h"
 #include "properties/Configure.h"
+#include "utils/file/FileUtils.h"
 
 namespace org {
 namespace apache {
@@ -186,7 +187,7 @@ class FlowControlProtocol {
   // Destructor
   virtual ~FlowControlProtocol() {
     stop();
-    if (_socket) close(_socket);
+    if (_socket) utils::file::FileUtils::close(_socket);
   }
 
  public:

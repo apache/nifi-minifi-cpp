@@ -51,7 +51,7 @@ class CivetStream : public io::BaseStream {
    */
   void seek(uint64_t offset) override { }
 
-  const uint64_t getSize() const override {
+  const size_t getSize() const override {
     return BaseStream::readBuffer;
   }
 
@@ -66,7 +66,7 @@ class CivetStream : public io::BaseStream {
       throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
     }
 
-    if (buf.size() < buflen) {
+    if (buf.size() < gsl::narrow<size_t>(buflen)) {
       buf.resize(buflen);
     }
     int ret = readData(buf.data(), buflen);

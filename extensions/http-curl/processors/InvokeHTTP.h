@@ -123,7 +123,7 @@ class InvokeHTTP : public core::Processor {
    * @param statuscode http response code.
    */
   void route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session,
-             const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int statusCode);
+             const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int64_t statusCode);
   /**
    * Determine if we should emit a new flowfile based on our activity
    * @param method method type

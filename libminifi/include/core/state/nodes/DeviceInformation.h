@@ -142,9 +142,6 @@ class Device {
 
       DWORD dwRetVal = 0;
 
-      std::hash<std::string> hash_fn;
-      std::set<std::string> macs;
-
       ULONG adapterLen = sizeof(IP_ADAPTER_INFO);
       adapterPtr = reinterpret_cast<IP_ADAPTER_INFO*>(malloc(sizeof(IP_ADAPTER_INFO)));
       if (adapterPtr == NULL) {

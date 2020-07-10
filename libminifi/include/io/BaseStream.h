@@ -176,7 +176,7 @@ class BaseStream : public DataStream, public Serializable {
    **/
   int read(uint64_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE) override;
 
-  const uint64_t getSize() const override {
+  const size_t getSize() const override {
     if (LIKELY(composable_stream_ == this)) {
       return buffer.size();
     } else {

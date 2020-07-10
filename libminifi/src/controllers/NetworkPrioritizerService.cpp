@@ -156,11 +156,11 @@ std::vector<std::string> NetworkPrioritizerService::getInterfaces(uint32_t size 
 
 bool NetworkPrioritizerService::sufficient_tokens(uint32_t size) {
   std::lock_guard<std::mutex> lock(token_mutex_);
-  auto ms = std::chrono::system_clock::now().time_since_epoch() / std::chrono::milliseconds(1);
+  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
   auto diff = ms - timestamp_;
   timestamp_ = ms;
   if (diff > 0) {
-    tokens_ += diff * tokens_per_ms;
+    tokens_ += gsl::narrow<uint32_t>(diff * tokens_per_ms);
   }
   if (bytes_per_token_ > 0 && size > 0) {
     if (tokens_ * bytes_per_token_ >= size) {
@@ -197,9 +197,9 @@ void NetworkPrioritizerService::onEnable() {
       logger_->log_trace("Max throughput is %d", max_throughput_);
       if (max_throughput_ < 1000) {
         bytes_per_token_ = 1;
-        tokens_ = max_throughput_;
+        tokens_ = gsl::narrow<uint32_t>(max_throughput_);
       } else {
-        bytes_per_token_ = max_throughput_ / 1000;
+        bytes_per_token_ = gsl::narrow<uint32_t>(max_throughput_ / 1000);
       }
     }
 

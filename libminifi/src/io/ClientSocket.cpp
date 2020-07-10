@@ -39,6 +39,7 @@
 #include <utils/Deleters.h>
 #include "io/validation.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/file/FileUtils.h"
 #include "utils/GeneralUtils.h"
 
 namespace util = org::apache::nifi::minifi::utils;
@@ -226,11 +227,11 @@ void Socket::closeStream() {
     socket_file_descriptor_ = INVALID_SOCKET;
   }
   if (total_written_ > 0) {
-    local_network_interface_.log_write(total_written_);
+    local_network_interface_.log_write(gsl::narrow<uint32_t>(total_written_.load()));
     total_written_ = 0;
   }
   if (total_read_ > 0) {
-    local_network_interface_.log_read(total_read_);
+    local_network_interface_.log_read(gsl::narrow<uint32_t>(total_read_.load()));
     total_read_ = 0;
   }
 }
@@ -512,7 +513,7 @@ int Socket::writeData(uint8_t *value, int size) {
     ret = send(fd, reinterpret_cast<const char*>(value) + bytes, size - bytes, 0);
     // check for errors
     if (ret <= 0) {
-      close(fd);
+      utils::file::FileUtils::close(fd);
       logger_->log_error("Could not send to %d, error: %s", fd, get_last_socket_error_message());
       return ret;
     }
@@ -609,7 +610,7 @@ int Socket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
     if (fd < 0) {
       if (listeners_ <= 0) {
         logger_->log_debug("fd %d close %i", fd, buflen);
-        close(socket_file_descriptor_);
+        utils::file::FileUtils::close(socket_file_descriptor_);
       }
       return -1;
     }

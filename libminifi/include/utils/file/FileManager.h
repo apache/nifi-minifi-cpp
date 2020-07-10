@@ -63,7 +63,7 @@ class FileManager {
 
   ~FileManager() {
     for (auto file : unique_files_) {
-      unlink(file.c_str());
+      std::remove(file.c_str());
     }
   }
   std::string unique_file(const std::string &location, bool keep = false) {

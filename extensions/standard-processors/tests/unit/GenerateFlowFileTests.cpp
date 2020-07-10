@@ -57,7 +57,7 @@ TEST_CASE("GenerateFlowFileTest", "[generateflowfiletest]") {
     std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
 
     is.seekg(0, is.end);
-    size_t length = is.tellg();
+    size_t length = gsl::narrow<size_t>(is.tellg());
     is.seekg(0, is.beg);
 
     std::vector<char> content(length);

@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cstdio>
 #include <utility>
 #include <memory>
 #include <string>
@@ -113,7 +114,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
     processor->incrementActiveTasks();
     processor->setScheduledState(core::ScheduledState::RUNNING);
     processor->onTrigger(context, session);
-    unlink(ss.str().c_str());
+    std::remove(ss.str().c_str());
     reporter = session->getProvenanceReporter();
 
     REQUIRE(processor->getName() == "getfileCreate2");
@@ -209,11 +210,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onTrigger(context, session);
-#ifndef WIN32
-  unlink(hidden_file_name.c_str());
-#else
-  _unlink(hidden_file_name.c_str());
-#endif /* !WIN32 */
+  std::remove(hidden_file_name.c_str());
   reporter = session->getProvenanceReporter();
 
   REQUIRE(processor->getName() == "getfileCreate2");
@@ -312,7 +309,7 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   plan->reset();
   testController.runSession(plan, false);
 
-  unlink(ss.str().c_str());
+  std::remove(ss.str().c_str());
 
   records = plan->getProvenanceRecords();
   record = plan->getCurrentFlowFile();
@@ -388,7 +385,7 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
   testController.runSession(plan, false);
 
   for (const auto &created_file : files) {
-    unlink(created_file.c_str());
+    std::remove(created_file.c_str());
   }
 
   records = plan->getProvenanceRecords();
@@ -614,13 +611,3 @@ TEST_CASE("TestRPGWithoutHostInvalidPort", "[TestRPG5]") {
 TEST_CASE("TestRPGValid", "[TestRPG6]") {
   testRPGBypass("", "8080", "8080", false);
 }
-
-int fileSize(const char *add) {
-  std::ifstream mySource;
-  mySource.open(add, std::ios_base::binary);
-  mySource.seekg(0, std::ios_base::end);
-  int size = mySource.tellg();
-  mySource.close();
-  return size;
-}
-

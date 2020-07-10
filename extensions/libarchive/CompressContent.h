@@ -20,6 +20,8 @@
 #ifndef __COMPRESS_CONTENT_H__
 #define __COMPRESS_CONTENT_H__
 
+#include <cinttypes>
+
 #include "archive_entry.h"
 #include "archive.h"
 
@@ -101,7 +103,7 @@ public:
           return -1;
         }
         if (ret > 0) {
-          ret = archive_write_data(arch_, buffer, ret);
+          ret = archive_write_data(arch_, buffer, gsl::narrow<size_t>(ret));
           if (ret < 0) {
             logger_->log_error("Compress Content archive error %s", archive_error_string(arch_));
             status_ = -1;
@@ -147,7 +149,7 @@ public:
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
   public:
-    WriteCallback(std::string &compress_mode, int64_t compress_level, std::string &compress_format,
+    WriteCallback(std::string &compress_mode, int compress_level, std::string &compress_format,
         std::shared_ptr<core::FlowFile> &flow, const std::shared_ptr<core::ProcessSession> &session) :
         compress_mode_(compress_mode), compress_level_(compress_level), compress_format_(compress_format),
         flow_(flow), session_(session),
@@ -160,7 +162,7 @@ public:
     ~WriteCallback() = default;
 
     std::string compress_mode_;
-    int64_t compress_level_;
+    int compress_level_;
     std::string compress_format_;
     std::shared_ptr<core::FlowFile> flow_;
     std::shared_ptr<core::ProcessSession> session_;
@@ -183,7 +185,7 @@ public:
       callback->session_->read(callback->flow_, &callback->readDecompressCb_);
       if (callback->readDecompressCb_.read_size_ >= 0) {
         *buff = callback->readDecompressCb_.buffer_;
-        return callback->readDecompressCb_.read_size_;
+        return gsl::narrow<la_ssize_t>(callback->readDecompressCb_.read_size_);
       } else {
         archive_set_error(arch, EIO, "Error reading flowfile");
         return -1;
@@ -228,7 +230,7 @@ public:
             return -1;
           }
           std::string option;
-          option = "gzip:compression-level=" + std::to_string((int) compress_level_);
+          option = "gzip:compression-level=" + std::to_string(compress_level_);
           r = archive_write_set_options(arch, option.c_str());
           if (r != ARCHIVE_OK) {
             archive_write_log_error_cleanup(arch);
@@ -316,8 +318,8 @@ public:
           archive_read_log_error_cleanup(arch);
           return -1;
         }
-        int entry_size = archive_entry_size(entry);
-        logger_->log_debug("Decompress Content archive entry size %d", entry_size);
+        int64_t entry_size = archive_entry_size(entry);
+        logger_->log_debug("Decompress Content archive entry size %" PRId64, entry_size);
         size_ = 0;
         while (size_ < entry_size) {
           char buffer[8192];
@@ -344,7 +346,7 @@ public:
 
   class GzipWriteCallback : public OutputStreamCallback {
    public:
-    GzipWriteCallback(std::string compress_mode, int64_t compress_level, std::shared_ptr<core::FlowFile> flow, std::shared_ptr<core::ProcessSession> session)
+    GzipWriteCallback(std::string compress_mode, int compress_level, std::shared_ptr<core::FlowFile> flow, std::shared_ptr<core::ProcessSession> session)
       : logger_(logging::LoggerFactory<CompressContent>::getLogger())
       , compress_mode_(std::move(compress_mode))
       , compress_level_(compress_level)
@@ -355,7 +357,7 @@ public:
 
     std::shared_ptr<logging::Logger> logger_;
     std::string compress_mode_;
-    int64_t compress_level_;
+    int compress_level_;
     std::shared_ptr<core::FlowFile> flow_;
     std::shared_ptr<core::ProcessSession> session_;
     bool success_{false};
@@ -371,7 +373,7 @@ public:
         int64_t process(std::shared_ptr<io::BaseStream> inputStream) override {
           std::vector<uint8_t> buffer(16 * 1024U);
           int64_t read_size = 0;
-          while (read_size < writer_.flow_->getSize()) {
+          while (read_size < gsl::narrow<int64_t>(writer_.flow_->getSize())) {
             int ret = inputStream->read(buffer.data(), buffer.size());
             if (ret < 0) {
               return -1;
@@ -427,7 +429,7 @@ protected:
 
 private:
   std::shared_ptr<logging::Logger> logger_;
-  int64_t compressLevel_;
+  int compressLevel_;
   std::string compressMode_;
   std::string compressFormat_;
   bool updateFileName_;

@@ -141,7 +141,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
     auto ival = std::strtoll(cvalue, &pEnd, 0);
 
     if (pEnd[0] == '\0') {
-      output = ival;
+      output = gsl::narrow<T>(ival);
       return true;
     }
 
@@ -152,7 +152,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
 
     char end0 = toupper(pEnd[0]);
     if (end0 == 'B') {
-      output = ival;
+      output = gsl::narrow<T>(ival);
       return true;
     } else if ((end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T') || (end0 == 'P')) {
       if (pEnd[1] == '\0') {
@@ -170,7 +170,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
             }
           }
         }
-        output = ival * multiplier;
+        output = gsl::narrow<T>(ival * multiplier);
         return true;
 
       } else if ((pEnd[1] == 'b' || pEnd[1] == 'B') && (pEnd[2] == '\0')) {
@@ -188,7 +188,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
             }
           }
         }
-        output = ival * multiplier;
+        output = gsl::narrow<T>(ival * multiplier);
         return true;
       }
     }

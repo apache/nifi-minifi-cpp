@@ -15,6 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// Visual Studio 2017 warns when overriding a deprecated function, even if
+// the override is also deprecated.  Note that we need to put this #pragma
+// here, because it doesn't work inside the #ifndef
+#ifdef WIN32
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif
+
 #ifndef LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
 #define LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
 
@@ -262,12 +271,10 @@ class HTTPRequestResponse {
 
 class BaseHTTPClient {
  public:
-  explicit BaseHTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) {
-    response_code = -1;
+  explicit BaseHTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) : response_code(-1) {
   }
 
-  BaseHTTPClient() {
-    response_code = -1;
+  BaseHTTPClient() : response_code(-1) {
   }
 
   virtual ~BaseHTTPClient() = default;
@@ -307,7 +314,7 @@ class BaseHTTPClient {
     return false;
   }
 
-  virtual int64_t &getResponseCode() {
+  virtual int64_t getResponseCode() const {
     return response_code;
   }
 
@@ -375,3 +382,7 @@ extern void parse_url(const std::string *url, std::string *host, int *port, std:
 }  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
+
+#ifdef WIN32
+#pragma warning(pop)
+#endif  // NOLINT

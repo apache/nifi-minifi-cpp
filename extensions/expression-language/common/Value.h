@@ -185,9 +185,9 @@ class Value {
     } else if (is_signed_long_) {
       return signed_long_val_;
     } else if (is_long_double_) {
-      return long_double_val_;
+      return static_cast<uint64_t >(long_double_val_);
     } else {
-      return 0.0;
+      return 0;
     }
   }
 
@@ -199,17 +199,17 @@ class Value {
     } else if (is_string_) {
       return string_val_.empty() ? 0 : std::stol(string_val_);
     } else if (is_long_double_) {
-      return long_double_val_;
+      return static_cast<int64_t >(long_double_val_);
     } else {
-      return 0.0;
+      return 0;
     }
   }
 
   long double asLongDouble() const {
     if (is_signed_long_) {
-      return signed_long_val_;
+      return static_cast<long double>(signed_long_val_);
     } else if (is_unsigned_long_) {
-      return unsigned_long_val_;
+      return static_cast<long double>(unsigned_long_val_);
     } else if (is_long_double_) {
       return long_double_val_;
     } else if (is_string_) {

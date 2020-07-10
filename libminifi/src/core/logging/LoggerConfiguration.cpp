@@ -167,8 +167,8 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       if (logger_properties->get(appender_key + ".max_files", max_files_str)) {
         try {
           max_files = std::stoi(max_files_str);
-        } catch (const std::invalid_argument &ia) {
-        } catch (const std::out_of_range &oor) {
+        } catch (const std::invalid_argument &) {
+        } catch (const std::out_of_range &) {
         }
       }
 
@@ -177,8 +177,8 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       if (logger_properties->get(appender_key + ".max_file_size", max_file_size_str)) {
         try {
           max_file_size = std::stoi(max_file_size_str);
-        } catch (const std::invalid_argument &ia) {
-        } catch (const std::out_of_range &oor) {
+        } catch (const std::invalid_argument &) {
+        } catch (const std::out_of_range &) {
         }
       }
       sink_map[appender_name] = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(file_name, max_file_size, max_files);
@@ -288,7 +288,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
   spdlogger->flush_on(std::max(spdlog::level::info, current_namespace->level));
   try {
     spdlog::register_logger(spdlogger);
-  } catch (const spdlog::spdlog_ex &ex) {
+  } catch (const spdlog::spdlog_ex &) {
     // Ignore as someone else beat us to registration, we should get the one they made below
   }
   return spdlog::get(name);

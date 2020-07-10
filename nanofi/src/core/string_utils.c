@@ -29,7 +29,7 @@ int validate_list(struct token_list * tk_list) {
     return 0;
 }
 
-void add_token_to_list(struct token_list * tk_list, const char * begin, uint64_t len) {
+void add_token_to_list(struct token_list * tk_list, const char * begin, size_t len) {
     struct token_node * new_node = (struct token_node *)malloc(sizeof(struct token_node));
     new_node->data = (char *)malloc((len+1) * sizeof(char));
     strncpy(new_node->data, begin, len);
@@ -137,14 +137,14 @@ token_list tokenize_string(const char * begin, char delim) {
             tks.total_bytes++;
             continue;
         }
-        int len = end - begin;
+        size_t len = end - begin;
         add_token_to_list(&tks, begin, len);
         tks.total_bytes++;
         begin = (end+1);
     }
 
     if (begin && *begin != '\0') {
-        int len = strlen(begin);
+        size_t len = strlen(begin);
         if (len < MAX_BYTES_READ) {
             tks.has_non_delimited_token = 1;
         }

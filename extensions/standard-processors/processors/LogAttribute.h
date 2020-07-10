@@ -98,7 +98,7 @@ class LogAttribute : public core::Processor {
   // Nest Callback Class for read stream
   class ReadCallback : public InputStreamCallback {
    public:
-    ReadCallback(std::shared_ptr<logging::Logger> logger, uint64_t size)
+    ReadCallback(std::shared_ptr<logging::Logger> logger, size_t size)
         : logger_(std::move(logger))
         , buffer_(size)  {
     }

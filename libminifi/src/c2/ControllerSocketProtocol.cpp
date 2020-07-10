@@ -183,7 +183,7 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
           } else if (what == "components") {
             io::BaseStream resp;
             resp.writeData(&head, 1);
-            uint16_t size = update_sink_->getAllComponents().size();
+            uint16_t size = gsl::narrow<uint16_t>(update_sink_->getAllComponents().size());
             resp.write(size);
             for (const auto &component : update_sink_->getAllComponents()) {
               resp.writeUTF(component->getComponentName());
@@ -209,7 +209,7 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
           } else if (what == "connections") {
             io::BaseStream resp;
             resp.writeData(&head, 1);
-            uint16_t size = queue_full_.size();
+            uint16_t size = gsl::narrow<uint16_t>(queue_full_.size());
             resp.write(size);
             for (const auto &connection : queue_full_) {
               resp.writeUTF(connection.first, false);
@@ -227,7 +227,7 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
             }
             io::BaseStream resp;
             resp.writeData(&head, 1);
-            uint16_t full_connection_count = full_connections.size();
+            uint16_t full_connection_count = gsl::narrow<uint16_t>(full_connections.size());
             resp.write(full_connection_count);
             for (auto conn : full_connections) {
               resp.writeUTF(conn);

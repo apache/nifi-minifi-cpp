@@ -499,8 +499,9 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
       return -1;
     }
 
-    ret = transaction->getStream().writeData(reinterpret_cast<uint8_t *>(const_cast<char*>(packet->payload_.c_str())), len);
-    if (ret != (int64_t)len) {
+    ret = transaction->getStream().writeData(reinterpret_cast<uint8_t *>(const_cast<char*>(packet->payload_.c_str())),
+                                             gsl::narrow<int>(len));
+    if (ret != gsl::narrow<int64_t>(len)) {
       logger_->log_debug("Failed to write payload size!");
       return -1;
     }

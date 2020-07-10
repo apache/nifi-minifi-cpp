@@ -461,7 +461,7 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
         try {
           // Assumption - first character is not '0', otherwise not all digits will be replaced by 'value'.
           number = std::stoul(&nodeText[numberPos]);
-        } catch (std::invalid_argument& e) {
+        } catch (const std::invalid_argument &) {
           continue;
         }
 
@@ -593,7 +593,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
   if (writeXML_) {
     logger_->log_trace("Writing event in XML");
     substituteXMLPercentageItems(doc);
-    logger_->log_trace("Finish substituting \%\% in XML");
+    logger_->log_trace("Finish substituting %% in XML");
 
     if (resolve_as_attributes_) {
       eventRender.matched_fields_ = walker.getFieldValues();

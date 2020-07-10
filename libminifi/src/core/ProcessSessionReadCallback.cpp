@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 #include "core/ProcessSessionReadCallback.h"
+#include <cstdio>
 #include <memory>
 #include <string>
 
@@ -88,7 +89,7 @@ ProcessSessionReadCallback::~ProcessSessionReadCallback() {
   _tmpFileOs.close();
 
   // Clean up tmp file, if necessary
-  unlink(_tmpFile.c_str());
+  std::remove(_tmpFile.c_str());
 }
 
 }  // namespace core

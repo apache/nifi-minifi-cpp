@@ -19,6 +19,7 @@
 #ifdef _WIN32
 #define NOMINMAX
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #else
 #include <sys/socket.h>  // socket
 #include <arpa/inet.h> // inet_addr
@@ -90,14 +91,15 @@ int read_buffer(uint8_t *buf, int len, cstream * stream) {
   return total_read;
 }
 
-int writeUTF(const char * cstr, uint64_t len, enum Bool widen, cstream * stream) {
-  if (len > 65535) {
+int writeUTF(const char * cstr, size_t length, enum Bool widen, cstream * stream) {
+  if (length > 65535) {
     return -1;
   }
+  int len = (int) length;
 
   int ret;
   if (!widen) {
-    uint16_t shortlen = len;
+    uint16_t shortlen = (uint16_t) len;
     ret = write_uint16_t(shortlen, stream);
   } else {
     ret = write_uint32_t(len, stream);
@@ -108,14 +110,7 @@ int writeUTF(const char * cstr, uint64_t len, enum Bool widen, cstream * stream)
   }
 
   const uint8_t *underlyingPtr = (const uint8_t *)cstr;
-
-  if (!widen) {
-    uint16_t short_length = len;
-    ret = write_buffer(underlyingPtr, short_length, stream);
-  } else {
-    ret = write_buffer(underlyingPtr, len, stream);
-  }
-  return ret;
+  return write_buffer(underlyingPtr, len, stream);
 }
 
 int read_uint8_t(uint8_t *value, cstream * stream) {
@@ -153,9 +148,9 @@ int readUTFLen(uint32_t * utflen, cstream * stream) {
   return ret;
 }
 
-int readUTF(char * buf, uint64_t buflen, cstream * stream) {
+int readUTF(char * buf, uint32_t buflen, cstream * stream) {
   //return stream->impl->readData((uint8_t*)buf, buflen);
-  return read_buffer((uint8_t*)buf, buflen, stream);
+  return read_buffer((uint8_t*)buf, (int) buflen, stream);
 }
 
 void close_stream(cstream * stream) {
@@ -212,7 +207,11 @@ cstream * create_socket(const char * host, uint16_t portnum) {
       break;
     }
 
+#ifdef WIN32
+    closesocket(sock);
+#else
     close(sock);
+#endif
   }
 
   freeaddrinfo(result);

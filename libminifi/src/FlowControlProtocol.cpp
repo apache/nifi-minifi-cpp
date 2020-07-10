@@ -79,7 +79,9 @@ int FlowControlProtocol::readData(uint8_t *buf, int buflen) {
     if (status <= 0) {
       return status;
     }
-#ifndef __MACH__
+#ifdef WIN32
+    status = _read(_socket, buf, buflen);
+#elif !defined(__MACH__)
     status = read(_socket, buf, buflen);
 #else
     status = recv(_socket, buf, buflen, 0);
@@ -194,7 +196,7 @@ int FlowControlProtocol::sendRegisterReq() {
   int status = sendData(buffer.data(), size);
   buffer.clear();
   if (status <= 0) {
-    close(_socket);
+    utils::file::FileUtils::close(_socket);
     _socket = 0;
     logger_->log_error("Flow Control Protocol Send Register Req failed");
     return -1;
@@ -204,7 +206,7 @@ int FlowControlProtocol::sendRegisterReq() {
   status = readHdr(&hdr);
 
   if (status <= 0) {
-    close(_socket);
+    utils::file::FileUtils::close(_socket);
     _socket = 0;
     logger_->log_error("Flow Control Protocol Read Register Resp header failed");
     return -1;
@@ -224,7 +226,7 @@ int FlowControlProtocol::sendRegisterReq() {
     status = readData(payload.data(), hdr.payloadLen);
     if (status <= 0) {
       logger_->log_warn("Flow Control Protocol Register Read Payload fail");
-      close(_socket);
+      utils::file::FileUtils::close(_socket);
       _socket = 0;
       return -1;
     }
@@ -241,12 +243,12 @@ int FlowControlProtocol::sendRegisterReq() {
         break;
       }
     }
-    close(_socket);
+    utils::file::FileUtils::close(_socket);
     _socket = 0;
     return 0;
   } else {
     logger_->log_warn("Flow Control Protocol Register fail");
-    close(_socket);
+    utils::file::FileUtils::close(_socket);
     _socket = 0;
     return -1;
   }
@@ -288,7 +290,7 @@ int FlowControlProtocol::sendReportReq() {
   int status = sendData(buffer.data(), size);
   buffer.clear();
   if (status <= 0) {
-    close(_socket);
+    utils::file::FileUtils::close(_socket);
     _socket = 0;
     logger_->log_error("Flow Control Protocol Send Report Req failed");
     return -1;
@@ -298,7 +300,7 @@ int FlowControlProtocol::sendReportReq() {
   status = readHdr(&hdr);
 
   if (status <= 0) {
-    close(_socket);
+    utils::file::FileUtils::close(_socket);
     _socket = 0;
     logger_->log_error("Flow Control Protocol Read Report Resp header failed");
     return -1;
@@ -316,7 +318,7 @@ int FlowControlProtocol::sendReportReq() {
     status = readData(payload.data(), hdr.payloadLen);
     if (status <= 0) {
       logger_->log_warn("Flow Control Protocol Report Resp Read Payload fail");
-      close(_socket);
+      utils::file::FileUtils::close(_socket);
       _socket = 0;
       return -1;
     }
@@ -349,33 +351,33 @@ int FlowControlProtocol::sendReportReq() {
         break;
       }
     }
-    close(_socket);
+    utils::file::FileUtils::close(_socket);
     _socket = 0;
     return 0;
   } else if (hdr.status == RESP_TRIGGER_REGISTER && hdr.seqNumber == this->_seqNumber) {
     logger_->log_trace("Flow Control Protocol trigger reregister");
     this->_registered = false;
     this->_seqNumber++;
-    close(_socket);
+    utils::file::FileUtils::close(_socket);
     _socket = 0;
     return 0;
   } else if (hdr.status == RESP_STOP_FLOW_CONTROLLER && hdr.seqNumber == this->_seqNumber) {
     logger_->log_trace("Flow Control Protocol stop flow controller");
     this->_controller->stop(true);
     this->_seqNumber++;
-    close(_socket);
+    utils::file::FileUtils::close(_socket);
     _socket = 0;
     return 0;
   } else if (hdr.status == RESP_START_FLOW_CONTROLLER && hdr.seqNumber == this->_seqNumber) {
     logger_->log_trace("Flow Control Protocol start flow controller");
     this->_controller->start();
     this->_seqNumber++;
-    close(_socket);
+    utils::file::FileUtils::close(_socket);
     _socket = 0;
     return 0;
   } else {
     logger_->log_trace("Flow Control Protocol Report fail");
-    close(_socket);
+    utils::file::FileUtils::close(_socket);
     _socket = 0;
     return -1;
   }

@@ -130,7 +130,7 @@ std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS f
 
   std::string event_data;
 
-  if (metadata_ptr_ == NULL | event_ptr_ == NULL) {
+  if (metadata_ptr_ == NULL || event_ptr_ == NULL) {
     return event_data;
   }
 
