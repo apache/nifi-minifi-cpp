@@ -42,8 +42,6 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-#define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
-
 template<typename T>
 class CRCStream : public BaseStream {
  public:
@@ -261,7 +259,7 @@ template<typename T>
 int CRCStream<T>::write(uint64_t base_value, bool is_little_endian) {
   if (disable_encoding_)
     is_little_endian = false;
-  const uint64_t value = is_little_endian == 1 ? htonll_r(base_value) : base_value;
+  const uint64_t value = is_little_endian == 1 ? byteSwap(base_value) : base_value;
   uint8_t bytes[sizeof value];
   std::copy(static_cast<const char*>(static_cast<const void*>(&value)), static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value, bytes);
   return writeData(bytes, sizeof value);
@@ -271,7 +269,7 @@ template<typename T>
 int CRCStream<T>::write(uint32_t base_value, bool is_little_endian) {
   if (disable_encoding_)
     is_little_endian = false;
-  const uint32_t value = is_little_endian ? htonl(base_value) : base_value;
+  const uint32_t value = is_little_endian ? byteSwap(base_value) : base_value;
   uint8_t bytes[sizeof value];
   std::copy(static_cast<const char*>(static_cast<const void*>(&value)), static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value, bytes);
   return writeData(bytes, sizeof value);
@@ -281,7 +279,7 @@ template<typename T>
 int CRCStream<T>::write(uint16_t base_value, bool is_little_endian) {
   if (disable_encoding_)
     is_little_endian = false;
-  const uint16_t value = is_little_endian == 1 ? htons(base_value) : base_value;
+  const uint16_t value = is_little_endian == 1 ? byteSwap(base_value) : base_value;
   uint8_t bytes[sizeof value];
   std::copy(static_cast<const char*>(static_cast<const void*>(&value)), static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value, bytes);
   return writeData(bytes, sizeof value);

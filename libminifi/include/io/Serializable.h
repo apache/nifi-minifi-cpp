@@ -44,8 +44,9 @@ Integral byteSwap(Integral i) {
 #ifdef htonll
   return htonll(i);
 #else
-  #define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
-  return htonll_r(i);
+  uint32_t lower_32_bits = static_cast<uint32_t>(i);
+  uint32_t higher_32_bits = static_cast<uint32_t>(i >> 32);
+  return (static_cast<uint64_t>(byteSwap(lower_32_bits)) << 32) + byteSwap(higher_32_bits);
 #endif
 }
 

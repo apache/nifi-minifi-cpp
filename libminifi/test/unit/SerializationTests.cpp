@@ -70,3 +70,19 @@ TEST_CASE("TestWriteUTF3", "[MINIFI193]") {
   REQUIRE(verifyString == stringOne);
 }
 
+TEST_CASE("Serialization test: the byteSwap functions work correctly", "[byteSwap]") {
+    REQUIRE(byteSwap(uint16_t{0}) == uint16_t{0});
+    REQUIRE(byteSwap(uint16_t{0x0001}) == uint16_t{0x0100});
+    REQUIRE(byteSwap(uint16_t{0x0102}) == uint16_t{0x0201});
+    REQUIRE(byteSwap(uint16_t{0xFFEE}) == uint16_t{0xEEFF});
+
+    REQUIRE(byteSwap(uint32_t{0}) == uint32_t{0});
+    REQUIRE(byteSwap(uint32_t{0x00000001}) == uint32_t{0x01000000});
+    REQUIRE(byteSwap(uint32_t{0x01020304}) == uint32_t{0x04030201});
+    REQUIRE(byteSwap(uint32_t{0xFFEEDDCC}) == uint32_t{0xCCDDEEFF});
+
+    REQUIRE(byteSwap(uint64_t{0}) == uint64_t{0});
+    REQUIRE(byteSwap(uint64_t{0x0000000000000001}) == uint64_t{0x0100000000000000});
+    REQUIRE(byteSwap(uint64_t{0x0102030405060708}) == uint64_t{0x0807060504030201});
+    REQUIRE(byteSwap(uint64_t{0xFFEEDDCCBBAA9988}) == uint64_t{0x8899AABBCCDDEEFF});
+}

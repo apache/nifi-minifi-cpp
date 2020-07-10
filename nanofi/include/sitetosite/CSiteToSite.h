@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-#define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
+#define htonll_r(x) ((((uint64_t)htonl((uint32_t)x)) << 32) + htonl((uint32_t)((x) >> 32)))
 
 // Resource Negotiated Status Code
 #define RESOURCE_OK 20
