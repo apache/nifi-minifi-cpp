@@ -337,17 +337,6 @@ TEST_CASE("ConsumeWindowsEventLog prints events in XML correctly", "[onTrigger]"
 
 namespace {
 
-int countOccurrences(const std::string& text, const std::string& substring) {
-  REQUIRE(substring.size() > 0);
-  int counter = 0;
-  std::size_t pos = 0;
-  while ((pos = text.find(substring, pos)) != std::string::npos) {
-    ++counter;
-    pos += substring.size();
-  }
-  return counter;
-}
-
 void batchCommitSizeTestHelper(int batch_commit_size, int expected_num_commits) {
   TestController test_controller;
   LogTestController::getInstance().setDebug<ConsumeWindowsEventLog>();
@@ -376,7 +365,7 @@ void batchCommitSizeTestHelper(int batch_commit_size, int expected_num_commits) 
 
     test_controller.runSession(test_plan);
 
-    REQUIRE(countOccurrences(LogTestController::getInstance().log_output.str(), "processQueue commit") == expected_num_commits);
+    REQUIRE(LogTestController::getInstance().countOccurrences("processQueue commit") == expected_num_commits);
   }
 }
 

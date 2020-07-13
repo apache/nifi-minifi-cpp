@@ -158,6 +158,10 @@ class LogTestController {
     return found;
   }
 
+  int countOccurrences(const std::string& pattern) {
+    return utils::StringUtils::countOccurrences(log_output.str(), pattern).second;
+  }
+
   void reset() {
     for (auto const & name : modified_loggers) {
       setLevel(name, spdlog::level::err);
