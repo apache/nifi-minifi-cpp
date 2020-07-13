@@ -33,6 +33,8 @@ const std::wstring APPLICATION_CHANNEL = L"Application";
 
 constexpr DWORD BOOKMARK_TESTS_OPCODE = 10368;  // random opcode hopefully won't clash with something important
 
+constexpr DWORD EVT_NEXT_TIMEOUT_MS = 100;
+
 std::unique_ptr<Bookmark> createBookmark(TestPlan &test_plan,
                                          const std::wstring &channel,
                                          const std::string &uuid = IdGenerator::getIdGenerator()->generate().to_string()) {
@@ -55,7 +57,7 @@ std::wstring bookmarkHandleAsXml(EVT_HANDLE event) {
   DWORD buffer_used;
   DWORD property_count;
   if (!EvtRender(nullptr, event, EvtRenderBookmark, buffer.size(), buffer.data(), &buffer_used, &property_count)) {
-    FAIL("Could not render event; error code: " << GetLastError());
+    FAIL("EvtRender() failed; error code: " << GetLastError());
   }
   return std::wstring{buffer.data()};
 }
@@ -78,10 +80,8 @@ unique_evt_handle queryEvents() {
 unique_evt_handle getFirstEventFromResults(const unique_evt_handle& results) {
   REQUIRE(results);
   EVT_HANDLE event_raw_handle = 0;
-  DWORD timeout_ms = 100;
   DWORD num_results_found = 0;
-  bool result = EvtNext(results.get(), 1, &event_raw_handle, timeout_ms, 0, &num_results_found);
-  if (!result) {
+  if (!EvtNext(results.get(), 1, &event_raw_handle, EVT_NEXT_TIMEOUT_MS, 0, &num_results_found)) {
     FAIL("EvtNext() failed; error code: " << GetLastError());
   }
   unique_evt_handle event{event_raw_handle};

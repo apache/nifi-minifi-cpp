@@ -18,7 +18,7 @@
 #include "ConsumeWindowsEventLog.h"
 
 #include "core/ConfigurableComponent.h"
-#include "../../../../extensions/standard-processors/processors/LogAttribute.h"
+#include "processors/LogAttribute.h"
 #include "TestBase.h"
 
 using ConsumeWindowsEventLog = org::apache::nifi::minifi::processors::ConsumeWindowsEventLog;
@@ -79,7 +79,7 @@ TEST_CASE("ConsumeWindowsEventLog properties work with default values", "[create
     ConsumeWindowsEventLog::EventHeader,
     ConsumeWindowsEventLog::OutputFormat,
     ConsumeWindowsEventLog::BatchCommitSize,
-    ConsumeWindowsEventLog::BookmarkRootDirectory,
+    ConsumeWindowsEventLog::BookmarkRootDirectory,  // TODO(fgerlits): obsolete, see definition; remove in a later release
     ConsumeWindowsEventLog::ProcessOldEvents
   };
   for (const core::Property& property : properties_required_or_with_default_value) {
