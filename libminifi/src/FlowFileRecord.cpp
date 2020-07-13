@@ -62,7 +62,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
   snapshot_ = false;
 }
 
-FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event,
+FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::shared_ptr<core::FlowFile> &event,
                                const std::string &uuidConnection)
     : FlowFile(),
       snapshot_(""),
@@ -71,49 +71,32 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
   entry_date_ = event->getEntryDate();
   lineage_start_date_ = event->getlineageStartDate();
   lineage_Identifiers_ = event->getlineageIdentifiers();
-  uuidStr_ = event->getUUIDStr();
   attributes_ = event->getAttributes();
   size_ = event->getSize();
   offset_ = event->getOffset();
   event->getUUID(uuid_);
   uuid_connection_ = uuidConnection;
   claim_ = event->getResourceClaim();
-  if (event->getFlowIdentifier()) {
-    std::string attr;
-    event->getAttribute(FlowAttributeKey(FlowAttribute::FLOW_ID), attr);
-    setFlowIdentifier(event->getFlowIdentifier());
-    if (!attr.empty()) {
-      addKeyedAttribute(FlowAttribute::FLOW_ID, attr);
-    }
-  }
 }
 
-FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event)
+FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::shared_ptr<core::FlowFile> &event)
     : FlowFile(),
       uuid_connection_(""),
       snapshot_(""),
       content_repo_(content_repo),
       flow_repository_(flow_repository) {
   claim_ = event->getResourceClaim();
-  if (event->getFlowIdentifier()) {
-    std::string attr;
-    event->getAttribute(FlowAttributeKey(FlowAttribute::FLOW_ID), attr);
-    setFlowIdentifier(event->getFlowIdentifier());
-    if (!attr.empty()) {
-      addKeyedAttribute(FlowAttribute::FLOW_ID, attr);
-    }
-  }
 }
 
 FlowFileRecord::~FlowFileRecord() {
-  logger_->log_debug("Destroying flow file record,  UUID %s", uuidStr_);
+  logger_->log_debug("Destroying flow file record,  UUID %s", getUUIDStr());
   if (!snapshot_)
-    logger_->log_debug("Delete FlowFile UUID %s", uuidStr_);
+    logger_->log_debug("Delete FlowFile UUID %s", getUUIDStr());
   else
-    logger_->log_debug("Delete SnapShot FlowFile UUID %s", uuidStr_);
+    logger_->log_debug("Delete SnapShot FlowFile UUID %s", getUUIDStr());
 
   if (!claim_) {
-    logger_->log_debug("Claim is null ptr for %s", uuidStr_);
+    logger_->log_debug("Claim is null ptr for %s", getUUIDStr());
   }
 }
 
@@ -179,9 +162,9 @@ bool FlowFileRecord::DeSerialize(std::string key) {
   ret = DeSerialize(stream);
 
   if (ret) {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s success", uuidStr_, stream.size(), uuid_connection_);
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s success", getUUIDStr(), stream.size(), uuid_connection_);
   } else {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s fail", uuidStr_, stream.size(), uuid_connection_);
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s fail", getUUIDStr(), stream.size(), uuid_connection_);
   }
 
   return ret;
@@ -205,7 +188,7 @@ bool FlowFileRecord::Serialize(io::BufferStream &outStream) {
     return false;
   }
 
-  ret = outStream.write(this->uuidStr_);
+  ret = outStream.write(this->getUUIDStr());
   if (ret <= 0) {
     return false;
   }
@@ -261,13 +244,13 @@ bool FlowFileRecord::Serialize() {
     return false;
   }
 
-  if (flow_repository_->Put(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
-    logger_->log_debug("NiFi FlowFile Store event %s size %llu success", uuidStr_, outStream.size());
+  if (flow_repository_->Put(getUUIDStr(), const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
+    logger_->log_debug("NiFi FlowFile Store event %s size %llu success", getUUIDStr(), outStream.size());
     // on behalf of the persisted record instance
     if (claim_) claim_->increaseFlowFileRecordOwnedCount();
     return true;
   } else {
-    logger_->log_error("NiFi FlowFile Store event %s size %llu fail", uuidStr_, outStream.size());
+    logger_->log_error("NiFi FlowFile Store event %s size %llu fail", getUUIDStr(), outStream.size());
     return false;
   }
 
@@ -289,9 +272,17 @@ bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
     return false;
   }
 
-  if (outStream.read(uuidStr_) <= 0) {
+  std::string uuidStr;
+  ret = outStream.read(uuidStr)
+  if (ret <= 0) {
     return false;
   }
+  utils::optional<utils::Identifier> parsedUUID = utils::Identifier::parse(uuidStr);
+  if (!parsedUUID) {
+    return false;
+  }
+  uuid_ = parsedUUID.value();
+
 
   if (outStream.read(uuid_connection_) <= 0) {
     return false;

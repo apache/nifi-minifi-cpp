@@ -165,8 +165,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 }
 
 std::string PutFile::tmpWritePath(const std::string &filename, const std::string &directory) const {
-  utils::Identifier tmpFileUuid;
-  id_generator_->generate(tmpFileUuid);
+  utils::Identifier tmpFileUuid = id_generator_->generate();
   std::stringstream tmpFileSs;
   tmpFileSs << directory;
   auto lastSeparatorPos = filename.find_last_of(utils::file::FileUtils::get_separator());

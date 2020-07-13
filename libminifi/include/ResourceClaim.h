@@ -49,6 +49,8 @@ class ResourceClaim {
  public:
   // the type which uniquely represents the resource for the owning manager
   using Path = std::string;
+
+  static std::atomic<std::size_t> count;
   // Constructor
   /*!
    * Create a new resource claim

@@ -27,7 +27,7 @@ KeyValueStoreService::KeyValueStoreService(const std::string& name, const std::s
     : ControllerService(name, id) {
 }
 
-KeyValueStoreService::KeyValueStoreService(const std::string& name, utils::Identifier uuid /*= utils::Identifier()*/)
+KeyValueStoreService::KeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : ControllerService(name, uuid) {
 }
 

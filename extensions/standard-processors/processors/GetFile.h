@@ -111,7 +111,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   /*!
    * Create a new processor
    */
-  explicit GetFile(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit GetFile(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         metrics_(std::make_shared<GetFileMetrics>()),
         last_listing_time_(0),

@@ -33,7 +33,7 @@ class MockControllerService : public core::controller::ControllerService {
 
   }
 
-  explicit MockControllerService(const std::string &name, utils::Identifier &  uuid)
+  explicit MockControllerService(const std::string &name, const utils::Identifier &  uuid)
       : ControllerService(name, uuid) {
 
   }

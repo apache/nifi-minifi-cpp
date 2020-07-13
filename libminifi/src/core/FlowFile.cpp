@@ -33,8 +33,10 @@ std::shared_ptr<utils::IdGenerator> FlowFile::id_generator_ = utils::IdGenerator
 std::shared_ptr<utils::NonRepeatingStringGenerator> FlowFile::numeric_id_generator_ = std::make_shared<utils::NonRepeatingStringGenerator>();
 std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
 
+std::atomic<std::size_t> FlowFile::flowFileCount{0};
+
 FlowFile::FlowFile()
-    : Connectable("FlowFile"),
+    : CoreComponent("FlowFile"),
       size_(0),
       stored(false),
       offset_(0),
@@ -49,9 +51,12 @@ FlowFile::FlowFile()
   entry_date_ = utils::timeutils::getTimeMillis();
   event_time_ = entry_date_;
   lineage_start_date_ = entry_date_;
+  ++flowFileCount;
 }
 
-FlowFile::~FlowFile() = default;
+FlowFile::~FlowFile() {
+  --flowFileCount;
+}
 
 FlowFile& FlowFile::operator=(const FlowFile& other) {
   uuid_ = other.uuid_;
@@ -65,7 +70,6 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
   penaltyExpiration_ms_ = other.penaltyExpiration_ms_;
   attributes_ = other.attributes_;
   claim_ = other.claim_;
-  uuidStr_ = other.uuidStr_;
   connection_ = other.connection_;
   original_connection_ = other.original_connection_;
   return *this;

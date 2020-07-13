@@ -58,17 +58,17 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
 
   const std::shared_ptr<core::Repository> repo = std::dynamic_pointer_cast<core::Repository>(store);
 
-  if (nullptr == repo || IsNullOrEmpty(uuidStr_)) {
+  if (nullptr == repo || uuid_.isNil()) {
     logger_->log_error("Repo could not be assigned");
     return false;
   }
-  ret = repo->Get(uuidStr_, value);
+  ret = repo->Get(getUUIDStr(), value);
 
   if (!ret) {
-    logger_->log_error("NiFi Provenance Store event %s can not be found", uuidStr_);
+    logger_->log_error("NiFi Provenance Store event %s can not be found", getUUIDStr());
     return false;
   } else {
-    logger_->log_debug("NiFi Provenance Read event %s", uuidStr_);
+    logger_->log_debug("NiFi Provenance Read event %s", getUUIDStr());
   }
 
   org::apache::nifi::minifi::io::BufferStream stream((const uint8_t*) value.data(), value.length());
@@ -76,9 +76,9 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
   ret = DeSerialize(stream);
 
   if (ret) {
-    logger_->log_debug("NiFi Provenance retrieve event %s size %llu eventType %d success", uuidStr_, stream.size(), _eventType);
+    logger_->log_debug("NiFi Provenance retrieve event %s size %llu eventType %d success", getUUIDStr(), stream.size(), _eventType);
   } else {
-    logger_->log_debug("NiFi Provenance retrieve event %s size %llu eventType %d fail", uuidStr_, stream.size(), _eventType);
+    logger_->log_debug("NiFi Provenance retrieve event %s size %llu eventType %d fail", getUUIDStr(), stream.size(), _eventType);
   }
 
   return ret;
@@ -87,7 +87,7 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
 bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStream& outStream) {
   int ret;
 
-  ret = outStream.write(this->uuidStr_);
+  ret = outStream.write(this->getUUIDStr());
   if (ret <= 0) {
     return false;
   }
@@ -225,8 +225,8 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableCo
   Serialize(outStream);
 
   // Persist to the DB
-  if (!repo->Serialize(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
-    logger_->log_error("NiFi Provenance Store event %s size %llu fail", uuidStr_, outStream.size());
+  if (!repo->Serialize(getUUIDStr(), const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
+    logger_->log_error("NiFi Provenance Store event %s size %llu fail", getUUIDStr(), outStream.size());
   }
   return true;
 }
@@ -236,7 +236,13 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
 
   org::apache::nifi::minifi::io::BufferStream outStream(buffer, bufferSize);
 
-  ret = outStream.read(this->uuidStr_);
+  std::string uuidStr;
+  ret = outStream.read(uuidStr);
+  utils::optional<utils::Identifier> uuid = utils::Identifier::parse(uuidStr);
+  if (!uuid) {
+    return false;
+  }
+  uuid_ = uuid.value();
 
   if (ret <= 0) {
     return false;

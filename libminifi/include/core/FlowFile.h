@@ -35,8 +35,10 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-class FlowFile : public core::Connectable, public ReferenceContainer {
+class FlowFile : public CoreComponent, public ReferenceContainer {
  public:
+
+  static std::atomic<std::size_t> flowFileCount;
   FlowFile();
   ~FlowFile() override;
   FlowFile& operator=(const FlowFile& other);

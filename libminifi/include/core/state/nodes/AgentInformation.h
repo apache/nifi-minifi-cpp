@@ -627,7 +627,7 @@ class AgentManifest : public DeviceInformation {
 
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
  public:
-  AgentNode(const std::string& name, utils::Identifier & uuid)
+  AgentNode(const std::string& name, const utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
     setArray(false);
   }
@@ -688,7 +688,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
  */
 class AgentInformation : public AgentNode {
  public:
-  AgentInformation(const std::string& name, utils::Identifier & uuid)
+  AgentInformation(const std::string& name, const utils::Identifier & uuid)
       : AgentNode(name, uuid),
         include_agent_status_(true) {
     setArray(false);

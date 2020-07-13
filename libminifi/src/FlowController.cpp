@@ -93,8 +93,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   if (IsNullOrEmpty(configuration_)) {
     throw std::runtime_error("Must supply a configuration.");
   }
-  utils::IdGenerator::getIdGenerator()->generate(uuid_);
-  setUUID(uuid_);
   flow_update_ = false;
   // Setup the default values
   if (flow_configuration_ != nullptr) {
@@ -466,7 +464,7 @@ void FlowController::initializeC2() {
   std::string identifier_str;
   if (!configuration_->get("nifi.c2.agent.identifier", "c2.agent.identifier", identifier_str) || identifier_str.empty()) {
     // set to the flow controller's identifier
-    identifier_str = uuidStr_;
+    identifier_str = getUUIDStr();
   }
   configuration_->setAgentIdentifier(identifier_str);
 

@@ -24,7 +24,7 @@ namespace minifi {
 namespace core {
 namespace expressions {
 
-ExpressionContextBuilder::ExpressionContextBuilder(const std::string &name, minifi::utils::Identifier &uuid)
+ExpressionContextBuilder::ExpressionContextBuilder(const std::string &name, const minifi::utils::Identifier &uuid)
     : core::ProcessContextBuilder(name, uuid) {
 }
 

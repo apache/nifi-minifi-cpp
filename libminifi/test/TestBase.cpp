@@ -71,9 +71,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   }
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
-  utils::Identifier uuid;
-
-  utils::IdGenerator::getIdGenerator()->generate(uuid);
+  utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
 
   processor->setStreamFactory(stream_factory);
   // initialize the processor
@@ -136,7 +134,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   return processor;
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, utils::Identifier& uuid, const std::string &name,
+std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const utils::Identifier& uuid, const std::string &name,
                                                         const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
@@ -160,12 +158,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
     return nullptr;
   }
   std::lock_guard<std::recursive_mutex> guard(mutex);
-
-  utils::Identifier uuid;
-
-  utils::IdGenerator::getIdGenerator()->generate(uuid);
-
-  return addProcessor(processor_name, uuid, name, relationships, linkToPrevious);
+  return addProcessor(processor_name, utils::IdGenerator::getIdGenerator()->generate(), name, relationships, linkToPrevious);
 }
 
 std::shared_ptr<minifi::Connection> TestPlan::addConnection(const std::shared_ptr<core::Processor>& source_proc, const core::Relationship& source_relationship, const std::shared_ptr<core::Processor>& destination_proc) {
@@ -198,9 +191,7 @@ std::shared_ptr<core::controller::ControllerServiceNode> TestPlan::addController
   }
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
-  utils::Identifier uuid;
-
-  utils::IdGenerator::getIdGenerator()->generate(uuid);
+  utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
 
   std::shared_ptr<core::controller::ControllerServiceNode> controller_service_node =
       controller_services_provider_->createControllerService(controller_name, controller_name, name, true /*firstTimeAdded*/);

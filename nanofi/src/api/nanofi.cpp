@@ -124,8 +124,9 @@ nifi_instance *create_instance_repo(const char *url, nifi_port *port, const char
 
   // may have to translate port ID here in the future
   // need reinterpret cast until we move to C for this module.
-  instance->port.port_id = reinterpret_cast<char*>(malloc(strlen(port->port_id) + 1));
-  snprintf(instance->port.port_id, strlen(port->port_id) + 1, "%s", port->port_id);
+  char* port_id = reinterpret_cast<char*>(malloc(strlen(port->port_id) + 1));
+  std::strcpy(port_id, port->port_id);
+  instance->port.port_id = port_id;
   return instance;
 }
 
@@ -137,8 +138,8 @@ standalone_processor * create_processor(const char *name, nifi_instance * instan
   }
   if (instance == NULL) {
     nifi_port port;
-    char portnum[] = "98765";
-    port.port_id = portnum;
+    std::string port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
+    port.port_id = (char*)port_str.c_str();
     instance = create_instance("internal_standalone", &port);
   }
   auto flow = create_new_flow(instance);

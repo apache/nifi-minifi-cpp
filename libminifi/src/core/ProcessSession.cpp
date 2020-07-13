@@ -610,8 +610,7 @@ bool ProcessSession::exportContent(const std::string &destination, const std::st
 }
 
 bool ProcessSession::exportContent(const std::string &destination, const std::shared_ptr<core::FlowFile> &flow, bool keepContent) {
-  utils::Identifier tmpFileUuid;
-  id_generator_->generate(tmpFileUuid);
+  utils::Identifier tmpFileUuid = id_generator_->generate();
   std::stringstream tmpFileSs;
   tmpFileSs << destination << "." << tmpFileUuid.to_string();
   std::string tmpFileName = tmpFileSs.str();

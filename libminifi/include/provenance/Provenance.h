@@ -171,7 +171,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   virtual ~ProvenanceEventRecord() = default;
   // Get the Event ID
   std::string getEventId() {
-    return uuidStr_;
+    return getUUIDStr();
   }
 
   void setEventId(const std::string &id) {

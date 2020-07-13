@@ -38,6 +38,8 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+class FlowFile;
+
 /**
  * Represents the base connectable component
  * Purpose: As in NiFi, this represents a connection point and allows the derived
@@ -79,7 +81,7 @@ class Connectable : public CoreComponent {
    */
   virtual std::set<std::shared_ptr<Connectable>> getOutGoingConnections(const std::string &relationship) const;
 
-  virtual void put(std::shared_ptr<Connectable> flow) {
+  virtual void put(const std::shared_ptr<FlowFile>& flow) {
   }
 
   /**

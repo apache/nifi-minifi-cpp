@@ -54,7 +54,7 @@ class AWSCredentialsService : public core::controller::ControllerService {
         logger_(logging::LoggerFactory<AWSCredentialsService>::getLogger()) {
   }
 
-  explicit AWSCredentialsService(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit AWSCredentialsService(const std::string &name, const utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
         logger_(logging::LoggerFactory<AWSCredentialsService>::getLogger()) {
   }

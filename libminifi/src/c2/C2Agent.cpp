@@ -141,8 +141,7 @@ void C2Agent::start() {
   }
   task_ids_.clear();
   for (const auto& function : functions_) {
-    utils::Identifier uuid;
-    utils::IdGenerator::getIdGenerator()->generate(uuid);
+    utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
     const std::string uuid_str = uuid.to_string();
     task_ids_.push_back(uuid_str);
     auto monitor = utils::make_unique<utils::ComplexMonitor>();

@@ -30,6 +30,7 @@ class uuid;
 
 #include "core/logging/Logger.h"
 #include "properties/Properties.h"
+#include "OptionalUtils.h"
 
 #define UUID_TIME_IMPL 0
 #define UUID_RANDOM_IMPL 1
@@ -43,6 +44,7 @@ class uuid;
 #define UUID_TIME_STR "time"
 #define UUID_WINDOWS_STR "windows"
 
+struct debug;
 
 namespace org {
 namespace apache {
@@ -50,103 +52,37 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-template<typename T, typename C>
-class IdentifierBase {
- public:
-  IdentifierBase(T myid) { // NOLINT
-    copyInto(myid);
-  }
-
-  IdentifierBase(const IdentifierBase &other) {
-    copyInto(other.id_);
-  }
-
-  IdentifierBase(IdentifierBase &&other)
-      : converted_(std::move(other.converted_)) {
-    copyInto(other.id_);
-  }
-
-  IdentifierBase() = default;
-
-  IdentifierBase &operator=(const IdentifierBase &other) {
-    copyInto(other.id_);
-    return *this;
-  }
-
-  IdentifierBase &operator=(T o) {
-    copyInto(o);
-    return *this;
-  }
-
-  void getIdentifier(T other) const {
-    copyOutOf(other);
-  }
-
-  C convert() const {
-    return converted_;
-  }
-
- protected:
-  void copyInto(const IdentifierBase &other) {
-    memcpy(id_, other.id_, sizeof(T));
-  }
-
-  void copyInto(const void *other) {
-    memcpy(id_, other, sizeof(T));
-  }
-
-  void copyOutOf(void *other) {
-    memcpy(other, id_, sizeof(T));
-  }
-
-  C converted_{};
-
-  T id_{};
-};
-
-typedef uint8_t UUID_FIELD[16];
-
-class Identifier : public IdentifierBase<UUID_FIELD, std::string> {
+class Identifier {
+  friend struct ::debug;
   static constexpr const char* UUID_FORMAT_STRING = "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx";
 
  public:
-  Identifier(UUID_FIELD u); // NOLINT
-  Identifier();
-  explicit Identifier(const std::string& id_str);
-  Identifier(const Identifier &other);
-  Identifier(Identifier &&other);
+  using Data = std::array<uint8_t, 16>;
 
-  /**
-   * I believe these exist to make windows builds happy -- need more testing
-   * to ensure this doesn't cause any issues.
-   */
-  Identifier(const IdentifierBase &other); // NOLINT
-  Identifier &operator=(const IdentifierBase &other);
+  Identifier() = default;
+  Identifier(const Data& data);
+  Identifier(const std::string& data);
+  Identifier &operator=(const Data& data);
 
-  Identifier &operator=(const Identifier &other);
-  Identifier &operator=(UUID_FIELD o);
+  Identifier &operator=(const std::string& idStr);
 
-  Identifier &operator=(std::string id);
-  bool operator==(const std::nullptr_t nullp) const;
+  bool operator!=(const Identifier& other) const;
+  bool operator==(const Identifier& other) const;
 
-  bool operator!=(std::nullptr_t nullp) const;
-
-  bool operator!=(const Identifier &other) const;
-  bool operator==(const Identifier &other) const;
+  bool isNil() const;
 
   std::string to_string() const;
 
-  const unsigned char * const toArray() const;
+  static utils::optional<Identifier> parse(const std::string& str);
 
- protected:
-  void build_string();
+ private:
+  Data data_{};
 };
 
 class IdGenerator {
  public:
-  void generate(Identifier &output);
   Identifier generate();
-  void initialize(const std::shared_ptr<Properties> & properties);
+  void initialize(const std::shared_ptr<Properties>& properties);
 
   ~IdGenerator();
 
@@ -156,7 +92,7 @@ class IdGenerator {
   }
 
  protected:
-  uint64_t getDeviceSegmentFromString(const std::string & str, int numBits) const;
+  uint64_t getDeviceSegmentFromString(const std::string& str, int numBits) const;
   uint64_t getRandomDeviceSegment(int numBits) const;
 
  private:
@@ -170,7 +106,7 @@ class IdGenerator {
   std::mutex uuid_mutex_;
 #ifndef WIN32
   std::unique_ptr<uuid> uuid_impl_;
-  bool generateWithUuidImpl(unsigned int mode, UUID_FIELD output);
+  bool generateWithUuidImpl(unsigned int mode, Identifier::Data& output);
 #endif
 };
 

@@ -53,7 +53,7 @@ class CoapConnectorService : public core::controller::ControllerService {
     initialize();
   }
 
-  explicit CoapConnectorService(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit CoapConnectorService(const std::string &name, const utils::Identifier& uuid = {})
       : ControllerService(name, std::move(uuid)) {
     initialize();
   }

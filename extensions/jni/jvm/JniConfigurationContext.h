@@ -34,7 +34,7 @@ class ConfigurationContext : public core::controller::ControllerService {
   /*!
    * Create a new processor
    */
-  explicit ConfigurationContext(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit ConfigurationContext(const std::string& name, const utils::Identifier& uuid = {})
       : core::controller::ControllerService(name, uuid) {
   }
 

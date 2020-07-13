@@ -89,9 +89,9 @@ private:
 class TailFileTestResourceManager {
 public:
     TailFileTestResourceManager(const std::string& processor_name, void(*callback)(processor_session * ps, processor_context * ctx)) {
-        const char * port_str = "uuid";
+        std::string port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
         nifi_port port;
-        port.port_id = (char *)port_str;
+        port.port_id = (char*)port_str.c_str();
         const char * instance_str = "nifi";
         instance_ = create_instance(instance_str, &port);
         add_custom_processor(processor_name.c_str(), callback);

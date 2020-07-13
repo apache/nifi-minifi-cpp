@@ -133,7 +133,7 @@ bool Connection::isFull() {
   return false;
 }
 
-void Connection::put(std::shared_ptr<core::FlowFile> flow) {
+void Connection::put(const std::shared_ptr<core::FlowFile>& flow) {
   if (drop_empty_ && flow->getSize() == 0) {
     logger_->log_info("Dropping empty flow file: %s", flow->getUUIDStr());
     return;

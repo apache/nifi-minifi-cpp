@@ -90,8 +90,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
     if (entryMetadata.entryType == AE_IFREG) {
       logger_->log_info("FocusArchiveEntry importing %s from %s", entryMetadata.entryName, entryMetadata.tmpFileName);
       session->import(entryMetadata.tmpFileName, flowFile, false, 0);
-      utils::Identifier stashKeyUuid;
-      id_generator_->generate(stashKeyUuid);
+      utils::Identifier stashKeyUuid = id_generator_->generate();
       logger_->log_debug("FocusArchiveEntry generated stash key %s for entry %s", stashKeyUuid.to_string(), entryMetadata.entryName);
       entryMetadata.stashKey.assign(stashKeyUuid.to_string());
 

@@ -53,7 +53,7 @@ class JavaControllerService : public core::controller::ControllerService, public
     initialized_ = false;
   }
 
-  explicit JavaControllerService(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit JavaControllerService(const std::string &name, const utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
         loader(nullptr),
         logger_(logging::LoggerFactory<JavaControllerService>::getLogger()) {

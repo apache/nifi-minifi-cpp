@@ -82,7 +82,7 @@ class SSLContextService : public core::controller::ControllerService {
         logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
   }
 
-  explicit SSLContextService(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit SSLContextService(const std::string &name, const utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
         initialized_(false),
         valid_(false),

@@ -234,10 +234,7 @@ bool RawSiteToSiteClient::handShake() {
     return false;
   }
   logger_->log_debug("Site2Site Protocol Perform hand shake with destination port %s", port_id_str_);
-  utils::Identifier uuid;
-  // Generate the global UUID for the com identify
-  id_generator_->generate(uuid);
-  _commsIdentifier = uuid.to_string();
+  _commsIdentifier = id_generator_->generate().to_string();
 
   int ret = peer_->write(_commsIdentifier);
 
