@@ -119,6 +119,8 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
   auto controller = testController.controller_;
   auto root = testController.root_;
 
+  testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, "10 s");
+
   auto sourceProc = std::static_pointer_cast<minifi::processors::TestFlowFileGenerator>(root->findProcessor("Generator"));
   auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessor("TestProcessor"));
 

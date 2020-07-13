@@ -420,7 +420,7 @@ std::size_t ProcessGroup::getTotalFlowFileCount() const {
     sum += conn->getQueueSize();
   }
 
-  for (ProcessGroup* childGroup : child_process_groups_) {
+  for (const ProcessGroup* childGroup : child_process_groups_) {
     sum += childGroup->getTotalFlowFileCount();
   }
   return sum;

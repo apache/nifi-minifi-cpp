@@ -244,7 +244,7 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
       this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_, [] (const std::shared_ptr<core::Processor>& proc) -> bool {
         return !proc->hasIncomingConnections();
       });
-      std::chrono::milliseconds shutdown_timer{0};
+      auto shutdown_start = std::chrono::steady_clock::now();
       // we enable C2 to progressively increase the timeout
       // in case it sees that waiting for a little longer could
       // allow the FlowFiles to be processed
@@ -252,18 +252,19 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
         if (timeToWait != 0) {
           return std::chrono::milliseconds{timeToWait};
         }
-        static const core::TimePeriodValue default_timeout{"10 sec"};
         utils::optional<core::TimePeriodValue> shutdown_timeout;
         std::string shutdown_timeout_str;
         if (configuration_->get(minifi::Configure::nifi_flowcontroller_drain_timeout, shutdown_timeout_str)) {
           shutdown_timeout = core::TimePeriodValue::fromString(shutdown_timeout_str);
         }
-        return std::chrono::milliseconds{shutdown_timeout.value_or(default_timeout).getMilliseconds()};
+        if (shutdown_timeout) {
+          return std::chrono::milliseconds{shutdown_timeout->getMilliseconds()};
+        }
+        return std::chrono::milliseconds{0};
       };
       std::size_t count;
-      while (shutdown_timer < shutdown_timeout() && (count = this->root_->getTotalFlowFileCount()) != 0) {
+      while ((std::chrono::steady_clock::now() - shutdown_start) < shutdown_timeout() && (count = this->root_->getTotalFlowFileCount()) != 0) {
         std::this_thread::sleep_for(shutdown_check_interval_);
-        shutdown_timer += shutdown_check_interval_;
       }
       // shutdown all other processors as well
       this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
