@@ -61,8 +61,9 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
     if (purge_required_ && nullptr != content_repo_) {
       std::lock_guard<std::mutex> lock(purge_mutex_);
       for (auto purgeItem : purge_list_) {
-        std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(sharedFromThis(), content_repo_);
-        if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size())) {
+        utils::Identifier containerId;
+        auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size(), content_repo_, containerId);
+        if (eventRead) {
           auto claim = eventRead->getResourceClaim();
           if (claim) claim->decreaseFlowFileRecordOwnedCount();
         }

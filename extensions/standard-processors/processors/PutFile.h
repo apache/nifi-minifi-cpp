@@ -104,7 +104,7 @@ class PutFile : public core::Processor {
   int64_t max_dest_files_ = -1;
 
   bool putFile(core::ProcessSession *session,
-               std::shared_ptr<FlowFileRecord> flowFile,
+               std::shared_ptr<core::FlowFile> flowFile,
                const std::string &tmpFile,
                const std::string &destFile,
                const std::string &destDir);

@@ -228,9 +228,8 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
 
   CallBack callback;
 
-  std::map<std::string, std::string> attributes;
-  attributes["testy"] = "test";
-  std::shared_ptr<minifi::FlowFileRecord> flow = std::make_shared<minifi::FlowFileRecord>(repo, content_repo, attributes);
+  auto flow = std::make_shared<minifi::FlowFileRecord>();
+  flow->setAttribute("testy", "test");
   session2->write(flow, &callback);
 
   invokehttp->incrementActiveTasks();

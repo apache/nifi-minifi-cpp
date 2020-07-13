@@ -260,7 +260,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
+    flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/gzip");
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
@@ -298,7 +298,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
+    REQUIRE(flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string content(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
@@ -332,7 +332,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
+    flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/bzip2");
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
@@ -371,7 +371,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfilet
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
+    REQUIRE(flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
@@ -411,7 +411,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
+    flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/x-lzma");
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
@@ -433,7 +433,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
   sessionGenFlowFile.import(compressedPath(), flow, true, 0);
-  flow->setAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), "application/x-lzma");
+  flow->setAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, "application/x-lzma");
   sessionGenFlowFile.flushContent();
   input->put(flow);
 
@@ -457,7 +457,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
+    REQUIRE(flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
@@ -497,7 +497,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime);
+    flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/x-xz");
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
@@ -519,7 +519,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfil
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
   sessionGenFlowFile.import(compressedPath(), flow, true, 0);
-  flow->setAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), "application/x-xz");
+  flow->setAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, "application/x-xz");
   sessionGenFlowFile.flushContent();
   input->put(flow);
 
@@ -543,7 +543,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfil
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    REQUIRE(flow1->getAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), mime) == false);
+    REQUIRE(flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);

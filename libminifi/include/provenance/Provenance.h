@@ -171,7 +171,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   virtual ~ProvenanceEventRecord() = default;
   // Get the Event ID
   std::string getEventId() {
-    return uuidStr_;
+    return getUUIDStr();
   }
 
   void setEventId(const std::string &id) {
@@ -230,7 +230,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     return _contentFullPath;
   }
   // Get LineageIdentifiers
-  std::set<std::string> getLineageIdentifiers() {
+  std::vector<std::string> getLineageIdentifiers() {
     return _lineageIdentifiers;
   }
   // Get Details
@@ -340,8 +340,8 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     _attributes = flow->getAttributes();
     _size = flow->getSize();
     _offset = flow->getOffset();
-    if (flow->getOriginalConnection())
-      _sourceQueueIdentifier = flow->getOriginalConnection()->getName();
+    if (flow->getConnection())
+      _sourceQueueIdentifier = flow->getConnection()->getName();
     if (flow->getResourceClaim()) {
       _contentFullPath = flow->getResourceClaim()->getContentFullPath();
     }
@@ -415,7 +415,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   // Attributes key/values pairs for the flow record
   std::map<std::string, std::string> _attributes;
   // UUID string for all parents
-  std::set<std::string> _lineageIdentifiers;
+  std::vector<std::string> _lineageIdentifiers;
   // transitUri
   std::string _transitUri;
   // sourceSystemFlowFileIdentifier

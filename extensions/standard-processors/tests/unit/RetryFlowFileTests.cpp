@@ -128,8 +128,7 @@ class RetryFlowFileTest {
       if (processor_uuid_matches_flowfile.value()) {
         plan_->setProperty(update, retry_attr_name_on_flowfile.value_or("flowfile.retries") + ".uuid", retryflowfile->getUUIDStr(), true);
       } else {
-        utils::Identifier non_matching_uuid;
-        utils::IdGenerator::getIdGenerator()->generate(non_matching_uuid);
+        utils::Identifier non_matching_uuid = utils::IdGenerator::getIdGenerator()->generate();
         plan_->setProperty(update, retry_attr_name_on_flowfile.value_or("flowfile.retries") + ".uuid", non_matching_uuid.to_string(), true);
       }
     }

@@ -16,12 +16,15 @@
  * limitations under the License.
  */
 
-#include "core/FlowFile.h"
 #include <memory>
 #include <string>
 #include <set>
+#include <cinttypes>
+#include "core/Repository.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
+#include "core/FlowFile.h"
+#include "utils/requirements/Container.h"
 
 namespace org {
 namespace apache {
@@ -34,7 +37,7 @@ std::shared_ptr<utils::NonRepeatingStringGenerator> FlowFile::numeric_id_generat
 std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
 
 FlowFile::FlowFile()
-    : Connectable("FlowFile"),
+    : CoreComponent("FlowFile"),
       size_(0),
       stored(false),
       offset_(0),
@@ -42,16 +45,12 @@ FlowFile::FlowFile()
       penaltyExpiration_ms_(0),
       event_time_(0),
       claim_(nullptr),
-      marked_delete_(false),
-      connection_(nullptr),
-      original_connection_() {
+      marked_delete_(false) {
   id_ = numeric_id_generator_->generateId();
   entry_date_ = utils::timeutils::getTimeMillis();
   event_time_ = entry_date_;
   lineage_start_date_ = entry_date_;
 }
-
-FlowFile::~FlowFile() = default;
 
 FlowFile& FlowFile::operator=(const FlowFile& other) {
   uuid_ = other.uuid_;
@@ -65,9 +64,7 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
   penaltyExpiration_ms_ = other.penaltyExpiration_ms_;
   attributes_ = other.attributes_;
   claim_ = other.claim_;
-  uuidStr_ = other.uuidStr_;
   connection_ = other.connection_;
-  original_connection_ = other.original_connection_;
   return *this;
 }
 
@@ -141,7 +138,7 @@ uint64_t FlowFile::getlineageStartDate() const {
   return lineage_start_date_;
 }
 
-std::set<std::string>& FlowFile::getlineageIdentifiers() {
+std::vector<std::string> &FlowFile::getlineageIdentifiers() {
   return lineage_Identifiers_;
 }
 
@@ -167,7 +164,7 @@ uint64_t FlowFile::getOffset() const {
 bool FlowFile::removeAttribute(const std::string key) {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
-    attributes_.erase(key);
+    attributes_.erase(it);
     return true;
   } else {
     return false;
@@ -177,7 +174,7 @@ bool FlowFile::removeAttribute(const std::string key) {
 bool FlowFile::updateAttribute(const std::string key, const std::string value) {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
-    attributes_[key] = value;
+    it->second = value;
     return true;
   } else {
     return false;
@@ -203,43 +200,34 @@ void FlowFile::setLineageStartDate(const uint64_t date) {
  * Sets the original connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setOriginalConnection(std::shared_ptr<core::Connectable>& connection) {
-  original_connection_ = connection;
-}
-
-/**
- * Sets the connection with a shared pointer.
- * @param connection shared connection.
- */
-void FlowFile::setConnection(std::shared_ptr<core::Connectable>& connection) {
+void FlowFile::setConnection(const std::shared_ptr<core::Connectable>& connection) {
   connection_ = connection;
-}
-
-/**
- * Sets the connection with a shared pointer.
- * @param connection shared connection.
- */
-void FlowFile::setConnection(std::shared_ptr<core::Connectable>&& connection) {
-  connection_ = connection;
-}
-
-/**
- * Returns the connection referenced by this record.
- * @return shared connection pointer.
- */
-std::shared_ptr<core::Connectable> FlowFile::getConnection() const {
-  return connection_;
 }
 
 /**
  * Returns the original connection referenced by this record.
  * @return shared original connection pointer.
  */
-std::shared_ptr<core::Connectable> FlowFile::getOriginalConnection() const {
-  return original_connection_;
+std::shared_ptr<core::Connectable> FlowFile::getConnection() const {
+  return connection_;
 }
 
+const std::string SpecialFlowAttribute::PATH = "path";
+const std::string SpecialFlowAttribute::ABSOLUTE_PATH = "absolute.path";
+const std::string SpecialFlowAttribute::FILENAME = "filename";
+const std::string SpecialFlowAttribute::UUID = "uuid";
+const std::string SpecialFlowAttribute::priority = "priority";
+const std::string SpecialFlowAttribute::MIME_TYPE = "mime.type";
+const std::string SpecialFlowAttribute::DISCARD_REASON = "discard.reason";
+const std::string SpecialFlowAttribute::ALTERNATE_IDENTIFIER = "alternate.identifier";
+const std::string SpecialFlowAttribute::FLOW_ID = "flow.id";
+
 } /* namespace core */
+
+namespace utils {
+template struct assert_container<core::FlowFile::AttributeMap>;
+} /* namespace utils */
+
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

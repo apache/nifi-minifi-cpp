@@ -66,10 +66,10 @@ public:
 class BinaryConcatenationMerge : public MergeBin {
 public:
   static const char *mimeType;
-  std::string getMergedContentType() {
+  std::string getMergedContentType() override {
     return mimeType;
   }
-  virtual void merge(
+  void merge(
     core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
     std::string &header, std::string &footer, std::string &demarcator, const std::shared_ptr<core::FlowFile> &flowFile) override;
   // Nest Callback Class for read stream
@@ -216,7 +216,7 @@ public:
       for (auto flow : flows_) {
         struct archive_entry *entry = archive_entry_new();
         std::string fileName;
-        flow->getAttribute(FlowAttributeKey(FILENAME), fileName);
+        flow->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
         archive_entry_set_pathname(entry, fileName.c_str());
         archive_entry_set_size(entry, flow->getSize());
         archive_entry_set_mode(entry, S_IFREG | 0755);
@@ -250,7 +250,7 @@ public:
   static const char *mimeType;
   void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
     std::string &demarcator, const std::shared_ptr<core::FlowFile> &flowFile) override;
-  std::string getMergedContentType() {
+  std::string getMergedContentType() override {
     return mimeType;
   }
 };
@@ -261,7 +261,7 @@ public:
   static const char *mimeType;
   void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
     std::string &demarcator, const std::shared_ptr<core::FlowFile> &flowFile) override;
-  std::string getMergedContentType() {
+  std::string getMergedContentType() override {
     return mimeType;
   }
 };

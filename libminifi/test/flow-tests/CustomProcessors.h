@@ -48,8 +48,8 @@ class ProcessorWithStatistics {
 
 class TestProcessor : public core::Processor, public ProcessorWithStatistics {
  public:
-  TestProcessor(std::string name, utils::Identifier &uuid) : Processor(name, uuid) {}
-  TestProcessor(std::string name) : Processor(name) {}
+  TestProcessor(const std::string& name, const utils::Identifier &uuid) : Processor(name, uuid) {}
+  TestProcessor(const std::string& name) : Processor(name) {}
   void initialize() override {
     setSupportedProperties({AppleProbability, BananaProbability});
     setSupportedRelationships({Apple, Banana});
@@ -91,8 +91,8 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
 
 class TestFlowFileGenerator : public processors::GenerateFlowFile, public ProcessorWithStatistics {
  public:
-  TestFlowFileGenerator(std::string name, utils::Identifier &uuid) : GenerateFlowFile(name, uuid) {}
-  TestFlowFileGenerator(std::string name) : GenerateFlowFile(name) {}
+  TestFlowFileGenerator(const std::string& name, const utils::Identifier &uuid) : GenerateFlowFile(name, uuid) {}
+  TestFlowFileGenerator(const std::string& name) : GenerateFlowFile(name) {}
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override {
     ++trigger_count;

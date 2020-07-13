@@ -128,7 +128,6 @@ int main(int argc, char **argv) {
   
   assert(verifyLogLinePresenceInPollTime(
       std::chrono::seconds(10),
-      "key:filename value:",
       "key:invokehttp.request.url value:" + url,
       "key:invokehttp.status.code value:200",
       "key:flow.id"));

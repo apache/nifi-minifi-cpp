@@ -36,7 +36,7 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-ProcessContextBuilder::ProcessContextBuilder(const std::string &name, minifi::utils::Identifier &uuid)
+ProcessContextBuilder::ProcessContextBuilder(const std::string &name, const minifi::utils::Identifier &uuid)
     : core::CoreComponent(name, uuid) {
   content_repo_ = std::make_shared<core::repository::FileSystemRepository>();
   configuration_ = std::make_shared<minifi::Configure>();

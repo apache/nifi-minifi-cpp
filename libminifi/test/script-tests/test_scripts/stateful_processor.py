@@ -34,7 +34,7 @@ def onTrigger(context, session):
   log.info('Vrrm, vrrrm, processor is running, vrrrm!!')
   # flow_file = session.get()
   flow_file = session.create()
-  flow_file.updateAttribute("filename", str(state))
+  flow_file.setAttribute("filename", str(state))
   log.info('created flow file: %s' % flow_file.getAttribute('filename'))
 
   if flow_file is not None:

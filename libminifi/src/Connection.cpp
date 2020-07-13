@@ -133,7 +133,7 @@ bool Connection::isFull() {
   return false;
 }
 
-void Connection::put(std::shared_ptr<core::FlowFile> flow) {
+void Connection::put(const std::shared_ptr<core::FlowFile>& flow) {
   if (drop_empty_ && flow->getSize() == 0) {
     logger_->log_info("Dropping empty flow file: %s", flow->getUUIDStr());
     return;
@@ -201,7 +201,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
           break;
         }
         std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
-        item->setOriginalConnection(connectable);
+        item->setConnection(connectable);
         logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
         return item;
       }
@@ -214,7 +214,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
         break;
       }
       std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
-      item->setOriginalConnection(connectable);
+      item->setConnection(connectable);
       logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
       return item;
     }

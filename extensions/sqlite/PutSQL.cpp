@@ -82,7 +82,7 @@ void PutSQL::onSchedule(core::ProcessContext *context,
 
 void PutSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
                        const std::shared_ptr<core::ProcessSession> &session) {
-  std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->get());
+  auto flow_file = session->get();
 
   if (!flow_file) {
     return;
@@ -144,7 +144,7 @@ void PutSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
 
       session->transfer(flow_file, Success);
 
-      flow_file = std::static_pointer_cast<FlowFileRecord>(session->get());
+      flow_file = session->get();
 
       if (!flow_file) {
         logger_->log_info("Processed %d in batch", batch_processed);

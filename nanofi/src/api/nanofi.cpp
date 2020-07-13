@@ -33,8 +33,9 @@
 #include "utils/StringUtils.h"
 #include "io/BufferStream.h"
 #include "core/cxxstructs.h"
+#include "utils/FlatMap.h"
 
-using string_map = std::map<std::string, std::string>;
+using AttributeMap = org::apache::nifi::minifi::core::FlowFile::AttributeMap;
 
 class API_INITIALIZER {
  public:
@@ -124,8 +125,9 @@ nifi_instance *create_instance_repo(const char *url, nifi_port *port, const char
 
   // may have to translate port ID here in the future
   // need reinterpret cast until we move to C for this module.
-  instance->port.port_id = reinterpret_cast<char*>(malloc(strlen(port->port_id) + 1));
-  snprintf(instance->port.port_id, strlen(port->port_id) + 1, "%s", port->port_id);
+  char* port_id = reinterpret_cast<char*>(malloc(strlen(port->port_id) + 1));
+  std::strcpy(port_id, port->port_id);
+  instance->port.port_id = port_id;
   return instance;
 }
 
@@ -137,8 +139,8 @@ standalone_processor * create_processor(const char *name, nifi_instance * instan
   }
   if (instance == NULL) {
     nifi_port port;
-    char portnum[] = "98765";
-    port.port_id = portnum;
+    std::string port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
+    port.port_id = const_cast<char*>(port_str.c_str());
     instance = create_instance("internal_standalone", &port);
   }
   auto flow = create_new_flow(instance);
@@ -250,7 +252,7 @@ flow_file_record* create_flowfile(const char *file, const size_t len) {
 flow_file_record* create_ff_object(const char *file, const size_t len, const uint64_t size) {
   NULL_CHECK(nullptr, file);
   flow_file_record *new_ff = create_ff_object_na(file, len, size);
-  new_ff->attributes = new string_map();
+  new_ff->attributes = new AttributeMap();
   return new_ff;
 }
 
@@ -274,7 +276,7 @@ flow_file_record* create_ff_object_na(const char *file, const size_t len, const 
 
 flow_file_record* create_ff_object_nc() {
   flow_file_record* new_ff = create_ff_object_na(nullptr, 0, 0);
-  new_ff->attributes = new string_map();
+  new_ff->attributes = new AttributeMap();
   return new_ff;
 }
 
@@ -348,7 +350,7 @@ void free_flowfile(flow_file_record *ff) {
     delete content_repo_ptr;
   }
   if (ff->ffp == nullptr) {
-    auto map = static_cast<string_map*>(ff->attributes);
+    auto map = static_cast<AttributeMap*>(ff->attributes);
     delete map;
   } else {
     auto ff_sptr = reinterpret_cast<std::shared_ptr<core::FlowFile>*>(ff->ffp);
@@ -369,7 +371,7 @@ void free_flowfile(flow_file_record *ff) {
 int8_t add_attribute(flow_file_record *ff, const char *key, void *value, size_t size) {
   NULL_CHECK(-1, ff, key, value);
   NULL_CHECK(-1, ff->attributes);
-  auto attribute_map = static_cast<string_map*>(ff->attributes);
+  auto attribute_map = static_cast<AttributeMap*>(ff->attributes);
   const auto& ret = attribute_map->insert(std::pair<std::string, std::string>(key, std::string(static_cast<char*>(value), size)));
   return ret.second ? 0 : -1;
 }
@@ -384,7 +386,7 @@ int8_t add_attribute(flow_file_record *ff, const char *key, void *value, size_t 
 void update_attribute(flow_file_record *ff, const char *key, void *value, size_t size) {
   NULL_CHECK(, ff, key);
   NULL_CHECK(, ff->attributes);
-  auto attribute_map = static_cast<string_map*>(ff->attributes);
+  auto attribute_map = static_cast<AttributeMap*>(ff->attributes);
   (*attribute_map)[key] = std::string(static_cast<char*>(value), size);
 }
 
@@ -398,7 +400,7 @@ void update_attribute(flow_file_record *ff, const char *key, void *value, size_t
 int8_t get_attribute(const flow_file_record * ff, attribute * caller_attribute) {
   NULL_CHECK(-1, ff, caller_attribute);
   NULL_CHECK(-1, ff->attributes, caller_attribute->key);
-  auto attribute_map = static_cast<string_map*>(ff->attributes);
+  auto attribute_map = static_cast<AttributeMap*>(ff->attributes);
   auto find = attribute_map->find(caller_attribute->key);
   if (find != attribute_map->end()) {
     caller_attribute->value = static_cast<void*>(const_cast<char*>(find->second.data()));
@@ -411,14 +413,14 @@ int8_t get_attribute(const flow_file_record * ff, attribute * caller_attribute) 
 int get_attribute_quantity(const flow_file_record *ff) {
   NULL_CHECK(0, ff);
   NULL_CHECK(0, ff->attributes);
-  auto attribute_map = static_cast<string_map*>(ff->attributes);
+  auto attribute_map = static_cast<AttributeMap*>(ff->attributes);
   return attribute_map ? attribute_map->size() : 0;
 }
 
 int get_all_attributes(const flow_file_record* ff, attribute_set *target) {
   NULL_CHECK(0, ff, target);
   NULL_CHECK(0, ff->attributes, target->attributes);
-  auto attribute_map = static_cast<string_map*>(ff->attributes);
+  auto attribute_map = static_cast<AttributeMap*>(ff->attributes);
   size_t i = 0;
   for (const auto& kv : *attribute_map) {
     if (i >= target->size) {
@@ -441,7 +443,7 @@ int get_all_attributes(const flow_file_record* ff, attribute_set *target) {
 int8_t remove_attribute(flow_file_record *ff, const char *key) {
   NULL_CHECK(-1, ff, key);
   NULL_CHECK(-1, ff->attributes);
-  auto attribute_map = static_cast<string_map*>(ff->attributes);
+  auto attribute_map = static_cast<AttributeMap*>(ff->attributes);
   return gsl::narrow<int8_t>(attribute_map->erase(key)) - 1;  // erase by key returns the number of elements removed (0 or 1)
 }
 
@@ -468,7 +470,7 @@ int get_content(const flow_file_record* ff, uint8_t* target, int size) {
  * @param instance nifi instance structure
  */
 int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
-  static string_map empty_attribute_map;
+  static AttributeMap empty_attribute_map;
 
   NULL_CHECK(-1, ff, instance);
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
@@ -477,9 +479,9 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
     minifi_instance_ref->setRemotePort(instance->port.port_id);
   }
 
-  string_map& attribute_map = empty_attribute_map;
+  AttributeMap& attribute_map = empty_attribute_map;
   if(ff->attributes) {
-    attribute_map = *(static_cast<string_map *>(ff->attributes));
+    attribute_map = *(static_cast<AttributeMap *>(ff->attributes));
   }
 
   auto no_op = minifi_instance_ref->getNoOpRepository();
@@ -507,7 +509,11 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
     stream = std::make_shared<minifi::io::BufferStream>();
   }
 
-  auto ffr = std::make_shared<minifi::FlowFileRecord>(no_op, content_repo, attribute_map, claim);
+  auto ffr = std::make_shared<minifi::FlowFileRecord>();
+  for (const auto& attribute : attribute_map) {
+    ffr->setAttribute(attribute.first, attribute.second);
+  }
+  ffr->setResourceClaim(claim);
   ffr->addAttribute("nanofi.version", API_VERSION);
   ffr->setSize(ff->size);
 
@@ -707,7 +713,7 @@ flow_file_record *invoke_ff(standalone_processor* proc, const flow_file_record *
       free(fb.buffer);
     }
 
-    ff_data->attributes = *static_cast<std::map<std::string, std::string> *>(input_ff->attributes);
+    ff_data->attributes = *static_cast<AttributeMap*>(input_ff->attributes);
     plan->runNextProcessor(nullptr, ff_data);
   }
   while (plan->runNextProcessor()) {

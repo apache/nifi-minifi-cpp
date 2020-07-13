@@ -497,7 +497,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 
 class TestProcessorNoContent : public minifi::core::Processor {
  public:
-  explicit TestProcessorNoContent(std::string name, utils::Identifier uuid = NULL)
+  explicit TestProcessorNoContent(std::string name, utils::Identifier uuid = {})
       : Processor(name, uuid),
         Success("success", "All files are routed to success") {
   }

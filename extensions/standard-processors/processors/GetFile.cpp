@@ -181,15 +181,15 @@ void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
         std::string fileName = list.front();
         list.pop();
         logger_->log_info("GetFile process %s", fileName);
-        std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+        auto flowFile = session->create();
         if (flowFile == nullptr)
           return;
         std::size_t found = fileName.find_last_of("/\\");
         std::string path = fileName.substr(0, found);
         std::string name = fileName.substr(found + 1);
-        flowFile->updateKeyedAttribute(FILENAME, name);
-        flowFile->updateKeyedAttribute(PATH, path);
-        flowFile->addKeyedAttribute(ABSOLUTE_PATH, fileName);
+        flowFile->setAttribute(core::SpecialFlowAttribute::FILENAME, name);
+        flowFile->setAttribute(core::SpecialFlowAttribute::PATH, path);
+        flowFile->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, fileName);
         session->import(fileName, flowFile, request_.keepSourceFile);
         session->transfer(flowFile, Success);
       }

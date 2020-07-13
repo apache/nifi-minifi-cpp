@@ -56,7 +56,7 @@ namespace core {
  */
 class ProcessContextBuilder : public core::CoreComponent, public std::enable_shared_from_this<ProcessContextBuilder> {
  public:
-  ProcessContextBuilder(const std::string &name, minifi::utils::Identifier &uuid);
+  ProcessContextBuilder(const std::string &name, const minifi::utils::Identifier &uuid);
 
   ProcessContextBuilder(const std::string &name); // NOLINT
 

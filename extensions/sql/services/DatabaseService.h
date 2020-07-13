@@ -40,18 +40,7 @@ namespace controllers {
  */
 class DatabaseService : public core::controller::ControllerService {
  public:
-
-  /**
-   * Constructors for the controller service.
-   */
-  explicit DatabaseService(const std::string &name, const std::string &id)
-      : ControllerService(name, id),
-        initialized_(false),
-        logger_(logging::LoggerFactory<DatabaseService>::getLogger()) {
-    initialize();
-  }
-
-  explicit DatabaseService(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit DatabaseService(const std::string &name, const utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
         initialized_(false),
         logger_(logging::LoggerFactory<DatabaseService>::getLogger()) {

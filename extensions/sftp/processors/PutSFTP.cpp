@@ -221,7 +221,7 @@ int64_t PutSFTP::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
 }
 
 bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->get());
+  auto flow_file = session->get();
   if (flow_file == nullptr) {
     return false;
   }
@@ -247,7 +247,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   bool remote_group_set = false;
   uint64_t remote_group = 0U;
 
-  flow_file->getKeyedAttribute(FILENAME, filename);
+  flow_file->getAttribute(core::SpecialFlowAttribute::FILENAME, filename);
 
   std::string value;
   context->getProperty(RemotePath, remote_path, flow_file);

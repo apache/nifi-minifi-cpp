@@ -23,6 +23,23 @@
 #include <cctype>
 #include "../TestBase.h"
 #include "utils/Id.h"
+#include "../Utils.h"
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace utils {
+struct IdentifierTestAccessor {
+  FIELD_ACCESSOR(data_)
+};
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+
+using org::apache::nifi::minifi::utils::IdentifierTestAccessor;
 
 TEST_CASE("Test default is time", "[id]") {
   TestController test_controller;
@@ -47,11 +64,9 @@ TEST_CASE("Test time", "[id]") {
 
   REQUIRE(true == LogTestController::getInstance().contains("Using uuid_generate_time implementation for uids."));
 
-  utils::Identifier id;
-  generator->generate(id);
+  utils::Identifier id = generator->generate();
 
-  const uint8_t* bytes = id.toArray();
-  uint8_t version = bytes[6] >> 4;
+  uint8_t version = IdentifierTestAccessor::get_data_(id)[6] >> 4;
   REQUIRE(0x01 == version);
 
   LogTestController::getInstance().reset();
@@ -86,11 +101,9 @@ TEST_CASE("Test random", "[id]") {
 
   REQUIRE(true == LogTestController::getInstance().contains("Using uuid_generate_random for uids."));
 
-  utils::Identifier id;
-  generator->generate(id);
+  utils::Identifier id = generator->generate();
 
-  const uint8_t* bytes = id.toArray();
-  uint8_t version = bytes[6] >> 4;
+  uint8_t version = IdentifierTestAccessor::get_data_(id)[6] >> 4;
   REQUIRE(0x04 == version);
 
   LogTestController::getInstance().reset();
@@ -134,8 +147,6 @@ TEST_CASE("Test parse", "[id]") {
   std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
   generator->initialize(id_props);
 
-  utils::Identifier id;
-
   const std::map<std::string, std::array<uint8_t, 16U>> test_cases = {
       {"00000000-0000-0000-0000-000000000000", {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
       {"1d412e16-0148-11ea-880b-9bf2c1d8f5be", {0x1D, 0x41, 0x2E, 0x16, 0x01, 0x48, 0x11, 0xEA, 0x88, 0x0B, 0x9B, 0xF2, 0xC1, 0xD8, 0xF5, 0xBE}},
@@ -144,8 +155,8 @@ TEST_CASE("Test parse", "[id]") {
   };
 
   for (const auto& test_case : test_cases) {
-    id = test_case.first;
-    REQUIRE(memcmp(id.toArray(), test_case.second.data(), 16U) == 0);
+    utils::Identifier id = utils::Identifier::parse(test_case.first).value();
+    REQUIRE(memcmp(IdentifierTestAccessor::get_data_(id).data(), test_case.second.data(), 16U) == 0);
     REQUIRE(utils::StringUtils::equalsIgnoreCase(test_case.first, id.to_string()));
   }
 
@@ -162,8 +173,7 @@ TEST_CASE("Test to_string", "[id]") {
   std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
   generator->initialize(id_props);
 
-  utils::Identifier id;
-  generator->generate(id);
+  utils::Identifier id = generator->generate();
 
   std::string id_str = id.to_string();
   std::cerr << "Generated UUID " << id_str << std::endl;
@@ -206,18 +216,16 @@ TEST_CASE("Test Hex Device Segment 16 bits correct digits", "[id]") {
   std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
   generator->initialize(id_props);
 
-  utils::Identifier uuid;
-  generator->generate(uuid);
-  auto uid = uuid.toArray();
-  REQUIRE(0x09 == uid[0]);
-  REQUIRE(0xaf == uid[1]);
-  REQUIRE(0 == uid[15]);
+  utils::Identifier uuid = generator->generate();
+  auto& data = IdentifierTestAccessor::get_data_(uuid);
+  REQUIRE(0x09 == data[0]);
+  REQUIRE(0xaf == data[1]);
+  REQUIRE(0 == data[15]);
 
-  generator->generate(uuid);
-  uid = uuid.toArray();
-  REQUIRE(0x09 == uid[0]);
-  REQUIRE(0xaf == uid[1]);
-  REQUIRE(1 == uid[15]);
+  uuid = generator->generate();
+  REQUIRE(0x09 == data[0]);
+  REQUIRE(0xaf == data[1]);
+  REQUIRE(1 == data[15]);
 
   REQUIRE(true == LogTestController::getInstance().contains("Using user defined device segment: 9af"));
   LogTestController::getInstance().reset();
@@ -234,20 +242,18 @@ TEST_CASE("Test Hex Device Segment 16 bits too many digits", "[id]") {
   std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
   generator->initialize(id_props);
 
-  utils::Identifier uuid;
-  generator->generate(uuid);
-  auto uid = uuid.toArray();
-  REQUIRE(0x09 == uid[0]);
-  REQUIRE(0xaf == uid[1]);
-  REQUIRE(0 == (uid[2] & 128));
-  REQUIRE(0 == uid[15]);
+  utils::Identifier uuid = generator->generate();
+  auto& data = IdentifierTestAccessor::get_data_(uuid);
+  REQUIRE(0x09 == data[0]);
+  REQUIRE(0xaf == data[1]);
+  REQUIRE(0 == (data[2] & 128));
+  REQUIRE(0 == data[15]);
 
-  generator->generate(uuid);
-  uid = uuid.toArray();
-  REQUIRE(0x09 == uid[0]);
-  REQUIRE(0xaf == uid[1]);
-  REQUIRE(0 == (uid[2] & 128));
-  REQUIRE(1 == uid[15]);
+  uuid = generator->generate();
+  REQUIRE(0x09 == data[0]);
+  REQUIRE(0xaf == data[1]);
+  REQUIRE(0 == (data[2] & 128));
+  REQUIRE(1 == data[15]);
 
   REQUIRE(true == LogTestController::getInstance().contains("Using user defined device segment: 9af"));
   LogTestController::getInstance().reset();
@@ -265,23 +271,20 @@ TEST_CASE("Test Hex Device Segment 18 bits", "[id]") {
   std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
   generator->initialize(id_props);
 
-  utils::Identifier uuid;
-  generator->generate(uuid);
-  auto uid = uuid.toArray();
-  REQUIRE(0x09 == uid[0]);
-  REQUIRE(0xaf == uid[1]);
-  REQUIRE(128 == (uid[2] & 192));
-  REQUIRE(0 == uid[15]);
+  utils::Identifier uuid = generator->generate();
+  auto& data = IdentifierTestAccessor::get_data_(uuid);
+  REQUIRE(0x09 == data[0]);
+  REQUIRE(0xaf == data[1]);
+  REQUIRE(128 == (data[2] & 192));
+  REQUIRE(0 == data[15]);
 
-  generator->generate(uuid);
-  uid = uuid.toArray();
-  REQUIRE(0x09 == uid[0]);
-  REQUIRE(0xaf == uid[1]);
-  REQUIRE(128 == (uid[2] & 192));
-  REQUIRE(1 == uid[15]);
+  uuid = generator->generate();
+  REQUIRE(0x09 == data[0]);
+  REQUIRE(0xaf == data[1]);
+  REQUIRE(128 == (data[2] & 192));
+  REQUIRE(1 == data[15]);
 
-  utils::Identifier uuid2;
-  generator->generate(uuid2);
+  utils::Identifier uuid2 = generator->generate();
   REQUIRE(uuid.to_string() != uuid2.to_string());
   REQUIRE(uuid != uuid2);
 
@@ -313,7 +316,7 @@ TEST_CASE("Collision", "[collision]") {
   for (size_t i = 0U; i < 16U; i++) {
     threads.emplace_back([&generator, &uuids, i](){
       for (size_t j = 0U; j < 1024U; j++) {
-        generator->generate(uuids[i * 1024U + j]);
+        uuids[i * 1024U + j] = generator->generate();
       }
     });
   }
@@ -322,7 +325,7 @@ TEST_CASE("Collision", "[collision]") {
   }
 
   std::sort(uuids.begin(), uuids.end(), [](const utils::Identifier& a, const utils::Identifier& b) {
-    return memcmp(a.toArray(), b.toArray(), 16U) < 0;
+    return memcmp(IdentifierTestAccessor::get_data_(a).data(), IdentifierTestAccessor::get_data_(b).data(), 16U) < 0;
   });
   REQUIRE(uuids.end() == std::adjacent_find(uuids.begin(), uuids.end()));
 
@@ -351,11 +354,11 @@ TEST_CASE("Speed", "[speed]") {
 
   std::vector<utils::Identifier> uuids(128U * 1024U);
   // Prime the generator
-  generator->generate(uuids[0]);
+  generator->generate();
 
   auto before = std::chrono::high_resolution_clock::now();
   for (size_t i = 0U; i < uuids.size(); i++) {
-    generator->generate(uuids[i]);
+    uuids[i] = generator->generate();
   }
   auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - before).count();
   std::cerr << "Generating one " << implementation << " UUID took " << (duration / uuids.size()) << "ns" << std::endl;

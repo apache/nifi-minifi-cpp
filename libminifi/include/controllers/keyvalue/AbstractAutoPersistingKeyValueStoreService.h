@@ -39,7 +39,6 @@ namespace controllers {
 
 class AbstractAutoPersistingKeyValueStoreService : public PersistableKeyValueStoreService {
  public:
-  explicit AbstractAutoPersistingKeyValueStoreService(const std::string& name, const std::string& id);
   explicit AbstractAutoPersistingKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
 
   virtual ~AbstractAutoPersistingKeyValueStoreService();

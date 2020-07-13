@@ -55,13 +55,11 @@ class Bin {
         logger_(logging::LoggerFactory<Bin>::getLogger()) {
     queued_data_size_ = 0;
     creation_dated_ = utils::timeutils::getTimeMillis();
-    std::shared_ptr<utils::IdGenerator> id_generator = utils::IdGenerator::getIdGenerator();
-    id_generator->generate(uuid_);
-    uuid_str_ = uuid_.to_string();
-    logger_->log_debug("Bin %s for group %s created", uuid_str_, groupId_);
+    uuid_ = utils::IdGenerator::getIdGenerator()->generate();
+    logger_->log_debug("Bin %s for group %s created", getUUIDStr(), groupId_);
   }
   virtual ~Bin() {
-    logger_->log_debug("Bin %s for group %s destroyed", uuid_str_, groupId_);
+    logger_->log_debug("Bin %s for group %s destroyed", getUUIDStr(), groupId_);
   }
   // check whether the bin is full
   bool isFull() {
@@ -106,7 +104,7 @@ class Bin {
 
     queue_.push_back(flow);
     queued_data_size_ += flow->getSize();
-    logger_->log_debug("Bin %s for group %s offer size %zu byte %" PRIu64 " min_entry %zu max_entry %zu", uuid_str_, groupId_, queue_.size(), queued_data_size_, minEntries_, maxEntries_);
+    logger_->log_debug("Bin %s for group %s offer size %zu byte %" PRIu64 " min_entry %zu max_entry %zu", getUUIDStr(), groupId_, queue_.size(), queued_data_size_, minEntries_, maxEntries_);
 
     return true;
   }
@@ -117,10 +115,11 @@ class Bin {
   int getSize() {
     return queue_.size();
   }
-  // Get the UUID as string
+
   std::string getUUIDStr() {
-    return uuid_str_;
+    return uuid_.to_string();
   }
+
   std::string getGroupId() {
     return groupId_;
   }
@@ -142,8 +141,6 @@ class Bin {
   std::shared_ptr<logging::Logger> logger_;
   // A global unique identifier
   utils::Identifier uuid_;
-  // UUID string
-  std::string uuid_str_;
 };
 
 // BinManager Class
@@ -274,7 +271,7 @@ class BinFiles : public core::Processor {
   // Initialize, over write by NiFi BinFiles
   void initialize(void) override;
 
-  void put(std::shared_ptr<core::Connectable> flow) override;
+  void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
 
   std::set<std::shared_ptr<core::Connectable>> getOutGoingConnections(const std::string &relationship) const override;
 
@@ -304,7 +301,7 @@ class BinFiles : public core::Processor {
      * @return the resurrected persisted FlowFiles
      */
     std::unordered_set<std::shared_ptr<core::FlowFile>> getNewFlowFiles();
-    void put(std::shared_ptr<core::FlowFile>& flowFile);
+    void put(const std::shared_ptr<core::FlowFile>& flowFile);
    private:
     std::atomic_bool has_new_flow_file_{false};
     std::mutex flow_file_mutex_;

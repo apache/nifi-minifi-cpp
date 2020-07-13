@@ -38,26 +38,20 @@ namespace core {
 
 std::shared_ptr<utils::IdGenerator> ProcessGroup::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid)
+ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid)
     : ProcessGroup(type, name, uuid, 0, 0) {
 }
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid, int version)
+ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version)
     : ProcessGroup(type, name, uuid, version, 0) {
 }
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid, int version, ProcessGroup *parent)
-    : logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
-      name_(name),
+ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version, ProcessGroup *parent)
+    : CoreComponent(name, uuid, id_generator_),
+      logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
       type_(type),
       config_version_(version),
       parent_process_group_(parent) {
-  if (uuid == nullptr) {
-    id_generator_->generate(uuid_);
-  } else {
-    uuid_ = uuid;
-  }
-
   yield_period_msec_ = 0;
 
   if (parent_process_group_ != 0) {
@@ -71,14 +65,12 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, utils::Ident
   logger_->log_debug("ProcessGroup %s created", name_);
 }
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name)
-    : logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
-      name_(name),
+ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name)
+    : CoreComponent(name, {}, id_generator_),
+      logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
       type_(type),
       config_version_(0),
       parent_process_group_(0) {
-  id_generator_->generate(uuid_);
-
   yield_period_msec_ = 0;
   onschedule_retry_msec_ = ONSCHEDULE_RETRY_INTERVAL;
   transmitting_ = false;

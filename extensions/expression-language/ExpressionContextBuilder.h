@@ -37,7 +37,7 @@ namespace expressions {
  */
 class ExpressionContextBuilder : public core::ProcessContextBuilder {
  public:
-  ExpressionContextBuilder(const std::string &name, minifi::utils::Identifier &uuid);
+  ExpressionContextBuilder(const std::string &name, const minifi::utils::Identifier &uuid);
 
   ExpressionContextBuilder(const std::string &name);
 

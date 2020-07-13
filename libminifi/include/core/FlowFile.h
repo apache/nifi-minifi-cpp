@@ -23,11 +23,13 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "utils/TimeUtil.h"
 #include "ResourceClaim.h"
 #include "Connectable.h"
 #include "WeakReference.h"
+#include "utils/FlatMap.h"
 
 namespace org {
 namespace apache {
@@ -35,11 +37,14 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-class FlowFile : public core::Connectable, public ReferenceContainer {
+class Connectable;
+
+class FlowFile : public CoreComponent, public ReferenceContainer {
  public:
   FlowFile();
-  ~FlowFile() override;
   FlowFile& operator=(const FlowFile& other);
+
+  using AttributeMap = utils::FlatMap<std::string, std::string>;
 
   /**
    * Returns a pointer to this flow file record's
@@ -80,7 +85,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   /**
    * Get lineage identifiers
    */
-  std::set<std::string>& getlineageIdentifiers();
+  std::vector<std::string> &getlineageIdentifiers();
 
   /**
    * Returns whether or not this flow file record
@@ -119,7 +124,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    */
   void setLineageStartDate(const uint64_t date);
 
-  void setLineageIdentifiers(std::set<std::string> lineage_Identifiers) {
+  void setLineageIdentifiers(const std::vector<std::string>& lineage_Identifiers) {
     lineage_Identifiers_ = lineage_Identifiers;
   }
   /**
@@ -150,8 +155,8 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   /**
    * setAttribute, if attribute already there, update it, else, add it
    */
-  void setAttribute(const std::string& key, const std::string& value) {
-    attributes_[key] = value;
+  bool setAttribute(const std::string& key, const std::string& value) {
+    return attributes_.insert_or_assign(key, value).second;
   }
 
   /**
@@ -159,14 +164,14 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * @return attributes.
    */
   std::map<std::string, std::string> getAttributes() const {
-    return attributes_;
+    return {attributes_.begin(), attributes_.end()};
   }
 
   /**
    * Returns the map of attributes
    * @return attributes.
    */
-  std::map<std::string, std::string> *getAttributesPtr() {
+  AttributeMap *getAttributesPtr() {
     return &attributes_;
   }
 
@@ -230,52 +235,15 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   }
 
   /**
-   * Yield
-   */
-  void yield() override {
-  }
-  /**
-   * Determines if we are connected and operating
-   */
-  bool isRunning() override {
-    return true;
-  }
-
-  /**
-   * Determines if work is available by this connectable
-   * @return boolean if work is available.
-   */
-  bool isWorkAvailable() override {
-    return true;
-  }
-
-  /**
    * Sets the original connection with a shared pointer.
    * @param connection shared connection.
    */
-  void setConnection(std::shared_ptr<core::Connectable>& connection);
-
-  /**
-   * Sets the original connection with a shared pointer.
-   * @param connection shared connection.
-   */
-  void setConnection(std::shared_ptr<core::Connectable>&& connection);
-
-  /**
-   * Returns the connection referenced by this record.
-   * @return shared connection pointer.
-   */
-  std::shared_ptr<core::Connectable> getConnection() const;
-  /**
-   * Sets the original connection with a shared pointer.
-   * @param connection shared connection.
-   */
-  void setOriginalConnection(std::shared_ptr<core::Connectable>& connection);
+  void setConnection(const std::shared_ptr<core::Connectable>& connection);
   /**
    * Returns the original connection referenced by this record.
    * @return shared original connection pointer.
    */
-  std::shared_ptr<core::Connectable> getOriginalConnection() const;
+  std::shared_ptr<core::Connectable> getConnection() const;
 
   void setStoredToRepository(bool storedInRepository) {
     stored = storedInRepository;
@@ -307,25 +275,44 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   // Penalty expiration
   uint64_t penaltyExpiration_ms_;
   // Attributes key/values pairs for the flow record
-  std::map<std::string, std::string> attributes_;
+  AttributeMap attributes_;
   // Pointer to the associated content resource claim
   std::shared_ptr<ResourceClaim> claim_;
   // Pointers to stashed content resource claims
-  std::map<std::string, std::shared_ptr<ResourceClaim>> stashedContent_;
+  utils::FlatMap<std::string, std::shared_ptr<ResourceClaim>> stashedContent_;
   // UUID string
   // std::string uuid_str_;
   // UUID string for all parents
-  std::set<std::string> lineage_Identifiers_;
+  std::vector<std::string> lineage_Identifiers_;
 
-  // Connection queue that this flow file will be transfer or current in
-  std::shared_ptr<core::Connectable> connection_;
   // Orginal connection queue that this flow file was dequeued from
-  std::shared_ptr<core::Connectable> original_connection_;
+  std::shared_ptr<core::Connectable> connection_;
 
- private:
   static std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   static std::shared_ptr<utils::NonRepeatingStringGenerator> numeric_id_generator_;
+};
+
+// FlowFile Attribute
+struct SpecialFlowAttribute {
+  // The flowfile's path indicates the relative directory to which a FlowFile belongs and does not contain the filename
+  static const std::string PATH;
+  // The flowfile's absolute path indicates the absolute directory to which a FlowFile belongs and does not contain the filename
+  static const std::string ABSOLUTE_PATH;
+  // The filename of the FlowFile. The filename should not contain any directory structure.
+  static const std::string FILENAME;
+  // A unique UUID assigned to this FlowFile.
+  static const std::string UUID;
+  // A numeric value indicating the FlowFile priority
+  static const std::string priority;
+  // The MIME Type of this FlowFile
+  static const std::string MIME_TYPE;
+  // Specifies the reason that a FlowFile is being discarded
+  static const std::string DISCARD_REASON;
+  // Indicates an identifier other than the FlowFile's UUID that is known to refer to this FlowFile.
+  static const std::string ALTERNATE_IDENTIFIER;
+  // Flow identifier
+  static const std::string FLOW_ID;
 };
 
 }  // namespace core

@@ -54,7 +54,7 @@ using content_repo_sptr = std::shared_ptr<core::ContentRepository>;
 
 struct flowfile_input_params {
   std::shared_ptr<minifi::io::BaseStream> content_stream;
-  std::map<std::string, std::string> attributes;
+  minifi::core::FlowFile::AttributeMap attributes;
 };
 
 namespace {

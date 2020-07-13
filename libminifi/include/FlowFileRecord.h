@@ -38,6 +38,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "ResourceClaim.h"
 #include "Connection.h"
+#include "io/OutputStream.h"
 
 namespace org {
 namespace apache {
@@ -45,40 +46,6 @@ namespace nifi {
 namespace minifi {
 
 #define DEFAULT_FLOWFILE_PATH "."
-
-// FlowFile Attribute
-enum FlowAttribute {
-  // The flowfile's path indicates the relative directory to which a FlowFile belongs and does not contain the filename
-  PATH = 0,
-  // The flowfile's absolute path indicates the absolute directory to which a FlowFile belongs and does not contain the filename
-  ABSOLUTE_PATH,
-  // The filename of the FlowFile. The filename should not contain any directory structure.
-  FILENAME,
-  // A unique UUID assigned to this FlowFile.
-  UUID,
-  // A numeric value indicating the FlowFile priority
-  priority,
-  // The MIME Type of this FlowFile
-  MIME_TYPE,
-  // Specifies the reason that a FlowFile is being discarded
-  DISCARD_REASON,
-  // Indicates an identifier other than the FlowFile's UUID that is known to refer to this FlowFile.
-  ALTERNATE_IDENTIFIER,
-  // Flow identifier
-  FLOW_ID,
-  MAX_FLOW_ATTRIBUTES
-};
-
-// FlowFile Attribute Key
-static const char *FlowAttributeKeyArray[MAX_FLOW_ATTRIBUTES] = { "path", "absolute.path", "filename", "uuid", "priority", "mime.type", "discard.reason", "alternate.identifier", "flow.id" };
-
-// FlowFile Attribute Enum to Key
-inline const char *FlowAttributeKey(FlowAttribute attribute) {
-  if (attribute < MAX_FLOW_ATTRIBUTES)
-    return FlowAttributeKeyArray[attribute];
-  else
-    return NULL;
-}
 
 // FlowFile IO Callback functions for input and output
 // throw exception for error
@@ -95,94 +62,38 @@ class OutputStreamCallback {
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
 };
 
+namespace core {
+class ProcessSession;
+}
+
 class FlowFileRecord : public core::FlowFile {
+  friend class core::ProcessSession;
+
  public:
-  // Constructor
-  /*
-   * Create a new flow record
-   */
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::map<std::string, std::string> attributes,
-                          std::shared_ptr<ResourceClaim> claim = nullptr);
+  FlowFileRecord();
 
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event);
-
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event,
-                          const std::string &uuidConnection);
-
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo)
-      : FlowFile(),
-        flow_repository_(flow_repository),
-        content_repo_(content_repo),
-        snapshot_("") {
-  }
-  // Destructor
-  virtual ~FlowFileRecord();
-  // addAttribute key is enum
-  bool addKeyedAttribute(FlowAttribute key, const std::string &value);
-  // removeAttribute key is enum
-  bool removeKeyedAttribute(FlowAttribute key);
-  // updateAttribute key is enum
-  bool updateKeyedAttribute(FlowAttribute key, std::string value);
-  // getAttribute key is enum
-  bool getKeyedAttribute(FlowAttribute key, std::string &value);
-
-  bool Serialize(io::BufferStream &outStream);
+  bool Serialize(io::OutputStream &outStream);
 
   //! Serialize and Persistent to the repository
-  bool Serialize();
+  bool Persist(const std::shared_ptr<core::Repository>& flowRepository);
   //! DeSerialize
-  bool DeSerialize(const uint8_t *buffer, const int bufferSize);
-  //! DeSerialize
-  bool DeSerialize(io::BufferStream &stream) {
-    return DeSerialize(stream.getBuffer(), gsl::narrow<int>(stream.size()));
+  static std::shared_ptr<FlowFileRecord> DeSerialize(const uint8_t *buffer, int bufferSize, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container) {
+    io::BufferStream inStream{buffer, gsl::narrow<unsigned int>(bufferSize)};
+    return DeSerialize(inStream, content_repo, container);
   }
   //! DeSerialize
-  bool DeSerialize(std::string key);
+  static std::shared_ptr<FlowFileRecord> DeSerialize(io::InputStream &stream, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
+  //! DeSerialize
+  static std::shared_ptr<FlowFileRecord> DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository,
+      const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
 
-  void setSnapShot(bool snapshot) {
-    snapshot_ = snapshot;
-  }
-
-  /**
-   * gets the UUID connection.
-   * @return uuidConnection
-   */
-  const std::string getConnectionUuid() {
-    return uuid_connection_;
-  }
-
-  /**
-   * Set the UUID connection.
-   */
-  void setUuidConnection(const std::string &uuid_connection) {
-    uuid_connection_ = uuid_connection;
-  }
-
-  const std::string getContentFullPath() {
+  std::string getContentFullPath() {
     return claim_ ? claim_->getContentFullPath() : "";
   }
 
-  FlowFileRecord &operator=(const FlowFileRecord &);
-
-  FlowFileRecord(const FlowFileRecord &parent) = delete;
-
  protected:
-  // connection uuid
-  std::string uuid_connection_;
-
   // Local flow sequence ID
   static std::atomic<uint64_t> local_flow_seq_number_;
-
-  // repository reference.
-  std::shared_ptr<core::Repository> flow_repository_;
-
-  // content repo reference.
-  std::shared_ptr<core::ContentRepository> content_repo_;
-
-  // Snapshot flow record for session rollback
-  bool snapshot_;
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
 
  private:
   static std::shared_ptr<logging::Logger> logger_;

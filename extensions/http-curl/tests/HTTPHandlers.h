@@ -242,10 +242,6 @@ class FlowFileResponder : public ServerAwareHandler {
       if(!isServerRunning())return false;
       assert(read == length);
 
-      assert(flow->attributes["path"] == ".");
-      assert(!flow->attributes["uuid"].empty());
-      assert(!flow->attributes["filename"].empty());
-
       if (!invalid_checksum) {
         site2site_rest_resp = std::to_string(stream.getCRC());
         flow_files_.enqueue(flow);

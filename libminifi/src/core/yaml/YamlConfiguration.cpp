@@ -608,11 +608,10 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           checkRequiredField(&connectionNode, "source name",
           CONFIG_YAML_CONNECTIONS_KEY);
           std::string connectionSrcProcName = connectionNode["source name"].as<std::string>();
-          utils::Identifier tmpUUID;
-          tmpUUID = connectionSrcProcName;
-          if (NULL != parent->findProcessorById(tmpUUID)) {
+          utils::optional<utils::Identifier> tmpUUID = utils::Identifier::parse(connectionSrcProcName);
+          if (tmpUUID && NULL != parent->findProcessorById(tmpUUID.value())) {
             // the source name is a remote port id, so use that as the source id
-            srcUUID = tmpUUID;
+            srcUUID = tmpUUID.value();
             logger_->log_debug("Using 'source name' containing a remote port id to match the source for "
                                "connection '%s': source name => [%s]",
                                name, connectionSrcProcName);
@@ -647,11 +646,10 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           checkRequiredField(&connectionNode, "destination name",
           CONFIG_YAML_CONNECTIONS_KEY);
           std::string connectionDestProcName = connectionNode["destination name"].as<std::string>();
-          utils::Identifier tmpUUID;
-          tmpUUID = connectionDestProcName;
-          if (parent->findProcessorById(tmpUUID)) {
+          utils::optional<utils::Identifier> tmpUUID = utils::Identifier::parse(connectionDestProcName);
+          if (tmpUUID && parent->findProcessorById(tmpUUID.value())) {
             // the destination name is a remote port id, so use that as the dest id
-            destUUID = tmpUUID;
+            destUUID = tmpUUID.value();
             logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for "
                                "connection '%s': destination name => [%s]",
                                name, connectionDestProcName);
@@ -972,8 +970,7 @@ std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode, const std::
                                   "of YAML::NodeType::Scalar.");
     }
   } else {
-    utils::Identifier uuid;
-    id_generator_->generate(uuid);
+    utils::Identifier uuid = id_generator_->generate();
     id = uuid.to_string();
     logger_->log_debug("Generating random ID: id => [%s]", id);
   }

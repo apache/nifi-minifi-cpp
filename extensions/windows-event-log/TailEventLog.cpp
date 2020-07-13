@@ -96,7 +96,7 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
     while (bytes_to_read > 0) {
 
-      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+      auto flowFile = session->create();
       if (flowFile == nullptr)
         return;
 

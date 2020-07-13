@@ -52,11 +52,11 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
   repository->initialize(std::make_shared<minifi::Configure>());
 
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  minifi::FlowFileRecord record(repository, content_repo);
+  auto file = std::make_shared<minifi::FlowFileRecord>();
 
-  record.addAttribute("keyA", "");
+  file->addAttribute("keyA", "");
 
-  REQUIRE(true == record.Serialize());
+  REQUIRE(true == file->Persist(repository));
 
   utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
 
@@ -74,13 +74,13 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
 
   repository->initialize(std::make_shared<minifi::Configure>());
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  minifi::FlowFileRecord record(repository, content_repo);
+  auto file = std::make_shared<minifi::FlowFileRecord>();
 
-  record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
+  file->addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-  record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
+  file->addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-  REQUIRE(true == record.Serialize());
+  REQUIRE(true == file->Persist(repository));
 
   utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
 
@@ -99,9 +99,7 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
   repository->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
 
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  minifi::FlowFileRecord record(repository, content_repo);
-
-  minifi::FlowFileRecord record2(repository, content_repo);
+  minifi::FlowFileRecord record;
 
   std::string uuid = record.getUUIDStr();
 
@@ -115,22 +113,23 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
 
   record.addAttribute("", "sdgsdg");
 
-  REQUIRE(record.Serialize());
+  REQUIRE(record.Persist(repository));
 
   repository->stop();
 
-  record2.DeSerialize(uuid);
+  utils::Identifier containerId;
+  auto record2 = minifi::FlowFileRecord::DeSerialize(uuid, repository, content_repo, containerId);
 
   std::string value;
-  REQUIRE(record2.getAttribute("", value));
+  REQUIRE(record2->getAttribute("", value));
 
   REQUIRE("hasdgasdgjsdgasgdsgsadaskgasd2" == value);
 
-  REQUIRE(!record2.getAttribute("key", value));
-  REQUIRE(record2.getAttribute("keyA", value));
+  REQUIRE(!record2->getAttribute("key", value));
+  REQUIRE(record2->getAttribute("keyA", value));
   REQUIRE("hasdgasdgjsdgasgdsgsadaskgasd" == value);
 
-  REQUIRE(record2.getAttribute("keyB", value));
+  REQUIRE(record2->getAttribute("keyB", value));
   REQUIRE(value.empty());
 
   utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
@@ -146,8 +145,6 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
   auto dir = testController.createTempDirectory(format);
 
   std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0, 1);
-
-  std::map<std::string, std::string> attributes;
 
   std::fstream file;
   std::stringstream ss;
@@ -165,14 +162,14 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   {
     std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ss.str(), content_repo);
-
-    minifi::FlowFileRecord record(repository, content_repo, attributes, claim);
+    minifi::FlowFileRecord record;
+    record.setResourceClaim(claim);
 
     record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
 
     record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-    REQUIRE(record.Serialize());
+    REQUIRE(record.Persist(repository));
 
     REQUIRE(repository->Delete(record.getUUIDStr()));
     claim->decreaseFlowFileRecordOwnedCount();
@@ -203,8 +200,6 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0, 1);
 
-  std::map<std::string, std::string> attributes;
-
   std::fstream file;
   std::stringstream ss;
   ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
@@ -220,13 +215,14 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ss.str(), content_repo);
   {
-    minifi::FlowFileRecord record(repository, content_repo, attributes, claim);
+    minifi::FlowFileRecord record;
+    record.setResourceClaim(claim);
 
     record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
 
     record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-    REQUIRE(record.Serialize());
+    REQUIRE(record.Persist(repository));
 
     repository->flush();
 
@@ -382,10 +378,10 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
       }
 
       for (int keyIdx = 0; keyIdx < 100; ++keyIdx) {
-        auto file = std::make_shared<minifi::FlowFileRecord>(ff_repository, nullptr);
-        file->setUuidConnection(connection->getUUIDStr());
+        auto file = std::make_shared<minifi::FlowFileRecord>();
+        file->setConnection(connection);
         // Serialize is sync
-        REQUIRE(file->Serialize());
+        REQUIRE(file->Persist(ff_repository));
         if (keyIdx % 2 == 0) {
           // delete every second flowFile
           REQUIRE(ff_repository->Delete(file->getUUIDStr()));

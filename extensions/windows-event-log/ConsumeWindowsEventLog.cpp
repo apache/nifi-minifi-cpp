@@ -661,7 +661,7 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
         session.putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
       }
     }
-    session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "application/xml");
+    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
     session.putAttribute(flowFile, "Timezone name", timezone_name_);
     session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
     session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
@@ -673,7 +673,7 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     logger_->log_trace("Writing rendered plain text to a flow file");
 
     session.write(flowFile, &WriteCallback(eventRender.rendered_text_));
-    session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
+    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "text/plain");
     session.putAttribute(flowFile, "Timezone name", timezone_name_);
     session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
     session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);

@@ -165,7 +165,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
               break;
             logger_->log_debug("Execute Command Respond %d", numRead);
             ExecuteProcess::WriteCallback callback(buffer, numRead);
-            std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+            auto flowFile = session->create();
             if (!flowFile)
               continue;
             flowFile->addAttribute("command", _command);
@@ -178,8 +178,8 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
           char buffer[4096];
           char *bufPtr = buffer;
           int totalRead = 0;
-          std::shared_ptr<FlowFileRecord> flowFile = nullptr;
-          while (1) {
+          std::shared_ptr<core::FlowFile> flowFile = nullptr;
+          while (true) {
             int numRead = read(_pipefd[0], bufPtr, (sizeof(buffer) - totalRead));
             if (numRead <= 0) {
               if (totalRead > 0) {
@@ -187,7 +187,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
                 // child exits and close the pipe
                 ExecuteProcess::WriteCallback callback(buffer, totalRead);
                 if (!flowFile) {
-                  flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+                  flowFile = session->create();
                   if (!flowFile)
                     break;
                   flowFile->addAttribute("command", _command);
@@ -205,7 +205,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
                 logger_->log_debug("Execute Command Max Respond %d", sizeof(buffer));
                 ExecuteProcess::WriteCallback callback(buffer, sizeof(buffer));
                 if (!flowFile) {
-                  flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+                  flowFile = session->create();
                   if (!flowFile)
                     continue;
                   flowFile->addAttribute("command", _command);

@@ -89,8 +89,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_p
     return nullptr;
   }
 
-  utils::Identifier uuid;
-  id_generator_->generate(uuid);
+  utils::Identifier uuid = id_generator_->generate();
 
   processor->setStreamFactory(stream_factory);
   // initialize the processor
@@ -166,7 +165,7 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
   process_sessions_.push_back(current_session);
   if (input_ff_params) {
-    std::shared_ptr<minifi::FlowFileRecord> flowFile = std::static_pointer_cast<minifi::FlowFileRecord>(current_session->create());
+    auto flowFile = current_session->create();
     for(const auto& kv : input_ff_params->attributes) {
       flowFile->setAttribute(kv.first, kv.second);
     }
@@ -247,8 +246,7 @@ void ExecutionPlan::finalize() {
 }
 
 std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::string &processor_name, const std::string &name) {
-  utils::Identifier uuid;
-  id_generator_->generate(uuid);
+  utils::Identifier uuid = id_generator_->generate();
 
   auto custom_proc = custom_processors.find(processor_name);
 

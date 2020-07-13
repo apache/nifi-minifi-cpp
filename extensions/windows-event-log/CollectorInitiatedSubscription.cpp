@@ -58,7 +58,7 @@ const std::string ProcessorName("CollectorInitiatedSubscription");
 static core::Relationship s_success("success", "Relationship for successfully consumed events.");
 
 
-CollectorInitiatedSubscription::CollectorInitiatedSubscription(const std::string& name, utils::Identifier uuid)
+CollectorInitiatedSubscription::CollectorInitiatedSubscription(const std::string& name, const utils::Identifier& uuid)
   : core::Processor(name, uuid), logger_(logging::LoggerFactory<CollectorInitiatedSubscription>::getLogger()) {
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
@@ -648,7 +648,7 @@ int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::Pro
     auto flowFile = session->create();
 
     session->write(flowFile, &WriteCallback(xml));
-    session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "application/xml");
+    session->putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
     session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session->transfer(flowFile, s_success);
     session->commit();

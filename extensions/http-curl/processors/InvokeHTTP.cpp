@@ -262,9 +262,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
 InvokeHTTP::~InvokeHTTP() = default;
 
 std::string InvokeHTTP::generateId() {
-  utils::Identifier txId;
-  utils::IdGenerator::getIdGenerator()->generate(txId);
-  return txId.to_string();
+  return utils::IdGenerator::getIdGenerator()->generate().to_string();
 }
 
 bool InvokeHTTP::emitFlowFile(const std::string &method) {
@@ -272,14 +270,14 @@ bool InvokeHTTP::emitFlowFile(const std::string &method) {
 }
 
 void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
+  auto flowFile = session->get();
 
   std::string url = url_;
 
   if (flowFile == nullptr) {
     if (!emitFlowFile(method_)) {
       logger_->log_debug("InvokeHTTP -- create flow file with  %s", method_);
-      flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+      flowFile = session->create();
     } else {
       logger_->log_debug("Exiting because method is %s and there is no flowfile available to execute it, yielding", method_);
       yield();
@@ -367,18 +365,18 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     bool output_body_to_content = isSuccess && !putToAttribute;
 
     logger_->log_debug("isSuccess: %d, response code %" PRId64, isSuccess, http_code);
-    std::shared_ptr<FlowFileRecord> response_flow = nullptr;
+    std::shared_ptr<core::FlowFile> response_flow = nullptr;
 
     if (output_body_to_content) {
       if (flowFile != nullptr) {
-        response_flow = std::static_pointer_cast<FlowFileRecord>(session->create(flowFile));
+        response_flow = session->create(flowFile);
       } else {
-        response_flow = std::static_pointer_cast<FlowFileRecord>(session->create());
+        response_flow = session->create();
       }
 
       // if content type isn't returned we should return application/octet-stream
       // as per RFC 2046 -- 4.5.1
-      response_flow->addKeyedAttribute(MIME_TYPE, content_type ? std::string(content_type) : DefaultContentType);
+      response_flow->addAttribute(core::SpecialFlowAttribute::MIME_TYPE, content_type ? std::string(content_type) : DefaultContentType);
       response_flow->addAttribute(STATUS_CODE, std::to_string(http_code));
       if (!response_headers.empty())
         response_flow->addAttribute(STATUS_MESSAGE, response_headers.at(0));
@@ -395,7 +393,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   }
 }
 
-void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session,
+void InvokeHTTP::route(const std::shared_ptr<core::FlowFile> &request, const std::shared_ptr<core::FlowFile> &response, const std::shared_ptr<core::ProcessSession> &session,
                        const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int64_t statusCode) {
   // check if we should yield the processor
   if (!isSuccess && request == nullptr) {

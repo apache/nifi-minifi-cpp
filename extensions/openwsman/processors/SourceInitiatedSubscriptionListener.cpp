@@ -627,7 +627,7 @@ int SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback(WsXmlNo
 
   try {
     logger->log_trace("Found Event");
-    auto flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
+    auto flow_file = session->create();
     if (flow_file == nullptr) {
       logger->log_error("Failed to create FlowFile");
       return 1;

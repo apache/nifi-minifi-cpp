@@ -176,7 +176,7 @@ class TailFile : public core::Processor {
 
   void updateFlowFileAttributes(const std::string &full_file_name, const TailState &state, const std::string &fileName,
                                 const std::string &baseName, const std::string &extension,
-                                std::shared_ptr<FlowFileRecord> &flow_file) const;
+                                std::shared_ptr<core::FlowFile> &flow_file) const;
 
   void updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const;
 };

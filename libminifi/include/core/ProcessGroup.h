@@ -56,27 +56,19 @@ enum ProcessGroupType {
 #define ONSCHEDULE_RETRY_INTERVAL 30000  // millisecs
 
 // ProcessGroup Class
-class ProcessGroup {
+class ProcessGroup : public CoreComponent {
  public:
   // Constructor
   /*!
    * Create a new process group
    */
 
-  ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid, int version, ProcessGroup *parent);
-  ProcessGroup(ProcessGroupType type, std::string name);
-  ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid);
-  ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid, int version);
+  ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version, ProcessGroup *parent);
+  ProcessGroup(ProcessGroupType type, const std::string& name);
+  ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid);
+  ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version);
   // Destructor
   virtual ~ProcessGroup();
-  // Set Processor Name
-  void setName(std::string name) {
-    name_ = name;
-  }
-  // Get Process Name
-  std::string getName(void) {
-    return (name_);
-  }
   // Set URL
   void setURL(std::string url) {
     url_ = url;
@@ -157,18 +149,6 @@ class ProcessGroup {
     return onschedule_retry_msec_;
   }
 
-  // Set UUID
-  void setUUID(const utils::Identifier& uuid) {
-    uuid_ = uuid;
-  }
-  // Get UUID
-  bool getUUID(utils::Identifier &uuid) {
-    if (uuid_ == nullptr) {
-      return false;
-    }
-    uuid = uuid_;
-    return true;
-  }
   // getVersion
   int getVersion() {
     return config_version_;
@@ -253,10 +233,6 @@ class ProcessGroup {
  protected:
   void startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
 
-  // A global unique identifier
-  utils::Identifier uuid_;
-  // Processor Group Name
-  std::string name_;
   // version
   int config_version_;
   // Process Group Type

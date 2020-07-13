@@ -33,7 +33,6 @@ namespace controllers {
 
 class PersistableKeyValueStoreService : virtual public KeyValueStoreService, public AbstractCoreComponentStateManagerProvider {
  public:
-  explicit PersistableKeyValueStoreService(const std::string& name, const std::string& id);
   explicit PersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
 
   virtual ~PersistableKeyValueStoreService();

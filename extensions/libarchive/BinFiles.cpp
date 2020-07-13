@@ -259,7 +259,7 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
     }
   }
 
-  std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast < FlowFileRecord > (session->get());
+  auto flow = session->get();
 
   if (flow != nullptr) {
     preprocessFlowFile(context.get(), session.get(), flow);
@@ -321,19 +321,12 @@ void BinFiles::addFlowsToSession(core::ProcessContext *context, core::ProcessSes
   }
 }
 
-void BinFiles::put(std::shared_ptr<core::Connectable> flow) {
-  auto flowFile = std::dynamic_pointer_cast<core::FlowFile>(flow);
+void BinFiles::restore(const std::shared_ptr<core::FlowFile>& flowFile) {
   if (!flowFile) return;
-  if (flowFile->getOriginalConnection()) {
-    // onTrigger assumed ownership over a FlowFile
-    // don't have to do anything
-    return;
-  }
-  // no original connection i.e. we are during restore
   file_store_.put(flowFile);
 }
 
-void BinFiles::FlowFileStore::put(std::shared_ptr<core::FlowFile>& flowFile) {
+void BinFiles::FlowFileStore::put(const std::shared_ptr<core::FlowFile>& flowFile) {
   {
     std::lock_guard<std::mutex> guard(flow_file_mutex_);
     incoming_files_.emplace(std::move(flowFile));

@@ -44,7 +44,7 @@ void FlowFileRepository::flush() {
   rocksdb::WriteBatch batch;
   rocksdb::ReadOptions options;
 
-  std::vector<std::shared_ptr<FlowFileRecord>> purgeList;
+  std::vector<std::shared_ptr<FlowFile>> purgeList;
 
   std::vector<rocksdb::Slice> keys;
   std::list<std::string> keystrings;
@@ -67,8 +67,9 @@ void FlowFileRepository::flush() {
       continue;
     }
 
-    std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
-    if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), values[i].size())) {
+    utils::Identifier containerId;
+    auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), values[i].size(), content_repo_, containerId);
+    if (eventRead) {
       purgeList.push_back(eventRead);
     }
     logger_->log_debug("Issuing batch delete, including %s, Content path %s", eventRead->getUUIDStr(), eventRead->getContentFullPath());
@@ -150,28 +151,29 @@ void FlowFileRepository::prune_stored_flowfiles() {
 
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
+    utils::Identifier containerId;
+    auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size(), content_repo_, containerId);
     std::string key = it->key().ToString();
-    if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
+    if (eventRead) {
       // on behalf of the just resurrected persisted instance
       auto claim = eventRead->getResourceClaim();
       if (claim) claim->increaseFlowFileRecordOwnedCount();
       bool found = false;
-      auto search = containers.find(eventRead->getConnectionUuid());
+      auto search = containers.find(containerId.to_string());
       found = (search != containers.end());
       if (!found) {
         // for backward compatibility
-        search = connectionMap.find(eventRead->getConnectionUuid());
+        search = connectionMap.find(containerId.to_string());
         found = (search != connectionMap.end());
       }
       if (found) {
-        logger_->log_debug("Found connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
+        logger_->log_debug("Found connection for %s, path %s ", containerId.to_string(), eventRead->getContentFullPath());
         eventRead->setStoredToRepository(true);
         // we found the connection for the persistent flowFile
         // even if a processor immediately marks it for deletion, flush only happens after prune_stored_flowfiles
-        search->second->put(eventRead);
+        search->second->restore(eventRead);
       } else {
-        logger_->log_warn("Could not find connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
+        logger_->log_warn("Could not find connection for %s, path %s ", containerId.to_string(), eventRead->getContentFullPath());
         keys_to_delete.enqueue(key);
       }
     } else {

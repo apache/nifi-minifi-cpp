@@ -50,23 +50,23 @@ namespace utils {
 
 #ifdef WIN32
 namespace {
-  void windowsUuidToUuidField(UUID* uuid, UUID_FIELD out) {
+  void windowsUuidToUuidField(UUID* uuid, Identifier::Data& out) {
     uint32_t Data1BE = htonl(uuid->Data1);
-    memcpy(out, &Data1BE, 4);
+    memcpy(out.data(), &Data1BE, 4);
     uint16_t Data2BE = htons(uuid->Data2);
-    memcpy(out + 4, &Data2BE, 2);
+    memcpy(out.data() + 4, &Data2BE, 2);
     uint16_t Data3BE = htons(uuid->Data3);
-    memcpy(out + 6, &Data3BE, 2);
-    memcpy(out + 8, uuid->Data4, 8);
+    memcpy(out.data() + 6, &Data3BE, 2);
+    memcpy(out.data() + 8, uuid->Data4, 8);
   }
 
-  void windowsUuidGenerateTime(UUID_FIELD out) {
+  void windowsUuidGenerateTime(Identifier::Data& out) {
     UUID uuid;
     UuidCreateSequential(&uuid);
     windowsUuidToUuidField(&uuid, out);
   }
 
-  void windowsUuidGenerateRandom(UUID_FIELD out) {
+  void windowsUuidGenerateRandom(Identifier::Data& out) {
     UUID uuid;
     UuidCreate(&uuid);
     windowsUuidToUuidField(&uuid, out);
@@ -74,97 +74,57 @@ namespace {
 }  // namespace
 #endif
 
-Identifier::Identifier(UUID_FIELD u)
-    : IdentifierBase(u) {
-  build_string();
-}
+Identifier::Identifier(const Data& data) : data_(data) {}
 
-Identifier::Identifier()
-    : IdentifierBase() {
-}
-
-Identifier::Identifier(const std::string& id_str)
-    : IdentifierBase() {
-  sscanf(id_str.c_str(), UUID_FORMAT_STRING,
-         &id_[0], &id_[1], &id_[2], &id_[3], &id_[4], &id_[5], &id_[6], &id_[7],
-         &id_[8], &id_[9], &id_[10], &id_[11], &id_[12], &id_[13], &id_[14], &id_[15]);
-  build_string();
-}
-
-Identifier::Identifier(const Identifier &other) {
-  if (!other.convert().empty()) {
-    copyInto(other);
-    build_string();
-  }
-}
-
-Identifier::Identifier(Identifier &&other)
-    : IdentifierBase(std::move(other)) {
-}
-
-Identifier::Identifier(const IdentifierBase &other) {
-  if (!other.convert().empty()) {
-    copyInto(other);
-    build_string();
-  }
-}
-
-Identifier &Identifier::operator=(const Identifier &other) {
-  if (!other.convert().empty()) {
-    IdentifierBase::operator =(other);
-    build_string();
-  }
+Identifier& Identifier::operator=(const Data& data) {
+  data_ = data;
   return *this;
 }
 
-Identifier &Identifier::operator=(const IdentifierBase &other) {
-  if (!other.convert().empty()) {
-    IdentifierBase::operator =(other);
-    build_string();
+Identifier& Identifier::operator=(const std::string& idStr) {
+  utils::optional<Identifier> id = Identifier::parse(idStr);
+  if (!id) {
+    throw std::runtime_error("Couldn't parse UUID");
   }
+  *this = id.value();
   return *this;
 }
 
-Identifier &Identifier::operator=(UUID_FIELD o) {
-  IdentifierBase::operator=(o);
-  build_string();
-  return *this;
+bool Identifier::isNil() const {
+  return *this == Identifier{};
 }
 
-Identifier &Identifier::operator=(std::string id) {
-  return Identifier::operator=(Identifier{id});
+bool Identifier::operator!=(const Identifier& other) const {
+  return !(*this == other);
 }
 
-bool Identifier::operator==(const std::nullptr_t nullp) const {
-  return converted_.empty();
-}
-
-bool Identifier::operator!=(const std::nullptr_t nullp) const {
-  return !converted_.empty();
-}
-
-bool Identifier::operator!=(const Identifier &other) const {
-  return converted_ != other.converted_;
-}
-
-bool Identifier::operator==(const Identifier &other) const {
-  return converted_ == other.converted_;
+bool Identifier::operator==(const Identifier& other) const {
+  return data_ == other.data_;
 }
 
 std::string Identifier::to_string() const {
-  return convert();
-}
-
-const unsigned char * const Identifier::toArray() const {
-  return id_;
-}
-
-void Identifier::build_string() {
-  char uuidStr[37];
+  char uuidStr[37]{};  // 36+1 for the \0
   snprintf(uuidStr, sizeof(uuidStr), UUID_FORMAT_STRING,
-      id_[0], id_[1], id_[2], id_[3], id_[4], id_[5], id_[6], id_[7],
-      id_[8], id_[9], id_[10], id_[11], id_[12], id_[13], id_[14], id_[15]);
-  converted_ = uuidStr;
+           data_[0], data_[1], data_[2], data_[3],
+           data_[4], data_[5],
+           data_[6], data_[7],
+           data_[8], data_[9],
+           data_[10], data_[11], data_[12], data_[13], data_[14], data_[15]);
+  return {uuidStr};
+}
+
+utils::optional<Identifier> Identifier::parse(const std::string &str) {
+  Identifier id;
+  int assigned = sscanf(str.c_str(), UUID_FORMAT_STRING,
+      &id.data_[0], &id.data_[1], &id.data_[2], &id.data_[3],
+      &id.data_[4], &id.data_[5],
+      &id.data_[6], &id.data_[7],
+      &id.data_[8], &id.data_[9],
+      &id.data_[10], &id.data_[11], &id.data_[12], &id.data_[13], &id.data_[14], &id.data_[15]);
+  if (assigned != 16) {
+    return utils::nullopt;
+  }
+  return id;
 }
 
 IdGenerator::IdGenerator()
@@ -200,7 +160,7 @@ uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int num
 
 uint64_t IdGenerator::getRandomDeviceSegment(int numBits) const {
   uint64_t deviceSegment = 0;
-  UUID_FIELD random_uuid;
+  Identifier::Data random_uuid{};
   for (int word = 0; word < 2; word++) {
 #ifdef WIN32
     windowsUuidGenerateRandom(random_uuid);
@@ -208,7 +168,7 @@ uint64_t IdGenerator::getRandomDeviceSegment(int numBits) const {
     uuid temp_uuid;
     temp_uuid.make(UUID_MAKE_V4);
     void* uuid_bin = temp_uuid.binary();
-    memcpy(random_uuid, uuid_bin, 16);
+    memcpy(random_uuid.data(), uuid_bin, 16);
     free(uuid_bin);
 #endif
     for (int i = 0; i < 4; i++) {
@@ -222,7 +182,7 @@ uint64_t IdGenerator::getRandomDeviceSegment(int numBits) const {
   return deviceSegment;
 }
 
-void IdGenerator::initialize(const std::shared_ptr<Properties> & properties) {
+void IdGenerator::initialize(const std::shared_ptr<Properties>& properties) {
   std::string implementation_str;
   implementation_ = UUID_TIME_IMPL;
   if (properties->get("uid.implementation", implementation_str)) {
@@ -269,7 +229,7 @@ void IdGenerator::initialize(const std::shared_ptr<Properties> & properties) {
 }
 
 #ifndef WIN32
-bool IdGenerator::generateWithUuidImpl(unsigned int mode, UUID_FIELD output) {
+bool IdGenerator::generateWithUuidImpl(unsigned int mode, Identifier::Data& output) {
   void* uuid = nullptr;
   try {
     std::lock_guard<std::mutex> lock(uuid_mutex_);
@@ -280,20 +240,14 @@ bool IdGenerator::generateWithUuidImpl(unsigned int mode, UUID_FIELD output) {
     return false;
   }
 
-  memcpy(output, uuid, 16);
+  memcpy(output.data(), uuid, 16);
   free(uuid);
   return true;
 }
 #endif
 
 Identifier IdGenerator::generate() {
-  Identifier ident;
-  generate(ident);
-  return ident;
-}
-
-void IdGenerator::generate(Identifier &ident) {
-  UUID_FIELD output;
+  Identifier::Data output{};
   switch (implementation_) {
     case UUID_RANDOM_IMPL:
     case UUID_DEFAULT_IMPL:
@@ -304,7 +258,7 @@ void IdGenerator::generate(Identifier &ident) {
 #endif
       break;
     case MINIFI_UID_IMPL: {
-      std::memcpy(output, deterministic_prefix_, sizeof(deterministic_prefix_));
+      std::memcpy(output.data(), deterministic_prefix_, sizeof(deterministic_prefix_));
       uint64_t incrementor_value = incrementor_++;
       for (int i = 8; i < 16; i++) {
         output[i] = (incrementor_value >> ((15 - i) * 8)) & std::numeric_limits<unsigned char>::max();
@@ -320,7 +274,7 @@ void IdGenerator::generate(Identifier &ident) {
 #endif
       break;
   }
-  ident = output;
+  return Identifier{output};
 }
 
 } /* namespace utils */
