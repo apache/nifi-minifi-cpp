@@ -31,24 +31,28 @@ core::Property RetryFlowFile::RetryAttribute(core::PropertyBuilder::createProper
         "The name of the attribute that contains the current retry count for the FlowFile."
         "WARNING: If the name matches an attribute already on the FlowFile that does not contain a numerical value, "
         "the processor will either overwrite that attribute with '1' or fail based on configuration.")
-    ->withDefaultValue("flowfile.retries")
+    ->withDefaultValue("flowfile.retries", core::StandardValidators::NON_BLANK_VALIDATOR())
     ->supportsExpressionLanguage(true)
+    ->isRequired(true)
     ->build());
 
 core::Property RetryFlowFile::MaximumRetries(core::PropertyBuilder::createProperty("Maximum Retries")
     ->withDescription("The maximum number of times a FlowFile can be retried before being passed to the 'retries_exceeded' relationship.")
     ->withDefaultValue<uint64_t>(3)
     ->supportsExpressionLanguage(true)
+    ->isRequired(true)
     ->build());
 
 core::Property RetryFlowFile::PenalizeRetries(core::PropertyBuilder::createProperty("Penalize Retries")
   ->withDescription("If set to 'true', this Processor will penalize input FlowFiles before passing them to the 'retry' relationship. This does not apply to the 'retries_exceeded' relationship.")
   ->withDefaultValue<bool>(true)
+  ->isRequired(true)
   ->build());
 
 core::Property RetryFlowFile::FailOnNonNumericalOverwrite(core::PropertyBuilder::createProperty("Fail on Non-numerical Overwrite")
     ->withDescription("If the FlowFile already has the attribute defined in 'Retry Attribute' that is *not* a number, fail the FlowFile instead of resetting that value to '1'")
     ->withDefaultValue<bool>(false)
+    ->isRequired(true)
     ->build());
 
 core::Property RetryFlowFile::ReuseMode(core::PropertyBuilder::createProperty("Reuse Mode")
@@ -58,6 +62,7 @@ core::Property RetryFlowFile::ReuseMode(core::PropertyBuilder::createProperty("R
         "not reset after being successfully retried by a previous instance of this processor.")
     ->withAllowableValues<std::string>({FAIL_ON_REUSE, WARN_ON_REUSE, RESET_REUSE})
     ->withDefaultValue(FAIL_ON_REUSE)
+    ->isRequired(true)
     ->build());
 
 core::Relationship RetryFlowFile::Retry("retry",
