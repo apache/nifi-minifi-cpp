@@ -26,7 +26,9 @@
 #include <map>
 #include <mutex>
 #include <string>
+
 #include "spdlog/common.h"
+#include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/sink.h"
 #include "spdlog/logger.h"
 #include "spdlog/formatter.h"

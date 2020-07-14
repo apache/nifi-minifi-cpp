@@ -183,9 +183,9 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       }
       sink_map[appender_name] = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(file_name, max_file_size, max_files);
     } else if ("stdout" == appender_type) {
-      sink_map[appender_name] = spdlog::sinks::stdout_sink_mt::instance();
+      sink_map[appender_name] = std::make_shared<spdlog::sinks::stdout_sink_mt>();
     } else if ("stderr" == appender_type) {
-      sink_map[appender_name] = spdlog::sinks::stderr_sink_mt::instance();
+      sink_map[appender_name] = std::make_shared<spdlog::sinks::stderr_sink_mt>();
     } else if ("syslog" == appender_type) {
       sink_map[appender_name] = LoggerConfiguration::create_syslog_sink();
     } else {
@@ -280,11 +280,11 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
     current_namespace_str += "::";
   }
   if (logger != nullptr) {
-    logger->log_debug("%s logger got sinks from namespace %s and level %s from namespace %s", name, sink_namespace_str, spdlog::level::level_names[level], level_namespace_str);
+    logger->log_debug("%s logger got sinks from namespace %s and level %s from namespace %s", name, sink_namespace_str, spdlog::level::to_string_view(level), level_namespace_str);
   }
   spdlogger = std::make_shared<spdlog::logger>(name, begin(sinks), end(sinks));
   spdlogger->set_level(level);
-  spdlogger->set_formatter(formatter);
+  spdlogger->set_formatter(formatter -> clone());
   spdlogger->flush_on(std::max(spdlog::level::info, current_namespace->level));
   try {
     spdlog::register_logger(spdlogger);
@@ -298,7 +298,7 @@ std::shared_ptr<spdlog::sinks::sink> LoggerConfiguration::create_syslog_sink() {
 #ifdef WIN32
   return std::make_shared<internal::windowseventlog_sink>("ApacheNiFiMiNiFi");
 #else
-  return std::make_shared<spdlog::sinks::syslog_sink>("ApacheNiFiMiNiFi");
+  return std::dynamic_pointer_cast<spdlog::sinks::sink>(spdlog::syslog_logger_mt("ApacheNiFiMiNiFi", 0, LOG_USER, false));
 #endif
 }
 
@@ -306,14 +306,15 @@ std::shared_ptr<spdlog::sinks::sink> LoggerConfiguration::create_fallback_sink()
   if (utils::Environment::isRunningAsService()) {
     return LoggerConfiguration::create_syslog_sink();
   } else {
-    return spdlog::sinks::stderr_sink_mt::instance();
+    return std::dynamic_pointer_cast<spdlog::sinks::sink>(std::make_shared<spdlog::sinks::stderr_sink_mt>());
   }
 }
 
 std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::create_default_root() {
   std::shared_ptr<internal::LoggerNamespace> result = std::make_shared<internal::LoggerNamespace>();
   result->sinks = std::vector<std::shared_ptr<spdlog::sinks::sink>>();
-  result->sinks.push_back(spdlog::sinks::stderr_sink_mt::instance());
+  auto default_sink = std::make_shared<spdlog::sinks::stderr_sink_mt>();
+  result->sinks.emplace_back(std::move(default_sink));
   result->level = spdlog::level::info;
   return result;
 }
