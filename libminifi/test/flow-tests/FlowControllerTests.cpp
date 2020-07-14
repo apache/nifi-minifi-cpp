@@ -133,8 +133,12 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  std::this_thread::sleep_for(std::chrono::milliseconds{50});
+  int tryCount = 0;
+  while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
+    std::this_thread::sleep_for(std::chrono::milliseconds{20});
+  }
 
+  REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
   REQUIRE(sinkProc->trigger_count.load() == 0);
 
@@ -171,8 +175,12 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  std::this_thread::sleep_for(std::chrono::milliseconds{50});
+  int tryCount = 0;
+  while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
+    std::this_thread::sleep_for(std::chrono::milliseconds{20});
+  }
 
+  REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
   REQUIRE(sinkProc->trigger_count.load() == 0);
 
@@ -211,8 +219,12 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  std::this_thread::sleep_for(std::chrono::milliseconds{50});
+  int tryCount = 0;
+  while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
+    std::this_thread::sleep_for(std::chrono::milliseconds{20});
+  }
 
+  REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
   REQUIRE(sinkProc->trigger_count.load() == 0);
 
