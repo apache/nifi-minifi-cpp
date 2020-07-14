@@ -109,9 +109,9 @@ int SiteToSiteClient::writeResponse(const std::shared_ptr<Transaction> &transact
 }
 
 bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast<FlowFileRecord>(session->get());
+  auto flow = session->get();
 
-  std::shared_ptr<Transaction> transaction = NULL;
+  std::shared_ptr<Transaction> transaction = nullptr;
 
   if (!flow) {
     return false;
@@ -131,7 +131,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
   // Create the transaction
   std::string transactionID;
   transaction = createTransaction(transactionID, SEND);
-  if (transaction == NULL) {
+  if (transaction == nullptr) {
     context->yield();
     tearDown();
     throw Exception(SITE2SITE_EXCEPTION, "Can not create transaction");
@@ -164,7 +164,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
       if (transferNanos > _batchSendNanos)
         break;
 
-      flow = std::static_pointer_cast<FlowFileRecord>(session->get());
+      flow = session->get();
 
       if (!flow) {
         continueTransaction = false;
@@ -406,7 +406,7 @@ bool SiteToSiteClient::complete(std::string transactionID) {
   }
 }
 
-int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, const std::shared_ptr<FlowFileRecord> &flowFile, const std::shared_ptr<core::ProcessSession> &session) {
+int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, const std::shared_ptr<core::FlowFile> &flowFile, const std::shared_ptr<core::ProcessSession> &session) {
   int ret;
 
   if (peer_state_ != READY) {
@@ -679,7 +679,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
         // transaction done
         break;
       }
-      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+      auto flowFile = session->create();
 
       if (!flowFile) {
         throw Exception(SITE2SITE_EXCEPTION, "Flow File Creation Failed");
@@ -687,7 +687,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
       std::map<std::string, std::string>::iterator it;
       std::string sourceIdentifier;
       for (it = packet._attributes.begin(); it != packet._attributes.end(); it++) {
-        if (it->first == FlowAttributeKey(UUID))
+        if (it->first == core::SpecialFlowAttribute::UUID)
           sourceIdentifier = it->second;
         flowFile->addAttribute(it->first, it->second);
       }

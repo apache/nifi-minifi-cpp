@@ -165,7 +165,7 @@ int64_t FetchSFTP::WriteCallback::process(std::shared_ptr<io::BaseStream> stream
 }
 
 void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->get());
+  auto flow_file = session->get();
   if (flow_file == nullptr) {
     return;
   }
@@ -242,9 +242,9 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, common_properties.hostname);
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(common_properties.port));
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_FILENAME, remote_file);
-  flow_file->updateKeyedAttribute(FILENAME, child_path);
+  flow_file->updateAttribute(core::SpecialFlowAttribute::FILENAME, child_path);
   if (!parent_path.empty()) {
-    flow_file->updateKeyedAttribute(PATH, parent_path);
+    flow_file->updateAttribute(core::SpecialFlowAttribute::PATH, parent_path);
   }
 
   /* Execute completion strategy */

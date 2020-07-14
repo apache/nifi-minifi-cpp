@@ -213,7 +213,7 @@ class SiteToSiteClient : public core::Connectable {
   }
 
   // Return -1 when any error occurs
-  virtual int16_t send(std::string transactionID, DataPacket *packet, const std::shared_ptr<FlowFileRecord> &flowFile, const std::shared_ptr<core::ProcessSession> &session);
+  virtual int16_t send(std::string transactionID, DataPacket *packet, const std::shared_ptr<core::FlowFile> &flowFile, const std::shared_ptr<core::ProcessSession> &session);
 
  protected:
   // Cancel the transaction

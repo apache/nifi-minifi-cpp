@@ -705,7 +705,7 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
     TailState state_copy{state};
 
     while (file_reader.hasMoreToRead()) {
-      auto flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
+      auto flow_file = session->create();
       session->write(flow_file, &file_reader);
 
       if (file_reader.useLatestFlowFile()) {
@@ -727,7 +727,7 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
 
   } else {
     WholeFileReaderCallback file_reader{full_file_name, state.position_, state.checksum_};
-    auto flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
+    auto flow_file = session->create();
     session->write(flow_file, &file_reader);
 
     updateFlowFileAttributes(full_file_name, state, fileName, baseName, extension, flow_file);
@@ -741,13 +741,13 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
 void TailFile::updateFlowFileAttributes(const std::string &full_file_name, const TailState &state,
                                         const std::string &fileName, const std::string &baseName,
                                         const std::string &extension,
-                                        std::shared_ptr<FlowFileRecord> &flow_file) const {
+                                        std::shared_ptr<core::FlowFile> &flow_file) const {
   logger_->log_info("TailFile %s for %" PRIu64 " bytes", fileName, flow_file->getSize());
   std::string logName = baseName + "." + std::to_string(state.position_) + "-" +
                         std::to_string(state.position_ + flow_file->getSize() - 1) + "." + extension;
-  flow_file->updateKeyedAttribute(PATH, state.path_);
-  flow_file->addKeyedAttribute(ABSOLUTE_PATH, full_file_name);
-  flow_file->updateKeyedAttribute(FILENAME, logName);
+  flow_file->updateAttribute(core::SpecialFlowAttribute::PATH, state.path_);
+  flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, full_file_name);
+  flow_file->updateAttribute(core::SpecialFlowAttribute::FILENAME, logName);
 }
 
 void TailFile::updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const {

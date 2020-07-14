@@ -216,7 +216,7 @@ namespace processors {
   }
 
   void FetchOPCProcessor::OPCData2FlowFile(const opc::NodeData& opcnode, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+    auto flowFile = session->create();
     if (flowFile == nullptr) {
       logger_->log_error("Failed to create flowfile!");
       return;

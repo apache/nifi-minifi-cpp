@@ -435,7 +435,7 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
   }
 
   /* Create FlowFile */
-  std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
+  auto flow_file = session->create();
   if (flow_file == nullptr) {
     logger_->log_error("Failed to create FlowFileRecord");
     return false;
@@ -461,8 +461,8 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
   /* mtime */
   session->putAttribute(flow_file, ATTRIBUTE_FILE_LASTMODIFIEDTIME, mtime_str);
 
-  flow_file->updateKeyedAttribute(FILENAME, child.filename);
-  flow_file->updateKeyedAttribute(PATH, child.parent_path);
+  flow_file->updateAttribute(core::SpecialFlowAttribute::FILENAME, child.filename);
+  flow_file->updateAttribute(core::SpecialFlowAttribute::PATH, child.parent_path);
 
   session->transfer(flow_file, Success);
 

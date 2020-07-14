@@ -116,7 +116,7 @@ class ListenHTTP : public core::Processor {
     // Send HTTP 500 error response to client
     void send_error_response(struct mg_connection *conn);
     bool auth_request(mg_connection *conn, const mg_request_info *req_info) const;
-    void set_header_attributes(const mg_request_info *req_info, const std::shared_ptr<FlowFileRecord> &flow_file) const;
+    void set_header_attributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const;
     void write_body(mg_connection *conn, const mg_request_info *req_info, bool include_payload = true);
 
     std::string base_uri_;

@@ -66,7 +66,6 @@ void FocusArchiveEntry::initialize() {
 
 void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   auto flowFile = session->get();
-  std::shared_ptr<FlowFileRecord> flowFileRecord = std::static_pointer_cast<FlowFileRecord>(flowFile);
 
   if (!flowFile) {
     return;

@@ -275,7 +275,7 @@ public:
           return -1;
         }
         std::string fileName;
-        flow_->getAttribute(FlowAttributeKey(FILENAME), fileName);
+        flow_->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
         archive_entry_set_pathname(entry, fileName.c_str());
         archive_entry_set_size(entry, flow_->getSize());
         archive_entry_set_mode(entry, S_IFREG | 0755);

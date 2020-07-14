@@ -116,7 +116,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
           logger_->log_debug("Longitude: %lf\nLatitude: %lf\nAltitude: %lf\nAccuracy: %lf\n\n", gpsdata->fix.latitude, gpsdata->fix.longitude, gpsdata->fix.altitude,
                              (gpsdata->fix.epx > gpsdata->fix.epy) ? gpsdata->fix.epx : gpsdata->fix.epy);
 
-          std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+          auto flowFile = session->create();
           if (flowFile == nullptr)
             return;
 

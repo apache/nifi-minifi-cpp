@@ -68,7 +68,7 @@ void ExecuteSQL::onSchedule(core::ProcessContext *context,
 
 void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
                            const std::shared_ptr<core::ProcessSession> &session) {
-  std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->get());
+  auto flow_file = session->get();
 
   try {
     // Use an existing context, if one is available

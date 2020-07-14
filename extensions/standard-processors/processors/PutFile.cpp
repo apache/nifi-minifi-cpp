@@ -93,7 +93,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     return;
   }
 
-  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
+  std::shared_ptr<core::FlowFile> flowFile = session->get();
 
   // Do nothing if there are no incoming files
   if (!flowFile) {
@@ -115,7 +115,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   }
 
   std::string filename;
-  flowFile->getKeyedAttribute(FILENAME, filename);
+  flowFile->getAttribute(core::SpecialFlowAttribute::FILENAME, filename);
   std::string tmpFile = tmpWritePath(filename, directory);
 
   logger_->log_debug("PutFile using temporary file %s", tmpFile);
@@ -181,7 +181,7 @@ std::string PutFile::tmpWritePath(const std::string &filename, const std::string
   return tmpFile;
 }
 
-bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRecord> flowFile, const std::string &tmpFile, const std::string &destFile, const std::string &destDir) {
+bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowFile> flowFile, const std::string &tmpFile, const std::string &destFile, const std::string &destDir) {
   struct stat dir_stat;
 
   if (stat(destDir.c_str(), &dir_stat) && try_mkdirs_) {

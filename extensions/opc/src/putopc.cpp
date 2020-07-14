@@ -201,7 +201,7 @@ namespace processors {
       }
     }
 
-    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
+    auto flowFile = session->get();
 
     // Do nothing if there are no incoming files
     if (!flowFile) {

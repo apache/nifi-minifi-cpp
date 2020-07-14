@@ -243,6 +243,16 @@ std::shared_ptr<core::Connectable> FlowFile::getOriginalConnection() const {
   return original_connection_;
 }
 
+const std::string SpecialFlowAttribute::PATH = "path";
+const std::string SpecialFlowAttribute::ABSOLUTE_PATH = "absolute.path";
+const std::string SpecialFlowAttribute::FILENAME = "filename";
+const std::string SpecialFlowAttribute::UUID = "uuid";
+const std::string SpecialFlowAttribute::priority = "priority";
+const std::string SpecialFlowAttribute::MIME_TYPE = "mime.type";
+const std::string SpecialFlowAttribute::DISCARD_REASON = "discard.reason";
+const std::string SpecialFlowAttribute::ALTERNATE_IDENTIFIER = "alternate.identifier";
+const std::string SpecialFlowAttribute::FLOW_ID = "flow.id";
+
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

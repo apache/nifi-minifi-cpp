@@ -50,9 +50,9 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
   // Increase the local ID for the flow record
   ++local_flow_seq_number_;
   // Populate the default attributes
-  addKeyedAttribute(FILENAME, std::to_string(utils::timeutils::getTimeNano()));
-  addKeyedAttribute(PATH, DEFAULT_FLOWFILE_PATH);
-  addKeyedAttribute(UUID, getUUIDStr());
+  addAttribute(core::SpecialFlowAttribute::FILENAME, std::to_string(utils::timeutils::getTimeNano()));
+  addAttribute(core::SpecialFlowAttribute::PATH, DEFAULT_FLOWFILE_PATH);
+  addAttribute(core::SpecialFlowAttribute::UUID, getUUIDStr());
   // Populate the attributes from the input
   std::map<std::string, std::string>::iterator it;
   for (it = attributes.begin(); it != attributes.end(); it++) {
@@ -97,46 +97,6 @@ FlowFileRecord::~FlowFileRecord() {
 
   if (!claim_) {
     logger_->log_debug("Claim is null ptr for %s", getUUIDStr());
-  }
-}
-
-bool FlowFileRecord::addKeyedAttribute(FlowAttribute key, const std::string &value) {
-  const char *keyStr = FlowAttributeKey(key);
-  if (keyStr) {
-    const std::string keyString = keyStr;
-    return FlowFile::addAttribute(keyString, value);
-  } else {
-    return false;
-  }
-}
-
-bool FlowFileRecord::removeKeyedAttribute(FlowAttribute key) {
-  const char *keyStr = FlowAttributeKey(key);
-  if (keyStr) {
-    std::string keyString = keyStr;
-    return FlowFile::removeAttribute(keyString);
-  } else {
-    return false;
-  }
-}
-
-bool FlowFileRecord::updateKeyedAttribute(FlowAttribute key, std::string value) {
-  const char *keyStr = FlowAttributeKey(key);
-  if (keyStr) {
-    std::string keyString = keyStr;
-    return FlowFile::updateAttribute(keyString, value);
-  } else {
-    return false;
-  }
-}
-
-bool FlowFileRecord::getKeyedAttribute(FlowAttribute key, std::string &value) {
-  const char *keyStr = FlowAttributeKey(key);
-  if (keyStr) {
-    std::string keyString = keyStr;
-    return FlowFile::getAttribute(keyString, value);
-  } else {
-    return false;
   }
 }
 

@@ -115,9 +115,9 @@ void CompressContent::onTrigger(const std::shared_ptr<core::ProcessContext> &con
   std::string compressFormat = compressFormat_;
   if (compressFormat_ == COMPRESSION_FORMAT_ATTRIBUTE) {
     std::string attr;
-    flowFile->getAttribute(FlowAttributeKey(MIME_TYPE), attr);
+    flowFile->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attr);
     if (attr.empty()) {
-      logger_->log_error("No %s attribute existed for the flow, route to failure", FlowAttributeKey(MIME_TYPE));
+      logger_->log_error("No %s attribute existed for the flow, route to failure", core::SpecialFlowAttribute::MIME_TYPE);
       session->transfer(flowFile, Failure);
       return;
     }
@@ -186,19 +186,19 @@ void CompressContent::onTrigger(const std::shared_ptr<core::ProcessContext> &con
     session->remove(processFlowFile);
   } else {
     std::string fileName;
-    processFlowFile->getAttribute(FlowAttributeKey(FILENAME), fileName);
+    processFlowFile->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
     if (compressMode_ == MODE_COMPRESS) {
-      session->putAttribute(processFlowFile, FlowAttributeKey(MIME_TYPE), mimeType);
+      session->putAttribute(processFlowFile, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
       if (updateFileName_) {
         fileName = fileName + fileExtension;
-        session->putAttribute(processFlowFile, FlowAttributeKey(FILENAME), fileName);
+        session->putAttribute(processFlowFile, core::SpecialFlowAttribute::FILENAME, fileName);
       }
     } else {
-      session->removeAttribute(processFlowFile, FlowAttributeKey(MIME_TYPE));
+      session->removeAttribute(processFlowFile, core::SpecialFlowAttribute::MIME_TYPE);
       if (updateFileName_) {
         if (fileName.size() >= fileExtension.size() && fileName.compare(fileName.size() - fileExtension.size(), fileExtension.size(), fileExtension) == 0) {
           fileName = fileName.substr(0, fileName.size() - fileExtension.size());
-          session->putAttribute(processFlowFile, FlowAttributeKey(FILENAME), fileName);
+          session->putAttribute(processFlowFile, core::SpecialFlowAttribute::FILENAME, fileName);
         }
       }
     }

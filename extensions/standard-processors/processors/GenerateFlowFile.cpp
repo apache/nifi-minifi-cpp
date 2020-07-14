@@ -119,7 +119,7 @@ void GenerateFlowFile::onSchedule(const std::shared_ptr<core::ProcessContext> &c
 void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   for (uint64_t i = 0; i < batchSize_; i++) {
     // For each batch
-    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+    std::shared_ptr<core::FlowFile> flowFile = session->create();
     if (!flowFile) {
       logger_->log_error("Failed to create flowfile!");
       return;

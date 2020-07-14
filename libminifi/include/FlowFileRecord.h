@@ -46,40 +46,6 @@ namespace minifi {
 
 #define DEFAULT_FLOWFILE_PATH "."
 
-// FlowFile Attribute
-enum FlowAttribute {
-  // The flowfile's path indicates the relative directory to which a FlowFile belongs and does not contain the filename
-  PATH = 0,
-  // The flowfile's absolute path indicates the absolute directory to which a FlowFile belongs and does not contain the filename
-  ABSOLUTE_PATH,
-  // The filename of the FlowFile. The filename should not contain any directory structure.
-  FILENAME,
-  // A unique UUID assigned to this FlowFile.
-  UUID,
-  // A numeric value indicating the FlowFile priority
-  priority,
-  // The MIME Type of this FlowFile
-  MIME_TYPE,
-  // Specifies the reason that a FlowFile is being discarded
-  DISCARD_REASON,
-  // Indicates an identifier other than the FlowFile's UUID that is known to refer to this FlowFile.
-  ALTERNATE_IDENTIFIER,
-  // Flow identifier
-  FLOW_ID,
-  MAX_FLOW_ATTRIBUTES
-};
-
-// FlowFile Attribute Key
-static const char *FlowAttributeKeyArray[MAX_FLOW_ATTRIBUTES] = { "path", "absolute.path", "filename", "uuid", "priority", "mime.type", "discard.reason", "alternate.identifier", "flow.id" };
-
-// FlowFile Attribute Enum to Key
-inline const char *FlowAttributeKey(FlowAttribute attribute) {
-  if (attribute < MAX_FLOW_ATTRIBUTES)
-    return FlowAttributeKeyArray[attribute];
-  else
-    return NULL;
-}
-
 // FlowFile IO Callback functions for input and output
 // throw exception for error
 class InputStreamCallback {
@@ -117,14 +83,6 @@ class FlowFileRecord : public core::FlowFile {
   }
   // Destructor
   virtual ~FlowFileRecord();
-  // addAttribute key is enum
-  bool addKeyedAttribute(FlowAttribute key, const std::string &value);
-  // removeAttribute key is enum
-  bool removeKeyedAttribute(FlowAttribute key);
-  // updateAttribute key is enum
-  bool updateKeyedAttribute(FlowAttribute key, std::string value);
-  // getAttribute key is enum
-  bool getKeyedAttribute(FlowAttribute key, std::string &value);
 
   bool Serialize(io::BufferStream &outStream);
 

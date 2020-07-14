@@ -35,6 +35,30 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+// FlowFile Attribute
+struct SpecialFlowAttribute {
+  // The flowfile's path indicates the relative directory to which a FlowFile belongs and does not contain the filename
+  static const std::string PATH;
+  // The flowfile's absolute path indicates the absolute directory to which a FlowFile belongs and does not contain the filename
+  static const std::string ABSOLUTE_PATH;
+  // The filename of the FlowFile. The filename should not contain any directory structure.
+  static const std::string FILENAME;
+  // A unique UUID assigned to this FlowFile.
+  static const std::string UUID;
+  // A numeric value indicating the FlowFile priority
+  static const std::string priority;
+  // The MIME Type of this FlowFile
+  static const std::string MIME_TYPE;
+  // Specifies the reason that a FlowFile is being discarded
+  static const std::string DISCARD_REASON;
+  // Indicates an identifier other than the FlowFile's UUID that is known to refer to this FlowFile.
+  static const std::string ALTERNATE_IDENTIFIER;
+  // Flow identifier
+  static const std::string FLOW_ID;
+};
+
+class Connectable;
+
 class FlowFile : public CoreComponent, public ReferenceContainer {
  public:
 

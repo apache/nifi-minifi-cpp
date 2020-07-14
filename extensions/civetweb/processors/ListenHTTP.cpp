@@ -212,7 +212,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 ListenHTTP::~ListenHTTP() = default;
 
 void ListenHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->get());
+  std::shared_ptr<core::FlowFile> flow_file = session->get();
 
   // Do nothing if there are no incoming files
   if (!flow_file) {
@@ -256,7 +256,7 @@ void ListenHTTP::Handler::send_error_response(struct mg_connection *conn) {
             "Content-Length: 0\r\n\r\n");
 }
 
-void ListenHTTP::Handler::set_header_attributes(const mg_request_info *req_info, const std::shared_ptr<FlowFileRecord> &flow_file) const {
+void ListenHTTP::Handler::set_header_attributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const {
   // Add filename from "filename" header value (and pattern headers)
   for (int i = 0; i < req_info->num_headers; i++) {
     auto header = &req_info->http_headers[i];
@@ -294,7 +294,7 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *
 
   auto session = session_factory_->createSession();
   ListenHTTP::WriteCallback callback(conn, req_info);
-  auto flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
+  auto flow_file = session->create();
 
   if (!flow_file) {
     send_error_response(conn);
@@ -353,7 +353,7 @@ bool ListenHTTP::Handler::handleGet(CivetServer *server, struct mg_connection *c
   }
 
   auto session = session_factory_->createSession();
-  auto flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
+  auto flow_file = session->create();
 
   if (!flow_file) {
     send_error_response(conn);
