@@ -44,8 +44,6 @@ class uuid;
 #define UUID_TIME_STR "time"
 #define UUID_WINDOWS_STR "windows"
 
-struct debug;
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -53,6 +51,7 @@ namespace minifi {
 namespace utils {
 
 class Identifier {
+  friend struct IdentifierTestAccessor;
   friend struct ::debug;
   static constexpr const char* UUID_FORMAT_STRING = "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx";
 

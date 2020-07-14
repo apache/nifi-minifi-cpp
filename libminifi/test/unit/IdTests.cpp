@@ -23,16 +23,23 @@
 #include <cctype>
 #include "../TestBase.h"
 #include "utils/Id.h"
+#include "../Utils.h"
 
-struct debug{
-  static const utils::Identifier::Data& getData(const utils::Identifier& id) {
-    return id.data_;
-  }
-
-  static utils::Identifier::Data& getData(utils::Identifier& id) {
-    return id.data_;
-  }
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace utils {
+struct IdentifierTestAccessor {
+  FIELD_ACCESSOR(Identifier, data_)
 };
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+
+using org::apache::nifi::minifi::utils::IdentifierTestAccessor;
 
 TEST_CASE("Test default is time", "[id]") {
   TestController test_controller;
@@ -59,7 +66,7 @@ TEST_CASE("Test time", "[id]") {
 
   utils::Identifier id = generator->generate();
 
-  uint8_t version = debug::getData(id)[6] >> 4;
+  uint8_t version = IdentifierTestAccessor::get_data_(id)[6] >> 4;
   REQUIRE(0x01 == version);
 
   LogTestController::getInstance().reset();
@@ -96,7 +103,7 @@ TEST_CASE("Test random", "[id]") {
 
   utils::Identifier id = generator->generate();
 
-  uint8_t version = debug::getData(id)[6] >> 4;
+  uint8_t version = IdentifierTestAccessor::get_data_(id)[6] >> 4;
   REQUIRE(0x04 == version);
 
   LogTestController::getInstance().reset();
@@ -149,7 +156,7 @@ TEST_CASE("Test parse", "[id]") {
 
   for (const auto& test_case : test_cases) {
     utils::Identifier id = test_case.first;
-    REQUIRE(memcmp(debug::getData(id).data(), test_case.second.data(), 16U) == 0);
+    REQUIRE(memcmp(IdentifierTestAccessor::get_data_(id).data(), test_case.second.data(), 16U) == 0);
     REQUIRE(utils::StringUtils::equalsIgnoreCase(test_case.first, id.to_string()));
   }
 
@@ -210,7 +217,7 @@ TEST_CASE("Test Hex Device Segment 16 bits correct digits", "[id]") {
   generator->initialize(id_props);
 
   utils::Identifier uuid = generator->generate();
-  auto& data = debug::getData(uuid);
+  auto& data = IdentifierTestAccessor::get_data_(uuid);
   REQUIRE(0x09 == data[0]);
   REQUIRE(0xaf == data[1]);
   REQUIRE(0 == data[15]);
@@ -236,7 +243,7 @@ TEST_CASE("Test Hex Device Segment 16 bits too many digits", "[id]") {
   generator->initialize(id_props);
 
   utils::Identifier uuid = generator->generate();
-  auto& data = debug::getData(uuid);
+  auto& data = IdentifierTestAccessor::get_data_(uuid);
   REQUIRE(0x09 == data[0]);
   REQUIRE(0xaf == data[1]);
   REQUIRE(0 == (data[2] & 128));
@@ -265,7 +272,7 @@ TEST_CASE("Test Hex Device Segment 18 bits", "[id]") {
   generator->initialize(id_props);
 
   utils::Identifier uuid = generator->generate();
-  auto& data = debug::getData(uuid);
+  auto& data = IdentifierTestAccessor::get_data_(uuid);
   REQUIRE(0x09 == data[0]);
   REQUIRE(0xaf == data[1]);
   REQUIRE(128 == (data[2] & 192));
@@ -318,7 +325,7 @@ TEST_CASE("Collision", "[collision]") {
   }
 
   std::sort(uuids.begin(), uuids.end(), [](const utils::Identifier& a, const utils::Identifier& b) {
-    return memcmp(debug::getData(a).data(), debug::getData(b).data(), 16U) < 0;
+    return memcmp(IdentifierTestAccessor::get_data_(a).data(), IdentifierTestAccessor::get_data_(b).data(), 16U) < 0;
   });
   REQUIRE(uuids.end() == std::adjacent_find(uuids.begin(), uuids.end()));
 
