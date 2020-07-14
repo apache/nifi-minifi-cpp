@@ -117,12 +117,12 @@ void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSessio
         session->transfer(flow_file, Failure);
         return;
       }
+      // Assuming reuse_mode_ == WARN_ON_REUSE || reuse_mode_ == RESET_REUSE
+      core::logging::LOG_LEVEL reuse_mode_log_level(core::logging::LOG_LEVEL::debug);
       if (reuse_mode_ == WARN_ON_REUSE) {
-        reuse_mode_log_level_ = core::logging::LOG_LEVEL::warn;
-      } else {  // Assuming reuse_mode_ == RESET_REUSE
-        reuse_mode_log_level_ = core::logging::LOG_LEVEL::debug;
+        reuse_mode_log_level = core::logging::LOG_LEVEL::warn;
       }
-      logger_->log_string(reuse_mode_log_level_, "Reusing retry attribute that belongs to different processor. Resetting value to 0.");
+      logger_->log_string(reuse_mode_log_level, "Reusing retry attribute that belongs to different processor. Resetting value to 0.");
       retry_property_value = 0;
     }
   }
