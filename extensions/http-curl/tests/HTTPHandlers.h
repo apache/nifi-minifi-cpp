@@ -572,7 +572,7 @@ public:
     if (!wait_times_.empty() && wait_times_[0] > std::chrono::seconds(0)) {
       sleep_for(wait_times_[0]);
     }
-    int chunk_count = std::max(static_cast<int>(wait_times_.size()) - 1, 0);
+    int chunk_count = (std::max)(static_cast<int>(wait_times_.size()) - 1, 0);
     mg_printf(conn, "HTTP/1.1 201 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\nConnection: close\r\n\r\n", chunk_count);
     for (int chunkIdx = 0; chunkIdx < chunk_count; ++chunkIdx) {
       mg_printf(conn, "a");

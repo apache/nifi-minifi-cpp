@@ -203,13 +203,6 @@ int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args_with_url(argc, argv);
   const bool isSecure = args.isUrlSecure();
 
-#ifdef WIN32
-  if (url.find("localhost") != std::string::npos) {
-	  std::string port, scheme, path;
-	  parse_http_components(url, port, scheme, path);
-	  url = scheme + "://" + org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + port +  path;
-  }
-#endif
   {
     struct test_profile profile;
     run_variance(args.test_file, isSecure, args.url, profile);

@@ -30,6 +30,7 @@
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
+#include "HTTPUtils.h"
 
 class IntegrationBase {
  public:
@@ -194,7 +195,15 @@ cmd_args parse_cmdline_args(int argc, char ** argv, const std::string& uri_path 
 cmd_args parse_cmdline_args_with_url(int argc, char ** argv) {
   cmd_args args = parse_basic_cmdline_args(argc, argv);
   if (argc > 3) {
-    args.url = argv[3];
+    std::string url = argv[3];
+#ifdef WIN32
+    if (url.find("localhost") != std::string::npos) {
+      std::string port, scheme, path;
+      parse_http_components(url, port, scheme, path);
+      url = scheme + "://" + org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + port +  path;
+    }
+#endif
+    args.url = url;
   }
   return args;
 }
