@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_HTTPUTILS_H
-#define NIFI_MINIFI_CPP_HTTPUTILS_H
+#ifndef LIBMINIFI_INCLUDE_UTILS_HTTPUTILS_H_
+#define LIBMINIFI_INCLUDE_UTILS_HTTPUTILS_H_
 
+#include <string>
 #include "RegexUtils.h"
 
 /**
@@ -27,19 +28,18 @@ so we convert localhost to our local hostname.
   */
 inline bool parse_http_components(const std::string &url, std::string &port, std::string &scheme, std::string &path) {
 #ifdef WIN32
-	auto hostname = (url.find(org::apache::nifi::minifi::io::Socket::getMyHostName()) != std::string::npos ? org::apache::nifi::minifi::io::Socket::getMyHostName() : "localhost");
-	std::string regexstr = "^(http|https)://(" + hostname + ":)([0-9]+)?(/.*)$";
+  auto hostname = (url.find(org::apache::nifi::minifi::io::Socket::getMyHostName()) != std::string::npos ? org::apache::nifi::minifi::io::Socket::getMyHostName() : "localhost");
+  std::string regexstr = "^(http|https)://(" + hostname + ":)([0-9]+)?(/.*)$";
 #else
-	std::string regexstr = "^(http|https)://(localhost:)([0-9]+)?(/.*)$";
+  std::string regexstr = "^(http|https)://(localhost:)([0-9]+)?(/.*)$";
 #endif
 
-	using namespace org::apache::nifi::minifi::utils;
-
+  using Regex = org::apache::nifi::minifi::utils::Regex;
   auto rgx = Regex(regexstr, {Regex::Mode::ICASE});
 
   if (rgx.match(url)) {
     auto result = rgx.getResult();
-    if(result.size() >= 5){
+    if (result.size() >= 5) {
       scheme = result[1];
       port = result[3];
       path = result[4];
@@ -49,4 +49,4 @@ inline bool parse_http_components(const std::string &url, std::string &port, std
   return false;
 }
 
-#endif //NIFI_MINIFI_CPP_HTTPUTILS_H
+#endif  // LIBMINIFI_INCLUDE_UTILS_HTTPUTILS_H_
