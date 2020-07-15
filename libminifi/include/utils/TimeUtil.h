@@ -66,6 +66,42 @@ inline std::string getTimeStr(uint64_t msec, bool enforce_locale = false) {
   return ret;
 }
 
+inline time_t mkgmtime(struct tm *date_time) {
+#ifdef WIN32
+  return _mkgmtime(date_time);
+#else
+  static const int month_lengths[] =      {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  static const int month_lengths_leap[] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  static const auto is_leap_year = [](int year) -> bool {
+    return (year - 1968) % 4 == 0 && ((year - 1900) % 100 != 0 || (year - 1600) % 400 == 0);
+  };
+  static const auto num_leap_days = [](int year) -> int {
+    return (year - 1968) / 4 - (year - 1900) / 100 + (year - 1600) / 400;
+  };
+
+  int year = date_time->tm_year + 1900;
+  time_t result = year - 1970;
+  result *= 365;
+  result += num_leap_days(year - 1);
+
+  for (int i = 0; i < 12 && i < date_time->tm_mon; ++i) {
+    result += is_leap_year(year) ? month_lengths_leap[i] : month_lengths[i];
+  }
+
+  result += date_time->tm_mday - 1;
+  result *= 24;
+
+  result += date_time->tm_hour;
+  result *= 60;
+
+  result += date_time->tm_min;
+  result *= 60;
+
+  result += date_time->tm_sec;
+  return result;
+#endif
+}
+
 /**
  * Parse a datetime in yyyy-MM-dd'T'HH:mm:ssZ format
  * @param str the datetime string
@@ -108,23 +144,9 @@ inline int64_t parseDateTimeStr(const std::string &str) {
   timeinfo.tm_hour = hours;
   timeinfo.tm_min = minutes;
   timeinfo.tm_sec = seconds;
+  timeinfo.tm_isdst = 0;
 
-  /* Get local timezone offset */
-  time_t utc = time(nullptr);
-  struct tm now_tm = *gmtime(&utc); // NOLINT
-  now_tm.tm_isdst = 0;
-  time_t local = mktime(&now_tm);
-  if (local == -1) {
-    return -1;
-  }
-  int64_t timezone_offset = utc - local;
-
-  /* Convert parsed date */
-  time_t time = mktime(&timeinfo);
-  if (time == -1) {
-    return -1;
-  }
-  return time + timezone_offset;
+  return static_cast<int64_t>(mkgmtime(&timeinfo));
 }
 
 inline bool getDateTimeStr(int64_t unix_timestamp, std::string& date_time_str) {
