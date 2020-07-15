@@ -31,6 +31,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include "core/Deprecated.h"
 #include "core/ContentRepository.h"
 #include "core/SerializableComponent.h"
 #include "properties/Configure.h"
@@ -113,7 +114,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     return found;
   }
 
-  void setConnectionMap(std::map<std::string, std::shared_ptr<core::Connectable>> &connectionMap) {
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 1.0) void setConnectionMap(std::map<std::string, std::shared_ptr<core::Connectable>> &connectionMap) {
     this->connectionMap = connectionMap;
   }
 
@@ -234,7 +235,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
  protected:
   std::map<std::string, std::shared_ptr<core::Connectable>> containers;
 
-  std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap;
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 1.0) std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap;
   // Mutex for protection
   std::mutex mutex_;
   // repository directory

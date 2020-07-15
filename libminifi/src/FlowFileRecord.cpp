@@ -17,7 +17,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "FlowFileRecord.h"
 #include <time.h>
 #include <cstdio>
 #include <vector>
@@ -27,6 +26,8 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <cinttypes>
+#include "FlowFileRecord.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Relationship.h"
 #include "core/Repository.h"
@@ -127,7 +128,7 @@ FlowFileRecord::~FlowFileRecord() {
 void FlowFileRecord::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
   // Decrease the flow file record owned count for the resource claim
   claim->decreaseFlowFileRecordOwnedCount();
-  logger_->log_debug("Detaching Resource Claim %s, %s, attempt %llu", getUUIDStr(), claim->getContentFullPath(), claim->getFlowFileRecordOwnedCount());
+  logger_->log_debug("Detaching Resource Claim %s, %s, attempt " "%" PRIu64, getUUIDStr(), claim->getContentFullPath(), claim->getFlowFileRecordOwnedCount());
   if (content_repo_ && content_repo_->removeIfOrphaned(claim)) {
     logger_->log_debug("Deleted Resource Claim %s", claim->getContentFullPath());
   }

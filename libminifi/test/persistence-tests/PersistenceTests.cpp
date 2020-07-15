@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#undef NDEBUG
 #include <chrono>
 #include <map>
 #include <memory>
@@ -101,6 +102,7 @@ struct TestFlow{
     core::ProcessSession sessionGenFlowFile(inputContext);
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     sessionGenFlowFile.importFrom(stream, flow);
+    assert(flow->getResourceClaim()->getFlowFileRecordOwnedCount() == 1);
     sessionGenFlowFile.transfer(flow, {"input", "d"});
     sessionGenFlowFile.commit();
   }
