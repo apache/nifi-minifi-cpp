@@ -154,6 +154,9 @@ TEST_CASE("Test DateTime Conversion", "[testDateTime]") {
   REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-01-01T00:00:00Z", timestamp));
   REQUIRE(0LL == timestamp);
 
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-01-01T00:59:59Z", timestamp));
+  REQUIRE(3600 - 1 == timestamp);
+
   REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("2000-06-17T12:34:21Z", timestamp));
   REQUIRE(961245261LL == timestamp);
 
