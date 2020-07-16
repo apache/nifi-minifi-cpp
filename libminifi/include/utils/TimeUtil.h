@@ -73,7 +73,7 @@ inline time_t mkgmtime(struct tm *date_time) {
   static const int month_lengths[] =      {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   static const int month_lengths_leap[] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   static const auto is_leap_year = [](int year) -> bool {
-    return (year - 1968) % 4 == 0 && ((year - 1900) % 100 != 0 || (year - 1600) % 400 == 0);
+    return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
   };
   static const auto num_leap_days = [](int year) -> int {
     return (year - 1968) / 4 - (year - 1900) / 100 + (year - 1600) / 400;
