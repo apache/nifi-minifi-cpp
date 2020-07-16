@@ -57,7 +57,7 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(std::shared_ptr
         throw std::runtime_error("Support for the provided configuration class could not be found");
       }
     }
-  } catch (const std::runtime_error &r) {
+  } catch (const std::runtime_error &) {
     if (fail_safe) {
       return std::unique_ptr<core::FlowConfiguration>(new core::FlowConfiguration(repo, flow_file_repo, content_repo, stream_factory, configure, path));
     }

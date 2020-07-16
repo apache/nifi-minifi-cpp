@@ -267,7 +267,6 @@ class FlowFileResponder : public ServerAwareHandler {
 
     if (flow_files_feed_->size_approx() > 0) {
       std::shared_ptr<FlowObj> flowobj;
-      uint8_t buf[1];
       std::vector<std::shared_ptr<FlowObj>> flows;
       uint64_t total = 0;
 

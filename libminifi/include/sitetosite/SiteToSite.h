@@ -246,8 +246,6 @@ class Transaction {
     total_transfers_ = 0;
     _bytes = 0;
 
-    char uuidStr[37];
-
     // Generate the global UUID for the transaction
     id_generator_->generate(uuid_);
     uuid_str_ = uuid_.to_string();

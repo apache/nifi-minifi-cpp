@@ -273,7 +273,7 @@ void RemoteProcessorGroupPort::onTrigger(const std::shared_ptr<core::ProcessCont
 
     returnProtocol(std::move(protocol_));
     return;
-  } catch (const minifi::Exception &ex2) {
+  } catch (const minifi::Exception &) {
     context->yield();
     session->rollback();
   } catch (...) {

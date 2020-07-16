@@ -808,7 +808,7 @@ Value expr_binary_op(const std::vector<Value> &args, long double (*ldop)(long do
     } else {
       return Value(ldop(args[0].asLongDouble(), args[1].asLongDouble()));
     }
-  } catch (const std::exception &e) {
+  } catch (const std::exception &) {
     return Value();
   }
 }

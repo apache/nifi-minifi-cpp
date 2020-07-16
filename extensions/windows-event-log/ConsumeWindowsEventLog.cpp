@@ -460,7 +460,7 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
         try {
           // Assumption - first character is not '0', otherwise not all digits will be replaced by 'value'.
           number = std::stoul(&nodeText[numberPos]);
-        } catch (std::invalid_argument& e) {
+        } catch (const std::invalid_argument &) {
           continue;
         }
 

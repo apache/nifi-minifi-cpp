@@ -223,7 +223,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       } else {
         heart_beat_period_ = std::stoi(heartbeat_period);
       }
-    } catch (const std::invalid_argument &ie) {
+    } catch (const std::invalid_argument &) {
       heart_beat_period_ = 3000;
     }
   } else {

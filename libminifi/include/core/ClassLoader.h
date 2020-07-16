@@ -436,7 +436,6 @@ class ClassLoader {
 
   void *dlsym(void *handle, const char *name) {
     FARPROC symbol;
-    HMODULE hModule;
 
     symbol = GetProcAddress((HMODULE)handle, name);
 
@@ -470,7 +469,6 @@ class ClassLoader {
   void *dlopen(const char *file, int mode) {
     std::lock_guard<std::mutex> lock(internal_mutex_);
     HMODULE object;
-    char * current_error = NULL;
     uint32_t uMode = SetErrorMode(SEM_FAILCRITICALERRORS);
     if (nullptr == file) {
       HMODULE allModules[1024];
@@ -483,8 +481,6 @@ class ClassLoader {
       if (EnumProcessModules(current_process_id, allModules,
               sizeof(allModules), &cbNeeded) != 0) {
         for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++) {
-          TCHAR szModName[MAX_PATH];
-
           // Get the full path to the module's file.
           resource_mapping_.insert(std::make_pair(allModules[i], "minifi-system"));
         }
