@@ -18,6 +18,7 @@
 #ifndef EXTENSIONS_HTTP_CURL_CLIENT_CIVETSTREAM_H_
 #define EXTENSIONS_HTTP_CURL_CLIENT_CIVETSTREAM_H_
 
+#include <algorithm>
 #include <memory>
 #include <thread>
 #include <mutex>

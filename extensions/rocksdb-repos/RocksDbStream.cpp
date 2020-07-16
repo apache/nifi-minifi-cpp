@@ -17,6 +17,7 @@
  */
 
 #include "RocksDbStream.h"
+#include <algorithm>
 #include <fstream>
 #include <utility>
 #include <vector>

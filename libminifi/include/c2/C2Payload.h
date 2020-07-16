@@ -81,7 +81,7 @@ struct C2ContentResponse {
   // delay before running
   uint32_t delay{ 0 };
   // max time before this response will no longer be honored.
-  uint64_t ttl{ (std::numeric_limits<uint64_t>::max)() };
+  uint64_t ttl{ std::numeric_limits<uint64_t>::max() };
   // name applied to commands
   std::string name;
   // commands that correspond with the operation.

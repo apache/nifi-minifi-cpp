@@ -61,7 +61,7 @@ bool LinuxPowerManagerService::isAboveMax(int new_tasks) {
 }
 
 uint16_t LinuxPowerManagerService::getMaxThreads() {
-  return (std::numeric_limits<uint16_t>::max)();
+  return std::numeric_limits<uint16_t>::max();
 }
 
 bool LinuxPowerManagerService::canIncrease() {

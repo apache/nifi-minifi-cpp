@@ -102,7 +102,7 @@ class Worker {
       promise->set_value(result);
       return false;
     }
-    next_exec_time_ = (std::max)(next_exec_time_ + run_determinant_->wait_time(), std::chrono::steady_clock::now());
+    next_exec_time_ = std::max(next_exec_time_ + run_determinant_->wait_time(), std::chrono::steady_clock::now());
     return true;
   }
 

@@ -18,6 +18,7 @@
 
 #include "HTTPStream.h"
 
+#include <algorithm>
 #include <fstream>
 #include <vector>
 #include <memory>

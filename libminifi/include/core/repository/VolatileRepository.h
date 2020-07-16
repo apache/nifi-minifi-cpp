@@ -227,7 +227,7 @@ bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configu
     if (configure->get(strstream.str(), value)) {
       if (core::Property::StringToInt(value, max_bytes)) {
         if (max_bytes <= 0) {
-          max_size_ = (std::numeric_limits<uint32_t>::max)();
+          max_size_ = std::numeric_limits<uint32_t>::max();
         } else {
           max_size_ = gsl::narrow<size_t>(max_bytes);
         }

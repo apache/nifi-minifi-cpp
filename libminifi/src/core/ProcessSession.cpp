@@ -339,7 +339,7 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
     size_t position = 0;
     const size_t max_size = stream.size();
     while (position < max_size) {
-      const size_t read_size = (std::min)(max_read, max_size - position);
+      const size_t read_size = std::min(max_read, max_size - position);
       stream.read(charBuffer, read_size);
 
       content_stream->write(charBuffer.data(), read_size);
