@@ -23,20 +23,26 @@
 
 #include "utils/ScopeGuard.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <Windows.h>
 #include <sddl.h>
+#include <psapi.h>
+#include <vector>
+#include <algorithm>
 #pragma comment(lib, "Ws2_32.lib")
 #else
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <pwd.h>
 #include <sys/types.h>
+#include <unistd.h>
+#include <fstream>
 
-#include <mutex>
+#endif
+
+#ifdef __APPLE__
+#include <mach/mach.h>
 #endif
 
 namespace org {
@@ -45,7 +51,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-#ifdef WIN32
+#ifdef _WIN32
 /*
  These are common translations for SIDs in windows
  */
@@ -73,7 +79,7 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
   std::string name;
   name = uid;
   if (!name.empty()) {
-#ifdef WIN32
+#ifdef _WIN32
     const auto resolved_name = resolve_common_identifiers(name);
     if (!resolved_name.empty()) {
       return resolved_name;
@@ -152,6 +158,80 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
 #endif
   }
   return name;
+}
+
+unsigned long long OsUtils::getMemoryUsage() {
+#ifdef __linux__
+  long resPages;
+  long sharedPages;
+  {
+    std::string ignore;
+    std::ifstream ifs("/proc/self/statm");
+    ifs >> ignore >> resPages >> sharedPages;
+  }
+
+  if (sharedPages > resPages) {
+    throw std::range_error("Shared memory page count ("
+      + std::to_string(sharedPages)
+      + ") should not be larger than resident set size ("
+      + std::to_string(resPages)
+      + "), that includes it"
+    );
+  }
+
+  const long ownPages = resPages - sharedPages;
+  const long pageSize = sysconf(_SC_PAGE_SIZE);
+  return ownPages * pageSize;
+#endif
+
+#ifdef __APPLE__
+  task_basic_info tInfo;
+  mach_msg_type_number_t tInfoCount = TASK_BASIC_INFO_COUNT;
+  if (KERN_SUCCESS != task_info(mach_task_self(), TASK_BASIC_INFO, (task_info_t)&tInfo, &tInfoCount))
+      throw std::runtime_error("Could not get memory info for current process");
+  return tInfo.resident_size;
+#endif
+
+#ifdef _WIN32
+  const auto hCurrentProcess = GetCurrentProcess();
+
+  PSAPI_WORKING_SET_INFORMATION workingSetSizeInfo;
+  QueryWorkingSet(hCurrentProcess, &workingSetSizeInfo, sizeof(workingSetSizeInfo));
+  auto pageCountLimit = workingSetSizeInfo.NumberOfEntries * 2; // twice the size for sure fit next time
+  BOOL success = 0;
+
+  // allocate storage
+  size_t storageSize = sizeof(ULONG_PTR) + pageCountLimit * sizeof(PSAPI_WORKING_SET_BLOCK);
+  std::vector<char> storage(storageSize);
+  ULONG_PTR* totalPages = nullptr;
+  PSAPI_WORKING_SET_BLOCK* workingSetBlock = nullptr;
+
+  for (int tries = 0; tries < 10 && !success; ++tries) {
+    if (storage.size() != storageSize)
+      storage.resize(storageSize);
+
+    // allocate structured data continuously in storage, Windows only likes it this way
+    totalPages = new(storage.data()) ULONG_PTR;
+    workingSetBlock = new(storage.data() + sizeof(ULONG_PTR)) PSAPI_WORKING_SET_BLOCK[pageCountLimit];
+
+    // get page information or set number of entries correctly for next try
+    success = QueryWorkingSet(hCurrentProcess, storage.data(), storageSize);
+    pageCountLimit = *totalPages * 2; // twice the size for sure fit next time
+    storageSize = sizeof(ULONG_PTR) + pageCountLimit * sizeof(PSAPI_WORKING_SET_BLOCK);
+  }
+
+  if (!success) {
+    throw std::runtime_error("Could not get memory info for current process");
+  }
+
+  const auto privatePages = std::count_if(workingSetBlock, workingSetBlock + *totalPages, [](const PSAPI_WORKING_SET_BLOCK& b) { return b.Shared != 1; });
+
+  // get page size
+  SYSTEM_INFO systemInfo;
+  GetSystemInfo(&systemInfo);
+
+  return privatePages * systemInfo.dwPageSize;
+#endif
 }
 
 }  // namespace utils
