@@ -85,3 +85,7 @@ TEST_CASE("parseDateTimeStr() works correctly", "[parseDateTimeStr]") {
   REQUIRE(parseDateTimeStr("2024-01-30T23:01:15Z") == 1706655675);
   REQUIRE(parseDateTimeStr("2087-07-31T01:33:50Z") == 3710453630);
 }
+
+TEST_CASE("Test time conversion", "[testtimeconversion]") {
+  REQUIRE("2017-02-16 20:14:56.196" == getTimeStr(1487276096196, true));
+}
