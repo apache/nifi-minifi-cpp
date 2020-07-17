@@ -62,6 +62,9 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
       auto oldClaim = claim_;
       claim_ = newClaim;
       // the order of increase/release is important
+      // with refcount manipulation we should always increment first, then decrement as this way we don't accidentally
+      // discard the object under ourselves, note that an equality check will not suffice as two ResourceClaim
+      // instances can reference the same file (they could have the same contentPath)
       if (claim_) claim_->increaseFlowFileRecordOwnedCount();
       if (oldClaim) owner.releaseClaim(oldClaim);
       return *this;
@@ -82,6 +85,12 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
     }
 
    private:
+    /*
+     * We are aiming for the constraint that all FlowFiles should have a non-null claim pointer,
+     * unfortunately, for now, some places (e.g. ProcessSession::create) violate this constraint.
+     * We should indicate an empty or invalid content with special claims like
+     * InvalidResourceClaim and EmptyResourceClaim.
+     */
     std::shared_ptr<ResourceClaim> claim_;
   };
 
