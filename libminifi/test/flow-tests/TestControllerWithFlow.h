@@ -56,6 +56,8 @@ class TestControllerWithFlow: public TestController{
   }
 
   ~TestControllerWithFlow() {
+    controller_->stop(true);
+    controller_->unload();
     LogTestController::getInstance().reset();
   }
 
