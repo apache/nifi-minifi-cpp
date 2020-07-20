@@ -31,8 +31,8 @@
 #include "processors/LogAttribute.h"
 #include "HTTPIntegrationBase.h"
 
-class VerifyC2Server : public CoapIntegrationBase {
- public:
+class VerifyC2Server : public HTTPIntegrationBase {
+public:
   explicit VerifyC2Server(bool isSecure)
       : isSecure(isSecure) {
     char format[] = "/tmp/ssth.XXXXXX";

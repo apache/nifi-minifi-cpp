@@ -27,8 +27,8 @@
 #include "TestServer.h"
 #include "HTTPIntegrationBase.h"
 
-class VerifyC2Server : public CoapIntegrationBase {
- public:
+class VerifyC2Server : public HTTPIntegrationBase {
+public:
   explicit VerifyC2Server() {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);

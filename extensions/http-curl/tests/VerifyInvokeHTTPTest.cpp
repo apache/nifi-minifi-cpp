@@ -27,10 +27,10 @@
 #include "CivetServer.h"
 #include "HTTPIntegrationBase.h"
 
-class VerifyInvokeHTTP : public CoapIntegrationBase {
+class VerifyInvokeHTTP : public HTTPIntegrationBase {
 public:
   VerifyInvokeHTTP()
-      : CoapIntegrationBase(6000) {
+      : HTTPIntegrationBase(6000) {
   }
 
   void testSetup() override {
