@@ -80,6 +80,8 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
     period = "PM";
   if (hour > 12)
     hour -= 12;
+  if (hour = 0)
+    hour = 12;
   datestr << st.wMonth << "/" << st.wDay << "/" << st.wYear << " " << std::setfill('0') << std::setw(2) << hour << ":" << std::setfill('0') << std::setw(2) << st.wMinute << ":" << std::setfill('0') << std::setw(2) << st.wSecond << " " << period;
   event_timestamp_str_ = datestr.str();
   auto level = static_cast<PEVT_VARIANT>(rendered_values.get())[EvtSystemLevel];
