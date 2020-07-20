@@ -813,7 +813,7 @@ void ProcessSession::commit() {
         }
     }
 
-    persistFlowFilesBeforeTransfer(connectionQueues);
+    persistFlowFilesBeforeTransfer(connectionQueues, _flowFileSnapShots);
 
     for (auto& cq : connectionQueues) {
       auto connection = std::dynamic_pointer_cast<Connection>(cq.first);
@@ -831,7 +831,7 @@ void ProcessSession::commit() {
     _addedFlowFiles.clear();
     _clonedFlowFiles.clear();
     _deletedFlowFiles.clear();
-    _originalFlowFiles.clear();
+    _flowFileSnapShots.clear();
 
     _transferRelationship.clear();
     // persistent the provenance report
@@ -853,9 +853,11 @@ void ProcessSession::rollback() {
 
   try {
     std::shared_ptr<Connectable> connection = nullptr;
-    // Requeue the snapshot of the flowfile back
-    for (const auto &it : _originalFlowFiles) {
+    // Restore the flowFiles from the snapshot
+    for (const auto &it : _updatedFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
+      auto snaphost = _flowFileSnapShots[record->getUUIDStr()];
+      (*record.get()) = (*snaphost.get());
       connection = record->getOriginalConnection();
       if ((connection) != nullptr) {
         std::shared_ptr<FlowFileRecord> flowf = std::static_pointer_cast<FlowFileRecord>(record);
@@ -881,7 +883,7 @@ void ProcessSession::rollback() {
       }
     }
 
-    _originalFlowFiles.clear();
+    _flowFileSnapShots.clear();
 
     _clonedFlowFiles.clear();
     _addedFlowFiles.clear();
@@ -897,7 +899,10 @@ void ProcessSession::rollback() {
   }
 }
 
-void ProcessSession::persistFlowFilesBeforeTransfer(std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile> > > &transactionMap) {
+void ProcessSession::persistFlowFilesBeforeTransfer(
+    std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile> > >& transactionMap,
+    const std::map<std::string, std::shared_ptr<FlowFile>>& originalFlowFileSnapShots) {
+
   std::vector<std::pair<std::string, std::unique_ptr<io::DataStream>>> flowData;
 
   auto flowFileRepo = process_context_->getFlowFileRepository();
@@ -933,22 +938,28 @@ void ProcessSession::persistFlowFilesBeforeTransfer(std::map<std::shared_ptr<Con
     const bool shouldDropEmptyFiles = connection ? connection->getDropEmptyFlowFiles() : false;
     auto& flows = transaction.second;
     for (auto &ff : flows) {
+      auto snapshotIt = originalFlowFileSnapShots.find(ff->getUUIDStr());
+      auto original = snapshotIt != originalFlowFileSnapShots.end() ? snapshotIt->second : nullptr;
       if (shouldDropEmptyFiles && ff->getSize() == 0) {
         // the receiver promised to drop this FF, no need for it anymore
         if (ff->isStored() && flowFileRepo->Delete(ff->getUUIDStr())) {
-          auto claim = ff->getResourceClaim();
+          // original must be non-null since this flowFile is already stored in the repos ->
+          // must have come from a session->get()
+          auto claim = original->getResourceClaim();
           // decrement on behalf of the persisted-instance-to-be-deleted
           if (claim) claim->decreaseFlowFileRecordOwnedCount();
           ff->setStoredToRepository(false);
         }
         continue;
       }
-      if (!ff->isStored()) {
-        auto claim = ff->getResourceClaim();
-        // increment on behalf of the persisted instance
-        if (claim) claim->increaseFlowFileRecordOwnedCount();
-        ff->setStoredToRepository(true);
-      }
+      auto claim = ff->getResourceClaim();
+      // increment on behalf of the persisted instance
+      if (claim) claim->increaseFlowFileRecordOwnedCount();
+      auto originalClaim = original ? original->getResourceClaim() : nullptr;
+      // decrement on behalf of the overridden instance if any
+      if (ff->isStored() && originalClaim) originalClaim->decreaseFlowFileRecordOwnedCount();
+
+      ff->setStoredToRepository(true);
     }
   }
 }
@@ -993,9 +1004,9 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
         snapshot->setAttribute(attr, flow_version->getFlowId());
       }
       logger_->log_debug("Create Snapshot FlowFile with UUID %s", snapshot->getUUIDStr());
-      snapshot = ret;
+      (*snapshot.get()) = (*ret.get());
       // save a snapshot
-      _originalFlowFiles[snapshot->getUUIDStr()] = snapshot;
+      _flowFileSnapShots[snapshot->getUUIDStr()] = snapshot;
       return ret;
     }
     current = std::static_pointer_cast<Connection>(process_context_->getProcessorNode()->pickIncomingConnection());

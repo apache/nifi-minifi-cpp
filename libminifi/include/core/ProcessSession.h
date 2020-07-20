@@ -142,7 +142,7 @@ class ProcessSession : public ReferenceContainer {
   // FlowFiles being modified by current process session
   std::map<std::string, std::shared_ptr<core::FlowFile>> _updatedFlowFiles;
   // Copy of the original FlowFiles being modified by current process session as above
-  std::map<std::string, std::shared_ptr<core::FlowFile>> _originalFlowFiles;
+  std::map<std::string, std::shared_ptr<core::FlowFile>> _flowFileSnapShots;
   // FlowFiles being added by current process session
   std::map<std::string, std::shared_ptr<core::FlowFile>> _addedFlowFiles;
   // FlowFiles being deleted by current process session
@@ -153,7 +153,9 @@ class ProcessSession : public ReferenceContainer {
   std::map<std::string, std::shared_ptr<core::FlowFile>> _clonedFlowFiles;
 
  private:
-  void persistFlowFilesBeforeTransfer(std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap);
+  void persistFlowFilesBeforeTransfer(
+      std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap,
+      const std::map<std::string, std::shared_ptr<FlowFile>>& originalFlowFileSnapShots);
   // Clone the flow file during transfer to multiple connections for a relationship
   std::shared_ptr<core::FlowFile> cloneDuringTransfer(std::shared_ptr<core::FlowFile> &parent);
   // ProcessContext

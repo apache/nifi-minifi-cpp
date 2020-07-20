@@ -38,27 +38,16 @@ using Connection = minifi::Connection;
 using MergeContent = minifi::processors::MergeContent;
 
 struct TestFlow{
-  TestFlow(const std::shared_ptr<core::repository::FlowFileRepository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<core::Repository>& prov_repo)
+  TestFlow(const std::shared_ptr<core::repository::FlowFileRepository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<core::Repository>& prov_repo,
+        const std::function<std::shared_ptr<core::Processor>(utils::Identifier&)>& processorGenerator, const core::Relationship& relationshipToOutput)
       : ff_repository(ff_repository), content_repo(content_repo), prov_repo(prov_repo) {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
 
-    // setup MERGE processor
+    // setup processor
     {
-      merge = std::make_shared<MergeContent>("MergeContent", mergeProcUUID());
-      merge->initialize();
-      merge->setAutoTerminatedRelationships({{"original", "d"}});
-
-      merge->setProperty(MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-      merge->setProperty(MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
-      merge->setProperty(MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
-      merge->setProperty(MergeContent::MinEntries, "3");
-      merge->setProperty(MergeContent::Header, "_Header_");
-      merge->setProperty(MergeContent::Footer, "_Footer_");
-      merge->setProperty(MergeContent::Demarcator, "_Demarcator_");
-      merge->setProperty(MergeContent::MaxBinAge, "1 h");
-
-      std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(merge);
-      mergeContext = std::make_shared<core::ProcessContext>(node, controller_services_provider, prov_repo, ff_repository, content_repo);
+      processor = processorGenerator(mainProcUUID());
+      std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+      processorContext = std::make_shared<core::ProcessContext>(node, controller_services_provider, prov_repo, ff_repository, content_repo);
     }
 
     // setup INPUT processor
@@ -73,7 +62,7 @@ struct TestFlow{
     {
       input = std::make_shared<Connection>(ff_repository, content_repo, "Input", inputConnUUID());
       input->setRelationship({"input", "d"});
-      input->setDestinationUUID(mergeProcUUID());
+      input->setDestinationUUID(mainProcUUID());
       input->setSourceUUID(inputProcUUID());
       inputProcessor->addConnection(input);
     }
@@ -81,23 +70,23 @@ struct TestFlow{
     // setup Output Connection
     {
       output = std::make_shared<Connection>(ff_repository, content_repo, "Output", outputConnUUID());
-      output->setRelationship(MergeContent::Merge);
-      output->setSourceUUID(mergeProcUUID());
+      output->setRelationship(relationshipToOutput);
+      output->setSourceUUID(mainProcUUID());
     }
 
     // setup ProcessGroup
     {
       root = std::make_shared<core::ProcessGroup>(core::ProcessGroupType::ROOT_PROCESS_GROUP, "root");
-      root->addProcessor(merge);
+      root->addProcessor(processor);
       root->addConnection(input);
       root->addConnection(output);
     }
 
     // prepare Merge Processor for execution
-    merge->setScheduledState(core::ScheduledState::RUNNING);
-    merge->onSchedule(mergeContext.get(), new core::ProcessSessionFactory(mergeContext));
+    processor->setScheduledState(core::ScheduledState::RUNNING);
+    processor->onSchedule(processorContext.get(), new core::ProcessSessionFactory(processorContext));
   }
-  void write(const std::string& data) {
+  std::shared_ptr<core::FlowFile> write(const std::string& data) {
     minifi::io::DataStream stream(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
     core::ProcessSession sessionGenFlowFile(inputContext);
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
@@ -105,17 +94,18 @@ struct TestFlow{
     assert(flow->getResourceClaim()->getFlowFileRecordOwnedCount() == 1);
     sessionGenFlowFile.transfer(flow, {"input", "d"});
     sessionGenFlowFile.commit();
+    return flow;
   }
   std::string read(const std::shared_ptr<core::FlowFile>& file) {
-    core::ProcessSession session(mergeContext);
+    core::ProcessSession session(processorContext);
     std::vector<uint8_t> buffer;
     BufferReader reader(buffer);
     session.read(file, &reader);
     return {buffer.data(), buffer.data() + buffer.size()};
   }
   void trigger() {
-    auto session = std::make_shared<core::ProcessSession>(mergeContext);
-    merge->onTrigger(mergeContext, session);
+    auto session = std::make_shared<core::ProcessSession>(processorContext);
+    processor->onTrigger(processorContext, session);
     session->commit();
   }
 
@@ -124,19 +114,36 @@ struct TestFlow{
   std::shared_ptr<core::ProcessGroup> root;
 
  private:
-  static utils::Identifier& mergeProcUUID() {static auto id = utils::IdGenerator::getIdGenerator()->generate(); return id;}
+  static utils::Identifier& mainProcUUID() {static auto id = utils::IdGenerator::getIdGenerator()->generate(); return id;}
   static utils::Identifier& inputProcUUID() {static auto id = utils::IdGenerator::getIdGenerator()->generate(); return id;}
   static utils::Identifier& inputConnUUID() {static auto id = utils::IdGenerator::getIdGenerator()->generate(); return id;}
   static utils::Identifier& outputConnUUID() {static auto id = utils::IdGenerator::getIdGenerator()->generate(); return id;}
 
   std::shared_ptr<core::Processor> inputProcessor;
-  std::shared_ptr<core::Processor> merge;
+  std::shared_ptr<core::Processor> processor;
   std::shared_ptr<core::repository::FlowFileRepository> ff_repository;
   std::shared_ptr<core::ContentRepository> content_repo;
   std::shared_ptr<core::Repository> prov_repo;
   std::shared_ptr<core::ProcessContext> inputContext;
-  std::shared_ptr<core::ProcessContext> mergeContext;
+  std::shared_ptr<core::ProcessContext> processorContext;
 };
+
+std::shared_ptr<MergeContent> setupMergeProcessor(const utils::Identifier& id) {
+  auto processor = std::make_shared<MergeContent>("MergeContent", id);
+  processor->initialize();
+  processor->setAutoTerminatedRelationships({{"original", "d"}});
+
+  processor->setProperty(MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
+  processor->setProperty(MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
+  processor->setProperty(MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
+  processor->setProperty(MergeContent::MinEntries, "3");
+  processor->setProperty(MergeContent::Header, "_Header_");
+  processor->setProperty(MergeContent::Footer, "_Footer_");
+  processor->setProperty(MergeContent::Demarcator, "_Demarcator_");
+  processor->setProperty(MergeContent::MaxBinAge, "1 h");
+
+  return processor;
+}
 
 TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   TestController testController;
@@ -162,7 +169,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", true);
 
   {
-    TestFlow flow(ff_repository, content_repo, prov_repo);
+    TestFlow flow(ff_repository, content_repo, prov_repo, setupMergeProcessor, MergeContent::Merge);
 
     flowController->load(flow.root);
     ff_repository->start();
@@ -190,7 +197,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
 
   // swap the ProcessGroup and restart the FlowController
   {
-    TestFlow flow(ff_repository, content_repo, prov_repo);
+    TestFlow flow(ff_repository, content_repo, prov_repo, setupMergeProcessor, MergeContent::Merge);
 
     flowController->load(flow.root);
     ff_repository->start();
@@ -216,5 +223,97 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
         || Catch::Equals("_Header_two_Demarcator_one_Demarcator_three_Footer_");
 
     REQUIRE_THAT(content, isOneOfPossibleResults);
+  }
+}
+
+class ContentUpdaterProcessor : public core::Processor{
+ public:
+  ContentUpdaterProcessor(const std::string& name, utils::Identifier& id) : Processor(name, id) {}
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
+    auto ff = session->get();
+    std::string data = "<override>";
+    minifi::io::DataStream stream(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
+    session->importFrom(stream, ff);
+    session->transfer(ff, {"success", "d"});
+  }
+};
+
+std::shared_ptr<core::Processor> setupContentUpdaterProcessor(utils::Identifier& id) {
+  return std::make_shared<ContentUpdaterProcessor>("Updater", id);
+}
+
+TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
+  TestController testController;
+  LogTestController::getInstance().setDebug<core::ContentRepository>();
+  LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setTrace<minifi::ResourceClaim>();
+  LogTestController::getInstance().setTrace<minifi::FlowFileRecord>();
+
+  char format[] = "/tmp/test.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+
+  auto config = std::make_shared<minifi::Configure>();
+  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, utils::file::FileUtils::concat_path(dir, "content_repository"));
+  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
+
+  std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
+  std::shared_ptr<core::repository::FlowFileRepository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  ff_repository->initialize(config);
+  content_repo->initialize(config);
+
+  auto flowConfig = std::unique_ptr<core::FlowConfiguration>{new core::FlowConfiguration(prov_repo, ff_repository, content_repo, nullptr, config, "")};
+  auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", true);
+
+  {
+    TestFlow flow(ff_repository, content_repo, prov_repo, setupContentUpdaterProcessor, {"success", "d"});
+
+    flowController->load(flow.root);
+    ff_repository->start();
+
+    // write two files into the input
+    auto flowFile = flow.write("data");
+    auto claim = flowFile->getResourceClaim();
+    // one from the FlowFile and one from the persisted instance
+    REQUIRE(claim->getFlowFileRecordOwnedCount() == 2);
+    // update them with the Merge Processor
+    flow.trigger();
+
+    auto content = flow.read(flowFile);
+    REQUIRE(content == "<override>");
+    auto newClaim = flowFile->getResourceClaim();
+    // the processor added new content to the flowFile
+    REQUIRE(claim != newClaim);
+    // nobody holds an owning reference to the previous claim
+    REQUIRE(claim->getFlowFileRecordOwnedCount() == 0);
+    // one from the FlowFile and one from the persisted instance
+    REQUIRE(newClaim->getFlowFileRecordOwnedCount() == 2);
+
+    ff_repository->stop();
+    flowController->unload();
+  }
+
+  // swap the ProcessGroup and restart the FlowController
+  {
+    TestFlow flow(ff_repository, content_repo, prov_repo, setupContentUpdaterProcessor, {"success", "d"});
+
+    flowController->load(flow.root);
+    ff_repository->start();
+    // wait for FlowFileRepository to start and notify the owners of
+    // the resurrected FlowFiles
+    std::this_thread::sleep_for(std::chrono::milliseconds{100});
+
+    std::set<std::shared_ptr<core::FlowFile>> expired;
+    auto file = flow.output->poll(expired);
+    REQUIRE(file);
+    REQUIRE(expired.empty());
+
+    auto content = flow.read(file);
+    REQUIRE(content == "<override>");
+    // the still persisted instance and this FlowFile
+    REQUIRE(file->getResourceClaim()->getFlowFileRecordOwnedCount() == 2);
+
+    ff_repository->stop();
+    flowController->unload();
   }
 }
