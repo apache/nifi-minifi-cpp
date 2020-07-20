@@ -78,7 +78,7 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
   auto hour = st.wHour;
   if (hour >= 12 && hour < 24)
     period = "PM";
-  if (hour >= 12)
+  if (hour > 12)
     hour -= 12;
   datestr << st.wMonth << "/" << st.wDay << "/" << st.wYear << " " << std::setfill('0') << std::setw(2) << hour << ":" << std::setfill('0') << std::setw(2) << st.wMinute << ":" << std::setfill('0') << std::setw(2) << st.wSecond << " " << period;
   event_timestamp_str_ = datestr.str();
