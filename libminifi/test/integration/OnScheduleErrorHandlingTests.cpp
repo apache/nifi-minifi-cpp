@@ -38,10 +38,7 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
       const std::string logs = LogTestController::getInstance().log_output.str();
       const auto result = utils::StringUtils::countOccurrences(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
       const int occurrences = result.second;
-      if (occurrences <= 1) {  // Verify retry of onSchedule and onUnSchedule calls
-        return false;
-      }
-      return true;
+      return 1 < occurrences;
     }));
     flowController_->updatePropertyValue("kamikaze", minifi::processors::KamikazeProcessor::ThrowInOnSchedule.getName(), "false");
 

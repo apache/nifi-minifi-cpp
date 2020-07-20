@@ -125,6 +125,7 @@ int main(int argc, char **argv) {
   assert(ssl_client->getCACertificate().length() > 0);
   // now let's disable one of the controller services.
   std::shared_ptr<core::controller::ControllerServiceNode> cs_id = controller->getControllerServiceNode("ID");
+  const auto checkCsIdEnabledMatchesDisabledFlag = [&cs_id] { return !disabled == cs_id->enabled(); };
   assert(cs_id != nullptr);
   {
     std::lock_guard<std::mutex> lock(control_mutex);
@@ -132,28 +133,19 @@ int main(int argc, char **argv) {
     disabled = false;
   }
   std::shared_ptr<core::controller::ControllerServiceNode> mock_cont = controller->getControllerServiceNode("MockItLikeIts1995");
-  const bool test_success_01 = verifyEventHappenedInPollTime(std::chrono::seconds(4), [&cs_id] {
-    return cs_id->enabled();
-  });
+  assert(verifyEventHappenedInPollTime(std::chrono::seconds(4), checkCsIdEnabledMatchesDisabledFlag));
   {
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->disableReferencingServices(mock_cont);
     disabled = true;
   }
-  const bool test_success_02 = verifyEventHappenedInPollTime(std::chrono::seconds(2), [&cs_id] {
-    return !cs_id->enabled();
-  });
+  assert(verifyEventHappenedInPollTime(std::chrono::seconds(2), checkCsIdEnabledMatchesDisabledFlag));
   {
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->enableReferencingServices(mock_cont);
     disabled = false;
   }
-  const bool test_success_03 = verifyEventHappenedInPollTime(std::chrono::seconds(2), [&cs_id] {
-    return cs_id->enabled();
-  });
-  assert(test_success_01);
-  assert(test_success_02);
-  assert(test_success_03);
+  assert(verifyEventHappenedInPollTime(std::chrono::seconds(2), checkCsIdEnabledMatchesDisabledFlag));
 
   controller->waitUnload(60000);
   return 0;

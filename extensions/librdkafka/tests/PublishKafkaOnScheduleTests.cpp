@@ -33,10 +33,7 @@ class PublishKafkaOnScheduleTests : public IntegrationBase {
         const std::string logs = LogTestController::getInstance().log_output.str();
         const auto result = utils::StringUtils::countOccurrences(logs, "value 1 is outside allowed range 1000..1000000000");
         const int occurrences = result.second;
-        if (occurrences <= 1) {  // Verify retry of onSchedule and onUnSchedule calls
-          return false;
-        }
-        return true;
+        return 1 < occurrences;
       }));
       flowController_->updatePropertyValue("kafka", minifi::processors::PublishKafka::MaxMessageSize.getName(), "1999");
       const std::vector<std::string> must_appear_byorder_msgs = {"notifyStop called",
