@@ -44,6 +44,8 @@ bool verifyEventHappenedInPollTime(const std::chrono::duration<Rep, Period>& wai
 
 template <class Rep, class Period, typename ...String>
 bool verifyLogLinePresenceInPollTime(const std::chrono::duration<Rep, Period>& wait_duration, String... patterns) {
+  // This function contains an extra copy on the parameter pack unpacking
+  // However, since we gcc 4.9 does not support forwarding parameter packs we are pretty much forced to do this
   // This helper is to be removed once we upgrade to support gcc 4.9+ only
   std::vector<std::string> pattern_list;
   std::initializer_list<int> {(pattern_list.push_back(patterns), 0)...};
