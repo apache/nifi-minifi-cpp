@@ -43,12 +43,10 @@ bool verifyEventHappenedInPollTime(const std::chrono::duration<Rep, Period>& wai
 }
 
 template <class Rep, class Period, typename ...String>
-bool verifyLogLinePresenceInPollTime(const std::chrono::duration<Rep, Period>& wait_duration, String... patterns) {
-  // This function contains an extra copy on the parameter pack unpacking
-  // However, since we gcc 4.9 does not support forwarding parameter packs we are pretty much forced to do this
-  // This helper is to be removed once we upgrade to support gcc 4.9+ only
-  std::vector<std::string> pattern_list;
-  std::initializer_list<int> {(pattern_list.push_back(patterns), 0)...};
+bool verifyLogLinePresenceInPollTime(const std::chrono::duration<Rep, Period>& wait_duration, String&&... patterns) {
+  // gcc before 4.9 does not support capturing parameter packs in lambdas: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=41933
+  // Once we support gcc >= 4.9 only, this vector will no longer be necessary, we'll be able to iterate on the parameter pack directly.
+  std::vector<std::string> pattern_list{std::forward<String>(patterns)...};
   auto check = [&] {
     const std::string logs = LogTestController::getInstance().log_output.str();
     if (std::all_of(pattern_list.cbegin(), pattern_list.cend(), [&logs] (const std::string& pattern) { return logs.find(pattern) != std::string::npos; })) {
