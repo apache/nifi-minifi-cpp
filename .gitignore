@@ -53,7 +53,7 @@ target
 thirdparty/**/*.o
 thirdparty/**/*.a
 libminifi/test/**/*.a
-libminifi/include/agent/agent_version.h
+libminifi/include/src/agent_version.cpp
 docs/generated
 thirdparty/apache-rat/apache-rat*
 /compile_commands.json
