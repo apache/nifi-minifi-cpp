@@ -857,7 +857,7 @@ void ProcessSession::rollback() {
     for (const auto &it : _updatedFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
       auto snaphost = _flowFileSnapShots[record->getUUIDStr()];
-      (*record.get()) = (*snaphost.get());
+      *record = *snaphost;
       connection = record->getOriginalConnection();
       if ((connection) != nullptr) {
         std::shared_ptr<FlowFileRecord> flowf = std::static_pointer_cast<FlowFileRecord>(record);
@@ -1004,7 +1004,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
         snapshot->setAttribute(attr, flow_version->getFlowId());
       }
       logger_->log_debug("Create Snapshot FlowFile with UUID %s", snapshot->getUUIDStr());
-      (*snapshot.get()) = (*ret.get());
+      *snapshot = *ret;
       // save a snapshot
       _flowFileSnapShots[snapshot->getUUIDStr()] = snapshot;
       return ret;
