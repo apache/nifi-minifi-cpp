@@ -251,9 +251,9 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     if (!configure->get("nifi.c2.agent.update.temp.location", "c2.agent.update.temp.location", update_location_)) {
       std::string cwd = utils::Environment::getCurrentWorkingDirectory();
       if (cwd.empty()) {
-        logger_->log_error("Could not set the copy path because the working directory could not be determined");
+        logger_->log_error("Could not set the update location because the working directory could not be determined");
       } else {
-        cwd + "/minifi.update";  // FIXME(fgerlits): should this be assigned to update_location_?
+        update_location_ = cwd + "/minifi.update";
       }
     }
 
