@@ -18,6 +18,7 @@
 
 #include "c2/C2Agent.h"
 
+#include <cstdio>
 #include <csignal>
 #include <utility>
 #include <limits>
@@ -37,6 +38,7 @@
 #include "utils/file/FileManager.h"
 #include "utils/GeneralUtils.h"
 #include "utils/HTTPClient.h"
+#include "utils/Environment.h"
 #include "utils/Monitors.h"
 
 namespace org {
@@ -238,25 +240,20 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
 
   if (allow_updates_) {
     if (!configure->get("nifi.c2.agent.update.command", "c2.agent.update.command", update_command_)) {
-      char cwd[1024];
-      if (getcwd(cwd, sizeof(cwd)) == nullptr) {
-        logger_->log_error("Could not set update command, reason %s", std::strerror(errno));
-
+      std::string cwd = utils::Environment::getCurrentWorkingDirectory();
+      if (cwd.empty()) {
+        logger_->log_error("Could not set the update command because the working directory could not be determined");
       } else {
-        std::stringstream command;
-        command << cwd << "/minifi.sh update";
-        update_command_ = command.str();
+        update_command_ = cwd + "/minifi.sh update";
       }
     }
 
     if (!configure->get("nifi.c2.agent.update.temp.location", "c2.agent.update.temp.location", update_location_)) {
-      char cwd[1024];
-      if (getcwd(cwd, sizeof(cwd)) == nullptr) {
-        logger_->log_error("Could not set copy path, reason %s", std::strerror(errno));
+      std::string cwd = utils::Environment::getCurrentWorkingDirectory();
+      if (cwd.empty()) {
+        logger_->log_error("Could not set the copy path because the working directory could not be determined");
       } else {
-        std::stringstream copy_path;
-        std::stringstream command;
-        copy_path << cwd << "/minifi.update";
+        cwd + "/minifi.update";  // FIXME(fgerlits): should this be assigned to update_location_?
       }
     }
 
@@ -679,7 +676,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
       std::ifstream new_conf(file_path);
       std::string raw_data_str((std::istreambuf_iterator<char>(new_conf)), std::istreambuf_iterator<char>());
-      unlink(file_path.c_str());
+      std::remove(file_path.c_str());
       // if we can apply the update, we will acknowledge it and then backup the configuration file.
       if (update_sink_->applyUpdate(urlStr, raw_data_str)) {
         C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
@@ -832,7 +829,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
         }
         // remove the downloaded file.
         logger_->log_trace("removing file %s", file_path);
-        unlink(file_path.c_str());
+        std::remove(file_path.c_str());
         update_agent();
       } else {
         logger_->log_trace("Update disallowed from file %s", file_path);
@@ -862,15 +859,14 @@ bool C2Agent::update_property(const std::string &property_name, const std::strin
 }
 
 void C2Agent::restart_agent() {
-  char cwd[1024];
-  if (getcwd(cwd, sizeof(cwd)) == nullptr) {
-    logger_->log_error("Could not restart agent, reason %s", std::strerror(errno));
+  std::string cwd = utils::Environment::getCurrentWorkingDirectory();
+  if (cwd.empty()) {
+    logger_->log_error("Could not restart the agent because the working directory could not be determined");
     return;
   }
 
-  std::stringstream command;
-  command << cwd << "/bin/minifi.sh restart";
-  system(command.str().c_str());
+  std::string command = cwd + "/bin/minifi.sh restart";
+  system(command.c_str());
 }
 
 void C2Agent::update_agent() {

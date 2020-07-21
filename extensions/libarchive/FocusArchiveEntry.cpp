@@ -245,7 +245,11 @@ int64_t FocusArchiveEntry::ReadCallback::process(std::shared_ptr<io::BaseStream>
       auto fd = fopen(tmpFileName.c_str(), "w");
 
       if (archive_entry_size(entry) > 0) {
+#ifdef WIN32
+        nlen += archive_read_data_into_fd(inputArchive, _fileno(fd));
+#else
         nlen += archive_read_data_into_fd(inputArchive, fileno(fd));
+#endif
       }
 
       fclose(fd);

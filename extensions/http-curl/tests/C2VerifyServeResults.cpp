@@ -17,6 +17,7 @@
  */
 
 #undef NDEBUG
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <sstream>
@@ -45,7 +46,7 @@ class VerifyC2Server : public CoapIntegrationBase {
   }
 
   void cleanup() override {
-    unlink(ss.str().c_str());
+    std::remove(ss.str().c_str());
   }
 
   void runAssertions() override {

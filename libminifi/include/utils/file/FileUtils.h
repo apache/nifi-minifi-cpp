@@ -710,6 +710,22 @@ class FileUtils {
     return get_parent_path(executable_path);
   }
 
+  static int close(int file_descriptor) {
+#ifdef WIN32
+    return _close(file_descriptor);
+#else
+    return ::close(file_descriptor);
+#endif
+  }
+
+  static int access(const char *path_name, int mode) {
+#ifdef WIN32
+    return _access(path_name, mode);
+#else
+    return ::access(path_name, mode);
+#endif
+  }
+
 #ifdef WIN32
   static std::error_code hide_file(const char* const file_name) {
     const bool success = SetFileAttributesA(file_name, FILE_ATTRIBUTE_HIDDEN);

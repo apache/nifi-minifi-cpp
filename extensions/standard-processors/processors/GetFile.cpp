@@ -247,10 +247,10 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
     if (request.ignoreHiddenFile && utils::file::FileUtils::is_hidden(fullName))
       return false;
 
-    if (access(fullName.c_str(), R_OK) != 0)
+    if (utils::file::FileUtils::access(fullName.c_str(), R_OK) != 0)
       return false;
 
-    if (request.keepSourceFile == false && access(fullName.c_str(), W_OK) != 0)
+    if (request.keepSourceFile == false && utils::file::FileUtils::access(fullName.c_str(), W_OK) != 0)
       return false;
 
     utils::Regex rgx(request.fileFilter);

@@ -32,6 +32,7 @@
 #include <string>
 #include "io/validation.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/file/FileUtils.h"
 
 namespace org {
 namespace apache {
@@ -71,7 +72,7 @@ void ServerSocket::registerCallback(std::function<bool()> accept_function, std::
 
 void ServerSocket::close_fd(int fd) {
   std::lock_guard<std::recursive_mutex> guard(selection_mutex_);
-  close(fd);
+  utils::file::FileUtils::close(fd);
   FD_CLR(fd, &total_list_);
 }
 

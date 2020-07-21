@@ -39,6 +39,7 @@
 #include <utils/Deleters.h>
 #include "io/validation.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/file/FileUtils.h"
 #include "utils/GeneralUtils.h"
 
 namespace util = org::apache::nifi::minifi::utils;
@@ -512,7 +513,7 @@ int Socket::writeData(uint8_t *value, int size) {
     ret = send(fd, reinterpret_cast<const char*>(value) + bytes, size - bytes, 0);
     // check for errors
     if (ret <= 0) {
-      close(fd);
+      utils::file::FileUtils::close(fd);
       logger_->log_error("Could not send to %d, error: %s", fd, get_last_socket_error_message());
       return ret;
     }
@@ -609,7 +610,7 @@ int Socket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
     if (fd < 0) {
       if (listeners_ <= 0) {
         logger_->log_debug("fd %d close %i", fd, buflen);
-        close(socket_file_descriptor_);
+        utils::file::FileUtils::close(socket_file_descriptor_);
       }
       return -1;
     }

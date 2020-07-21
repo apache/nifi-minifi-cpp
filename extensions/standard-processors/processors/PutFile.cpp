@@ -30,9 +30,6 @@
 #include <Windows.h>
 #endif
 #include "utils/file/FileUtils.h"
-#ifndef S_ISDIR
-#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
-#endif
 
 namespace org {
 namespace apache {
@@ -133,26 +130,22 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   // If file exists, apply conflict resolution strategy
   struct stat statResult;
 
-  if ((max_dest_files_ != -1) && (stat(directory.c_str(), &statResult) == 0)) {
-    // something exists at directory path
-    if (S_ISDIR(statResult.st_mode)) {
-      // it's a directory, count the files
-      int64_t ct = 0;
+  if ((max_dest_files_ != -1) && utils::file::FileUtils::is_directory(directory.c_str())) {
+    int64_t count = 0;
 
-      // Callback, called for each file entry in the listed directory
-      // Return value is used to break (false) or continue (true) listing
-      auto lambda = [&ct, this](const std::string&, const std::string&) -> bool {
-        return ++ct < max_dest_files_;
-      };
+    // Callback, called for each file entry in the listed directory
+    // Return value is used to break (false) or continue (true) listing
+    auto lambda = [&count, this](const std::string&, const std::string&) -> bool {
+      return ++count < max_dest_files_;
+    };
 
-      utils::file::FileUtils::list_dir(directory, lambda, logger_, false);
+    utils::file::FileUtils::list_dir(directory, lambda, logger_, false);
 
-      if (ct >= max_dest_files_) {
-        logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
-                          "configured max number of files", directory, max_dest_files_);
-        session->transfer(flowFile, Failure);
-        return;
-      }
+    if (count >= max_dest_files_) {
+      logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
+                        "configured max number of files", directory, max_dest_files_);
+      session->transfer(flowFile, Failure);
+      return;
     }
   }
 
@@ -306,7 +299,7 @@ bool PutFile::ReadCallback::commit() {
 // Clean up resources
 PutFile::ReadCallback::~ReadCallback() {
   // Clean up tmp file, if necessary
-  unlink(tmp_file_.c_str());
+  std::remove(tmp_file_.c_str());
 }
 
 } /* namespace processors */

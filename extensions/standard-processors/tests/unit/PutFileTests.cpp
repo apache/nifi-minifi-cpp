@@ -15,14 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <sys/stat.h>
+
+#include <cstdio>
 #include <utility>
 #include <memory>
 #include <string>
 #include <vector>
 #include <set>
 #include <fstream>
-
 
 #include "utils/file/FileUtils.h"
 #include "TestBase.h"
@@ -91,7 +93,7 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
   record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
-  unlink(ss.str().c_str());
+  std::remove(ss.str().c_str());
 
   REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + ss.str()));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
@@ -163,7 +165,7 @@ TEST_CASE("PutFileTestFileExists", "[getfileputpfile]") {
   record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
-  unlink(ss.str().c_str());
+  std::remove(ss.str().c_str());
 
   REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + ss.str()));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
@@ -231,7 +233,7 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
   record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
-  unlink(ss.str().c_str());
+  std::remove(ss.str().c_str());
 
   REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + ss.str()));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
@@ -299,7 +301,7 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
-  unlink(ss.str().c_str());
+  std::remove(ss.str().c_str());
 
   REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + ss.str()));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));

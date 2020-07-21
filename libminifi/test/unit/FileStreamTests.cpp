@@ -15,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -57,7 +59,7 @@ TEST_CASE("TestFileOverWrite", "[TestFiles]") {
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()) == "tempfile");
 
-  unlink(ss.str().c_str());
+  std::remove(ss.str().c_str());
 }
 
 TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
@@ -95,7 +97,7 @@ TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()) == "tempFile");
 
-  unlink(ss.str().c_str());
+  std::remove(ss.str().c_str());
 }
 
 TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
@@ -133,7 +135,7 @@ TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()) == "tempFile");
 
-  unlink(ss.str().c_str());
+  std::remove(ss.str().c_str());
 }
 
 TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
@@ -171,7 +173,7 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()) == "");
 
-  unlink(ss.str().c_str());
+  std::remove(ss.str().c_str());
 }
 
 TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
@@ -205,7 +207,7 @@ TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()) == "tempFile");
 
-  unlink(ss.str().c_str());
+  std::remove(ss.str().c_str());
 }
 
 TEST_CASE("TestFileExceedSize", "[TestLoader]") {
@@ -240,5 +242,5 @@ TEST_CASE("TestFileExceedSize", "[TestLoader]") {
     REQUIRE(stream.readData(verifybuffer, 8192) == 8192);
   REQUIRE(stream.readData(verifybuffer, 8192) == 0);
 
-  unlink(ss.str().c_str());
+  std::remove(ss.str().c_str());
 }

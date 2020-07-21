@@ -17,10 +17,10 @@
  */
 
 #include <sys/stat.h>
-#include <chrono>
-#include <thread>
+
 #undef NDEBUG
 #include <cassert>
+#include <cstdio>
 #include <utility>
 #include <fstream>
 #include <memory>
@@ -29,6 +29,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+
 #include "utils/StringUtils.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
@@ -64,8 +65,8 @@ class TailFileTestHarness : public IntegrationBase {
   }
 
   void cleanup() override {
-    unlink(ss.str().c_str());
-    unlink(statefile.c_str());
+    std::remove(ss.str().c_str());
+    std::remove(statefile.c_str());
   }
 
   void runAssertions() override {

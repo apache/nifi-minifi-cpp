@@ -36,7 +36,11 @@ SecureDescriptorStream::SecureDescriptorStream(int fd, SSL *ssl)
 
 void SecureDescriptorStream::seek(uint64_t offset) {
   std::lock_guard<std::recursive_mutex> lock(file_lock_);
-  lseek(fd_, gsl::narrow<long>(offset), 0x00);
+#ifdef WIN32
+  _lseeki64(fd_, gsl::narrow<int64_t>(offset), 0x00);
+#else
+  lseek(fd_, gsl::narrow<off_t>(offset), 0x00);
+#endif
 }
 
 int SecureDescriptorStream::writeData(std::vector<uint8_t> &buf, int buflen) {

@@ -36,7 +36,11 @@ DescriptorStream::DescriptorStream(int fd)
 
 void DescriptorStream::seek(uint64_t offset) {
   std::lock_guard<std::recursive_mutex> lock(file_lock_);
-  lseek(fd_, gsl::narrow<long>(offset), 0x00);
+#ifdef WIN32
+  _lseeki64(fd_, gsl::narrow<int64_t>(offset), 0x00);
+#else
+  lseek(fd_, gsl::narrow<off_t>(offset), 0x00);
+#endif
 }
 
 int DescriptorStream::writeData(std::vector<uint8_t> &buf, int buflen) {
@@ -55,7 +59,11 @@ int DescriptorStream::writeData(std::vector<uint8_t> &buf, int buflen) {
 int DescriptorStream::writeData(uint8_t *value, int size) {
   if (!IsNullOrEmpty(value)) {
     std::lock_guard<std::recursive_mutex> lock(file_lock_);
+#ifdef WIN32
+    if (_write(fd_, value, size) != size) {
+#else
     if (::write(fd_, value, size) != size) {
+#endif
       return -1;
     } else {
       return size;
@@ -96,7 +104,11 @@ int DescriptorStream::readData(std::vector<uint8_t> &buf, int buflen) {
 
 int DescriptorStream::readData(uint8_t *buf, int buflen) {
   if (!IsNullOrEmpty(buf)) {
+#ifdef WIN32
+    auto size_read = _read(fd_, buf, buflen);
+#else
     auto size_read = ::read(fd_, buf, buflen);
+#endif
 
     if (size_read < 0) {
       return -1;
