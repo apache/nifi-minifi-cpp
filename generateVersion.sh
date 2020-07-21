@@ -64,13 +64,13 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-const char* AgentBuild::VERSION = "$version";
-const char* AgentBuild::BUILD_IDENTIFIER = "$buildident";
-const char* AgentBuild::BUILD_REV = "$buildrev";
-const char* AgentBuild::BUILD_DATE = "$date";
-const char* AgentBuild::COMPILER = "$compiler";
-const char* AgentBuild::COMPILER_VERSION = "$compiler_version";
-const char* AgentBuild::COMPILER_FLAGS = "$flags";
+const char* const AgentBuild::VERSION = "$version";
+const char* const AgentBuild::BUILD_IDENTIFIER = "$buildident";
+const char* const AgentBuild::BUILD_REV = "$buildrev";
+const char* const AgentBuild::BUILD_DATE = "$date";
+const char* const AgentBuild::COMPILER = "$compiler";
+const char* const AgentBuild::COMPILER_VERSION = "$compiler_version";
+const char* const AgentBuild::COMPILER_FLAGS = "$flags";
 
 std::vector<std::string> AgentBuild::getExtensions() {
   static std::vector<std::string> extensions;

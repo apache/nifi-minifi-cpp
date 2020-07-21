@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
 #define LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
 
+#include <string>
 #include <vector>
 
 namespace org {
@@ -27,28 +28,14 @@ namespace minifi {
 
 class AgentBuild {
  public:
-  static constexpr const char* VERSION = "0.7.0";
-  static constexpr const char* BUILD_IDENTIFIER = "RhqnAg2TrbAq2GRPspiPl6DG";
-  static constexpr const char* BUILD_REV = "13403fb5a920c451081fcbc3050249d0ba0a462b";
-  static constexpr const char* BUILD_DATE = "1595341791";
-  static constexpr const char* COMPILER = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++";
-  static constexpr const char* COMPILER_VERSION = "11.0.3.11030032";
-  static constexpr const char* COMPILER_FLAGS = " -std=c++11 -DOPENSSL_SUPPORT";
-  static std::vector<std::string> getExtensions() {
-    static std::vector<std::string> extensions;
-    if (extensions.empty()) {
-      extensions.push_back("minifi-standard-processors");
-      extensions.push_back("minifi-http-curl");
-      extensions.push_back("minifi-expression-language-extensions");
-      extensions.push_back("minifi-civet-extensions");
-      extensions.push_back("minifi-rocksdb-repos");
-      extensions.push_back("minifi-archive-extensions");
-      extensions.push_back("minifi-script-extensions");
-      extensions.push_back("minifi-sftp");
-      extensions.push_back("minifi-system");
-    }
-    return extensions;
-  }
+  static const char* const VERSION;
+  static const char* const BUILD_IDENTIFIER;
+  static const char* const BUILD_REV;
+  static const char* const BUILD_DATE;
+  static const char* const COMPILER;
+  static const char* const COMPILER_VERSION;
+  static const char* const COMPILER_FLAGS;
+  static std::vector<std::string> getExtensions();
 };
 
 }  // namespace minifi
