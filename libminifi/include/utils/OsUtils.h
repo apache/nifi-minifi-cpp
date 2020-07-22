@@ -35,7 +35,7 @@ extern std::string userIdToUsername(const std::string &uid);
  * Returns memory usage in bytes
  */
 
-unsigned long long getMemoryUsage();
+uint64_t getMemoryUsage();
 
 #ifdef WIN32
 /*

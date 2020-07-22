@@ -160,7 +160,7 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
   return name;
 }
 
-unsigned long long OsUtils::getMemoryUsage() {
+uint64_t OsUtils::getMemoryUsage() {
 #ifdef __linux__
   long resPages;
   long sharedPages;
@@ -215,6 +215,7 @@ unsigned long long OsUtils::getMemoryUsage() {
     workingSetBlock = new(storage.data() + sizeof(ULONG_PTR)) PSAPI_WORKING_SET_BLOCK[pageCountLimit];
 
     // get page information or set number of entries correctly for next try
+    // if storageSize is too low, QueryWorkingSet fails and sets *totalPages to correct value for later retry
     success = QueryWorkingSet(hCurrentProcess, storage.data(), storageSize);
     pageCountLimit = *totalPages * 2; // twice the size for sure fit next time
     storageSize = sizeof(ULONG_PTR) + pageCountLimit * sizeof(PSAPI_WORKING_SET_BLOCK);
@@ -224,7 +225,7 @@ unsigned long long OsUtils::getMemoryUsage() {
     throw std::runtime_error("Could not get memory info for current process");
   }
 
-  const auto privatePages = std::count_if(workingSetBlock, workingSetBlock + *totalPages, [](const PSAPI_WORKING_SET_BLOCK& b) { return b.Shared != 1; });
+  const uint64_t privatePages = std::count_if(workingSetBlock, workingSetBlock + *totalPages, [](const PSAPI_WORKING_SET_BLOCK& b) { return b.Shared != 1; });
 
   // get page size
   SYSTEM_INFO systemInfo;
