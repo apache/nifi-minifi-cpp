@@ -156,7 +156,7 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
 TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S4]") {
   SiteToSiteResponder *collector = new SiteToSiteResponder();
 
-  char a = 0xFF;
+  char a = '\xFF';
   std::string resp_code;
   resp_code.insert(resp_code.begin(), a);
   collector->push_response(resp_code);
