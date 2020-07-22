@@ -219,7 +219,7 @@ class FlowFileResponder : public ServerAwareHandler {
 
       auto flow = std::make_shared<FlowObj>();
 
-      for (int i = 0; i < num_attributes; i++) {
+      for (uint32_t i = 0; i < num_attributes; i++) {
         std::string name, value;
         read = stream.readUTF(name, true);
         if(!isServerRunning())return false;

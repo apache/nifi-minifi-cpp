@@ -697,7 +697,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
       return -1;
     }
 
-    int i;
+    size_t i;
     for (i = 0; i < packet->_attributes->size; ++i) {
       const char *key = packet->_attributes->attributes[i].key;
 

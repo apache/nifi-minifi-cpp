@@ -321,7 +321,7 @@ flow_file_record * write_to_flow(const char * buff, size_t count, processor_cont
         return NULL;
     }
 
-    int ret = fwrite(buff, 1, count, ffp);
+    size_t ret = fwrite(buff, 1, count, ffp);
     if (ret < count) {
         fclose(ffp);
         free_flowfile(ffr);
@@ -419,7 +419,7 @@ int get_all_attributes(const flow_file_record* ff, attribute_set *target) {
   NULL_CHECK(0, ff, target);
   NULL_CHECK(0, ff->attributes, target->attributes);
   auto attribute_map = static_cast<string_map*>(ff->attributes);
-  int i = 0;
+  size_t i = 0;
   for (const auto& kv : *attribute_map) {
     if (i >= target->size) {
       break;
@@ -429,7 +429,7 @@ int get_all_attributes(const flow_file_record* ff, attribute_set *target) {
     target->attributes[i].value_size = kv.second.size();
     ++i;
   }
-  return i;
+  return gsl::narrow<int>(i);
 }
 
 /**

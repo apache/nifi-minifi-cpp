@@ -190,7 +190,7 @@ class C2Agent : public state::UpdateController {
   int64_t heart_beat_period_;
 
   // maximum number of queued messages to send to the c2 server
-  int16_t max_c2_responses;
+  size_t max_c2_responses;
 
   // time point the last time we performed a heartbeat.
   std::chrono::steady_clock::time_point last_run_;

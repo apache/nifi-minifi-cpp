@@ -39,7 +39,7 @@ void generateData(std::vector<char>& data) {
 }
 
 void provisionRepo(minifi::provenance::ProvenanceRepository& repo, size_t number_of_records, size_t record_size) {
-  for (int i = 0; i < number_of_records; ++i) {
+  for (size_t i = 0; i < number_of_records; ++i) {
     std::vector<char> v(record_size);
     generateData(v);
     REQUIRE(repo.Put(std::to_string(i), reinterpret_cast<const uint8_t*>(v.data()), v.size()));

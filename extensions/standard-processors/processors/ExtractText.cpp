@@ -162,8 +162,9 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
     bool repeatingcapture;
     ctx_->getProperty(EnableRepeatingCaptureGroup.getName(), repeatingcapture);
 
-    int maxCaptureSize;
-    ctx_->getProperty(MaxCaptureGroupLen.getName(), maxCaptureSize);
+    int maxCaptureSizeProperty;
+    ctx_->getProperty(MaxCaptureGroupLen.getName(), maxCaptureSizeProperty);
+    size_t maxCaptureSize = gsl::narrow<size_t>(maxCaptureSizeProperty);
 
     std::string contentStr = contentStream.str();
 

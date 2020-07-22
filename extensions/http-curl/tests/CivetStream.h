@@ -66,7 +66,7 @@ class CivetStream : public io::BaseStream {
       throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
     }
 
-    if (buf.size() < buflen) {
+    if (buf.size() < gsl::narrow<size_t>(buflen)) {
       buf.resize(buflen);
     }
     int ret = readData(buf.data(), buflen);

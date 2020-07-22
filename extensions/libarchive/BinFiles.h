@@ -20,6 +20,7 @@
 #ifndef __BIN_FILES_H__
 #define __BIN_FILES_H__
 
+#include <cinttypes>
 #include <climits>
 #include <deque>
 #include <map>
@@ -44,7 +45,7 @@ class Bin {
   /*!
    * Create a new Bin. Note: this object is not thread safe
    */
-  explicit Bin(const uint64_t &minSize, const uint64_t &maxSize, const int &minEntries, const int & maxEntries, const std::string &fileCount, const std::string &groupId)
+  explicit Bin(const uint64_t &minSize, const uint64_t &maxSize, const size_t &minEntries, const size_t & maxEntries, const std::string &fileCount, const std::string &groupId)
       : minSize_(minSize),
         maxSize_(maxSize),
         maxEntries_(maxEntries),
@@ -91,7 +92,7 @@ class Bin {
       if (flow->getAttribute(fileCount_, value)) {
         try {
           // for defrag case using the identification
-          int count = std::stoi(value);
+          size_t count = std::stoul(value);
           maxEntries_ = count;
           minEntries_ = count;
         } catch (...) {
@@ -105,7 +106,7 @@ class Bin {
 
     queue_.push_back(flow);
     queued_data_size_ += flow->getSize();
-    logger_->log_debug("Bin %s for group %s offer size %d byte %d min_entry %d max_entry %d", uuid_str_, groupId_, queue_.size(), queued_data_size_, minEntries_, maxEntries_);
+    logger_->log_debug("Bin %s for group %s offer size %zu byte %" PRIu64 " min_entry %zu max_entry %zu", uuid_str_, groupId_, queue_.size(), queued_data_size_, minEntries_, maxEntries_);
 
     return true;
   }
@@ -129,8 +130,8 @@ class Bin {
  private:
   uint64_t minSize_;
   uint64_t maxSize_;
-  int maxEntries_;
-  int minEntries_;
+  size_t maxEntries_;
+  size_t minEntries_;
   // Queued data size
   uint64_t queued_data_size_;
   // Queue for the Flow File

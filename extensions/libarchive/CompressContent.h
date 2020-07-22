@@ -373,7 +373,7 @@ public:
         int64_t process(std::shared_ptr<io::BaseStream> inputStream) override {
           std::vector<uint8_t> buffer(16 * 1024U);
           int64_t read_size = 0;
-          while (read_size < writer_.flow_->getSize()) {
+          while (read_size < gsl::narrow<int64_t>(writer_.flow_->getSize())) {
             int ret = inputStream->read(buffer.data(), buffer.size());
             if (ret < 0) {
               return -1;
