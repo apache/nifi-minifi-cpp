@@ -124,11 +124,11 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
   auto sourceProc = std::static_pointer_cast<minifi::processors::TestFlowFileGenerator>(root->findProcessor("Generator"));
   auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessor("TestProcessor"));
 
-  // prevent the initial trigger
-  // in case the source got triggered
-  // and the scheduler triggers the sink
-  // before we could initiate the shutdown
-  sinkProc->yield(200);
+  std::promise<void> execSinkPromise;
+  std::future<void> execSinkFuture = execSinkPromise.get_future();
+  sinkProc->onTriggerCb_ = [&] {
+    execSinkFuture.wait();
+  };
 
   testController.startFlow();
 
@@ -140,8 +140,8 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
 
   REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
-  REQUIRE(sinkProc->trigger_count.load() == 0);
 
+  execSinkPromise.set_value();
   controller->stop(true);
 
   REQUIRE(sourceProc->trigger_count.load() == 1);
@@ -158,12 +158,10 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
   auto sourceProc = std::static_pointer_cast<minifi::processors::TestFlowFileGenerator>(root->findProcessor("Generator"));
   auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessor("TestProcessor"));
 
-  // prevent the initial trigger
-  // in case the source got triggered
-  // and the scheduler triggers the sink
-  sinkProc->yield(200);
-
+  std::promise<void> execSinkPromise;
+  std::future<void> execSinkFuture = execSinkPromise.get_future();
   sinkProc->onTriggerCb_ = [&]{
+    execSinkFuture.wait();
     static std::atomic<bool> first_onTrigger{true};
     bool isFirst = true;
     // sleep only on the first trigger
@@ -182,8 +180,8 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
 
   REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
-  REQUIRE(sinkProc->trigger_count.load() == 0);
 
+  execSinkPromise.set_value();
   controller->stop(true);
 
   REQUIRE(sourceProc->trigger_count.load() == 1);
@@ -202,12 +200,10 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   auto sourceProc = std::static_pointer_cast<minifi::processors::TestFlowFileGenerator>(root->findProcessor("Generator"));
   auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessor("TestProcessor"));
 
-  // prevent the initial trigger
-  // in case the source got triggered
-  // and the scheduler triggers the sink
-  sinkProc->yield(200);
-
+  std::promise<void> execSinkPromise;
+  std::future<void> execSinkFuture = execSinkPromise.get_future();
   sinkProc->onTriggerCb_ = [&]{
+    execSinkFuture.wait();
     static std::atomic<bool> first_onTrigger{true};
     bool isFirst = true;
     // sleep only on the first trigger
@@ -226,9 +222,9 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
 
   REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
-  REQUIRE(sinkProc->trigger_count.load() == 0);
 
   std::thread shutdownThread([&]{
+    execSinkPromise.set_value();
     controller->stop(true);
   });
 
