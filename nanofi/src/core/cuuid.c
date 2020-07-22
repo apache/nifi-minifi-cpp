@@ -21,6 +21,7 @@
 #include "uuid.h"
 #endif
 
+#include <stdio.h>
 #include "core/cuuid.h"
 
 #ifdef WIN32
