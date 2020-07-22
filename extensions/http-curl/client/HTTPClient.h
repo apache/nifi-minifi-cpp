@@ -15,6 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// Visual Studio 2017 warns when overriding a deprecated function, even if
+// the override is also deprecated.  Note that we need to put this #pragma
+// here, because it doesn't work inside the #ifndef
+#ifdef WIN32
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif
+
 #ifndef EXTENSIONS_HTTP_CURL_CLIENT_HTTPCLIENT_H_
 #define EXTENSIONS_HTTP_CURL_CLIENT_HTTPCLIENT_H_
 
@@ -293,3 +302,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 }  // namespace org
 
 #endif  // EXTENSIONS_HTTP_CURL_CLIENT_HTTPCLIENT_H_
+
+#ifdef WIN32
+#pragma warning(pop)
+#endif

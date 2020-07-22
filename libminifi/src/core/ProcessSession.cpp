@@ -584,12 +584,17 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
 #elif defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(WIN32)
+#pragma warning(push)
+#pragma warning(disable: 4996)
 #endif
   import(source, flows, offset, inputDelimiter);
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #elif defined(__GNUC__)
 #pragma GCC diagnostic pop
+#elif defined(WIN32)
+#pragma warning(pop)
 #endif
   logger_->log_trace("Closed input %s, keeping source ? %i", source, keepSource);
   if (!keepSource) {
