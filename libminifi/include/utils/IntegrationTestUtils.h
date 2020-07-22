@@ -49,10 +49,7 @@ bool verifyLogLinePresenceInPollTime(const std::chrono::duration<Rep, Period>& w
   std::vector<std::string> pattern_list{std::forward<String>(patterns)...};
   auto check = [&] {
     const std::string logs = LogTestController::getInstance().log_output.str();
-    if (std::all_of(pattern_list.cbegin(), pattern_list.cend(), [&logs] (const std::string& pattern) { return logs.find(pattern) != std::string::npos; })) {
-      return true;
-    }
-    return false;
+    return std::all_of(pattern_list.cbegin(), pattern_list.cend(), [&logs] (const std::string& pattern) { return logs.find(pattern) != std::string::npos; });
   };
   return verifyEventHappenedInPollTime(wait_duration, check);
 }
