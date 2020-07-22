@@ -320,8 +320,6 @@ if(BOOTSTRAP)
     message(FATAL_ERROR "Bootstrapping is no longer needed within the agent")
 endif()
 
-add_subdirectory(libminifi)
-
 createExtension(STANDARD-PROCESSORS "STANDARD PROCESSORS" "Provides standard processors" "extensions/standard-processors" "extensions/standard-processors/tests/")
 
 if ((DISABLE_CURL STREQUAL "OFF" OR NOT DISABLE_CURL) AND NOT DISABLE_CIVET)
@@ -599,6 +597,8 @@ else()
 			"${selected_extensions}"
 			"${BUILD_IDENTIFIER}")
 endif()
+
+add_subdirectory(libminifi)
 
 # Generate source assembly
 set(ASSEMBLY_BASE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
