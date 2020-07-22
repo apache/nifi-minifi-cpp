@@ -269,7 +269,8 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       logger_->log_debug("InvokeHTTP -- create flow file with  %s", method_);
       flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
     } else {
-      logger_->log_debug("exiting because method is %s", method_);
+      logger_->log_debug("Exiting because method is %s and there is no flowfile available to execute it, yielding", method_);
+      yield();
       return;
     }
   } else {
