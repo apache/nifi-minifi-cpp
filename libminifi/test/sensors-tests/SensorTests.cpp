@@ -66,7 +66,6 @@ class PcapTestHarness : public IntegrationBase {
 
   void runAssertions() {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    
     assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "Initializing EnvironmentalSensors"));
   }
 
