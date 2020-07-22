@@ -128,7 +128,7 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
   // in case the source got triggered
   // and the scheduler triggers the sink
   // before we could initiate the shutdown
-  sinkProc->yield(100);
+  sinkProc->yield(200);
 
   testController.startFlow();
 
@@ -161,7 +161,7 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
   // prevent the initial trigger
   // in case the source got triggered
   // and the scheduler triggers the sink
-  sinkProc->yield(100);
+  sinkProc->yield(200);
 
   sinkProc->onTriggerCb_ = [&]{
     static std::atomic<bool> first_onTrigger{true};
@@ -205,7 +205,7 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   // prevent the initial trigger
   // in case the source got triggered
   // and the scheduler triggers the sink
-  sinkProc->yield(100);
+  sinkProc->yield(200);
 
   sinkProc->onTriggerCb_ = [&]{
     static std::atomic<bool> first_onTrigger{true};
