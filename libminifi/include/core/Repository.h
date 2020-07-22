@@ -114,7 +114,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     return found;
   }
 
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 1.0) void setConnectionMap(std::map<std::string, std::shared_ptr<core::Connectable>> &connectionMap) {
+  void setConnectionMap(std::map<std::string, std::shared_ptr<core::Connectable>> &connectionMap) {
     this->connectionMap = connectionMap;
   }
 
@@ -235,7 +235,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
  protected:
   std::map<std::string, std::shared_ptr<core::Connectable>> containers;
 
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 1.0) std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap;
+  std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap;
   // Mutex for protection
   std::mutex mutex_;
   // repository directory
