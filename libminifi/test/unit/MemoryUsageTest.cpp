@@ -24,5 +24,6 @@ TEST_CASE("Test memory usage", "[testmemoryusage]") {
   const std::size_t size = 30000000;
   std::vector<char> v(size);
   const auto memoryUsage = utils::OsUtils::getMemoryUsage();
-  REQUIRE(((memoryUsage > size) && (memoryUsage < 2 * size)));
+  REQUIRE(memoryUsage > size);
+  REQUIRE(memoryUsage < 2 * size);
 }
