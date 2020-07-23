@@ -31,7 +31,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include "core/Deprecated.h"
 #include "core/ContentRepository.h"
 #include "core/SerializableComponent.h"
 #include "properties/Configure.h"
