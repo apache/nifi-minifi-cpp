@@ -259,7 +259,7 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
     }
   }
 
-  std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast < FlowFileRecord > (session->get());
+  auto flow = session->get();
 
   if (flow != nullptr) {
     preprocessFlowFile(context.get(), session.get(), flow);

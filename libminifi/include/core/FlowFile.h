@@ -28,11 +28,15 @@
 #include "ResourceClaim.h"
 #include "Connectable.h"
 #include "WeakReference.h"
+#include "utils/FlatMap.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+
+class FlowFileRecord;
+
 namespace core {
 
 // FlowFile Attribute
@@ -61,7 +65,6 @@ class Connectable;
 
 class FlowFile : public CoreComponent, public ReferenceContainer {
  public:
-
   static std::atomic<std::size_t> flowFileCount;
   FlowFile();
   ~FlowFile() override;
@@ -106,7 +109,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   /**
    * Get lineage identifiers
    */
-  std::set<std::string>& getlineageIdentifiers();
+  std::vector<std::string> &getlineageIdentifiers();
 
   /**
    * Returns whether or not this flow file record
@@ -145,7 +148,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    */
   void setLineageStartDate(const uint64_t date);
 
-  void setLineageIdentifiers(std::set<std::string> lineage_Identifiers) {
+  void setLineageIdentifiers(const std::vector<std::string>& lineage_Identifiers) {
     lineage_Identifiers_ = lineage_Identifiers;
   }
   /**
@@ -185,7 +188,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * @return attributes.
    */
   std::map<std::string, std::string> getAttributes() const {
-    return attributes_;
+    return {attributes_.begin(), attributes_.end()};
   }
 
   /**
@@ -193,7 +196,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * @return attributes.
    */
   std::map<std::string, std::string> *getAttributesPtr() {
-    return &attributes_;
+    return nullptr;
   }
 
   /**
@@ -275,23 +278,8 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
     return true;
   }
 
-  /**
-   * Sets the original connection with a shared pointer.
-   * @param connection shared connection.
-   */
-  void setConnection(std::shared_ptr<core::Connectable>& connection);
+  void releaseClaim(std::shared_ptr<ResourceClaim> claim) {}
 
-  /**
-   * Sets the original connection with a shared pointer.
-   * @param connection shared connection.
-   */
-  void setConnection(std::shared_ptr<core::Connectable>&& connection);
-
-  /**
-   * Returns the connection referenced by this record.
-   * @return shared connection pointer.
-   */
-  std::shared_ptr<core::Connectable> getConnection() const;
   /**
    * Sets the original connection with a shared pointer.
    * @param connection shared connection.
@@ -311,7 +299,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
     return stored;
   }
 
- protected:
+ private:
   bool stored;
   // Mark for deletion
   bool marked_delete_;
@@ -333,22 +321,19 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   // Penalty expiration
   uint64_t penaltyExpiration_ms_;
   // Attributes key/values pairs for the flow record
-  std::map<std::string, std::string> attributes_;
+  utils::FlatMap<std::string, std::string> attributes_;
   // Pointer to the associated content resource claim
   std::shared_ptr<ResourceClaim> claim_;
   // Pointers to stashed content resource claims
-  std::map<std::string, std::shared_ptr<ResourceClaim>> stashedContent_;
+  utils::FlatMap<std::string, std::shared_ptr<ResourceClaim>> stashedContent_;
   // UUID string
   // std::string uuid_str_;
   // UUID string for all parents
-  std::set<std::string> lineage_Identifiers_;
+  std::vector<std::string> lineage_Identifiers_;
 
-  // Connection queue that this flow file will be transfer or current in
-  std::shared_ptr<core::Connectable> connection_;
   // Orginal connection queue that this flow file was dequeued from
   std::shared_ptr<core::Connectable> original_connection_;
 
- private:
   static std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   static std::shared_ptr<utils::NonRepeatingStringGenerator> numeric_id_generator_;

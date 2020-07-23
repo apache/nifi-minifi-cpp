@@ -230,7 +230,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     return _contentFullPath;
   }
   // Get LineageIdentifiers
-  std::set<std::string> getLineageIdentifiers() {
+  std::vector<std::string> getLineageIdentifiers() {
     return _lineageIdentifiers;
   }
   // Get Details
@@ -415,7 +415,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   // Attributes key/values pairs for the flow record
   std::map<std::string, std::string> _attributes;
   // UUID string for all parents
-  std::set<std::string> _lineageIdentifiers;
+  std::vector<std::string> _lineageIdentifiers;
   // transitUri
   std::string _transitUri;
   // sourceSystemFlowFileIdentifier

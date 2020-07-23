@@ -45,7 +45,6 @@ FlowFile::FlowFile()
       event_time_(0),
       claim_(nullptr),
       marked_delete_(false),
-      connection_(nullptr),
       original_connection_() {
   id_ = numeric_id_generator_->generateId();
   entry_date_ = utils::timeutils::getTimeMillis();
@@ -70,7 +69,6 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
   penaltyExpiration_ms_ = other.penaltyExpiration_ms_;
   attributes_ = other.attributes_;
   claim_ = other.claim_;
-  connection_ = other.connection_;
   original_connection_ = other.original_connection_;
   return *this;
 }
@@ -145,7 +143,7 @@ uint64_t FlowFile::getlineageStartDate() const {
   return lineage_start_date_;
 }
 
-std::set<std::string>& FlowFile::getlineageIdentifiers() {
+std::vector<std::string> &FlowFile::getlineageIdentifiers() {
   return lineage_Identifiers_;
 }
 
@@ -171,7 +169,7 @@ uint64_t FlowFile::getOffset() const {
 bool FlowFile::removeAttribute(const std::string key) {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
-    attributes_.erase(key);
+    attributes_.erase(it);
     return true;
   } else {
     return false;
@@ -181,7 +179,7 @@ bool FlowFile::removeAttribute(const std::string key) {
 bool FlowFile::updateAttribute(const std::string key, const std::string value) {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
-    attributes_[key] = value;
+    it->second = value;
     return true;
   } else {
     return false;
@@ -209,30 +207,6 @@ void FlowFile::setLineageStartDate(const uint64_t date) {
  */
 void FlowFile::setOriginalConnection(std::shared_ptr<core::Connectable>& connection) {
   original_connection_ = connection;
-}
-
-/**
- * Sets the connection with a shared pointer.
- * @param connection shared connection.
- */
-void FlowFile::setConnection(std::shared_ptr<core::Connectable>& connection) {
-  connection_ = connection;
-}
-
-/**
- * Sets the connection with a shared pointer.
- * @param connection shared connection.
- */
-void FlowFile::setConnection(std::shared_ptr<core::Connectable>&& connection) {
-  connection_ = connection;
-}
-
-/**
- * Returns the connection referenced by this record.
- * @return shared connection pointer.
- */
-std::shared_ptr<core::Connectable> FlowFile::getConnection() const {
-  return connection_;
 }
 
 /**

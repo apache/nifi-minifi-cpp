@@ -44,7 +44,7 @@ void FlowFileRepository::flush() {
   rocksdb::WriteBatch batch;
   rocksdb::ReadOptions options;
 
-  std::vector<std::shared_ptr<FlowFileRecord>> purgeList;
+  std::vector<std::shared_ptr<FlowFile>> purgeList;
 
   std::vector<rocksdb::Slice> keys;
   std::list<std::string> keystrings;
@@ -67,11 +67,11 @@ void FlowFileRepository::flush() {
       continue;
     }
 
-    std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
-    if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), values[i].size())) {
-      purgeList.push_back(eventRead);
+    utils::optional<FlowFileRecord> eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), values[i].size(), content_repo_);
+    if (eventRead) {
+      purgeList.push_back(eventRead->getFlowFile());
     }
-    logger_->log_debug("Issuing batch delete, including %s, Content path %s", eventRead->getUUIDStr(), eventRead->getContentFullPath());
+    logger_->log_debug("Issuing batch delete, including %s, Content path %s", eventRead->getFlowFile()->getUUIDStr(), eventRead->getContentFullPath());
     batch.Delete(keys[i]);
   }
 
@@ -150,7 +150,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
 
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
+    utils::optional<FlowFileRecord> eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size(), content_repo_);
     std::string key = it->key().ToString();
     if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
       // on behalf of the just resurrected persisted instance

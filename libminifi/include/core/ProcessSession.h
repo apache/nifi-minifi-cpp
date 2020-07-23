@@ -76,12 +76,8 @@ class ProcessSession : public ReferenceContainer {
 
   // Get the FlowFile from the highest priority queue
   virtual std::shared_ptr<core::FlowFile> get();
-  // Create a new UUID FlowFile with no content resource claim and without parent
-  std::shared_ptr<core::FlowFile> create();
   // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
-  // std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &&parent);
-  // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
-  std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile> &parent);
+  std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile> &parent = {});
   // Add a FlowFile to the session
   virtual void add(const std::shared_ptr<core::FlowFile> &flow);
   // Clone a new UUID FlowFile from parent both for content resource claim and attributes
@@ -146,7 +142,7 @@ class ProcessSession : public ReferenceContainer {
   // FlowFiles being modified by current process session
   std::map<std::string, std::shared_ptr<core::FlowFile>> _updatedFlowFiles;
   // Copy of the original FlowFiles being modified by current process session as above
-  std::map<std::string, std::shared_ptr<core::FlowFile>> _flowFileSnapShots;
+  std::map<std::string, FlowFileRecord> _originalFlowFiles;
   // FlowFiles being added by current process session
   std::map<std::string, std::shared_ptr<core::FlowFile>> _addedFlowFiles;
   // FlowFiles being deleted by current process session

@@ -115,7 +115,7 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
 
   record.addAttribute("", "sdgsdg");
 
-  REQUIRE(record.Serialize());
+  REQUIRE(record.Serialize(repository));
 
   repository->stop();
 

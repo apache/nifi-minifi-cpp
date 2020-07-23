@@ -61,63 +61,42 @@ class OutputStreamCallback {
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
 };
 
-class FlowFileRecord : public core::FlowFile {
+namespace core {
+class ProcessSession;
+}
+
+class FlowFileRecord : public io::Serializable {
+  friend class core::ProcessSession;
  public:
-  // Constructor
-  /*
-   * Create a new flow record
-   */
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::map<std::string, std::string> attributes,
-                          std::shared_ptr<ResourceClaim> claim = nullptr);
-
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::shared_ptr<core::FlowFile> &event);
-
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::shared_ptr<core::FlowFile> &event,
-                          const std::string &uuidConnection);
-
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo)
-      : FlowFile(),
-        flow_repository_(flow_repository),
-        content_repo_(content_repo),
-        snapshot_("") {
-  }
-  // Destructor
-  virtual ~FlowFileRecord();
-
+  FlowFileRecord(const std::shared_ptr<core::FlowFile>& file, const utils::Identifier& connectionId = {}) : file_(file), connectionUUID_(connectionId) {}
   bool Serialize(io::BufferStream &outStream);
 
   //! Serialize and Persistent to the repository
-  bool Serialize();
+  bool Persist(const std::shared_ptr<core::Repository>& flowRepository);
   //! DeSerialize
-  bool DeSerialize(const uint8_t *buffer, const int bufferSize);
+  static utils::optional<FlowFileRecord> DeSerialize(const uint8_t *buffer, int bufferSize, const std::shared_ptr<core::ContentRepository> &content_repo);
   //! DeSerialize
-  bool DeSerialize(io::BufferStream &stream) {
-    return DeSerialize(stream.getBuffer(), gsl::narrow<int>(stream.size()));
+  static utils::optional<FlowFileRecord> DeSerialize(io::BufferStream &stream, const std::shared_ptr<core::ContentRepository> &content_repo) {
+    return DeSerialize(stream.getBuffer(), gsl::narrow<int>(stream.getSize()), content_repo);
   }
   //! DeSerialize
-  bool DeSerialize(std::string key);
+  static utils::optional<FlowFileRecord> DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository, const std::shared_ptr<core::ContentRepository> &content_repo);
 
   void setSnapShot(bool snapshot) {
     snapshot_ = snapshot;
   }
 
-  /**
-   * gets the UUID connection.
-   * @return uuidConnection
-   */
-  const std::string getConnectionUuid() {
-    return uuid_connection_;
+  std::string getContentFullPath() {
+    const auto& claim = file_->claim_;
+    return claim ? claim->getContentFullPath() : "";
   }
 
-  /**
-   * Set the UUID connection.
-   */
-  void setUuidConnection(const std::string &uuid_connection) {
-    uuid_connection_ = uuid_connection;
+  const utils::Identifier& getConnectionUUID() {
+    return connectionUUID_;
   }
 
-  const std::string getContentFullPath() {
-    return claim_ ? claim_->getContentFullPath() : "";
+  const gsl::not_null<std::shared_ptr<core::FlowFile>>& getFlowFile() {
+    return file_;
   }
 
   FlowFileRecord &operator=(const FlowFileRecord &);
@@ -125,17 +104,8 @@ class FlowFileRecord : public core::FlowFile {
   FlowFileRecord(const FlowFileRecord &parent) = delete;
 
  protected:
-  // connection uuid
-  std::string uuid_connection_;
-
   // Local flow sequence ID
   static std::atomic<uint64_t> local_flow_seq_number_;
-
-  // repository reference.
-  std::shared_ptr<core::Repository> flow_repository_;
-
-  // content repo reference.
-  std::shared_ptr<core::ContentRepository> content_repo_;
 
   // Snapshot flow record for session rollback
   bool snapshot_;
@@ -143,6 +113,12 @@ class FlowFileRecord : public core::FlowFile {
   // Only support pass by reference or pointer
 
  private:
+  std::shared_ptr<core::Repository> flow_repository_;
+  std::shared_ptr<core::ContentRepository> content_repository_;
+  const gsl::not_null<std::shared_ptr<core::FlowFile>> file_;
+  utils::Identifier connectionUUID_;
+  std::shared_ptr<Connection> connection_;
+
   static std::shared_ptr<logging::Logger> logger_;
 };
 

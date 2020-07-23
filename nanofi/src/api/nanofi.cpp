@@ -508,7 +508,11 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
     stream = std::make_shared<minifi::io::BufferStream>();
   }
 
-  auto ffr = std::make_shared<minifi::FlowFileRecord>(no_op, content_repo, attribute_map, claim);
+  auto ffr = std::make_shared<core::FlowFile>();
+  for (const auto& attribute : attribute_map) {
+    ffr->setAttribute(attribute.first, attribute.second);
+  }
+  ffr->setResourceClaim(claim);
   ffr->addAttribute("nanofi.version", API_VERSION);
   ffr->setSize(ff->size);
 

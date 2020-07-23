@@ -40,131 +40,61 @@ namespace minifi {
 std::shared_ptr<logging::Logger> FlowFileRecord::logger_ = logging::LoggerFactory<FlowFileRecord>::getLogger();
 std::atomic<uint64_t> FlowFileRecord::local_flow_seq_number_(0);
 
-FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::map<std::string, std::string> attributes,
-                               std::shared_ptr<ResourceClaim> claim)
-    : FlowFile(),
-      content_repo_(content_repo),
-      flow_repository_(flow_repository) {
-  id_ = local_flow_seq_number_.load();
-  claim_ = claim;
-  // Increase the local ID for the flow record
-  ++local_flow_seq_number_;
-  // Populate the default attributes
-  addAttribute(core::SpecialFlowAttribute::FILENAME, std::to_string(utils::timeutils::getTimeNano()));
-  addAttribute(core::SpecialFlowAttribute::PATH, DEFAULT_FLOWFILE_PATH);
-  addAttribute(core::SpecialFlowAttribute::UUID, getUUIDStr());
-  // Populate the attributes from the input
-  std::map<std::string, std::string>::iterator it;
-  for (it = attributes.begin(); it != attributes.end(); it++) {
-    FlowFile::addAttribute(it->first, it->second);
-  }
-
-  snapshot_ = false;
-}
-
-FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::shared_ptr<core::FlowFile> &event,
-                               const std::string &uuidConnection)
-    : FlowFile(),
-      snapshot_(""),
-      content_repo_(content_repo),
-      flow_repository_(flow_repository) {
-  entry_date_ = event->getEntryDate();
-  lineage_start_date_ = event->getlineageStartDate();
-  lineage_Identifiers_ = event->getlineageIdentifiers();
-  attributes_ = event->getAttributes();
-  size_ = event->getSize();
-  offset_ = event->getOffset();
-  event->getUUID(uuid_);
-  uuid_connection_ = uuidConnection;
-  claim_ = event->getResourceClaim();
-}
-
-FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::shared_ptr<core::FlowFile> &event)
-    : FlowFile(),
-      uuid_connection_(""),
-      snapshot_(""),
-      content_repo_(content_repo),
-      flow_repository_(flow_repository) {
-  claim_ = event->getResourceClaim();
-}
-
-FlowFileRecord::~FlowFileRecord() {
-  logger_->log_debug("Destroying flow file record,  UUID %s", getUUIDStr());
-  if (!snapshot_)
-    logger_->log_debug("Delete FlowFile UUID %s", getUUIDStr());
-  else
-    logger_->log_debug("Delete SnapShot FlowFile UUID %s", getUUIDStr());
-
-  if (!claim_) {
-    logger_->log_debug("Claim is null ptr for %s", getUUIDStr());
-  }
-}
-
-FlowFileRecord &FlowFileRecord::operator=(const FlowFileRecord &other) {
-  core::FlowFile::operator=(other);
-  uuid_connection_ = other.uuid_connection_;
-  snapshot_ = other.snapshot_;
-  return *this;
-}
-
-bool FlowFileRecord::DeSerialize(std::string key) {
+utils::optional<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository, const std::shared_ptr<core::ContentRepository>& content_repo) {
   std::string value;
-  bool ret;
 
-  ret = flow_repository_->Get(key, value);
-
-  if (!ret) {
+  if (!flowRepository->Get(key, value)) {
     logger_->log_error("NiFi FlowFile Store event %s can not found", key);
-    return false;
+    return utils::nullopt;
   }
   io::BufferStream stream((const uint8_t*) value.data(), value.length());
 
-  ret = DeSerialize(stream);
+  auto record = DeSerialize(stream, content_repo);
 
-  if (ret) {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s success", getUUIDStr(), stream.size(), uuid_connection_);
+  if (record) {
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size " "%" PRIu64 " connection %s success", record->file_->getUUIDStr(), stream.size(), record->connectionUUID_.to_string());
   } else {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s fail", getUUIDStr(), stream.size(), uuid_connection_);
+    logger_->log_debug("Couldn't deserialize FlowFile %s from the stream of size " "%" PRIu64, key, stream.size());
   }
 
-  return ret;
+  return record;
 }
 
 bool FlowFileRecord::Serialize(io::BufferStream &outStream) {
   int ret;
 
-  ret = outStream.write(this->event_time_);
+  ret = outStream.write(file->event_time_);
   if (ret != 8) {
     return false;
   }
 
-  ret = outStream.write(this->entry_date_);
+  ret = outStream.write(file->entry_date_);
   if (ret != 8) {
     return false;
   }
 
-  ret = outStream.write(this->lineage_start_date_);
+  ret = outStream.write(file->lineage_start_date_);
   if (ret != 8) {
     return false;
   }
 
-  ret = outStream.write(this->getUUIDStr());
+  ret = outStream.write(file->getUUIDStr());
   if (ret <= 0) {
     return false;
   }
 
-  ret = outStream.write(this->uuid_connection_);
+  ret = outStream.write(connectionUUID_.to_string());
   if (ret <= 0) {
     return false;
   }
   // write flow attributes
-  uint32_t numAttributes = this->attributes_.size();
+  uint32_t numAttributes = file->attributes_.size();
   ret = outStream.write(numAttributes);
   if (ret != 4) {
     return false;
   }
 
-  for (auto& itAttribute : attributes_) {
+  for (auto& itAttribute : file_->attributes_) {
     ret = outStream.write(itAttribute.first, true);
     if (ret <= 0) {
       return false;
@@ -175,17 +105,17 @@ bool FlowFileRecord::Serialize(io::BufferStream &outStream) {
     }
   }
 
-  ret = outStream.write(this->getContentFullPath());
+  ret = outStream.write(getContentFullPath());
   if (ret <= 0) {
     return false;
   }
 
-  ret = outStream.write(this->size_);
+  ret = outStream.write(file->size_);
   if (ret != 8) {
     return false;
   }
 
-  ret = outStream.write(this->offset_);
+  ret = outStream.write(file->offset_);
   if (ret != 8) {
     return false;
   }
@@ -193,8 +123,8 @@ bool FlowFileRecord::Serialize(io::BufferStream &outStream) {
   return true;
 }
 
-bool FlowFileRecord::Serialize() {
-  if (flow_repository_->isNoop()) {
+bool FlowFileRecord::Persist(const std::shared_ptr<core::Repository>& flowRepository) {
+  if (flowRepository->isNoop()) {
     return true;
   }
 
@@ -204,83 +134,104 @@ bool FlowFileRecord::Serialize() {
     return false;
   }
 
-  if (flow_repository_->Put(getUUIDStr(), const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
-    logger_->log_debug("NiFi FlowFile Store event %s size %llu success", getUUIDStr(), outStream.size());
+  if (flowRepository->Put(file_->getUUIDStr(), const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
+    logger_->log_debug("NiFi FlowFile Store event %s size " "%" PRIu64 " success", file_->getUUIDStr(), outStream.size());
     // on behalf of the persisted record instance
-    if (claim_) claim_->increaseFlowFileRecordOwnedCount();
+    if (file_->claim_) file_->claim_->increaseFlowFileRecordOwnedCount();
     return true;
   } else {
-    logger_->log_error("NiFi FlowFile Store event %s size %llu fail", getUUIDStr(), outStream.size());
+    logger_->log_error("NiFi FlowFile Store failed %s size " "%" PRIu64 " fail", file_->getUUIDStr(), outStream.size());
     return false;
   }
 
   return true;
 }
 
-bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
-  io::BufferStream outStream(buffer, bufferSize);
+utils::optional<FlowFileRecord> FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize, const std::shared_ptr<core::ContentRepository>& content_repo) {
+  int ret;
 
-  if (outStream.read(event_time_) != sizeof(event_time_)) {
-    return false;
+  FlowFileRecord record(std::make_shared<core::FlowFile>());
+  auto& file = record.file_;
+
+  io::DataStream outStream(buffer, bufferSize);
+
+  ret = outStream.read(file->event_time_);
+  if (ret != 8) {
+    return {};
   }
 
-  if (outStream.read(entry_date_) != sizeof(entry_date_)) {
-    return false;
+  ret = outStream.read(file->entry_date_);
+  if (ret != 8) {
+    return {};
   }
 
-  if (outStream.read(lineage_start_date_) != sizeof(lineage_start_date_)) {
-    return false;
+  ret = outStream.read(file->lineage_start_date_);
+  if (ret != 8) {
+    return {};
   }
 
   std::string uuidStr;
   ret = outStream.read(uuidStr)
   if (ret <= 0) {
-    return false;
+    return {};
   }
   utils::optional<utils::Identifier> parsedUUID = utils::Identifier::parse(uuidStr);
   if (!parsedUUID) {
-    return false;
+    return {};
   }
-  uuid_ = parsedUUID.value();
+  file->uuid_ = parsedUUID.value();
 
 
-  if (outStream.read(uuid_connection_) <= 0) {
-    return false;
+  std::string connectionUUIDStr;
+  ret = outStream.readUTF(connectionUUIDStr);
+  if (ret <= 0) {
+    return {};
   }
+  utils::optional<utils::Identifier> parsedConnectionUUID = utils::Identifier::parse(connectionUUIDStr);
+  if (!parsedConnectionUUID) {
+    return {};
+  }
+  record.connectionUUID_ = parsedConnectionUUID.value();
 
   // read flow attributes
   uint32_t numAttributes = 0;
-  if (outStream.read(numAttributes) != sizeof(numAttributes)) {
-    return false;
+  ret = outStream.read(numAttributes);
+  if (ret != 4) {
+    return {};
   }
 
   for (uint32_t i = 0; i < numAttributes; i++) {
     std::string key;
-    if (outStream.read(key, true) <= 0) {
-      return false;
+    ret = outStream.read(key, true);
+    if (ret <= 0) {
+      return {};
     }
     std::string value;
-    if (outStream.read(value, true) <= 0) {
-      return false;
+    ret = outStream.read(value, true);
+    if (ret <= 0) {
+      return {};
     }
-    this->attributes_[key] = value;
+    file->attributes_[key] = value;
   }
 
   std::string content_full_path;
-  if (outStream.read(content_full_path) <= 0) {
-    return false;
+  ret = outStream.readUTF(content_full_path);
+  if (ret <= 0) {
+    return {};
   }
 
-  if (outStream.read(size_) != sizeof(size_)) {
-    return false;
+  ret = outStream.read(file->size_);
+  if (ret != 8) {
+    return {};
   }
 
-  if (outStream.read(offset_) != sizeof(offset_)) {
-    return false;
+  ret = outStream.read(file->offset_);
+  if (ret != 8) {
+    return {};
   }
 
   claim_ = std::make_shared<ResourceClaim>(content_full_path, content_repo_);
-  return true;
+  return record;
 }
 
 } /* namespace minifi */
