@@ -25,20 +25,11 @@ else
 fi
 
 while (( $# )) ; do
-    [ x"$1" == x"--" ] && break
-    INCLUDE_DIRS="$INCLUDE_DIRS $1"
+    TARGET_DIRS="$TARGET_DIRS $1"
     shift
 done
 
-while (( $# )) ; do
-    SOURCE_DIRS="$SOURCE_DIRS $1"
-    shift
-done
+[ x"$TARGET_DIRS" == x"" ] && echo "ERROR: No source directories specified." && exit 1
 
-[ x"$INCLUDE_DIRS" == x"" ] && echo "WARNING: No include directories specified."
-[ x"$SOURCE_DIRS" == x"" ] && echo "ERROR: No source directories specified." && exit 1
-
-HEADERS=`find $INCLUDE_DIRS -name '*.h' | sort | uniq | tr '\n' ' '`
-SOURCES=`find $SOURCE_DIRS -name  '*.cpp' | sort | uniq | tr '\n' ' '`
-REPOSITORY="$(realpath --physical "$(dirname "$0")/../..")"
-python ${SCRIPT_DIR}/cpplint.py --linelength=200 --repository="$REPOSITORY" ${HEADERS} ${SOURCES}
+SOURCES=`find $TARGET_DIRS -name '*.cpp' -o -name '*.h' | sort | uniq | tr '\n' ' '`
+python ${SCRIPT_DIR}/cpplint.py --linelength=200 ${SOURCES}

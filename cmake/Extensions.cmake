@@ -73,7 +73,7 @@ if (NOT WIN32)
     add_custom_target(${target-name}
     COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
             ${CMAKE_SOURCE_DIR}/libminifi/include/
-            ${CMAKE_CURRENT_LIST_DIR}/ --
+            ${CMAKE_CURRENT_LIST_DIR}/
             ${CMAKE_CURRENT_LIST_DIR}/)
 endif(NOT WIN32)
 endmacro()
