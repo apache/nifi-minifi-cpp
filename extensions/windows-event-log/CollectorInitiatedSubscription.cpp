@@ -33,7 +33,8 @@
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "utils/ScopeGuard.h"
+
+#include "utils/gsl.h"
 
 #pragma comment(lib, "wevtapi.lib")
 #pragma comment(lib, "Wecapi.lib")
@@ -244,7 +245,7 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
     LOG_SUBSCRIPTION_WINDOWS_ERROR("EcOpenSubscription");
     return false;
   }
-  const utils::ScopeGuard guard_hSubscription([hSubscription]() { EcClose(hSubscription); });
+  const auto guard_hSubscription = gsl::finally([hSubscription]() { EcClose(hSubscription); });
 
   PEC_VARIANT vProperty = NULL;
   std::vector<BYTE> buffer;
@@ -264,7 +265,7 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
   }
 
   const EC_OBJECT_ARRAY_PROPERTY_HANDLE hArray = vProperty->PropertyHandleVal;
-  const utils::ScopeGuard guard_hArray([hArray]() { EcClose(hArray); });
+  const auto guard_hArray = gsl::finally([hArray]() { EcClose(hArray); });
 
   // Get the EventSources array size (number of elements).
   DWORD dwEventSourceCount{};
@@ -459,7 +460,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
     LOG_SUBSCRIPTION_WINDOWS_ERROR("EcOpenSubscription");
     return false;
   }
-  const utils::ScopeGuard guard_hSubscription([hSubscription]() { EcClose(hSubscription); });
+  const auto guard_hSubscription = gsl::finally([hSubscription]() { EcClose(hSubscription); });
 
   struct SubscriptionProperty
   {
@@ -529,7 +530,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
   }
 
   const EC_OBJECT_ARRAY_PROPERTY_HANDLE hArray = vProperty->PropertyHandleVal;
-  const utils::ScopeGuard guard_hArray([hArray]() { EcClose(hArray); });
+  const auto guard_hArray = gsl::finally([hArray]() { EcClose(hArray); });
 
   DWORD dwEventSourceCount{};
   if (!EcGetObjectArraySize(hArray, &dwEventSourceCount)) {

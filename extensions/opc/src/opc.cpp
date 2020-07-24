@@ -19,10 +19,11 @@
 #include "opc.h"
 
 //MiNiFi includes
-#include "utils/ScopeGuard.h"
 #include "utils/StringUtils.h"
 #include "logging/Logger.h"
 #include "Exception.h"
+
+#include "utils/gsl.h"
 
 //Standard includes
 #include <stdlib.h>
@@ -302,7 +303,7 @@ void Client::traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb,
 
   UA_BrowseResponse bResp = UA_Client_Service_browse(client_, bReq);
 
-  utils::ScopeGuard guard([&bResp]() {
+  const auto guard = gsl::finally([&bResp]() {
     UA_BrowseResponse_deleteMembers(&bResp);
   });
 
@@ -363,7 +364,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
 
   UA_TranslateBrowsePathsToNodeIdsResponse response = UA_Client_Service_translateBrowsePathsToNodeIds(client_, request);
 
-  utils::ScopeGuard guard([&browsePath]() {
+  const auto guard = gsl::finally([&browsePath]() {
     UA_BrowsePath_deleteMembers(&browsePath);
   });
 

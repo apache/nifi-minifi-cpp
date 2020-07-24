@@ -37,7 +37,6 @@
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "utils/RegexUtils.h"
-#include "utils/ScopeGuard.h"
 #include "utils/file/FileUtils.h"
 #include "core/FlowFile.h"
 #include "core/logging/Logger.h"

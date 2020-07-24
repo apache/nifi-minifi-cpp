@@ -22,7 +22,6 @@
 
 #include "wel/UnicodeConversion.h"
 #include "utils/file/FileUtils.h"
-#include "utils/ScopeGuard.h"
 
 namespace org {
 namespace apache {

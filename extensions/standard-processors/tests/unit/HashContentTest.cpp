@@ -34,7 +34,6 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
-#include "utils/ScopeGuard.h"
 
 #include "GetFile.h"
 #include "HashContent.h"

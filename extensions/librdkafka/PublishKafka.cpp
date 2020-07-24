@@ -29,7 +29,6 @@
 
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
-#include "utils/ScopeGuard.h"
 #include "utils/GeneralUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"

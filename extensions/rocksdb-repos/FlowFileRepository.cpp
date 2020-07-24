@@ -17,7 +17,6 @@
  */
 #include "FlowFileRecord.h"
 #include "FlowFileRepository.h"
-#include "utils/ScopeGuard.h"
 
 #include "rocksdb/options.h"
 #include "rocksdb/write_batch.h"

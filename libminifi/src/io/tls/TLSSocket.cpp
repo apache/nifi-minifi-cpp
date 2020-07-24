@@ -30,7 +30,6 @@
 #include "io/tls/TLSSocket.h"
 #include "io/tls/TLSUtils.h"
 #include "properties/Configure.h"
-#include "utils/ScopeGuard.h"
 #include "utils/StringUtils.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"

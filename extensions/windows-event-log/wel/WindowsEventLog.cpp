@@ -19,8 +19,9 @@
 #include "WindowsEventLog.h"
 #include "UnicodeConversion.h"
 #include "utils/Deleters.h"
-#include "utils/ScopeGuard.h"
 #include <algorithm>
+
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -39,7 +40,7 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
   if (context == NULL) {
     return;
   }
-  utils::ScopeGuard contextGuard([&context](){
+  const auto contextGuard = gsl::finally([&context](){
     EvtClose(context);
   });
   if (!EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, nullptr, &dwBufferUsed, &dwPropertyCount))

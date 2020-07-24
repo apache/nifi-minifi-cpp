@@ -21,7 +21,7 @@
 #include <iostream>
 #include <map>
 
-#include "utils/ScopeGuard.h"
+#include "utils/gsl.h"
 
 #ifdef __linux__
 #include <sstream>
@@ -90,7 +90,7 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
     }
     // First call to LookupAccountSid to get the buffer sizes.
     PSID pSidOwner = NULL;
-    const utils::ScopeGuard guard_pSidOwner([&pSidOwner]() { if (pSidOwner != NULL) { LocalFree(pSidOwner); } });
+    const auto guard_pSidOwner = gsl::finally([&pSidOwner]() { if (pSidOwner != NULL) { LocalFree(pSidOwner); } });
     if (ConvertStringSidToSidA(name.c_str(), &pSidOwner)) {
       SID_NAME_USE sidType = SidTypeUnknown;
       DWORD windowsAccountNameSize = 0, dwwindowsDomainSize = 0;

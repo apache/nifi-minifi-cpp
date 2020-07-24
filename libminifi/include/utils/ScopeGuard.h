@@ -23,7 +23,7 @@
 #include <utility>
 #include <functional>
 
-#include "gsl.h"
+#include "utils/gsl.h"
 #include "core/Deprecated.h"
 
 namespace org {
@@ -32,10 +32,10 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-struct ScopeGuard : ::gsl::final_action<std::function<void()>> {
+struct DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 1.0) ScopeGuard : ::gsl::final_action<std::function<void()>> {
   using ::gsl::final_action<std::function<void()>>::final_action;
 
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 1.0) void disable() noexcept {
+  void disable() noexcept {
     dismiss();
   }
 };
