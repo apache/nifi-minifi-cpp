@@ -341,7 +341,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   size_t eventCount = 0;
   const TimeDiff timeDiff;
-  gsl::finally timeGuard([&]() {
+  const auto timeGuard = gsl::finally([&]() {
     logger_->log_debug("processed %zu Events in %"  PRId64 " ms", eventCount, timeDiff());
   });
 
