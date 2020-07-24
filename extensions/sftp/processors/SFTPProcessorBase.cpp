@@ -41,7 +41,6 @@
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
-#include "utils/ScopeGuard.h"
 
 namespace org {
 namespace apache {

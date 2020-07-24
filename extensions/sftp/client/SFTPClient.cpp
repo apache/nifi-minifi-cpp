@@ -24,8 +24,8 @@
 #include <sstream>
 #include <iomanip>
 #include "utils/StringUtils.h"
-#include "utils/ScopeGuard.h"
-#include "utils/StringUtils.h"
+
+#include "gsl.h"
 
 namespace org {
 namespace apache {
@@ -506,7 +506,7 @@ bool SFTPClient::getFile(const std::string& path, io::BaseStream& output, int64_
     }
     return false;
   }
-  utils::ScopeGuard guard([&file_handle]() {
+  const auto guard = gsl::finally([&file_handle]() {
     libssh2_sftp_close(file_handle);
   });
 
@@ -563,7 +563,7 @@ bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool ov
       logger_->log_error("Failed to open remote file \"%s\" due to an underlying SSH error: %s", path.c_str(), err_msg);
     }
   }
-  utils::ScopeGuard guard([this, &file_handle, &path]() {
+  const auto guard = gsl::finally ([this, &file_handle, &path]() {
     logger_->log_trace("Closing remote file \"%s\"", path.c_str());
     libssh2_sftp_close(file_handle);
   });
@@ -706,7 +706,7 @@ bool SFTPClient::listDirectory(const std::string& path, bool follow_symlinks,
     logger_->log_error("Failed to open remote directory \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
     return false;
   }
-  utils::ScopeGuard guard([&dir_handle]() {
+  const auto guard = gsl::finally([&dir_handle]() {
     libssh2_sftp_close(dir_handle);
   });
 

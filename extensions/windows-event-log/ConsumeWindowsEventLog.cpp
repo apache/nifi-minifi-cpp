@@ -35,11 +35,12 @@
 #include "wel/XMLString.h"
 #include "wel/UnicodeConversion.h"
 
-#include "utils/ScopeGuard.h"
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Bookmark.h"
+
+#include "gsl.h"
 
 #pragma comment(lib, "wevtapi.lib")
 #pragma comment(lib, "ole32.lib")
@@ -340,7 +341,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   size_t eventCount = 0;
   const TimeDiff timeDiff;
-  utils::ScopeGuard timeGuard([&]() {
+  gsl::finally timeGuard([&]() {
     logger_->log_debug("processed %zu Events in %"  PRId64 " ms", eventCount, timeDiff());
   });
 
@@ -353,7 +354,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     context->yield();
     return;
   }
-  const utils::ScopeGuard guard_hEventResults([hEventResults]() { EvtClose(hEventResults); });
+  const gsl::finally guard_hEventResults([hEventResults]() { EvtClose(hEventResults); });
 
   logger_->log_trace("Retrieved results in Channel: %ls with Query: %ls", wstrChannel_.c_str(), wstrQuery_.c_str());
 
@@ -385,7 +386,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
       }
       break;
     }
-    const utils::ScopeGuard guard_hEvent([hEvent]() { EvtClose(hEvent); });
+    const gsl::finally guard_hEvent([hEvent]() { EvtClose(hEvent); });
     logger_->log_trace("Succesfully get the next hEvent, performing event rendering");
     EventRender eventRender;
     std::wstring newBookmarkXml;

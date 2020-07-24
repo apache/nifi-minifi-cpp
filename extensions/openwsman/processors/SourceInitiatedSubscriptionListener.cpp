@@ -51,8 +51,9 @@ extern "C" {
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
-#include "utils/ScopeGuard.h"
 #include "utils/file/FileUtils.h"
+
+#include "gsl.h"
 
 #define XML_NS_CUSTOM_SUBSCRIPTION "http://schemas.microsoft.com/wbem/wsman/1/subscription"
 #define XML_NS_CUSTOM_AUTHENTICATION "http://schemas.microsoft.com/wbem/wsman/1/authentication"
@@ -391,7 +392,7 @@ void SourceInitiatedSubscriptionListener::Handler::sendResponse(struct mg_connec
 }
 
 bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptionManager(struct mg_connection* conn, const std::string& endpoint, WsXmlDocH request) {
-  utils::ScopeGuard request_guard([&]() {
+  const auto request_guard = gsl::finally([&]() {
       ws_xml_destroy_doc(request);
   });
 
@@ -406,7 +407,7 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptionManager(str
 
   // Create reponse envelope from request
   WsXmlDocH response = wsman_create_response_envelope(request, nullptr);
-  utils::ScopeGuard response_guard([&]() {
+  const auto response_guard = gsl::finally([&]() {
     ws_xml_destroy_doc(response);
   });
 
@@ -653,7 +654,7 @@ int SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback(WsXmlNo
 }
 
 bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptions(struct mg_connection* conn, const std::string& endpoint, WsXmlDocH request) {
-  utils::ScopeGuard guard([&]() {
+  const auto guard = gsl::finally([&]() {
       ws_xml_destroy_doc(request);
   });
   auto action = getSoapAction(request);
