@@ -850,7 +850,8 @@ endif()
 if(NOT WIN32)
 # Create a custom build target that will run the linter.
 add_custom_target(linter
-  COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+  COMMAND python ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/cpplint.py
+            --linelength=200 --quiet --recursive
           ${CMAKE_SOURCE_DIR})
 
 add_custom_target(shellcheck
