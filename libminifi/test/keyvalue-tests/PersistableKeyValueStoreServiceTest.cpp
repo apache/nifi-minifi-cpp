@@ -21,12 +21,10 @@
 #include <memory>
 #include <utility>
 #include <string>
-#include <array>
 
 #include "catch.hpp"
 
 #include "../TestBase.h"
-#include "../../controller/Controller.h"
 #include "core/controller/ControllerService.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
@@ -42,7 +40,7 @@ static inline void configYamlHandler(Catch::ConfigData&, const std::string& path
 int main(int argc, char* argv[]) {
   Catch::Session session;
 
-  Catch::Clara::CommandLine<Catch::ConfigData>& cli = const_cast<Catch::Clara::CommandLine<Catch::ConfigData>&>(session.cli());
+  auto& cli = const_cast<Catch::Clara::CommandLine<Catch::ConfigData>&>(session.cli());
   cli["--config-yaml"]
       .describe("path to the config.yaml containing the PersistableKeyValueStoreService controller service configuration")
       .bind(&configYamlHandler, "path");
@@ -246,7 +244,7 @@ TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyVal
   }
 
   std::unordered_map<std::string, std::string> kvs_res;
-  REQUIRE(0U == kvs_res.size());
+  REQUIRE(kvs_res.empty());
 
   /* Make sure we can still insert after we cleared */
   const char* key = "foo";

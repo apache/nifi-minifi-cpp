@@ -43,7 +43,7 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
   explicit UnorderedMapPersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
   explicit UnorderedMapPersistableKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure>& configuration);
 
-  virtual ~UnorderedMapPersistableKeyValueStoreService();
+  ~UnorderedMapPersistableKeyValueStoreService() override;
 
   static core::Property File;
 
@@ -62,6 +62,12 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
   bool persist() override;
 
  protected:
+  using AbstractAutoPersistingKeyValueStoreService::getImpl;
+  using AbstractAutoPersistingKeyValueStoreService::setImpl;
+  using AbstractAutoPersistingKeyValueStoreService::persistImpl;
+  using AbstractAutoPersistingKeyValueStoreService::removeImpl;
+
+
   static constexpr const char* FORMAT_VERSION_KEY = "__UnorderedMapPersistableKeyValueStoreService_FormatVersion";
   static constexpr int FORMAT_VERSION = 1;
 

@@ -37,11 +37,11 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-class AbstractAutoPersistingKeyValueStoreService : public PersistableKeyValueStoreService {
+class AbstractAutoPersistingKeyValueStoreService : virtual public PersistableKeyValueStoreService {
  public:
   explicit AbstractAutoPersistingKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
 
-  virtual ~AbstractAutoPersistingKeyValueStoreService();
+  ~AbstractAutoPersistingKeyValueStoreService() override;
 
   static core::Property AlwaysPersist;
   static core::Property AutoPersistenceInterval;

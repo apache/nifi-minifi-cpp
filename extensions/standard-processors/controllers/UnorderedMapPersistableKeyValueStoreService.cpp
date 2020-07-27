@@ -36,16 +36,16 @@ core::Property UnorderedMapPersistableKeyValueStoreService::File(
         ->isRequired(true)->build());
 
 UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid /*= utils::Identifier()*/)
-    : KeyValueStoreService(name, uuid)
-    , AbstractAutoPersistingKeyValueStoreService(name, uuid)
+    : AbstractAutoPersistingKeyValueStoreService(name, uuid)
     , UnorderedMapKeyValueStoreService(name, uuid)
+    , PersistableKeyValueStoreService(name, uuid)
     , logger_(logging::LoggerFactory<UnorderedMapPersistableKeyValueStoreService>::getLogger()) {
 }
 
 UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure> &configuration)
-    : KeyValueStoreService(name)
-    , AbstractAutoPersistingKeyValueStoreService(name)
+    : AbstractAutoPersistingKeyValueStoreService(name)
     , UnorderedMapKeyValueStoreService(name)
+    , PersistableKeyValueStoreService(name)
     , logger_(logging::LoggerFactory<UnorderedMapPersistableKeyValueStoreService>::getLogger())  {
   setConfiguration(configuration);
   initialize();

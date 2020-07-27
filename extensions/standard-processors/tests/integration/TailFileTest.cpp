@@ -16,27 +16,15 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
-
 #undef NDEBUG
 #include <cassert>
 #include <cstdio>
-#include <utility>
-#include <fstream>
 #include <memory>
 #include <string>
-#include <type_traits>
-#include <vector>
 #include <iostream>
-#include <sstream>
 
-#include "utils/StringUtils.h"
-#include "core/Core.h"
 #include "core/logging/Logger.h"
-#include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
-#include "properties/Configure.h"
 #include "TestBase.h"
 #include "processors/TailFile.h"
 #include "processors/LogAttribute.h"

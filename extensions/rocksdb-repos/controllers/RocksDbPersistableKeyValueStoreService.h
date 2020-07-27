@@ -44,27 +44,27 @@ class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyV
  public:
   explicit RocksDbPersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
 
-  virtual ~RocksDbPersistableKeyValueStoreService() = default;
+  ~RocksDbPersistableKeyValueStoreService() override = default;
 
   static core::Property Directory;
 
-  virtual void initialize() override;
-  virtual void onEnable() override;
-  virtual void notifyStop() override;
+  void initialize() override;
+  void onEnable() override;
+  void notifyStop() override;
 
-  virtual bool set(const std::string& key, const std::string& value) override;
+  bool set(const std::string& key, const std::string& value) override;
 
-  virtual bool get(const std::string& key, std::string& value) override;
+  bool get(const std::string& key, std::string& value) override;
 
-  virtual bool get(std::unordered_map<std::string, std::string>& kvs) override;
+  bool get(std::unordered_map<std::string, std::string>& kvs) override;
 
-  virtual bool remove(const std::string& key) override;
+  bool remove(const std::string& key) override;
 
-  virtual bool clear() override;
+  bool clear() override;
 
-  virtual bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
+  bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
 
-  virtual bool persist() override;
+  bool persist() override;
 
  protected:
   std::string directory_;

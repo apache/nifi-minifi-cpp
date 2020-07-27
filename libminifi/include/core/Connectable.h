@@ -140,16 +140,6 @@ class Connectable : public CoreComponent {
   virtual bool isWorkAvailable() = 0;
 
   /**
-   * Verify that this connectable can be stopped.
-   * @return bool.
-   */
-  virtual bool verifyCanStop() {
-    if (isRunning())
-      return true;
-    return false;
-  }
-
-  /**
    * Sets the flow version for this connectable.
    */
   void setFlowIdentifier(const std::shared_ptr<state::FlowIdentifier> &version) {

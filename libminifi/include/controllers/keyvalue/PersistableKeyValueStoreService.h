@@ -32,11 +32,11 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-class PersistableKeyValueStoreService : virtual public KeyValueStoreService, public AbstractCoreComponentStateManagerProvider {
+class PersistableKeyValueStoreService : public KeyValueStoreService, public AbstractCoreComponentStateManagerProvider {
  public:
   explicit PersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
 
-  virtual ~PersistableKeyValueStoreService();
+  ~PersistableKeyValueStoreService() override;
 
   virtual bool persist() = 0;
 
