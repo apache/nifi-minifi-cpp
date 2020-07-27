@@ -79,6 +79,6 @@ class OpenCVObjectFactory : public core::ObjectFactory {
 };
 
 extern "C" {
-	DLL_EXPORT void *createOpenCVFactory(void);
+  DLL_EXPORT void *createOpenCVFactory(void);
 }
 #endif /* EXTENSIONS_OPENCVLOADER_H_ */

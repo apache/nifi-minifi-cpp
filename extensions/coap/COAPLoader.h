@@ -85,6 +85,6 @@ class COAPObjectFactory : public core::ObjectFactory {
 };
 
 extern "C" {
-	DLL_EXPORT void *createCOAPFactory(void);
+  DLL_EXPORT void *createCOAPFactory(void);
 }
 #endif /* EXTENSIONS_COAPLOADER_H_ */

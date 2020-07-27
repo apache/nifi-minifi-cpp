@@ -82,11 +82,11 @@ class PeerResponder : public ServerAwareHandler {
   }
 
   bool handleGet(CivetServer *server, struct mg_connection *conn) override {
-	
+  
 #ifdef WIN32
-	  std::string hostname = org::apache::nifi::minifi::io::Socket::getMyHostName();
+    std::string hostname = org::apache::nifi::minifi::io::Socket::getMyHostName();
 #else
-	  std::string hostname = "localhost";
+    std::string hostname = "localhost";
 #endif
     std::string site2site_rest_resp = "{\"peers\" : [{ \"hostname\": \"" + hostname + "\", \"port\": " + port + ",  \"secure\": false, \"flowFileCount\" : 0 }] }";
     std::stringstream headers;

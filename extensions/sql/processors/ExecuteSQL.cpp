@@ -59,8 +59,8 @@ const core::Property ExecuteSQL::s_sqlSelectQuery(
     "Note that Expression Language is not evaluated for flow file contents.")->supportsExpressionLanguage(true)->build());
 
 const core::Property ExecuteSQL::s_maxRowsPerFlowFile(
-	core::PropertyBuilder::createProperty("Max Rows Per Flow File")->isRequired(true)->withDefaultValue<int>(0)->withDescription(
-		"The maximum number of result rows that will be included intoi a flow file. If zero then all will be placed into the flow file")->supportsExpressionLanguage(true)->build());
+  core::PropertyBuilder::createProperty("Max Rows Per Flow File")->isRequired(true)->withDefaultValue<int>(0)->withDescription(
+    "The maximum number of result rows that will be included intoi a flow file. If zero then all will be placed into the flow file")->supportsExpressionLanguage(true)->build());
 
 const core::Relationship ExecuteSQL::s_success("success", "Successfully created FlowFile from SQL query result set.");
 

@@ -30,32 +30,25 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-//! GetGPS Class
 class GetGPS : public core::Processor
 {
 public:
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	GetGPS(std::string name, utils::Identifier uuid = utils::Identifier())
-	: core::Processor(name, uuid), logger_(logging::LoggerFactory<GetGPS>::getLogger())
-	{
-		gpsdHost_ = "localhost";
-		gpsdPort_ = "2947";
-		gpsdWaitTime_ = 50000000;
-	}
-	//! Destructor
-	virtual ~GetGPS() = default;
-	//! Processor Name
-	static const std::string ProcessorName;
-	//! Supported Properties
-	static core::Property GPSDHost;
-	static core::Property GPSDPort;
-	static core::Property GPSDWaitTime;
+  GetGPS(std::string name, utils::Identifier uuid = utils::Identifier())
+  : core::Processor(name, uuid), logger_(logging::LoggerFactory<GetGPS>::getLogger())
+  {
+    gpsdHost_ = "localhost";
+    gpsdPort_ = "2947";
+    gpsdWaitTime_ = 50000000;
+  }
+  virtual ~GetGPS() = default;
+  static const std::string ProcessorName;
+  // Supported Properties
+  static core::Property GPSDHost;
+  static core::Property GPSDPort;
+  static core::Property GPSDWaitTime;
 
-	//! Supported Relationships
-	static core::Relationship Success;
+  // Supported Relationships
+  static core::Relationship Success;
 
 public:
   /**
@@ -65,10 +58,10 @@ public:
    * ProcessSession objects.
    */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-	//! OnTrigger method, implemented by NiFi GetGPS
-	virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-	//! Initialize, over write by NiFi GetGPS
-	virtual void initialize(void) override;
+  //! OnTrigger method, implemented by NiFi GetGPS
+  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  //! Initialize, over write by NiFi GetGPS
+  virtual void initialize(void) override;
 
 protected:
 

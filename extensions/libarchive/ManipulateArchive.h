@@ -39,51 +39,43 @@ namespace processors {
 
 using logging::Logger;
 
-//! ManipulateArchive Class
 class ManipulateArchive : public core::Processor {
 public:
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	ManipulateArchive(std::string name, utils::Identifier uuid = utils::Identifier())
-	: core::Processor(name, uuid),
-		logger_(logging::LoggerFactory<ManipulateArchive>::getLogger()) {
-	}
-	//! Destructor
-	virtual ~ManipulateArchive() = default;
+  ManipulateArchive(std::string name, utils::Identifier uuid = utils::Identifier())
+  : core::Processor(name, uuid),
+    logger_(logging::LoggerFactory<ManipulateArchive>::getLogger()) {
+  }
+  virtual ~ManipulateArchive() = default;
+  static constexpr char const* ProcessorName = "ManipulateArchive";
 
-	//! Processor Name
-	static constexpr char const* ProcessorName = "ManipulateArchive";
+  // Supported operations
+  static char const* OPERATION_REMOVE;
+  static char const* OPERATION_COPY;
+  static char const* OPERATION_MOVE;
+  static char const* OPERATION_TOUCH;
 
-	//! Supported operations
-	static char const* OPERATION_REMOVE;
-	static char const* OPERATION_COPY;
-	static char const* OPERATION_MOVE;
-	static char const* OPERATION_TOUCH;
+  // Supported Properties
+  static core::Property Operation;
+  static core::Property Target;
+  static core::Property Destination;
+  static core::Property Before;
+  static core::Property After;
+  // Supported Relationships
+  static core::Relationship Success;
+  static core::Relationship Failure;
 
-	//! Supported Properties
-	static core::Property Operation;
-	static core::Property Target;
-	static core::Property Destination;
-	static core::Property Before;
-	static core::Property After;
-	//! Supported Relationships
-	static core::Relationship Success;
-	static core::Relationship Failure;
-
-	//! OnTrigger method, implemented by NiFi ManipulateArchive
-	void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-	void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
-	//! Initialize, over write by NiFi ManipulateArchive
-	void initialize(void);
+  // OnTrigger method, implemented by NiFi ManipulateArchive
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  // Initialize, over write by NiFi ManipulateArchive
+  void initialize(void);
 
 protected:
 
 private:
-	//! Logger
-	std::shared_ptr<Logger> logger_;
-	std::string before_, after_, operation_, destination_, targetEntry_;
+  // Logger
+  std::shared_ptr<Logger> logger_;
+  std::string before_, after_, operation_, destination_, targetEntry_;
 };
 
 REGISTER_RESOURCE(ManipulateArchive, "Performs an operation which manipulates an archive without needing to split the archive into multiple FlowFiles.");

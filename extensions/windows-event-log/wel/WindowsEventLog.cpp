@@ -208,7 +208,7 @@ std::string WindowsEventLogHeader::createDefaultDelimiter(size_t max, size_t len
 }
 
 EVT_HANDLE WindowsEventLogHandler::getMetadata() const {
-	return metadata_provider_;
+  return metadata_provider_;
 }
 
 } /* namespace wel */

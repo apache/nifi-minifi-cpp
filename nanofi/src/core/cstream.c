@@ -20,7 +20,7 @@
 #define NOMINMAX
 #include <winsock2.h>
 #else
-#include <sys/socket.h>	// socket
+#include <sys/socket.h>  // socket
 #include <arpa/inet.h> // inet_addr
 #include <netdb.h> // hostent
 #include <unistd.h> // close

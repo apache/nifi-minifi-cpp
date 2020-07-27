@@ -147,7 +147,7 @@ class MaxCollector: public SQLRowSubscriber {
   size_t countColumns_{};
   bool columnsVerified_{false};
 };
-	
+  
 } /* namespace sql */
 } /* namespace minifi */
 } /* namespace nifi */

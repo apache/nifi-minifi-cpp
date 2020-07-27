@@ -20,7 +20,7 @@
 #define LIBMINIFI_CAPI_PLAN_H_
 
 #ifndef WIN32
-	#include <dirent.h>
+  #include <dirent.h>
 #endif
 #include <cstdio>
 #include <cstdlib>

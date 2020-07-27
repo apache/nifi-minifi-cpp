@@ -43,9 +43,9 @@ namespace minifi {
 namespace processors {
 
 struct EventRender {
-	std::map<std::string, std::string> matched_fields_;
-	std::string text_;
-	std::string rendered_text_;
+  std::map<std::string, std::string> matched_fields_;
+  std::string text_;
+  std::string rendered_text_;
 };
 
 class Bookmark;

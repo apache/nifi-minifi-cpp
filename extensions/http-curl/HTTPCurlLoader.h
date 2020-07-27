@@ -98,6 +98,6 @@ class HttpCurlObjectFactory : public core::ObjectFactory {
 };
 
 extern "C" {
-	DLL_EXPORT void *createHttpCurlFactory(void);
+  DLL_EXPORT void *createHttpCurlFactory(void);
 }
 #endif /* EXTENSIONS_HTTPCURLLOADER_H_ */
