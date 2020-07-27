@@ -29,6 +29,3 @@ target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads)
 
 SET (STANDARD-PROCESSORS minifi-standard-processors PARENT_SCOPE)
 register_extension(minifi-standard-processors)
-
-
-register_extension_linter(minifi-standard-processors-linter)

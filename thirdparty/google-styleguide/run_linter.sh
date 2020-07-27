@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# ./run_linter <includedir1> <includedir2> ... <includedirN> -- <srcdir1> <srcdir2> ... <srcdirN>
+# ./run_linter <includedir1> <includedir2> ... <includedirN> <srcdir1> <srcdir2> ... <srcdirN>
 
 if [[ "$(uname)" == "Darwin" ]]; then
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -31,5 +31,5 @@ done
 
 [ x"$TARGET_DIRS" == x"" ] && echo "ERROR: No source directories specified." && exit 1
 
-SOURCES=`find $TARGET_DIRS -name '*.cpp' -o -name '*.h' | sort | uniq | tr '\n' ' '`
-python ${SCRIPT_DIR}/cpplint.py --linelength=200 ${SOURCES}
+# SOURCES=`find $TARGET_DIRS -name '*.cpp' -o -name '*.h' | sort | uniq | tr '\n' ' '`
+python ${SCRIPT_DIR}/cpplint.py --linelength=200 --quiet --recursive ${TARGET_DIRS}

@@ -30,5 +30,3 @@ target_link_libraries(minifi-rdkafka-extensions librdkafka)
 SET (RDKAFKA-EXTENSIONS minifi-rdkafka-extensions PARENT_SCOPE)
 
 register_extension(minifi-rdkafka-extensions)
-
-register_extension_linter(minifi-rdkafka-extensions-linter)

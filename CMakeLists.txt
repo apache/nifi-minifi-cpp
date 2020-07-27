@@ -849,12 +849,9 @@ endif()
 
 if(NOT WIN32)
 # Create a custom build target that will run the linter.
-get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
 add_custom_target(linter
   COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
-          ${CMAKE_SOURCE_DIR}/libminifi/include/
-          ${CMAKE_SOURCE_DIR}/libminifi/test/
-  DEPENDS ${extensions})
+          ${CMAKE_SOURCE_DIR})
 
 add_custom_target(shellcheck
 	COMMAND ${CMAKE_SOURCE_DIR}/run_shellcheck.sh ${CMAKE_SOURCE_DIR})
