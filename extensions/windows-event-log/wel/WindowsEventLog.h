@@ -87,7 +87,7 @@ class WindowsEventLogMetadata {
 
   static std::string getMetadataString(METADATA val) {
     static std::map< METADATA, std::string> map = {
-        {LOG_NAME,	"LOG_NAME" },
+        {LOG_NAME,  "LOG_NAME" },
         {SOURCE,"SOURCE"},
         {TIME_CREATED,"TIME_CREATED" },
         {EVENTID,"EVENTID"},

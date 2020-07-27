@@ -963,12 +963,12 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
     core::TimeUnit unit;
     if (!core::Property::StringToTime(value, entity_tracking_time_window, unit) ||
         !core::Property::ConvertTimeUnitToMS(entity_tracking_time_window, unit, entity_tracking_time_window)) {
-      /* The default is 3 hours	*/
+      /* The default is 3 hours  */
       entity_tracking_time_window = 3 * 3600 * 1000;
       logger_->log_error("Entity Tracking Time Window attribute is invalid");
     }
   } else {
-    /* The default is 3 hours	*/
+    /* The default is 3 hours  */
     entity_tracking_time_window = 3 * 3600 * 1000;
   }
 

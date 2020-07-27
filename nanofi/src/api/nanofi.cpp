@@ -282,7 +282,7 @@ flow_file_record * generate_flow(processor_context * ctx) {
     flow_file_record * ffr = create_ff_object_nc();
 
     if (ffr->crp) {
-    	delete static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp);
+      delete static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp);
     }
     ffr->crp = static_cast<void*>(new std::shared_ptr<minifi::core::ContentRepository>(ctx->getContentRepository()));
 

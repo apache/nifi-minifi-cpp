@@ -75,7 +75,7 @@ void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     yield();
     return;
   }
-	
+  
   std::shared_ptr<core::FlowFile> flowFile = session->get();
 
   if (!flowFile) {

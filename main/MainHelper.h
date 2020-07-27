@@ -25,9 +25,9 @@
 
 #ifdef WIN32
 extern "C" {
-	FILE* __cdecl _imp____iob_func();
+  FILE* __cdecl _imp____iob_func();
 
-	FILE* __cdecl __imp___iob_func();
+  FILE* __cdecl __imp___iob_func();
 }
 #endif
 

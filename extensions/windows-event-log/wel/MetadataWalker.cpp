@@ -98,7 +98,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
     }
   }
 
-	return true;
+  return true;
 }
 
 std::vector<std::string> MetadataWalker::getIdentifiers(const std::string &text) const {
@@ -151,7 +151,7 @@ std::map<std::string, std::string> MetadataWalker::getFieldValues() const {
 }
 
 std::map<std::string, std::string> MetadataWalker::getIdentifiers() const {
-	return replaced_identifiers_;
+  return replaced_identifiers_;
 }
 
 std::string MetadataWalker::updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex) {

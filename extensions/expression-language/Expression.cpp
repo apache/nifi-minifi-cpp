@@ -95,15 +95,15 @@ Expression make_dynamic_attr(const std::string &attribute_id) {
 }
 
 Value resolve_user_id(const std::vector<Value> &args) {
-	std::string name;
-	if (args.size() == 1) {
-		name = args[0].asString();
-		if (!name.empty()) {
-			name = minifi::utils::OsUtils::userIdToUsername(name);
-		}
-	}
+  std::string name;
+  if (args.size() == 1) {
+    name = args[0].asString();
+    if (!name.empty()) {
+      name = minifi::utils::OsUtils::userIdToUsername(name);
+    }
+  }
 
-	return Value(name);
+  return Value(name);
 }
 
 Value expr_hostname(const std::vector<Value> &args) {

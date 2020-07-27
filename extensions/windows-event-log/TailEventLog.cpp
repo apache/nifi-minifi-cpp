@@ -73,68 +73,68 @@ void TailEventLog::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
 
 void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   
-	if (log_handle_ == nullptr) {
-		logger_->log_debug("Handle could not be created for %s", log_source_);
-	}
+  if (log_handle_ == nullptr) {
+    logger_->log_debug("Handle could not be created for %s", log_source_);
+  }
 
-	BYTE buffer[MAX_RECORD_BUFFER_SIZE];
+  BYTE buffer[MAX_RECORD_BUFFER_SIZE];
 
-	EVENTLOGRECORD *event_record = (EVENTLOGRECORD*)&buffer;
+  EVENTLOGRECORD *event_record = (EVENTLOGRECORD*)&buffer;
 
-	DWORD bytes_to_read = 0, min_bytes = 0;
-	
-	GetOldestEventLogRecord(log_handle_, &current_record_);
-	GetNumberOfEventLogRecords(log_handle_, &num_records_);
-	current_record_ = num_records_-max_events_;
-	
-	logger_->log_trace("%d and %d", current_record_, num_records_);
+  DWORD bytes_to_read = 0, min_bytes = 0;
+  
+  GetOldestEventLogRecord(log_handle_, &current_record_);
+  GetNumberOfEventLogRecords(log_handle_, &num_records_);
+  current_record_ = num_records_-max_events_;
+  
+  logger_->log_trace("%d and %d", current_record_, num_records_);
 
-	if (ReadEventLog(log_handle_,EVENTLOG_FORWARDS_READ | EVENTLOG_SEEK_READ, current_record_, event_record,MAX_RECORD_BUFFER_SIZE, &bytes_to_read,&min_bytes))
-	{
-		if (bytes_to_read == 0) {
-			logger_->log_debug("Yielding");
-			context->yield();
-		}
-		while (bytes_to_read > 0)
-		{
+  if (ReadEventLog(log_handle_,EVENTLOG_FORWARDS_READ | EVENTLOG_SEEK_READ, current_record_, event_record,MAX_RECORD_BUFFER_SIZE, &bytes_to_read,&min_bytes))
+  {
+    if (bytes_to_read == 0) {
+      logger_->log_debug("Yielding");
+      context->yield();
+    }
+    while (bytes_to_read > 0)
+    {
 
-			std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
-			if (flowFile == nullptr)
-				return;
+      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+      if (flowFile == nullptr)
+        return;
 
-			LPSTR source =
-				(LPSTR)((LPBYTE)event_record + sizeof(EVENTLOGRECORD));
+      LPSTR source =
+        (LPSTR)((LPBYTE)event_record + sizeof(EVENTLOGRECORD));
 
-			LPSTR computer_name =
-				(LPSTR)((LPBYTE)event_record + sizeof(EVENTLOGRECORD) +
-					strlen(source) + 1);
+      LPSTR computer_name =
+        (LPSTR)((LPBYTE)event_record + sizeof(EVENTLOGRECORD) +
+          strlen(source) + 1);
 
-			flowFile->addAttribute("source", source);
-			flowFile->addAttribute("record_number", std::to_string( event_record->RecordNumber));
-			flowFile->addAttribute("computer_name", computer_name);
-			
-			flowFile->addAttribute("event_time", getTimeStamp(event_record->TimeGenerated));
-			flowFile->addAttribute("event_type", typeToString(event_record->EventType));
-			//flowFile->addAttribute("", event_message);
+      flowFile->addAttribute("source", source);
+      flowFile->addAttribute("record_number", std::to_string( event_record->RecordNumber));
+      flowFile->addAttribute("computer_name", computer_name);
+      
+      flowFile->addAttribute("event_time", getTimeStamp(event_record->TimeGenerated));
+      flowFile->addAttribute("event_type", typeToString(event_record->EventType));
+      //flowFile->addAttribute("", event_message);
 
-			
-			io::DataStream stream((const uint8_t*)(event_record + event_record->DataOffset), event_record->DataLength);
-			// need an import from the data stream.
-			session->importFrom(stream, flowFile);
-			session->transfer(flowFile, Success);
-			bytes_to_read -= event_record->Length;
-			event_record = (EVENTLOGRECORD *)
-				((LPBYTE)event_record + event_record->Length);
-		}
+      
+      io::DataStream stream((const uint8_t*)(event_record + event_record->DataOffset), event_record->DataLength);
+      // need an import from the data stream.
+      session->importFrom(stream, flowFile);
+      session->transfer(flowFile, Success);
+      bytes_to_read -= event_record->Length;
+      event_record = (EVENTLOGRECORD *)
+        ((LPBYTE)event_record + event_record->Length);
+    }
 
-		event_record = (EVENTLOGRECORD *)&buffer;
-		logger_->log_trace("All done no more");
-	}
-	else {
-		LogWindowsError();
-		logger_->log_trace("Yielding due to error");
-		context->yield();
-	}
+    event_record = (EVENTLOGRECORD *)&buffer;
+    logger_->log_trace("All done no more");
+  }
+  else {
+    LogWindowsError();
+    logger_->log_trace("Yielding due to error");
+    context->yield();
+  }
 
 }
 } /* namespace processors */
