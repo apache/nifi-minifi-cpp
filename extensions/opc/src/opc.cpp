@@ -23,7 +23,7 @@
 #include "logging/Logger.h"
 #include "Exception.h"
 
-#include "gsl.h"
+#include "utils/gsl.h"
 
 //Standard includes
 #include <stdlib.h>

@@ -25,7 +25,7 @@
 #include <iomanip>
 #include "utils/StringUtils.h"
 
-#include "gsl.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {

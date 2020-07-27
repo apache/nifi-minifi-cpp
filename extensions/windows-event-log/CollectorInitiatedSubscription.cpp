@@ -34,7 +34,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
-#include "gsl.h"
+#include "utils/gsl.h"
 
 #pragma comment(lib, "wevtapi.lib")
 #pragma comment(lib, "Wecapi.lib")

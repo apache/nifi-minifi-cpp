@@ -53,7 +53,7 @@ extern "C" {
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 
-#include "gsl.h"
+#include "utils/gsl.h"
 
 #define XML_NS_CUSTOM_SUBSCRIPTION "http://schemas.microsoft.com/wbem/wsman/1/subscription"
 #define XML_NS_CUSTOM_AUTHENTICATION "http://schemas.microsoft.com/wbem/wsman/1/authentication"

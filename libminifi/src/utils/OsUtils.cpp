@@ -21,7 +21,7 @@
 #include <iostream>
 #include <map>
 
-#include "gsl.h"
+#include "utils/gsl.h"
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN

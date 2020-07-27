@@ -21,7 +21,7 @@
 #include "utils/Deleters.h"
 #include <algorithm>
 
-#include "gsl.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
