@@ -35,26 +35,20 @@ namespace processors {
 const LPWSTR pEventTypeNames[] = { L"Error", L"Warning", L"Informational", L"Audit Success", L"Audit Failure" };
 char log_name[255] = "Application";
 
-//! TailEventLog Class
 class TailEventLog : public core::Processor
 {
 public:
-  //! Constructor
-	/*!
-	 * Create a new processor
-	 */
   TailEventLog(std::string name, utils::Identifier uuid = utils::Identifier())
   : core::Processor(name, uuid), logger_(logging::LoggerFactory<TailEventLog>::getLogger()),max_events_(1){
   }
-  //! Destructor
   virtual ~TailEventLog() = default;
-  //! Processor Name
   static const std::string ProcessorName;
-  //! Supported Properties
+
+  // Supported Properties
   static core::Property LogSourceFileName;
   static core::Property MaxEventsPerFlowFile;
 
-  //! Supported Relationships
+  // Supported Relationships
   static core::Relationship Success;
 
 public:
@@ -65,9 +59,9 @@ public:
    * ProcessSession objects.
    */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  //! OnTrigger method, implemented by NiFi TailEventLog
+  // OnTrigger method, implemented by NiFi TailEventLog
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  //! Initialize, over write by NiFi TailEventLog
+  // Initialize, over write by NiFi TailEventLog
   virtual void initialize(void) override;
 
 protected:
@@ -117,10 +111,6 @@ protected:
     return str.str();
   }
 
-
-	/**
-
-	*/
   void LogWindowsError(void)
   {
     auto error_id = GetLastError();
@@ -136,10 +126,7 @@ protected:
       0, NULL);
 
     logger_->log_debug("Error %d: %s\n", (int)error_id, (char *)lpMsg);
-
   }
-
-
 
 private:
   std::mutex log_mutex_;

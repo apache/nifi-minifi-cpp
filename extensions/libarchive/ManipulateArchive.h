@@ -39,49 +39,41 @@ namespace processors {
 
 using logging::Logger;
 
-//! ManipulateArchive Class
 class ManipulateArchive : public core::Processor {
 public:
-  //! Constructor
-	/*!
-	 * Create a new processor
-	 */
   ManipulateArchive(std::string name, utils::Identifier uuid = utils::Identifier())
   : core::Processor(name, uuid),
     logger_(logging::LoggerFactory<ManipulateArchive>::getLogger()) {
   }
-  //! Destructor
   virtual ~ManipulateArchive() = default;
-
-  //! Processor Name
   static constexpr char const* ProcessorName = "ManipulateArchive";
 
-  //! Supported operations
+  // Supported operations
   static char const* OPERATION_REMOVE;
   static char const* OPERATION_COPY;
   static char const* OPERATION_MOVE;
   static char const* OPERATION_TOUCH;
 
-  //! Supported Properties
+  // Supported Properties
   static core::Property Operation;
   static core::Property Target;
   static core::Property Destination;
   static core::Property Before;
   static core::Property After;
-  //! Supported Relationships
+  // Supported Relationships
   static core::Relationship Success;
   static core::Relationship Failure;
 
-  //! OnTrigger method, implemented by NiFi ManipulateArchive
+  // OnTrigger method, implemented by NiFi ManipulateArchive
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
-  //! Initialize, over write by NiFi ManipulateArchive
+  // Initialize, over write by NiFi ManipulateArchive
   void initialize(void);
 
 protected:
 
 private:
-  //! Logger
+  // Logger
   std::shared_ptr<Logger> logger_;
   std::string before_, after_, operation_, destination_, targetEntry_;
 };

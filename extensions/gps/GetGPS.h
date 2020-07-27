@@ -30,14 +30,9 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-//! GetGPS Class
 class GetGPS : public core::Processor
 {
 public:
-  //! Constructor
-	/*!
-	 * Create a new processor
-	 */
   GetGPS(std::string name, utils::Identifier uuid = utils::Identifier())
   : core::Processor(name, uuid), logger_(logging::LoggerFactory<GetGPS>::getLogger())
   {
@@ -45,16 +40,14 @@ public:
     gpsdPort_ = "2947";
     gpsdWaitTime_ = 50000000;
   }
-  //! Destructor
   virtual ~GetGPS() = default;
-  //! Processor Name
   static const std::string ProcessorName;
-  //! Supported Properties
+  // Supported Properties
   static core::Property GPSDHost;
   static core::Property GPSDPort;
   static core::Property GPSDWaitTime;
 
-  //! Supported Relationships
+  // Supported Relationships
   static core::Relationship Success;
 
 public:
