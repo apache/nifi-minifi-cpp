@@ -36,15 +36,17 @@ in a much smaller memory footprint and consume fewer resources. If your systems 
 
 ## Building with Visual Studio 
 
-In order to support Visual Studio you must install [plugins capable of building CMake](https://devblogs.microsoft.com/cppblog/cmake-support-in-visual-studio/). We also advise
+Make sure your Visual Studio installation includes the "Visual C++ tools for CMake" and "Visual C++ ATL for x86 and x64" options.
+You can also add these after installation using the Visual Studio Installer app. We also advise
 installing WiX and Visual Studio Command Prompt via the marketplace. To do this please go to the Tools Menu, followed by Extensions and Updates. Once the popup displays you
 may install additional features from Online sources in the Online menu.
 
 A file named CMakeSettings.json provides the CMake configuration.
 
 CMake must generate its cache, under Cache in the CMake Menu. After that is complete go to 'Build Only' under the CMake menu. Due to limitations in Visual Studio's CMake support, it is advised
-that you build `minifi.lib` then `minifiexe` targets. Once you have built these targets, you may use the `cpack` command to build your MSI. If you are building with JNI functionality the MSI will be
-significantly larger ( about 160 MB ) since it contains the base NARs to run the standard set of Apache NiFi processors. 
+that you build `minifi.lib` then `minifi.exe` targets.  `Build All` works, too, but it takes much longer.
+Once you have built these targets, you may use the `cpack` command to build your MSI. If you are building with JNI functionality the MSI will be
+significantly larger (about 160 MB) since it contains the base NARs to run the standard set of Apache NiFi processors. 
 
 ## Building via the build script
 
@@ -60,6 +62,7 @@ After the build directory it will take optional parameters modifying the CMake c
 | /J | Enables JNI |
 | /64 | Creates 64-bit build instead of a 32-bit one |
 | /D | Builds RelWithDebInfo build instead of Release |
+| /CI | Sets STRICT_GSL_CHECKS to AUDIT |
 
 Examples:
  - 32-bit build with kafka, disabling tests, enabling MSI creation: `win_build_vs.bat build32 /T /K /P`
@@ -78,8 +81,8 @@ A basic working CMake configuration can be inferred from the `win_build_vs.bat`.
 ```
 mkdir build
 cd build
-cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=OFF -DENABLE_JNI=OFF -DOPENSSL_OFF=OFF -DENABLE_COAP=OFF -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
-msbuild /m nifi-minifi-cpp.sln /property:Configuration=Release /property:Platform=x64
+cmake -G "Visual Studio 15 2017" -DINSTALLER_MERGE_MODULES=OFF -DENABLE_SQL=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=OFF -DENABLE_JNI=OFF -DOPENSSL_OFF=OFF -DENABLE_COAP=OFF -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
+msbuild /m nifi-minifi-cpp.sln /property:Configuration=Release /property:Platform=Win32
 copy main\Release\minifi.exe main\
 cpack
 ctest -C Release
