@@ -21,7 +21,8 @@
 #include "spdlog/spdlog.h"
 
 void LogTestController::setLevel(const std::string name, spdlog::level::level_enum level) {
-  logger_->log_info("Setting log level for %s to %s", name, spdlog::level::to_string_view(level));
+  const fmt::basic_string_view<char> levelView(spdlog::level::to_string_view(level));
+  logger_->log_info("Setting log level for %s to %s", name, std::string(levelView.begin(), levelView.end()));
   std::string adjusted_name = name;
   const std::string clazz = "class ";
   auto haz_clazz = name.find(clazz);

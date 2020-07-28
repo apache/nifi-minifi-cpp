@@ -280,7 +280,8 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
     current_namespace_str += "::";
   }
   if (logger != nullptr) {
-    logger->log_debug("%s logger got sinks from namespace %s and level %s from namespace %s", name, sink_namespace_str, spdlog::level::to_string_view(level), level_namespace_str);
+    const fmt::basic_string_view<char> levelView(spdlog::level::to_string_view(level));
+    logger->log_debug("%s logger got sinks from namespace %s and level %s from namespace %s", name, sink_namespace_str, std::string(levelView.begin(), levelView.end()), level_namespace_str);
   }
   spdlogger = std::make_shared<spdlog::logger>(name, begin(sinks), end(sinks));
   spdlogger->set_level(level);
