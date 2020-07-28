@@ -1521,8 +1521,8 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   }
 
-  SECTION("Lookup frequency set to 10 ms => new files are only picked up after 10 ms") {
-    plan->setProperty(tail_file, processors::TailFile::LookupFrequency.getName(), "10 ms");
+  SECTION("Lookup frequency set to 100 ms => new files are only picked up after 100 ms") {
+    plan->setProperty(tail_file, processors::TailFile::LookupFrequency.getName(), "100 ms");
 
     plan->reset(true);
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
@@ -1536,7 +1536,7 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
     plan->reset(false);
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(11));
+    std::this_thread::sleep_for(std::chrono::milliseconds(110));
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   }

@@ -45,51 +45,45 @@ for %%i in (%extensions%) do (
 )
 
 (
-	echo #ifndef AGENT_BUILD_H
-	echo #define AGENT_BUILD_H
-
+    echo #include ^<string^>
 	echo #include ^<vector^>
+	echo #include "agent/agent_version.h"
 
 	echo namespace org {
 	echo namespace apache {
 	echo namespace nifi {
 	echo namespace minifi {
 
-	echo class AgentBuild {
-	echo public:
-	echo static constexpr const char* VERSION = "%version%";
-	echo static constexpr const char* BUILD_IDENTIFIER = "%buildident%";
-	echo   static constexpr const char* BUILD_REV = "%buildrev%";
-	echo   static constexpr const char* BUILD_DATE = "%builddate%";
-	echo   static constexpr const char* COMPILER = "%compiler%";
-	echo   static constexpr const char* COMPILER_VERSION = "%compiler_version%";
-	echo   static constexpr const char* COMPILER_FLAGS = "%flags%";
-	echo   static std^:^:vector^<std^:^:string^> getExtensions^(^) {
+	echo const char* const AgentBuild::VERSION = "%version%";
+	echo const char* const AgentBuild::BUILD_IDENTIFIER = "%buildident%";
+	echo const char* const AgentBuild::BUILD_REV = "%buildrev%";
+	echo const char* const AgentBuild::BUILD_DATE = "%builddate%";
+	echo const char* const AgentBuild::COMPILER = "%compiler%";
+	echo const char* const AgentBuild::COMPILER_VERSION = "%compiler_version%";
+	echo const char* const AgentBuild::COMPILER_FLAGS = "%flags%";
+	echo std^:^:vector^<std^:^:string^> AgentBuild::getExtensions^(^) {
   	echo 	static std^:^:vector^<std^:^:string^> extensions;
   	echo 	if ^(extensions.empty^(^)^){
-	) > "%out_dir%/agent_version.h"
+	) > "%out_dir%/agent_version.cpp"
 
 	for /l %%i in (1,1,%count%) do (
 	   (
 				echo extensions.push_back^("!extension%%i!"^);
-		)>> "%out_dir%/agent_version.h"
+		)>> "%out_dir%/agent_version.cpp"
 	)
 
 	
 (
-	echo 	  extensions.push_back^("minifi-system"^);
-	echo 	}
-  	echo 	return extensions;
+	echo 	 extensions.push_back^("minifi-system"^);
 	echo   }
-	echo };
+  	echo   return extensions;
+	echo }
 
 	echo } /* namespace minifi */
 	echo } /* namespace nifi */
 	echo } /* namespace apache */
 	echo } /* namespace org */
-
-	echo #endif /* AGENT_BUILD_H */
-) >> "%out_dir%/agent_version.h"
+) >> "%out_dir%/agent_version.cpp"
 
  goto :EOF
 
