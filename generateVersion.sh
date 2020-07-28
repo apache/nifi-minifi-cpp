@@ -36,7 +36,7 @@ IFS=';' read -r -a extensions_array <<< "$extensions"
 
 extension_list="${extension_list} } "
 
-cat >"$out_dir/agent_version.h" <<EOF
+cat >"$out_dir/agent_version.cpp" <<EOF
 /**
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -54,48 +54,45 @@ cat >"$out_dir/agent_version.h" <<EOF
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
-#define LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
 
+#include <string>
 #include <vector>
+#include "agent/agent_version.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
-class AgentBuild {
- public:
-  static constexpr const char* VERSION = "$version";
-  static constexpr const char* BUILD_IDENTIFIER = "$buildident";
-  static constexpr const char* BUILD_REV = "$buildrev";
-  static constexpr const char* BUILD_DATE = "$date";
-  static constexpr const char* COMPILER = "$compiler";
-  static constexpr const char* COMPILER_VERSION = "$compiler_version";
-  static constexpr const char* COMPILER_FLAGS = "$flags";
-  static std::vector<std::string> getExtensions() {
-    static std::vector<std::string> extensions;
-    if (extensions.empty()) {
+const char* const AgentBuild::VERSION = "$version";
+const char* const AgentBuild::BUILD_IDENTIFIER = "$buildident";
+const char* const AgentBuild::BUILD_REV = "$buildrev";
+const char* const AgentBuild::BUILD_DATE = "$date";
+const char* const AgentBuild::COMPILER = "$compiler";
+const char* const AgentBuild::COMPILER_VERSION = "$compiler_version";
+const char* const AgentBuild::COMPILER_FLAGS = "$flags";
+
+std::vector<std::string> AgentBuild::getExtensions() {
+  static std::vector<std::string> extensions;
+  if (extensions.empty()) {
 EOF
 
 for EXTENSION in "${extensions_array[@]}"
 do
-cat <<EOF >> "$out_dir/agent_version.h"
-      extensions.push_back("${EXTENSION}");
+cat <<EOF >> "$out_dir/agent_version.cpp"
+    extensions.push_back("${EXTENSION}");
 EOF
 done
 
-cat <<EOF >> "$out_dir/agent_version.h"
-      extensions.push_back("minifi-system");
-    }
-    return extensions;
+cat <<EOF >> "$out_dir/agent_version.cpp"
+    extensions.push_back("minifi-system");
   }
-};
+  return extensions;
+}
 
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
 
-#endif  // LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
 EOF
