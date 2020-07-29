@@ -382,25 +382,6 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
   }
 }
 
-void FlowController::reload(std::string yamlFile) {
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-  logger_->log_info("Starting to reload Flow Controller with yaml %s", yamlFile);
-  stop(true);
-  unload();
-  std::string oldYamlFile = this->configuration_filename_;
-  this->configuration_filename_ = yamlFile;
-  load();
-  start();
-  if (this->root_ != nullptr) {
-    this->configuration_filename_ = oldYamlFile;
-    logger_->log_info("Rollback Flow Controller to YAML %s", oldYamlFile);
-    stop(true);
-    unload();
-    load();
-    start();
-  }
-}
-
 void FlowController::loadFlowRepo() {
   if (this->flow_file_repo_ != nullptr) {
     logger_->log_debug("Getting connection map");

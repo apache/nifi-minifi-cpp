@@ -270,10 +270,6 @@ class TestFlowController : public minifi::FlowController {
     stop(true);
   }
 
-  void reload(std::string file) override {
-
-  }
-
   bool isRunning() override {
     return true;
   }

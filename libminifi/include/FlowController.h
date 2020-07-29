@@ -134,8 +134,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   virtual void waitUnload(uint64_t timeToWaitMs);
   // Unload the current flow xml, clean the root process group and all its children
   virtual void unload();
-  // Load new xml
-  virtual void reload(std::string yamlFile);
   // update property value
   void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue) {
     if (root_ != nullptr)
