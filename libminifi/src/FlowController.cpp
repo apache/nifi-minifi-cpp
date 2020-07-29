@@ -256,17 +256,16 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
         return !proc->hasIncomingConnections();
       });
       auto shutdown_start = std::chrono::steady_clock::now();
-      // we enable C2 to progressively increase the timeout
-      // in case it sees that waiting for a little longer could
-      // allow the FlowFiles to be processed
-      auto shutdown_timeout = [&]() -> std::chrono::milliseconds {
-        if (timeToWait != 0) {
-          return std::chrono::milliseconds{timeToWait};
+      while (this->root_->getTotalFlowFileCount() != 0) {
+        // we enable C2 to progressively increase the timeout
+        // in case it sees that waiting for a little longer could
+        // allow the FlowFiles to be processed
+        const std::chrono::milliseconds shutdown_timeout = timeToWait == 0 ?
+            loadShutdownTimeoutFromConfiguration().value_or(std::chrono::milliseconds{0}) :
+            std::chrono::milliseconds{timeToWait};
+        if (shutdown_timeout < std::chrono::steady_clock::now() - shutdown_start) {
+          break;
         }
-        return loadShutdownTimeoutFromConfiguration().value_or(std::chrono::milliseconds{0});
-      };
-      std::size_t count;
-      while ((std::chrono::steady_clock::now() - shutdown_start) < shutdown_timeout() && (count = this->root_->getTotalFlowFileCount()) != 0) {
         std::this_thread::sleep_for(shutdown_check_interval_);
       }
       // shutdown all other processors as well
