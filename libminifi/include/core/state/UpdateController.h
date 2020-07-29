@@ -162,7 +162,7 @@ class StateController {
   /**
    * Stop the client
    */
-  virtual int16_t stop(bool force, uint64_t timeToWait = 0) = 0;
+  virtual int16_t stop() = 0;
 
   virtual bool isRunning() = 0;
 

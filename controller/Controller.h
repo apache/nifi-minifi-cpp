@@ -331,7 +331,7 @@ void printManifest(const std::shared_ptr<minifi::Configure> &configuration) {
   controller->load();
   controller->start();
   std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-  controller->stop(true);
+  controller->stop();
 }
 
 #endif /* CONTROLLER_CONTROLLER_H_ */

@@ -169,8 +169,19 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
   }
 }
 
+utils::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFromConfiguration() {
+  std::string shutdown_timeout_str;
+  if (configuration_->get(minifi::Configure::nifi_flowcontroller_drain_timeout, shutdown_timeout_str)) {
+    const utils::optional<core::TimePeriodValue> time_from_config = core::TimePeriodValue::fromString(shutdown_timeout_str);
+    if (time_from_config) {
+      return { std::chrono::milliseconds{ time_from_config.value().getMilliseconds() }};
+    }
+  }
+  return utils::nullopt;
+}
+
 FlowController::~FlowController() {
-  stop(true);
+  stop();
   stopC2();
   unload();
   protocol_ = nullptr;
@@ -200,7 +211,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   updating_ = true;
 
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-  stop(true);
+  stop();
   unload();
   controller_map_->clear();
   auto prevRoot = std::move(this->root_);
@@ -234,7 +245,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   return started;
 }
 
-int16_t FlowController::stop(bool force, uint64_t timeToWait) {
+int16_t FlowController::stop() {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     // immediately indicate that we are not running
@@ -244,26 +255,12 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
       this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_, [] (const std::shared_ptr<core::Processor>& proc) -> bool {
         return !proc->hasIncomingConnections();
       });
-      auto shutdown_start = std::chrono::steady_clock::now();
       // we enable C2 to progressively increase the timeout
       // in case it sees that waiting for a little longer could
       // allow the FlowFiles to be processed
-      auto shutdown_timeout = [&]() -> std::chrono::milliseconds {
-        if (timeToWait != 0) {
-          return std::chrono::milliseconds{timeToWait};
-        }
-        utils::optional<core::TimePeriodValue> shutdown_timeout;
-        std::string shutdown_timeout_str;
-        if (configuration_->get(minifi::Configure::nifi_flowcontroller_drain_timeout, shutdown_timeout_str)) {
-          shutdown_timeout = core::TimePeriodValue::fromString(shutdown_timeout_str);
-        }
-        if (shutdown_timeout) {
-          return std::chrono::milliseconds{shutdown_timeout->getMilliseconds()};
-        }
-        return std::chrono::milliseconds{0};
-      };
-      std::size_t count;
-      while ((std::chrono::steady_clock::now() - shutdown_start) < shutdown_timeout() && (count = this->root_->getTotalFlowFileCount()) != 0) {
+      auto shutdown_start = std::chrono::steady_clock::now();
+      while ((std::chrono::steady_clock::now() - shutdown_start) < loadShutdownTimeoutFromConfiguration().value_or(std::chrono::milliseconds{0}) &&
+          this->root_->getTotalFlowFileCount() != 0) {
         std::this_thread::sleep_for(shutdown_check_interval_);
       }
       // shutdown all other processors as well
@@ -316,7 +313,7 @@ void FlowController::waitUnload(const uint64_t timeToWaitMs) {
 void FlowController::unload() {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
-    stop(true);
+    stop();
   }
   if (initialized_) {
     logger_->log_info("Unload Flow Controller");
@@ -328,7 +325,7 @@ void FlowController::unload() {
 void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool reload) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
-    stop(true);
+    stop();
   }
   if (!initialized_) {
     if (root) {
@@ -342,13 +339,9 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
     }
 
     this->root_ = root == nullptr ? std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_)) : root;
-
     logger_->log_info("Loaded root processor Group");
-
     logger_->log_info("Initializing timers");
-
     controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
-
     auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
 
     if (!thread_pool_.isRunning() || reload) {
@@ -357,7 +350,6 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
       thread_pool_.setControllerServiceProvider(base_shared_ptr);
       thread_pool_.start();
     }
-
     if (nullptr == timer_scheduler_ || reload) {
       timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(base_shared_ptr, provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
     }
@@ -447,7 +439,7 @@ void FlowController::initializeC2() {
     if (c2_enabled_ && class_str.empty()) {
       logger_->log_error("Class name must be defined when C2 is enabled");
       std::cerr << "Class name must be defined when C2 is enabled" << std::endl;
-      stop(true);
+      stop();
       exit(1);
     }
   } else {
@@ -485,19 +477,15 @@ void FlowController::initializeC2() {
   std::string class_csv;
   if (root_ != nullptr) {
     std::shared_ptr<state::response::QueueMetrics> queueMetrics = std::make_shared<state::response::QueueMetrics>();
-
     std::map<std::string, std::shared_ptr<Connection>> connections;
     root_->getConnections(connections);
     for (auto con : connections) {
       queueMetrics->addConnection(con.second);
     }
     device_information_[queueMetrics->getName()] = queueMetrics;
-
     std::shared_ptr<state::response::RepositoryMetrics> repoMetrics = std::make_shared<state::response::RepositoryMetrics>();
-
     repoMetrics->addRepository(provenance_repo_);
     repoMetrics->addRepository(flow_file_repo_);
-
     device_information_[repoMetrics->getName()] = repoMetrics;
   }
 
@@ -506,29 +494,22 @@ void FlowController::initializeC2() {
 
     for (std::string clazz : classes) {
       auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-
       if (nullptr == ptr) {
         logger_->log_error("No metric defined for %s", clazz);
         continue;
       }
-
       std::shared_ptr<state::response::ResponseNode> processor = std::static_pointer_cast<state::response::ResponseNode>(ptr);
-
       auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(processor);
-
       if (identifier != nullptr) {
         identifier->setIdentifier(identifier_str);
-
         identifier->setAgentClass(class_str);
       }
-
       auto monitor = std::dynamic_pointer_cast<state::response::AgentMonitor>(processor);
       if (monitor != nullptr) {
         monitor->addRepository(provenance_repo_);
         monitor->addRepository(flow_file_repo_);
         monitor->setStateMonitor(shared_from_this());
       }
-
       auto flowMonitor = std::dynamic_pointer_cast<state::response::FlowMonitor>(processor);
       std::map<std::string, std::shared_ptr<Connection>> connections;
       root_->getConnections(connections);
@@ -537,31 +518,23 @@ void FlowController::initializeC2() {
           flowMonitor->addConnection(con.second);
         }
         flowMonitor->setStateMonitor(shared_from_this());
-
         flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
       }
-
       std::lock_guard<std::mutex> lock(metrics_mutex_);
-
       root_response_nodes_[processor->getName()] = processor;
     }
   }
 
   if (configuration_->get("nifi.flow.metrics.classes", class_csv)) {
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
-
     for (std::string clazz : classes) {
       auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-
       if (nullptr == ptr) {
         logger_->log_error("No metric defined for %s", clazz);
         continue;
       }
-
       std::shared_ptr<state::response::ResponseNode> processor = std::static_pointer_cast<state::response::ResponseNode>(ptr);
-
       std::lock_guard<std::mutex> lock(metrics_mutex_);
-
       device_information_[processor->getName()] = processor;
     }
   }
@@ -646,16 +619,13 @@ void FlowController::loadC2ResponseConfiguration(const std::string &prefix) {
 
         if (configuration_->get(nameOption.str(), name)) {
           std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
-
           if (configuration_->get(classOption.str(), class_definitions)) {
             std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-
             for (std::string clazz : classes) {
               std::lock_guard<std::mutex> lock(metrics_mutex_);
 
               // instantiate the object
               auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-
               if (nullptr == ptr) {
                 auto metric = component_metrics_.find(clazz);
                 if (metric != component_metrics_.end()) {
@@ -665,9 +635,7 @@ void FlowController::loadC2ResponseConfiguration(const std::string &prefix) {
                   continue;
                 }
               }
-
               auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
-
               std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
             }
 
@@ -675,8 +643,6 @@ void FlowController::loadC2ResponseConfiguration(const std::string &prefix) {
             std::stringstream optionName;
             optionName << option.str() << "." << name;
             auto node = loadC2ResponseConfiguration(optionName.str(), new_node);
-//            if (node != nullptr && new_node != node)
-            //            std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
           }
 
           root_response_nodes_[name] = new_node;
@@ -718,13 +684,10 @@ std::shared_ptr<state::response::ResponseNode> FlowController::loadC2ResponseCon
           } else {
             if (configuration_->get(classOption.str(), class_definitions)) {
               std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-
               for (std::string clazz : classes) {
                 std::lock_guard<std::mutex> lock(metrics_mutex_);
-
                 // instantiate the object
                 auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-
                 if (nullptr == ptr) {
                   auto metric = component_metrics_.find(clazz);
                   if (metric != component_metrics_.end()) {
@@ -736,7 +699,6 @@ std::shared_ptr<state::response::ResponseNode> FlowController::loadC2ResponseCon
                 }
 
                 auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
-
                 std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
               }
               if (!new_node->isEmpty())

@@ -42,7 +42,7 @@ int16_t ProcessorController::start() {
 /**
  * Stop the client
  */
-int16_t ProcessorController::stop(bool force, uint64_t timeToWait) {
+int16_t ProcessorController::stop() {
   scheduler_->unschedule(processor_);
   return 0;
 }

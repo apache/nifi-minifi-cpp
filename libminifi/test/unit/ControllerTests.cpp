@@ -52,7 +52,7 @@ class TestStateController : public minifi::state::StateController {
   /**
    * Stop the client
    */
-  virtual int16_t stop(bool force, uint64_t timeToWait = 0) {
+  virtual int16_t stop() {
     is_running = false;
     return 0;
   }
@@ -105,7 +105,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
   /**
    * Stop the client
    */
-  virtual int16_t stop(bool force, uint64_t timeToWait = 0) {
+  virtual int16_t stop() {
     is_running = false;
     return 0;
   }

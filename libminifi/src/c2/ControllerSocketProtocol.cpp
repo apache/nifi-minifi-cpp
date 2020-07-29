@@ -103,7 +103,7 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
           int size = stream->readUTF(componentStr);
           if ( size != -1 ) {
             auto components = update_sink_->getComponents(componentStr);
-            for (auto component : components) {
+            for (const auto& component : components) {
               component->start();
             }
           } else {
@@ -117,8 +117,8 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
           int size = stream->readUTF(componentStr);
           if ( size != -1 ) {
             auto components = update_sink_->getComponents(componentStr);
-            for (auto component : components) {
-              component->stop(true, 1000);
+            for (const auto& component : components) {
+              component->stop();
             }
           } else {
             logger_->log_debug("Connection broke");
