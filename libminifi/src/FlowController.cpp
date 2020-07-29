@@ -169,6 +169,17 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
   }
 }
 
+utils::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFromConfiguration() {
+  std::string shutdown_timeout_str;
+  if (configuration_->get(minifi::Configure::nifi_flowcontroller_drain_timeout, shutdown_timeout_str)) {
+    const utils::optional<core::TimePeriodValue> time_from_config = core::TimePeriodValue::fromString(shutdown_timeout_str);
+    if (time_from_config) {
+      return { std::chrono::milliseconds{ time_from_config.value().getMilliseconds() }};
+    }
+  }
+  return utils::nullopt;
+}
+
 FlowController::~FlowController() {
   stop(true);
   stopC2();
@@ -252,15 +263,7 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
         if (timeToWait != 0) {
           return std::chrono::milliseconds{timeToWait};
         }
-        utils::optional<core::TimePeriodValue> shutdown_timeout;
-        std::string shutdown_timeout_str;
-        if (configuration_->get(minifi::Configure::nifi_flowcontroller_drain_timeout, shutdown_timeout_str)) {
-          shutdown_timeout = core::TimePeriodValue::fromString(shutdown_timeout_str);
-        }
-        if (shutdown_timeout) {
-          return std::chrono::milliseconds{shutdown_timeout->getMilliseconds()};
-        }
-        return std::chrono::milliseconds{0};
+        return loadShutdownTimeoutFromConfiguration().value_or(std::chrono::milliseconds{0});
       };
       std::size_t count;
       while ((std::chrono::steady_clock::now() - shutdown_start) < shutdown_timeout() && (count = this->root_->getTotalFlowFileCount()) != 0) {

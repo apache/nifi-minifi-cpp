@@ -327,6 +327,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   void loadC2ResponseConfiguration(const std::string &prefix);
 
+
   std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode>);
 
   // function to load the flow file repo.
@@ -338,6 +339,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Initializes flow controller paths.
    */
   virtual void initializePaths(const std::string &adjustedFilename);
+
+  utils::optional<std::chrono::milliseconds> loadShutdownTimeoutFromConfiguration();
 
   // flow controller mutex
   std::recursive_mutex mutex_;
