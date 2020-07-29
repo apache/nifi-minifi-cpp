@@ -128,7 +128,7 @@ jobs:
         run: |
           echo "::set-env name=CMAKE_BUILD_OPTIONS::-DENABLE_PCAP=TRUE"
           apt update
-          apt install -y wget ccache git g++ bison flex libpython3-dev
+          apt install -y sudo wget ccache git g++ bison flex libpython3-dev
           cd $HOME
           wget https://github.com/Kitware/CMake/releases/download/v3.18.0/cmake-3.18.0-Linux-x86_64.sh
           chmod a+x cmake-3.18.0-Linux-x86_64.sh
