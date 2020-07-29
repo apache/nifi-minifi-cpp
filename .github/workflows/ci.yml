@@ -8,25 +8,15 @@ jobs:
     steps:
       - id: checkout
         uses: actions/checkout@v2
-      - id: cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/Library/Caches/Homebrew
-          key: xcode10.3-ccache-${{github.ref}}-${{github.sha}}
-          restore-keys: |
-            xcode10.3-ccache-${{github.ref}}-
-            xcode10.3-ccache-refs/heads/main-
       - id: install_dependencies
-        run: brew install ccache ossp-uuid boost flex openssl python lua libpcap xz libssh2
+        run: brew install ossp-uuid boost flex openssl python lua libpcap xz libssh2
       - id: setup_env
         run: |
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
           echo "::set-env name=CMAKE_BUILD_OPTIONS::-DENABLE_PCAP=TRUE -DENABLE_LUA_SCRIPTING=1"
           sudo xcode-select -switch /Applications/Xcode_10.3.app
-          echo "::set-env name=PATH::`brew --prefix`/opt/ccache/libexec:$PATH"
       - id: build
-        run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=ON .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
   macos_xcode_11_2_1:
     name: "macos-xcode11.2.1"
     runs-on: macos-10.15
@@ -34,25 +24,15 @@ jobs:
     steps:
       - id: checkout
         uses: actions/checkout@v2
-      - id: cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/Library/Caches/Homebrew
-          key: xcode11.2.1-ccache-${{github.ref}}-${{github.sha}}
-          restore-keys: |
-            xcode11.2.1-ccache-${{github.ref}}-
-            xcode11.2.1-ccache-refs/heads/main-
       - id: install_dependencies
-        run: brew install ccache ossp-uuid boost flex openssl python lua libpcap xz libssh2
+        run: brew install ossp-uuid boost flex openssl python lua libpcap xz libssh2
       - id: setup_env
         run: |
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
           echo "::set-env name=CMAKE_BUILD_OPTIONS::-DENABLE_PCAP=TRUE -DENABLE_LUA_SCRIPTING=1"
           sudo xcode-select -switch /Applications/Xcode_11.2.1.app
-          echo "::set-env name=PATH::`brew --prefix`/opt/ccache/libexec:$PATH"
       - id: build
-        run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=ON .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
   windows:
     name: "windows"
     runs-on: windows-2016
@@ -101,7 +81,7 @@ jobs:
           sudo apt install -y ccache
           echo "::set-env name=PATH::/usr/lib/ccache:$PATH"
       - id: build
-        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=ON .. && cmake --build . --parallel 4   && make test ARGS="--timeout 300 -j2 --output-on-failure"
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4   && make test ARGS="--timeout 300 -j2 --output-on-failure"
   ubuntu_16_04_gcc_4_8:
     name: "ubuntu-16.04-gcc-4.8"
     runs-on: ubuntu-16.04
@@ -127,7 +107,7 @@ jobs:
           sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
           sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
       - id: build
-        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=ON .. && cmake --build . --parallel 4   && make test ARGS="--timeout 300 -j2 --output-on-failure"
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4   && make test ARGS="--timeout 300 -j2 --output-on-failure"
   ubuntu_14_04_gcc_4_8:
     name: "ubuntu-14.04-gcc-4.8"
     runs-on: ubuntu-18.04
@@ -162,7 +142,7 @@ jobs:
           echo "::set-env name=CMAKE_ROOT::$CMAKE_HOME/share/cmake-3.18"
           echo "::set-env name=PATH::/usr/lib/ccache:$CMAKE_HOME/bin:$PATH"
       - id: build
-        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=ON .. && make -j4 VERBOSE=1  && make test ARGS="--timeout 300 -j2 --output-on-failure"
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT .. && make -j4 VERBOSE=1  && make test ARGS="--timeout 300 -j2 --output-on-failure"
   ubuntu_14_04:
     name: "ubuntu-14.04"
     runs-on: ubuntu-18.04
@@ -192,7 +172,7 @@ jobs:
           echo "::set-env name=CMAKE_ROOT::$CMAKE_HOME/share/cmake-3.18"
           echo "::set-env name=PATH::/usr/lib/ccache:$CMAKE_HOME/bin:$PATH"
       - id: build
-        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=ON .. && make -j4 VERBOSE=1  && make test ARGS="--timeout 300 -j2 --output-on-failure"
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT .. && make -j4 VERBOSE=1  && make test ARGS="--timeout 300 -j2 --output-on-failure"
   ubuntu_16_04_all:
     name: "ubuntu-16.04-all"
     runs-on: ubuntu-16.04
@@ -238,7 +218,7 @@ jobs:
           sudo apt install -y ccache
           echo "::set-env name=PATH::/usr/lib/ccache:$PATH"
       - id: build
-        run: mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=ON .. && make debian
+        run: mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=AUDIT .. && make debian
   centos:
     name: "centos"
     runs-on: ubuntu-18.04
@@ -260,7 +240,7 @@ jobs:
           sudo apt install -y ccache
           echo "::set-env name=PATH::/usr/lib/ccache:$PATH"
       - id: build
-        run: mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=ON .. && make centos
+        run: mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=AUDIT .. && make centos
   fedora:
     name: "fedora"
     runs-on: ubuntu-18.04
@@ -282,7 +262,7 @@ jobs:
           sudo apt install -y ccache
           echo "::set-env name=PATH::/usr/lib/ccache:$PATH"
       - id: build
-        run: mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=ON .. && make fedora
+        run: mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=AUDIT .. && make fedora
   ubuntu_18_04:
     name: "ubuntu-18.04"
     runs-on: ubuntu-18.04
@@ -304,7 +284,7 @@ jobs:
           sudo apt install -y ccache
           echo "::set-env name=PATH::/usr/lib/ccache:$PATH"
       - id: build
-        run: mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=ON .. && make u18
+        run: mkdir -p build && cd build && cmake -DSTRICT_GSL_CHECKS=AUDIT .. && make u18
   ubuntu_16_04_shared:
     name: "ubuntu-16.04-shared"
     runs-on: ubuntu-16.04
