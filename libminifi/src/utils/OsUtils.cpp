@@ -197,6 +197,8 @@ uint64_t OsUtils::getMemoryUsage() {
     throw std::runtime_error("Could not get memory info for current process");
   return pmc.WorkingSetSize;
 #endif
+
+throw std::runtime_error("getMemoryUsage() is not implemented for this platform");
 }
 
 }  // namespace utils
