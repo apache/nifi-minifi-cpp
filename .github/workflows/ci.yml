@@ -110,8 +110,7 @@ jobs:
         run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4   && make test ARGS="--timeout 300 -j2 --output-on-failure"
   ubuntu_20_04:
     name: "ubuntu-20.04"
-    runs-on: ubuntu-18.04
-    container: ubuntu:20.04
+    runs-on: ubuntu-20.04
     timeout-minutes: 60
     steps:
       - id: checkout
@@ -127,17 +126,8 @@ jobs:
       - id: install_deps
         run: |
           echo "::set-env name=CMAKE_BUILD_OPTIONS::-DENABLE_PCAP=TRUE"
-          apt update
-          DEBIAN_FRONTEND=noninteractive apt install -y tzdata
-          apt install -y sudo wget ccache git g++ bison flex libpython3-dev
-          cd $HOME
-          wget https://github.com/Kitware/CMake/releases/download/v3.18.0/cmake-3.18.0-Linux-x86_64.sh
-          chmod a+x cmake-3.18.0-Linux-x86_64.sh
-          export CMAKE_HOME=$HOME/opt/cmake
-          mkdir -p $CMAKE_HOME
-          ./cmake-3.18.0-Linux-x86_64.sh --prefix=$CMAKE_HOME --skip-license
-          echo "::set-env name=CMAKE_ROOT::$CMAKE_HOME/share/cmake-3.18"
-          echo "::set-env name=PATH::/usr/lib/ccache:$CMAKE_HOME/bin:$PATH"
+          sudo apt install -y ccache
+          echo "::set-env name=PATH::/usr/lib/ccache:$PATH"
       - id: build
         run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT .. && make -j4 VERBOSE=1  && make test ARGS="--timeout 300 -j2 --output-on-failure"
   ubuntu_16_04_all:
