@@ -60,7 +60,7 @@ class ProcessorController : public StateController {
   /**
    * Stop the client
    */
-  virtual int16_t stop(bool force, uint64_t timeToWait = 0);
+  virtual int16_t stop();
 
   virtual bool isRunning();
 

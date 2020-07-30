@@ -361,7 +361,7 @@ int FlowControlProtocol::sendReportReq() {
     return 0;
   } else if (hdr.status == RESP_STOP_FLOW_CONTROLLER && hdr.seqNumber == this->_seqNumber) {
     logger_->log_trace("Flow Control Protocol stop flow controller");
-    this->_controller->stop(true);
+    this->_controller->stop();
     this->_seqNumber++;
     close(_socket);
     _socket = 0;

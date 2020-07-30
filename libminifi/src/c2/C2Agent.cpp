@@ -449,7 +449,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
             logger_->log_debug("Clearing state for component %s", component->getComponentName());
             auto state_manager = state_manager_provider->getCoreComponentStateManager(component->getComponentUUID());
             if (state_manager != nullptr) {
-              component->stop(true);
+              component->stop();
               state_manager->clear();
               state_manager->persist();
               component->start();
@@ -476,7 +476,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       handle_describe(resp);
       break;
     case Operation::RESTART: {
-      update_sink_->stop(true);
+      update_sink_->stop();
       C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
       protocol_.load()->consumePayload(std::move(response));
       restart_agent();
@@ -493,7 +493,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       for (auto &component : components) {
         logger_->log_debug("Stopping component %s", component->getComponentName());
         if (resp.op == Operation::STOP)
-          component->stop(true);
+          component->stop();
         else
           component->start();
       }

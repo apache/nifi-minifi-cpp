@@ -181,7 +181,7 @@ utils::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFr
 }
 
 FlowController::~FlowController() {
-  stop(true);
+  stop();
   stopC2();
   unload();
   protocol_ = nullptr;
@@ -211,7 +211,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   updating_ = true;
 
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-  stop(true);
+  stop();
   unload();
   controller_map_->clear();
   auto prevRoot = std::move(this->root_);
@@ -245,7 +245,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   return started;
 }
 
-int16_t FlowController::stop(bool force, uint64_t timeToWait) {
+int16_t FlowController::stop() {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     // immediately indicate that we are not running
@@ -255,17 +255,12 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
       this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_, [] (const std::shared_ptr<core::Processor>& proc) -> bool {
         return !proc->hasIncomingConnections();
       });
+      // we enable C2 to progressively increase the timeout
+      // in case it sees that waiting for a little longer could
+      // allow the FlowFiles to be processed
       auto shutdown_start = std::chrono::steady_clock::now();
-      while (this->root_->getTotalFlowFileCount() != 0) {
-        // we enable C2 to progressively increase the timeout
-        // in case it sees that waiting for a little longer could
-        // allow the FlowFiles to be processed
-        const std::chrono::milliseconds shutdown_timeout = timeToWait == 0 ?
-            loadShutdownTimeoutFromConfiguration().value_or(std::chrono::milliseconds{0}) :
-            std::chrono::milliseconds{timeToWait};
-        if (shutdown_timeout < std::chrono::steady_clock::now() - shutdown_start) {
-          break;
-        }
+      while ((std::chrono::steady_clock::now() - shutdown_start) < loadShutdownTimeoutFromConfiguration().value_or(std::chrono::milliseconds{0}) &&
+          this->root_->getTotalFlowFileCount() != 0) {
         std::this_thread::sleep_for(shutdown_check_interval_);
       }
       // shutdown all other processors as well
@@ -318,7 +313,7 @@ void FlowController::waitUnload(const uint64_t timeToWaitMs) {
 void FlowController::unload() {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
-    stop(true);
+    stop();
   }
   if (initialized_) {
     logger_->log_info("Unload Flow Controller");
@@ -330,7 +325,7 @@ void FlowController::unload() {
 void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool reload) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
-    stop(true);
+    stop();
   }
   if (!initialized_) {
     if (root) {
@@ -449,7 +444,7 @@ void FlowController::initializeC2() {
     if (c2_enabled_ && class_str.empty()) {
       logger_->log_error("Class name must be defined when C2 is enabled");
       std::cerr << "Class name must be defined when C2 is enabled" << std::endl;
-      stop(true);
+      stop();
       exit(1);
     }
   } else {

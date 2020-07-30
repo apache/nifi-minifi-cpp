@@ -254,12 +254,12 @@ class TestFlowController : public minifi::FlowController {
     return 0;
   }
 
-  int16_t stop(bool force, uint64_t timeToWait = 0) override {
+  int16_t stop() override {
     running_.store(false);
     return 0;
   }
   void waitUnload(const uint64_t timeToWaitMs) override {
-    stop(true);
+    stop();
   }
 
   int16_t pause() override {
@@ -267,7 +267,7 @@ class TestFlowController : public minifi::FlowController {
   }
 
   void unload() override {
-    stop(true);
+    stop();
   }
 
   bool isRunning() override {

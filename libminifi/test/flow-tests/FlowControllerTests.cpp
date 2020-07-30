@@ -105,7 +105,7 @@ TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
     REQUIRE(it.second->getQueueSize() > 10);
   }
 
-  controller->stop(true);
+  controller->stop();
 
   REQUIRE(sinkProc->trigger_count == 0);
 
@@ -142,7 +142,7 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   execSinkPromise.set_value();
-  controller->stop(true);
+  controller->stop();
 
   REQUIRE(sourceProc->trigger_count.load() == 1);
   REQUIRE(sinkProc->trigger_count.load() == 3);
@@ -182,7 +182,7 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   execSinkPromise.set_value();
-  controller->stop(true);
+  controller->stop();
 
   REQUIRE(sourceProc->trigger_count.load() == 1);
   REQUIRE(sinkProc->trigger_count.load() == 1);
@@ -225,7 +225,7 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
 
   std::thread shutdownThread([&]{
     execSinkPromise.set_value();
-    controller->stop(true);
+    controller->stop();
   });
 
   while (controller->isRunning()) {

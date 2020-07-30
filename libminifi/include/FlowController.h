@@ -117,7 +117,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
     return -1;
   }
   // Unload the current flow YAML, clean the root process group and all its children
-  int16_t stop(bool force, uint64_t timeToWait = 0) override;
+  int16_t stop() override;
   int16_t applyUpdate(const std::string &source, const std::string &configuration) override;
   int16_t drainRepositories() override {
     return -1;
