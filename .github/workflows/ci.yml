@@ -126,7 +126,7 @@ jobs:
       - id: install_deps
         run: |
           echo "::set-env name=CMAKE_BUILD_OPTIONS::-DENABLE_PCAP=TRUE"
-          sudo apt install -y ccache
+          sudo apt install -y ccache libfl-dev
           echo "::set-env name=PATH::/usr/lib/ccache:$PATH"
       - id: build
         run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT .. && make -j4 VERBOSE=1  && make test ARGS="--timeout 300 -j2 --output-on-failure"
