@@ -162,9 +162,10 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   repository->loadComponent(content_repo);
 
-  std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ss.str(), content_repo);
 
   {
+    std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ss.str(), content_repo);
+
     minifi::FlowFileRecord record(repository, content_repo, attributes, claim);
 
     record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");

@@ -54,6 +54,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   }
   return is_valid_;
 }
+
 void DatabaseContentRepository::stop() {
   if (db_) {
     auto opendb = db_->open();
@@ -64,54 +65,54 @@ void DatabaseContentRepository::stop() {
   db_.reset();
 }
 
-std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append) {
+std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::ResourceClaim &claim, bool append) {
   // the traditional approach with these has been to return -1 from the stream; however, since we have the ability here
   // we can simply return a nullptr, which is also valid from the API when this stream is not valid.
-  if (nullptr == claim || !is_valid_ || !db_)
+  if (!is_valid_ || !db_)
     return nullptr;
   // append is already supported in all modes
-  return std::make_shared<io::RocksDbStream>(claim->getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true);
+  return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true);
 }
 
-std::shared_ptr<io::BaseStream> DatabaseContentRepository::read(const std::shared_ptr<minifi::ResourceClaim> &claim) {
+std::shared_ptr<io::BaseStream> DatabaseContentRepository::read(const minifi::ResourceClaim &claim) {
   // the traditional approach with these has been to return -1 from the stream; however, since we have the ability here
   // we can simply return a nullptr, which is also valid from the API when this stream is not valid.
-  if (nullptr == claim || !is_valid_ || !db_)
+  if (!is_valid_ || !db_)
     return nullptr;
-  return std::make_shared<io::RocksDbStream>(claim->getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), false);
+  return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), false);
 }
 
-bool DatabaseContentRepository::exists(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+bool DatabaseContentRepository::exists(const minifi::ResourceClaim &streamId) {
   auto opendb = db_->open();
   if (!opendb) {
     return false;
   }
   std::string value;
   rocksdb::Status status;
-  status = opendb->Get(rocksdb::ReadOptions(), streamId->getContentFullPath(), &value);
+  status = opendb->Get(rocksdb::ReadOptions(), streamId.getContentFullPath(), &value);
   if (status.ok()) {
-    logger_->log_debug("%s exists", streamId->getContentFullPath());
+    logger_->log_debug("%s exists", streamId.getContentFullPath());
     return true;
   } else {
-    logger_->log_debug("%s does not exist", streamId->getContentFullPath());
+    logger_->log_debug("%s does not exist", streamId.getContentFullPath());
     return false;
   }
 }
 
-bool DatabaseContentRepository::remove(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  if (nullptr == claim || !is_valid_ || !db_)
+bool DatabaseContentRepository::remove(const minifi::ResourceClaim &claim) {
+  if (!is_valid_ || !db_)
     return false;
   auto opendb = db_->open();
   if (!opendb) {
     return false;
   }
   rocksdb::Status status;
-  status = opendb->Delete(rocksdb::WriteOptions(), claim->getContentFullPath());
+  status = opendb->Delete(rocksdb::WriteOptions(), claim.getContentFullPath());
   if (status.ok()) {
-    logger_->log_debug("Deleted %s", claim->getContentFullPath());
+    logger_->log_debug("Deleted %s", claim.getContentFullPath());
     return true;
   } else {
-    logger_->log_debug("Attempted, but could not delete %s", claim->getContentFullPath());
+    logger_->log_debug("Attempted, but could not delete %s", claim.getContentFullPath());
     return false;
   }
 }

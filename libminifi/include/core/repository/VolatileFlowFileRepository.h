@@ -50,18 +50,9 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
     repo_full_ = false;
     while (running_) {
       std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
-      if (purge_required_ && nullptr != content_repo_) {
-        std::lock_guard<std::mutex> lock(purge_mutex_);
-        for (auto purgeItem : purge_list_) {
-          std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
-          if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size())) {
-            std::shared_ptr<minifi::ResourceClaim> newClaim = eventRead->getResourceClaim();
-            if (newClaim != nullptr) {
-              content_repo_->removeIfOrphaned(newClaim);
-            }
-          }
-        }
-        purge_list_.resize(0);
+      if (purge_required_) {
+        // simply discard the serialized flowFiles as we have already discarded
+        // the reference on their behalf when marked it for deletion
         purge_list_.clear();
       }
     }

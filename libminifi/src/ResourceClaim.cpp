@@ -42,21 +42,27 @@ void setDefaultDirectory(std::string path) {
 
 ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
     : claim_manager_(claim_manager),
-      deleted_(false),
-      logger_(logging::LoggerFactory<ResourceClaim>::getLogger()) {
-  auto contentDirectory = claim_manager_->getStoragePath();
-  if (contentDirectory.empty())
-    contentDirectory = default_directory_path;
+      logger_(logging::LoggerFactory<ResourceClaim>::getLogger()),
+      _contentFullPath(([&] {
+        auto contentDirectory = claim_manager->getStoragePath();
+        if (contentDirectory.empty())
+          contentDirectory = default_directory_path;
 
-  // Create the full content path for the content
-  _contentFullPath = contentDirectory + "/" + non_repeating_string_generator_.generate();
+        // Create the full content path for the content
+        return contentDirectory + "/" + non_repeating_string_generator_.generate();
+      })()) {
+  increaseFlowFileRecordOwnedCount();
   logger_->log_debug("Resource Claim created %s", _contentFullPath);
 }
 
-ResourceClaim::ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted)
+ResourceClaim::ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
     : claim_manager_(claim_manager),
-      deleted_(deleted) {
-  _contentFullPath = path;
+      _contentFullPath(path) {
+  increaseFlowFileRecordOwnedCount();
+}
+
+ResourceClaim::~ResourceClaim() {
+  decreaseFlowFileRecordOwnedCount();
 }
 
 } /* namespace minifi */

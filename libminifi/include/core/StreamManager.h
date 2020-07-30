@@ -40,6 +40,10 @@ namespace core {
 template<typename T>
 class StreamManager {
  public:
+  enum class StreamState{
+    Deleted,
+    Alive
+  };
   virtual ~StreamManager() = default;
 
   virtual std::string getStoragePath() const = 0;
@@ -49,21 +53,21 @@ class StreamManager {
    * @param streamId stream identifier
    * @return stream pointer.
    */
-  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<T> &streamId, bool append = false) = 0;
+  virtual std::shared_ptr<io::BaseStream> write(const T &streamId, bool append = false) = 0;
 
   /**
    * Create a read stream using the streamId as a reference.
    * @param streamId stream identifier
    * @return stream pointer.
    */
-  virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<T> &streamId) = 0;
+  virtual std::shared_ptr<io::BaseStream> read(const T &streamId) = 0;
 
   /**
    * Closes the stream
    * @param streamId stream identifier
    * @return result of operation.
    */
-  virtual bool close(const std::shared_ptr<T> &streamId) = 0;
+  virtual bool close(const T &streamId) = 0;
 
   /**
    * Removes the stream from this stream manager. The end result
@@ -71,20 +75,15 @@ class StreamManager {
    * @param streamId stream identifier
    * @return result of operation.
    */
-  virtual bool remove(const std::shared_ptr<T> &streamId) = 0;
+  virtual bool remove(const T &streamId) = 0;
 
-  /**
-   * Removes an item if it was orphan
-   */
-  virtual bool removeIfOrphaned(const std::shared_ptr<T> &streamId) = 0;
+  virtual uint32_t getStreamCount(const T &streamId) = 0;
 
-  virtual uint32_t getStreamCount(const std::shared_ptr<T> &streamId) = 0;
+  virtual void incrementStreamCount(const T &streamId) = 0;
 
-  virtual void incrementStreamCount(const std::shared_ptr<T> &streamId) = 0;
+  virtual StreamState decrementStreamCount(const T &streamId) = 0;
 
-  virtual void decrementStreamCount(const std::shared_ptr<T> &streamId) = 0;
-
-  virtual bool exists(const std::shared_ptr<T> &streamId) = 0;
+  virtual bool exists(const T &streamId) = 0;
 };
 
 }  // namespace core

@@ -173,7 +173,6 @@ class IdGenerator {
 
 class NonRepeatingStringGenerator {
  public:
-  NonRepeatingStringGenerator();
   std::string generate() {
     return prefix_ + std::to_string(incrementor_++);
   }
@@ -181,8 +180,8 @@ class NonRepeatingStringGenerator {
       return incrementor_++;
     }
  private:
-  std::atomic<uint64_t> incrementor_;
-  std::string prefix_;
+  std::atomic<uint64_t> incrementor_{0};
+  std::string prefix_{std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) + "-"};
 };
 
 }  // namespace utils

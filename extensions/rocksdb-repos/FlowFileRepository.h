@@ -182,6 +182,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     if (running_) {
       return;
     }
+    content_repo_->reset();
     running_ = true;
     thread_ = std::thread(&FlowFileRepository::run, shared_from_this());
     logger_->log_debug("%s Repository Monitor Thread Start", getName());

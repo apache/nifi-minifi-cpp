@@ -41,13 +41,13 @@ namespace repository {
  * Purpose: Stages content into a volatile area of memory. Note that   when the maximum number
  * of entries is consumed we will rollback a session to wait for others to be freed.
  */
-class VolatileContentRepository : public core::ContentRepository, public virtual core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>> {
+class VolatileContentRepository : public core::ContentRepository, public virtual core::repository::VolatileRepository<ResourceClaim::Id> {
  public:
   static const char *minimal_locking;
 
   explicit VolatileContentRepository(std::string name = getClassName<VolatileContentRepository>())
       : core::SerializableComponent(name),
-        core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>>(name),
+        core::repository::VolatileRepository<ResourceClaim::Id>(name),
         minimize_locking_(true),
         logger_(logging::LoggerFactory<VolatileContentRepository>::getLogger()) {
     max_count_ = 15000;
@@ -79,22 +79,22 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
    * @param claim resource claim
    * @return BaseStream shared pointer that represents the stream the consumer will write to.
    */
-  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append);
+  virtual std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append);
 
   /**
    * Creates readable stream.
    * @param claim resource claim
    * @return BaseStream shared pointer that represents the stream from which the consumer will read..
    */
-  virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<minifi::ResourceClaim> &claim);
+  virtual std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim);
 
-  virtual bool exists(const std::shared_ptr<minifi::ResourceClaim> &streamId);
+  virtual bool exists(const minifi::ResourceClaim &streamId);
 
   /**
    * Closes the claim.
    * @return whether or not the claim is associated with content stored in volatile memory.
    */
-  virtual bool close(const std::shared_ptr<minifi::ResourceClaim> &claim) {
+  virtual bool close(const minifi::ResourceClaim &claim) {
     return remove(claim);
   }
 
@@ -102,7 +102,7 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
    * Closes the claim.
    * @return whether or not the claim is associated with content stored in volatile memory.
    */
-  virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
+  virtual bool remove(const minifi::ResourceClaim &claim);
 
  protected:
   virtual void start();
@@ -117,16 +117,11 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
  private:
   bool minimize_locking_;
 
-  // function pointers that are associated with the claims.
-  std::function<bool(std::shared_ptr<minifi::ResourceClaim>, std::shared_ptr<minifi::ResourceClaim>)> resource_claim_comparator_;
-  std::function<bool(std::shared_ptr<minifi::ResourceClaim>)> resource_claim_check_;
-  std::function<void(std::shared_ptr<minifi::ResourceClaim>)> claim_reclaimer_;
-
   // mutex and master list that represent a cache of Atomic entries. this exists so that we don't have to walk the atomic entry list.
   // The idea is to reduce the computational complexity while keeping access as maximally lock free as we can.
   std::mutex map_mutex_;
 
-  std::map<std::string, AtomicEntry<std::shared_ptr<minifi::ResourceClaim>>*> master_list_;
+  std::map<ResourceClaim::Id, AtomicEntry<ResourceClaim::Id>*> master_list_;
 
   // logger
   std::shared_ptr<logging::Logger> logger_;

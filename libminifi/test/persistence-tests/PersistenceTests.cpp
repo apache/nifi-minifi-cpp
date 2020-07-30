@@ -242,6 +242,16 @@ std::shared_ptr<core::Processor> setupContentUpdaterProcessor(utils::Identifier&
   return std::make_shared<ContentUpdaterProcessor>("Updater", id);
 }
 
+class ReportingFileSystemRepository : public core::repository::FileSystemRepository{
+ public:
+  bool remove(const minifi::ResourceClaim& claim) override {
+    removedResources.push_back(claim.getId());
+    return FileSystemRepository::remove(claim);
+  }
+
+  std::vector<std::string> removedResources;
+};
+
 TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   TestController testController;
   LogTestController::getInstance().setDebug<core::ContentRepository>();
@@ -258,7 +268,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
 
   std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
   std::shared_ptr<core::repository::FlowFileRepository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
-  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  std::shared_ptr<ReportingFileSystemRepository> content_repo = std::make_shared<ReportingFileSystemRepository>();
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
@@ -271,23 +281,28 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
     flowController->load(flow.root);
     ff_repository->start();
 
-    // write two files into the input
-    auto flowFile = flow.write("data");
-    auto claim = flowFile->getResourceClaim();
-    // one from the FlowFile and one from the persisted instance
-    REQUIRE(claim->getFlowFileRecordOwnedCount() == 2);
-    // update them with the Merge Processor
-    flow.trigger();
+    std::vector<std::string> resourcesExpectedToBeRemoved;
+    {
+      // write two files into the input
+      auto flowFile = flow.write("data");
+      auto claim = flowFile->getResourceClaim();
+      resourcesExpectedToBeRemoved.push_back(claim->getId());
+      // one from the FlowFile and one from the persisted instance
+      REQUIRE(claim->getFlowFileRecordOwnedCount() == 2);
+      // update them with the Merge Processor
+      flow.trigger();
 
-    auto content = flow.read(flowFile);
-    REQUIRE(content == "<override>");
-    auto newClaim = flowFile->getResourceClaim();
-    // the processor added new content to the flowFile
-    REQUIRE(claim != newClaim);
-    // nobody holds an owning reference to the previous claim
-    REQUIRE(claim->getFlowFileRecordOwnedCount() == 0);
-    // one from the FlowFile and one from the persisted instance
-    REQUIRE(newClaim->getFlowFileRecordOwnedCount() == 2);
+      auto content = flow.read(flowFile);
+      REQUIRE(content == "<override>");
+      auto newClaim = flowFile->getResourceClaim();
+      // the processor added new content to the flowFile
+      REQUIRE(claim != newClaim);
+      // only this instance behind this shared_ptr keeps the resource alive
+      REQUIRE(claim->getFlowFileRecordOwnedCount() == 1);
+      // one from the FlowFile and one from the persisted instance
+      REQUIRE(newClaim->getFlowFileRecordOwnedCount() == 2);
+    }
+    REQUIRE(content_repo->removedResources == resourcesExpectedToBeRemoved);
 
     ff_repository->stop();
     flowController->unload();

@@ -245,7 +245,7 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
 
   try {
     uint64_t startTime = utils::timeutils::getTimeMillis();
-    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim);
+    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(*claim);
     // Call the callback to write the content
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
@@ -280,7 +280,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
 
   try {
     uint64_t startTime = utils::timeutils::getTimeMillis();
-    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim, true);
+    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(*claim, true);
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for append");
     }
@@ -323,7 +323,7 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
 
     claim = flow->getResourceClaim();
 
-    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->read(claim);
+    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->read(*claim);
 
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for read");
@@ -356,7 +356,7 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
 
   try {
     auto startTime = utils::timeutils::getTimeMillis();
-    std::shared_ptr<io::BaseStream> content_stream = process_context_->getContentRepository()->write(claim);
+    std::shared_ptr<io::BaseStream> content_stream = process_context_->getContentRepository()->write(*claim);
 
     if (nullptr == content_stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Could not obtain claim for " + claim->getContentFullPath());
@@ -402,7 +402,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
     auto startTime = utils::timeutils::getTimeMillis();
     std::ifstream input;
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
-    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim);
+    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(*claim);
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open new flowfile content for write");
     }
@@ -519,7 +519,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
           claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
         }
         if (stream == nullptr) {
-          stream = process_context_->getContentRepository()->write(claim);
+          stream = process_context_->getContentRepository()->write(*claim);
         }
         if (stream == nullptr) {
           logger_->log_error("Stream is null");
@@ -939,6 +939,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
         if (ff->isStored() && flowFileRepo->Delete(ff->getUUIDStr())) {
           // original must be non-null since this flowFile is already stored in the repos ->
           // must have come from a session->get()
+          assert(original);
           auto claim = original->getResourceClaim();
           // decrement on behalf of the persisted-instance-to-be-deleted
           if (claim) claim->decreaseFlowFileRecordOwnedCount();

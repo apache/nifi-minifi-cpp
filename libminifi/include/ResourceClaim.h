@@ -47,6 +47,8 @@ extern void setDefaultDirectory(std::string);
 // ResourceClaim Class
 class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
  public:
+  // the type which represents the resource
+  using Id = std::string;
   // Constructor
   /*!
    * Create a new resource claim
@@ -55,42 +57,36 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
 
   explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager);
 
-  explicit ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted = false);
+  explicit ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager);
 
   // Destructor
-  ~ResourceClaim() = default;
+  ~ResourceClaim();
   // increaseFlowFileRecordOwnedCount
   void increaseFlowFileRecordOwnedCount() {
-    claim_manager_->incrementStreamCount(shared_from_this());
+    claim_manager_->incrementStreamCount(*this);
   }
   // decreaseFlowFileRecordOwenedCount
   void decreaseFlowFileRecordOwnedCount() {
-    claim_manager_->decrementStreamCount(shared_from_this());
+    claim_manager_->decrementStreamCount(*this);
   }
   // getFlowFileRecordOwenedCount
   uint64_t getFlowFileRecordOwnedCount() {
-    return claim_manager_->getStreamCount(shared_from_this());
+    return claim_manager_->getStreamCount(*this);
   }
   // Get the content full path
-  std::string getContentFullPath() {
+  std::string getContentFullPath() const {
     return _contentFullPath;
   }
-  // Set the content full path
-  void setContentFullPath(std::string path) {
-    _contentFullPath = path;
-  }
 
-  void deleteClaim() {
-    if (!deleted_) {
-      deleted_ = true;
-    }
+  Id getId() const {
+    return _contentFullPath;
   }
 
   bool exists() {
     if (claim_manager_ == nullptr) {
       return false;
     }
-    return claim_manager_->exists(shared_from_this());
+    return claim_manager_->exists(*this);
   }
 
   friend std::ostream& operator<<(std::ostream& stream, const ResourceClaim& claim) {
@@ -104,9 +100,8 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   }
 
  protected:
-  std::atomic<bool> deleted_;
   // Full path to the content
-  std::string _contentFullPath;
+  const Id _contentFullPath;
 
   std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager_;
 

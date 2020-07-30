@@ -42,21 +42,22 @@ bool FileSystemRepository::initialize(const std::shared_ptr<minifi::Configure> &
 void FileSystemRepository::stop() {
 }
 
-std::shared_ptr<io::BaseStream> FileSystemRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append) {
-  return std::make_shared<io::FileStream>(claim->getContentFullPath(), append);
+std::shared_ptr<io::BaseStream> FileSystemRepository::write(const minifi::ResourceClaim &claim, bool append) {
+  return std::make_shared<io::FileStream>(claim.getContentFullPath(), append);
 }
 
-bool FileSystemRepository::exists(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
-  std::ifstream file(streamId->getContentFullPath());
+bool FileSystemRepository::exists(const minifi::ResourceClaim &streamId) {
+  std::ifstream file(streamId.getContentFullPath());
   return file.good();
 }
 
-std::shared_ptr<io::BaseStream> FileSystemRepository::read(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  return std::make_shared<io::FileStream>(claim->getContentFullPath(), 0, false);
+std::shared_ptr<io::BaseStream> FileSystemRepository::read(const minifi::ResourceClaim &claim) {
+  return std::make_shared<io::FileStream>(claim.getContentFullPath(), 0, false);
 }
 
-bool FileSystemRepository::remove(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  std::remove(claim->getContentFullPath().c_str());
+bool FileSystemRepository::remove(const minifi::ResourceClaim &claim) {
+  logger_->log_debug("Deleting resource %s", claim.getContentFullPath());
+  std::remove(claim.getContentFullPath().c_str());
   return true;
 }
 
