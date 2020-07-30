@@ -169,13 +169,6 @@ void Identifier::build_string() {
   converted_ = uuidStr;
 }
 
-uint64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-
-NonRepeatingStringGenerator::NonRepeatingStringGenerator()
-    : prefix_((std::to_string(timestamp) + "-")),
-      incrementor_(0) {
-}
-
 IdGenerator::IdGenerator()
     : implementation_(UUID_TIME_IMPL),
       logger_(logging::LoggerFactory<IdGenerator>::getLogger()),

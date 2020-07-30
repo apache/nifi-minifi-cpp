@@ -39,7 +39,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
 
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
-  auto stream = content_repo->write(claim);
+  auto stream = content_repo->write(*claim);
 
   stream->writeUTF("well hello there");
 
@@ -55,7 +55,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
   REQUIRE(content_repo->initialize(configuration));
 
-  auto read_stream = content_repo->read(claim);
+  auto read_stream = content_repo->read(*claim);
 
   std::string readstr;
   read_stream->readUTF(readstr);
@@ -80,7 +80,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
 
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
-  auto stream = content_repo->write(claim);
+  auto stream = content_repo->write(*claim);
 
   stream->writeUTF("well hello there");
 
@@ -97,9 +97,9 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
   REQUIRE(content_repo->initialize(configuration));
 
-  content_repo->remove(claim);
+  content_repo->remove(*claim);
 
-  auto read_stream = content_repo->read(claim);
+  auto read_stream = content_repo->read(*claim);
 
   std::string readstr;
 
@@ -118,7 +118,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   REQUIRE(content_repo->initialize(configuration));
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
-  auto stream = content_repo->write(claim);
+  auto stream = content_repo->write(*claim);
 
   // we're writing nothing to the stream.
 
@@ -135,7 +135,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
   REQUIRE(content_repo->initialize(configuration));
 
-  auto read_stream = content_repo->read(claim);
+  auto read_stream = content_repo->read(*claim);
 
   std::string readstr;
 
@@ -143,68 +143,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   REQUIRE(read_stream->readUTF(readstr) == -1);
 }
 
-TEST_CASE("Test Null Claim", "[TestDBCR4]") {
-  TestController testController;
-  char format[] = "/var/tmp/testRepo.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
-  auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
-
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
-  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(content_repo->initialize(configuration));
-
-
-  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
-  auto stream = content_repo->write(nullptr);
-
-  REQUIRE(stream == nullptr);
-
-  auto read_stream = content_repo->write(nullptr);
-
-  REQUIRE(read_stream == nullptr);
-}
-
-TEST_CASE("Delete Null Claim", "[TestDBCR5]") {
-  TestController testController;
-  char format[] = "/var/tmp/testRepo.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
-  auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
-
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
-  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(content_repo->initialize(configuration));
-
-  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
-  auto stream = content_repo->write(claim);
-
-  stream->writeUTF("well hello there");
-
-  stream->closeStream();
-
-  content_repo->stop();
-
-  // reclaim the memory
-  content_repo = nullptr;
-
-  content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
-
-  configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
-  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(content_repo->initialize(configuration));
-
-  REQUIRE(!content_repo->remove(nullptr));
-
-  auto read_stream = content_repo->read(claim);
-
-  std::string readstr;
-
-  // -1 tell us we have an invalid stream
-  read_stream->readUTF(readstr);
-
-  REQUIRE(readstr == "well hello there");
-}
-
-TEST_CASE("Delete NonExistent Claim", "[TestDBCR5]") {
+TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
   TestController testController;
   char format[] = "/var/tmp/testRepo.XXXXXX";
   auto dir = testController.createTempDirectory(format);
@@ -216,7 +155,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR5]") {
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto claim2 = std::make_shared<minifi::ResourceClaim>(content_repo);
-  auto stream = content_repo->write(claim);
+  auto stream = content_repo->write(*claim);
 
   stream->writeUTF("well hello there");
 
@@ -234,9 +173,9 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR5]") {
   REQUIRE(content_repo->initialize(configuration));
 
   // we won't complain if it does not exist
-  REQUIRE(content_repo->remove(claim2));
+  REQUIRE(content_repo->remove(*claim2));
 
-  auto read_stream = content_repo->read(claim);
+  auto read_stream = content_repo->read(*claim);
 
   std::string readstr;
 
@@ -246,7 +185,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR5]") {
   REQUIRE(readstr == "well hello there");
 }
 
-TEST_CASE("Delete Remove Count Claim", "[TestDBCR6]") {
+TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
   TestController testController;
   char format[] = "/var/tmp/testRepo.XXXXXX";
   auto dir = testController.createTempDirectory(format);
@@ -258,7 +197,7 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR6]") {
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto claim2 = std::make_shared<minifi::ResourceClaim>(content_repo);
-  auto stream = content_repo->write(claim);
+  auto stream = content_repo->write(*claim);
 
   stream->writeUTF("well hello there");
 
@@ -278,14 +217,13 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR6]") {
   // increment twice. verify we have 2 for the stream count
   // and then test the removal and verify that the claim was removed by virtue of obtaining
   // its count.
-  content_repo->incrementStreamCount(claim2);
-  content_repo->incrementStreamCount(claim2);
-  REQUIRE(content_repo->getStreamCount(claim2) == 2);
-  content_repo->decrementStreamCount(claim2);
-  content_repo->decrementStreamCount(claim2);
-  REQUIRE(content_repo->removeIfOrphaned(claim2));
-  REQUIRE(content_repo->getStreamCount(claim2) == 0);
-  auto read_stream = content_repo->read(claim);
+  content_repo->incrementStreamCount(*claim2);
+  content_repo->incrementStreamCount(*claim2);
+  REQUIRE(content_repo->getStreamCount(*claim2) == 2);
+  content_repo->decrementStreamCount(*claim2);
+  REQUIRE(content_repo->decrementStreamCount(*claim2) == core::StreamManager<minifi::ResourceClaim>::StreamState::Deleted);
+  REQUIRE(content_repo->getStreamCount(*claim2) == 0);
+  auto read_stream = content_repo->read(*claim);
 
   std::string readstr;
 

@@ -64,7 +64,7 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
   size_ = other.size_;
   penaltyExpiration_ms_ = other.penaltyExpiration_ms_;
   attributes_ = other.attributes_;
-  claim_.set(*this, other.claim_);
+  claim_ = other.claim_;
   uuidStr_ = other.uuidStr_;
   connection_ = other.connection_;
   original_connection_ = other.original_connection_;
@@ -93,18 +93,18 @@ void FlowFile::setDeleted(const bool deleted) {
 }
 
 std::shared_ptr<ResourceClaim> FlowFile::getResourceClaim() {
-  return claim_.get();
+  return claim_;
 }
 
 void FlowFile::clearResourceClaim() {
-  claim_.set(*this, nullptr);
+  claim_ = nullptr;
 }
 void FlowFile::setResourceClaim(const std::shared_ptr<ResourceClaim>& claim) {
-  claim_.set(*this, claim);
+  claim_ = claim;
 }
 
 std::shared_ptr<ResourceClaim> FlowFile::getStashClaim(const std::string& key) {
-  return stashedContent_[key].get();
+  return stashedContent_[key];
 }
 
 void FlowFile::setStashClaim(const std::string& key, const std::shared_ptr<ResourceClaim>& claim) {
@@ -114,13 +114,13 @@ void FlowFile::setStashClaim(const std::string& key, const std::shared_ptr<Resou
                       getUUIDStr().c_str(), key.c_str());
   }
 
-  stashedContent_[key].set(*this, claim);
+  stashedContent_[key] = claim;
 }
 
 void FlowFile::clearStashClaim(const std::string& key) {
   auto claimIt = stashedContent_.find(key);
   if (claimIt != stashedContent_.end()) {
-    claimIt->second.set(*this, nullptr);
+    claimIt->second = nullptr;
     stashedContent_.erase(claimIt);
   }
 }

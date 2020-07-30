@@ -56,30 +56,14 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
    */
   virtual void stop() = 0;
 
-  /**
-   * Removes an item if it was orphan
-   */
-  virtual bool removeIfOrphaned(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+  void reset() {
     std::lock_guard<std::mutex> lock(count_map_mutex_);
-    const std::string str = streamId->getContentFullPath();
-    auto count = count_map_.find(str);
-    if (count != count_map_.end()) {
-      if (count_map_[str] == 0) {
-        remove(streamId);
-        count_map_.erase(str);
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      remove(streamId);
-      return true;
-    }
+    count_map_.clear();
   }
 
-  virtual uint32_t getStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+  virtual uint32_t getStreamCount(const minifi::ResourceClaim &streamId) {
     std::lock_guard<std::mutex> lock(count_map_mutex_);
-    auto cnt = count_map_.find(streamId->getContentFullPath());
+    auto cnt = count_map_.find(streamId.getContentFullPath());
     if (cnt != count_map_.end()) {
       return cnt->second;
     } else {
@@ -87,9 +71,9 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
     }
   }
 
-  virtual void incrementStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+  virtual void incrementStreamCount(const minifi::ResourceClaim &streamId) {
     std::lock_guard<std::mutex> lock(count_map_mutex_);
-    const std::string str = streamId->getContentFullPath();
+    const std::string str = streamId.getContentFullPath();
     auto count = count_map_.find(str);
     if (count != count_map_.end()) {
       count_map_[str] = count->second + 1;
@@ -98,14 +82,17 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
     }
   }
 
-  virtual void decrementStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+  virtual StreamState decrementStreamCount(const minifi::ResourceClaim &streamId) {
     std::lock_guard<std::mutex> lock(count_map_mutex_);
-    const std::string str = streamId->getContentFullPath();
+    const std::string str = streamId.getContentFullPath();
     auto count = count_map_.find(str);
-    if (count != count_map_.end() && count->second > 0) {
+    if (count != count_map_.end() && count->second > 1) {
       count_map_[str] = count->second - 1;
+      return StreamState::Alive;
     } else {
       count_map_.erase(str);
+      remove(streamId);
+      return StreamState::Deleted;
     }
   }
 

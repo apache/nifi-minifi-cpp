@@ -86,17 +86,17 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
 
   virtual void stop();
 
-  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append = false);
+  virtual std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append = false);
 
-  virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<minifi::ResourceClaim> &claim);
+  virtual std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim);
 
-  virtual bool close(const std::shared_ptr<minifi::ResourceClaim> &claim) {
+  virtual bool close(const minifi::ResourceClaim &claim) {
     return remove(claim);
   }
 
-  virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
+  virtual bool remove(const minifi::ResourceClaim &claim);
 
-  virtual bool exists(const std::shared_ptr<minifi::ResourceClaim> &streamId);
+  virtual bool exists(const minifi::ResourceClaim &streamId);
 
   virtual void yield() {
 

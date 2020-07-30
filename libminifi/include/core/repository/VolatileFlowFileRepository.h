@@ -50,20 +50,23 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
     repo_full_ = false;
     while (running_) {
       std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
-      if (purge_required_ && nullptr != content_repo_) {
-        std::lock_guard<std::mutex> lock(purge_mutex_);
-        for (auto purgeItem : purge_list_) {
-          std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
-          if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size())) {
-            std::shared_ptr<minifi::ResourceClaim> newClaim = eventRead->getResourceClaim();
-            if (newClaim != nullptr) {
-              content_repo_->removeIfOrphaned(newClaim);
-            }
-          }
+      flush();
+    }
+    flush();
+  }
+
+  virtual void flush() {
+    if (purge_required_ && nullptr != content_repo_) {
+      std::lock_guard<std::mutex> lock(purge_mutex_);
+      for (auto purgeItem : purge_list_) {
+        std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
+        if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size())) {
+          auto claim = eventRead->getResourceClaim();
+          if (claim) claim->decreaseFlowFileRecordOwnedCount();
         }
-        purge_list_.resize(0);
-        purge_list_.clear();
       }
+      purge_list_.resize(0);
+      purge_list_.clear();
     }
   }
 

@@ -36,64 +36,6 @@ namespace minifi {
 namespace core {
 
 class FlowFile : public core::Connectable, public ReferenceContainer {
- private:
-  class FlowFileOwnedResourceClaimPtr{
-   public:
-    FlowFileOwnedResourceClaimPtr() = default;
-    explicit FlowFileOwnedResourceClaimPtr(const std::shared_ptr<ResourceClaim>& claim) : claim_(claim) {
-      if (claim_) claim_->increaseFlowFileRecordOwnedCount();
-    }
-    explicit FlowFileOwnedResourceClaimPtr(std::shared_ptr<ResourceClaim>&& claim) : claim_(std::move(claim)) {
-      if (claim_) claim_->increaseFlowFileRecordOwnedCount();
-    }
-    FlowFileOwnedResourceClaimPtr(const FlowFileOwnedResourceClaimPtr& ref) : claim_(ref.claim_) {
-      if (claim_) claim_->increaseFlowFileRecordOwnedCount();
-    }
-    FlowFileOwnedResourceClaimPtr(FlowFileOwnedResourceClaimPtr&& ref) : claim_(std::move(ref.claim_)) {
-      // taking ownership of claim, no need to increment/decrement
-    }
-    FlowFileOwnedResourceClaimPtr& operator=(const FlowFileOwnedResourceClaimPtr& ref) = delete;
-    FlowFileOwnedResourceClaimPtr& operator=(FlowFileOwnedResourceClaimPtr&& ref) = delete;
-
-    FlowFileOwnedResourceClaimPtr& set(FlowFile& owner, const FlowFileOwnedResourceClaimPtr& ref) {
-      return set(owner, ref.claim_);
-    }
-    FlowFileOwnedResourceClaimPtr& set(FlowFile& owner, const std::shared_ptr<ResourceClaim>& newClaim) {
-      auto oldClaim = claim_;
-      claim_ = newClaim;
-      // the order of increase/release is important
-      // with refcount manipulation we should always increment first, then decrement as this way we don't accidentally
-      // discard the object under ourselves, note that an equality check will not suffice as two ResourceClaim
-      // instances can reference the same file (they could have the same contentPath)
-      if (claim_) claim_->increaseFlowFileRecordOwnedCount();
-      if (oldClaim) owner.releaseClaim(oldClaim);
-      return *this;
-    }
-    const std::shared_ptr<ResourceClaim>& get() const {
-      return claim_;
-    }
-    const std::shared_ptr<ResourceClaim>& operator->() const {
-      return claim_;
-    }
-    operator bool() const noexcept {
-      return static_cast<bool>(claim_);
-    }
-    ~FlowFileOwnedResourceClaimPtr() {
-      // allow the owner FlowFile to manually release the claim
-      // while logging stuff and removing it from repositories
-      assert(!claim_);
-    }
-
-   private:
-    /*
-     * We are aiming for the constraint that all FlowFiles should have a non-null claim pointer,
-     * unfortunately, for now, some places (e.g. ProcessSession::create) violate this constraint.
-     * We should indicate an empty or invalid content with special claims like
-     * InvalidResourceClaim and EmptyResourceClaim.
-     */
-    std::shared_ptr<ResourceClaim> claim_;
-  };
-
  public:
   FlowFile();
   ~FlowFile() override;
@@ -134,12 +76,6 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Return true if the given stash claim exists
    */
   bool hasStashClaim(const std::string& key);
-
-  /**
-   * Decrease the flow file record owned count for the resource claim and, if 
-   * its counter is at zero, remove it from the repo.
-   */
-  virtual void releaseClaim(const std::shared_ptr<ResourceClaim> claim) = 0;
 
   /**
    * Get lineage identifiers
@@ -373,9 +309,9 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   // Attributes key/values pairs for the flow record
   std::map<std::string, std::string> attributes_;
   // Pointer to the associated content resource claim
-  FlowFileOwnedResourceClaimPtr claim_;
+  std::shared_ptr<ResourceClaim> claim_;
   // Pointers to stashed content resource claims
-  std::map<std::string, FlowFileOwnedResourceClaimPtr> stashedContent_;
+  std::map<std::string, std::shared_ptr<ResourceClaim>> stashedContent_;
   // UUID string
   // std::string uuid_str_;
   // UUID string for all parents

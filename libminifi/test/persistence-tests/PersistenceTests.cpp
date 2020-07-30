@@ -33,12 +33,13 @@
 #include "../TestBase.h"
 #include "../../extensions/libarchive/MergeContent.h"
 #include "../test/BufferReader.h"
+#include "core/repository/VolatileFlowFileRepository.h"
 
 using Connection = minifi::Connection;
 using MergeContent = minifi::processors::MergeContent;
 
 struct TestFlow{
-  TestFlow(const std::shared_ptr<core::repository::FlowFileRepository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<core::Repository>& prov_repo,
+  TestFlow(const std::shared_ptr<core::Repository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<core::Repository>& prov_repo,
         const std::function<std::shared_ptr<core::Processor>(utils::Identifier&)>& processorGenerator, const core::Relationship& relationshipToOutput)
       : ff_repository(ff_repository), content_repo(content_repo), prov_repo(prov_repo) {
     // setup processor
@@ -119,7 +120,7 @@ struct TestFlow{
 
   std::shared_ptr<core::Processor> inputProcessor;
   std::shared_ptr<core::Processor> processor;
-  std::shared_ptr<core::repository::FlowFileRepository> ff_repository;
+  std::shared_ptr<core::Repository> ff_repository;
   std::shared_ptr<core::ContentRepository> content_repo;
   std::shared_ptr<core::Repository> prov_repo;
   std::shared_ptr<core::ProcessContext> inputContext;
@@ -244,8 +245,11 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   TestController testController;
   LogTestController::getInstance().setDebug<core::ContentRepository>();
   LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
   LogTestController::getInstance().setTrace<minifi::ResourceClaim>();
   LogTestController::getInstance().setTrace<minifi::FlowFileRecord>();
+  LogTestController::getInstance().setTrace<core::repository::FlowFileRepository>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileRepository<minifi::ResourceClaim::Path>>();
 
   char format[] = "/var/tmp/test.XXXXXX";
   auto dir = testController.createTempDirectory(format);
@@ -255,8 +259,16 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
 
   std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
-  std::shared_ptr<core::repository::FlowFileRepository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
-  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  std::shared_ptr<core::Repository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
+  std::shared_ptr<core::ContentRepository> content_repo;
+  SECTION("VolatileContentRepository") {
+    testController.getLogger()->log_info("Using VolatileContentRepository");
+    content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  }
+  SECTION("FileSystemContentRepository") {
+    testController.getLogger()->log_info("Using FileSystemRepository");
+    content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  }
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
@@ -269,23 +281,29 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
     flowController->load(flow.root);
     ff_repository->start();
 
-    // write two files into the input
-    auto flowFile = flow.write("data");
-    auto claim = flowFile->getResourceClaim();
-    // one from the FlowFile and one from the persisted instance
-    REQUIRE(claim->getFlowFileRecordOwnedCount() == 2);
-    // update them with the Merge Processor
-    flow.trigger();
+    std::string removedResource;
+    {
+      // write two files into the input
+      auto flowFile = flow.write("data");
+      auto claim = flowFile->getResourceClaim();
+      removedResource = claim->getContentFullPath();
+      // one from the FlowFile and one from the persisted instance
+      REQUIRE(claim->getFlowFileRecordOwnedCount() == 2);
+      // update them with the Merge Processor
+      flow.trigger();
 
-    auto content = flow.read(flowFile);
-    REQUIRE(content == "<override>");
-    auto newClaim = flowFile->getResourceClaim();
-    // the processor added new content to the flowFile
-    REQUIRE(claim != newClaim);
-    // nobody holds an owning reference to the previous claim
-    REQUIRE(claim->getFlowFileRecordOwnedCount() == 0);
-    // one from the FlowFile and one from the persisted instance
-    REQUIRE(newClaim->getFlowFileRecordOwnedCount() == 2);
+      auto content = flow.read(flowFile);
+      REQUIRE(content == "<override>");
+      auto newClaim = flowFile->getResourceClaim();
+      // the processor added new content to the flowFile
+      REQUIRE(claim != newClaim);
+      // only this instance behind this shared_ptr keeps the resource alive
+      REQUIRE(claim->getFlowFileRecordOwnedCount() == 1);
+      // one from the FlowFile and one from the persisted instance
+      REQUIRE(newClaim->getFlowFileRecordOwnedCount() == 2);
+    }
+    REQUIRE(LogTestController::getInstance().countOccurrences("Deleting resource " + removedResource) == 1);
+    REQUIRE(LogTestController::getInstance().countOccurrences("Deleting resource") == 1);
 
     ff_repository->stop();
     flowController->unload();

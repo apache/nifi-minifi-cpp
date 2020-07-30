@@ -46,7 +46,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
       content_repo_(content_repo),
       flow_repository_(flow_repository) {
   id_ = local_flow_seq_number_.load();
-  claim_.set(*this, claim);
+  claim_ = claim;
   // Increase the local ID for the flow record
   ++local_flow_seq_number_;
   // Populate the default attributes
@@ -77,7 +77,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
   offset_ = event->getOffset();
   event->getUUID(uuid_);
   uuid_connection_ = uuidConnection;
-  claim_.set(*this, event->getResourceClaim());
+  claim_ = event->getResourceClaim();
   if (event->getFlowIdentifier()) {
     std::string attr;
     event->getAttribute(FlowAttributeKey(FlowAttribute::FLOW_ID), attr);
@@ -94,7 +94,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
       snapshot_(""),
       content_repo_(content_repo),
       flow_repository_(flow_repository) {
-  claim_.set(*this, event->getResourceClaim());
+  claim_ = event->getResourceClaim();
   if (event->getFlowIdentifier()) {
     std::string attr;
     event->getAttribute(FlowAttributeKey(FlowAttribute::FLOW_ID), attr);
@@ -114,23 +114,6 @@ FlowFileRecord::~FlowFileRecord() {
 
   if (!claim_) {
     logger_->log_debug("Claim is null ptr for %s", uuidStr_);
-  }
-
-  claim_.set(*this, nullptr);
-
-  // Disown stash claims
-  for (auto &stashPair : stashedContent_) {
-    auto& stashClaim = stashPair.second;
-    stashClaim.set(*this, nullptr);
-  }
-}
-
-void FlowFileRecord::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
-  // Decrease the flow file record owned count for the resource claim
-  claim->decreaseFlowFileRecordOwnedCount();
-  logger_->log_debug("Detaching Resource Claim %s, %s, attempt " "%" PRIu64, getUUIDStr(), claim->getContentFullPath(), claim->getFlowFileRecordOwnedCount());
-  if (content_repo_ && content_repo_->removeIfOrphaned(claim)) {
-    logger_->log_debug("Deleted Resource Claim %s", claim->getContentFullPath());
   }
 }
 
@@ -358,7 +341,7 @@ bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
     return false;
   }
 
-  claim_.set(*this, std::make_shared<ResourceClaim>(content_full_path, content_repo_, true));
+  claim_ = std::make_shared<ResourceClaim>(content_full_path, content_repo_);
   return true;
 }
 

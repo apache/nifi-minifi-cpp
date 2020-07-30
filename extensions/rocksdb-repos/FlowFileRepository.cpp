@@ -87,9 +87,7 @@ void FlowFileRepository::flush() {
   if (content_repo_) {
     for (const auto &ffr : purgeList) {
       auto claim = ffr->getResourceClaim();
-      if (claim) {
-        content_repo_->removeIfOrphaned(claim);
-      }
+      if (claim) claim->decreaseFlowFileRecordOwnedCount();
     }
   }
 }
@@ -165,14 +163,15 @@ void FlowFileRepository::prune_stored_flowfiles() {
         found = (search != connectionMap.end());
       }
       if (found) {
-        // we find the connection for the persistent flowfile, create the flowfile and enqueue that
-        std::shared_ptr<core::FlowFile> flow_file_ref = std::static_pointer_cast<core::FlowFile>(eventRead);
         eventRead->setStoredToRepository(true);
+        // we found the connection for the persistent flowFile
+        auto claim = eventRead->getResourceClaim();
+        // on behalf of the just resurrected persisted instance
+        if (claim) claim->increaseFlowFileRecordOwnedCount();
+        // even if a processor immediately marks it for deletion, flush only happens after prune_stored_flowfiles
         search->second->put(eventRead);
       } else {
         logger_->log_warn("Could not find connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
-        auto claim = eventRead->getResourceClaim();
-        if (claim) claim->decreaseFlowFileRecordOwnedCount();
         keys_to_delete.enqueue(key);
       }
     } else {
