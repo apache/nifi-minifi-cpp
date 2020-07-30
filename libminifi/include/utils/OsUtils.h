@@ -26,21 +26,14 @@ namespace minifi {
 namespace utils {
 namespace OsUtils {
 
-/**
- * Resolves a user ID to a username
- */
+/// Resolves a user ID to a username
 extern std::string userIdToUsername(const std::string &uid);
 
-/**
- * Returns memory usage in bytes
- */
-
+/// Returns memory usage in bytes, including shared memory
 uint64_t getMemoryUsage();
 
 #ifdef WIN32
-/*
- Resolves common identifiers
-*/
+/// Resolves common identifiers
 extern std::string resolve_common_identifiers(const std::string &id);
 #endif
 } /* namespace OsUtils */

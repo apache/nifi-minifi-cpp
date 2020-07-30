@@ -23,6 +23,10 @@
 
 #include "utils/ScopeGuard.h"
 
+#ifdef __linux__
+#include <sstream>
+#endif
+
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -162,76 +166,36 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
 
 uint64_t OsUtils::getMemoryUsage() {
 #ifdef __linux__
-  long resPages;
-  long sharedPages;
-  {
-    std::string ignore;
-    std::ifstream ifs("/proc/self/statm");
-    ifs >> ignore >> resPages >> sharedPages;
+  static const std::string linePrefix = "VmRSS:";
+  std::ifstream statusFile("/proc/self/status");
+  std::string line;
+
+  while (std::getline(statusFile, line)) {
+    // if line begins with "VmRSS:"
+    if (line.rfind(linePrefix, 0) == 0) {
+      std::istringstream valuableLine(line.substr(linePrefix.length()));
+      uint64_t kByteValue;
+      valuableLine >> kByteValue;
+      return kByteValue * 1024;
+    }
   }
 
-  if (sharedPages > resPages) {
-    throw std::range_error("Shared memory page count ("
-      + std::to_string(sharedPages)
-      + ") should not be larger than resident set size ("
-      + std::to_string(resPages)
-      + "), that includes it"
-    );
-  }
-
-  const long ownPages = resPages - sharedPages;
-  const long pageSize = sysconf(_SC_PAGE_SIZE);
-  return ownPages * pageSize;
+  throw std::runtime_error("Could not get memory info for current process");
 #endif
 
 #ifdef __APPLE__
   task_basic_info tInfo;
   mach_msg_type_number_t tInfoCount = TASK_BASIC_INFO_COUNT;
   if (KERN_SUCCESS != task_info(mach_task_self(), TASK_BASIC_INFO, (task_info_t)&tInfo, &tInfoCount))
-      throw std::runtime_error("Could not get memory info for current process");
+    throw std::runtime_error("Could not get memory info for current process");
   return tInfo.resident_size;
 #endif
 
 #ifdef _WIN32
-  const auto hCurrentProcess = GetCurrentProcess();
-
-  PSAPI_WORKING_SET_INFORMATION workingSetSizeInfo;
-  QueryWorkingSet(hCurrentProcess, &workingSetSizeInfo, sizeof(workingSetSizeInfo));
-  auto pageCountLimit = workingSetSizeInfo.NumberOfEntries * 2; // twice the size for sure fit next time
-  BOOL success = 0;
-
-  // allocate storage
-  size_t storageSize = sizeof(ULONG_PTR) + pageCountLimit * sizeof(PSAPI_WORKING_SET_BLOCK);
-  std::vector<char> storage(storageSize);
-  ULONG_PTR* totalPages = nullptr;
-  PSAPI_WORKING_SET_BLOCK* workingSetBlock = nullptr;
-
-  for (int tries = 0; tries < 10 && !success; ++tries) {
-    if (storage.size() != storageSize)
-      storage.resize(storageSize);
-
-    // allocate structured data continuously in storage, Windows only likes it this way
-    totalPages = new(storage.data()) ULONG_PTR;
-    workingSetBlock = new(storage.data() + sizeof(ULONG_PTR)) PSAPI_WORKING_SET_BLOCK[pageCountLimit];
-
-    // get page information or set number of entries correctly for next try
-    // if storageSize is too low, QueryWorkingSet fails and sets *totalPages to correct value for later retry
-    success = QueryWorkingSet(hCurrentProcess, storage.data(), storageSize);
-    pageCountLimit = *totalPages * 2; // twice the size for sure fit next time
-    storageSize = sizeof(ULONG_PTR) + pageCountLimit * sizeof(PSAPI_WORKING_SET_BLOCK);
-  }
-
-  if (!success) {
+  PROCESS_MEMORY_COUNTERS pmc;
+  if (!GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
     throw std::runtime_error("Could not get memory info for current process");
-  }
-
-  const uint64_t privatePages = std::count_if(workingSetBlock, workingSetBlock + *totalPages, [](const PSAPI_WORKING_SET_BLOCK& b) { return b.Shared != 1; });
-
-  // get page size
-  SYSTEM_INFO systemInfo;
-  GetSystemInfo(&systemInfo);
-
-  return privatePages * systemInfo.dwPageSize;
+  return pmc.WorkingSetSize;
 #endif
 }
 
