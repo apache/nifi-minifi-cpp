@@ -245,7 +245,7 @@ std::shared_ptr<core::Processor> setupContentUpdaterProcessor(utils::Identifier&
 class ReportingFileSystemRepository : public core::repository::FileSystemRepository{
  public:
   bool remove(const minifi::ResourceClaim& claim) override {
-    removedResources.push_back(claim.getId());
+    removedResources.push_back(claim.getContentFullPath());
     return FileSystemRepository::remove(claim);
   }
 
@@ -286,7 +286,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
       // write two files into the input
       auto flowFile = flow.write("data");
       auto claim = flowFile->getResourceClaim();
-      resourcesExpectedToBeRemoved.push_back(claim->getId());
+      resourcesExpectedToBeRemoved.push_back(claim->getContentFullPath());
       // one from the FlowFile and one from the persisted instance
       REQUIRE(claim->getFlowFileRecordOwnedCount() == 2);
       // update them with the Merge Processor

@@ -83,6 +83,13 @@ void FlowFileRepository::flush() {
     }
     return;  // Stop here - don't delete from content repo while we have records in FF repo
   }
+
+  if (content_repo_) {
+    for (const auto &ffr : purgeList) {
+      auto claim = ffr->getResourceClaim();
+      if (claim) claim->decreaseFlowFileRecordOwnedCount();
+    }
+  }
 }
 
 void FlowFileRepository::printStats() {

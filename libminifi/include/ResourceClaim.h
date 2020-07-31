@@ -47,8 +47,8 @@ extern void setDefaultDirectory(std::string);
 // ResourceClaim Class
 class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
  public:
-  // the type which represents the resource
-  using Id = std::string;
+  // the type which uniquely represents the resource for the owning manager
+  using Path = std::string;
   // Constructor
   /*!
    * Create a new resource claim
@@ -74,11 +74,7 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
     return claim_manager_->getStreamCount(*this);
   }
   // Get the content full path
-  std::string getContentFullPath() const {
-    return _contentFullPath;
-  }
-
-  Id getId() const {
+  Path getContentFullPath() const {
     return _contentFullPath;
   }
 
@@ -101,7 +97,7 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
 
  protected:
   // Full path to the content
-  const Id _contentFullPath;
+  const Path _contentFullPath;
 
   std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager_;
 

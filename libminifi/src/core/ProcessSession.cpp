@@ -940,9 +940,6 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
           // original must be non-null since this flowFile is already stored in the repos ->
           // must have come from a session->get()
           assert(original);
-          auto claim = original->getResourceClaim();
-          // decrement on behalf of the persisted-instance-to-be-deleted
-          if (claim) claim->decreaseFlowFileRecordOwnedCount();
           ff->setStoredToRepository(false);
         }
         continue;
@@ -952,7 +949,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
       if (claim) claim->increaseFlowFileRecordOwnedCount();
       auto originalClaim = original ? original->getResourceClaim() : nullptr;
       // decrement on behalf of the overridden instance if any
-      if (ff->isStored() && originalClaim) originalClaim->decreaseFlowFileRecordOwnedCount();
+      if (originalClaim) originalClaim->decreaseFlowFileRecordOwnedCount();
 
       ff->setStoredToRepository(true);
     }

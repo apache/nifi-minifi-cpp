@@ -89,18 +89,18 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::R
       if (ent == nullptr) {
         return nullptr;
       }
-      return std::make_shared<io::AtomicEntryStream<ResourceClaim::Id>>(claim.getId(), ent);
+      return std::make_shared<io::AtomicEntryStream<ResourceClaim::Path>>(claim.getContentFullPath(), ent);
     }
   }
 
   int size = 0;
   if (LIKELY(minimize_locking_ == true)) {
     for (auto ent : value_vector_) {
-      if (ent->testAndSetKey(claim.getId())) {
+      if (ent->testAndSetKey(claim.getContentFullPath())) {
         std::lock_guard<std::mutex> lock(map_mutex_);
         master_list_[claim.getContentFullPath()] = ent;
-        logger_->log_info("Minimize locking, return stream for %s", claim.getId());
-        return std::make_shared<io::AtomicEntryStream<ResourceClaim::Id>>(claim.getId(), ent);
+        logger_->log_info("Minimize locking, return stream for %s", claim.getContentFullPath());
+        return std::make_shared<io::AtomicEntryStream<ResourceClaim::Path>>(claim.getContentFullPath(), ent);
       }
       size++;
     }
@@ -108,12 +108,12 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::R
     std::lock_guard<std::mutex> lock(map_mutex_);
     auto claim_check = master_list_.find(claim.getContentFullPath());
     if (claim_check != master_list_.end()) {
-      return std::make_shared<io::AtomicEntryStream<ResourceClaim::Id>>(claim.getId(), claim_check->second);
+      return std::make_shared<io::AtomicEntryStream<ResourceClaim::Path>>(claim.getContentFullPath(), claim_check->second);
     } else {
-      auto *ent = new AtomicEntry<ResourceClaim::Id>(&current_size_, &max_size_);
-      if (ent->testAndSetKey(claim.getId())) {
+      auto *ent = new AtomicEntry<ResourceClaim::Path>(&current_size_, &max_size_);
+      if (ent->testAndSetKey(claim.getContentFullPath())) {
         master_list_[claim.getContentFullPath()] = ent;
-        return std::make_shared<io::AtomicEntryStream<ResourceClaim::Id>>(claim.getId(), ent);
+        return std::make_shared<io::AtomicEntryStream<ResourceClaim::Path>>(claim.getContentFullPath(), ent);
       }
     }
   }
@@ -143,7 +143,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::read(const minifi::Re
     if (ent == nullptr) {
       return nullptr;
     }
-    return std::make_shared<io::AtomicEntryStream<ResourceClaim::Id>>(claim.getId(), ent);
+    return std::make_shared<io::AtomicEntryStream<ResourceClaim::Path>>(claim.getContentFullPath(), ent);
   }
 
   return nullptr;
@@ -160,7 +160,7 @@ bool VolatileContentRepository::remove(const minifi::ResourceClaim &claim) {
       master_list_.erase(claim.getContentFullPath());
       // because of the test and set we need to decrement ownership
       ptr->decrementOwnership();
-      if (ptr->freeValue(claim.getId())) {
+      if (ptr->freeValue(claim.getContentFullPath())) {
         logger_->log_info("Removed %s", claim.getContentFullPath());
         return true;
       } else {

@@ -41,13 +41,13 @@ namespace repository {
  * Purpose: Stages content into a volatile area of memory. Note that   when the maximum number
  * of entries is consumed we will rollback a session to wait for others to be freed.
  */
-class VolatileContentRepository : public core::ContentRepository, public virtual core::repository::VolatileRepository<ResourceClaim::Id> {
+class VolatileContentRepository : public core::ContentRepository, public virtual core::repository::VolatileRepository<ResourceClaim::Path> {
  public:
   static const char *minimal_locking;
 
   explicit VolatileContentRepository(std::string name = getClassName<VolatileContentRepository>())
       : core::SerializableComponent(name),
-        core::repository::VolatileRepository<ResourceClaim::Id>(name),
+        core::repository::VolatileRepository<ResourceClaim::Path>(name),
         minimize_locking_(true),
         logger_(logging::LoggerFactory<VolatileContentRepository>::getLogger()) {
     max_count_ = 15000;
@@ -121,7 +121,7 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   // The idea is to reduce the computational complexity while keeping access as maximally lock free as we can.
   std::mutex map_mutex_;
 
-  std::map<ResourceClaim::Id, AtomicEntry<ResourceClaim::Id>*> master_list_;
+  std::map<ResourceClaim::Path, AtomicEntry<ResourceClaim::Path>*> master_list_;
 
   // logger
   std::shared_ptr<logging::Logger> logger_;

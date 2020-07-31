@@ -51,18 +51,18 @@ ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>>
         // Create the full content path for the content
         return contentDirectory + "/" + non_repeating_string_generator_.generate();
       })()) {
-  increaseFlowFileRecordOwnedCount();
+  if (claim_manager_) increaseFlowFileRecordOwnedCount();
   logger_->log_debug("Resource Claim created %s", _contentFullPath);
 }
 
 ResourceClaim::ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
     : claim_manager_(claim_manager),
       _contentFullPath(path) {
-  increaseFlowFileRecordOwnedCount();
+  if (claim_manager_) increaseFlowFileRecordOwnedCount();
 }
 
 ResourceClaim::~ResourceClaim() {
-  decreaseFlowFileRecordOwnedCount();
+  if (claim_manager_) decreaseFlowFileRecordOwnedCount();
 }
 
 } /* namespace minifi */
