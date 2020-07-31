@@ -133,8 +133,8 @@ class LoggerConfiguration {
                                                     std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
 
  private:
-  static std::shared_ptr<spdlog::sinks::sink> create_syslog_sink();
-  static std::shared_ptr<spdlog::sinks::sink> create_fallback_sink();
+  static spdlog::sink_ptr create_syslog_sink();
+  static spdlog::sink_ptr create_fallback_sink();
 
   static std::shared_ptr<internal::LoggerNamespace> create_default_root();
 

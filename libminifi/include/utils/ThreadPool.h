@@ -17,6 +17,7 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_
 #define LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>

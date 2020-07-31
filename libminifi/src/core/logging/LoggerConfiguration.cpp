@@ -280,7 +280,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
     current_namespace_str += "::";
   }
   if (logger != nullptr) {
-    const fmt::basic_string_view<char> levelView(spdlog::level::to_string_view(level));
+    const auto levelView(spdlog::level::to_string_view(level));
     logger->log_debug("%s logger got sinks from namespace %s and level %s from namespace %s", name, sink_namespace_str, std::string(levelView.begin(), levelView.end()), level_namespace_str);
   }
   spdlogger = std::make_shared<spdlog::logger>(name, begin(sinks), end(sinks));
@@ -295,7 +295,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
   return spdlog::get(name);
 }
 
-std::shared_ptr<spdlog::sinks::sink> LoggerConfiguration::create_syslog_sink() {
+spdlog::sink_ptr LoggerConfiguration::create_syslog_sink() {
 #ifdef WIN32
   return std::make_shared<internal::windowseventlog_sink>("ApacheNiFiMiNiFi");
 #else
@@ -303,7 +303,7 @@ std::shared_ptr<spdlog::sinks::sink> LoggerConfiguration::create_syslog_sink() {
 #endif
 }
 
-std::shared_ptr<spdlog::sinks::sink> LoggerConfiguration::create_fallback_sink() {
+spdlog::sink_ptr LoggerConfiguration::create_fallback_sink() {
   if (utils::Environment::isRunningAsService()) {
     return LoggerConfiguration::create_syslog_sink();
   } else {
@@ -313,9 +313,7 @@ std::shared_ptr<spdlog::sinks::sink> LoggerConfiguration::create_fallback_sink()
 
 std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::create_default_root() {
   std::shared_ptr<internal::LoggerNamespace> result = std::make_shared<internal::LoggerNamespace>();
-  result->sinks = std::vector<std::shared_ptr<spdlog::sinks::sink>>();
-  auto default_sink = std::make_shared<spdlog::sinks::stderr_sink_mt>();
-  result->sinks.emplace_back(std::move(default_sink));
+  result->sinks = { std::make_shared<spdlog::sinks::stderr_sink_mt>() };
   result->level = spdlog::level::info;
   return result;
 }
