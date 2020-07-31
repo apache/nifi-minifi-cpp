@@ -185,8 +185,7 @@ class MergeTestController : public TestController {
     logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
     node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider = nullptr;
-    context = std::make_shared<core::ProcessContext>(node, controller_service_provider, repo, repo, content_repo);
+    context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
   }
   ~MergeTestController() = default;
   std::shared_ptr<core::ProcessContext> context;

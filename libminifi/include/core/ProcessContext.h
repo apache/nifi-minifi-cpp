@@ -55,7 +55,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   /*!
    * Create a new process context associated with the processor/controller service/state manager
    */
-  ProcessContext(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, const std::shared_ptr<core::Repository> &repo,
+  ProcessContext(const std::shared_ptr<ProcessorNode> &processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository> &repo,
                  const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
       : VariableRegistry(std::make_shared<minifi::Configure>()),
         controller_service_provider_(controller_service_provider),
@@ -73,7 +73,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   /*!
    * Create a new process context associated with the processor/controller service/state manager
    */
-  ProcessContext(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, const std::shared_ptr<core::Repository> &repo,
+  ProcessContext(const std::shared_ptr<ProcessorNode> &processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository> &repo,
                  const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<minifi::Configure> &configuration, const std::shared_ptr<core::ContentRepository> &content_repo =
                      std::make_shared<core::repository::FileSystemRepository>())
       : VariableRegistry(configuration),
@@ -172,9 +172,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
    * identifier
    */
   std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier) {
-    if (controller_service_provider_ != nullptr)
-      return controller_service_provider_->getControllerServiceForComponent(identifier, processor_node_->getUUIDStr());
-    return nullptr;
+    return controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerServiceForComponent(identifier, processor_node_->getUUIDStr());
   }
 
   /**
@@ -228,7 +226,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   }
 
   static std::shared_ptr<core::CoreComponentStateManagerProvider> getOrCreateDefaultStateManagerProvider(
-      std::shared_ptr<controller::ControllerServiceProvider> controller_service_provider,
+      controller::ControllerServiceProvider* controller_service_provider,
       std::shared_ptr<minifi::Configure> configuration,
       const char *base_path = "") {
     static std::mutex mutex;
@@ -300,7 +298,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
 
   static std::shared_ptr<core::CoreComponentStateManagerProvider> getStateManagerProvider(
       std::shared_ptr<logging::Logger> logger,
-      std::shared_ptr<controller::ControllerServiceProvider> controller_service_provider,
+      controller::ControllerServiceProvider* controller_service_provider,
       std::shared_ptr<minifi::Configure> configuration) {
     if (controller_service_provider == nullptr) {
       return nullptr;
@@ -330,7 +328,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   }
 
   // controller service provider.
-  std::shared_ptr<controller::ControllerServiceProvider> controller_service_provider_;
+  controller::ControllerServiceProvider* controller_service_provider_;
   // state manager provider
   std::shared_ptr<core::CoreComponentStateManagerProvider> state_manager_provider_;
   // repository shared pointer.

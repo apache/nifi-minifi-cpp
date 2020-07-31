@@ -32,7 +32,7 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+void ControllerSocketProtocol::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
                                           const std::shared_ptr<Configure> &configuration) {
   HeartBeatReporter::initialize(controller, updateSink, configuration);
   stream_factory_ = minifi::io::StreamFactory::getInstance(configuration);

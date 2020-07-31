@@ -84,7 +84,7 @@ class CoapProtocol : public minifi::c2::RESTSender {
     // no op.
   }
 
-  void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) override;
+  void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) override;
 
   // Supported Properties
 

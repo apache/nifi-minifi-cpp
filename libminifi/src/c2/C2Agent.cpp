@@ -47,7 +47,7 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller,
+C2Agent::C2Agent(core::controller::ControllerServiceProvider* controller,
                  const std::shared_ptr<state::StateMonitor> &updateSink,
                  const std::shared_ptr<Configure> &configuration)
     : heart_beat_period_(3000),
