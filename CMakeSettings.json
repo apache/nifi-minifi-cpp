@@ -89,7 +89,7 @@
         },
         {
           "name": "STRICT_GSL_CHECKS",
-          "value": "AUDIT"
+          "value": "ON"
         }
       ],
       "ctestCommandArgs": ""
