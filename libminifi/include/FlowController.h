@@ -319,20 +319,15 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::vector<BackTrace> getTraces() override;
 
   void initializeC2();
-
   void stopC2();
 
  protected:
   void loadC2ResponseConfiguration();
-
   void loadC2ResponseConfiguration(const std::string &prefix);
-
-
   std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode>);
 
   // function to load the flow file repo.
   void loadFlowRepo();
-
   void initializeExternalComponents();
 
   /**
@@ -345,10 +340,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // flow controller mutex
   std::recursive_mutex mutex_;
 
-  // Configuration File Name
-  std::string configuration_file_name_;
-  // NiFi property File Name
-  std::string properties_file_name_;
   // Root Process Group
   std::shared_ptr<core::ProcessGroup> root_;
   // Whether it is running
@@ -357,7 +348,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   // conifiguration filename
   std::string configuration_filename_;
-
   std::atomic<bool> c2_initialized_;
   std::atomic<bool> flow_update_;
   std::atomic<bool> c2_enabled_;
@@ -365,61 +355,41 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::atomic<bool> initialized_;
   // Provenance Repo
   std::shared_ptr<core::Repository> provenance_repo_;
-
   // FlowFile Repo
   std::shared_ptr<core::Repository> flow_file_repo_;
-
   std::shared_ptr<core::ContentRepository> content_repo_;
-
   // Thread pool for schedulers
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
-  // Flow Engines
   // Flow Timer Scheduler
   std::shared_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
   // Flow Event Scheduler
   std::shared_ptr<EventDrivenSchedulingAgent> event_scheduler_;
   // Cron Schedule
   std::shared_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
-  // Controller Service
-  // Config
-  // Site to Site Server Listener
-  // Heart Beat
   // FlowControl Protocol
   std::unique_ptr<FlowControlProtocol> protocol_;
-
   std::shared_ptr<Configure> configuration_;
-
   std::shared_ptr<core::controller::ControllerServiceMap> controller_service_map_;
-
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
   // flow configuration object.
   std::unique_ptr<core::FlowConfiguration> flow_configuration_;
-
   // metrics information
-
   std::chrono::steady_clock::time_point start_time_;
-
   mutable std::mutex metrics_mutex_;
   // root_nodes cache
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
-
   // metrics cache
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> device_information_;
-
   // metrics cache
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> component_metrics_;
-
   std::map<uint8_t, std::vector<std::shared_ptr<state::response::ResponseNode>>> component_metrics_by_id_;
-
   // metrics last run
   std::chrono::steady_clock::time_point last_metrics_capture_;
 
  private:
   std::chrono::milliseconds shutdown_check_interval_{1000};
-
   std::shared_ptr<logging::Logger> logger_;
   std::string serial_number_;
-
   std::unique_ptr<state::UpdateController> c2_agent_;
 };
 
