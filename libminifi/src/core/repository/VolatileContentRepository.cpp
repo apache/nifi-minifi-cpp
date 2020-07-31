@@ -161,7 +161,7 @@ bool VolatileContentRepository::remove(const minifi::ResourceClaim &claim) {
       // because of the test and set we need to decrement ownership
       ptr->decrementOwnership();
       if (ptr->freeValue(claim.getContentFullPath())) {
-        logger_->log_info("Removed %s", claim.getContentFullPath());
+        logger_->log_info("Deleting resource %s", claim.getContentFullPath());
         return true;
       } else {
         logger_->log_info("free failed for %s", claim.getContentFullPath());

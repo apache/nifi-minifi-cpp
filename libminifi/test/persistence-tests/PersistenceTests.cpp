@@ -38,7 +38,7 @@ using Connection = minifi::Connection;
 using MergeContent = minifi::processors::MergeContent;
 
 struct TestFlow{
-  TestFlow(const std::shared_ptr<core::repository::FlowFileRepository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<core::Repository>& prov_repo,
+  TestFlow(const std::shared_ptr<core::Repository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<core::Repository>& prov_repo,
         const std::function<std::shared_ptr<core::Processor>(utils::Identifier&)>& processorGenerator, const core::Relationship& relationshipToOutput)
       : ff_repository(ff_repository), content_repo(content_repo), prov_repo(prov_repo) {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
@@ -121,7 +121,7 @@ struct TestFlow{
 
   std::shared_ptr<core::Processor> inputProcessor;
   std::shared_ptr<core::Processor> processor;
-  std::shared_ptr<core::repository::FlowFileRepository> ff_repository;
+  std::shared_ptr<core::Repository> ff_repository;
   std::shared_ptr<core::ContentRepository> content_repo;
   std::shared_ptr<core::Repository> prov_repo;
   std::shared_ptr<core::ProcessContext> inputContext;
@@ -242,20 +242,11 @@ std::shared_ptr<core::Processor> setupContentUpdaterProcessor(utils::Identifier&
   return std::make_shared<ContentUpdaterProcessor>("Updater", id);
 }
 
-class ReportingFileSystemRepository : public core::repository::FileSystemRepository{
- public:
-  bool remove(const minifi::ResourceClaim& claim) override {
-    removedResources.push_back(claim.getContentFullPath());
-    return FileSystemRepository::remove(claim);
-  }
-
-  std::vector<std::string> removedResources;
-};
-
 TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   TestController testController;
   LogTestController::getInstance().setDebug<core::ContentRepository>();
   LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
   LogTestController::getInstance().setTrace<minifi::ResourceClaim>();
   LogTestController::getInstance().setTrace<minifi::FlowFileRecord>();
 
@@ -267,8 +258,26 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
 
   std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
-  std::shared_ptr<core::repository::FlowFileRepository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
-  std::shared_ptr<ReportingFileSystemRepository> content_repo = std::make_shared<ReportingFileSystemRepository>();
+  std::shared_ptr<core::Repository> ff_repository;
+  std::shared_ptr<core::ContentRepository> content_repo;
+  SECTION("FlowFileRepository"){
+    ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
+    SECTION("VolatileContentRepository"){
+      content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+    }
+    SECTION("FileSystemContenRepository"){
+      content_repo = std::make_shared<core::repository::FileSystemRepository>();
+    }
+  }
+  SECTION("VolatileFlowFileRepository"){
+    ff_repository = std::make_shared<core::repository::FlowFileRepository>("volatileFlowFileRepository");
+    SECTION("VolatileContentRepository"){
+      content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+    }
+    SECTION("FileSystemContenRepository"){
+      content_repo = std::make_shared<core::repository::FileSystemRepository>();
+    }
+  }
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
@@ -281,12 +290,12 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
     flowController->load(flow.root);
     ff_repository->start();
 
-    std::vector<std::string> resourcesExpectedToBeRemoved;
+    std::string removedResource;
     {
       // write two files into the input
       auto flowFile = flow.write("data");
       auto claim = flowFile->getResourceClaim();
-      resourcesExpectedToBeRemoved.push_back(claim->getContentFullPath());
+      removedResource = claim->getContentFullPath();
       // one from the FlowFile and one from the persisted instance
       REQUIRE(claim->getFlowFileRecordOwnedCount() == 2);
       // update them with the Merge Processor
@@ -302,7 +311,8 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
       // one from the FlowFile and one from the persisted instance
       REQUIRE(newClaim->getFlowFileRecordOwnedCount() == 2);
     }
-    REQUIRE(content_repo->removedResources == resourcesExpectedToBeRemoved);
+    REQUIRE(LogTestController::getInstance().countOccurrences("Deleting resource " + removedResource) == 1);
+    REQUIRE(LogTestController::getInstance().countOccurrences("Deleting resource") == 1);
 
     ff_repository->stop();
     flowController->unload();
