@@ -337,6 +337,14 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   utils::optional<std::chrono::milliseconds> loadShutdownTimeoutFromConfiguration();
 
+  template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>
+  void conditionalReloadScheduler(std::shared_ptr<T>& scheduler, const bool condition) {
+    if (condition) {
+      // TODO(hunyadi): Making a shared pointer for the schedulers goes away with the next commit
+      auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
+      scheduler = std::make_shared<T>(base_shared_ptr, provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+    }
+  }
   // flow controller mutex
   std::recursive_mutex mutex_;
 

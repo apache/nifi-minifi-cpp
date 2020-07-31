@@ -82,10 +82,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       flow_file_repo_(flow_file_repo),
       controller_service_map_(std::make_shared<core::controller::ControllerServiceMap>()),
       thread_pool_(2, false, nullptr, "Flowcontroller threadpool"),
-      timer_scheduler_(nullptr),
-      event_scheduler_(nullptr),
-      cron_scheduler_(nullptr),
-      controller_service_provider_(nullptr),
       flow_configuration_(std::move(flow_configuration)),
       configuration_(configure),
       content_repo_(content_repo),
@@ -267,9 +263,9 @@ int16_t FlowController::stop() {
       this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
     }
     // stop after we've attempted to stop the processors.
-    this->timer_scheduler_->stop();
-    this->event_scheduler_->stop();
-    this->cron_scheduler_->stop();
+    timer_scheduler_->stop();
+    event_scheduler_->stop();
+    cron_scheduler_->stop();
     thread_pool_.shutdown();
     /* STOP! Before you change it, consider the following:
      * -Stopping the schedulers doesn't actually quit the onTrigger functions of processors
@@ -350,17 +346,10 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
       thread_pool_.setControllerServiceProvider(base_shared_ptr);
       thread_pool_.start();
     }
-    if (nullptr == timer_scheduler_ || reload) {
-      timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(base_shared_ptr, provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
-    }
 
-    if (nullptr == event_scheduler_ || reload) {
-      event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(base_shared_ptr, provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
-    }
-
-    if (nullptr == cron_scheduler_ || reload) {
-      cron_scheduler_ = std::make_shared<CronDrivenSchedulingAgent>(base_shared_ptr, provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
-    }
+    conditionalReloadScheduler<TimerDrivenSchedulingAgent>(timer_scheduler_, !timer_scheduler_ || reload);
+    conditionalReloadScheduler<EventDrivenSchedulingAgent>(event_scheduler_, !event_scheduler_ || reload);
+    conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_ || reload);
 
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
