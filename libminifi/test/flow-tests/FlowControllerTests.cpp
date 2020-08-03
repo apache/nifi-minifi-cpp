@@ -141,6 +141,7 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
     std::this_thread::sleep_for(std::chrono::milliseconds{20});
   }
 
+  testController.logger_->log_info("Verifying conditions");
   REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
@@ -186,6 +187,7 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
     std::this_thread::sleep_for(std::chrono::milliseconds{20});
   }
 
+  testController.logger_->log_info("Verifying conditions");
   REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
@@ -233,6 +235,7 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
     std::this_thread::sleep_for(std::chrono::milliseconds{20});
   }
 
+  testController.logger_->log_info("Verifying conditions");
   REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
