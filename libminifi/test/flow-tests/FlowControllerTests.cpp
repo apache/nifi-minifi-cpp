@@ -79,6 +79,17 @@ Connections:
 Remote Processing Groups:
 )";
 
+template<typename Fn>
+void busy_wait(std::chrono::milliseconds timeout, Fn&& fn) {
+  auto start = std::chrono::steady_clock::now();
+  while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start) < timeout) {
+    if (fn()) {
+      return;
+    }
+  }
+  throw std::runtime_error("Condition is not satisfied in " + std::to_string(timeout.count()) + "ms");
+}
+
 TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
   TestControllerWithFlow testController(yamlConfig);
   auto controller = testController.controller_;
@@ -135,14 +146,10 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  int tryCount = 0;
-  while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
-    testController.logger_->log_info("Sleeping for 20 ms");
-    std::this_thread::sleep_for(std::chrono::milliseconds{20});
-  }
+  busy_wait(std::chrono::milliseconds{50}, [&] {return root->getTotalFlowFileCount() != 0;});
 
   testController.logger_->log_info("Verifying conditions");
-  REQUIRE(root->getTotalFlowFileCount() == 3);
+  REQUIRE(root->getTotalFlowFileCount() != 0);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   testController.logger_->log_info("Continue sinkProc and stop controller");
@@ -181,14 +188,10 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  int tryCount = 0;
-  while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
-    testController.logger_->log_info("Sleeping for 20 ms");
-    std::this_thread::sleep_for(std::chrono::milliseconds{20});
-  }
+  busy_wait(std::chrono::milliseconds{50}, [&] {return root->getTotalFlowFileCount() != 0;});
 
   testController.logger_->log_info("Verifying conditions");
-  REQUIRE(root->getTotalFlowFileCount() == 3);
+  REQUIRE(root->getTotalFlowFileCount() != 0);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   testController.logger_->log_info("Continue sinkProc and stop controller");
@@ -229,14 +232,10 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  int tryCount = 0;
-  while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
-    testController.logger_->log_info("Sleeping for 20 ms");
-    std::this_thread::sleep_for(std::chrono::milliseconds{20});
-  }
+  busy_wait(std::chrono::milliseconds{50}, [&] {return root->getTotalFlowFileCount() != 0;});
 
   testController.logger_->log_info("Verifying conditions");
-  REQUIRE(root->getTotalFlowFileCount() == 3);
+  REQUIRE(root->getTotalFlowFileCount() != 0);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   std::thread shutdownThread([&]{
