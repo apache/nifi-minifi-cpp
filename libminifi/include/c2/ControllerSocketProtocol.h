@@ -51,7 +51,7 @@ class ControllerSocketProtocol : public HeartBeatReporter {
    * @param updateSink update mechanism that will be used to stop/clear elements
    * @param configuration configuration class.
    */
-  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+  virtual void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
                           const std::shared_ptr<Configure> &configuration);
 
   /**

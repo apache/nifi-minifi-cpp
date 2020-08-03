@@ -40,6 +40,7 @@
 #include "core/Repository.h"
 #include "core/FlowFile.h"
 #include "VariableRegistry.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -62,7 +63,7 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
 
   virtual ~ProcessContextBuilder() = default;
 
-  std::shared_ptr<ProcessContextBuilder> withProvider(const std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider);
+  std::shared_ptr<ProcessContextBuilder> withProvider(core::controller::ControllerServiceProvider* controller_service_provider);
 
   std::shared_ptr<ProcessContextBuilder> withProvenanceRepository(const std::shared_ptr<core::Repository> &repo);
 
@@ -76,7 +77,7 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
 
  protected:
   std::shared_ptr<minifi::Configure> configuration_;
-  std::shared_ptr<controller::ControllerServiceProvider> controller_service_provider_;
+  core::controller::ControllerServiceProvider* controller_service_provider_;
   std::shared_ptr<core::Repository> prov_repo_;
   std::shared_ptr<core::Repository> flow_repo_;
   std::shared_ptr<core::ContentRepository> content_repo_;

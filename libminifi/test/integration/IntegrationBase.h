@@ -118,7 +118,7 @@ void IntegrationBase::run(std::string test_file_location) {
   auto controller_service_provider = yaml_ptr->getControllerServiceProvider();
   char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";
   state_dir = utils::file::FileUtils::create_temp_directory(state_dir_name_template);
-  core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_service_provider, configuration, state_dir.c_str());
+  core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_service_provider.get(), configuration, state_dir.c_str());
 
   std::shared_ptr<core::ProcessGroup> pg(yaml_config.getRoot(test_file_location));
   queryRootProcessGroup(pg);

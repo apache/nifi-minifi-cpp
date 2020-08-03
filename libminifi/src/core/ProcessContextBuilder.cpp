@@ -48,7 +48,7 @@ ProcessContextBuilder::ProcessContextBuilder(const std::string &name)
   configuration_ = std::make_shared<minifi::Configure>();
 }
 
-std::shared_ptr<ProcessContextBuilder> ProcessContextBuilder::withProvider(const std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider) {
+std::shared_ptr<ProcessContextBuilder> ProcessContextBuilder::withProvider(core::controller::ControllerServiceProvider* controller_service_provider) {
   controller_service_provider_ = controller_service_provider;
   return this->shared_from_this();
 }

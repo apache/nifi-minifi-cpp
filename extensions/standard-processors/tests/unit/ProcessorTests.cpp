@@ -83,8 +83,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   REQUIRE(!dir.empty());
 
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
   context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
   // replicate 10 threads
@@ -169,8 +168,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   REQUIRE(!dir.empty());
 
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
   context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
   // replicate 10 threads
@@ -265,8 +263,7 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   processor->setScheduledState(core::ScheduledState::RUNNING);
 
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
 
@@ -574,8 +571,7 @@ void testRPGBypass(const std::string &host, const std::string &port, const std::
   REQUIRE(rpg->setProperty(minifi::RemoteProcessorGroupPort::hostName, host));
   rpg->setProperty(minifi::RemoteProcessorGroupPort::port, port);
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(rpg);
-  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
   auto psf = std::make_shared<core::ProcessSessionFactory>(context);
   if (hasException) {
     auto expected_error = "Site2Site Protocol: HTTPClient not resolvable. No peers configured or any port specific hostname and port -- cannot schedule";

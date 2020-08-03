@@ -580,7 +580,7 @@ void FlowController::initializeC2() {
   loadC2ResponseConfiguration();
 
   if (!c2_initialized_) {
-    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(std::dynamic_pointer_cast<FlowController>(shared_from_this()),
+    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(this,
                                                              std::dynamic_pointer_cast<FlowController>(shared_from_this()),
                                                              configuration_));
     c2_agent_->start();
@@ -790,7 +790,7 @@ std::shared_ptr<core::controller::ControllerService> FlowController::getControll
  * @param id service identifier
  * @return shared pointer to the controller service node or nullptr if it does not exist.
  */
-std::shared_ptr<core::controller::ControllerServiceNode> FlowController::getControllerServiceNode(const std::string &id) {
+std::shared_ptr<core::controller::ControllerServiceNode> FlowController::getControllerServiceNode(const std::string &id) const {
   return controller_service_provider_->getControllerServiceNode(id);
 }
 

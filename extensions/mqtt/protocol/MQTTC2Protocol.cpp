@@ -30,7 +30,7 @@ MQTTC2Protocol::MQTTC2Protocol(std::string name, utils::Identifier uuid)
 
 MQTTC2Protocol::~MQTTC2Protocol() = default;
 
-void MQTTC2Protocol::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
+void MQTTC2Protocol::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) {
   if (configure->get("nifi.c2.mqtt.connector.service", controller_service_name_)) {
     auto service = controller->getControllerService(controller_service_name_);
     mqtt_service_ = std::static_pointer_cast<controllers::MQTTControllerService>(service);

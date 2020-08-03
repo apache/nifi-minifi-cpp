@@ -62,7 +62,7 @@ namespace c2 {
  */
 class C2Agent : public state::UpdateController {
  public:
-  C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller,
+  C2Agent(core::controller::ControllerServiceProvider* controller,
           const std::shared_ptr<state::StateMonitor> &updateSink,
           const std::shared_ptr<Configure> &configure);
   virtual ~C2Agent() noexcept {
@@ -210,7 +210,7 @@ class C2Agent : public state::UpdateController {
   std::shared_ptr<controllers::UpdatePolicyControllerService> update_service_;
 
   // controller service provider reference.
-  std::shared_ptr<core::controller::ControllerServiceProvider> controller_;
+  core::controller::ControllerServiceProvider* controller_;
 
   // shared pointer to the configuration of this agent
   std::shared_ptr<Configure> configuration_;

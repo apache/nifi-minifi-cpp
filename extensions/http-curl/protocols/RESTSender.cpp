@@ -41,7 +41,7 @@ RESTSender::RESTSender(const std::string &name, const utils::Identifier &uuid)
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }
 
-void RESTSender::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
+void RESTSender::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) {
   C2Protocol::initialize(controller, configure);
   // base URL when one is not specified.
   if (nullptr != configure) {

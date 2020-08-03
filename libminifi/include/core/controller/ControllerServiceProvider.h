@@ -82,7 +82,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * @param id controller service identifier.
    * @return shared pointer to the controller service node.
    */
-  virtual std::shared_ptr<ControllerServiceNode> getControllerServiceNode(const std::string &id) {
+  virtual std::shared_ptr<ControllerServiceNode> getControllerServiceNode(const std::string &id) const {
     return controller_map_->getControllerServiceNode(id);
   }
 

@@ -41,20 +41,18 @@ struct TestFlow{
   TestFlow(const std::shared_ptr<core::repository::FlowFileRepository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<core::Repository>& prov_repo,
         const std::function<std::shared_ptr<core::Processor>(utils::Identifier&)>& processorGenerator, const core::Relationship& relationshipToOutput)
       : ff_repository(ff_repository), content_repo(content_repo), prov_repo(prov_repo) {
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-
     // setup processor
     {
       processor = processorGenerator(mainProcUUID());
       std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-      processorContext = std::make_shared<core::ProcessContext>(node, controller_services_provider, prov_repo, ff_repository, content_repo);
+      processorContext = std::make_shared<core::ProcessContext>(node, nullptr, prov_repo, ff_repository, content_repo);
     }
 
     // setup INPUT processor
     {
       inputProcessor = std::make_shared<core::Processor>("source", inputProcUUID());
       std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(inputProcessor);
-      inputContext = std::make_shared<core::ProcessContext>(node, controller_services_provider, prov_repo,
+      inputContext = std::make_shared<core::ProcessContext>(node, nullptr, prov_repo,
                                                             ff_repository, content_repo);
     }
 

@@ -144,8 +144,7 @@ class CompressDecompressionTestController : public TestController{
     processor_->setScheduledState(core::ScheduledState::RUNNING);
 
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor_);
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    context_ = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    context_ = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
   }
 
  public:
