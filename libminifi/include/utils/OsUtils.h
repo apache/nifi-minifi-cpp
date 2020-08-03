@@ -43,4 +43,4 @@ extern std::string resolve_common_identifiers(const std::string &id);
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_ */
+#endif  // LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
