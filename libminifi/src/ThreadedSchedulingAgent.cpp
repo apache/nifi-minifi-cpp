@@ -98,6 +98,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     processor->incrementActiveTasks();
 
     std::function<utils::TaskRescheduleInfo()> f_ex = [agent, processor, processContext, sessionFactory] () {
+      agent->logger_->log_debug("Executing processor: %s", processor->getUUIDStr().c_str());
       return agent->run(processor, processContext, sessionFactory);
     };
 
