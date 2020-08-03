@@ -366,7 +366,9 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
 
     context->getProperty(LookupFrequency.getName(), lookup_frequency_);
 
-    // in multiple mode, we check for new/removed files in every onTrigger
+    recoverState(context);
+
+    doMultifileLookup();
 
   } else {
     tail_mode_ = Mode::SINGLE;
@@ -378,13 +380,13 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     } else {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "File to tail must be a fully qualified file");
     }
+
+    recoverState(context);
   }
 
   std::string rolling_filename_pattern_glob;
   context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
   rolling_filename_pattern_ = utils::file::PathUtils::globToRegex(rolling_filename_pattern_glob);
-
-  recoverState(context);
 }
 
 void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const {
@@ -633,9 +635,7 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &, const st
   if (tail_mode_ == Mode::MULTIPLE) {
     if (last_multifile_lookup_ + lookup_frequency_ < std::chrono::steady_clock::now()) {
       logger_->log_debug("Lookup frequency %" PRId64 " ms have elapsed, doing new multifile lookup", int64_t{lookup_frequency_.count()});
-      checkForRemovedFiles();
-      checkForNewFiles();
-      last_multifile_lookup_ = std::chrono::steady_clock::now();
+      doMultifileLookup();
     } else {
       logger_->log_trace("Skipping multifile lookup");
     }
@@ -743,6 +743,12 @@ void TailFile::updateStateAttributes(TailState &state, uint64_t size, uint64_t c
   state.position_ += size;
   state.last_read_time_ = std::chrono::system_clock::now();
   state.checksum_ = checksum;
+}
+
+void TailFile::doMultifileLookup() {
+  checkForRemovedFiles();
+  checkForNewFiles();
+  last_multifile_lookup_ = std::chrono::steady_clock::now();
 }
 
 void TailFile::checkForRemovedFiles() {

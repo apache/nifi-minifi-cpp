@@ -168,6 +168,8 @@ class TailFile : public core::Processor {
   bool getStateFromLegacyStateFile(const std::shared_ptr<core::ProcessContext>& context,
                                    std::map<std::string, TailState> &new_tail_states) const;
 
+  void doMultifileLookup();
+
   void checkForRemovedFiles();
 
   void checkForNewFiles();
