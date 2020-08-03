@@ -1499,9 +1499,9 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
   auto log_attribute = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   plan->setProperty(log_attribute, processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
-  testController.runSession(plan, true);
-
   SECTION("Lookup frequency not set => defaults to 10 minutes") {
+    testController.runSession(plan, true);
+
     std::shared_ptr<processors::TailFile> tail_file_processor = std::dynamic_pointer_cast<processors::TailFile>(tail_file);
     REQUIRE(tail_file_processor);
     REQUIRE(tail_file_processor->getLookupFrequency() == std::chrono::minutes{10});
@@ -1509,8 +1509,10 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
 
   SECTION("Lookup frequency set to zero => new files are picked up immediately") {
     plan->setProperty(tail_file, processors::TailFile::LookupFrequency.getName(), "0 sec");
+    testController.runSession(plan, true);
+    REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
 
-    plan->reset(true);
+    plan->reset();
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
     createTempFile(directory, "test.blue.log", "sky\n");
@@ -1523,8 +1525,10 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
 
   SECTION("Lookup frequency set to 100 ms => new files are only picked up after 100 ms") {
     plan->setProperty(tail_file, processors::TailFile::LookupFrequency.getName(), "100 ms");
+    testController.runSession(plan, true);
+    REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
 
-    plan->reset(true);
+    plan->reset();
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
     createTempFile(directory, "test.blue.log", "sky\n");
@@ -1533,11 +1537,17 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
 
-    plan->reset(false);
+    plan->reset();
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(110));
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
+  }
+
+  SECTION("Lookup frequency set to a thousand years => files already present when started are still picked up") {
+    plan->setProperty(tail_file, processors::TailFile::LookupFrequency.getName(), "365000 days");
+    testController.runSession(plan, true);
+    REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
   }
 }
