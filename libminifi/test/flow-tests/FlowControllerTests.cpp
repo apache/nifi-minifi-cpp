@@ -127,7 +127,9 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
   std::promise<void> execSinkPromise;
   std::future<void> execSinkFuture = execSinkPromise.get_future();
   sinkProc->onTriggerCb_ = [&] {
+    testController.logger_->log_info("sinkProc onTrigger started");
     execSinkFuture.wait();
+    testController.logger_->log_info("sinkProc onTrigger calls impl");
   };
 
   testController.startFlow();
@@ -135,12 +137,14 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
   // wait for the source processor to enqueue its flowFiles
   int tryCount = 0;
   while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
+    testController.logger_->log_info("Sleeping for 20 ms");
     std::this_thread::sleep_for(std::chrono::milliseconds{20});
   }
 
   REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
+  testController.logger_->log_info("Continue sinkProc and stop controller");
   execSinkPromise.set_value();
   controller->stop(true);
 
@@ -161,13 +165,16 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
   std::promise<void> execSinkPromise;
   std::future<void> execSinkFuture = execSinkPromise.get_future();
   sinkProc->onTriggerCb_ = [&]{
+    testController.logger_->log_info("sinkProc onTrigger started");
     execSinkFuture.wait();
+    testController.logger_->log_info("sinkProc onTrigger continue");
     static std::atomic<bool> first_onTrigger{true};
     bool isFirst = true;
     // sleep only on the first trigger
     if (first_onTrigger.compare_exchange_strong(isFirst, false)) {
       std::this_thread::sleep_for(std::chrono::milliseconds{1500});
     }
+    testController.logger_->log_info("sinkProc onTrigger calls impl");
   };
 
   testController.startFlow();
@@ -175,12 +182,14 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
   // wait for the source processor to enqueue its flowFiles
   int tryCount = 0;
   while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
+    testController.logger_->log_info("Sleeping for 20 ms");
     std::this_thread::sleep_for(std::chrono::milliseconds{20});
   }
 
   REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
+  testController.logger_->log_info("Continue sinkProc and stop controller");
   execSinkPromise.set_value();
   controller->stop(true);
 
@@ -203,13 +212,16 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   std::promise<void> execSinkPromise;
   std::future<void> execSinkFuture = execSinkPromise.get_future();
   sinkProc->onTriggerCb_ = [&]{
+    testController.logger_->log_info("sinkProc onTrigger started");
     execSinkFuture.wait();
+    testController.logger_->log_info("sinkProc onTrigger continue");
     static std::atomic<bool> first_onTrigger{true};
     bool isFirst = true;
     // sleep only on the first trigger
     if (first_onTrigger.compare_exchange_strong(isFirst, false)) {
       std::this_thread::sleep_for(std::chrono::milliseconds{1500});
     }
+    testController.logger_->log_info("sinkProc onTrigger calls impl");
   };
 
   testController.startFlow();
@@ -217,6 +229,7 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   // wait for the source processor to enqueue its flowFiles
   int tryCount = 0;
   while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
+    testController.logger_->log_info("Sleeping for 20 ms");
     std::this_thread::sleep_for(std::chrono::milliseconds{20});
   }
 
@@ -224,11 +237,14 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   std::thread shutdownThread([&]{
+    testController.logger_->log_info("Continue sinkProc and stop controller");
     execSinkPromise.set_value();
     controller->stop(true);
   });
 
-  while (controller->isRunning()) {
+  int extendCount = 0;
+  while (extendCount++ < 5 && controller->isRunning()) {
+    testController.logger_->log_info("Controller still running, extend the waiting period, ff count: %d", (int)root->getTotalFlowFileCount());
     std::this_thread::sleep_for(std::chrono::milliseconds{500});
     timeout_ms += 500;
     testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, std::to_string(timeout_ms) + " ms");
