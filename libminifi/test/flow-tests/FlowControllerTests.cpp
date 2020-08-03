@@ -244,7 +244,7 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
 
   int extendCount = 0;
   while (extendCount++ < 5 && controller->isRunning()) {
-    testController.logger_->log_info("Controller still running, extend the waiting period, ff count: %d", (int)root->getTotalFlowFileCount());
+    testController.logger_->log_info("Controller still running, extend the waiting period, ff count: %d", static_cast<int>(root->getTotalFlowFileCount()));
     std::this_thread::sleep_for(std::chrono::milliseconds{500});
     timeout_ms += 500;
     testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, std::to_string(timeout_ms) + " ms");
