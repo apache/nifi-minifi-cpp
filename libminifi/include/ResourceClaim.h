@@ -45,7 +45,7 @@ extern std::string default_directory_path;
 extern void setDefaultDirectory(std::string);
 
 // ResourceClaim Class
-class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
+class ResourceClaim {
  public:
   // the type which uniquely represents the resource for the owning manager
   using Path = std::string;
