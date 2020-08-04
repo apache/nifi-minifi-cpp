@@ -33,8 +33,6 @@ class TestControllerWithFlow: public TestController{
     LogTestController::getInstance().setTrace<minifi::EventDrivenSchedulingAgent>();
     LogTestController::getInstance().setTrace<TestControllerWithFlow>();
 
-    logger_->log_info("TestControllerWithFlow constructor");
-
     char format[] = "/tmp/flowTest.XXXXXX";
     std::string dir = createTempDirectory(format);
 
@@ -60,13 +58,11 @@ class TestControllerWithFlow: public TestController{
   }
 
   void startFlow() {
-    logger_->log_info("TestControllerWithFlow::startFlow");
     controller_->load(root_);
     controller_->start();
   }
 
   ~TestControllerWithFlow() {
-    logger_->log_info("TestControllerWithFlow destructor");
     controller_->stop(true);
     controller_->unload();
     LogTestController::getInstance().reset();
