@@ -23,20 +23,30 @@
 
 #include "utils/ScopeGuard.h"
 
-#ifdef WIN32
+#ifdef __linux__
+#include <sstream>
+#endif
+
+#ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <Windows.h>
 #include <sddl.h>
+#include <psapi.h>
+#include <vector>
+#include <algorithm>
 #pragma comment(lib, "Ws2_32.lib")
 #else
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <pwd.h>
 #include <sys/types.h>
+#include <unistd.h>
+#include <fstream>
 
-#include <mutex>
+#endif
+
+#ifdef __APPLE__
+#include <mach/mach.h>
 #endif
 
 namespace org {
@@ -45,7 +55,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-#ifdef WIN32
+#ifdef _WIN32
 /*
  These are common translations for SIDs in windows
  */
@@ -73,7 +83,7 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
   std::string name;
   name = uid;
   if (!name.empty()) {
-#ifdef WIN32
+#ifdef _WIN32
     const auto resolved_name = resolve_common_identifiers(name);
     if (!resolved_name.empty()) {
       return resolved_name;
@@ -152,6 +162,43 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
 #endif
   }
   return name;
+}
+
+uint64_t OsUtils::getMemoryUsage() {
+#ifdef __linux__
+  static const std::string linePrefix = "VmRSS:";
+  std::ifstream statusFile("/proc/self/status");
+  std::string line;
+
+  while (std::getline(statusFile, line)) {
+    // if line begins with "VmRSS:"
+    if (line.rfind(linePrefix, 0) == 0) {
+      std::istringstream valuableLine(line.substr(linePrefix.length()));
+      uint64_t kByteValue;
+      valuableLine >> kByteValue;
+      return kByteValue * 1024;
+    }
+  }
+
+  throw std::runtime_error("Could not get memory info for current process");
+#endif
+
+#ifdef __APPLE__
+  task_basic_info tInfo;
+  mach_msg_type_number_t tInfoCount = TASK_BASIC_INFO_COUNT;
+  if (KERN_SUCCESS != task_info(mach_task_self(), TASK_BASIC_INFO, (task_info_t)&tInfo, &tInfoCount))
+    throw std::runtime_error("Could not get memory info for current process");
+  return tInfo.resident_size;
+#endif
+
+#ifdef _WIN32
+  PROCESS_MEMORY_COUNTERS pmc;
+  if (!GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
+    throw std::runtime_error("Could not get memory info for current process");
+  return pmc.WorkingSetSize;
+#endif
+
+  throw std::runtime_error("getMemoryUsage() is not implemented for this platform");
 }
 
 }  // namespace utils

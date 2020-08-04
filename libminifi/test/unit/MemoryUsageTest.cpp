@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,33 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
 
-#include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace OsUtils {
+#include "utils/OsUtils.h"
+#include "../TestBase.h"
 
-/// Resolves a user ID to a username
-extern std::string userIdToUsername(const std::string &uid);
-
-/// Returns memory usage in bytes, including shared memory
-uint64_t getMemoryUsage();
-
-#ifdef WIN32
-/// Resolves common identifiers
-extern std::string resolve_common_identifiers(const std::string &id);
-#endif
-} /* namespace OsUtils */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
+TEST_CASE("Test memory usage", "[testmemoryusage]") {
+  std::vector<char> v(30000000);
+  const auto memoryUsage = utils::OsUtils::getMemoryUsage();
+  REQUIRE(memoryUsage > v.size());
+  REQUIRE(memoryUsage < 2 * v.size());
+}
