@@ -33,6 +33,7 @@
 #include "../TestBase.h"
 #include "../../extensions/libarchive/MergeContent.h"
 #include "../test/BufferReader.h"
+#include "core/repository/VolatileFlowFileRepository.h"
 
 using Connection = minifi::Connection;
 using MergeContent = minifi::processors::MergeContent;
@@ -249,6 +250,8 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
   LogTestController::getInstance().setTrace<minifi::ResourceClaim>();
   LogTestController::getInstance().setTrace<minifi::FlowFileRecord>();
+  LogTestController::getInstance().setTrace<core::repository::FlowFileRepository>();
+  LogTestController::getInstance().setTrace<core::repository::VolatileRepository<minifi::ResourceClaim::Path>>();
 
   char format[] = "/var/tmp/test.XXXXXX";
   auto dir = testController.createTempDirectory(format);
@@ -258,25 +261,15 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
 
   std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
-  std::shared_ptr<core::Repository> ff_repository;
+  std::shared_ptr<core::Repository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
   std::shared_ptr<core::ContentRepository> content_repo;
-  SECTION("FlowFileRepository"){
-    ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
-    SECTION("VolatileContentRepository"){
-      content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    }
-    SECTION("FileSystemContenRepository"){
-      content_repo = std::make_shared<core::repository::FileSystemRepository>();
-    }
+  SECTION("VolatileContentRepository") {
+    testController.getLogger()->log_info("Using VolatileContentRepository");
+    content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   }
-  SECTION("VolatileFlowFileRepository"){
-    ff_repository = std::make_shared<core::repository::FlowFileRepository>("volatileFlowFileRepository");
-    SECTION("VolatileContentRepository"){
-      content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    }
-    SECTION("FileSystemContenRepository"){
-      content_repo = std::make_shared<core::repository::FileSystemRepository>();
-    }
+  SECTION("FileSystemContentRepository") {
+    testController.getLogger()->log_info("Using FileSystemRepository");
+    content_repo = std::make_shared<core::repository::FileSystemRepository>();
   }
   ff_repository->initialize(config);
   content_repo->initialize(config);
