@@ -31,7 +31,6 @@ class TestControllerWithFlow: public TestController{
     LogTestController::getInstance().setTrace<core::Processor>();
     LogTestController::getInstance().setTrace<minifi::TimerDrivenSchedulingAgent>();
     LogTestController::getInstance().setTrace<minifi::EventDrivenSchedulingAgent>();
-    LogTestController::getInstance().setTrace<TestControllerWithFlow>();
 
     char format[] = "/tmp/flowTest.XXXXXX";
     std::string dir = createTempDirectory(format);
@@ -71,8 +70,6 @@ class TestControllerWithFlow: public TestController{
   std::shared_ptr<minifi::Configure> configuration_;
   std::shared_ptr<minifi::FlowController> controller_;
   std::shared_ptr<core::ProcessGroup> root_;
-
-  std::shared_ptr<logging::Logger> logger_{LogTestController::getInstance().getLogger<TestControllerWithFlow>()};
 };
 
 #endif //NIFI_MINIFI_CPP_TESTCONTROLLERWITHFLOW_H

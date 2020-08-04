@@ -144,9 +144,8 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  busy_wait(std::chrono::milliseconds{50}, [&] {return root->getTotalFlowFileCount() != 0;});
+  busy_wait(std::chrono::milliseconds{50}, [&] {return root->getTotalFlowFileCount() == 3;});
 
-  REQUIRE(root->getTotalFlowFileCount() != 0);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   execSinkPromise.set_value();
@@ -181,9 +180,8 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  busy_wait(std::chrono::milliseconds{50}, [&] {return root->getTotalFlowFileCount() != 0;});
+  busy_wait(std::chrono::milliseconds{50}, [&] {return root->getTotalFlowFileCount() == 3;});
 
-  REQUIRE(root->getTotalFlowFileCount() != 0);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   execSinkPromise.set_value();
@@ -220,9 +218,8 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  busy_wait(std::chrono::milliseconds{50}, [&] {return root->getTotalFlowFileCount() != 0;});
+  busy_wait(std::chrono::milliseconds{50}, [&] {return root->getTotalFlowFileCount() == 3;});
 
-  REQUIRE(root->getTotalFlowFileCount() != 0);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   std::thread shutdownThread([&]{
@@ -230,13 +227,15 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
     controller->stop(true);
   });
 
-  int extendCount = 0;
+  unsigned int extendCount = 0;
   while (extendCount++ < 5 && controller->isRunning()) {
-    testController.logger_->log_info("Controller still running, extend the waiting period, ff count: %d", static_cast<int>(root->getTotalFlowFileCount()));
+    testController.getLogger()->log_info("Controller still running, extend the waiting period %u, ff count: %u", extendCount, static_cast<unsigned int>(root->getTotalFlowFileCount()));
     std::this_thread::sleep_for(std::chrono::milliseconds{500});
     timeout_ms += 500;
     testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, std::to_string(timeout_ms) + " ms");
   }
+
+  REQUIRE(!controller->isRunning());
 
   shutdownThread.join();
 
