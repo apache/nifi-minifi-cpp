@@ -33,6 +33,7 @@ core::Relationship Success{"success", "Everything is fine"};
 const std::string APPLICATION_CHANNEL = "Application";
 
 constexpr DWORD CWEL_TESTS_OPCODE = 14985;  // random opcode hopefully won't clash with something important
+const std::string QUERY = "Event/System/EventID=" + std::to_string(CWEL_TESTS_OPCODE);
 
 void reportEvent(const std::string& channel, const char* message, WORD log_level = EVENTLOG_INFORMATION_TYPE) {
   auto event_source = RegisterEventSourceA(nullptr, channel.c_str());
@@ -118,6 +119,7 @@ TEST_CASE("ConsumeWindowsEventLog can consume new events", "[onTrigger]") {
 
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
 
   auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
   test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog.getName(), "0");
@@ -162,6 +164,7 @@ TEST_CASE("ConsumeWindowsEventLog bookmarking works", "[onTrigger]") {
 
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
 
   auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
   test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog.getName(), "0");
@@ -208,6 +211,7 @@ TEST_CASE("ConsumeWindowsEventLog extracts some attributes by default", "[onTrig
 
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
 
   auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
   test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog.getName(), "0");
@@ -256,6 +260,7 @@ void outputFormatSetterTestHelper(const std::string &output_format, int expected
 
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), output_format);
 
   auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
@@ -303,6 +308,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in XML correctly", "[onTrigger]"
 
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), "XML");
 
   auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
@@ -344,6 +350,7 @@ void batchCommitSizeTestHelper(int batch_commit_size, int expected_num_commits) 
 
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), "XML");
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::BatchCommitSize.getName(), std::to_string(batch_commit_size));
 
