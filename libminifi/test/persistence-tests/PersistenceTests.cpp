@@ -152,7 +152,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   LogTestController::getInstance().setTrace<minifi::ResourceClaim>();
   LogTestController::getInstance().setTrace<minifi::FlowFileRecord>();
 
-  char format[] = "/tmp/test.XXXXXX";
+  char format[] = "/var/tmp/test.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   auto config = std::make_shared<minifi::Configure>();
@@ -249,7 +249,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   LogTestController::getInstance().setTrace<minifi::ResourceClaim>();
   LogTestController::getInstance().setTrace<minifi::FlowFileRecord>();
 
-  char format[] = "/tmp/test.XXXXXX";
+  char format[] = "/var/tmp/test.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   auto config = std::make_shared<minifi::Configure>();
