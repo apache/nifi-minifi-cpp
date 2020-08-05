@@ -32,7 +32,7 @@
 #include "core/Property.h"
 #include "io/BaseStream.h"
 #include "io/ClientSocket.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "io/EndianCheck.h"
 #include "properties/Configure.h"
 #include "utils/HTTPClient.h"
@@ -145,7 +145,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   /*
    * Create a new site2site peer
    */
-  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket, const std::string host, uint16_t port, const std::string &ifc)
+  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::BufferStream> injected_socket, const std::string host, uint16_t port, const std::string &ifc)
       : SiteToSitePeer(host, port, ifc) {
     stream_ = std::move(injected_socket);
   }
@@ -280,13 +280,13 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     return this->proxy_;
   }
 
-  void setStream(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream) {
+  void setStream(std::unique_ptr<org::apache::nifi::minifi::io::BufferStream> stream) {
     stream_ = nullptr;
     if (stream)
       stream_ = std::move(stream);
   }
 
-  org::apache::nifi::minifi::io::DataStream *getStream() {
+  org::apache::nifi::minifi::io::BufferStream *getStream() {
     return stream_.get();
   }
 
@@ -345,7 +345,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
    * Move assignment operator.
    */
   SiteToSitePeer& operator=(SiteToSitePeer&& other) {
-    stream_ = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(other.stream_.release());
+    stream_ = std::unique_ptr<org::apache::nifi::minifi::io::BufferStream>(other.stream_.release());
     host_ = std::move(other.host_);
     port_ = std::move(other.port_);
     local_network_interface_ = std::move(other.local_network_interface_);
@@ -360,7 +360,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   SiteToSitePeer &operator=(const SiteToSitePeer &parent) = delete;
 
  private:
-  std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream_;
+  std::unique_ptr<org::apache::nifi::minifi::io::BufferStream> stream_;
 
   std::string host_;
 

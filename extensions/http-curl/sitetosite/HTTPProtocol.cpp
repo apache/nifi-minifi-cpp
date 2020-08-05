@@ -89,7 +89,7 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
         }
 
         client->appendHeader(PROTOCOL_VERSION_HEADER, "1");
-        peer_->setStream(std::unique_ptr<io::DataStream>(new io::HttpStream(client)));
+        peer_->setStream(std::unique_ptr<io::BufferStream>(new io::HttpStream(client)));
         transactionID = transaction->getUUIDStr();
         logger_->log_debug("Created transaction id -%s-", transactionID);
         known_transactions_[transaction->getUUIDStr()] = transaction;
@@ -110,7 +110,7 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
 
     if (transaction->getDirection() == SEND) {
       auto stream = dynamic_cast<io::HttpStream*>(peer_->getStream());
-      stream->closeStream();
+      stream->close();
       auto client = stream->getClient();
       if (client->getResponseCode() == 202) {
         code = CONFIRM_TRANSACTION;

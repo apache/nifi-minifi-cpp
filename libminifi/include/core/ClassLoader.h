@@ -36,7 +36,7 @@
 #define DLL_EXPORT __declspec(dllexport)
 #endif
 #include "core/Core.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 
 namespace org {
 namespace apache {

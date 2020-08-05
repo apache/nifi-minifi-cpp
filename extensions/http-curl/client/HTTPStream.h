@@ -46,7 +46,7 @@ class HttpStream : public io::BaseStream {
     forceClose();
   }
 
-  virtual void closeStream() override;
+  virtual void close() override;
 
   const std::shared_ptr<utils::HTTPClient> &getClientRef() {
     return http_client_;
@@ -62,7 +62,7 @@ class HttpStream : public io::BaseStream {
       // lock shouldn't be needed here as call paths currently guarantee
       // flow, but we should be safe anyway.
       std::lock_guard<std::mutex> lock(mutex_);
-      closeStream();
+      close();
       http_client_->forceClose();
       if (http_client_future_.valid()) {
         http_client_future_.get();

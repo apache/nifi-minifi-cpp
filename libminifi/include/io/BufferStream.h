@@ -16,17 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_IO_BASESTREAM_H_
-#define LIBMINIFI_INCLUDE_IO_BASESTREAM_H_
+#ifndef LIBMINIFI_INCLUDE_IO_DATASTREAM_H_
+#define LIBMINIFI_INCLUDE_IO_DATASTREAM_H_
 
-#include <string>
-#include <vector>
 #include <iostream>
 #include <cstdint>
-#include "EndianCheck.h"
-#include "BufferStream.h"
-#include "Serializable.h"
-#include "core/expect.h"
+#include <vector>
 #include "InputStream.h"
 #include "OutputStream.h"
 
@@ -36,19 +31,58 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-/**
- * Base Stream is the base of a composable stream architecture.
- * Intended to be the base of layered streams ala DatInputStreams in Java.
- *
- * ** Not intended to be thread safe as it is not intended to be shared**
- *
- * Extensions may be thread safe and thus shareable, but that is up to the implementation.
- */
-class BaseStream : public InputStream, public OutputStream {};
+class BufferStream : public InputStream, public OutputStream {
+ public:
+  BufferStream() = default;
+
+  BufferStream(const uint8_t *buf, const unsigned int len) {
+    write(buf, len);
+  }
+
+  using InputStream::read;
+  using OutputStream::write;
+
+  int write(const uint8_t* data, unsigned int len) final;
+
+  int read(uint8_t* buffer, unsigned int len) override;
+
+  virtual short initialize() { // NOLINT
+    buffer.clear();
+    readOffset = 0;
+    return 0;
+  }
+
+  void seek(uint64_t offset) override {
+    readOffset += offset;
+  }
+
+  void close() override { }
+
+  /**
+   * Returns the underlying buffer
+   * @return vector's array
+   **/
+  const uint8_t *getBuffer() const {
+    return buffer.data();
+  }
+
+  /**
+   * Retrieve size of data stream
+   * @return size of data stream
+   **/
+  int size() const override {
+    return buffer.size();
+  }
+
+ private:
+  std::vector<uint8_t> buffer;
+
+  uint32_t readOffset = 0;
+};
 
 }  // namespace io
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-#endif  // LIBMINIFI_INCLUDE_IO_BASESTREAM_H_
+#endif  // LIBMINIFI_INCLUDE_IO_DATASTREAM_H_

@@ -25,15 +25,9 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-/* ZlibBaseStream */
-
-ZlibBaseStream::ZlibBaseStream()
-    : ZlibBaseStream(this) {
-}
-
-ZlibBaseStream::ZlibBaseStream(DataStream* other)
-    : BaseStream(other)
-    , outputBuffer_(16384U) {
+ZlibBaseStream::ZlibBaseStream(OutputStream* output)
+    : output_{output},
+      outputBuffer_(16384U) {
   strm_.zalloc = Z_NULL;
   strm_.zfree = Z_NULL;
   strm_.opaque = Z_NULL;
@@ -43,14 +37,8 @@ bool ZlibBaseStream::isFinished() const {
   return state_ == ZlibStreamState::FINISHED;
 }
 
-/* ZlibCompressStream */
-
-ZlibCompressStream::ZlibCompressStream(ZlibCompressionFormat format, int level)
-  : ZlibCompressStream(this, format, level) {
-}
-
-ZlibCompressStream::ZlibCompressStream(DataStream* other, ZlibCompressionFormat format, int level)
-  : ZlibBaseStream(other) {
+ZlibCompressStream::ZlibCompressStream(OutputStream* output, ZlibCompressionFormat format, int level)
+  : ZlibBaseStream(output) {
   int ret = deflateInit2(
       &strm_,
       level,
@@ -72,13 +60,13 @@ ZlibCompressStream::~ZlibCompressStream() {
   }
 }
 
-int ZlibCompressStream::writeData(uint8_t* value, int size) {
+int ZlibCompressStream::write(const uint8_t* value, unsigned int size) {
   if (state_ != ZlibStreamState::INITIALIZED) {
     logger_->log_error("writeData called in invalid ZlibCompressStream state, state is %hhu", state_);
     return -1;
   }
 
-  strm_.next_in = value;
+  strm_.next_in = const_cast<uint8_t*>(value);
   strm_.avail_in = size;
 
   /*
@@ -106,7 +94,7 @@ int ZlibCompressStream::writeData(uint8_t* value, int size) {
     }
     int output_size = outputBuffer_.size() - strm_.avail_out;
     logger_->log_trace("deflate produced %d B of output data", output_size);
-    if (BaseStream::writeData(outputBuffer_.data(), output_size) != output_size) {
+    if (output_->write(outputBuffer_.data(), output_size) != output_size) {
       logger_->log_error("Failed to write to underlying stream");
       state_ = ZlibStreamState::ERRORED;
       return -1;
@@ -116,22 +104,16 @@ int ZlibCompressStream::writeData(uint8_t* value, int size) {
   return size;
 }
 
-void ZlibCompressStream::closeStream() {
+void ZlibCompressStream::close() {
   if (state_ == ZlibStreamState::INITIALIZED) {
-    if (writeData(nullptr, 0U) == 0) {
+    if (write(nullptr, 0U) == 0) {
       state_ = ZlibStreamState::FINISHED;
     }
   }
 }
 
-/* ZlibDecompressStream */
-
-ZlibDecompressStream::ZlibDecompressStream(ZlibCompressionFormat format)
-  : ZlibDecompressStream(this, format) {
-}
-
-ZlibDecompressStream::ZlibDecompressStream(DataStream* other, ZlibCompressionFormat format)
-    : ZlibBaseStream(other) {
+ZlibDecompressStream::ZlibDecompressStream(OutputStream* output, ZlibCompressionFormat format)
+    : ZlibBaseStream(output) {
   int ret = inflateInit2(&strm_, 15 + (format == ZlibCompressionFormat::GZIP ? 16 : 0) /* windowBits */);
   if (ret != Z_OK) {
     logger_->log_error("Failed to initialize z_stream with inflateInit2, error code: %d", ret);
@@ -147,13 +129,13 @@ ZlibDecompressStream::~ZlibDecompressStream() {
   }
 }
 
-int ZlibDecompressStream::writeData(uint8_t* value, int size) {
+int ZlibDecompressStream::write(const uint8_t* value, unsigned int size) {
   if (state_ != ZlibStreamState::INITIALIZED) {
     logger_->log_error("writeData called in invalid ZlibDecompressStream state, state is %hhu", state_);
     return -1;
   }
 
-  strm_.next_in = value;
+  strm_.next_in = const_cast<uint8_t*>(value);
   strm_.avail_in = size;
 
   /*
@@ -179,7 +161,7 @@ int ZlibDecompressStream::writeData(uint8_t* value, int size) {
     }
     int output_size = outputBuffer_.size() - strm_.avail_out;
     logger_->log_trace("deflate produced %d B of output data", output_size);
-    if (BaseStream::writeData(outputBuffer_.data(), output_size) != output_size) {
+    if (output_->write(outputBuffer_.data(), output_size) != output_size) {
       logger_->log_error("Failed to write to underlying stream");
       state_ = ZlibStreamState::ERRORED;
       return -1;

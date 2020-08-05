@@ -24,7 +24,7 @@
 
 #include "properties/Configure.h"
 #include "ResourceClaim.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "io/BaseStream.h"
 #include "StreamManager.h"
 #include "core/Connectable.h"

@@ -38,12 +38,12 @@ namespace sitetosite {
  * @returns SiteToSitePeer
  */
 static std::unique_ptr<SiteToSitePeer> createStreamingPeer(const SiteToSiteClientConfiguration &client_configuration) {
-  std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = nullptr;
+  std::unique_ptr<org::apache::nifi::minifi::io::BufferStream> str = nullptr;
   if (nullptr != client_configuration.getSecurityContext()) {
-    str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
+    str = std::unique_ptr<org::apache::nifi::minifi::io::BufferStream>(
         client_configuration.getStreamFactory()->createSecureSocket(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(), client_configuration.getSecurityContext()));
   } else {
-    str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
+    str = std::unique_ptr<org::apache::nifi::minifi::io::BufferStream>(
         client_configuration.getStreamFactory()->createSocket(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort()));
   }
 

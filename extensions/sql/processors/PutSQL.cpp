@@ -33,7 +33,7 @@
 
 #include <soci/soci.h>
 
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Exception.h"

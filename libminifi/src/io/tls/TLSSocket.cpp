@@ -148,15 +148,15 @@ int16_t TLSContext::initialize(bool server_method) {
 }
 
 TLSSocket::~TLSSocket() {
-  TLSSocket::closeStream();
+  TLSSocket::close();
 }
 
-void TLSSocket::closeStream() {
+void TLSSocket::close() {
   if (ssl_ != 0) {
     SSL_free(ssl_);
     ssl_ = nullptr;
   }
-  Socket::closeStream();
+  Socket::close();
 }
 
 /**
@@ -239,7 +239,7 @@ int16_t TLSSocket::initialize(bool blocking) {
         return 0;
       } else {
         logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
-        closeStream();
+        close();
         return -1;
       }
     } else {
@@ -260,7 +260,7 @@ void TLSSocket::close_ssl(int fd) {
     if (nullptr != fd_ssl) {
       SSL_free(fd_ssl);
       ssl_map_[fd] = nullptr;
-      closeStream();
+      close();
     }
   }
 }
@@ -329,7 +329,7 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
           return socket_file_descriptor_;
         } else {
           logger_->log_error("SSL socket connect failed (%d) to %s %d", ssl_error, requested_hostname_, port_);
-          closeStream();
+          close();
           return -1;
         }
       }
@@ -355,7 +355,7 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
 int TLSSocket::writeData(std::vector<uint8_t>& buf, int buflen) {
   int16_t fd = select_descriptor(1000);
   if (fd < 0) {
-    closeStream();
+    close();
     return -1;
   }
   return writeData(buf.data(), buflen, fd);
@@ -378,7 +378,7 @@ int TLSSocket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
   int loc = 0;
   int16_t fd = select_descriptor(1000);
   if (fd < 0) {
-    closeStream();
+    close();
     return -1;
   }
   auto fd_ssl = get_ssl(fd);
@@ -418,7 +418,7 @@ int TLSSocket::readData(std::vector<uint8_t> &buf, int buflen) {
   while (buflen) {
     int16_t fd = select_descriptor(1000);
     if (fd < 0) {
-      closeStream();
+      close();
       return -1;
     }
 
@@ -468,7 +468,7 @@ int TLSSocket::writeData(uint8_t *value, int size) {
   int sent = 0;
   int fd = select_descriptor(1000);
   if (fd < 0) {
-    closeStream();
+    close();
     return -1;
   }
   auto fd_ssl = get_ssl(fd);
@@ -495,7 +495,7 @@ int TLSSocket::readData(uint8_t *buf, int buflen) {
   while (buflen) {
     int16_t fd = select_descriptor(1000);
     if (fd < 0) {
-      closeStream();
+      close();
       return -1;
     }
 

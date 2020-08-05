@@ -54,7 +54,7 @@ class AtomicEntryStream : public BaseStream {
 
   ~AtomicEntryStream() override;
 
-  void closeStream() override {
+  void close() override {
   }
 
   /**
@@ -63,47 +63,25 @@ class AtomicEntryStream : public BaseStream {
    */
   void seek(uint64_t offset) override;
 
-  const size_t getSize() const override {
+  size_t size() const override {
     return length_;
   }
 
-  // data stream extensions
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  int readData(std::vector<uint8_t> &buf, int buflen) override;
-  /**
-   * Reads data and places it into buf
-   * @param buf buffer in which we extract data
-   * @param buflen
-   */
-  int readData(uint8_t *buf, int buflen) override;
-
-  /**
-   * Write value to the stream using std::vector
-   * @param buf incoming buffer
-   * @param buflen buffer to write
-   */
-  virtual int writeData(std::vector<uint8_t> &buf, int buflen);
+  int read(uint8_t *buf, unsigned int buflen) override;
 
   /**
    * writes value to stream
    * @param value value to write
    * @param size size of value
    */
-  int writeData(uint8_t *value, int size) override;
+  int write(const uint8_t *value, unsigned int size) override;
 
-  /**
-   * Returns the underlying buffer
-   * @return vector's array
-   **/
-  const uint8_t *getBuffer() const {
-    throw std::runtime_error("Stream does not support this operation");
-  }
-
- protected:
+ private:
   size_t length_;
   size_t offset_;
   T key_;
@@ -127,20 +105,9 @@ void AtomicEntryStream<T>::seek(uint64_t offset) {
   offset_ = gsl::narrow<size_t>(offset);
 }
 
-template<typename T>
-int AtomicEntryStream<T>::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen) || invalid_stream_)
-    return -1;
-  return writeData(buf.data(), buflen);
-}
-
 // data stream overrides
 template<typename T>
-int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
+int AtomicEntryStream<T>::write(const uint8_t *value, unsigned int size) {
   if (size == 0) {
     return 0;
   }
@@ -158,27 +125,7 @@ int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
 }
 
 template<typename T>
-int AtomicEntryStream<T>::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (invalid_stream_) {
-    return -1;
-  }
-  if (buf.size() < static_cast<size_t>(buflen)) {
-    buf.resize(buflen);
-  }
-  int ret = readData(buf.data(), buflen);
-
-  if (ret < buflen) {
-    buf.resize((std::max)(ret, 0));
-  }
-  return ret;
-}
-
-template<typename T>
-int AtomicEntryStream<T>::readData(uint8_t *buf, int buflen) {
+int AtomicEntryStream<T>::read(uint8_t *buf, unsigned int buflen) {
   if (buflen == 0) {
     return 0;
   }

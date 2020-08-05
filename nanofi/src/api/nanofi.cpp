@@ -31,7 +31,7 @@
 #include "ResourceClaim.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "core/cxxstructs.h"
 
 using string_map = std::map<std::string, std::string>;
@@ -487,7 +487,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
   auto content_repo = minifi_instance_ref->getContentRepository();
 
   std::shared_ptr<minifi::ResourceClaim> claim = nullptr;
-  std::shared_ptr<minifi::io::DataStream> stream = nullptr;  // Used when content is not in content repo
+  std::shared_ptr<minifi::io::BufferStream> stream = nullptr;  // Used when content is not in content repo
 
   if(ff->contentLocation) {
     auto ff_content_repo_ptr = (static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ff->crp));
@@ -498,13 +498,13 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
       claim->increaseFlowFileRecordOwnedCount();
     } else {
       file_buffer fb = file_to_buffer(ff->contentLocation);
-      stream = std::make_shared<minifi::io::DataStream>();
+      stream = std::make_shared<minifi::io::BufferStream>();
       stream->writeData(fb.buffer, gsl::narrow<int>(fb.file_len));
       free(fb.buffer);
     }
   } else {
     // The flowfile has no content - create an empty stream to create empty content
-    stream = std::make_shared<minifi::io::DataStream>();
+    stream = std::make_shared<minifi::io::BufferStream>();
   }
 
   auto ffr = std::make_shared<minifi::FlowFileRecord>(no_op, content_repo, attribute_map, claim);
@@ -701,7 +701,7 @@ flow_file_record *invoke_ff(standalone_processor* proc, const flow_file_record *
                                                                                              *content_repo);
       ff_data->content_stream = (*content_repo)->read(*claim);
     } else {
-      ff_data->content_stream = std::make_shared<minifi::io::DataStream>();
+      ff_data->content_stream = std::make_shared<minifi::io::BufferStream>();
       file_buffer fb = file_to_buffer(input_ff->contentLocation);
       ff_data->content_stream->writeData(fb.buffer, gsl::narrow<int>(fb.file_len));
       free(fb.buffer);
@@ -729,7 +729,7 @@ flow_file_record *invoke_chunk(standalone_processor* proc, uint8_t* buf, uint64_
   plan->reset();
 
   auto ff_data = std::make_shared<flowfile_input_params>();
-  ff_data->content_stream = std::make_shared<minifi::io::DataStream>();
+  ff_data->content_stream = std::make_shared<minifi::io::BufferStream>();
   ff_data->content_stream->writeData(buf, gsl::narrow<int>(size));
 
   plan->runNextProcessor(nullptr, ff_data);

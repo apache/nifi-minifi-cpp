@@ -174,7 +174,7 @@ bool FlowFileRecord::DeSerialize(std::string key) {
     logger_->log_error("NiFi FlowFile Store event %s can not found", key);
     return false;
   }
-  io::DataStream stream((const uint8_t*) value.data(), value.length());
+  io::BufferStream stream((const uint8_t*) value.data(), value.length());
 
   ret = DeSerialize(stream);
 
@@ -187,7 +187,7 @@ bool FlowFileRecord::DeSerialize(std::string key) {
   return ret;
 }
 
-bool FlowFileRecord::Serialize(io::DataStream &outStream) {
+bool FlowFileRecord::Serialize(io::BufferStream &outStream) {
   int ret;
 
   ret = write(this->event_time_, &outStream);
@@ -255,7 +255,7 @@ bool FlowFileRecord::Serialize() {
     return true;
   }
 
-  io::DataStream outStream;
+  io::BufferStream outStream;
 
   if (!Serialize(outStream)) {
     return false;
@@ -277,7 +277,7 @@ bool FlowFileRecord::Serialize() {
 bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
   int ret;
 
-  io::DataStream outStream(buffer, bufferSize);
+  io::BufferStream outStream(buffer, bufferSize);
 
   ret = read(this->event_time_, &outStream);
   if (ret != 8) {

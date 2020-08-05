@@ -80,7 +80,7 @@ class TestRepository : public core::Repository {
     return true;
   }
 
-  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) override {
+  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) override {
     for (const auto& item: data) {
       if (!Put(item.first, item.second->getBuffer(), item.second->getSize())) {
         return false;

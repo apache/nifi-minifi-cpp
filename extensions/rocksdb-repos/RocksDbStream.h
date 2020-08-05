@@ -49,10 +49,10 @@ class RocksDbStream : public io::BaseStream {
   explicit RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable = false, rocksdb::WriteBatch* batch = nullptr);
 
   ~RocksDbStream() override {
-    closeStream();
+    close();
   }
 
-  void closeStream() override;
+  void close() override;
   /**
    * Skip to the specified offset.
    * @param offset offset to which we will skip

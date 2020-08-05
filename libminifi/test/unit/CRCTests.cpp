@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 #include "io/CRCStream.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "../TestBase.h"
 
 TEST_CASE("Test CRC1", "[testcrc1]") {

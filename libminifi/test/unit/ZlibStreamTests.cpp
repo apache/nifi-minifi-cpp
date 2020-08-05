@@ -53,7 +53,7 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
     }
   }
 
-  compressStream.closeStream();
+  compressStream.close();
 
   REQUIRE(0U < compressStream.getSize());
 
@@ -98,7 +98,7 @@ TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
     }
   }
 
-  compressStream.closeStream();
+  compressStream.close();
 
   REQUIRE(decompressStream.isFinished());
   REQUIRE(original == std::string(reinterpret_cast<const char*>(decompressStream.getBuffer()), decompressStream.getSize()));

@@ -43,7 +43,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
 
   stream->writeUTF("well hello there");
 
-  stream->closeStream();
+  stream->close();
 
   content_repo->stop();
   // reclaim the memory
@@ -84,7 +84,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
 
   stream->writeUTF("well hello there");
 
-  stream->closeStream();
+  stream->close();
 
   content_repo->stop();
 
@@ -122,7 +122,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
 
   // we're writing nothing to the stream.
 
-  stream->closeStream();
+  stream->close();
 
   content_repo->stop();
 
@@ -159,7 +159,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
 
   stream->writeUTF("well hello there");
 
-  stream->closeStream();
+  stream->close();
 
   content_repo->stop();
 
@@ -201,7 +201,7 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
 
   stream->writeUTF("well hello there");
 
-  stream->closeStream();
+  stream->close();
 
   content_repo->stop();
 

@@ -21,7 +21,7 @@
 
 #include <string>
 #include "EndianCheck.h"
-#include "DataStream.h"
+#include "BufferStream.h"
 #ifdef WIN32
 #include "Winsock2.h"
 #else
@@ -67,13 +67,13 @@ class Serializable {
    * write byte to stream
    * @return resulting write size
    **/
-  int write(uint8_t value, DataStream *stream);
+  int write(uint8_t value, BufferStream *stream);
 
   /**
    * write byte to stream
    * @return resulting write size
    **/
-  int write(char value, DataStream *stream);
+  int write(char value, BufferStream *stream);
 
   /**
    * write valueto stream
@@ -82,21 +82,21 @@ class Serializable {
    * @param strema output stream
    * @return resulting write size
    **/
-  int write(const uint8_t *value, int len, DataStream *stream);
+  int write(const uint8_t *value, int len, BufferStream *stream);
 
   /**
    * write bool to stream
    * @param value non encoded value
    * @return resulting write size
    **/
-  int write(bool value, DataStream *stream);
+  int write(bool value, BufferStream *stream);
 
   /**
    * write UTF string to stream
    * @param str string to write
    * @return resulting write size
    **/
-  int writeUTF(std::string str, DataStream *stream, bool widen = false);
+  int writeUTF(std::string str, BufferStream *stream, bool widen = false);
 
   /**
   * writes 2-8 bytes to stream
@@ -110,7 +110,7 @@ class Serializable {
       std::is_integral<Integral>::value &&
       !std::is_signed<Integral>::value
       , Integral>::type* = nullptr>
-  int write(Integral const & base_value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE) {
+  int write(Integral const & base_value, BufferStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE) {
     const Integral value = is_little_endian ? byteSwap(base_value) : base_value;
 
     return stream->writeData(reinterpret_cast<uint8_t *>(const_cast<Integral*>(&value)), sizeof(Integral));
@@ -122,7 +122,7 @@ class Serializable {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  int read(uint8_t &value, DataStream *stream);
+  int read(uint8_t &value, BufferStream *stream);
 
   /**
    * reads a byte from the stream
@@ -130,7 +130,7 @@ class Serializable {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  int read(char &value, DataStream *stream);
+  int read(char &value, BufferStream *stream);
 
   /**
    * reads a byte array from the stream
@@ -139,7 +139,7 @@ class Serializable {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  int read(uint8_t *value, int len, DataStream *stream);
+  int read(uint8_t *value, int len, BufferStream *stream);
 
   /**
    * read UTF from stream
@@ -147,7 +147,7 @@ class Serializable {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  int readUTF(std::string &str, DataStream *stream, bool widen = false);
+  int readUTF(std::string &str, BufferStream *stream, bool widen = false);
 
   /**
   * reads 2-8 bytes from the stream
@@ -160,7 +160,7 @@ class Serializable {
       std::is_integral<Integral>::value &&
       !std::is_signed<Integral>::value
       , Integral>::type* = nullptr>
-  int read(Integral &value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE) {
+  int read(Integral &value, BufferStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE) {
     return stream->read(value, is_little_endian);
   }
 

@@ -32,10 +32,10 @@
 bool sendSingleCommand(std::unique_ptr<minifi::io::Socket> socket, uint8_t op, const std::string value) {
   socket->initialize();
   std::vector<uint8_t> data;
-  minifi::io::BaseStream stream;
-  stream.writeData(&op, 1);
-  stream.writeUTF(value);
-  return socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) == stream.getSize();
+  minifi::io::BufferStream stream;
+  stream.write(&op, 1);
+  stream.write(value);
+  return socket->write(const_cast<uint8_t*>(stream.getBuffer()), stream.size()) == stream.size();
 }
 
 /**
@@ -72,23 +72,23 @@ int updateFlow(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, st
   socket->initialize();
   std::vector<uint8_t> data;
   uint8_t op = minifi::c2::Operation::UPDATE;
-  minifi::io::BaseStream stream;
-  stream.writeData(&op, 1);
-  stream.writeUTF("flow");
-  stream.writeUTF(file);
-  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+  minifi::io::BufferStream stream;
+  stream.write(&op, 1);
+  stream.write("flow");
+  stream.write(file);
+  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), stream.size()) < 0) {
     return -1;
   }
   // read the response
   uint8_t resp = 0;
-  socket->readData(&resp, 1);
+  socket->read(&resp, 1);
   if (resp == minifi::c2::Operation::DESCRIBE) {
     uint16_t connections = 0;
     socket->read(connections);
     out << connections << " are full" << std::endl;
     for (int i = 0; i < connections; i++) {
       std::string fullcomponent;
-      socket->readUTF(fullcomponent);
+      socket->read(fullcomponent);
       out << fullcomponent << " is full" << std::endl;
     }
   }
@@ -103,22 +103,22 @@ int getFullConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream 
   socket->initialize();
   std::vector<uint8_t> data;
   uint8_t op = minifi::c2::Operation::DESCRIBE;
-  minifi::io::BaseStream stream;
-  stream.writeData(&op, 1);
-  stream.writeUTF("getfull");
-  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+  minifi::io::BufferStream stream;
+  stream.write(&op, 1);
+  stream.write("getfull");
+  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), stream.size()) < 0) {
     return -1;
   }
   // read the response
   uint8_t resp = 0;
-  socket->readData(&resp, 1);
+  socket->read(&resp, 1);
   if (resp == minifi::c2::Operation::DESCRIBE) {
     uint16_t connections = 0;
     socket->read(connections);
     out << connections << " are full" << std::endl;
     for (int i = 0; i < connections; i++) {
       std::string fullcomponent;
-      socket->readUTF(fullcomponent);
+      socket->read(fullcomponent);
       out << fullcomponent << " is full" << std::endl;
     }
   }
@@ -129,15 +129,15 @@ int getJstacks(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
   socket->initialize();
   std::vector<uint8_t> data;
   uint8_t op = minifi::c2::Operation::DESCRIBE;
-  minifi::io::BaseStream stream;
-  stream.writeData(&op, 1);
-  stream.writeUTF("jstack");
-  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+  minifi::io::BufferStream stream;
+  stream.write(&op, 1);
+  stream.write("jstack");
+  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), stream.size()) < 0) {
     return -1;
   }
   // read the response
   uint8_t resp = 0;
-  socket->readData(&resp, 1);
+  socket->read(&resp, 1);
   if (resp == minifi::c2::Operation::DESCRIBE) {
 
     uint64_t size = 0;
@@ -146,11 +146,11 @@ int getJstacks(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
     for (int i = 0; i < size; i++) {
       std::string name;
       uint64_t lines;
-      socket->readUTF(name);
+      socket->read(name);
       socket->read(lines);
       for (int j = 0; j < lines; j++) {
         std::string line;
-        socket->readUTF(line);
+        socket->read(line);
         out << name << " -- " << line << std::endl;
       }
 
@@ -168,19 +168,19 @@ int getConnectionSize(std::unique_ptr<minifi::io::Socket> socket, std::ostream &
   socket->initialize();
   std::vector<uint8_t> data;
   uint8_t op = minifi::c2::Operation::DESCRIBE;
-  minifi::io::BaseStream stream;
-  stream.writeData(&op, 1);
-  stream.writeUTF("queue");
-  stream.writeUTF(connection);
-  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+  minifi::io::BufferStream stream;
+  stream.write(&op, 1);
+  stream.write("queue");
+  stream.write(connection);
+  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), stream.size()) < 0) {
     return -1;
   }
   // read the response
   uint8_t resp = 0;
-  socket->readData(&resp, 1);
+  socket->read(&resp, 1);
   if (resp == minifi::c2::Operation::DESCRIBE) {
     std::string size;
-    socket->readUTF(size);
+    socket->read(size);
     out << "Size/Max of " << connection << " " << size << std::endl;
   }
   return 0;
@@ -188,23 +188,23 @@ int getConnectionSize(std::unique_ptr<minifi::io::Socket> socket, std::ostream &
 
 int listComponents(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, bool show_header = true) {
   socket->initialize();
-  minifi::io::BaseStream stream;
+  minifi::io::BufferStream stream;
   uint8_t op = minifi::c2::Operation::DESCRIBE;
-  stream.writeData(&op, 1);
-  stream.writeUTF("components");
-  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+  stream.write(&op, 1);
+  stream.write("components");
+  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), stream.size()) < 0) {
     return -1;
   }
   uint16_t responses = 0;
-  socket->readData(&op, 1);
+  socket->read(&op, 1);
   socket->read(responses);
   if (show_header)
     out << "Components:" << std::endl;
 
   for (int i = 0; i < responses; i++) {
     std::string name, status;
-    socket->readUTF(name, false);
-    socket->readUTF(status, false);
+    socket->read(name, false);
+    socket->read(status, false);
     out << name << ", running: " << status << std::endl;
   }
   return 0;
@@ -212,22 +212,22 @@ int listComponents(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out
 
 int listConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, bool show_header = true) {
   socket->initialize();
-  minifi::io::BaseStream stream;
+  minifi::io::BufferStream stream;
   uint8_t op = minifi::c2::Operation::DESCRIBE;
-  stream.writeData(&op, 1);
-  stream.writeUTF("connections");
-  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+  stream.write(&op, 1);
+  stream.write("connections");
+  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), stream.size()) < 0) {
     return -1;
   }
   uint16_t responses = 0;
-  socket->readData(&op, 1);
+  socket->read(&op, 1);
   socket->read(responses);
   if (show_header)
     out << "Connection Names:" << std::endl;
 
   for (int i = 0; i < responses; i++) {
     std::string name;
-    socket->readUTF(name, false);
+    socket->read(name, false);
     out << name << std::endl;
   }
   return 0;

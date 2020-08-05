@@ -127,14 +127,14 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   // getAttribute key is enum
   bool getKeyedAttribute(FlowAttribute key, std::string &value);
 
-  bool Serialize(io::DataStream &outStream);
+  bool Serialize(io::BufferStream &outStream);
 
   //! Serialize and Persistent to the repository
   bool Serialize();
   //! DeSerialize
   bool DeSerialize(const uint8_t *buffer, const int bufferSize);
   //! DeSerialize
-  bool DeSerialize(io::DataStream &stream) {
+  bool DeSerialize(io::BufferStream &stream) {
     return DeSerialize(stream.getBuffer(), gsl::narrow<int>(stream.getSize()));
   }
   //! DeSerialize

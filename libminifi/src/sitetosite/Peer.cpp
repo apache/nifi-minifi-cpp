@@ -65,7 +65,7 @@ bool SiteToSitePeer::Open() {
 
 void SiteToSitePeer::Close() {
   if (stream_ != nullptr)
-    stream_->closeStream();
+    stream_->close();
 }
 
 } /* namespace sitetosite */

@@ -96,7 +96,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     return true;
   }
 
-  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::DataStream>>>& data) {
+  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>>& data) {
     return true;
   }
 

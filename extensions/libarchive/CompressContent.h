@@ -385,7 +385,7 @@ public:
               read_size += ret;
             }
           }
-          outputStream_->closeStream();
+          outputStream_->close();
           return read_size;
         }
 

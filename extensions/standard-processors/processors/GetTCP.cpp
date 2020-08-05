@@ -196,14 +196,14 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
           } else if (size_read == -2 && stay_connected_) {
             if (++reconnects > connection_attempt_limit_) {
               logger_->log_info("Too many reconnects, exiting thread");
-              socket_ptr->closeStream();
+              socket_ptr->close();
               return -1;
             }
             logger_->log_info("Sleeping for %" PRIu64 " msec before attempting to reconnect", reconnect_interval_);
             std::this_thread::sleep_for(std::chrono::milliseconds(reconnect_interval_));
             socket_ring_buffer_.enqueue(std::move(socket_ptr));
           } else {
-            socket_ptr->closeStream();
+            socket_ptr->close();
             std::this_thread::sleep_for(std::chrono::milliseconds(reconnect_interval_));
             logger_->log_info("Read response returned a -1 from socket, exiting thread");
             return -1;

@@ -43,7 +43,7 @@ RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::R
   size_ = value_.size();
 }
 
-void RocksDbStream::closeStream() {
+void RocksDbStream::close() {
 }
 
 void RocksDbStream::seek(uint64_t offset) {

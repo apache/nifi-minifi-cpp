@@ -125,7 +125,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     return db_->Put(rocksdb::WriteOptions(), key, value).ok();
   }
 
-  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) {
+  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) {
     rocksdb::WriteBatch batch;
     for (const auto &item: data) {
       rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->getSize());

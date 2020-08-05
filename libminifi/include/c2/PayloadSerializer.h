@@ -247,7 +247,7 @@ class PayloadSerializer {
     return true;
   }
   static bool deserialize(std::vector<uint8_t> data, C2Payload &payload) {
-    io::DataStream dataStream(data.data(), data.size());
+    io::BufferStream dataStream(data.data(), data.size());
     io::BaseStream stream(&dataStream);
 
     uint8_t op, st = 0;

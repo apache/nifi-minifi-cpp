@@ -18,7 +18,7 @@
 #include "ConvertUpdate.h"
 #include "utils/HTTPClient.h"
 #include "io/BaseStream.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 
 namespace org {
 namespace apache {

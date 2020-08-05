@@ -35,7 +35,7 @@
 #include "wel/XMLString.h"
 #include "wel/UnicodeConversion.h"
 
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Bookmark.h"

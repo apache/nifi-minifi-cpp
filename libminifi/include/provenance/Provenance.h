@@ -350,14 +350,14 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   using SerializableComponent::Serialize;
 
   // Serialize the event to a stream
-  bool Serialize(org::apache::nifi::minifi::io::DataStream& outStream);
+  bool Serialize(org::apache::nifi::minifi::io::BufferStream& outStream);
 
   // Serialize and Persistent to the repository
   bool Serialize(const std::shared_ptr<core::SerializableComponent> &repo);
   // DeSerialize
   bool DeSerialize(const uint8_t *buffer, const size_t bufferSize);
   // DeSerialize
-  bool DeSerialize(org::apache::nifi::minifi::io::DataStream &stream) {
+  bool DeSerialize(org::apache::nifi::minifi::io::BufferStream &stream) {
     return DeSerialize(stream.getBuffer(), stream.getSize());
   }
   // DeSerialize
@@ -365,7 +365,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
 
   uint64_t getEventTime(const uint8_t *buffer, const size_t bufferSize) {
     int size = bufferSize > 72 ? 72 : bufferSize;
-    org::apache::nifi::minifi::io::DataStream outStream(buffer, size);
+    org::apache::nifi::minifi::io::BufferStream outStream(buffer, size);
 
     std::string uuid;
     int ret = readUTF(uuid, &outStream);

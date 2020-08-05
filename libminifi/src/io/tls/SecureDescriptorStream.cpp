@@ -140,7 +140,7 @@ int SecureDescriptorStream::readData(uint8_t *buf, int buflen) {
  * @return resulting read size
  **/
 int SecureDescriptorStream::read(uint8_t &value) {
-  return Serializable::read(value, reinterpret_cast<DataStream*>(this));
+  return Serializable::read(value, reinterpret_cast<BufferStream*>(this));
 }
 
 /**
@@ -228,7 +228,7 @@ int SecureDescriptorStream::read(uint64_t &value, bool is_little_endian) {
  * @return resulting read size
  **/
 int SecureDescriptorStream::readUTF(std::string &str, bool widen) {
-  return Serializable::readUTF(str, reinterpret_cast<DataStream*>(this), widen);
+  return Serializable::readUTF(str, reinterpret_cast<BufferStream*>(this), widen);
 }
 
 } /* namespace io */

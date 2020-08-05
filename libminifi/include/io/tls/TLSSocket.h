@@ -162,7 +162,7 @@ class TLSSocket : public Socket {
    */
   int writeData(uint8_t *value, int size);
 
-  void closeStream();  // override
+  void close();  // override
 
  protected:
   int writeData(uint8_t *value, int size, int fd);

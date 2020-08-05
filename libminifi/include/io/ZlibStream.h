@@ -51,8 +51,7 @@ class ZlibBaseStream : public BaseStream {
   virtual bool isFinished() const;
 
  protected:
-  ZlibBaseStream();
-  explicit ZlibBaseStream(DataStream* other);
+  explicit ZlibBaseStream(OutputStream* output);
 
   ZlibBaseStream(const ZlibBaseStream&) = delete;
   ZlibBaseStream& operator=(const ZlibBaseStream&) = delete;
@@ -62,12 +61,12 @@ class ZlibBaseStream : public BaseStream {
   ZlibStreamState state_{ZlibStreamState::UNINITIALIZED};
   z_stream strm_{};
   std::vector<uint8_t> outputBuffer_;
+  OutputStream* output_;
 };
 
 class ZlibCompressStream : public ZlibBaseStream {
  public:
-  explicit ZlibCompressStream(ZlibCompressionFormat format = ZlibCompressionFormat::GZIP, int level = Z_DEFAULT_COMPRESSION);
-  explicit ZlibCompressStream(DataStream* other, ZlibCompressionFormat format = ZlibCompressionFormat::GZIP, int level = Z_DEFAULT_COMPRESSION);
+  explicit ZlibCompressStream(OutputStream* output, ZlibCompressionFormat format = ZlibCompressionFormat::GZIP, int level = Z_DEFAULT_COMPRESSION);
 
   ZlibCompressStream(const ZlibCompressStream&) = delete;
   ZlibCompressStream& operator=(const ZlibCompressStream&) = delete;
@@ -76,9 +75,9 @@ class ZlibCompressStream : public ZlibBaseStream {
 
   ~ZlibCompressStream() override;
 
-  int writeData(uint8_t* value, int size) override;
+  int write(const uint8_t* value, unsigned int size) override;
 
-  void closeStream() override;
+  void close() override;
 
  private:
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ZlibCompressStream>::getLogger()};
@@ -86,8 +85,7 @@ class ZlibCompressStream : public ZlibBaseStream {
 
 class ZlibDecompressStream : public ZlibBaseStream {
  public:
-  explicit ZlibDecompressStream(ZlibCompressionFormat format = ZlibCompressionFormat::GZIP);
-  explicit ZlibDecompressStream(DataStream* other, ZlibCompressionFormat format = ZlibCompressionFormat::GZIP);
+  explicit ZlibDecompressStream(OutputStream* output, ZlibCompressionFormat format = ZlibCompressionFormat::GZIP);
 
   ZlibDecompressStream(const ZlibDecompressStream&) = delete;
   ZlibDecompressStream& operator=(const ZlibDecompressStream&) = delete;
@@ -96,7 +94,7 @@ class ZlibDecompressStream : public ZlibBaseStream {
 
   ~ZlibDecompressStream() override;
 
-  int writeData(uint8_t *value, int size) override;
+  int write(const uint8_t *value, unsigned int size) override;
 
  private:
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ZlibDecompressStream>::getLogger()};

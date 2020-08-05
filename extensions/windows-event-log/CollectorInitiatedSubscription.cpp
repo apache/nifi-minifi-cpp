@@ -30,7 +30,7 @@
 #include <memory>
 #include <codecvt>
 
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 

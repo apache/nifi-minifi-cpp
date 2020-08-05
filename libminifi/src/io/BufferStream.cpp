@@ -15,51 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/Repository.h"
-#include <cstdint>
-#include <vector>
-
 #include "io/BufferStream.h"
-#include "io/Serializable.h"
-#include "core/Relationship.h"
-#include "core/logging/Logger.h"
-#include "FlowController.h"
-#include "provenance/Provenance.h"
+#include <vector>
+#include <cstdint>
+#include <string>
+#include <algorithm>
+#include <iterator>
+#include <cassert>
+#include <Exception.h>
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace core {
+namespace io {
 
-void Repository::start() {
-  if (this->purge_period_ <= 0)
-    return;
-  if (running_)
-    return;
-  running_ = true;
-  thread_ = std::thread(&Repository::threadExecutor, this);
-  logger_->log_debug("%s Repository Monitor Thread Start", name_);
+int BufferStream::write(const uint8_t *value, unsigned int size) {
+  buffer.reserve(buffer.size() + size);
+  std::copy(value, value + size, std::back_inserter(buffer));
+  return size;
 }
 
-void Repository::stop() {
-  if (!running_)
-    return;
-  running_ = false;
-  if (thread_.joinable())
-    thread_.join();
-  logger_->log_debug("%s Repository Monitor Thread Stop", name_);
+int BufferStream::read(uint8_t *buf, unsigned int len) {
+  len = (std::min<uint64_t>)(len, buffer.size() - readOffset);
+  auto begin = buffer.begin() + readOffset;
+  std::copy(begin, begin + len, buf);
+
+  // increase offset for the next read
+  readOffset += len;
+
+  return len;
 }
 
-// repoSize
-uint64_t Repository::getRepoSize() {
-  return repo_size_;
-}
-
-void Repository::flush() {
-}
-
-} /* namespace core */
+} /* namespace io */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

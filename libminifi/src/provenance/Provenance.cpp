@@ -23,7 +23,7 @@
 #include <vector>
 #include <list>
 #include "core/Repository.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "io/Serializable.h"
 #include "core/logging/Logger.h"
 #include "core/Relationship.h"
@@ -72,7 +72,7 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
     logger_->log_debug("NiFi Provenance Read event %s", uuidStr_);
   }
 
-  org::apache::nifi::minifi::io::DataStream stream((const uint8_t*) value.data(), value.length());
+  org::apache::nifi::minifi::io::BufferStream stream((const uint8_t*) value.data(), value.length());
 
   ret = DeSerialize(stream);
 
@@ -85,7 +85,7 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
   return ret;
 }
 
-bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::DataStream& outStream) {
+bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStream& outStream) {
   int ret;
 
   ret = writeUTF(this->uuidStr_, &outStream);
@@ -221,7 +221,7 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::DataStream&
 }
 
 bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableComponent> &repo) {
-  org::apache::nifi::minifi::io::DataStream outStream;
+  org::apache::nifi::minifi::io::BufferStream outStream;
 
   Serialize(outStream);
 
@@ -235,7 +235,7 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableCo
 bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t bufferSize) {
   int ret;
 
-  org::apache::nifi::minifi::io::DataStream outStream(buffer, bufferSize);
+  org::apache::nifi::minifi::io::BufferStream outStream(buffer, bufferSize);
 
   ret = readUTF(this->uuidStr_, &outStream);
 
@@ -390,10 +390,10 @@ void ProvenanceReporter::commit() {
     return;
   }
 
-  std::vector<std::pair<std::string, std::unique_ptr<io::DataStream>>> flowData;
+  std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
 
   for (auto& event : _events) {
-    std::unique_ptr<io::DataStream> stramptr(new io::DataStream());
+    std::unique_ptr<io::BufferStream> stramptr(new io::BufferStream());
     event->Serialize(*stramptr.get());
 
     flowData.emplace_back(event->getUUIDStr(), std::move(stramptr));

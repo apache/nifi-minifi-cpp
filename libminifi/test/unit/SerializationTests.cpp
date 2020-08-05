@@ -27,7 +27,7 @@
 #define FMT_DEFAULT fmt_lower
 
 TEST_CASE("TestWriteUTF", "[MINIFI193]") {
-  org::apache::nifi::minifi::io::DataStream baseStream;
+  org::apache::nifi::minifi::io::BufferStream baseStream;
 
   org::apache::nifi::minifi::io::Serializable ser;
 
@@ -41,7 +41,7 @@ TEST_CASE("TestWriteUTF", "[MINIFI193]") {
 }
 
 TEST_CASE("TestWriteUTF2", "[MINIFI193]") {
-  org::apache::nifi::minifi::io::DataStream baseStream;
+  org::apache::nifi::minifi::io::BufferStream baseStream;
 
   org::apache::nifi::minifi::io::Serializable ser;
 
@@ -56,7 +56,7 @@ TEST_CASE("TestWriteUTF2", "[MINIFI193]") {
 }
 
 TEST_CASE("TestWriteUTF3", "[MINIFI193]") {
-  org::apache::nifi::minifi::io::DataStream baseStream;
+  org::apache::nifi::minifi::io::BufferStream baseStream;
 
   org::apache::nifi::minifi::io::Serializable ser;
 

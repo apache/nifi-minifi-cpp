@@ -26,7 +26,6 @@
 
 #include "HTTPCallback.h"
 #include "io/validation.h"
-#include "io/NonConvertingStream.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -44,7 +43,7 @@ HttpStream::HttpStream(std::shared_ptr<utils::HTTPClient> client)
   // submit early on
 }
 
-void HttpStream::closeStream() {
+void HttpStream::close() {
   http_callback_.close();
   http_read_callback_.close();
 }

@@ -21,7 +21,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 
 namespace org {
 namespace apache {
@@ -31,23 +31,23 @@ namespace io {
 
 #define IS_ASCII(c) __builtin_expect(!!((c >= 1) && (c <= 127)), 1)
 
-int Serializable::write(uint8_t value, DataStream *stream) {
+int Serializable::write(uint8_t value, BufferStream *stream) {
   return stream->writeData(&value, 1);
 }
-int Serializable::write(char value, DataStream *stream) {
+int Serializable::write(char value, BufferStream *stream) {
   return stream->writeData(reinterpret_cast<uint8_t *>(&value), 1);
 }
 
-int Serializable::write(const uint8_t * const value, int len, DataStream *stream) {
+int Serializable::write(const uint8_t * const value, int len, BufferStream *stream) {
   return stream->writeData(const_cast<uint8_t *>(value), len);
 }
 
-int Serializable::write(bool value, DataStream *stream) {
+int Serializable::write(bool value, BufferStream *stream) {
   uint8_t temp = value;
   return stream->writeData(&temp, 1);
 }
 
-int Serializable::read(uint8_t &value, DataStream *stream) {
+int Serializable::read(uint8_t &value, BufferStream *stream) {
   uint8_t buf;
 
   int ret = stream->readData(&buf, 1);
@@ -56,7 +56,7 @@ int Serializable::read(uint8_t &value, DataStream *stream) {
   return ret;
 }
 
-int Serializable::read(char &value, DataStream *stream) {
+int Serializable::read(char &value, BufferStream *stream) {
   uint8_t buf;
 
   int ret = stream->readData(&buf, 1);
@@ -65,11 +65,11 @@ int Serializable::read(char &value, DataStream *stream) {
   return ret;
 }
 
-int Serializable::read(uint8_t *value, int len, DataStream *stream) {
+int Serializable::read(uint8_t *value, int len, BufferStream *stream) {
   return stream->readData(value, len);
 }
 
-int Serializable::readUTF(std::string &str, DataStream *stream, bool widen) {
+int Serializable::readUTF(std::string &str, BufferStream *stream, bool widen) {
   uint32_t utflen = 0;
   int ret = 1;
   if (!widen) {
@@ -96,7 +96,7 @@ int Serializable::readUTF(std::string &str, DataStream *stream, bool widen) {
   return utflen;
 }
 
-int Serializable::writeUTF(std::string str, DataStream *stream, bool widen) {
+int Serializable::writeUTF(std::string str, BufferStream *stream, bool widen) {
   uint32_t utflen = 0;
 
   utflen = str.length();

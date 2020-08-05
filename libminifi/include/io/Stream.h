@@ -16,20 +16,31 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <string>
-#include <vector>
-#include "io/CRCStream.h"
-#include "io/BufferStream.h"
-#include "TestBase.h"
-#include "GetFile.h"
-#include "LogAttribute.h"
-#include "SchedulingAgent.h"
-#include "TimerDrivenSchedulingAgent.h"
+#pragma once
 
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace io {
 
-TEST_CASE("TestTDAgent", "[test1]") {
-  std::shared_ptr<core::Processor> procA = std::make_shared<minifi::processors::GetFile>("getFile");
-  std::shared_ptr<core::Processor> procB = std::make_shared<minifi::processors::LogAttribute>("logAttribute");
-  // agent.run()
-}
+/**
+ * All streams serialize/deserialize in big-endian
+ */
+class Stream {
+ public:
+  virtual void close() {
+    throw std::runtime_error("Close is not supported");
+  }
+  virtual void seek(uint64_t offset) {
+    throw std::runtime_error("Seek is not supported");
+  }
+
+  virtual ~Stream() = default;
+};
+
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
