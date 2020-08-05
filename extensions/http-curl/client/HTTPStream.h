@@ -77,48 +77,28 @@ class HttpStream : public io::BaseStream {
    * Skip to the specified offset.
    * @param offset offset to which we will skip
    */
-  virtual void seek(uint64_t offset) override;
+  void seek(uint64_t offset) override;
 
-  const size_t getSize() const override {
+  size_t size() const override {
     return written;
   }
 
-  // data stream extensions
-  /**
-   * Reads data and places it into buf
-   * @param buf buffer in which we extract data
-   * @param buflen
-   */
-  virtual int readData(std::vector<uint8_t> &buf, int buflen) override;
-  /**
-   * Reads data and places it into buf
-   * @param buf buffer in which we extract data
-   * @param buflen
-   */
-  virtual int readData(uint8_t *buf, int buflen) override;
+  using BaseStream::write;
+  using BaseStream::read;
 
   /**
-   * Write value to the stream using std::vector
-   * @param buf incoming buffer
-   * @param buflen buffer to write
-   *
+   * Reads data and places it into buf
+   * @param buf buffer in which we extract data
+   * @param buflen
    */
-  virtual int writeData(std::vector<uint8_t> &buf, int buflen);
+  int read(uint8_t *buf, unsigned int buflen) override;
 
   /**
    * writes value to stream
    * @param value value to write
    * @param size size of value
    */
-  virtual int writeData(uint8_t *value, int size) override;
-
-  /**
-   * Returns the underlying buffer
-   * @return vector's array
-   **/
-  const uint8_t *getBuffer() const {
-    throw std::runtime_error("Stream does not support this operation");
-  }
+  int write(const uint8_t *value, unsigned int size) override;
 
   static bool submit_client(std::shared_ptr<utils::HTTPClient> client) {
     if (client == nullptr)

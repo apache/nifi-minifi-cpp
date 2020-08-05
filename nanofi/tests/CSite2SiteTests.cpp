@@ -97,7 +97,7 @@ void send_response_code(minifi::io::BaseStream* stream, uint8_t resp) {
 void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, TransferState& transfer_state, S2SReceivedData& s2s_data) {
   // In long term it would be nice to calculate the crc of the received data here
   send_response_code(stream, 12);  // confirmed
-  stream->writeUTF(crcstr);
+  stream->write(crcstr);
   send_response_code(stream, 13);  // transaction finished
 
   wait_until(transfer_state.transer_completed);

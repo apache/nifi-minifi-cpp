@@ -138,8 +138,8 @@ class VerifyCoAPServer : public CoapIntegrationBase {
       stream.write(version);
       stream.write(size);
       stream.write(&operation, 1);
-      stream.writeUTF("id");
-      stream.writeUTF("operand");
+      stream.write("id");
+      stream.write("operand");
 
       uint8_t *data = new uint8_t[stream.getSize()];
       memcpy(data, stream.getBuffer(), stream.getSize());

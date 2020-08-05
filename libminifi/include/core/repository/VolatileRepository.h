@@ -296,7 +296,7 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
 template<typename T>
 bool VolatileRepository<T>::MultiPut(const std::vector<std::pair<T, std::unique_ptr<io::BufferStream>>>& data) {
   for (const auto& item : data) {
-    if (!Put(item.first, item.second->getBuffer(), item.second->getSize())) {
+    if (!Put(item.first, item.second->getBuffer(), item.second->size())) {
       return false;
     }
   }

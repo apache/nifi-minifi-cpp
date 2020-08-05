@@ -114,13 +114,13 @@ class TLSSocket : public Socket {
 
   TLSSocket& operator=(TLSSocket&&);
 
-  virtual ~TLSSocket();
+  ~TLSSocket() override;
 
   /**
    * Initializes the socket
    * @return result of the creation operation.
    */
-  int16_t initialize() {
+  int initialize() override {
     return initialize(true);
   }
 
@@ -131,28 +131,19 @@ class TLSSocket : public Socket {
    * @param msec timeout interval to wait
    * @returns file descriptor
    */
-  virtual int16_t select_descriptor(uint16_t msec);
+  int16_t select_descriptor(uint16_t msec) override;
 
-  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+  using Socket::read;
+  using Socket::write;
 
-  virtual int readData(uint8_t *buf, int buflen, bool retrieve_all_bytes);
-
-  virtual int readData(std::vector<uint8_t> &buf, int buflen, bool retrieve_all_bytes);
+  int read(uint8_t *buf, unsigned int buflen, bool retrieve_all_bytes) override;
 
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(uint8_t *buf, int buflen);
-
-  /**
-   * Write value to the stream using std::vector
-   * @param buf incoming buffer
-   * @param buflen buffer to write
-   *
-   */
-  int writeData(std::vector<uint8_t> &buf, int buflen);
+  int read(uint8_t *buf, unsigned int buflen) override;
 
   /**
    * Write value to the stream using uint8_t ptr
@@ -160,12 +151,12 @@ class TLSSocket : public Socket {
    * @param buflen buffer to write
    *
    */
-  int writeData(uint8_t *value, int size);
+  int write(const uint8_t *value, unsigned int size) override;
 
-  void close();  // override
+  void close() override;
 
  protected:
-  int writeData(uint8_t *value, int size, int fd);
+  int writeData(const uint8_t *value, unsigned int size, int fd);
 
   SSL *get_ssl(int fd) {
     if (UNLIKELY(listeners_ > 0)) {

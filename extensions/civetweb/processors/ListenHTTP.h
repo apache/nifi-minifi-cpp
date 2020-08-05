@@ -137,11 +137,11 @@ class ListenHTTP : public core::Processor {
         : out_str_(out_str) {
     }
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      out_str_->resize(stream->getSize());
-      uint64_t num_read = stream->readData(reinterpret_cast<uint8_t *>(&(*out_str_)[0]),
-                                           gsl::narrow<int>(stream->getSize()));
+      out_str_->resize(stream->size());
+      uint64_t num_read = stream->read(reinterpret_cast<uint8_t *>(&(*out_str_)[0]),
+                                           gsl::narrow<int>(stream->size()));
 
-      if (num_read != stream->getSize()) {
+      if (num_read != stream->size()) {
         throw std::runtime_error("GraphReadCallback failed to fully read flow file input stream");
       }
 

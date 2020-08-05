@@ -113,7 +113,7 @@ int AtomicEntryStream<T>::write(const uint8_t *value, unsigned int size) {
   }
   if (nullptr != value && !invalid_stream_) {
     std::lock_guard<std::recursive_mutex> lock(entry_lock_);
-    if (entry_->insert(key_, value, size)) {
+    if (entry_->insert(key_, const_cast<uint8_t*>(value), size)) {
       offset_ += size;
       if (offset_ > length_) {
         length_ = offset_;

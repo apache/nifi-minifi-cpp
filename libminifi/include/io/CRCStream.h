@@ -34,7 +34,6 @@
 #endif
 #include "BaseStream.h"
 #include "Exception.h"
-#include "Serializable.h"
 
 namespace org {
 namespace apache {
@@ -60,6 +59,9 @@ class CRCStream : public BaseStream {
     return child_stream_;
   }
 
+  using BaseStream::write;
+  using BaseStream::read;
+
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
@@ -74,11 +76,11 @@ class CRCStream : public BaseStream {
    */
   int write(const uint8_t *value, unsigned int size) override;
 
-  size_t size() const override { return child_stream_->getSize(); }
+  size_t size() const override { return child_stream_->size(); }
 
   void close() override { child_stream_->close(); }
 
-  short initialize() { // NOLINT
+  int initialize() override {
     child_stream_->initialize();
     reset();
     return 0;

@@ -296,7 +296,7 @@ class WriteCallback : public OutputStreamCallback {
     uint64_t total = 0;
     while (len > 0) {
       int size = len < 16384 ? static_cast<int>(len) : 16384;
-      int ret = _packet->transaction_->getStream().readData(buffer, size);
+      int ret = _packet->transaction_->getStream().read(buffer, size);
       if (ret != size) {
         logging::LOG_ERROR(_packet->logger_reference_) << "Site2Site Receive Flow Size " << size << " Failed " << ret << ", should have received " << len;
         return -1;
@@ -330,13 +330,13 @@ class ReadCallback : public InputStreamCallback {
       if (readSize < 0) {
         return -1;
       }
-      int ret = _packet->transaction_->getStream().writeData(buffer, readSize);
+      int ret = _packet->transaction_->getStream().write(buffer, readSize);
       if (ret != readSize) {
         logging::LOG_INFO(_packet->logger_reference_) << "Site2Site Send Flow Size " << readSize << " Failed " << ret;
         return -1;
       }
       size += readSize;
-    } while (size < stream->getSize());
+    } while (size < stream->size());
     _packet->_size = size;
     return size;
   }

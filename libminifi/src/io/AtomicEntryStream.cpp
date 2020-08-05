@@ -19,7 +19,6 @@
 #include <vector>
 #include <mutex>
 #include <string>
-#include "io/Serializable.h"
 
 namespace org {
 namespace apache {

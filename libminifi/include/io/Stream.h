@@ -29,13 +29,6 @@ namespace io {
  */
 class Stream {
  public:
-  virtual void close() {
-    throw std::runtime_error("Close is not supported");
-  }
-  virtual void seek(uint64_t offset) {
-    throw std::runtime_error("Seek is not supported");
-  }
-
   virtual ~Stream() = default;
 };
 

@@ -28,11 +28,11 @@ namespace utils {
 
 int64_t ByteOutputCallback::process(std::shared_ptr<io::BaseStream> stream) {
   stream->seek(0);
-  if (stream->getSize() > 0) {
-    std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[stream->getSize()]);
-    readFully(buffer.get(), stream->getSize());
-    stream->readData(reinterpret_cast<uint8_t*>(buffer.get()), stream->getSize());
-    return stream->getSize();
+  if (stream->size() > 0) {
+    std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[stream->size()]);
+    readFully(buffer.get(), stream->size());
+    stream->read(reinterpret_cast<uint8_t*>(buffer.get()), stream->size());
+    return stream->size();
   }
   return size_.load();
 }
@@ -41,8 +41,8 @@ int64_t StreamOutputCallback::process(std::shared_ptr<io::BaseStream> stream) {
   stream->seek(0);
   std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[size_.load()]);
   auto written = readFully(buffer.get(), size_);
-  stream->writeData(reinterpret_cast<uint8_t*>(buffer.get()), written);
-  return stream->getSize();
+  stream->write(reinterpret_cast<uint8_t*>(buffer.get()), written);
+  return stream->size();
 }
 
 void StreamOutputCallback::write(char *data, size_t size) {

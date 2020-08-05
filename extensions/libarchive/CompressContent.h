@@ -379,7 +379,7 @@ public:
             } else if (ret == 0) {
               break;
             } else {
-              if (outputStream_->writeData(buffer.data(), ret) != ret) {
+              if (outputStream_->write(buffer.data(), ret) != ret) {
                 return -1;
               }
               read_size += ret;

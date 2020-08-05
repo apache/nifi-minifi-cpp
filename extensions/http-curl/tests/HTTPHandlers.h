@@ -286,8 +286,8 @@ class FlowFileResponder : public ServerAwareHandler {
         uint32_t num_attributes = flow->attributes.size();
         stream.write(num_attributes);
         for (const auto& entry : flow->attributes) {
-          stream.writeUTF(entry.first);
-          stream.writeUTF(entry.second);
+          stream.write(entry.first);
+          stream.write(entry.second);
         }
         uint64_t length = flow->data.size();
         stream.write(length);

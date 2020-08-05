@@ -56,7 +56,7 @@ namespace { // NOLINT
 
     size_t ret = 0;
     do {
-      ret = stream->readData(buffer, HASH_BUFFER_SIZE);
+      ret = stream->read(buffer, HASH_BUFFER_SIZE);
       if (ret > 0) {
         MD5_Update(&context, buffer, ret);
         ret_val.second += ret;
@@ -80,7 +80,7 @@ namespace { // NOLINT
 
     size_t ret = 0;
     do {
-      ret = stream->readData(buffer, HASH_BUFFER_SIZE);
+      ret = stream->read(buffer, HASH_BUFFER_SIZE);
       if (ret > 0) {
         SHA1_Update(&context, buffer, ret);
         ret_val.second += ret;
@@ -104,7 +104,7 @@ namespace { // NOLINT
 
     size_t ret;
     do {
-      ret = stream->readData(buffer, HASH_BUFFER_SIZE);
+      ret = stream->read(buffer, HASH_BUFFER_SIZE);
       if (ret > 0) {
         SHA256_Update(&context, buffer, ret);
         ret_val.second += ret;

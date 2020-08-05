@@ -527,7 +527,7 @@ bool SFTPClient::getFile(const std::string& path, io::BaseStream& output, int64_
     total_read += read_ret;
     int remaining = read_ret;
     while (remaining > 0) {
-      int write_ret = output.writeData(buf.data() + (read_ret - remaining), remaining);
+      int write_ret = output.write(buf.data() + (read_ret - remaining), remaining);
       if (write_ret < 0) {
         last_error_ = LIBSSH2_FX_OK;
         logger_->log_error("Failed to write output");
@@ -577,7 +577,7 @@ bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool ov
   std::vector<uint8_t> buf(buf_size);
   uint64_t total_read = 0U;
   do {
-    int read_ret = input.readData(buf.data(), buf.size());
+    int read_ret = input.read(buf.data(), buf.size());
     if (read_ret < 0) {
       last_error_ = LIBSSH2_FX_OK;
       logger_->log_error("Error while reading input");

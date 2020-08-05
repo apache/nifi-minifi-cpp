@@ -16,14 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_IO_DATASTREAM_H_
-#define LIBMINIFI_INCLUDE_IO_DATASTREAM_H_
+#pragma once
 
 #include <iostream>
 #include <cstdint>
 #include <vector>
-#include "InputStream.h"
-#include "OutputStream.h"
+#include "BaseStream.h"
 
 namespace org {
 namespace apache {
@@ -31,7 +29,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-class BufferStream : public InputStream, public OutputStream {
+class BufferStream : public BaseStream {
  public:
   BufferStream() = default;
 
@@ -39,14 +37,14 @@ class BufferStream : public InputStream, public OutputStream {
     write(buf, len);
   }
 
-  using InputStream::read;
-  using OutputStream::write;
+  using BaseStream::read;
+  using BaseStream::write;
 
   int write(const uint8_t* data, unsigned int len) final;
 
   int read(uint8_t* buffer, unsigned int len) override;
 
-  virtual short initialize() { // NOLINT
+  int initialize() override {
     buffer.clear();
     readOffset = 0;
     return 0;
@@ -62,7 +60,7 @@ class BufferStream : public InputStream, public OutputStream {
    * Returns the underlying buffer
    * @return vector's array
    **/
-  const uint8_t *getBuffer() const {
+  const uint8_t *getBuffer() const override {
     return buffer.data();
   }
 
@@ -70,7 +68,7 @@ class BufferStream : public InputStream, public OutputStream {
    * Retrieve size of data stream
    * @return size of data stream
    **/
-  int size() const override {
+  uint64_t size() const override {
     return buffer.size();
   }
 
@@ -85,4 +83,3 @@ class BufferStream : public InputStream, public OutputStream {
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-#endif  // LIBMINIFI_INCLUDE_IO_DATASTREAM_H_

@@ -53,20 +53,9 @@ void HttpStream::seek(uint64_t offset) {
   throw std::exception();
 }
 
-int HttpStream::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen)) {
-    return -1;
-  }
-  return writeData(buf.data(), buflen);
-}
-
 // data stream overrides
 
-int HttpStream::writeData(uint8_t *value, int size) {
+int HttpStream::write(const uint8_t *value, unsigned int size) {
   if (!IsNullOrEmpty(value)) {
     if (!started_) {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -85,29 +74,7 @@ int HttpStream::writeData(uint8_t *value, int size) {
   }
 }
 
-template<typename T>
-inline int HttpStream::readBuffer(std::vector<uint8_t>& buf, const T& t) {
-  buf.resize(sizeof t);
-  return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
-}
-
-int HttpStream::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen)) {
-    buf.resize(buflen);
-  }
-  int ret = readData(buf.data(), buflen);
-
-  if (ret < buflen) {
-    buf.resize((std::max)(ret, 0));
-  }
-  return ret;
-}
-
-int HttpStream::readData(uint8_t *buf, int buflen) {
+int HttpStream::read(uint8_t *buf, unsigned int buflen) {
   if (!IsNullOrEmpty(buf)) {
     if (!started_) {
       std::lock_guard<std::mutex> lock(mutex_);

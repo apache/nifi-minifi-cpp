@@ -18,7 +18,6 @@
 #include "io/BaseStream.h"
 #include <vector>
 #include <string>
-#include "io/Serializable.h"
 #include "core/expect.h"
 
 namespace org {
@@ -26,14 +25,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace io {
-
-int BaseStream::writeData(uint8_t *value, int size) {
-  if (LIKELY(composable_stream_ == this)) {
-    return BufferStream::writeData(value, size);
-  } else {
-    return composable_stream_->writeData(value, size);
-  }
-}
 
 } /* namespace io */
 } /* namespace minifi */

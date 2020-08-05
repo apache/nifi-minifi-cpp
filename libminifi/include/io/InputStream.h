@@ -29,7 +29,7 @@ namespace io {
 
 class InputStream : public Stream {
  public:
-  virtual int size() const {
+  virtual uint64_t size() const {
     throw std::runtime_error("Querying size is not supported");
   }
   /**
@@ -38,7 +38,9 @@ class InputStream : public Stream {
    * @param len length to read
    * @return resulting read size
    **/
-  virtual int read(uint8_t *value, unsigned int len) = 0;
+  virtual int read(uint8_t *value, unsigned int len) {
+    throw std::runtime_error("Stream is not readable");
+  }
 
   /**
   * reads a byte from the stream

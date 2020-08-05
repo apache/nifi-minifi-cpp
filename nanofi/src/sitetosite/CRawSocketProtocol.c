@@ -80,7 +80,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
   generate_uuid(&gen, client->_commsIdentifier);
   client->_commsIdentifier[36]='\0';
 
-  int ret = writeUTF(client->_commsIdentifier, strlen(client->_commsIdentifier), False, client->_peer->_stream);
+  int ret = write(client->_commsIdentifier, strlen(client->_commsIdentifier), False, client->_peer->_stream);
 
   if (ret <= 0) {
     return -1;
@@ -151,7 +151,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
 
   if (client->_currentVersion >= 3) {
     const char * urlstr = getURL(client->_peer);
-    ret = writeUTF(urlstr, strlen(urlstr), False, client->_peer->_stream);
+    ret = write(urlstr, strlen(urlstr), False, client->_peer->_stream);
     if (ret <= 0) {
       ret_val = -1;
     }
@@ -165,10 +165,10 @@ int handShake(struct CRawSiteToSiteClient * client) {
   }
 
   HASH_ITER(hh, properties, current, tmp) {
-    if(ret_val == 0 && writeUTF(current->name, strlen(current->name), False, client->_peer->_stream) <= 0) {
+    if(ret_val == 0 && write(current->name, strlen(current->name), False, client->_peer->_stream) <= 0) {
       ret_val = -1;
     }
-    if(ret_val == 0 && writeUTF(current->value, strlen(current->value), False, client->_peer->_stream) <= 0) {
+    if(ret_val == 0 && write(current->value, strlen(current->value), False, client->_peer->_stream) <= 0) {
       ret_val = -1;
     }
     logc(debug, "Site2Site Protocol Send handshake properties %s %s", current->name, current->value);
@@ -813,7 +813,7 @@ int writeResponse(struct CRawSiteToSiteClient* client, RespondCode code, const c
     return -1;
 
   if (resCode->hasDescription) {
-    ret = writeUTF(message, strlen(message), False, client->_peer->_stream);
+    ret = write(message, strlen(message), False, client->_peer->_stream);
     if (ret > 0) {
       return (3 + ret);
     } else {
@@ -830,7 +830,7 @@ int writeRequestType(struct CRawSiteToSiteClient* client, RequestType type) {
 
   const char * typestr = RequestTypeStr[type];
 
-  return writeUTF(typestr, strlen(typestr), False, client->_peer->_stream);
+  return write(typestr, strlen(typestr), False, client->_peer->_stream);
 }
 
 int readRequestType(struct CRawSiteToSiteClient* client, RequestType *type) {
@@ -879,7 +879,7 @@ int initiateResourceNegotiation(struct CRawSiteToSiteClient* client) {
     return -1;
   }
 
-  int ret = writeUTF(getResourceName(client), strlen(getResourceName(client)), False, client->_peer->_stream);
+  int ret = write(getResourceName(client), strlen(getResourceName(client)), False, client->_peer->_stream);
 
   if (ret <= 0) {
     return -1;
@@ -939,7 +939,7 @@ int initiateCodecResourceNegotiation(struct CRawSiteToSiteClient* client) {
 
   const char * coderresource = getCodecResourceName(client);
 
-  int ret = writeUTF(coderresource, strlen(coderresource), False, client->_peer->_stream);
+  int ret = write(coderresource, strlen(coderresource), False, client->_peer->_stream);
 
   if (ret <= 0) {
     return -1;

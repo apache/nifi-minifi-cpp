@@ -37,7 +37,6 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Property.h"
 #include "ResourceClaim.h"
-#include "io/Serializable.h"
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "Core.h"

@@ -214,10 +214,10 @@ int64_t PutSFTP::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
   if (!client_.putFile(target_path_,
       *stream,
       conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/,
-      stream->getSize() /*expected_size*/)) {
+      stream->size() /*expected_size*/)) {
     throw client_.getLastError();
   }
-  return stream->getSize();
+  return stream->size();
 }
 
 bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {

@@ -25,7 +25,6 @@
 #include <string>
 #include "EndianCheck.h"
 #include "BaseStream.h"
-#include "Serializable.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {

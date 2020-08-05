@@ -40,7 +40,9 @@ class OutputStream : public Stream {
    * @param len length of value
    * @return resulting write size
    **/
-  virtual int write(const uint8_t *value, unsigned int len) = 0;
+  virtual int write(const uint8_t *value, unsigned int len) {
+    throw std::runtime_error("Stream is not writable");
+  }
 
   /**
    * write byte to stream
@@ -91,7 +93,7 @@ class OutputStream : public Stream {
   int write(uint64_t value);
 
  private:
-  int write(const char* str, uint32_t len, bool widen);
+  int write_str(const char* str, uint32_t len, bool widen);
 };
 
 }  // namespace io

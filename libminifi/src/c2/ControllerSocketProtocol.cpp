@@ -100,7 +100,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
         case Operation::START:
         {
           std::string componentStr;
-          int size = stream->readUTF(componentStr);
+          int size = stream->read(componentStr);
           if ( size != -1 ) {
             auto components = update_sink_->getComponents(componentStr);
             for (const auto& component : components) {
@@ -114,7 +114,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
         case Operation::STOP:
         {
           std::string componentStr;
-          int size = stream->readUTF(componentStr);
+          int size = stream->read(componentStr);
           if ( size != -1 ) {
             auto components = update_sink_->getComponents(componentStr);
             for (const auto& component : components) {
@@ -128,7 +128,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
         case Operation::CLEAR:
         {
           std::string connection;
-          int size = stream->readUTF(connection);
+          int size = stream->read(connection);
           if ( size != -1 ) {
             update_sink_->clearConnection(connection);
           }
@@ -137,14 +137,14 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
         case Operation::UPDATE:
         {
           std::string what;
-          int size = stream->readUTF(what);
+          int size = stream->read(what);
           if (size == -1) {
             logger_->log_debug("Connection broke");
             break;
           }
           if (what == "flow") {
             std::string ff_loc;
-            int size = stream->readUTF(ff_loc);
+            int size = stream->read(ff_loc);
             std::ifstream tf(ff_loc);
             std::string configuration((std::istreambuf_iterator<char>(tf)),
                 std::istreambuf_iterator<char>());
@@ -159,14 +159,14 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
         case Operation::DESCRIBE:
         {
           std::string what;
-          int size = stream->readUTF(what);
+          int size = stream->read(what);
           if (size == -1) {
             logger_->log_debug("Connection broke");
             break;
           }
           if (what == "queue") {
             std::string connection;
-            int size = stream->readUTF(connection);
+            int size = stream->read(connection);
             if (size == -1) {
               logger_->log_debug("Connection broke");
               break;
@@ -176,45 +176,45 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
               std::lock_guard<std::mutex> lock(controller_mutex_);
               response << queue_size_[connection] << " / " << queue_max_[connection];
             }
-            io::BaseStream resp;
-            resp.writeData(&head, 1);
-            resp.writeUTF(response.str());
-            stream->writeData(const_cast<uint8_t*>(resp.getBuffer()), resp.getSize());
+            io::BufferStream resp;
+            resp.write(&head, 1);
+            resp.write(response.str());
+            stream->write(const_cast<uint8_t*>(resp.getBuffer()), resp.size());
           } else if (what == "components") {
-            io::BaseStream resp;
-            resp.writeData(&head, 1);
+            io::BufferStream resp;
+            resp.write(&head, 1);
             uint16_t size = gsl::narrow<uint16_t>(update_sink_->getAllComponents().size());
             resp.write(size);
             for (const auto &component : update_sink_->getAllComponents()) {
-              resp.writeUTF(component->getComponentName());
-              resp.writeUTF(component->isRunning() ? "true" : "false");
+              resp.write(component->getComponentName());
+              resp.write(component->isRunning() ? "true" : "false");
             }
-            stream->writeData(const_cast<uint8_t*>(resp.getBuffer()), resp.getSize());
+            stream->write(const_cast<uint8_t*>(resp.getBuffer()), resp.size());
           } else if (what == "jstack") {
-            io::BaseStream resp;
-            resp.writeData(&head, 1);
+            io::BufferStream resp;
+            resp.write(&head, 1);
             auto traces = update_sink_->getTraces();
             uint64_t trace_size = traces.size();
             resp.write(trace_size);
             for (const auto &trace : traces) {
               const auto &lines = trace.getTraces();
-              resp.writeUTF(trace.getName());
+              resp.write(trace.getName());
               uint64_t lsize = lines.size();
               resp.write(lsize);
               for (const auto &line : lines) {
-                resp.writeUTF(line);
+                resp.write(line);
               }
             }
-            stream->writeData(const_cast<uint8_t*>(resp.getBuffer()), resp.getSize());
+            stream->write(const_cast<uint8_t*>(resp.getBuffer()), resp.size());
           } else if (what == "connections") {
-            io::BaseStream resp;
-            resp.writeData(&head, 1);
+            io::BufferStream resp;
+            resp.write(&head, 1);
             uint16_t size = gsl::narrow<uint16_t>(queue_full_.size());
             resp.write(size);
             for (const auto &connection : queue_full_) {
-              resp.writeUTF(connection.first, false);
+              resp.write(connection.first, false);
             }
-            stream->writeData(const_cast<uint8_t*>(resp.getBuffer()), resp.getSize());
+            stream->write(const_cast<uint8_t*>(resp.getBuffer()), resp.size());
           } else if (what == "getfull") {
             std::vector<std::string> full_connections;
             {
@@ -225,14 +225,14 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
                 }
               }
             }
-            io::BaseStream resp;
-            resp.writeData(&head, 1);
+            io::BufferStream resp;
+            resp.write(&head, 1);
             uint16_t full_connection_count = gsl::narrow<uint16_t>(full_connections.size());
             resp.write(full_connection_count);
             for (auto conn : full_connections) {
-              resp.writeUTF(conn);
+              resp.write(conn);
             }
-            stream->writeData(const_cast<uint8_t*>(resp.getBuffer()), resp.getSize());
+            stream->write(const_cast<uint8_t*>(resp.getBuffer()), resp.size());
           }
         }
         break;

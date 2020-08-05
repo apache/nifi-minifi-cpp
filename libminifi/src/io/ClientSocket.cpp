@@ -32,6 +32,7 @@
 #include <vector>
 #include <cerrno>
 #include <string>
+#include <arpa/inet.h>
 #include "Exception.h"
 #include <system_error>
 #include <cinttypes>
@@ -365,7 +366,7 @@ int8_t Socket::createConnection(const addrinfo *, ip4addr &addr) {
   return 0;
 }
 
-int16_t Socket::initialize() {
+int Socket::initialize() {
   addrinfo hints{};
   memset(&hints, 0, sizeof hints);  // make sure the struct is empty
   hints.ai_family = AF_UNSPEC;
@@ -479,7 +480,7 @@ int16_t Socket::setSocketOptions(const SocketDescriptor sock) {
     // lose the pesky "address already in use" error message
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char *>(&opt), sizeof(opt)) < 0) {
       logger_->log_error("setsockopt() SO_REUSEADDR failed");
-      close(sock);
+      ::close(sock);
       return -1;
     }
   }
@@ -490,16 +491,6 @@ int16_t Socket::setSocketOptions(const SocketDescriptor sock) {
 
 std::string Socket::getHostname() const {
   return canonical_hostname_;
-}
-
-int Socket::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen))
-    return -1;
-  return writeData(buf.data(), buflen);
 }
 
 // data stream overrides

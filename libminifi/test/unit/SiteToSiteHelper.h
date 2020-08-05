@@ -32,7 +32,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
  public:
   SiteToSiteResponder() = default;
   // initialize
-  virtual short initialize() {
+  int initialize() override {
     return 1;
   }
 

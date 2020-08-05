@@ -37,7 +37,6 @@
 #include "FlowFileRecord.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "ResourceClaim.h"
-#include "io/Serializable.h"
 #include "utils/Id.h"
 #include "utils/TimeUtil.h"
 
@@ -358,7 +357,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   bool DeSerialize(const uint8_t *buffer, const size_t bufferSize);
   // DeSerialize
   bool DeSerialize(org::apache::nifi::minifi::io::BufferStream &stream) {
-    return DeSerialize(stream.getBuffer(), stream.getSize());
+    return DeSerialize(stream.getBuffer(), stream.size());
   }
   // DeSerialize
   bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &repo);
@@ -368,21 +367,21 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     org::apache::nifi::minifi::io::BufferStream outStream(buffer, size);
 
     std::string uuid;
-    int ret = readUTF(uuid, &outStream);
+    int ret = outStream.read(uuid);
 
     if (ret <= 0) {
       return 0;
     }
 
     uint32_t eventType;
-    ret = read(eventType, &outStream);
+    ret = outStream.read(eventType);
     if (ret != 4) {
       return 0;
     }
 
     uint64_t event_time;
 
-    ret = read(event_time, &outStream);
+    ret = outStream.read(event_time);
     if (ret != 8) {
       return 0;
     }

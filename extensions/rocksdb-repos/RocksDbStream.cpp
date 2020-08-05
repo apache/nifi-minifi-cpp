@@ -50,20 +50,7 @@ void RocksDbStream::seek(uint64_t offset) {
   // noop
 }
 
-int RocksDbStream::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen)) {
-    return -1;
-  }
-  return writeData(buf.data(), buflen);
-}
-
-// data stream overrides
-
-int RocksDbStream::writeData(uint8_t *value, int size) {
+int RocksDbStream::write(const uint8_t *value, unsigned int size) {
   if (!IsNullOrEmpty(value) && write_enable_) {
     auto opendb = db_->open();
     if (!opendb) {
@@ -89,29 +76,7 @@ int RocksDbStream::writeData(uint8_t *value, int size) {
   }
 }
 
-template<typename T>
-inline int RocksDbStream::readBuffer(std::vector<uint8_t>& buf, const T& t) {
-  buf.resize(sizeof t);
-  return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
-}
-
-int RocksDbStream::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < gsl::narrow<size_t>(buflen)) {
-    buf.resize(buflen);
-  }
-  int ret = readData(buf.data(), buflen);
-
-  if (ret < buflen) {
-    buf.resize((std::max)(ret, 0));
-  }
-  return ret;
-}
-
-int RocksDbStream::readData(uint8_t *buf, int buflen) {
+int RocksDbStream::read(uint8_t *buf, unsigned int buflen) {
   if (!IsNullOrEmpty(buf) && exists_) {
     size_t amtToRead = gsl::narrow<size_t>(buflen);
     if (offset_ >= value_.size()) {

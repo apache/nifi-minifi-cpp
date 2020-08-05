@@ -41,12 +41,12 @@ class TLSServerSocket : public BaseServerSocket, public TLSSocket {
 
   virtual ~TLSServerSocket();
 
-  int16_t initialize(bool loopbackOnly) {
+  int16_t initialize(bool loopbackOnly) override {
     is_loopback_only_ = loopbackOnly;
     return TLSSocket::initialize();
   }
 
-  virtual int16_t initialize() {
+  int initialize() override {
     return TLSSocket::initialize();
   }
 
@@ -59,7 +59,7 @@ class TLSServerSocket : public BaseServerSocket, public TLSSocket {
    * Initializes the socket
    * @return result of the creation operation.
    */
-  virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler);
+  void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler) override;
 
  private:
   std::function<void(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler)> fx;

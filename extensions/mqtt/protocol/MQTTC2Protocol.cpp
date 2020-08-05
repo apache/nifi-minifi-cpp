@@ -65,8 +65,8 @@ C2Payload MQTTC2Protocol::consumePayload(const std::string &url, const C2Payload
   // we are getting an update.
   std::lock_guard<std::mutex> lock(input_mutex_);
   io::BaseStream stream;
-  stream.writeUTF(in_topic_);
-  stream.writeUTF(url);
+  stream.write(in_topic_);
+  stream.write(url);
   std::vector<uint8_t> response;
   auto transmit_id = mqtt_service_->send(update_topic_, stream.getBuffer(), stream.getSize());
   if (transmit_id > 0 && mqtt_service_->awaitResponse(5000, transmit_id, in_topic_, response)) {

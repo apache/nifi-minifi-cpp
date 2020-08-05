@@ -141,7 +141,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     }
     rocksdb::WriteBatch batch;
     for (const auto &item: data) {
-      rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->getSize());
+      rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->size());
       if (!batch.Put(item.first, value).ok()) {
         logger_->log_error("Failed to add item to batch operation");
         return false;

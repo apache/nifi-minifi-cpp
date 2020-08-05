@@ -41,7 +41,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto stream = content_repo->write(*claim);
 
-  stream->writeUTF("well hello there");
+  stream->write("well hello there");
 
   stream->close();
 
@@ -65,7 +65,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
   // should not be able to write to the read stream
   // -1 will indicate that we were not able to write any data
 
-  REQUIRE(read_stream->writeUTF("other value") == -1);
+  REQUIRE(read_stream->write("other value") == -1);
 }
 
 TEST_CASE("Delete Claim", "[TestDBCR2]") {
@@ -82,7 +82,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto stream = content_repo->write(*claim);
 
-  stream->writeUTF("well hello there");
+  stream->write("well hello there");
 
   stream->close();
 
@@ -157,7 +157,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
   auto claim2 = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto stream = content_repo->write(*claim);
 
-  stream->writeUTF("well hello there");
+  stream->write("well hello there");
 
   stream->close();
 
@@ -199,7 +199,7 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
   auto claim2 = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto stream = content_repo->write(*claim);
 
-  stream->writeUTF("well hello there");
+  stream->write("well hello there");
 
   stream->close();
 

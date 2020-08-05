@@ -89,7 +89,7 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
         }
 
         client->appendHeader(PROTOCOL_VERSION_HEADER, "1");
-        peer_->setStream(std::unique_ptr<io::BufferStream>(new io::HttpStream(client)));
+        peer_->setStream(std::unique_ptr<io::BaseStream>(new io::HttpStream(client)));
         transactionID = transaction->getUUIDStr();
         logger_->log_debug("Created transaction id -%s-", transactionID);
         known_transactions_[transaction->getUUIDStr()] = transaction;

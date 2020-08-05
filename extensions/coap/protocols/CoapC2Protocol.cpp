@@ -58,7 +58,7 @@ minifi::c2::C2Payload CoapProtocol::consumePayload(const std::string &url, const
 int CoapProtocol::writeAcknowledgement(io::BaseStream *stream, const minifi::c2::C2Payload &payload) {
   auto ident = payload.getIdentifier();
   auto state = payload.getStatus().getState();
-  stream->writeUTF(ident);
+  stream->write(ident);
   uint8_t payloadState = 0;
   switch (state) {
     case state::UpdateState::NESTED:
@@ -93,14 +93,14 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
 
     const std::string agentIdent = minifi::c2::PayloadParser::getInstance(payload).in("agentInfo").getAs<std::string>("identifier");
 
-    stream->writeUTF(deviceIdent, false);
+    stream->write(deviceIdent, false);
 
     logger_->log_trace("Writing heartbeat with device Ident %s and agent Ident %s", deviceIdent, agentIdent);
 
     if (agentIdent.empty()) {
       return -1;
     }
-    stream->writeUTF(agentIdent, false);
+    stream->write(agentIdent, false);
 
     try {
       auto flowInfoParser = minifi::c2::PayloadParser::getInstance(payload).in("flowInfo");
@@ -115,7 +115,7 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
       componentParser.foreach([this, stream](const minifi::c2::C2Payload &component) {
         auto myParser = minifi::c2::PayloadParser::getInstance(component);
         bool running = false;
-        stream->writeUTF(component.getLabel());
+        stream->write(component.getLabel());
         try {
           running = myParser.getAs<bool>("running");
         }
@@ -128,7 +128,7 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
       stream->write(size);
       queueParser.foreach([this, stream](const minifi::c2::C2Payload &component) {
         auto myParser = minifi::c2::PayloadParser::getInstance(component);
-        stream->writeUTF(component.getLabel());
+        stream->write(component.getLabel());
         uint64_t datasize = 0, datasizemax = 0, qsize = 0, sizemax = 0;
         try {
           datasize = myParser.getAs<uint64_t>("dataSize");
@@ -148,8 +148,8 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
       auto bucketId = vfsParser.getAs<std::string>("bucketId");
       auto flowId = vfsParser.getAs<std::string>("flowId");
 
-      stream->writeUTF(bucketId);
-      stream->writeUTF(flowId);
+      stream->write(bucketId);
+      stream->write(flowId);
 
     } catch (const minifi::c2::PayloadParseException &pe) {
       logger_->log_error("Parser exception occurred, but is ignorable, reason %s", pe.what());

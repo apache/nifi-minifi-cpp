@@ -179,9 +179,9 @@ bool FlowFileRecord::DeSerialize(std::string key) {
   ret = DeSerialize(stream);
 
   if (ret) {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s success", uuidStr_, stream.getSize(), uuid_connection_);
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s success", uuidStr_, stream.size(), uuid_connection_);
   } else {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s fail", uuidStr_, stream.getSize(), uuid_connection_);
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s fail", uuidStr_, stream.size(), uuid_connection_);
   }
 
   return ret;
@@ -190,59 +190,59 @@ bool FlowFileRecord::DeSerialize(std::string key) {
 bool FlowFileRecord::Serialize(io::BufferStream &outStream) {
   int ret;
 
-  ret = write(this->event_time_, &outStream);
+  ret = outStream.write(this->event_time_);
   if (ret != 8) {
     return false;
   }
 
-  ret = write(this->entry_date_, &outStream);
+  ret = outStream.write(this->entry_date_);
   if (ret != 8) {
     return false;
   }
 
-  ret = write(this->lineage_start_date_, &outStream);
+  ret = outStream.write(this->lineage_start_date_);
   if (ret != 8) {
     return false;
   }
 
-  ret = writeUTF(this->uuidStr_, &outStream);
+  ret = outStream.write(this->uuidStr_);
   if (ret <= 0) {
     return false;
   }
 
-  ret = writeUTF(this->uuid_connection_, &outStream);
+  ret = outStream.write(this->uuid_connection_);
   if (ret <= 0) {
     return false;
   }
   // write flow attributes
   uint32_t numAttributes = this->attributes_.size();
-  ret = write(numAttributes, &outStream);
+  ret = outStream.write(numAttributes);
   if (ret != 4) {
     return false;
   }
 
   for (auto& itAttribute : attributes_) {
-    ret = writeUTF(itAttribute.first, &outStream, true);
+    ret = outStream.write(itAttribute.first);
     if (ret <= 0) {
       return false;
     }
-    ret = writeUTF(itAttribute.second, &outStream, true);
+    ret = outStream.write(itAttribute.second);
     if (ret <= 0) {
       return false;
     }
   }
 
-  ret = writeUTF(this->getContentFullPath(), &outStream);
+  ret = outStream.write(this->getContentFullPath());
   if (ret <= 0) {
     return false;
   }
 
-  ret = write(this->size_, &outStream);
+  ret = outStream.write(this->size_);
   if (ret != 8) {
     return false;
   }
 
-  ret = write(this->offset_, &outStream);
+  ret = outStream.write(this->offset_);
   if (ret != 8) {
     return false;
   }
@@ -261,13 +261,13 @@ bool FlowFileRecord::Serialize() {
     return false;
   }
 
-  if (flow_repository_->Put(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
-    logger_->log_debug("NiFi FlowFile Store event %s size %llu success", uuidStr_, outStream.getSize());
+  if (flow_repository_->Put(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
+    logger_->log_debug("NiFi FlowFile Store event %s size %llu success", uuidStr_, outStream.size());
     // on behalf of the persisted record instance
     if (claim_) claim_->increaseFlowFileRecordOwnedCount();
     return true;
   } else {
-    logger_->log_error("NiFi FlowFile Store event %s size %llu fail", uuidStr_, outStream.getSize());
+    logger_->log_error("NiFi FlowFile Store event %s size %llu fail", uuidStr_, outStream.size());
     return false;
   }
 
@@ -275,69 +275,56 @@ bool FlowFileRecord::Serialize() {
 }
 
 bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
-  int ret;
-
   io::BufferStream outStream(buffer, bufferSize);
 
-  ret = read(this->event_time_, &outStream);
-  if (ret != 8) {
+  if (outStream.read(event_time_) != sizeof(event_time_)) {
     return false;
   }
 
-  ret = read(this->entry_date_, &outStream);
-  if (ret != 8) {
+  if (outStream.read(entry_date_) != sizeof(entry_date_)) {
     return false;
   }
 
-  ret = read(this->lineage_start_date_, &outStream);
-  if (ret != 8) {
+  if (outStream.read(lineage_start_date_) != sizeof(lineage_start_date_)) {
     return false;
   }
 
-  ret = readUTF(this->uuidStr_, &outStream);
-  if (ret <= 0) {
+  if (outStream.read(uuidStr_) <= 0) {
     return false;
   }
 
-  ret = readUTF(this->uuid_connection_, &outStream);
-  if (ret <= 0) {
+  if (outStream.read(uuid_connection_) <= 0) {
     return false;
   }
 
   // read flow attributes
   uint32_t numAttributes = 0;
-  ret = read(numAttributes, &outStream);
-  if (ret != 4) {
+  if (outStream.read(numAttributes) != sizeof(numAttributes)) {
     return false;
   }
 
   for (uint32_t i = 0; i < numAttributes; i++) {
     std::string key;
-    ret = readUTF(key, &outStream, true);
-    if (ret <= 0) {
+    if (outStream.read(key, true) <= 0) {
       return false;
     }
     std::string value;
-    ret = readUTF(value, &outStream, true);
-    if (ret <= 0) {
+    if (outStream.read(value, true) <= 0) {
       return false;
     }
     this->attributes_[key] = value;
   }
 
   std::string content_full_path;
-  ret = readUTF(content_full_path, &outStream);
-  if (ret <= 0) {
+  if (outStream.read(content_full_path) <= 0) {
     return false;
   }
 
-  ret = read(this->size_, &outStream);
-  if (ret != 8) {
+  if (outStream.read(size_) != sizeof(size_)) {
     return false;
   }
 
-  ret = read(this->offset_, &outStream);
-  if (ret != 8) {
+  if (outStream.read(offset_) != sizeof(offset_)) {
     return false;
   }
 

@@ -35,12 +35,12 @@ PyBaseStream::PyBaseStream(std::shared_ptr<io::BaseStream> stream)
 }
 
 py::bytes PyBaseStream::read() {
-  return read(stream_->getSize());
+  return read(stream_->size());
 }
 
 py::bytes PyBaseStream::read(size_t len) {
   if (len == 0) {
-    len = stream_->getSize();
+    len = stream_->size();
   }
 
   if (len <= 0) {
@@ -49,7 +49,7 @@ py::bytes PyBaseStream::read(size_t len) {
 
   std::vector<uint8_t> buffer(len);
 
-  auto read = stream_->readData(buffer.data(), static_cast<int>(len));
+  auto read = stream_->read(buffer.data(), static_cast<int>(len));
   auto result = py::bytes(reinterpret_cast<char *>(buffer.data()), static_cast<size_t>(read));
 
   return result;
@@ -57,7 +57,7 @@ py::bytes PyBaseStream::read(size_t len) {
 
 size_t PyBaseStream::write(py::bytes buf) {
   const auto &&buf_str = buf.operator std::string();
-  return static_cast<size_t>(stream_->writeData(reinterpret_cast<uint8_t *>(const_cast<char *>(buf_str.data())),
+  return static_cast<size_t>(stream_->write(reinterpret_cast<uint8_t *>(const_cast<char *>(buf_str.data())),
                                                 static_cast<int>(buf_str.length())));
 }
 

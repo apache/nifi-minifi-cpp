@@ -69,7 +69,7 @@ class PayloadSerializer {
       auto str = base_type->getStringValue();
       type = 4;
       stream->write(&type, 1);
-      stream->writeUTF(str);
+      stream->write(str);
     }
   }
   static void serialize(uint16_t op, const C2Payload &payload, std::shared_ptr<io::BaseStream> stream) {
@@ -80,17 +80,17 @@ class PayloadSerializer {
       op = opToInt(nested_payload.getOperation());
       stream->write(op);
       stream->write(&st, 1);
-      stream->writeUTF(nested_payload.getLabel());
-      stream->writeUTF(nested_payload.getIdentifier());
+      stream->write(nested_payload.getLabel());
+      stream->write(nested_payload.getIdentifier());
       const std::vector<C2ContentResponse> &content = nested_payload.getContent();
       size = content.size();
       stream->write(size);
       for (const auto &payload_content : content) {
-        stream->writeUTF(payload_content.name);
+        stream->write(payload_content.name);
         size = payload_content.operation_arguments.size();
         stream->write(size);
         for (auto content : payload_content.operation_arguments) {
-          stream->writeUTF(content.first);
+          stream->write(content.first);
           serializeValueNode(content.second, stream);
         }
       }
@@ -135,7 +135,7 @@ class PayloadSerializer {
     return op;
   }
   static std::shared_ptr<io::BaseStream> serialize(uint16_t version, const C2Payload &payload) {
-    std::shared_ptr<io::BaseStream> stream = std::make_shared<io::BaseStream>();
+    std::shared_ptr<io::BaseStream> stream = std::make_shared<io::BufferStream>();
     uint16_t op = 0;
     uint8_t st = 0;
     op = opToInt(payload.getOperation());
@@ -148,18 +148,18 @@ class PayloadSerializer {
       st = 0;
       stream->write(&st, 1);
     }
-    stream->writeUTF(payload.getLabel());
+    stream->write(payload.getLabel());
 
-    stream->writeUTF(payload.getIdentifier());
+    stream->write(payload.getIdentifier());
     const std::vector<C2ContentResponse> &content = payload.getContent();
     uint32_t size = content.size();
     stream->write(size);
     for (const auto &payload_content : content) {
-      stream->writeUTF(payload_content.name);
+      stream->write(payload_content.name);
       size = payload_content.operation_arguments.size();
       stream->write(size);
       for (auto content : payload_content.operation_arguments) {
-        stream->writeUTF(content.first);
+        stream->write(content.first);
         serializeValueNode(content.second, stream);
       }
     }
@@ -192,7 +192,7 @@ class PayloadSerializer {
       default:
       case 4:
         std::string str;
-        stream->readUTF(str);
+        stream->read(str);
         node = str;
     }
     return node;
@@ -219,8 +219,8 @@ class PayloadSerializer {
     for (size_t i = 0; i < payloads; i++) {
       stream->read(op);
       stream->read(st);
-      stream->readUTF(label);
-      stream->readUTF(identifier);
+      stream->read(label);
+      stream->read(identifier);
       operation = intToOp(op);
       C2Payload subPayload(operation, st == 1 ? state::UpdateState::NESTED : state::UpdateState::READ_COMPLETE);
       subPayload.setIdentifier(identifier);
@@ -231,12 +231,12 @@ class PayloadSerializer {
         std::string content_name;
         uint32_t args = 0;
         C2ContentResponse content(operation);
-        stream->readUTF(content_name);
+        stream->read(content_name);
         content.name = content_name;
         stream->read(args);
         for (uint32_t j = 0; j < args; j++) {
           std::string first, second;
-          stream->readUTF(first);
+          stream->read(first);
           content.operation_arguments[first] = deserializeValueNode(stream);
         }
         subPayload.addContent(std::move(content));
@@ -247,8 +247,7 @@ class PayloadSerializer {
     return true;
   }
   static bool deserialize(std::vector<uint8_t> data, C2Payload &payload) {
-    io::BufferStream dataStream(data.data(), data.size());
-    io::BaseStream stream(&dataStream);
+    io::BufferStream stream(data.data(), data.size());
 
     uint8_t op, st = 0;
     uint16_t version = 0;
@@ -258,8 +257,8 @@ class PayloadSerializer {
     stream.read(op);
     stream.read(version);
     stream.read(st);
-    stream.readUTF(label);
-    stream.readUTF(identifier);
+    stream.read(label);
+    stream.read(identifier);
 
     Operation operation = intToOp(op);
 
@@ -273,12 +272,12 @@ class PayloadSerializer {
       std::string content_name;
       uint32_t args = 0;
       C2ContentResponse content(operation);
-      stream.readUTF(content_name);
+      stream.read(content_name);
       content.name = content_name;
       stream.read(args);
       for (uint32_t j = 0; j < args; j++) {
         std::string first, second;
-        stream.readUTF(first);
+        stream.read(first);
         // stream.readUTF(second);
         content.operation_arguments[first] = deserializeValueNode(&stream);
       }

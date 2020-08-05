@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "io/BufferStream.h"
-#include "io/Serializable.h"
 #include "core/Relationship.h"
 #include "core/logging/Logger.h"
 #include "FlowController.h"

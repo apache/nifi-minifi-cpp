@@ -33,7 +33,7 @@ TEST_CASE("TestWriteUTF", "[MINIFI193]") {
 
   std::string stringOne = "helo world";  // yes, this has a typo.
   std::string verifyString;
-  ser.writeUTF(stringOne, &baseStream, false);
+  ser.write(stringOne, &baseStream, false);
 
   ser.readUTF(verifyString, &baseStream, false);
 
@@ -48,7 +48,7 @@ TEST_CASE("TestWriteUTF2", "[MINIFI193]") {
   std::string stringOne = "hel\xa1o world";
   REQUIRE(11 == stringOne.length());
   std::string verifyString;
-  ser.writeUTF(stringOne, &baseStream, false);
+  ser.write(stringOne, &baseStream, false);
 
   ser.readUTF(verifyString, &baseStream, false);
 
@@ -63,7 +63,7 @@ TEST_CASE("TestWriteUTF3", "[MINIFI193]") {
   std::string stringOne = "\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8\x96\xe7\x95\x8c";
   REQUIRE(12 == stringOne.length());
   std::string verifyString;
-  ser.writeUTF(stringOne, &baseStream, false);
+  ser.write(stringOne, &baseStream, false);
 
   ser.readUTF(verifyString, &baseStream, false);
 

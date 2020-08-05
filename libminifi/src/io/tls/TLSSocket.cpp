@@ -352,27 +352,7 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
   return -1;
 }
 
-int TLSSocket::writeData(std::vector<uint8_t>& buf, int buflen) {
-  int16_t fd = select_descriptor(1000);
-  if (fd < 0) {
-    close();
-    return -1;
-  }
-  return writeData(buf.data(), buflen, fd);
-}
-
-int TLSSocket::readData(std::vector<uint8_t> &buf, int buflen, bool retrieve_all_bytes) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen)) {
-    buf.resize(buflen);
-  }
-  return readData(buf.data(), buflen, retrieve_all_bytes);
-}
-
-int TLSSocket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
+int TLSSocket::read(uint8_t *buf, unsigned int buflen, bool retrieve_all_bytes) {
   int total_read = 0;
   int status = 0;
   int loc = 0;
@@ -406,41 +386,7 @@ int TLSSocket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
   return total_read;
 }
 
-int TLSSocket::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0)
-    return -1;
-  if (buf.size() < static_cast<size_t>(buflen)) {
-    buf.resize(buflen);
-  }
-  int total_read = 0;
-  int status = 0;
-  int loc = 0;
-  while (buflen) {
-    int16_t fd = select_descriptor(1000);
-    if (fd < 0) {
-      close();
-      return -1;
-    }
-
-    auto fd_ssl = get_ssl(fd);
-    if (IsNullOrEmpty(fd_ssl)) {
-      return -1;
-    }
-    int sslStatus;
-    do {
-      status = SSL_read(fd_ssl, buf.data() + loc, buflen);
-      sslStatus = SSL_get_error(fd_ssl, status);
-    } while (status < 0 && sslStatus == SSL_ERROR_WANT_READ);
-
-    buflen -= status;
-    loc += status;
-    total_read += status;
-  }
-
-  return total_read;
-}
-
-int TLSSocket::writeData(uint8_t *value, int size, int fd) {
+int TLSSocket::writeData(const uint8_t *value, unsigned int size, int fd) {
   int bytes = 0;
   int sent = 0;
   auto fd_ssl = get_ssl(fd);
@@ -463,33 +409,16 @@ int TLSSocket::writeData(uint8_t *value, int size, int fd) {
   return size;
 }
 
-int TLSSocket::writeData(uint8_t *value, int size) {
-  int bytes = 0;
-  int sent = 0;
+int TLSSocket::write(const uint8_t *value, unsigned int size) {
   int fd = select_descriptor(1000);
   if (fd < 0) {
     close();
     return -1;
   }
-  auto fd_ssl = get_ssl(fd);
-  if (IsNullOrEmpty(fd_ssl)) {
-    return -1;
-  }
-  while (bytes < size) {
-    sent = SSL_write(fd_ssl, value + bytes, size - bytes);
-    // check for errors
-    if (sent < 0) {
-      int ret = 0;
-      ret = SSL_get_error(fd_ssl, sent);
-      logger_->log_error("WriteData socket %d send failed %s %d", fd, strerror(errno), ret);
-      return sent;
-    }
-    bytes += sent;
-  }
-  return size;
+  return writeData(value, size, fd);
 }
 
-int TLSSocket::readData(uint8_t *buf, int buflen) {
+int TLSSocket::read(uint8_t *buf, unsigned int buflen) {
   int total_read = 0;
   int status = 0;
   while (buflen) {

@@ -38,14 +38,14 @@ int OutputStream::write(bool value) {
 }
 
 int OutputStream::write(const std::string& str, bool widen) {
-  return write(str.c_str(), str.length(), widen);
+  return write_str(str.c_str(), str.length(), widen);
 }
 
 int OutputStream::write(const char* str, bool widen) {
-  return write(str, strlen(str), widen);
+  return write_str(str, strlen(str), widen);
 }
 
-int OutputStream::write(const char* str, uint32_t len, bool widen) {
+int OutputStream::write_str(const char* str, uint32_t len, bool widen) {
   int ret = 0;
   if (!widen) {
     uint16_t shortLen = len;
@@ -65,7 +65,7 @@ int OutputStream::write(const char* str, uint32_t len, bool widen) {
     return ret;
   }
 
-  return ret + write(reinterpret_cast<const uint8_t *>(str.c_str()), len);
+  return ret + write(reinterpret_cast<const uint8_t *>(str), len);
 }
 
 int OutputStream::write(uint16_t value) {

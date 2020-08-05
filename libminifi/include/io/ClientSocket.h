@@ -115,12 +115,12 @@ class Socket : public BaseStream {
 
   ~Socket() override;
 
-  void close() final;
+  void close() override;
   /**
    * Initializes the socket
    * @return result of the creation operation.
    */
-  virtual int16_t initialize();
+  int initialize() override;
 
   virtual void setInterface(io::NetworkInterface interface) {
     local_network_interface_ = std::move(interface);
@@ -166,7 +166,7 @@ class Socket : public BaseStream {
    * @param buflen
    * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
-  int read(uint8_t *buf, unsigned int buflen, bool retrieve_all_bytes);
+  virtual int read(uint8_t *buf, unsigned int buflen, bool retrieve_all_bytes);
 
  protected:
   /**

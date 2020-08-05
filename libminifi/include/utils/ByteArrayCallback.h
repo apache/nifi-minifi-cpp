@@ -45,10 +45,10 @@ class ByteInputCallBack : public InputStreamCallback {
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) {
     stream->seek(0);
 
-    if (stream->getSize() > 0) {
-      vec.resize(stream->getSize());
+    if (stream->size() > 0) {
+      vec.resize(stream->size());
 
-      stream->readData(reinterpret_cast<uint8_t*>(vec.data()), gsl::narrow<int>(stream->getSize()));
+      stream->read(reinterpret_cast<uint8_t*>(vec.data()), gsl::narrow<int>(stream->getSize()));
     }
 
     ptr = reinterpret_cast<char*>(&vec[0]);

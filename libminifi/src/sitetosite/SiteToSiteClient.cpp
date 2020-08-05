@@ -56,7 +56,7 @@ int SiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &transacti
     return -1;
   }
   if (resCode->hasDescription) {
-    ret = peer_->readUTF(message);
+    ret = peer_->read(message);
     if (ret <= 0)
       return -1;
   }
@@ -97,7 +97,7 @@ int SiteToSiteClient::writeResponse(const std::shared_ptr<Transaction> &transact
     return -1;
 
   if (resCode->hasDescription) {
-    ret = peer_->writeUTF(message);
+    ret = peer_->write(message);
     if (ret > 0) {
       return (3 + ret);
     } else {
@@ -449,12 +449,12 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
 
   std::map<std::string, std::string>::iterator itAttribute;
   for (itAttribute = packet->_attributes.begin(); itAttribute != packet->_attributes.end(); itAttribute++) {
-    ret = transaction->getStream().writeUTF(itAttribute->first, true);
+    ret = transaction->getStream().write(itAttribute->first, true);
 
     if (ret <= 0) {
       return -1;
     }
-    ret = transaction->getStream().writeUTF(itAttribute->second, true);
+    ret = transaction->getStream().write(itAttribute->second, true);
     if (ret <= 0) {
       return -1;
     }
@@ -499,8 +499,7 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
       return -1;
     }
 
-    ret = transaction->getStream().writeData(reinterpret_cast<uint8_t *>(const_cast<char*>(packet->payload_.c_str())),
-                                             gsl::narrow<int>(len));
+    ret = transaction->getStream().write(reinterpret_cast<uint8_t *>(const_cast<char*>(packet->payload_.c_str())), len);
     if (ret != gsl::narrow<int64_t>(len)) {
       logger_->log_debug("Failed to write payload size!");
       return -1;
@@ -602,11 +601,11 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
   for (unsigned int i = 0; i < numAttributes; i++) {
     std::string key;
     std::string value;
-    ret = transaction->getStream().readUTF(key, true);
+    ret = transaction->getStream().read(key, true);
     if (ret <= 0) {
       return false;
     }
-    ret = transaction->getStream().readUTF(value, true);
+    ret = transaction->getStream().read(value, true);
     if (ret <= 0) {
       return false;
     }
