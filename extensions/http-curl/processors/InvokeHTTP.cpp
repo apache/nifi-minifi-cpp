@@ -26,6 +26,7 @@
 #include <memory>
 #include <algorithm>
 #include <cctype>
+#include <cinttypes>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -337,7 +338,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     const std::vector<char> &response_body = client.getResponseBody();
     const std::vector<std::string> &response_headers = client.getHeaders();
 
-    int http_code = gsl::narrow<int>(client.getResponseCode());
+    int64_t http_code = client.getResponseCode();
     const char *content_type = client.getContentType();
     flowFile->addAttribute(STATUS_CODE, std::to_string(http_code));
     if (!response_headers.empty())
@@ -345,10 +346,10 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     flowFile->addAttribute(REQUEST_URL, url_);
     flowFile->addAttribute(TRANSACTION_ID, tx_id);
 
-    bool isSuccess = ((int32_t) (http_code / 100)) == 2;
+    bool isSuccess = (static_cast<int32_t>(http_code / 100) == 2);
     bool output_body_to_content = isSuccess && !putToAttribute;
 
-    logger_->log_debug("isSuccess: %d, response code %d", isSuccess, http_code);
+    logger_->log_debug("isSuccess: %d, response code %" PRId64, isSuccess, http_code);
     std::shared_ptr<FlowFileRecord> response_flow = nullptr;
 
     if (output_body_to_content) {
@@ -378,7 +379,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
 }
 
 void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session,
-                       const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int statusCode) {
+                       const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int64_t statusCode) {
   // check if we should yield the processor
   if (!isSuccess && request == nullptr) {
     context->yield();
