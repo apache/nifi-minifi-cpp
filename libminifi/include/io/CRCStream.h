@@ -181,7 +181,7 @@ class CRCStream : public BaseStream {
     return readData(reinterpret_cast<uint8_t*>(buf.data()), sizeof(t));
   }
 
-  uint64_t crc_;
+  uLong crc_;
   T *child_stream_;
   bool disable_encoding_;
 };
@@ -195,7 +195,7 @@ CRCStream<T>::CRCStream(T *child_stream)
 
 template<typename T>
 CRCStream<T>::CRCStream(T *child_stream, uint64_t initial_crc)
-    : crc_(initial_crc),
+    : crc_(gsl::narrow<uLong>(initial_crc)),
       child_stream_(child_stream),
       disable_encoding_(false) {
 }
@@ -222,7 +222,7 @@ template<typename T>
 int CRCStream<T>::readData(uint8_t *buf, int buflen) {
   int ret = child_stream_->read(buf, buflen);
   if (ret > 0) {
-    crc_ = crc32(gsl::narrow<uLong>(crc_), buf, ret);
+    crc_ = crc32(crc_, buf, ret);
   }
   return ret;
 }
@@ -242,7 +242,7 @@ template<typename T>
 int CRCStream<T>::writeData(uint8_t *value, int size) {
   int ret = child_stream_->write(value, size);
   if (ret > 0) {
-    crc_ = crc32(gsl::narrow<uLong>(crc_), value, ret);
+    crc_ = crc32(crc_, value, ret);
   }
   return ret;
 }
@@ -252,7 +252,7 @@ void CRCStream<T>::reset() {
 }
 template<typename T>
 void CRCStream<T>::updateCRC(uint8_t *buffer, uint32_t length) {
-  crc_ = crc32(gsl::narrow<uLong>(crc_), buffer, length);
+  crc_ = crc32(crc_, buffer, length);
 }
 
 template<typename T>
