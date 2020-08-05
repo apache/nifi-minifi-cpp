@@ -58,7 +58,7 @@ int64_t ProcessSessionReadCallback::process(std::shared_ptr<io::BaseStream> stre
       return -1;
     }
     size += read;
-  } while (size < stream->getSize());
+  } while (size < stream->size());
   _writeSucceeded = true;
   return size;
 }

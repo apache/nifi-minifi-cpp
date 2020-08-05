@@ -15,16 +15,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "io/BaseStream.h"
+#include <cstdio>
+#include <iostream>
 #include <vector>
 #include <string>
-#include "core/expect.h"
+#include <algorithm>
+#include "io/InputStream.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace io {
+
+int InputStream::read(std::vector<uint8_t>& buffer, int len) {
+  if (buffer.size() < len) {
+    buffer.resize(len);
+  }
+  int ret = read(buffer.data(), len);
+  buffer.resize((std::max)(ret, 0));
+  return ret;
+}
+
+int InputStream::read(bool &value) {
+  uint8_t buf = 0;
+
+  if (read(&buf, 1) != 1) {
+    return -1;
+  }
+  value = buf;
+  return 1;
+}
+
+int InputStream::read(std::string &str, bool widen) {
+  uint32_t len = 0;
+  int ret = 0;
+  if (!widen) {
+    uint16_t shortLength = 0;
+    ret = read(shortLength);
+    len = shortLength;
+  } else {
+    ret = read(len);
+  }
+
+  if (ret <= 0) {
+    return ret;
+  }
+
+  if (len == 0) {
+    str = "";
+    return ret;
+  }
+
+  std::vector<uint8_t> buffer(len);
+  if (read(buffer.data(), len) != len) {
+    return -1;
+  }
+
+  str = std::string(reinterpret_cast<const char*>(buffer.data()), len);
+  return ret + len;
+}
 
 } /* namespace io */
 } /* namespace minifi */

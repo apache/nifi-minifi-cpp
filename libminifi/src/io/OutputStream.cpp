@@ -15,16 +15,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "io/BaseStream.h"
+#include <cstdio>
+#include <cstring>
+#include <iostream>
 #include <vector>
 #include <string>
-#include "core/expect.h"
+#include <algorithm>
+#include "io/OutputStream.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace io {
+
+int OutputStream::write(const std::vector<uint8_t>& buffer, int len) {
+  if (buffer.size() < len) {
+    return -1;
+  }
+  return write(buffer.data(), len);
+}
+
+int OutputStream::write(bool value) {
+  uint8_t temp = value;
+  return write(&temp, 1);
+}
+
+int OutputStream::write(const std::string& str, bool widen) {
+  return write_str(str.c_str(), str.length(), widen);
+}
+
+int OutputStream::write(const char* str, bool widen) {
+  return write_str(str, std::strlen(str), widen);
+}
+
+int OutputStream::write_str(const char* str, uint32_t len, bool widen) {
+  int ret = 0;
+  if (!widen) {
+    uint16_t shortLen = len;
+    if (len != shortLen) {
+      return -1;
+    }
+    ret = write(shortLen);
+  } else {
+    ret = write(len);
+  }
+
+  if (ret <= 0) {
+    return ret;
+  }
+
+  if (len == 0) {
+    return ret;
+  }
+
+  return ret + write(reinterpret_cast<const uint8_t *>(str), len);
+}
 
 } /* namespace io */
 } /* namespace minifi */

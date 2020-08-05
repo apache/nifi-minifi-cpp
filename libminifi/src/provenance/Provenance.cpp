@@ -23,8 +23,7 @@
 #include <vector>
 #include <list>
 #include "core/Repository.h"
-#include "io/DataStream.h"
-#include "io/Serializable.h"
+#include "io/BufferStream.h"
 #include "core/logging/Logger.h"
 #include "core/Relationship.h"
 #include "FlowController.h"
@@ -72,107 +71,107 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
     logger_->log_debug("NiFi Provenance Read event %s", uuidStr_);
   }
 
-  org::apache::nifi::minifi::io::DataStream stream((const uint8_t*) value.data(), value.length());
+  org::apache::nifi::minifi::io::BufferStream stream((const uint8_t*) value.data(), value.length());
 
   ret = DeSerialize(stream);
 
   if (ret) {
-    logger_->log_debug("NiFi Provenance retrieve event %s size %llu eventType %d success", uuidStr_, stream.getSize(), _eventType);
+    logger_->log_debug("NiFi Provenance retrieve event %s size %llu eventType %d success", uuidStr_, stream.size(), _eventType);
   } else {
-    logger_->log_debug("NiFi Provenance retrieve event %s size %llu eventType %d fail", uuidStr_, stream.getSize(), _eventType);
+    logger_->log_debug("NiFi Provenance retrieve event %s size %llu eventType %d fail", uuidStr_, stream.size(), _eventType);
   }
 
   return ret;
 }
 
-bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::DataStream& outStream) {
+bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStream& outStream) {
   int ret;
 
-  ret = writeUTF(this->uuidStr_, &outStream);
+  ret = outStream.write(this->uuidStr_);
   if (ret <= 0) {
     return false;
   }
 
   uint32_t eventType = this->_eventType;
-  ret = write(eventType, &outStream);
+  ret = outStream.write(eventType);
   if (ret != 4) {
     return false;
   }
 
-  ret = write(this->_eventTime, &outStream);
+  ret = outStream.write(this->_eventTime);
   if (ret != 8) {
     return false;
   }
 
-  ret = write(this->_entryDate, &outStream);
+  ret = outStream.write(this->_entryDate);
   if (ret != 8) {
     return false;
   }
 
-  ret = write(this->_eventDuration, &outStream);
+  ret = outStream.write(this->_eventDuration);
   if (ret != 8) {
     return false;
   }
 
-  ret = write(this->_lineageStartDate, &outStream);
+  ret = outStream.write(this->_lineageStartDate);
   if (ret != 8) {
     return false;
   }
 
-  ret = writeUTF(this->_componentId, &outStream);
+  ret = outStream.write(this->_componentId);
   if (ret <= 0) {
     return false;
   }
 
-  ret = writeUTF(this->_componentType, &outStream);
+  ret = outStream.write(this->_componentType);
   if (ret <= 0) {
     return false;
   }
 
-  ret = writeUTF(this->flow_uuid_, &outStream);
+  ret = outStream.write(this->flow_uuid_);
   if (ret <= 0) {
     return false;
   }
 
-  ret = writeUTF(this->_details, &outStream);
+  ret = outStream.write(this->_details);
   if (ret <= 0) {
     return false;
   }
 
   // write flow attributes
   uint32_t numAttributes = this->_attributes.size();
-  ret = write(numAttributes, &outStream);
+  ret = outStream.write(numAttributes);
   if (ret != 4) {
     return false;
   }
 
   for (const auto& itAttribute : _attributes) {
-    ret = writeUTF(itAttribute.first, &outStream, true);
+    ret = outStream.write(itAttribute.first);
     if (ret <= 0) {
       return false;
     }
-    ret = writeUTF(itAttribute.second, &outStream, true);
+    ret = outStream.write(itAttribute.second);
     if (ret <= 0) {
       return false;
     }
   }
 
-  ret = writeUTF(this->_contentFullPath, &outStream);
+  ret = outStream.write(this->_contentFullPath);
   if (ret <= 0) {
     return false;
   }
 
-  ret = write(this->_size, &outStream);
+  ret = outStream.write(this->_size);
   if (ret != 8) {
     return false;
   }
 
-  ret = write(this->_offset, &outStream);
+  ret = outStream.write(this->_offset);
   if (ret != 8) {
     return false;
   }
 
-  ret = writeUTF(this->_sourceQueueIdentifier, &outStream);
+  ret = outStream.write(this->_sourceQueueIdentifier);
   if (ret <= 0) {
     return false;
   }
@@ -180,38 +179,38 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::DataStream&
   if (this->_eventType == ProvenanceEventRecord::FORK || this->_eventType == ProvenanceEventRecord::CLONE || this->_eventType == ProvenanceEventRecord::JOIN) {
     // write UUIDs
     uint32_t number = this->_parentUuids.size();
-    ret = write(number, &outStream);
+    ret = outStream.write(number);
     if (ret != 4) {
       return false;
     }
     for (const auto& parentUUID : _parentUuids) {
-      ret = writeUTF(parentUUID, &outStream);
+      ret = outStream.write(parentUUID);
       if (ret <= 0) {
         return false;
       }
     }
     number = this->_childrenUuids.size();
-    ret = write(number, &outStream);
+    ret = outStream.write(number);
     if (ret != 4) {
       return false;
     }
     for (const auto& childUUID : _childrenUuids) {
-      ret = writeUTF(childUUID, &outStream);
+      ret = outStream.write(childUUID);
       if (ret <= 0) {
         return false;
       }
     }
   } else if (this->_eventType == ProvenanceEventRecord::SEND || this->_eventType == ProvenanceEventRecord::FETCH) {
-    ret = writeUTF(this->_transitUri, &outStream);
+    ret = outStream.write(this->_transitUri);
     if (ret <= 0) {
       return false;
     }
   } else if (this->_eventType == ProvenanceEventRecord::RECEIVE) {
-    ret = writeUTF(this->_transitUri, &outStream);
+    ret = outStream.write(this->_transitUri);
     if (ret <= 0) {
       return false;
     }
-    ret = writeUTF(this->_sourceSystemFlowFileIdentifier, &outStream);
+    ret = outStream.write(this->_sourceSystemFlowFileIdentifier);
     if (ret <= 0) {
       return false;
     }
@@ -221,13 +220,13 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::DataStream&
 }
 
 bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableComponent> &repo) {
-  org::apache::nifi::minifi::io::DataStream outStream;
+  org::apache::nifi::minifi::io::BufferStream outStream;
 
   Serialize(outStream);
 
   // Persist to the DB
-  if (!repo->Serialize(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
-    logger_->log_error("NiFi Provenance Store event %s size %llu fail", uuidStr_, outStream.getSize());
+  if (!repo->Serialize(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
+    logger_->log_error("NiFi Provenance Store event %s size %llu fail", uuidStr_, outStream.size());
   }
   return true;
 }
@@ -235,57 +234,57 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableCo
 bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t bufferSize) {
   int ret;
 
-  org::apache::nifi::minifi::io::DataStream outStream(buffer, bufferSize);
+  org::apache::nifi::minifi::io::BufferStream outStream(buffer, bufferSize);
 
-  ret = readUTF(this->uuidStr_, &outStream);
+  ret = outStream.read(this->uuidStr_);
 
   if (ret <= 0) {
     return false;
   }
 
   uint32_t eventType;
-  ret = read(eventType, &outStream);
+  ret = outStream.read(eventType);
   if (ret != 4) {
     return false;
   }
   this->_eventType = (ProvenanceEventRecord::ProvenanceEventType) eventType;
 
-  ret = read(this->_eventTime, &outStream);
+  ret = outStream.read(this->_eventTime);
   if (ret != 8) {
     return false;
   }
 
-  ret = read(this->_entryDate, &outStream);
+  ret = outStream.read(this->_entryDate);
   if (ret != 8) {
     return false;
   }
 
-  ret = read(this->_eventDuration, &outStream);
+  ret = outStream.read(this->_eventDuration);
   if (ret != 8) {
     return false;
   }
 
-  ret = read(this->_lineageStartDate, &outStream);
+  ret = outStream.read(this->_lineageStartDate);
   if (ret != 8) {
     return false;
   }
 
-  ret = readUTF(this->_componentId, &outStream);
+  ret = outStream.read(this->_componentId);
   if (ret <= 0) {
     return false;
   }
 
-  ret = readUTF(this->_componentType, &outStream);
+  ret = outStream.read(this->_componentType);
   if (ret <= 0) {
     return false;
   }
 
-  ret = readUTF(this->flow_uuid_, &outStream);
+  ret = outStream.read(this->flow_uuid_);
   if (ret <= 0) {
     return false;
   }
 
-  ret = readUTF(this->_details, &outStream);
+  ret = outStream.read(this->_details);
 
   if (ret <= 0) {
     return false;
@@ -293,41 +292,41 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
 
   // read flow attributes
   uint32_t numAttributes = 0;
-  ret = read(numAttributes, &outStream);
+  ret = outStream.read(numAttributes);
   if (ret != 4) {
     return false;
   }
 
   for (uint32_t i = 0; i < numAttributes; i++) {
     std::string key;
-    ret = readUTF(key, &outStream, true);
+    ret = outStream.read(key);
     if (ret <= 0) {
       return false;
     }
     std::string value;
-    ret = readUTF(value, &outStream, true);
+    ret = outStream.read(value);
     if (ret <= 0) {
       return false;
     }
     this->_attributes[key] = value;
   }
 
-  ret = readUTF(this->_contentFullPath, &outStream);
+  ret = outStream.read(this->_contentFullPath);
   if (ret <= 0) {
     return false;
   }
 
-  ret = read(this->_size, &outStream);
+  ret = outStream.read(this->_size);
   if (ret != 8) {
     return false;
   }
 
-  ret = read(this->_offset, &outStream);
+  ret = outStream.read(this->_offset);
   if (ret != 8) {
     return false;
   }
 
-  ret = readUTF(this->_sourceQueueIdentifier, &outStream);
+  ret = outStream.read(this->_sourceQueueIdentifier);
   if (ret <= 0) {
     return false;
   }
@@ -335,43 +334,43 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
   if (this->_eventType == ProvenanceEventRecord::FORK || this->_eventType == ProvenanceEventRecord::CLONE || this->_eventType == ProvenanceEventRecord::JOIN) {
     // read UUIDs
     uint32_t number = 0;
-    ret = read(number, &outStream);
+    ret = outStream.read(number);
     if (ret != 4) {
       return false;
     }
 
     for (uint32_t i = 0; i < number; i++) {
       std::string parentUUID;
-      ret = readUTF(parentUUID, &outStream);
+      ret = outStream.read(parentUUID);
       if (ret <= 0) {
         return false;
       }
       this->addParentUuid(parentUUID);
     }
     number = 0;
-    ret = read(number, &outStream);
+    ret = outStream.read(number);
     if (ret != 4) {
       return false;
     }
     for (uint32_t i = 0; i < number; i++) {
       std::string childUUID;
-      ret = readUTF(childUUID, &outStream);
+      ret = outStream.read(childUUID);
       if (ret <= 0) {
         return false;
       }
       this->addChildUuid(childUUID);
     }
   } else if (this->_eventType == ProvenanceEventRecord::SEND || this->_eventType == ProvenanceEventRecord::FETCH) {
-    ret = readUTF(this->_transitUri, &outStream);
+    ret = outStream.read(this->_transitUri);
     if (ret <= 0) {
       return false;
     }
   } else if (this->_eventType == ProvenanceEventRecord::RECEIVE) {
-    ret = readUTF(this->_transitUri, &outStream);
+    ret = outStream.read(this->_transitUri);
     if (ret <= 0) {
       return false;
     }
-    ret = readUTF(this->_sourceSystemFlowFileIdentifier, &outStream);
+    ret = outStream.read(this->_sourceSystemFlowFileIdentifier);
     if (ret <= 0) {
       return false;
     }
@@ -390,10 +389,10 @@ void ProvenanceReporter::commit() {
     return;
   }
 
-  std::vector<std::pair<std::string, std::unique_ptr<io::DataStream>>> flowData;
+  std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
 
   for (auto& event : _events) {
-    std::unique_ptr<io::DataStream> stramptr(new io::DataStream());
+    std::unique_ptr<io::BufferStream> stramptr(new io::BufferStream());
     event->Serialize(*stramptr.get());
 
     flowData.emplace_back(event->getUUIDStr(), std::move(stramptr));

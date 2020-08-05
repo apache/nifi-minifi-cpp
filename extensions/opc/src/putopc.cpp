@@ -423,7 +423,7 @@ namespace processors {
 
   int64_t PutOPCProcessor::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
     buf_.clear();
-    buf_.resize(stream->getSize());
+    buf_.resize(stream->size());
 
     uint64_t size = 0;
 
@@ -438,9 +438,9 @@ namespace processors {
         break;
       }
       size += read;
-    } while (size < stream->getSize());
+    } while (size < stream->size());
 
-    logger_->log_trace("Read %llu bytes from flowfile content to buffer", stream->getSize());
+    logger_->log_trace("Read %llu bytes from flowfile content to buffer", stream->size());
 
     return size;
   }

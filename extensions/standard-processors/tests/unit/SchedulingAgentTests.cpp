@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 #include "io/CRCStream.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "TestBase.h"
 #include "GetFile.h"
 #include "LogAttribute.h"

@@ -35,7 +35,7 @@
 #include "wel/XMLString.h"
 #include "wel/UnicodeConversion.h"
 
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Bookmark.h"
@@ -645,7 +645,7 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     }
 
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      return stream->writeData(reinterpret_cast<uint8_t*>(const_cast<char*>(str_.c_str())), str_.size());
+      return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(str_.c_str())), str_.size());
     }
 
     const std::string& str_;

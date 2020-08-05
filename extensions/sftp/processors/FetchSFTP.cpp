@@ -34,7 +34,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
@@ -161,7 +161,7 @@ int64_t FetchSFTP::WriteCallback::process(std::shared_ptr<io::BaseStream> stream
   if (!client_.getFile(remote_file_, *stream)) {
     throw client_.getLastError();
   }
-  return stream->getSize();
+  return stream->size();
 }
 
 void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {

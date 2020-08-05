@@ -118,32 +118,32 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 
     {
       // valid response version 3, 0 ops
-      uint8_t *data = new uint8_t[5] { 0x00, 0x03, 0x00, 0x01, 0x00 };
-      minifi::coap::CoapResponse response(205, std::unique_ptr<uint8_t>(data), 5);
+      auto data = std::unique_ptr<uint8_t[]>(new uint8_t[5] { 0x00, 0x03, 0x00, 0x01, 0x00 });
+      minifi::coap::CoapResponse response(205, std::move(data), 5);
       responses.enqueue(std::move(response));
     }
 
     {
       // valid response
-      uint8_t *data = new uint8_t[5] { 0x00, 0x03, 0x00, 0x00, 0x00 };
-      minifi::coap::CoapResponse response(205, std::unique_ptr<uint8_t>(data), 5);
+      auto data = std::unique_ptr<uint8_t[]>(new uint8_t[5] { 0x00, 0x03, 0x00, 0x00, 0x00 });
+      minifi::coap::CoapResponse response(205, std::move(data), 5);
       responses.enqueue(std::move(response));
     }
 
     {
       // should result in valid operation
-      minifi::io::BaseStream stream;
+      minifi::io::BufferStream stream;
       uint16_t version = 0, size = 1;
       uint8_t operation = 1;
       stream.write(version);
       stream.write(size);
       stream.write(&operation, 1);
-      stream.writeUTF("id");
-      stream.writeUTF("operand");
+      stream.write("id");
+      stream.write("operand");
 
-      uint8_t *data = new uint8_t[stream.getSize()];
-      memcpy(data, stream.getBuffer(), stream.getSize());
-      minifi::coap::CoapResponse response(205, std::unique_ptr<uint8_t>(data), stream.getSize());
+      auto data = std::unique_ptr<uint8_t[]>(new uint8_t[stream.size()]);
+      memcpy(data.get(), stream.getBuffer(), stream.size());
+      minifi::coap::CoapResponse response(205, std::move(data), stream.size());
       responses.enqueue(std::move(response));
     }
 

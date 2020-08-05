@@ -318,14 +318,14 @@ void TFConvertImageToTensor::onTrigger(const std::shared_ptr<core::ProcessContex
 }
 
 int64_t TFConvertImageToTensor::ImageReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
-  if (tensor_->AllocatedBytes() < stream->getSize()) {
+  if (tensor_->AllocatedBytes() < stream->size()) {
     throw std::runtime_error("Tensor is not big enough to hold FlowFile bytes");
   }
 
-  auto num_read = stream->readData(tensor_->flat<unsigned char>().data(),
-                                   static_cast<int>(stream->getSize()));
+  auto num_read = stream->read(tensor_->flat<unsigned char>().data(),
+                                   static_cast<int>(stream->size()));
 
-  if (num_read != stream->getSize()) {
+  if (num_read != stream->size()) {
     throw std::runtime_error("TensorReadCallback failed to fully read flow file input stream");
   }
 
@@ -334,7 +334,7 @@ int64_t TFConvertImageToTensor::ImageReadCallback::process(std::shared_ptr<io::B
 
 int64_t TFConvertImageToTensor::TensorWriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
   auto tensor_proto_buf = tensor_proto_->SerializeAsString();
-  auto num_wrote = stream->writeData(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
+  auto num_wrote = stream->write(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
                                      static_cast<int>(tensor_proto_buf.size()));
 
   if (num_wrote != tensor_proto_buf.size()) {

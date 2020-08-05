@@ -21,7 +21,7 @@
 
 #include "cstructs.h"
 #include "cxx/Plan.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 
 struct flow : public ExecutionPlan {
   using ExecutionPlan::ExecutionPlan;

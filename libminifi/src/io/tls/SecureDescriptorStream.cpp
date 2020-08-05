@@ -43,20 +43,10 @@ void SecureDescriptorStream::seek(uint64_t offset) {
 #endif
 }
 
-int SecureDescriptorStream::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen)) {
-    return -1;
-  }
-  return writeData(buf.data(), buflen);
-}
-
 // data stream overrides
 
-int SecureDescriptorStream::writeData(uint8_t *value, int size) {
+int SecureDescriptorStream::write(const uint8_t *value, int size) {
+  gsl_Expects(size >= 0);
   if (!IsNullOrEmpty(value)) {
     std::lock_guard<std::recursive_mutex> lock(file_lock_);
     int bytes = 0;
@@ -78,36 +68,8 @@ int SecureDescriptorStream::writeData(uint8_t *value, int size) {
   }
 }
 
-template<typename T>
-inline std::vector<uint8_t> SecureDescriptorStream::readBuffer(const T& t) {
-  std::vector<uint8_t> buf;
-  readBuffer(buf, t);
-  return buf;
-}
-
-template<typename T>
-inline int SecureDescriptorStream::readBuffer(std::vector<uint8_t>& buf, const T& t) {
-  buf.resize(sizeof t);
-  return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
-}
-
-int SecureDescriptorStream::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen)) {
-    buf.resize(buflen);
-  }
-  int ret = readData(buf.data(), buflen);
-
-  if (ret < buflen) {
-    buf.resize((std::max)(ret, 0));
-  }
-  return ret;
-}
-
-int SecureDescriptorStream::readData(uint8_t *buf, int buflen) {
+int SecureDescriptorStream::read(uint8_t *buf, int buflen) {
+  gsl_Expects(buflen >= 0);
   if (!IsNullOrEmpty(buf)) {
     int total_read = 0;
       int status = 0;
@@ -131,104 +93,6 @@ int SecureDescriptorStream::readData(uint8_t *buf, int buflen) {
   } else {
     return -1;
   }
-}
-
-/**
- * reads a byte from the stream
- * @param value reference in which will set the result
- * @param stream stream from which we will read
- * @return resulting read size
- **/
-int SecureDescriptorStream::read(uint8_t &value) {
-  return Serializable::read(value, reinterpret_cast<DataStream*>(this));
-}
-
-/**
- * reads two bytes from the stream
- * @param value reference in which will set the result
- * @param stream stream from which we will read
- * @return resulting read size
- **/
-int SecureDescriptorStream::read(uint16_t &base_value, bool is_little_endian) {
-  std::vector<uint8_t> buf;
-  auto ret = readBuffer(buf, base_value);
-  if (ret <= 0) return ret;
-  if (is_little_endian) {
-    base_value = (buf[0] << 8) | buf[1];
-  } else {
-    base_value = buf[0] | buf[1] << 8;
-  }
-  return 2;
-}
-
-/**
- * reads a byte from the stream
- * @param value reference in which will set the result
- * @param stream stream from which we will read
- * @return resulting read size
- **/
-int SecureDescriptorStream::read(char &value) {
-  return readData(reinterpret_cast<uint8_t*>(&value), 1);
-}
-
-/**
- * reads a byte array from the stream
- * @param value reference in which will set the result
- * @param len length to read
- * @param stream stream from which we will read
- * @return resulting read size
- **/
-int SecureDescriptorStream::read(uint8_t *value, int len) {
-  return readData(value, len);
-}
-
-/**
- * reads four bytes from the stream
- * @param value reference in which will set the result
- * @param stream stream from which we will read
- * @return resulting read size
- **/
-int SecureDescriptorStream::read(uint32_t &value, bool is_little_endian) {
-  std::vector<uint8_t> buf;
-  auto ret = readBuffer(buf, value);
-  if (ret <= 0) return ret;
-  if (is_little_endian) {
-    value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
-  } else {
-    value = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
-  }
-  return 4;
-}
-
-/**
- * reads eight byte from the stream
- * @param value reference in which will set the result
- * @param stream stream from which we will read
- * @return resulting read size
- **/
-int SecureDescriptorStream::read(uint64_t &value, bool is_little_endian) {
-  std::vector<uint8_t> buf;
-  auto ret = readBuffer(buf, value);
-  if (ret <= 0) return ret;
-
-  if (is_little_endian) {
-    value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48) | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32) | ((uint64_t) (buf[4] & 255) << 24)
-        | ((uint64_t) (buf[5] & 255) << 16) | ((uint64_t) (buf[6] & 255) << 8) | ((uint64_t) (buf[7] & 255) << 0);
-  } else {
-    value = ((uint64_t) buf[0] << 0) | ((uint64_t) (buf[1] & 255) << 8) | ((uint64_t) (buf[2] & 255) << 16) | ((uint64_t) (buf[3] & 255) << 24) | ((uint64_t) (buf[4] & 255) << 32)
-        | ((uint64_t) (buf[5] & 255) << 40) | ((uint64_t) (buf[6] & 255) << 48) | ((uint64_t) (buf[7] & 255) << 56);
-  }
-  return 8;
-}
-
-/**
- * read UTF from stream
- * @param str reference string
- * @param stream stream from which we will read
- * @return resulting read size
- **/
-int SecureDescriptorStream::readUTF(std::string &str, bool widen) {
-  return Serializable::readUTF(str, reinterpret_cast<DataStream*>(this), widen);
 }
 
 } /* namespace io */

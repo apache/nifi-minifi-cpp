@@ -28,7 +28,7 @@
 #include <string>
 #include <iostream>
 
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
@@ -114,7 +114,7 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       flowFile->addAttribute("event_time", getTimeStamp(event_record->TimeGenerated));
       flowFile->addAttribute("event_type", typeToString(event_record->EventType));
       
-      io::DataStream stream((const uint8_t*)(event_record + event_record->DataOffset), event_record->DataLength);
+      io::BufferStream stream((const uint8_t*)(event_record + event_record->DataOffset), event_record->DataLength);
       // need an import from the data stream.
       session->importFrom(stream, flowFile);
       session->transfer(flowFile, Success);

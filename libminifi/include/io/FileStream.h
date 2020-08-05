@@ -55,82 +55,43 @@ class FileStream : public io::BaseStream {
   explicit FileStream(const std::string &path, bool append = false);
 
   ~FileStream() override {
-    closeStream();
+    close();
   }
 
-  void closeStream() override;
+  void close() final;
   /**
    * Skip to the specified offset.
    * @param offset offset to which we will skip
    */
   void seek(uint64_t offset) override;
 
-  const size_t getSize() const override {
+  size_t size() const override {
     return length_;
   }
 
-  // data stream extensions
-  /**
-   * Reads data and places it into buf
-   * @param buf buffer in which we extract data
-   * @param buflen
-   */
-  int readData(std::vector<uint8_t> &buf, int buflen) override;
-  /**
-   * Reads data and places it into buf
-   * @param buf buffer in which we extract data
-   * @param buflen
-   */
-  int readData(uint8_t *buf, int buflen) override;
+  using BaseStream::read;
+  using BaseStream::write;
 
   /**
-   * Write value to the stream using std::vector
-   * @param buf incoming buffer
-   * @param buflen buffer to write
-   *
+   * Reads data and places it into buf
+   * @param buf buffer in which we extract data
+   * @param buflen
    */
-  virtual int writeData(std::vector<uint8_t> &buf, int buflen);
+  int read(uint8_t *buf, int buflen) override;
 
   /**
    * writes value to stream
    * @param value value to write
    * @param size size of value
    */
-  int writeData(uint8_t *value, int size) override;
+  int write(const uint8_t *value, int size) override;
 
-  /**
-   * Returns the underlying buffer
-   * @return vector's array
-   **/
-  const uint8_t *getBuffer() const {
-    throw std::runtime_error("Stream does not support this operation");
-  }
-
- protected:
-  /**
-   * Creates a vector and returns the vector using the provided
-   * type name.
-   * @param t incoming object
-   * @returns vector.
-   */
-  template<typename T>
-  std::vector<uint8_t> readBuffer(const T& t);
-
-  /**
-   * Populates the vector using the provided type name.
-   * @param buf output buffer
-   * @param t incoming object
-   * @returns number of bytes read.
-   */
-  template<typename T>
-  int readBuffer(std::vector<uint8_t>& buf, const T& t);
   std::mutex file_lock_;
   std::unique_ptr<std::fstream> file_stream_;
   size_t offset_;
   std::string path_;
   size_t length_;
 
- private:
   std::shared_ptr<logging::Logger> logger_;
 };
 

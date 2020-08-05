@@ -285,7 +285,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", true);
 
   std::string data = "banana";
-  minifi::io::DataStream content(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
+  minifi::io::BufferStream content(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
 
   /**
    * Currently it is the Connection's responsibility to persist the incoming

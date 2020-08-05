@@ -34,7 +34,7 @@
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
 #include "SensorBase.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"

@@ -18,49 +18,68 @@
 
 #pragma once
 
-#include <map>
-#include <memory>
-#include "ResourceClaim.h"
-#include "io/BaseStream.h"
+#include <iostream>
+#include <cstdint>
+#include <vector>
+#include "BaseStream.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace core {
+namespace io {
 
-class ContentRepository;
-
-class ContentSession {
+class BufferStream : public BaseStream {
  public:
-  enum class WriteMode {
-    OVERWRITE,
-    APPEND
-  };
+  BufferStream() = default;
 
-  explicit ContentSession(std::shared_ptr<ContentRepository> repository);
+  BufferStream(const uint8_t *buf, const unsigned int len) {
+    write(buf, len);
+  }
 
-  std::shared_ptr<ResourceClaim> create();
+  using BaseStream::read;
+  using BaseStream::write;
 
-  std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resourceId, WriteMode mode = WriteMode::OVERWRITE);
+  int write(const uint8_t* data, int len) final;
 
-  std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resourceId);
+  int read(uint8_t* buffer, int len) override;
 
-  virtual void commit();
+  int initialize() override {
+    buffer_.clear();
+    readOffset_ = 0;
+    return 0;
+  }
 
-  void rollback();
+  void seek(uint64_t offset) override {
+    readOffset_ += offset;
+  }
 
-  virtual ~ContentSession() = default;
+  void close() override { }
 
- protected:
-  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> managedResources_;
-  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> extendedResources_;
-  std::shared_ptr<ContentRepository> repository_;
+  /**
+   * Returns the underlying buffer
+   * @return vector's array
+   **/
+  const uint8_t *getBuffer() const override {
+    return buffer_.data();
+  }
+
+  /**
+   * Retrieve size of data stream
+   * @return size of data stream
+   **/
+  size_t size() const override {
+    return buffer_.size();
+  }
+
+ private:
+  std::vector<uint8_t> buffer_;
+
+  uint64_t readOffset_ = 0;
 };
 
-}  // namespace core
+}  // namespace io
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-

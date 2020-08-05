@@ -134,14 +134,14 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     return ExecuteWithRetry(operation);
   }
 
-  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) {
+  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) {
     auto opendb = db_->open();
     if (!opendb) {
       return false;
     }
     rocksdb::WriteBatch batch;
     for (const auto &item: data) {
-      rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->getSize());
+      rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->size());
       if (!batch.Put(item.first, value).ok()) {
         logger_->log_error("Failed to add item to batch operation");
         return false;

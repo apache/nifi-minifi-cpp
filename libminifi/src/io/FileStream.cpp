@@ -16,13 +16,15 @@
  * limitations under the License.
  */
 
-#include "io/FileStream.h"
 #include <fstream>
 #include <vector>
 #include <memory>
 #include <string>
 #include <Exception.h>
 #include "io/validation.h"
+#include "io/FileStream.h"
+#include "io/InputStream.h"
+#include "io/OutputStream.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -68,7 +70,7 @@ FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enab
   seek(offset);
 }
 
-void FileStream::closeStream() {
+void FileStream::close() {
   std::lock_guard<std::mutex> lock(file_lock_);
   file_stream_.reset();
 }
@@ -81,20 +83,8 @@ void FileStream::seek(uint64_t offset) {
   file_stream_->seekp(offset_);
 }
 
-int FileStream::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen)) {
-    return -1;
-  }
-  return writeData(buf.data(), buflen);
-}
-
-// data stream overrides
-
-int FileStream::writeData(uint8_t *value, int size) {
+int FileStream::write(const uint8_t *value, int size) {
+  gsl_Expects(size >= 0);
   if (!IsNullOrEmpty(value)) {
     std::lock_guard<std::mutex> lock(file_lock_);
     if (file_stream_->write(reinterpret_cast<const char*>(value), size)) {
@@ -114,36 +104,8 @@ int FileStream::writeData(uint8_t *value, int size) {
   }
 }
 
-template<typename T>
-inline std::vector<uint8_t> FileStream::readBuffer(const T& t) {
-  std::vector<uint8_t> buf;
-  readBuffer(buf, t);
-  return buf;
-}
-
-template<typename T>
-inline int FileStream::readBuffer(std::vector<uint8_t>& buf, const T& t) {
-  buf.resize(sizeof t);
-  return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
-}
-
-int FileStream::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen)) {
-    buf.resize(buflen);
-  }
-  int ret = readData(buf.data(), buflen);
-
-  if (ret < buflen) {
-    buf.resize(ret);
-  }
-  return ret;
-}
-
-int FileStream::readData(uint8_t *buf, int buflen) {
+int FileStream::read(uint8_t *buf, int buflen) {
+  gsl_Expects(buflen >= 0);
   if (!IsNullOrEmpty(buf)) {
     std::lock_guard<std::mutex> lock(file_lock_);
     if (!file_stream_) {

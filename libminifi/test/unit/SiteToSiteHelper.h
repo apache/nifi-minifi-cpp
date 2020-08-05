@@ -19,7 +19,7 @@
 #define LIBMINIFI_TEST_UNIT_SITE2SITE_HELPER_H_
 
 #include <queue>
-#include "io/BaseStream.h"
+#include "io/BufferStream.h"
 #include "io/EndianCheck.h"
 #include "core/Core.h"
 /**
@@ -27,32 +27,22 @@
  */
 class SiteToSiteResponder : public minifi::io::BaseStream {
  private:
-  std::queue<std::string> server_responses_;
+  minifi::io::BufferStream server_responses_;
   std::queue<std::string> client_responses_;
  public:
   SiteToSiteResponder() = default;
   // initialize
-  virtual short initialize() {
+  int initialize() override {
     return 1;
   }
 
-  void push_response(std::string resp) {
-    server_responses_.push(resp);
+  void push_response(const std::string& resp) {
+    server_responses_.write(reinterpret_cast<const uint8_t*>(resp.data()), resp.length());
   }
 
-  std::string get_next_response() {
-    std::string ret = server_responses_.front();
-    server_responses_.pop();
-    return ret;
-  }
-
-  int writeData(uint8_t *value, int size) {
-    client_responses_.push(std::string((char*) value, size));
+  int write(const uint8_t *value, int size) override {
+    client_responses_.push(std::string(reinterpret_cast<const char*>(value), size));
     return size;
-  }
-
-  bool has_next_client_response() {
-    return !client_responses_.empty();
   }
 
   std::string get_next_client_response() {
@@ -62,89 +52,13 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
   }
 
   /**
-   * reads a byte from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  virtual int read(uint8_t &value) {
-    value = get_next_response().c_str()[0];
-    return 1;
-  }
-
-  /**
-   * reads two bytes from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  virtual int read(uint16_t &base_value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
-    base_value = std::stoi(get_next_response());
-    return 2;
-  }
-
-  /**
-   * reads a byte from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  virtual int read(char &value) {
-    value = get_next_response().c_str()[0];
-    return 1;
-  }
-
-  /**
    * reads a byte array from the stream
    * @param value reference in which will set the result
    * @param len length to read
-   * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint8_t *value, int len) {
-    std::string str = get_next_response();
-    memcpy(value, str.c_str(), str.size());
-    return len;
-  }
-
-  virtual int readData(uint8_t *buf, int buflen) {
-    std::string str = get_next_response();
-    memset(buf, 0x00, buflen);
-    memcpy(buf, str.c_str(), str.size());
-    return str.size();
-  }
-
-  /**
-   * reads four bytes from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  virtual int read(uint32_t &value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
-    value = std::stoul(get_next_response());
-    return 4;
-  }
-
-  /**
-   * reads eight byte from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  virtual int read(uint64_t &value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
-    value = std::stoull(get_next_response());
-    return 8;
-  }
-
-  /**
-   * read UTF from stream
-   * @param str reference string
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  virtual int readUTF(std::string &str, bool widen = false) {
-    str = get_next_response();
-    return str.length();
+  int read(uint8_t *value, int len) override {
+    return server_responses_.read(value, len);
   }
 
 };

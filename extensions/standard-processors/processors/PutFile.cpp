@@ -264,7 +264,7 @@ int64_t PutFile::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
 
     tmp_file_os.write(reinterpret_cast<char *>(buffer), read);
     size += read;
-  } while (size < stream->getSize());
+  } while (size < stream->size());
 
   tmp_file_os.close();
 

@@ -209,7 +209,7 @@ class FlowFileResponder : public ServerAwareHandler {
 
     if (!wrong_uri) {
       minifi::io::CivetStream civet_stream(conn);
-      minifi::io::CRCStream < minifi::io::CivetStream > stream(&civet_stream);
+      minifi::io::CRCStream < minifi::io::CivetStream > stream(gsl::make_not_null(&civet_stream));
       uint32_t num_attributes;
       int read;
       uint64_t total_size = 0;
@@ -221,10 +221,10 @@ class FlowFileResponder : public ServerAwareHandler {
 
       for (uint32_t i = 0; i < num_attributes; i++) {
         std::string name, value;
-        read = stream.readUTF(name, true);
+        read = stream.read(name, true);
         if(!isServerRunning())return false;
         assert(read > 0); total_size += read;
-        read = stream.readUTF(value, true);
+        read = stream.read(value, true);
         if(!isServerRunning())return false;
         assert(read > 0); total_size += read;
         flow->attributes[name] = value;
@@ -238,7 +238,7 @@ class FlowFileResponder : public ServerAwareHandler {
       flow->data.resize(gsl::narrow<size_t>(length));
       flow->total_size = total_size;
 
-      read = stream.readData(flow->data.data(), gsl::narrow<int>(length));
+      read = stream.read(flow->data.data(), gsl::narrow<int>(length));
       if(!isServerRunning())return false;
       assert(read == length);
 
@@ -280,18 +280,18 @@ class FlowFileResponder : public ServerAwareHandler {
           "Content-Type: application/octet-stream\r\n"
           "Connection: close\r\n\r\n",
           total);
-      minifi::io::BaseStream serializer;
-      minifi::io::CRCStream < minifi::io::BaseStream > stream(&serializer);
+      minifi::io::BufferStream serializer;
+      minifi::io::CRCStream < minifi::io::BaseStream > stream(gsl::make_not_null(&serializer));
       for (const auto& flow : flows) {
         uint32_t num_attributes = flow->attributes.size();
         stream.write(num_attributes);
         for (const auto& entry : flow->attributes) {
-          stream.writeUTF(entry.first);
-          stream.writeUTF(entry.second);
+          stream.write(entry.first);
+          stream.write(entry.second);
         }
         uint64_t length = flow->data.size();
         stream.write(length);
-        stream.writeData(flow->data.data(), gsl::narrow<int>(length));
+        stream.write(flow->data.data(), gsl::narrow<int>(length));
       }
     } else {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nConnection: "

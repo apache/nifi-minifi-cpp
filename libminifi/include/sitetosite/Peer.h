@@ -32,7 +32,7 @@
 #include "core/Property.h"
 #include "io/BaseStream.h"
 #include "io/ClientSocket.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "io/EndianCheck.h"
 #include "properties/Configure.h"
 #include "utils/HTTPClient.h"
@@ -145,7 +145,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   /*
    * Create a new site2site peer
    */
-  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket, const std::string host, uint16_t port, const std::string &ifc)
+  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::BaseStream> injected_socket, const std::string host, uint16_t port, const std::string &ifc)
       : SiteToSitePeer(host, port, ifc) {
     stream_ = std::move(injected_socket);
   }
@@ -280,62 +280,27 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     return this->proxy_;
   }
 
-  void setStream(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream) {
+  void setStream(std::unique_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
     stream_ = nullptr;
     if (stream)
       stream_ = std::move(stream);
   }
 
-  org::apache::nifi::minifi::io::DataStream *getStream() {
+  org::apache::nifi::minifi::io::BaseStream *getStream() {
     return stream_.get();
   }
 
-  int write(uint8_t value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
-    return Serializable::write(value, stream_.get());
+  using BaseStream::write;
+  using BaseStream::read;
+
+  int write(const uint8_t* data, int len) override {
+    return stream_->write(data, len);
   }
-  int write(char value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
-    return Serializable::write(value, stream_.get());
+
+  int read(uint8_t* data, int len) override {
+    return stream_->read(data, len);
   }
-  int write(uint32_t value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
-    return Serializable::write(value, stream_.get());
-  }
-  int write(uint16_t value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
-    return Serializable::write(value, stream_.get());
-  }
-  int write(uint8_t *value, int len) {
-    return Serializable::write(value, len, stream_.get());
-  }
-  int write(uint64_t value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
-    return Serializable::write(value, stream_.get());
-  }
-  int write(bool value) {
-    uint8_t temp = value;
-    return Serializable::write(temp, stream_.get());
-  }
-  int writeUTF(std::string str, bool widen = false) {
-    return Serializable::writeUTF(str, stream_.get(), widen);
-  }
-  int read(uint8_t &value) {
-    return Serializable::read(value, stream_.get());
-  }
-  int read(uint16_t &value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
-    return Serializable::read(value, stream_.get());
-  }
-  int read(char &value) {
-    return Serializable::read(value, stream_.get());
-  }
-  int read(uint8_t *value, int len) {
-    return Serializable::read(value, len, stream_.get());
-  }
-  int read(uint32_t &value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
-    return Serializable::read(value, stream_.get());
-  }
-  int read(uint64_t &value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
-    return Serializable::read(value, stream_.get());
-  }
-  int readUTF(std::string &str, bool widen = false) {
-    return org::apache::nifi::minifi::io::Serializable::readUTF(str, stream_.get(), widen);
-  }
+
   // open connection to the peer
   bool Open();
   // close connection to the peer
@@ -345,7 +310,10 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
    * Move assignment operator.
    */
   SiteToSitePeer& operator=(SiteToSitePeer&& other) {
-    stream_ = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(other.stream_.release());
+    if (this == &other) {
+      return *this;
+    }
+    stream_ = std::move(other.stream_);
     host_ = std::move(other.host_);
     port_ = std::move(other.port_);
     local_network_interface_ = std::move(other.local_network_interface_);
@@ -360,7 +328,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   SiteToSitePeer &operator=(const SiteToSitePeer &parent) = delete;
 
  private:
-  std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream_;
+  std::unique_ptr<org::apache::nifi::minifi::io::BaseStream> stream_;
 
   std::string host_;
 

@@ -18,7 +18,7 @@
 #include "ConvertUpdate.h"
 #include "utils/HTTPClient.h"
 #include "io/BaseStream.h"
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 
 namespace org {
 namespace apache {
@@ -39,8 +39,7 @@ void ConvertUpdate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     // first we have the input topic string followed by the update URI
     if (update.size() > 0) {
 
-      io::DataStream dataStream(update.data(), update.size());
-      io::BaseStream stream(&dataStream);
+      io::BufferStream stream(update.data(), update.size());
 
       std::string returnTopic, url;
 
@@ -49,8 +48,8 @@ void ConvertUpdate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
         break;
       }
 
-      stream.readUTF(returnTopic);
-      stream.readUTF(url);
+      stream.read(returnTopic);
+      stream.read(url);
 
       /**
        * Not having curl support is actually okay for MQTT to be built, but running the update processor requires

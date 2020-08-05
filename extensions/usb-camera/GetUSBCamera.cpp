@@ -453,7 +453,7 @@ int64_t GetUSBCamera::PNGWriteCallback::process(std::shared_ptr<io::BaseStream> 
     throw;
   }
 
-  return stream->writeData(png_output_buf_.data(), png_output_buf_.size());
+  return stream->write(png_output_buf_.data(), png_output_buf_.size());
 }
 
 GetUSBCamera::RawWriteCallback::RawWriteCallback(uvc_frame_t *frame)
@@ -463,7 +463,7 @@ GetUSBCamera::RawWriteCallback::RawWriteCallback(uvc_frame_t *frame)
 
 int64_t GetUSBCamera::RawWriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
   logger_->log_info("Writing %d bytes of raw capture data", frame_->data_bytes);
-  return stream->writeData(reinterpret_cast<uint8_t *>(frame_->data), frame_->data_bytes);
+  return stream->write(reinterpret_cast<uint8_t *>(frame_->data), frame_->data_bytes);
 }
 
 } /* namespace processors */

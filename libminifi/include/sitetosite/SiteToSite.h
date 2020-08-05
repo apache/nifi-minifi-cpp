@@ -236,7 +236,7 @@ class Transaction {
   /*!
    * Create a new transaction
    */
-  explicit Transaction(TransferDirection direction, org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> &stream)
+  explicit Transaction(TransferDirection direction, org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> &&stream)
       : closed_(false),
         crcStream(std::move(stream)) {
     _state = TRANSACTION_STARTED;

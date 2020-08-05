@@ -37,7 +37,6 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Property.h"
 #include "ResourceClaim.h"
-#include "io/Serializable.h"
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "Core.h"
@@ -96,7 +95,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     return true;
   }
 
-  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::DataStream>>>& data) {
+  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>>& data) {
     return true;
   }
 

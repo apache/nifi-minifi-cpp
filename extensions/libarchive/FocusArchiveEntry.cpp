@@ -165,7 +165,7 @@ la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d,
   int last_read = 0;
 
   do {
-    last_read = data->stream->readData(reinterpret_cast<uint8_t *>(data->buf), 8196 - read);
+    last_read = data->stream->read(reinterpret_cast<uint8_t *>(data->buf), 8196 - read);
     read += last_read;
   } while (data->processor->isRunning() && last_read > 0 && read < 8196);
 

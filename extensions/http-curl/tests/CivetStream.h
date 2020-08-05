@@ -33,92 +33,26 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-class CivetStream : public io::BaseStream {
+class CivetStream : public io::InputStream {
  public:
   /**
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
    */
-  explicit CivetStream(struct mg_connection *conn)
-      : io::BaseStream(), conn(conn) {
-
-  }
+  explicit CivetStream(struct mg_connection *conn) : conn(conn) {}
 
   ~CivetStream() override = default;
-  /**
-   * Skip to the specified offset.
-   * @param offset offset to which we will skip
-   */
-  void seek(uint64_t offset) override { }
-
-  const size_t getSize() const override {
-    return BaseStream::readBuffer;
-  }
-
-  // data stream extensions
-  /**
-   * Reads data and places it into buf
-   * @param buf buffer in which we extract data
-   * @param buflen
-   */
-  int readData(std::vector<uint8_t> &buf, int buflen) override {
-    if (buflen < 0) {
-      throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-    }
-
-    if (buf.size() < gsl::narrow<size_t>(buflen)) {
-      buf.resize(buflen);
-    }
-    int ret = readData(buf.data(), buflen);
-
-    if (ret < buflen) {
-      buf.resize((std::max)(ret, 0));
-    }
-    return ret;
-  }
 
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  int readData(uint8_t *buf, int buflen) override {
-    return mg_read(conn,buf,buflen);
-  }
-
-  /**
-   * Write value to the stream using std::vector
-   * @param buf incoming buffer
-   * @param buflen buffer to write
-   *
-   */
-  virtual int writeData(std::vector<uint8_t> &buf, int buflen) {
-    return 0;
-  }
-
-  /**
-   * writes value to stream
-   * @param value value to write
-   * @param size size of value
-   */
-  int writeData(uint8_t *value, int size) override {
-    return 0;
+  int read(uint8_t *buf, int buflen) override {
+    return mg_read(conn, buf, buflen);
   }
 
  protected:
-
-  /**
-   * Populates the vector using the provided type name.
-   * @param buf output buffer
-   * @param t incoming object
-   * @returns number of bytes read
-   */
-  template<typename T>
-  inline int readBuffer(std::vector<uint8_t>& buf, const T& t) {
-    buf.resize(sizeof t);
-    return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
-  }
-
   struct mg_connection *conn;
 
  private:

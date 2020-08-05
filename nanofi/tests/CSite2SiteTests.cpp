@@ -97,27 +97,27 @@ void send_response_code(minifi::io::BaseStream* stream, uint8_t resp) {
 void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, TransferState& transfer_state, S2SReceivedData& s2s_data) {
   // In long term it would be nice to calculate the crc of the received data here
   send_response_code(stream, 12);  // confirmed
-  stream->writeUTF(crcstr);
+  stream->write(crcstr);
   send_response_code(stream, 13);  // transaction finished
 
   wait_until(transfer_state.transer_completed);
 
   std::string requesttype;
-  stream->readUTF(requesttype);
+  stream->read(requesttype);
 
   if(requesttype == "SEND_FLOWFILES") {
     s2s_data.request_type_ok = true;
     stream->read(s2s_data.attr_num);
     std::string key, value;
     for(int i = 0; i < s2s_data.attr_num; ++i) {
-      stream->readUTF(key, true);
-      stream->readUTF(value, true);
+      stream->read(key, true);
+      stream->read(value, true);
       s2s_data.attributes[key] = value;
     }
     uint64_t content_size=0;
     stream->read(content_size);
     s2s_data.payload.resize(content_size);
-    stream->readData(s2s_data.payload, content_size);
+    stream->read(s2s_data.payload, content_size);
   } else {
     s2s_data.request_type_ok = false;
   }
@@ -127,7 +127,7 @@ void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, 
 void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfer_state, S2SReceivedData& s2s_data) {
   // Verify the magic string
   char c_array[4];
-  stream->readData((uint8_t*)c_array, 4);
+  stream->read((uint8_t*)c_array, 4);
   s2s_data.magic_string = std::string(c_array, 4);
   uint8_t success = 0x14;
   stream->write(&success, 1);
@@ -139,7 +139,7 @@ void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfe
   int read_len = 0;
   while(!found_codec) {
     uint8_t handshake_data[1000];
-    int actual_len = stream->readData(handshake_data+read_len, 1000-read_len);
+    int actual_len = stream->read(handshake_data+read_len, 1000-read_len);
     if(actual_len <= 0) {
       continue;
     }

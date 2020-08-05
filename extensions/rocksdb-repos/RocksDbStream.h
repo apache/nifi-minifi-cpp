@@ -24,7 +24,6 @@
 #include <string>
 #include "io/EndianCheck.h"
 #include "io/BaseStream.h"
-#include "io/Serializable.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {
@@ -49,107 +48,35 @@ class RocksDbStream : public io::BaseStream {
   explicit RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable = false, rocksdb::WriteBatch* batch = nullptr);
 
   ~RocksDbStream() override {
-    closeStream();
+    close();
   }
 
-  void closeStream() override;
+  void close() final;
   /**
    * Skip to the specified offset.
    * @param offset offset to which we will skip
    */
   void seek(uint64_t offset) override;
 
-  const size_t getSize() const override {
+  size_t size() const override {
     return size_;
   }
 
-  int read(uint16_t &value, bool is_little_endian) override {
-    uint8_t buf[2];
-    if (readData(&buf[0], 2) < 0)
-      return -1;
-    if (is_little_endian) {
-      value = (buf[0] << 8) | buf[1];
-    } else {
-      value = buf[0] | buf[1] << 8;
-    }
-    return 2;
-  }
-
-  int read(uint32_t &value, bool is_little_endian) override {
-    uint8_t buf[4];
-    if (readData(&buf[0], 4) < 0)
-      return -1;
-
-    if (is_little_endian) {
-      value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
-    } else {
-      value = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
-    }
-
-    return 4;
-  }
-  int read(uint64_t &value, bool is_little_endian) override {
-    uint8_t buf[8];
-    if (readData(&buf[0], 8) < 0)
-      return -1;
-    if (is_little_endian) {
-      value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48) | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32) | ((uint64_t) (buf[4] & 255) << 24)
-          | ((uint64_t) (buf[5] & 255) << 16) | ((uint64_t) (buf[6] & 255) << 8) | ((uint64_t) (buf[7] & 255) << 0);
-    } else {
-      value = ((uint64_t) buf[0] << 0) | ((uint64_t) (buf[1] & 255) << 8) | ((uint64_t) (buf[2] & 255) << 16) | ((uint64_t) (buf[3] & 255) << 24) | ((uint64_t) (buf[4] & 255) << 32)
-          | ((uint64_t) (buf[5] & 255) << 40) | ((uint64_t) (buf[6] & 255) << 48) | ((uint64_t) (buf[7] & 255) << 56);
-    }
-    return 8;
-  }
-
-  // data stream extensions
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  int readData(std::vector<uint8_t> &buf, int buflen) override;
-  /**
-   * Reads data and places it into buf
-   * @param buf buffer in which we extract data
-   * @param buflen
-   */
-  int readData(uint8_t *buf, int buflen) override;
-
-  /**
-   * Write value to the stream using std::vector
-   * @param buf incoming buffer
-   * @param buflen buffer to write
-   *
-   */
-  virtual int writeData(std::vector<uint8_t> &buf, int buflen);
+  int read(uint8_t *buf, int buflen) override;
 
   /**
    * writes value to stream
    * @param value value to write
    * @param size size of value
    */
-  int writeData(uint8_t *value, int size) override;
-
-  /**
-   * Returns the underlying buffer
-   * @return vector's array
-   **/
-  const uint8_t *getBuffer() const {
-    throw std::runtime_error("Stream does not support this operation");
-  }
+  int write(const uint8_t *value, int size) override;
 
  protected:
-
-  /**
-   * Populates the vector using the provided type name.
-   * @param buf output buffer
-   * @param t incoming object
-   * @returns number of bytes read.
-   */
-  template<typename T>
-  int readBuffer(std::vector<uint8_t>&, const T&);
-
   std::string path_;
 
   bool write_enable_;

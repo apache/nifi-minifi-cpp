@@ -19,8 +19,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "io/DataStream.h"
-#include "io/Serializable.h"
+#include "io/BufferStream.h"
 #include "core/Relationship.h"
 #include "core/logging/Logger.h"
 #include "FlowController.h"

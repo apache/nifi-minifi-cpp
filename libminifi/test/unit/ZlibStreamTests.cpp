@@ -27,7 +27,8 @@ namespace io = org::apache::nifi::minifi::io;
 
 TEST_CASE("gzip compression and decompression", "[basic]") {
   /* Compression*/
-  io::ZlibCompressStream compressStream;
+  io::BufferStream compressBuffer;
+  io::ZlibCompressStream compressStream(gsl::make_not_null(&compressBuffer));
 
   std::string original;
   SECTION("Empty") {
@@ -53,38 +54,40 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
     }
   }
 
-  compressStream.closeStream();
+  compressStream.close();
 
-  REQUIRE(0U < compressStream.getSize());
+  REQUIRE(0U < compressBuffer.size());
 
-  if (compressStream.getSize() < 64U) {
-    std::cerr << utils::StringUtils::to_hex(compressStream.getBuffer(), compressStream.getSize()) << std::endl;
+  if (compressBuffer.size() < 64U) {
+    std::cerr << utils::StringUtils::to_hex(compressBuffer.getBuffer(), compressBuffer.size()) << std::endl;
   }
 
   /* Decompression */
-  io::ZlibDecompressStream decompressStream;
+  io::BufferStream decompressBuffer;
+  io::ZlibDecompressStream decompressStream(gsl::make_not_null(&decompressBuffer));
 
-  decompressStream.writeData(const_cast<uint8_t*>(compressStream.getBuffer()), compressStream.getSize());
+  decompressStream.write(const_cast<uint8_t*>(compressBuffer.getBuffer()), compressBuffer.size());
 
   REQUIRE(decompressStream.isFinished());
-  REQUIRE(original == std::string(reinterpret_cast<const char*>(decompressStream.getBuffer()), decompressStream.getSize()));
+  REQUIRE(original == std::string(reinterpret_cast<const char*>(decompressBuffer.getBuffer()), decompressBuffer.size()));
 }
 
 TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
-  io::ZlibDecompressStream decompressStream;
-  io::ZlibCompressStream compressStream(&decompressStream);
+  io::BufferStream output;
+  io::ZlibDecompressStream decompressStream(gsl::make_not_null(&output));
+  io::ZlibCompressStream compressStream(gsl::make_not_null(&decompressStream));
 
   std::string original;
   SECTION("Empty") {
   }
   SECTION("Simple content in one write") {
-    REQUIRE(strlen("foobar") == compressStream.writeData(reinterpret_cast<uint8_t*>(const_cast<char*>("foobar")), strlen("foobar")));
+    REQUIRE(strlen("foobar") == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("foobar")), strlen("foobar")));
     original += "foobar";
   }
   SECTION("Simple content in two writes") {
-    REQUIRE(strlen("foo") == compressStream.writeData(reinterpret_cast<uint8_t*>(const_cast<char*>("foo")), strlen("foo")));
+    REQUIRE(strlen("foo") == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("foo")), strlen("foo")));
     original += "foo";
-    REQUIRE(strlen("bar") == compressStream.writeData(reinterpret_cast<uint8_t*>(const_cast<char*>("bar")), strlen("bar")));
+    REQUIRE(strlen("bar") == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("bar")), strlen("bar")));
     original += "bar";
   }
   SECTION("Large data") {
@@ -94,12 +97,12 @@ TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
     for (size_t i = 0U; i < 1024U; i++) {
       std::generate(buf.begin(), buf.end(), [&](){return dist(gen);});
       original += std::string(reinterpret_cast<const char*>(buf.data()), buf.size());
-      REQUIRE(buf.size() == compressStream.writeData(buf.data(), buf.size()));
+      REQUIRE(buf.size() == compressStream.write(buf.data(), buf.size()));
     }
   }
 
-  compressStream.closeStream();
+  compressStream.close();
 
   REQUIRE(decompressStream.isFinished());
-  REQUIRE(original == std::string(reinterpret_cast<const char*>(decompressStream.getBuffer()), decompressStream.getSize()));
+  REQUIRE(original == std::string(reinterpret_cast<const char*>(output.getBuffer()), output.size()));
 }

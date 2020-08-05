@@ -113,7 +113,7 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
 
   logger_->log_debug("Negotiate protocol version with destination port %s current version %d", port_id_str_, _currentVersion);
 
-  int ret = peer_->writeUTF(getResourceName());
+  int ret = peer_->write(getResourceName());
 
   logger_->log_trace("result of writing resource name is %i", ret);
   if (ret <= 0) {
@@ -177,7 +177,7 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
 
   logger_->log_trace("Negotiate Codec version with destination port %s current version %d", port_id_str_, _currentCodecVersion);
 
-  int ret = peer_->writeUTF(getCodecResourceName());
+  int ret = peer_->write(getCodecResourceName());
 
   if (ret <= 0) {
     logger_->log_debug("result of getCodecResourceName is %i", ret);
@@ -239,7 +239,7 @@ bool RawSiteToSiteClient::handShake() {
   id_generator_->generate(uuid);
   _commsIdentifier = uuid.to_string();
 
-  int ret = peer_->writeUTF(_commsIdentifier);
+  int ret = peer_->write(_commsIdentifier);
 
   if (ret <= 0) {
     return false;
@@ -259,7 +259,7 @@ bool RawSiteToSiteClient::handShake() {
   }
 
   if (_currentVersion >= 3) {
-    ret = peer_->writeUTF(peer_->getURL());
+    ret = peer_->write(peer_->getURL());
     if (ret <= 0) {
       return false;
     }
@@ -273,11 +273,11 @@ bool RawSiteToSiteClient::handShake() {
 
   std::map<std::string, std::string>::iterator it;
   for (it = properties.begin(); it != properties.end(); it++) {
-    ret = peer_->writeUTF(it->first);
+    ret = peer_->write(it->first);
     if (ret <= 0) {
       return false;
     }
-    ret = peer_->writeUTF(it->second);
+    ret = peer_->write(it->second);
     if (ret <= 0) {
       return false;
     }
@@ -353,7 +353,7 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
 
     for (uint32_t i = 0; i < number; i++) {
       std::string host;
-      status = peer_->readUTF(host);
+      status = peer_->read(host);
       if (status <= 0) {
         tearDown();
         return false;
@@ -393,13 +393,13 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
     if (type >= MAX_REQUEST_TYPE)
       return -1;
 
-    return peer_->writeUTF(SiteToSiteRequest::RequestTypeStr[type]);
+    return peer_->write(SiteToSiteRequest::RequestTypeStr[type]);
   }
 
   int RawSiteToSiteClient::readRequestType(RequestType &type) {
     std::string requestTypeStr;
 
-    int ret = peer_->readUTF(requestTypeStr);
+    int ret = peer_->read(requestTypeStr);
 
     if (ret <= 0)
       return ret;
@@ -495,12 +495,12 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
       return transaction;
     }
 
-    org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(peer_.get());
+    org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(gsl::make_not_null(peer_.get()));
     switch (code) {
       case MORE_DATA:
         dataAvailable = true;
         logger_->log_trace("Site2Site peer indicates that data is available");
-        transaction = std::make_shared<Transaction>(direction, crcstream);
+        transaction = std::make_shared<Transaction>(direction, std::move(crcstream));
         known_transactions_[transaction->getUUIDStr()] = transaction;
         transactionID = transaction->getUUIDStr();
         transaction->setDataAvailable(dataAvailable);
@@ -509,7 +509,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
       case NO_MORE_DATA:
         dataAvailable = false;
         logger_->log_trace("Site2Site peer indicates that no data is available");
-        transaction = std::make_shared<Transaction>(direction, crcstream);
+        transaction = std::make_shared<Transaction>(direction, std::move(crcstream));
         known_transactions_[transaction->getUUIDStr()] = transaction;
         transactionID = transaction->getUUIDStr();
         transaction->setDataAvailable(dataAvailable);
@@ -525,8 +525,8 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
     if (ret <= 0) {
       return NULL;
     } else {
-      org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(peer_.get());
-      transaction = std::make_shared<Transaction>(direction, crcstream);
+      org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(gsl::make_not_null(peer_.get()));
+      transaction = std::make_shared<Transaction>(direction, std::move(crcstream));
       known_transactions_[transaction->getUUIDStr()] = transaction;
       transactionID = transaction->getUUIDStr();
       logger_->log_trace("Site2Site create transaction %s", transaction->getUUIDStr());

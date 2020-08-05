@@ -81,9 +81,9 @@ class HttpStreamingCallback : public ByteInputCallBack {
   int64_t process(std::shared_ptr<io::BaseStream> stream) override {
     std::vector<char> vec;
 
-    if (stream->getSize() > 0) {
-      vec.resize(stream->getSize());
-      stream->readData(reinterpret_cast<uint8_t*>(vec.data()), gsl::narrow<int>(stream->getSize()));
+    if (stream->size() > 0) {
+      vec.resize(stream->size());
+      stream->read(reinterpret_cast<uint8_t*>(vec.data()), gsl::narrow<int>(stream->size()));
     }
 
     return processInner(std::move(vec));

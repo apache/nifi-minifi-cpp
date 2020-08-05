@@ -93,7 +93,7 @@ class Socket : public BaseStream {
    * @param hostname hostname we are connecting to.
    * @param port port we are connecting to.
    */
-  explicit Socket(const std::shared_ptr<SocketContext> &context, std::string hostname, uint16_t port);
+  Socket(const std::shared_ptr<SocketContext> &context, std::string hostname, uint16_t port);
 
   Socket(const Socket&) = delete;
   Socket(Socket&&) noexcept;
@@ -113,14 +113,14 @@ class Socket : public BaseStream {
    * Destructor
    */
 
-  virtual ~Socket();
+  ~Socket() override;
 
-  virtual void closeStream();
+  void close() override;
   /**
    * Initializes the socket
    * @return result of the creation operation.
    */
-  virtual int16_t initialize();
+  int initialize() override;
 
   virtual void setInterface(io::NetworkInterface interface) {
     local_network_interface_ = std::move(interface);
@@ -145,24 +145,19 @@ class Socket : public BaseStream {
     port_ = port;
   }
 
-  // data stream extensions
+  using BaseStream::write;
+  using BaseStream::read;
+
+  int write(const uint8_t *value, int size) override;
+
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
-  virtual int readData(std::vector<uint8_t> &buf, int buflen) {
-    return readData(buf, buflen, true);
-  }
-  /**
-   * Reads data and places it into buf
-   * @param buf buffer in which we extract data
-   * @param buflen
-   * @param retrieve_all_bytes determines if we should read all bytes before returning
-   */
-  virtual int readData(uint8_t *buf, int buflen) {
-    return readData(buf, buflen, true);
+  int read(uint8_t *buf, int buflen) override {
+    return read(buf, buflen, true);
   }
 
   /**
@@ -171,65 +166,7 @@ class Socket : public BaseStream {
    * @param buflen
    * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
-  virtual int readData(std::vector<uint8_t> &buf, int buflen, bool retrieve_all_bytes);
-  /**
-   * Reads data and places it into buf
-   * @param buf buffer in which we extract data
-   * @param buflen
-   * @param retrieve_all_bytes determines if we should read all bytes before returning
-   */
-  virtual int readData(uint8_t *buf, int buflen, bool retrieve_all_bytes);
-
-  /**
-   * Write value to the stream using std::vector
-   * @param buf incoming buffer
-   * @param buflen buffer to write
-   *
-   */
-  virtual int writeData(std::vector<uint8_t> &buf, int buflen);
-
-  /**
-   * writes value to stream
-   * @param value value to write
-   * @param size size of value
-   */
-  virtual int writeData(uint8_t *value, int size);
-
-  /**
-   * Writes a system word
-   * @param value value to write
-   */
-  virtual int write(uint64_t value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
-
-  /**
-   * Writes a uint32_t
-   * @param value value to write
-   */
-  virtual int write(uint32_t value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
-
-  /**
-   * Writes a system short
-   * @param value value to write
-   */
-  virtual int write(uint16_t value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
-
-  /**
-   * Reads a system word
-   * @param value value to write
-   */
-  virtual int read(uint64_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
-
-  /**
-   * Reads a uint32_t
-   * @param value value to write
-   */
-  virtual int read(uint32_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
-
-  /**
-   * Reads a system short
-   * @param value value to write
-   */
-  virtual int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
+  virtual int read(uint8_t *buf, int buflen, bool retrieve_all_bytes);
 
  protected:
   /**
@@ -241,24 +178,6 @@ class Socket : public BaseStream {
    * @param listeners number of listeners in the queue
    */
   explicit Socket(const std::shared_ptr<SocketContext> &context, std::string hostname, uint16_t port, uint16_t listeners);
-
-  /**
-   * Creates a vector and returns the vector using the provided
-   * type name.
-   * @param t incoming object
-   * @returns vector.
-   */
-  template<typename T>
-  std::vector<uint8_t> readBuffer(const T& t);
-
-  /**
-   * Populates the vector using the provided type name.
-   * @param buf output buffer
-   * @param t incoming object
-   * @returns number of bytes read.
-   */
-  template<typename T>
-  int readBuffer(std::vector<uint8_t>& buf, const T& t);
 
   /**
    * Creates a connection using the addr object

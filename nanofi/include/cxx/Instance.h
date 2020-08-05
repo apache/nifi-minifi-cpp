@@ -131,7 +131,7 @@ class Instance {
     return content_repo_;
   }
 
-  void transfer(const std::shared_ptr<FlowFileRecord> &ff, const std::shared_ptr<minifi::io::DataStream> &stream = nullptr) {
+  void transfer(const std::shared_ptr<FlowFileRecord> &ff, const std::shared_ptr<minifi::io::BufferStream> &stream = nullptr) {
     auto processContext = std::make_shared<core::ProcessContext>(proc_node_, nullptr, no_op_repo_, no_op_repo_, configure_, content_repo_);
     auto sessionFactory = std::make_shared<core::ProcessSessionFactory>(processContext);
 

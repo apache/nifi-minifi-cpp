@@ -35,8 +35,7 @@ class EndiannessCheck {
     /* do whatever is needed at static init time */
     unsigned int x = 1;
     char *c = reinterpret_cast<char*>(&x);
-    IS_LITTLE = *c == 1;
-    return IS_LITTLE;
+    return *c == 1;
   }
 };
 

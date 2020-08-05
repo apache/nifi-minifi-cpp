@@ -48,19 +48,19 @@ class ServerSocket : public BaseServerSocket, public Socket {
 
   virtual ~ServerSocket();
 
-  virtual int16_t initialize(bool loopbackOnly) {
+  int16_t initialize(bool loopbackOnly) override {
     is_loopback_only_ = loopbackOnly;
     return Socket::initialize();
   }
 
-  virtual int16_t initialize() {
+  int initialize() override {
     return Socket::initialize();
   }
 
   /**
    * Registers a call back and starts the read for the server socket.
    */
-  virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler);
+  void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler) override;
 
  private:
   void close_fd(int fd);

@@ -364,7 +364,7 @@ public:
     int64_t process(std::shared_ptr<io::BaseStream> outputStream) override {
       class ReadCallback : public InputStreamCallback {
        public:
-        ReadCallback(GzipWriteCallback& writer, std::shared_ptr<io::BaseStream> outputStream)
+        ReadCallback(GzipWriteCallback& writer, std::shared_ptr<io::OutputStream> outputStream)
           : writer_(writer)
           , outputStream_(std::move(outputStream)) {
         }
@@ -379,25 +379,25 @@ public:
             } else if (ret == 0) {
               break;
             } else {
-              if (outputStream_->writeData(buffer.data(), ret) != ret) {
+              if (outputStream_->write(buffer.data(), ret) != ret) {
                 return -1;
               }
               read_size += ret;
             }
           }
-          outputStream_->closeStream();
+          outputStream_->close();
           return read_size;
         }
 
         GzipWriteCallback& writer_;
-        std::shared_ptr<io::BaseStream> outputStream_;
+        std::shared_ptr<io::OutputStream> outputStream_;
       };
 
       std::shared_ptr<io::ZlibBaseStream> filterStream;
       if (compress_mode_ == MODE_COMPRESS) {
-        filterStream = std::make_shared<io::ZlibCompressStream>(outputStream.get(), io::ZlibCompressionFormat::GZIP, compress_level_);
+        filterStream = std::make_shared<io::ZlibCompressStream>(gsl::make_not_null(outputStream.get()), io::ZlibCompressionFormat::GZIP, compress_level_);
       } else {
-        filterStream = std::make_shared<io::ZlibDecompressStream>(outputStream.get(), io::ZlibCompressionFormat::GZIP);
+        filterStream = std::make_shared<io::ZlibDecompressStream>(gsl::make_not_null(outputStream.get()), io::ZlibCompressionFormat::GZIP);
       }
       ReadCallback readCb(*this, filterStream);
       session_->read(flow_, &readCb);

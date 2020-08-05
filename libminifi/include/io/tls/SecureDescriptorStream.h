@@ -30,7 +30,6 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "io/BaseStream.h"
 #include "io/EndianCheck.h"
-#include "io/Serializable.h"
 
 namespace org {
 namespace apache {
@@ -61,123 +60,25 @@ class SecureDescriptorStream : public io::BaseStream {
    */
   void seek(uint64_t offset) override;
 
-  const size_t getSize() const override {
+  size_t size() const override {
     return -1;
   }
 
-  // data stream extensions
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  int readData(std::vector<uint8_t> &buf, int buflen) override;
-  /**
-   * Reads data and places it into buf
-   * @param buf buffer in which we extract data
-   * @param buflen
-   */
-  int readData(uint8_t *buf, int buflen) override;
-
-  /**
-   * Write value to the stream using std::vector
-   * @param buf incoming buffer
-   * @param buflen buffer to write
-   *
-   */
-  virtual int writeData(std::vector<uint8_t> &buf, int buflen);
+  int read(uint8_t *buf, int buflen) override;
 
   /**
    * writes value to stream
    * @param value value to write
    * @param size size of value
    */
-  int writeData(uint8_t *value, int size) override;
-
-  /**
-   * Returns the underlying buffer
-   * @return vector's array
-   */
-  const uint8_t *getBuffer() const {
-    throw std::runtime_error("Stream does not support this operation");
-  }
-
-  /**
-   * reads a byte from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  int read(uint8_t &value) override;
-
-  /**
-   * reads two bytes from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  int read(uint16_t &base_value, bool is_little_endian = false) override;
-
-  /**
-   * reads a byte from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  int read(char &value) override;
-
-  /**
-   * reads a byte array from the stream
-   * @param value reference in which will set the result
-   * @param len length to read
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  int read(uint8_t *value, int len) override;
-
-  /**
-   * reads four bytes from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  int read(uint32_t &value, bool is_little_endian = false) override;
-
-  /**
-   * reads eight byte from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  int read(uint64_t &value, bool is_little_endian = false) override;
-
-
-  /**
-   * read UTF from stream
-   * @param str reference string
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  int readUTF(std::string &str, bool widen = false) override;
+  int write(const uint8_t *value, int size) override;
 
  protected:
-  /**
-   * Creates a vector and returns the vector using the provided
-   * type name.
-   * @param t incoming object
-   * @returns vector.
-   */
-  template<typename T>
-  std::vector<uint8_t> readBuffer(const T& t);
-
-  /**
-   * Populates the vector using the provided type name.
-   * @param buf output buffer
-   * @param t incoming object
-   * @returns number of bytes read.
-   */
-  template<typename T>
-  int readBuffer(std::vector<uint8_t>& buf, const T& t);
   std::recursive_mutex file_lock_;
 
   int fd_;

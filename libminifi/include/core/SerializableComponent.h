@@ -21,7 +21,6 @@
 #include <memory>
 #include <string>
 
-#include "io/Serializable.h"
 #include "core/Connectable.h"
 #include "core/Core.h"
 
@@ -34,7 +33,7 @@ namespace core {
 /**
  * Represents a component that is serializable and an extension point of core Component
  */
-class SerializableComponent : public core::Connectable, public minifi::io::Serializable {
+class SerializableComponent : public core::Connectable {
  public:
   SerializableComponent(const std::string name) // NOLINT
         : core::Connectable(name) {

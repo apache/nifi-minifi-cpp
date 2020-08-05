@@ -27,6 +27,12 @@
 #pragma comment(lib, "Ws2_32.lib")
 #endif /* !WIN32 */
 
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
+
 #include <memory>
 #include <utility>
 #include <vector>
@@ -41,7 +47,6 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/file/FileUtils.h"
 #include "utils/GeneralUtils.h"
-
 namespace util = org::apache::nifi::minifi::utils;
 namespace mio = org::apache::nifi::minifi::io;
 
@@ -213,16 +218,16 @@ Socket& Socket::operator=(Socket &&other) noexcept {
 }
 
 Socket::~Socket() {
-  Socket::closeStream();
+  close();
 }
 
-void Socket::closeStream() {
+void Socket::close() {
   if (valid_socket(socket_file_descriptor_)) {
     logging::LOG_DEBUG(logger_) << "Closing " << socket_file_descriptor_;
 #ifdef WIN32
     closesocket(socket_file_descriptor_);
 #else
-    close(socket_file_descriptor_);
+    ::close(socket_file_descriptor_);
 #endif
     socket_file_descriptor_ = INVALID_SOCKET;
   }
@@ -255,14 +260,14 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
       const auto bind_result = bind(socket_file_descriptor_, current_addr->ai_addr, current_addr->ai_addrlen);
       if (bind_result == SOCKET_ERROR) {
         logger_->log_warn("bind: %s", get_last_socket_error_message());
-        closeStream();
+        close();
         continue;
       }
 
       const auto listen_result = listen(socket_file_descriptor_, listeners_);
       if (listen_result == SOCKET_ERROR) {
         logger_->log_warn("listen: %s", get_last_socket_error_message());
-        closeStream();
+        close();
         continue;
       }
 
@@ -280,7 +285,7 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
       const auto connect_result = connect(socket_file_descriptor_, current_addr->ai_addr, current_addr->ai_addrlen);
       if (connect_result == SOCKET_ERROR) {
         logger_->log_warn("Couldn't connect to %s:%" PRIu16 ": %s", sockaddr_ntop(current_addr->ai_addr), port_, get_last_socket_error_message());
-        closeStream();
+        close();
         continue;
       }
 
@@ -353,7 +358,7 @@ int8_t Socket::createConnection(const addrinfo *, ip4addr &addr) {
     }
     if (connect(socket_file_descriptor_, reinterpret_cast<const sockaddr *>(&sa_loc), sizeof(sockaddr_in)) < 0) {
 #endif /* WIN32 */
-      closeStream();
+      close();
       return -1;
     }
   }
@@ -365,7 +370,7 @@ int8_t Socket::createConnection(const addrinfo *, ip4addr &addr) {
   return 0;
 }
 
-int16_t Socket::initialize() {
+int Socket::initialize() {
   addrinfo hints{};
   memset(&hints, 0, sizeof hints);  // make sure the struct is empty
   hints.ai_family = AF_UNSPEC;
@@ -458,19 +463,19 @@ int16_t Socket::setSocketOptions(const SocketDescriptor sock) {
 #ifndef __MACH__
   if (setsockopt(sock, SOL_TCP, TCP_NODELAY, static_cast<void*>(&opt), sizeof(opt)) < 0) {
     logger_->log_error("setsockopt() TCP_NODELAY failed");
-    close(sock);
+    ::close(sock);
     return -1;
   }
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&opt), sizeof(opt)) < 0) {
     logger_->log_error("setsockopt() SO_REUSEADDR failed");
-    close(sock);
+    ::close(sock);
     return -1;
   }
 
   int sndsize = 256 * 1024;
   if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char *>(&sndsize), sizeof(sndsize)) < 0) {
     logger_->log_error("setsockopt() SO_SNDBUF failed");
-    close(sock);
+    ::close(sock);
     return -1;
   }
 
@@ -479,7 +484,7 @@ int16_t Socket::setSocketOptions(const SocketDescriptor sock) {
     // lose the pesky "address already in use" error message
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char *>(&opt), sizeof(opt)) < 0) {
       logger_->log_error("setsockopt() SO_REUSEADDR failed");
-      close(sock);
+      ::close(sock);
       return -1;
     }
   }
@@ -492,19 +497,11 @@ std::string Socket::getHostname() const {
   return canonical_hostname_;
 }
 
-int Socket::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen))
-    return -1;
-  return writeData(buf.data(), buflen);
-}
-
 // data stream overrides
 
-int Socket::writeData(uint8_t *value, int size) {
+int Socket::write(const uint8_t *value, int size) {
+  gsl_Expects(size >= 0);
+
   int ret = 0, bytes = 0;
 
   int fd = select_descriptor(1000);
@@ -526,84 +523,8 @@ int Socket::writeData(uint8_t *value, int size) {
   return bytes;
 }
 
-template<typename T>
-inline std::vector<uint8_t> Socket::readBuffer(const T& t) {
-  std::vector<uint8_t> buf;
-  readBuffer(buf, t);
-  return buf;
-}
-
-template<typename T>
-inline int Socket::readBuffer(std::vector<uint8_t>& buf, const T& t) {
-  buf.resize(sizeof t);
-  return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
-}
-
-int Socket::write(uint64_t base_value, bool is_little_endian) {
-  return Serializable::write(base_value, this, is_little_endian);
-}
-
-int Socket::write(uint32_t base_value, bool is_little_endian) {
-  return Serializable::write(base_value, this, is_little_endian);
-}
-
-int Socket::write(uint16_t base_value, bool is_little_endian) {
-  return Serializable::write(base_value, this, is_little_endian);
-}
-
-int Socket::read(uint64_t &value, bool is_little_endian) {
-  std::vector<uint8_t> buf;
-  auto ret = readBuffer(buf, value);
-  if(ret <= 0)return ret;
-
-  if (is_little_endian) {
-    value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48) | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32) | ((uint64_t) (buf[4] & 255) << 24)
-        | ((uint64_t) (buf[5] & 255) << 16) | ((uint64_t) (buf[6] & 255) << 8) | ((uint64_t) (buf[7] & 255) << 0);
-  } else {
-    value = ((uint64_t) buf[0] << 0) | ((uint64_t) (buf[1] & 255) << 8) | ((uint64_t) (buf[2] & 255) << 16) | ((uint64_t) (buf[3] & 255) << 24) | ((uint64_t) (buf[4] & 255) << 32)
-        | ((uint64_t) (buf[5] & 255) << 40) | ((uint64_t) (buf[6] & 255) << 48) | ((uint64_t) (buf[7] & 255) << 56);
-  }
-  return sizeof(value);
-}
-
-int Socket::read(uint32_t &value, bool is_little_endian) {
-  std::vector<uint8_t> buf;
-  auto ret = readBuffer(buf, value);
-  if(ret <= 0)return ret;
-
-  if (is_little_endian) {
-    value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
-  } else {
-    value = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
-  }
-  return sizeof(value);
-}
-
-int Socket::read(uint16_t &value, bool is_little_endian) {
-  std::vector<uint8_t> buf;
-  auto ret = readBuffer(buf, value);
-  if(ret <= 0)return ret;
-
-  if (is_little_endian) {
-    value = (buf[0] << 8) | buf[1];
-  } else {
-    value = buf[0] | buf[1] << 8;
-  }
-  return sizeof(value);
-}
-
-int Socket::readData(std::vector<uint8_t> &buf, int buflen, bool retrieve_all_bytes) {
-  if (buflen < 0) {
-    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
-  }
-
-  if (buf.size() < static_cast<size_t>(buflen)) {
-    buf.resize(buflen);
-  }
-  return readData(buf.data(), buflen, retrieve_all_bytes);
-}
-
-int Socket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
+int Socket::read(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
+  gsl_Expects(buflen >= 0);
   int32_t total_read = 0;
   while (buflen) {
     int16_t fd = select_descriptor(1000);

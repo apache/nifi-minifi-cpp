@@ -32,7 +32,7 @@
 
 TEST_CASE("TestSetPortId", "[S2S1]") {
   std::unique_ptr<minifi::sitetosite::SiteToSitePeer> peer = std::unique_ptr<minifi::sitetosite::SiteToSitePeer>(
-      new minifi::sitetosite::SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(new org::apache::nifi::minifi::io::DataStream()), "fake_host", 65433, ""));
+      new minifi::sitetosite::SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::BufferStream>(new org::apache::nifi::minifi::io::BufferStream()), "fake_host", 65433, ""));
 
   minifi::sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 
@@ -49,7 +49,7 @@ TEST_CASE("TestSetPortId", "[S2S1]") {
 
 TEST_CASE("TestSetPortIdUppercase", "[S2S2]") {
   std::unique_ptr<minifi::sitetosite::SiteToSitePeer> peer = std::unique_ptr<minifi::sitetosite::SiteToSitePeer>(
-      new minifi::sitetosite::SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(new org::apache::nifi::minifi::io::DataStream()), "fake_host", 65433, ""));
+      new minifi::sitetosite::SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::BufferStream>(new org::apache::nifi::minifi::io::BufferStream()), "fake_host", 65433, ""));
 
   minifi::sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 
@@ -94,7 +94,7 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
   sunny_path_bootstrap(collector);
 
   std::unique_ptr<minifi::sitetosite::SiteToSitePeer> peer = std::unique_ptr<minifi::sitetosite::SiteToSitePeer>(
-      new minifi::sitetosite::SiteToSitePeer(std::unique_ptr<minifi::io::DataStream>(new org::apache::nifi::minifi::io::BaseStream(collector)), "fake_host", 65433, ""));
+      new minifi::sitetosite::SiteToSitePeer(std::unique_ptr<minifi::io::BaseStream>(collector), "fake_host", 65433, ""));
 
   minifi::sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 
@@ -163,7 +163,7 @@ TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S4]") {
   collector->push_response(resp_code);
 
   std::unique_ptr<minifi::sitetosite::SiteToSitePeer> peer = std::unique_ptr<minifi::sitetosite::SiteToSitePeer>(
-      new minifi::sitetosite::SiteToSitePeer(std::unique_ptr<minifi::io::DataStream>(new org::apache::nifi::minifi::io::BaseStream(collector)), "fake_host", 65433, ""));
+      new minifi::sitetosite::SiteToSitePeer(std::unique_ptr<minifi::io::BaseStream>(collector), "fake_host", 65433, ""));
 
   minifi::sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 

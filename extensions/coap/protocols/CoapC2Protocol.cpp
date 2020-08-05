@@ -58,7 +58,7 @@ minifi::c2::C2Payload CoapProtocol::consumePayload(const std::string &url, const
 int CoapProtocol::writeAcknowledgement(io::BaseStream *stream, const minifi::c2::C2Payload &payload) {
   auto ident = payload.getIdentifier();
   auto state = payload.getStatus().getState();
-  stream->writeUTF(ident);
+  stream->write(ident);
   uint8_t payloadState = 0;
   switch (state) {
     case state::UpdateState::NESTED:
@@ -93,14 +93,14 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
 
     const std::string agentIdent = minifi::c2::PayloadParser::getInstance(payload).in("agentInfo").getAs<std::string>("identifier");
 
-    stream->writeUTF(deviceIdent, false);
+    stream->write(deviceIdent, false);
 
     logger_->log_trace("Writing heartbeat with device Ident %s and agent Ident %s", deviceIdent, agentIdent);
 
     if (agentIdent.empty()) {
       return -1;
     }
-    stream->writeUTF(agentIdent, false);
+    stream->write(agentIdent, false);
 
     try {
       auto flowInfoParser = minifi::c2::PayloadParser::getInstance(payload).in("flowInfo");
@@ -115,7 +115,7 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
       componentParser.foreach([this, stream](const minifi::c2::C2Payload &component) {
         auto myParser = minifi::c2::PayloadParser::getInstance(component);
         bool running = false;
-        stream->writeUTF(component.getLabel());
+        stream->write(component.getLabel());
         try {
           running = myParser.getAs<bool>("running");
         }
@@ -128,7 +128,7 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
       stream->write(size);
       queueParser.foreach([this, stream](const minifi::c2::C2Payload &component) {
         auto myParser = minifi::c2::PayloadParser::getInstance(component);
-        stream->writeUTF(component.getLabel());
+        stream->write(component.getLabel());
         uint64_t datasize = 0, datasizemax = 0, qsize = 0, sizemax = 0;
         try {
           datasize = myParser.getAs<uint64_t>("dataSize");
@@ -148,8 +148,8 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
       auto bucketId = vfsParser.getAs<std::string>("bucketId");
       auto flowId = vfsParser.getAs<std::string>("flowId");
 
-      stream->writeUTF(bucketId);
-      stream->writeUTF(flowId);
+      stream->write(bucketId);
+      stream->write(flowId);
 
     } catch (const minifi::c2::PayloadParseException &pe) {
       logger_->log_error("Parser exception occurred, but is ignorable, reason %s", pe.what());
@@ -212,7 +212,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
   uint8_t payload_type = 0;
   uint64_t payload_u64 = 0;
   uint16_t size = 0;
-  io::BaseStream stream;
+  io::BufferStream stream;
 
   stream.write(version);
   std::string endpoint = "heartbeat";
@@ -238,7 +238,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
   };
 
-  size_t bsize = stream.getSize();
+  size_t bsize = stream.size();
 
   CoapMessage msg;
   msg.data_ = const_cast<uint8_t *>(stream.getBuffer());
@@ -249,8 +249,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
   if (isRegistrationMessage(message)) {
     require_registration_ = true;
   } else if (message.getSize() > 0) {
-    io::DataStream byteStream(message.getData(), message.getSize());
-    io::BaseStream responseStream(&byteStream);
+    io::BufferStream responseStream(message.getData(), message.getSize());
     responseStream.read(version);
     responseStream.read(size);
     logger_->log_trace("Received ack. version %d. number of operations %d", version, size);
@@ -261,8 +260,8 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       uint16_t argsize = 0;
       std::string operand, id;
       REQUIRE_SIZE_IF(1, responseStream.read(operationType))
-      REQUIRE_VALID(responseStream.readUTF(id, false))
-      REQUIRE_VALID(responseStream.readUTF(operand, false))
+      REQUIRE_VALID(responseStream.read(id, false))
+      REQUIRE_VALID(responseStream.read(operand, false))
 
       logger_->log_trace("Received op %d, with id %s and operand %s", operationType, id, operand);
       auto newOp = getOperation(operationType);
@@ -277,8 +276,8 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       responseStream.read(argsize);
       for (int j = 0; j < argsize; j++) {
         std::string key, value;
-        REQUIRE_VALID(responseStream.readUTF(key))
-        REQUIRE_VALID(responseStream.readUTF(value))
+        REQUIRE_VALID(responseStream.read(key))
+        REQUIRE_VALID(responseStream.read(value))
         new_command.operation_arguments[key] = value;
       }
 

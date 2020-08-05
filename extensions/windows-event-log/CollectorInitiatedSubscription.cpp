@@ -30,7 +30,7 @@
 #include <memory>
 #include <codecvt>
 
-#include "io/DataStream.h"
+#include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
@@ -634,7 +634,7 @@ int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::Pro
     }
 
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      return stream->writeData((uint8_t*)&str_[0], str_.size());
+      return stream->write((uint8_t*)&str_[0], str_.size());
     }
 
     std::string str_;

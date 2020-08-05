@@ -33,7 +33,6 @@
 #include <set>
 #include "core/ContentRepository.h"
 #include "io/BaseStream.h"
-#include "io/Serializable.h"
 #include "core/FlowFile.h"
 #include "utils/TimeUtil.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -96,7 +95,7 @@ class OutputStreamCallback {
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
 };
 
-class FlowFileRecord : public core::FlowFile, public io::Serializable {
+class FlowFileRecord : public core::FlowFile {
  public:
   // Constructor
   /*
@@ -127,15 +126,15 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   // getAttribute key is enum
   bool getKeyedAttribute(FlowAttribute key, std::string &value);
 
-  bool Serialize(io::DataStream &outStream);
+  bool Serialize(io::BufferStream &outStream);
 
   //! Serialize and Persistent to the repository
   bool Serialize();
   //! DeSerialize
   bool DeSerialize(const uint8_t *buffer, const int bufferSize);
   //! DeSerialize
-  bool DeSerialize(io::DataStream &stream) {
-    return DeSerialize(stream.getBuffer(), gsl::narrow<int>(stream.getSize()));
+  bool DeSerialize(io::BufferStream &stream) {
+    return DeSerialize(stream.getBuffer(), gsl::narrow<int>(stream.size()));
   }
   //! DeSerialize
   bool DeSerialize(std::string key);

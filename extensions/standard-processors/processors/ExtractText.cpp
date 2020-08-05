@@ -133,7 +133,7 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
   while (read_size < size_limit) {
     // Don't read more than config limit or the size of the buffer
     int length = gsl::narrow<int>(std::min<uint64_t>(size_limit - read_size, buffer_.size()));
-    ret = stream->readData(buffer_, length);
+    ret = stream->read(buffer_, length);
 
     if (ret < 0) {
       return -1;  // Stream error

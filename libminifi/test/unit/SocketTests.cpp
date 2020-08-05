@@ -33,21 +33,21 @@ TEST_CASE("TestSocket", "[TestSocket1]") {
   org::apache::nifi::minifi::io::Socket socket(std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>()), Sockets::getMyHostName(), 8183);
   REQUIRE(-1 == socket.initialize());
   REQUIRE(socket.getHostname().rfind(Sockets::getMyHostName(), 0) == 0);
-  socket.closeStream();
+  socket.close();
 }
 
 TEST_CASE("TestSocketWriteTest1", "[TestSocket2]") {
   org::apache::nifi::minifi::io::Socket socket(std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>()), Sockets::getMyHostName(), 8183);
   REQUIRE(-1 == socket.initialize());
 
-  socket.writeData(0, 0);
+  socket.write((const uint8_t*)nullptr, 0);
 
   std::vector<uint8_t> buffer;
   buffer.push_back('a');
 
-  REQUIRE(-1 == socket.writeData(buffer, 1));
+  REQUIRE(-1 == socket.write(buffer, 1));
 
-  socket.closeStream();
+  socket.close();
 }
 
 TEST_CASE("TestSocketWriteTest2", "[TestSocket3]") {
@@ -62,18 +62,18 @@ TEST_CASE("TestSocketWriteTest2", "[TestSocket3]") {
 
   REQUIRE(-1 != client.initialize());
 
-  REQUIRE(1 == client.writeData(buffer, 1));
+  REQUIRE(1 == client.write(buffer, 1));
 
   std::vector<uint8_t> readBuffer;
   readBuffer.resize(1);
 
-  REQUIRE(1 == server.readData(readBuffer, 1));
+  REQUIRE(1 == server.read(readBuffer, 1));
 
   REQUIRE(readBuffer == buffer);
 
-  server.closeStream();
+  server.close();
 
-  client.closeStream();
+  client.close();
 }
 
 TEST_CASE("TestGetHostName", "[TestSocket4]") {
@@ -101,9 +101,9 @@ TEST_CASE("TestWriteEndian64", "[TestSocket5]") {
 
   REQUIRE(negative_two == negative_one);
 
-  server.closeStream();
+  server.close();
 
-  client.closeStream();
+  client.close();
 }
 
 TEST_CASE("TestWriteEndian32", "[TestSocket6]") {
@@ -136,9 +136,9 @@ TEST_CASE("TestWriteEndian32", "[TestSocket6]") {
 
     REQUIRE(negative_two == negative_one);
   }
-  server.closeStream();
+  server.close();
 
-  client.closeStream();
+  client.close();
 }
 
 TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket7]") {
@@ -155,20 +155,20 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket7]") {
 
   REQUIRE(-1 != client.initialize());
 
-  REQUIRE(1 == client.writeData(buffer, 1));
+  REQUIRE(1 == client.write(buffer, 1));
 
   std::vector<uint8_t> readBuffer;
   readBuffer.resize(1);
 
-  REQUIRE(1 == server.readData(readBuffer, 1));
+  REQUIRE(1 == server.read(readBuffer, 1));
 
   REQUIRE(readBuffer == buffer);
 
-  client.closeStream();
+  client.close();
 
-  REQUIRE(-1 == client.writeData(buffer, 1));
+  REQUIRE(-1 == client.write(buffer, 1));
 
-  server.closeStream();
+  server.close();
 }
 
 #ifdef OPENSSL_ENABLED

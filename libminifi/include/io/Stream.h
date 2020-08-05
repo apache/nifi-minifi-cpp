@@ -15,10 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "io/BaseStream.h"
-#include <vector>
-#include <string>
-#include "core/expect.h"
+
+#pragma once
 
 namespace org {
 namespace apache {
@@ -26,8 +24,29 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+/**
+ * All streams serialize/deserialize in big-endian
+ */
+class Stream {
+ public:
+  virtual void close() {}
+
+  virtual void seek(uint64_t offset) {
+    throw std::runtime_error("Seek is not supported");
+  }
+
+  virtual int initialize() {
+    return 1;
+  }
+
+  virtual const uint8_t* getBuffer() const {
+    throw std::runtime_error("Not a buffered stream");
+  }
+  virtual ~Stream() = default;
+};
+
+}  // namespace io
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

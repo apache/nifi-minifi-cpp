@@ -254,11 +254,11 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
 
-    flow->setSize(stream->getSize());
+    flow->setSize(stream->size());
     flow->setOffset(0);
     flow->setResourceClaim(claim);
 
-    stream->closeStream();
+    stream->close();
     std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flow->getUUIDStr();
     uint64_t endTime = utils::timeutils::getTimeMillis();
     provenance_report_->modifyContent(flow, details, endTime - startTime);
@@ -286,14 +286,14 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
     }
     // Call the callback to write the content
 
-    size_t oldPos = stream->getSize();
+    size_t oldPos = stream->size();
     // this prevents an issue if we write, above, with zero length.
     if (oldPos > 0)
       stream->seek(oldPos + 1);
     if (callback->process(stream) < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
-    flow->setSize(stream->getSize());
+    flow->setSize(stream->size());
 
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
@@ -349,7 +349,7 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
  * @param flow flow file
  *
  */
-void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<core::FlowFile> &flow) {
+void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<core::FlowFile> &flow) {
   std::shared_ptr<ResourceClaim> claim = content_session_->create();
   size_t max_read = getpagesize();
   std::vector<uint8_t> charBuffer(max_read);
@@ -362,24 +362,24 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
       throw Exception(FILE_OPERATION_EXCEPTION, "Could not obtain claim for " + claim->getContentFullPath());
     }
     size_t position = 0;
-    const size_t max_size = stream.getSize();
+    const size_t max_size = stream.size();
     while (position < max_size) {
       const size_t read_size = (std::min)(max_read, max_size - position);
-      stream.readData(charBuffer, read_size);
+      stream.read(charBuffer, read_size);
 
       content_stream->write(charBuffer.data(), read_size);
       position += read_size;
     }
     // Open the source file and stream to the flow file
 
-    flow->setSize(content_stream->getSize());
+    flow->setSize(content_stream->size());
     flow->setOffset(0);
     flow->setResourceClaim(claim);
 
     logger_->log_debug("Import offset %" PRIu64 " length %" PRIu64 " into content %s for FlowFile UUID %s",
         flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath(), flow->getUUIDStr());
 
-    content_stream->closeStream();
+    content_stream->close();
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
     auto endTime = utils::timeutils::getTimeMillis();
@@ -433,14 +433,14 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
       }
 
       if (!invalidWrite) {
-        flow->setSize(stream->getSize());
+        flow->setSize(stream->size());
         flow->setOffset(0);
         flow->setResourceClaim(claim);
 
         logger_->log_debug("Import offset %" PRIu64 " length %" PRIu64 " into content %s for FlowFile UUID %s", flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath(),
                            flow->getUUIDStr());
 
-        stream->closeStream();
+        stream->close();
         input.close();
         if (!keepSource)
           std::remove(source.c_str());
@@ -449,7 +449,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
         auto endTime = utils::timeutils::getTimeMillis();
         provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
       } else {
-        stream->closeStream();
+        stream->close();
         input.close();
         throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
       }
@@ -528,7 +528,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         }
         if (stream->write(begin, len) != len) {
           logger_->log_error("Error while writing");
-          stream->closeStream();
+          stream->close();
           throw Exception(FILE_OPERATION_EXCEPTION, "File Export Error creating Flowfile");
         }
 
@@ -537,12 +537,12 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
           break;
         }
         flowFile = std::static_pointer_cast<FlowFileRecord>(create());
-        flowFile->setSize(stream->getSize());
+        flowFile->setSize(stream->size());
         flowFile->setOffset(0);
         flowFile->setResourceClaim(claim);
         logging::LOG_DEBUG(logger_) << "Import offset " << flowFile->getOffset() << " length " << flowFile->getSize() << " content " << flowFile->getResourceClaim()->getContentFullPath()
                                     << ", FlowFile UUID " << flowFile->getUUIDStr();
-        stream->closeStream();
+        stream->close();
         std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
         uint64_t endTime = utils::timeutils::getTimeMillis();
         provenance_report_->modifyContent(flowFile, details, endTime - startTime);
@@ -894,7 +894,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
     std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile> > >& transactionMap,
     const std::map<std::string, std::shared_ptr<FlowFile>>& originalFlowFileSnapShots) {
 
-  std::vector<std::pair<std::string, std::unique_ptr<io::DataStream>>> flowData;
+  std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
 
   auto flowFileRepo = process_context_->getFlowFileRepository();
   auto contentRepo = process_context_->getContentRepository();
@@ -911,7 +911,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
       }
       FlowFileRecord event(flowFileRepo, contentRepo, ff, target->getUUIDStr());
 
-      std::unique_ptr<io::DataStream> stream(new io::DataStream());
+      std::unique_ptr<io::BufferStream> stream(new io::BufferStream());
       event.Serialize(*stream);
 
       flowData.emplace_back(event.getUUIDStr(), std::move(stream));

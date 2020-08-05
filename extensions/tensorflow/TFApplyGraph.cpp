@@ -190,11 +190,11 @@ void TFApplyGraph::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
 int64_t TFApplyGraph::GraphReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
   std::string graph_proto_buf;
-  graph_proto_buf.resize(stream->getSize());
-  auto num_read = stream->readData(reinterpret_cast<uint8_t *>(&graph_proto_buf[0]),
-                                   static_cast<int>(stream->getSize()));
+  graph_proto_buf.resize(stream->size());
+  auto num_read = stream->read(reinterpret_cast<uint8_t *>(&graph_proto_buf[0]),
+                                   static_cast<int>(stream->size()));
 
-  if (num_read != stream->getSize()) {
+  if (num_read != stream->size()) {
     throw std::runtime_error("GraphReadCallback failed to fully read flow file input stream");
   }
 
@@ -204,11 +204,11 @@ int64_t TFApplyGraph::GraphReadCallback::process(std::shared_ptr<io::BaseStream>
 
 int64_t TFApplyGraph::TensorReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
   std::string tensor_proto_buf;
-  tensor_proto_buf.resize(stream->getSize());
-  auto num_read = stream->readData(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
-                                   static_cast<int>(stream->getSize()));
+  tensor_proto_buf.resize(stream->size());
+  auto num_read = stream->read(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
+                                   static_cast<int>(stream->size()));
 
-  if (num_read != stream->getSize()) {
+  if (num_read != stream->size()) {
     throw std::runtime_error("TensorReadCallback failed to fully read flow file input stream");
   }
 
@@ -218,7 +218,7 @@ int64_t TFApplyGraph::TensorReadCallback::process(std::shared_ptr<io::BaseStream
 
 int64_t TFApplyGraph::TensorWriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
   auto tensor_proto_buf = tensor_proto_->SerializeAsString();
-  auto num_wrote = stream->writeData(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
+  auto num_wrote = stream->write(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
                                      static_cast<int>(tensor_proto_buf.size()));
 
   if (num_wrote != tensor_proto_buf.size()) {
