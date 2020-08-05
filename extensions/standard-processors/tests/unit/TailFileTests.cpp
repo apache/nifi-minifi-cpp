@@ -1123,7 +1123,7 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
   std::this_thread::sleep_for(std::chrono::seconds(1));
   std::string test_file = createTempFile(log_dir, "test.log", "line four\nline five\nline six\n");  // current log file
 
-  char state_dir_format[] = "/tmp/gt.XXXXXX";
+  char state_dir_format[] = "/var/tmp/gt.XXXXXX";
   auto state_dir = testController.createTempDirectory(state_dir_format);
 
   utils::Identifier tail_file_uuid = utils::IdGenerator::getIdGenerator()->generate();
