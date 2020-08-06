@@ -82,7 +82,7 @@ Remote Processing Groups:
 template<typename Fn>
 bool verifyWithBusyWait(std::chrono::milliseconds timeout, Fn&& fn) {
   auto start = std::chrono::steady_clock::now();
-  while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start) < timeout) {
+  while (std::chrono::steady_clock::now() - start < timeout) {
     if (fn()) {
       return true;
     }
