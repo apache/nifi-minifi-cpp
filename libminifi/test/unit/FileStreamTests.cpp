@@ -39,7 +39,7 @@ TEST_CASE("TestFileOverWrite", "[TestFiles]") {
 
   minifi::io::FileStream stream(path, 0, true);
   std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
+  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
 
   uint8_t* data = readBuffer.data();
 
@@ -53,7 +53,7 @@ TEST_CASE("TestFileOverWrite", "[TestFiles]") {
 
   std::vector<uint8_t> verifybuffer;
 
-  REQUIRE(stream.readData(verifybuffer, stream.getSize()) == stream.getSize());
+  REQUIRE(stream.read(verifybuffer, stream.size()) == stream.size());
 
   data = verifybuffer.data();
 
@@ -77,7 +77,7 @@ TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
 
   minifi::io::FileStream stream(path, 0, true);
   std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
+  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
 
   uint8_t* data = readBuffer.data();
 
@@ -91,7 +91,7 @@ TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
 
   std::vector<uint8_t> verifybuffer;
 
-  REQUIRE(stream.readData(verifybuffer, stream.getSize()) == stream.getSize());
+  REQUIRE(stream.read(verifybuffer, stream.size()) == stream.size());
 
   data = verifybuffer.data();
 
@@ -115,7 +115,7 @@ TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
 
   minifi::io::FileStream stream(path, 0, true);
   std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
+  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
 
   uint8_t* data = readBuffer.data();
 
@@ -123,13 +123,13 @@ TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
 
   stream.seek(4);
 
-  stream.write(nullptr, 0);
+  stream.write((const uint8_t*)nullptr, 0);
 
   stream.seek(0);
 
   std::vector<uint8_t> verifybuffer;
 
-  REQUIRE(stream.readData(verifybuffer, stream.getSize()) == stream.getSize());
+  REQUIRE(stream.read(verifybuffer, stream.size()) == stream.size());
 
   data = verifybuffer.data();
 
@@ -153,7 +153,7 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
 
   minifi::io::FileStream stream(path, 0, true);
   std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
+  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
 
   uint8_t* data = readBuffer.data();
 
@@ -161,13 +161,13 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
 
   stream.seek(4);
 
-  stream.write(nullptr, 0);
+  stream.write((const uint8_t*)nullptr, 0);
 
   stream.seek(0);
 
   std::vector<uint8_t> verifybuffer;
 
-  REQUIRE(stream.readData(nullptr, stream.getSize()) == -1);
+  REQUIRE(stream.read(nullptr, stream.size()) == -1);
 
   data = verifybuffer.data();
 
@@ -191,7 +191,7 @@ TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
 
   minifi::io::FileStream stream(path, 0, true);
   std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
+  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
 
   uint8_t* data = readBuffer.data();
 
@@ -201,7 +201,7 @@ TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
 
   std::vector<uint8_t> verifybuffer;
 
-  REQUIRE(stream.readData(verifybuffer, 8192) == 8);
+  REQUIRE(stream.read(verifybuffer, 8192) == 8);
 
   data = verifybuffer.data();
 
@@ -226,7 +226,7 @@ TEST_CASE("TestFileExceedSize", "[TestLoader]") {
 
   minifi::io::FileStream stream(path, 0, true);
   std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
+  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
 
   uint8_t* data = readBuffer.data();
 
@@ -235,12 +235,12 @@ TEST_CASE("TestFileExceedSize", "[TestLoader]") {
   std::vector<uint8_t> verifybuffer;
 
   for (int i = 0; i < 10; i++)
-    REQUIRE(stream.readData(verifybuffer, 8192) == 8192);
-  REQUIRE(stream.readData(verifybuffer, 8192) == 0);
+    REQUIRE(stream.read(verifybuffer, 8192) == 8192);
+  REQUIRE(stream.read(verifybuffer, 8192) == 0);
   stream.seek(0);
   for (int i = 0; i < 10; i++)
-    REQUIRE(stream.readData(verifybuffer, 8192) == 8192);
-  REQUIRE(stream.readData(verifybuffer, 8192) == 0);
+    REQUIRE(stream.read(verifybuffer, 8192) == 8192);
+  REQUIRE(stream.read(verifybuffer, 8192) == 0);
 
   std::remove(ss.str().c_str());
 }

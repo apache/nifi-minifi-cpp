@@ -42,9 +42,8 @@ namespace io {
  */
 class BaseStream : public InputStream, public OutputStream {
  public:
-  virtual void close() {
-    throw std::runtime_error("Close is not supported");
-  }
+  virtual void close() {}
+
   virtual void seek(uint64_t offset) {
     throw std::runtime_error("Seek is not supported");
   }

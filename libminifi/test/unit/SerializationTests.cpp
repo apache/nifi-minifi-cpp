@@ -29,13 +29,11 @@
 TEST_CASE("TestWriteUTF", "[MINIFI193]") {
   org::apache::nifi::minifi::io::BufferStream baseStream;
 
-  org::apache::nifi::minifi::io::Serializable ser;
-
   std::string stringOne = "helo world";  // yes, this has a typo.
   std::string verifyString;
-  ser.write(stringOne, &baseStream, false);
+  baseStream.write(stringOne, false);
 
-  ser.readUTF(verifyString, &baseStream, false);
+  baseStream.read(verifyString, false);
 
   REQUIRE(verifyString == stringOne);
 }
@@ -43,14 +41,12 @@ TEST_CASE("TestWriteUTF", "[MINIFI193]") {
 TEST_CASE("TestWriteUTF2", "[MINIFI193]") {
   org::apache::nifi::minifi::io::BufferStream baseStream;
 
-  org::apache::nifi::minifi::io::Serializable ser;
-
   std::string stringOne = "hel\xa1o world";
   REQUIRE(11 == stringOne.length());
   std::string verifyString;
-  ser.write(stringOne, &baseStream, false);
+  baseStream.write(stringOne, false);
 
-  ser.readUTF(verifyString, &baseStream, false);
+  baseStream.read(verifyString, false);
 
   REQUIRE(verifyString == stringOne);
 }
@@ -58,14 +54,12 @@ TEST_CASE("TestWriteUTF2", "[MINIFI193]") {
 TEST_CASE("TestWriteUTF3", "[MINIFI193]") {
   org::apache::nifi::minifi::io::BufferStream baseStream;
 
-  org::apache::nifi::minifi::io::Serializable ser;
-
   std::string stringOne = "\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8\x96\xe7\x95\x8c";
   REQUIRE(12 == stringOne.length());
   std::string verifyString;
-  ser.write(stringOne, &baseStream, false);
+  baseStream.write(stringOne, false);
 
-  ser.readUTF(verifyString, &baseStream, false);
+  baseStream.read(verifyString, false);
 
   REQUIRE(verifyString == stringOne);
 }

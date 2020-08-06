@@ -44,6 +44,8 @@ class OutputStream : public Stream {
     throw std::runtime_error("Stream is not writable");
   }
 
+  int write(const std::vector<uint8_t>& buffer, unsigned int len);
+
   /**
    * write byte to stream
    * @return resulting write size

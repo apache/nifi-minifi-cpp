@@ -222,11 +222,11 @@ bool FlowFileRecord::Serialize(io::BufferStream &outStream) {
   }
 
   for (auto& itAttribute : attributes_) {
-    ret = outStream.write(itAttribute.first);
+    ret = outStream.write(itAttribute.first, true);
     if (ret <= 0) {
       return false;
     }
-    ret = outStream.write(itAttribute.second);
+    ret = outStream.write(itAttribute.second, true);
     if (ret <= 0) {
       return false;
     }

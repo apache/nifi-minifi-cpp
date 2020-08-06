@@ -42,6 +42,8 @@ class InputStream : public Stream {
     throw std::runtime_error("Stream is not readable");
   }
 
+  int read(std::vector<uint8_t>& buffer, unsigned int len);
+
   /**
   * reads a byte from the stream
   * @param value reference in which will set the result

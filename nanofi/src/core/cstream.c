@@ -91,7 +91,7 @@ int read_buffer(uint8_t *buf, int len, cstream * stream) {
   return total_read;
 }
 
-int write(const char * cstr, size_t len, enum Bool widen, cstream * stream) {
+int writeUTF(const char * cstr, size_t len, enum Bool widen, cstream * stream) {
   if (len > 65535) {
     return -1;
   }

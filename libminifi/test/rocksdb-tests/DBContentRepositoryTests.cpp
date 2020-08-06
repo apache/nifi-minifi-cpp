@@ -58,7 +58,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
   auto read_stream = content_repo->read(*claim);
 
   std::string readstr;
-  read_stream->readUTF(readstr);
+  read_stream->read(readstr);
 
   REQUIRE(readstr == "well hello there");
 
@@ -104,7 +104,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
   std::string readstr;
 
   // -1 tell us we have an invalid stream
-  REQUIRE(read_stream->readUTF(readstr) == -1);
+  REQUIRE(read_stream->read(readstr) == -1);
 }
 
 TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
@@ -140,7 +140,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   std::string readstr;
 
   // -1 tell us we have an invalid stream
-  REQUIRE(read_stream->readUTF(readstr) == -1);
+  REQUIRE(read_stream->read(readstr) == -1);
 }
 
 TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
@@ -180,7 +180,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
   std::string readstr;
 
   // -1 tell us we have an invalid stream
-  read_stream->readUTF(readstr);
+  read_stream->read(readstr);
 
   REQUIRE(readstr == "well hello there");
 }
@@ -228,7 +228,7 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
   std::string readstr;
 
   // -1 tell us we have an invalid stream
-  read_stream->readUTF(readstr);
+  read_stream->read(readstr);
 
   REQUIRE(readstr == "well hello there");
 }

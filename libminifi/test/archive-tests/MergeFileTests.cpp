@@ -80,7 +80,7 @@ class FixedBuffer : public org::apache::nifi::minifi::InputStreamCallback {
   }
 
   template<class Input>
-  int write(Input input, std::size_t len) {
+  int write(Input& input, std::size_t len) {
     REQUIRE(size_ + len <= capacity_);
     int total_read = 0;
     do {
