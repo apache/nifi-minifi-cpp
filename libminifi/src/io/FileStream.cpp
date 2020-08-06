@@ -16,15 +16,16 @@
  * limitations under the License.
  */
 
-#include "io/FileStream.h"
-#include "io/InputStream.h"
-#include "io/OutputStream.h"
 #include <fstream>
 #include <vector>
 #include <memory>
 #include <string>
 #include <Exception.h>
 #include "io/validation.h"
+#include "io/FileStream.h"
+#include "io/InputStream.h"
+#include "io/OutputStream.h"
+
 namespace org {
 namespace apache {
 namespace nifi {

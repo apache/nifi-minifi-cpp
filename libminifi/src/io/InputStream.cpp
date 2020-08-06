@@ -112,7 +112,7 @@ int InputStream::read(uint32_t &value) {
     return -1;
   }
 
-  value = 0 ;
+  value = 0;
   value |= (uint32_t) buf[0] << 24;
   value |= (uint32_t) buf[1] << 16;
   value |= (uint32_t) buf[2] << 8;

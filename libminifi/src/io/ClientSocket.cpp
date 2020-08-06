@@ -27,12 +27,17 @@
 #pragma comment(lib, "Ws2_32.lib")
 #endif /* !WIN32 */
 
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
+
 #include <memory>
 #include <utility>
 #include <vector>
 #include <cerrno>
 #include <string>
-#include <arpa/inet.h>
 #include "Exception.h"
 #include <system_error>
 #include <cinttypes>
@@ -459,19 +464,19 @@ int16_t Socket::setSocketOptions(const SocketDescriptor sock) {
 #ifndef __MACH__
   if (setsockopt(sock, SOL_TCP, TCP_NODELAY, static_cast<void*>(&opt), sizeof(opt)) < 0) {
     logger_->log_error("setsockopt() TCP_NODELAY failed");
-    close(sock);
+    ::close(sock);
     return -1;
   }
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&opt), sizeof(opt)) < 0) {
     logger_->log_error("setsockopt() SO_REUSEADDR failed");
-    close(sock);
+    ::close(sock);
     return -1;
   }
 
   int sndsize = 256 * 1024;
   if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char *>(&sndsize), sizeof(sndsize)) < 0) {
     logger_->log_error("setsockopt() SO_SNDBUF failed");
-    close(sock);
+    ::close(sock);
     return -1;
   }
 

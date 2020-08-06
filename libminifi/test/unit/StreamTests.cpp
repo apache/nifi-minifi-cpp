@@ -28,14 +28,10 @@
 
 TEST_CASE("TestReadData", "[testread]") {
   auto base = std::make_shared<minifi::io::BufferStream>();
-  uint64_t b = 8;
-  base->write(b);
+  base->write((const uint8_t*)"\x01\x02\x03\x04\x05\x06\x07\x08", 8);
   uint64_t c = 0;
-  REQUIRE(8 == base->read(reinterpret_cast<uint8_t*>(&c), 8));
-  if (minifi::io::EndiannessCheck::IS_LITTLE)
-    REQUIRE(c == 576460752303423488);
-  else
-    REQUIRE(c == 8);
+  REQUIRE(8 == base->read(c));
+  REQUIRE(c == 0x0102030405060708);
 }
 
 TEST_CASE("TestRead8", "[testread]") {
@@ -72,4 +68,12 @@ TEST_CASE("TestRead4", "[testread]") {
   uint32_t c = 0;
   base->read(c);
   REQUIRE(c == 8);
+}
+
+TEST_CASE("TestWrite1", "[testwrite]") {
+  auto base = std::make_shared<minifi::io::BufferStream>();
+  base->write((uint64_t)0x0102030405060708);
+  std::string bytes(8, '\0');
+  REQUIRE(8 == base->read(reinterpret_cast<uint8_t*>(const_cast<char*>(bytes.data())), 8));
+  REQUIRE(bytes == "\x01\x02\x03\x04\x05\x06\x07\x08");
 }
