@@ -318,14 +318,14 @@ void TFConvertImageToTensor::onTrigger(const std::shared_ptr<core::ProcessContex
 }
 
 int64_t TFConvertImageToTensor::ImageReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
-  if (tensor_->AllocatedBytes() < stream->getSize()) {
+  if (tensor_->AllocatedBytes() < stream->size()) {
     throw std::runtime_error("Tensor is not big enough to hold FlowFile bytes");
   }
 
-  auto num_read = stream->readData(tensor_->flat<unsigned char>().data(),
-                                   static_cast<int>(stream->getSize()));
+  auto num_read = stream->read(tensor_->flat<unsigned char>().data(),
+                                   static_cast<int>(stream->size()));
 
-  if (num_read != stream->getSize()) {
+  if (num_read != stream->size()) {
     throw std::runtime_error("TensorReadCallback failed to fully read flow file input stream");
   }
 

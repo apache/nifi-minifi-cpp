@@ -154,11 +154,11 @@ int64_t TFExtractTopLabels::LabelsReadCallback::process(std::shared_ptr<io::Base
 
 int64_t TFExtractTopLabels::TensorReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
   std::string tensor_proto_buf;
-  tensor_proto_buf.resize(stream->getSize());
-  auto num_read = stream->readData(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
-                                   static_cast<int>(stream->getSize()));
+  tensor_proto_buf.resize(stream->size());
+  auto num_read = stream->read(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
+                                   static_cast<int>(stream->size()));
 
-  if (num_read != stream->getSize()) {
+  if (num_read != stream->size()) {
     throw std::runtime_error("TensorReadCallback failed to fully read flow file input stream");
   }
 

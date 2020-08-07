@@ -35,7 +35,7 @@ LuaBaseStream::LuaBaseStream(std::shared_ptr<io::BaseStream> stream)
 
 std::string LuaBaseStream::read(size_t len) {
   if (len == 0) {
-    len = stream_->getSize();
+    len = stream_->size();
   }
 
   if (len <= 0) {
@@ -52,7 +52,7 @@ std::string LuaBaseStream::read(size_t len) {
   //     0 <= n < s.size()."
   //
   // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3337.pdf
-  auto read = stream_->readData(reinterpret_cast<uint8_t *>(&buffer[0]), static_cast<int>(len));
+  auto read = stream_->read(reinterpret_cast<uint8_t *>(&buffer[0]), static_cast<int>(len));
 
   if (read != len) {
     buffer.resize(static_cast<size_t >(read));

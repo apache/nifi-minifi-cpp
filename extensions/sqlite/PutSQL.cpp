@@ -173,11 +173,11 @@ void PutSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
 }
 
 int64_t PutSQL::SQLReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
-  sql_->resize(stream->getSize());
-  auto num_read = static_cast<uint64_t >(stream->readData(reinterpret_cast<uint8_t *>(&(*sql_)[0]),
-                                                          static_cast<int>(stream->getSize())));
+  sql_->resize(stream->size());
+  auto num_read = static_cast<uint64_t >(stream->read(reinterpret_cast<uint8_t *>(&(*sql_)[0]),
+                                                          static_cast<int>(stream->size())));
 
-  if (num_read != stream->getSize()) {
+  if (num_read != stream->size()) {
     throw std::runtime_error("SQLReadCallback failed to fully read flow file input stream");
   }
 
