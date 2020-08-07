@@ -107,7 +107,7 @@ jobs:
           sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
           sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
       - id: build
-        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4   && make test ARGS="--timeout 300 -j2 --output-on-failure"
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DENABLE_ENCRYPT_CONFIG_TOOL=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4   && make test ARGS="--timeout 300 -j2 --output-on-failure"
   ubuntu_20_04:
     name: "ubuntu-20.04"
     runs-on: ubuntu-20.04

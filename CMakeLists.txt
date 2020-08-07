@@ -540,9 +540,15 @@ endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 add_subdirectory(main)
-add_subdirectory(nanofi)
 
+add_subdirectory(nanofi)
 add_dependencies(nanofi minifiexe)
+
+option(ENABLE_ENCRYPT_CONFIG_TOOL "Build the encrypt-config tool." ON)
+if (ENABLE_ENCRYPT_CONFIG_TOOL)
+	add_subdirectory(encrypt-config)
+	add_dependencies(encrypt-config minifi)
+endif()
 
 if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
 	add_subdirectory(controller)
@@ -769,6 +775,10 @@ registerTest("${TEST_DIR}/flow-tests")
 
 if (NOT DISABLE_ROCKSDB AND NOT DISABLE_LIBARCHIVE)
 	registerTest("${TEST_DIR}/persistence-tests")
+endif()
+
+if (ENABLE_ENCRYPT_CONFIG_TOOL)
+	registerTest("encrypt-config/tests")
 endif()
 
 include(BuildDocs)
