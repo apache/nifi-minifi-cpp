@@ -981,7 +981,7 @@ std::vector<std::shared_ptr<state::StateController>> FlowController::getComponen
     vec.push_back(shared_from_this());
   } else {
     // check processors
-    std::shared_ptr<core::Processor> processor = root_->findProcessor(name);
+    std::shared_ptr<core::Processor> processor = root_->findProcessorByName(name);
     if (processor != nullptr) {
       switch (processor->getSchedulingStrategy()) {
         case core::SchedulingStrategy::TIMER_DRIVEN:

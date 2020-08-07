@@ -54,7 +54,7 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
   logger_->log_debug("Connection %s created", name_);
 }
 
-Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid)
+Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, const utils::Identifier& uuid)
     : core::Connectable(name, uuid),
       flow_repository_(flow_repository),
       content_repo_(content_repo),
@@ -70,8 +70,8 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
   logger_->log_debug("Connection %s created", name_);
 }
 
-Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid,
-                       utils::Identifier & srcUUID)
+Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, const utils::Identifier& uuid,
+                       const utils::Identifier& srcUUID)
     : core::Connectable(name, uuid),
       flow_repository_(flow_repository),
       content_repo_(content_repo),
@@ -90,8 +90,8 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
   logger_->log_debug("Connection %s created", name_);
 }
 
-Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid,
-                       utils::Identifier & srcUUID, utils::Identifier & destUUID)
+Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, const utils::Identifier& uuid,
+                       const utils::Identifier& srcUUID, const utils::Identifier& destUUID)
     : core::Connectable(name, uuid),
       flow_repository_(flow_repository),
       content_repo_(content_repo),

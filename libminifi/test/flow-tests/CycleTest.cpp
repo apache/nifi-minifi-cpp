@@ -103,9 +103,9 @@ TEST_CASE("Flow with two long cycle", "[FlowWithCycle]") {
   auto controller = testController.controller_;
   auto root = testController.root_;
 
-  auto procGenerator = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator>(root->findProcessor("Generator"));
-  auto procA = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(root->findProcessor("A"));
-  auto procB = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(root->findProcessor("B"));
+  auto procGenerator = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator>(root->findProcessorByName("Generator"));
+  auto procA = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(root->findProcessorByName("A"));
+  auto procB = std::static_pointer_cast<org::apache::nifi::minifi::processors::TestProcessor>(root->findProcessorByName("B"));
 
   int tryCount = 0;
   while (tryCount++ < 10 && !(procA->trigger_count.load() >= 10 && procB->trigger_count.load() >= 10)) {

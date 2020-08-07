@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
 
-  std::shared_ptr<core::Processor> proc = yaml_config.getRoot(args.test_file)->findProcessor("invoke");
+  std::shared_ptr<core::Processor> proc = yaml_config.getRoot(args.test_file)->findProcessorByName("invoke");
   assert(proc != nullptr);
 
   const auto inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);

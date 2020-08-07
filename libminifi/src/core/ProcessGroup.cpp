@@ -263,26 +263,21 @@ void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAge
   }
 }
 
-std::shared_ptr<Processor> ProcessGroup::findProcessor(utils::Identifier &uuid) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  std::shared_ptr<Processor> ret = NULL;
-  for (auto processor : processors_) {
-    logger_->log_debug("find processor %s", processor->getName());
+std::shared_ptr<Processor> ProcessGroup::findProcessorById(const utils::Identifier& uuid) const {
+  const auto id_matches = [&] (const std::shared_ptr<Processor>& processor) {
+    logger_->log_debug("Current processor is %s", processor->getName());
     utils::Identifier processorUUID;
+    return processor->getUUID(processorUUID) && uuid == processorUUID;
+  };
+  return findProcessor(id_matches);
+}
 
-    if (processor->getUUID(processorUUID)) {
-      if (uuid == processorUUID) {
-        return processor;
-      }
-    }
-  }
-  for (auto processGroup : child_process_groups_) {
-    logger_->log_debug("find processor child %s", processGroup->getName());
-    std::shared_ptr<Processor> processor = processGroup->findProcessor(uuid);
-    if (processor)
-      return processor;
-  }
-  return ret;
+std::shared_ptr<Processor> ProcessGroup::findProcessorByName(const std::string &processorName) const {
+  const auto name_matches = [&] (const std::shared_ptr<Processor>& processor) {
+    logger_->log_debug("Current processor is %s", processor->getName());
+    return processor->getName() == processorName;
+  };
+  return findProcessor(name_matches);
 }
 
 void ProcessGroup::addControllerService(const std::string &nodeId, std::shared_ptr<core::controller::ControllerServiceNode> &node) {
@@ -309,22 +304,6 @@ void ProcessGroup::getAllProcessors(std::vector<std::shared_ptr<Processor>> &pro
   for (auto processGroup : child_process_groups_) {
     processGroup->getAllProcessors(processor_vec);
   }
-}
-
-std::shared_ptr<Processor> ProcessGroup::findProcessor(const std::string &processorName) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  std::shared_ptr<Processor> ret = NULL;
-  for (auto processor : processors_) {
-    logger_->log_debug("Current processor is %s", processor->getName());
-    if (processor->getName() == processorName)
-      return processor;
-  }
-  for (auto processGroup : child_process_groups_) {
-    std::shared_ptr<Processor> processor = processGroup->findProcessor(processorName);
-    if (processor)
-      return processor;
-  }
-  return ret;
 }
 
 void ProcessGroup::updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue) {
@@ -384,13 +363,13 @@ void ProcessGroup::addConnection(std::shared_ptr<Connection> connection) {
     utils::Identifier sourceUUID;
     std::shared_ptr<Processor> source = NULL;
     connection->getSourceUUID(sourceUUID);
-    source = this->findProcessor(sourceUUID);
+    source = this->findProcessorById(sourceUUID);
     if (source)
       source->addConnection(connection);
     std::shared_ptr<Processor> destination = NULL;
     utils::Identifier destinationUUID;
     connection->getDestinationUUID(destinationUUID);
-    destination = this->findProcessor(destinationUUID);
+    destination = this->findProcessorById(destinationUUID);
     if (destination && destination != source)
       destination->addConnection(connection);
   }
@@ -406,13 +385,13 @@ void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
     utils::Identifier sourceUUID;
     std::shared_ptr<Processor> source = NULL;
     connection->getSourceUUID(sourceUUID);
-    source = this->findProcessor(sourceUUID);
+    source = this->findProcessorById(sourceUUID);
     if (source)
       source->removeConnection(connection);
     std::shared_ptr<Processor> destination = NULL;
     utils::Identifier destinationUUID;
     connection->getDestinationUUID(destinationUUID);
-    destination = this->findProcessor(destinationUUID);
+    destination = this->findProcessorById(destinationUUID);
     if (destination && destination != source)
       destination->removeConnection(connection);
   }

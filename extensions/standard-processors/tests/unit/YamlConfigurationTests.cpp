@@ -139,19 +139,19 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
 
   REQUIRE(rootFlowConfig);
-  REQUIRE(rootFlowConfig->findProcessor("TailFile"));
+  REQUIRE(rootFlowConfig->findProcessorByName("TailFile"));
   utils::Identifier uuid;
-  rootFlowConfig->findProcessor("TailFile")->getUUID(uuid);
+  rootFlowConfig->findProcessorByName("TailFile")->getUUID(uuid);
   REQUIRE(uuid != nullptr);
-  REQUIRE(!rootFlowConfig->findProcessor("TailFile")->getUUIDStr().empty());
-  REQUIRE(1 == rootFlowConfig->findProcessor("TailFile")->getMaxConcurrentTasks());
+  REQUIRE(!rootFlowConfig->findProcessorByName("TailFile")->getUUIDStr().empty());
+  REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
   REQUIRE(
-      core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessor("TailFile")->getSchedulingStrategy());
-  REQUIRE(1 == rootFlowConfig->findProcessor("TailFile")->getMaxConcurrentTasks());
-  REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessor("TailFile")->getSchedulingPeriodNano());
-  REQUIRE(30 * 1000 == rootFlowConfig->findProcessor("TailFile")->getPenalizationPeriodMsec());
-  REQUIRE(1 * 1000 == rootFlowConfig->findProcessor("TailFile")->getYieldPeriodMsec());
-  REQUIRE(0 == rootFlowConfig->findProcessor("TailFile")->getRunDurationNano());
+      core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
+  REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
+  REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
+  REQUIRE(30 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriodMsec());
+  REQUIRE(1 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
+  REQUIRE(0 == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
   std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
   rootFlowConfig->getConnections(connectionMap);
@@ -442,18 +442,18 @@ NiFi Properties Overrides: {}
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
 
   REQUIRE(rootFlowConfig);
-  REQUIRE(rootFlowConfig->findProcessor("TailFile"));
+  REQUIRE(rootFlowConfig->findProcessorByName("TailFile"));
   utils::Identifier uuid;
-  rootFlowConfig->findProcessor("TailFile")->getUUID(uuid);
+  rootFlowConfig->findProcessorByName("TailFile")->getUUID(uuid);
   REQUIRE(uuid != nullptr);
-  REQUIRE(!rootFlowConfig->findProcessor("TailFile")->getUUIDStr().empty());
-  REQUIRE(1 == rootFlowConfig->findProcessor("TailFile")->getMaxConcurrentTasks());
-  REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessor("TailFile")->getSchedulingStrategy());
-  REQUIRE(1 == rootFlowConfig->findProcessor("TailFile")->getMaxConcurrentTasks());
-  REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessor("TailFile")->getSchedulingPeriodNano());
-  REQUIRE(30 * 1000 == rootFlowConfig->findProcessor("TailFile")->getPenalizationPeriodMsec());
-  REQUIRE(1 * 1000 == rootFlowConfig->findProcessor("TailFile")->getYieldPeriodMsec());
-  REQUIRE(0 == rootFlowConfig->findProcessor("TailFile")->getRunDurationNano());
+  REQUIRE(!rootFlowConfig->findProcessorByName("TailFile")->getUUIDStr().empty());
+  REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
+  REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
+  REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
+  REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
+  REQUIRE(30 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriodMsec());
+  REQUIRE(1 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
+  REQUIRE(0 == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
   std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
   rootFlowConfig->getConnections(connectionMap);
@@ -495,11 +495,11 @@ Processors:
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
 
   REQUIRE(rootFlowConfig);
-  REQUIRE(rootFlowConfig->findProcessor("PutFile"));
+  REQUIRE(rootFlowConfig->findProcessorByName("PutFile"));
   utils::Identifier uuid;
-  rootFlowConfig->findProcessor("PutFile")->getUUID(uuid);
+  rootFlowConfig->findProcessorByName("PutFile")->getUUID(uuid);
   REQUIRE(uuid != nullptr);
-  REQUIRE(!rootFlowConfig->findProcessor("PutFile")->getUUIDStr().empty());
+  REQUIRE(!rootFlowConfig->findProcessorByName("PutFile")->getUUIDStr().empty());
 
   REQUIRE(LogTestController::getInstance().contains("[warning] Unable to set the dynamic property "
                                                     "Dynamic Property with value Bad"));
@@ -536,11 +536,11 @@ Processors:
     std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
 
     REQUIRE(rootFlowConfig);
-    REQUIRE(rootFlowConfig->findProcessor("GetFile"));
+    REQUIRE(rootFlowConfig->findProcessorByName("GetFile"));
     utils::Identifier uuid;
-    rootFlowConfig->findProcessor("GetFile")->getUUID(uuid);
+    rootFlowConfig->findProcessorByName("GetFile")->getUUID(uuid);
     REQUIRE(uuid != nullptr);
-    REQUIRE(!rootFlowConfig->findProcessor("GetFile")->getUUIDStr().empty());
+    REQUIRE(!rootFlowConfig->findProcessorByName("GetFile")->getUUIDStr().empty());
   } catch (const std::exception &e) {
     caught_exception = true;
     REQUIRE("Unable to parse configuration file for component named 'XYZ' because required property "
@@ -579,11 +579,11 @@ Processors:
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
 
   REQUIRE(rootFlowConfig);
-  REQUIRE(rootFlowConfig->findProcessor("XYZ"));
+  REQUIRE(rootFlowConfig->findProcessorByName("XYZ"));
   utils::Identifier uuid;
-  rootFlowConfig->findProcessor("XYZ")->getUUID(uuid);
+  rootFlowConfig->findProcessorByName("XYZ")->getUUID(uuid);
   REQUIRE(uuid != nullptr);
-  REQUIRE(!rootFlowConfig->findProcessor("XYZ")->getUUIDStr().empty());
+  REQUIRE(!rootFlowConfig->findProcessorByName("XYZ")->getUUIDStr().empty());
 }
 
 class DummyComponent : public core::ConfigurableComponent {
