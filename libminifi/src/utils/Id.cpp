@@ -48,6 +48,8 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+const char* Identifier::UUID_FORMAT_STRING = "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx";
+
 #ifdef WIN32
 namespace {
   void windowsUuidToUuidField(UUID* uuid, UUID_FIELD out) {
@@ -81,6 +83,14 @@ Identifier::Identifier(UUID_FIELD u)
 
 Identifier::Identifier()
     : IdentifierBase() {
+}
+
+Identifier::Identifier(const std::string& id_str)
+    : IdentifierBase() {
+  sscanf(id_str.c_str(), UUID_FORMAT_STRING,
+         &id_[0], &id_[1], &id_[2], &id_[3], &id_[4], &id_[5], &id_[6], &id_[7],
+         &id_[8], &id_[9], &id_[10], &id_[11], &id_[12], &id_[13], &id_[14], &id_[15]);
+  build_string();
 }
 
 Identifier::Identifier(const Identifier &other) {
@@ -124,14 +134,7 @@ Identifier &Identifier::operator=(UUID_FIELD o) {
 }
 
 Identifier &Identifier::operator=(std::string id) {
-  sscanf(id.c_str(), "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
-         &id_[0], &id_[1], &id_[2], &id_[3],
-         &id_[4], &id_[5],
-         &id_[6], &id_[7],
-         &id_[8], &id_[9],
-         &id_[10], &id_[11], &id_[12], &id_[13], &id_[14], &id_[15]);
-  build_string();
-  return *this;
+  return Identifier::operator=(Identifier{id});
 }
 
 bool Identifier::operator==(const std::nullptr_t nullp) const {
@@ -160,12 +163,9 @@ const unsigned char * const Identifier::toArray() const {
 
 void Identifier::build_string() {
   char uuidStr[37];
-  snprintf(uuidStr, sizeof(uuidStr), "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
-      id_[0], id_[1], id_[2], id_[3],
-      id_[4], id_[5],
-      id_[6], id_[7],
-      id_[8], id_[9],
-      id_[10], id_[11], id_[12], id_[13], id_[14], id_[15]);
+  snprintf(uuidStr, sizeof(uuidStr), UUID_FORMAT_STRING,
+      id_[0], id_[1], id_[2], id_[3], id_[4], id_[5], id_[6], id_[7],
+      id_[8], id_[9], id_[10], id_[11], id_[12], id_[13], id_[14], id_[15]);
   converted_ = uuidStr;
 }
 

@@ -70,7 +70,7 @@ class PcapTestHarness : public IntegrationBase {
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
-    std::shared_ptr<core::Processor> proc = pg->findProcessor("pcap");
+    std::shared_ptr<core::Processor> proc = pg->findProcessorByName("pcap");
     assert(proc != nullptr);
 
     auto inv = std::dynamic_pointer_cast<minifi::processors::GetEnvironmentalSensors>(proc);

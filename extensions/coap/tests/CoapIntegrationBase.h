@@ -61,12 +61,9 @@ class CoapIntegrationBase : public IntegrationBase {
 
     core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
-    std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
-    std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
+    std::shared_ptr<core::ProcessGroup> pg{ yaml_config.getRoot(test_file_location).release() };
 
     queryRootProcessGroup(pg);
-
-    ptr.release();
 
     std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 

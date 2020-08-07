@@ -49,11 +49,11 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
    * Create a new processor
    */
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name);
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid);
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid,
-                      utils::Identifier & srcUUID);
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid,
-                      utils::Identifier & srcUUID, utils::Identifier & destUUID);
+  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, const utils::Identifier& uuid);
+  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, const utils::Identifier& uuid,
+                      const utils::Identifier& srcUUID);
+  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, const utils::Identifier& uuid,
+                      const utils::Identifier& srcUUID, const utils::Identifier& destUUID);
   // Destructor
   virtual ~Connection() = default;
 

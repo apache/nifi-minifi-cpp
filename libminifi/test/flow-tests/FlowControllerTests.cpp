@@ -97,7 +97,7 @@ TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
 
   testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, "100 ms");
 
-  auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessor("TestProcessor"));
+  auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessorByName("TestProcessor"));
   // prevent execution of the consumer processor
   sinkProc->yield(10000);
 
@@ -132,8 +132,8 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
 
   testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, "10 s");
 
-  auto sourceProc = std::static_pointer_cast<minifi::processors::TestFlowFileGenerator>(root->findProcessor("Generator"));
-  auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessor("TestProcessor"));
+  auto sourceProc = std::static_pointer_cast<minifi::processors::TestFlowFileGenerator>(root->findProcessorByName("Generator"));
+  auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessorByName("TestProcessor"));
 
   std::promise<void> execSinkPromise;
   std::future<void> execSinkFuture = execSinkPromise.get_future();
@@ -163,8 +163,8 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
 
   testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, "1000 ms");
 
-  auto sourceProc = std::static_pointer_cast<minifi::processors::TestFlowFileGenerator>(root->findProcessor("Generator"));
-  auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessor("TestProcessor"));
+  auto sourceProc = std::static_pointer_cast<minifi::processors::TestFlowFileGenerator>(root->findProcessorByName("Generator"));
+  auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessorByName("TestProcessor"));
 
   std::promise<void> execSinkPromise;
   std::future<void> execSinkFuture = execSinkPromise.get_future();
@@ -202,8 +202,8 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
 
   testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, std::to_string(timeout_ms) + " ms");
 
-  auto sourceProc = std::static_pointer_cast<minifi::processors::TestFlowFileGenerator>(root->findProcessor("Generator"));
-  auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessor("TestProcessor"));
+  auto sourceProc = std::static_pointer_cast<minifi::processors::TestFlowFileGenerator>(root->findProcessorByName("Generator"));
+  auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessorByName("TestProcessor"));
 
   std::promise<void> execSinkPromise;
   std::future<void> execSinkFuture = execSinkPromise.get_future();
