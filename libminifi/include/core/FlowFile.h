@@ -258,26 +258,6 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
     return id_;
   }
 
-  /**
-   * Yield
-   */
-  void yield() override {
-  }
-  /**
-   * Determines if we are connected and operating
-   */
-  bool isRunning() override {
-    return true;
-  }
-
-  /**
-   * Determines if work is available by this connectable
-   * @return boolean if work is available.
-   */
-  bool isWorkAvailable() override {
-    return true;
-  }
-
   void releaseClaim(std::shared_ptr<ResourceClaim> claim) {}
 
   /**

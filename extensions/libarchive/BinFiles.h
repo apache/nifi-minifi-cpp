@@ -263,7 +263,7 @@ class BinFiles : public core::Processor {
   // Initialize, over write by NiFi BinFiles
   void initialize(void) override;
 
-  void put(std::shared_ptr<core::Connectable> flow) override;
+  void put(const std::shared_ptr<core::FlowFile>& flowFile) override;
 
   std::set<std::shared_ptr<core::Connectable>> getOutGoingConnections(const std::string &relationship) const override;
 
@@ -293,7 +293,7 @@ class BinFiles : public core::Processor {
      * @return the resurrected persisted FlowFiles
      */
     std::unordered_set<std::shared_ptr<core::FlowFile>> getNewFlowFiles();
-    void put(std::shared_ptr<core::FlowFile>& flowFile);
+    void put(const std::shared_ptr<core::FlowFile>& flowFile);
    private:
     std::atomic_bool has_new_flow_file_{false};
     std::mutex flow_file_mutex_;

@@ -321,8 +321,7 @@ void BinFiles::addFlowsToSession(core::ProcessContext *context, core::ProcessSes
   }
 }
 
-void BinFiles::put(std::shared_ptr<core::Connectable> flow) {
-  auto flowFile = std::dynamic_pointer_cast<core::FlowFile>(flow);
+void BinFiles::put(const std::shared_ptr<core::FlowFile>& flowFile) {
   if (!flowFile) return;
   if (flowFile->getOriginalConnection()) {
     // onTrigger assumed ownership over a FlowFile
@@ -333,7 +332,7 @@ void BinFiles::put(std::shared_ptr<core::Connectable> flow) {
   file_store_.put(flowFile);
 }
 
-void BinFiles::FlowFileStore::put(std::shared_ptr<core::FlowFile>& flowFile) {
+void BinFiles::FlowFileStore::put(const std::shared_ptr<core::FlowFile>& flowFile) {
   {
     std::lock_guard<std::mutex> guard(flow_file_mutex_);
     incoming_files_.emplace(std::move(flowFile));

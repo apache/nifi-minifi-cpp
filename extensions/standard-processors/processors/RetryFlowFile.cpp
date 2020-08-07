@@ -99,7 +99,7 @@ void RetryFlowFile::onSchedule(core::ProcessContext* context, core::ProcessSessi
 }
 
 void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
-  std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord> (session->get());
+  auto flow_file = session->get();
   if (!flow_file) {
     return;
   }
@@ -154,7 +154,7 @@ void RetryFlowFile::readDynamicPropertyKeys(core::ProcessContext* context) {
   }
 }
 
-utils::optional<uint64_t> RetryFlowFile::getRetryPropertyValue(const std::shared_ptr<FlowFileRecord>& flow_file) const {
+utils::optional<uint64_t> RetryFlowFile::getRetryPropertyValue(const std::shared_ptr<core::FlowFile>& flow_file) const {
   std::string value_as_string;
   flow_file->getAttribute(retry_attribute_, value_as_string);
   uint64_t value;
@@ -172,7 +172,7 @@ utils::optional<uint64_t> RetryFlowFile::getRetryPropertyValue(const std::shared
   return utils::make_optional<uint64_t>(0);
 }
 
-void RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<FlowFileRecord>& flow_file) const {
+void RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<core::FlowFile>& flow_file) const {
   for (const auto& attribute : exceeded_flowfile_attribute_keys_) {
     std::string value;
     context->getDynamicProperty(attribute, value, flow_file);

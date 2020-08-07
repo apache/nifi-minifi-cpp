@@ -507,7 +507,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         if (delimiterPos == end) {
           break;
         }
-        flowFile = std::static_pointer_cast<FlowFileRecord>(create());
+        flowFile = create();
         flowFile->setSize(stream->size());
         flowFile->setOffset(0);
         flowFile->setResourceClaim(claim);
@@ -790,7 +790,7 @@ void ProcessSession::commit() {
     _addedFlowFiles.clear();
     _clonedFlowFiles.clear();
     _deletedFlowFiles.clear();
-    _flowFileSnapShots.clear();
+    _originalFlowFiles.clear();
 
     _transferRelationship.clear();
     // persistent the provenance report
@@ -855,7 +855,7 @@ void ProcessSession::rollback() {
 
 void ProcessSession::persistFlowFilesBeforeTransfer(
     std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile> > >& transactionMap,
-    const std::map<std::string, std::shared_ptr<FlowFile>>& originalFlowFileSnapShots) {
+    const std::map<std::string, FlowFileRecord>& originalFlowFileSnapShots) {
 
   std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
 
@@ -872,12 +872,11 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
         // the receiver will drop this FF
         continue;
       }
-      FlowFileRecord event(flowFileRepo, contentRepo, ff, target->getUUIDStr());
 
       std::unique_ptr<io::BufferStream> stream(new io::BufferStream());
-      event.Serialize(*stream);
+      FlowFileRecord(ff, target->getUUIDStr()).Serialize(*stream);
 
-      flowData.emplace_back(event.getUUIDStr(), std::move(stream));
+      flowData.emplace_back(ff->getUUIDStr(), std::move(stream));
     }
   }
 
@@ -893,7 +892,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
     auto& flows = transaction.second;
     for (auto &ff : flows) {
       auto snapshotIt = originalFlowFileSnapShots.find(ff->getUUIDStr());
-      auto original = snapshotIt != originalFlowFileSnapShots.end() ? snapshotIt->second : nullptr;
+      auto original = snapshotIt != originalFlowFileSnapShots.end() ? std::shared_ptr<FlowFile>(snapshotIt->second.file_) : nullptr;
       if (shouldDropEmptyFiles && ff->getSize() == 0) {
         // the receiver promised to drop this FF, no need for it anymore
         if (ff->isStored() && flowFileRepo->Delete(ff->getUUIDStr())) {

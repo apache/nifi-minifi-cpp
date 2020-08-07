@@ -152,16 +152,16 @@ void FlowFileRepository::prune_stored_flowfiles() {
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     utils::optional<FlowFileRecord> eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size(), content_repo_);
     std::string key = it->key().ToString();
-    if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
+    if (eventRead) {
       // on behalf of the just resurrected persisted instance
       auto claim = eventRead->getResourceClaim();
       if (claim) claim->increaseFlowFileRecordOwnedCount();
       bool found = false;
-      auto search = containers.find(eventRead->getConnectionUuid());
+      auto search = containers.find(eventRead->getConnectionUUID().to_string());
       found = (search != containers.end());
       if (!found) {
         // for backward compatibility
-        search = connectionMap.find(eventRead->getConnectionUuid());
+        search = connectionMap.find(eventRead->getConnectionUUID().to_string());
         found = (search != connectionMap.end());
       }
       if (found) {

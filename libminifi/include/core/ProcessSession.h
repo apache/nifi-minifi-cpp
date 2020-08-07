@@ -155,7 +155,7 @@ class ProcessSession : public ReferenceContainer {
  private:
   void persistFlowFilesBeforeTransfer(
       std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap,
-      const std::map<std::string, std::shared_ptr<FlowFile>>& originalFlowFileSnapShots);
+      const std::map<std::string, FlowFileRecord>& originalFlowFileSnapShots);
   // Clone the flow file during transfer to multiple connections for a relationship
   std::shared_ptr<core::FlowFile> cloneDuringTransfer(std::shared_ptr<core::FlowFile> &parent);
   // ProcessContext

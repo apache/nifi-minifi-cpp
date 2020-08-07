@@ -230,7 +230,7 @@ utils::optional<FlowFileRecord> FlowFileRecord::DeSerialize(const uint8_t *buffe
     return {};
   }
 
-  claim_ = std::make_shared<ResourceClaim>(content_full_path, content_repo_);
+  record.file_->claim_ = std::make_shared<ResourceClaim>(content_full_path, content_repo_);
   return record;
 }
 

@@ -88,8 +88,8 @@ class RetryFlowFile : public core::Processor {
 
  private:
   void readDynamicPropertyKeys(core::ProcessContext* context);
-  utils::optional<uint64_t> getRetryPropertyValue(const std::shared_ptr<FlowFileRecord>& flow_file) const;
-  void setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<FlowFileRecord>& flow_file) const;
+  utils::optional<uint64_t> getRetryPropertyValue(const std::shared_ptr<core::FlowFile>& flow_file) const;
+  void setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<core::FlowFile>& flow_file) const;
 
   std::string retry_attribute_;
   uint64_t maximum_retries_ = 3;  // The real default value is set by the default on the MaximumRetries property
