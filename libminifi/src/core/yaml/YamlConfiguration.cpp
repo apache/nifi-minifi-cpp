@@ -527,174 +527,151 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
     logger_->log_error("parseProcessNode: no parent group was provided");
     return;
   }
+  if (!connectionsNode || !connectionsNode->IsSequence()) {
+    return;
+  }
 
-  if (connectionsNode) {
-    if (connectionsNode->IsSequence()) {
-      for (YAML::const_iterator iter = connectionsNode->begin(); iter != connectionsNode->end(); ++iter) {
-        YAML::Node connectionNode = iter->as<YAML::Node>();
-        std::shared_ptr<minifi::Connection> connection = nullptr;
+  for (YAML::const_iterator iter = connectionsNode->begin(); iter != connectionsNode->end(); ++iter) {
+    YAML::Node connectionNode = iter->as<YAML::Node>();
+    std::shared_ptr<minifi::Connection> connection = nullptr;
 
-        // Configure basic connection
-        utils::Identifier uuid;
-        std::string id = getOrGenerateId(&connectionNode);
+    // Configure basic connection
+    std::string id = getOrGenerateId(&connectionNode);
 
-        // Default name to be same as ID
-        std::string name = id;
+    // Default name to be same as ID
+    // If name is specified in configuration, use the value
+    std::string name = connectionNode["name"].as<std::string>(id);
 
-        // If name is specified in configuration, use the value
-        if (connectionNode["name"]) {
-          name = connectionNode["name"].as<std::string>();
-        }
+    const utils::Identifier uuid{id};
 
-        uuid = id;
-        connection = this->createConnection(name, uuid);
-        logger_->log_debug("Created connection with UUID %s and name %s", id, name);
+    connection = createConnection(name, uuid);
+    if (!connection) {
+      return;
+    }
+    logger_->log_debug("Created connection with UUID %s and name %s", id, name);
 
-        // Configure connection source
-        if (connectionNode.as<YAML::Node>()["source relationship name"]) {
-          auto rawRelationship = connectionNode["source relationship name"].as<std::string>();
-          core::Relationship relationship(rawRelationship, "");
-          logger_->log_debug("parseConnection: relationship => [%s]", rawRelationship);
-          if (connection) {
-            connection->addRelationship(relationship);
+    auto addNewRelationshipToConnection = [&] (const std::string& relationship_name) {
+      core::Relationship relationship(relationship_name, "");
+      logger_->log_debug("parseConnection: relationship => [%s]", relationship_name);
+      connection->addRelationship(std::move(relationship));
+    };
+    // Configure connection source
+    if (connectionNode.as<YAML::Node>()["source relationship name"]) {
+      addNewRelationshipToConnection(connectionNode["source relationship name"].as<std::string>());
+    } else if (connectionNode.as<YAML::Node>()["source relationship names"]) {
+      auto relList = connectionNode["source relationship names"];
+        if (relList.IsSequence()) {
+          for (const auto &rel : relList) {
+            addNewRelationshipToConnection(rel.as<std::string>());
           }
-        } else if (connectionNode.as<YAML::Node>()["source relationship names"]) {
-          auto relList = connectionNode["source relationship names"];
-          if (connection) {
-            if (relList.IsSequence()) {
-              for (const auto &rel : relList) {
-                auto rawRelationship = rel.as<std::string>();
-                core::Relationship relationship(rawRelationship, "");
-                logger_->log_debug("parseConnection: relationship => [%s]", rawRelationship);
-                connection->addRelationship(relationship);
-              }
-            } else {
-              auto rawRelationship = relList.as<std::string>();
-              core::Relationship relationship(rawRelationship, "");
-              logger_->log_debug("parseConnection: relationship => [%s]", rawRelationship);
-              connection->addRelationship(relationship);
-            }
-          }
-        }
-
-        utils::Identifier srcUUID;
-
-        if (connectionNode["max work queue size"]) {
-          auto max_work_queue_str = connectionNode["max work queue size"].as<std::string>();
-          uint64_t max_work_queue_size = 0;
-          if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
-            connection->setMaxQueueSize(max_work_queue_size);
-          }
-          logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_size << " as the max queue size for " << name;
-        }
-
-        if (connectionNode["max work queue data size"]) {
-          auto max_work_queue_str = connectionNode["max work queue data size"].as<std::string>();
-          uint64_t max_work_queue_data_size = 0;
-          if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
-            connection->setMaxQueueDataSize(max_work_queue_data_size);
-          }
-          logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_data_size << " as the max queue data size for " << name;
-        }
-
-        if (connectionNode["source id"]) {
-          std::string connectionSrcProcId = connectionNode["source id"].as<std::string>();
-          srcUUID = connectionSrcProcId;
-          logger_->log_debug("Using 'source id' to match source with same id for "
-                             "connection '%s': source id => [%s]",
-                             name, connectionSrcProcId);
         } else {
-          // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
-          checkRequiredField(&connectionNode, "source name",
-          CONFIG_YAML_CONNECTIONS_KEY);
-          std::string connectionSrcProcName = connectionNode["source name"].as<std::string>();
-          utils::Identifier tmpUUID;
-          tmpUUID = connectionSrcProcName;
-          if (NULL != parent->findProcessorById(tmpUUID)) {
-            // the source name is a remote port id, so use that as the source id
-            srcUUID = tmpUUID;
-            logger_->log_debug("Using 'source name' containing a remote port id to match the source for "
-                               "connection '%s': source name => [%s]",
-                               name, connectionSrcProcName);
-          } else {
-            // lastly, look the processor up by name
-            auto srcProcessor = parent->findProcessorByName(connectionSrcProcName);
-            if (NULL != srcProcessor) {
-              srcProcessor->getUUID(srcUUID);
-              logger_->log_debug("Using 'source name' to match source with same name for "
-                                 "connection '%s': source name => [%s]",
-                                 name, connectionSrcProcName);
-            } else {
-              // we ran out of ways to discover the source processor
-              logger_->log_error("Could not locate a source with name %s to create a connection", connectionSrcProcName);
-              throw std::invalid_argument("Could not locate a source with name " + connectionSrcProcName + " to create a connection ");
-            }
-          }
+          addNewRelationshipToConnection(relList.as<std::string>());
         }
-        connection->setSourceUUID(srcUUID);
+    }
 
-        // Configure connection destination
-        utils::Identifier destUUID;
-        if (connectionNode["destination id"]) {
-          std::string connectionDestProcId = connectionNode["destination id"].as<std::string>();
-          destUUID = connectionDestProcId;
-          logger_->log_debug("Using 'destination id' to match destination with same id for "
-                             "connection '%s': destination id => [%s]",
-                             name, connectionDestProcId);
+    if (connectionNode["max work queue size"]) {
+      auto max_work_queue_str = connectionNode["max work queue size"].as<std::string>();
+      uint64_t max_work_queue_size = 0;
+      if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
+        connection->setMaxQueueSize(max_work_queue_size);
+      }
+      logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_size << " as the max queue size for " << name;
+    }
+    if (connectionNode["max work queue data size"]) {
+      auto max_work_queue_str = connectionNode["max work queue data size"].as<std::string>();
+      uint64_t max_work_queue_data_size = 0;
+      if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
+        connection->setMaxQueueDataSize(max_work_queue_data_size);
+      }
+      logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_data_size << " as the max queue data size for " << name;
+    }
+
+    utils::Identifier srcUUID;
+
+    if (connectionNode["source id"]) {
+      srcUUID = connectionNode["source id"].as<std::string>();
+      logger_->log_debug("Using 'source id' to match source with same id for connection '%s': source id => [%s]", name, srcUUID.to_string());
+    } else {
+      // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
+      checkRequiredField(&connectionNode, "source name", CONFIG_YAML_CONNECTIONS_KEY);
+      std::string connectionSrcProcName = connectionNode["source name"].as<std::string>();
+      if (nullptr != parent->findProcessorById(utils::Identifier{connectionSrcProcName})) {
+        // the source name is a remote port id, so use that as the source id
+        srcUUID = connectionSrcProcName;
+        logger_->log_debug("Using 'source name' containing a remote port id to match the source for connection '%s': source name => [%s]", name, connectionSrcProcName);
+      } else {
+        // lastly, look the processor up by name
+        auto srcProcessor = parent->findProcessorByName(connectionSrcProcName);
+        if (nullptr != srcProcessor) {
+          srcProcessor->getUUID(srcUUID);
+          logger_->log_debug("Using 'source name' to match source with same name for connection '%s': source name => [%s]", name, connectionSrcProcName);
         } else {
-          // we use the same logic as above for resolving the source processor
-          // for looking up the destination processor in absence of a processor id
-          checkRequiredField(&connectionNode, "destination name",
-          CONFIG_YAML_CONNECTIONS_KEY);
-          std::string connectionDestProcName = connectionNode["destination name"].as<std::string>();
-          utils::Identifier tmpUUID;
-          tmpUUID = connectionDestProcName;
-          if (parent->findProcessorById(tmpUUID)) {
-            // the destination name is a remote port id, so use that as the dest id
-            destUUID = tmpUUID;
-            logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for "
-                               "connection '%s': destination name => [%s]",
-                               name, connectionDestProcName);
-          } else {
-            // look the processor up by name
-            auto destProcessor = parent->findProcessorByName(connectionDestProcName);
-            if (NULL != destProcessor) {
-              destProcessor->getUUID(destUUID);
-              logger_->log_debug("Using 'destination name' to match destination with same name for "
-                                 "connection '%s': destination name => [%s]",
-                                 name, connectionDestProcName);
-            } else {
-              // we ran out of ways to discover the destination processor
-              logger_->log_error("Could not locate a destination with name %s to create a connection", connectionDestProcName);
-              throw std::invalid_argument("Could not locate a destination with name " + connectionDestProcName + " to create a connection");
-            }
-          }
-        }
-        connection->setDestinationUUID(destUUID);
-
-        if (connectionNode["flowfile expiration"]) {
-          uint64_t expirationDuration = 0;
-          std::string expiration = connectionNode["flowfile expiration"].as<std::string>();
-          TimeUnit unit;
-          if (core::Property::StringToTime(expiration, expirationDuration, unit) && core::Property::ConvertTimeUnitToMS(expirationDuration, unit, expirationDuration)) {
-            logger_->log_debug("parseConnection: flowfile expiration => [%d]", expirationDuration);
-            connection->setFlowExpirationDuration(expirationDuration);
-          }
-        }
-
-        if (connectionNode["drop empty"]) {
-          std::string strvalue = connectionNode["drop empty"].as<std::string>();
-          bool dropEmpty = false;
-          if (utils::StringUtils::StringToBool(strvalue, dropEmpty)) {
-            connection->setDropEmptyFlowFiles(dropEmpty);
-          }
-        }
-
-        if (connection) {
-          parent->addConnection(connection);
+          // we ran out of ways to discover the source processor
+          logger_->log_error("Could not locate a source with name %s to create a connection", connectionSrcProcName);
+          throw std::invalid_argument("Could not locate a source with name " + connectionSrcProcName + " to create a connection ");
         }
       }
     }
+    connection->setSourceUUID(srcUUID);
+
+    // Configure connection destination
+    utils::Identifier destUUID;
+    if (connectionNode["destination id"]) {
+      std::string connectionDestProcId = connectionNode["destination id"].as<std::string>();
+      destUUID = connectionDestProcId;
+      logger_->log_debug("Using 'destination id' to match destination with same id for "
+                         "connection '%s': destination id => [%s]",
+                         name, connectionDestProcId);
+    } else {
+      // we use the same logic as above for resolving the source processor
+      // for looking up the destination processor in absence of a processor id
+      checkRequiredField(&connectionNode, "destination name",
+      CONFIG_YAML_CONNECTIONS_KEY);
+      std::string connectionDestProcName = connectionNode["destination name"].as<std::string>();
+      utils::Identifier tmpUUID;
+      tmpUUID = connectionDestProcName;
+      if (parent->findProcessorById(tmpUUID)) {
+        // the destination name is a remote port id, so use that as the dest id
+        destUUID = tmpUUID;
+        logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for "
+                           "connection '%s': destination name => [%s]",
+                           name, connectionDestProcName);
+      } else {
+        // look the processor up by name
+        auto destProcessor = parent->findProcessorByName(connectionDestProcName);
+        if (NULL != destProcessor) {
+          destProcessor->getUUID(destUUID);
+          logger_->log_debug("Using 'destination name' to match destination with same name for "
+                             "connection '%s': destination name => [%s]",
+                             name, connectionDestProcName);
+        } else {
+          // we ran out of ways to discover the destination processor
+          logger_->log_error("Could not locate a destination with name %s to create a connection", connectionDestProcName);
+          throw std::invalid_argument("Could not locate a destination with name " + connectionDestProcName + " to create a connection");
+        }
+      }
+    }
+    connection->setDestinationUUID(destUUID);
+
+    if (connectionNode["flowfile expiration"]) {
+      uint64_t expirationDuration = 0;
+      std::string expiration = connectionNode["flowfile expiration"].as<std::string>();
+      TimeUnit unit;
+      if (core::Property::StringToTime(expiration, expirationDuration, unit) && core::Property::ConvertTimeUnitToMS(expirationDuration, unit, expirationDuration)) {
+        logger_->log_debug("parseConnection: flowfile expiration => [%d]", expirationDuration);
+        connection->setFlowExpirationDuration(expirationDuration);
+      }
+    }
+
+    if (connectionNode["drop empty"]) {
+      std::string strvalue = connectionNode["drop empty"].as<std::string>();
+      bool dropEmpty = false;
+      if (utils::StringUtils::StringToBool(strvalue, dropEmpty)) {
+        connection->setDropEmptyFlowFiles(dropEmpty);
+      }
+    }
+
+    parent->addConnection(connection);
   }
 }
 
