@@ -352,11 +352,13 @@ void ProcessGroup::addConnection(const std::shared_ptr<Connection>& connection) 
     connections_.insert(connection);
     logger_->log_debug("Add connection %s into process group %s", connection->getName(), name_);
     std::shared_ptr<Processor> source = this->findProcessorById(connection->getSourceUUID());
-    if (source)
+    if (source) {
       source->addConnection(connection);
+    }
     std::shared_ptr<Processor> destination = this->findProcessorById(connection->getDestinationUUID());
-    if (destination && destination != source)
+    if (destination && destination != source) {
       destination->addConnection(connection);
+    }
   }
 }
 

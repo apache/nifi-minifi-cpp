@@ -617,7 +617,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           CONFIG_YAML_CONNECTIONS_KEY);
           std::string connectionSrcProcName = connectionNode["source name"].as<std::string>();
           utils::optional<utils::Identifier> tmpUUID = utils::Identifier::parse(connectionSrcProcName);
-          if (tmpUUID && NULL != parent->findProcessorById(tmpUUID.value())) {
+          if (tmpUUID && nullptr != parent->findProcessorById(tmpUUID.value())) {
             // the source name is a remote port id, so use that as the source id
             srcUUID = tmpUUID.value();
             logger_->log_debug("Using 'source name' containing a remote port id to match the source for "
@@ -626,7 +626,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           } else {
             // lastly, look the processor up by name
             auto srcProcessor = parent->findProcessorByName(connectionSrcProcName);
-            if (NULL != srcProcessor) {
+            if (nullptr != srcProcessor) {
               srcUUID = srcProcessor->getUUID();
               logger_->log_debug("Using 'source name' to match source with same name for "
                                  "connection '%s': source name => [%s]",
@@ -664,7 +664,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           } else {
             // look the processor up by name
             auto destProcessor = parent->findProcessorByName(connectionDestProcName);
-            if (NULL != destProcessor) {
+            if (nullptr != destProcessor) {
               destUUID = destProcessor->getUUID();
               logger_->log_debug("Using 'destination name' to match destination with same name for "
                                  "connection '%s': destination name => [%s]",

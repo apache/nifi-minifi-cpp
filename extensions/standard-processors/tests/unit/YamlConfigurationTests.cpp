@@ -494,7 +494,7 @@ Processors:
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("PutFile"));
-  utils::Identifier uuid = rootFlowConfig->findProcessorByName("PutFile")->getUUID();
+  const utils::Identifier uuid = rootFlowConfig->findProcessorByName("PutFile")->getUUID();
   REQUIRE(uuid);
   REQUIRE(!rootFlowConfig->findProcessorByName("PutFile")->getUUIDStr().empty());
 
