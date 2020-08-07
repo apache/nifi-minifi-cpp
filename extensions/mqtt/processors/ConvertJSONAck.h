@@ -77,8 +77,8 @@ class ConvertJSONAck : public ConvertBase {
       int64_t ret = 0;
       if (nullptr == stream)
         return 0;
-      buffer_.resize(stream->getSize());
-      ret = stream->read(reinterpret_cast<uint8_t*>(buffer_.data()), stream->getSize());
+      buffer_.resize(stream->size());
+      ret = stream->read(reinterpret_cast<uint8_t*>(buffer_.data()), stream->size());
       return ret;
     }
     std::vector<char> buffer_;

@@ -212,7 +212,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
   uint8_t payload_type = 0;
   uint64_t payload_u64 = 0;
   uint16_t size = 0;
-  io::BaseStream stream;
+  io::BufferStream stream;
 
   stream.write(version);
   std::string endpoint = "heartbeat";
@@ -238,7 +238,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
   };
 
-  size_t bsize = stream.getSize();
+  size_t bsize = stream.size();
 
   CoapMessage msg;
   msg.data_ = const_cast<uint8_t *>(stream.getBuffer());
@@ -249,8 +249,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
   if (isRegistrationMessage(message)) {
     require_registration_ = true;
   } else if (message.getSize() > 0) {
-    io::DataStream byteStream(message.getData(), message.getSize());
-    io::BaseStream responseStream(&byteStream);
+    io::BufferStream responseStream(message.getData(), message.getSize());
     responseStream.read(version);
     responseStream.read(size);
     logger_->log_trace("Received ack. version %d. number of operations %d", version, size);
@@ -261,8 +260,8 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       uint16_t argsize = 0;
       std::string operand, id;
       REQUIRE_SIZE_IF(1, responseStream.read(operationType))
-      REQUIRE_VALID(responseStream.readUTF(id, false))
-      REQUIRE_VALID(responseStream.readUTF(operand, false))
+      REQUIRE_VALID(responseStream.read(id, false))
+      REQUIRE_VALID(responseStream.read(operand, false))
 
       logger_->log_trace("Received op %d, with id %s and operand %s", operationType, id, operand);
       auto newOp = getOperation(operationType);
@@ -277,8 +276,8 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       responseStream.read(argsize);
       for (int j = 0; j < argsize; j++) {
         std::string key, value;
-        REQUIRE_VALID(responseStream.readUTF(key))
-        REQUIRE_VALID(responseStream.readUTF(value))
+        REQUIRE_VALID(responseStream.read(key))
+        REQUIRE_VALID(responseStream.read(value))
         new_command.operation_arguments[key] = value;
       }
 

@@ -132,7 +132,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 
     {
       // should result in valid operation
-      minifi::io::BaseStream stream;
+      minifi::io::BufferStream stream;
       uint16_t version = 0, size = 1;
       uint8_t operation = 1;
       stream.write(version);
@@ -141,9 +141,9 @@ class VerifyCoAPServer : public CoapIntegrationBase {
       stream.write("id");
       stream.write("operand");
 
-      uint8_t *data = new uint8_t[stream.getSize()];
-      memcpy(data, stream.getBuffer(), stream.getSize());
-      minifi::coap::CoapResponse response(205, std::unique_ptr<uint8_t>(data), stream.getSize());
+      uint8_t *data = new uint8_t[stream.size()];
+      memcpy(data, stream.getBuffer(), stream.size());
+      minifi::coap::CoapResponse response(205, std::unique_ptr<uint8_t>(data), stream.size());
       responses.enqueue(std::move(response));
     }
 

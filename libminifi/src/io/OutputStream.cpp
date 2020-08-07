@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -49,7 +50,7 @@ int OutputStream::write(const std::string& str, bool widen) {
 }
 
 int OutputStream::write(const char* str, bool widen) {
-  return write_str(str, strlen(str), widen);
+  return write_str(str, std::strlen(str), widen);
 }
 
 int OutputStream::write_str(const char* str, uint32_t len, bool widen) {

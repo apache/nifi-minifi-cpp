@@ -100,7 +100,7 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
 
     auto stream = c2::PayloadSerializer::serialize(1,payload);
 
-    mqtt_service_->send(topic, stream->getBuffer(), stream->getSize());
+    mqtt_service_->send(topic, stream->getBuffer(), stream->size());
 
   }
 
