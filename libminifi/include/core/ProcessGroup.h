@@ -199,10 +199,26 @@ class ProcessGroup {
   void removeProcessGroup(ProcessGroup *child);
   // ! Add connections
   void addConnection(std::shared_ptr<Connection> connection);
+  // Generic find
+  template <typename Fun>
+  std::shared_ptr<Processor> findProcessor(Fun&& condition) const {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    const auto found = std::find_if(processors_.cbegin(), processors_.cend(), condition);
+    if (found != processors_.cend()) {
+      return *found;
+    }
+    for (const auto& processGroup : child_process_groups_) {
+      const std::shared_ptr<Processor> processor = processGroup->findProcessor(condition);
+      if (processor) {
+        return processor;
+      }
+    }
+    return nullptr;
+  }
   // findProcessor based on UUID
-  std::shared_ptr<Processor> findProcessor(utils::Identifier &uuid);
+  std::shared_ptr<Processor> findProcessorById(const utils::Identifier& uuid) const;
   // findProcessor based on name
-  std::shared_ptr<Processor> findProcessor(const std::string &processorName);
+  std::shared_ptr<Processor> findProcessorByName(const std::string &processorName) const;
 
   void getAllProcessors(std::vector<std::shared_ptr<Processor>> &processor_vec);
   /**
@@ -274,7 +290,7 @@ class ProcessGroup {
 
  private:
   // Mutex for protection
-  std::recursive_mutex mutex_;
+  mutable std::recursive_mutex mutex_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation

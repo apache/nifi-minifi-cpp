@@ -98,7 +98,7 @@ class FlowConfiguration : public CoreComponent {
   // Create Remote Processor Group
   std::unique_ptr<core::ProcessGroup> createRemoteProcessGroup(std::string name, utils::Identifier & uuid);
   // Create Connection
-  std::shared_ptr<minifi::Connection> createConnection(std::string name, utils::Identifier & uuid);
+  std::shared_ptr<minifi::Connection> createConnection(std::string name, const utils::Identifier& uuid) const;
   // Create Provenance Report Task
   std::shared_ptr<core::Processor> createProvenanceReportTask(void);
 

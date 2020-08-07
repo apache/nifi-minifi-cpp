@@ -112,7 +112,7 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(
   return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::REMOTE_PROCESS_GROUP, name, uuid));
 }
 
-std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(std::string name, utils::Identifier & uuid) {
+std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(std::string name, const utils::Identifier& uuid) const {
   return std::make_shared<minifi::Connection>(flow_file_repo_, content_repo_, name, uuid);
 }
 

@@ -610,7 +610,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           std::string connectionSrcProcName = connectionNode["source name"].as<std::string>();
           utils::Identifier tmpUUID;
           tmpUUID = connectionSrcProcName;
-          if (NULL != parent->findProcessor(tmpUUID)) {
+          if (NULL != parent->findProcessorById(tmpUUID)) {
             // the source name is a remote port id, so use that as the source id
             srcUUID = tmpUUID;
             logger_->log_debug("Using 'source name' containing a remote port id to match the source for "
@@ -618,7 +618,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
                                name, connectionSrcProcName);
           } else {
             // lastly, look the processor up by name
-            auto srcProcessor = parent->findProcessor(connectionSrcProcName);
+            auto srcProcessor = parent->findProcessorByName(connectionSrcProcName);
             if (NULL != srcProcessor) {
               srcProcessor->getUUID(srcUUID);
               logger_->log_debug("Using 'source name' to match source with same name for "
@@ -649,7 +649,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           std::string connectionDestProcName = connectionNode["destination name"].as<std::string>();
           utils::Identifier tmpUUID;
           tmpUUID = connectionDestProcName;
-          if (parent->findProcessor(tmpUUID)) {
+          if (parent->findProcessorById(tmpUUID)) {
             // the destination name is a remote port id, so use that as the dest id
             destUUID = tmpUUID;
             logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for "
@@ -657,7 +657,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
                                name, connectionDestProcName);
           } else {
             // look the processor up by name
-            auto destProcessor = parent->findProcessor(connectionDestProcName);
+            auto destProcessor = parent->findProcessorByName(connectionDestProcName);
             if (NULL != destProcessor) {
               destProcessor->getUUID(destUUID);
               logger_->log_debug("Using 'destination name' to match destination with same name for "

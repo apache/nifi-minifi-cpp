@@ -65,7 +65,7 @@ public:
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
-    std::shared_ptr<core::Processor> proc = pg->findProcessor("invoke");
+    std::shared_ptr<core::Processor> proc = pg->findProcessorByName("invoke");
     assert(proc != nullptr);
 
     std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
