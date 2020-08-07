@@ -34,7 +34,7 @@ namespace io {
  * write certain objects/primitives to a data stream.
  *
  */
-class OutputStream : public Stream {
+class OutputStream : public virtual Stream {
  public:
   /**
    * write valueto stream

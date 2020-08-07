@@ -40,43 +40,14 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace io {
+namespace internal {
 
-template<typename T>
-class CRCStream : public BaseStream {
+template<typename StreamType>
+class CRCStreamBase : public virtual Stream {
  public:
-  /**
-   * Raw pointer because the caller guarantees that
-   * it will exceed our lifetime.
-   */
-  explicit CRCStream(T *child_stream);
-  CRCStream(T *child_stream, uint64_t initial_crc);
-
-  CRCStream(CRCStream<T>&&) noexcept;
-
-  ~CRCStream() override = default;
-
-  T *getstream() const {
+  StreamType *getstream() const {
     return child_stream_;
   }
-
-  using BaseStream::write;
-  using BaseStream::read;
-
-  /**
-   * Reads data and places it into buf
-   * @param buf buffer in which we extract data
-   * @param buflen
-   */
-  int read(uint8_t *buf, unsigned int buflen) override;
-
-  /**
-   * writes value to stream
-   * @param value value to write
-   * @param size size of value
-   */
-  int write(const uint8_t *value, unsigned int size) override;
-
-  size_t size() const override { return child_stream_->size(); }
 
   void close() override { child_stream_->close(); }
 
@@ -86,62 +57,84 @@ class CRCStream : public BaseStream {
     return 0;
   }
 
-  void updateCRC(uint8_t *buffer, uint32_t length);
+  void updateCRC(uint8_t *buffer, uint32_t length) {
+    crc_ = crc32(crc_, buffer, length);
+  }
 
   uint64_t getCRC() {
     return crc_;
   }
 
-  void reset();
+  void reset() {
+    crc_ = crc32(0L, Z_NULL, 0);
+  }
 
- private:
-  uLong crc_;
-  T *child_stream_;
+ protected:
+  uint64_t crc_ = 0;
+  StreamType *child_stream_ = nullptr;
 };
 
-template<typename T>
-CRCStream<T>::CRCStream(T *child_stream)
-    : child_stream_(child_stream) {
-  crc_ = crc32(0L, Z_NULL, 0);
-}
+template<typename StreamType>
+class InputCRCStream : public virtual CRCStreamBase<StreamType>, public InputStream {
+ public:
+  using InputStream::read;
+  using CRCStreamBase<StreamType>::child_stream_;
+  using CRCStreamBase<StreamType>::crc_;
 
-template<typename T>
-CRCStream<T>::CRCStream(T *child_stream, uint64_t initial_crc)
-    : crc_(gsl::narrow<uLong>(initial_crc)),
-      child_stream_(child_stream) {
-}
-
-template<typename T>
-CRCStream<T>::CRCStream(CRCStream<T> &&move) noexcept
-    : crc_(std::move(move.crc_)),
-      child_stream_(std::move(move.child_stream_)) {
-}
-
-template<typename T>
-int CRCStream<T>::read(uint8_t *buf, unsigned int buflen) {
-  int ret = child_stream_->read(buf, buflen);
-  if (ret > 0) {
-    crc_ = crc32(crc_, buf, ret);
+  int read(uint8_t *buf, unsigned int buflen) override {
+    int ret = child_stream_->read(buf, buflen);
+    if (ret > 0) {
+      crc_ = crc32(crc_, buf, ret);
+    }
+    return ret;
   }
-  return ret;
-}
 
-template<typename T>
-int CRCStream<T>::write(const uint8_t *value, unsigned int size) {
-  int ret = child_stream_->write(value, size);
-  if (ret > 0) {
-    crc_ = crc32(crc_, value, ret);
+  uint64_t size() const override { return child_stream_->size(); }
+};
+
+template<typename StreamType>
+class OutputCRCStream : public virtual CRCStreamBase<StreamType>, public OutputStream {
+ public:
+  using OutputStream::write;
+  using CRCStreamBase<StreamType>::child_stream_;
+  using CRCStreamBase<StreamType>::crc_;
+
+  int write(const uint8_t *value, unsigned int size) override {
+    int ret = child_stream_->write(value, size);
+    if (ret > 0) {
+      crc_ = crc32(crc_, value, ret);
+    }
+    return ret;
   }
-  return ret;
-}
-template<typename T>
-void CRCStream<T>::reset() {
-  crc_ = crc32(0L, Z_NULL, 0);
-}
-template<typename T>
-void CRCStream<T>::updateCRC(uint8_t *buffer, uint32_t length) {
-  crc_ = crc32(crc_, buffer, length);
-}
+};
+
+struct empty_class {};
+
+}  // namespace internal
+
+template<typename StreamType>
+class CRCStream : public std::conditional<std::is_base_of<InputStream, StreamType>::value, internal::InputCRCStream<StreamType>, internal::empty_class>::type
+                  , public std::conditional<std::is_base_of<OutputStream, StreamType>::value, internal::OutputCRCStream<StreamType>, internal::empty_class>::type {
+  using internal::CRCStreamBase<StreamType>::child_stream_;
+  using internal::CRCStreamBase<StreamType>::crc_;
+
+ public:
+  explicit CRCStream(StreamType *child_stream) {
+    child_stream_ = child_stream;
+    crc_ = crc32(0L, Z_NULL, 0);
+  }
+
+  CRCStream(StreamType *child_stream, uint64_t initial_crc) {
+    crc_ = initial_crc;
+    child_stream_ = child_stream;
+  }
+
+  CRCStream(CRCStream &&move) noexcept {
+    crc_ = std::move(move.crc_);
+    child_stream_ = std::move(move.child_stream_);
+  }
+};
+
 
 }  // namespace io
 }  // namespace minifi

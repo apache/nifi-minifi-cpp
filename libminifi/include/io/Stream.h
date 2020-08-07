@@ -29,6 +29,19 @@ namespace io {
  */
 class Stream {
  public:
+  virtual void close() {}
+
+  virtual void seek(uint64_t offset) {
+    throw std::runtime_error("Seek is not supported");
+  }
+
+  virtual int initialize() {
+    return 1;
+  }
+
+  virtual const uint8_t* getBuffer() const {
+    throw std::runtime_error("Not a buffered stream");
+  }
   virtual ~Stream() = default;
 };
 

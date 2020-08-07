@@ -52,13 +52,6 @@ class CivetStream : public io::InputStream {
     return mg_read(conn, buf, buflen);
   }
 
-  // TODO: These are hacks!!!
-  void close() {}
-
-  int initialize() {return -1;}
-
-  int write(const uint8_t* buf, unsigned int len) {return 0;}
-
  protected:
   struct mg_connection *conn;
 

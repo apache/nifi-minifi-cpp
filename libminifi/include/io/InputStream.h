@@ -29,7 +29,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-class InputStream : public Stream {
+class InputStream : public virtual Stream {
  public:
   virtual uint64_t size() const {
     throw std::runtime_error("Querying size is not supported");

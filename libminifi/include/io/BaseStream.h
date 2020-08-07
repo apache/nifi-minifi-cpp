@@ -40,22 +40,7 @@ namespace io {
  *
  * Extensions may be thread safe and thus shareable, but that is up to the implementation.
  */
-class BaseStream : public InputStream, public OutputStream {
- public:
-  virtual void close() {}
-
-  virtual void seek(uint64_t offset) {
-    throw std::runtime_error("Seek is not supported");
-  }
-
-  virtual int initialize() {
-    return 1;
-  }
-
-  virtual const uint8_t* getBuffer() const {
-    throw std::runtime_error("Not a buffered stream");
-  }
-};
+class BaseStream : public InputStream, public OutputStream {};
 
 }  // namespace io
 }  // namespace minifi
