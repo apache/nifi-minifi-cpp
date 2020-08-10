@@ -67,11 +67,12 @@ void FlowFileRepository::flush() {
       continue;
     }
 
-    utils::optional<FlowFileRecord> eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), values[i].size(), content_repo_);
+    utils::Identifier containerId;
+    auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), values[i].size(), content_repo_, containerId);
     if (eventRead) {
-      purgeList.push_back(eventRead->getFlowFile());
+      purgeList.push_back(eventRead);
     }
-    logger_->log_debug("Issuing batch delete, including %s, Content path %s", eventRead->getFlowFile()->getUUIDStr(), eventRead->getContentFullPath());
+    logger_->log_debug("Issuing batch delete, including %s, Content path %s", eventRead->getUUIDStr(), eventRead->getContentFullPath());
     batch.Delete(keys[i]);
   }
 
@@ -150,18 +151,19 @@ void FlowFileRepository::prune_stored_flowfiles() {
 
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    utils::optional<FlowFileRecord> eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size(), content_repo_);
+    utils::Identifier containerId;
+    auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size(), content_repo_, containerId);
     std::string key = it->key().ToString();
     if (eventRead) {
       // on behalf of the just resurrected persisted instance
       auto claim = eventRead->getResourceClaim();
       if (claim) claim->increaseFlowFileRecordOwnedCount();
       bool found = false;
-      auto search = containers.find(eventRead->getConnectionUUID().to_string());
+      auto search = containers.find(containerId.to_string());
       found = (search != containers.end());
       if (!found) {
         // for backward compatibility
-        search = connectionMap.find(eventRead->getConnectionUUID().to_string());
+        search = connectionMap.find(containerId.to_string());
         found = (search != connectionMap.end());
       }
       if (found) {
@@ -171,7 +173,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
         // even if a processor immediately marks it for deletion, flush only happens after prune_stored_flowfiles
         search->second->put(eventRead);
       } else {
-        logger_->log_warn("Could not find connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
+        logger_->log_warn("Could not find connection for %s, path %s ", containerId.to_string(), eventRead->getContentFullPath());
         keys_to_delete.enqueue(key);
       }
     } else {

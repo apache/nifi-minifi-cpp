@@ -75,6 +75,10 @@ class ResourceClaim {
   uint64_t getFlowFileRecordOwnedCount() {
     return claim_manager_->getStreamCount(*this);
   }
+
+  bool removeIfOrphaned() {
+    return claim_manager_->removeIfOrphaned(shared_from_this());
+  }
   // Get the content full path
   Path getContentFullPath() const {
     return _contentFullPath;

@@ -16,12 +16,14 @@
  * limitations under the License.
  */
 
-#include "core/FlowFile.h"
 #include <memory>
 #include <string>
 #include <set>
+#include <cinttypes>
+#include <core/Repository.h>
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
+#include "core/FlowFile.h"
 
 namespace org {
 namespace apache {
@@ -54,7 +56,27 @@ FlowFile::FlowFile()
 }
 
 FlowFile::~FlowFile() {
-  --flowFileCount;
+  logger_->log_debug("Destroying flow file record,  UUID %s", getUUIDStr());
+  if (!claim_) {
+    logger_->log_debug("Claim is null ptr for %s", getUUIDStr());
+  }
+
+  claim_.set(*this, nullptr);
+
+  // Disown stash claims
+  for (auto &stashPair : stashedContent_) {
+    auto& stashClaim = stashPair.second;
+    stashClaim.set(*this, nullptr);
+  }
+}
+
+void FlowFile::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
+  // Decrease the flow file record owned count for the resource claim
+  claim->decreaseFlowFileRecordOwnedCount();
+  logger_->log_debug("Detaching Resource Claim %s, %s, attempt " "%" PRIu64, getUUIDStr(), claim->getContentFullPath(), claim->getFlowFileRecordOwnedCount());
+  if (claim->removeIfOrphaned()) {
+    logger_->log_debug("Deleted Resource Claim %s", claim->getContentFullPath());
+  }
 }
 
 FlowFile& FlowFile::operator=(const FlowFile& other) {
@@ -205,7 +227,7 @@ void FlowFile::setLineageStartDate(const uint64_t date) {
  * Sets the original connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setOriginalConnection(std::shared_ptr<core::Connectable>& connection) {
+void FlowFile::setOriginalConnection(const std::shared_ptr<core::Connectable>& connection) {
   original_connection_ = connection;
 }
 

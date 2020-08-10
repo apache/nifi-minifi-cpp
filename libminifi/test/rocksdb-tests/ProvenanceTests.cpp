@@ -62,13 +62,10 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
 
 TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE, "componentid", "componenttype");
-  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::string eventId = record1.getEventId();
-  std::map<std::string, std::string> attributes;
-  attributes.insert(std::pair<std::string, std::string>("potato", "potatoe"));
-  attributes.insert(std::pair<std::string, std::string>("tomato", "tomatoe"));
-  std::shared_ptr<core::repository::FlowFileRepository> frepo = std::make_shared<core::repository::FlowFileRepository>("ff", "./content_repository", 0, 0, 0);
-  std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<minifi::FlowFileRecord>(frepo, content_repo, attributes);
+  std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<minifi::FlowFileRecord>();
+  ffr1->setAttribute("potato", "potatoe");
+  ffr1->setAttribute("tomato", "tomatoe");
 
   record1.addChildFlowFile(ffr1);
 
@@ -116,14 +113,10 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
 
 TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[TestFlowAndProv1]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE, "componentid", "componenttype");
-  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::string eventId = record1.getEventId();
-  std::map<std::string, std::string> attributes;
-  attributes.insert(std::pair<std::string, std::string>("potato", "potatoe"));
-  attributes.insert(std::pair<std::string, std::string>("tomato", "tomatoe"));
-  std::shared_ptr<core::Repository> frepo = std::make_shared<core::repository::VolatileProvenanceRepository>();
-  frepo->initialize(0);
-  std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<minifi::FlowFileRecord>(frepo, content_repo, attributes);
+  std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<minifi::FlowFileRecord>();
+  ffr1->setAttribute("potato", "potatoe");
+  ffr1->setAttribute("tomato", "tomatoe");
 
   record1.addChildFlowFile(ffr1);
 

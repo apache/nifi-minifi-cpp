@@ -40,19 +40,19 @@ namespace minifi {
 std::shared_ptr<logging::Logger> FlowFileRecord::logger_ = logging::LoggerFactory<FlowFileRecord>::getLogger();
 std::atomic<uint64_t> FlowFileRecord::local_flow_seq_number_(0);
 
-utils::optional<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository, const std::shared_ptr<core::ContentRepository>& content_repo) {
+std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository, const std::shared_ptr<core::ContentRepository>& content_repo, utils::Identifier& container) {
   std::string value;
 
   if (!flowRepository->Get(key, value)) {
     logger_->log_error("NiFi FlowFile Store event %s can not found", key);
-    return utils::nullopt;
+    return nullptr;
   }
   io::BufferStream stream((const uint8_t*) value.data(), value.length());
 
-  auto record = DeSerialize(stream, content_repo);
+  auto record = DeSerialize(stream, content_repo, container);
 
   if (record) {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size " "%" PRIu64 " connection %s success", record->file_->getUUIDStr(), stream.size(), record->connectionUUID_.to_string());
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size " "%" PRIu64 " connection %s success", record->getUUIDStr(), stream.size(), record->original_connection_->getUUIDStr());
   } else {
     logger_->log_debug("Couldn't deserialize FlowFile %s from the stream of size " "%" PRIu64, key, stream.size());
   }
@@ -63,38 +63,40 @@ utils::optional<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& k
 bool FlowFileRecord::Serialize(io::BufferStream &outStream) {
   int ret;
 
-  ret = outStream.write(file->event_time_);
+  ret = outStream.write(event_time_);
   if (ret != 8) {
     return false;
   }
 
-  ret = outStream.write(file->entry_date_);
+  ret = outStream.write(entry_date_);
   if (ret != 8) {
     return false;
   }
 
-  ret = outStream.write(file->lineage_start_date_);
+  ret = outStream.write(lineage_start_date_);
   if (ret != 8) {
     return false;
   }
 
-  ret = outStream.write(file->getUUIDStr());
+  ret = outStream.write(getUUIDStr());
   if (ret <= 0) {
     return false;
   }
 
-  ret = outStream.write(connectionUUID_.to_string());
+  utils::Identifier containerId;
+  if (original_connection_) original_connection_->getUUID(containerId);
+  ret = outStream.write(containerId.to_string());
   if (ret <= 0) {
     return false;
   }
   // write flow attributes
-  uint32_t numAttributes = file->attributes_.size();
+  uint32_t numAttributes = attributes_.size();
   ret = outStream.write(numAttributes);
   if (ret != 4) {
     return false;
   }
 
-  for (auto& itAttribute : file_->attributes_) {
+  for (auto& itAttribute : attributes_) {
     ret = outStream.write(itAttribute.first, true);
     if (ret <= 0) {
       return false;
@@ -110,12 +112,12 @@ bool FlowFileRecord::Serialize(io::BufferStream &outStream) {
     return false;
   }
 
-  ret = outStream.write(file->size_);
+  ret = outStream.write(size_);
   if (ret != 8) {
     return false;
   }
 
-  ret = outStream.write(file->offset_);
+  ret = outStream.write(offset_);
   if (ret != 8) {
     return false;
   }
@@ -134,24 +136,23 @@ bool FlowFileRecord::Persist(const std::shared_ptr<core::Repository>& flowReposi
     return false;
   }
 
-  if (flowRepository->Put(file_->getUUIDStr(), const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
-    logger_->log_debug("NiFi FlowFile Store event %s size " "%" PRIu64 " success", file_->getUUIDStr(), outStream.size());
+  if (flowRepository->Put(getUUIDStr(), const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
+    logger_->log_debug("NiFi FlowFile Store event %s size " "%" PRIu64 " success", getUUIDStr(), outStream.size());
     // on behalf of the persisted record instance
-    if (file_->claim_) file_->claim_->increaseFlowFileRecordOwnedCount();
+    if (claim_) claim_->increaseFlowFileRecordOwnedCount();
     return true;
   } else {
-    logger_->log_error("NiFi FlowFile Store failed %s size " "%" PRIu64 " fail", file_->getUUIDStr(), outStream.size());
+    logger_->log_error("NiFi FlowFile Store failed %s size " "%" PRIu64 " fail", getUUIDStr(), outStream.size());
     return false;
   }
 
   return true;
 }
 
-utils::optional<FlowFileRecord> FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize, const std::shared_ptr<core::ContentRepository>& content_repo) {
+std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize, const std::shared_ptr<core::ContentRepository>& content_repo, utils::Identifier& container) {
   int ret;
 
-  FlowFileRecord record(std::make_shared<core::FlowFile>());
-  auto& file = record.file_;
+  auto file = std::make_shared<FlowFileRecord>();
 
   io::DataStream outStream(buffer, bufferSize);
 
@@ -191,7 +192,7 @@ utils::optional<FlowFileRecord> FlowFileRecord::DeSerialize(const uint8_t *buffe
   if (!parsedConnectionUUID) {
     return {};
   }
-  record.connectionUUID_ = parsedConnectionUUID.value();
+  container = parsedConnectionUUID.value();
 
   // read flow attributes
   uint32_t numAttributes = 0;
@@ -230,8 +231,9 @@ utils::optional<FlowFileRecord> FlowFileRecord::DeSerialize(const uint8_t *buffe
     return {};
   }
 
-  record.file_->claim_ = std::make_shared<ResourceClaim>(content_full_path, content_repo_);
-  return record;
+  file->claim_ = std::make_shared<ResourceClaim>(content_full_path, content_repo));
+
+  return file;
 }
 
 } /* namespace minifi */

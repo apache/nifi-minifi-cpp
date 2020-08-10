@@ -65,38 +65,28 @@ namespace core {
 class ProcessSession;
 }
 
-class FlowFileRecord : public io::Serializable {
+class FlowFileRecord : public core::FlowFile, public io::Serializable {
   friend class core::ProcessSession;
  public:
-  FlowFileRecord(const std::shared_ptr<core::FlowFile>& file, const utils::Identifier& connectionId = {}) : file_(file), connectionUUID_(connectionId) {}
   bool Serialize(io::BufferStream &outStream);
 
   //! Serialize and Persistent to the repository
   bool Persist(const std::shared_ptr<core::Repository>& flowRepository);
   //! DeSerialize
-  static utils::optional<FlowFileRecord> DeSerialize(const uint8_t *buffer, int bufferSize, const std::shared_ptr<core::ContentRepository> &content_repo);
+  static std::shared_ptr<FlowFileRecord> DeSerialize(const uint8_t *buffer, int bufferSize, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
   //! DeSerialize
-  static utils::optional<FlowFileRecord> DeSerialize(io::BufferStream &stream, const std::shared_ptr<core::ContentRepository> &content_repo) {
-    return DeSerialize(stream.getBuffer(), gsl::narrow<int>(stream.getSize()), content_repo);
+  static std::shared_ptr<FlowFileRecord> DeSerialize(io::BufferStream &stream, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container) {
+    return DeSerialize(stream.getBuffer(), gsl::narrow<int>(stream.size()), content_repo, container);
   }
   //! DeSerialize
-  static utils::optional<FlowFileRecord> DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository, const std::shared_ptr<core::ContentRepository> &content_repo);
+  static std::shared_ptr<FlowFileRecord> DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
 
   void setSnapShot(bool snapshot) {
     snapshot_ = snapshot;
   }
 
   std::string getContentFullPath() {
-    const auto& claim = file_->claim_;
-    return claim ? claim->getContentFullPath() : "";
-  }
-
-  const utils::Identifier& getConnectionUUID() {
-    return connectionUUID_;
-  }
-
-  const gsl::not_null<std::shared_ptr<core::FlowFile>>& getFlowFile() {
-    return file_;
+    return claim_ ? claim_->getContentFullPath() : "";
   }
 
   FlowFileRecord &operator=(const FlowFileRecord &);
@@ -113,12 +103,6 @@ class FlowFileRecord : public io::Serializable {
   // Only support pass by reference or pointer
 
  private:
-  std::shared_ptr<core::Repository> flow_repository_;
-  std::shared_ptr<core::ContentRepository> content_repository_;
-  const gsl::not_null<std::shared_ptr<core::FlowFile>> file_;
-  utils::Identifier connectionUUID_;
-  std::shared_ptr<Connection> connection_;
-
   static std::shared_ptr<logging::Logger> logger_;
 };
 

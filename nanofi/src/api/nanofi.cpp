@@ -508,7 +508,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
     stream = std::make_shared<minifi::io::BufferStream>();
   }
 
-  auto ffr = std::make_shared<core::FlowFile>();
+  auto ffr = std::make_shared<minifi::FlowFileRecord>();
   for (const auto& attribute : attribute_map) {
     ffr->setAttribute(attribute.first, attribute.second);
   }
