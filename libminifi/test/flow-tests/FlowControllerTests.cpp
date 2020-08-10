@@ -79,6 +79,17 @@ Connections:
 Remote Processing Groups:
 )";
 
+template<typename Fn>
+bool verifyWithBusyWait(std::chrono::milliseconds timeout, Fn&& fn) {
+  auto start = std::chrono::steady_clock::now();
+  while (std::chrono::steady_clock::now() - start < timeout) {
+    if (fn()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
   TestControllerWithFlow testController(yamlConfig);
   auto controller = testController.controller_;
@@ -133,12 +144,9 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  int tryCount = 0;
-  while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
-    std::this_thread::sleep_for(std::chrono::milliseconds{20});
-  }
+  auto flowFilesEnqueued = [&] {return root->getTotalFlowFileCount() == 3;};
+  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{50}, flowFilesEnqueued));
 
-  REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   execSinkPromise.set_value();
@@ -173,12 +181,9 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  int tryCount = 0;
-  while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
-    std::this_thread::sleep_for(std::chrono::milliseconds{20});
-  }
+  auto flowFilesEnqueued = [&] {return root->getTotalFlowFileCount() == 3;};
+  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{50}, flowFilesEnqueued));
 
-  REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   execSinkPromise.set_value();
@@ -193,7 +198,7 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   auto controller = testController.controller_;
   auto root = testController.root_;
 
-  int timeout_ms = 1000;
+  unsigned int timeout_ms = 1000;
 
   testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, std::to_string(timeout_ms) + " ms");
 
@@ -215,12 +220,9 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  int tryCount = 0;
-  while (tryCount++ < 10 && root->getTotalFlowFileCount() != 3) {
-    std::this_thread::sleep_for(std::chrono::milliseconds{20});
-  }
+  auto flowFilesEnqueued = [&] {return root->getTotalFlowFileCount() == 3;};
+  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{50}, flowFilesEnqueued));
 
-  REQUIRE(root->getTotalFlowFileCount() == 3);
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
   std::thread shutdownThread([&]{
@@ -228,11 +230,20 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
     controller->stop(true);
   });
 
-  while (controller->isRunning()) {
-    std::this_thread::sleep_for(std::chrono::milliseconds{500});
+  auto shutdownInitiated = std::chrono::steady_clock::now();
+  auto shutdownDuration = [&] {return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - shutdownInitiated);};
+
+  std::this_thread::sleep_for(std::chrono::milliseconds{500});
+  while (shutdownDuration() < std::chrono::milliseconds(2500) && controller->isRunning()) {
     timeout_ms += 500;
+    testController.getLogger()->log_info("Controller still running after %u ms, extending the waiting period to %u ms, ff count: %u",
+        static_cast<unsigned int>(shutdownDuration().count()), timeout_ms, static_cast<unsigned int>(root->getTotalFlowFileCount()));
     testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, std::to_string(timeout_ms) + " ms");
+    std::this_thread::sleep_for(std::chrono::milliseconds{500});
   }
+
+  REQUIRE(!controller->isRunning());
+  REQUIRE(shutdownDuration().count() > 1500);
 
   shutdownThread.join();
 
