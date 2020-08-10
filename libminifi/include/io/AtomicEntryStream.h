@@ -27,6 +27,7 @@
 #include "core/repository/AtomicRepoEntries.h"
 #include "Exception.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/StreamUtils.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -72,14 +73,14 @@ class AtomicEntryStream : public BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  int read(uint8_t *buf, unsigned int buflen) override;
+  int read(uint8_t *buf, int buflen) override;
 
   /**
    * writes value to stream
    * @param value value to write
    * @param size size of value
    */
-  int write(const uint8_t *value, unsigned int size) override;
+  int write(const uint8_t *value, int size) override;
 
  private:
   size_t length_;
@@ -107,7 +108,8 @@ void AtomicEntryStream<T>::seek(uint64_t offset) {
 
 // data stream overrides
 template<typename T>
-int AtomicEntryStream<T>::write(const uint8_t *value, unsigned int size) {
+int AtomicEntryStream<T>::write(const uint8_t *value, int size) {
+  utils::internal::ensureNonNegativeWrite(size);
   if (size == 0) {
     return 0;
   }
@@ -125,7 +127,8 @@ int AtomicEntryStream<T>::write(const uint8_t *value, unsigned int size) {
 }
 
 template<typename T>
-int AtomicEntryStream<T>::read(uint8_t *buf, unsigned int buflen) {
+int AtomicEntryStream<T>::read(uint8_t *buf, int buflen) {
+  utils::internal::ensureNonNegativeRead(buflen);
   if (buflen == 0) {
     return 0;
   }

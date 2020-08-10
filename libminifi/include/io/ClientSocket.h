@@ -148,7 +148,7 @@ class Socket : public BaseStream {
   using BaseStream::write;
   using BaseStream::read;
 
-  int write(const uint8_t *value, unsigned int size) override;
+  int write(const uint8_t *value, int size) override;
 
   /**
    * Reads data and places it into buf
@@ -156,7 +156,7 @@ class Socket : public BaseStream {
    * @param buflen
    * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
-  int read(uint8_t *buf, unsigned int buflen) override {
+  int read(uint8_t *buf, int buflen) override {
     return read(buf, buflen, true);
   }
 
@@ -166,7 +166,7 @@ class Socket : public BaseStream {
    * @param buflen
    * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
-  virtual int read(uint8_t *buf, unsigned int buflen, bool retrieve_all_bytes);
+  virtual int read(uint8_t *buf, int buflen, bool retrieve_all_bytes);
 
  protected:
   /**

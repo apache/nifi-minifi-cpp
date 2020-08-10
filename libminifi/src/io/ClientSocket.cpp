@@ -47,6 +47,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/file/FileUtils.h"
 #include "utils/GeneralUtils.h"
+#include "utils/StreamUtils.h"
 
 namespace util = org::apache::nifi::minifi::utils;
 namespace mio = org::apache::nifi::minifi::io;
@@ -500,7 +501,9 @@ std::string Socket::getHostname() const {
 
 // data stream overrides
 
-int Socket::write(const uint8_t *value, unsigned int size) {
+int Socket::write(const uint8_t *value, int size) {
+  utils::internal::ensureNonNegativeWrite(size);
+
   int ret = 0, bytes = 0;
 
   int fd = select_descriptor(1000);
@@ -522,7 +525,8 @@ int Socket::write(const uint8_t *value, unsigned int size) {
   return bytes;
 }
 
-int Socket::read(uint8_t *buf, unsigned int buflen, bool retrieve_all_bytes) {
+int Socket::read(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
+  utils::internal::ensureNonNegativeRead(buflen);
   int32_t total_read = 0;
   while (buflen) {
     int16_t fd = select_descriptor(1000);

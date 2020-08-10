@@ -42,11 +42,11 @@ class OutputStream : public virtual Stream {
    * @param len length of value
    * @return resulting write size
    **/
-  virtual int write(const uint8_t *value, unsigned int len) {
+  virtual int write(const uint8_t *value, int len) {
     throw std::runtime_error("Stream is not writable");
   }
 
-  int write(const std::vector<uint8_t>& buffer, unsigned int len);
+  int write(const std::vector<uint8_t>& buffer, int len);
 
   /**
    * write byte to stream

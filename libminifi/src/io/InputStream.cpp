@@ -28,7 +28,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-int InputStream::read(std::vector<uint8_t>& buffer, unsigned int len) {
+int InputStream::read(std::vector<uint8_t>& buffer, int len) {
   if (buffer.size() < len) {
     buffer.resize(len);
   }

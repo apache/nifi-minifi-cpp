@@ -18,6 +18,7 @@
 
 #include "io/ZlibStream.h"
 #include "Exception.h"
+#include "utils/StreamUtils.h"
 
 namespace org {
 namespace apache {
@@ -60,7 +61,8 @@ ZlibCompressStream::~ZlibCompressStream() {
   }
 }
 
-int ZlibCompressStream::write(const uint8_t* value, unsigned int size) {
+int ZlibCompressStream::write(const uint8_t* value, int size) {
+  utils::internal::ensureNonNegativeWrite(size);
   if (state_ != ZlibStreamState::INITIALIZED) {
     logger_->log_error("writeData called in invalid ZlibCompressStream state, state is %hhu", state_);
     return -1;
@@ -129,7 +131,8 @@ ZlibDecompressStream::~ZlibDecompressStream() {
   }
 }
 
-int ZlibDecompressStream::write(const uint8_t* value, unsigned int size) {
+int ZlibDecompressStream::write(const uint8_t* value, int size) {
+  utils::internal::ensureNonNegativeWrite(size);
   if (state_ != ZlibStreamState::INITIALIZED) {
     logger_->log_error("writeData called in invalid ZlibDecompressStream state, state is %hhu", state_);
     return -1;

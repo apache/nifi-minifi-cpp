@@ -69,14 +69,14 @@ class SecureDescriptorStream : public io::BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  int read(uint8_t *buf, unsigned int buflen) override;
+  int read(uint8_t *buf, int buflen) override;
 
   /**
    * writes value to stream
    * @param value value to write
    * @param size size of value
    */
-  int write(const uint8_t *value, unsigned int size) override;
+  int write(const uint8_t *value, int size) override;
 
  protected:
   std::recursive_mutex file_lock_;

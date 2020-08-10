@@ -48,7 +48,7 @@ class ByteInputCallBack : public InputStreamCallback {
     if (stream->size() > 0) {
       vec.resize(stream->size());
 
-      stream->read(reinterpret_cast<uint8_t*>(vec.data()), gsl::narrow<int>(stream->getSize()));
+      stream->read(reinterpret_cast<uint8_t*>(vec.data()), gsl::narrow<int>(stream->size()));
     }
 
     ptr = reinterpret_cast<char*>(&vec[0]);

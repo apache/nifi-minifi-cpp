@@ -40,9 +40,9 @@ class BufferStream : public BaseStream {
   using BaseStream::read;
   using BaseStream::write;
 
-  int write(const uint8_t* data, unsigned int len) final;
+  int write(const uint8_t* data, int len) final;
 
-  int read(uint8_t* buffer, unsigned int len) override;
+  int read(uint8_t* buffer, int len) override;
 
   int initialize() override {
     buffer.clear();
@@ -68,7 +68,7 @@ class BufferStream : public BaseStream {
    * Retrieve size of data stream
    * @return size of data stream
    **/
-  uint64_t size() const override {
+  size_t size() const override {
     return buffer.size();
   }
 

@@ -34,6 +34,7 @@
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/GeneralUtils.h"
+#include "utils/StreamUtils.h"
 
 namespace org {
 namespace apache {
@@ -352,7 +353,8 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
   return -1;
 }
 
-int TLSSocket::read(uint8_t *buf, unsigned int buflen, bool retrieve_all_bytes) {
+int TLSSocket::read(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
+  utils::internal::ensureNonNegativeRead(buflen);
   int total_read = 0;
   int status = 0;
   int loc = 0;
@@ -387,6 +389,7 @@ int TLSSocket::read(uint8_t *buf, unsigned int buflen, bool retrieve_all_bytes) 
 }
 
 int TLSSocket::writeData(const uint8_t *value, unsigned int size, int fd) {
+  utils::internal::ensureNonNegativeWrite(size);
   int bytes = 0;
   int sent = 0;
   auto fd_ssl = get_ssl(fd);
@@ -409,7 +412,7 @@ int TLSSocket::writeData(const uint8_t *value, unsigned int size, int fd) {
   return size;
 }
 
-int TLSSocket::write(const uint8_t *value, unsigned int size) {
+int TLSSocket::write(const uint8_t *value, int size) {
   int fd = select_descriptor(1000);
   if (fd < 0) {
     close();
@@ -418,7 +421,8 @@ int TLSSocket::write(const uint8_t *value, unsigned int size) {
   return writeData(value, size, fd);
 }
 
-int TLSSocket::read(uint8_t *buf, unsigned int buflen) {
+int TLSSocket::read(uint8_t *buf, int buflen) {
+  utils::internal::ensureNonNegativeRead(buflen);
   int total_read = 0;
   int status = 0;
   while (buflen) {

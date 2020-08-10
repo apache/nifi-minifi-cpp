@@ -40,7 +40,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
     server_responses_.write((const uint8_t*)resp.data(), resp.length());
   }
 
-  int write(const uint8_t *value, unsigned int size) override {
+  int write(const uint8_t *value, int size) override {
     client_responses_.push(std::string((char*) value, size));
     return size;
   }
@@ -57,7 +57,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
    * @param len length to read
    * @return resulting read size
    **/
-  int read(uint8_t *value, unsigned int len) override {
+  int read(uint8_t *value, int len) override {
     return server_responses_.read(value, len);
   }
 

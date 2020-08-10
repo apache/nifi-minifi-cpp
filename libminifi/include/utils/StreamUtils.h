@@ -15,42 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <vector>
-#include <cstdint>
-#include <string>
-#include <algorithm>
-#include <iterator>
-#include <cassert>
-#include "io/BufferStream.h"
-#include "utils/StreamUtils.h"
+
+#pragma once
+
+#include "Exception.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace io {
+namespace utils {
+namespace internal {
 
-int BufferStream::write(const uint8_t *value, int size) {
-  utils::internal::ensureNonNegativeWrite(size);
-  buffer.reserve(buffer.size() + size);
-  std::copy(value, value + size, std::back_inserter(buffer));
-  return size;
+class NegativeReadException : public Exception {
+ public:
+  NegativeReadException() : Exception(ExceptionType::GENERAL_EXCEPTION, "Cannot read negative count of bytes from stream") {}
+};
+
+class NegativeWriteException : public Exception {
+ public:
+  NegativeWriteException() : Exception(ExceptionType::GENERAL_EXCEPTION, "Cannot write negative count of bytes to stream") {}
+};
+
+inline void ensureNonNegativeRead(int count) {
+  if (count < 0) {
+    throw NegativeReadException();
+  }
 }
 
-int BufferStream::read(uint8_t *buf, int len) {
-  utils::internal::ensureNonNegativeRead(len);
-  len = (std::min<uint64_t>)(len, buffer.size() - readOffset);
-  auto begin = buffer.begin() + readOffset;
-  std::copy(begin, begin + len, buf);
-
-  // increase offset for the next read
-  readOffset += len;
-
-  return len;
+inline void ensureNonNegativeWrite(int count) {
+  if (count < 0) {
+    throw NegativeWriteException();
+  }
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace internal
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

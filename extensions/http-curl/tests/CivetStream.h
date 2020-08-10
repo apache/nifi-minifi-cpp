@@ -48,7 +48,7 @@ class CivetStream : public io::InputStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  int read(uint8_t *buf, unsigned int buflen) override {
+  int read(uint8_t *buf, int buflen) override {
     return mg_read(conn, buf, buflen);
   }
 

@@ -29,7 +29,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-int OutputStream::write(const std::vector<uint8_t>& buffer, unsigned int len) {
+int OutputStream::write(const std::vector<uint8_t>& buffer, int len) {
   if (buffer.size() < len) {
     return -1;
   }
