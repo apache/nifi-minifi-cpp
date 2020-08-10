@@ -34,6 +34,8 @@
 #include "utils/OptionalUtils.h"
 #include "yaml-cpp/yaml.h"
 
+class YamlConfigurationTestAccessor;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -232,6 +234,8 @@ class YamlConfiguration : public FlowConfiguration {
   void parseControllerServices(YAML::Node *controllerServicesNode);
   // Process connection YAML
 
+  void configureConnectionSourceRelationshipFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
+
   /**
    * Parses the Connections section of a configuration YAML.
    * The resulting Connections are added to the parent ProcessGroup.
@@ -348,6 +352,8 @@ class YamlConfiguration : public FlowConfiguration {
    * @param reason
    */
   void raiseComponentError(const std::string &component_name, const std::string &yaml_section, const std::string &reason) const;
+
+  friend class ::YamlConfigurationTestAccessor;
 };
 
 }  // namespace core

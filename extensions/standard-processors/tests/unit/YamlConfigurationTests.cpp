@@ -22,6 +22,65 @@
 #include "core/RepositoryFactory.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "TestBase.h"
+#include "utils/TestUtils.h"
+
+class YamlConfigurationTestAccessor {
+ public:
+  YamlConfigurationTestAccessor() :
+      testProvRepo_{ core::createRepository("provenancerepository", true) },
+      testFlowFileRepo_{ core::createRepository("flowfilerepository", true) },
+      configuration_{ std::make_shared<minifi::Configure>() },
+      streamFactory_{ minifi::io::StreamFactory::getInstance(configuration_) },
+      content_repo_{ std::make_shared<core::repository::VolatileContentRepository>() },
+      yamlConfiguration_{ testProvRepo_, testFlowFileRepo_, content_repo_, streamFactory_, configuration_ } {}
+
+  core::YamlConfiguration* operator->() {
+    return &yamlConfiguration_;
+  }
+
+  void configureConnectionSourceRelationshipFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
+    yamlConfiguration_.configureConnectionSourceRelationshipFromYaml(connectionNode, connection);
+  }
+
+ private:
+  std::shared_ptr<core::Repository> testProvRepo_;
+  std::shared_ptr<core::Repository> testFlowFileRepo_;
+  std::shared_ptr<minifi::Configure> configuration_;
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory_;
+  std::shared_ptr<core::ContentRepository> content_repo_;
+
+  core::YamlConfiguration yamlConfiguration_;
+};
+
+TEST_CASE("Connections are parsed from yaml.", "[YamlConfiguration]") {
+  YamlConfigurationTestAccessor yaml_config;
+  const std::shared_ptr<minifi::Connection> connection = yaml_config->createConnection("name", utils::generateUUID());
+  SECTION("Source relationships are read") {
+    std::string serialized_yaml;
+    std::vector<std::string> expectations;
+    SECTION("Single relationship name") {
+      serialized_yaml = std::string { "source relationship name: success\n" };
+      expectations = { "success" };
+    }
+    SECTION("List of relationship names") {
+      serialized_yaml = std::string {
+          "source relationship names:\n"
+          "- success\n"
+          "- failure\n"
+          "- something_else\n" };
+      expectations = { "success", "failure", "something_else" };
+    }
+    YAML::Node connection_node = YAML::Load(serialized_yaml);
+    yaml_config.configureConnectionSourceRelationshipFromYaml(connection_node, connection);
+    const std::set<core::Relationship>& relationships = connection->getRelationships();
+    REQUIRE(expectations.size() == relationships.size());
+    for (const auto& expected_relationship_name : expectations) {
+      const auto relationship_name_matches = [&] (const core::Relationship& relationship) { return expected_relationship_name == relationship.getName(); };
+      const std::size_t relationship_count = std::count_if(relationships.cbegin(), relationships.cend(), relationship_name_matches);
+      REQUIRE(1 == relationship_count);
+    }
+  }
+}
 
 TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   TestController test_controller;
@@ -35,105 +94,105 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
 
   SECTION("loading YAML without optional component IDs works") {
   static const std::string CONFIG_YAML_WITHOUT_IDS = ""
-  "MiNiFi Config Version: 1\n"
-  "Flow Controller:\n"
-  "    name: MiNiFi Flow\n"
-  "    comment:\n"
-  "\n"
-  "Core Properties:\n"
-  "    flow controller graceful shutdown period: 10 sec\n"
-  "    flow service write delay interval: 500 ms\n"
-  "    administrative yield duration: 30 sec\n"
-  "    bored yield duration: 10 millis\n"
-  "\n"
-  "FlowFile Repository:\n"
-  "    partitions: 256\n"
-  "    checkpoint interval: 2 mins\n"
-  "    always sync: false\n"
-  "    Swap:\n"
-  "        threshold: 20000\n"
-  "        in period: 5 sec\n"
-  "        in threads: 1\n"
-  "        out period: 5 sec\n"
-  "        out threads: 4\n"
-  "\n"
-  "Provenance Repository:\n"
-  "    provenance rollover time: 1 min\n"
-  "\n"
-  "Content Repository:\n"
-  "    content claim max appendable size: 10 MB\n"
-  "    content claim max flow files: 100\n"
-  "    always sync: false\n"
-  "\n"
-  "Component Status Repository:\n"
-  "    buffer size: 1440\n"
-  "    snapshot frequency: 1 min\n"
-  "\n"
-  "Security Properties:\n"
-  "    keystore: /tmp/ssl/localhost-ks.jks\n"
-  "    keystore type: JKS\n"
-  "    keystore password: localtest\n"
-  "    key password: localtest\n"
-  "    truststore: /tmp/ssl/localhost-ts.jks\n"
-  "    truststore type: JKS\n"
-  "    truststore password: localtest\n"
-  "    ssl protocol: TLS\n"
-  "    Sensitive Props:\n"
-  "        key:\n"
-  "        algorithm: PBEWITHMD5AND256BITAES-CBC-OPENSSL\n"
-  "        provider: BC\n"
-  "\n"
-  "Processors:\n"
-  "    - name: TailFile\n"
-  "      class: org.apache.nifi.processors.standard.TailFile\n"
-  "      max concurrent tasks: 1\n"
-  "      scheduling strategy: TIMER_DRIVEN\n"
-  "      scheduling period: 1 sec\n"
-  "      penalization period: 30 sec\n"
-  "      yield period: 1 sec\n"
-  "      run duration nanos: 0\n"
-  "      auto-terminated relationships list:\n"
-  "      Properties:\n"
-  "          File to Tail: logs/minifi-app.log\n"
-  "          Rolling Filename Pattern: minifi-app*\n"
-  "          Initial Start Position: Beginning of File\n"
-  "\n"
-  "Connections:\n"
-  "    - name: TailToS2S\n"
-  "      source name: TailFile\n"
-  "      source relationship name: success\n"
-  "      destination name: 8644cbcc-a45c-40e0-964d-5e536e2ada61\n"
-  "      max work queue size: 0\n"
-  "      max work queue data size: 1 MB\n"
-  "      flowfile expiration: 60 sec\n"
-  "      queue prioritizer class: org.apache.nifi.prioritizer.NewestFlowFileFirstPrioritizer\n"
-  "\n"
-  "Remote Processing Groups:\n"
-  "    - name: NiFi Flow\n"
-  "      comment:\n"
-  "      url: https://localhost:8090/nifi\n"
-  "      timeout: 30 secs\n"
-  "      yield period: 10 sec\n"
-  "      Input Ports:\n"
-  "          - id: 8644cbcc-a45c-40e0-964d-5e536e2ada61\n"
-  "            name: tailed log\n"
-  "            comments:\n"
-  "            max concurrent tasks: 1\n"
-  "            use compression: false\n"
-  "\n"
-  "Provenance Reporting:\n"
-  "    comment:\n"
-  "    scheduling strategy: TIMER_DRIVEN\n"
-  "    scheduling period: 30 sec\n"
-  "    host: localhost\n"
-  "    port name: provenance\n"
-  "    port: 8090\n"
-  "    port uuid: 2f389b8d-83f2-48d3-b465-048f28a1cb56\n"
-  "    url: https://localhost:8090/\n"
-  "    originating url: http://${hostname(true)}:8081/nifi\n"
-  "    use compression: true\n"
-  "    timeout: 30 secs\n"
-  "    batch size: 1000";
+      "MiNiFi Config Version: 1\n"
+      "Flow Controller:\n"
+      "    name: MiNiFi Flow\n"
+      "    comment:\n"
+      "\n"
+      "Core Properties:\n"
+      "    flow controller graceful shutdown period: 10 sec\n"
+      "    flow service write delay interval: 500 ms\n"
+      "    administrative yield duration: 30 sec\n"
+      "    bored yield duration: 10 millis\n"
+      "\n"
+      "FlowFile Repository:\n"
+      "    partitions: 256\n"
+      "    checkpoint interval: 2 mins\n"
+      "    always sync: false\n"
+      "    Swap:\n"
+      "        threshold: 20000\n"
+      "        in period: 5 sec\n"
+      "        in threads: 1\n"
+      "        out period: 5 sec\n"
+      "        out threads: 4\n"
+      "\n"
+      "Provenance Repository:\n"
+      "    provenance rollover time: 1 min\n"
+      "\n"
+      "Content Repository:\n"
+      "    content claim max appendable size: 10 MB\n"
+      "    content claim max flow files: 100\n"
+      "    always sync: false\n"
+      "\n"
+      "Component Status Repository:\n"
+      "    buffer size: 1440\n"
+      "    snapshot frequency: 1 min\n"
+      "\n"
+      "Security Properties:\n"
+      "    keystore: /tmp/ssl/localhost-ks.jks\n"
+      "    keystore type: JKS\n"
+      "    keystore password: localtest\n"
+      "    key password: localtest\n"
+      "    truststore: /tmp/ssl/localhost-ts.jks\n"
+      "    truststore type: JKS\n"
+      "    truststore password: localtest\n"
+      "    ssl protocol: TLS\n"
+      "    Sensitive Props:\n"
+      "        key:\n"
+      "        algorithm: PBEWITHMD5AND256BITAES-CBC-OPENSSL\n"
+      "        provider: BC\n"
+      "\n"
+      "Processors:\n"
+      "    - name: TailFile\n"
+      "      class: org.apache.nifi.processors.standard.TailFile\n"
+      "      max concurrent tasks: 1\n"
+      "      scheduling strategy: TIMER_DRIVEN\n"
+      "      scheduling period: 1 sec\n"
+      "      penalization period: 30 sec\n"
+      "      yield period: 1 sec\n"
+      "      run duration nanos: 0\n"
+      "      auto-terminated relationships list:\n"
+      "      Properties:\n"
+      "          File to Tail: logs/minifi-app.log\n"
+      "          Rolling Filename Pattern: minifi-app*\n"
+      "          Initial Start Position: Beginning of File\n"
+      "\n"
+      "Connections:\n"
+      "    - name: TailToS2S\n"
+      "      source name: TailFile\n"
+      "      source relationship name: success\n"
+      "      destination name: 8644cbcc-a45c-40e0-964d-5e536e2ada61\n"
+      "      max work queue size: 0\n"
+      "      max work queue data size: 1 MB\n"
+      "      flowfile expiration: 60 sec\n"
+      "      queue prioritizer class: org.apache.nifi.prioritizer.NewestFlowFileFirstPrioritizer\n"
+      "\n"
+      "Remote Processing Groups:\n"
+      "    - name: NiFi Flow\n"
+      "      comment:\n"
+      "      url: https://localhost:8090/nifi\n"
+      "      timeout: 30 secs\n"
+      "      yield period: 10 sec\n"
+      "      Input Ports:\n"
+      "          - id: 8644cbcc-a45c-40e0-964d-5e536e2ada61\n"
+      "            name: tailed log\n"
+      "            comments:\n"
+      "            max concurrent tasks: 1\n"
+      "            use compression: false\n"
+      "\n"
+      "Provenance Reporting:\n"
+      "    comment:\n"
+      "    scheduling strategy: TIMER_DRIVEN\n"
+      "    scheduling period: 30 sec\n"
+      "    host: localhost\n"
+      "    port name: provenance\n"
+      "    port: 8090\n"
+      "    port uuid: 2f389b8d-83f2-48d3-b465-048f28a1cb56\n"
+      "    url: https://localhost:8090/\n"
+      "    originating url: http://${hostname(true)}:8081/nifi\n"
+      "    use compression: true\n"
+      "    timeout: 30 secs\n"
+      "    batch size: 1000";
 
   std::istringstream configYamlStream(CONFIG_YAML_WITHOUT_IDS);
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
