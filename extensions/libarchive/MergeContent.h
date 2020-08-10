@@ -43,6 +43,8 @@ namespace processors {
 #define MERGE_FORMAT_AVRO_VALUE "Avro"
 #define DELIMITER_STRATEGY_FILENAME "Filename"
 #define DELIMITER_STRATEGY_TEXT "Text"
+#define ATTRIBUTE_STRATEGY_KEEP_COMMON "Keep Only Common Attributes"
+#define ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE "Keep All Unique Attributes"
 
 // MergeBin Class
 class MergeBin {
@@ -259,6 +261,42 @@ public:
   }
 };
 
+class AttributeMerger {
+public:
+  AttributeMerger(core::ProcessSession *session, std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows, std::shared_ptr<core::FlowFile> &mergeFlow)
+    : session_(session)
+    , flows_(flows)
+    , mergeFlow_(mergeFlow) {}
+  void mergeAttributes();
+  virtual ~AttributeMerger() = default;
+protected:
+  std::map<std::string, std::string> getCommonAttributes();
+  virtual void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& commonAttributes) = 0;
+
+  std::deque<std::shared_ptr<core::FlowFile>> &flows_;
+  core::ProcessSession *session_;
+  std::shared_ptr<core::FlowFile> &mergeFlow_;
+};
+
+class KeepOnlyCommonAttributesMerger: public AttributeMerger {
+public:
+  KeepOnlyCommonAttributesMerger(core::ProcessSession *session, std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows, std::shared_ptr<core::FlowFile> &mergeFlow)
+    : AttributeMerger(session, flows, mergeFlow) {}
+protected:
+  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& commonAttributes) override;
+};
+
+class KeepAllUniqueAttributesMerger: public AttributeMerger {
+public:
+  KeepAllUniqueAttributesMerger(core::ProcessSession *session, std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows, std::shared_ptr<core::FlowFile> &mergeFlow)
+    : AttributeMerger(session, flows, mergeFlow) {}
+protected:
+  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& commonAttributes) override;
+
+private:
+  std::vector<std::string> removed_attributes_;
+};
+
 // MergeContent Class
 class MergeContent : public processors::BinFiles {
  public:
@@ -273,6 +311,7 @@ class MergeContent : public processors::BinFiles {
     mergeFormat_ = MERGE_FORMAT_CONCAT_VALUE;
     delimiterStratgey_ = DELIMITER_STRATEGY_FILENAME;
     keepPath_ = false;
+    attributeStrategy_ = ATTRIBUTE_STRATEGY_KEEP_COMMON;
   }
   // Destructor
   virtual ~MergeContent() = default;
@@ -287,6 +326,7 @@ class MergeContent : public processors::BinFiles {
   static core::Property Header;
   static core::Property Footer;
   static core::Property Demarcator;
+  static core::Property AttributeStrategy;
 
   // Supported Relationships
   static core::Relationship Merge;
@@ -324,6 +364,7 @@ class MergeContent : public processors::BinFiles {
   std::string headerContent_;
   std::string footerContent_;
   std::string demarcatorContent_;
+  std::string attributeStrategy_;
   // readContent
   std::string readContent(std::string path);
 };
