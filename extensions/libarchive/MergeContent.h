@@ -32,17 +32,23 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-#define MERGE_STRATEGY_BIN_PACK "Bin-Packing Algorithm"
-#define MERGE_STRATEGY_DEFRAGMENT "Defragment"
-#define MERGE_FORMAT_TAR_VALUE "TAR"
-#define MERGE_FORMAT_ZIP_VALUE "ZIP"
-#define MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE "FlowFile Stream, v3"
-#define MERGE_FORMAT_FLOWFILE_STREAM_V2_VALUE  "FlowFile Stream, v2"
-#define MERGE_FORMAT_FLOWFILE_TAR_V1_VALUE  "FlowFile Tar, v1"
-#define MERGE_FORMAT_CONCAT_VALUE "Binary Concatenation"
-#define MERGE_FORMAT_AVRO_VALUE "Avro"
-#define DELIMITER_STRATEGY_FILENAME "Filename"
-#define DELIMITER_STRATEGY_TEXT "Text"
+namespace merge_content_options {
+
+constexpr const char *MERGE_STRATEGY_BIN_PACK = "Bin-Packing Algorithm";
+constexpr const char *MERGE_STRATEGY_DEFRAGMENT = "Defragment";
+constexpr const char *MERGE_FORMAT_TAR_VALUE = "TAR";
+constexpr const char *MERGE_FORMAT_ZIP_VALUE = "ZIP";
+constexpr const char *MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE = "FlowFile Stream, v3";
+constexpr const char *MERGE_FORMAT_FLOWFILE_STREAM_V2_VALUE = "FlowFile Stream, v2";
+constexpr const char *MERGE_FORMAT_FLOWFILE_TAR_V1_VALUE = "FlowFile Tar, v1";
+constexpr const char *MERGE_FORMAT_CONCAT_VALUE = "Binary Concatenation";
+constexpr const char *MERGE_FORMAT_AVRO_VALUE = "Avro";
+constexpr const char *DELIMITER_STRATEGY_FILENAME = "Filename";
+constexpr const char *DELIMITER_STRATEGY_TEXT = "Text";
+constexpr const char *ATTRIBUTE_STRATEGY_KEEP_COMMON = "Keep Only Common Attributes";
+constexpr const char *ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attributes";
+
+} /* namespace merge_content_options */
 
 // MergeBin Class
 class MergeBin {
@@ -195,15 +201,15 @@ public:
       struct archive *arch;
 
       arch = archive_write_new();
-      if (merge_type_ == MERGE_FORMAT_TAR_VALUE) {
+      if (merge_type_ == merge_content_options::MERGE_FORMAT_TAR_VALUE) {
         archive_write_set_format_pax_restricted(arch); // tar format
       }
-      if (merge_type_ == MERGE_FORMAT_ZIP_VALUE) {
+      if (merge_type_ == merge_content_options::MERGE_FORMAT_ZIP_VALUE) {
         archive_write_set_format_zip(arch); // zip format
       }
       archive_write_set_bytes_per_block(arch, 0);
       archive_write_add_filter_none(arch);
-      this->stream_ = stream;
+      stream_ = stream;
       archive_write_open(arch, this, NULL, archive_write, NULL);
 
       for (auto flow : flows_) {
@@ -213,7 +219,7 @@ public:
         archive_entry_set_pathname(entry, fileName.c_str());
         archive_entry_set_size(entry, flow->getSize());
         archive_entry_set_mode(entry, S_IFREG | 0755);
-        if (merge_type_ == MERGE_FORMAT_TAR_VALUE) {
+        if (merge_type_ == merge_content_options::MERGE_FORMAT_TAR_VALUE) {
           std::string perm;
           int permInt;
           if (flow->getAttribute(BinFiles::TAR_PERMISSIONS_ATTRIBUTE, perm)) {
@@ -259,9 +265,41 @@ public:
   }
 };
 
+class AttributeMerger {
+public:
+  explicit AttributeMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
+    : flows_(flows) {}
+  void mergeAttributes(core::ProcessSession *session, std::shared_ptr<core::FlowFile> &merge_flow);
+  virtual ~AttributeMerger() = default;
+protected:
+  std::map<std::string, std::string> getMergedAttributes();
+  virtual void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) = 0;
+
+  const std::deque<std::shared_ptr<core::FlowFile>> &flows_;
+};
+
+class KeepOnlyCommonAttributesMerger: public AttributeMerger {
+public:
+  explicit KeepOnlyCommonAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
+    : AttributeMerger(flows) {}
+protected:
+  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) override;
+};
+
+class KeepAllUniqueAttributesMerger: public AttributeMerger {
+public:
+  explicit KeepAllUniqueAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
+    : AttributeMerger(flows) {}
+protected:
+  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) override;
+
+private:
+  std::vector<std::string> removed_attributes_;
+};
+
 // MergeContent Class
 class MergeContent : public processors::BinFiles {
- public:
+public:
   // Constructor
   /*!
    * Create a new processor
@@ -269,10 +307,11 @@ class MergeContent : public processors::BinFiles {
   explicit MergeContent(std::string name, utils::Identifier uuid = utils::Identifier())
       : processors::BinFiles(name, uuid),
         logger_(logging::LoggerFactory<MergeContent>::getLogger()) {
-    mergeStratgey_ = MERGE_STRATEGY_DEFRAGMENT;
-    mergeFormat_ = MERGE_FORMAT_CONCAT_VALUE;
-    delimiterStratgey_ = DELIMITER_STRATEGY_FILENAME;
+    mergeStrategy_ = merge_content_options::MERGE_STRATEGY_DEFRAGMENT;
+    mergeFormat_ = merge_content_options::MERGE_FORMAT_CONCAT_VALUE;
+    delimiterStrategy_ = merge_content_options::DELIMITER_STRATEGY_FILENAME;
     keepPath_ = false;
+    attributeStrategy_ = merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON;
   }
   // Destructor
   virtual ~MergeContent() = default;
@@ -287,6 +326,7 @@ class MergeContent : public processors::BinFiles {
   static core::Property Header;
   static core::Property Footer;
   static core::Property Demarcator;
+  static core::Property AttributeStrategy;
 
   // Supported Relationships
   static core::Relationship Merge;
@@ -313,17 +353,18 @@ class MergeContent : public processors::BinFiles {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
-  std::string mergeStratgey_;
+  std::string mergeStrategy_;
   std::string mergeFormat_;
   std::string correlationAttributeName_;
   bool keepPath_;
-  std::string delimiterStratgey_;
+  std::string delimiterStrategy_;
   std::string header_;
   std::string footer_;
   std::string demarcator_;
   std::string headerContent_;
   std::string footerContent_;
   std::string demarcatorContent_;
+  std::string attributeStrategy_;
   // readContent
   std::string readContent(std::string path);
 };
