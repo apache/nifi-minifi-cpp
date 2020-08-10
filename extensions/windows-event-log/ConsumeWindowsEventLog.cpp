@@ -624,6 +624,24 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     const std::string& str_;
   };
 
+  DYNAMIC_TIME_ZONE_INFORMATION tzinfo;
+  auto ret = GetDynamicTimeZoneInformation(&tzinfo);
+  std::wstring tzstr;
+  std::string tzbias;
+  bool dst = false;
+  switch (ret) {
+  case TIME_ZONE_ID_UNKNOWN:
+    logger_->log_error("Failed to get timezone information!");
+    break;
+  case TIME_ZONE_ID_DAYLIGHT:
+    tzstr = std::wstring(tzinfo.DaylightName, 32);
+    dst = true;
+  case TIME_ZONE_ID_STANDARD:
+    tzstr = tzstr.empty() ? std::wstring(tzinfo.StandardName, 32) : tzstr;  // Use standard timezome name in case there is no daylight name or in case it's not DST
+    tzbias = std::to_string(tzinfo.Bias + (dst ? tzinfo.DaylightBias : 0));
+    break;
+  }
+
   if (writeXML_) {
     auto flowFile = session.create();
     logger_->log_trace("Writing rendered XML to a flow file");
@@ -635,6 +653,8 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
       }
     }
     session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "application/xml");
+    session.putAttribute(flowFile, "Timezone name", wel::to_string(tzstr.c_str()));
+    session.putAttribute(flowFile, "Timezone bias", tzbias);
     session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session.transfer(flowFile, Success);
   }
@@ -645,6 +665,8 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
 
     session.write(flowFile, &WriteCallback(eventRender.rendered_text_));
     session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
+    session.putAttribute(flowFile, "Timezone name", wel::to_string(tzstr.c_str()));
+    session.putAttribute(flowFile, "Timezone bias", tzbias);
     session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session.transfer(flowFile, Success);
   }
