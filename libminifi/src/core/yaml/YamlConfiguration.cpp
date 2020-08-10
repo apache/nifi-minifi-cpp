@@ -522,6 +522,27 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
   }
 }
 
+void YamlConfiguration::configureConnectionSourceRelationshipFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
+  auto addNewRelationshipToConnection = [&] (const std::string& relationship_name) {
+    core::Relationship relationship(relationship_name, "");
+    logger_->log_debug("parseConnection: relationship => [%s]", relationship_name);
+    connection->addRelationship(std::move(relationship));
+  };
+  // Configure connection source
+  if (connectionNode.as<YAML::Node>()["source relationship name"]) {
+    addNewRelationshipToConnection(connectionNode["source relationship name"].as<std::string>());
+  } else if (connectionNode.as<YAML::Node>()["source relationship names"]) {
+    auto relList = connectionNode["source relationship names"];
+      if (relList.IsSequence()) {
+        for (const auto &rel : relList) {
+          addNewRelationshipToConnection(rel.as<std::string>());
+        }
+      } else {
+        addNewRelationshipToConnection(relList.as<std::string>());
+      }
+  }
+}
+
 void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::ProcessGroup *parent) {
   if (!parent) {
     logger_->log_error("parseProcessNode: no parent group was provided");
@@ -550,24 +571,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
     }
     logger_->log_debug("Created connection with UUID %s and name %s", id, name);
 
-    auto addNewRelationshipToConnection = [&] (const std::string& relationship_name) {
-      core::Relationship relationship(relationship_name, "");
-      logger_->log_debug("parseConnection: relationship => [%s]", relationship_name);
-      connection->addRelationship(std::move(relationship));
-    };
-    // Configure connection source
-    if (connectionNode.as<YAML::Node>()["source relationship name"]) {
-      addNewRelationshipToConnection(connectionNode["source relationship name"].as<std::string>());
-    } else if (connectionNode.as<YAML::Node>()["source relationship names"]) {
-      auto relList = connectionNode["source relationship names"];
-        if (relList.IsSequence()) {
-          for (const auto &rel : relList) {
-            addNewRelationshipToConnection(rel.as<std::string>());
-          }
-        } else {
-          addNewRelationshipToConnection(relList.as<std::string>());
-        }
-    }
+    configureConnectionSourceRelationshipFromYaml(connectionNode, connection);
 
     if (connectionNode["max work queue size"]) {
       auto max_work_queue_str = connectionNode["max work queue size"].as<std::string>();

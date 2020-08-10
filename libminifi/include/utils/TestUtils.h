@@ -19,10 +19,12 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 #include "../../test/TestBase.h"
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
+#include "utils/Id.h"
 
 namespace org {
 namespace apache {
@@ -58,6 +60,12 @@ std::string getFileContent(const std::string& file_name) {
   REQUIRE(file_handle.is_open());
   const std::string file_content{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>()) };
   return file_content;
+}
+
+Identifier generateUUID() {
+  // TODO(hunyadi): Will make the Id generator manage lifetime using a unique_ptr and return a raw ptr on access
+  static std::shared_ptr<utils::IdGenerator> id_generator = utils::IdGenerator::getIdGenerator();
+  return id_generator->generate();
 }
 
 }  // namespace utils
