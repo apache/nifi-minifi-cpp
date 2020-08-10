@@ -42,6 +42,11 @@ class YamlConfigurationTestAccessor {
     yamlConfiguration_.configureConnectionSourceRelationshipFromYaml(connectionNode, connection);
   }
 
+  void configureConnectionWorkQueueSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
+    yamlConfiguration_.configureConnectionWorkQueueSizeFromYaml(connectionNode, connection);
+  }
+
+
  private:
   std::shared_ptr<core::Repository> testProvRepo_;
   std::shared_ptr<core::Repository> testFlowFileRepo_;
@@ -52,7 +57,7 @@ class YamlConfigurationTestAccessor {
   core::YamlConfiguration yamlConfiguration_;
 };
 
-TEST_CASE("Connections are parsed from yaml.", "[YamlConfiguration]") {
+TEST_CASE("Connections components are parsed from yaml.", "[YamlConfiguration]") {
   YamlConfigurationTestAccessor yaml_config;
   const std::shared_ptr<minifi::Connection> connection = yaml_config->createConnection("name", utils::generateUUID());
   SECTION("Source relationships are read") {
@@ -79,6 +84,13 @@ TEST_CASE("Connections are parsed from yaml.", "[YamlConfiguration]") {
       const std::size_t relationship_count = std::count_if(relationships.cbegin(), relationships.cend(), relationship_name_matches);
       REQUIRE(1 == relationship_count);
     }
+  }
+  SECTION("Queue size limits are read") {
+    YAML::Node connection_node = YAML::Load(std::string {
+        "max work queue size: 231\n"
+        "max work queue data size: 1 MB\n" });
+    yaml_config.configureConnectionWorkQueueSizeFromYaml(connection_node, connection);
+    REQUIRE(231 == connection->getMaxQueueSize());
   }
 }
 

@@ -543,6 +543,17 @@ void YamlConfiguration::configureConnectionSourceRelationshipFromYaml(const YAML
   }
 }
 
+void YamlConfiguration::configureConnectionWorkQueueSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
+  if (connectionNode["max work queue size"]) {
+      auto max_work_queue_str = connectionNode["max work queue size"].as<std::string>();
+      uint64_t max_work_queue_size = 0;
+      if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
+        connection->setMaxQueueSize(max_work_queue_size);
+      }
+      logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_size << " as the max queue size.";
+    }
+}
+
 void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::ProcessGroup *parent) {
   if (!parent) {
     logger_->log_error("parseProcessNode: no parent group was provided");
@@ -572,15 +583,8 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
     logger_->log_debug("Created connection with UUID %s and name %s", id, name);
 
     configureConnectionSourceRelationshipFromYaml(connectionNode, connection);
+    configureConnectionWorkQueueSizeFromYaml(connectionNode, connection);
 
-    if (connectionNode["max work queue size"]) {
-      auto max_work_queue_str = connectionNode["max work queue size"].as<std::string>();
-      uint64_t max_work_queue_size = 0;
-      if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
-        connection->setMaxQueueSize(max_work_queue_size);
-      }
-      logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_size << " as the max queue size for " << name;
-    }
     if (connectionNode["max work queue data size"]) {
       auto max_work_queue_str = connectionNode["max work queue data size"].as<std::string>();
       uint64_t max_work_queue_data_size = 0;

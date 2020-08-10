@@ -242,7 +242,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
 
   /**
    * Set the size of this record.
-   * @param size size of record to set.Ï
+   * @param size size of record to set.
    */
   void setSize(const uint64_t size) {
     size_ = size;
