@@ -46,6 +46,9 @@ class YamlConfigurationTestAccessor {
     yamlConfiguration_.configureConnectionWorkQueueSizeFromYaml(connectionNode, connection);
   }
 
+  void configureConnectionWorkQueueDataSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
+    yamlConfiguration_.configureConnectionWorkQueueDataSizeFromYaml(connectionNode, connection);
+  }
 
  private:
   std::shared_ptr<core::Repository> testProvRepo_;
@@ -88,9 +91,11 @@ TEST_CASE("Connections components are parsed from yaml.", "[YamlConfiguration]")
   SECTION("Queue size limits are read") {
     YAML::Node connection_node = YAML::Load(std::string {
         "max work queue size: 231\n"
-        "max work queue data size: 1 MB\n" });
+        "max work queue data size: 12 MB\n" });
     yaml_config.configureConnectionWorkQueueSizeFromYaml(connection_node, connection);
+    yaml_config.configureConnectionWorkQueueDataSizeFromYaml(connection_node, connection);
     REQUIRE(231 == connection->getMaxQueueSize());
+    REQUIRE(12582912 == connection->getMaxQueueDataSize());  // 12 * 1024 * 1024 B
   }
 }
 

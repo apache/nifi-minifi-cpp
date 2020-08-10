@@ -230,6 +230,7 @@ class YamlConfiguration : public FlowConfiguration {
 
   void configureConnectionSourceRelationshipFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
   void configureConnectionWorkQueueSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
+  void configureConnectionWorkQueueDataSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
 
   /**
    * Parses the Connections section of a configuration YAML.
