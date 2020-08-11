@@ -37,14 +37,16 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class KafkaConnectionKey {
- public:
-    std::string client_id_;
-    std::string brokers_;
+struct KafkaConnectionKey {
+  std::string client_id_;
+  std::string brokers_;
 
-    bool operator <(const KafkaConnectionKey& rhs) const {
-      return std::tie(brokers_, client_id_) < std::tie(rhs.brokers_, rhs.client_id_);
-    }
+  bool operator< (const KafkaConnectionKey& rhs) const { return std::tie(brokers_, client_id_) <  std::tie(rhs.brokers_, rhs.client_id_); }
+  bool operator<=(const KafkaConnectionKey& rhs) const { return std::tie(brokers_, client_id_) <= std::tie(rhs.brokers_, rhs.client_id_); }
+  bool operator==(const KafkaConnectionKey& rhs) const { return std::tie(brokers_, client_id_) == std::tie(rhs.brokers_, rhs.client_id_); }
+  bool operator!=(const KafkaConnectionKey& rhs) const { return std::tie(brokers_, client_id_) != std::tie(rhs.brokers_, rhs.client_id_); }
+  bool operator> (const KafkaConnectionKey& rhs) const { return std::tie(brokers_, client_id_) >  std::tie(rhs.brokers_, rhs.client_id_); }
+  bool operator>=(const KafkaConnectionKey& rhs) const { return std::tie(brokers_, client_id_) >= std::tie(rhs.brokers_, rhs.client_id_); }
 };
 
 class KafkaConnection {
@@ -70,7 +72,7 @@ class KafkaConnection {
 
   std::shared_ptr<KafkaTopic> getTopic(const std::string &topic) const;
 
-  KafkaConnectionKey const * const getKey() const;
+  KafkaConnectionKey const* getKey() const;
 
   void putTopic(const std::string &topicName, const std::shared_ptr<KafkaTopic> &topic);
 

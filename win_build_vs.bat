@@ -64,6 +64,9 @@ for %%x in (%*) do (
     if [%%~x] EQU [/D] (
         set cmake_build_type=RelWithDebInfo
     )
+    if [%%~x] EQU [/DD] (
+        set cmake_build_type=Debug
+    )
     if [%%~x] EQU [/CI] (
         set "strict_gsl_checks=-DSTRICT_GSL_CHECKS=AUDIT"
     )
