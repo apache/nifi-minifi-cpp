@@ -461,8 +461,8 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
   /* mtime */
   session->putAttribute(flow_file, ATTRIBUTE_FILE_LASTMODIFIEDTIME, mtime_str);
 
-  flow_file->updateAttribute(core::SpecialFlowAttribute::FILENAME, child.filename);
-  flow_file->updateAttribute(core::SpecialFlowAttribute::PATH, child.parent_path);
+  flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, child.filename);
+  flow_file->setAttribute(core::SpecialFlowAttribute::PATH, child.parent_path);
 
   session->transfer(flow_file, Success);
 

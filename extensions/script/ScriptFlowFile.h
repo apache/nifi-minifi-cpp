@@ -31,6 +31,7 @@ class ScriptFlowFile {
  public:
   explicit ScriptFlowFile(std::shared_ptr<core::FlowFile> flow_file);
   std::string getAttribute(const std::string &key);
+  bool setAttribute(const std::string &key, const std::string &value);
   bool addAttribute(const std::string &key, const std::string &value);
   bool updateAttribute(std::string key, std::string value);
   bool removeAttribute(std::string key);

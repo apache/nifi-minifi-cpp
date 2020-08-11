@@ -55,7 +55,8 @@ LuaScriptEngine::LuaScriptEngine()
       "getAttribute", &script::ScriptFlowFile::getAttribute,
       "addAttribute", &script::ScriptFlowFile::addAttribute,
       "removeAttribute", &script::ScriptFlowFile::removeAttribute,
-      "updateAttribute", &script::ScriptFlowFile::updateAttribute);
+      "updateAttribute", &script::ScriptFlowFile::updateAttribute,
+      "setAttribute", &script::ScriptFlowFile::setAttribute);
   lua_.new_usertype<lua::LuaBaseStream>(
       "BaseStream",
       "read", &lua::LuaBaseStream::read,

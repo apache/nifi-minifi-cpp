@@ -321,14 +321,8 @@ void BinFiles::addFlowsToSession(core::ProcessContext *context, core::ProcessSes
   }
 }
 
-void BinFiles::put(const std::shared_ptr<core::FlowFile>& flowFile) {
+void BinFiles::restore(const std::shared_ptr<core::FlowFile>& flowFile) {
   if (!flowFile) return;
-  if (flowFile->getOriginalConnection()) {
-    // onTrigger assumed ownership over a FlowFile
-    // don't have to do anything
-    return;
-  }
-  // no original connection i.e. we are during restore
   file_store_.put(flowFile);
 }
 

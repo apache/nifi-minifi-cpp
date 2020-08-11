@@ -52,6 +52,14 @@ bool ScriptFlowFile::addAttribute(const std::string &key, const std::string &val
   return flow_file_->addAttribute(key, value);
 }
 
+bool ScriptFlowFile::setAttribute(const std::string &key, const std::string &value) {
+  if (!flow_file_) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
+  return flow_file_->setAttribute(key, value);
+}
+
 bool ScriptFlowFile::updateAttribute(std::string key, std::string value) {
   if (!flow_file_) {
     throw std::runtime_error("Access of FlowFile after it has been released");

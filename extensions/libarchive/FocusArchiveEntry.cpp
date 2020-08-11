@@ -46,13 +46,6 @@ std::shared_ptr<utils::IdGenerator> FocusArchiveEntry::id_generator_ = utils::Id
 core::Property FocusArchiveEntry::Path("Path", "The path within the archive to focus (\"/\" to focus the total archive)", "");
 core::Relationship FocusArchiveEntry::Success("success", "success operational on the flow record");
 
-bool FocusArchiveEntry::set_or_update_attr(std::shared_ptr<core::FlowFile> flowFile, const std::string& key, const std::string& value) const {
-  if (flowFile->updateAttribute(key, value))
-    return true;
-  else
-    return flowFile->addAttribute(key, value);
-}
-
 void FocusArchiveEntry::initialize() {
   //! Set the supported properties
   std::set<core::Property> properties;
@@ -131,9 +124,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 
     std::string stackStr = archiveStack.toJsonString();
   
-    if (!flowFile->updateAttribute("lens.archive.stack", stackStr)) {
-      flowFile->addAttribute("lens.archive.stack", stackStr);
-    }
+    flowFile->setAttribute("lens.archive.stack", stackStr);
 
   }
 
@@ -141,9 +132,9 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
   std::size_t found = archiveMetadata.focusedEntry.find_last_of("/\\");
   std::string path = archiveMetadata.focusedEntry.substr(0, found);
   std::string name = archiveMetadata.focusedEntry.substr(found + 1);
-  set_or_update_attr(flowFile, "filename", name);
-  set_or_update_attr(flowFile, "path", path);
-  set_or_update_attr(flowFile, "absolute.path", archiveMetadata.focusedEntry);
+  flowFile->setAttribute("filename", name);
+  flowFile->setAttribute("path", path);
+  flowFile->setAttribute("absolute.path", archiveMetadata.focusedEntry);
 
   // Transfer to the relationship
   session->transfer(flowFile, Success);

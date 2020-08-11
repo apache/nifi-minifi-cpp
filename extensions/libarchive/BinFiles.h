@@ -263,7 +263,7 @@ class BinFiles : public core::Processor {
   // Initialize, over write by NiFi BinFiles
   void initialize(void) override;
 
-  void put(const std::shared_ptr<core::FlowFile>& flowFile) override;
+  void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
 
   std::set<std::shared_ptr<core::Connectable>> getOutGoingConnections(const std::string &relationship) const override;
 

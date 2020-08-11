@@ -84,6 +84,10 @@ class Connectable : public CoreComponent {
   virtual void put(const std::shared_ptr<FlowFile>& flow) {
   }
 
+  virtual void restore(const std::shared_ptr<FlowFile>& file) {
+    put(file);
+  }
+
   /**
    * Gets and sets next incoming connection
    * @return next incoming connection

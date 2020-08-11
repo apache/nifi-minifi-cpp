@@ -69,6 +69,8 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   ~FlowFile() override;
   FlowFile& operator=(const FlowFile& other);
 
+  using AttributeMap = utils::FlatMap<std::string, std::string>;
+
   /**
    * Returns a pointer to this flow file record's
    * claim
@@ -178,8 +180,8 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   /**
    * setAttribute, if attribute already there, update it, else, add it
    */
-  void setAttribute(const std::string& key, const std::string& value) {
-    attributes_[key] = value;
+  bool setAttribute(const std::string& key, const std::string& value) {
+    return attributes_.insert_or_assign(key, value).second;
   }
 
   /**
@@ -194,8 +196,8 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Returns the map of attributes
    * @return attributes.
    */
-  std::map<std::string, std::string> *getAttributesPtr() {
-    return nullptr;
+  AttributeMap *getAttributesPtr() {
+    return &attributes_;
   }
 
   /**
@@ -304,7 +306,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   // Penalty expiration
   uint64_t penaltyExpiration_ms_;
   // Attributes key/values pairs for the flow record
-  utils::FlatMap<std::string, std::string> attributes_;
+  AttributeMap attributes_;
   // Pointer to the associated content resource claim
   std::shared_ptr<ResourceClaim> claim_;
   // Pointers to stashed content resource claims

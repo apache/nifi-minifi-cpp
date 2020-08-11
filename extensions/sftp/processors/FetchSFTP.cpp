@@ -242,9 +242,9 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, common_properties.hostname);
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(common_properties.port));
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_FILENAME, remote_file);
-  flow_file->updateAttribute(core::SpecialFlowAttribute::FILENAME, child_path);
+  flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, child_path);
   if (!parent_path.empty()) {
-    flow_file->updateAttribute(core::SpecialFlowAttribute::PATH, parent_path);
+    flow_file->setAttribute(core::SpecialFlowAttribute::PATH, parent_path);
   }
 
   /* Execute completion strategy */

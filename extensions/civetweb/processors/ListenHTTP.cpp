@@ -262,13 +262,9 @@ void ListenHTTP::Handler::set_header_attributes(const mg_request_info *req_info,
     auto header = &req_info->http_headers[i];
 
     if (strcmp("filename", header->name) == 0) {
-      if (!flow_file->updateAttribute("filename", header->value)) {
-        flow_file->addAttribute("filename", header->value);
-      }
+      flow_file->setAttribute("filename", header->value);
     } else if (std::regex_match(header->name, headers_as_attrs_regex_)) {
-      if (!flow_file->updateAttribute(header->name, header->value)) {
-        flow_file->addAttribute(header->name, header->value);
-      }
+      flow_file->setAttribute(header->name, header->value);
     }
   }
 

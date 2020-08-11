@@ -52,7 +52,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& k
   auto record = DeSerialize(stream, content_repo, container);
 
   if (record) {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size " "%" PRIu64 " connection %s success", record->getUUIDStr(), stream.size(), record->original_connection_->getUUIDStr());
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size " "%" PRIu64 " connection %s success", record->getUUIDStr(), stream.size(), container.to_string());
   } else {
     logger_->log_debug("Couldn't deserialize FlowFile %s from the stream of size " "%" PRIu64, key, stream.size());
   }

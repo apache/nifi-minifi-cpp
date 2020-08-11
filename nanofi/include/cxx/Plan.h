@@ -53,8 +53,8 @@ using failure_callback_type = std::function<void(flow_file_record*)>;
 using content_repo_sptr = std::shared_ptr<core::ContentRepository>;
 
 struct flowfile_input_params {
-  std::shared_ptr<minifi::io::BaseStream> content_stream;
-  std::map<std::string, std::string> attributes;
+  std::shared_ptr<minifi::io::BufferStream> content_stream;
+  org::apache::nifi::minifi::core::FlowFile::AttributeMap attributes;
 };
 
 namespace {

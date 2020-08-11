@@ -68,7 +68,8 @@ PYBIND11_EMBEDDED_MODULE(minifi_native, m) { // NOLINT
       .def("getAttribute", &script::ScriptFlowFile::getAttribute)
       .def("addAttribute", &script::ScriptFlowFile::addAttribute)
       .def("updateAttribute", &script::ScriptFlowFile::updateAttribute)
-      .def("removeAttribute", &script::ScriptFlowFile::removeAttribute);
+      .def("removeAttribute", &script::ScriptFlowFile::removeAttribute)
+      .def("setAttribute", &script::ScriptFlowFile::setAttribute);
 
   py::class_<core::Relationship>(m, "Relationship")
       .def("getName", &core::Relationship::getName)

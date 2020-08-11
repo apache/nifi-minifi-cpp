@@ -61,8 +61,6 @@ class FocusArchiveEntry : public core::Processor {
   //! Supported Relationships
   static core::Relationship Success;
 
-  bool set_or_update_attr(std::shared_ptr<core::FlowFile>, const std::string&, const std::string&) const;
-
   //! OnTrigger method, implemented by NiFi FocusArchiveEntry
   virtual void onTrigger(core::ProcessContext *context,
       core::ProcessSession *session);

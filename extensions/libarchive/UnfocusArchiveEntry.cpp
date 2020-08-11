@@ -40,13 +40,6 @@ namespace processors {
 
 core::Relationship UnfocusArchiveEntry::Success("success", "success operational on the flow record");
 
-bool UnfocusArchiveEntry::set_or_update_attr(std::shared_ptr<core::FlowFile> flowFile, const std::string& key, const std::string& value) const {
-  if (flowFile->updateAttribute(key, value))
-    return true;
-  else
-    return flowFile->addAttribute(key, value);
-}
-
 void UnfocusArchiveEntry::initialize() {
   //! Set the supported properties
   std::set<core::Property> properties;
@@ -96,10 +89,7 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
 
     {
       std::string stackStr = archiveStack.toJsonString();
-    
-      if (!flowFile->updateAttribute("lens.archive.stack", stackStr)) {
-        flowFile->addAttribute("lens.archive.stack", stackStr);
-      }
+      flowFile->setAttribute("lens.archive.stack", stackStr);
     }
   }
 
@@ -140,9 +130,9 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
     std::size_t found = abs_path.find_last_of("/\\");
     std::string path = abs_path.substr(0, found);
     std::string name = abs_path.substr(found + 1);
-    set_or_update_attr(flowFile, "filename", name);
-    set_or_update_attr(flowFile, "path", path);
-    set_or_update_attr(flowFile, "absolute.path", abs_path);
+    flowFile->setAttribute("filename", name);
+    flowFile->setAttribute("path", path);
+    flowFile->setAttribute("absolute.path", abs_path);
   }
 
   // Create archive by restoring each entry in the archive from tmp files

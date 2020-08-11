@@ -745,9 +745,9 @@ void TailFile::updateFlowFileAttributes(const std::string &full_file_name, const
   logger_->log_info("TailFile %s for %" PRIu64 " bytes", fileName, flow_file->getSize());
   std::string logName = baseName + "." + std::to_string(state.position_) + "-" +
                         std::to_string(state.position_ + flow_file->getSize() - 1) + "." + extension;
-  flow_file->updateAttribute(core::SpecialFlowAttribute::PATH, state.path_);
+  flow_file->setAttribute(core::SpecialFlowAttribute::PATH, state.path_);
   flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, full_file_name);
-  flow_file->updateAttribute(core::SpecialFlowAttribute::FILENAME, logName);
+  flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, logName);
 }
 
 void TailFile::updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const {

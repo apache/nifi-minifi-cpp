@@ -187,8 +187,8 @@ void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
         std::size_t found = fileName.find_last_of("/\\");
         std::string path = fileName.substr(0, found);
         std::string name = fileName.substr(found + 1);
-        flowFile->updateAttribute(core::SpecialFlowAttribute::FILENAME, name);
-        flowFile->updateAttribute(core::SpecialFlowAttribute::PATH, path);
+        flowFile->setAttribute(core::SpecialFlowAttribute::FILENAME, name);
+        flowFile->setAttribute(core::SpecialFlowAttribute::PATH, path);
         flowFile->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, fileName);
         session->import(fileName, flowFile, request_.keepSourceFile);
         session->transfer(flowFile, Success);

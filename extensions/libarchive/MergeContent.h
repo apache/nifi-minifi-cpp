@@ -215,7 +215,7 @@ public:
 
       for (auto flow : flows_) {
         struct archive_entry *entry = archive_entry_new();
-        std::string fileName;
+        std::string fileName = std::to_string(getTimeNano());
         flow->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
         archive_entry_set_pathname(entry, fileName.c_str());
         archive_entry_set_size(entry, flow->getSize());
