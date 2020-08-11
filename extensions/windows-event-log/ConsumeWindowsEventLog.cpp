@@ -634,11 +634,12 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     logger_->log_error("Failed to get timezone information!");
     break;
   case TIME_ZONE_ID_DAYLIGHT:
-    tzstr = std::wstring(tzinfo.DaylightName, 32);
+    tzstr = tzinfo.DaylightName;
     dst = true;
+    // [[fallthrough]];
   case TIME_ZONE_ID_STANDARD:
-    tzstr = tzstr.empty() ? std::wstring(tzinfo.StandardName, 32) : tzstr;  // Use standard timezome name in case there is no daylight name or in case it's not DST
-    tzbias = std::to_string(tzinfo.Bias + (dst ? tzinfo.DaylightBias : 0));
+    tzstr = tzstr.empty() ? tzinfo.StandardName : tzstr;  // Use standard timezome name in case there is no daylight name or in case it's not DST
+    tzbias = std::to_string(tzinfo.Bias + (dst ? tzinfo.DaylightBias : tzinfo.StandardBias));
     break;
   }
 
