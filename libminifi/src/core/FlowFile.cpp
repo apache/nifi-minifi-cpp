@@ -20,7 +20,7 @@
 #include <string>
 #include <set>
 #include <cinttypes>
-#include <core/Repository.h>
+#include "core/Repository.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 #include "core/FlowFile.h"
@@ -70,7 +70,7 @@ FlowFile::~FlowFile() {
   }
 }
 
-void FlowFile::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
+void FlowFile::releaseClaim(const std::shared_ptr<ResourceClaim>& claim) {
   // Decrease the flow file record owned count for the resource claim
   claim->decreaseFlowFileRecordOwnedCount();
   logger_->log_debug("Detaching Resource Claim %s, %s, attempt " "%" PRIu64, getUUIDStr(), claim->getContentFullPath(), claim->getFlowFileRecordOwnedCount());

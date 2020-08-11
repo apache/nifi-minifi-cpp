@@ -59,8 +59,8 @@ class Identifier {
   using Data = std::array<uint8_t, 16>;
 
   Identifier() = default;
-  Identifier(const Data& data);
-  Identifier(const std::string& data);
+  explicit Identifier(const Data& data);
+  explicit Identifier(const std::string& data);
   Identifier &operator=(const Data& data);
 
   Identifier &operator=(const std::string& idStr);

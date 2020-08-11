@@ -79,7 +79,8 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
     return DeSerialize(stream.getBuffer(), gsl::narrow<int>(stream.size()), content_repo, container);
   }
   //! DeSerialize
-  static std::shared_ptr<FlowFileRecord> DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
+  static std::shared_ptr<FlowFileRecord> DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository,
+      const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
 
   void setSnapShot(bool snapshot) {
     snapshot_ = snapshot;
@@ -88,10 +89,6 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   std::string getContentFullPath() {
     return claim_ ? claim_->getContentFullPath() : "";
   }
-
-  FlowFileRecord &operator=(const FlowFileRecord &);
-
-  FlowFileRecord(const FlowFileRecord &parent) = delete;
 
  protected:
   // Local flow sequence ID

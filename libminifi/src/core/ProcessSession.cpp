@@ -814,7 +814,10 @@ void ProcessSession::rollback() {
     for (const auto &it : _updatedFlowFiles) {
       auto& original = _originalFlowFiles.find(it.first)->second;
       *it.second = *original;
-      logger_->log_debug("ProcessSession rollback for %s, record %s, to connection %s", process_context_->getProcessorNode()->getName(), original->getUUIDStr(), original->getOriginalConnection()->getName());
+      logger_->log_debug("ProcessSession rollback for %s, record %s, to connection %s",
+          process_context_->getProcessorNode()->getName(),
+          original->getUUIDStr(),
+          original->getOriginalConnection()->getName());
       connectionQueues[original->getOriginalConnection()].push_back(it.second);
     }
 

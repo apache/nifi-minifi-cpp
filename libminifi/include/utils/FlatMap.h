@@ -21,6 +21,8 @@
 
 #include <tuple>
 #include <functional>
+#include <vector>
+#include <utility>
 
 namespace org {
 namespace apache {
@@ -32,6 +34,7 @@ template<typename K, typename V>
 class FlatMap{
  public:
   using value_type = std::pair<K, V>;
+
  private:
   using Container = std::vector<value_type>;
 
@@ -63,7 +66,7 @@ class FlatMap{
     friend class FlatMap;
    public:
     explicit const_iterator(typename Container::const_iterator it): it_(it) {}
-    const_iterator(iterator it): it_(it.it_) {}
+    explicit const_iterator(iterator it): it_(it.it_) {}
     const value_type* operator->() const {return &(*it_);}
     const value_type& operator*() const {return *it_;}
 
@@ -129,7 +132,7 @@ class FlatMap{
     return 0;
   }
 
-  std::pair<iterator,bool> insert( const value_type& value ) {
+  std::pair<iterator, bool> insert(const value_type& value) {
     auto it = find(value.first);
     if (it != end()) {
       return {it, false};
@@ -139,7 +142,7 @@ class FlatMap{
   }
 
   template<typename M>
-  std::pair<iterator,bool> insert_or_assign( const K& key, M&& value ) {
+  std::pair<iterator, bool> insert_or_assign(const K& key, M&& value) {
     auto it = find(key);
     if (it != end()) {
       it->second = std::forward<M>(value);
@@ -178,6 +181,7 @@ class FlatMap{
   const_iterator end() const {
     return const_iterator{data_.end()};
   }
+
  private:
   Container data_;
 };

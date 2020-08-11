@@ -23,6 +23,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "utils/TimeUtil.h"
 #include "ResourceClaim.h"
@@ -263,7 +264,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Decrease the flow file record owned count for the resource claim and, if
    * its counter is at zero, remove it from the repo.
    */
-  void releaseClaim(const std::shared_ptr<ResourceClaim> claim);
+  void releaseClaim(const std::shared_ptr<ResourceClaim>& claim);
 
   /**
    * Sets the original connection with a shared pointer.
