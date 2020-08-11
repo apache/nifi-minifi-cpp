@@ -645,6 +645,15 @@ void YamlConfiguration::configureConnectionFlowFileExpirationFromYaml(const YAML
   }
 }
 
+void YamlConfiguration::configureConnectionDropEmptyFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
+  if (connectionNode["drop empty"]) {
+    bool dropEmpty = false;
+    if (utils::StringUtils::StringToBool(connectionNode["drop empty"].as<std::string>(), dropEmpty)) {
+      connection->setDropEmptyFlowFiles(dropEmpty);
+    }
+  }
+}
+
 void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::ProcessGroup *parent) {
   if (!parent) {
     logger_->log_error("parseProcessNode: no parent group was provided");
@@ -679,14 +688,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
     configureConnectionSourceUUIDFromYaml(connectionNode, connection, parent, name);
     configureConnectionDestinationUUIDFromYaml(connectionNode, connection, parent, name);
     configureConnectionFlowFileExpirationFromYaml(connectionNode, connection);
-
-    if (connectionNode["drop empty"]) {
-      std::string strvalue = connectionNode["drop empty"].as<std::string>();
-      bool dropEmpty = false;
-      if (utils::StringUtils::StringToBool(strvalue, dropEmpty)) {
-        connection->setDropEmptyFlowFiles(dropEmpty);
-      }
-    }
+    configureConnectionDropEmptyFromYaml(connectionNode, connection);
 
     parent->addConnection(connection);
   }

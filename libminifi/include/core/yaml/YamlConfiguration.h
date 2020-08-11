@@ -234,6 +234,7 @@ class YamlConfiguration : public FlowConfiguration {
   void configureConnectionSourceUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const;
   void configureConnectionDestinationUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const;
   void configureConnectionFlowFileExpirationFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
+  void configureConnectionDropEmptyFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
 
   /**
    * Parses the Connections section of a configuration YAML.
