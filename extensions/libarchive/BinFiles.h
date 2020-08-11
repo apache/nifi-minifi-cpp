@@ -46,7 +46,8 @@ class Bin : public core::CoreComponent{
    * Create a new Bin. Note: this object is not thread safe
    */
   explicit Bin(const uint64_t &minSize, const uint64_t &maxSize, const size_t &minEntries, const size_t & maxEntries, const std::string &fileCount, const std::string &groupId)
-      : minSize_(minSize),
+      : CoreComponent(""),
+        minSize_(minSize),
         maxSize_(maxSize),
         maxEntries_(maxEntries),
         minEntries_(minEntries),

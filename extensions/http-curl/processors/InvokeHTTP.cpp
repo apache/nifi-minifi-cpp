@@ -393,7 +393,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   }
 }
 
-void InvokeHTTP::route(std::shared_ptr<core::FlowFile> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session,
+void InvokeHTTP::route(const std::shared_ptr<core::FlowFile> &request, const std::shared_ptr<core::FlowFile> &response, const std::shared_ptr<core::ProcessSession> &session,
                        const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int64_t statusCode) {
   // check if we should yield the processor
   if (!isSuccess && request == nullptr) {
