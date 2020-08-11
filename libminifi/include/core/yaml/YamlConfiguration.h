@@ -232,6 +232,7 @@ class YamlConfiguration : public FlowConfiguration {
   void configureConnectionWorkQueueSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
   void configureConnectionWorkQueueDataSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
   void configureConnectionSourceUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const;
+  void configureConnectionDestinationUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const;
 
   /**
    * Parses the Connections section of a configuration YAML.

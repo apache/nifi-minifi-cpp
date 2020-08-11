@@ -56,6 +56,10 @@ class YamlConfigurationTestAccessor {
     yamlConfiguration_.configureConnectionSourceUUIDFromYaml(connectionNode, connection, parent, name);
   }
 
+  void configureConnectionDestinationUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const {
+    yamlConfiguration_.configureConnectionDestinationUUIDFromYaml(connectionNode, connection, parent, name);
+  }
+
  private:
   std::shared_ptr<core::Repository> testProvRepo_;
   std::shared_ptr<core::Repository> testFlowFileRepo_;
@@ -105,26 +109,38 @@ TEST_CASE("Connections components are parsed from yaml.", "[YamlConfiguration]")
   }
   SECTION("Source and destination names and uuids are read") {
     const utils::Identifier expected_source_id = utils::generateUUID();
+    const utils::Identifier expected_destination_id = utils::generateUUID();
     std::string serialized_yaml;
     core::ProcessGroup parent(core::ProcessGroupType::ROOT_PROCESS_GROUP, "root");
-    parent.addProcessor(std::static_pointer_cast<core::Processor>(std::make_shared<processors::TailFile>("TailFile", expected_source_id)));
+    parent.addProcessor(std::static_pointer_cast<core::Processor>(std::make_shared<processors::TailFile>("TailFile_1", expected_source_id)));
+    parent.addProcessor(std::static_pointer_cast<core::Processor>(std::make_shared<processors::TailFile>("TailFile_2", expected_destination_id)));
     SECTION("Directly from configuration") {
       serialized_yaml = std::string {
           "source id: " + expected_source_id.to_string() + "\n"
-          "destination name: 8644cbcc-a45c-40e0-964d-5e536e2ada61\n"
+          "destination name: " + expected_destination_id.to_string() + "\n"
       };
     }
-    SECTION("Via processor lookup") {
+    SECTION("Using UUID as remote port id") {
       serialized_yaml = std::string {
-          "source name: TailFile\n"
-          "destination name: 8644cbcc-a45c-40e0-964d-5e536e2ada61\n"
+          "source name: " + expected_source_id.to_string() + "\n"
+          "destination name: " + expected_destination_id.to_string() + "\n"
+      };
+    }
+    SECTION("Via processor name lookup") {
+      serialized_yaml = std::string {
+          "source name: TailFile_1\n"
+          "destination name: TailFile_2\n"
       };
     }
     YAML::Node connection_node = YAML::Load(serialized_yaml);
     yaml_config.configureConnectionSourceUUIDFromYaml(connection_node, connection, &parent, "Test Connection");
+    yaml_config.configureConnectionDestinationUUIDFromYaml(connection_node, connection, &parent, "Test Connection");
     utils::Identifier actual_source_id;
     connection->getSourceUUID(actual_source_id);
     REQUIRE(expected_source_id == actual_source_id);
+    utils::Identifier actual_destination_id;
+    connection->getDestinationUUID(actual_destination_id);
+    REQUIRE(expected_destination_id == actual_destination_id);
   }
 }
 

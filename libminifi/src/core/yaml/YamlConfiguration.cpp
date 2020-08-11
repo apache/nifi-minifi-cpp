@@ -594,6 +594,46 @@ void YamlConfiguration::configureConnectionSourceUUIDFromYaml(const YAML::Node& 
   connection->setSourceUUID(srcUUID);
 }
 
+void YamlConfiguration::configureConnectionDestinationUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const {
+  utils::Identifier destUUID;
+  if (connectionNode["destination id"]) {
+    std::string connectionDestProcId = connectionNode["destination id"].as<std::string>();
+    destUUID = connectionDestProcId;
+    logger_->log_debug("Using 'destination id' to match destination with same id for "
+                       "connection '%s': destination id => [%s]",
+                       name, connectionDestProcId);
+  } else {
+    // we use the same logic as above for resolving the source processor
+    // for looking up the destination processor in absence of a processor id
+    checkRequiredField(&connectionNode, "destination name",
+    CONFIG_YAML_CONNECTIONS_KEY);
+    std::string connectionDestProcName = connectionNode["destination name"].as<std::string>();
+    utils::Identifier tmpUUID;
+    tmpUUID = connectionDestProcName;
+    if (parent->findProcessorById(tmpUUID)) {
+      // the destination name is a remote port id, so use that as the dest id
+      destUUID = tmpUUID;
+      logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for "
+                         "connection '%s': destination name => [%s]",
+                         name, connectionDestProcName);
+    } else {
+      // look the processor up by name
+      auto destProcessor = parent->findProcessorByName(connectionDestProcName);
+      if (NULL != destProcessor) {
+        destProcessor->getUUID(destUUID);
+        logger_->log_debug("Using 'destination name' to match destination with same name for "
+                           "connection '%s': destination name => [%s]",
+                           name, connectionDestProcName);
+      } else {
+        // we ran out of ways to discover the destination processor
+        logger_->log_error("Could not locate a destination with name %s to create a connection", connectionDestProcName);
+        throw std::invalid_argument("Could not locate a destination with name " + connectionDestProcName + " to create a connection");
+      }
+    }
+  }
+  connection->setDestinationUUID(destUUID);
+}
+
 void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::ProcessGroup *parent) {
   if (!parent) {
     logger_->log_error("parseProcessNode: no parent group was provided");
@@ -626,45 +666,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
     configureConnectionWorkQueueSizeFromYaml(connectionNode, connection);
     configureConnectionWorkQueueDataSizeFromYaml(connectionNode, connection);
     configureConnectionSourceUUIDFromYaml(connectionNode, connection, parent, name);
-
-    // Configure connection destination
-    utils::Identifier destUUID;
-    if (connectionNode["destination id"]) {
-      std::string connectionDestProcId = connectionNode["destination id"].as<std::string>();
-      destUUID = connectionDestProcId;
-      logger_->log_debug("Using 'destination id' to match destination with same id for "
-                         "connection '%s': destination id => [%s]",
-                         name, connectionDestProcId);
-    } else {
-      // we use the same logic as above for resolving the source processor
-      // for looking up the destination processor in absence of a processor id
-      checkRequiredField(&connectionNode, "destination name",
-      CONFIG_YAML_CONNECTIONS_KEY);
-      std::string connectionDestProcName = connectionNode["destination name"].as<std::string>();
-      utils::Identifier tmpUUID;
-      tmpUUID = connectionDestProcName;
-      if (parent->findProcessorById(tmpUUID)) {
-        // the destination name is a remote port id, so use that as the dest id
-        destUUID = tmpUUID;
-        logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for "
-                           "connection '%s': destination name => [%s]",
-                           name, connectionDestProcName);
-      } else {
-        // look the processor up by name
-        auto destProcessor = parent->findProcessorByName(connectionDestProcName);
-        if (NULL != destProcessor) {
-          destProcessor->getUUID(destUUID);
-          logger_->log_debug("Using 'destination name' to match destination with same name for "
-                             "connection '%s': destination name => [%s]",
-                             name, connectionDestProcName);
-        } else {
-          // we ran out of ways to discover the destination processor
-          logger_->log_error("Could not locate a destination with name %s to create a connection", connectionDestProcName);
-          throw std::invalid_argument("Could not locate a destination with name " + connectionDestProcName + " to create a connection");
-        }
-      }
-    }
-    connection->setDestinationUUID(destUUID);
+    configureConnectionDestinationUUIDFromYaml(connectionNode, connection, parent, name);
 
     if (connectionNode["flowfile expiration"]) {
       uint64_t expirationDuration = 0;
