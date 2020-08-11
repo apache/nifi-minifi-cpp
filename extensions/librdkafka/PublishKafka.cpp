@@ -162,23 +162,23 @@ struct rd_kafka_topic_conf_deleter {
 
 // Message
 enum class MessageStatus : uint8_t {
-  MESSAGESTATUS_UNCOMPLETE,
-  MESSAGESTATUS_ERROR,
-  MESSAGESTATUS_SUCCESS
+  InFlight,
+  Error,
+  Success
 };
 
 const char* to_string(const MessageStatus s) {
   switch (s) {
-    case MessageStatus::MESSAGESTATUS_UNCOMPLETE: return "MESSAGESTATUS_UNCOMPLETE";
-    case MessageStatus::MESSAGESTATUS_ERROR: return "MESSAGESTATUS_ERROR";
-    case MessageStatus::MESSAGESTATUS_SUCCESS: return "MESSAGESTATUS_SUCCESS";
+    case MessageStatus::InFlight: return "InFlight";
+    case MessageStatus::Error: return "Error";
+    case MessageStatus::Success: return "Success";
   }
   throw std::runtime_error{"PublishKafka to_string(MessageStatus): unreachable code"};
 }
 
 struct MessageResult {
-  MessageStatus status = MessageStatus::MESSAGESTATUS_UNCOMPLETE;
-  rd_kafka_resp_err_t err_code = RD_KAFKA_RESP_ERR_UNKNOWN;
+  MessageStatus status = MessageStatus::InFlight;
+  rd_kafka_resp_err_t err_code = RD_KAFKA_RESP_ERR_NO_ERROR;
 };
 
 struct FlowFileResult {
@@ -196,17 +196,32 @@ class PublishKafka::Messages {
 
   std::string logStatus(const std::unique_lock<std::mutex>& lock) const {
     gsl_Expects(lock.owns_lock());
+    const auto messageresult_ok = [](const MessageResult r) { return r.status == MessageStatus::Success && r.err_code == RD_KAFKA_RESP_ERR_NO_ERROR; };
+    const auto messageresult_inflight = [](const MessageResult r) { return r.status == MessageStatus::InFlight && r.err_code == RD_KAFKA_RESP_ERR_NO_ERROR; };
+    std::vector<size_t> flow_files_in_flight;
     std::ostringstream oss;
     if (interrupted_) { oss << "interrupted, "; }
     for (size_t ffi = 0; ffi < flow_files_.size(); ++ffi) {
+      const auto& flow_file = flow_files_[ffi];
+      if (!flow_file.flow_file_error && std::all_of(std::begin(flow_file.messages), std::end(flow_file.messages), messageresult_ok)) {
+        continue;  // don't log the happy path to reduce log spam
+      }
+      if (!flow_file.flow_file_error && std::all_of(std::begin(flow_file.messages), std::end(flow_file.messages), messageresult_inflight)) {
+        flow_files_in_flight.push_back(ffi);
+        continue;  // don't log fully in-flight flow files here, log them at the end instead
+      }
       oss << '[' << ffi << "]: {";
-      if (flow_files_[ffi].flow_file_error) { oss << "error, "; }
-      for (size_t msgi = 0; msgi < flow_files_[ffi].messages.size(); ++msgi) {
-        oss << '<' << msgi << ">: (" << to_string(flow_files_[ffi].messages[msgi].status) << ", "
-            << rd_kafka_err2str(flow_files_[ffi].messages[msgi].err_code) << "), ";
+      if (flow_file.flow_file_error) { oss << "error, "; }
+      for (size_t msgi = 0; msgi < flow_file.messages.size(); ++msgi) {
+        const auto& msg = flow_file.messages[msgi];
+        if (messageresult_ok(msg)) {
+          continue;
+        }
+        oss << '<' << msgi << ">: (msg " << to_string(msg.status) << ", " << rd_kafka_err2str(msg.err_code) << "), ";
       }
       oss << "}, ";
     }
+    oss << "in-flight (" << flow_files_in_flight.size() << "): " << utils::StringUtils::join(",", flow_files_in_flight);
     return oss.str();
   }
 
@@ -221,7 +236,7 @@ class PublishKafka::Messages {
       }
       return interrupted_ || std::all_of(std::begin(this->flow_files_), std::end(this->flow_files_), [](const FlowFileResult& flow_file) {
         return flow_file.flow_file_error || std::all_of(std::begin(flow_file.messages), std::end(flow_file.messages), [](const MessageResult& message) {
-          return message.status != MessageStatus::MESSAGESTATUS_UNCOMPLETE;
+          return message.status != MessageStatus::InFlight;
         });
       });
     });
@@ -308,11 +323,11 @@ class ReadCallback : public InputStreamCallback {
       messages_ptr_copy->modifyResult(flow_file_index_copy, [segment_num, rkmessage, logger, flow_file_index_copy](FlowFileResult &flow_file) {
         auto &message = flow_file.messages.at(segment_num);
         message.err_code = rkmessage->err;
-        message.status = message.err_code == 0 ? MessageStatus::MESSAGESTATUS_SUCCESS : MessageStatus::MESSAGESTATUS_ERROR;
+        message.status = message.err_code == 0 ? MessageStatus::Success : MessageStatus::Error;
         if (message.err_code != RD_KAFKA_RESP_ERR_NO_ERROR) {
-          logger->log_warn("PublishKafka produce, flow file #%zu/segment #%zu: %s", flow_file_index_copy, segment_num, rd_kafka_err2str(message.err_code));
+          logger->log_warn("delivery callback, flow file #%zu/segment #%zu: %s", flow_file_index_copy, segment_num, rd_kafka_err2str(message.err_code));
         } else {
-          logger->log_debug("PublishKafka produce, flow file #%zu/segment #%zu: success", flow_file_index_copy, segment_num);
+          logger->log_debug("delivery callback, flow file #%zu/segment #%zu: success", flow_file_index_copy, segment_num);
         }
       });
     };
@@ -332,6 +347,7 @@ class ReadCallback : public InputStreamCallback {
       // in case of failure, rd_kafka_producev doesn't take ownership of the headers, so we need to delete them
       rd_kafka_headers_destroy(hdrs_copy);
     }
+    logger_->log_trace("produce enqueued flow file #%zu/segment #%zu: %s", flow_file_index_, segment_num, rd_kafka_err2str(err));
     return err;
   }
 
@@ -400,7 +416,7 @@ class ReadCallback : public InputStreamCallback {
       if (err) {
         messages_->modifyResult(flow_file_index_, [segment_num, err](FlowFileResult& flow_file) {
           auto& message = flow_file.messages.at(segment_num);
-          message.status = MessageStatus::MESSAGESTATUS_ERROR;
+          message.status = MessageStatus::Error;
           message.err_code = err;
         });
         status_ = -1;
@@ -961,20 +977,20 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       for (size_t segment_num = 0; segment_num < flow_file.messages.size(); segment_num++) {
         const auto& message = flow_file.messages[segment_num];
         switch (message.status) {
-          case MessageStatus::MESSAGESTATUS_UNCOMPLETE:
+          case MessageStatus::InFlight:
             success = false;
             logger_->log_error("Waiting for delivery confirmation was interrupted for flow file %s segment %zu",
                 flowFiles[index]->getUUIDStr(),
                 segment_num);
           break;
-          case MessageStatus::MESSAGESTATUS_ERROR:
+          case MessageStatus::Error:
             success = false;
             logger_->log_error("Failed to deliver flow file %s segment %zu, error: %s",
                 flowFiles[index]->getUUIDStr(),
                 segment_num,
                 rd_kafka_err2str(message.err_code));
           break;
-          case MessageStatus::MESSAGESTATUS_SUCCESS:
+          case MessageStatus::Success:
             logger_->log_debug("Successfully delivered flow file %s segment %zu",
                 flowFiles[index]->getUUIDStr(),
                 segment_num);
