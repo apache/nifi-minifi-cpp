@@ -634,6 +634,17 @@ void YamlConfiguration::configureConnectionDestinationUUIDFromYaml(const YAML::N
   connection->setDestinationUUID(destUUID);
 }
 
+void YamlConfiguration::configureConnectionFlowFileExpirationFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
+  if (connectionNode["flowfile expiration"]) {
+    uint64_t expirationDuration = 0;
+    TimeUnit unit;
+    if (core::Property::StringToTime(connectionNode["flowfile expiration"].as<std::string>(), expirationDuration, unit) && core::Property::ConvertTimeUnitToMS(expirationDuration, unit, expirationDuration)) {
+      logger_->log_debug("parseConnection: flowfile expiration => [%d]", expirationDuration);
+      connection->setFlowExpirationDuration(expirationDuration);
+    }
+  }
+}
+
 void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::ProcessGroup *parent) {
   if (!parent) {
     logger_->log_error("parseProcessNode: no parent group was provided");
@@ -667,16 +678,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
     configureConnectionWorkQueueDataSizeFromYaml(connectionNode, connection);
     configureConnectionSourceUUIDFromYaml(connectionNode, connection, parent, name);
     configureConnectionDestinationUUIDFromYaml(connectionNode, connection, parent, name);
-
-    if (connectionNode["flowfile expiration"]) {
-      uint64_t expirationDuration = 0;
-      std::string expiration = connectionNode["flowfile expiration"].as<std::string>();
-      TimeUnit unit;
-      if (core::Property::StringToTime(expiration, expirationDuration, unit) && core::Property::ConvertTimeUnitToMS(expirationDuration, unit, expirationDuration)) {
-        logger_->log_debug("parseConnection: flowfile expiration => [%d]", expirationDuration);
-        connection->setFlowExpirationDuration(expirationDuration);
-      }
-    }
+    configureConnectionFlowFileExpirationFromYaml(connectionNode, connection);
 
     if (connectionNode["drop empty"]) {
       std::string strvalue = connectionNode["drop empty"].as<std::string>();
