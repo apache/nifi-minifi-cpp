@@ -22,9 +22,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace controllers {
-PersistableKeyValueStoreService::PersistableKeyValueStoreService(const std::string& name, const std::string& id)
-    : KeyValueStoreService(name, id) {
-}
 
 PersistableKeyValueStoreService::PersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid /*= utils::Identifier()*/)
     : KeyValueStoreService(name, uuid) {

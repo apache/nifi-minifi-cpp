@@ -43,19 +43,6 @@ namespace controllers {
  */
 class NetworkPrioritizerService : public core::controller::ControllerService, public minifi::io::NetworkPrioritizer, public std::enable_shared_from_this<NetworkPrioritizerService> {
  public:
-  explicit NetworkPrioritizerService(const std::string &name, const std::string &id)
-      : ControllerService(name, id),
-        enabled_(false),
-        max_throughput_((std::numeric_limits<uint64_t>::max)()),
-        max_payload_((std::numeric_limits<uint64_t>::max)()),
-        tokens_per_ms(2),
-        tokens_(1000),
-        timestamp_(0),
-        bytes_per_token_(0),
-        verify_interfaces_(true),
-        logger_(logging::LoggerFactory<NetworkPrioritizerService>::getLogger()) {
-  }
-
   explicit NetworkPrioritizerService(const std::string &name, const utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
         enabled_(false),

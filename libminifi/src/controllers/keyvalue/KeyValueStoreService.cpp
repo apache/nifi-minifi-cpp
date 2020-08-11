@@ -23,10 +23,6 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-KeyValueStoreService::KeyValueStoreService(const std::string& name, const std::string& id)
-    : ControllerService(name, id) {
-}
-
 KeyValueStoreService::KeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : ControllerService(name, uuid) {
 }

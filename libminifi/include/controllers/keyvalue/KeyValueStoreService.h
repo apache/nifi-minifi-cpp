@@ -35,7 +35,6 @@ namespace controllers {
 
 class KeyValueStoreService : public core::controller::ControllerService {
  public:
-  explicit KeyValueStoreService(const std::string& name, const std::string& id);
   explicit KeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
 
   virtual ~KeyValueStoreService();

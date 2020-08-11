@@ -82,10 +82,6 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   static std::shared_ptr<FlowFileRecord> DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository,
       const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
 
-  void setSnapShot(bool snapshot) {
-    snapshot_ = snapshot;
-  }
-
   std::string getContentFullPath() {
     return claim_ ? claim_->getContentFullPath() : "";
   }
@@ -93,11 +89,6 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
  protected:
   // Local flow sequence ID
   static std::atomic<uint64_t> local_flow_seq_number_;
-
-  // Snapshot flow record for session rollback
-  bool snapshot_;
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
 
  private:
   static std::shared_ptr<logging::Logger> logger_;

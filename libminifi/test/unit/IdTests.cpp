@@ -155,7 +155,7 @@ TEST_CASE("Test parse", "[id]") {
   };
 
   for (const auto& test_case : test_cases) {
-    utils::Identifier id = test_case.first;
+    utils::Identifier id{test_case.first};
     REQUIRE(memcmp(IdentifierTestAccessor::get_data_(id).data(), test_case.second.data(), 16U) == 0);
     REQUIRE(utils::StringUtils::equalsIgnoreCase(test_case.first, id.to_string()));
   }

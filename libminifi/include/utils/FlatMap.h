@@ -66,7 +66,7 @@ class FlatMap{
     friend class FlatMap;
    public:
     explicit const_iterator(typename Container::const_iterator it): it_(it) {}
-    explicit const_iterator(iterator it): it_(it.it_) {}
+    const_iterator(iterator it): it_(it.it_) {}  // NOLINT
     const value_type* operator->() const {return &(*it_);}
     const value_type& operator*() const {return *it_;}
 

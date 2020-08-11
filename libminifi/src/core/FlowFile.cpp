@@ -68,6 +68,7 @@ FlowFile::~FlowFile() {
     auto& stashClaim = stashPair.second;
     stashClaim.set(*this, nullptr);
   }
+  --flowFileCount;
 }
 
 void FlowFile::releaseClaim(const std::shared_ptr<ResourceClaim>& claim) {

@@ -278,7 +278,7 @@ Identifier IdGenerator::generate() {
 #endif
       break;
   }
-  return output;
+  return Identifier{output};
 }
 
 } /* namespace utils */

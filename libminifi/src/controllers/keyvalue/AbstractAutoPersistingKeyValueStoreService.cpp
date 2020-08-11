@@ -32,15 +32,6 @@ core::Property AbstractAutoPersistingKeyValueStoreService::AutoPersistenceInterv
                                                                                         "If set to 0 seconds, auto persistence will be disabled.")
         ->isRequired(false)->withDefaultValue<core::TimePeriodValue>("1 min")->build());
 
-AbstractAutoPersistingKeyValueStoreService::AbstractAutoPersistingKeyValueStoreService(const std::string& name, const std::string& id)
-    : KeyValueStoreService(name, id)
-    , PersistableKeyValueStoreService(name, id)
-    , always_persist_(false)
-    , auto_persistence_interval_(0U)
-    , running_(false)
-    , logger_(logging::LoggerFactory<AbstractAutoPersistingKeyValueStoreService>::getLogger()) {
-}
-
 AbstractAutoPersistingKeyValueStoreService::AbstractAutoPersistingKeyValueStoreService(const std::string& name, utils::Identifier uuid /*= utils::Identifier()*/)
     : KeyValueStoreService(name, uuid)
     , PersistableKeyValueStoreService(name, uuid)

@@ -28,11 +28,6 @@ std::mutex control_mutex;
 
 class MockControllerService : public core::controller::ControllerService {
  public:
-  explicit MockControllerService(const std::string &name, const std::string &id)
-      : ControllerService(name, id) {
-
-  }
-
   explicit MockControllerService(const std::string &name, const utils::Identifier &  uuid)
       : ControllerService(name, uuid) {
 
