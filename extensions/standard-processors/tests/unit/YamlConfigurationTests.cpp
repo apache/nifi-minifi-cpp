@@ -60,6 +60,10 @@ class YamlConfigurationTestAccessor {
     yamlConfiguration_.configureConnectionDestinationUUIDFromYaml(connectionNode, connection, parent, name);
   }
 
+  void configureConnectionFlowFileExpirationFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
+    yamlConfiguration_.configureConnectionFlowFileExpirationFromYaml(connectionNode, connection);
+  }
+
  private:
   std::shared_ptr<core::Repository> testProvRepo_;
   std::shared_ptr<core::Repository> testFlowFileRepo_;
@@ -139,6 +143,12 @@ TEST_CASE("Connections components are parsed from yaml.", "[YamlConfiguration]")
     REQUIRE(expected_source_id == actual_source_id);
     utils::Identifier actual_destination_id = connection->getDestinationUUID();
     REQUIRE(expected_destination_id == actual_destination_id);
+  }
+  SECTION("Flow file expiration is read") {
+    YAML::Node connection_node = YAML::Load(std::string {
+        "flowfile expiration: 2 min\n" });
+    yaml_config.configureConnectionFlowFileExpirationFromYaml(connection_node, connection);
+    REQUIRE(120000 == connection->getFlowExpirationDuration());  // 2 * 60 * 1000 ms
   }
 }
 
