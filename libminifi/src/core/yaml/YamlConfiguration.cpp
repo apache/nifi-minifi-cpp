@@ -565,6 +565,35 @@ void YamlConfiguration::configureConnectionWorkQueueDataSizeFromYaml(const YAML:
   }
 }
 
+void YamlConfiguration::configureConnectionSourceUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const {
+  utils::Identifier srcUUID;
+  if (connectionNode["source id"]) {
+    srcUUID = connectionNode["source id"].as<std::string>();
+    logger_->log_debug("Using 'source id' to match source with same id for connection '%s': source id => [%s]", name, srcUUID.to_string());
+  } else {
+    // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
+    checkRequiredField(&connectionNode, "source name", CONFIG_YAML_CONNECTIONS_KEY);
+    const std::string connectionSrcProcName = connectionNode["source name"].as<std::string>();
+    if (nullptr != parent->findProcessorById(utils::Identifier{connectionSrcProcName})) {
+      // the source name is a remote port id, so use that as the source id
+      srcUUID = connectionSrcProcName;
+      logger_->log_debug("Using 'source name' containing a remote port id to match the source for connection '%s': source name => [%s]", name, connectionSrcProcName);
+    } else {
+      // lastly, look the processor up by name
+      auto srcProcessor = parent->findProcessorByName(connectionSrcProcName);
+      if (nullptr != srcProcessor) {
+        srcProcessor->getUUID(srcUUID);
+        logger_->log_debug("Using 'source name' to match source with same name for connection '%s': source name => [%s]", name, connectionSrcProcName);
+      } else {
+        // we ran out of ways to discover the source processor
+        logger_->log_error("Could not locate a source with name %s to create a connection", connectionSrcProcName);
+        throw std::invalid_argument("Could not locate a source with name " + connectionSrcProcName + " to create a connection ");
+      }
+    }
+  }
+  connection->setSourceUUID(srcUUID);
+}
+
 void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::ProcessGroup *parent) {
   if (!parent) {
     logger_->log_error("parseProcessNode: no parent group was provided");
@@ -596,34 +625,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
     configureConnectionSourceRelationshipFromYaml(connectionNode, connection);
     configureConnectionWorkQueueSizeFromYaml(connectionNode, connection);
     configureConnectionWorkQueueDataSizeFromYaml(connectionNode, connection);
-
-    utils::Identifier srcUUID;
-
-    if (connectionNode["source id"]) {
-      srcUUID = connectionNode["source id"].as<std::string>();
-      logger_->log_debug("Using 'source id' to match source with same id for connection '%s': source id => [%s]", name, srcUUID.to_string());
-    } else {
-      // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
-      checkRequiredField(&connectionNode, "source name", CONFIG_YAML_CONNECTIONS_KEY);
-      std::string connectionSrcProcName = connectionNode["source name"].as<std::string>();
-      if (nullptr != parent->findProcessorById(utils::Identifier{connectionSrcProcName})) {
-        // the source name is a remote port id, so use that as the source id
-        srcUUID = connectionSrcProcName;
-        logger_->log_debug("Using 'source name' containing a remote port id to match the source for connection '%s': source name => [%s]", name, connectionSrcProcName);
-      } else {
-        // lastly, look the processor up by name
-        auto srcProcessor = parent->findProcessorByName(connectionSrcProcName);
-        if (nullptr != srcProcessor) {
-          srcProcessor->getUUID(srcUUID);
-          logger_->log_debug("Using 'source name' to match source with same name for connection '%s': source name => [%s]", name, connectionSrcProcName);
-        } else {
-          // we ran out of ways to discover the source processor
-          logger_->log_error("Could not locate a source with name %s to create a connection", connectionSrcProcName);
-          throw std::invalid_argument("Could not locate a source with name " + connectionSrcProcName + " to create a connection ");
-        }
-      }
-    }
-    connection->setSourceUUID(srcUUID);
+    configureConnectionSourceUUIDFromYaml(connectionNode, connection, parent, name);
 
     // Configure connection destination
     utils::Identifier destUUID;
@@ -968,7 +970,7 @@ std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode, const std::
   return id;
 }
 
-void YamlConfiguration::checkRequiredField(YAML::Node *yamlNode, const std::string &fieldName, const std::string &yamlSection, const std::string &errorMessage) {
+void YamlConfiguration::checkRequiredField(const YAML::Node *yamlNode, const std::string &fieldName, const std::string &yamlSection, const std::string &errorMessage) const {
   std::string errMsg = errorMessage;
   if (!yamlNode->as<YAML::Node>()[fieldName]) {
     if (errMsg.empty()) {

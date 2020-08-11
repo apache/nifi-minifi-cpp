@@ -19,8 +19,10 @@
 #include <map>
 #include <memory>
 #include "core/repository/VolatileContentRepository.h"
+#include "core/ProcessGroup.h"
 #include "core/RepositoryFactory.h"
 #include "core/yaml/YamlConfiguration.h"
+#include "TailFile.h"
 #include "TestBase.h"
 #include "utils/TestUtils.h"
 
@@ -48,6 +50,10 @@ class YamlConfigurationTestAccessor {
 
   void configureConnectionWorkQueueDataSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
     yamlConfiguration_.configureConnectionWorkQueueDataSizeFromYaml(connectionNode, connection);
+  }
+
+  void configureConnectionSourceUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const {
+    yamlConfiguration_.configureConnectionSourceUUIDFromYaml(connectionNode, connection, parent, name);
   }
 
  private:
@@ -96,6 +102,29 @@ TEST_CASE("Connections components are parsed from yaml.", "[YamlConfiguration]")
     yaml_config.configureConnectionWorkQueueDataSizeFromYaml(connection_node, connection);
     REQUIRE(231 == connection->getMaxQueueSize());
     REQUIRE(12582912 == connection->getMaxQueueDataSize());  // 12 * 1024 * 1024 B
+  }
+  SECTION("Source and destination names and uuids are read") {
+    const utils::Identifier expected_source_id = utils::generateUUID();
+    std::string serialized_yaml;
+    core::ProcessGroup parent(core::ProcessGroupType::ROOT_PROCESS_GROUP, "root");
+    parent.addProcessor(std::static_pointer_cast<core::Processor>(std::make_shared<processors::TailFile>("TailFile", expected_source_id)));
+    SECTION("Directly from configuration") {
+      serialized_yaml = std::string {
+          "source id: " + expected_source_id.to_string() + "\n"
+          "destination name: 8644cbcc-a45c-40e0-964d-5e536e2ada61\n"
+      };
+    }
+    SECTION("Via processor lookup") {
+      serialized_yaml = std::string {
+          "source name: TailFile\n"
+          "destination name: 8644cbcc-a45c-40e0-964d-5e536e2ada61\n"
+      };
+    }
+    YAML::Node connection_node = YAML::Load(serialized_yaml);
+    yaml_config.configureConnectionSourceUUIDFromYaml(connection_node, connection, &parent, "Test Connection");
+    utils::Identifier actual_source_id;
+    connection->getSourceUUID(actual_source_id);
+    REQUIRE(expected_source_id == actual_source_id);
   }
 }
 
