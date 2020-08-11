@@ -30,6 +30,7 @@
 #include <algorithm>
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
+#include "utils/GeneralUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
@@ -64,9 +65,9 @@ core::Property MergeContent::KeepPath(
   ->withDefaultValue(false)->build());
 core::Property MergeContent::AttributeStrategy(
   core::PropertyBuilder::createProperty("Attribute Strategy")
-  ->withDescription("Determines which FlowFile attributes should be added to the bundle.")
-  ->withAllowableValues<std::string>({ATTRIBUTE_STRATEGY_KEEP_COMMON, ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE})
-  ->withDefaultValue(ATTRIBUTE_STRATEGY_KEEP_COMMON)->build());
+  ->withDescription("Determines which FlowFile attributes should be added to the bundle. If 'Keep All Unique Attributes' is selected, any attribute on any FlowFile that gets bundled will be kept unless its value conflicts with the value from another FlowFile. If 'Keep Only Common Attributes' is selected, only the attributes that exist on all FlowFiles in the bundle, with the same value, will be preserved.")
+  ->withAllowableValues<std::string>({MergeContent::ATTRIBUTE_STRATEGY_KEEP_COMMON, MergeContent::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE})
+  ->withDefaultValue(MergeContent::ATTRIBUTE_STRATEGY_KEEP_COMMON)->build());
 core::Relationship MergeContent::Merge("merged", "The FlowFile containing the merged content");
 const char *BinaryConcatenationMerge::mimeType = "application/octet-stream";
 const char *TarMerge::mimeType = "application/tar";
@@ -116,39 +117,31 @@ void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessio
   std::string value;
   BinFiles::onSchedule(context, sessionFactory);
   if (context->getProperty(MergeStrategy.getName(), value) && !value.empty()) {
-    this->mergeStratgey_ = value;
+    mergeStratgey_ = value;
   }
-  value = "";
   if (context->getProperty(MergeFormat.getName(), value) && !value.empty()) {
-    this->mergeFormat_ = value;
+    mergeFormat_ = value;
   }
-  value = "";
   if (context->getProperty(CorrelationAttributeName.getName(), value) && !value.empty()) {
-      this->correlationAttributeName_ = value;
+    correlationAttributeName_ = value;
   }
-  value = "";
   if (context->getProperty(DelimiterStrategy.getName(), value) && !value.empty()) {
-      this->delimiterStratgey_ = value;
+    delimiterStratgey_ = value;
   }
-  value = "";
   if (context->getProperty(Header.getName(), value) && !value.empty()) {
-      this->header_ = value;
+    header_ = value;
   }
-  value = "";
   if (context->getProperty(Footer.getName(), value) && !value.empty()) {
-      this->footer_ = value;
+    footer_ = value;
   }
-  value = "";
   if (context->getProperty(Demarcator.getName(), value) && !value.empty()) {
-      this->demarcator_ = value;
+    demarcator_ = value;
   }
-  value = "";
   if (context->getProperty(KeepPath.getName(), value) && !value.empty()) {
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, keepPath_);
   }
-  value = "";
   if (context->getProperty(AttributeStrategy.getName(), value) && !value.empty()) {
-      this->attributeStrategy_ = value;
+    attributeStrategy_ = value;
   }
   if (mergeStratgey_ == MERGE_STRATEGY_DEFRAGMENT) {
     binManager_.setFileCount(FRAGMENT_COUNT_ATTRIBUTE);
@@ -262,46 +255,43 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
   }
 
   std::unique_ptr<MergeBin> mergeBin;
-  if (mergeFormat_ == MERGE_FORMAT_CONCAT_VALUE || mergeFormat_ == MERGE_FORMAT_TAR_VALUE
-      || mergeFormat_ == MERGE_FORMAT_ZIP_VALUE) {
-    if (mergeFormat_ == MERGE_FORMAT_CONCAT_VALUE)
-      mergeBin = std::unique_ptr < MergeBin > (new BinaryConcatenationMerge());
-    else if (mergeFormat_ == MERGE_FORMAT_TAR_VALUE)
-      mergeBin = std::unique_ptr < MergeBin > (new TarMerge());
-    else if (mergeFormat_ == MERGE_FORMAT_ZIP_VALUE)
-          mergeBin = std::unique_ptr < MergeBin > (new ZipMerge());
-    else
-      return false;
-
-    std::shared_ptr<core::FlowFile> mergeFlow;
-    try {
-      mergeFlow = mergeBin->merge(context, session, bin->getFlowFile(), this->headerContent_, this->footerContent_, this->demarcatorContent_);
-    } catch (...) {
-      logger_->log_error("Merge Content merge catch exception");
-      return false;
-    }
-    session->putAttribute(mergeFlow, BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(bin->getSize()));
-
-    std::unique_ptr<AttributeMerger> attributeMerger;
-    if (attributeStrategy_ == ATTRIBUTE_STRATEGY_KEEP_COMMON)
-      attributeMerger = std::unique_ptr < AttributeMerger > (new KeepOnlyCommonAttributesMerger(session, bin->getFlowFile(), mergeFlow));
-    else if (attributeStrategy_ == ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE)
-      attributeMerger = std::unique_ptr < AttributeMerger > (new KeepAllUniqueAttributesMerger(session, bin->getFlowFile(), mergeFlow));
-    else
-      return false;
-    attributeMerger->mergeAttributes();
-
-    // we successfully merge the flow
-    session->transfer(mergeFlow, Merge);
-    std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
-    for (auto flow : flows) {
-      session->transfer(flow, Original);
-    }
-    logger_->log_info("Merge FlowFile record UUID %s, payload length %d", mergeFlow->getUUIDStr(), mergeFlow->getSize());
-  } else {
+  if (mergeFormat_ == MERGE_FORMAT_CONCAT_VALUE)
+    mergeBin = utils::make_unique<BinaryConcatenationMerge>();
+  else if (mergeFormat_ == MERGE_FORMAT_TAR_VALUE)
+    mergeBin = utils::make_unique<TarMerge>();
+  else if (mergeFormat_ == MERGE_FORMAT_ZIP_VALUE)
+    mergeBin = utils::make_unique<ZipMerge>();
+  else {
     logger_->log_error("Merge format not supported %s", mergeFormat_);
     return false;
   }
+
+  std::shared_ptr<core::FlowFile> mergeFlow;
+  try {
+    mergeFlow = mergeBin->merge(context, session, bin->getFlowFile(), this->headerContent_, this->footerContent_, this->demarcatorContent_);
+  } catch (...) {
+    logger_->log_error("Merge Content merge catch exception");
+    return false;
+  }
+  session->putAttribute(mergeFlow, BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(bin->getSize()));
+
+  if (attributeStrategy_ == ATTRIBUTE_STRATEGY_KEEP_COMMON)
+    KeepOnlymergedAttributesMerger(bin->getFlowFile()).mergeAttributes(session, mergeFlow);
+  else if (attributeStrategy_ == ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE)
+    KeepAllUniqueAttributesMerger(bin->getFlowFile()).mergeAttributes(session, mergeFlow);
+  else {
+    logger_->log_error("Attribute strategy not supported %s", attributeStrategy_);
+    throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid attribute strategy: " + attributeStrategy_);
+  }
+
+  // we successfully merge the flow
+  session->transfer(mergeFlow, Merge);
+  std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
+  for (auto flow : flows) {
+    session->transfer(flow, Original);
+  }
+  logger_->log_info("Merge FlowFile record UUID %s, payload length %d", mergeFlow->getUUIDStr(), mergeFlow->getSize());
+
   return true;
 }
 
@@ -362,52 +352,50 @@ std::shared_ptr<core::FlowFile> ZipMerge::merge(core::ProcessContext *context, c
   return flowFile;
 }
 
-void AttributeMerger::mergeAttributes() {
-  std::map<std::string, std::string> commonAttributes = getCommonAttributes();
-
-  for (const auto& pair : commonAttributes) {
-    session_->putAttribute(mergeFlow_, pair.first, pair.second);
+void AttributeMerger::mergeAttributes(core::ProcessSession *session, std::shared_ptr<core::FlowFile> &mergeFlow) {
+  for (const auto& pair : getMergedAttributes()) {
+    session->putAttribute(mergeFlow, pair.first, pair.second);
   }
 }
 
-std::map<std::string, std::string> AttributeMerger::getCommonAttributes() {
-  std::map<std::string, std::string> commonAttributes;
+std::map<std::string, std::string> AttributeMerger::getMergedAttributes() {
+  std::map<std::string, std::string> mergedAttributes;
   bool isFirst = true;
   for (const auto& flow : flows_) {
     if (isFirst) {
-      commonAttributes = flow->getAttributes();
+      mergedAttributes = flow->getAttributes();
       isFirst = false;
     } else {
-      processFlowFile(flow, commonAttributes);
+      processFlowFile(flow, mergedAttributes);
     }
   }
-  return commonAttributes;
+  return mergedAttributes;
 }
 
-void KeepOnlyCommonAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& commonAttributes) {
-  auto flowAttributes = flow->getAttributes();
-  for (auto it = commonAttributes.cbegin(); it != commonAttributes.cend();) {
-    if (flowAttributes.find(it->first) != flowAttributes.end()) {
-      if (flowAttributes[it->first] != commonAttributes[it->first])
-        commonAttributes.erase(it++);
+void KeepOnlymergedAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) {
+  for (auto it = mergedAttributes.cbegin(); it != mergedAttributes.cend();) {
+    std::string value;
+    if (flow->getAttribute(it->first, value)) {
+      if (value != it->second)
+        mergedAttributes.erase(it++);
       else
         ++it;
     } else {
-      commonAttributes.erase(it++);
+      mergedAttributes.erase(it++);
     }
   }
 }
 
-void KeepAllUniqueAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& commonAttributes) {
+void KeepAllUniqueAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) {
   auto flowAttributes = flow->getAttributes();
   for (const auto& attr : flowAttributes) {
-    if (commonAttributes.find(attr.first) != commonAttributes.end()) {
-      if (commonAttributes[attr.first] != attr.second) {
-        commonAttributes.erase(attr.first);
+    if (mergedAttributes.find(attr.first) != mergedAttributes.end()) {
+      if (mergedAttributes[attr.first] != attr.second) {
+        mergedAttributes.erase(attr.first);
         removed_attributes_.push_back(attr.first);
       }
     } else if (std::find(removed_attributes_.cbegin(), removed_attributes_.cend(), attr.first) == removed_attributes_.cend()) {
-      commonAttributes[attr.first] = attr.second;
+      mergedAttributes[attr.first] = attr.second;
     }
   }
 }

@@ -929,7 +929,7 @@ TEST_CASE("Test Merge File Attributes Keeping All Unique Attributes", "[testMerg
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::AttributeStrategy, ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::AttributeStrategy, org::apache::nifi::minifi::processors::MergeContent::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE);
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> record[3];

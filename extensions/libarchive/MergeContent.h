@@ -43,8 +43,6 @@ namespace processors {
 #define MERGE_FORMAT_AVRO_VALUE "Avro"
 #define DELIMITER_STRATEGY_FILENAME "Filename"
 #define DELIMITER_STRATEGY_TEXT "Text"
-#define ATTRIBUTE_STRATEGY_KEEP_COMMON "Keep Only Common Attributes"
-#define ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE "Keep All Unique Attributes"
 
 // MergeBin Class
 class MergeBin {
@@ -263,35 +261,31 @@ public:
 
 class AttributeMerger {
 public:
-  AttributeMerger(core::ProcessSession *session, std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows, std::shared_ptr<core::FlowFile> &mergeFlow)
-    : session_(session)
-    , flows_(flows)
-    , mergeFlow_(mergeFlow) {}
-  void mergeAttributes();
+  AttributeMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
+    : flows_(flows) {}
+  void mergeAttributes(core::ProcessSession *session, std::shared_ptr<core::FlowFile> &mergeFlow);
   virtual ~AttributeMerger() = default;
 protected:
-  std::map<std::string, std::string> getCommonAttributes();
-  virtual void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& commonAttributes) = 0;
+  std::map<std::string, std::string> getMergedAttributes();
+  virtual void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) = 0;
 
-  std::deque<std::shared_ptr<core::FlowFile>> &flows_;
-  core::ProcessSession *session_;
-  std::shared_ptr<core::FlowFile> &mergeFlow_;
+  const std::deque<std::shared_ptr<core::FlowFile>> &flows_;
 };
 
-class KeepOnlyCommonAttributesMerger: public AttributeMerger {
+class KeepOnlymergedAttributesMerger: public AttributeMerger {
 public:
-  KeepOnlyCommonAttributesMerger(core::ProcessSession *session, std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows, std::shared_ptr<core::FlowFile> &mergeFlow)
-    : AttributeMerger(session, flows, mergeFlow) {}
+  KeepOnlymergedAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
+    : AttributeMerger(flows) {}
 protected:
-  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& commonAttributes) override;
+  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) override;
 };
 
 class KeepAllUniqueAttributesMerger: public AttributeMerger {
 public:
-  KeepAllUniqueAttributesMerger(core::ProcessSession *session, std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows, std::shared_ptr<core::FlowFile> &mergeFlow)
-    : AttributeMerger(session, flows, mergeFlow) {}
+  KeepAllUniqueAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
+    : AttributeMerger(flows) {}
 protected:
-  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& commonAttributes) override;
+  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) override;
 
 private:
   std::vector<std::string> removed_attributes_;
@@ -299,7 +293,10 @@ private:
 
 // MergeContent Class
 class MergeContent : public processors::BinFiles {
- public:
+public:
+  static constexpr const char *ATTRIBUTE_STRATEGY_KEEP_COMMON = "Keep Only Common Attributes";
+  static constexpr const char *ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attributes";
+
   // Constructor
   /*!
    * Create a new processor
