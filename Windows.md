@@ -62,6 +62,7 @@ After the build directory it will take optional parameters modifying the CMake c
 | /J | Enables JNI |
 | /64 | Creates 64-bit build instead of a 32-bit one |
 | /D | Builds RelWithDebInfo build instead of Release |
+| /DD | Builds Debug build instead of Release |
 | /CI | Sets STRICT_GSL_CHECKS to AUDIT |
 
 Examples:

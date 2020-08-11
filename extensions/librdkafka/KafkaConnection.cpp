@@ -87,7 +87,7 @@ std::shared_ptr<KafkaTopic> KafkaConnection::getTopic(const std::string &topic) 
   return nullptr;
 }
 
-KafkaConnectionKey const * const KafkaConnection::getKey() const {
+KafkaConnectionKey const* KafkaConnection::getKey() const {
   return &key_;
 }
 
