@@ -209,9 +209,8 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
 
     // Create and write to the test file
     for (int i = 0; i < 6; i++) {
-      std::ofstream tmpfile;
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      std::ofstream tmpfile(flowFileName.c_str(), std::ios::binary);
       for (int j = 0; j < 32; j++) {
         tmpfile << std::to_string(i);
         if (i < 3)
@@ -231,7 +230,7 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
 
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
   for (int i = 0; i < 6; i++) {
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     // three bundle
@@ -303,9 +302,8 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
         expectfileFirst << "demarcator";
       if (i != 3 && i >= 4)
         expectfileSecond << "demarcator";
-      std::ofstream tmpfile;
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      std::ofstream tmpfile(flowFileName.c_str(), std::ios::binary);
       for (int j = 0; j < 32; j++) {
         tmpfile << std::to_string(i);
         if (i < 3)
@@ -336,7 +334,7 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
 
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
   for (int i = 0; i < 6; i++) {
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     // three bundle
@@ -398,9 +396,8 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
     for (int i = 0; i < 6; i++) {
       if (i == 4)
         continue;
-      std::ofstream tmpfile;
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      std::ofstream tmpfile(flowFileName.c_str(), std::ios::binary);
       for (int j = 0; j < 32; j++) {
         tmpfile << std::to_string(i);
         if (i < 3)
@@ -429,7 +426,7 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
   for (int i = 0; i < 6; i++) {
     if (i == 4)
       continue;
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     // three bundle
@@ -496,9 +493,8 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
 
     // Create and write to the test file
     for (int i = 0; i < 6; i++) {
-      std::ofstream tmpfile;
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      std::ofstream tmpfile(flowFileName.c_str(), std::ios::binary);
       for (int j = 0; j < 32; j++) {
         tmpfile << std::to_string(i);
         if (i < 3)
@@ -526,7 +522,7 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
 
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
   for (int i = 0; i < 6; i++) {
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     flow->setAttribute("tag", "tag");
@@ -578,9 +574,8 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
 
     // Create and write to the test file
     for (int i = 0; i < 6; i++) {
-      std::ofstream tmpfile;
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      std::ofstream tmpfile(flowFileName.c_str(), std::ios::binary);
       for (int j = 0; j < 32; j++) {
         tmpfile << std::to_string(i);
         if (i < 3)
@@ -608,7 +603,7 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
 
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
   for (int i = 0; i < 6; i++) {
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     flow->setAttribute("tag", "tag");
@@ -669,9 +664,8 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
 
     // Create and write to the test file
     for (int i = 0; i < 6; i++) {
-      std::ofstream tmpfile;
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      std::ofstream tmpfile(flowFileName.c_str(), std::ios::binary);
       for (int j = 0; j < 32; j++) {
         tmpfile << std::to_string(i);
         if (i < 3)
@@ -699,7 +693,7 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
 
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
   for (int i = 0; i < 6; i++) {
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     flow->setAttribute("tag", "tag");
@@ -785,7 +779,7 @@ TEST_CASE("MergeFileOnAttribute", "[mergefiletest5]") {
 
   // Generate 6 flowfiles, even files are merged to one, odd files are merged to an other
   for (int i = 0; i < 6; i++) {
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     if (i % 2 == 0)
@@ -842,9 +836,8 @@ TEST_CASE("Test Merge File Attributes Keeping Only Common Attributes", "[testMer
 
     // Create and write to the test file
     for (int i = 0; i < 3; i++) {
-      std::ofstream tmpfile;
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      std::ofstream tmpfile(flowFileName.c_str(), std::ios::binary);
       for (int j = 0; j < 32; j++) {
         tmpfile << std::to_string(i);
         expectfileFirst << std::to_string(i);
@@ -861,7 +854,7 @@ TEST_CASE("Test Merge File Attributes Keeping Only Common Attributes", "[testMer
 
   // Generate 3 flowfiles merging all into one
   for (int i = 0; i < 3; i++) {
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
@@ -916,9 +909,8 @@ TEST_CASE("Test Merge File Attributes Keeping All Unique Attributes", "[testMerg
 
     // Create and write to the test file
     for (int i = 0; i < 3; i++) {
-      std::ofstream tmpfile;
       std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
-      tmpfile.open(flowFileName.c_str(), std::ios::binary);
+      std::ofstream tmpfile(flowFileName.c_str(), std::ios::binary);
       for (int j = 0; j < 32; j++) {
         tmpfile << std::to_string(i);
         expectfileFirst << std::to_string(i);
@@ -936,7 +928,7 @@ TEST_CASE("Test Merge File Attributes Keeping All Unique Attributes", "[testMerg
 
   // Generate 3 flowfiles merging all into one
   for (int i = 0; i < 3; i++) {
-    std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+    const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));

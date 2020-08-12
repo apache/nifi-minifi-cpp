@@ -261,7 +261,7 @@ public:
 
 class AttributeMerger {
 public:
-  AttributeMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
+  explicit AttributeMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : flows_(flows) {}
   void mergeAttributes(core::ProcessSession *session, std::shared_ptr<core::FlowFile> &mergeFlow);
   virtual ~AttributeMerger() = default;
@@ -272,9 +272,9 @@ protected:
   const std::deque<std::shared_ptr<core::FlowFile>> &flows_;
 };
 
-class KeepOnlymergedAttributesMerger: public AttributeMerger {
+class KeepOnlyCommonAttributesMerger: public AttributeMerger {
 public:
-  KeepOnlymergedAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
+  explicit KeepOnlyCommonAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : AttributeMerger(flows) {}
 protected:
   void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) override;
@@ -282,13 +282,13 @@ protected:
 
 class KeepAllUniqueAttributesMerger: public AttributeMerger {
 public:
-  KeepAllUniqueAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
+  explicit KeepAllUniqueAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : AttributeMerger(flows) {}
 protected:
   void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) override;
 
 private:
-  std::vector<std::string> removed_attributes_;
+  std::vector<std::string> removedAttributes_;
 };
 
 // MergeContent Class

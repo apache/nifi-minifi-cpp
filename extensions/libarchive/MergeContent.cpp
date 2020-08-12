@@ -276,7 +276,7 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
   session->putAttribute(mergeFlow, BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(bin->getSize()));
 
   if (attributeStrategy_ == ATTRIBUTE_STRATEGY_KEEP_COMMON)
-    KeepOnlymergedAttributesMerger(bin->getFlowFile()).mergeAttributes(session, mergeFlow);
+    KeepOnlyCommonAttributesMerger(bin->getFlowFile()).mergeAttributes(session, mergeFlow);
   else if (attributeStrategy_ == ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE)
     KeepAllUniqueAttributesMerger(bin->getFlowFile()).mergeAttributes(session, mergeFlow);
   else {
@@ -372,30 +372,26 @@ std::map<std::string, std::string> AttributeMerger::getMergedAttributes() {
   return mergedAttributes;
 }
 
-void KeepOnlymergedAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) {
-  for (auto it = mergedAttributes.cbegin(); it != mergedAttributes.cend();) {
-    std::string value;
-    if (flow->getAttribute(it->first, value)) {
-      if (value != it->second)
-        mergedAttributes.erase(it++);
-      else
-        ++it;
-    } else {
-      mergedAttributes.erase(it++);
-    }
-  }
+void KeepOnlyCommonAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) {
+  auto flowAttributes = flow->getAttributes();
+  std::map<std::string, std::string> tmpMerged;
+  std::set_intersection(std::make_move_iterator(mergedAttributes.begin()), std::make_move_iterator(mergedAttributes.end()),
+    std::make_move_iterator(flowAttributes.begin()), std::make_move_iterator(flowAttributes.end()), std::inserter(tmpMerged, tmpMerged.begin()));
+  mergedAttributes = std::move(tmpMerged);
 }
 
 void KeepAllUniqueAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) {
   auto flowAttributes = flow->getAttributes();
-  for (const auto& attr : flowAttributes) {
-    if (mergedAttributes.find(attr.first) != mergedAttributes.end()) {
-      if (mergedAttributes[attr.first] != attr.second) {
-        mergedAttributes.erase(attr.first);
-        removed_attributes_.push_back(attr.first);
-      }
-    } else if (std::find(removed_attributes_.cbegin(), removed_attributes_.cend(), attr.first) == removed_attributes_.cend()) {
-      mergedAttributes[attr.first] = attr.second;
+  for (auto&& attr : flowAttributes) {
+    if(std::find(removedAttributes_.cbegin(), removedAttributes_.cend(), attr.first) != removedAttributes_.cend()) {
+      continue;
+    }
+    std::map<std::string, std::string>::iterator insertionRes;
+    bool insertionHappened;
+    std::tie(insertionRes, insertionHappened) = mergedAttributes.insert(attr);
+    if(!insertionHappened && insertionRes->second != attr.second) {
+      mergedAttributes.erase(insertionRes);
+      removedAttributes_.push_back(attr.first);
     }
   }
 }
