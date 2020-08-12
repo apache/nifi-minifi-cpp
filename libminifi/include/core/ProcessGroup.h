@@ -201,7 +201,7 @@ class ProcessGroup {
   void addConnection(std::shared_ptr<Connection> connection);
   // Generic find
   template <typename Fun>
-  std::shared_ptr<Processor> findProcessor(Fun&& condition) const {
+  std::shared_ptr<Processor> findProcessor(Fun condition) const {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     const auto found = std::find_if(processors_.cbegin(), processors_.cend(), condition);
     if (found != processors_.cend()) {
