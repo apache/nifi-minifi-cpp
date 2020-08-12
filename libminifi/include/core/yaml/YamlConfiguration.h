@@ -228,6 +228,7 @@ class YamlConfiguration : public FlowConfiguration {
   void parseControllerServices(YAML::Node *controllerServicesNode);
   // Process connection YAML
 
+  // These could be extracted to a separate ConnectionYamlParser class
   void configureConnectionSourceRelationshipFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
   void configureConnectionWorkQueueSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
   void configureConnectionWorkQueueDataSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
