@@ -263,11 +263,11 @@ class AttributeMerger {
 public:
   explicit AttributeMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : flows_(flows) {}
-  void mergeAttributes(core::ProcessSession *session, std::shared_ptr<core::FlowFile> &mergeFlow);
+  void mergeAttributes(core::ProcessSession *session, std::shared_ptr<core::FlowFile> &merge_flow);
   virtual ~AttributeMerger() = default;
 protected:
   std::map<std::string, std::string> getMergedAttributes();
-  virtual void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) = 0;
+  virtual void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) = 0;
 
   const std::deque<std::shared_ptr<core::FlowFile>> &flows_;
 };
@@ -277,7 +277,7 @@ public:
   explicit KeepOnlyCommonAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : AttributeMerger(flows) {}
 protected:
-  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) override;
+  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) override;
 };
 
 class KeepAllUniqueAttributesMerger: public AttributeMerger {
@@ -285,10 +285,10 @@ public:
   explicit KeepAllUniqueAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : AttributeMerger(flows) {}
 protected:
-  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow, std::map<std::string, std::string>& mergedAttributes) override;
+  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) override;
 
 private:
-  std::vector<std::string> removedAttributes_;
+  std::vector<std::string> removed_attributes_;
 };
 
 // MergeContent Class
@@ -304,9 +304,9 @@ public:
   explicit MergeContent(std::string name, utils::Identifier uuid = utils::Identifier())
       : processors::BinFiles(name, uuid),
         logger_(logging::LoggerFactory<MergeContent>::getLogger()) {
-    mergeStratgey_ = MERGE_STRATEGY_DEFRAGMENT;
+    mergeStrategy_ = MERGE_STRATEGY_DEFRAGMENT;
     mergeFormat_ = MERGE_FORMAT_CONCAT_VALUE;
-    delimiterStratgey_ = DELIMITER_STRATEGY_FILENAME;
+    delimiterStrategy_ = DELIMITER_STRATEGY_FILENAME;
     keepPath_ = false;
     attributeStrategy_ = ATTRIBUTE_STRATEGY_KEEP_COMMON;
   }
@@ -350,11 +350,11 @@ public:
 
  private:
   std::shared_ptr<logging::Logger> logger_;
-  std::string mergeStratgey_;
+  std::string mergeStrategy_;
   std::string mergeFormat_;
   std::string correlationAttributeName_;
   bool keepPath_;
-  std::string delimiterStratgey_;
+  std::string delimiterStrategy_;
   std::string header_;
   std::string footer_;
   std::string demarcator_;
