@@ -337,12 +337,15 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   utils::optional<std::chrono::milliseconds> loadShutdownTimeoutFromConfiguration();
 
+ private:
   template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>
   void conditionalReloadScheduler(std::shared_ptr<T>& scheduler, const bool condition) {
     if (condition) {
       scheduler = std::make_shared<T>(gsl::not_null<core::controller::ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
     }
   }
+
+ protected:
   // flow controller mutex
   std::recursive_mutex mutex_;
 
