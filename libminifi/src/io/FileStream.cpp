@@ -34,19 +34,17 @@ FileStream::FileStream(const std::string &path, bool append)
       path_(path),
       offset_(0) {
   file_stream_ = std::unique_ptr<std::fstream>(new std::fstream());
-  if (append)
+  if (append) {
     file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
-  else
-    file_stream_->open(path.c_str(), std::fstream::out | std::fstream::binary);
-  file_stream_->seekg(0, file_stream_->end);
-  file_stream_->seekp(0, file_stream_->end);
-  std::streamoff len = file_stream_->tellg();
-  if (len > 0) {
-    length_ = gsl::narrow<size_t>(len);
+    file_stream_->seekg(0, file_stream_->end);
+    file_stream_->seekp(0, file_stream_->end);
+    std::streamoff len = file_stream_->tellg();
+    length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
+    seek(offset_);
   } else {
+    file_stream_->open(path.c_str(), std::fstream::out | std::fstream::binary);
     length_ = 0;
   }
-  seek(offset_);
 }
 
 FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enable)
@@ -71,15 +69,12 @@ FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enab
 }
 
 void FileStream::closeStream() {
-  std::lock_guard<std::recursive_mutex> lock(file_lock_);
-  if (file_stream_ != nullptr) {
-    file_stream_->close();
-    file_stream_ = nullptr;
-  }
+  std::lock_guard<std::mutex> lock(file_lock_);
+  file_stream_.reset();
 }
 
 void FileStream::seek(uint64_t offset) {
-  std::lock_guard<std::recursive_mutex> lock(file_lock_);
+  std::lock_guard<std::mutex> lock(file_lock_);
   offset_ = gsl::narrow<size_t>(offset);
   file_stream_->clear();
   file_stream_->seekg(offset_);
@@ -101,13 +96,12 @@ int FileStream::writeData(std::vector<uint8_t> &buf, int buflen) {
 
 int FileStream::writeData(uint8_t *value, int size) {
   if (!IsNullOrEmpty(value)) {
-    std::lock_guard<std::recursive_mutex> lock(file_lock_);
+    std::lock_guard<std::mutex> lock(file_lock_);
     if (file_stream_->write(reinterpret_cast<const char*>(value), size)) {
       offset_ += size;
       if (offset_ > length_) {
         length_ = offset_;
       }
-      file_stream_->seekg(offset_);
       file_stream_->flush();
       return size;
     } else {
@@ -149,7 +143,7 @@ int FileStream::readData(std::vector<uint8_t> &buf, int buflen) {
 
 int FileStream::readData(uint8_t *buf, int buflen) {
   if (!IsNullOrEmpty(buf)) {
-    std::lock_guard<std::recursive_mutex> lock(file_lock_);
+    std::lock_guard<std::mutex> lock(file_lock_);
     if (!file_stream_) {
       return -1;
     }

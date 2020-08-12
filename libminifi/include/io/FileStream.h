@@ -124,7 +124,7 @@ class FileStream : public io::BaseStream {
    */
   template<typename T>
   int readBuffer(std::vector<uint8_t>& buf, const T& t);
-  std::recursive_mutex file_lock_;
+  std::mutex file_lock_;
   std::unique_ptr<std::fstream> file_stream_;
   size_t offset_;
   std::string path_;
