@@ -15,12 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <vector>
 #include <cstdint>
-#include <string>
 #include <algorithm>
-#include <iterator>
-#include <cassert>
 #include "io/BufferStream.h"
 #include "utils/StreamUtils.h"
 

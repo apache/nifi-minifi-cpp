@@ -41,17 +41,10 @@ class InputStream : public virtual Stream {
    * @return resulting read size
    **/
   virtual int read(uint8_t *value, int len) {
-    throw std::runtime_error("Stream is not readable");
+    throw std::runtime_error("Read is not implemented");
   }
 
   int read(std::vector<uint8_t>& buffer, int len);
-
-  /**
-  * reads a byte from the stream
-  * @param value reference in which will set the result
-  * @return resulting read size
-  **/
-  int read(uint8_t &value);
 
   /**
    * read string from stream
@@ -68,25 +61,24 @@ class InputStream : public virtual Stream {
   int read(bool& value);
 
   /**
-  * reads 2 bytes from the stream
+  * reads sizeof(Integral) bytes from the stream
   * @param value reference in which will set the result
   * @return resulting read size
   **/
-  int read(uint16_t& value);
+  template<typename Integral, typename = std::enable_if<std::is_unsigned<Integral>::value && !std::is_same<Integral, bool>::value>>
+  int read(Integral& value) {
+    uint8_t buf[sizeof(Integral)]{};
+    if (read(buf, sizeof(Integral)) != sizeof(Integral)) {
+      return -1;
+    }
 
-  /**
-  * reads 4 bytes from the stream
-  * @param value reference in which will set the result
-  * @return resulting read size
-  **/
-  int read(uint32_t& value);
+    value = 0;
+    for (std::size_t byteIdx = 0; byteIdx < sizeof(Integral); ++byteIdx) {
+      value += static_cast<Integral>(buf[byteIdx]) << (8 * (sizeof(Integral) - 1) - 8 * byteIdx);
+    }
 
-  /**
-  * reads 8 bytes from the stream
-  * @param value reference in which will set the result
-  * @return resulting read size
-  **/
-  int read(uint64_t& value);
+    return sizeof(Integral);
+  }
 };
 
 }  // namespace io

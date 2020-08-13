@@ -43,16 +43,10 @@ class OutputStream : public virtual Stream {
    * @return resulting write size
    **/
   virtual int write(const uint8_t *value, int len) {
-    throw std::runtime_error("Stream is not writable");
+    throw std::runtime_error("Write is not implemented");
   }
 
   int write(const std::vector<uint8_t>& buffer, int len);
-
-  /**
-   * write byte to stream
-   * @return resulting write size
-   **/
-  int write(uint8_t value);
 
   /**
    * write bool to stream
@@ -76,25 +70,20 @@ class OutputStream : public virtual Stream {
   int write(const char* str, bool widen = false);
 
   /**
-  * writes 2 bytes to stream
-  * @param base_value non encoded value
+  * writes sizeof(Integral) bytes to the stream
+  * @param value to write
   * @return resulting write size
   **/
-  int write(uint16_t value);
+  template<typename Integral, typename = std::enable_if<std::is_unsigned<Integral>::value && !std::is_same<Integral, bool>::value>>
+  int write(Integral value) {
+    uint8_t buffer[sizeof(Integral)]{};
 
-  /**
-  * writes 4 bytes to stream
-  * @param base_value non encoded value
-  * @return resulting write size
-  **/
-  int write(uint32_t value);
+    for (std::size_t byteIdx = 0; byteIdx < sizeof(Integral); ++byteIdx) {
+      buffer[byteIdx] = static_cast<uint8_t>(value >> (8*(sizeof(Integral) - 1) - 8*byteIdx));
+    }
 
-  /**
-  * writes 8 bytes to stream
-  * @param base_value non encoded value
-  * @return resulting write size
-  **/
-  int write(uint64_t value);
+    return write(buffer, sizeof(Integral));
+  }
 
  private:
   int write_str(const char* str, uint32_t len, bool widen);

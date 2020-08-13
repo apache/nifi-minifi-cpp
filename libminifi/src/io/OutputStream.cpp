@@ -36,10 +36,6 @@ int OutputStream::write(const std::vector<uint8_t>& buffer, int len) {
   return write(buffer.data(), len);
 }
 
-int OutputStream::write(uint8_t value) {
-  return write(&value, 1);
-}
-
 int OutputStream::write(bool value) {
   uint8_t temp = value;
   return write(&temp, 1);
@@ -74,41 +70,6 @@ int OutputStream::write_str(const char* str, uint32_t len, bool widen) {
   }
 
   return ret + write(reinterpret_cast<const uint8_t *>(str), len);
-}
-
-int OutputStream::write(uint16_t value) {
-  uint8_t buffer[2]{};
-
-  buffer[0] = value >> 8;
-  buffer[1] = value;
-
-  return write(buffer, 2);
-}
-
-int OutputStream::write(uint32_t value) {
-  uint8_t buffer[4]{};
-
-  buffer[0] = value >> 24;
-  buffer[1] = value >> 16;
-  buffer[2] = value >> 8;
-  buffer[3] = value;
-
-  return write(buffer, 4);
-}
-
-int OutputStream::write(uint64_t value) {
-  uint8_t buffer[8]{};
-
-  buffer[0] = value >> 56;
-  buffer[1] = value >> 48;
-  buffer[2] = value >> 40;
-  buffer[3] = value >> 32;
-  buffer[4] = value >> 24;
-  buffer[5] = value >> 16;
-  buffer[6] = value >> 8;
-  buffer[7] = value;
-
-  return write(buffer, 8);
 }
 
 } /* namespace io */

@@ -37,17 +37,6 @@ int InputStream::read(std::vector<uint8_t>& buffer, int len) {
   return ret;
 }
 
-
-int InputStream::read(uint8_t &value) {
-  uint8_t buf = 0;
-
-  if (read(&buf, 1) != 1) {
-    return -1;
-  }
-  value = buf;
-  return 1;
-}
-
 int InputStream::read(bool &value) {
   uint8_t buf = 0;
 
@@ -85,53 +74,6 @@ int InputStream::read(std::string &str, bool widen) {
 
   str = std::string(reinterpret_cast<const char*>(buffer.data()), len);
   return ret + len;
-}
-
-int InputStream::read(uint64_t &value) {
-  uint8_t buf[8]{};
-  if (read(buf, 8) != 8) {
-    return -1;
-  }
-
-  value = 0;
-  value |= (uint64_t) buf[0] << 56;
-  value |= (uint64_t) buf[1] << 48;
-  value |= (uint64_t) buf[2] << 40;
-  value |= (uint64_t) buf[3] << 32;
-  value |= (uint64_t) buf[4] << 24;
-  value |= (uint64_t) buf[5] << 16;
-  value |= (uint64_t) buf[6] << 8;
-  value |= (uint64_t) buf[7];
-
-  return 8;
-}
-
-int InputStream::read(uint32_t &value) {
-  uint8_t buf[4]{};
-  if (read(buf, 4) != 4) {
-    return -1;
-  }
-
-  value = 0;
-  value |= (uint32_t) buf[0] << 24;
-  value |= (uint32_t) buf[1] << 16;
-  value |= (uint32_t) buf[2] << 8;
-  value |= (uint32_t) buf[3];
-
-  return 4;
-}
-
-int InputStream::read(uint16_t &value) {
-  uint8_t buf[2]{};
-  if (read(buf, 2) != 2) {
-    return -1;
-  }
-
-  value = 0;
-  value |= (uint16_t) buf[0] << 8;
-  value |= (uint16_t) buf[1];
-
-  return 2;
 }
 
 } /* namespace io */

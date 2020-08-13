@@ -234,12 +234,14 @@ TEST_CASE("TestFileExceedSize", "[TestLoader]") {
 
   std::vector<uint8_t> verifybuffer;
 
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; i++) {
     REQUIRE(stream.read(verifybuffer, 8192) == 8192);
+  }
   REQUIRE(stream.read(verifybuffer, 8192) == 0);
   stream.seek(0);
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; i++) {
     REQUIRE(stream.read(verifybuffer, 8192) == 8192);
+  }
   REQUIRE(stream.read(verifybuffer, 8192) == 0);
 
   std::remove(ss.str().c_str());
