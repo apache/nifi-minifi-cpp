@@ -46,7 +46,7 @@ enum class ZlibStreamState : uint8_t {
   FINISHED
 };
 
-class ZlibBaseStream : public BaseStream {
+class ZlibBaseStream : public OutputStream {
  public:
   virtual bool isFinished() const;
 

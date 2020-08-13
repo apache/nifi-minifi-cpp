@@ -40,9 +40,7 @@ class InputStream : public virtual Stream {
    * @param len length to read
    * @return resulting read size
    **/
-  virtual int read(uint8_t *value, int len) {
-    throw std::runtime_error("Read is not implemented");
-  }
+  virtual int read(uint8_t *value, int len) = 0;
 
   int read(std::vector<uint8_t>& buffer, int len);
 

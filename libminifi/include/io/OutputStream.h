@@ -42,9 +42,7 @@ class OutputStream : public virtual Stream {
    * @param len length of value
    * @return resulting write size
    **/
-  virtual int write(const uint8_t *value, int len) {
-    throw std::runtime_error("Write is not implemented");
-  }
+  virtual int write(const uint8_t *value, int len) = 0;
 
   int write(const std::vector<uint8_t>& buffer, int len);
 

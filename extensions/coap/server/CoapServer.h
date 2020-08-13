@@ -65,7 +65,7 @@ class CoapQuery {
 class CoapResponse {
   friend class CoapQuery;
  public:
-  CoapResponse(int code, std::unique_ptr<uint8_t> data, size_t size)
+  CoapResponse(int code, std::unique_ptr<uint8_t[]> data, size_t size)
       : code_(code),
         data_(std::move(data)),
         size_(size) {
@@ -88,7 +88,7 @@ class CoapResponse {
   CoapResponse &operator=(CoapResponse &&qry) = default;
  private:
   int code_;
-  std::unique_ptr<uint8_t> data_;
+  std::unique_ptr<uint8_t[]> data_;
   size_t size_;
 };
 

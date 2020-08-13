@@ -364,7 +364,7 @@ public:
     int64_t process(std::shared_ptr<io::BaseStream> outputStream) override {
       class ReadCallback : public InputStreamCallback {
        public:
-        ReadCallback(GzipWriteCallback& writer, std::shared_ptr<io::BaseStream> outputStream)
+        ReadCallback(GzipWriteCallback& writer, std::shared_ptr<io::OutputStream> outputStream)
           : writer_(writer)
           , outputStream_(std::move(outputStream)) {
         }
@@ -390,7 +390,7 @@ public:
         }
 
         GzipWriteCallback& writer_;
-        std::shared_ptr<io::BaseStream> outputStream_;
+        std::shared_ptr<io::OutputStream> outputStream_;
       };
 
       std::shared_ptr<io::ZlibBaseStream> filterStream;
