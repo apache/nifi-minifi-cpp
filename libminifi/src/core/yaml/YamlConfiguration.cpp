@@ -653,9 +653,10 @@ void YamlConfiguration::configureConnectionFlowFileExpirationFromYaml(const YAML
 }
 
 void YamlConfiguration::configureConnectionDropEmptyFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
-  if (connectionNode["drop empty"]) {
+  const YAML::Node drop_empty_node = connectionNode["drop empty"];
+  if (drop_empty_node) {
     bool dropEmpty = false;
-    if (utils::StringUtils::StringToBool(connectionNode["drop empty"].as<std::string>(), dropEmpty)) {
+    if (utils::StringUtils::StringToBool(drop_empty_node.as<std::string>(), dropEmpty)) {
       connection->setDropEmptyFlowFiles(dropEmpty);
     }
   }
