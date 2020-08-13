@@ -395,9 +395,9 @@ public:
 
       std::shared_ptr<io::ZlibBaseStream> filterStream;
       if (compress_mode_ == MODE_COMPRESS) {
-        filterStream = std::make_shared<io::ZlibCompressStream>(outputStream.get(), io::ZlibCompressionFormat::GZIP, compress_level_);
+        filterStream = std::make_shared<io::ZlibCompressStream>(gsl::make_not_null(outputStream.get()), io::ZlibCompressionFormat::GZIP, compress_level_);
       } else {
-        filterStream = std::make_shared<io::ZlibDecompressStream>(outputStream.get(), io::ZlibCompressionFormat::GZIP);
+        filterStream = std::make_shared<io::ZlibDecompressStream>(gsl::make_not_null(outputStream.get()), io::ZlibCompressionFormat::GZIP);
       }
       ReadCallback readCb(*this, filterStream);
       session_->read(flow_, &readCb);

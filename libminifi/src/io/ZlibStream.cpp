@@ -26,7 +26,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-ZlibBaseStream::ZlibBaseStream(OutputStream* output)
+ZlibBaseStream::ZlibBaseStream(gsl::not_null<OutputStream*> output)
     : output_{output},
       outputBuffer_(16384U) {
   strm_.zalloc = Z_NULL;
@@ -38,7 +38,7 @@ bool ZlibBaseStream::isFinished() const {
   return state_ == ZlibStreamState::FINISHED;
 }
 
-ZlibCompressStream::ZlibCompressStream(OutputStream* output, ZlibCompressionFormat format, int level)
+ZlibCompressStream::ZlibCompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format, int level)
   : ZlibBaseStream(output) {
   int ret = deflateInit2(
       &strm_,
@@ -114,7 +114,7 @@ void ZlibCompressStream::close() {
   }
 }
 
-ZlibDecompressStream::ZlibDecompressStream(OutputStream* output, ZlibCompressionFormat format)
+ZlibDecompressStream::ZlibDecompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format)
     : ZlibBaseStream(output) {
   int ret = inflateInit2(&strm_, 15 + (format == ZlibCompressionFormat::GZIP ? 16 : 0) /* windowBits */);
   if (ret != Z_OK) {

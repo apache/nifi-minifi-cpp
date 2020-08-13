@@ -28,7 +28,7 @@ namespace io = org::apache::nifi::minifi::io;
 TEST_CASE("gzip compression and decompression", "[basic]") {
   /* Compression*/
   io::BufferStream compressBuffer;
-  io::ZlibCompressStream compressStream(&compressBuffer);
+  io::ZlibCompressStream compressStream(gsl::make_not_null(&compressBuffer));
 
   std::string original;
   SECTION("Empty") {
@@ -64,7 +64,7 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
 
   /* Decompression */
   io::BufferStream decompressBuffer;
-  io::ZlibDecompressStream decompressStream(&decompressBuffer);
+  io::ZlibDecompressStream decompressStream(gsl::make_not_null(&decompressBuffer));
 
   decompressStream.write(const_cast<uint8_t*>(compressBuffer.getBuffer()), compressBuffer.size());
 
@@ -74,8 +74,8 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
 
 TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
   io::BufferStream output;
-  io::ZlibDecompressStream decompressStream(&output);
-  io::ZlibCompressStream compressStream(&decompressStream);
+  io::ZlibDecompressStream decompressStream(gsl::make_not_null(&output));
+  io::ZlibCompressStream compressStream(gsl::make_not_null(&decompressStream));
 
   std::string original;
   SECTION("Empty") {

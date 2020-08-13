@@ -27,6 +27,7 @@
 
 #include "BaseStream.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -51,7 +52,7 @@ class ZlibBaseStream : public OutputStream {
   virtual bool isFinished() const;
 
  protected:
-  explicit ZlibBaseStream(OutputStream* output);
+  explicit ZlibBaseStream(gsl::not_null<OutputStream*> output);
 
   ZlibBaseStream(const ZlibBaseStream&) = delete;
   ZlibBaseStream& operator=(const ZlibBaseStream&) = delete;
@@ -61,12 +62,12 @@ class ZlibBaseStream : public OutputStream {
   ZlibStreamState state_{ZlibStreamState::UNINITIALIZED};
   z_stream strm_{};
   std::vector<uint8_t> outputBuffer_;
-  OutputStream* output_;
+  gsl::not_null<OutputStream*> output_;
 };
 
 class ZlibCompressStream : public ZlibBaseStream {
  public:
-  explicit ZlibCompressStream(OutputStream* output, ZlibCompressionFormat format = ZlibCompressionFormat::GZIP, int level = Z_DEFAULT_COMPRESSION);
+  explicit ZlibCompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format = ZlibCompressionFormat::GZIP, int level = Z_DEFAULT_COMPRESSION);
 
   ZlibCompressStream(const ZlibCompressStream&) = delete;
   ZlibCompressStream& operator=(const ZlibCompressStream&) = delete;
@@ -85,7 +86,7 @@ class ZlibCompressStream : public ZlibBaseStream {
 
 class ZlibDecompressStream : public ZlibBaseStream {
  public:
-  explicit ZlibDecompressStream(OutputStream* output, ZlibCompressionFormat format = ZlibCompressionFormat::GZIP);
+  explicit ZlibDecompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format = ZlibCompressionFormat::GZIP);
 
   ZlibDecompressStream(const ZlibDecompressStream&) = delete;
   ZlibDecompressStream& operator=(const ZlibDecompressStream&) = delete;
