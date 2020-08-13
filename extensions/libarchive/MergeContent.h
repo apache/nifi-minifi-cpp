@@ -32,17 +32,19 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-#define MERGE_STRATEGY_BIN_PACK "Bin-Packing Algorithm"
-#define MERGE_STRATEGY_DEFRAGMENT "Defragment"
-#define MERGE_FORMAT_TAR_VALUE "TAR"
-#define MERGE_FORMAT_ZIP_VALUE "ZIP"
-#define MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE "FlowFile Stream, v3"
-#define MERGE_FORMAT_FLOWFILE_STREAM_V2_VALUE  "FlowFile Stream, v2"
-#define MERGE_FORMAT_FLOWFILE_TAR_V1_VALUE  "FlowFile Tar, v1"
-#define MERGE_FORMAT_CONCAT_VALUE "Binary Concatenation"
-#define MERGE_FORMAT_AVRO_VALUE "Avro"
-#define DELIMITER_STRATEGY_FILENAME "Filename"
-#define DELIMITER_STRATEGY_TEXT "Text"
+static constexpr const char *MERGE_STRATEGY_BIN_PACK = "Bin-Packing Algorithm";
+static constexpr const char *MERGE_STRATEGY_DEFRAGMENT = "Defragment";
+static constexpr const char *MERGE_FORMAT_TAR_VALUE = "TAR";
+static constexpr const char *MERGE_FORMAT_ZIP_VALUE = "ZIP";
+static constexpr const char *MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE = "FlowFile Stream, v3";
+static constexpr const char *MERGE_FORMAT_FLOWFILE_STREAM_V2_VALUE = "FlowFile Stream, v2";
+static constexpr const char *MERGE_FORMAT_FLOWFILE_TAR_V1_VALUE = "FlowFile Tar, v1";
+static constexpr const char *MERGE_FORMAT_CONCAT_VALUE = "Binary Concatenation";
+static constexpr const char *MERGE_FORMAT_AVRO_VALUE = "Avro";
+static constexpr const char *DELIMITER_STRATEGY_FILENAME = "Filename";
+static constexpr const char *DELIMITER_STRATEGY_TEXT = "Text";
+static constexpr const char *ATTRIBUTE_STRATEGY_KEEP_COMMON = "Keep Only Common Attributes";
+static constexpr const char *ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attributes";
 
 // MergeBin Class
 class MergeBin {
@@ -294,9 +296,6 @@ private:
 // MergeContent Class
 class MergeContent : public processors::BinFiles {
 public:
-  static constexpr const char *ATTRIBUTE_STRATEGY_KEEP_COMMON = "Keep Only Common Attributes";
-  static constexpr const char *ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attributes";
-
   // Constructor
   /*!
    * Create a new processor

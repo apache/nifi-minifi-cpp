@@ -66,8 +66,8 @@ core::Property MergeContent::KeepPath(
 core::Property MergeContent::AttributeStrategy(
   core::PropertyBuilder::createProperty("Attribute Strategy")
   ->withDescription("Determines which FlowFile attributes should be added to the bundle. If 'Keep All Unique Attributes' is selected, any attribute on any FlowFile that gets bundled will be kept unless its value conflicts with the value from another FlowFile. If 'Keep Only Common Attributes' is selected, only the attributes that exist on all FlowFiles in the bundle, with the same value, will be preserved.")
-  ->withAllowableValues<std::string>({MergeContent::ATTRIBUTE_STRATEGY_KEEP_COMMON, MergeContent::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE})
-  ->withDefaultValue(MergeContent::ATTRIBUTE_STRATEGY_KEEP_COMMON)->build());
+  ->withAllowableValues<std::string>({ATTRIBUTE_STRATEGY_KEEP_COMMON, ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE})
+  ->withDefaultValue(ATTRIBUTE_STRATEGY_KEEP_COMMON)->build());
 core::Relationship MergeContent::Merge("merged", "The FlowFile containing the merged content");
 const char *BinaryConcatenationMerge::mimeType = "application/octet-stream";
 const char *TarMerge::mimeType = "application/tar";

@@ -221,9 +221,9 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
     }
   }
 
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::DELIMITER_STRATEGY_TEXT);
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> record[6];
@@ -322,9 +322,9 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
   auto input = testController.input;
   auto output = testController.output;
 
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_FILENAME);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::DELIMITER_STRATEGY_FILENAME);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Header, HEADER_FILE);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Footer, FOOTER_FILE);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Demarcator, DEMARCATOR_FILE);
@@ -414,9 +414,9 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
   auto input = testController.input;
   auto output = testController.output;
 
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::DELIMITER_STRATEGY_TEXT);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MaxBinAge, "1 sec");
 
   core::ProcessSession sessionGenFlowFile(context);
@@ -511,9 +511,9 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
   auto input = testController.input;
   auto output = testController.output;
 
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::DELIMITER_STRATEGY_TEXT);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
@@ -592,9 +592,9 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
   auto input = testController.input;
   auto output = testController.output;
 
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_TAR_VALUE);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::MERGE_FORMAT_TAR_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::DELIMITER_STRATEGY_TEXT);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
@@ -682,9 +682,9 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
   auto input = testController.input;
   auto output = testController.output;
 
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_ZIP_VALUE);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::MERGE_FORMAT_ZIP_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::DELIMITER_STRATEGY_TEXT);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
@@ -768,9 +768,9 @@ TEST_CASE("MergeFileOnAttribute", "[mergefiletest5]") {
   auto input = testController.input;
   auto output = testController.output;
 
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::DELIMITER_STRATEGY_TEXT);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinEntries, "3");
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
@@ -845,9 +845,9 @@ TEST_CASE("Test Merge File Attributes Keeping Only Common Attributes", "[testMer
     }
   }
 
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::DELIMITER_STRATEGY_TEXT);
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> record[3];
@@ -918,10 +918,10 @@ TEST_CASE("Test Merge File Attributes Keeping All Unique Attributes", "[testMerg
     }
   }
 
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, DELIMITER_STRATEGY_TEXT);
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::AttributeStrategy, org::apache::nifi::minifi::processors::MergeContent::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::AttributeStrategy, org::apache::nifi::minifi::processors::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE);
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> record[3];
