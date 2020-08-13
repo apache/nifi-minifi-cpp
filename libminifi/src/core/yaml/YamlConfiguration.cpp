@@ -22,6 +22,7 @@
 #include <cinttypes>
 
 #include "core/yaml/YamlConfiguration.h"
+#include "core/yaml/CheckRequiredField.h"
 #include "core/state/Value.h"
 #ifdef YAML_CONFIGURATION_USE_REGEX
 #include <regex>
@@ -39,7 +40,7 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node root
   utils::Identifier uuid;
   int version = 0;
 
-  checkRequiredField(&rootFlowNode, "name",
+  yaml::checkRequiredField(&rootFlowNode, "name", logger_,
   CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
   std::string flowName = rootFlowNode["name"].as<std::string>();
 
@@ -100,7 +101,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         core::ProcessorConfig procCfg;
         YAML::Node procNode = iter->as<YAML::Node>();
 
-        checkRequiredField(&procNode, "name",
+        yaml::checkRequiredField(&procNode, "name", logger_,
         CONFIG_YAML_PROCESSORS_KEY);
         procCfg.name = procNode["name"].as<std::string>();
         procCfg.id = getOrGenerateId(&procNode);
@@ -115,7 +116,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
 
         uuid = procCfg.id.c_str();
         logger_->log_debug("parseProcessorNode: name => [%s] id => [%s]", procCfg.name, procCfg.id);
-        checkRequiredField(&procNode, "class", CONFIG_YAML_PROCESSORS_KEY);
+        yaml::checkRequiredField(&procNode, "class", logger_, CONFIG_YAML_PROCESSORS_KEY);
         procCfg.javaClass = procNode["class"].as<std::string>();
         logger_->log_debug("parseProcessorNode: class => [%s]", procCfg.javaClass);
 
@@ -272,7 +273,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
       for (YAML::const_iterator iter = rpgNode->begin(); iter != rpgNode->end(); ++iter) {
         YAML::Node currRpgNode = iter->as<YAML::Node>();
 
-        checkRequiredField(&currRpgNode, "name",
+        yaml::checkRequiredField(&currRpgNode, "name", logger_,
         CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
         auto name = currRpgNode["name"].as<std::string>();
         id = getOrGenerateId(&currRpgNode);
@@ -360,7 +361,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
         group->setTransmitting(true);
         group->setURL(url);
 
-        checkRequiredField(&currRpgNode, "Input Ports",
+        yaml::checkRequiredField(&currRpgNode, "Input Ports", logger_,
         CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
         YAML::Node inputPorts = currRpgNode["Input Ports"].as<YAML::Node>();
         if (inputPorts && inputPorts.IsSequence()) {
@@ -405,10 +406,10 @@ void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, cor
 
   YAML::Node node = reportNode->as<YAML::Node>();
 
-  checkRequiredField(&node, "scheduling strategy",
+  yaml::checkRequiredField(&node, "scheduling strategy", logger_,
   CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto schedulingStrategyStr = node["scheduling strategy"].as<std::string>();
-  checkRequiredField(&node, "scheduling period",
+  yaml::checkRequiredField(&node, "scheduling period", logger_,
   CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto schedulingPeriodStr = node["scheduling period"].as<std::string>();
 
@@ -444,9 +445,9 @@ void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, cor
       logger_->log_debug("ProvenanceReportingTask URL %s", urlStr);
     }
   }
-  checkRequiredField(&node, "port uuid", CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  yaml::checkRequiredField(&node, "port uuid", logger_, CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto portUUIDStr = node["port uuid"].as<std::string>();
-  checkRequiredField(&node, "batch size", CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  yaml::checkRequiredField(&node, "batch size", logger_, CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto batchSizeStr = node["batch size"].as<std::string>();
 
   logger_->log_debug("ProvenanceReportingTask port uuid %s", portUUIDStr);
@@ -470,17 +471,17 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
       for (auto iter : *controllerServicesNode) {
         YAML::Node controllerServiceNode = iter.as<YAML::Node>();
         try {
-          checkRequiredField(&controllerServiceNode, "name",
+          yaml::checkRequiredField(&controllerServiceNode, "name", logger_,
           CONFIG_YAML_CONTROLLER_SERVICES_KEY);
-          checkRequiredField(&controllerServiceNode, "id",
+          yaml::checkRequiredField(&controllerServiceNode, "id", logger_,
           CONFIG_YAML_CONTROLLER_SERVICES_KEY);
           std::string type = "";
 
           try {
-            checkRequiredField(&controllerServiceNode, "class", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+            yaml::checkRequiredField(&controllerServiceNode, "class", logger_, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
             type = controllerServiceNode["class"].as<std::string>();
           } catch (const std::invalid_argument &) {
-            checkRequiredField(&controllerServiceNode, "type", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+            yaml::checkRequiredField(&controllerServiceNode, "type", logger_, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
             type = controllerServiceNode["type"].as<std::string>();
             logger_->log_debug("Using type %s for controller service node", type);
           }
@@ -575,7 +576,7 @@ void YamlConfiguration::configureConnectionSourceUUIDFromYaml(const YAML::Node& 
     logger_->log_debug("Using 'source id' to match source with same id for connection '%s': source id => [%s]", name, srcUUID.to_string());
   } else {
     // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
-    checkRequiredField(&connectionNode, "source name", CONFIG_YAML_CONNECTIONS_KEY);
+    yaml::checkRequiredField(&connectionNode, "source name", logger_, CONFIG_YAML_CONNECTIONS_KEY);
     const std::string connectionSrcProcName = connectionNode["source name"].as<std::string>();
     if (nullptr != parent->findProcessorById(utils::Identifier{connectionSrcProcName})) {
       // the source name is a remote port id, so use that as the source id
@@ -608,7 +609,7 @@ void YamlConfiguration::configureConnectionDestinationUUIDFromYaml(const YAML::N
   } else {
     // we use the same logic as above for resolving the source processor
     // for looking up the destination processor in absence of a processor id
-    checkRequiredField(&connectionNode, "destination name", CONFIG_YAML_CONNECTIONS_KEY);
+    yaml::checkRequiredField(&connectionNode, "destination name", logger_, CONFIG_YAML_CONNECTIONS_KEY);
     std::string connectionDestProcName = connectionNode["destination name"].as<std::string>();
     utils::Identifier targetProcessorUUID(connectionDestProcName);
     if (parent->findProcessorById(targetProcessorUUID)) {
@@ -715,10 +716,10 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *
   YAML::Node inputPortsObj = portNode->as<YAML::Node>();
 
   // Check for required fields
-  checkRequiredField(&inputPortsObj, "name",
+  yaml::checkRequiredField(&inputPortsObj, "name", logger_,
   CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
   auto nameStr = inputPortsObj["name"].as<std::string>();
-  checkRequiredField(&inputPortsObj, "id",
+  yaml::checkRequiredField(&inputPortsObj, "id", logger_,
   CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY,
                      "The field 'id' is required for "
                          "the port named '" + nameStr + "' in the YAML Config. If this port "
@@ -982,26 +983,6 @@ std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode, const std::
     logger_->log_debug("Generating random ID: id => [%s]", id);
   }
   return id;
-}
-
-void YamlConfiguration::checkRequiredField(const YAML::Node *yamlNode, const std::string &fieldName, const std::string &yamlSection, const std::string &errorMessage) const {
-  std::string errMsg = errorMessage;
-  if (!yamlNode->as<YAML::Node>()[fieldName]) {
-    if (errMsg.empty()) {
-      // Build a helpful error message for the user so they can fix the
-      // invalid YAML config file, using the component name if present
-      errMsg =
-          yamlNode->as<YAML::Node>()["name"] ?
-              "Unable to parse configuration file for component named '" + yamlNode->as<YAML::Node>()["name"].as<std::string>() + "' as required field '" + fieldName + "' is missing" :
-              "Unable to parse configuration file as required field '" + fieldName + "' is missing";
-      if (!yamlSection.empty()) {
-        errMsg += " [in '" + yamlSection + "' section of configuration file]";
-      }
-    }
-    logging::LOG_ERROR(logger_) << errMsg;
-
-    throw std::invalid_argument(errMsg);
-  }
 }
 
 YAML::Node YamlConfiguration::getOptionalField(YAML::Node *yamlNode, const std::string &fieldName, const YAML::Node &defaultValue, const std::string &yamlSection,
