@@ -150,19 +150,19 @@ void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessio
   logger_->log_debug("Merge Content: Footer [%s] Header [%s] Demarcator [%s] KeepPath [%d]", footer_, header_, demarcator_, keepPath_);
   if (delimiterStrategy_ == DELIMITER_STRATEGY_FILENAME) {
     if (!header_.empty()) {
-      this->headerContent_ = readContent(header_);
+      headerContent_ = readContent(header_);
     }
     if (!footer_.empty()) {
-       this->footerContent_ = readContent(footer_);
+       footerContent_ = readContent(footer_);
     }
     if (!demarcator_.empty()) {
-        this->demarcatorContent_ = readContent(demarcator_);
+        demarcatorContent_ = readContent(demarcator_);
     }
   }
   if (delimiterStrategy_ == DELIMITER_STRATEGY_TEXT) {
-    this->headerContent_ = header_;
-    this->footerContent_ = footer_;
-    this->demarcatorContent_ = demarcator_;
+    headerContent_ = header_;
+    footerContent_ = footer_;
+    demarcatorContent_ = demarcator_;
   }
 }
 
@@ -268,7 +268,7 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
 
   std::shared_ptr<core::FlowFile> mergeFlow;
   try {
-    mergeFlow = mergeBin->merge(context, session, bin->getFlowFile(), this->headerContent_, this->footerContent_, this->demarcatorContent_);
+    mergeFlow = mergeBin->merge(context, session, bin->getFlowFile(), headerContent_, footerContent_, demarcatorContent_);
   } catch (...) {
     logger_->log_error("Merge Content merge catch exception");
     return false;
@@ -300,7 +300,7 @@ std::shared_ptr<core::FlowFile> BinaryConcatenationMerge::merge(core::ProcessCon
   std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
   BinaryConcatenationMerge::WriteCallback callback(header, footer, demarcator, flows, session);
   session->write(flowFile, &callback);
-  session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), this->getMergedContentType());
+  session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), getMergedContentType());
   std::string fileName;
   if (flows.size() == 1) {
     flows.front()->getAttribute(FlowAttributeKey(FILENAME), fileName);
@@ -317,7 +317,7 @@ std::shared_ptr<core::FlowFile> TarMerge::merge(core::ProcessContext *context, c
   std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
   ArchiveMerge::WriteCallback callback(std::string(MERGE_FORMAT_TAR_VALUE), flows, session);
   session->write(flowFile, &callback);
-  session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), this->getMergedContentType());
+  session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), getMergedContentType());
   std::string fileName;
   flowFile->getAttribute(FlowAttributeKey(FILENAME), fileName);
   if (flows.size() == 1) {
@@ -337,7 +337,7 @@ std::shared_ptr<core::FlowFile> ZipMerge::merge(core::ProcessContext *context, c
   std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
   ArchiveMerge::WriteCallback callback(std::string(MERGE_FORMAT_ZIP_VALUE), flows, session);
   session->write(flowFile, &callback);
-  session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), this->getMergedContentType());
+  session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), getMergedContentType());
   std::string fileName;
   flowFile->getAttribute(FlowAttributeKey(FILENAME), fileName);
   if (flows.size() == 1) {

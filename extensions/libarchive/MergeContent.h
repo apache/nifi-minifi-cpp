@@ -203,7 +203,7 @@ public:
       }
       archive_write_set_bytes_per_block(arch, 0);
       archive_write_add_filter_none(arch);
-      this->stream_ = stream;
+      stream_ = stream;
       archive_write_open(arch, this, NULL, archive_write, NULL);
 
       for (auto flow : flows_) {
