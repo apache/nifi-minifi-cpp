@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR ) {
+  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR) {
     logger->log_error("Cannot install signal handler");
     return -1;
   }

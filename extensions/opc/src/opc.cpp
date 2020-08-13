@@ -340,7 +340,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   auto tokens = utils::StringUtils::split(path, "/");
   std::vector<UA_UInt32> ids;
   for(size_t i = 0; i < tokens.size(); ++i) {
-    UA_UInt32 val = (i ==0 ) ? UA_NS0ID_ORGANIZES : UA_NS0ID_HASCOMPONENT;
+    UA_UInt32 val = (i ==0) ? UA_NS0ID_ORGANIZES : UA_NS0ID_HASCOMPONENT;
     ids.push_back(val);
   }
 
@@ -485,7 +485,7 @@ std::string nodeValue2String(const NodeData& nd) {
     case UA_TYPES_STRING:
     case UA_TYPES_LOCALIZEDTEXT:
     case UA_TYPES_BYTESTRING: {
-      UA_String value = *(UA_String * )(nd.var_->data);
+      UA_String value = *(UA_String *)(nd.var_->data);
       ret_val = std::string(reinterpret_cast<const char *>(value.data), value.length);
       break;
     }

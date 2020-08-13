@@ -64,7 +64,7 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
     }
   }
 
-  event_timestamp_ = static_cast<PEVT_VARIANT>( rendered_values.get())[EvtSystemTimeCreated].FileTimeVal;
+  event_timestamp_ = static_cast<PEVT_VARIANT>(rendered_values.get())[EvtSystemTimeCreated].FileTimeVal;
 
   SYSTEMTIME st;
   FILETIME ft;

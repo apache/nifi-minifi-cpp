@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
     auto result = options.parse(argc, argv);
 
     if (result.count("help")) {
-      std::cout << options.help( { "", "Group" }) << std::endl;
+      std::cout << options.help({ "", "Group" }) << std::endl;
       exit(0);
     }
 
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
       // catch anything thrown within try block that derives from std::exception
       std::cerr << exc.what() << std::endl;
   } catch (...) {
-    std::cout << options.help( { "", "Group" }) << std::endl;
+    std::cout << options.help({ "", "Group" }) << std::endl;
     exit(0);
   }
   return 0;

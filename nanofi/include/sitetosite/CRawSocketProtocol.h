@@ -86,7 +86,7 @@ static const char * getCodecResourceName(const struct CRawSiteToSiteClient * c) 
 
 static RespondCodeContext *getRespondCodeContext(RespondCode code) {
   unsigned int i;
-  for ( i = 0; i < sizeof(respondCodeContext) / sizeof(RespondCodeContext); i++) {
+  for (i = 0; i < sizeof(respondCodeContext) / sizeof(RespondCodeContext); i++) {
     if (respondCodeContext[i].code == code) {
       return &respondCodeContext[i];
     }

@@ -563,7 +563,7 @@ bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool ov
       logger_->log_error("Failed to open remote file \"%s\" due to an underlying SSH error: %s", path.c_str(), err_msg);
     }
   }
-  const auto guard = gsl::finally ([this, &file_handle, &path]() {
+  const auto guard = gsl::finally([this, &file_handle, &path]() {
     logger_->log_trace("Closing remote file \"%s\"", path.c_str());
     libssh2_sftp_close(file_handle);
   });

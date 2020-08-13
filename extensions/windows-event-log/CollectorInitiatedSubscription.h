@@ -71,7 +71,7 @@ protected:
   bool subscribe(const std::shared_ptr<core::ProcessContext> &context);
   void unsubscribe();
   int processQueue(const std::shared_ptr<core::ProcessSession> &session);
-  void logError(int line, const std::string& error );
+  void logError(int line, const std::string& error);
   void logWindowsError(int line, const std::string& info);
   void logInvalidSubscriptionPropertyType(int line, DWORD type);
   bool getSubscriptionProperty(EC_HANDLE hSubscription, EC_SUBSCRIPTION_PROPERTY_ID propID, DWORD flags, std::vector<BYTE>& buffer, PEC_VARIANT& vProperty);

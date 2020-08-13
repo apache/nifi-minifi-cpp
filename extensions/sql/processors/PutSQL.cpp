@@ -66,10 +66,10 @@ PutSQL::~PutSQL() = default;
 
 void PutSQL::initialize() {
   //! Set the supported properties
-  setSupportedProperties( { dbControllerService(), s_sqlStatements });
+  setSupportedProperties({ dbControllerService(), s_sqlStatements });
 
   //! Set the supported relationships
-  setSupportedRelationships( { s_success });
+  setSupportedRelationships({ s_success });
 }
 
 void PutSQL::processOnSchedule(core::ProcessContext& context) {

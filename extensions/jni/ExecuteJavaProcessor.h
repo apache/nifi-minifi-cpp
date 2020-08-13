@@ -86,17 +86,17 @@ class ExecuteJavaProcessor : public core::Processor {
   static JavaSignatures &getLoggerSignatures() {
     static JavaSignatures loggersignatures;
     if (loggersignatures.empty()) {
-      loggersignatures.addSignature( { "isWarnEnabled", "()Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_isWarnEnabled) });
-      loggersignatures.addSignature( { "isTraceEnabled", "()Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_isTraceEnabled) });
-      loggersignatures.addSignature( { "isInfoEnabled", "()Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_isInfoEnabled) });
-      loggersignatures.addSignature( { "isErrorEnabled", "()Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_isErrorEnabled) });
-      loggersignatures.addSignature( { "isDebugEnabled", "()Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_isDebugEnabled) });
+      loggersignatures.addSignature({ "isWarnEnabled", "()Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_isWarnEnabled) });
+      loggersignatures.addSignature({ "isTraceEnabled", "()Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_isTraceEnabled) });
+      loggersignatures.addSignature({ "isInfoEnabled", "()Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_isInfoEnabled) });
+      loggersignatures.addSignature({ "isErrorEnabled", "()Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_isErrorEnabled) });
+      loggersignatures.addSignature({ "isDebugEnabled", "()Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_isDebugEnabled) });
 
-      loggersignatures.addSignature( { "info", "(Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_info) });
-      loggersignatures.addSignature( { "warn", "(Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_warn) });
-      loggersignatures.addSignature( { "error", "(Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_error) });
-      loggersignatures.addSignature( { "debug", "(Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_debug) });
-      loggersignatures.addSignature( { "trace", "(Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_trace) });
+      loggersignatures.addSignature({ "info", "(Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_info) });
+      loggersignatures.addSignature({ "warn", "(Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_warn) });
+      loggersignatures.addSignature({ "error", "(Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_error) });
+      loggersignatures.addSignature({ "debug", "(Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_debug) });
+      loggersignatures.addSignature({ "trace", "(Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniLogger_trace) });
     }
     return loggersignatures;
   }
@@ -104,11 +104,11 @@ class ExecuteJavaProcessor : public core::Processor {
   static JavaSignatures &getProcessContextSignatures() {
     static JavaSignatures methodSignatures;
     if (methodSignatures.empty()) {
-      methodSignatures.addSignature( { "getComponent", "()Lorg/apache/nifi/components/AbstractConfigurableComponent;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getComponent) });
-      methodSignatures.addSignature( { "getPropertyNames", "()Ljava/util/List;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getPropertyNames) });
-      methodSignatures.addSignature( { "getPropertyValue", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue) });
-      methodSignatures.addSignature( { "getName", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getName) });
-      methodSignatures.addSignature( { "getControllerServiceLookup", "()Lorg/apache/nifi/controller/ControllerServiceLookup;",
+      methodSignatures.addSignature({ "getComponent", "()Lorg/apache/nifi/components/AbstractConfigurableComponent;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getComponent) });
+      methodSignatures.addSignature({ "getPropertyNames", "()Ljava/util/List;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getPropertyNames) });
+      methodSignatures.addSignature({ "getPropertyValue", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue) });
+      methodSignatures.addSignature({ "getName", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getName) });
+      methodSignatures.addSignature({ "getControllerServiceLookup", "()Lorg/apache/nifi/controller/ControllerServiceLookup;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getControllerServiceLookup) });
     }
     return methodSignatures;
@@ -117,8 +117,8 @@ class ExecuteJavaProcessor : public core::Processor {
   static JavaSignatures &getInputStreamSignatures() {
     static JavaSignatures methodSignatures;
     if (methodSignatures.empty()) {
-      methodSignatures.addSignature( { "read", "()I", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInputStream_read) });
-      methodSignatures.addSignature( { "readWithOffset", "([BII)I", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInputStream_readWithOffset) });
+      methodSignatures.addSignature({ "read", "()I", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInputStream_read) });
+      methodSignatures.addSignature({ "readWithOffset", "([BII)I", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInputStream_readWithOffset) });
 
     }
     return methodSignatures;
@@ -127,15 +127,15 @@ class ExecuteJavaProcessor : public core::Processor {
   static JavaSignatures &getFlowFileSignatures() {
     static JavaSignatures methodSignatures;
     if (methodSignatures.empty()) {
-      methodSignatures.addSignature( { "getAttributes", "()Ljava/util/Map;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getAttributes) });
-      methodSignatures.addSignature( { "getAttribute", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getAttribute) });
-      methodSignatures.addSignature( { "getSize", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getSize) });
-      methodSignatures.addSignature( { "getEntryDate", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getEntryDate) });
-      methodSignatures.addSignature( { "getLineageStartDate", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate) });
-      methodSignatures.addSignature( { "getLastQueueDatePrim", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim) });
-      methodSignatures.addSignature( { "getQueueDateIndex", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getQueueDateIndex) });
-      methodSignatures.addSignature( { "getId", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getId) });
-      methodSignatures.addSignature( { "getUUIDStr", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getUUIDStr) });
+      methodSignatures.addSignature({ "getAttributes", "()Ljava/util/Map;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getAttributes) });
+      methodSignatures.addSignature({ "getAttribute", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getAttribute) });
+      methodSignatures.addSignature({ "getSize", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getSize) });
+      methodSignatures.addSignature({ "getEntryDate", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getEntryDate) });
+      methodSignatures.addSignature({ "getLineageStartDate", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate) });
+      methodSignatures.addSignature({ "getLastQueueDatePrim", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim) });
+      methodSignatures.addSignature({ "getQueueDateIndex", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getQueueDateIndex) });
+      methodSignatures.addSignature({ "getId", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getId) });
+      methodSignatures.addSignature({ "getUUIDStr", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getUUIDStr) });
     }
     return methodSignatures;
   }
@@ -143,28 +143,28 @@ class ExecuteJavaProcessor : public core::Processor {
   static JavaSignatures &getProcessSessionSignatures() {
     static JavaSignatures methodSignatures;
     if (methodSignatures.empty()) {
-      methodSignatures.addSignature( { "remove", "(Lorg/apache/nifi/flowfile/FlowFile;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_remove) });
-      methodSignatures.addSignature( { "create", "()Lorg/apache/nifi/flowfile/FlowFile;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_create) });
-      methodSignatures.addSignature( { "penalize", "(Lorg/apache/nifi/flowfile/FlowFile;)Lorg/apache/nifi/flowfile/FlowFile;",
+      methodSignatures.addSignature({ "remove", "(Lorg/apache/nifi/flowfile/FlowFile;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_remove) });
+      methodSignatures.addSignature({ "create", "()Lorg/apache/nifi/flowfile/FlowFile;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_create) });
+      methodSignatures.addSignature({ "penalize", "(Lorg/apache/nifi/flowfile/FlowFile;)Lorg/apache/nifi/flowfile/FlowFile;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_penalize) });
-      methodSignatures.addSignature( { "createWithParent", "(Lorg/apache/nifi/flowfile/FlowFile;)Lorg/apache/nifi/flowfile/FlowFile;",
+      methodSignatures.addSignature({ "createWithParent", "(Lorg/apache/nifi/flowfile/FlowFile;)Lorg/apache/nifi/flowfile/FlowFile;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_createWithParent) });
-      methodSignatures.addSignature( { "rollback", "()V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_rollback) });
-      methodSignatures.addSignature( { "commit", "()V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_commit) });
-      methodSignatures.addSignature( { "get", "()Lorg/apache/nifi/flowfile/FlowFile;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_get) });
-      methodSignatures.addSignature( { "write", "(Lorg/apache/nifi/flowfile/FlowFile;[B)Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_write) });
-      methodSignatures.addSignature( { "append", "(Lorg/apache/nifi/flowfile/FlowFile;[B)Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_append) });
-      methodSignatures.addSignature( { "putAttribute", "(Lorg/apache/nifi/flowfile/FlowFile;Ljava/lang/String;Ljava/lang/String;)Lorg/apache/nifi/flowfile/FlowFile;",
+      methodSignatures.addSignature({ "rollback", "()V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_rollback) });
+      methodSignatures.addSignature({ "commit", "()V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_commit) });
+      methodSignatures.addSignature({ "get", "()Lorg/apache/nifi/flowfile/FlowFile;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_get) });
+      methodSignatures.addSignature({ "write", "(Lorg/apache/nifi/flowfile/FlowFile;[B)Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_write) });
+      methodSignatures.addSignature({ "append", "(Lorg/apache/nifi/flowfile/FlowFile;[B)Z", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_append) });
+      methodSignatures.addSignature({ "putAttribute", "(Lorg/apache/nifi/flowfile/FlowFile;Ljava/lang/String;Ljava/lang/String;)Lorg/apache/nifi/flowfile/FlowFile;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_putAttribute) });
-      methodSignatures.addSignature( { "removeAttribute", "(Lorg/apache/nifi/flowfile/FlowFile;Ljava/lang/String;)Lorg/apache/nifi/flowfile/FlowFile;",
+      methodSignatures.addSignature({ "removeAttribute", "(Lorg/apache/nifi/flowfile/FlowFile;Ljava/lang/String;)Lorg/apache/nifi/flowfile/FlowFile;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_removeAttribute) });
-      methodSignatures.addSignature( { "clone", "(Lorg/apache/nifi/flowfile/FlowFile;)Lorg/apache/nifi/flowfile/FlowFile;",
+      methodSignatures.addSignature({ "clone", "(Lorg/apache/nifi/flowfile/FlowFile;)Lorg/apache/nifi/flowfile/FlowFile;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_clone) });
-      methodSignatures.addSignature( { "clonePortion", "(Lorg/apache/nifi/flowfile/FlowFile;JJ)Lorg/apache/nifi/flowfile/FlowFile;",
+      methodSignatures.addSignature({ "clonePortion", "(Lorg/apache/nifi/flowfile/FlowFile;JJ)Lorg/apache/nifi/flowfile/FlowFile;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_clonePortion) });
-      methodSignatures.addSignature( { "readFlowFile", "(Lorg/apache/nifi/flowfile/FlowFile;)Lorg/apache/nifi/processor/JniInputStream;",
+      methodSignatures.addSignature({ "readFlowFile", "(Lorg/apache/nifi/flowfile/FlowFile;)Lorg/apache/nifi/processor/JniInputStream;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_readFlowFile) });
-      methodSignatures.addSignature( { "transfer", "(Lorg/apache/nifi/flowfile/FlowFile;Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_transfer) });
+      methodSignatures.addSignature({ "transfer", "(Lorg/apache/nifi/flowfile/FlowFile;Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_transfer) });
     }
     return methodSignatures;
   }
@@ -172,9 +172,9 @@ class ExecuteJavaProcessor : public core::Processor {
   static JavaSignatures &getJniInitializationContextSignatures() {
     static JavaSignatures methodSignatures;
     if (methodSignatures.empty()) {
-      methodSignatures.addSignature( { "getControllerServiceLookup", "()Lorg/apache/nifi/controller/ControllerServiceLookup;",
+      methodSignatures.addSignature({ "getControllerServiceLookup", "()Lorg/apache/nifi/controller/ControllerServiceLookup;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInitializationContext_getControllerServiceLookup) });
-      methodSignatures.addSignature( { "getIdentifier", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInitializationContext_getIdentifier) });
+      methodSignatures.addSignature({ "getIdentifier", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInitializationContext_getIdentifier) });
     }
     return methodSignatures;
   }
@@ -182,13 +182,13 @@ class ExecuteJavaProcessor : public core::Processor {
   static JavaSignatures &getJniControllerServiceLookupSignatures() {
     static JavaSignatures methodSignatures;
     if (methodSignatures.empty()) {
-      methodSignatures.addSignature( { "getControllerService", "(Ljava/lang/String;)Lorg/apache/nifi/controller/ControllerService;",
+      methodSignatures.addSignature({ "getControllerService", "(Ljava/lang/String;)Lorg/apache/nifi/controller/ControllerService;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniControllerServiceLookup_getControllerService) });
-      methodSignatures.addSignature( { "isControllerServiceEnabled", "(Ljava/lang/String;)Z",
+      methodSignatures.addSignature({ "isControllerServiceEnabled", "(Ljava/lang/String;)Z",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniControllerServiceLookup_isControllerServiceEnabled) });
-      methodSignatures.addSignature( { "isControllerServiceEnabling", "(Ljava/lang/String;)Z",
+      methodSignatures.addSignature({ "isControllerServiceEnabling", "(Ljava/lang/String;)Z",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniControllerServiceLookup_isControllerServiceEnabling) });
-      methodSignatures.addSignature( { "getControllerServiceName", "(Ljava/lang/String;)Ljava/lang/String;",
+      methodSignatures.addSignature({ "getControllerServiceName", "(Ljava/lang/String;)Ljava/lang/String;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniControllerServiceLookup_getControllerServiceName) });
     }
     return methodSignatures;
