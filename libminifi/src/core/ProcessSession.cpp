@@ -261,10 +261,9 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
     flow->setResourceClaim(claim);
 
     stream->closeStream();
-    std::stringstream details;
-    details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
+    std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flow->getUUIDStr();
     uint64_t endTime = getTimeMillis();
-    provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
+    provenance_report_->modifyContent(flow, details, endTime - startTime);
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
