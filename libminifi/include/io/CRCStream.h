@@ -24,6 +24,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <cassert>
 
 #ifdef WIN32
 #include <winsock2.h>
@@ -71,7 +72,11 @@ class CRCStreamBase : public virtual Stream {
 
  protected:
   explicit CRCStreamBase(gsl::not_null<StreamType*> child_stream) : child_stream_(child_stream) {}
-  CRCStreamBase();
+  //  this implementation is here to make MSVC happy, declaration would be enough
+  //  as it will never get called (and should not be called)
+  CRCStreamBase() : child_stream_(gsl::make_not_null<StreamType*>(nullptr)) {
+    assert(false);
+  }
 
   uLong crc_ = 0;
   gsl::not_null<StreamType*> child_stream_;
