@@ -28,19 +28,19 @@ namespace io {
 
 int BufferStream::write(const uint8_t *value, int size) {
   utils::internal::ensureNonNegativeWrite(size);
-  buffer.reserve(buffer.size() + size);
-  std::copy(value, value + size, std::back_inserter(buffer));
+  buffer_.reserve(buffer_.size() + size);
+  std::copy(value, value + size, std::back_inserter(buffer_));
   return size;
 }
 
 int BufferStream::read(uint8_t *buf, int len) {
   utils::internal::ensureNonNegativeRead(len);
-  len = (std::min<uint64_t>)(len, buffer.size() - readOffset);
-  auto begin = buffer.begin() + readOffset;
+  len = (std::min<uint64_t>)(len, buffer_.size() - readOffset_);
+  auto begin = buffer_.begin() + readOffset_;
   std::copy(begin, begin + len, buf);
 
   // increase offset for the next read
-  readOffset += len;
+  readOffset_ += len;
 
   return len;
 }

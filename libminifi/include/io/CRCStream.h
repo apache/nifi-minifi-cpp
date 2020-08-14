@@ -62,7 +62,7 @@ class CRCStreamBase : public virtual Stream {
   }
 
   uint64_t getCRC() {
-    return crc_;
+    return gsl::narrow<uint64_t>(crc_);
   }
 
   void reset() {
@@ -73,7 +73,7 @@ class CRCStreamBase : public virtual Stream {
   explicit CRCStreamBase(gsl::not_null<StreamType*> child_stream) : child_stream_(child_stream) {}
   CRCStreamBase();
 
-  uint64_t crc_ = 0;
+  uLong crc_ = 0;
   gsl::not_null<StreamType*> child_stream_;
 };
 
@@ -127,7 +127,7 @@ class CRCStream : public std::conditional<std::is_base_of<InputStream, StreamTyp
   }
 
   CRCStream(gsl::not_null<StreamType*> child_stream, uint64_t initial_crc) : internal::CRCStreamBase<StreamType>(child_stream) {
-    crc_ = initial_crc;
+    crc_ = gsl::narrow<uLong>(initial_crc);
   }
 
   CRCStream(CRCStream &&stream) noexcept : internal::CRCStreamBase<StreamType>(std::move(stream.child_stream_)){

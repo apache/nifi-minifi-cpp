@@ -45,13 +45,13 @@ class BufferStream : public BaseStream {
   int read(uint8_t* buffer, int len) override;
 
   int initialize() override {
-    buffer.clear();
-    readOffset = 0;
+    buffer_.clear();
+    readOffset_ = 0;
     return 0;
   }
 
   void seek(uint64_t offset) override {
-    readOffset += offset;
+    readOffset_ += offset;
   }
 
   void close() override { }
@@ -61,7 +61,7 @@ class BufferStream : public BaseStream {
    * @return vector's array
    **/
   const uint8_t *getBuffer() const override {
-    return buffer.data();
+    return buffer_.data();
   }
 
   /**
@@ -69,13 +69,13 @@ class BufferStream : public BaseStream {
    * @return size of data stream
    **/
   size_t size() const override {
-    return buffer.size();
+    return buffer_.size();
   }
 
  private:
-  std::vector<uint8_t> buffer;
+  std::vector<uint8_t> buffer_;
 
-  uint32_t readOffset = 0;
+  uint64_t readOffset_ = 0;
 };
 
 }  // namespace io
