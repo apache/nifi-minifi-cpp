@@ -28,6 +28,7 @@
 #include <deque>
 #include <utility>
 #include <algorithm>
+#include <numeric>
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "utils/GeneralUtils.h"
@@ -359,17 +360,13 @@ void AttributeMerger::mergeAttributes(core::ProcessSession *session, std::shared
 }
 
 std::map<std::string, std::string> AttributeMerger::getMergedAttributes() {
-  std::map<std::string, std::string> merged_attributes;
-  bool is_first = true;
-  for (const auto& flow : flows_) {
-    if (is_first) {
-      merged_attributes = flow->getAttributes();
-      is_first = false;
-    } else {
-      processFlowFile(flow, merged_attributes);
-    }
-  }
-  return merged_attributes;
+  if (flows_.empty()) return {};
+  std::map<std::string, std::string> sum{ flows_.front()->getAttributes() };
+  const auto merge_attributes = [this](std::map<std::string, std::string>* const merged_attributes, const std::shared_ptr<core::FlowFile>& flow) {
+    processFlowFile(flow, *merged_attributes);
+    return merged_attributes;
+  };
+  return *std::accumulate(std::next(flows_.cbegin()), flows_.cend(), &sum, merge_attributes);
 }
 
 void KeepOnlyCommonAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) {
