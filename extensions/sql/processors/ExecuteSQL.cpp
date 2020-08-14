@@ -74,10 +74,10 @@ ExecuteSQL::~ExecuteSQL() = default;
 
 void ExecuteSQL::initialize() {
   //! Set the supported properties
-  setSupportedProperties( { dbControllerService(), outputFormat(), s_sqlSelectQuery, s_maxRowsPerFlowFile});
+  setSupportedProperties({ dbControllerService(), outputFormat(), s_sqlSelectQuery, s_maxRowsPerFlowFile});
 
   //! Set the supported relationships
-  setSupportedRelationships( { s_success });
+  setSupportedRelationships({ s_success });
 }
 
 void ExecuteSQL::processOnSchedule(core::ProcessContext &context) {

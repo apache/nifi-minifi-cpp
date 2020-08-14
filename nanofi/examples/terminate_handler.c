@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
   set_property(put_proc, "Directory", "/tmp/never_existed");
   set_property(put_proc, "Create Missing Directories", "false");
 
-  flow_file_record *record = get_next_flow_file(instance, new_flow );
+  flow_file_record *record = get_next_flow_file(instance, new_flow);
 
   // Here be dragons - nothing below this line gets executed
   fprintf(stderr, "Dragons!!!");

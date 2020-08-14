@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 
   char *file = argv[1];
 
-  if(access( file, F_OK ) == -1) {
+  if(access(file, F_OK) == -1) {
     printf("Error: %s doesn't exist!\n", file);
     exit(1);
   }

@@ -349,7 +349,7 @@ class JVMLoader {
     }
 
 #ifdef _MSC_VER
-#pragma warning( suppress: 4054 )
+#pragma warning(suppress: 4054)
 #endif
     return (void*)symbol;
   }

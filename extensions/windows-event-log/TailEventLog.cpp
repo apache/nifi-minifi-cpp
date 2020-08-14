@@ -110,7 +110,7 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
           strlen(source) + 1);
 
       flowFile->addAttribute("source", source);
-      flowFile->addAttribute("record_number", std::to_string( event_record->RecordNumber));
+      flowFile->addAttribute("record_number", std::to_string(event_record->RecordNumber));
       flowFile->addAttribute("computer_name", computer_name);
       
       flowFile->addAttribute("event_time", getTimeStamp(event_record->TimeGenerated));

@@ -124,7 +124,7 @@ class CoapServer : public core::Connectable {
     future = std::async(std::launch::async, [&]() -> uint64_t {
       while (running_) {
         int res = coap_run_once(server_->ctx, 100);
-        if (res < 0 ) {
+        if (res < 0) {
           break;
         }
         coap_check_notify(server_->ctx);

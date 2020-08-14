@@ -42,7 +42,7 @@ class HttpTransaction : public sitetosite::Transaction {
   }
 
   ~HttpTransaction(){
-    auto stream = dynamic_cast< org::apache::nifi::minifi::io::HttpStream*>(  dynamic_cast<SiteToSitePeer*>(crcStream.getstream())->getStream() );
+    auto stream = dynamic_cast< org::apache::nifi::minifi::io::HttpStream*>(dynamic_cast<SiteToSitePeer*>(crcStream.getstream())->getStream() );
   if (stream)
     stream->forceClose();
   }

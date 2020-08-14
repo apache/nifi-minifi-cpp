@@ -123,10 +123,10 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
   static JavaSignatures &getJniConfigurationContext() {
     static JavaSignatures methodSignatures;
     if (methodSignatures.empty()) {
-      methodSignatures.addSignature( { "getName", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniConfigurationContext_getName) });
-      methodSignatures.addSignature( { "getComponent", "()Lorg/apache/nifi/components/AbstractConfigurableComponent;",
+      methodSignatures.addSignature({ "getName", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniConfigurationContext_getName) });
+      methodSignatures.addSignature({ "getComponent", "()Lorg/apache/nifi/components/AbstractConfigurableComponent;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniConfigurationContext_getComponent) });
-      methodSignatures.addSignature( { "getPropertyNames", "()Ljava/util/List;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyNames) });
+      methodSignatures.addSignature({ "getPropertyNames", "()Ljava/util/List;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyNames) });
       methodSignatures.addSignature(
           { "getPropertyValue", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyValue) });
     }
@@ -136,9 +136,9 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
   static JavaSignatures &getJniInitializationContextSignatures() {
     static JavaSignatures methodSignatures;
     if (methodSignatures.empty()) {
-      methodSignatures.addSignature( { "getControllerServiceLookup", "()Lorg/apache/nifi/controller/ControllerServiceLookup;",
+      methodSignatures.addSignature({ "getControllerServiceLookup", "()Lorg/apache/nifi/controller/ControllerServiceLookup;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInitializationContext_getControllerServiceLookup) });
-      methodSignatures.addSignature( { "getIdentifier", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInitializationContext_getIdentifier) });
+      methodSignatures.addSignature({ "getIdentifier", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInitializationContext_getIdentifier) });
     }
     return methodSignatures;
   }

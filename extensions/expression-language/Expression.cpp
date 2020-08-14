@@ -86,7 +86,7 @@ Expression make_dynamic_attr(const std::string &attribute_id) {
       return Value(result);
     } else {
       auto registry = params.registry_.lock();
-      if ( registry && registry->getConfigurationProperty( attribute_id , result) ) {
+      if (registry && registry->getConfigurationProperty(attribute_id , result)) {
         return Value(result);
       }
     }

@@ -344,7 +344,7 @@ bool ExecutionPlan::addCustomProcessor(custom_processor_args in) {
     return false;  // This name cannot be registered
   }
 
-  if (custom_processors.count(in.name) > 0 ) {
+  if (custom_processors.count(in.name) > 0) {
     return false;  // Already exists
   }
   custom_processors[in.name] = in;

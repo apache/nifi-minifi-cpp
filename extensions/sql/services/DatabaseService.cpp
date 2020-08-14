@@ -58,7 +58,7 @@ void DatabaseService::onEnable() {
 }
 
 void DatabaseService::initializeProperties() {
-  setSupportedProperties( { ConnectionString });
+  setSupportedProperties({ ConnectionString });
 }
 
 } /* namespace controllers */

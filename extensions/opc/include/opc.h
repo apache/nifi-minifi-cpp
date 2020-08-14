@@ -74,7 +74,7 @@ class Client {
                                               const std::vector<std::vector<char>>& trustBuffers);
 
  private:
-  Client (std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
+  Client(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
       const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
       const std::vector<std::vector<char>>& trustBuffers);
 

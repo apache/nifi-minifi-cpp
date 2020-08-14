@@ -178,7 +178,7 @@ TEST_CASE("TestSiteToBootStrap", "[S2S3]") {
     uint16_t port = sckt->getPort();
 
     sckt->registerCallback([]() -> bool { return true; },  [&bootstrap_func, &transfer_state, &received_data](minifi::io::BaseStream* stream)
-      {bootstrap_func(stream, transfer_state, received_data); accept_transfer(stream, PAYLOAD_CRC, transfer_state, received_data); } );
+      {bootstrap_func(stream, transfer_state, received_data); accept_transfer(stream, PAYLOAD_CRC, transfer_state, received_data); });
 
     bool c_handshake_ok = false;
     bool c_transfer_ok = false;

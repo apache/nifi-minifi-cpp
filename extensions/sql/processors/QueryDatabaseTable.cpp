@@ -220,10 +220,10 @@ QueryDatabaseTable::~QueryDatabaseTable() = default;
 
 void QueryDatabaseTable::initialize() {
   //! Set the supported properties
-  setSupportedProperties( { dbControllerService(), outputFormat(), s_tableName, s_columnNames, s_maxValueColumnNames, s_whereClause, s_sqlQuery, s_maxRowsPerFlowFile, s_stateDirectory});
+  setSupportedProperties({ dbControllerService(), outputFormat(), s_tableName, s_columnNames, s_maxValueColumnNames, s_whereClause, s_sqlQuery, s_maxRowsPerFlowFile, s_stateDirectory});
 
   //! Set the supported relationships
-  setSupportedRelationships( { s_success });
+  setSupportedRelationships({ s_success });
 }
 
 void QueryDatabaseTable::processOnSchedule(core::ProcessContext &context) {
