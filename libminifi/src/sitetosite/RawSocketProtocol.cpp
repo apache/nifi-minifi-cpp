@@ -495,7 +495,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
       return transaction;
     }
 
-    org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(peer_.get());
+    org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(gsl::make_not_null(peer_.get()));
     switch (code) {
       case MORE_DATA:
         dataAvailable = true;
@@ -525,7 +525,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
     if (ret <= 0) {
       return NULL;
     } else {
-      org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(peer_.get());
+      org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(gsl::make_not_null(peer_.get()));
       transaction = std::make_shared<Transaction>(direction, crcstream);
       known_transactions_[transaction->getUUIDStr()] = transaction;
       transactionID = transaction->getUUIDStr();

@@ -203,7 +203,7 @@ class FileReaderCallback : public OutputStreamCallback {
   }
 
   int64_t process(std::shared_ptr<io::BaseStream> output_stream) override {
-    io::CRCStream<io::BaseStream> crc_stream{output_stream.get(), checksum_};
+    io::CRCStream<io::BaseStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
 
     uint64_t num_bytes_written = 0;
     bool found_delimiter = false;
@@ -284,7 +284,7 @@ class WholeFileReaderCallback : public OutputStreamCallback {
   int64_t process(std::shared_ptr<io::BaseStream> output_stream) override {
     std::array<char, BUFFER_SIZE> buffer;
 
-    io::CRCStream<io::BaseStream> crc_stream{output_stream.get(), checksum_};
+    io::CRCStream<io::BaseStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
 
     uint64_t num_bytes_written = 0;
 

@@ -70,8 +70,14 @@ class CRCStreamBase : public virtual Stream {
   }
 
  protected:
+  explicit CRCStreamBase(gsl::not_null<StreamType*> child_stream) : child_stream_(child_stream) {}
+  CRCStreamBase() : child_stream_(gsl::make_not_null<StreamType*>(nullptr)) {
+    //  this base class should be directly initialized from the most derived class
+    assert(false);
+  }
+
   uint64_t crc_ = 0;
-  StreamType *child_stream_ = nullptr;
+  gsl::not_null<StreamType*> child_stream_;
 };
 
 template<typename StreamType>
@@ -119,19 +125,16 @@ class CRCStream : public std::conditional<std::is_base_of<InputStream, StreamTyp
   using internal::CRCStreamBase<StreamType>::crc_;
 
  public:
-  explicit CRCStream(StreamType *child_stream) {
-    child_stream_ = child_stream;
+  explicit CRCStream(gsl::not_null<StreamType*> child_stream) : internal::CRCStreamBase<StreamType>(child_stream) {
     crc_ = crc32(0L, Z_NULL, 0);
   }
 
-  CRCStream(StreamType *child_stream, uint64_t initial_crc) {
+  CRCStream(gsl::not_null<StreamType*> child_stream, uint64_t initial_crc) : internal::CRCStreamBase<StreamType>(child_stream) {
     crc_ = initial_crc;
-    child_stream_ = child_stream;
   }
 
-  CRCStream(CRCStream &&move) noexcept {
-    crc_ = std::move(move.crc_);
-    child_stream_ = std::move(move.child_stream_);
+  CRCStream(CRCStream &&stream) noexcept : internal::CRCStreamBase<StreamType>(std::move(stream.child_stream_)){
+    crc_ = std::move(stream.crc_);
   }
 };
 

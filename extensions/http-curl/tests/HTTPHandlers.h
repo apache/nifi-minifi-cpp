@@ -209,7 +209,7 @@ class FlowFileResponder : public ServerAwareHandler {
 
     if (!wrong_uri) {
       minifi::io::CivetStream civet_stream(conn);
-      minifi::io::CRCStream < minifi::io::CivetStream > stream(&civet_stream);
+      minifi::io::CRCStream < minifi::io::CivetStream > stream(gsl::make_not_null(&civet_stream));
       uint32_t num_attributes;
       int read;
       uint64_t total_size = 0;
@@ -281,7 +281,7 @@ class FlowFileResponder : public ServerAwareHandler {
           "Connection: close\r\n\r\n",
           total);
       minifi::io::BufferStream serializer;
-      minifi::io::CRCStream < minifi::io::BaseStream > stream(&serializer);
+      minifi::io::CRCStream < minifi::io::BaseStream > stream(gsl::make_not_null(&serializer));
       for (const auto& flow : flows) {
         uint32_t num_attributes = flow->attributes.size();
         stream.write(num_attributes);
