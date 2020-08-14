@@ -71,10 +71,7 @@ class CRCStreamBase : public virtual Stream {
 
  protected:
   explicit CRCStreamBase(gsl::not_null<StreamType*> child_stream) : child_stream_(child_stream) {}
-  CRCStreamBase() : child_stream_(gsl::make_not_null<StreamType*>(nullptr)) {
-    //  this base class should be directly initialized from the most derived class
-    assert(false);
-  }
+  CRCStreamBase();
 
   uint64_t crc_ = 0;
   gsl::not_null<StreamType*> child_stream_;
