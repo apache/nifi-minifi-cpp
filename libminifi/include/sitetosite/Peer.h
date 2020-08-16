@@ -199,7 +199,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   }
   // Yield based on the yield period
   void yield() {
-    yield_expiration_ = (getTimeMillis() + yield_period_msec_);
+    yield_expiration_ = (utils::timeutils::getTimeMillis() + yield_period_msec_);
   }
   // setHostName
   void setHostName(std::string host_) {
@@ -221,12 +221,12 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   }
   // Yield based on the input time
   void yield(uint64_t time) {
-    yield_expiration_ = (getTimeMillis() + time);
+    yield_expiration_ = (utils::timeutils::getTimeMillis() + time);
   }
   // whether need be to yield
   bool isYield() {
     if (yield_expiration_ > 0)
-      return (yield_expiration_ >= getTimeMillis());
+      return (yield_expiration_ >= utils::timeutils::getTimeMillis());
     else
       return false;
   }
@@ -237,13 +237,13 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   // Yield based on the yield period
   void yield(std::string portId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    uint64_t yieldExpiration = (getTimeMillis() + yield_period_msec_);
+    uint64_t yieldExpiration = (utils::timeutils::getTimeMillis() + yield_period_msec_);
     yield_expiration_PortIdMap[portId] = yieldExpiration;
   }
   // Yield based on the input time
   void yield(std::string portId, uint64_t time) {
     std::lock_guard<std::mutex> lock(mutex_);
-    uint64_t yieldExpiration = (getTimeMillis() + time);
+    uint64_t yieldExpiration = (utils::timeutils::getTimeMillis() + time);
     yield_expiration_PortIdMap[portId] = yieldExpiration;
   }
   // whether need be to yield
@@ -252,7 +252,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     std::map<std::string, uint64_t>::iterator it = this->yield_expiration_PortIdMap.find(portId);
     if (it != yield_expiration_PortIdMap.end()) {
       uint64_t yieldExpiration = it->second;
-      return (yieldExpiration >= getTimeMillis());
+      return (yieldExpiration >= utils::timeutils::getTimeMillis());
     } else {
       return false;
     }

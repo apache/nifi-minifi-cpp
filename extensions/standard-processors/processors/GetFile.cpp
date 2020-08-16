@@ -164,9 +164,9 @@ void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   const bool isDirEmptyBeforePoll = isListingEmpty();
   logger_->log_debug("Is listing empty before polling directory %i", isDirEmptyBeforePoll);
   if (isDirEmptyBeforePoll) {
-    if (request_.pollInterval == 0 || (getTimeMillis() - last_listing_time_) > request_.pollInterval) {
+    if (request_.pollInterval == 0 || (utils::timeutils::getTimeMillis() - last_listing_time_) > request_.pollInterval) {
       performListing(request_);
-      last_listing_time_.store(getTimeMillis());
+      last_listing_time_.store(utils::timeutils::getTimeMillis());
     }
   }
 
@@ -238,7 +238,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
       return false;
 
     uint64_t modifiedTime = ((uint64_t) (statbuf.st_mtime) * 1000);
-    uint64_t fileAge = getTimeMillis() - modifiedTime;
+    uint64_t fileAge = utils::timeutils::getTimeMillis() - modifiedTime;
     if (request.minAge > 0 && fileAge < request.minAge)
       return false;
     if (request.maxAge > 0 && fileAge > request.maxAge)

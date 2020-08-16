@@ -49,7 +49,7 @@ ProvenanceEventRecord::ProvenanceEventRecord(ProvenanceEventRecord::ProvenanceEv
   _eventType = event;
   _componentId = componentId;
   _componentType = componentType;
-  _eventTime = getTimeMillis();
+  _eventTime = utils::timeutils::getTimeMillis();
 }
 
 // DeSerialize

@@ -258,7 +258,7 @@ class Property {
   }
 
   static bool StringToDateTime(const std::string& input, int64_t& output) {
-    int64_t temp = parseDateTimeStr(input);
+    int64_t temp = utils::timeutils::parseDateTimeStr(input);
     if (temp == -1) {
       return false;
     }

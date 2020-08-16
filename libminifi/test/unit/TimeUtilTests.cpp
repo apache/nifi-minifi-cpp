@@ -35,6 +35,7 @@ namespace {
   }
 
   void mkgmtimeTestHelper(time_t expected, int year, int month, int day, int hour, int minute, int second) {
+    using org::apache::nifi::minifi::utils::timeutils::mkgmtime;
     struct tm date_time = createTm(year, month, day, hour, minute, second);
     REQUIRE(mkgmtime(&date_time) == expected);
   }
@@ -65,6 +66,7 @@ TEST_CASE("mkgmtime() works correctly", "[mkgmtime]") {
 }
 
 TEST_CASE("parseDateTimeStr() works correctly", "[parseDateTimeStr]") {
+  using org::apache::nifi::minifi::utils::timeutils::parseDateTimeStr;
   REQUIRE(parseDateTimeStr("1970-01-01T00:00:00Z") == 0);
   REQUIRE(parseDateTimeStr("1970-01-01T00:59:59Z") == ONE_HOUR - 1);
 
@@ -87,5 +89,6 @@ TEST_CASE("parseDateTimeStr() works correctly", "[parseDateTimeStr]") {
 }
 
 TEST_CASE("Test time conversion", "[testtimeconversion]") {
+  using org::apache::nifi::minifi::utils::timeutils::getTimeStr;
   REQUIRE("2017-02-16 20:14:56.196" == getTimeStr(1487276096196, true));
 }

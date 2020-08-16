@@ -185,16 +185,16 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   }
   // Yield based on the yield period
   void yield() override {
-    yield_expiration_ = (getTimeMillis() + yield_period_msec_);
+    yield_expiration_ = (utils::timeutils::getTimeMillis() + yield_period_msec_);
   }
   // Yield based on the input time
   void yield(uint64_t time) {
-    yield_expiration_ = (getTimeMillis() + time);
+    yield_expiration_ = (utils::timeutils::getTimeMillis() + time);
   }
   // whether need be to yield
   bool isYield() {
     if (yield_expiration_ > 0)
-      return (yield_expiration_ >= getTimeMillis());
+      return (yield_expiration_ >= utils::timeutils::getTimeMillis());
     else
       return false;
   }
@@ -204,7 +204,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   }
   // get yield time
   uint64_t getYieldTime() {
-    uint64_t curTime = getTimeMillis();
+    uint64_t curTime = utils::timeutils::getTimeMillis();
     if (yield_expiration_ > curTime)
       return (yield_expiration_ - curTime);
     else

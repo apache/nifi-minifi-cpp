@@ -46,7 +46,7 @@ FlowFile::FlowFile()
       connection_(nullptr),
       original_connection_() {
   id_ = numeric_id_generator_->generateId();
-  entry_date_ = getTimeMillis();
+  entry_date_ = utils::timeutils::getTimeMillis();
   event_time_ = entry_date_;
   lineage_start_date_ = entry_date_;
 }

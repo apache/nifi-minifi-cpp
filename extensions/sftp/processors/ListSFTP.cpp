@@ -429,7 +429,7 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
     return true;
   }
   std::string mtime_str;
-  if (!getDateTimeStr(static_cast<int64_t>(child.attrs.mtime), mtime_str)) {
+  if (!utils::timeutils::getDateTimeStr(static_cast<int64_t>(child.attrs.mtime), mtime_str)) {
     logger_->log_error("Failed to convert modification date %lu of \"%s/%s\" to string", child.attrs.mtime, child.parent_path.c_str(), child.filename.c_str());
     return true;
   }

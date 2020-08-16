@@ -165,7 +165,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
 
   ProvenanceEventRecord()
       : core::SerializableComponent(core::getClassName<ProvenanceEventRecord>()) {
-    _eventTime = getTimeMillis();
+    _eventTime = utils::timeutils::getTimeMillis();
   }
 
   // Destructor

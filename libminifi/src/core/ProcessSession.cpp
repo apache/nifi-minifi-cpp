@@ -231,7 +231,7 @@ void ProcessSession::removeAttribute(const std::shared_ptr<core::FlowFile> &flow
 void ProcessSession::penalize(const std::shared_ptr<core::FlowFile> &flow) {
   uint64_t penalization_period = process_context_->getProcessorNode()->getPenalizationPeriodMsec();
   logging::LOG_INFO(logger_) << "Penalizing " << flow->getUUIDStr() << " for " << penalization_period << "ms at " << process_context_->getProcessorNode()->getName();
-  flow->setPenaltyExpiration(getTimeMillis() + penalization_period);
+  flow->setPenaltyExpiration(utils::timeutils::getTimeMillis() + penalization_period);
 }
 
 void ProcessSession::transfer(const std::shared_ptr<core::FlowFile> &flow, Relationship relationship) {
@@ -244,7 +244,7 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
 
   try {
-    uint64_t startTime = getTimeMillis();
+    uint64_t startTime = utils::timeutils::getTimeMillis();
     std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim);
     // Call the callback to write the content
     if (nullptr == stream) {
@@ -262,7 +262,7 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
 
     stream->closeStream();
     std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flow->getUUIDStr();
-    uint64_t endTime = getTimeMillis();
+    uint64_t endTime = utils::timeutils::getTimeMillis();
     provenance_report_->modifyContent(flow, details, endTime - startTime);
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
@@ -281,7 +281,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
   }
 
   try {
-    uint64_t startTime = getTimeMillis();
+    uint64_t startTime = utils::timeutils::getTimeMillis();
     std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim, true);
     if (nullptr == stream) {
       rollback();
@@ -301,7 +301,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
 
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
-    uint64_t endTime = getTimeMillis();
+    uint64_t endTime = utils::timeutils::getTimeMillis();
     provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
@@ -361,7 +361,7 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
   std::vector<uint8_t> charBuffer(max_read);
 
   try {
-    auto startTime = getTimeMillis();
+    auto startTime = utils::timeutils::getTimeMillis();
     std::shared_ptr<io::BaseStream> content_stream = process_context_->getContentRepository()->write(claim);
 
     if (nullptr == content_stream) {
@@ -390,7 +390,7 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
     content_stream->closeStream();
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
-    auto endTime = getTimeMillis();
+    auto endTime = utils::timeutils::getTimeMillis();
     provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
@@ -407,7 +407,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
   std::vector<uint8_t> charBuffer(size);
 
   try {
-    auto startTime = getTimeMillis();
+    auto startTime = utils::timeutils::getTimeMillis();
     std::ifstream input;
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
     std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim);
@@ -454,7 +454,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
           std::remove(source.c_str());
         std::stringstream details;
         details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
-        auto endTime = getTimeMillis();
+        auto endTime = utils::timeutils::getTimeMillis();
         provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
       } else {
         stream->closeStream();
@@ -508,7 +508,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
       uint8_t* begin = buffer.data();
       uint8_t* end = begin + read;
       while (true) {
-        startTime = getTimeMillis();
+        startTime = utils::timeutils::getTimeMillis();
         uint8_t* delimiterPos = std::find(begin, end, static_cast<uint8_t>(inputDelimiter));
         const auto len = gsl::narrow<int>(delimiterPos - begin);
 
@@ -524,7 +524,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
 
         /* Create claim and stream if needed and append data */
         if (claim == nullptr) {
-          startTime = getTimeMillis();
+          startTime = utils::timeutils::getTimeMillis();
           claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
         }
         if (stream == nullptr) {
@@ -553,7 +553,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
                                     << ", FlowFile UUID " << flowFile->getUUIDStr();
         stream->closeStream();
         std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
-        uint64_t endTime = getTimeMillis();
+        uint64_t endTime = utils::timeutils::getTimeMillis();
         provenance_report_->modifyContent(flowFile, details, endTime - startTime);
         flows.push_back(flowFile);
 
