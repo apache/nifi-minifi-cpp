@@ -188,7 +188,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
 
     if (expired_duration_ > 0) {
       // We need to check for flow expiration
-      if (getTimeMillis() > (item->getEntryDate() + expired_duration_)) {
+      if (utils::timeutils::getTimeMillis() > (item->getEntryDate() + expired_duration_)) {
         // Flow record expired
         expiredFlowRecords.insert(item);
         logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);

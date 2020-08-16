@@ -17,8 +17,8 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_
 #define LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_
 
-#include <string.h>
-#include <time.h>
+#include <cstring>
+#include <ctime>
 
 #include <array>
 #include <chrono>
@@ -29,6 +29,13 @@
 #include <string>
 
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace utils {
+namespace timeutils {
 
 /**
  * Gets the current time in milliseconds
@@ -66,11 +73,11 @@ inline std::string getTimeStr(uint64_t msec, bool enforce_locale = false) {
   return ret;
 }
 
-inline time_t mkgmtime(struct tm *date_time) {
+inline time_t mkgmtime(struct tm* date_time) {
 #ifdef WIN32
   return _mkgmtime(date_time);
 #else
-  static const int month_lengths[] =      {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  static const int month_lengths[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   static const int month_lengths_leap[] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   static const auto is_leap_year = [](int year) -> bool {
     return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
@@ -107,7 +114,7 @@ inline time_t mkgmtime(struct tm *date_time) {
  * @param str the datetime string
  * @returns Unix timestamp
  */
-inline int64_t parseDateTimeStr(const std::string &str) {
+inline int64_t parseDateTimeStr(const std::string& str) {
   /**
    * There is no strptime on Windows. As long as we have to parse a single date format this is not so bad,
    * but if multiple formats will have to be supported in the future, it might be worth it to include
@@ -166,5 +173,19 @@ inline bool getDateTimeStr(int64_t unix_timestamp, std::string& date_time_str) {
   date_time_str = buf.data();
   return true;
 }
+
+} /* namespace timeutils */
+} /* namespace utils */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
+
+// for backwards compatibility, to be removed after 0.8
+using org::apache::nifi::minifi::utils::timeutils::getTimeMillis;
+using org::apache::nifi::minifi::utils::timeutils::getTimeNano;
+using org::apache::nifi::minifi::utils::timeutils::getTimeStr;
+using org::apache::nifi::minifi::utils::timeutils::parseDateTimeStr;
+using org::apache::nifi::minifi::utils::timeutils::getDateTimeStr;
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_

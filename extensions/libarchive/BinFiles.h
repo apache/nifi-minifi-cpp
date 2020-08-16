@@ -54,7 +54,7 @@ class Bin {
         groupId_(groupId),
         logger_(logging::LoggerFactory<Bin>::getLogger()) {
     queued_data_size_ = 0;
-    creation_dated_ = getTimeMillis();
+    creation_dated_ = utils::timeutils::getTimeMillis();
     std::shared_ptr<utils::IdGenerator> id_generator = utils::IdGenerator::getIdGenerator();
     id_generator->generate(uuid_);
     uuid_str_ = uuid_.to_string();
@@ -76,7 +76,7 @@ class Bin {
   }
   // check whether the bin is older than the time specified in msec
   bool isOlderThan(const uint64_t &duration) {
-    uint64_t currentTime = getTimeMillis();
+    uint64_t currentTime = utils::timeutils::getTimeMillis();
     if (currentTime > (creation_dated_ + duration))
       return true;
     else

@@ -138,11 +138,11 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
   }
 
   bool continueTransaction = true;
-  uint64_t startSendingNanos = getTimeNano();
+  uint64_t startSendingNanos = utils::timeutils::getTimeNano();
 
   try {
     while (continueTransaction) {
-      uint64_t startTime = getTimeMillis();
+      uint64_t startTime = utils::timeutils::getTimeMillis();
       std::string payload;
       DataPacket packet(getLogger(), transaction, flow->getAttributes(), payload);
 
@@ -153,14 +153,14 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
 
       logger_->log_debug("Site2Site transaction %s send flow record %s", transactionID, flow->getUUIDStr());
       if (resp == 0) {
-        uint64_t endTime = getTimeMillis();
+        uint64_t endTime = utils::timeutils::getTimeMillis();
         std::string transitUri = peer_->getURL() + "/" + flow->getUUIDStr();
         std::string details = "urn:nifi:" + flow->getUUIDStr() + "Remote Host=" + peer_->getHostName();
         session->getProvenanceReporter()->send(flow, transitUri, details, endTime - startTime, false);
       }
       session->remove(flow);
 
-      uint64_t transferNanos = getTimeNano() - startSendingNanos;
+      uint64_t transferNanos = utils::timeutils::getTimeNano() - startSendingNanos;
       if (transferNanos > _batchSendNanos)
         break;
 
@@ -668,7 +668,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
   try {
     while (true) {
       std::map<std::string, std::string> empty;
-      uint64_t startTime = getTimeMillis();
+      uint64_t startTime = utils::timeutils::getTimeMillis();
       std::string payload;
       DataPacket packet(getLogger(), transaction, empty, payload);
       bool eof = false;
@@ -705,7 +705,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
         }
       }
       core::Relationship relation;  // undefined relationship
-      uint64_t endTime = getTimeMillis();
+      uint64_t endTime = utils::timeutils::getTimeMillis();
       std::string transitUri = peer_->getURL() + "/" + sourceIdentifier;
       std::string details = "urn:nifi:" + sourceIdentifier + "Remote Host=" + peer_->getHostName();
       session->getProvenanceReporter()->receive(flowFile, transitUri, sourceIdentifier, details, endTime - startTime);

@@ -286,7 +286,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
 
   // Check whether it is still being penalized
   bool isPenalized() const {
-    return (penaltyExpiration_ms_ > 0 ? penaltyExpiration_ms_ > getTimeMillis() : false);
+    return penaltyExpiration_ms_ > 0 && penaltyExpiration_ms_ > utils::timeutils::getTimeMillis();
   }
 
   uint64_t getId() const {

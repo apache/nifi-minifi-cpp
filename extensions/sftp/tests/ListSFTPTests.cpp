@@ -230,7 +230,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file writes attributes
   auto file = std::string(src_dir) + "/vfs/nifi_test/tstFile.ext";
   auto mtime = utils::file::FileUtils::last_write_time(file);
   std::string mtime_str;
-  REQUIRE(true == getDateTimeStr(mtime, mtime_str));
+  REQUIRE(true == utils::timeutils::getDateTimeStr(mtime, mtime_str));
   uint64_t uid, gid;
   REQUIRE(true == utils::file::FileUtils::get_uid_gid(file, uid, gid));
   uint32_t permissions;

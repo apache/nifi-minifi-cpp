@@ -127,8 +127,8 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     message << dashLine;
     message << "\nStandard FlowFile Attributes";
     message << "\n" << "UUID:" << flow->getUUIDStr();
-    message << "\n" << "EntryDate:" << getTimeStr(flow->getEntryDate());
-    message << "\n" << "lineageStartDate:" << getTimeStr(flow->getlineageStartDate());
+    message << "\n" << "EntryDate:" << utils::timeutils::getTimeStr(flow->getEntryDate());
+    message << "\n" << "lineageStartDate:" << utils::timeutils::getTimeStr(flow->getlineageStartDate());
     message << "\n" << "Size:" << flow->getSize() << " Offset:" << flow->getOffset();
     message << "\nFlowFile Attributes Map Content";
     std::map<std::string, std::string> attrs = flow->getAttributes();

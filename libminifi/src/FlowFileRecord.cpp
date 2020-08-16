@@ -50,7 +50,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
   // Increase the local ID for the flow record
   ++local_flow_seq_number_;
   // Populate the default attributes
-  addKeyedAttribute(FILENAME, std::to_string(getTimeNano()));
+  addKeyedAttribute(FILENAME, std::to_string(utils::timeutils::getTimeNano()));
   addKeyedAttribute(PATH, DEFAULT_FLOWFILE_PATH);
   addKeyedAttribute(UUID, getUUIDStr());
   // Populate the attributes from the input
