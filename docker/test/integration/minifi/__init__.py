@@ -501,8 +501,8 @@ class LogAttribute(Processor):
     def __init__(self, ):
         super(LogAttribute, self).__init__('LogAttribute',
                                            auto_terminate=['success'])
-        
-        
+
+
 class DebugFlow(Processor):
     def __init__(self, ):
         super(DebugFlow, self).__init__('DebugFlow')

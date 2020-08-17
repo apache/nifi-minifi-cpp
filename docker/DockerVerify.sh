@@ -17,6 +17,12 @@
 
 set -e
 
+if [[ $# -lt 1 ]]; then
+  echo "Usage:"
+  echo "  ./DockerVerify.sh <MINIFI_VERSION>"
+  exit 1
+fi
+
 docker_dir="$( cd ${0%/*} && pwd )"
 
 export MINIFI_VERSION=$1

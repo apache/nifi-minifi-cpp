@@ -175,7 +175,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
         self.wait_for_output(timeout)
         self.log_nifi_output()
         if self.segfault:
-            return false
+            return False
         if isinstance(self.output_validator, FileOutputValidator):
             return self.output_validator.validate(dir=kwargs.get('dir', ''))
         return self.output_validator.validate()
