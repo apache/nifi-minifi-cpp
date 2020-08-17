@@ -218,7 +218,7 @@ class SingleNodeDockerCluster(Cluster):
     def deploy_kafka_broker(self, name):
         dockerfile = dedent("""FROM {base_image}
                 USER root
-                CMD $KAFKA_HOME/bin/kafka-console-consumer.sh --bootstrap-server host.docker.internal:9092 --topic test > heaven_signal.txt
+                CMD $KAFKA_HOME/bin/kafka-console-consumer.sh --bootstrap-server 192.168.42.4:9092 --topic test > heaven_signal.txt
                 """.format(base_image='spotify/kafka:latest'))
 
         logging.info('Creating and running docker container for kafka broker...')
@@ -437,7 +437,7 @@ class Processor(Connectable):
         self.controller_services = controller_services
 
         self.schedule = {
-            'scheduling strategy': 'EVENT_DRIVEN',
+            'scheduling strategy': 'TIMER_DRIVEN',
             'scheduling period': '1 sec',
             'penalization period': '30 sec',
             'yield period': '1 sec',
@@ -546,7 +546,7 @@ class PublishKafka(Processor):
         super(PublishKafka, self).__init__('PublishKafka',
                                            properties={'Client Name': 'nghiaxlee', 'Known Brokers': '192.168.42.4:9092', 'Topic Name': 'test',
                                                        'Batch Size': '10', 'Compress Codec': 'none', 'Delivery Guarantee': '1',
-                                                       'Request Timeout': '10 sec', 'Message Timeout': '5 sec'},
+                                                       'Request Timeout': '10 sec', 'Message Timeout': '12 sec'},
                                            auto_terminate=['success'])
 
 
