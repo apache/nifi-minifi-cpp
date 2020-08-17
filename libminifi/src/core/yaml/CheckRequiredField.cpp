@@ -42,8 +42,7 @@ void checkRequiredField(const YAML::Node *yamlNode, const std::string &fieldName
         errMsg += " [in '" + yamlSection + "' section of configuration file]";
       }
     }
-    logging::LOG_ERROR(logger) << errMsg;
-
+    logger->log_error(errMsg.c_str());
     throw std::invalid_argument(errMsg);
   }
 }
