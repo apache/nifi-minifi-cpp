@@ -32,19 +32,21 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-static constexpr const char *MERGE_STRATEGY_BIN_PACK = "Bin-Packing Algorithm";
-static constexpr const char *MERGE_STRATEGY_DEFRAGMENT = "Defragment";
-static constexpr const char *MERGE_FORMAT_TAR_VALUE = "TAR";
-static constexpr const char *MERGE_FORMAT_ZIP_VALUE = "ZIP";
-static constexpr const char *MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE = "FlowFile Stream, v3";
-static constexpr const char *MERGE_FORMAT_FLOWFILE_STREAM_V2_VALUE = "FlowFile Stream, v2";
-static constexpr const char *MERGE_FORMAT_FLOWFILE_TAR_V1_VALUE = "FlowFile Tar, v1";
-static constexpr const char *MERGE_FORMAT_CONCAT_VALUE = "Binary Concatenation";
-static constexpr const char *MERGE_FORMAT_AVRO_VALUE = "Avro";
-static constexpr const char *DELIMITER_STRATEGY_FILENAME = "Filename";
-static constexpr const char *DELIMITER_STRATEGY_TEXT = "Text";
-static constexpr const char *ATTRIBUTE_STRATEGY_KEEP_COMMON = "Keep Only Common Attributes";
-static constexpr const char *ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attributes";
+namespace MergeContentOptions {
+constexpr const char *MERGE_STRATEGY_BIN_PACK = "Bin-Packing Algorithm";
+constexpr const char *MERGE_STRATEGY_DEFRAGMENT = "Defragment";
+constexpr const char *MERGE_FORMAT_TAR_VALUE = "TAR";
+constexpr const char *MERGE_FORMAT_ZIP_VALUE = "ZIP";
+constexpr const char *MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE = "FlowFile Stream, v3";
+constexpr const char *MERGE_FORMAT_FLOWFILE_STREAM_V2_VALUE = "FlowFile Stream, v2";
+constexpr const char *MERGE_FORMAT_FLOWFILE_TAR_V1_VALUE = "FlowFile Tar, v1";
+constexpr const char *MERGE_FORMAT_CONCAT_VALUE = "Binary Concatenation";
+constexpr const char *MERGE_FORMAT_AVRO_VALUE = "Avro";
+constexpr const char *DELIMITER_STRATEGY_FILENAME = "Filename";
+constexpr const char *DELIMITER_STRATEGY_TEXT = "Text";
+constexpr const char *ATTRIBUTE_STRATEGY_KEEP_COMMON = "Keep Only Common Attributes";
+constexpr const char *ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attributes";
+}
 
 // MergeBin Class
 class MergeBin {
@@ -197,10 +199,10 @@ public:
       struct archive *arch;
 
       arch = archive_write_new();
-      if (merge_type_ == MERGE_FORMAT_TAR_VALUE) {
+      if (merge_type_ == MergeContentOptions::MERGE_FORMAT_TAR_VALUE) {
         archive_write_set_format_pax_restricted(arch); // tar format
       }
-      if (merge_type_ == MERGE_FORMAT_ZIP_VALUE) {
+      if (merge_type_ == MergeContentOptions::MERGE_FORMAT_ZIP_VALUE) {
         archive_write_set_format_zip(arch); // zip format
       }
       archive_write_set_bytes_per_block(arch, 0);
@@ -215,7 +217,7 @@ public:
         archive_entry_set_pathname(entry, fileName.c_str());
         archive_entry_set_size(entry, flow->getSize());
         archive_entry_set_mode(entry, S_IFREG | 0755);
-        if (merge_type_ == MERGE_FORMAT_TAR_VALUE) {
+        if (merge_type_ == MergeContentOptions::MERGE_FORMAT_TAR_VALUE) {
           std::string perm;
           int permInt;
           if (flow->getAttribute(BinFiles::TAR_PERMISSIONS_ATTRIBUTE, perm)) {
@@ -303,11 +305,11 @@ public:
   explicit MergeContent(std::string name, utils::Identifier uuid = utils::Identifier())
       : processors::BinFiles(name, uuid),
         logger_(logging::LoggerFactory<MergeContent>::getLogger()) {
-    mergeStrategy_ = MERGE_STRATEGY_DEFRAGMENT;
-    mergeFormat_ = MERGE_FORMAT_CONCAT_VALUE;
-    delimiterStrategy_ = DELIMITER_STRATEGY_FILENAME;
+    mergeStrategy_ = MergeContentOptions::MERGE_STRATEGY_DEFRAGMENT;
+    mergeFormat_ = MergeContentOptions::MERGE_FORMAT_CONCAT_VALUE;
+    delimiterStrategy_ = MergeContentOptions::DELIMITER_STRATEGY_FILENAME;
     keepPath_ = false;
-    attributeStrategy_ = ATTRIBUTE_STRATEGY_KEEP_COMMON;
+    attributeStrategy_ = MergeContentOptions::ATTRIBUTE_STRATEGY_KEEP_COMMON;
   }
   // Destructor
   virtual ~MergeContent() = default;

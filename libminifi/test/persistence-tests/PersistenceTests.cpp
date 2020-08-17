@@ -133,9 +133,9 @@ std::shared_ptr<MergeContent> setupMergeProcessor(const utils::Identifier& id) {
   processor->initialize();
   processor->setAutoTerminatedRelationships({{"original", "d"}});
 
-  processor->setProperty(MergeContent::MergeFormat, org::apache::nifi::minifi::processors::MERGE_FORMAT_CONCAT_VALUE);
-  processor->setProperty(MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::MERGE_STRATEGY_BIN_PACK);
-  processor->setProperty(MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::DELIMITER_STRATEGY_TEXT);
+  processor->setProperty(MergeContent::MergeFormat, org::apache::nifi::minifi::processors::MergeContentOptions::MERGE_FORMAT_CONCAT_VALUE);
+  processor->setProperty(MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::MergeContentOptions::MERGE_STRATEGY_BIN_PACK);
+  processor->setProperty(MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::MergeContentOptions::DELIMITER_STRATEGY_TEXT);
   processor->setProperty(MergeContent::MinEntries, "3");
   processor->setProperty(MergeContent::Header, "_Header_");
   processor->setProperty(MergeContent::Footer, "_Footer_");
