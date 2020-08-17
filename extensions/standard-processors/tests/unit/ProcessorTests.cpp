@@ -48,10 +48,15 @@ TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   REQUIRE(processor->getName() == "processorname");
 }
 
+// TODO(adebreceni)
+// what is this test? multiple onTriggers with the same session
+// session->get() then no commit, same repo for flowFileRepo and provenance repo
 TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   TestController testController;
   LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
+  auto config = std::make_shared<minifi::Configure>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  content_repo->initialize(config);
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
   processor->initialize();
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -89,8 +94,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
   processor->onSchedule(context, factory);
 
-  int prev = 0;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 1; i < 10; i++) {
     auto session = std::make_shared<core::ProcessSession>(context);
     REQUIRE(processor->getName() == "getfileCreate2");
 
@@ -126,9 +130,11 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
     }
     session->commit();
     std::shared_ptr<core::FlowFile> ffr = session->get();
+    REQUIRE(ffr);  // GetFile successfully read the contents and created a flowFile
 
-    REQUIRE(repo->getRepoMap().size() == (prev + 1));
-    prev++;
+    // one CREATE, one MODIFY, and one FF contents, as we use the same
+    // underlying repo for both provenance and flowFileRepo
+    REQUIRE(repo->getRepoMap().size() == 3 * i);
   }
 }
 

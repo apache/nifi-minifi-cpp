@@ -37,6 +37,10 @@ namespace core {
 namespace repository {
 
 void FlowFileRepository::flush() {
+  auto opendb = db_->open();
+  if (!opendb) {
+    return;
+  }
   rocksdb::WriteBatch batch;
   rocksdb::ReadOptions options;
 
@@ -54,7 +58,7 @@ void FlowFileRepository::flush() {
     }
   }
 
-  auto multistatus = db_->MultiGet(options, keys, &values);
+  auto multistatus = opendb->MultiGet(options, keys, &values);
 
   for(size_t i=0; i<keys.size() && i<values.size() && i<multistatus.size(); ++i) {
     if(!multistatus[i].ok()) {
@@ -71,7 +75,7 @@ void FlowFileRepository::flush() {
     batch.Delete(keys[i]);
   }
 
-  auto operation = [this, &batch]() { return db_->Write(rocksdb::WriteOptions(), &batch); };
+  auto operation = [&batch, &opendb]() { return opendb->Write(rocksdb::WriteOptions(), &batch); };
 
   if (!ExecuteWithRetry(operation)) {
     for (const auto& key: keystrings) {
@@ -91,14 +95,18 @@ void FlowFileRepository::flush() {
 }
 
 void FlowFileRepository::printStats() {
+  auto opendb = db_->open();
+  if (!opendb) {
+    return;
+  }
   std::string key_count;
-  db_->GetProperty("rocksdb.estimate-num-keys", &key_count);
+  opendb->GetProperty("rocksdb.estimate-num-keys", &key_count);
 
   std::string table_readers;
-  db_->GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
+  opendb->GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
 
   std::string all_memtables;
-  db_->GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
+  opendb->GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
 
   logger_->log_info("Repository stats: key count: %s, table readers size: %s, all memory tables size: %s",
       key_count, table_readers, all_memtables);
@@ -122,26 +130,27 @@ void FlowFileRepository::run() {
 }
 
 void FlowFileRepository::prune_stored_flowfiles() {
-  rocksdb::DB* used_database;
-  std::unique_ptr<rocksdb::DB> stored_database;
-  bool corrupt_checkpoint = false;
+  rocksdb::Options options;
+  options.create_if_missing = true;
+  options.use_direct_io_for_flush_and_compaction = true;
+  options.use_direct_reads = true;
+  minifi::internal::RocksDatabase checkpointDB(options, FLOWFILE_CHECKPOINT_DIRECTORY, minifi::internal::RocksDatabase::Mode::ReadOnly);
+  utils::optional<minifi::internal::OpenRocksDB> opendb;
   if (nullptr != checkpoint_) {
-    rocksdb::Options options;
-    options.create_if_missing = true;
-    options.use_direct_io_for_flush_and_compaction = true;
-    options.use_direct_reads = true;
-    rocksdb::Status status = rocksdb::DB::OpenForReadOnly(options, FLOWFILE_CHECKPOINT_DIRECTORY, &used_database);
-    if (status.ok()) {
-      stored_database.reset(used_database);
-    } else {
-      used_database = db_;
+    opendb = checkpointDB.open();
+    if (!opendb) {
+      opendb = db_->open();
+    }
+    if (!opendb) {
+      logger_->log_trace("Could not open neither the checkpoint nor the live database.");
+      return;
     }
   } else {
     logger_->log_trace("Could not open checkpoint as object doesn't exist. Likely not needed or file system error.");
     return;
   }
 
-  rocksdb::Iterator* it = used_database->NewIterator(rocksdb::ReadOptions());
+  auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
     std::string key = it->key().ToString();
@@ -155,7 +164,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
         search = connectionMap.find(eventRead->getConnectionUuid());
         found = (search != connectionMap.end());
       }
-      if (!corrupt_checkpoint && found) {
+      if (found) {
         // we find the connection for the persistent flowfile, create the flowfile and enqueue that
         std::shared_ptr<core::FlowFile> flow_file_ref = std::static_pointer_cast<core::FlowFile>(eventRead);
         eventRead->setStoredToRepository(true);
@@ -171,8 +180,6 @@ void FlowFileRepository::prune_stored_flowfiles() {
       keys_to_delete.enqueue(key);
     }
   }
-
-  delete it;
 }
 
 bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> operation) {
@@ -194,22 +201,25 @@ bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> opera
  * Returns True if there is data to interrogate.
  * @return true if our db has data stored.
  */
-bool FlowFileRepository::need_checkpoint(){
-  std::unique_ptr<rocksdb::Iterator> it = std::unique_ptr<rocksdb::Iterator>(db_->NewIterator(rocksdb::ReadOptions()));
-  for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    return true;
-  }
-  return false;
+bool FlowFileRepository::need_checkpoint(minifi::internal::OpenRocksDB& opendb){
+  auto it = opendb.NewIterator(rocksdb::ReadOptions());
+  it->SeekToFirst();
+  return it->Valid();
 }
 void FlowFileRepository::initialize_repository() {
+  auto opendb = db_->open();
+  if (!opendb) {
+    logger_->log_trace("Couldn't open database, no way to checkpoint");
+    return;
+  }
   // first we need to establish a checkpoint iff it is needed.
-  if (!need_checkpoint()){
+  if (!need_checkpoint(*opendb)){
     logger_->log_trace("Do not need checkpoint");
     return;
   }
   rocksdb::Checkpoint *checkpoint;
   // delete any previous copy
-  if (utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY) >= 0 && rocksdb::Checkpoint::Create(db_, &checkpoint).ok()) {
+  if (utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY) >= 0 && opendb->NewCheckpoint(&checkpoint).ok()) {
     if (checkpoint->CreateCheckpoint(FLOWFILE_CHECKPOINT_DIRECTORY).ok()) {
       checkpoint_ = std::unique_ptr<rocksdb::Checkpoint>(checkpoint);
       logger_->log_trace("Created checkpoint directory");

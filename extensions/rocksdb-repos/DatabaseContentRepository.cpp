@@ -21,6 +21,7 @@
 #include <string>
 #include "RocksDbStream.h"
 #include "rocksdb/merge_operator.h"
+#include "utils/GeneralUtils.h"
 
 namespace org {
 namespace apache {
@@ -43,8 +44,8 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   options.merge_operator = std::make_shared<StringAppender>();
   options.error_if_exists = false;
   options.max_successive_merges = 0;
-  rocksdb::Status status = rocksdb::DB::Open(options, directory_.c_str(), &db_);
-  if (status.ok()) {
+  db_ = utils::make_unique<minifi::internal::RocksDatabase>(options, directory_);
+  if (db_->open()) {
     logger_->log_debug("NiFi Content DB Repository database open %s success", directory_);
     is_valid_ = true;
   } else {
@@ -55,10 +56,12 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
 }
 void DatabaseContentRepository::stop() {
   if (db_) {
-    db_->FlushWAL(true);
-    delete db_;
-    db_ = nullptr;
+    auto opendb = db_->open();
+    if (opendb) {
+      opendb->FlushWAL(true);
+    }
   }
+  db_.reset();
 }
 
 std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append) {
@@ -67,7 +70,7 @@ std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const std::shar
   if (nullptr == claim || !is_valid_ || !db_)
     return nullptr;
   // append is already supported in all modes
-  return std::make_shared<io::RocksDbStream>(claim->getContentFullPath(), db_, true);
+  return std::make_shared<io::RocksDbStream>(claim->getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true);
 }
 
 std::shared_ptr<io::BaseStream> DatabaseContentRepository::read(const std::shared_ptr<minifi::ResourceClaim> &claim) {
@@ -75,13 +78,17 @@ std::shared_ptr<io::BaseStream> DatabaseContentRepository::read(const std::share
   // we can simply return a nullptr, which is also valid from the API when this stream is not valid.
   if (nullptr == claim || !is_valid_ || !db_)
     return nullptr;
-  return std::make_shared<io::RocksDbStream>(claim->getContentFullPath(), db_, false);
+  return std::make_shared<io::RocksDbStream>(claim->getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), false);
 }
 
 bool DatabaseContentRepository::exists(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
   std::string value;
   rocksdb::Status status;
-  status = db_->Get(rocksdb::ReadOptions(), streamId->getContentFullPath(), &value);
+  status = opendb->Get(rocksdb::ReadOptions(), streamId->getContentFullPath(), &value);
   if (status.ok()) {
     logger_->log_debug("%s exists", streamId->getContentFullPath());
     return true;
@@ -94,8 +101,12 @@ bool DatabaseContentRepository::exists(const std::shared_ptr<minifi::ResourceCla
 bool DatabaseContentRepository::remove(const std::shared_ptr<minifi::ResourceClaim> &claim) {
   if (nullptr == claim || !is_valid_ || !db_)
     return false;
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
   rocksdb::Status status;
-  status = db_->Delete(rocksdb::WriteOptions(), claim->getContentFullPath());
+  status = opendb->Delete(rocksdb::WriteOptions(), claim->getContentFullPath());
   if (status.ok()) {
     logger_->log_debug("Deleted %s", claim->getContentFullPath());
     return true;

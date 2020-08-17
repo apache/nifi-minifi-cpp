@@ -30,13 +30,14 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-RocksDbStream::RocksDbStream(std::string path, rocksdb::DB *db, bool write_enable)
+RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable)
     : BaseStream(),
       path_(std::move(path)),
       write_enable_(write_enable),
-      db_(db),
+      db_(std::move(db)),
       logger_(logging::LoggerFactory<RocksDbStream>::getLogger()) {
-  exists_ = db_->Get(rocksdb::ReadOptions(), path_, &value_).ok();
+  auto opendb = db_->open();
+  exists_ = opendb && opendb->Get(rocksdb::ReadOptions(), path_, &value_).ok();
   offset_ = 0;
   size_ = value_.size();
 }
@@ -63,12 +64,16 @@ int RocksDbStream::writeData(std::vector<uint8_t> &buf, int buflen) {
 
 int RocksDbStream::writeData(uint8_t *value, int size) {
   if (!IsNullOrEmpty(value) && write_enable_) {
+    auto opendb = db_->open();
+    if (!opendb) {
+      return -1;
+    }
     rocksdb::Slice slice_value((const char *) value, size);
     rocksdb::Status status;
     size_ += size;
     rocksdb::WriteOptions opts;
     opts.sync = true;
-    db_->Merge(opts, path_, slice_value);
+    opendb->Merge(opts, path_, slice_value);
     if (status.ok()) {
       return 0;
     } else {

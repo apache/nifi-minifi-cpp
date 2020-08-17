@@ -22,6 +22,7 @@
 #include "properties/Configure.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "../RocksDatabase.h"
 
 #include "rocksdb/db.h"
 #include "rocksdb/options.h"
@@ -69,7 +70,7 @@ class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyV
  protected:
   std::string directory_;
 
-  std::unique_ptr<rocksdb::DB> db_;
+  std::unique_ptr<minifi::internal::RocksDatabase> db_;
   rocksdb::WriteOptions default_write_options;
 
  private:
