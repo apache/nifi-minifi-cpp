@@ -43,7 +43,6 @@ namespace core {
 #define DEFAULT_FLOW_YAML_FILE_NAME "conf/config.yml"
 #define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
 #define CONFIG_YAML_PROCESSORS_KEY "Processors"
-#define CONFIG_YAML_CONNECTIONS_KEY "Connections"
 #define CONFIG_YAML_CONTROLLER_SERVICES_KEY "Controller Services"
 #define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY "Remote Processing Groups"
 #define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3 "Remote Process Groups"
@@ -151,36 +150,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @return             the root ProcessGroup node of the flow
    *                       configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getYamlRoot(YAML::Node *rootYamlNode) {
-    YAML::Node rootYaml = *rootYamlNode;
-    YAML::Node flowControllerNode = rootYaml[CONFIG_YAML_FLOW_CONTROLLER_KEY];
-    YAML::Node processorsNode = rootYaml[CONFIG_YAML_PROCESSORS_KEY];
-    YAML::Node connectionsNode = rootYaml[CONFIG_YAML_CONNECTIONS_KEY];
-    YAML::Node controllerServiceNode = rootYaml[CONFIG_YAML_CONTROLLER_SERVICES_KEY];
-    YAML::Node remoteProcessingGroupsNode = rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY];
-
-    if (!remoteProcessingGroupsNode) {
-      remoteProcessingGroupsNode = rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3];
-    }
-
-    YAML::Node provenanceReportNode = rootYaml[CONFIG_YAML_PROVENANCE_REPORT_KEY];
-
-    parseControllerServices(&controllerServiceNode);
-    // Create the root process group
-    core::ProcessGroup *root = parseRootProcessGroupYaml(flowControllerNode);
-    parseProcessorNodeYaml(processorsNode, root);
-    parseRemoteProcessGroupYaml(&remoteProcessingGroupsNode, root);
-    parseConnectionYaml(&connectionsNode, root);
-    parseProvenanceReportingYaml(&provenanceReportNode, root);
-
-    // set the controller services into the root group.
-    for (auto controller_service : controller_services_->getAllControllerServices()) {
-      root->addControllerService(controller_service->getName(), controller_service);
-      root->addControllerService(controller_service->getUUIDStr(), controller_service);
-    }
-
-    return std::unique_ptr<core::ProcessGroup>(root);
-  }
+  std::unique_ptr<core::ProcessGroup> getYamlRoot(YAML::Node *rootYamlNode);
 
   /**
    * Parses a processor from its corresponding YAML config node and adds
@@ -226,16 +196,6 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parent parent process group.
    */
   void parseControllerServices(YAML::Node *controllerServicesNode);
-  // Process connection YAML
-
-  // These could be extracted to a separate ConnectionYamlParser class
-  void configureConnectionSourceRelationshipFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
-  void configureConnectionWorkQueueSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
-  void configureConnectionWorkQueueDataSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
-  void configureConnectionSourceUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const;
-  void configureConnectionDestinationUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const;
-  void configureConnectionFlowFileExpirationFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
-  void configureConnectionDropEmptyFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const;
 
   /**
    * Parses the Connections section of a configuration YAML.
@@ -328,8 +288,6 @@ class YamlConfiguration : public FlowConfiguration {
    * @param reason
    */
   void raiseComponentError(const std::string &component_name, const std::string &yaml_section, const std::string &reason) const;
-
-  friend class ::YamlConfigurationTestAccessor;
 };
 
 }  // namespace core

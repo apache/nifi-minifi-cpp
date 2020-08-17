@@ -23,6 +23,7 @@
 
 #include "core/yaml/YamlConfiguration.h"
 #include "core/yaml/CheckRequiredField.h"
+#include "core/yaml/YamlConnectionParser.h"
 #include "core/state/Value.h"
 #ifdef YAML_CONFIGURATION_USE_REGEX
 #include <regex>
@@ -80,6 +81,37 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node root
 
   return group.release();
 }
+
+std::unique_ptr<core::ProcessGroup> YamlConfiguration::getYamlRoot(YAML::Node *rootYamlNode) {
+    YAML::Node rootYaml = *rootYamlNode;
+    YAML::Node flowControllerNode = rootYaml[CONFIG_YAML_FLOW_CONTROLLER_KEY];
+    YAML::Node processorsNode = rootYaml[CONFIG_YAML_PROCESSORS_KEY];
+    YAML::Node connectionsNode = rootYaml[yaml::YamlConnectionParser::CONFIG_YAML_CONNECTIONS_KEY];
+    YAML::Node controllerServiceNode = rootYaml[CONFIG_YAML_CONTROLLER_SERVICES_KEY];
+    YAML::Node remoteProcessingGroupsNode = rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY];
+
+    if (!remoteProcessingGroupsNode) {
+      remoteProcessingGroupsNode = rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3];
+    }
+
+    YAML::Node provenanceReportNode = rootYaml[CONFIG_YAML_PROVENANCE_REPORT_KEY];
+
+    parseControllerServices(&controllerServiceNode);
+    // Create the root process group
+    core::ProcessGroup *root = parseRootProcessGroupYaml(flowControllerNode);
+    parseProcessorNodeYaml(processorsNode, root);
+    parseRemoteProcessGroupYaml(&remoteProcessingGroupsNode, root);
+    parseConnectionYaml(&connectionsNode, root);
+    parseProvenanceReportingYaml(&provenanceReportNode, root);
+
+    // set the controller services into the root group.
+    for (auto controller_service : controller_services_->getAllControllerServices()) {
+      root->addControllerService(controller_service->getName(), controller_service);
+      root->addControllerService(controller_service->getUUIDStr(), controller_service);
+    }
+
+    return std::unique_ptr<core::ProcessGroup>(root);
+  }
 
 void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::ProcessGroup *parentGroup) {
   int64_t schedulingPeriod = -1;
@@ -523,147 +555,7 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
   }
 }
 
-void YamlConfiguration::configureConnectionSourceRelationshipFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
-  auto addNewRelationshipToConnection = [&] (const std::string& relationship_name) {
-    core::Relationship relationship(relationship_name, "");
-    logger_->log_debug("parseConnection: relationship => [%s]", relationship_name);
-    connection->addRelationship(std::move(relationship));
-  };
-  // Configure connection source
-  if (connectionNode.as<YAML::Node>()["source relationship name"]) {
-    addNewRelationshipToConnection(connectionNode["source relationship name"].as<std::string>());
-  } else if (connectionNode.as<YAML::Node>()["source relationship names"]) {
-    auto relList = connectionNode["source relationship names"];
-      if (relList.IsSequence()) {
-        for (const auto &rel : relList) {
-          addNewRelationshipToConnection(rel.as<std::string>());
-        }
-      } else {
-        addNewRelationshipToConnection(relList.as<std::string>());
-      }
-  }
-}
-
-void YamlConfiguration::configureConnectionWorkQueueSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
-  const YAML::Node max_work_queue_data_size_node = connectionNode["max work queue size"];
-  if (max_work_queue_data_size_node) {
-      auto max_work_queue_str = max_work_queue_data_size_node.as<std::string>();
-      uint64_t max_work_queue_size = 0;
-      if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
-        connection->setMaxQueueSize(max_work_queue_size);
-      }
-      logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_size << " as the max queue size.";
-    }
-}
-
-void YamlConfiguration::configureConnectionWorkQueueDataSizeFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
-  const YAML::Node max_work_queue_data_size_node = connectionNode["max work queue data size"];
-  if (max_work_queue_data_size_node) {
-    auto max_work_queue_str = max_work_queue_data_size_node.as<std::string>();
-    uint64_t max_work_queue_data_size = 0;
-    if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
-      connection->setMaxQueueDataSize(max_work_queue_data_size);
-    }
-    logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_data_size << " as the max queue data size.";
-  }
-}
-
-void YamlConfiguration::configureConnectionSourceUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const {
-  utils::Identifier srcUUID;
-  const YAML::Node source_id_node = connectionNode["source id"];
-  if (source_id_node) {
-    srcUUID = source_id_node.as<std::string>();
-    logger_->log_debug("Using 'source id' to match source with same id for connection '%s': source id => [%s]", name, srcUUID.to_string());
-  } else {
-    // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
-    yaml::checkRequiredField(&connectionNode, "source name", logger_, CONFIG_YAML_CONNECTIONS_KEY);
-    const std::string connectionSrcProcName = connectionNode["source name"].as<std::string>();
-    if (nullptr != parent->findProcessorById(utils::Identifier{connectionSrcProcName})) {
-      // the source name is a remote port id, so use that as the source id
-      logger_->log_debug("Using 'source name' containing a remote port id to match the source for connection '%s': source name => [%s]", name, connectionSrcProcName);
-      srcUUID = connectionSrcProcName;
-    } else {
-      // lastly, look the processor up by name
-      auto srcProcessor = parent->findProcessorByName(connectionSrcProcName);
-      if (nullptr != srcProcessor) {
-        logger_->log_debug("Using 'source name' to match source with same name for connection '%s': source name => [%s]", name, connectionSrcProcName);
-        srcProcessor->getUUID(srcUUID);
-      } else {
-        // we ran out of ways to discover the source processor
-        const std::string error_msg = "Could not locate a source with name " + connectionSrcProcName + " to create a connection ";
-        logger_->log_error(error_msg.c_str());
-        throw std::invalid_argument(error_msg);
-      }
-    }
-  }
-  connection->setSourceUUID(srcUUID);
-}
-
-void YamlConfiguration::configureConnectionDestinationUUIDFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection, core::ProcessGroup *parent, const std::string& name) const {
-  utils::Identifier destUUID;
-  const YAML::Node destination_id_node = connectionNode["destination id"];
-  if (destination_id_node) {
-    std::string connectionDestProcId = destination_id_node.as<std::string>();
-    destUUID = connectionDestProcId;
-    logger_->log_debug("Using 'destination id' to match destination with same id for connection '%s': destination id => [%s]", name, connectionDestProcId);
-  } else {
-    // we use the same logic as above for resolving the source processor
-    // for looking up the destination processor in absence of a processor id
-    yaml::checkRequiredField(&connectionNode, "destination name", logger_, CONFIG_YAML_CONNECTIONS_KEY);
-    std::string connectionDestProcName = connectionNode["destination name"].as<std::string>();
-    utils::Identifier targetProcessorUUID(connectionDestProcName);
-    if (parent->findProcessorById(targetProcessorUUID)) {
-      // the destination name is a remote port id, so use that as the dest id
-      logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for connection '%s': destination name => [%s]", name, connectionDestProcName);
-      destUUID = targetProcessorUUID;
-    } else {
-      // look the processor up by name
-      auto destProcessor = parent->findProcessorByName(connectionDestProcName);
-      if (NULL != destProcessor) {
-        destProcessor->getUUID(destUUID);
-        logger_->log_debug("Using 'destination name' to match destination with same name for connection '%s': destination name => [%s]", name, connectionDestProcName);
-      } else {
-        // we ran out of ways to discover the destination processor
-        const std::string error_msg = "Could not locate a destination with name " + connectionDestProcName + " to create a connection";
-        logger_->log_error(error_msg.c_str());
-        throw std::invalid_argument(error_msg);
-      }
-    }
-  }
-  connection->setDestinationUUID(destUUID);
-}
-
-void YamlConfiguration::configureConnectionFlowFileExpirationFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
-  const YAML::Node expiration_node = connectionNode["flowfile expiration"];
-  if (!expiration_node) {
-    return;
-  }
-  uint64_t expirationDuration = 0;
-  TimeUnit unit;
-  const std::string flowfile_expiration_str = expiration_node.as<std::string>();
-  if (!core::Property::StringToTime(flowfile_expiration_str, expirationDuration, unit) || !core::Property::ConvertTimeUnitToMS(expirationDuration, unit, expirationDuration)) {
-    // We should throw here, but we do not.
-    // The reason is that our parser only accepts time formats that consists of a number and
-    // a unit, but users might use this field populated with a "0" (and no units).
-    // We cannot correct this, because there is no API contract for the config, we need to support
-    // all already-supported configuration files.
-    // This has the side-effect of allowing values like "20 minuites" and silently defaulting to 0.
-    logger_->log_debug("parseConnection: flowfile expiration => [%d]", expirationDuration);
-  }
-  connection->setFlowExpirationDuration(expirationDuration);
-}
-
-void YamlConfiguration::configureConnectionDropEmptyFromYaml(const YAML::Node& connectionNode, const std::shared_ptr<minifi::Connection>& connection) const {
-  const YAML::Node drop_empty_node = connectionNode["drop empty"];
-  if (drop_empty_node) {
-    bool dropEmpty = false;
-    if (utils::StringUtils::StringToBool(drop_empty_node.as<std::string>(), dropEmpty)) {
-      connection->setDropEmptyFlowFiles(dropEmpty);
-    }
-  }
-}
-
-void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::ProcessGroup *parent) {
+void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::ProcessGroup* parent) {
   if (!parent) {
     logger_->log_error("parseProcessNode: no parent group was provided");
     return;
@@ -690,14 +582,14 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
       return;
     }
     logger_->log_debug("Created connection with UUID %s and name %s", id, name);
-
-    configureConnectionSourceRelationshipFromYaml(connectionNode, connection);
-    configureConnectionWorkQueueSizeFromYaml(connectionNode, connection);
-    configureConnectionWorkQueueDataSizeFromYaml(connectionNode, connection);
-    configureConnectionSourceUUIDFromYaml(connectionNode, connection, parent, name);
-    configureConnectionDestinationUUIDFromYaml(connectionNode, connection, parent, name);
-    configureConnectionFlowFileExpirationFromYaml(connectionNode, connection);
-    configureConnectionDropEmptyFromYaml(connectionNode, connection);
+    const yaml::YamlConnectionParser connectionParser(connectionNode, name, gsl::not_null<core::ProcessGroup*>{ parent }, logger_);
+    connectionParser.configureConnectionSourceRelationshipsFromYaml(connection);
+    connection->setMaxQueueSize(connectionParser.getWorkQueueSizeFromYaml());
+    connection->setMaxQueueDataSize(connectionParser.getWorkQueueDataSizeFromYaml());
+    connection->setSourceUUID(connectionParser.getSourceUUIDFromYaml());
+    connection->setDestinationUUID(connectionParser.getDestinationUUIDFromYaml());
+    connection->setFlowExpirationDuration(connectionParser.getFlowFileExpirationFromYaml());
+    connection->setDropEmptyFlowFiles(connectionParser.getDropEmptyFromYaml());
 
     parent->addConnection(connection);
   }
