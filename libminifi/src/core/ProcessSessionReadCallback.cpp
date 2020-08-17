@@ -54,7 +54,9 @@ int64_t ProcessSessionReadCallback::process(std::shared_ptr<io::BaseStream> stre
     if (read == 0) {
       break;
     }
-    _tmpFileOs.write(reinterpret_cast<char*>(buffer), read);
+    if (!_tmpFileOs.write(reinterpret_cast<char*>(buffer), read)) {
+      return -1;
+    }
     size += read;
   } while (size < stream->getSize());
   _writeSucceeded = true;
@@ -69,6 +71,9 @@ bool ProcessSessionReadCallback::commit() {
   logger_->log_debug("committing export operation to %s", _destFile);
 
   if (_writeSucceeded) {
+    if (!_tmpFileOs.flush()) {
+      return false;
+    }
     _tmpFileOs.close();
 
     if (rename(_tmpFile.c_str(), _destFile.c_str())) {

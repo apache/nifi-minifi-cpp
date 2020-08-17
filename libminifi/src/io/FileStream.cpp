@@ -102,7 +102,9 @@ int FileStream::writeData(uint8_t *value, int size) {
       if (offset_ > length_) {
         length_ = offset_;
       }
-      file_stream_->flush();
+      if (!file_stream_->flush()) {
+        return -1;
+      }
       return size;
     } else {
       return -1;

@@ -248,12 +248,10 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
     std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim);
     // Call the callback to write the content
     if (nullptr == stream) {
-      rollback();
-      return;
+      throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
     }
     if (callback->process(stream) < 0) {
-      rollback();
-      return;
+      throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
 
     flow->setSize(stream->getSize());
@@ -284,8 +282,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
     uint64_t startTime = getTimeMillis();
     std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim, true);
     if (nullptr == stream) {
-      rollback();
-      return;
+      throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for append");
     }
     // Call the callback to write the content
 
@@ -294,8 +291,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
     if (oldPos > 0)
       stream->seek(oldPos + 1);
     if (callback->process(stream) < 0) {
-      rollback();
-      return;
+      throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
     flow->setSize(stream->getSize());
 
@@ -330,15 +326,13 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
     std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->read(claim);
 
     if (nullptr == stream) {
-      rollback();
-      return;
+      throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for read");
     }
 
     stream->seek(flow->getOffset());
 
     if (callback->process(stream) < 0) {
-      rollback();
-      return;
+      throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
@@ -365,9 +359,7 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
     std::shared_ptr<io::BaseStream> content_stream = process_context_->getContentRepository()->write(claim);
 
     if (nullptr == content_stream) {
-      logger_->log_debug("Could not obtain claim for %s", claim->getContentFullPath());
-      rollback();
-      return;
+      throw Exception(FILE_OPERATION_EXCEPTION, "Could not obtain claim for " + claim->getContentFullPath());
     }
     size_t position = 0;
     const size_t max_size = stream.getSize();
@@ -412,8 +404,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
     std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim);
     if (nullptr == stream) {
-      rollback();
-      return;
+      throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open new flowfile content for write");
     }
     if (input.is_open() && input.good()) {
       bool invalidWrite = false;
@@ -532,8 +523,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         }
         if (stream == nullptr) {
           logger_->log_error("Stream is null");
-          rollback();
-          return;
+          throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for import");
         }
         if (stream->write(begin, len) != len) {
           logger_->log_error("Error while writing");
