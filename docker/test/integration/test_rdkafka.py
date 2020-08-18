@@ -56,13 +56,21 @@ def test_broker_on_off():
         cluster.put_test_data('test')
         cluster.deploy_flow(None, engine='kafka-broker')
         cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
+        start_count = 1
+        stop_count = 0
 
         def start_kafka():
+            nonlocal start_count
             assert cluster.start_flow('kafka-broker')
             assert cluster.start_flow('kafka-consumer')
+            start_count += 1
+            assert cluster.wait_for_container_logs('zookeeper', 'Established session', 30, start_count)
         def stop_kafka():
+            nonlocal stop_count
             assert cluster.stop_flow('kafka-consumer')
             assert cluster.stop_flow('kafka-broker')
+            stop_count += 1
+            assert cluster.wait_for_container_logs('zookeeper', 'Processed session termination for sessionid', 30, stop_count)
 
         assert cluster.check_output(10, dir='/success')
         stop_kafka()

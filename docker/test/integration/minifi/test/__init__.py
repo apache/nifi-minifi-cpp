@@ -19,6 +19,7 @@ import uuid
 import tarfile
 import subprocess
 import sys
+import time
 from io import BytesIO
 from threading import Event
 
@@ -191,6 +192,18 @@ class DockerTestCluster(SingleNodeDockerCluster):
     def rm_out_child(self, dir):
         logging.info('Removing %s from output folder', self.tmp_test_output_dir + dir)
         shutil.rmtree(self.tmp_test_output_dir + dir)
+
+    def wait_for_container_logs(self, container_name, log, timeout, count=1):
+        logging.info('Waiting for logs `%s` in container `%s`', log, container_name)
+        container = self.containers[container_name]
+        check_count = 0
+        while check_count <= timeout:
+            if container.logs().decode("utf-8").count(log) == count:
+                return True
+            else:
+                check_count += 1
+                time.sleep(1)
+        return False
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
