@@ -18,7 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_IO_TLS_RocksDbStream_H_
 #define LIBMINIFI_INCLUDE_IO_TLS_RocksDbStream_H_
 
-#include "rocksdb/db.h"
+#include "RocksDatabase.h"
 #include <iostream>
 #include <cstdint>
 #include <string>
@@ -46,7 +46,7 @@ class RocksDbStream : public io::BaseStream {
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
    */
-  explicit RocksDbStream(std::string path, rocksdb::DB *db, bool write_enable = false);
+  explicit RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable = false);
 
   ~RocksDbStream() override {
     closeStream();
@@ -160,7 +160,7 @@ class RocksDbStream : public io::BaseStream {
 
   std::string value_;
 
-  rocksdb::DB *db_;
+  gsl::not_null<minifi::internal::RocksDatabase*> db_;
 
   size_t size_;
 

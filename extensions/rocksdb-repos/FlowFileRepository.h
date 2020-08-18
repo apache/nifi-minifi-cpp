@@ -28,6 +28,7 @@
 #include "Connection.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "concurrentqueue.h"
+#include "RocksDatabase.h"
 
 namespace org {
 namespace apache {
@@ -70,12 +71,6 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     db_ = NULL;
   }
 
-  // Destructor
-  ~FlowFileRepository() {
-    if (db_)
-      delete db_;
-  }
-
   virtual bool isNoop() {
     return false;
   }
@@ -116,25 +111,34 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     options.write_buffer_size = 8 << 20;
     options.max_write_buffer_number = 20;
     options.min_write_buffer_number_to_merge = 1;
-    rocksdb::Status status = rocksdb::DB::Open(options, directory_, &db_);
-    if (status.ok()) {
+    db_ = utils::make_unique<minifi::internal::RocksDatabase>(options, directory_);
+    if (db_->open()) {
       logger_->log_debug("NiFi FlowFile Repository database open %s success", directory_);
+      return true;
     } else {
       logger_->log_error("NiFi FlowFile Repository database open %s fail", directory_);
+      return false;
     }
-    return status.ok();
   }
 
   virtual void run();
 
   virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
     // persistent to the DB
+    auto opendb = db_->open();
+    if (!opendb) {
+      return false;
+    }
     rocksdb::Slice value((const char *) buf, bufLen);
-    auto operation = [this, &key, &value]() { return db_->Put(rocksdb::WriteOptions(), key, value); };
+    auto operation = [this, &key, &value, &opendb]() { return opendb->Put(rocksdb::WriteOptions(), key, value); };
     return ExecuteWithRetry(operation);
   }
 
   virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) {
+    auto opendb = db_->open();
+    if (!opendb) {
+      return false;
+    }
     rocksdb::WriteBatch batch;
     for (const auto &item: data) {
       rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->getSize());
@@ -143,7 +147,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
         return false;
       }
     }
-    auto operation = [this, &batch]() { return db_->Write(rocksdb::WriteOptions(), &batch); };
+    auto operation = [this, &batch, &opendb]() { return opendb->Write(rocksdb::WriteOptions(), &batch); };
     return ExecuteWithRetry(operation);
   }
 
@@ -162,9 +166,11 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
    * @return status of the get operation.
    */
   virtual bool Get(const std::string &key, std::string &value) {
-    if (db_ == nullptr)
+    auto opendb = db_->open();
+    if (!opendb) {
       return false;
-    return db_->Get(rocksdb::ReadOptions(), key, &value).ok();
+    }
+    return opendb->Get(rocksdb::ReadOptions(), key, &value).ok();
   }
 
   virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo);
@@ -194,7 +200,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
    * Returns true if a checkpoint is needed at startup
    * @return true if a checkpoint is needed.
    */
-  bool need_checkpoint();
+  bool need_checkpoint(minifi::internal::OpenRocksDB& opendb);
 
   /**
    * Prunes stored flow files.
@@ -203,7 +209,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 
   moodycamel::ConcurrentQueue<std::string> keys_to_delete;
   std::shared_ptr<core::ContentRepository> content_repo_;
-  rocksdb::DB* db_;
+  std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::unique_ptr<rocksdb::Checkpoint> checkpoint_;
   std::shared_ptr<logging::Logger> logger_;
 };

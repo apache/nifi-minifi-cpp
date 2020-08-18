@@ -25,6 +25,8 @@
 #include "core/ContentRepository.h"
 #include "properties/Configure.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "RocksDatabase.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -117,7 +119,7 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
 
  private:
   bool is_valid_;
-  rocksdb::DB* db_;
+  std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::shared_ptr<logging::Logger> logger_;
 };
 

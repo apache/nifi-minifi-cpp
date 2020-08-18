@@ -75,13 +75,12 @@ void RocksDbPersistableKeyValueStoreService::onEnable() {
   if (!always_persist_) {
     options.manual_wal_flush = true;
   }
-  rocksdb::DB* db = nullptr;
-  rocksdb::Status status = rocksdb::DB::Open(options, directory_, &db);
-  if (status.ok()) {
-    db_.reset(db);
+  db_ = utils::make_unique<minifi::internal::RocksDatabase>(options, directory_);
+  if (db_->open()) {
     logger_->log_trace("Successfully opened RocksDB database at %s", directory_.c_str());
   } else {
-    logger_->log_error("Failed to open RocksDB database at %s, error: %s", directory_.c_str(), status.getState());
+    // TODO(adebreceni) forward the status
+    logger_->log_error("Failed to open RocksDB database at %s, error", directory_.c_str());
     return;
   }
 
@@ -102,7 +101,11 @@ bool RocksDbPersistableKeyValueStoreService::set(const std::string& key, const s
   if (!db_) {
     return false;
   }
-  rocksdb::Status status = db_->Put(default_write_options, key, value);
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
+  rocksdb::Status status = opendb->Put(default_write_options, key, value);
   if (!status.ok()) {
     logger_->log_error("Failed to Put key %s to RocksDB database at %s, error: %s", key.c_str(), directory_.c_str(), status.getState());
     return false;
@@ -114,7 +117,11 @@ bool RocksDbPersistableKeyValueStoreService::get(const std::string& key, std::st
   if (!db_) {
     return false;
   }
-  rocksdb::Status status = db_->Get(rocksdb::ReadOptions(), key, &value);
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
+  rocksdb::Status status = opendb->Get(rocksdb::ReadOptions(), key, &value);
   if (!status.ok()) {
     logger_->log_error("Failed to Get key %s from RocksDB database at %s, error: %s", key.c_str(), directory_.c_str(), status.getState());
     return false;
@@ -126,8 +133,12 @@ bool RocksDbPersistableKeyValueStoreService::get(std::unordered_map<std::string,
   if (!db_) {
     return false;
   }
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
   kvs.clear();
-  std::unique_ptr<rocksdb::Iterator> it = std::unique_ptr<rocksdb::Iterator>(db_->NewIterator(rocksdb::ReadOptions()));
+  auto it = std::unique_ptr<rocksdb::Iterator>(opendb->NewIterator(rocksdb::ReadOptions()));
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     kvs.emplace(it->key().ToString(), it->value().ToString());
   }
@@ -142,7 +153,11 @@ bool RocksDbPersistableKeyValueStoreService::remove(const std::string& key) {
   if (!db_) {
     return false;
   }
-  rocksdb::Status status = db_->Delete(default_write_options, key);
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
+  rocksdb::Status status = opendb->Delete(default_write_options, key);
   if (!status.ok()) {
     logger_->log_error("Failed to Delete from RocksDB database at %s, error: %s", directory_.c_str(), status.getState());
     return false;
@@ -154,9 +169,13 @@ bool RocksDbPersistableKeyValueStoreService::clear() {
   if (!db_) {
     return false;
   }
-  std::unique_ptr<rocksdb::Iterator> it = std::unique_ptr<rocksdb::Iterator>(db_->NewIterator(rocksdb::ReadOptions()));
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
+  auto it = std::unique_ptr<rocksdb::Iterator>(opendb->NewIterator(rocksdb::ReadOptions()));
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    rocksdb::Status status = db_->Delete(default_write_options, it->key());
+    rocksdb::Status status = opendb->Delete(default_write_options, it->key());
     if (!status.ok()) {
       logger_->log_error("Failed to Delete from RocksDB database at %s, error: %s", directory_.c_str(), status.getState());
       return false;
@@ -173,6 +192,10 @@ bool RocksDbPersistableKeyValueStoreService::update(const std::string& key, cons
   if (!db_) {
     return false;
   }
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
   throw std::logic_error("Unsupported method");
 }
 
@@ -180,10 +203,14 @@ bool RocksDbPersistableKeyValueStoreService::persist() {
   if (!db_) {
     return false;
   }
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
   if (always_persist_) {
     return true;
   }
-  return db_->FlushWAL(true /*sync*/).ok();
+  return opendb->FlushWAL(true /*sync*/).ok();
 }
 
 } /* namespace controllers */
