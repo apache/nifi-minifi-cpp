@@ -21,14 +21,16 @@ def test_publish_kafka():
     """
     Verify delivery of message to kafka broker
     """
-    producer_flow = GetFile('/tmp/input') >> PublishKafka() >> ('success', LogAttribute())
+    producer_flow = GetFile('/tmp/input') >> PublishKafka() \
+                        >> (('failure', LogAttribute()),
+                            ('success', PutFile('/tmp/output/success')))
 
-    with DockerTestCluster(KafkaValidator('test')) as cluster:
+    with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
         cluster.put_test_data('test')
         cluster.deploy_flow(None, engine='kafka-broker')
         cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
 
-        assert cluster.check_output(10)
+        assert cluster.check_output(10, dir='/success')
 
 def test_no_broker():
     """
@@ -82,3 +84,17 @@ def test_broker_on_off():
         cluster.rm_out_child('/failure')
         assert cluster.check_output(30, dir='/failure')
 
+def test_ssl():
+    """
+    Verify security connection
+    """
+    producer_flow = GetFile('/tmp/input') >> PublishKafkaSSL() \
+                    >> (('failure', LogAttribute()),
+                        ('success', PutFile('/tmp/output/ssl')))
+
+    with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
+        cluster.put_test_data('test')
+        cluster.deploy_flow(None, engine='kafka-broker')
+        cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
+
+        assert cluster.check_output(10, dir='/ssl')
