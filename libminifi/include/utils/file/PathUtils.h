@@ -66,7 +66,7 @@ struct space_info {
   }
 };
 
-class filesystem_error : std::system_error {
+class filesystem_error : public std::system_error {
   std::shared_ptr<const std::pair<std::string, std::string>> paths_involved_;
  public:
   filesystem_error(const std::string& what_arg, const std::error_code ec)

@@ -131,7 +131,7 @@ space_info space(const char* const path, std::error_code& ec) noexcept {
 
 space_info space(const char* const path) {
   std::error_code ec;
-  auto result = space(path, ec);
+  const auto result = space(path, ec);  // const here doesn't break NRVO
   if (ec) {
     throw filesystem_error{ec.message(), path, "", ec};
   }
