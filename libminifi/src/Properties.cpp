@@ -117,7 +117,7 @@ void Properties::loadConfigureFile(const char *fileName) {
     return;
   }
 
-  properties_file_ = utils::file::PathUtils::getFullPath(utils::file::FileUtils::concat_path(getHome(), fileName));
+  properties_file_ = utils::file::getFullPath(utils::file::FileUtils::concat_path(getHome(), fileName));
 
   logger_->log_info("Using configuration file to load configuration for %s from %s (located at %s)", getName().c_str(), fileName, properties_file_);
 

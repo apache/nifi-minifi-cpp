@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
   // initialize static functions that were defined apriori
   core::FlowConfiguration::initialize_static_functions();
 
-  std::string graceful_shutdown_seconds = "";
+  std::string graceful_shutdown_seconds;
   std::string prov_repo_class = "provenancerepository";
   std::string flow_repo_class = "flowfilerepository";
   std::string nifi_configuration_class_name = "yamlconfiguration";

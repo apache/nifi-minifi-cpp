@@ -17,7 +17,11 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 
+#include <cinttypes>
+#include <memory>
 #include <string>
+#include <system_error>
+#include <utility>
 
 namespace org {
 namespace apache {
@@ -25,7 +29,8 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 namespace file {
-namespace PathUtils {
+
+namespace PathUtils = ::org::apache::nifi::minifi::utils::file;
 
 /**
  * Extracts the filename and path performing some validation of the path and output to ensure
@@ -47,7 +52,44 @@ std::string getFullPath(const std::string& path);
 
 std::string globToRegex(std::string glob);
 
-}  // namespace PathUtils
+
+/**
+ * Represents filesystem space information in bytes
+ */
+struct space_info {
+  std::uintmax_t capacity;
+  std::uintmax_t free;
+  std::uintmax_t available;
+
+  friend bool operator==(const space_info& a, const space_info& b) noexcept {
+    return a.capacity == b.capacity && a.free == b.free && a.available == b.available;
+  }
+};
+
+class filesystem_error : std::system_error {
+  std::shared_ptr<const std::pair<std::string, std::string>> paths_involved_;
+ public:
+  filesystem_error(const std::string& what_arg, const std::error_code ec)
+      :std::system_error{ec, what_arg}
+  {}
+  filesystem_error(const std::string& what_arg, const char* const path1, const char* const path2, const std::error_code ec)
+      :std::system_error{ec, what_arg}, paths_involved_{std::make_shared<const std::pair<std::string, std::string>>(path1, path2)}
+  {}
+
+  // copy should be noexcept as soon as libstdc++ fixes std::system_error copy
+  filesystem_error(const filesystem_error& o) = default;
+  filesystem_error& operator=(const filesystem_error&) = default;
+
+  const char* path1() const noexcept { return paths_involved_->first.c_str(); }
+  const char* path2() const noexcept { return paths_involved_->second.c_str(); }
+};
+
+/**
+ * Provides filesystem space information for the specified directory
+ */
+space_info space(const char* path);
+space_info space(const char* path, std::error_code&) noexcept;
+
 }  // namespace file
 }  // namespace utils
 }  // namespace minifi

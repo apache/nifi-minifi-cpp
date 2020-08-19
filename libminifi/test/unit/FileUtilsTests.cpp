@@ -92,7 +92,7 @@ TEST_CASE("TestFilePath", "[TestGetFileNameAndPath]") {
   std::stringstream file;
   file << path.str() << FileUtils::get_separator() << "file";
   std::string filename, filepath;
-  REQUIRE(true == utils::file::PathUtils::getFileNameAndPath(file.str(), filepath, filename) );
+  REQUIRE(true == utils::file::getFileNameAndPath(file.str(), filepath, filename) );
   REQUIRE(path.str() == filepath);
   REQUIRE("file" == filename);
 }
@@ -100,7 +100,7 @@ SECTION("NO FILE VALID PATH") {
   std::stringstream path;
   path << "a" << FileUtils::get_separator() << "b" << FileUtils::get_separator() << "c" << FileUtils::get_separator();
   std::string filename, filepath;
-  REQUIRE(false == utils::file::PathUtils::getFileNameAndPath(path.str(), filepath, filename) );
+  REQUIRE(false == utils::file::getFileNameAndPath(path.str(), filepath, filename) );
   REQUIRE(filepath.empty());
   REQUIRE(filename.empty());
 }
@@ -110,14 +110,14 @@ SECTION("FILE NO PATH") {
   std::string filename, filepath;
   std::string expectedPath;
   expectedPath += FileUtils::get_separator();
-  REQUIRE(true == utils::file::PathUtils::getFileNameAndPath(path.str(), filepath, filename) );
+  REQUIRE(true == utils::file::getFileNameAndPath(path.str(), filepath, filename) );
   REQUIRE(expectedPath == filepath);
   REQUIRE("file" == filename);
 }
 SECTION("NO FILE NO PATH") {
   std::string path = "file";
   std::string filename, filepath;
-  REQUIRE(false == utils::file::PathUtils::getFileNameAndPath(path, filepath, filename) );
+  REQUIRE(false == utils::file::getFileNameAndPath(path, filepath, filename) );
   REQUIRE(filepath.empty());
   REQUIRE(filename.empty());
 }
@@ -154,7 +154,7 @@ TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
   TestController testController;
 
   char format[] = "/tmp/gt.XXXXXX";
-  const std::string tempDir = utils::file::PathUtils::getFullPath(testController.createTempDirectory(format));
+  const std::string tempDir = utils::file::getFullPath(testController.createTempDirectory(format));
 
   const std::string cwd = utils::Environment::getCurrentWorkingDirectory();
 
@@ -168,15 +168,15 @@ TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
   REQUIRE(0 == utils::file::FileUtils::create_dir(tempDir1));
   REQUIRE(0 == utils::file::FileUtils::create_dir(tempDir2));
 
-  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath(tempDir1));
-  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath("test1"));
-  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath("./test1"));
-  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath("././test1"));
-  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath("./test2/../test1"));
+  REQUIRE(tempDir1 == utils::file::getFullPath(tempDir1));
+  REQUIRE(tempDir1 == utils::file::getFullPath("test1"));
+  REQUIRE(tempDir1 == utils::file::getFullPath("./test1"));
+  REQUIRE(tempDir1 == utils::file::getFullPath("././test1"));
+  REQUIRE(tempDir1 == utils::file::getFullPath("./test2/../test1"));
 #ifdef WIN32
-  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath(".\\test1"));
-  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath(".\\.\\test1"));
-  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath(".\\test2\\..\\test1"));
+  REQUIRE(tempDir1 == utils::file::getFullPath(".\\test1"));
+  REQUIRE(tempDir1 == utils::file::getFullPath(".\\.\\test1"));
+  REQUIRE(tempDir1 == utils::file::getFullPath(".\\test2\\..\\test1"));
 #endif
 }
 
