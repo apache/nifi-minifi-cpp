@@ -20,6 +20,7 @@ import tarfile
 import subprocess
 import sys
 import time
+import subprocess
 from io import BytesIO
 from threading import Event
 
@@ -57,6 +58,9 @@ class DockerTestCluster(SingleNodeDockerCluster):
         os.makedirs(self.tmp_test_output_dir)
         logging.info('Creating tmp test resource dir: %s', self.tmp_test_resources_dir)
         os.makedirs(self.tmp_test_resources_dir)
+        os.chmod(self.tmp_test_output_dir, 0o777)
+        os.chmod(self.tmp_test_input_dir, 0o777)
+        os.chmod(self.tmp_test_resources_dir, 0o777)
 
         # Add resources
         test_dir = os.environ['PYTHONPATH'].split(':')[-1] # Based on DockerVerify.sh
@@ -280,6 +284,8 @@ class SingleFileOutputValidator(FileOutputValidator):
 
         full_dir = self.output_dir + dir
         logging.info("Output folder: %s", full_dir)
+        if "GITHUB_WORKSPACE" in os.environ:
+            subprocess.call(['sudo', 'chmod', '-R', '0777', full_dir])
 
         listing = listdir(full_dir)
 
@@ -313,6 +319,8 @@ class EmptyFilesOutPutValidator(FileOutputValidator):
 
         full_dir = self.output_dir + dir
         logging.info("Output folder: %s", full_dir)
+        if "GITHUB_WORKSPACE" in os.environ:
+            subprocess.call(['sudo', 'chmod', '-R', '0777', full_dir])
 
         listing = listdir(full_dir)
         if listing:
@@ -334,6 +342,8 @@ class NoFileOutPutValidator(FileOutputValidator):
 
         full_dir = self.output_dir + dir
         logging.info("Output folder: %s", full_dir)
+        if "GITHUB_WORKSPACE" in os.environ:
+            subprocess.call(['sudo', 'chmod', '-R', '0777', full_dir])
 
         listing = listdir(full_dir)
 

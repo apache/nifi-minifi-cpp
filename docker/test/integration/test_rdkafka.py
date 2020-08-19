@@ -30,7 +30,7 @@ def test_publish_kafka():
         cluster.deploy_flow(None, engine='kafka-broker')
         cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
 
-        assert cluster.check_output(10, dir='/success')
+        assert cluster.check_output(30, dir='/success')
 
 def test_no_broker():
     """
@@ -44,7 +44,7 @@ def test_no_broker():
         cluster.put_test_data('no broker')
         cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
 
-        assert cluster.check_output(30)
+        assert cluster.check_output(60)
 
 def test_broker_on_off():
     """
@@ -74,15 +74,15 @@ def test_broker_on_off():
             stop_count += 1
             assert cluster.wait_for_container_logs('zookeeper', 'Processed session termination for sessionid', 30, stop_count)
 
-        assert cluster.check_output(10, dir='/success')
-        stop_kafka()
-        assert cluster.check_output(30, dir='/failure')
-        start_kafka()
-        cluster.rm_out_child('/success')
         assert cluster.check_output(30, dir='/success')
         stop_kafka()
+        assert cluster.check_output(60, dir='/failure')
+        start_kafka()
+        cluster.rm_out_child('/success')
+        assert cluster.check_output(60, dir='/success')
+        stop_kafka()
         cluster.rm_out_child('/failure')
-        assert cluster.check_output(30, dir='/failure')
+        assert cluster.check_output(60, dir='/failure')
 
 def test_ssl():
     """
@@ -97,4 +97,4 @@ def test_ssl():
         cluster.deploy_flow(None, engine='kafka-broker')
         cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
 
-        assert cluster.check_output(10, dir='/ssl')
+        assert cluster.check_output(30, dir='/ssl')
