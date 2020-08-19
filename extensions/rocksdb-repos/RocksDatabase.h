@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <mutex>
+
 #include "utils/OptionalUtils.h"
 #include "rocksdb/db.h"
 #include "rocksdb/options.h"
@@ -36,13 +38,9 @@ class RocksDatabase;
 class OpenRocksDB {
   friend class RocksDatabase;
 
-  OpenRocksDB(RocksDatabase& db, gsl::not_null<rocksdb::DB*> impl);
+  OpenRocksDB(gsl::not_null<RocksDatabase*> db, gsl::not_null<std::shared_ptr<rocksdb::DB>> impl);
 
  public:
-  OpenRocksDB(OpenRocksDB&& other);
-
-  OpenRocksDB& operator=(OpenRocksDB&& other);
-
   rocksdb::Status Put(const rocksdb::WriteOptions& options, const rocksdb::Slice& key, const rocksdb::Slice& value);
 
   rocksdb::Status Get(const rocksdb::ReadOptions& options, const rocksdb::Slice& key, std::string* value);
@@ -63,13 +61,11 @@ class OpenRocksDB {
 
   rocksdb::Status FlushWAL(bool sync);
 
-  ~OpenRocksDB();
-
   rocksdb::DB* get();
 
  private:
-  RocksDatabase& db_;
-  rocksdb::DB* impl_;
+  gsl::not_null<RocksDatabase*> db_;
+  gsl::not_null<std::shared_ptr<rocksdb::DB>> impl_;
 };
 
 class RocksDatabase {
@@ -79,8 +75,6 @@ class RocksDatabase {
   RocksDatabase(const rocksdb::Options& options, const std::string& name);
 
   utils::optional<OpenRocksDB> open();
-
-  ~RocksDatabase();
 
  private:
   /*
@@ -92,8 +86,8 @@ class RocksDatabase {
   rocksdb::Options open_options_;
   std::string db_name_;
 
-  std::atomic<rocksdb::DB*> impl_{nullptr};
-  std::atomic<int> reference_count_{0};
+  std::mutex mtx_;
+  std::shared_ptr<rocksdb::DB> impl_;
 
 };
 

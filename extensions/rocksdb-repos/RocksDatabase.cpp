@@ -24,20 +24,12 @@ namespace nifi {
 namespace minifi {
 namespace internal {
 
-OpenRocksDB::OpenRocksDB(RocksDatabase &db, gsl::not_null<rocksdb::DB*> impl) : db_(db), impl_(impl) {}
-
-OpenRocksDB::OpenRocksDB(OpenRocksDB &&other) : db_(other.db_), impl_(other.impl_) {
-  other.impl_ = nullptr;
-}
-
-OpenRocksDB& OpenRocksDB::operator=(OpenRocksDB &&other) {
-  throw std::logic_error("Should not be called, only here for optional lazy init");
-}
+OpenRocksDB::OpenRocksDB(gsl::not_null<RocksDatabase*> db, gsl::not_null<std::shared_ptr<rocksdb::DB>> impl) : db_(std::move(db)), impl_(std::move(impl)) {}
 
 rocksdb::Status OpenRocksDB::Put(const rocksdb::WriteOptions& options, const rocksdb::Slice& key, const rocksdb::Slice& value) {
   rocksdb::Status result = impl_->Put(options, key, value);
   if (result == rocksdb::Status::NoSpace()) {
-    db_.invalidate();
+    db_->invalidate();
   }
   return result;
 }
@@ -45,7 +37,7 @@ rocksdb::Status OpenRocksDB::Put(const rocksdb::WriteOptions& options, const roc
 rocksdb::Status OpenRocksDB::Get(const rocksdb::ReadOptions& options, const rocksdb::Slice& key, std::string* value) {
   rocksdb::Status result = impl_->Get(options, key, value);
   if (result == rocksdb::Status::NoSpace()) {
-    db_.invalidate();
+    db_->invalidate();
   }
   return result;
 }
@@ -54,7 +46,7 @@ std::vector<rocksdb::Status> OpenRocksDB::MultiGet(const rocksdb::ReadOptions& o
   std::vector<rocksdb::Status> results = impl_->MultiGet(options, keys, values);
   for (const auto& result : results) {
     if (result == rocksdb::Status::NoSpace()) {
-      db_.invalidate();
+      db_->invalidate();
     }
   }
   return results;
@@ -63,7 +55,7 @@ std::vector<rocksdb::Status> OpenRocksDB::MultiGet(const rocksdb::ReadOptions& o
 rocksdb::Status OpenRocksDB::Write(const rocksdb::WriteOptions& options, rocksdb::WriteBatch* updates) {
   rocksdb::Status result = impl_->Write(options, updates);
   if (result == rocksdb::Status::NoSpace()) {
-    db_.invalidate();
+    db_->invalidate();
   }
   return result;
 }
@@ -71,7 +63,7 @@ rocksdb::Status OpenRocksDB::Write(const rocksdb::WriteOptions& options, rocksdb
 rocksdb::Status OpenRocksDB::Delete(const rocksdb::WriteOptions& options, const rocksdb::Slice& key) {
   rocksdb::Status result = impl_->Delete(options, key);
   if (result == rocksdb::Status::NoSpace()) {
-    db_.invalidate();
+    db_->invalidate();
   }
   return result;
 }
@@ -79,7 +71,7 @@ rocksdb::Status OpenRocksDB::Delete(const rocksdb::WriteOptions& options, const 
 rocksdb::Status OpenRocksDB::Merge(const rocksdb::WriteOptions& options, const rocksdb::Slice& key, const rocksdb::Slice& value) {
   rocksdb::Status result = impl_->Merge(options, key, value);
   if (result == rocksdb::Status::NoSpace()) {
-    db_.invalidate();
+    db_->invalidate();
   }
   return result;
 }
@@ -93,70 +85,43 @@ rocksdb::Iterator* OpenRocksDB::NewIterator(const rocksdb::ReadOptions& options)
 }
 
 rocksdb::Status OpenRocksDB::NewCheckpoint(rocksdb::Checkpoint **checkpoint) {
-  return rocksdb::Checkpoint::Create(impl_, checkpoint);
+  return rocksdb::Checkpoint::Create(impl_.get(), checkpoint);
 }
 
 rocksdb::Status OpenRocksDB::FlushWAL(bool sync) {
   rocksdb::Status result = impl_->FlushWAL(sync);
   if (result == rocksdb::Status::NoSpace()) {
-    db_.invalidate();
+    db_->invalidate();
   }
   return result;
 }
 
 rocksdb::DB* OpenRocksDB::get() {
-  return impl_;
-}
-
-OpenRocksDB::~OpenRocksDB() {
-  if (impl_ == nullptr) {
-    // this instance has been moved from
-    return;
-  }
-  if (--db_.reference_count_ == 0) {
-    // it's on us to delete the database
-    delete impl_;
-  }
+  return impl_.get();
 }
 
 RocksDatabase::RocksDatabase(const rocksdb::Options& options, const std::string& name) : open_options_(options), db_name_(name) {}
 
 void RocksDatabase::invalidate() {
-  rocksdb::DB* current_db = impl_.load();
-  impl_ = nullptr;
-  if (current_db != nullptr && --reference_count_ == 0) {
-    // it's on us to delete the database
-    delete current_db;
-  }
+  std::lock_guard<std::mutex> db_guard{ mtx_ };
+  // discard our own instance
+  impl_.reset();
 }
 
 utils::optional<OpenRocksDB> RocksDatabase::open() {
-  // to make sure that we have a valid reference in this method
-  // also we increment on behalf of the OpenRocksDB instance to be created
-  ++reference_count_;
-  rocksdb::DB* db_instance = impl_.load();
-  if (db_instance == nullptr) {
+  std::lock_guard<std::mutex> db_guard{ mtx_ };
+  if (!impl_) {
     // database is not opened yet
+    rocksdb::DB* db_instance = nullptr;
     rocksdb::Status result = rocksdb::DB::Open(open_options_, db_name_, &db_instance);
     if (result.ok()) {
-      // since we could open the db, any previous db instance has surely been destroyed
-      reference_count_ = 2;
-      rocksdb::DB* current_db = nullptr;
-      // we managed to open the db, we surely hold a single reference to it
-      if (!impl_.compare_exchange_strong(current_db, db_instance)) {
-        throw std::logic_error("Nobody else should have been able to open the database and set the pointer");
-      }
+      impl_.reset(db_instance);
     } else {
-      // we failed to open the database either because of some real error
-      // or because an other call this ::open was faster than the current one
+      // we failed to open the database
       return utils::nullopt;
     }
   }
-  return OpenRocksDB(*this, gsl::make_not_null<rocksdb::DB*>(db_instance));
-}
-
-RocksDatabase::~RocksDatabase() {
-  delete impl_.load();
+  return OpenRocksDB(gsl::make_not_null<RocksDatabase*>(this), gsl::make_not_null<std::shared_ptr<rocksdb::DB>>(impl_));
 }
 
 } /* namespace internal */
