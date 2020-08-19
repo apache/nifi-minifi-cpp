@@ -52,6 +52,8 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Connectable.h"
+#include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 #include "utils/HTTPClient.h"
 #include "utils/GeneralUtils.h"
 #include "io/NetworkPrioritizer.h"
@@ -83,7 +85,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       controller_service_map_(std::make_shared<core::controller::ControllerServiceMap>()),
       thread_pool_(2, false, nullptr, "Flowcontroller threadpool"),
       flow_configuration_(std::move(flow_configuration)),
-      configuration_(configure),
+      configuration_(std::move(configure)),
       content_repo_(content_repo),
       logger_(logging::LoggerFactory<FlowController>::getLogger()) {
   if (provenance_repo == nullptr)
@@ -103,25 +105,23 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   c2_initialized_ = false;
   root_ = nullptr;
 
-  protocol_ = utils::make_unique<FlowControlProtocol>(this, configure);
+  protocol_ = utils::make_unique<FlowControlProtocol>(this, configuration_);
 
   if (!headless_mode) {
     std::string rawConfigFileString;
-    configure->get(Configure::nifi_flow_configuration_file, rawConfigFileString);
+    configuration_->get(Configure::nifi_flow_configuration_file, rawConfigFileString);
 
     if (!rawConfigFileString.empty()) {
       configuration_filename_ = rawConfigFileString;
     }
 
-    std::string adjustedFilename;
-    if (!configuration_filename_.empty()) {
-      // perform a naive determination if this is a relative path
-      if (configuration_filename_.c_str()[0] != '/') {
-        adjustedFilename = adjustedFilename + configure->getHome() + "/" + configuration_filename_;
-      } else {
-        adjustedFilename = configuration_filename_;
+    const auto adjustedFilename = [&]() -> std::string {
+      if (configuration_filename_.empty()) { return {}; }
+      if (utils::file::isAbsolutePath(configuration_filename_.c_str())) {
+        return configuration_filename_;
       }
-    }
+      return utils::file::FileUtils::concat_path(configuration_->getHome(), configuration_filename_);
+    }();
     initializeExternalComponents();
     initializePaths(adjustedFilename);
   }
@@ -142,25 +142,20 @@ void FlowController::initializeExternalComponents() {
 }
 
 void FlowController::initializePaths(const std::string &adjustedFilename) {
-  char *path = NULL;
+  const char *path = nullptr;
 #ifndef WIN32
   char full_path[PATH_MAX];
   path = realpath(adjustedFilename.c_str(), full_path);
 #else
-  path = const_cast<char*>(adjustedFilename.c_str());
+  path = adjustedFilename.c_str();
 #endif
 
-  if (path == NULL) {
+  if (path == nullptr) {
     throw std::runtime_error("Path is not specified. Either manually set MINIFI_HOME or ensure ../conf exists");
   }
   std::string pathString(path);
   configuration_filename_ = pathString;
   logger_->log_info("FlowController NiFi Configuration file %s", pathString);
-
-  if (!path) {
-    logger_->log_error("Could not locate path from provided configuration file name (%s).  Exiting.", path);
-    exit(1);
-  }
 }
 
 utils::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFromConfiguration() {
@@ -198,6 +193,9 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   }
 
   if (newRoot == nullptr)
+    return false;
+
+  if (!isRunning())
     return false;
 
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName(), newRoot->getVersion());

@@ -225,6 +225,10 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
 
   virtual uint64_t getRepoSize();
 
+  std::string getDirectory() const {
+    return directory_;
+  }
+
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   Repository(const Repository &parent) = delete;

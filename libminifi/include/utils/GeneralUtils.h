@@ -43,6 +43,7 @@ using std::make_unique;
 
 template<typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 T intdiv_ceil(T numerator, T denominator) {
+  gsl_Expects(denominator != 0);
   // note: division and remainder is 1 instruction on x86
   return numerator / denominator + (numerator % denominator > 0);
 }
@@ -91,6 +92,74 @@ struct EnableSharedFromThis : virtual internal::EnableSharedFromThisBase {
     return std::dynamic_pointer_cast<T>(internal::EnableSharedFromThisBase::shared_from_this());
   }
 };
+
+// utilities to define single expression functions with proper noexcept and a decltype-ed return type (like decltype(auto) since C++14)
+#define MINIFICPP_UTIL_DEDUCED(...) noexcept(noexcept(__VA_ARGS__)) -> decltype(__VA_ARGS__) { return __VA_ARGS__; }
+#define MINIFICPP_UTIL_DEDUCED_CONDITIONAL(condition, ...) noexcept(noexcept(__VA_ARGS__)) -> typename std::enable_if<(condition), decltype(__VA_ARGS__)>::type { return __VA_ARGS__; }
+
+#if __cplusplus < 201703L
+namespace detail {
+template<typename>
+struct is_reference_wrapper : std::false_type {};
+
+template<typename T>
+struct is_reference_wrapper<std::reference_wrapper<T>> : std::true_type {};
+
+// invoke on pointer to member function
+template<typename T, typename Clazz, typename Obj, typename... Args>
+auto invoke_member_function_impl(T Clazz::*f, Obj&& obj, Args&&... args) MINIFICPP_UTIL_DEDUCED_CONDITIONAL(
+    /* cond: */ (std::is_base_of<Clazz, typename std::decay<decltype(obj)>::type>::value),
+    /* expr: */ (std::forward<Obj>(obj).*f)(std::forward<Args>(args)...))
+
+template<typename T, typename Clazz, typename Obj, typename... Args>
+auto invoke_member_function_impl(T Clazz::*f, Obj&& obj, Args&&... args) MINIFICPP_UTIL_DEDUCED_CONDITIONAL(
+    /* cond: */ (!std::is_base_of<Clazz, typename std::decay<decltype(obj)>::type>::value && is_reference_wrapper<typename std::decay<decltype(obj)>::type>::value),
+    /* expr: */ (std::forward<Obj>(obj).get().*f)(std::forward<Args>(args)...))
+
+template<typename T, typename Clazz, typename Obj, typename... Args>
+auto invoke_member_function_impl(T Clazz::*f, Obj&& obj, Args&&... args) MINIFICPP_UTIL_DEDUCED_CONDITIONAL(
+    /* cond: */ (!std::is_base_of<Clazz, typename std::decay<decltype(obj)>::type>::value && !is_reference_wrapper<typename std::decay<decltype(obj)>::type>::value),
+    /* expr: */ ((*std::forward<Obj>(obj)).*f)(std::forward<Args>(args)...))
+
+// invoke on pointer to data member
+template<typename T, typename Clazz, typename Obj>
+auto invoke_member_object_impl(T Clazz::*f, Obj&& obj) MINIFICPP_UTIL_DEDUCED_CONDITIONAL(
+    /* cond: */ (std::is_base_of<Clazz, typename std::decay<decltype(obj)>::type>::value),
+    /* expr: */ std::forward<Obj>(obj).*f)
+
+template<typename T, typename Clazz, typename Obj>
+auto invoke_member_object_impl(T Clazz::*f, Obj&& obj) MINIFICPP_UTIL_DEDUCED_CONDITIONAL(
+    /* cond: */ (!std::is_base_of<Clazz, typename std::decay<decltype(obj)>::type>::value && is_reference_wrapper<typename std::decay<decltype(obj)>::type>::value),
+    /* expr: */ std::forward<Obj>(obj).get().*f)
+
+template<typename T, typename Clazz, typename Obj>
+auto invoke_member_object_impl(T Clazz::*f, Obj&& obj) MINIFICPP_UTIL_DEDUCED_CONDITIONAL(
+    /* cond: */ (!std::is_base_of<Clazz, typename std::decay<decltype(obj)>::type>::value && !is_reference_wrapper<typename std::decay<decltype(obj)>::type>::value),
+    /* expr: */ (*std::forward<Obj>(obj)).*f)
+
+// invoke_impl
+template<typename T, typename Clazz, typename Obj, typename... Args>
+auto invoke_impl(T Clazz::*f, Obj&& obj, Args&&... args) MINIFICPP_UTIL_DEDUCED_CONDITIONAL(
+    /* cond: */ std::is_member_function_pointer<decltype(f)>::value,
+    /* expr: */ invoke_member_function_impl(f, std::forward<Obj>(obj), std::forward<Args>(args)...))
+
+template<typename T, typename Clazz, typename Obj>
+auto invoke_impl(T Clazz::*f, Obj&& obj) MINIFICPP_UTIL_DEDUCED_CONDITIONAL(
+    /* cond: */ std::is_member_object_pointer<decltype(f)>::value,
+    /* expr: */ invoke_member_object_impl(f, std::forward<Obj>(obj)))
+
+template<typename F, typename... Args>
+auto invoke_impl(F&& f, Args&&... args) MINIFICPP_UTIL_DEDUCED_CONDITIONAL(
+    /* cond: */ !std::is_member_function_pointer<F>::value && !std::is_member_object_pointer<F>::value,
+    /* expr: */ std::forward<F>(f)(std::forward<Args>(args)...))
+
+}  // namespace detail
+
+template<typename F, typename... Args>
+auto invoke(F&& f, Args&&... args) MINIFICPP_UTIL_DEDUCED(detail::invoke_impl(std::forward<F>(f), std::forward<Args>(args)...))
+#else
+using std::invoke
+#endif /* < C++17 */
 
 }  // namespace utils
 }  // namespace minifi

@@ -19,14 +19,32 @@
 #include <catch.hpp>
 #include "utils/file/PathUtils.h"
 
-using namespace org::apache::nifi::minifi::utils::file;
+namespace fs = org::apache::nifi::minifi::utils::file;
 
-TEST_CASE("PathUtils::globToRegex works", "[globToRegex]") {
-  REQUIRE(PathUtils::globToRegex("") == "");
-  REQUIRE(PathUtils::globToRegex("NoSpecialChars") == "NoSpecialChars");
-  REQUIRE(PathUtils::globToRegex("ReplaceDot.txt") == "ReplaceDot\\.txt");
-  REQUIRE(PathUtils::globToRegex("Replace.Multiple.Dots...txt") == "Replace\\.Multiple\\.Dots\\.\\.\\.txt");
-  REQUIRE(PathUtils::globToRegex("ReplaceAsterisk.*") == "ReplaceAsterisk\\..*");
-  REQUIRE(PathUtils::globToRegex("Replace*Multiple*Asterisks") == "Replace.*Multiple.*Asterisks");
-  REQUIRE(PathUtils::globToRegex("ReplaceQuestionMark?.txt") == "ReplaceQuestionMark.\\.txt");
+TEST_CASE("file::globToRegex works", "[globToRegex]") {
+  REQUIRE(fs::globToRegex("").empty());
+  REQUIRE(fs::globToRegex("NoSpecialChars") == "NoSpecialChars");
+  REQUIRE(fs::globToRegex("ReplaceDot.txt") == "ReplaceDot\\.txt");
+  REQUIRE(fs::globToRegex("Replace.Multiple.Dots...txt") == "Replace\\.Multiple\\.Dots\\.\\.\\.txt");
+  REQUIRE(fs::globToRegex("ReplaceAsterisk.*") == "ReplaceAsterisk\\..*");
+  REQUIRE(fs::globToRegex("Replace*Multiple*Asterisks") == "Replace.*Multiple.*Asterisks");
+  REQUIRE(fs::globToRegex("ReplaceQuestionMark?.txt") == "ReplaceQuestionMark.\\.txt");
+}
+
+TEST_CASE("path::isAbsolutePath", "[path::isAbsolutePath]") {
+#ifdef WIN32
+  REQUIRE(fs::isAbsolutePath("C:\\"));
+  REQUIRE(fs::isAbsolutePath("C:\\Program Files"));
+  REQUIRE(fs::isAbsolutePath("C:\\Program Files\\ApacheNiFiMiNiFi\\nifi-minifi-cpp\\conf\\minifi.properties"));
+  REQUIRE(fs::isAbsolutePath("C:/"));
+  REQUIRE(fs::isAbsolutePath("C:/Program Files"));
+  REQUIRE(fs::isAbsolutePath("C:/Program Files/ApacheNiFiMiNiFi/nifi-minifi-cpp/conf/minifi.properties"));
+  REQUIRE(!fs::isAbsolutePath("/"));
+#else
+  REQUIRE(fs::isAbsolutePath("/"));
+  REQUIRE(fs::isAbsolutePath("/etc"));
+  REQUIRE(fs::isAbsolutePath("/opt/minifi/conf/minifi.properties"));
+#endif /* WIN32 */
+
+  REQUIRE(!fs::isAbsolutePath("hello"));
 }

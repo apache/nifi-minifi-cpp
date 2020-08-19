@@ -239,7 +239,7 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
   REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
 
   std::string filePath, fileName;
-  REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file.str(), filePath, fileName));
+  REQUIRE(utils::file::getFileNameAndPath(temp_file.str(), filePath, fileName));
 
   // should stay the same
   for (int i = 0; i < 5; i++) {
@@ -321,7 +321,7 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
     REQUIRE(plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->get(state));
 
     std::string filePath, fileName;
-    REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file, filePath, fileName));
+    REQUIRE(utils::file::getFileNameAndPath(temp_file, filePath, fileName));
     std::unordered_map<std::string, std::string> expected_state{{"file.0.name", fileName},
                                                                 {"file.0.position", "35"},
                                                                 {"file.0.current", temp_file},
@@ -365,8 +365,8 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
     REQUIRE(plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->get(state));
 
     std::string filePath1, filePath2, fileName1, fileName2;
-    REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file_1, filePath1, fileName1));
-    REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file_2, filePath2, fileName2));
+    REQUIRE(utils::file::getFileNameAndPath(temp_file_1, filePath1, fileName1));
+    REQUIRE(utils::file::getFileNameAndPath(temp_file_2, filePath2, fileName2));
     std::unordered_map<std::string, std::string> expected_state{{"file.0.name", fileName1},
                                                                 {"file.0.position", "35"},
                                                                 {"file.0.current", temp_file_1},

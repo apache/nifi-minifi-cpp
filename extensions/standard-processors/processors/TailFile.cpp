@@ -381,7 +381,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     tail_mode_ = Mode::SINGLE;
 
     std::string path, file_name;
-    if (utils::file::PathUtils::getFileNameAndPath(file_to_tail_, path, file_name)) {
+    if (utils::file::getFileNameAndPath(file_to_tail_, path, file_name)) {
       // NOTE: position and checksum will be updated in recoverState() if there is a persisted state for this file
       tail_states_.emplace(file_to_tail_, TailState{path, file_name});
     } else {
@@ -393,7 +393,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
 
   std::string rolling_filename_pattern_glob;
   context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
-  rolling_filename_pattern_ = utils::file::PathUtils::globToRegex(rolling_filename_pattern_glob);
+  rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
 }
 
 void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const {
@@ -432,7 +432,7 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &s
 
   if (key == "FILENAME") {
     std::string fileLocation, fileName;
-    if (utils::file::PathUtils::getFileNameAndPath(value, fileLocation, fileName)) {
+    if (utils::file::getFileNameAndPath(value, fileLocation, fileName)) {
       logger_->log_debug("State migration received path %s, file %s", fileLocation, fileName);
       state.emplace(fileName, TailState{fileLocation, fileName});
     } else {
@@ -451,7 +451,7 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &s
   if (key.find(CURRENT_STR) == 0) {
     const auto file = key.substr(strlen(CURRENT_STR));
     std::string fileLocation, fileName;
-    if (utils::file::PathUtils::getFileNameAndPath(value, fileLocation, fileName)) {
+    if (utils::file::getFileNameAndPath(value, fileLocation, fileName)) {
       state[file].path_ = fileLocation;
       state[file].file_name_ = fileName;
     } else {
@@ -513,7 +513,7 @@ bool TailFile::getStateFromStateManager(std::map<std::string, TailState> &new_ta
         }};
 
         std::string fileLocation, fileName;
-        if (utils::file::PathUtils::getFileNameAndPath(current, fileLocation, fileName)) {
+        if (utils::file::getFileNameAndPath(current, fileLocation, fileName)) {
           logger_->log_debug("Received path %s, file %s", fileLocation, fileName);
           new_tail_states.emplace(current, TailState{fileLocation, fileName, position, last_read_time, checksum});
         } else {

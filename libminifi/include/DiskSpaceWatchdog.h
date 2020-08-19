@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,42 +16,44 @@
  * limitations under the License.
  */
 
-#include "utils/file/FileUtils.h"
+#pragma once
 
-#include <zlib.h>
+#include <chrono>
+#include <cinttypes>
+#include <string>
+#include <vector>
 
-#include <algorithm>
-#include <iostream>
+#include "utils/IntervalSwitch.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace utils {
-namespace file {
 
-uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position) {
-  constexpr uint64_t BUFFER_SIZE = 4096u;
-  std::array<char, std::size_t{BUFFER_SIZE}> buffer;
+class Configure;
+namespace core {
+namespace logging {
+class Logger;
+}  // namespace logging
+}  // namespace core
 
-  std::ifstream stream{file_name, std::ios::in | std::ios::binary};
+namespace disk_space_watchdog {
+struct Config {
+  std::chrono::milliseconds interval;
+  std::uintmax_t stop_threshold_bytes;
+  std::uintmax_t restart_threshold_bytes;
+};
 
-  uLong checksum = 0;
-  uint64_t remaining_bytes_to_be_read = up_to_position;
+Config read_config(const Configure&);
 
-  while (stream && remaining_bytes_to_be_read > 0) {
-    // () around std::min are needed because Windows.h defines min (and max) as a macro
-    stream.read(buffer.data(), (std::min)(BUFFER_SIZE, remaining_bytes_to_be_read));
-    uInt bytes_read = gsl::narrow<uInt>(stream.gcount());
-    checksum = crc32(checksum, reinterpret_cast<unsigned char*>(buffer.data()), bytes_read);
-    remaining_bytes_to_be_read -= bytes_read;
-  }
-
-  return checksum;
+inline utils::IntervalSwitch<std::uintmax_t> disk_space_interval_switch(Config config) {
+  return {config.stop_threshold_bytes, config.restart_threshold_bytes, utils::IntervalSwitchState::UPPER};
 }
 
-}  // namespace file
-}  // namespace utils
+// Esentially `paths | transform(utils::file::space) | transform(&utils::file::space_info::available)` with error logging
+std::vector<std::uintmax_t> check_available_space(const std::vector<std::string>& paths, core::logging::Logger* logger = nullptr);
+
+}  // namespace disk_space_watchdog
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

@@ -17,7 +17,12 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 
+#include <cctype>
+#include <cinttypes>
+#include <memory>
 #include <string>
+#include <system_error>
+#include <utility>
 
 namespace org {
 namespace apache {
@@ -25,7 +30,9 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 namespace file {
-namespace PathUtils {
+
+namespace PathUtils = ::org::apache::nifi::minifi::utils::file;
+using path = const char*;
 
 /**
  * Extracts the filename and path performing some validation of the path and output to ensure
@@ -47,7 +54,54 @@ std::string getFullPath(const std::string& path);
 
 std::string globToRegex(std::string glob);
 
-}  // namespace PathUtils
+inline bool isAbsolutePath(const char* const path) noexcept {
+#ifdef _WIN32
+  return path && std::isalpha(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/');
+#else
+  return path && path[0] == '/';
+#endif
+}
+
+
+/**
+ * Represents filesystem space information in bytes
+ */
+struct space_info {
+  std::uintmax_t capacity;
+  std::uintmax_t free;
+  std::uintmax_t available;
+
+  friend bool operator==(const space_info& a, const space_info& b) noexcept {
+    return a.capacity == b.capacity && a.free == b.free && a.available == b.available;
+  }
+};
+
+class filesystem_error : public std::system_error {
+ public:
+  filesystem_error(const std::string& what_arg, const std::error_code ec)
+      :std::system_error{ec, what_arg}
+  {}
+  filesystem_error(const std::string& what_arg, const path path1, const path path2, const std::error_code ec)
+      :std::system_error{ec, what_arg}, paths_involved_{std::make_shared<const std::pair<std::string, std::string>>(path1, path2)}
+  {}
+
+  // copy should be noexcept as soon as libstdc++ fixes std::system_error copy
+  filesystem_error(const filesystem_error& o) = default;
+  filesystem_error& operator=(const filesystem_error&) = default;
+
+  path path1() const noexcept { return paths_involved_->first.c_str(); }
+  path path2() const noexcept { return paths_involved_->second.c_str(); }
+
+ private:
+  std::shared_ptr<const std::pair<std::string, std::string>> paths_involved_;
+};
+
+/**
+ * Provides filesystem space information for the specified directory
+ */
+space_info space(path);
+space_info space(path, std::error_code&) noexcept;
+
 }  // namespace file
 }  // namespace utils
 }  // namespace minifi

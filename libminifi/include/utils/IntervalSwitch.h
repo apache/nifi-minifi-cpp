@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,14 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
-#define LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
+#pragma once
 
-#include <mutex>
-#include <condition_variable>
-#include <thread>
-#include <chrono>
 #include <functional>
+#include <utility>
+
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -30,26 +29,42 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-class CallBackTimer {
+enum class IntervalSwitchState {
+  LOWER,
+  UPPER,
+};
+
+namespace detail {
+struct SwitchReturn {
+  IntervalSwitchState state;
+  bool switched;
+};
+}  // namespace detail
+
+template<typename T, typename Comp = std::less<T>>
+class IntervalSwitch {
  public:
-  CallBackTimer(std::chrono::milliseconds interval, const std::function<void(void)>& func);
-  ~CallBackTimer();
+  IntervalSwitch(T lower_threshold, T upper_threshold, const IntervalSwitchState initial_state = IntervalSwitchState::UPPER)
+      :lower_threshold_{std::move(lower_threshold)}, upper_threshold_{std::move(upper_threshold)}, state_{initial_state} {
+    gsl_Expects(!less_(upper_threshold_, lower_threshold_));
+  }
 
-  void stop();
-
-  void start();
-
-  bool is_running() const;
+  detail::SwitchReturn operator()(const T& value) {
+    const auto old_state = state_;
+    if (less_(value, lower_threshold_)) {
+      state_ = IntervalSwitchState::LOWER;
+    } else if (!less_(value, upper_threshold_)) {
+      state_ = IntervalSwitchState::UPPER;
+    }
+    return {state_, state_ != old_state};
+  }
 
  private:
-  bool execute_;
-  std::function<void(void)> func_;
-  std::thread thd_;
-  mutable std::mutex mtx_;
-  mutable std::mutex cv_mtx_;
-  std::condition_variable cv_;
+  T lower_threshold_;
+  T upper_threshold_;
+  Comp less_;
 
-  const std::chrono::milliseconds interval_;
+  IntervalSwitchState state_;
 };
 
 }  // namespace utils
@@ -57,6 +72,3 @@ class CallBackTimer {
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
-
