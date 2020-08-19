@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,48 +16,27 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
-#define LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
+#pragma once
 
-#include <mutex>
-#include <condition_variable>
-#include <thread>
-#include <chrono>
-#include <functional>
+#include "utils/CallBackTimer.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace utils {
 
-class CallBackTimer {
+class FlowController;
+class Configure;
+
+class DiskSpaceWatchdog : public utils::CallBackTimer {
  public:
-  CallBackTimer(std::chrono::milliseconds interval, const std::function<void(void)>& func);
-  ~CallBackTimer();
+  DiskSpaceWatchdog(FlowController*, const Configure*);
 
-  void stop();
-
-  void start();
-
-  bool is_running() const;
-
- private:
-  bool execute_;
-  std::function<void(void)> func_;
-  std::thread thd_;
-  mutable std::mutex mtx_;
-  mutable std::mutex cv_mtx_;
-  std::condition_variable cv_;
-
-  const std::chrono::milliseconds interval_;
+  DiskSpaceWatchdog(const DiskSpaceWatchdog&) = delete;
+  DiskSpaceWatchdog& operator=(const DiskSpaceWatchdog&) = delete;
 };
 
-}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_CALLBACKTIMER_H_
-

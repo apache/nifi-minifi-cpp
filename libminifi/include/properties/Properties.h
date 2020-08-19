@@ -24,7 +24,9 @@
 #include <vector>
 #include <string>
 #include <map>
+
 #include "core/logging/Logger.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -81,6 +83,16 @@ class Properties {
    * @return value corresponding to key or empty value.
    */
   int getInt(const std::string &key, int default_value) const;
+
+  utils::optional<std::string> get(const std::string& key) const noexcept {
+    std::string result;
+    const bool found = get(key, result);
+    if (found) {
+      return result;
+    } else {
+      return utils::nullopt;
+    }
+  }
 
   // Parse one line in configure file like key=value
   bool parseConfigureFileLine(char *buf, std::string &prop_key, std::string &prop_value);

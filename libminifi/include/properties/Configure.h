@@ -107,6 +107,11 @@ class Configure : public Properties {
   static const char *nifi_state_management_provider_local_always_persist;
   static const char *nifi_state_management_provider_local_auto_persistence_interval;
 
+  // disk space watchdog options
+  static const char *minifi_disk_space_watchdog_interval_ms;
+  static const char *minifi_disk_space_watchdog_stop_threshold_bytes;
+  static const char *minifi_disk_space_watchdog_restart_threshold_bytes;
+
  private:
   std::string agent_identifier_;
   std::string agent_class_;
