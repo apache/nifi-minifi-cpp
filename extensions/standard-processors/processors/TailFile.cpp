@@ -654,8 +654,12 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &, const st
 void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
                            const std::string &full_file_name,
                            TailState &state) {
-  if (utils::file::FileUtils::file_size(full_file_name) < state.position_) {
+  uint64_t fsize = utils::file::FileUtils::file_size(full_file_name);
+  if (fsize < state.position_) {
     processRotatedFiles(session, state);
+  } else if (fsize == state.position_) {
+    logger_->log_trace("Skipping file %s as its size hasn't change since last read", state.file_name_);
+    return;
   }
 
   processSingleFile(session, full_file_name, state);
