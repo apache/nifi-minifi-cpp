@@ -701,6 +701,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     if (success) {
       session->transfer(flowFiles[index], Success);
     } else {
+      session->penalize(flowFiles[index]);
       session->transfer(flowFiles[index], Failure);
     }
   });
