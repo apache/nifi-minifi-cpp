@@ -130,30 +130,27 @@ void FlowFileRepository::run() {
 }
 
 void FlowFileRepository::prune_stored_flowfiles() {
+  rocksdb::Options options;
+  options.create_if_missing = true;
+  options.use_direct_io_for_flush_and_compaction = true;
+  options.use_direct_reads = true;
+  minifi::internal::RocksDatabase checkpointDB(options, FLOWFILE_CHECKPOINT_DIRECTORY, minifi::internal::RocksDatabase::Mode::ReadOnly);
   utils::optional<minifi::internal::OpenRocksDB> opendb;
-  rocksdb::DB* used_database;
-  std::unique_ptr<rocksdb::DB> stored_database;
   if (nullptr != checkpoint_) {
-    rocksdb::Options options;
-    options.create_if_missing = true;
-    options.use_direct_io_for_flush_and_compaction = true;
-    options.use_direct_reads = true;
-    rocksdb::Status status = rocksdb::DB::OpenForReadOnly(options, FLOWFILE_CHECKPOINT_DIRECTORY, &used_database);
-    if (status.ok()) {
-      stored_database.reset(used_database);
-    } else {
+    opendb = checkpointDB.open();
+    if (!opendb) {
       opendb = db_->open();
-      if (!opendb) {
-        return;
-      }
-      used_database = opendb->get();
+    }
+    if (!opendb) {
+      logger_->log_trace("Could not open neither the checkpoint nor the live database.");
+      return;
     }
   } else {
     logger_->log_trace("Could not open checkpoint as object doesn't exist. Likely not needed or file system error.");
     return;
   }
 
-  auto it = used_database->NewIterator(rocksdb::ReadOptions());
+  auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
     std::string key = it->key().ToString();

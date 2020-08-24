@@ -100,7 +100,7 @@ rocksdb::DB* OpenRocksDB::get() {
   return impl_.get();
 }
 
-RocksDatabase::RocksDatabase(const rocksdb::Options& options, const std::string& name) : open_options_(options), db_name_(name) {}
+RocksDatabase::RocksDatabase(const rocksdb::Options& options, const std::string& name, Mode mode) : open_options_(options), db_name_(name), mode_(mode) {}
 
 void RocksDatabase::invalidate() {
   std::lock_guard<std::mutex> db_guard{ mtx_ };
@@ -113,7 +113,14 @@ utils::optional<OpenRocksDB> RocksDatabase::open() {
   if (!impl_) {
     // database is not opened yet
     rocksdb::DB* db_instance = nullptr;
-    rocksdb::Status result = rocksdb::DB::Open(open_options_, db_name_, &db_instance);
+    rocksdb::Status result;
+    if (mode_ == Mode::ReadWrite) {
+      result = rocksdb::DB::Open(open_options_, db_name_, &db_instance);
+    } else if (mode_ == Mode::ReadOnly){
+      result = rocksdb::DB::OpenForReadOnly(open_options_, db_name_, &db_instance);
+    } else {
+      assert(false);
+    }
     if (result.ok()) {
       impl_.reset(db_instance);
     } else {

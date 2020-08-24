@@ -77,19 +77,25 @@ class RocksDatabase {
   friend class OpenRocksDB;
 
  public:
-  RocksDatabase(const rocksdb::Options& options, const std::string& name);
+  enum class Mode {
+    ReadOnly,
+    ReadWrite
+  };
 
-  utils::optional<OpenRocksDB> open();
+  RocksDatabase(const rocksdb::Options& options, const std::string& name, Mode mode = Mode::ReadWrite);
+
+  virtual utils::optional<OpenRocksDB> open();
 
  private:
   /*
    * notify RocksDatabase that the next open should check if they can reopen the database
    * until a successful reopen no more open is possible
    */
-  void invalidate();
+  virtual void invalidate();
 
-  rocksdb::Options open_options_;
-  std::string db_name_;
+  const rocksdb::Options open_options_;
+  const std::string db_name_;
+  const Mode mode_;
 
   std::mutex mtx_;
   std::shared_ptr<rocksdb::DB> impl_;
