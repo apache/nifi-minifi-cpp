@@ -38,11 +38,19 @@ class FlatMap{
  private:
   using Container = std::vector<value_type>;
 
+ public:
   class iterator{
     friend class const_iterator;
     friend class FlatMap;
-   public:
     explicit iterator(typename Container::iterator it): it_(it) {}
+
+   public:
+    using difference_type = void;
+    using value_type = FlatMap::value_type;
+    using pointer = void;
+    using reference = void;
+    using iterator_category = void;
+
     value_type* operator->() const {return &(*it_);}
     value_type& operator*() const {return *it_;}
 
@@ -64,11 +72,18 @@ class FlatMap{
 
   class const_iterator{
     friend class FlatMap;
-   public:
     explicit const_iterator(typename Container::const_iterator it): it_(it) {}
+
+   public:
     const_iterator(iterator it): it_(it.it_) {}  // NOLINT
-    const value_type* operator->() const {return &(*it_);}
-    const value_type& operator*() const {return *it_;}
+    using difference_type = void;
+    using value_type = const FlatMap::value_type;
+    using pointer = void;
+    using reference = void;
+    using iterator_category = void;
+
+    value_type* operator->() const {return &(*it_);}
+    value_type& operator*() const {return *it_;}
 
     bool operator==(const const_iterator& other) const {
       return it_ == other.it_;
@@ -86,7 +101,6 @@ class FlatMap{
     typename Container::const_iterator it_;
   };
 
- public:
   FlatMap() = default;
   FlatMap(const FlatMap&) = default;
   FlatMap(FlatMap&&) noexcept = default;
