@@ -122,7 +122,7 @@ utils::optional<OpenRocksDB> RocksDatabase::open() {
         result = rocksdb::DB::OpenForReadOnly(open_options_, db_name_, &db_instance);
         break;
     }
-    if (result.ok()) {
+    if (db_instance != nullptr && result.ok()) {
       impl_.reset(db_instance);
     } else {
       // we failed to open the database
