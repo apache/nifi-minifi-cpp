@@ -70,17 +70,6 @@ class Message {
  */
 class MQTTControllerService : public core::controller::ControllerService {
  public:
-  explicit MQTTControllerService(const std::string &name, const std::string &id)
-      : ControllerService(name, id),
-        initialized_(false),
-        client_(nullptr),
-        keepAliveInterval_(0),
-        connectionTimeOut_(0),
-        qos_(2),
-        ssl_context_service_(nullptr),
-        logger_(logging::LoggerFactory<MQTTControllerService>::getLogger()) {
-  }
-
   explicit MQTTControllerService(const std::string &name, const utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
         initialized_(false),

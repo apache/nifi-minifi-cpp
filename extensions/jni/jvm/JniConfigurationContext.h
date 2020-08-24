@@ -38,10 +38,6 @@ class ConfigurationContext : public core::controller::ControllerService {
       : core::controller::ControllerService(name, uuid) {
   }
 
-  explicit ConfigurationContext(const std::string &name, const std::string &id)
-      : core::controller::ControllerService(name, id) {
-  }
-
   virtual ~ConfigurationContext() = default;
   virtual jobject getClassInstance() = 0;
 };
