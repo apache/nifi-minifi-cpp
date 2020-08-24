@@ -91,7 +91,7 @@ class RocksDatabase {
    * notify RocksDatabase that the next open should check if they can reopen the database
    * until a successful reopen no more open is possible
    */
-  virtual void invalidate();
+  void invalidate();
 
   const rocksdb::Options open_options_;
   const std::string db_name_;
