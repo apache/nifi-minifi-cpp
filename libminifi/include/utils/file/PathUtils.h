@@ -17,6 +17,7 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 
+#include <cctype>
 #include <cinttypes>
 #include <memory>
 #include <string>
@@ -51,6 +52,14 @@ bool getFileNameAndPath(const std::string &path, std::string &filePath, std::str
 std::string getFullPath(const std::string& path);
 
 std::string globToRegex(std::string glob);
+
+inline bool isAbsolutePath(const char* const path) noexcept {
+#ifdef _WIN32
+  return path && std::isalpha(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/');
+#else
+  return path && path[0] == '/';
+#endif
+}
 
 
 /**

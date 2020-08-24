@@ -37,7 +37,7 @@
 namespace {
 using org::apache::nifi::minifi::utils::createTempDir;
 using org::apache::nifi::minifi::utils::optional;
-using org::apache::nifi::minifi::utils::file::FileUtils;
+namespace FileUtils = org::apache::nifi::minifi::utils::file;
 
 class RetryFlowFileTest {
  public:

@@ -29,7 +29,7 @@ namespace minifi {
 namespace utils {
 namespace file {
 
-uint64_t FileUtils::computeChecksum(const std::string &file_name, uint64_t up_to_position) {
+uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position) {
   constexpr uint64_t BUFFER_SIZE = 4096u;
   std::array<char, std::size_t{BUFFER_SIZE}> buffer;
 

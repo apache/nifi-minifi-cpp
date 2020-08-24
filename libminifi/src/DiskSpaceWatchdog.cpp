@@ -23,6 +23,7 @@
 
 #include "core/Property.h"
 #include "FlowController.h"
+#include "core/logging/Logger.h"
 #include "properties/Configure.h"
 #include "utils/file/PathUtils.h"
 
@@ -61,7 +62,7 @@ Config read_config(const Configure& conf) {
   if (restart_bytes < stop_bytes) { throw std::runtime_error{"disk space watchdog stop threshold must be <= restart threshold"}; }
   constexpr auto mebibytes = 1024 * 1024;
   return {
-      interval_ms.value_or(chr::milliseconds{100}),
+      interval_ms.value_or(chr::seconds{1}),
       stop_bytes.value_or(15 * mebibytes),
       restart_bytes.value_or(20 * mebibytes)
   };
@@ -72,6 +73,7 @@ struct callback {
   gsl::not_null<FlowController*> flow_controller;
   bool stopped;
   std::vector<std::string> paths_to_watch;
+  std::shared_ptr<logging::Logger> logger;
 
   void operator()() {
     check([this]{ flow_controller->stop(false); }, [this]{ flow_controller->start(); });
@@ -95,7 +97,15 @@ struct callback {
   std::vector<utils::file::space_info> get_path_spaces() const {
     std::vector<utils::file::space_info> result;
     result.reserve(paths_to_watch.size());
-    const auto space = [](const std::string& path) { return utils::file::space(path.c_str()); };
+    const auto space = [this](const std::string& path) {
+      try {
+        return utils::file::space(path.c_str());
+      } catch (const std::exception& e) {
+        logger->log_warn("Couldn't check available disk space at %s: %s", path, e.what());
+        const auto kErrVal = gsl::narrow_cast<std::uintmax_t>(-1);
+        return utils::file::space_info{kErrVal, kErrVal, kErrVal};
+      }
+    };
     std::transform(std::begin(paths_to_watch), std::end(paths_to_watch), std::back_inserter(result), space);
     return result;
   }
@@ -104,8 +114,8 @@ struct callback {
   bool has_enough_space(utils::file::space_info space_info) const noexcept { return space_info.available > cfg.restart_threshold_bytes; }
 };
 
-callback make_callback_and_check(Config cfg, FlowController& flow_controller, std::vector<std::string>&& paths_to_watch) {
-  callback cb{cfg, gsl::make_not_null(&flow_controller), false, std::move(paths_to_watch)};
+callback make_callback_and_check(Config cfg, FlowController& flow_controller, std::vector<std::string>&& paths_to_watch, std::shared_ptr<logging::Logger> logger) {
+  callback cb{cfg, gsl::make_not_null(&flow_controller), false, std::move(paths_to_watch), std::move(logger)};
   cb.check([]{ throw std::runtime_error{"Insufficient disk space, MiNiFi is unable to start"}; }, []{});
   return cb;
 }
@@ -113,7 +123,8 @@ callback make_callback_and_check(Config cfg, FlowController& flow_controller, st
 }  // namespace
 
 DiskSpaceWatchdog::DiskSpaceWatchdog(FlowController& flow_controller, const Configure& configure, std::vector<std::string> paths_to_watch)
-  :utils::CallBackTimer{read_config(configure).interval, make_callback_and_check(read_config(configure), flow_controller, std::move(paths_to_watch))}
+  :utils::CallBackTimer{read_config(configure).interval, make_callback_and_check(read_config(configure), flow_controller, std::move(paths_to_watch),
+      logging::LoggerFactory<DiskSpaceWatchdog>::getLogger())}
 { }
 
 }  // namespace minifi

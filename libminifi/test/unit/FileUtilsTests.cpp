@@ -28,7 +28,7 @@
 #include "utils/Environment.h"
 #include "utils/TimeUtil.h"
 
-using org::apache::nifi::minifi::utils::file::FileUtils;
+namespace FileUtils = org::apache::nifi::minifi::utils::file;
 
 TEST_CASE("TestFileUtils::concat_path", "[TestConcatPath]") {
   std::string child = "baz";
