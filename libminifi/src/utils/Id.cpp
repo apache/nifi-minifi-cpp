@@ -50,23 +50,23 @@ namespace utils {
 
 #ifdef WIN32
 namespace {
-  void windowsUuidToUuidField(UUID* uuid, UUID_FIELD out) {
+  void windowsUuidToUuidField(UUID* uuid, Identifier::Data& out) {
     uint32_t Data1BE = htonl(uuid->Data1);
-    memcpy(out, &Data1BE, 4);
+    memcpy(out.data(), &Data1BE, 4);
     uint16_t Data2BE = htons(uuid->Data2);
-    memcpy(out + 4, &Data2BE, 2);
+    memcpy(out.data() + 4, &Data2BE, 2);
     uint16_t Data3BE = htons(uuid->Data3);
-    memcpy(out + 6, &Data3BE, 2);
-    memcpy(out + 8, uuid->Data4, 8);
+    memcpy(out.data() + 6, &Data3BE, 2);
+    memcpy(out.data() + 8, uuid->Data4, 8);
   }
 
-  void windowsUuidGenerateTime(UUID_FIELD out) {
+  void windowsUuidGenerateTime(Identifier::Data& out) {
     UUID uuid;
     UuidCreateSequential(&uuid);
     windowsUuidToUuidField(&uuid, out);
   }
 
-  void windowsUuidGenerateRandom(UUID_FIELD out) {
+  void windowsUuidGenerateRandom(Identifier::Data& out) {
     UUID uuid;
     UuidCreate(&uuid);
     windowsUuidToUuidField(&uuid, out);
