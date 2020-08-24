@@ -95,7 +95,7 @@ class FlatMap{
   FlatMap(InputIterator begin, InputIterator end) : data_(begin, end) {}
 
   FlatMap& operator=(const FlatMap& source) = default;
-  FlatMap& operator=(FlatMap&& source) noexcept = default;
+  FlatMap& operator=(FlatMap&& source) = default;
   FlatMap& operator=(std::initializer_list<value_type> items) {
     data_ = items;
     return *this;
