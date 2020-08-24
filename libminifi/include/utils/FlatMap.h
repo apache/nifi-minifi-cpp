@@ -66,6 +66,7 @@ class FlatMap{
       ++it_;
       return *this;
     }
+
    private:
     typename Container::iterator it_;
   };
@@ -97,6 +98,7 @@ class FlatMap{
       ++it_;
       return *this;
     }
+
    private:
     typename Container::const_iterator it_;
   };
