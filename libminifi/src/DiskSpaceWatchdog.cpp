@@ -54,10 +54,10 @@ utils::optional<T> string_to_int(const std::string& str) {
   return utils::make_optional(result);
 }
 
-Config read_config(const Configure* const conf) {
-  const auto interval_ms = conf->get(Configure::minifi_disk_space_watchdog_interval_ms) >>= string_to_milliseconds;
-  const auto stop_bytes = conf->get(Configure::minifi_disk_space_watchdog_stop_threshold_bytes) >>= string_to_int<std::uintmax_t>;
-  const auto restart_bytes = conf->get(Configure::minifi_disk_space_watchdog_restart_threshold_bytes) >>= string_to_int<std::uintmax_t>;
+Config read_config(const Configure& conf) {
+  const auto interval_ms = conf.get(Configure::minifi_disk_space_watchdog_interval_ms) >>= string_to_milliseconds;
+  const auto stop_bytes = conf.get(Configure::minifi_disk_space_watchdog_stop_threshold_bytes) >>= string_to_int<std::uintmax_t>;
+  const auto restart_bytes = conf.get(Configure::minifi_disk_space_watchdog_restart_threshold_bytes) >>= string_to_int<std::uintmax_t>;
   if (restart_bytes < stop_bytes) { throw std::runtime_error{"disk space watchdog stop threshold must be <= restart threshold"}; }
   constexpr auto mebibytes = 1024 * 1024;
   return {
@@ -69,25 +69,51 @@ Config read_config(const Configure* const conf) {
 
 struct callback {
   Config cfg;
-  FlowController* flow_controller;
+  gsl::not_null<FlowController*> flow_controller;
   bool stopped;
+  std::vector<std::string> paths_to_watch;
 
   void operator()() {
-    const auto spaceinfo = utils::file::space(".");
-    if (!stopped && spaceinfo.available < cfg.stop_threshold_bytes) {
-      flow_controller->stop(false);
+    check([this]{ flow_controller->stop(false); }, [this]{ flow_controller->start(); });
+  }
+
+  template<typename StopFunc, typename RestartFunc>
+  void check(StopFunc stop, RestartFunc restart) {
+    const auto path_spaces = get_path_spaces();
+    const auto has_insufficient_space = [this](utils::file::space_info space_info) { return space_info.available < cfg.stop_threshold_bytes; };
+    const auto has_enough_space = [this](utils::file::space_info space_info) { return space_info.available > cfg.restart_threshold_bytes; };
+    if (!stopped && std::any_of(std::begin(path_spaces), std::end(path_spaces), has_insufficient_space)) {
+      stop();
       stopped = true;
-    } else if (stopped && spaceinfo.available > cfg.restart_threshold_bytes) {
-      flow_controller->start();
+    } else if (stopped && std::all_of(std::begin(path_spaces), std::end(path_spaces), has_enough_space)) {
+      restart();
       stopped = false;
     }
   }
+
+ private:
+  std::vector<utils::file::space_info> get_path_spaces() const {
+    std::vector<utils::file::space_info> result;
+    result.reserve(paths_to_watch.size());
+    const auto space = [](const std::string& path) { return utils::file::space(path.c_str()); };
+    std::transform(std::begin(paths_to_watch), std::end(paths_to_watch), std::back_inserter(result), space);
+    return result;
+  }
+
+  bool has_insufficient_space(utils::file::space_info space_info) const noexcept { return space_info.available < cfg.stop_threshold_bytes; }
+  bool has_enough_space(utils::file::space_info space_info) const noexcept { return space_info.available > cfg.restart_threshold_bytes; }
 };
+
+callback make_callback_and_check(Config cfg, FlowController& flow_controller, std::vector<std::string>&& paths_to_watch) {
+  callback cb{cfg, gsl::make_not_null(&flow_controller), false, std::move(paths_to_watch)};
+  cb.check([]{ throw std::runtime_error{"Insufficient disk space, MiNiFi is unable to start"}; }, []{});
+  return cb;
+}
 
 }  // namespace
 
-DiskSpaceWatchdog::DiskSpaceWatchdog(FlowController* const flow_controller, const Configure* const configure)
-  :utils::CallBackTimer{read_config(configure).interval, callback{read_config(configure), flow_controller, false}}
+DiskSpaceWatchdog::DiskSpaceWatchdog(FlowController& flow_controller, const Configure& configure, std::vector<std::string> paths_to_watch)
+  :utils::CallBackTimer{read_config(configure).interval, make_callback_and_check(read_config(configure), flow_controller, std::move(paths_to_watch))}
 { }
 
 }  // namespace minifi

@@ -18,6 +18,9 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "utils/CallBackTimer.h"
 
 namespace org {
@@ -30,7 +33,7 @@ class Configure;
 
 class DiskSpaceWatchdog : public utils::CallBackTimer {
  public:
-  DiskSpaceWatchdog(FlowController*, const Configure*);
+  DiskSpaceWatchdog(FlowController&, const Configure&, std::vector<std::string> paths_to_watch);
 
   DiskSpaceWatchdog(const DiskSpaceWatchdog&) = delete;
   DiskSpaceWatchdog& operator=(const DiskSpaceWatchdog&) = delete;

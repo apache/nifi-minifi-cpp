@@ -84,7 +84,7 @@ class Properties {
    */
   int getInt(const std::string &key, int default_value) const;
 
-  utils::optional<std::string> get(const std::string& key) const noexcept {
+  utils::optional<std::string> get(const std::string& key) const {
     std::string result;
     const bool found = get(key, result);
     if (found) {

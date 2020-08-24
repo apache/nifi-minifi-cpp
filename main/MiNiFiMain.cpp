@@ -53,6 +53,7 @@
 #include "core/FlowConfiguration.h"
 #include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
+#include "DiskSpaceWatchdog.h"
 #include "utils/file/PathUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
@@ -289,6 +290,14 @@ int main(int argc, char **argv) {
   std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
     new minifi::FlowController(prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo));
 
+  std::unique_ptr<minifi::DiskSpaceWatchdog> disk_space_watchdog;
+  try {
+    disk_space_watchdog = utils::make_unique<minifi::DiskSpaceWatchdog>(*controller, *configure, std::vector<std::string>{prov_repo->getDirectory(), flow_repo->getDirectory(), content_repo->getStoragePath()});
+  } catch(const std::runtime_error& error) {
+    logger->log_error(error.what());
+    return -1;
+  }
+
   logger->log_info("Loading FlowController");
 
   // Load flow from specified configuration file
@@ -305,8 +314,10 @@ int main(int argc, char **argv) {
   }
 
   // Start Processing the flow
-
   controller->start();
+
+  disk_space_watchdog->start();
+
   logger->log_info("MiNiFi started");
 
   /**
@@ -323,6 +334,8 @@ int main(int argc, char **argv) {
 
   while ((ret_val = sem_unlink("/MiNiFiMain")) == -1 && errno == EINTR);
   if(ret_val == -1) perror("sem_unlink");
+
+  disk_space_watchdog = nullptr;
 
   /**
    * Trigger unload -- wait stop_wait_time
