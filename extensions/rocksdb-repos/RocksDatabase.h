@@ -38,7 +38,7 @@ class RocksDatabase;
 class OpenRocksDB {
   friend class RocksDatabase;
 
-  OpenRocksDB(gsl::not_null<RocksDatabase*> db, gsl::not_null<std::shared_ptr<rocksdb::DB>> impl);
+  OpenRocksDB(RocksDatabase& db, gsl::not_null<std::shared_ptr<rocksdb::DB>> impl);
 
  public:
   OpenRocksDB(const OpenRocksDB&) = delete;

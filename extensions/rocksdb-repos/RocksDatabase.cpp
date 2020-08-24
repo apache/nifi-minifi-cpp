@@ -24,7 +24,7 @@ namespace nifi {
 namespace minifi {
 namespace internal {
 
-OpenRocksDB::OpenRocksDB(gsl::not_null<RocksDatabase*> db, gsl::not_null<std::shared_ptr<rocksdb::DB>> impl) : db_(std::move(db)), impl_(std::move(impl)) {}
+OpenRocksDB::OpenRocksDB(RocksDatabase& db, gsl::not_null<std::shared_ptr<rocksdb::DB>> impl) : db_(&db), impl_(std::move(impl)) {}
 
 rocksdb::Status OpenRocksDB::Put(const rocksdb::WriteOptions& options, const rocksdb::Slice& key, const rocksdb::Slice& value) {
   rocksdb::Status result = impl_->Put(options, key, value);
@@ -129,7 +129,7 @@ utils::optional<OpenRocksDB> RocksDatabase::open() {
       return utils::nullopt;
     }
   }
-  return OpenRocksDB(gsl::make_not_null<RocksDatabase*>(this), gsl::make_not_null<std::shared_ptr<rocksdb::DB>>(impl_));
+  return OpenRocksDB(*this, gsl::make_not_null<std::shared_ptr<rocksdb::DB>>(impl_));
 }
 
 } /* namespace internal */
