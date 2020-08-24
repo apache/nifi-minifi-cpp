@@ -19,6 +19,8 @@ import uuid
 import tarfile
 import subprocess
 import sys
+import time
+import subprocess
 from io import BytesIO
 from threading import Event
 
@@ -56,6 +58,13 @@ class DockerTestCluster(SingleNodeDockerCluster):
         os.makedirs(self.tmp_test_output_dir)
         logging.info('Creating tmp test resource dir: %s', self.tmp_test_resources_dir)
         os.makedirs(self.tmp_test_resources_dir)
+        os.chmod(self.tmp_test_output_dir, 0o777)
+        os.chmod(self.tmp_test_input_dir, 0o777)
+        os.chmod(self.tmp_test_resources_dir, 0o777)
+
+        # Add resources
+        test_dir = os.environ['PYTHONPATH'].split(':')[-1] # Based on DockerVerify.sh
+        shutil.copytree(test_dir + "/resources/kafka_broker/conf/certs", self.tmp_test_resources_dir + "/certs")
 
         # Point output validator to ephemeral output dir
         self.output_validator = output_validator
@@ -64,15 +73,14 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         # Start observing output dir
         self.done_event = Event()
-        event_handler = OutputEventHandler(output_validator, self.done_event)
+        self.event_handler = OutputEventHandler(self.output_validator, self.done_event)
         self.observer = Observer()
-        self.observer.schedule(event_handler, self.tmp_test_output_dir)
+        self.observer.schedule(self.event_handler, self.tmp_test_output_dir)
         self.observer.start()
 
         super(DockerTestCluster, self).__init__()
 
-        if isinstance(output_validator, KafkaValidator):
-            output_validator.set_containers(self.containers)
+
 
     def deploy_flow(self,
                     flow,
@@ -135,8 +143,18 @@ class DockerTestCluster(SingleNodeDockerCluster):
         file_abs_path = join(self.tmp_test_resources_dir, file_name)
         put_file_contents(contents, file_abs_path)
 
+    def restart_observer_if_needed(self):
+        if self.observer.is_alive():
+            return
+
+        self.observer = Observer()
+        self.done_event.clear()
+        self.observer.schedule(self.event_handler, self.tmp_test_output_dir)
+        self.observer.start()
+
     def wait_for_output(self, timeout_seconds):
         logging.info('Waiting up to %d seconds for test output...', timeout_seconds)
+        self.restart_observer_if_needed()
         self.done_event.wait(timeout_seconds)
         self.observer.stop()
         self.observer.join()
@@ -168,16 +186,16 @@ class DockerTestCluster(SingleNodeDockerCluster):
             stats = container.stats(stream=False)
             logging.info('Container stats:\n%s', stats)
 
-    def check_output(self, timeout=5, **kwargs):
+    def check_output(self, timeout=5, subdir=''):
         """
         Wait for flow output, validate it, and log minifi output.
         """
+        if subdir:
+            self.output_validator.subdir = subdir
         self.wait_for_output(timeout)
         self.log_nifi_output()
         if self.segfault:
-            return false
-        if isinstance(self.output_validator, FileOutputValidator):
-            return self.output_validator.validate(dir=kwargs.get('dir', ''))
+            return False
         return self.output_validator.validate()
 
     def check_http_proxy_access(self):
@@ -189,8 +207,20 @@ class DockerTestCluster(SingleNodeDockerCluster):
         return False
 
     def rm_out_child(self, dir):
-        logging.info('Removing %s from output folder', self.tmp_test_output_dir + dir)
-        shutil.rmtree(self.tmp_test_output_dir + dir)
+        logging.info('Removing %s from output folder', os.path.join(self.tmp_test_output_dir, dir))
+        shutil.rmtree(os.path.join(self.tmp_test_output_dir, dir))
+
+    def wait_for_container_logs(self, container_name, log, timeout, count=1):
+        logging.info('Waiting for logs `%s` in container `%s`', log, container_name)
+        container = self.containers[container_name]
+        check_count = 0
+        while check_count <= timeout:
+            if container.logs().decode("utf-8").count(log) == count:
+                return True
+            else:
+                check_count += 1
+                time.sleep(1)
+        return False
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
@@ -254,25 +284,31 @@ class SingleFileOutputValidator(FileOutputValidator):
     Validates the content of a single file in the given directory.
     """
 
-    def __init__(self, expected_content):
+    def __init__(self, expected_content, subdir=''):
         self.valid = False
         self.expected_content = expected_content
+        self.subdir = subdir
 
-    def validate(self, dir=''):
-
+    def validate(self):
         self.valid = False
-
-        full_dir = self.output_dir + dir
+        full_dir = os.path.join(self.output_dir, self.subdir)
         logging.info("Output folder: %s", full_dir)
+        if "GITHUB_WORKSPACE" in os.environ:
+            subprocess.call(['sudo', 'chmod', '-R', '0777', full_dir])
+
+        if not os.path.isdir(full_dir):
+            return self.valid
 
         listing = listdir(full_dir)
-
         if listing:
             for l in listing:
                 logging.info("name:: %s", l)
             out_file_name = listing[0]
+            full_path = join(full_dir, out_file_name)
+            if not os.path.isfile(full_path):
+                return self.valid
 
-            with open(join(full_dir, out_file_name), 'r') as out_file:
+            with open(full_path, 'r') as out_file:
                 contents = out_file.read()
                 logging.info("dir %s -- name %s", full_dir, out_file_name)
                 logging.info("expected %s -- content %s", self.expected_content, contents)
@@ -282,47 +318,6 @@ class SingleFileOutputValidator(FileOutputValidator):
 
         return self.valid
 
-class KafkaValidator(OutputValidator):
-    """
-    Validates PublishKafka
-    """
-
-    def __init__(self, expected_content):
-        self.valid = False
-        self.expected_content = expected_content
-        self.containers = None
-
-    def set_containers(self, containers):
-        self.containers = containers
-
-    def validate(self):
-
-        if self.valid:
-            return True
-        if self.containers is None:
-            return self.valid
-
-        if 'kafka-consumer' not in self.containers:
-            logging.info('Not found kafka container.')
-            return False
-        else:
-            kafka_container = self.containers['kafka-consumer']
-
-        output, stat = kafka_container.get_archive('/heaven_signal.txt')
-        file_obj = BytesIO()
-        for i in output:
-            file_obj.write(i)
-        file_obj.seek(0)
-        tar = tarfile.open(mode='r', fileobj=file_obj)
-        contents = tar.extractfile('heaven_signal.txt').read()
-        logging.info("expected %s -- content %s", self.expected_content, contents)
-
-        contents = contents.decode("utf-8")
-        if self.expected_content in contents:
-            self.valid = True
-
-        logging.info("expected %s -- content %s", self.expected_content, contents)
-        return self.valid
 
 class EmptyFilesOutPutValidator(FileOutputValidator):
     """
@@ -338,6 +333,8 @@ class EmptyFilesOutPutValidator(FileOutputValidator):
 
         full_dir = self.output_dir + dir
         logging.info("Output folder: %s", full_dir)
+        if "GITHUB_WORKSPACE" in os.environ:
+            subprocess.call(['sudo', 'chmod', '-R', '0777', full_dir])
 
         listing = listdir(full_dir)
         if listing:
@@ -359,6 +356,8 @@ class NoFileOutPutValidator(FileOutputValidator):
 
         full_dir = self.output_dir + dir
         logging.info("Output folder: %s", full_dir)
+        if "GITHUB_WORKSPACE" in os.environ:
+            subprocess.call(['sudo', 'chmod', '-R', '0777', full_dir])
 
         listing = listdir(full_dir)
 

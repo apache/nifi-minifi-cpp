@@ -264,3 +264,16 @@ jobs:
           echo "::set-env name=PATH::/usr/lib/ccache:$PATH"
       - id: build
         run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS=ON -DSTRICT_GSL_CHECKS=AUDIT .. &&  cmake --build . --parallel 4  && make test ARGS="--timeout 300 -j4 --output-on-failure"
+  docker_integration_tests:
+    name: "Docker integration tests"
+    runs-on: ubuntu-20.04
+    timeout-minutes: 60
+    steps:
+      - id: checkout
+        uses: actions/checkout@v2
+      - id: build
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT .. && make docker
+      - id: install_deps
+        run: sudo apt install -y python3-virtualenv
+      - id: test
+        run: cd build && make docker-verify

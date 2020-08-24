@@ -30,7 +30,6 @@ from copy import copy
 import time
 from collections import OrderedDict
 
-
 class Cluster(object):
     """
     Base Cluster class. This is intended to be a generic interface
@@ -96,15 +95,7 @@ class SingleNodeDockerCluster(Cluster):
         if self.network is None:
             net_name = 'nifi-' + str(uuid.uuid4())
             logging.info('Creating network: %s', net_name)
-            # Set IP
-            ipam_pool = docker.types.IPAMPool(
-                subnet='192.168.42.0/24',
-                gateway='192.168.42.1'
-            )
-            ipam_config = docker.types.IPAMConfig(
-                pool_configs=[ipam_pool]
-            )
-            self.network = self.client.networks.create(net_name, ipam=ipam_config)
+            self.network = self.client.networks.create(net_name)
 
         if engine == 'nifi':
             self.deploy_nifi_flow(flow, name, vols)
@@ -216,32 +207,40 @@ class SingleNodeDockerCluster(Cluster):
         self.containers[container.name] = container
 
     def deploy_kafka_broker(self, name):
-        dockerfile = dedent("""FROM {base_image}
-                USER root
-                CMD $KAFKA_HOME/bin/kafka-console-consumer.sh --bootstrap-server host.docker.internal:9092 --topic test > heaven_signal.txt
-                """.format(base_image='spotify/kafka:latest'))
+        logging.info('Creating and running docker containers for kafka broker...')
+        zookeeper = self.client.containers.run(
+                    self.client.images.pull("wurstmeister/zookeeper:latest"),
+                    detach=True,
+                    name='zookeeper',
+                    network=self.network.name,
+                    ports={'2181/tcp': 2181},
+                    )
+        self.containers[zookeeper.name] = zookeeper
 
-        logging.info('Creating and running docker container for kafka broker...')
-
+        test_dir = os.environ['PYTHONPATH'].split(':')[-1] # Based on DockerVerify.sh
+        broker_image = self.build_image_by_path(test_dir + "/resources/kafka_broker", 'minifi-kafka')
         broker = self.client.containers.run(
-                    self.client.images.pull("spotify/kafka:latest"),
+                    broker_image[0],
                     detach=True,
                     name='kafka-broker',
-                    ports={'2181/tcp': 2181, '9092/tcp': 9092},
-                    environment=["ADVERTISED_HOST=192.168.42.4", "ADVERTISED_PORT=9092"]
+                    network=self.network.name,
+                    ports={'9092/tcp': 9092},
+                    environment=["KAFKA_LISTENERS=PLAINTEXT://kafka-broker:9092,SSL://kafka-broker:9093", "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181"],
                     )
-        self.network.connect(broker, ipv4_address='192.168.42.4')
+        self.containers[broker.name] = broker
 
+        dockerfile = dedent("""FROM {base_image}
+                USER root
+                CMD $KAFKA_HOME/bin/kafka-console-consumer.sh --bootstrap-server kafka-broker:9092 --topic test > heaven_signal.txt
+                """.format(base_image='wurstmeister/kafka:2.12-2.5.0'))
         configured_image = self.build_image(dockerfile, [])
         consumer = self.client.containers.run(
                     configured_image[0],
                     detach=True,
                     name='kafka-consumer',
-                    network=self.network.name
+                    network=self.network.name,
                     )
-
         self.containers[consumer.name] = consumer
-        self.containers[broker.name] = broker
 
     def deploy_http_proxy(self):
         logging.info('Creating and running http-proxy docker container...')
@@ -301,6 +300,20 @@ class SingleNodeDockerCluster(Cluster):
 
         return configured_image
 
+    def build_image_by_path(self, dir, name=None):
+        try:
+            logging.info('Creating configured image...')
+            configured_image = self.client.images.build(path=dir,
+                                                        tag=name,
+                                                        rm=True,
+                                                        forcerm=True)
+            logging.info('Created image with id: %s', configured_image[0].id)
+            self.images.append(configured_image)
+            return configured_image
+        except Exception as e:
+            logging.info(e)
+            raise
+
     def __enter__(self):
         """
         Allocate ephemeral cluster resources.
@@ -318,7 +331,7 @@ class SingleNodeDockerCluster(Cluster):
             container.remove(v=True, force=True)
 
         # Clean up images
-        for image in self.images:
+        for image in reversed(self.images):
             logging.info('Cleaning up image: %s', image[0].id)
             self.client.images.remove(image[0].id, force=True)
 
@@ -437,7 +450,7 @@ class Processor(Connectable):
         self.controller_services = controller_services
 
         self.schedule = {
-            'scheduling strategy': 'EVENT_DRIVEN',
+            'scheduling strategy': 'TIMER_DRIVEN',
             'scheduling period': '1 sec',
             'penalization period': '30 sec',
             'yield period': '1 sec',
@@ -501,8 +514,8 @@ class LogAttribute(Processor):
     def __init__(self, ):
         super(LogAttribute, self).__init__('LogAttribute',
                                            auto_terminate=['success'])
-        
-        
+
+
 class DebugFlow(Processor):
     def __init__(self, ):
         super(DebugFlow, self).__init__('DebugFlow')
@@ -541,13 +554,29 @@ class PutFile(Processor):
         else:
             return key
 
+
 class PublishKafka(Processor):
     def __init__(self):
         super(PublishKafka, self).__init__('PublishKafka',
-                                           properties={'Client Name': 'nghiaxlee', 'Known Brokers': '192.168.42.4:9092', 'Topic Name': 'test',
+                                           properties={'Client Name': 'nghiaxlee', 'Known Brokers': 'kafka-broker:9092', 'Topic Name': 'test',
                                                        'Batch Size': '10', 'Compress Codec': 'none', 'Delivery Guarantee': '1',
-                                                       'Request Timeout': '10 sec', 'Message Timeout': '5 sec'},
+                                                       'Request Timeout': '10 sec', 'Message Timeout': '12 sec'},
                                            auto_terminate=['success'])
+
+
+class PublishKafkaSSL(Processor):
+    def __init__(self):
+        super(PublishKafkaSSL, self).__init__('PublishKafka',
+                                              properties={'Client Name': 'LMN', 'Known Brokers': 'kafka-broker:9093',
+                                                          'Topic Name': 'test', 'Batch Size': '10',
+                                                          'Compress Codec': 'none', 'Delivery Guarantee': '1',
+                                                          'Request Timeout': '10 sec', 'Message Timeout': '12 sec',
+                                                          'Security CA': '/tmp/resources/certs/ca-cert',
+                                                          'Security Cert': '/tmp/resources/certs/client_LMN_client.pem',
+                                                          'Security Pass Phrase': 'abcdefgh',
+                                                          'Security Private Key': '/tmp/resources/certs/client_LMN_client.key',
+                                                          'Security Protocol': 'ssl'},
+                                              auto_terminate=['success'])
 
 
 class InputPort(Connectable):

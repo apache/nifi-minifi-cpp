@@ -21,14 +21,16 @@ def test_publish_kafka():
     """
     Verify delivery of message to kafka broker
     """
-    producer_flow = GetFile('/tmp/input') >> PublishKafka() >> ('success', LogAttribute())
+    producer_flow = GetFile('/tmp/input') >> PublishKafka() \
+                        >> (('failure', LogAttribute()),
+                            ('success', PutFile('/tmp/output/success')))
 
-    with DockerTestCluster(KafkaValidator('test')) as cluster:
+    with DockerTestCluster(SingleFileOutputValidator('test', subdir='success')) as cluster:
         cluster.put_test_data('test')
         cluster.deploy_flow(None, engine='kafka-broker')
         cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
 
-        assert cluster.check_output(10)
+        assert cluster.check_output(30)
 
 def test_no_broker():
     """
@@ -42,7 +44,7 @@ def test_no_broker():
         cluster.put_test_data('no broker')
         cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
 
-        assert cluster.check_output(30)
+        assert cluster.check_output(60)
 
 def test_broker_on_off():
     """
@@ -56,21 +58,43 @@ def test_broker_on_off():
         cluster.put_test_data('test')
         cluster.deploy_flow(None, engine='kafka-broker')
         cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
+        start_count = 1
+        stop_count = 0
 
         def start_kafka():
+            nonlocal start_count
             assert cluster.start_flow('kafka-broker')
             assert cluster.start_flow('kafka-consumer')
+            start_count += 1
+            assert cluster.wait_for_container_logs('zookeeper', 'Established session', 30, start_count)
         def stop_kafka():
+            nonlocal stop_count
             assert cluster.stop_flow('kafka-consumer')
             assert cluster.stop_flow('kafka-broker')
+            stop_count += 1
+            assert cluster.wait_for_container_logs('zookeeper', 'Processed session termination for sessionid', 30, stop_count)
 
-        assert cluster.check_output(10, dir='/success')
+        assert cluster.check_output(30, subdir='success')
         stop_kafka()
-        assert cluster.check_output(30, dir='/failure')
+        assert cluster.check_output(60, subdir='failure')
         start_kafka()
-        cluster.rm_out_child('/success')
-        assert cluster.check_output(30, dir='/success')
+        cluster.rm_out_child('success')
+        assert cluster.check_output(60, subdir='success')
         stop_kafka()
-        cluster.rm_out_child('/failure')
-        assert cluster.check_output(30, dir='/failure')
+        cluster.rm_out_child('failure')
+        assert cluster.check_output(60, subdir='failure')
 
+def test_ssl():
+    """
+    Verify security connection
+    """
+    producer_flow = GetFile('/tmp/input') >> PublishKafkaSSL() \
+                    >> (('failure', LogAttribute()),
+                        ('success', PutFile('/tmp/output/ssl')))
+
+    with DockerTestCluster(SingleFileOutputValidator('test', subdir='ssl')) as cluster:
+        cluster.put_test_data('test')
+        cluster.deploy_flow(None, engine='kafka-broker')
+        cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
+
+        assert cluster.check_output(30)

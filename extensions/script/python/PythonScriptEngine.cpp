@@ -42,11 +42,14 @@ PythonScriptEngine::PythonScriptEngine() {
 
 void PythonScriptEngine::eval(const std::string &script) {
   py::gil_scoped_acquire gil { };
-
-  if (script[0] == '\n') {
-    py::eval<py::eval_statements>(py::module::import("textwrap").attr("dedent")(script), *bindings_, *bindings_);
-  } else {
-    py::eval<py::eval_statements>(script, *bindings_, *bindings_);
+  try {
+    if (script[0] == '\n') {
+      py::eval<py::eval_statements>(py::module::import("textwrap").attr("dedent")(script), *bindings_, *bindings_);
+    } else {
+      py::eval<py::eval_statements>(script, *bindings_, *bindings_);
+    }
+  } catch (std::exception& e) {
+     throw minifi::script::ScriptException(e.what());
   }
 }
 
