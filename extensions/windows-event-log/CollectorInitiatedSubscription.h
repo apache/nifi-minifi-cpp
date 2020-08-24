@@ -43,7 +43,7 @@ public:
   /*!
   * Create a new processor
   */
-  CollectorInitiatedSubscription(const std::string& name, utils::Identifier uuid = utils::Identifier());
+  CollectorInitiatedSubscription(const std::string& name, const utils::Identifier& uuid = {});
 
   //! Destructor
   virtual ~CollectorInitiatedSubscription() = default;
