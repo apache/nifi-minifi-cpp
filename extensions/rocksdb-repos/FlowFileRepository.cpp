@@ -75,7 +75,7 @@ void FlowFileRepository::flush() {
     batch.Delete(keys[i]);
   }
 
-  auto operation = [this, &batch, &opendb]() { return opendb->Write(rocksdb::WriteOptions(), &batch); };
+  auto operation = [&batch, &opendb]() { return opendb->Write(rocksdb::WriteOptions(), &batch); };
 
   if (!ExecuteWithRetry(operation)) {
     for (const auto& key: keystrings) {
@@ -153,7 +153,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
     return;
   }
 
-  auto it = std::unique_ptr<rocksdb::Iterator>(used_database->NewIterator(rocksdb::ReadOptions()));
+  auto it = used_database->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
     std::string key = it->key().ToString();
@@ -205,7 +205,7 @@ bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> opera
  * @return true if our db has data stored.
  */
 bool FlowFileRepository::need_checkpoint(minifi::internal::OpenRocksDB& opendb){
-  auto it = std::unique_ptr<rocksdb::Iterator>(opendb.NewIterator(rocksdb::ReadOptions()));
+  auto it = opendb.NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     return true;
   }

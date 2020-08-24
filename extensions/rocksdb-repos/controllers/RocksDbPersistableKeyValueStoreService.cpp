@@ -138,7 +138,7 @@ bool RocksDbPersistableKeyValueStoreService::get(std::unordered_map<std::string,
     return false;
   }
   kvs.clear();
-  auto it = std::unique_ptr<rocksdb::Iterator>(opendb->NewIterator(rocksdb::ReadOptions()));
+  auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     kvs.emplace(it->key().ToString(), it->value().ToString());
   }
@@ -173,7 +173,7 @@ bool RocksDbPersistableKeyValueStoreService::clear() {
   if (!opendb) {
     return false;
   }
-  auto it = std::unique_ptr<rocksdb::Iterator>(opendb->NewIterator(rocksdb::ReadOptions()));
+  auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     rocksdb::Status status = opendb->Delete(default_write_options, it->key());
     if (!status.ok()) {

@@ -80,8 +80,8 @@ bool OpenRocksDB::GetProperty(const rocksdb::Slice& property, std::string* value
   return impl_->GetProperty(property, value);
 }
 
-rocksdb::Iterator* OpenRocksDB::NewIterator(const rocksdb::ReadOptions& options) {
-  return impl_->NewIterator(options);
+std::unique_ptr<rocksdb::Iterator> OpenRocksDB::NewIterator(const rocksdb::ReadOptions& options) {
+  return std::unique_ptr<rocksdb::Iterator>{impl_->NewIterator(options)};
 }
 
 rocksdb::Status OpenRocksDB::NewCheckpoint(rocksdb::Checkpoint **checkpoint) {

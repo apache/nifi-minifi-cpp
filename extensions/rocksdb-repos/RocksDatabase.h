@@ -41,6 +41,11 @@ class OpenRocksDB {
   OpenRocksDB(gsl::not_null<RocksDatabase*> db, gsl::not_null<std::shared_ptr<rocksdb::DB>> impl);
 
  public:
+  OpenRocksDB(const OpenRocksDB&) = delete;
+  OpenRocksDB(OpenRocksDB&&) noexcept = default;
+  OpenRocksDB& operator=(const OpenRocksDB&) = delete;
+  OpenRocksDB& operator=(OpenRocksDB&&) = default;
+
   rocksdb::Status Put(const rocksdb::WriteOptions& options, const rocksdb::Slice& key, const rocksdb::Slice& value);
 
   rocksdb::Status Get(const rocksdb::ReadOptions& options, const rocksdb::Slice& key, std::string* value);
@@ -55,7 +60,7 @@ class OpenRocksDB {
 
   bool GetProperty(const rocksdb::Slice& property, std::string* value);
 
-  rocksdb::Iterator* NewIterator(const rocksdb::ReadOptions& options);
+  std::unique_ptr<rocksdb::Iterator> NewIterator(const rocksdb::ReadOptions& options);
 
   rocksdb::Status NewCheckpoint(rocksdb::Checkpoint** checkpoint);
 

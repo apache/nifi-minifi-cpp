@@ -130,7 +130,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       return false;
     }
     rocksdb::Slice value((const char *) buf, bufLen);
-    auto operation = [this, &key, &value, &opendb]() { return opendb->Put(rocksdb::WriteOptions(), key, value); };
+    auto operation = [&key, &value, &opendb]() { return opendb->Put(rocksdb::WriteOptions(), key, value); };
     return ExecuteWithRetry(operation);
   }
 
@@ -147,7 +147,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
         return false;
       }
     }
-    auto operation = [this, &batch, &opendb]() { return opendb->Write(rocksdb::WriteOptions(), &batch); };
+    auto operation = [&batch, &opendb]() { return opendb->Write(rocksdb::WriteOptions(), &batch); };
     return ExecuteWithRetry(operation);
   }
 
