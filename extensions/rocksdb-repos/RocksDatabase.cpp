@@ -114,12 +114,13 @@ utils::optional<OpenRocksDB> RocksDatabase::open() {
     // database is not opened yet
     rocksdb::DB* db_instance = nullptr;
     rocksdb::Status result;
-    if (mode_ == Mode::ReadWrite) {
-      result = rocksdb::DB::Open(open_options_, db_name_, &db_instance);
-    } else if (mode_ == Mode::ReadOnly){
-      result = rocksdb::DB::OpenForReadOnly(open_options_, db_name_, &db_instance);
-    } else {
-      assert(false);
+    switch (mode_) {
+      case Mode::ReadWrite:
+        result = rocksdb::DB::Open(open_options_, db_name_, &db_instance);
+        break;
+      case Mode::ReadOnly:
+        result = rocksdb::DB::OpenForReadOnly(open_options_, db_name_, &db_instance);
+        break;
     }
     if (result.ok()) {
       impl_.reset(db_instance);
