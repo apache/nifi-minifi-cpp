@@ -25,6 +25,7 @@
 #include "rocksdb/options.h"
 #include "rocksdb/slice.h"
 #include "rocksdb/utilities/checkpoint.h"
+#include "logging/Logger.h"
 
 namespace org {
 namespace apache {
@@ -100,6 +101,7 @@ class RocksDatabase {
   std::mutex mtx_;
   std::shared_ptr<rocksdb::DB> impl_;
 
+  static std::shared_ptr<core::logging::Logger> logger_;
 };
 
 } /* namespace internal */

@@ -17,6 +17,7 @@
  */
 
 #include "RocksDatabase.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -101,6 +102,8 @@ rocksdb::DB* OpenRocksDB::get() {
   return impl_.get();
 }
 
+std::shared_ptr<core::logging::Logger> RocksDatabase::logger_ = core::logging::LoggerFactory<RocksDatabase>::getLogger();
+
 RocksDatabase::RocksDatabase(const rocksdb::Options& options, const std::string& name, Mode mode) : open_options_(options), db_name_(name), mode_(mode) {}
 
 void RocksDatabase::invalidate() {
@@ -118,9 +121,15 @@ utils::optional<OpenRocksDB> RocksDatabase::open() {
     switch (mode_) {
       case Mode::ReadWrite:
         result = rocksdb::DB::Open(open_options_, db_name_, &db_instance);
+        if (!result.ok()) {
+          logger_->log_error("Cannot open writable rocksdb database %s, error: %s", db_name_, result.ToString());
+        }
         break;
       case Mode::ReadOnly:
         result = rocksdb::DB::OpenForReadOnly(open_options_, db_name_, &db_instance);
+        if (!result.ok()) {
+          logger_->log_error("Cannot open read-only rocksdb database %s, error: %s", db_name_, result.ToString());
+        }
         break;
     }
     if (db_instance != nullptr && result.ok()) {
