@@ -47,6 +47,7 @@ std::vector<rocksdb::Status> OpenRocksDB::MultiGet(const rocksdb::ReadOptions& o
   for (const auto& result : results) {
     if (result == rocksdb::Status::NoSpace()) {
       db_->invalidate();
+      break;
     }
   }
   return results;
