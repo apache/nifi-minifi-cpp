@@ -32,7 +32,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-namespace MergeContentOptions {
+namespace merge_content_options {
+
 constexpr const char *MERGE_STRATEGY_BIN_PACK = "Bin-Packing Algorithm";
 constexpr const char *MERGE_STRATEGY_DEFRAGMENT = "Defragment";
 constexpr const char *MERGE_FORMAT_TAR_VALUE = "TAR";
@@ -46,7 +47,8 @@ constexpr const char *DELIMITER_STRATEGY_FILENAME = "Filename";
 constexpr const char *DELIMITER_STRATEGY_TEXT = "Text";
 constexpr const char *ATTRIBUTE_STRATEGY_KEEP_COMMON = "Keep Only Common Attributes";
 constexpr const char *ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attributes";
-}
+
+} /* namespace merge_content_options */
 
 // MergeBin Class
 class MergeBin {
@@ -199,10 +201,10 @@ public:
       struct archive *arch;
 
       arch = archive_write_new();
-      if (merge_type_ == MergeContentOptions::MERGE_FORMAT_TAR_VALUE) {
+      if (merge_type_ == merge_content_options::MERGE_FORMAT_TAR_VALUE) {
         archive_write_set_format_pax_restricted(arch); // tar format
       }
-      if (merge_type_ == MergeContentOptions::MERGE_FORMAT_ZIP_VALUE) {
+      if (merge_type_ == merge_content_options::MERGE_FORMAT_ZIP_VALUE) {
         archive_write_set_format_zip(arch); // zip format
       }
       archive_write_set_bytes_per_block(arch, 0);
@@ -217,7 +219,7 @@ public:
         archive_entry_set_pathname(entry, fileName.c_str());
         archive_entry_set_size(entry, flow->getSize());
         archive_entry_set_mode(entry, S_IFREG | 0755);
-        if (merge_type_ == MergeContentOptions::MERGE_FORMAT_TAR_VALUE) {
+        if (merge_type_ == merge_content_options::MERGE_FORMAT_TAR_VALUE) {
           std::string perm;
           int permInt;
           if (flow->getAttribute(BinFiles::TAR_PERMISSIONS_ATTRIBUTE, perm)) {
@@ -305,11 +307,11 @@ public:
   explicit MergeContent(std::string name, utils::Identifier uuid = utils::Identifier())
       : processors::BinFiles(name, uuid),
         logger_(logging::LoggerFactory<MergeContent>::getLogger()) {
-    mergeStrategy_ = MergeContentOptions::MERGE_STRATEGY_DEFRAGMENT;
-    mergeFormat_ = MergeContentOptions::MERGE_FORMAT_CONCAT_VALUE;
-    delimiterStrategy_ = MergeContentOptions::DELIMITER_STRATEGY_FILENAME;
+    mergeStrategy_ = merge_content_options::MERGE_STRATEGY_DEFRAGMENT;
+    mergeFormat_ = merge_content_options::MERGE_FORMAT_CONCAT_VALUE;
+    delimiterStrategy_ = merge_content_options::DELIMITER_STRATEGY_FILENAME;
     keepPath_ = false;
-    attributeStrategy_ = MergeContentOptions::ATTRIBUTE_STRATEGY_KEEP_COMMON;
+    attributeStrategy_ = merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON;
   }
   // Destructor
   virtual ~MergeContent() = default;
