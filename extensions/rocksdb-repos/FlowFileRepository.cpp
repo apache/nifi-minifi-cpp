@@ -203,10 +203,8 @@ bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> opera
  */
 bool FlowFileRepository::need_checkpoint(minifi::internal::OpenRocksDB& opendb){
   auto it = opendb.NewIterator(rocksdb::ReadOptions());
-  for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    return true;
-  }
-  return false;
+  it->SeekToFirst();
+  return it->Valid();
 }
 void FlowFileRepository::initialize_repository() {
   auto opendb = db_->open();
