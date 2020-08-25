@@ -85,7 +85,7 @@ TEST_CASE("TailFile reads the file until the first delimiter", "[simple]") {
   auto id = tailfile->getUUIDStr();
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
@@ -128,7 +128,7 @@ TEST_CASE("TailFile picks up the second line if a delimiter is written between r
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
@@ -174,7 +174,7 @@ TEST_CASE("TailFile re-reads the file if the state is deleted between runs", "[s
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
@@ -217,7 +217,7 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
   std::stringstream temp_file;
   temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
@@ -286,7 +286,7 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
   auto logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
   plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream state_file;
@@ -397,7 +397,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs"
   std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attribute", core::Relationship("success", "description"), true);
   plan->setProperty(log_attribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   std::string directory = testController.createTempDirectory(format);
 
   std::string first_test_file = createTempFile(directory, "first.log", "my first log line\n");
@@ -432,7 +432,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs 
   LogTestController::getInstance().setDebug<minifi::processors::TailFile>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   std::string directory = testController.createTempDirectory(format);
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
@@ -489,7 +489,7 @@ TEST_CASE("TailFile finds the single input file in both Single and Multiple mode
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
@@ -528,7 +528,7 @@ TEST_CASE("TailFile picks up new files created between runs", "[multiple_file]")
   LogTestController::getInstance().setDebug<core::ProcessSession>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
@@ -564,7 +564,7 @@ TEST_CASE("TailFile can handle input files getting removed", "[multiple_file]") 
   LogTestController::getInstance().setDebug<core::ProcessSession>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
@@ -618,7 +618,7 @@ TEST_CASE("TailFile processes a very long line correctly", "[simple]") {
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
@@ -696,7 +696,7 @@ TEST_CASE("TailFile processes a long line followed by multiple newlines correctl
   std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
   auto id = tailfile->getUUIDStr();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
@@ -791,7 +791,7 @@ TEST_CASE("TailFile onSchedule throws in Multiple mode if the Base Directory doe
   }
 
   SECTION("Base Directory is set and it exists") {
-    char format[] = "/tmp/gt.XXXXXX";
+    char format[] = "/var/tmp/gt.XXXXXX";
     std::string directory = testController.createTempDirectory(format);
 
     plan->setProperty(tailfile, processors::TailFile::BaseDirectory.getName(), directory);
@@ -812,7 +812,7 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
 
   auto plan = testController.createPlan();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::string in_file = dir + utils::file::FileUtils::get_separator() + "testfifo.txt";
@@ -881,7 +881,7 @@ TEST_CASE("TailFile finds and finishes multiple rotated files and continues with
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
   auto plan = testController.createPlan();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::string test_file = dir + utils::file::FileUtils::get_separator() + "fruits.log";
@@ -940,7 +940,7 @@ TEST_CASE("TailFile ignores old rotated files", "[rotation]") {
   LogTestController::getInstance().setDebug<core::ProcessSession>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   const std::string dir = testController.createTempDirectory(format);
 
   std::string log_file_name = dir + utils::file::FileUtils::get_separator() + "test.log";
@@ -987,7 +987,7 @@ TEST_CASE("TailFile rotation works with multiple input files", "[rotation][multi
 
   auto plan = testController.createPlan();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   createTempFile(dir, "fruit.log", "apple\npear\nbanana\n");
@@ -1052,7 +1052,7 @@ TEST_CASE("TailFile handles the Rolling Filename Pattern property correctly", "[
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
   auto plan = testController.createPlan();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
   std::string test_file = createTempFile(dir, "test.log", "some stuff\n");
@@ -1116,14 +1116,14 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
   LogTestController::getInstance().setTrace<processors::TailFile>();
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
 
-  char log_dir_format[] = "/tmp/gt.XXXXXX";
+  char log_dir_format[] = "/var/tmp/gt.XXXXXX";
   auto log_dir = testController.createTempDirectory(log_dir_format);
 
   std::string test_file_1 = createTempFile(log_dir, "test.1", "line one\nline two\nline three\n");  // old rotated file
   std::this_thread::sleep_for(std::chrono::seconds(1));
   std::string test_file = createTempFile(log_dir, "test.log", "line four\nline five\nline six\n");  // current log file
 
-  char state_dir_format[] = "/tmp/gt.XXXXXX";
+  char state_dir_format[] = "/var/tmp/gt.XXXXXX";
   auto state_dir = testController.createTempDirectory(state_dir_format);
 
   utils::Identifier tail_file_uuid = utils::IdGenerator::getIdGenerator()->generate();
@@ -1170,7 +1170,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
   LogTestController::getInstance().setTrace<processors::TailFile>();
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto temp_directory = testController.createTempDirectory(format);
 
   auto plan = testController.createPlan();
@@ -1246,7 +1246,7 @@ TEST_CASE("TailFile yields if no work is done on any files", "[yield][multiple_f
   LogTestController::getInstance().setTrace<processors::TailFile>();
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto temp_directory = testController.createTempDirectory(format);
 
   auto plan = testController.createPlan();
@@ -1306,7 +1306,7 @@ TEST_CASE("TailFile doesn't yield if work was done on rotated files only", "[yie
   LogTestController::getInstance().setTrace<processors::TailFile>();
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto temp_directory = testController.createTempDirectory(format);
   std::string full_file_name = createTempFile(temp_directory, "test.log", "stuff\n");
 
@@ -1366,7 +1366,7 @@ TEST_CASE("TailFile handles the Delimiter setting correctly", "[delimiter]") {
     LogTestController::getInstance().setTrace<processors::TailFile>();
     LogTestController::getInstance().setTrace<processors::LogAttribute>();
 
-    char format[] = "/tmp/gt.XXXXXX";
+    char format[] = "/var/tmp/gt.XXXXXX";
     auto temp_directory = testController.createTempDirectory(format);
 
     std::string delimiter = test_case.second;
@@ -1401,7 +1401,7 @@ TEST_CASE("TailFile handles Unix/Windows line endings correctly", "[simple]") {
   LogTestController::getInstance().setTrace<processors::TailFile>();
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   auto temp_directory = testController.createTempDirectory(format);
   std::string full_file_name = createTempFile(temp_directory, "test.log", "line1\nline two\n", std::ios::out);  // write in text mode
 
@@ -1432,7 +1432,7 @@ TEST_CASE("TailFile can tail all files in a directory recursively", "[multiple]"
   LogTestController::getInstance().setTrace<processors::TailFile>();
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   std::string base_directory = testController.createTempDirectory(format);
   std::string directory1 = base_directory + utils::file::FileUtils::get_separator() + "one";
   utils::file::FileUtils::create_dir(directory1);
@@ -1484,7 +1484,7 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
   LogTestController::getInstance().setTrace<processors::TailFile>();
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
 
-  char format[] = "/tmp/gt.XXXXXX";
+  char format[] = "/var/tmp/gt.XXXXXX";
   std::string directory = testController.createTempDirectory(format);
 
   createTempFile(directory, "test.red.log", "cherry\n");
