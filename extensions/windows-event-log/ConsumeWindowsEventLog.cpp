@@ -372,6 +372,8 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     return;
   }
 
+  refreshTimeZoneData();
+
   logger_->log_trace("Enumerating the events in the result set after the bookmarked event.");
   while (true) {
     EVT_HANDLE hEvent{};
@@ -610,6 +612,36 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
   return true;
 }
 
+void ConsumeWindowsEventLog::refreshTimeZoneData() {
+  DYNAMIC_TIME_ZONE_INFORMATION tzinfo;
+  auto ret = GetDynamicTimeZoneInformation(&tzinfo);
+  std::wstring tzstr;
+  long tzbias = 0;
+  bool dst = false;
+  switch (ret) {
+    case TIME_ZONE_ID_UNKNOWN:
+      logger_->log_error("Failed to get timezone information!");
+      return;  // Don't update members in case we cannot get data
+    case TIME_ZONE_ID_DAYLIGHT:
+      tzstr = tzinfo.DaylightName;
+      dst = true;
+      // [[fallthrough]];
+    case TIME_ZONE_ID_STANDARD:
+      tzstr = tzstr.empty() ? tzinfo.StandardName : tzstr;  // Use standard timezome name in case there is no daylight name or in case it's not DST
+      tzbias = tzinfo.Bias + (dst ? tzinfo.DaylightBias : tzinfo.StandardBias);
+      break;
+  }
+
+  tzbias *= -1;  // WinApi specifies UTC = localtime + bias, but we need offset from UTC
+  std::stringstream tzoffset;
+  tzoffset << ((tzbias > 0) ? "+" : "") << (tzbias / 60) << ":" << std::setfill('0') << std::setw(2) << (std::abs(tzbias % 60));
+
+  timezone_name_ = wel::to_string(tzstr.c_str());
+  timezone_offset_ = tzoffset.str();
+
+  logger_->log_trace("Timezone name: %s, offset: %s", timezone_name_, timezone_offset_);
+}
+
 void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session)
 {
   struct WriteCallback : public OutputStreamCallback {
@@ -624,25 +656,6 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     const std::string& str_;
   };
 
-  DYNAMIC_TIME_ZONE_INFORMATION tzinfo;
-  auto ret = GetDynamicTimeZoneInformation(&tzinfo);
-  std::wstring tzstr;
-  std::string tzbias;
-  bool dst = false;
-  switch (ret) {
-  case TIME_ZONE_ID_UNKNOWN:
-    logger_->log_error("Failed to get timezone information!");
-    break;
-  case TIME_ZONE_ID_DAYLIGHT:
-    tzstr = tzinfo.DaylightName;
-    dst = true;
-    // [[fallthrough]];
-  case TIME_ZONE_ID_STANDARD:
-    tzstr = tzstr.empty() ? tzinfo.StandardName : tzstr;  // Use standard timezome name in case there is no daylight name or in case it's not DST
-    tzbias = std::to_string(tzinfo.Bias + (dst ? tzinfo.DaylightBias : tzinfo.StandardBias));
-    break;
-  }
-
   if (writeXML_) {
     auto flowFile = session.create();
     logger_->log_trace("Writing rendered XML to a flow file");
@@ -654,8 +667,8 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
       }
     }
     session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "application/xml");
-    session.putAttribute(flowFile, "Timezone name", wel::to_string(tzstr.c_str()));
-    session.putAttribute(flowFile, "Timezone bias", tzbias);
+    session.putAttribute(flowFile, "Timezone name", timezone_name_);
+    session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
     session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session.transfer(flowFile, Success);
   }
@@ -666,8 +679,8 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
 
     session.write(flowFile, &WriteCallback(eventRender.rendered_text_));
     session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
-    session.putAttribute(flowFile, "Timezone name", wel::to_string(tzstr.c_str()));
-    session.putAttribute(flowFile, "Timezone bias", tzbias);
+    session.putAttribute(flowFile, "Timezone name", timezone_name_);
+    session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
     session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session.transfer(flowFile, Success);
   }

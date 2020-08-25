@@ -101,6 +101,7 @@ public:
   
 
 protected:
+  void refreshTimeZoneData();
   void putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session);
   wel::WindowsEventLogHandler getEventLogHandler(const std::string & name);
   bool insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string &value);
@@ -138,6 +139,9 @@ private:
   std::mutex onTriggerMutex_;
   std::unordered_map<std::string, std::string> xmlPercentageItemsResolutions_;
   HMODULE hMsobjsDll_{};
+
+  std::string timezone_name_;
+  std::string timezone_offset_;  // Represented as UTC offset in (H)H:MM format, like +2:00
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
