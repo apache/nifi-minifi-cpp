@@ -141,7 +141,7 @@ private:
   HMODULE hMsobjsDll_{};
 
   std::string timezone_name_;
-  std::string timezone_offset_;  // Represented as UTC offset in (H)H:MM format, like +2:00
+  std::string timezone_offset_;  // Represented as UTC offset in (+|-)HH:MM format, like +02:00
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
