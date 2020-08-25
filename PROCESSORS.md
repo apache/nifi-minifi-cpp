@@ -757,7 +757,8 @@ Merges a Group of FlowFiles together based on a user-defined strategy and packag
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
 | Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| - | - | - | - |
+|Attribute Strategy|Keep Only Common Attributes|Keep Only Common Attributes<Br>Keep All Unique Attributes<Br>|Determines which FlowFile attributes should be added to the bundle. If 'Keep All Unique Attributes' is selected, any attribute on any FlowFile that gets bundled will be kept unless its value conflicts with the value from another FlowFile. If 'Keep Only Common Attributes' is selected, only the attributes that exist on all FlowFiles in the bundle, with the same value, will be preserved.| 
 |Correlation Attribute Name|||Correlation Attribute Name|
 |Delimiter Strategy|Filename||Determines if Header, Footer, and Demarcator should point to files|
 |Demarcator File|||Filename specifying the demarcator to use|
