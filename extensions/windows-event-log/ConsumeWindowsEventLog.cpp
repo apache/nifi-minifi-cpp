@@ -634,7 +634,8 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
 
   tzbias *= -1;  // WinApi specifies UTC = localtime + bias, but we need offset from UTC
   std::stringstream tzoffset;
-  tzoffset << ((tzbias > 0) ? "+" : "") << (tzbias / 60) << ":" << std::setfill('0') << std::setw(2) << (std::abs(tzbias % 60));
+  tzoffset << (tzbias >= 0 ? '+' : '-') << std::setfill('0') << std::setw(2) << std::abs(tzbias) / 60
+      << ":" << std::setfill('0') << std::setw(2) << std::abs(tzbias) % 60;
 
   timezone_name_ = wel::to_string(tzstr.c_str());
   timezone_offset_ = tzoffset.str();
