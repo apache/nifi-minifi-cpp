@@ -171,6 +171,7 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
       flowFile->setAttribute(kv.first, kv.second);
     }
     current_session->importFrom(*(input_ff_params->content_stream.get()), flowFile);
+    current_session->flushContent();
     current_session->transfer(flowFile, core::Relationship("success", "success"));
     relationships_[relationships_.size()-1]->put(std::static_pointer_cast<core::FlowFile>(flowFile));
   }

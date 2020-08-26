@@ -72,7 +72,7 @@ void VolatileContentRepository::start() {
     return;
   if (running_)
     return;
-  thread_ = std::thread(&VolatileContentRepository::run, shared_from_parent<VolatileContentRepository>());
+  thread_ = std::thread(&VolatileContentRepository::run, sharedFromThis());
   thread_.detach();
   running_ = true;
   logger_->log_info("%s Repository Monitor Thread Start", getName());

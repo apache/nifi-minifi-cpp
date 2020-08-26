@@ -33,7 +33,9 @@ namespace io {
 int DataStream::writeData(uint8_t *value, int size) {
   if (value == nullptr)
     return 0;
-  std::copy(value, value + size, std::back_inserter(buffer));
+  std::size_t previous_size = buffer.size();
+  buffer.resize(previous_size + size);
+  std::memcpy(buffer.data() + previous_size, value, size);
   return size;
 }
 

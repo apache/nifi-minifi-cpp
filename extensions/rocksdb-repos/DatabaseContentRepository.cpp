@@ -22,6 +22,7 @@
 #include "RocksDbStream.h"
 #include "rocksdb/merge_operator.h"
 #include "utils/GeneralUtils.h"
+#include "Exception.h"
 
 namespace org {
 namespace apache {
@@ -65,13 +66,53 @@ void DatabaseContentRepository::stop() {
   db_.reset();
 }
 
+DatabaseContentRepository::Session::Session(std::shared_ptr<ContentRepository> repository) : ContentSession(std::move(repository)) {}
+
+std::shared_ptr<ContentSession> DatabaseContentRepository::createSession() {
+  return std::make_shared<Session>(sharedFromThis());
+}
+
+void DatabaseContentRepository::Session::commit() {
+  auto dbContentRepository = std::static_pointer_cast<DatabaseContentRepository>(repository_);
+  auto opendb = dbContentRepository->db_->open();
+  if (!opendb) {
+    throw Exception(REPOSITORY_EXCEPTION, "Couldn't open rocksdb database to commit content changes");
+  }
+  rocksdb::WriteBatch batch;
+  for (const auto& resource : managedResources_) {
+    auto outStream = dbContentRepository->write(*resource.first, false, &batch);
+    if (outStream == nullptr) {
+      throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
+    }
+    const auto size = resource.second->getSize();
+    if (outStream->write(const_cast<uint8_t*>(resource.second->getBuffer()), size) != size) {
+      throw Exception(REPOSITORY_EXCEPTION, "Failed to write new resource: " + resource.first->getContentFullPath());
+    }
+  }
+  for (const auto& resource : extendedResources_) {
+    auto outStream = dbContentRepository->write(*resource.first, true, &batch);
+    if (outStream == nullptr) {
+      throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
+    }
+    const auto size = resource.second->getSize();
+    if (outStream->write(const_cast<uint8_t*>(resource.second->getBuffer()), size) != size) {
+      throw Exception(REPOSITORY_EXCEPTION, "Failed to append to resource: " + resource.first->getContentFullPath());
+    }
+  }
+
+  rocksdb::WriteOptions options;
+  options.sync = true;
+  rocksdb::Status status = opendb->Write(options, &batch);
+  if (!status.ok()) {
+    throw Exception(REPOSITORY_EXCEPTION, "Batch write failed: " + status.ToString());
+  }
+
+  managedResources_.clear();
+  extendedResources_.clear();
+}
+
 std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::ResourceClaim &claim, bool append) {
-  // the traditional approach with these has been to return -1 from the stream; however, since we have the ability here
-  // we can simply return a nullptr, which is also valid from the API when this stream is not valid.
-  if (!is_valid_ || !db_)
-    return nullptr;
-  // append is already supported in all modes
-  return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true);
+  return write(claim, append, nullptr);
 }
 
 std::shared_ptr<io::BaseStream> DatabaseContentRepository::read(const minifi::ResourceClaim &claim) {
@@ -109,12 +150,21 @@ bool DatabaseContentRepository::remove(const minifi::ResourceClaim &claim) {
   rocksdb::Status status;
   status = opendb->Delete(rocksdb::WriteOptions(), claim.getContentFullPath());
   if (status.ok()) {
-    logger_->log_debug("Deleted %s", claim.getContentFullPath());
+    logger_->log_debug("Deleting resource %s", claim.getContentFullPath());
     return true;
   } else {
     logger_->log_debug("Attempted, but could not delete %s", claim.getContentFullPath());
     return false;
   }
+}
+
+std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::ResourceClaim& claim, bool append, rocksdb::WriteBatch* batch) {
+  // the traditional approach with these has been to return -1 from the stream; however, since we have the ability here
+  // we can simply return a nullptr, which is also valid from the API when this stream is not valid.
+  if (!is_valid_ || !db_)
+    return nullptr;
+  // append is already supported in all modes
+  return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true, batch);
 }
 
 } /* namespace repository */

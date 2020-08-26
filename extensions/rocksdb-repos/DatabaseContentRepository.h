@@ -26,6 +26,7 @@
 #include "properties/Configure.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "RocksDatabase.h"
+#include "core/ContentSession.h"
 
 namespace org {
 namespace apache {
@@ -70,6 +71,12 @@ class StringAppender : public rocksdb::AssociativeMergeOperator {
  * DatabaseContentRepository is a content repository that stores data onto the local file system.
  */
 class DatabaseContentRepository : public core::ContentRepository, public core::Connectable {
+  class Session : public ContentSession {
+   public:
+    explicit Session(std::shared_ptr<ContentRepository> repository);
+
+    void commit() override;
+  };
  public:
 
   DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>(), utils::Identifier uuid = utils::Identifier())
@@ -78,34 +85,36 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
         db_(nullptr),
         logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {
   }
-  virtual ~DatabaseContentRepository() {
+  ~DatabaseContentRepository() override {
     stop();
   }
 
-  virtual bool initialize(const std::shared_ptr<minifi::Configure> &configuration);
+  std::shared_ptr<ContentSession> createSession() override;
 
-  virtual void stop();
+  bool initialize(const std::shared_ptr<minifi::Configure> &configuration) override;
 
-  virtual std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append = false);
+  void stop() override;
 
-  virtual std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim);
+  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append = false) override;
 
-  virtual bool close(const minifi::ResourceClaim &claim) {
+  std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim) override;
+
+  bool close(const minifi::ResourceClaim &claim) override {
     return remove(claim);
   }
 
-  virtual bool remove(const minifi::ResourceClaim &claim);
+  bool remove(const minifi::ResourceClaim &claim) override;
 
-  virtual bool exists(const minifi::ResourceClaim &streamId);
+  bool exists(const minifi::ResourceClaim &streamId) override;
 
-  virtual void yield() {
+  void yield() override {
 
   }
 
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() {
+  bool isRunning() override {
     return true;
   }
 
@@ -113,11 +122,13 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
    * Determines if work is available by this connectable
    * @return boolean if work is available.
    */
-  virtual bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return true;
   }
 
  private:
+  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, rocksdb::WriteBatch* batch);
+
   bool is_valid_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::shared_ptr<logging::Logger> logger_;

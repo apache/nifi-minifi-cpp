@@ -30,6 +30,8 @@
 #include "properties/Configure.h"
 #include "core/Connectable.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/GeneralUtils.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -41,7 +43,12 @@ namespace repository {
  * Purpose: Stages content into a volatile area of memory. Note that   when the maximum number
  * of entries is consumed we will rollback a session to wait for others to be freed.
  */
-class VolatileContentRepository : public core::ContentRepository, public virtual core::repository::VolatileRepository<ResourceClaim::Path> {
+class VolatileContentRepository :
+    public core::ContentRepository,
+    public core::repository::VolatileRepository<ResourceClaim::Path>,
+    public utils::EnableSharedFromThis<VolatileContentRepository> {
+  using utils::EnableSharedFromThis<VolatileContentRepository>::sharedFromThis;
+
  public:
   static const char *minimal_locking;
 
@@ -108,11 +115,6 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   virtual void start();
 
   virtual void run();
-
-  template<typename T2>
-  std::shared_ptr<T2> shared_from_parent() {
-    return std::dynamic_pointer_cast<T2>(shared_from_this());
-  }
 
  private:
   bool minimize_locking_;
