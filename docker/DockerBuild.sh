@@ -1,3 +1,4 @@
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements. See the NOTICE file
 # distributed with this work for additional information
@@ -16,23 +17,27 @@
 # under the License.
 #
 
-#!/bin/bash
-
 # Set env vars.
 UID_ARG=$1
 GID_ARG=$2
 MINIFI_VERSION=$3
 MINIFI_SOURCE_CODE=$4
 CMAKE_SOURCE_DIR=$5
+IMAGE_TYPE=${6:-release}
 
-echo "NiFi-MiNiFi-CPP Version: $MINIFI_VERSION"
+unset TAG
+if [ "${IMAGE_TYPE}" != "release" ]; then
+  TAG="${IMAGE_TYPE}-"
+fi
+
+echo "NiFi-MiNiFi-CPP Version: ${MINIFI_VERSION}"
 echo "Current Working Directory: $(pwd)"
-echo "CMake Source Directory: $CMAKE_SOURCE_DIR"
-echo "MiNiFi Package: $MINIFI_SOURCE_CODE"
+echo "CMake Source Directory: ${CMAKE_SOURCE_DIR}"
+echo "MiNiFi Package: ${MINIFI_SOURCE_CODE}"
 
 # Copy the MiNiFi source tree to the Docker working directory before building
-rm -rf $CMAKE_SOURCE_DIR/docker/minificppsource
-mkdir -p $CMAKE_SOURCE_DIR/docker/minificppsource
+rm -rf "${CMAKE_SOURCE_DIR}/docker/minificppsource"
+mkdir -p "${CMAKE_SOURCE_DIR}/docker/minificppsource"
 rsync -avr \
       --exclude '/*build*' \
       --exclude '/*_repository*' \
@@ -47,16 +52,17 @@ rsync -avr \
       --exclude '/extensions/expression-language/position.hh' \
       --exclude '/extensions/expression-language/stack.hh' \
       --delete \
-      $CMAKE_SOURCE_DIR/ \
-      $CMAKE_SOURCE_DIR/docker/minificppsource/
+      "${CMAKE_SOURCE_DIR}/" \
+      "${CMAKE_SOURCE_DIR}/docker/minificppsource/"
 
-DOCKER_COMMAND="docker build --build-arg UID=$UID_ARG \
-                             --build-arg GID=$GID_ARG \
-                             --build-arg MINIFI_VERSION=$MINIFI_VERSION \
-                             --build-arg MINIFI_SOURCE_CODE=$MINIFI_SOURCE_CODE \
+DOCKER_COMMAND="docker build --build-arg UID=${UID_ARG} \
+                             --build-arg GID=${GID_ARG} \
+                             --build-arg MINIFI_VERSION=${MINIFI_VERSION} \
+                             --build-arg MINIFI_SOURCE_CODE=${MINIFI_SOURCE_CODE} \
+                             --target ${IMAGE_TYPE} \
                              -t \
-                             apacheminificpp:$MINIFI_VERSION ."
-echo "Docker Command: '$DOCKER_COMMAND'"
-${DOCKER_COMMAND}
+                             apacheminificpp:${TAG}${MINIFI_VERSION} ."
+echo "Docker Command: '${DOCKER_COMMAND}'"
+DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}
 
-rm -rf $CMAKE_SOURCE_DIR/docker/minificppsource
+rm -rf "${CMAKE_SOURCE_DIR}/docker/minificppsource"
