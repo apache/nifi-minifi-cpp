@@ -26,6 +26,7 @@
 #include "properties/Configure.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "RocksDatabase.h"
+#include "core/ContentSession.h"
 
 namespace org {
 namespace apache {
@@ -70,6 +71,12 @@ class StringAppender : public rocksdb::AssociativeMergeOperator {
  * DatabaseContentRepository is a content repository that stores data onto the local file system.
  */
 class DatabaseContentRepository : public core::ContentRepository, public core::Connectable {
+  class Session : public ContentSession {
+   public:
+    explicit Session(std::shared_ptr<ContentRepository> repository);
+
+    void commit() override;
+  };
  public:
 
   DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>(), utils::Identifier uuid = utils::Identifier())
@@ -81,6 +88,8 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
   virtual ~DatabaseContentRepository() {
     stop();
   }
+
+  std::shared_ptr<ContentSession> createSession() override;
 
   virtual bool initialize(const std::shared_ptr<minifi::Configure> &configuration);
 
@@ -118,6 +127,8 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
   }
 
  private:
+  std::shared_ptr<io::BaseStream> write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append, rocksdb::WriteBatch* batch);
+
   bool is_valid_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::shared_ptr<logging::Logger> logger_;

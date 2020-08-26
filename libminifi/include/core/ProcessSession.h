@@ -57,6 +57,7 @@ class ProcessSession : public ReferenceContainer {
     logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());
     auto repo = process_context_->getProvenanceRepository();
     provenance_report_ = std::make_shared<provenance::ProvenanceReporter>(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
+    content_session_ = process_context_->getContentRepository()->createSession();
   }
 
   // Destructor
@@ -164,6 +165,8 @@ class ProcessSession : public ReferenceContainer {
   std::shared_ptr<logging::Logger> logger_;
   // Provenance Report
   std::shared_ptr<provenance::ProvenanceReporter> provenance_report_;
+
+  std::shared_ptr<ContentSession> content_session_;
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };

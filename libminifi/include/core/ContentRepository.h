@@ -28,6 +28,8 @@
 #include "io/BaseStream.h"
 #include "StreamManager.h"
 #include "core/Connectable.h"
+#include "ContentSession.h"
+#include "utils/GeneralUtils.h"
 
 namespace org {
 namespace apache {
@@ -38,7 +40,7 @@ namespace core {
 /**
  * Content repository definition that extends StreamManager.
  */
-class ContentRepository : public StreamManager<minifi::ResourceClaim> {
+class ContentRepository : public StreamManager<minifi::ResourceClaim>, public utils::safe_enable_shared_from_this<ContentRepository> {
  public:
   virtual ~ContentRepository() = default;
 
@@ -47,54 +49,22 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
    */
   virtual bool initialize(const std::shared_ptr<Configure> &configure) = 0;
 
-  virtual std::string getStoragePath() const {
-    return directory_;
-  }
+  virtual std::string getStoragePath() const;
+
+  virtual std::shared_ptr<ContentSession> createSession();
 
   /**
    * Stops this repository.
    */
   virtual void stop() = 0;
 
-  void reset() {
-    std::lock_guard<std::mutex> lock(count_map_mutex_);
-    count_map_.clear();
-  }
+  void reset();
 
-  virtual uint32_t getStreamCount(const minifi::ResourceClaim &streamId) {
-    std::lock_guard<std::mutex> lock(count_map_mutex_);
-    auto cnt = count_map_.find(streamId.getContentFullPath());
-    if (cnt != count_map_.end()) {
-      return cnt->second;
-    } else {
-      return 0;
-    }
-  }
+  virtual uint32_t getStreamCount(const minifi::ResourceClaim &streamId);
 
-  virtual void incrementStreamCount(const minifi::ResourceClaim &streamId) {
-    std::lock_guard<std::mutex> lock(count_map_mutex_);
-    const std::string str = streamId.getContentFullPath();
-    auto count = count_map_.find(str);
-    if (count != count_map_.end()) {
-      count_map_[str] = count->second + 1;
-    } else {
-      count_map_[str] = 1;
-    }
-  }
+  virtual void incrementStreamCount(const minifi::ResourceClaim &streamId);
 
-  virtual StreamState decrementStreamCount(const minifi::ResourceClaim &streamId) {
-    std::lock_guard<std::mutex> lock(count_map_mutex_);
-    const std::string str = streamId.getContentFullPath();
-    auto count = count_map_.find(str);
-    if (count != count_map_.end() && count->second > 1) {
-      count_map_[str] = count->second - 1;
-      return StreamState::Alive;
-    } else {
-      count_map_.erase(str);
-      remove(streamId);
-      return StreamState::Deleted;
-    }
-  }
+  virtual StreamState decrementStreamCount(const minifi::ResourceClaim &streamId);
 
  protected:
   std::string directory_;

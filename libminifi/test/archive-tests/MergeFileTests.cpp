@@ -36,6 +36,7 @@
 #include "processors/LogAttribute.h"
 #include "../TestBase.h"
 #include "../unit/ProvenanceTestHelper.h"
+#include "../InputProcessor.h"
 
 std::string FLOW_FILE;
 std::string EXPECT_MERGE_CONTENT_FIRST;
@@ -136,31 +137,37 @@ class MergeTestController : public TestController {
  public:
   MergeTestController() {
     init_file_paths();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::MergeContent>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::MergeContent>();
+    LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<core::ProcessSession>();
     LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::BinFiles>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::Bin>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::BinManager>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
+    LogTestController::getInstance().setTrace<minifi::processors::BinFiles>();
+    LogTestController::getInstance().setTrace<minifi::processors::Bin>();
+    LogTestController::getInstance().setTrace<minifi::processors::BinManager>();
+    LogTestController::getInstance().setTrace<minifi::Connection>();
+    LogTestController::getInstance().setTrace<minifi::core::Connectable>();
 
     std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+    auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+    content_repo->initialize(std::make_shared<minifi::Configure>());
 
-    processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
-    std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+    processor = std::make_shared<processors::MergeContent>("mergecontent");
     processor->initialize();
     utils::Identifier processoruuid;
-    REQUIRE(true == processor->getUUID(processoruuid));
+    REQUIRE(processor->getUUID(processoruuid));
+    std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<minifi::processors::LogAttribute>("logattribute");
     utils::Identifier logAttributeuuid;
-    REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
+    REQUIRE(logAttributeProcessor->getUUID(logAttributeuuid));
 
-    auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+    input_processor_ = std::make_shared<processors::InputProcessor>("input");
+    input_processor_->initialize();
+    utils::Identifier inputUUID;
+    REQUIRE(input_processor_->getUUID(inputUUID));
+    input_context_ = std::make_shared<core::ProcessContext>(std::make_shared<core::ProcessorNode>(input_processor_), nullptr, repo, repo, content_repo);
+
     // output from merge processor to log attribute
     output = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    output->addRelationship(core::Relationship("merged", "Merge successful output"));
+    output->addRelationship(processors::MergeContent::Merge);
     output->setSource(processor);
     output->setDestination(logAttributeProcessor);
     output->setSourceUUID(processoruuid);
@@ -168,26 +175,27 @@ class MergeTestController : public TestController {
     processor->addConnection(output);
     // input to merge processor
     input = std::make_shared<minifi::Connection>(repo, content_repo, "mergeinput");
+    input->addRelationship(processors::InputProcessor::Success);
+    input->setSource(input_processor_);
+    input->setSourceUUID(inputUUID);
     input->setDestination(processor);
     input->setDestinationUUID(processoruuid);
     processor->addConnection(input);
+    input_processor_->addConnection(input);
 
-    std::set<core::Relationship> autoTerminatedRelationships;
-    core::Relationship original("original", "");
-    core::Relationship failure("failure", "");
-    autoTerminatedRelationships.insert(original);
-    autoTerminatedRelationships.insert(failure);
-    processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
+    processor->setAutoTerminatedRelationships({processors::MergeContent::Original, processors::MergeContent::Failure});
 
     processor->incrementActiveTasks();
     processor->setScheduledState(core::ScheduledState::RUNNING);
     logAttributeProcessor->incrementActiveTasks();
     logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    node = std::make_shared<core::ProcessorNode>(processor);
-    context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+    context = std::make_shared<core::ProcessContext>(std::make_shared<core::ProcessorNode>(processor), nullptr, repo, repo, content_repo);
   }
   ~MergeTestController() = default;
+
+  std::shared_ptr<core::Processor> input_processor_;
+  std::shared_ptr<core::ProcessContext> input_context_;
   std::shared_ptr<core::ProcessContext> context;
   std::shared_ptr<core::ProcessorNode> node;
   std::shared_ptr<core::Processor> processor;
@@ -200,6 +208,7 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
   auto context = testController.context;
   auto processor = testController.processor;
   auto input = testController.input;
+  auto input_context = testController.input_context_;
   auto output = testController.output;
 
   {
@@ -224,11 +233,9 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
 
-  core::ProcessSession sessionGenFlowFile(context);
-  std::shared_ptr<core::FlowFile> record[6];
-
+  core::ProcessSession sessionGenFlowFile(input_context);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-  for (int i = 0; i < 6; i++) {
+  for (const int i : {0, 2, 5, 4, 1, 3}) {
     const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
@@ -242,14 +249,9 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
     else
       flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
     flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
-    record[i] = flow;
+    sessionGenFlowFile.transfer(flow, processors::InputProcessor::Success);
   }
-  input->put(record[0]);
-  input->put(record[2]);
-  input->put(record[5]);
-  input->put(record[4]);
-  input->put(record[1]);
-  input->put(record[3]);
+  sessionGenFlowFile.commit();
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
   processor->onSchedule(context, factory);
@@ -319,6 +321,7 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
   auto context = testController.context;
   auto processor = testController.processor;
   auto input = testController.input;
+  auto input_context = testController.input_context_;
   auto output = testController.output;
 
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
@@ -328,11 +331,9 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Footer, FOOTER_FILE);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Demarcator, DEMARCATOR_FILE);
 
-  core::ProcessSession sessionGenFlowFile(context);
-  std::shared_ptr<core::FlowFile> record[6];
-
+  core::ProcessSession sessionGenFlowFile(input_context);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-  for (int i = 0; i < 6; i++) {
+  for (const int i : {0, 2, 5, 4, 1, 3}) {
     const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
@@ -346,14 +347,9 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
     else
       flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
     flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
-    record[i] = flow;
+    sessionGenFlowFile.transfer(flow, processors::InputProcessor::Success);
   }
-  input->put(record[0]);
-  input->put(record[2]);
-  input->put(record[5]);
-  input->put(record[4]);
-  input->put(record[1]);
-  input->put(record[3]);
+  sessionGenFlowFile.commit();
 
   REQUIRE(processor->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
@@ -411,6 +407,7 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
   auto context = testController.context;
   auto processor = testController.processor;
   auto input = testController.input;
+  auto input_context = testController.input_context_;
   auto output = testController.output;
 
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
@@ -418,11 +415,9 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MaxBinAge, "1 sec");
 
-  core::ProcessSession sessionGenFlowFile(context);
-  std::shared_ptr<core::FlowFile> record[6];
-
+  core::ProcessSession sessionGenFlowFile(input_context);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-  for (int i = 0; i < 6; i++) {
+  for (const int i : {0, 2, 5, 1, 3}) {
     if (i == 4)
       continue;
     const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
@@ -438,13 +433,9 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
     else
       flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
     flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
-    record[i] = flow;
+    sessionGenFlowFile.transfer(flow, processors::InputProcessor::Success);
   }
-  input->put(record[0]);
-  input->put(record[2]);
-  input->put(record[5]);
-  input->put(record[1]);
-  input->put(record[3]);
+  sessionGenFlowFile.commit();
 
   REQUIRE(processor->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
@@ -508,6 +499,7 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
   auto context = testController.context;
   auto processor = testController.processor;
   auto input = testController.input;
+  auto input_context = testController.input_context_;
   auto output = testController.output;
 
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
@@ -516,23 +508,16 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-  core::ProcessSession sessionGenFlowFile(context);
-  std::shared_ptr<core::FlowFile> record[6];
-
+  core::ProcessSession sessionGenFlowFile(input_context);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-  for (int i = 0; i < 6; i++) {
+  for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     flow->setAttribute("tag", "tag");
-    record[i] = flow;
+    sessionGenFlowFile.transfer(flow, processors::InputProcessor::Success);
   }
-  input->put(record[0]);
-  input->put(record[1]);
-  input->put(record[2]);
-  input->put(record[3]);
-  input->put(record[4]);
-  input->put(record[5]);
+  sessionGenFlowFile.commit();
 
   REQUIRE(processor->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
@@ -589,6 +574,7 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
   auto context = testController.context;
   auto processor = testController.processor;
   auto input = testController.input;
+  auto input_context = testController.input_context_;
   auto output = testController.output;
 
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_TAR_VALUE);
@@ -597,23 +583,16 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-  core::ProcessSession sessionGenFlowFile(context);
-  std::shared_ptr<core::FlowFile> record[6];
-
+  core::ProcessSession sessionGenFlowFile(input_context);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-  for (int i = 0; i < 6; i++) {
+  for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     flow->setAttribute("tag", "tag");
-    record[i] = flow;
+    sessionGenFlowFile.transfer(flow, processors::InputProcessor::Success);
   }
-  input->put(record[0]);
-  input->put(record[1]);
-  input->put(record[2]);
-  input->put(record[3]);
-  input->put(record[4]);
-  input->put(record[5]);
+  sessionGenFlowFile.commit();
 
   REQUIRE(processor->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
@@ -679,6 +658,7 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
   auto context = testController.context;
   auto processor = testController.processor;
   auto input = testController.input;
+  auto input_context = testController.input_context_;
   auto output = testController.output;
 
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_ZIP_VALUE);
@@ -687,23 +667,16 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-  core::ProcessSession sessionGenFlowFile(context);
-  std::shared_ptr<core::FlowFile> record[6];
-
+  core::ProcessSession sessionGenFlowFile(input_context);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-  for (int i = 0; i < 6; i++) {
+  for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
     flow->setAttribute("tag", "tag");
-    record[i] = flow;
+    sessionGenFlowFile.transfer(flow, processors::InputProcessor::Success);
   }
-  input->put(record[0]);
-  input->put(record[1]);
-  input->put(record[2]);
-  input->put(record[3]);
-  input->put(record[4]);
-  input->put(record[5]);
+  sessionGenFlowFile.commit();
 
   REQUIRE(processor->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
@@ -765,6 +738,7 @@ TEST_CASE("MergeFileOnAttribute", "[mergefiletest5]") {
   auto context = testController.context;
   auto processor = testController.processor;
   auto input = testController.input;
+  auto input_context = testController.input_context_;
   auto output = testController.output;
 
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
@@ -773,11 +747,9 @@ TEST_CASE("MergeFileOnAttribute", "[mergefiletest5]") {
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinEntries, "3");
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-  core::ProcessSession sessionGenFlowFile(context);
-  std::shared_ptr<core::FlowFile> record[6];
-
+  core::ProcessSession sessionGenFlowFile(input_context);
   // Generate 6 flowfiles, even files are merged to one, odd files are merged to an other
-  for (int i = 0; i < 6; i++) {
+  for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
@@ -785,14 +757,9 @@ TEST_CASE("MergeFileOnAttribute", "[mergefiletest5]") {
       flow->setAttribute("tag", "even");
     else
       flow->setAttribute("tag", "odd");
-    record[i] = flow;
+    sessionGenFlowFile.transfer(flow, processors::InputProcessor::Success);
   }
-  input->put(record[0]);
-  input->put(record[1]);
-  input->put(record[2]);
-  input->put(record[3]);
-  input->put(record[4]);
-  input->put(record[5]);
+  sessionGenFlowFile.commit();
 
   REQUIRE(processor->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);

@@ -34,6 +34,7 @@
 #include "../../extensions/libarchive/MergeContent.h"
 #include "../test/BufferReader.h"
 #include "core/repository/VolatileFlowFileRepository.h"
+#include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
 
 using Connection = minifi::Connection;
 using MergeContent = minifi::processors::MergeContent;
@@ -160,7 +161,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
 
   std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
   std::shared_ptr<core::repository::FlowFileRepository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
-  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::DatabaseContentRepository>(); //std::make_shared<core::repository::FileSystemRepository>();
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
@@ -268,6 +269,10 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   SECTION("FileSystemContentRepository") {
     testController.getLogger()->log_info("Using FileSystemRepository");
     content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  }
+  SECTION("DatabaseContentRepository") {
+    testController.getLogger()->log_info("Using DatabaseContentRepository");
+    content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
   }
   ff_repository->initialize(config);
   content_repo->initialize(config);

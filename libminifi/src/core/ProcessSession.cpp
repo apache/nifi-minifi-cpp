@@ -241,11 +241,11 @@ void ProcessSession::transfer(const std::shared_ptr<core::FlowFile> &flow, Relat
 }
 
 void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
-  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
+  std::shared_ptr<ResourceClaim> claim = content_session_->create();
 
   try {
     uint64_t startTime = utils::timeutils::getTimeMillis();
-    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(*claim);
+    std::shared_ptr<io::BaseStream> stream = content_session_->write(*claim);
     // Call the callback to write the content
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
@@ -280,7 +280,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
 
   try {
     uint64_t startTime = utils::timeutils::getTimeMillis();
-    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(*claim, true);
+    std::shared_ptr<io::BaseStream> stream = content_session_->write(*claim, true);
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for append");
     }
@@ -323,7 +323,7 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
 
     claim = flow->getResourceClaim();
 
-    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->read(*claim);
+    std::shared_ptr<io::BaseStream> stream = content_session_->read(*claim);
 
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for read");
@@ -350,13 +350,13 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
  *
  */
 void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<core::FlowFile> &flow) {
-  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
+  std::shared_ptr<ResourceClaim> claim = content_session_->create();
   size_t max_read = getpagesize();
   std::vector<uint8_t> charBuffer(max_read);
 
   try {
     auto startTime = utils::timeutils::getTimeMillis();
-    std::shared_ptr<io::BaseStream> content_stream = process_context_->getContentRepository()->write(*claim);
+    std::shared_ptr<io::BaseStream> content_stream = content_session_->write(*claim);
 
     if (nullptr == content_stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Could not obtain claim for " + claim->getContentFullPath());
@@ -394,7 +394,7 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
 }
 
 void ProcessSession::import(std::string source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource, uint64_t offset) {
-  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
+  std::shared_ptr<ResourceClaim> claim = content_session_->create();
   size_t size = getpagesize();
   std::vector<uint8_t> charBuffer(size);
 
@@ -402,7 +402,8 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
     auto startTime = utils::timeutils::getTimeMillis();
     std::ifstream input;
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
-    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(*claim);
+    std::shared_ptr<io::BaseStream> stream = content_session_->write(*claim);
+
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open new flowfile content for write");
     }
@@ -516,10 +517,10 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         /* Create claim and stream if needed and append data */
         if (claim == nullptr) {
           startTime = utils::timeutils::getTimeMillis();
-          claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
+          claim = content_session_->create();
         }
         if (stream == nullptr) {
-          stream = process_context_->getContentRepository()->write(*claim);
+          stream = content_session_->write(*claim);
         }
         if (stream == nullptr) {
           logger_->log_error("Stream is null");
@@ -799,6 +800,8 @@ void ProcessSession::commit() {
         }
     }
 
+    content_session_->commit();
+
     persistFlowFilesBeforeTransfer(connectionQueues, _flowFileSnapShots);
 
     for (auto& cq : connectionQueues) {
@@ -868,6 +871,8 @@ void ProcessSession::rollback() {
         }
       }
     }
+
+    content_session_->rollback();
 
     _flowFileSnapShots.clear();
 

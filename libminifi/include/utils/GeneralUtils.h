@@ -68,6 +68,21 @@ using void_t = void;
 using std::void_t;
 #endif /* < C++17 */
 
+namespace internal {
+
+struct safe_enable_shared_from_this_base : std::enable_shared_from_this<safe_enable_shared_from_this_base> {
+  virtual ~safe_enable_shared_from_this_base() = default;
+};
+
+}  // namespace internal
+
+template<typename T>
+struct safe_enable_shared_from_this : virtual internal::safe_enable_shared_from_this_base {
+  std::shared_ptr<T> shared_from_this() {
+    return std::dynamic_pointer_cast<T>(internal::safe_enable_shared_from_this_base::shared_from_this());
+  }
+};
+
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
