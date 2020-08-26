@@ -128,18 +128,6 @@ inline std::string normalize_path_separators(std::string path, bool force_posix 
   return path;
 }
 
-inline std::string create_temp_directory(char* format) {
-#ifdef WIN32
-  const std::string tempDirectory = concat_path(get_temp_directory(),
-    minifi::utils::IdGenerator::getIdGenerator()->generate().to_string());
-  create_dir(tempDirectory);
-  return tempDirectory;
-#else
-  if (mkdtemp(format) == nullptr) { return ""; }
-  return format;
-#endif
-}
-
 inline std::string get_temp_directory() {
 #ifdef WIN32
   char tempBuffer[MAX_PATH];
@@ -555,6 +543,18 @@ inline std::string concat_path(const std::string& root, const std::string& child
     new_path << root << get_separator(force_posix) << child;
   }
   return new_path.str();
+}
+
+inline std::string create_temp_directory(char* format) {
+#ifdef WIN32
+  const std::string tempDirectory = concat_path(get_temp_directory(),
+      minifi::utils::IdGenerator::getIdGenerator()->generate().to_string());
+  create_dir(tempDirectory);
+  return tempDirectory;
+#else
+  if (mkdtemp(format) == nullptr) { return ""; }
+  return format;
+#endif
 }
 
 inline std::tuple<std::string /*parent_path*/, std::string /*child_path*/> split_path(const std::string& path, bool force_posix = false) {

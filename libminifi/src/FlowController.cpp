@@ -119,10 +119,10 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
 
     const auto adjustedFilename = [&]() -> std::string {
       if (configuration_filename_.empty()) { return {}; }
-      if (utils::file::isAbsolutePath(configuration_file_name_.c_str())) {
+      if (utils::file::isAbsolutePath(configuration_filename_.c_str())) {
         return configuration_filename_;
       }
-      return utils::file::FileUtils::concat_path(configuration_->getHome(), configuration_file_name_);
+      return utils::file::FileUtils::concat_path(configuration_->getHome(), configuration_filename_);
     }();
     initializeExternalComponents();
     initializePaths(adjustedFilename);

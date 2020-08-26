@@ -62,7 +62,7 @@ Config read_config(const Configure& conf) {
   if (restart_bytes < stop_bytes) { throw std::runtime_error{"disk space watchdog stop threshold must be <= restart threshold"}; }
   constexpr auto mebibytes = 1024 * 1024;
   return {
-      interval_ms.value_or(chr::seconds{1}),
+      interval_ms.value_or(chr::milliseconds{200}),
       stop_bytes.value_or(15 * mebibytes),
       restart_bytes.value_or(20 * mebibytes)
   };
@@ -76,7 +76,7 @@ struct callback {
   std::shared_ptr<logging::Logger> logger;
 
   void operator()() {
-    check([this]{ flow_controller->stop(false); }, [this]{ flow_controller->start(); });
+    check([this]{ flow_controller->stop(false); }, [this]{ flow_controller->load(); });
   }
 
   template<typename StopFunc, typename RestartFunc>
@@ -85,9 +85,11 @@ struct callback {
     const auto has_insufficient_space = [this](utils::file::space_info space_info) { return space_info.available < cfg.stop_threshold_bytes; };
     const auto has_enough_space = [this](utils::file::space_info space_info) { return space_info.available > cfg.restart_threshold_bytes; };
     if (!stopped && std::any_of(std::begin(path_spaces), std::end(path_spaces), has_insufficient_space)) {
+		logger->log_warn("Stopping flow controller due to insufficient disk space");
       stop();
       stopped = true;
     } else if (stopped && std::all_of(std::begin(path_spaces), std::end(path_spaces), has_enough_space)) {
+		logger->log_warn("Restarting flow controller");
       restart();
       stopped = false;
     }
@@ -99,7 +101,9 @@ struct callback {
     result.reserve(paths_to_watch.size());
     const auto space = [this](const std::string& path) {
       try {
-        return utils::file::space(path.c_str());
+        const auto result = utils::file::space(path.c_str());
+		logger->log_trace("%s available space: %zu bytes", path, gsl::narrow_cast<size_t>(result.available));
+		return result;
       } catch (const std::exception& e) {
         logger->log_warn("Couldn't check available disk space at %s: %s", path, e.what());
         const auto kErrVal = gsl::narrow_cast<std::uintmax_t>(-1);
@@ -115,7 +119,7 @@ struct callback {
 };
 
 callback make_callback_and_check(Config cfg, FlowController& flow_controller, std::vector<std::string>&& paths_to_watch, std::shared_ptr<logging::Logger> logger) {
-  callback cb{cfg, gsl::make_not_null(&flow_controller), false, std::move(paths_to_watch), std::move(logger)};
+  callback cb{cfg, gsl::make_not_null(&flow_controller), false, std::move(paths_to_watch), logger};
   cb.check([]{ throw std::runtime_error{"Insufficient disk space, MiNiFi is unable to start"}; }, []{});
   return cb;
 }
