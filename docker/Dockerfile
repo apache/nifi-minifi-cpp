@@ -16,15 +16,14 @@
 # under the License.
 #
 
-# First stage: the build environment
-# Edge required for rocksdb
-FROM alpine:3.8 AS builder
-MAINTAINER Apache NiFi <dev@nifi.apache.org>
+# First stage: the common build environment dependencies
+FROM alpine:3.12 AS build_deps
+LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
-ARG UID
-ARG GID
 ARG MINIFI_VERSION
 ARG MINIFI_SOURCE_CODE
+ARG UID=1000
+ARG GID=1000
 
 # Install the system dependencies needed for a build
 RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
@@ -54,7 +53,9 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	libressl-dev \
 	zlib-dev \
 	bzip2-dev \
-	python3-dev
+	python3-dev \
+	patch \
+	doxygen
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
@@ -72,7 +73,19 @@ USER ${USER}
 
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-${MINIFI_VERSION}
 
-# Perform the build
+
+# Build stage of the minimal image
+FROM build_deps AS build_minimal
+RUN cd ${MINIFI_BASE_DIR} \
+	&& mkdir build \
+	&& cd build \
+	&& cmake -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DENABLE_LIBRDKAFKA=ON -DSKIP_TESTS=true -DCMAKE_BUILD_TYPE=MinSizeRel .. \
+	&& make -j8 package \
+	&& tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
+
+
+# Build stage of normal image
+FROM build_deps AS build_release
 RUN cd ${MINIFI_BASE_DIR} \
 	&& mkdir build \
 	&& cd build \
@@ -80,18 +93,53 @@ RUN cd ${MINIFI_BASE_DIR} \
 	&& make -j8 package \
 	&& tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
 
-# Second stage: the runtime image
-# Edge required for rocksdb
-FROM alpine:3.8
 
-ARG UID
-ARG GID
+# Common runtime image dependencies
+# Edge required for rocksdb
+FROM alpine:3.12 AS common_runtime_deps
+
+ARG UID=1000
+ARG GID=1000
 ARG MINIFI_VERSION
 ARG MINIFI_SOURCE_CODE
 
 # Add testing repo for rocksdb
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
 
+ENV USER minificpp
+ENV MINIFI_BASE_DIR /opt/minifi
+ENV MINIFI_HOME ${MINIFI_BASE_DIR}/minifi-current
+ENV MINIFI_VERSIONED_HOME ${MINIFI_BASE_DIR}/nifi-minifi-cpp-${MINIFI_VERSION}
+ENV JAVA_HOME /usr/lib/jvm/default-jvm
+ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
+
+RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
+RUN install -d -o  ${USER} -g  ${USER} ${MINIFI_BASE_DIR} \
+    && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
+
+
+# Final stage of the minimal image
+FROM common_runtime_deps AS minimal
+
+RUN apk --update --no-cache upgrade && apk add --update --no-cache \
+	libstdc++
+RUN install -d -o ${USER} -g ${USER} ${MINIFI_VERSIONED_HOME}/bin \
+    && install -d -o ${USER} -g ${USER} ${MINIFI_VERSIONED_HOME}/conf && chown ${USER}:${USER} ${MINIFI_HOME}
+
+# Copy built minifi distribution from builder
+COPY --from=build_minimal --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME}/bin/minifi ${MINIFI_HOME}/bin/minifi
+COPY --from=build_minimal --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME}/bin/minifi.sh ${MINIFI_HOME}/bin/minifi.sh
+COPY --from=build_minimal --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME}/conf ${MINIFI_HOME}/conf
+
+USER ${USER}
+WORKDIR ${MINIFI_HOME}
+
+# Start MiNiFi CPP in the foreground
+CMD ./bin/minifi.sh run
+
+
+# Final stage of release image
+FROM common_runtime_deps AS release
 RUN apk --update --no-cache upgrade && apk add --update --no-cache \
 	util-linux \
 	curl \
@@ -105,24 +153,10 @@ RUN apk --update --no-cache upgrade && apk add --update --no-cache \
 	python3 \
 	zlib
 
-ENV USER minificpp
-ENV MINIFI_BASE_DIR /opt/minifi
-ENV MINIFI_HOME ${MINIFI_BASE_DIR}/minifi-current
-ENV MINIFI_VERSIONED_HOME ${MINIFI_BASE_DIR}/nifi-minifi-cpp-${MINIFI_VERSION}
-
-ENV JAVA_HOME /usr/lib/jvm/default-jvm
-ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
-
-RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
-RUN mkdir -p ${MINIFI_BASE_DIR} \
-    && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
-
 # Copy built minifi distribution from builder
-COPY --from=builder ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
-RUN chown -R ${USER}:${USER} /opt/minifi
+COPY --from=build_release --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
 
 USER ${USER}
-
 WORKDIR ${MINIFI_HOME}
 
 # Start MiNiFi CPP in the foreground

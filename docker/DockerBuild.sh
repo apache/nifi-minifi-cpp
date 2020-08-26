@@ -24,6 +24,13 @@ GID_ARG=$2
 MINIFI_VERSION=$3
 MINIFI_SOURCE_CODE=$4
 CMAKE_SOURCE_DIR=$5
+IMAGE_TYPE=${6:-release}
+
+if [ "${IMAGE_TYPE}" == "release" ]; then
+  TAG=
+else
+  TAG="-${IMAGE_TYPE}"
+fi
 
 echo "NiFi-MiNiFi-CPP Version: $MINIFI_VERSION"
 echo "Current Working Directory: $(pwd)"
@@ -54,9 +61,10 @@ DOCKER_COMMAND="docker build --build-arg UID=$UID_ARG \
                              --build-arg GID=$GID_ARG \
                              --build-arg MINIFI_VERSION=$MINIFI_VERSION \
                              --build-arg MINIFI_SOURCE_CODE=$MINIFI_SOURCE_CODE \
+                             --target $IMAGE_TYPE \
                              -t \
-                             apacheminificpp:$MINIFI_VERSION ."
+                             apacheminificpp:${MINIFI_VERSION}${TAG} ."
 echo "Docker Command: '$DOCKER_COMMAND'"
-${DOCKER_COMMAND}
+DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}
 
 rm -rf $CMAKE_SOURCE_DIR/docker/minificppsource
