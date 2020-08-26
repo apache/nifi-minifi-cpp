@@ -66,7 +66,10 @@ core::Property MergeContent::KeepPath(
   ->withDefaultValue(false)->build());
 core::Property MergeContent::AttributeStrategy(
   core::PropertyBuilder::createProperty("Attribute Strategy")
-  ->withDescription("Determines which FlowFile attributes should be added to the bundle. If 'Keep All Unique Attributes' is selected, any attribute on any FlowFile that gets bundled will be kept unless its value conflicts with the value from another FlowFile. If 'Keep Only Common Attributes' is selected, only the attributes that exist on all FlowFiles in the bundle, with the same value, will be preserved.")
+  ->withDescription("Determines which FlowFile attributes should be added to the bundle. If 'Keep All Unique Attributes' is selected, "
+                    "any attribute on any FlowFile that gets bundled will be kept unless its value conflicts with the value from another FlowFile "
+                    "(in which case neither, or none, of the conflicting attributes will be kept). If 'Keep Only Common Attributes' is selected, "
+                    "only the attributes that exist on all FlowFiles in the bundle, with the same value, will be preserved.")
   ->withAllowableValues<std::string>({merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON, merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE})
   ->withDefaultValue(merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON)->build());
 core::Relationship MergeContent::Merge("merged", "The FlowFile containing the merged content");
