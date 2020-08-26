@@ -143,6 +143,10 @@ TEST_CASE("ConsumeWindowsEventLog can consume new events", "[onTrigger]") {
     test_controller.runSession(test_plan);
     REQUIRE(LogTestController::getInstance().contains("processed 1 Events"));
     REQUIRE(LogTestController::getInstance().contains("<EventData><Data>Event one</Data></EventData>"));
+
+    // make sure timezone attributes are present
+    REQUIRE(LogTestController::getInstance().contains("key:Timezone offset value:"));
+    REQUIRE(LogTestController::getInstance().contains("key:Timezone name value:"));
   }
 
   SECTION("Read two events") {
