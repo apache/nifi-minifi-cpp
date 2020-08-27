@@ -17,7 +17,7 @@
 
 function(use_bundled_pahomqttc SOURCE_DIR BINARY_DIR)
     # Define patch step
-    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/paho.mqtt.c/paho.mqtt.c.patch")
+    set(PC git reset --hard HEAD && "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/paho.mqtt.c/paho.mqtt.c.patch")
 
     # Define byproducts
     if (WIN32)

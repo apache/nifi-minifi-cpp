@@ -20,7 +20,7 @@ function(use_bundled_libuvc SOURCE_DIR BINARY_DIR)
     pkg_check_modules(LIBUSB libusb-1.0)
 
     # Define patch step
-    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/libuvc/libuvc.patch")
+    set(PC git reset --hard HEAD && "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/libuvc/libuvc.patch")
 
     # Define patch step
     if (WIN32)
