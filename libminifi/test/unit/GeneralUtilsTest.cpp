@@ -25,7 +25,7 @@
 
 namespace utils = org::apache::nifi::minifi::utils;
 
-static_assert(std::is_same<decltype(utils::make_unique<char16_t>()), std::unique_ptr<char16_t>>::value, "utils::make_unique type is correct");
+static_assert(std::is_same<decltype(utils::make_unique<char16_t>()), std::unique_ptr<char16_t>>::value, "utils::make_unique type must be correct");
 
 TEST_CASE("GeneralUtils::make_unique", "[make_unique]") {
   const auto pstr = utils::make_unique<std::string>("test string");
@@ -53,8 +53,8 @@ TEST_CASE("GeneralUtils::exchange", "[exchange]") {
   REQUIRE(0 == b);
 }
 
-static_assert(std::is_same<decltype(utils::void_t<char16_t>()), void>::value, "utils::void_t single arg works");
-static_assert(std::is_same<decltype(utils::void_t<int, double, bool, void, char16_t>()), void>::value, "utils::void_t multi arg works");
+static_assert(std::is_same<decltype(utils::void_t<char16_t>()), void>::value, "utils::void_t single arg must work");
+static_assert(std::is_same<decltype(utils::void_t<int, double, bool, void, char16_t>()), void>::value, "utils::void_t multi arg must work");
 
 TEST_CASE("GeneralUtils::invoke pointer to member function", "[invoke memfnptr]") {
   const int result{0xc1ca};

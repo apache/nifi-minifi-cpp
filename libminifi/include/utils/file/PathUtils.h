@@ -76,7 +76,6 @@ struct space_info {
 };
 
 class filesystem_error : public std::system_error {
-  std::shared_ptr<const std::pair<std::string, std::string>> paths_involved_;
  public:
   filesystem_error(const std::string& what_arg, const std::error_code ec)
       :std::system_error{ec, what_arg}
@@ -91,6 +90,9 @@ class filesystem_error : public std::system_error {
 
   const char* path1() const noexcept { return paths_involved_->first.c_str(); }
   const char* path2() const noexcept { return paths_involved_->second.c_str(); }
+
+ private:
+  std::shared_ptr<const std::pair<std::string, std::string>> paths_involved_;
 };
 
 /**
