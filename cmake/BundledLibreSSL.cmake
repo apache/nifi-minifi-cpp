@@ -49,8 +49,8 @@ function(use_libre_ssl SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
         libressl-portable
-        URL https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-2.8.3.tar.gz https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-2.8.3.tar.gz https://gentoo.osuosl.org/distfiles/libressl-2.8.3.tar.gz
-        URL_HASH "SHA256=9b640b13047182761a99ce3e4f000be9687566e0828b4a72709e9e6a3ef98477"
+        URL https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.0.2.tar.gz https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.0.2.tar.gz https://gentoo.osuosl.org/distfiles/libressl-3.0.2.tar.gz
+        URL_HASH "SHA256=df7b172bf79b957dd27ef36dcaa1fb162562c0e8999e194aa8c1a3df2f15398e"
         SOURCE_DIR "${BINARY_DIR}/thirdparty/libressl-src"
         CMAKE_ARGS ${LIBRESSL_CMAKE_ARGS}
         BUILD_BYPRODUCTS ${LIBRESSL_LIBRARIES_LIST}
