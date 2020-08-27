@@ -25,12 +25,12 @@ def test_publish_kafka():
                         >> (('failure', LogAttribute()),
                             ('success', PutFile('/tmp/output/success')))
 
-    with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
+    with DockerTestCluster(SingleFileOutputValidator('test', subdir='success')) as cluster:
         cluster.put_test_data('test')
         cluster.deploy_flow(None, engine='kafka-broker')
         cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
 
-        assert cluster.check_output(30, dir='/success')
+        assert cluster.check_output(30)
 
 def test_no_broker():
     """
@@ -74,15 +74,15 @@ def test_broker_on_off():
             stop_count += 1
             assert cluster.wait_for_container_logs('zookeeper', 'Processed session termination for sessionid', 30, stop_count)
 
-        assert cluster.check_output(30, dir='/success')
+        assert cluster.check_output(30, subdir='success')
         stop_kafka()
-        assert cluster.check_output(60, dir='/failure')
+        assert cluster.check_output(60, subdir='failure')
         start_kafka()
-        cluster.rm_out_child('/success')
-        assert cluster.check_output(60, dir='/success')
+        cluster.rm_out_child('success')
+        assert cluster.check_output(60, subdir='success')
         stop_kafka()
-        cluster.rm_out_child('/failure')
-        assert cluster.check_output(60, dir='/failure')
+        cluster.rm_out_child('failure')
+        assert cluster.check_output(60, subdir='failure')
 
 def test_ssl():
     """
@@ -92,9 +92,9 @@ def test_ssl():
                     >> (('failure', LogAttribute()),
                         ('success', PutFile('/tmp/output/ssl')))
 
-    with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
+    with DockerTestCluster(SingleFileOutputValidator('test', subdir='ssl')) as cluster:
         cluster.put_test_data('test')
         cluster.deploy_flow(None, engine='kafka-broker')
         cluster.deploy_flow(producer_flow, name='minifi-producer', engine='minifi-cpp')
 
-        assert cluster.check_output(30, dir='/ssl')
+        assert cluster.check_output(30)

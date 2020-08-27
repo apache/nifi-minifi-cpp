@@ -73,9 +73,9 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         # Start observing output dir
         self.done_event = Event()
-        event_handler = OutputEventHandler(output_validator, self.done_event)
+        self.event_handler = OutputEventHandler(self.output_validator, self.done_event)
         self.observer = Observer()
-        self.observer.schedule(event_handler, self.tmp_test_output_dir)
+        self.observer.schedule(self.event_handler, self.tmp_test_output_dir)
         self.observer.start()
 
         super(DockerTestCluster, self).__init__()
@@ -143,8 +143,18 @@ class DockerTestCluster(SingleNodeDockerCluster):
         file_abs_path = join(self.tmp_test_resources_dir, file_name)
         put_file_contents(contents, file_abs_path)
 
+    def restart_observer_if_needed(self):
+        if self.observer.is_alive():
+            return
+
+        self.observer = Observer()
+        self.done_event.clear()
+        self.observer.schedule(self.event_handler, self.tmp_test_output_dir)
+        self.observer.start()
+
     def wait_for_output(self, timeout_seconds):
         logging.info('Waiting up to %d seconds for test output...', timeout_seconds)
+        self.restart_observer_if_needed()
         self.done_event.wait(timeout_seconds)
         self.observer.stop()
         self.observer.join()
@@ -176,16 +186,16 @@ class DockerTestCluster(SingleNodeDockerCluster):
             stats = container.stats(stream=False)
             logging.info('Container stats:\n%s', stats)
 
-    def check_output(self, timeout=5, **kwargs):
+    def check_output(self, timeout=5, subdir=''):
         """
         Wait for flow output, validate it, and log minifi output.
         """
+        if subdir:
+            self.output_validator.subdir = subdir
         self.wait_for_output(timeout)
         self.log_nifi_output()
         if self.segfault:
             return False
-        if isinstance(self.output_validator, FileOutputValidator):
-            return self.output_validator.validate(dir=kwargs.get('dir', ''))
         return self.output_validator.validate()
 
     def check_http_proxy_access(self):
@@ -197,8 +207,8 @@ class DockerTestCluster(SingleNodeDockerCluster):
         return False
 
     def rm_out_child(self, dir):
-        logging.info('Removing %s from output folder', self.tmp_test_output_dir + dir)
-        shutil.rmtree(self.tmp_test_output_dir + dir)
+        logging.info('Removing %s from output folder', os.path.join(self.tmp_test_output_dir, dir))
+        shutil.rmtree(os.path.join(self.tmp_test_output_dir, dir))
 
     def wait_for_container_logs(self, container_name, log, timeout, count=1):
         logging.info('Waiting for logs `%s` in container `%s`', log, container_name)
@@ -274,27 +284,31 @@ class SingleFileOutputValidator(FileOutputValidator):
     Validates the content of a single file in the given directory.
     """
 
-    def __init__(self, expected_content):
+    def __init__(self, expected_content, subdir=''):
         self.valid = False
         self.expected_content = expected_content
+        self.subdir = subdir
 
-    def validate(self, dir=''):
-
+    def validate(self):
         self.valid = False
-
-        full_dir = self.output_dir + dir
+        full_dir = os.path.join(self.output_dir, self.subdir)
         logging.info("Output folder: %s", full_dir)
         if "GITHUB_WORKSPACE" in os.environ:
             subprocess.call(['sudo', 'chmod', '-R', '0777', full_dir])
 
-        listing = listdir(full_dir)
+        if not os.path.isdir(full_dir):
+            return self.valid
 
+        listing = listdir(full_dir)
         if listing:
             for l in listing:
                 logging.info("name:: %s", l)
             out_file_name = listing[0]
+            full_path = join(full_dir, out_file_name)
+            if not os.path.isfile(full_path):
+                return self.valid
 
-            with open(join(full_dir, out_file_name), 'r') as out_file:
+            with open(full_path, 'r') as out_file:
                 contents = out_file.read()
                 logging.info("dir %s -- name %s", full_dir, out_file_name)
                 logging.info("expected %s -- content %s", self.expected_content, contents)
