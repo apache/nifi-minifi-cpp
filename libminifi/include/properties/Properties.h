@@ -24,7 +24,9 @@
 #include <vector>
 #include <string>
 #include <map>
+
 #include "core/logging/Logger.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -64,6 +66,13 @@ class Properties {
    * @returns true if found, false otherwise.
    */
   bool get(const std::string &key, std::string &value) const;
+
+  /**
+   * Returns the config value.
+   * @param key key to look up
+   * @returns the value if found, otherwise nullopt
+   */
+  utils::optional<std::string> get(const std::string &key) const;
 
   /**
    * Returns the config value by placing it into the referenced param value

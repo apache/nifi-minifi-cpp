@@ -48,6 +48,15 @@ bool Properties::get(const std::string &key, std::string &value) const {
   }
 }
 
+utils::optional<std::string> Properties::get(const std::string &key) const {
+  std::string value;
+  if (get(key, value)) {
+    return value;
+  } else {
+    return utils::nullopt;
+  }
+}
+
 bool Properties::get(const std::string &key, const std::string &alternate_key, std::string &value) const {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);

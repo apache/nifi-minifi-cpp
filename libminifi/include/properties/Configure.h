@@ -21,7 +21,10 @@
 #define LIBMINIFI_INCLUDE_PROPERTIES_CONFIGURE_H_
 
 #include <string>
+#include <memory>
 #include <mutex>
+
+#include "core/logging/Logger.h"
 #include "properties/Properties.h"
 
 namespace org {
@@ -29,9 +32,11 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
+class Decryptor;
+
 class Configure : public Properties {
  public:
-  Configure() : Properties("MiNiFi configuration") {}
+  Configure();
 
   void setAgentIdentifier(const std::string &identifier) {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -51,6 +56,8 @@ class Configure : public Properties {
     std::lock_guard<std::mutex> lock(mutex_);
     return agent_class_;
   }
+
+  void decryptSensitiveProperties(const Decryptor& decryptor);
 
   // nifi.flow.configuration.file
   static const char *nifi_default_directory;
@@ -110,6 +117,7 @@ class Configure : public Properties {
  private:
   std::string agent_identifier_;
   std::string agent_class_;
+  std::shared_ptr<minifi::core::logging::Logger> logger_;
   mutable std::mutex mutex_;
 };
 
