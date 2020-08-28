@@ -59,19 +59,17 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
+ENV JAVA_HOME /usr/lib/jvm/default-jvm
+ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
+ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-${MINIFI_VERSION}
 
 # Setup minificpp user
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
-RUN mkdir -p ${MINIFI_BASE_DIR}
-ENV JAVA_HOME /usr/lib/jvm/default-jvm
-ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
 
-ADD ${MINIFI_SOURCE_CODE} ${MINIFI_BASE_DIR}
-RUN chown -R ${USER}:${USER} ${MINIFI_BASE_DIR}
+RUN install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR}
+COPY --chown=${USER}:${USER} ${MINIFI_SOURCE_CODE} ${MINIFI_BASE_DIR}
 
 USER ${USER}
-
-ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-${MINIFI_VERSION}
 
 
 # Build stage of the minimal image
@@ -114,15 +112,14 @@ ENV JAVA_HOME /usr/lib/jvm/default-jvm
 ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
 
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
-RUN install -d -o  ${USER} -g  ${USER} ${MINIFI_BASE_DIR} \
+RUN install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} \
     && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
 
 
 # Final stage of the minimal image
 FROM common_runtime_deps AS minimal
 
-RUN apk --update --no-cache upgrade && apk add --update --no-cache \
-	libstdc++
+RUN apk --update --no-cache upgrade && apk add --update --no-cache libstdc++
 RUN install -d -o ${USER} -g ${USER} ${MINIFI_VERSIONED_HOME}/bin \
     && install -d -o ${USER} -g ${USER} ${MINIFI_VERSIONED_HOME}/conf && chown ${USER}:${USER} ${MINIFI_HOME}
 
