@@ -292,7 +292,13 @@ int main(int argc, char **argv) {
 
   std::unique_ptr<minifi::DiskSpaceWatchdog> disk_space_watchdog;
   try {
-    disk_space_watchdog = utils::make_unique<minifi::DiskSpaceWatchdog>(*controller, *configure, std::vector<std::string>{prov_repo->getDirectory(), flow_repo->getDirectory(), content_repo->getStoragePath()});
+    std::vector<std::string> repo_paths;
+    repo_paths.reserve(3);
+    // REPOSITORY_DIRECTORY is a dummy path used by noop and volatile repositories
+    if (!prov_repo->isNoop() && prov_repo->getDirectory() != REPOSITORY_DIRECTORY) { repo_paths.push_back(prov_repo->getDirectory()); }
+    if (!flow_repo->isNoop() && flow_repo->getDirectory() != REPOSITORY_DIRECTORY) { repo_paths.push_back(flow_repo->getDirectory()); }
+    repo_paths.push_back(content_repo->getStoragePath());
+    disk_space_watchdog = utils::make_unique<minifi::DiskSpaceWatchdog>(*controller, *configure, std::move(repo_paths));
   } catch(const std::runtime_error& error) {
     logger->log_error(error.what());
     return -1;
