@@ -78,7 +78,7 @@ RUN cd ${MINIFI_BASE_DIR} \
 	&& mkdir build \
 	&& cd build \
 	&& cmake -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DENABLE_LIBRDKAFKA=ON -DSKIP_TESTS=true -DCMAKE_BUILD_TYPE=MinSizeRel .. \
-	&& make -j8 package \
+	&& make -j$(nproc) package \
 	&& tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
 
 
@@ -88,7 +88,7 @@ RUN cd ${MINIFI_BASE_DIR} \
 	&& mkdir build \
 	&& cd build \
 	&& cmake -DDISABLE_JEMALLOC=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=ON -DENABLE_LIBRDKAFKA=ON .. \
-	&& make -j8 package \
+	&& make -j$(nproc) package \
 	&& tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
 
 
