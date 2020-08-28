@@ -84,6 +84,12 @@ class Properties {
    */
   int getInt(const std::string &key, int default_value) const;
 
+  /**
+   * Returns the config value.
+   *
+   * @param key key to look up
+   * @returns the value if found, nullopt otherwise.
+   */
   utils::optional<std::string> get(const std::string& key) const {
     std::string result;
     const bool found = get(key, result);
