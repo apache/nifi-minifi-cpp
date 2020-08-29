@@ -197,6 +197,9 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   if (newRoot == nullptr)
     return false;
 
+  if (!isRunning())
+    return false;
+
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName(), newRoot->getVersion());
 
   updating_ = true;

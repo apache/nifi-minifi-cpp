@@ -67,6 +67,7 @@ const char *Configure::nifi_c2_full_heartbeat = "nifi.c2.full.heartbeat";
 const char *Configure::nifi_state_management_provider_local = "nifi.state.management.provider.local";
 const char *Configure::nifi_state_management_provider_local_always_persist = "nifi.state.management.provider.local.always.persist";
 const char *Configure::nifi_state_management_provider_local_auto_persistence_interval = "nifi.state.management.provider.local.auto.persistence.interval";
+const char *Configure::minifi_disk_space_watchdog_enable = "minifi.disk.space.watchdog.enable";
 const char *Configure::minifi_disk_space_watchdog_interval_ms = "minifi.disk.space.watchdog.interval.ms";
 const char *Configure::minifi_disk_space_watchdog_stop_threshold_bytes = "minifi.disk.space.watchdog.stop.threshold.bytes";
 const char *Configure::minifi_disk_space_watchdog_restart_threshold_bytes = "minifi.disk.space.watchdog.restart.threshold.bytes";
