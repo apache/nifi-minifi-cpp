@@ -35,8 +35,7 @@ namespace processors {
 const LPWSTR pEventTypeNames[] = { L"Error", L"Warning", L"Informational", L"Audit Success", L"Audit Failure" };
 char log_name[255] = "Application";
 
-class TailEventLog : public core::Processor
-{
+class TailEventLog : public core::Processor {
 public:
   TailEventLog(std::string name, utils::Identifier uuid = utils::Identifier())
   : core::Processor(name, uuid), logger_(logging::LoggerFactory<TailEventLog>::getLogger()),max_events_(1){
@@ -71,10 +70,8 @@ protected:
   }
 
 
-  inline std::string typeToString(WORD wEventType)
-  {
-    switch (wEventType)
-    {
+  inline std::string typeToString(WORD wEventType) {
+    switch (wEventType) {
     case EVENTLOG_ERROR_TYPE:
       return "Error";
     case EVENTLOG_WARNING_TYPE:
@@ -90,8 +87,7 @@ protected:
     }
   }
 
-  std::string getTimeStamp(const DWORD Time)
-  {
+  std::string getTimeStamp(const DWORD Time) {
     uint64_t ullTimeStamp = 0;
     uint64_t SecsTo1970 = 116444736000000000;
     SYSTEMTIME st;
@@ -111,8 +107,7 @@ protected:
     return str.str();
   }
 
-  void LogWindowsError(void)
-  {
+  void LogWindowsError(void) {
     auto error_id = GetLastError();
     LPVOID lpMsg;
 

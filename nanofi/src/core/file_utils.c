@@ -42,8 +42,7 @@ int is_directory(const char * path) {
     return S_ISDIR(dir_stat.st_mode);
 }
 
-const char * get_separator(int force_posix)
-{
+const char * get_separator(int force_posix) {
 #ifdef WIN32
     if (!force_posix) {
         return "\\";

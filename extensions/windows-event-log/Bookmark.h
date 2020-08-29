@@ -36,8 +36,7 @@ namespace processors {
 
 #define LOG_LAST_ERROR(func) logger_->log_error("!"#func" error %x", GetLastError())
 
-class Bookmark
-{
+class Bookmark {
 public:
   Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, bool processOldEvents, std::shared_ptr<core::CoreComponentStateManager> state_manager, std::shared_ptr<logging::Logger> logger);
   ~Bookmark();

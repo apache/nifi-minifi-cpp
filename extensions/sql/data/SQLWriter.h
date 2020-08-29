@@ -31,8 +31,7 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-struct SQLWriter: public SQLRowSubscriber
-{
+struct SQLWriter: public SQLRowSubscriber {
   virtual std::string toString() = 0;
 };
 

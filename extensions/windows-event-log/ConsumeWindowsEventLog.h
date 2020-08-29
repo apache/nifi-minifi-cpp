@@ -51,8 +51,7 @@ struct EventRender {
 class Bookmark;
 
 //! ConsumeWindowsEventLog Class
-class ConsumeWindowsEventLog : public core::Processor
-{
+class ConsumeWindowsEventLog : public core::Processor {
 public:
   //! Constructor
   /*!

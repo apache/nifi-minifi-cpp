@@ -30,8 +30,7 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-class SQLRowsetProcessor
-{
+class SQLRowsetProcessor {
  public:
   SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, const std::vector<SQLRowSubscriber*>& rowSubscribers);
 

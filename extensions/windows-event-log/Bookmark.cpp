@@ -119,8 +119,7 @@ bool Bookmark::saveBookmarkXml(const std::wstring& bookmarkXml) {
   return state_manager_->set(state_map);
 }
 
-bool Bookmark::saveBookmark(EVT_HANDLE hEvent)
-{
+bool Bookmark::saveBookmark(EVT_HANDLE hEvent) {
   std::wstring bookmarkXml;
   if (!getNewBookmarkXml(hEvent, bookmarkXml)) {
     return false;

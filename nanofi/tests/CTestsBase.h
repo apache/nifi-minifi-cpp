@@ -128,8 +128,7 @@ private:
 class TestControllerWithTemporaryWorkingDirectory {
 public:
   TestControllerWithTemporaryWorkingDirectory()
-    : old_cwd_(get_current_working_directory())
-  {
+    : old_cwd_(get_current_working_directory()) {
     char format[] = "/tmp/ctest_temp_dir.XXXXXX";
     std::string temp_dir = test_controller_.createTempDirectory(format);
     int result = change_current_working_directory(temp_dir.c_str());
@@ -138,8 +137,7 @@ public:
     }
   }
 
-  ~TestControllerWithTemporaryWorkingDirectory()
-  {
+  ~TestControllerWithTemporaryWorkingDirectory() {
     chdir(old_cwd_);
     free(old_cwd_);
   }

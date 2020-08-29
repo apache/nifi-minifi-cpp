@@ -202,8 +202,7 @@ UA_StatusCode Client::connect(const std::string& url, const std::string& usernam
 }
 
 NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::string& basePath) {
-  if(ref->nodeClass == UA_NODECLASS_VARIABLE)
-  {
+  if(ref->nodeClass == UA_NODECLASS_VARIABLE) {
     opc::NodeData nodedata;
     std::string browsename(reinterpret_cast<const char*>(ref->browseName.name.data), ref->browseName.name.length);
 
@@ -398,8 +397,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
 }
 
 template<typename T>
-UA_StatusCode Client::add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, T value, OPCNodeDataType dt, UA_NodeId *receivedNodeId)
-{
+UA_StatusCode Client::add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, T value, OPCNodeDataType dt, UA_NodeId *receivedNodeId) {
   UA_VariableAttributes attr = UA_VariableAttributes_default;
   add_value_to_variant(&attr.value, value);
   char local[6] = "en-US";
@@ -456,8 +454,7 @@ template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parentNode
 template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, std::string value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
 
 int32_t OPCNodeDataTypeToTypeID(OPCNodeDataType dt) {
-  switch(dt)
-  {
+  switch(dt) {
     case OPCNodeDataType::Boolean:
       return UA_NS0ID_BOOLEAN;
     case OPCNodeDataType::Int32:

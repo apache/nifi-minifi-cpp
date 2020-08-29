@@ -188,8 +188,7 @@ namespace processors {
   bool FetchOPCProcessor::nodeFoundCallBack(opc::Client& client, const UA_ReferenceDescription *ref, const std::string& path,
       const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
     nodesFound_++;
-    if(ref->nodeClass == UA_NODECLASS_VARIABLE)
-    {
+    if(ref->nodeClass == UA_NODECLASS_VARIABLE) {
       try {
         opc::NodeData nodedata = connection_->getNodeData(ref, path);
         bool write = true;

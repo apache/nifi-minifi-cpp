@@ -37,8 +37,7 @@ namespace minifi {
 namespace processors {
 
 //! CollectorInitiatedSubscription Class
-class CollectorInitiatedSubscription : public core::Processor
-{
+class CollectorInitiatedSubscription : public core::Processor {
 public:
   //! Constructor
   /*!

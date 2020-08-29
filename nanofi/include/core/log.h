@@ -26,8 +26,7 @@
 extern "C" {
 #endif
 
-typedef enum
-{
+typedef enum {
   off = 0,
   critical = 1,
   err = 2,
