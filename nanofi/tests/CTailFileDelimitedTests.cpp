@@ -32,12 +32,12 @@ TEST_CASE("Test tailfile delimited. Empty file", "[tailfileDelimitedEmptyFileTes
     const char * file = "./e.txt";
     const char * delimiter = ";";
 
-    //Create empty file
+    // Create empty file
     FileManager fm(file);
 
     auto pp = invoke_processor(mgr, file);
 
-    //Test that no flowfiles were created
+    // Test that no flowfiles were created
     REQUIRE(pp != NULL);
     REQUIRE(pp->ff_list == NULL);
 }
@@ -54,13 +54,13 @@ TEST_CASE("Test tailfile delimited. File has less than 4096 chars", "[tailfileDe
 
     auto pp = invoke_processor(mgr, file);
 
-    //No flow files will be created
+    // No flow files will be created
     REQUIRE(pp != NULL);
     REQUIRE(pp->ff_list != NULL);
     REQUIRE(flow_files_size(pp->ff_list) == 1);
     REQUIRE(pp->ff_list->complete == 0);
 
-    //Test that the current offset in the file is 34
+    // Test that the current offset in the file is 34
     REQUIRE(pp->curr_offset == 34);
 }
 
@@ -70,7 +70,7 @@ TEST_CASE("Test tailfile delimited. Simple test", "[tailfileDelimitedSimpleTest]
     const char * file = "./e.txt";
     const char * delimiter = ";";
 
-    //Write 8192 bytes to the file
+    // Write 8192 bytes to the file
     FileManager fm(file);
     fm.WriteNChars(34, 'a');
     fm.WriteNChars(1, ';');
@@ -80,16 +80,16 @@ TEST_CASE("Test tailfile delimited. Simple test", "[tailfileDelimitedSimpleTest]
 
     auto pp = invoke_processor(mgr, file);
 
-    //Test that two flow file records were created
+    // Test that two flow file records were created
     REQUIRE(pp != NULL);
     REQUIRE(pp->ff_list != NULL);
     REQUIRE(pp->ff_list->ff_record != NULL);
     REQUIRE(flow_files_size(pp->ff_list) == 2);
 
-    //Test that the current offset in the file is 42 bytes
+    // Test that the current offset in the file is 42 bytes
     REQUIRE(pp->curr_offset == 42);
 
-    //Test the flow file sizes
+    // Test the flow file sizes
     const char * flowfile1_path = pp->ff_list->ff_record->contentLocation;
     const char * flowfile2_path = pp->ff_list->next->ff_record->contentLocation;
 
@@ -110,7 +110,7 @@ TEST_CASE("Test tailfile delimited. trailing non delimited string", "[tailfileNo
     const char * file = "./e.txt";
     const char * delimiter = ";";
 
-    //Write 8192 bytes to the file
+    // Write 8192 bytes to the file
     FileManager fm(file);
     fm.WriteNChars(34, 'a');
     fm.WriteNChars(1, ';');
@@ -119,13 +119,13 @@ TEST_CASE("Test tailfile delimited. trailing non delimited string", "[tailfileNo
 
     auto pp = invoke_processor(mgr, file);
 
-    //Test that two flow file records were created
+    // Test that two flow file records were created
     REQUIRE(pp != NULL);
     REQUIRE(pp->ff_list != NULL);
     REQUIRE(pp->ff_list->ff_record != NULL);
     REQUIRE(flow_files_size(pp->ff_list) == 2);
 
-    //Test that the current offset in the file is 35 bytes
+    // Test that the current offset in the file is 35 bytes
     REQUIRE(pp->curr_offset == 67);
     REQUIRE(pp->ff_list->complete == 1);
     REQUIRE(pp->ff_list->next->complete == 0);
@@ -133,7 +133,7 @@ TEST_CASE("Test tailfile delimited. trailing non delimited string", "[tailfileNo
     stat(pp->ff_list->ff_record->contentLocation, &fstat);
     REQUIRE(fstat.st_size == 34);
 
-    //Append a delimiter at the end of the file
+    // Append a delimiter at the end of the file
     fm.OpenStream();
     fm.WriteNChars(1, ';');
     fm.CloseStream();
@@ -153,7 +153,7 @@ TEST_CASE("Test tailfile delimited 4096 chars non delimited", "[tailfileDelimite
     const char * file = "./e.txt";
     const char * delimiter = ";";
 
-    //Write 4096 bytes to the file
+    // Write 4096 bytes to the file
     FileManager fm(file);
     fm.WriteNChars(4096, 'a');
     fm.CloseStream();
@@ -164,10 +164,10 @@ TEST_CASE("Test tailfile delimited 4096 chars non delimited", "[tailfileDelimite
     REQUIRE(pp->ff_list != NULL);
     REQUIRE(flow_files_size(pp->ff_list) == 1);
     REQUIRE(pp->ff_list->complete == 0);
-    //Test that the current offset in the file is 4096 bytes
+    // Test that the current offset in the file is 4096 bytes
     REQUIRE(pp->curr_offset == 4096);
 
-    //Write another 2048 characters
+    // Write another 2048 characters
     fm.OpenStream();
     fm.WriteNChars(2048, 'b');
     fm.CloseStream();
@@ -178,10 +178,10 @@ TEST_CASE("Test tailfile delimited 4096 chars non delimited", "[tailfileDelimite
     REQUIRE(flow_files_size(pp->ff_list) == 1);
     REQUIRE(pp->ff_list->complete == 0);
 
-    //Test that the current offset in the file is (4096 + 2048)
+    // Test that the current offset in the file is (4096 + 2048)
     REQUIRE(pp->curr_offset == 6144);
 
-    //Write another 2048 characters
+    // Write another 2048 characters
     fm.OpenStream();
     fm.WriteNChars(2048, 'c');
     fm.CloseStream();
@@ -191,10 +191,10 @@ TEST_CASE("Test tailfile delimited 4096 chars non delimited", "[tailfileDelimite
     REQUIRE(pp->ff_list != NULL);
     REQUIRE(flow_files_size(pp->ff_list) == 1);
 
-    //Test that the current offset in the file is 8192 bytes only
+    // Test that the current offset in the file is 8192 bytes only
     REQUIRE(pp->curr_offset == 8192);
 
-    //Write a delimiter at the end and expect a flow file size of 8192 bytes
+    // Write a delimiter at the end and expect a flow file size of 8192 bytes
     fm.OpenStream();
     fm.WriteNChars(1, ';');
     fm.CloseStream();
@@ -217,7 +217,7 @@ TEST_CASE("Test tailfile delimited. string starting with delimiter", "[tailfileD
     const char * file = "./e.txt";
     const char * delimiter = ";";
 
-    //Write 8192 bytes to the file
+    // Write 8192 bytes to the file
     FileManager fm(file);
     fm.WriteNChars(5, ';');
     fm.WriteNChars(34, 'a');
@@ -227,13 +227,13 @@ TEST_CASE("Test tailfile delimited. string starting with delimiter", "[tailfileD
 
     auto pp = invoke_processor(mgr, file);
 
-    //Test that two flow file records were created
+    // Test that two flow file records were created
     REQUIRE(pp != NULL);
     REQUIRE(pp->ff_list != NULL);
     REQUIRE(pp->ff_list->ff_record != NULL);
     REQUIRE(flow_files_size(pp->ff_list) == 2);
 
-    //Test that the current offset in the file is 35 bytes
+    // Test that the current offset in the file is 35 bytes
     REQUIRE(pp->curr_offset == 75);
     REQUIRE(pp->ff_list->complete == 1);
     REQUIRE(pp->ff_list->next->complete == 0);
@@ -241,7 +241,7 @@ TEST_CASE("Test tailfile delimited. string starting with delimiter", "[tailfileD
     stat(pp->ff_list->ff_record->contentLocation, &fstat);
     REQUIRE(fstat.st_size == 34);
 
-    //Append a delimiter at the end of the file
+    // Append a delimiter at the end of the file
     fm.OpenStream();
     fm.WriteNChars(1, ';');
     fm.CloseStream();

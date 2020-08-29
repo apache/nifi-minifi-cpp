@@ -80,4 +80,4 @@ PYBIND11_EMBEDDED_MODULE(minifi_native, m) { // NOLINT
       .def("write", &python::PyBaseStream::write);
 }
 
-#endif  //NIFI_MINIFI_CPP_PYTHONBINDINGS_H
+#endif  // NIFI_MINIFI_CPP_PYTHONBINDINGS_H

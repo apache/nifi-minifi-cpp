@@ -27,7 +27,7 @@ int openPeer(struct SiteToSiteCPeer * peer) {
     return -1;
   }
 
-  //In case there was no socket injected, let's create it
+  // In case there was no socket injected, let's create it
   if(peer->_stream == NULL) {
     peer->_stream = create_socket(peer->_host, peer->_port);
     if(peer->_stream == NULL) {

@@ -428,7 +428,7 @@ class HeartbeatHandler : public ServerAwareHandler {
 
   void verify(struct mg_connection *conn) {
     auto post_data = readPayload(conn);
-    //std::cerr << post_data << std::endl;
+    // std::cerr << post_data << std::endl;
     if (!IsNullOrEmpty(post_data)) {
       rapidjson::Document root;
       rapidjson::ParseResult ok = root.Parse(post_data.data(), post_data.size());

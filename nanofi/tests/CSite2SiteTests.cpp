@@ -63,7 +63,7 @@ struct TransferState {
 
 void wait_until(std::atomic<bool>& b) {
   while(!b) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(0));  //Just yield
+    std::this_thread::sleep_for(std::chrono::milliseconds(0));  // Just yield
   }
 }
 
@@ -95,7 +95,7 @@ void send_response_code(minifi::io::BaseStream* stream, uint8_t resp) {
 }
 
 void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, TransferState& transfer_state, S2SReceivedData& s2s_data) {
-  //In long term it would be nice to calculate the crc of the received data here
+  // In long term it would be nice to calculate the crc of the received data here
   send_response_code(stream, 12);  // confirmed
   stream->writeUTF(crcstr);
   send_response_code(stream, 13);  // transaction finished
@@ -125,7 +125,7 @@ void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, 
 }
 
 void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfer_state, S2SReceivedData& s2s_data) {
-  //Verify the magic string
+  // Verify the magic string
   char c_array[4];
   stream->readData((uint8_t*)c_array, 4);
   s2s_data.magic_string = std::string(c_array, 4);
@@ -134,7 +134,7 @@ void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfe
   send_response_code(stream, 0x1);
   stream->write(&success, 1);
 
-  //just consume handshake data
+  // just consume handshake data
   bool found_codec = false;
   int read_len = 0;
   while(!found_codec) {
@@ -148,7 +148,7 @@ void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfe
     auto it = std::search(incoming_data.begin(), incoming_data.end(), CODEC_NAME.begin(), CODEC_NAME.end());
     if(it != incoming_data.end()){
       size_t idx = std::distance(incoming_data.begin(), it);
-      //Actual version follows the string as an uint32_t // that should be the end of the buffer
+      // Actual version follows the string as an uint32_t // that should be the end of the buffer
       found_codec = idx + CODEC_NAME.length() + sizeof(uint32_t) == read_len;
     }
   }

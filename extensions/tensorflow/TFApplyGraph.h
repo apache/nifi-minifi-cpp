@@ -114,4 +114,4 @@ REGISTER_RESOURCE(TFApplyGraph, "Applies a TensorFlow graph to the tensor protob
 } /* namespace apache */
 } /* namespace org */
 
-#endif  //NIFI_MINIFI_CPP_TFAPPLYGRAPH_H
+#endif  // NIFI_MINIFI_CPP_TFAPPLYGRAPH_H

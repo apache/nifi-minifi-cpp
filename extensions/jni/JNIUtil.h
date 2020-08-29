@@ -35,4 +35,4 @@ static inline std::string JniStringToUTF(JNIEnv *env, const jstring &jstr) {
   return str;
 }
 
-#endif  //NIFI_MINIFI_CPP_JNIUTIL_H
+#endif  // NIFI_MINIFI_CPP_JNIUTIL_H

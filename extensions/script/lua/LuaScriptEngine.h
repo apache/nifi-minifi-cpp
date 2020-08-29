@@ -106,4 +106,4 @@ class LuaScriptEngine : public script::ScriptEngine {
 } /* namespace apache */
 } /* namespace org */
 
-#endif  //NIFI_MINIFI_CPP_LUASCRIPTENGINE_H
+#endif  // NIFI_MINIFI_CPP_LUASCRIPTENGINE_H

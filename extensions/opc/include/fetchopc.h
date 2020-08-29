@@ -109,4 +109,4 @@ REGISTER_RESOURCE(FetchOPCProcessor, "Fetches OPC-UA node");
 } /* namespace apache */
 } /* namespace org */
 
-#endif  //NIFI_MINIFI_CPP_FetchOPCProcessor_H
+#endif  // NIFI_MINIFI_CPP_FetchOPCProcessor_H

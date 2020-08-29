@@ -72,4 +72,4 @@ class TestControllerWithFlow: public TestController{
   std::shared_ptr<core::ProcessGroup> root_;
 };
 
-#endif  //NIFI_MINIFI_CPP_TESTCONTROLLERWITHFLOW_H
+#endif  // NIFI_MINIFI_CPP_TESTCONTROLLERWITHFLOW_H

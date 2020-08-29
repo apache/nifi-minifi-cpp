@@ -55,4 +55,4 @@ class LuaBaseStream {
 } /* namespace apache */
 } /* namespace org */
 
-#endif  //NIFI_MINIFI_CPP_LUABASESTREAM_H
+#endif  // NIFI_MINIFI_CPP_LUABASESTREAM_H

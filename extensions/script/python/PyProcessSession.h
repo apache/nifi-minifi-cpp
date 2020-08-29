@@ -101,4 +101,4 @@ class PyProcessSession {
 
 #pragma GCC visibility pop
 
-#endif  //NIFI_MINIFI_CPP_PYPROCESSESSION_H
+#endif  // NIFI_MINIFI_CPP_PYPROCESSESSION_H

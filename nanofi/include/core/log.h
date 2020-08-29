@@ -40,7 +40,7 @@ extern volatile int global_log_level;
 
 static const char *log_level_str[trace+1] = { "OFF", "CRITICAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE" };
 
-#if __STDC_VERSION__ >= 199901L  //C99 compiler support for __func__
+#if __STDC_VERSION__ >= 199901L  // C99 compiler support for __func__
 #if defined(__GNUC__)
 #define logc(level, format, ...) \
   if (level <= global_log_level && level > off) do { \
@@ -51,7 +51,7 @@ static const char *log_level_str[trace+1] = { "OFF", "CRITICAL", "ERROR", "WARN"
   if (level <= global_log_level && level > off) do { \
     fprintf(stderr, "%s:%u: [%s] %s: " format "\n", __FILE__, __LINE__, __func__, log_level_str[level],  __VA_ARGS__); \
   } while (0)
-#endif  //__GNUC__
+#endif  // __GNUC__
 #else  // no C99
 #define logc(level, ...) \
   if (level <= global_log_level && level > off) do { \
@@ -59,7 +59,7 @@ static const char *log_level_str[trace+1] = { "OFF", "CRITICAL", "ERROR", "WARN"
             fprintf(stderr, __VA_ARGS__); \
             fprintf(stderr, "\n"); \
   } while (0)
-#endif  //C99 compiler support
+#endif  // C99 compiler support
 
 static void set_log_level(log_level lvl) {
   if(lvl >= off && lvl <= trace) {
@@ -72,4 +72,4 @@ static void set_log_level(log_level lvl) {
 }
 #endif
 
-#endif  //NIFI_MINIFI_CPP_LOG_H
+#endif  // NIFI_MINIFI_CPP_LOG_H

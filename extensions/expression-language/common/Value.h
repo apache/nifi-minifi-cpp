@@ -261,4 +261,4 @@ class Value {
 } /* namespace apache */
 } /* namespace org */
 
-#endif  //NIFI_MINIFI_CPP_VALUE_H
+#endif  // NIFI_MINIFI_CPP_VALUE_H

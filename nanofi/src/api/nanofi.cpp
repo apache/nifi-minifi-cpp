@@ -41,7 +41,7 @@ class API_INITIALIZER {
   static int initialized;
 };
 
-//Just an internal utility func., not to be published via API!
+// Just an internal utility func., not to be published via API!
 file_buffer file_to_buffer(const char *path) {
   file_buffer fb;
   fb.buffer = nullptr;
@@ -487,7 +487,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
   auto content_repo = minifi_instance_ref->getContentRepository();
 
   std::shared_ptr<minifi::ResourceClaim> claim = nullptr;
-  std::shared_ptr<minifi::io::DataStream> stream = nullptr;  //Used when content is not in content repo
+  std::shared_ptr<minifi::io::DataStream> stream = nullptr;  // Used when content is not in content repo
 
   if(ff->contentLocation) {
     auto ff_content_repo_ptr = (static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ff->crp));
@@ -503,7 +503,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
       free(fb.buffer);
     }
   } else {
-    //The flowfile has no content - create an empty stream to create empty content
+    // The flowfile has no content - create an empty stream to create empty content
     stream = std::make_shared<minifi::io::DataStream>();
   }
 
@@ -544,7 +544,7 @@ processor *add_python_processor(flow *flow, processor_logic* logic) {
     return nullptr;
   }
   auto lambda = [logic](core::ProcessSession *ps, core::ProcessContext *cx) {
-    logic(static_cast<processor_session*>(ps), static_cast<processor_context*>(cx));  //Meh, sorry for this
+    logic(static_cast<processor_session*>(ps), static_cast<processor_context*>(cx));  // Meh, sorry for this
   };
   auto proc = flow->addCallback(nullptr, lambda);
   return static_cast<processor*>(proc.get());

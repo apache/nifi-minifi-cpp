@@ -89,4 +89,4 @@ REGISTER_RESOURCE(TFExtractTopLabels, "Extracts the top 5 labels for categorical
 } /* namespace apache */
 } /* namespace org */
 
-#endif  //NIFI_MINIFI_CPP_TFEXTRACTTOPLABELS_H
+#endif  // NIFI_MINIFI_CPP_TFEXTRACTTOPLABELS_H

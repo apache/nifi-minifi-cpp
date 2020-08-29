@@ -114,7 +114,7 @@ struct CRawSiteToSiteClient {
   // portIDStr
   char _port_id_str[37];
 
-  char _description_buffer[DESCRIPTION_BUFFER_SIZE];  //should be big enough
+  char _description_buffer[DESCRIPTION_BUFFER_SIZE];  // should be big enough
 
   // Peer Connection
   struct SiteToSiteCPeer* _peer;

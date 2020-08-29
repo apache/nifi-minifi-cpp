@@ -267,4 +267,4 @@ class SQLiteConnection {
 } /* namespace apache */
 } /* namespace org */
 
-#endif  //NIFI_MINIFI_CPP_SQLITECONNECTION_H
+#endif  // NIFI_MINIFI_CPP_SQLITECONNECTION_H

@@ -103,8 +103,8 @@ class CoapServer : public core::Connectable {
       : core::Connectable(name, uuid),
         server_(nullptr),
         port_(0) {
-    //TODO: this allows this class to be instantiated via the the class loader
-    //need to define this capability in the future.
+    // TODO: this allows this class to be instantiated via the the class loader
+    // need to define this capability in the future.
   }
   CoapServer(const std::string &hostname, uint16_t port)
       : core::Connectable(hostname),

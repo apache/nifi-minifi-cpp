@@ -38,4 +38,4 @@ class RandomServerSocket : public ServerSocket {
 } /* namespace apache */
 } /* namespace org */
 
-#endif  //NIFI_MINIFI_CPP_RANDOMSERVERSOCKET_H
+#endif  // NIFI_MINIFI_CPP_RANDOMSERVERSOCKET_H

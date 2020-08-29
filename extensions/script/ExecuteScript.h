@@ -100,4 +100,4 @@ REGISTER_RESOURCE(ExecuteScript, "Executes a script given the flow file and a pr
 } /* namespace apache */
 } /* namespace org */
 
-#endif  //NIFI_MINIFI_CPP_EXECUTESCRIPT_H
+#endif  // NIFI_MINIFI_CPP_EXECUTESCRIPT_H

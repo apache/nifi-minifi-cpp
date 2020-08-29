@@ -40,7 +40,7 @@ TEST_CASE("Test tailfile chunk size 4096, file size 8KB", "[tailfileChunk8KBFile
     const char * file = "./e.txt";
     const char * chunksize = "4096";
 
-    //Write 8192 bytes to the file
+    // Write 8192 bytes to the file
     FileManager fm(file);
     fm.WriteNChars(4096, 'a');
     fm.WriteNChars(4096, 'b');
@@ -56,13 +56,13 @@ TEST_CASE("Test tailfile chunk size 4096, file size 8KB", "[tailfileChunk8KBFile
     get_proc_uuid_from_processor(proc, uuid_str);
     struct processor_params * pp = get_proc_params(uuid_str);
 
-    //Test that two flow file records were created
+    // Test that two flow file records were created
     REQUIRE(pp != NULL);
     REQUIRE(pp->ff_list != NULL);
     REQUIRE(pp->ff_list->ff_record != NULL);
     REQUIRE(flow_files_size(pp->ff_list) == 2);
 
-    //Test that the current offset in the file is 8192 bytes
+    // Test that the current offset in the file is 8192 bytes
     REQUIRE(pp->curr_offset == 8192);
 }
 
@@ -72,7 +72,7 @@ TEST_CASE("Test tailfile chunk size 4096, file size less than 8KB", "[tailfileCh
     const char * file = "./e.txt";
     const char * chunksize = "4096";
 
-    //Write 4505 bytes to the file
+    // Write 4505 bytes to the file
     FileManager fm(file);
     fm.WriteNChars(4096, 'a');
     fm.WriteNChars(409, 'b');
@@ -87,13 +87,13 @@ TEST_CASE("Test tailfile chunk size 4096, file size less than 8KB", "[tailfileCh
     char uuid_str[37];
     get_proc_uuid_from_processor(proc, uuid_str);
     struct processor_params * pp = get_proc_params(uuid_str);
-    //Test that one flow file record was created
+    // Test that one flow file record was created
     REQUIRE(pp != NULL);
     REQUIRE(pp->ff_list != NULL);
     REQUIRE(pp->ff_list->ff_record != NULL);
     REQUIRE(flow_files_size(pp->ff_list) == 1);
 
-    //Test that the current offset in the file is 4096 bytes
+    // Test that the current offset in the file is 4096 bytes
     REQUIRE(pp->curr_offset == 4096);
     REQUIRE(pp->ff_list->ff_record->size == 4096);
 
@@ -108,7 +108,7 @@ TEST_CASE("Test tailfile chunk size 512, file size equal to 4608B", "[tailfileCh
     const char * file = "./e.txt";
     const char * chunksize = "512";
 
-    //Write 4608 bytes to the file
+    // Write 4608 bytes to the file
     FileManager fm(file);
     fm.WriteNChars(4608, 'a');
     fm.CloseStream();
@@ -123,13 +123,13 @@ TEST_CASE("Test tailfile chunk size 512, file size equal to 4608B", "[tailfileCh
     get_proc_uuid_from_processor(proc, uuid_str);
     struct processor_params * pp = get_proc_params(uuid_str);
 
-    //Test that one flow file record was created
+    // Test that one flow file record was created
     REQUIRE(pp != NULL);
     REQUIRE(pp->ff_list != NULL);
     REQUIRE(pp->ff_list->ff_record != NULL);
     REQUIRE(flow_files_size(pp->ff_list) == 9);
 
-    //Test that the current offset in the file is 4608 bytes
+    // Test that the current offset in the file is 4608 bytes
     REQUIRE(pp->curr_offset == 4608);
 }
 #endif

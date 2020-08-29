@@ -49,4 +49,4 @@ class PyBaseStream {
 } /* namespace apache */
 } /* namespace org */
 
-#endif  //NIFI_MINIFI_CPP_PYBYTESTREAM_H
+#endif  // NIFI_MINIFI_CPP_PYBYTESTREAM_H

@@ -114,7 +114,7 @@ class MockProcessor : public core::Processor {
         assert(false == context->isControllerServiceEnabled(linked_service));
       }
 
-      //verify we have access to the controller service
+      // verify we have access to the controller service
       // and verify that we can execute it.
 
     }

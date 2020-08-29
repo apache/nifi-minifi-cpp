@@ -49,4 +49,4 @@ class ScriptEngine {
 } /* namespace apache */
 } /* namespace org */
 
-#endif  //NIFI_MINIFI_CPP_SCRIPTENGINE_H
+#endif  // NIFI_MINIFI_CPP_SCRIPTENGINE_H

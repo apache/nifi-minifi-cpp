@@ -149,7 +149,7 @@ int readUTFLen(uint32_t * utflen, cstream * stream) {
 }
 
 int readUTF(char * buf, uint32_t buflen, cstream * stream) {
-  //return stream->impl->readData((uint8_t*)buf, buflen);
+  // return stream->impl->readData((uint8_t*)buf, buflen);
   return read_buffer((uint8_t*)buf, (int) buflen, stream);
 }
 

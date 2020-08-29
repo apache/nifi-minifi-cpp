@@ -267,7 +267,7 @@ typedef struct {
   // Whether received data is available
   int _dataAvailable;
 
-  //org::apache::nifi::minifi::io::BaseStream* _stream;
+  // org::apache::nifi::minifi::io::BaseStream* _stream;
   cstream * _stream;
 
   uLong _crc;
@@ -332,7 +332,7 @@ static int writeData(CTransaction * transaction, const uint8_t *value, int size)
 }
 
 static int readData(CTransaction * transaction, uint8_t *buf, int buflen) {
-  //int ret = transaction->_stream->read(buf, buflen);
+  // int ret = transaction->_stream->read(buf, buflen);
   int ret = read_buffer(buf, buflen, transaction->_stream);
   if (ret > 0) {
     transaction->_crc = crc32(transaction->_crc, buf, ret);
