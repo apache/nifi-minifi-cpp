@@ -31,7 +31,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-#define MAX_RECORD_BUFFER_SIZE 0x10000 // 64k
+#define MAX_RECORD_BUFFER_SIZE 0x10000  // 64k
 const LPWSTR pEventTypeNames[] = { L"Error", L"Warning", L"Informational", L"Audit Success", L"Audit Failure" };
 char log_name[255] = "Application";
 

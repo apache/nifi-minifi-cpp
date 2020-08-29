@@ -42,7 +42,7 @@
 const char * ATTR_NAME = "some_key";
 const char * ATTR_VALUE = "some value";
 const char * PAYLOAD = "Test MiNiFi payload";
-const char * PAYLOAD_CRC = "2006463717"; // Depends on both payload and attributes, do NOT change manually!
+const char * PAYLOAD_CRC = "2006463717";  // Depends on both payload and attributes, do NOT change manually!
 std::string CODEC_NAME = "StandardFlowFileCodec";
 
 struct S2SReceivedData {
@@ -63,7 +63,7 @@ struct TransferState {
 
 void wait_until(std::atomic<bool>& b) {
   while(!b) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(0)); //Just yield
+    std::this_thread::sleep_for(std::chrono::milliseconds(0));  //Just yield
   }
 }
 
@@ -96,9 +96,9 @@ void send_response_code(minifi::io::BaseStream* stream, uint8_t resp) {
 
 void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, TransferState& transfer_state, S2SReceivedData& s2s_data) {
   //In long term it would be nice to calculate the crc of the received data here
-  send_response_code(stream, 12); // confirmed
+  send_response_code(stream, 12);  // confirmed
   stream->writeUTF(crcstr);
-  send_response_code(stream, 13); // transaction finished
+  send_response_code(stream, 13);  // transaction finished
 
   wait_until(transfer_state.transer_completed);
 

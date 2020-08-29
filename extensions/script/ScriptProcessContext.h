@@ -46,4 +46,4 @@ class ScriptProcessContext {
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_PYPROCESSCONTEXT_H
+#endif  //NIFI_MINIFI_CPP_PYPROCESSCONTEXT_H

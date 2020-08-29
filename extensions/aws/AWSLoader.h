@@ -65,4 +65,4 @@ extern "C" {
 DLL_EXPORT void *createAWSFactory(void);
 }
 
-#endif //NIFI_MINIFI_CPP_AWSLOADER_H
+#endif  //NIFI_MINIFI_CPP_AWSLOADER_H

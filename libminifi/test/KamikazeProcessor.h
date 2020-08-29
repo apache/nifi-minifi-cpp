@@ -73,4 +73,4 @@ REGISTER_RESOURCE(KamikazeProcessor, "This processor can throw exceptions in onT
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_KAMIKAZEPROCESSOR_H
+#endif  //NIFI_MINIFI_CPP_KAMIKAZEPROCESSOR_H

@@ -43,4 +43,4 @@ struct processor_context : public core::ProcessContext {
   using core::ProcessContext::ProcessContext;
 };
 
-#endif //NIFI_MINIFI_CPP_CXXSTRUCTS_H
+#endif  //NIFI_MINIFI_CPP_CXXSTRUCTS_H

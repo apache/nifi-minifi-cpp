@@ -602,7 +602,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
     }
 
     wel::XmlString writer;
-    doc.print(writer, "", pugi::format_raw); // no indentation or formatting
+    doc.print(writer, "", pugi::format_raw);  // no indentation or formatting
     xml = writer.xml_;
 
     eventRender.text_ = std::move(xml);

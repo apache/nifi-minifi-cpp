@@ -237,4 +237,4 @@ class PythonScriptEngine : public script::ScriptEngine {
 
 #pragma GCC visibility pop
 
-#endif //NIFI_MINIFI_CPP_PYTHONSCRIPTENGINE_H
+#endif  //NIFI_MINIFI_CPP_PYTHONSCRIPTENGINE_H

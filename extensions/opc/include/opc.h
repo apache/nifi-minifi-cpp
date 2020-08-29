@@ -143,4 +143,4 @@ static void logClear(void *context) {};
 } /* namespace org */
 
 
-#endif //NIFI_MINIFI_CPP_OPC_H
+#endif  //NIFI_MINIFI_CPP_OPC_H

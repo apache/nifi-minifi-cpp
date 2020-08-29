@@ -50,4 +50,4 @@ class BufferReader : public org::apache::nifi::minifi::InputStreamCallback {
   std::vector<uint8_t>& buffer_;
 };
 
-#endif //NIFI_MINIFI_CPP_BUFFERREADER_H
+#endif  //NIFI_MINIFI_CPP_BUFFERREADER_H

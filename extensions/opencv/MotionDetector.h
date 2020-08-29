@@ -85,4 +85,4 @@ REGISTER_RESOURCE(MotionDetector, "Detect motion from captured images."); // NOL
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_MOTIONDETECTOR_H
+#endif  //NIFI_MINIFI_CPP_MOTIONDETECTOR_H

@@ -59,7 +59,7 @@ file_buffer file_to_buffer(const char *path) {
   filelen = ftell(fileptr);
   rewind(fileptr);
 
-  buffer = (uint8_t *)malloc((filelen+1)*sizeof(uint8_t)); // Enough memory for file + \0
+  buffer = (uint8_t *)malloc((filelen+1)*sizeof(uint8_t));  // Enough memory for file + \0
   const size_t read_result = fread(buffer, filelen, 1, fileptr);
   fclose(fileptr);
 
@@ -487,7 +487,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
   auto content_repo = minifi_instance_ref->getContentRepository();
 
   std::shared_ptr<minifi::ResourceClaim> claim = nullptr;
-  std::shared_ptr<minifi::io::DataStream> stream = nullptr; //Used when content is not in content repo
+  std::shared_ptr<minifi::io::DataStream> stream = nullptr;  //Used when content is not in content repo
 
   if(ff->contentLocation) {
     auto ff_content_repo_ptr = (static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ff->crp));

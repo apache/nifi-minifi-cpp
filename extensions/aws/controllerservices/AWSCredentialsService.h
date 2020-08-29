@@ -101,4 +101,4 @@ REGISTER_RESOURCE(AWSCredentialsService, "AWS Credentials Management Service");
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_AWSCREDENTIALSCONTROLLERSERVICE_H
+#endif  //NIFI_MINIFI_CPP_AWSCREDENTIALSCONTROLLERSERVICE_H

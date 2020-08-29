@@ -202,10 +202,10 @@ public:
 
       arch = archive_write_new();
       if (merge_type_ == merge_content_options::MERGE_FORMAT_TAR_VALUE) {
-        archive_write_set_format_pax_restricted(arch); // tar format
+        archive_write_set_format_pax_restricted(arch);  // tar format
       }
       if (merge_type_ == merge_content_options::MERGE_FORMAT_ZIP_VALUE) {
-        archive_write_set_format_zip(arch); // zip format
+        archive_write_set_format_zip(arch);  // zip format
       }
       archive_write_set_bytes_per_block(arch, 0);
       archive_write_add_filter_none(arch);
