@@ -25,9 +25,8 @@ MINIFI_SOURCE_CODE=$4
 CMAKE_SOURCE_DIR=$5
 IMAGE_TYPE=${6:-release}
 
-if [ "${IMAGE_TYPE}" == "release" ]; then
-  TAG=
-else
+unset TAG
+if [ "${IMAGE_TYPE}" != "release" ]; then
   TAG="${IMAGE_TYPE}-"
 fi
 

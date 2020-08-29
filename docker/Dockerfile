@@ -27,35 +27,35 @@ ARG GID=1000
 
 # Install the system dependencies needed for a build
 RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
-	g++ \
-	make \
-	bison \
-	flex \
-	flex-dev \
-	maven \
-	openjdk8-jre-base \
-	openjdk8 \
-	autoconf \
-	libtool \
-	wget \
-	gdb \
-	musl-dev \
-	boost-dev \
-	vim \
-	util-linux-dev \
-	curl-dev \
-	cmake \
-	git \
-	nss \
-	nss-dev \
-	unzip \
-	gpsd-dev \
-	libressl-dev \
-	zlib-dev \
-	bzip2-dev \
-	python3-dev \
-	patch \
-	doxygen
+  g++ \
+  make \
+  bison \
+  flex \
+  flex-dev \
+  maven \
+  openjdk8-jre-base \
+  openjdk8 \
+  autoconf \
+  libtool \
+  wget \
+  gdb \
+  musl-dev \
+  boost-dev \
+  vim \
+  util-linux-dev \
+  curl-dev \
+  cmake \
+  git \
+  nss \
+  nss-dev \
+  unzip \
+  gpsd-dev \
+  libressl-dev \
+  zlib-dev \
+  bzip2-dev \
+  python3-dev \
+  patch \
+  doxygen
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
@@ -75,21 +75,21 @@ USER ${USER}
 # Build stage of the minimal image
 FROM build_deps AS build_minimal
 RUN cd ${MINIFI_BASE_DIR} \
-	&& mkdir build \
-	&& cd build \
-	&& cmake -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DENABLE_LIBRDKAFKA=ON -DSKIP_TESTS=true -DCMAKE_BUILD_TYPE=MinSizeRel .. \
-	&& make -j$(nproc) package \
-	&& tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
+  && mkdir build \
+  && cd build \
+  && cmake -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DENABLE_LIBRDKAFKA=ON -DSKIP_TESTS=true -DCMAKE_BUILD_TYPE=MinSizeRel .. \
+  && make -j$(nproc) package \
+  && tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
 
 
 # Build stage of normal image
 FROM build_deps AS build_release
 RUN cd ${MINIFI_BASE_DIR} \
-	&& mkdir build \
-	&& cd build \
-	&& cmake -DDISABLE_JEMALLOC=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=ON -DENABLE_LIBRDKAFKA=ON .. \
-	&& make -j$(nproc) package \
-	&& tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
+  && mkdir build \
+  && cd build \
+  && cmake -DDISABLE_JEMALLOC=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=ON -DENABLE_LIBRDKAFKA=ON .. \
+  && make -j$(nproc) package \
+  && tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
 
 
 # Common runtime image dependencies
@@ -113,7 +113,7 @@ ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
 
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
 RUN install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} \
-    && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
+  && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
 
 
 # Final stage of the minimal image
@@ -121,7 +121,7 @@ FROM common_runtime_deps AS minimal
 
 RUN apk --update --no-cache upgrade && apk add --update --no-cache libstdc++
 RUN install -d -o ${USER} -g ${USER} ${MINIFI_VERSIONED_HOME}/bin \
-    && install -d -o ${USER} -g ${USER} ${MINIFI_VERSIONED_HOME}/conf && chown ${USER}:${USER} ${MINIFI_HOME}
+  && install -d -o ${USER} -g ${USER} ${MINIFI_VERSIONED_HOME}/conf && chown ${USER}:${USER} ${MINIFI_HOME}
 
 # Copy built minifi distribution from builder
 COPY --from=build_minimal --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME}/bin/minifi ${MINIFI_HOME}/bin/minifi
@@ -138,17 +138,17 @@ CMD ./bin/minifi.sh run
 # Final stage of release image
 FROM common_runtime_deps AS release
 RUN apk --update --no-cache upgrade && apk add --update --no-cache \
-	util-linux \
-	curl \
-	unzip \
-	gpsd \
-	openjdk8-jre-base \
-	openjdk8 \
-	nss \
-	nss-dev \
-	libressl \
-	python3 \
-	zlib
+  util-linux \
+  curl \
+  unzip \
+  gpsd \
+  openjdk8-jre-base \
+  openjdk8 \
+  nss \
+  nss-dev \
+  libressl \
+  python3 \
+  zlib
 
 # Copy built minifi distribution from builder
 COPY --from=build_release --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
