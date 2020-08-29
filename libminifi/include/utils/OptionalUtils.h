@@ -53,10 +53,10 @@ struct map_wrapper {
 
 // map implementation
 template<typename SourceType, typename F>
-auto operator|(const optional<SourceType>& o, map_wrapper<F> f) noexcept(noexcept(invoke(std::forward<F>(f.function), *o)))
--> optional<typename std::decay<decltype(invoke(std::forward<F>(f.function), *o))>::type> {
+auto operator|(const optional<SourceType>& o, map_wrapper<F> f) noexcept(noexcept(utils::invoke(std::forward<F>(f.function), *o)))
+    -> optional<typename std::decay<decltype(utils::invoke(std::forward<F>(f.function), *o))>::type> {
   if (o.has_value()) {
-    return make_optional(invoke(std::forward<F>(f.function), *o));
+    return make_optional(utils::invoke(std::forward<F>(f.function), *o));
   } else {
     return nullopt;
   }
@@ -69,11 +69,11 @@ struct flat_map_wrapper {
 
 // flatMap implementation
 template<typename SourceType, typename F>
-auto operator|(const optional<SourceType>& o, flat_map_wrapper<F> f) noexcept(noexcept(invoke(std::forward<F>(f.function), *o)))
--> optional<typename std::decay<decltype(*invoke(std::forward<F>(f.function), *o))>::type> {
-  static_assert(is_optional<decltype(invoke(std::forward<F>(f.function), *o))>::value, "flatMap expects a function returning optional");
+auto operator|(const optional<SourceType>& o, flat_map_wrapper<F> f) noexcept(noexcept(utils::invoke(std::forward<F>(f.function), *o)))
+    -> optional<typename std::decay<decltype(*utils::invoke(std::forward<F>(f.function), *o))>::type> {
+  static_assert(is_optional<decltype(utils::invoke(std::forward<F>(f.function), *o))>::value, "flatMap expects a function returning optional");
   if (o.has_value()) {
-    return invoke(std::forward<F>(f.function), *o);
+    return utils::invoke(std::forward<F>(f.function), *o);
   } else {
     return nullopt;
   }
