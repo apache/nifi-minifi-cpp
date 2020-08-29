@@ -360,8 +360,7 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
 
     std::wstring strRuntimeStatus;
 
-    switch (runtimeStatus)
-    {
+    switch (runtimeStatus) {
     case EcRuntimeStatusActiveStatusActive:
       strRuntimeStatus = L"Active";
       break;
@@ -462,8 +461,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
   }
   const auto guard_hSubscription = gsl::finally([hSubscription]() { EcClose(hSubscription); });
 
-  struct SubscriptionProperty
-  {
+  struct SubscriptionProperty {
     SubscriptionProperty(EC_SUBSCRIPTION_PROPERTY_ID propId, const std::wstring& val) {
       propId_ = propId;
 
@@ -559,8 +557,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
   return true;
 }
 
-bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::ProcessContext> &context)
-{
+bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::ProcessContext> &context) {
   logger_->log_debug("CollectorInitiatedSubscription: maxBufferSize_ %lld", maxBufferSize_.value());
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + to_string(channel_.value().c_str()) + "?" + to_string(query_.value().c_str());

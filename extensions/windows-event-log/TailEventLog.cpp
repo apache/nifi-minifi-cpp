@@ -89,14 +89,12 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   
   logger_->log_trace("%d and %d", current_record_, num_records_);
 
-  if (ReadEventLog(log_handle_,EVENTLOG_FORWARDS_READ | EVENTLOG_SEEK_READ, current_record_, event_record,MAX_RECORD_BUFFER_SIZE, &bytes_to_read,&min_bytes))
-  {
+  if (ReadEventLog(log_handle_,EVENTLOG_FORWARDS_READ | EVENTLOG_SEEK_READ, current_record_, event_record,MAX_RECORD_BUFFER_SIZE, &bytes_to_read,&min_bytes)) {
     if (bytes_to_read == 0) {
       logger_->log_debug("Yielding");
       context->yield();
     }
-    while (bytes_to_read > 0)
-    {
+    while (bytes_to_read > 0) {
 
       std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
       if (flowFile == nullptr)

@@ -51,8 +51,7 @@ SFTPTestServer::SFTPTestServer(const std::string& working_directory,
   jar_path_ = utils::file::FileUtils::concat_path(executable_dir, jar_path);
 }
 
-SFTPTestServer::~SFTPTestServer()
-{
+SFTPTestServer::~SFTPTestServer() {
   try {
     this->stop();
   } catch (...) {

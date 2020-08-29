@@ -60,8 +60,7 @@ namespace wel {
 
 typedef std::vector<std::pair<METADATA, std::string>> METADATA_NAMES;
 
-class WindowsEventLogHandler
-{
+class WindowsEventLogHandler {
 public:
   WindowsEventLogHandler() : metadata_provider_(nullptr) {
   }

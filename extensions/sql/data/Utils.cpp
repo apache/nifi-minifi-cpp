@@ -46,8 +46,7 @@ std::vector<std::string> inputStringToList(const std::string& str) {
   // Convert to lower and remove white characters.
   std::istringstream tokenStream(std::regex_replace(toLower(str), std::regex("\\s"), std::string("")));
 
-  while (std::getline(tokenStream, token, ','))
-  {
+  while (std::getline(tokenStream, token, ',')) {
     ret.push_back(token);
   }
 

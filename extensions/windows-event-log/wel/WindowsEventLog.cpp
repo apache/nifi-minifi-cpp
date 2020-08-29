@@ -43,14 +43,11 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
   const auto contextGuard = gsl::finally([&context](){
     EvtClose(context);
   });
-  if (!EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, nullptr, &dwBufferUsed, &dwPropertyCount))
-  {
-    if (ERROR_INSUFFICIENT_BUFFER == (status = GetLastError()))
-    {
+  if (!EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, nullptr, &dwBufferUsed, &dwPropertyCount)) {
+    if (ERROR_INSUFFICIENT_BUFFER == (status = GetLastError())) {
       dwBufferSize = dwBufferUsed;
       rendered_values = std::unique_ptr<EVT_VARIANT, utils::FreeDeleter>((PEVT_VARIANT)(malloc(dwBufferSize)));
-      if (rendered_values)
-      {
+      if (rendered_values) {
         EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount);
       }
     }
@@ -58,8 +55,7 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
       return;
     }
 
-    if (ERROR_SUCCESS != (status = GetLastError()))
-    {
+    if (ERROR_SUCCESS != (status = GetLastError())) {
       return;
     }
   }
@@ -88,8 +84,7 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
   auto level = static_cast<PEVT_VARIANT>(rendered_values.get())[EvtSystemLevel];
   auto keyword = static_cast<PEVT_VARIANT>(rendered_values.get())[EvtSystemKeywords];
   if (level.Type == EvtVarTypeByte) {
-    switch (level.ByteVal)
-    {
+    switch (level.ByteVal) {
       case WINEVENT_LEVEL_CRITICAL:
       case WINEVENT_LEVEL_ERROR:
         event_type_ = "Error";
@@ -158,8 +153,7 @@ std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS f
   return event_data;
 }
 
-std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const
-{
+std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const {
   std::string returnValue;
   std::unique_ptr<WCHAR, utils::FreeDeleter> pBuffer;
   DWORD dwBufferSize = 0;

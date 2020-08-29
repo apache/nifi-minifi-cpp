@@ -99,8 +99,7 @@ struct NodeData {
   NodeData& operator= (const NodeData &) = delete;
   NodeData& operator= (NodeData &&) = delete;
 
-  NodeData(NodeData&& rhs) : data(rhs.data), attributes(rhs.attributes)
-  {
+  NodeData(NodeData&& rhs) : data(rhs.data), attributes(rhs.attributes) {
     dataTypeID = rhs.dataTypeID;
     this->var_ = rhs.var_;
     rhs.var_ = nullptr;

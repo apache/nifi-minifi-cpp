@@ -172,8 +172,7 @@ cstream * create_socket(const char * host, uint16_t portnum) {
 
 #ifdef _WIN32
   WSADATA wsa;
-  if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
-  {
+  if (WSAStartup(MAKEWORD(2,2),&wsa) != 0) {
     logc(err, "%s", "WSAStartup failed");
     return NULL;
   }

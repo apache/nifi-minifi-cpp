@@ -351,8 +351,7 @@ public:
       , compress_mode_(std::move(compress_mode))
       , compress_level_(compress_level)
       , flow_(std::move(flow))
-      , session_(std::move(session))
-    {
+      , session_(std::move(session)) {
     }
 
     std::shared_ptr<logging::Logger> logger_;

@@ -76,8 +76,7 @@ sem_t *running;
 
 #ifdef WIN32
 BOOL WINAPI consoleSignalHandler(DWORD signal) {
-  if (signal == CTRL_C_EVENT || signal == CTRL_BREAK_EVENT)
-  {
+  if (signal == CTRL_C_EVENT || signal == CTRL_BREAK_EVENT) {
     
     sem_post(running);
     if (sem_wait(running) == -1)

@@ -30,12 +30,10 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class GetGPS : public core::Processor
-{
+class GetGPS : public core::Processor {
 public:
   GetGPS(std::string name, utils::Identifier uuid = utils::Identifier())
-  : core::Processor(name, uuid), logger_(logging::LoggerFactory<GetGPS>::getLogger())
-  {
+  : core::Processor(name, uuid), logger_(logging::LoggerFactory<GetGPS>::getLogger()) {
     gpsdHost_ = "localhost";
     gpsdPort_ = "2947";
     gpsdWaitTime_ = 50000000;

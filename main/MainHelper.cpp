@@ -23,8 +23,7 @@
 #include "utils/file/FileUtils.h"
 
 #ifdef WIN32
-FILE* __cdecl _imp____iob_func()
-{
+FILE* __cdecl _imp____iob_func() {
   struct _iobuf_VS2012 { // ...\Microsoft Visual Studio 11.0\VC\include\stdio.h #56
     char *_ptr;
     int   _cnt;
@@ -50,8 +49,7 @@ FILE* __cdecl _imp____iob_func()
   return (FILE*)&bufs;
 }
 
-FILE* __cdecl __imp___iob_func()
-{
+FILE* __cdecl __imp___iob_func() {
   struct _iobuf_VS2012 { // ...\Microsoft Visual Studio 11.0\VC\include\stdio.h #56
     char *_ptr;
     int   _cnt;

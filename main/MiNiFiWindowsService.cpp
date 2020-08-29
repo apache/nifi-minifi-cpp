@@ -84,12 +84,10 @@ void RunAsServiceIfNeeded() {
     return s_logger;
   };
 
-  SERVICE_TABLE_ENTRY serviceTable[] =
-  {
+  SERVICE_TABLE_ENTRY serviceTable[] = {
     {
       SERVICE_NAME,
-      [](DWORD argc, LPTSTR *argv)
-      {
+      [](DWORD argc, LPTSTR *argv) {
         setSyslogLogger();
 
         LOG_INFO("ServiceCtrlDispatcher");
@@ -366,8 +364,7 @@ bool CreateServiceTerminationThread(std::shared_ptr<logging::Logger> logger, HAN
       delete pThreadInfo;
 
       HANDLE arHandle[] = { terminationEventHandle, hService };
-      switch (auto res = WaitForMultipleObjects(_countof(arHandle), arHandle, FALSE, INFINITE))
-      {
+      switch (auto res = WaitForMultipleObjects(_countof(arHandle), arHandle, FALSE, INFINITE)) {
         case WAIT_FAILED:
           logger->log_error("!WaitForSingleObject lastError %x", GetLastError());
         break;

@@ -187,8 +187,7 @@ void SFTPProcessorBase::parseCommonPropertiesOnSchedule(const std::shared_ptr<co
 
 SFTPProcessorBase::CommonProperties::CommonProperties()
     : port(0U)
-    , proxy_port(0U)
-{
+    , proxy_port(0U) {
 }
 
 bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<FlowFileRecord>& flow_file, CommonProperties& common_properties) {
