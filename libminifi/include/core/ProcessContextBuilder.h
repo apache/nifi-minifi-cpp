@@ -40,7 +40,6 @@
 #include "core/Repository.h"
 #include "core/FlowFile.h"
 #include "VariableRegistry.h"
-#include "utils/gsl.h"
 
 namespace org {
 namespace apache {

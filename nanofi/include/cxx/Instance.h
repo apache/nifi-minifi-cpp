@@ -101,13 +101,12 @@ class Instance {
   }
 
   void enableAsyncC2(C2_Server *server, c2_stop_callback *c1, c2_start_callback *c2, c2_update_callback *c3) {
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider = nullptr;
     running_ = true;
     if (server->type != C2_Server_Type::MQTT) {
       configure_->set("c2.rest.url", server->url);
       configure_->set("c2.rest.url.ack", server->ack_url);
     }
-    agent_ = std::make_shared<c2::C2CallbackAgent>(controller_service_provider.get(), nullptr, configure_);
+    agent_ = std::make_shared<c2::C2CallbackAgent>(nullptr, nullptr, configure_);
     listener_thread_pool_.start();
     registerUpdateListener(agent_, 1000);
     agent_->setStopCallback(c1);
@@ -133,8 +132,7 @@ class Instance {
   }
 
   void transfer(const std::shared_ptr<FlowFileRecord> &ff, const std::shared_ptr<minifi::io::DataStream> &stream = nullptr) {
-    std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider = nullptr;
-    auto processContext = std::make_shared<core::ProcessContext>(proc_node_, controller_service_provider.get(), no_op_repo_, no_op_repo_, configure_, content_repo_);
+    auto processContext = std::make_shared<core::ProcessContext>(proc_node_, nullptr, no_op_repo_, no_op_repo_, configure_, content_repo_);
     auto sessionFactory = std::make_shared<core::ProcessSessionFactory>(processContext);
 
     rpg_->onSchedule(processContext, sessionFactory);
