@@ -572,6 +572,25 @@ if (ENABLE_ALL OR ENABLE_AZURE)
 	createExtension(AZURE-EXTENSIONS "AZURE EXTENSIONS" "This enables Azure support" "extensions/azure" "${TEST_DIR}/azure-tests")
 endif()
 
+## Add the systemd extension
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	option(DISABLE_SYSTEMD "Disables the systemd extension." OFF)
+	if (NOT DISABLE_SYSTEMD)
+		#if (BUILD_SYSTEMD)
+		#	include(BundledRocksDB)
+		#	use_bundled_rocksdb(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+		#else()
+		#	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/rocksdb/sys")
+		#	find_package(RocksDB REQUIRED)
+		#endif()
+
+		# TODO: use ExternalProject to get libsystemd
+		find_package(PkgConfig)
+		pkg_check_modules(SYSTEMD_PKGCONF systemd)
+		createExtension(SYSTEMD-EXTENSIONS "SYSTEMD EXTENSIONS" "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "extensions/systemd" "${TEST_DIR}/systemd-tests")
+	endif()
+endif()
+
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 add_subdirectory(main)
 

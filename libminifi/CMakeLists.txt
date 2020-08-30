@@ -127,7 +127,7 @@ if(NOT WIN32)
 	list(APPEND LIBMINIFI_LIBRARIES OSSP::libuuid++)
 endif()
 if (NOT OPENSSL_OFF)
-	list(APPEND LIBMINIFI_LIBRARIES OpenSSL::SSL)
+	list(APPEND LIBMINIFI_LIBRARIES OpenSSL::Crypto OpenSSL::SSL)
 endif()
 target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${LIBMINIFI_LIBRARIES})
 
