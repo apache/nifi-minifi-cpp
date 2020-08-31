@@ -74,6 +74,10 @@ std::shared_ptr<ContentSession> DatabaseContentRepository::createSession() {
 
 void DatabaseContentRepository::Session::commit() {
   auto dbContentRepository = std::static_pointer_cast<DatabaseContentRepository>(repository_);
+  auto opendb = dbContentRepository->db_->open();
+  if (!opendb) {
+    throw Exception(GENERAL_EXCEPTION, "Couldn't open rocksdb database to commit content changes");
+  }
   rocksdb::WriteBatch batch;
   for (const auto& resource : managedResources_) {
     auto outStream = dbContentRepository->write(resource.first, false, &batch);
@@ -98,7 +102,7 @@ void DatabaseContentRepository::Session::commit() {
 
   rocksdb::WriteOptions options;
   options.sync = true;
-  rocksdb::Status status = dbContentRepository->db_->Write(options, &batch);
+  rocksdb::Status status = opendb->Write(options, &batch);
   if (!status.ok()) {
     throw std::runtime_error("Batch write failed: " + status.ToString());
   }

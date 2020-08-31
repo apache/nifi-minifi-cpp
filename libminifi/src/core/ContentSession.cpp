@@ -43,8 +43,10 @@ std::shared_ptr<io::BaseStream> ContentSession::write(const std::shared_ptr<Reso
     if (!append) {
       throw Exception(GENERAL_EXCEPTION, "Can only overwrite owned resource");
     }
-    auto extension = std::make_shared<io::BaseStream>();
-    extendedResources_[resourceId] = extension;
+    auto& extension = extendedResources_[resourceId];
+    if (!extension) {
+      extension = std::make_shared<io::BaseStream>();
+    }
     return extension;
   }
   if (!append) {
@@ -54,6 +56,9 @@ std::shared_ptr<io::BaseStream> ContentSession::write(const std::shared_ptr<Reso
 }
 
 std::shared_ptr<io::BaseStream> ContentSession::read(const std::shared_ptr<ResourceClaim>& resourceId) {
+  // TODO(adebreceni):
+  //  after the stream refactor is merged we should be able to share the underlying buffer
+  //  between multiple InputStreams, moreover create a ConcatInputStream
   if (managedResources_.find(resourceId) != managedResources_.end() || extendedResources_.find(resourceId) != extendedResources_.end()) {
     throw Exception(GENERAL_EXCEPTION, "Can only read non-modified resource");
   }

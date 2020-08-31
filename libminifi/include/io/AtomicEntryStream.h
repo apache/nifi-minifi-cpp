@@ -141,6 +141,9 @@ int AtomicEntryStream<T>::writeData(std::vector<uint8_t> &buf, int buflen) {
 // data stream overrides
 template<typename T>
 int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
+  if (size == 0) {
+    return 0;
+  }
   if (nullptr != value && !invalid_stream_) {
     std::lock_guard<std::recursive_mutex> lock(entry_lock_);
     if (entry_->insert(key_, value, size)) {
@@ -176,6 +179,9 @@ int AtomicEntryStream<T>::readData(std::vector<uint8_t> &buf, int buflen) {
 
 template<typename T>
 int AtomicEntryStream<T>::readData(uint8_t *buf, int buflen) {
+  if (buflen == 0) {
+    return 0;
+  }
   if (nullptr != buf && !invalid_stream_) {
     std::lock_guard<std::recursive_mutex> lock(entry_lock_);
     int len = buflen;

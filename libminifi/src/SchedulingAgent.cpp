@@ -121,7 +121,7 @@ bool SchedulingAgent::onTrigger(const std::shared_ptr<core::Processor> &processo
     auto start = std::chrono::steady_clock::now();
     processor->onTrigger(processContext, sessionFactory);
     auto end = std::chrono::steady_clock::now();
-    logger_->log_error("Processor [%s] onTrigger took: %d", processor->getName(), (int)(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()));
+    logger_->log_error("Processor [%s] onTrigger took: %d", processor->getName(), gsl::narrow<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()));
     processor->decrementActiveTask();
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());

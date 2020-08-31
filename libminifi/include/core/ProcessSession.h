@@ -71,6 +71,9 @@ class ProcessSession : public ReferenceContainer {
   std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() {
     return provenance_report_;
   }
+  // writes the created contents to the underlying repository
+  void flushContent();
+
   // Get the FlowFile from the highest priority queue
   virtual std::shared_ptr<core::FlowFile> get();
   // Create a new UUID FlowFile with no content resource claim and without parent

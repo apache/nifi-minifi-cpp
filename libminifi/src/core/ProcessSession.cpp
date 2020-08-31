@@ -1002,6 +1002,10 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
   return nullptr;
 }
 
+void ProcessSession::flushContent() {
+  content_session_->commit();
+}
+
 bool ProcessSession::outgoingConnectionsFull(const std::string& relationship) {
   std::set<std::shared_ptr<Connectable>> connections = process_context_->getProcessorNode()->getOutGoingConnections(relationship);
   Connection * connection = nullptr;

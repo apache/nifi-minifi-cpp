@@ -53,6 +53,7 @@ namespace repository {
 template<typename T>
 class VolatileRepository : public core::Repository, public utils::safe_enable_shared_from_this<VolatileRepository<T>> {
   using utils::safe_enable_shared_from_this<VolatileRepository<T>>::shared_from_this;
+
  public:
   static const char *volatile_repo_max_count;
   static const char *volatile_repo_max_bytes;

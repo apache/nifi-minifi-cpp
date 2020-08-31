@@ -119,32 +119,31 @@ class CompressDecompressionTestController : public TestController{
 
     std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    processor_ = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
-    processor_->initialize();
+    processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
+    processor->initialize();
     utils::Identifier processoruuid;
-    REQUIRE(true == processor_->getUUID(processoruuid));
+    REQUIRE(true == processor->getUUID(processoruuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from compress processor to log attribute
-    output_ = std::make_shared<minifi::Connection>(repo, content_repo, "Output");
-    output_->addRelationship(core::Relationship("success", "compress successful output"));
-    output_->setSource(processor_);
-    output_->setSourceUUID(processoruuid);
-    processor_->addConnection(output_);
+    output = std::make_shared<minifi::Connection>(repo, content_repo, "Output");
+    output->addRelationship(core::Relationship("success", "compress successful output"));
+    output->setSource(processor);
+    output->setSourceUUID(processoruuid);
+    processor->addConnection(output);
     // connection to compress processor
-    input_ = std::make_shared<minifi::Connection>(repo, content_repo, "Input");
-    input_->setDestination(processor_);
-    input_->setDestinationUUID(processoruuid);
-    processor_->addConnection(input_);
+    input = std::make_shared<minifi::Connection>(repo, content_repo, "Input");
+    input->setDestination(processor);
+    input->setDestinationUUID(processoruuid);
+    processor->addConnection(input);
 
-    processor_->setAutoTerminatedRelationships({{"failure", ""}});
+    processor->setAutoTerminatedRelationships({{"failure", ""}});
 
-    processor_->incrementActiveTasks();
-    processor_->setScheduledState(core::ScheduledState::RUNNING);
+    processor->incrementActiveTasks();
+    processor->setScheduledState(core::ScheduledState::RUNNING);
 
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor_);
-    context_ = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+    context = std::make_shared<core::ProcessContext>(std::make_shared<core::ProcessorNode>(processor), nullptr, repo, repo, content_repo);
   }
 
  public:
@@ -178,13 +177,15 @@ class CompressDecompressionTestController : public TestController{
 
   virtual ~CompressDecompressionTestController() = 0;
 
-  std::shared_ptr<core::Processor> processor_;
-  std::shared_ptr<core::ProcessContext> context_;
-  std::shared_ptr<minifi::Connection> output_;
-  std::shared_ptr<minifi::Connection> input_;
+  std::shared_ptr<core::Processor> processor;
+  std::shared_ptr<core::ProcessContext> context;
+  std::shared_ptr<minifi::Connection> output;
+  std::shared_ptr<minifi::Connection> input;
 };
 
-CompressDecompressionTestController::~CompressDecompressionTestController() = default;
+CompressDecompressionTestController::~CompressDecompressionTestController() {
+  LogTestController::getInstance().reset();
+}
 
 std::string CompressDecompressionTestController::tempDir_;
 std::string CompressDecompressionTestController::raw_content_path_;
@@ -233,13 +234,7 @@ class DecompressTestController : public CompressDecompressionTestController{
   }
 };
 
-TEST_CASE("CompressFileGZip", "[compressfiletest1]") {
-  CompressTestController testController;
-  auto context = testController.context_;
-  auto input = testController.input_;
-  auto processor = testController.processor_;
-  auto output = testController.output_;
-
+TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1]") {
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_GZIP);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -247,7 +242,8 @@ TEST_CASE("CompressFileGZip", "[compressfiletest1]") {
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-  sessionGenFlowFile.import(testController.rawContentPath(), flow, true, 0);
+  sessionGenFlowFile.import(rawContentPath(), flow, true, 0);
+  sessionGenFlowFile.flushContent();
   input->put(flow);
 
   REQUIRE(processor->getName() == "compresscontent");
@@ -270,20 +266,13 @@ TEST_CASE("CompressFileGZip", "[compressfiletest1]") {
     sessionGenFlowFile.read(flow1, &callback);
     callback.archive_read();
     std::string content(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-    REQUIRE(testController.getRawContent() == content);
+    REQUIRE(getRawContent() == content);
     // write the compress content for next test
-    testController.writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
   }
-  LogTestController::getInstance().reset();
 }
 
-TEST_CASE("DecompressFileGZip", "[compressfiletest2]") {
-  DecompressTestController testController;
-  auto context = testController.context_;
-  auto input = testController.input_;
-  auto processor = testController.processor_;
-  auto output = testController.output_;
-
+TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfiletest2]") {
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_GZIP);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -291,7 +280,8 @@ TEST_CASE("DecompressFileGZip", "[compressfiletest2]") {
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-  sessionGenFlowFile.import(testController.compressedPath(), flow, true, 0);
+  sessionGenFlowFile.import(compressedPath(), flow, true, 0);
+  sessionGenFlowFile.flushContent();
   input->put(flow);
 
   REQUIRE(processor->getName() == "compresscontent");
@@ -312,18 +302,11 @@ TEST_CASE("DecompressFileGZip", "[compressfiletest2]") {
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string content(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-    REQUIRE(testController.getRawContent() == content);
+    REQUIRE(getRawContent() == content);
   }
-  LogTestController::getInstance().reset();
 }
 
-TEST_CASE("CompressFileBZip", "[compressfiletest3]") {
-  CompressTestController testController;
-  auto context = testController.context_;
-  auto input = testController.input_;
-  auto processor = testController.processor_;
-  auto output = testController.output_;
-
+TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3]") {
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_BZIP2);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -331,7 +314,8 @@ TEST_CASE("CompressFileBZip", "[compressfiletest3]") {
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-  sessionGenFlowFile.import(testController.rawContentPath(), flow, true, 0);
+  sessionGenFlowFile.import(rawContentPath(), flow, true, 0);
+  sessionGenFlowFile.flushContent();
   input->put(flow);
 
   REQUIRE(processor->getName() == "compresscontent");
@@ -354,21 +338,14 @@ TEST_CASE("CompressFileBZip", "[compressfiletest3]") {
     sessionGenFlowFile.read(flow1, &callback);
     callback.archive_read();
     std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-    REQUIRE(testController.getRawContent() == contents);
+    REQUIRE(getRawContent() == contents);
     // write the compress content for next test
-    testController.writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
   }
-  LogTestController::getInstance().reset();
 }
 
 
-TEST_CASE("DecompressFileBZip", "[compressfiletest4]") {
-  DecompressTestController testController;
-  auto context = testController.context_;
-  auto input = testController.input_;
-  auto processor = testController.processor_;
-  auto output = testController.output_;
-
+TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfiletest4]") {
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_BZIP2);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -376,7 +353,8 @@ TEST_CASE("DecompressFileBZip", "[compressfiletest4]") {
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-  sessionGenFlowFile.import(testController.compressedPath(), flow, true, 0);
+  sessionGenFlowFile.import(compressedPath(), flow, true, 0);
+  sessionGenFlowFile.flushContent();
   input->put(flow);
 
   REQUIRE(processor->getName() == "compresscontent");
@@ -397,18 +375,11 @@ TEST_CASE("DecompressFileBZip", "[compressfiletest4]") {
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-    REQUIRE(testController.getRawContent() == contents);
+    REQUIRE(getRawContent() == contents);
   }
-  LogTestController::getInstance().reset();
 }
 
-TEST_CASE("CompressFileLZMA", "[compressfiletest5]") {
-  CompressTestController testController;
-  auto context = testController.context_;
-  auto input = testController.input_;
-  auto processor = testController.processor_;
-  auto output = testController.output_;
-
+TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5]") {
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_LZMA);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -416,7 +387,8 @@ TEST_CASE("CompressFileLZMA", "[compressfiletest5]") {
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-  sessionGenFlowFile.import(testController.rawContentPath(), flow, true, 0);
+  sessionGenFlowFile.import(rawContentPath(), flow, true, 0);
+  sessionGenFlowFile.flushContent();
   input->put(flow);
 
   REQUIRE(processor->getName() == "compresscontent");
@@ -445,21 +417,14 @@ TEST_CASE("CompressFileLZMA", "[compressfiletest5]") {
     sessionGenFlowFile.read(flow1, &callback);
     callback.archive_read();
     std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-    REQUIRE(testController.getRawContent() == contents);
+    REQUIRE(getRawContent() == contents);
     // write the compress content for next test
-    testController.writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
   }
-  LogTestController::getInstance().reset();
 }
 
 
-TEST_CASE("DecompressFileLZMA", "[compressfiletest6]") {
-  DecompressTestController testController;
-  auto context = testController.context_;
-  auto input = testController.input_;
-  auto processor = testController.processor_;
-  auto output = testController.output_;
-
+TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfiletest6]") {
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_ATTRIBUTE);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -467,8 +432,9 @@ TEST_CASE("DecompressFileLZMA", "[compressfiletest6]") {
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-  sessionGenFlowFile.import(testController.compressedPath(), flow, true, 0);
+  sessionGenFlowFile.import(compressedPath(), flow, true, 0);
   flow->setAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), "application/x-lzma");
+  sessionGenFlowFile.flushContent();
   input->put(flow);
 
   REQUIRE(processor->getName() == "compresscontent");
@@ -495,18 +461,11 @@ TEST_CASE("DecompressFileLZMA", "[compressfiletest6]") {
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-    REQUIRE(testController.getRawContent() == contents);
+    REQUIRE(getRawContent() == contents);
   }
-  LogTestController::getInstance().reset();
 }
 
-TEST_CASE("CompressFileXYLZMA", "[compressfiletest7]") {
-  CompressTestController testController;
-  auto context = testController.context_;
-  auto input = testController.input_;
-  auto processor = testController.processor_;
-  auto output = testController.output_;
-
+TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletest7]") {
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_XZ_LZMA2);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -514,7 +473,8 @@ TEST_CASE("CompressFileXYLZMA", "[compressfiletest7]") {
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-  sessionGenFlowFile.import(testController.rawContentPath(), flow, true, 0);
+  sessionGenFlowFile.import(rawContentPath(), flow, true, 0);
+  sessionGenFlowFile.flushContent();
   input->put(flow);
 
   REQUIRE(processor->getName() == "compresscontent");
@@ -543,21 +503,14 @@ TEST_CASE("CompressFileXYLZMA", "[compressfiletest7]") {
     sessionGenFlowFile.read(flow1, &callback);
     callback.archive_read();
     std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-    REQUIRE(testController.getRawContent() == contents);
+    REQUIRE(getRawContent() == contents);
     // write the compress content for next test
-    testController.writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
   }
-  LogTestController::getInstance().reset();
 }
 
 
-TEST_CASE("DecompressFileXYLZMA", "[compressfiletest8]") {
-  DecompressTestController testController;
-  auto context = testController.context_;
-  auto input = testController.input_;
-  auto processor = testController.processor_;
-  auto output = testController.output_;
-
+TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfiletest8]") {
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_ATTRIBUTE);
   context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -565,8 +518,9 @@ TEST_CASE("DecompressFileXYLZMA", "[compressfiletest8]") {
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
-  sessionGenFlowFile.import(testController.compressedPath(), flow, true, 0);
+  sessionGenFlowFile.import(compressedPath(), flow, true, 0);
   flow->setAttribute(FlowAttributeKey(org::apache::nifi::minifi::MIME_TYPE), "application/x-xz");
+  sessionGenFlowFile.flushContent();
   input->put(flow);
 
   REQUIRE(processor->getName() == "compresscontent");
@@ -593,23 +547,21 @@ TEST_CASE("DecompressFileXYLZMA", "[compressfiletest8]") {
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-    REQUIRE(testController.getRawContent() == contents);
+    REQUIRE(getRawContent() == contents);
   }
-  LogTestController::getInstance().reset();
 }
 
-TEST_CASE("RawGzipCompressionDecompression", "[compressfiletest8]") {
-  TestController testController;
+TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfiletest8]") {
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::PutFile>();
 
   // Create temporary directories
   char format_src[] = "/tmp/archives.XXXXXX";
-  std::string src_dir = testController.createTempDirectory(format_src);
+  std::string src_dir = createTempDirectory(format_src);
   REQUIRE(!src_dir.empty());
 
   char format_dst[] = "/tmp/archived.XXXXXX";
-  std::string dst_dir = testController.createTempDirectory(format_dst);
+  std::string dst_dir = createTempDirectory(format_dst);
   REQUIRE(!dst_dir.empty());
 
   // Define files
@@ -618,7 +570,7 @@ TEST_CASE("RawGzipCompressionDecompression", "[compressfiletest8]") {
   std::string decompressed_file = utils::file::FileUtils::concat_path(dst_dir, "src.txt");
 
   // Build MiNiFi processing graph
-  auto plan = testController.createPlan();
+  auto plan = createPlan();
   auto get_file = plan->addProcessor(
       "GetFile",
       "GetFile");
@@ -684,7 +636,7 @@ TEST_CASE("RawGzipCompressionDecompression", "[compressfiletest8]") {
   std::ofstream{ src_file } << content;
 
   // Run flow
-  testController.runSession(plan, true);
+  runSession(plan, true);
 
   // Check compressed file
   std::ifstream compressed(compressed_file, std::ios::in | std::ios::binary);

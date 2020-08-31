@@ -37,6 +37,7 @@ namespace repository {
  */
 class VolatileFlowFileRepository : public VolatileRepository<std::string>, public utils::safe_enable_shared_from_this<VolatileFlowFileRepository> {
   using utils::safe_enable_shared_from_this<VolatileFlowFileRepository>::shared_from_this;
+
  public:
   explicit VolatileFlowFileRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
   MAX_REPOSITORY_STORAGE_SIZE,
