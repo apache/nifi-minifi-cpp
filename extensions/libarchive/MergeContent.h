@@ -55,11 +55,11 @@ class MergeBin {
 public:
 
   virtual ~MergeBin() = default;
-
   virtual std::string getMergedContentType() = 0;
   // merge the flows in the bin
-  virtual std::shared_ptr<core::FlowFile> merge(core::ProcessContext *context, core::ProcessSession *session,
-      std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer, std::string &demarcator) = 0;
+  virtual void merge(core::ProcessContext *context, core::ProcessSession *session,
+      std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer, std::string &demarcator,
+      const std::shared_ptr<core::FlowFile> &flowFile) = 0;
 };
 
 // BinaryConcatenationMerge Class
@@ -69,8 +69,9 @@ public:
   std::string getMergedContentType() {
     return mimeType;
   }
-  std::shared_ptr<core::FlowFile> merge(core::ProcessContext *context, core::ProcessSession *session,
-          std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer, std::string &demarcator);
+  virtual void merge(
+    core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
+    std::string &header, std::string &footer, std::string &demarcator, const std::shared_ptr<core::FlowFile> &flowFile) override;
   // Nest Callback Class for read stream
   class ReadCallback : public InputStreamCallback {
    public:
@@ -247,8 +248,8 @@ public:
 class TarMerge: public ArchiveMerge, public MergeBin {
 public:
   static const char *mimeType;
-  std::shared_ptr<core::FlowFile> merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
-        std::string &demarcator);
+  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
+    std::string &demarcator, const std::shared_ptr<core::FlowFile> &flowFile) override;
   std::string getMergedContentType() {
     return mimeType;
   }
@@ -258,8 +259,8 @@ public:
 class ZipMerge: public ArchiveMerge, public MergeBin {
 public:
   static const char *mimeType;
-  std::shared_ptr<core::FlowFile> merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
-        std::string &demarcator);
+  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
+    std::string &demarcator, const std::shared_ptr<core::FlowFile> &flowFile) override;
   std::string getMergedContentType() {
     return mimeType;
   }
@@ -269,7 +270,7 @@ class AttributeMerger {
 public:
   explicit AttributeMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : flows_(flows) {}
-  void mergeAttributes(core::ProcessSession *session, std::shared_ptr<core::FlowFile> &merge_flow);
+  void mergeAttributes(core::ProcessSession *session, const std::shared_ptr<core::FlowFile> &merge_flow);
   virtual ~AttributeMerger() = default;
 protected:
   std::map<std::string, std::string> getMergedAttributes();

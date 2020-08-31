@@ -845,7 +845,7 @@ TEST_CASE("Test Merge File Attributes Keeping Only Common Attributes", "[testMer
     }
   }
 
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_TAR_VALUE);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
 
@@ -860,6 +860,7 @@ TEST_CASE("Test Merge File Attributes Keeping Only Common Attributes", "[testMer
     flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
     flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
     flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
+    flow->setAttribute("mime.type", "application/octet-stream");
     if (i == 1)
       flow->setAttribute("tagUnique1", "unique1");
     else if (i == 2)
@@ -893,6 +894,7 @@ TEST_CASE("Test Merge File Attributes Keeping Only Common Attributes", "[testMer
   REQUIRE(attributes.find("tagUnique1") == attributes.end());
   REQUIRE(attributes.find("tagUnique2") == attributes.end());
   REQUIRE(attributes["tagCommon"] == "common");
+  REQUIRE(attributes["mime.type"] == "application/tar");
 
   LogTestController::getInstance().reset();
 }
@@ -918,7 +920,7 @@ TEST_CASE("Test Merge File Attributes Keeping All Unique Attributes", "[testMerg
     }
   }
 
-  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_TAR_VALUE);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::AttributeStrategy, org::apache::nifi::minifi::processors::merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE);
@@ -934,6 +936,7 @@ TEST_CASE("Test Merge File Attributes Keeping All Unique Attributes", "[testMerg
     flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
     flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
     flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
+    flow->setAttribute("mime.type", "application/octet-stream");
     if (i == 1)
       flow->setAttribute("tagUnique1", "unique1");
     else if (i == 2)
@@ -967,6 +970,7 @@ TEST_CASE("Test Merge File Attributes Keeping All Unique Attributes", "[testMerg
   REQUIRE(attributes["tagUnique1"] == "unique1");
   REQUIRE(attributes["tagUnique2"] == "unique2");
   REQUIRE(attributes["tagCommon"] == "common");
+  REQUIRE(attributes["mime.type"] == "application/tar");
 
   LogTestController::getInstance().reset();
 }
