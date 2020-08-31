@@ -66,7 +66,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
                    std::move(content_repo), std::move(flow_configuration), std::move(filesystem)),
       running_(false),
       updating_(false),
-      initialized_(false),
       controller_service_map_(std::make_shared<core::controller::ControllerServiceMap>()),
       thread_pool_(2, false, nullptr, "Flowcontroller threadpool"),
       logger_(logging::LoggerFactory<FlowController>::getLogger()) {
@@ -78,8 +77,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
     throw std::runtime_error("Must supply a configuration.");
   }
   running_ = false;
-  initialized_ = false;
-
   protocol_ = utils::make_unique<FlowControlProtocol>(this, configuration_);
 
   if (!headless_mode) {
@@ -115,7 +112,6 @@ utils::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFr
 FlowController::~FlowController() {
   stop();
   stopC2();
-  unload();
   // TODO(adebreceni): are these here on purpose, so they are destroyed first?
   protocol_ = nullptr;
   flow_file_repo_ = nullptr;
@@ -147,33 +143,27 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   controller_map_->clear();
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
-  initialized_ = false;
-  bool started = false;
   try {
-    load(this->root_, true);
+    reinitializeSchedulersWithClearedThreadPool();
+    io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
+    load(this->root_);
     flow_update_ = true;
-    started = start() == 0;
-
+    start();
     updating_ = false;
-
-    if (started) {
-      auto flowVersion = flow_configuration_->getFlowVersion();
-      if (flowVersion) {
-        logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
-        configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
-        configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
-      } else {
-        logger_->log_debug("Invalid flow version, not setting");
-      }
+    auto flowVersion = flow_configuration_->getFlowVersion();
+    if (flowVersion) {
+      logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
+      configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
+      configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
     }
   } catch (...) {
     this->root_ = std::move(prevRoot);
-    load(this->root_, true);
+    load(this->root_);
     flow_update_ = true;
     updating_ = false;
   }
 
-  return started;
+  return true;
 }
 
 int16_t FlowController::stop() {
@@ -246,29 +236,43 @@ void FlowController::unload() {
   if (running_) {
     stop();
   }
-  if (initialized_) {
-    logger_->log_info("Unload Flow Controller");
-    initialized_ = false;
-    name_ = "";
-  }
+  logger_->log_info("Unload Flow Controller");
+  name_ = "";
 }
 
-void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool reload) {
+void FlowController::restartThreadPool() {
+  auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
+  thread_pool_.shutdown();
+  thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 2));
+  thread_pool_.setControllerServiceProvider(base_shared_ptr);
+  thread_pool_.start();
+}
+
+void FlowController::initializeUninitializedSchedulers() {
+  conditionalReloadScheduler<TimerDrivenSchedulingAgent>(timer_scheduler_, !timer_scheduler_);
+  conditionalReloadScheduler<EventDrivenSchedulingAgent>(event_scheduler_, !event_scheduler_);
+  conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_);
+}
+
+void FlowController::reinitializeSchedulersWithClearedThreadPool() {
+  using NonNullControllerServiceProviderPtr = gsl::not_null<core::controller::ControllerServiceProvider*>;
+  restartThreadPool();
+  timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(NonNullControllerServiceProviderPtr(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+  event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(NonNullControllerServiceProviderPtr(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+  cron_scheduler_ = std::make_shared<CronDrivenSchedulingAgent>(NonNullControllerServiceProviderPtr(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+}
+
+void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     stop();
   }
-  if (!initialized_) {
-    if (reload) {
-      io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
-    }
-
     if (root) {
       logger_->log_info("Load Flow Controller from provided root");
-      this->root_ = root;
+      root_ = root;
     } else {
       logger_->log_info("Instantiating new flow");
-      this->root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot());
+      root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot());
     }
 
     logger_->log_info("Loaded root processor Group");
@@ -276,40 +280,33 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
     controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
     auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
 
-    if (!thread_pool_.isRunning() || reload) {
-      thread_pool_.shutdown();
-      thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 2));
-      thread_pool_.setControllerServiceProvider(base_shared_ptr);
-      thread_pool_.start();
+    if (!thread_pool_.isRunning()) {
+      restartThreadPool();
     }
 
-    conditionalReloadScheduler<TimerDrivenSchedulingAgent>(timer_scheduler_, !timer_scheduler_ || reload);
-    conditionalReloadScheduler<EventDrivenSchedulingAgent>(event_scheduler_, !event_scheduler_ || reload);
-    conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_ || reload);
+  initializeUninitializedSchedulers();
 
-    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
-    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
-        std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
+  std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
+  std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
+      std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
 
-    logger_->log_info("Loaded controller service provider");
+  logger_->log_info("Loaded controller service provider");
 
-    /*
-     * Without reset we have to distinguish a fresh restart and a reload, to decide if we have to
-     * increment the claims' counter on behalf of the persisted instances.
-     * ResourceClaim::getStreamCount is not suitable as multiple persisted instances
-     * might have the same claim.
-     * e.g. without reset a streamCount of 3 could mean the following:
-     *  - it was a fresh restart and 3 instances of this claim have already been resurrected -> we must increment
-     *  - it was a reload and 3 instances have been persisted before the shutdown -> we must not increment
-     */
-    content_repo_->reset();
-    logger_->log_info("Reset content repository");
+  /*
+   * Without reset we have to distinguish a fresh restart and a reload, to decide if we have to
+   * increment the claims' counter on behalf of the persisted instances.
+   * ResourceClaim::getStreamCount is not suitable as multiple persisted instances
+   * might have the same claim.
+   * e.g. without reset a streamCount of 3 could mean the following:
+   *  - it was a fresh restart and 3 instances of this claim have already been resurrected -> we must increment
+   *  - it was a reload and 3 instances have been persisted before the shutdown -> we must not increment
+   */
+  content_repo_->reset();
+  logger_->log_info("Reset content repository");
 
-    // Load Flow File from Repo
-    loadFlowRepo();
-    logger_->log_info("Loaded flow repository");
-    initialized_ = true;
-  }
+  // Load Flow File from Repo
+  loadFlowRepo();
+  logger_->log_info("Loaded flow repository");
 }
 
 void FlowController::loadFlowRepo() {
@@ -331,33 +328,28 @@ void FlowController::loadFlowRepo() {
 
 int16_t FlowController::start() {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-  if (!initialized_) {
-    logger_->log_error("Can not start Flow Controller because it has not been initialized");
-    return -1;
-  } else {
-    if (!running_) {
-      logger_->log_info("Starting Flow Controller");
-      controller_service_provider_->enableAllControllerServices();
-      this->timer_scheduler_->start();
-      this->event_scheduler_->start();
-      this->cron_scheduler_->start();
+  if (!running_) {
+    logger_->log_info("Starting Flow Controller");
+    controller_service_provider_->enableAllControllerServices();
+    timer_scheduler_->start();
+    event_scheduler_->start();
+    cron_scheduler_->start();
 
-      if (this->root_ != nullptr) {
-        start_time_ = std::chrono::steady_clock::now();
-        // watch out, this might immediately start the processors
-        // as the thread_pool_ is started in load()
-        this->root_->startProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
-      }
-      C2Client::initialize(this, shared_from_this());
-      running_ = true;
-      this->protocol_->start();
-      this->provenance_repo_->start();
-      this->flow_file_repo_->start();
-      thread_pool_.start();
-      logger_->log_info("Started Flow Controller");
+    if (root_ != nullptr) {
+      start_time_ = std::chrono::steady_clock::now();
+      // watch out, this might immediately start the processors
+      // as the thread_pool_ is started in load()
+      root_->startProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
     }
-    return 0;
+    C2Client::initialize(this, shared_from_this());
+    running_ = true;
+    protocol_->start();
+    provenance_repo_->start();
+    flow_file_repo_->start();
+    thread_pool_.start();
+    logger_->log_info("Started Flow Controller");
   }
+  return 0;
 }
 
 /**

@@ -94,17 +94,13 @@ class FlowController : public core::controller::ControllerServiceProvider,  publ
   }
 
   // Load flow xml from disk, after that, create the root process group and its children, initialize the flows
-  virtual void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr, bool reload = false);
+  virtual void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr);
 
   // Whether the Flow Controller is start running
   bool isRunning() override {
     return running_.load() || updating_.load();
   }
 
-  // Whether the Flow Controller has already been initialized (loaded flow XML)
-  virtual bool isInitialized() {
-    return initialized_.load();
-  }
   // Start to run the Flow Controller which internally start the root process group and all its children
   int16_t start() override;
   int16_t pause() override {
@@ -312,6 +308,10 @@ class FlowController : public core::controller::ControllerServiceProvider,  publ
   utils::optional<std::chrono::milliseconds> loadShutdownTimeoutFromConfiguration();
 
  private:
+  void restartThreadPool();
+  void initializeUninitializedSchedulers();
+  void reinitializeSchedulersWithClearedThreadPool();
+
   template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>
   void conditionalReloadScheduler(std::shared_ptr<T>& scheduler, const bool condition) {
     if (condition) {
@@ -327,8 +327,12 @@ class FlowController : public core::controller::ControllerServiceProvider,  publ
   std::atomic<bool> running_;
   std::atomic<bool> updating_;
 
-  // Whether it has already been initialized (load the flow XML already)
-  std::atomic<bool> initialized_;
+  std::atomic<bool> flow_update_;
+  // Provenance Repo
+  std::shared_ptr<core::Repository> provenance_repo_;
+  // FlowFile Repo
+  std::shared_ptr<core::Repository> flow_file_repo_;
+  std::shared_ptr<core::ContentRepository> content_repo_;
   // Thread pool for schedulers
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
   // Flow Timer Scheduler
