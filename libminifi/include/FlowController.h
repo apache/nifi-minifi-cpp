@@ -100,7 +100,9 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   }
 
   // Load flow xml from disk, after that, create the root process group and its children, initialize the flows
-  virtual void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr, bool reload = false);
+  // virtual void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr, bool reload = false);
+  virtual void load_without_reload(const std::shared_ptr<core::ProcessGroup> &root = nullptr);
+  virtual void load_with_reload(const std::shared_ptr<core::ProcessGroup> &root = nullptr);
 
   // Whether the Flow Controller is start running
   bool isRunning() override {
@@ -338,6 +340,9 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   utils::optional<std::chrono::milliseconds> loadShutdownTimeoutFromConfiguration();
 
  private:
+  void restartThreadPool();
+  void initializeUninitializedSchedulers();
+
   template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>
   void conditionalReloadScheduler(std::shared_ptr<T>& scheduler, const bool condition) {
     if (condition) {

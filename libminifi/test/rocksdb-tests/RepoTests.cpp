@@ -316,7 +316,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   // this notifies the FlowFileRepository of the flow structure
   // i.e. what Connections are present (more precisely what Connectables
   // are present)
-  flowController->load(root);
+  flowController->load_without_reload(root);
   // this will first check the persisted repo and restore all FlowFiles
   // that still has an owner Connectable
   ff_repository->start();

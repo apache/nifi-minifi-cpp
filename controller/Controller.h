@@ -271,7 +271,7 @@ std::shared_ptr<core::controller::ControllerService> getControllerService(const 
 
   std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
       new minifi::FlowController(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo));
-  controller->load();
+  controller->load_without_reload();
   auto service = controller->getControllerService(service_name);
   if (service)
     service->onEnable();
@@ -328,7 +328,7 @@ void printManifest(const std::shared_ptr<minifi::Configure> &configuration) {
 
   std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
       new minifi::FlowController(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo, "manifest", false));
-  controller->load();
+  controller->load_without_reload();
   controller->start();
   std::this_thread::sleep_for(std::chrono::milliseconds(10000));
   controller->stop();

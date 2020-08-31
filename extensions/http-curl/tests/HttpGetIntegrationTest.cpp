@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
   } else {
     server = utils::make_unique<TestServer>(port, path, &h_ex);
   }
-  controller->load();
+  controller->load_without_reload();
   controller->start();
   
   assert(verifyLogLinePresenceInPollTime(

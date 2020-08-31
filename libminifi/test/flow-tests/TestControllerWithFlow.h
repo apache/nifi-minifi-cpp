@@ -57,7 +57,7 @@ class TestControllerWithFlow: public TestController{
   }
 
   void startFlow() {
-    controller_->load(root_);
+    controller_->load_without_reload(root_);
     controller_->start();
   }
 

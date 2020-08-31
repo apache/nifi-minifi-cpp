@@ -215,7 +215,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   initialized_ = false;
   bool started = false;
   try {
-    load(this->root_, true);
+    load_with_reload(this->root_);
     flow_update_ = true;
     started = start() == 0;
 
@@ -233,7 +233,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     }
   } catch (...) {
     this->root_ = std::move(prevRoot);
-    load(this->root_, true);
+    load_with_reload(this->root_);
     flow_update_ = true;
     updating_ = false;
   }
@@ -318,7 +318,23 @@ void FlowController::unload() {
   }
 }
 
-void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool reload) {
+void FlowController::restartThreadPool() {
+  auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
+  thread_pool_.shutdown();
+  thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 2));
+  thread_pool_.setControllerServiceProvider(base_shared_ptr);
+  thread_pool_.start();
+}
+
+void FlowController::initializeUninitializedSchedulers() {
+  conditionalReloadScheduler<TimerDrivenSchedulingAgent>(timer_scheduler_, !timer_scheduler_);
+  conditionalReloadScheduler<EventDrivenSchedulingAgent>(event_scheduler_, !event_scheduler_);
+  conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_);
+}
+
+
+void FlowController::load_with_reload(const std::shared_ptr<core::ProcessGroup> &root) {
+  using core::controller::ControllerServiceProvider;
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     stop();
@@ -330,8 +346,41 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
       logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
     }
 
-    if (reload) {
-      io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
+    io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
+
+    this->root_ = root == nullptr ? std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_)) : root;
+    logger_->log_info("Loaded root processor Group");
+    logger_->log_info("Initializing timers");
+    controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
+
+    restartThreadPool();
+
+    timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(gsl::not_null<ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+    event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(gsl::not_null<ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+    cron_scheduler_ = std::make_shared<CronDrivenSchedulingAgent>(gsl::not_null<ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+
+    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
+    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
+        std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
+
+    logger_->log_info("Loaded controller service provider");
+    // Load Flow File from Repo
+    loadFlowRepo();
+    logger_->log_info("Loaded flow repository");
+    initialized_ = true;
+  }
+}
+
+void FlowController::load_without_reload(const std::shared_ptr<core::ProcessGroup> &root) {
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  if (running_) {
+    stop();
+  }
+  if (!initialized_) {
+    if (root) {
+      logger_->log_info("Load Flow Controller from provided root");
+    } else {
+      logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
     }
 
     this->root_ = root == nullptr ? std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_)) : root;
@@ -340,16 +389,11 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
     controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
     auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
 
-    if (!thread_pool_.isRunning() || reload) {
-      thread_pool_.shutdown();
-      thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 2));
-      thread_pool_.setControllerServiceProvider(base_shared_ptr);
-      thread_pool_.start();
+    if (!thread_pool_.isRunning()) {
+      restartThreadPool();
     }
 
-    conditionalReloadScheduler<TimerDrivenSchedulingAgent>(timer_scheduler_, !timer_scheduler_ || reload);
-    conditionalReloadScheduler<EventDrivenSchedulingAgent>(event_scheduler_, !event_scheduler_ || reload);
-    conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_ || reload);
+    initializeUninitializedSchedulers();
 
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
