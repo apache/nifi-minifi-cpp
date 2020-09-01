@@ -97,7 +97,7 @@ public:
   //! Initialize, overwrite by NiFi ConsumeWindowsEventLog
   virtual void initialize(void) override;
   void notifyStop() override;
-  
+
 
 protected:
   void refreshTimeZoneData();

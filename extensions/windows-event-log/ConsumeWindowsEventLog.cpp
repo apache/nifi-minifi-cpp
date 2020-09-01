@@ -185,7 +185,7 @@ void ConsumeWindowsEventLog::notifyStop() {
       LOG_LAST_ERROR(LoadLibrary);
     }
   }
-  logger_->log_trace("finish notifyStop"); 
+  logger_->log_trace("finish notifyStop");
 }
 
 ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
@@ -197,7 +197,7 @@ ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
 void ConsumeWindowsEventLog::initialize() {
   //! Set the supported properties
   setSupportedProperties({
-     Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes, 
+     Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes,
      EventHeaderDelimiter, EventHeader, OutputFormat, BatchCommitSize, BookmarkRootDirectory, ProcessOldEvents
   });
 
@@ -360,7 +360,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   auto hBookmark = pBookmark_->getBookmarkHandleFromXML();
   if (!hBookmark) {
-    logger_->log_error("hBookmark is null, unrecoverable error!"); 
+    logger_->log_error("hBookmark is null, unrecoverable error!");
     pBookmark_.reset();
     context->yield();
     return;
@@ -381,8 +381,8 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     if (!EvtNext(hEventResults, 1, &hEvent, EVT_NEXT_TIMEOUT_MS, 0, &dwReturned)) {
       if (ERROR_NO_MORE_ITEMS != GetLastError()) {
         LogWindowsError("Failed to get next event");
-        continue; 
-        /* According to MS this iteration should only end when the return value is false AND 
+        continue;
+        /* According to MS this iteration should only end when the return value is false AND
          the error code is NO_MORE_ITEMS. See the following page for further details:
          https://docs.microsoft.com/en-us/windows/win32/api/winevt/nf-winevt-evtnext */
       }
@@ -430,12 +430,12 @@ wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std
   providers_[name] = wel::WindowsEventLogHandler(EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0));
   logger_->log_trace("Not found the handler -> created handler for %s", name.c_str());
   return providers_[name];
-} 
+}
 
 // !!! Used a non-documented approach to resolve `%%` in XML via C:\Windows\System32\MsObjs.dll.
-// Links which mention this approach: 
+// Links which mention this approach:
 // https://social.technet.microsoft.com/Forums/Windows/en-US/340632d1-60f0-4cc5-ad6f-f8c841107d0d/translate-value-1833quot-on-impersonationlevel-and-similar-values?forum=winservergen
-// https://github.com/libyal/libevtx/blob/master/documentation/Windows%20XML%20Event%20Log%20(EVTX).asciidoc 
+// https://github.com/libyal/libevtx/blob/master/documentation/Windows%20XML%20Event%20Log%20(EVTX).asciidoc
 // https://stackoverflow.com/questions/33498244/marshaling-a-message-table-resource
 //
 // Traverse xml and check each node, if it starts with '%%' and contains only digits, use it as key to lookup value in C:\Windows\System32\MsObjs.dll.
@@ -556,7 +556,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
     return false;
   }
 
-  // this is a well known path. 
+  // this is a well known path.
   std::string providerName = doc.child("Event").child("System").child("Provider").attribute("Name").value();
   wel::WindowsEventLogMetadataImpl metadata{getEventLogHandler(providerName).getMetadata(), hEvent};
   wel::MetadataWalker walker{metadata, channel_, !resolve_as_attributes_, apply_identifier_function_, regex_};

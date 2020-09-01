@@ -335,11 +335,15 @@ TEST_CASE("ConsumeWindowsEventLog prints events in XML correctly", "[onTrigger]"
     test_controller.runSession(test_plan);
 
     REQUIRE(LogTestController::getInstance().contains(R"(<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event"><System><Provider Name="Application"/>)"));
-    REQUIRE(LogTestController::getInstance().contains(R"(<EventID Qualifiers="0">14985</EventID><Level>4</Level><Task>0</Task><Keywords>0x80000000000000</Keywords><TimeCreated SystemTime=")"));
+    REQUIRE(LogTestController::getInstance().contains(R"(<EventID Qualifiers="0">14985</EventID>)"));
+    REQUIRE(LogTestController::getInstance().contains(R"(<Level>4</Level>)"));
+    REQUIRE(LogTestController::getInstance().contains(R"(<Task>0</Task>)"));
+    REQUIRE(LogTestController::getInstance().contains(R"(<Keywords>0x80000000000000</Keywords><TimeCreated SystemTime=")"));
     // the timestamp (when the event was published) goes here
     REQUIRE(LogTestController::getInstance().contains(R"("/><EventRecordID>)"));
     // the ID of the event goes here (a number)
-    REQUIRE(LogTestController::getInstance().contains(R"(</EventRecordID><Channel>Application</Channel><Computer>)"));
+    REQUIRE(LogTestController::getInstance().contains(R"(</EventRecordID>)"));
+    REQUIRE(LogTestController::getInstance().contains(R"(<Channel>Application</Channel><Computer>)"));
     // the computer name goes here
     REQUIRE(LogTestController::getInstance().contains(R"(</Computer><Security/></System><EventData><Data>Event one</Data></EventData></Event>)"));
   }
