@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
     server = utils::make_unique<TestServer>(port, path, &h_ex);
   }
   controller->load();
-  controller->start();
+  controller->initialized_start();
   
   assert(verifyLogLinePresenceInPollTime(
       std::chrono::seconds(10),

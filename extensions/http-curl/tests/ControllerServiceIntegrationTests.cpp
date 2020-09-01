@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
   {
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->load();
-    controller->start();
+    controller->initialized_start();
     ssl_client_cont = controller->getControllerServiceNode("SSLClientServiceTest");
     ssl_client_cont->enable();
     assert(ssl_client_cont != nullptr);

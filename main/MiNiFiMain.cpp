@@ -306,7 +306,7 @@ int main(int argc, char **argv) {
 
   // Start Processing the flow
 
-  controller->start();
+  controller->initialized_start();
   logger->log_info("MiNiFi started");
 
   /**

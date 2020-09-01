@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
   org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 10005, 1);
 
   controller->load();
-  controller->start();
+  controller->initialized_start();
 
   assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(std::chrono::seconds(2)), "Add processor SiteToSiteProvenanceReportingTask into process group MiNiFi Flow"));
 

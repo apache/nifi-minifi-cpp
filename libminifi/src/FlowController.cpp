@@ -218,7 +218,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
     load(this->root_);
     flow_update_ = true;
-    started = start() == 0;
+    started = initialized_start() == 0;
 
     updating_ = false;
 
@@ -357,13 +357,10 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root) {
     logger_->log_info("Loaded root processor Group");
     controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
     auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
-
     if (!thread_pool_.isRunning()) {
       restartThreadPool();
     }
-
     initializeUninitializedSchedulers();
-
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
         std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
@@ -394,32 +391,32 @@ void FlowController::loadFlowRepo() {
 }
 
 int16_t FlowController::start() {
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-  if (!initialized_) {
-    logger_->log_error("Can not start Flow Controller because it has not been initialized");
-    return -1;
-  } else {
-    if (!running_) {
-      logger_->log_info("Starting Flow Controller");
-      controller_service_provider_->enableAllControllerServices();
-      this->timer_scheduler_->start();
-      this->event_scheduler_->start();
-      this->cron_scheduler_->start();
+  assert(false);
+}
 
-      if (this->root_ != nullptr) {
-        start_time_ = std::chrono::steady_clock::now();
-        this->root_->startProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
-      }
-      initializeC2();
-      running_ = true;
-      this->protocol_->start();
-      this->provenance_repo_->start();
-      this->flow_file_repo_->start();
-      thread_pool_.start();
-      logger_->log_info("Started Flow Controller");
+int16_t FlowController::initialized_start() {
+  assert(initialized_);
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  if (!running_) {
+    logger_->log_info("Starting Flow Controller");
+    controller_service_provider_->enableAllControllerServices();
+    this->timer_scheduler_->start();
+    this->event_scheduler_->start();
+    this->cron_scheduler_->start();
+
+    if (this->root_ != nullptr) {
+      start_time_ = std::chrono::steady_clock::now();
+      this->root_->startProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
     }
-    return 0;
+    initializeC2();
+    running_ = true;
+    this->protocol_->start();
+    this->provenance_repo_->start();
+    this->flow_file_repo_->start();
+    thread_pool_.start();
+    logger_->log_info("Started Flow Controller");
   }
+  return 0;
 }
 
 void FlowController::initializeC2() {

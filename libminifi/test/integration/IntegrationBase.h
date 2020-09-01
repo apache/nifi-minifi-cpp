@@ -129,7 +129,7 @@ void IntegrationBase::run(std::string test_file_location) {
                                                                                                 true);
   flowController_->load();
   updateProperties(flowController_);
-  flowController_->start();
+  flowController_->initialized_start();
 
   runAssertions();
 

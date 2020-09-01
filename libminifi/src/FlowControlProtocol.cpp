@@ -370,7 +370,7 @@ int FlowControlProtocol::sendReportReq() {
     return 0;
   } else if (hdr.status == RESP_START_FLOW_CONTROLLER && hdr.seqNumber == this->_seqNumber) {
     logger_->log_trace("Flow Control Protocol start flow controller");
-    this->_controller->start();
+    this->_controller->initialized_start();
     this->_seqNumber++;
     utils::file::FileUtils::close(_socket);
     _socket = 0;

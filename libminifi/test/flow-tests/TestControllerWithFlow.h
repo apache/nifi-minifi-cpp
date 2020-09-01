@@ -58,7 +58,7 @@ class TestControllerWithFlow: public TestController{
 
   void startFlow() {
     controller_->load(root_);
-    controller_->start();
+    controller_->initialized_start();
   }
 
   ~TestControllerWithFlow() {

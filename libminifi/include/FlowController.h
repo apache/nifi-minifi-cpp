@@ -100,7 +100,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   }
 
   // Load flow xml from disk, after that, create the root process group and its children, initialize the flows
-  // virtual void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr, bool reload = false);
   virtual void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr);
 
   // Whether the Flow Controller is start running
@@ -113,7 +112,9 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
     return initialized_.load();
   }
   // Start to run the Flow Controller which internally start the root process group and all its children
+  // int16_t start() override;
   int16_t start() override;
+  int16_t initialized_start();
   int16_t pause() override {
     return -1;
   }
