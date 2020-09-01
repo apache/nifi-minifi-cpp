@@ -107,10 +107,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
     return running_.load() || updating_.load();
   }
 
-  // Whether the Flow Controller has already been initialized (loaded flow XML)
-  virtual bool isInitialized() {
-    return initialized_.load();
-  }
   // Start to run the Flow Controller which internally start the root process group and all its children
   // int16_t start() override;
   int16_t start() override;

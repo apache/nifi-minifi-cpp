@@ -346,31 +346,33 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root) {
   if (running_) {
     stop();
   }
-  if (!initialized_) {
-    if (root) {
-      logger_->log_info("Load Flow Controller from provided root");
-      root_ = root;
-    } else {
-      logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
-      root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_));
-    }
-    logger_->log_info("Loaded root processor Group");
-    controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
-    auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
-    if (!thread_pool_.isRunning()) {
-      restartThreadPool();
-    }
-    initializeUninitializedSchedulers();
-    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
-    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
-        std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
-
-    logger_->log_info("Loaded controller service provider");
-    // Load Flow File from Repo
-    loadFlowRepo();
-    logger_->log_info("Loaded flow repository");
-    initialized_ = true;
+  assert(!initialized_);
+  if (root) {
+    logger_->log_info("Load Flow Controller from provided root");
+    root_ = root;
+  } else {
+    logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
+    root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_));
   }
+  logger_->log_info("Loaded root processor Group");
+  controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
+  auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
+
+  if (!thread_pool_.isRunning()) {
+    restartThreadPool();
+  }
+
+  initializeUninitializedSchedulers();
+
+  std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
+  std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
+      std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
+
+  logger_->log_info("Loaded controller service provider");
+  // Load Flow File from Repo
+  loadFlowRepo();
+  logger_->log_info("Loaded flow repository");
+  initialized_ = true;
 }
 
 void FlowController::loadFlowRepo() {
@@ -391,8 +393,8 @@ void FlowController::loadFlowRepo() {
 }
 
 int16_t FlowController::start() {
-  assert(initialized_);
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  assert(initialized_);
   if (!running_) {
     logger_->log_info("Starting Flow Controller");
     controller_service_provider_->enableAllControllerServices();
