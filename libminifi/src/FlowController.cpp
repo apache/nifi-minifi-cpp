@@ -77,7 +77,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       running_(false),
       updating_(false),
       c2_enabled_(true),
-      initialized_(false),
       provenance_repo_(provenance_repo),
       flow_file_repo_(flow_file_repo),
       controller_service_map_(std::make_shared<core::controller::ControllerServiceMap>()),
@@ -101,7 +100,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
     configuration_filename_ = flow_configuration_->getConfigurationPath();
   }
   running_ = false;
-  initialized_ = false;
   c2_initialized_ = false;
   root_ = nullptr;
 
@@ -211,7 +209,6 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   controller_map_->clear();
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
-  initialized_ = false;
   bool started = false;
   try {
     reinitializeSchedulersWithNewThreadPool();
@@ -312,11 +309,8 @@ void FlowController::unload() {
   if (running_) {
     stop();
   }
-  if (initialized_) {
-    logger_->log_info("Unload Flow Controller");
-    initialized_ = false;
-    name_ = "";
-  }
+  logger_->log_info("Unload Flow Controller");
+  name_ = "";
 }
 
 void FlowController::restartThreadPool() {
@@ -346,7 +340,6 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root) {
   if (running_) {
     stop();
   }
-  assert(!initialized_);
   if (root) {
     logger_->log_info("Load Flow Controller from provided root");
     root_ = root;
@@ -372,7 +365,6 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root) {
   // Load Flow File from Repo
   loadFlowRepo();
   logger_->log_info("Loaded flow repository");
-  initialized_ = true;
 }
 
 void FlowController::loadFlowRepo() {
@@ -394,7 +386,6 @@ void FlowController::loadFlowRepo() {
 
 int16_t FlowController::start() {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-  assert(initialized_);
   if (!running_) {
     logger_->log_info("Starting Flow Controller");
     controller_service_provider_->enableAllControllerServices();
