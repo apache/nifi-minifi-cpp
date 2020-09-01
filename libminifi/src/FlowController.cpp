@@ -218,7 +218,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
     load(this->root_);
     flow_update_ = true;
-    started = initialized_start() == 0;
+    started = start() == 0;
 
     updating_ = false;
 
@@ -391,10 +391,6 @@ void FlowController::loadFlowRepo() {
 }
 
 int16_t FlowController::start() {
-  assert(false);
-}
-
-int16_t FlowController::initialized_start() {
   assert(initialized_);
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (!running_) {

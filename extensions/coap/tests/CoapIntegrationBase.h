@@ -74,7 +74,7 @@ class CoapIntegrationBase : public IntegrationBase {
                                                                                                   true);
 
     controller->load();
-    controller->initialized_start();
+    controller->start();
 
     runAssertions();
 

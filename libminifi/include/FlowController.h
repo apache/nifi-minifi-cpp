@@ -114,7 +114,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // Start to run the Flow Controller which internally start the root process group and all its children
   // int16_t start() override;
   int16_t start() override;
-  int16_t initialized_start();
   int16_t pause() override {
     return -1;
   }

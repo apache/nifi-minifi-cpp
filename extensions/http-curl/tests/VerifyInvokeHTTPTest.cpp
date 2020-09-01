@@ -87,7 +87,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
   }
 
   void startFlowController() {
-    flowController_->initialized_start();
+    flowController_->start();
   }
 
   void stopFlowController() {

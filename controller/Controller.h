@@ -329,7 +329,7 @@ void printManifest(const std::shared_ptr<minifi::Configure> &configuration) {
   std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
       new minifi::FlowController(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo, "manifest", false));
   controller->load();
-  controller->initialized_start();
+  controller->start();
   std::this_thread::sleep_for(std::chrono::milliseconds(10000));
   controller->stop();
 }
