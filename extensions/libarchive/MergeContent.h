@@ -274,7 +274,7 @@ public:
   virtual ~AttributeMerger() = default;
 protected:
   std::map<std::string, std::string> getMergedAttributes();
-  virtual void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) = 0;
+  virtual void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string> &merged_attributes) = 0;
 
   const std::deque<std::shared_ptr<core::FlowFile>> &flows_;
 };
@@ -284,7 +284,7 @@ public:
   explicit KeepOnlyCommonAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : AttributeMerger(flows) {}
 protected:
-  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) override;
+  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string> &merged_attributes) override;
 };
 
 class KeepAllUniqueAttributesMerger: public AttributeMerger {
@@ -292,7 +292,7 @@ public:
   explicit KeepAllUniqueAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : AttributeMerger(flows) {}
 protected:
-  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) override;
+  void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string> &merged_attributes) override;
 
 private:
   std::vector<std::string> removed_attributes_;

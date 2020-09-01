@@ -170,7 +170,7 @@ void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessio
   }
 }
 
-std::string MergeContent::getGroupId(core::ProcessContext *context, std::shared_ptr<core::FlowFile> flow) {
+std::string MergeContent::getGroupId(core::ProcessContext*, std::shared_ptr<core::FlowFile> flow) {
   std::string groupId = "";
   std::string value;
   if (!correlationAttributeName_.empty()) {
@@ -299,7 +299,7 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
   return true;
 }
 
-void BinaryConcatenationMerge::merge(core::ProcessContext *context, core::ProcessSession *session,
+void BinaryConcatenationMerge::merge(core::ProcessContext*, core::ProcessSession *session,
     std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer, std::string &demarcator,
     const std::shared_ptr<core::FlowFile> &merge_flow) {
   BinaryConcatenationMerge::WriteCallback callback(header, footer, demarcator, flows, session);
@@ -315,8 +315,8 @@ void BinaryConcatenationMerge::merge(core::ProcessContext *context, core::Proces
     session->putAttribute(merge_flow, FlowAttributeKey(FILENAME), fileName);
 }
 
-void TarMerge::merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header,
-    std::string &footer, std::string &demarcator, const std::shared_ptr<core::FlowFile> &merge_flow) {
+void TarMerge::merge(core::ProcessContext*, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string&,
+    std::string&, std::string&, const std::shared_ptr<core::FlowFile> &merge_flow) {
   ArchiveMerge::WriteCallback callback(std::string(merge_content_options::MERGE_FORMAT_TAR_VALUE), flows, session);
   session->write(merge_flow, &callback);
   session->putAttribute(merge_flow, FlowAttributeKey(MIME_TYPE), getMergedContentType());
@@ -333,8 +333,8 @@ void TarMerge::merge(core::ProcessContext *context, core::ProcessSession *sessio
   }
 }
 
-void ZipMerge::merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header,
-    std::string &footer, std::string &demarcator, const std::shared_ptr<core::FlowFile> &merge_flow) {
+void ZipMerge::merge(core::ProcessContext*, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string&,
+    std::string&, std::string&, const std::shared_ptr<core::FlowFile> &merge_flow) {
   ArchiveMerge::WriteCallback callback(std::string(merge_content_options::MERGE_FORMAT_ZIP_VALUE), flows, session);
   session->write(merge_flow, &callback);
   session->putAttribute(merge_flow, FlowAttributeKey(MIME_TYPE), getMergedContentType());
@@ -367,7 +367,7 @@ std::map<std::string, std::string> AttributeMerger::getMergedAttributes() {
   return *std::accumulate(std::next(flows_.cbegin()), flows_.cend(), &sum, merge_attributes);
 }
 
-void KeepOnlyCommonAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) {
+void KeepOnlyCommonAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string> &merged_attributes) {
   auto flow_attributes = flow_file->getAttributes();
   std::map<std::string, std::string> tmp_merged;
   std::set_intersection(std::make_move_iterator(merged_attributes.begin()), std::make_move_iterator(merged_attributes.end()),
@@ -375,7 +375,7 @@ void KeepOnlyCommonAttributesMerger::processFlowFile(const std::shared_ptr<core:
   merged_attributes = std::move(tmp_merged);
 }
 
-void KeepAllUniqueAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string>& merged_attributes) {
+void KeepAllUniqueAttributesMerger::processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string> &merged_attributes) {
   auto flow_attributes = flow_file->getAttributes();
   for (auto&& attr : flow_attributes) {
     if(std::find(removed_attributes_.cbegin(), removed_attributes_.cend(), attr.first) != removed_attributes_.cend()) {
