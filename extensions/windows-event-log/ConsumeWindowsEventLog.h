@@ -113,6 +113,17 @@ protected:
   static constexpr const char * const Plaintext = "Plaintext";
 
 private:
+  struct TimeDiff {
+    auto operator()() const {
+      return int64_t{ std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count() };
+    }
+    const decltype(std::chrono::steady_clock::now()) time_ = std::chrono::steady_clock::now();
+  };
+
+  bool commitAndSaveBookmark(const std::wstring &bookmarkXml, const std::shared_ptr<core::ProcessSession> &session);
+  void processEventLogs(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session,
+    size_t& event_count, const EVT_HANDLE& event_query_results);
+
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
@@ -134,8 +145,8 @@ private:
 
   bool writeXML_;
   bool writePlainText_;
-  std::unique_ptr<Bookmark> pBookmark_;
-  std::mutex onTriggerMutex_;
+  std::unique_ptr<Bookmark> bookmark_;
+  std::mutex on_trigger_mutex_;
   std::unordered_map<std::string, std::string> xmlPercentageItemsResolutions_;
   HMODULE hMsobjsDll_{};
 
