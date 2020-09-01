@@ -175,9 +175,9 @@ ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::I
 }
 
 void ConsumeWindowsEventLog::notifyStop() {
-  std::lock_guard<std::mutex> lock(onTriggerMutex_);
+  std::lock_guard<std::mutex> lock(on_trigger_mutex_);
   logger_->log_trace("start notifyStop");
-  pBookmark_.reset();
+  bookmark_.reset();
   if (hMsobjsDll_) {
     if (FreeLibrary(hMsobjsDll_)) {
       hMsobjsDll_ = nullptr;
@@ -185,7 +185,7 @@ void ConsumeWindowsEventLog::notifyStop() {
       LOG_LAST_ERROR(LoadLibrary);
     }
   }
-  logger_->log_trace("finish notifyStop"); 
+  logger_->log_trace("finish notifyStop");
 }
 
 ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
@@ -197,7 +197,7 @@ ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
 void ConsumeWindowsEventLog::initialize() {
   //! Set the supported properties
   setSupportedProperties({
-     Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes, 
+     Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes,
      EventHeaderDelimiter, EventHeader, OutputFormat, BatchCommitSize, BookmarkRootDirectory, ProcessOldEvents
   });
 
@@ -205,7 +205,7 @@ void ConsumeWindowsEventLog::initialize() {
   setSupportedRelationships({Success});
 }
 
-bool ConsumeWindowsEventLog::insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string & value) {
+bool ConsumeWindowsEventLog::insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string & value) const {
 
   wel::METADATA name = wel::WindowsEventLogMetadata::getMetadataFromString(key);
 
@@ -277,16 +277,16 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   bool processOldEvents{};
   context->getProperty(ProcessOldEvents.getName(), processOldEvents);
 
-  if (!pBookmark_) {
+  if (!bookmark_) {
     std::string bookmarkDir;
     context->getProperty(BookmarkRootDirectory.getName(), bookmarkDir);
     if (bookmarkDir.empty()) {
       logger_->log_error("State Directory is empty");
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "State Directory is empty");
     }
-    pBookmark_ = std::make_unique<Bookmark>(wstrChannel_, wstrQuery_, bookmarkDir, getUUIDStr(), processOldEvents, state_manager_, logger_);
-    if (!*pBookmark_) {
-      pBookmark_.reset();
+    bookmark_ = std::make_unique<Bookmark>(wstrChannel_, wstrQuery_, bookmarkDir, getUUIDStr(), processOldEvents, state_manager_, logger_);
+    if (!*bookmark_) {
+      bookmark_.reset();
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bookmark is empty");
     }
   }
@@ -298,15 +298,66 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   logger_->log_trace("Successfully configured CWEL");
 }
 
+bool ConsumeWindowsEventLog::commitAndSaveBookmark(const std::wstring &bookmark_xml, const std::shared_ptr<core::ProcessSession> &session) {
+  {
+    const TimeDiff time_diff;
+    session->commit();
+    logger_->log_debug("processQueue commit took %" PRId64 " ms", time_diff());
+  }
+
+  if (!bookmark_->saveBookmarkXml(bookmark_xml)) {
+    logger_->log_error("Failed to save bookmark xml");
+  }
+
+  if (session->outgoingConnectionsFull("success")) {
+    logger_->log_debug("Outgoing success connection is full");
+    return false;
+  }
+
+  return true;
+}
+
+std::tuple<size_t, std::wstring> ConsumeWindowsEventLog::processEventLogs(const std::shared_ptr<core::ProcessContext> &context,
+    const std::shared_ptr<core::ProcessSession> &session, const EVT_HANDLE& event_query_results) {
+  size_t processed_event_count = 0;
+  std::wstring bookmark_xml;
+  logger_->log_trace("Enumerating the events in the result set after the bookmarked event.");
+  while (processed_event_count < batch_commit_size_ || batch_commit_size_ == 0) {
+    EVT_HANDLE next_event{};
+    DWORD handles_set_count{};
+    if (!EvtNext(event_query_results, 1, &next_event, EVT_NEXT_TIMEOUT_MS, 0, &handles_set_count)) {
+      if (ERROR_NO_MORE_ITEMS != GetLastError()) {
+        LogWindowsError("Failed to get next event");
+        continue;
+        /* According to MS this iteration should only end when the return value is false AND
+          the error code is NO_MORE_ITEMS. See the following page for further details:
+          https://docs.microsoft.com/en-us/windows/win32/api/winevt/nf-winevt-evtnext */
+      }
+      break;
+    }
+
+    const auto guard_next_event = gsl::finally([next_event]() { EvtClose(next_event); });
+    logger_->log_trace("Succesfully got the next event, performing event rendering");
+    EventRender event_render;
+    std::wstring new_bookmark_xml;
+    if (createEventRender(next_event, event_render) && bookmark_->getNewBookmarkXml(next_event, new_bookmark_xml)) {
+      bookmark_xml = std::move(new_bookmark_xml);
+      processed_event_count++;
+      putEventRenderFlowFileToSession(event_render, *session);
+    }
+  }
+  logger_->log_trace("Finished enumerating events.");
+  return std::make_tuple(processed_event_count, bookmark_xml);
+}
 
 void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  if (!pBookmark_) {
-    logger_->log_debug("pBookmark_ is null");
+  if (!bookmark_) {
+    logger_->log_debug("bookmark_ is null");
     context->yield();
     return;
   }
 
-  std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
+  std::unique_lock<std::mutex> lock(on_trigger_mutex_, std::try_to_lock);
   if (!lock.owns_lock()) {
     logger_->log_warn("processor was triggered before previous listing finished, configuration should be revised!");
     return;
@@ -314,59 +365,31 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   logger_->log_trace("CWEL onTrigger");
 
-  struct TimeDiff {
-    auto operator()() const {
-      return int64_t{ std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count() };
-    }
-    const decltype(std::chrono::steady_clock::now()) time_ = std::chrono::steady_clock::now();
-  };
-
-  const auto commitAndSaveBookmark = [&] (const std::wstring& bookmarkXml) {
-    const TimeDiff timeDiff;
-    session->commit();
-    logger_->log_debug("processQueue commit took %" PRId64 " ms", timeDiff());
-
-    const bool successful_save = pBookmark_->saveBookmarkXml(bookmarkXml);
-    if (!successful_save) {
-      logger_->log_error("Failed to save bookmark xml");
-    }
-
-    if (session->outgoingConnectionsFull("success")) {
-      logger_->log_debug("outgoingConnectionsFull");
-      return false;
-    }
-
-    return true;
-  };
-
-  size_t eventCount = 0;
-  const TimeDiff timeDiff;
+  size_t processed_event_count = 0;
+  const TimeDiff time_diff;
   const auto timeGuard = gsl::finally([&]() {
-    logger_->log_debug("processed %zu Events in %"  PRId64 " ms", eventCount, timeDiff());
+    logger_->log_debug("processed %zu Events in %"  PRId64 " ms", processed_event_count, time_diff());
   });
 
-  size_t commitAndSaveBookmarkCount = 0;
-  std::wstring bookmarkXml;
-
-  const auto hEventResults = EvtQuery(0, wstrChannel_.c_str(), wstrQuery_.c_str(), EvtQueryChannelPath);
-  if (!hEventResults) {
+  const auto event_query_results = EvtQuery(0, wstrChannel_.c_str(), wstrQuery_.c_str(), EvtQueryChannelPath);
+  if (!event_query_results) {
     LOG_LAST_ERROR(EvtQuery);
     context->yield();
     return;
   }
-  const auto guard_hEventResults = gsl::finally([hEventResults]() { EvtClose(hEventResults); });
+  const auto guard_event_query_results = gsl::finally([event_query_results]() { EvtClose(event_query_results); });
 
   logger_->log_trace("Retrieved results in Channel: %ls with Query: %ls", wstrChannel_.c_str(), wstrQuery_.c_str());
 
-  auto hBookmark = pBookmark_->getBookmarkHandleFromXML();
-  if (!hBookmark) {
-    logger_->log_error("hBookmark is null, unrecoverable error!"); 
-    pBookmark_.reset();
+  auto bookmark_handle = bookmark_->getBookmarkHandleFromXML();
+  if (!bookmark_handle) {
+    logger_->log_error("bookmark_handle is null, unrecoverable error!");
+    bookmark_.reset();
     context->yield();
     return;
   }
 
-  if (!EvtSeek(hEventResults, 1, hBookmark, 0, EvtSeekRelativeToBookmark)) {
+  if (!EvtSeek(event_query_results, 1, bookmark_handle, 0, EvtSeekRelativeToBookmark)) {
     LOG_LAST_ERROR(EvtSeek);
     context->yield();
     return;
@@ -374,44 +397,12 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   refreshTimeZoneData();
 
-  logger_->log_trace("Enumerating the events in the result set after the bookmarked event.");
-  while (true) {
-    EVT_HANDLE hEvent{};
-    DWORD dwReturned{};
-    if (!EvtNext(hEventResults, 1, &hEvent, EVT_NEXT_TIMEOUT_MS, 0, &dwReturned)) {
-      if (ERROR_NO_MORE_ITEMS != GetLastError()) {
-        LogWindowsError("Failed to get next event");
-        continue; 
-        /* According to MS this iteration should only end when the return value is false AND 
-         the error code is NO_MORE_ITEMS. See the following page for further details:
-         https://docs.microsoft.com/en-us/windows/win32/api/winevt/nf-winevt-evtnext */
-      }
-      break;
-    }
-    const auto guard_hEvent = gsl::finally([hEvent]() { EvtClose(hEvent); });
-    logger_->log_trace("Succesfully get the next hEvent, performing event rendering");
-    EventRender eventRender;
-    std::wstring newBookmarkXml;
-    if (createEventRender(hEvent, eventRender) && pBookmark_->getNewBookmarkXml(hEvent, newBookmarkXml)) {
-      bookmarkXml = std::move(newBookmarkXml);
-      eventCount++;
-      putEventRenderFlowFileToSession(eventRender, *session);
+  std::wstring bookmark_xml;
+  std::tie(processed_event_count, bookmark_xml) = processEventLogs(context, session, event_query_results);
 
-      if (batch_commit_size_ != 0U && (eventCount % batch_commit_size_ == 0)) {
-        if (!commitAndSaveBookmark(bookmarkXml)) {
-          context->yield();
-          return;
-        }
-
-        commitAndSaveBookmarkCount = eventCount;
-      }
-    }
-  }
-
-  logger_->log_trace("Finish enumerating events.");
-
-  if (eventCount > commitAndSaveBookmarkCount) {
-    commitAndSaveBookmark(bookmarkXml);
+  if (processed_event_count == 0 || !commitAndSaveBookmark(bookmark_xml, session)) {
+    context->yield();
+    return;
   }
 }
 
@@ -430,12 +421,12 @@ wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std
   providers_[name] = wel::WindowsEventLogHandler(EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0));
   logger_->log_trace("Not found the handler -> created handler for %s", name.c_str());
   return providers_[name];
-} 
+}
 
 // !!! Used a non-documented approach to resolve `%%` in XML via C:\Windows\System32\MsObjs.dll.
-// Links which mention this approach: 
+// Links which mention this approach:
 // https://social.technet.microsoft.com/Forums/Windows/en-US/340632d1-60f0-4cc5-ad6f-f8c841107d0d/translate-value-1833quot-on-impersonationlevel-and-similar-values?forum=winservergen
-// https://github.com/libyal/libevtx/blob/master/documentation/Windows%20XML%20Event%20Log%20(EVTX).asciidoc 
+// https://github.com/libyal/libevtx/blob/master/documentation/Windows%20XML%20Event%20Log%20(EVTX).asciidoc
 // https://stackoverflow.com/questions/33498244/marshaling-a-message-table-resource
 //
 // Traverse xml and check each node, if it starts with '%%' and contains only digits, use it as key to lookup value in C:\Windows\System32\MsObjs.dll.
@@ -556,7 +547,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
     return false;
   }
 
-  // this is a well known path. 
+  // this is a well known path.
   std::string providerName = doc.child("Event").child("System").child("Provider").attribute("Name").value();
   wel::WindowsEventLogMetadataImpl metadata{getEventLogHandler(providerName).getMetadata(), hEvent};
   wel::MetadataWalker walker{metadata, channel_, !resolve_as_attributes_, apply_identifier_function_, regex_};
@@ -647,7 +638,7 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
   logger_->log_trace("Timezone name: %s, offset: %s", timezone_name_, timezone_offset_);
 }
 
-void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session) {
+void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session) const {
   struct WriteCallback : public OutputStreamCallback {
     WriteCallback(const std::string& str)
       : str_(str) {
