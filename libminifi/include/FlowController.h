@@ -342,6 +342,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
  private:
   void restartThreadPool();
   void initializeUninitializedSchedulers();
+  void reinitializeSchedulersWithNewThreadPool();
 
   template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>
   void conditionalReloadScheduler(std::shared_ptr<T>& scheduler, const bool condition) {
