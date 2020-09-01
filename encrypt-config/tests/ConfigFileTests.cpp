@@ -62,7 +62,53 @@ bool check_encryption(const ConfigFile& test_file, const std::string& property_n
 
 using org::apache::nifi::minifi::encrypt_config::ConfigFile;
 using org::apache::nifi::minifi::encrypt_config::ConfigFileTestAccessor;
+using org::apache::nifi::minifi::encrypt_config::ConfigLine;
 using org::apache::nifi::minifi::utils::file::FileUtils;
+
+TEST_CASE("ConfigLine can be constructed from a line", "[encrypt-config][constructor]") {
+  auto line_is_parsed_correctly = [](const std::string& line, const std::string& expected_key, const std::string& expected_value) {
+    ConfigLine config_line{line};
+    return config_line.key_ == expected_key && config_line.value_ == expected_value;
+  };
+
+  REQUIRE(line_is_parsed_correctly("", "", ""));
+  REQUIRE(line_is_parsed_correctly("    \t  \r", "", ""));
+  REQUIRE(line_is_parsed_correctly("#disabled.setting=foo", "", ""));
+  REQUIRE(line_is_parsed_correctly("some line without an equals sign", "", ""));
+  REQUIRE(line_is_parsed_correctly("=value_without_key", "", ""));
+  REQUIRE(line_is_parsed_correctly("\t  =value_without_key", "", ""));
+
+  REQUIRE(line_is_parsed_correctly("nifi.some.key=", "nifi.some.key", ""));
+  REQUIRE(line_is_parsed_correctly("nifi.some.key=some_value", "nifi.some.key", "some_value"));
+  REQUIRE(line_is_parsed_correctly("nifi.some.key = some_value", "nifi.some.key", "some_value"));
+  REQUIRE(line_is_parsed_correctly("\tnifi.some.key\t=\tsome_value", "nifi.some.key", "some_value"));
+  REQUIRE(line_is_parsed_correctly("nifi.some.key=some_value  \r", "nifi.some.key", "some_value"));
+  REQUIRE(line_is_parsed_correctly("nifi.some.key=some value", "nifi.some.key", "some value"));
+  REQUIRE(line_is_parsed_correctly("nifi.some.key=value=with=equals=signs=", "nifi.some.key", "value=with=equals=signs="));
+}
+
+TEST_CASE("ConfigLine can be constructed from a key-value pair", "[encrypt-config][constructor]") {
+  auto can_construct_from_kv = [](const std::string& key, const std::string& value, const std::string& expected_line) {
+    ConfigLine config_line{key, value};
+    return config_line.line_ == expected_line;
+  };
+
+  REQUIRE(can_construct_from_kv("nifi.some.key", "", "nifi.some.key="));
+  REQUIRE(can_construct_from_kv("nifi.some.key", "some_value", "nifi.some.key=some_value"));
+}
+
+TEST_CASE("ConfigLine can update the value", "[encrypt-config][updateValue]") {
+  auto can_update_value = [](const std::string& original_line, const std::string& new_value, const std::string& expected_line) {
+    ConfigLine config_line{original_line};
+    config_line.updateValue(new_value);
+    return config_line.line_ == expected_line;
+  };
+
+  REQUIRE(can_update_value("nifi.some.key=some_value", "new_value", "nifi.some.key=new_value"));
+  REQUIRE(can_update_value("nifi.some.key=", "new_value", "nifi.some.key=new_value"));
+  REQUIRE(can_update_value("nifi.some.key=some_value", "", "nifi.some.key="));
+  REQUIRE(can_update_value("nifi.some.key=some_value", "very_long_new_value", "nifi.some.key=very_long_new_value"));
+}
 
 TEST_CASE("ConfigFile creates an empty object from a nonexistent file", "[encrypt-config][constructor]") {
   ConfigFile test_file{"resources/nonexistent-minifi.properties"};
