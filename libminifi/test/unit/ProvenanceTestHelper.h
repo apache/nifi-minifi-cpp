@@ -248,8 +248,6 @@ class TestFlowController : public minifi::FlowController {
 
   void load_without_reload(const std::shared_ptr<core::ProcessGroup> &root = nullptr) override {
   }
-  void load_with_reload(const std::shared_ptr<core::ProcessGroup> &root = nullptr) override {
-  }
 
   int16_t start() override {
     running_.store(true);

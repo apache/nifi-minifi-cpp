@@ -341,15 +341,6 @@ void FlowController::reinitializeSchedulersWithNewThreadPool() {
   cron_scheduler_ = std::make_shared<CronDrivenSchedulingAgent>(gsl::not_null<ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
 }
 
-void FlowController::load_with_reload(const std::shared_ptr<core::ProcessGroup> &root) {
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-  reinitializeSchedulersWithNewThreadPool();
-  if (!initialized_) {
-    io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
-  }
-  load_without_reload(root);
-}
-
 void FlowController::load_without_reload(const std::shared_ptr<core::ProcessGroup> &root) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
