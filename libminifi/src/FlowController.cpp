@@ -214,7 +214,9 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   initialized_ = false;
   bool started = false;
   try {
-    load_with_reload(this->root_);
+    reinitializeSchedulersWithNewThreadPool();
+    io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
+    load_without_reload(this->root_);
     flow_update_ = true;
     started = start() == 0;
 
@@ -232,7 +234,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     }
   } catch (...) {
     this->root_ = std::move(prevRoot);
-    load_with_reload(this->root_);
+    load_without_reload(this->root_);
     flow_update_ = true;
     updating_ = false;
   }
@@ -342,7 +344,6 @@ void FlowController::reinitializeSchedulersWithNewThreadPool() {
 void FlowController::load_with_reload(const std::shared_ptr<core::ProcessGroup> &root) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   reinitializeSchedulersWithNewThreadPool();
-
   if (!initialized_) {
     io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
   }
