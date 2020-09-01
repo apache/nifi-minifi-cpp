@@ -41,23 +41,23 @@ void setDefaultDirectory(std::string path) {
 }
 
 ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
-    : claim_manager_(std::move(claim_manager)),
-      logger_(logging::LoggerFactory<ResourceClaim>::getLogger()),
-      _contentFullPath(([&] {
+    : _contentFullPath([&] {
         auto contentDirectory = claim_manager->getStoragePath();
         if (contentDirectory.empty())
           contentDirectory = default_directory_path;
 
         // Create the full content path for the content
         return contentDirectory + "/" + non_repeating_string_generator_.generate();
-      })()) {
+      }()),
+      claim_manager_(std::move(claim_manager)),
+      logger_(logging::LoggerFactory<ResourceClaim>::getLogger()) {
   if (claim_manager_) increaseFlowFileRecordOwnedCount();
   logger_->log_debug("Resource Claim created %s", _contentFullPath);
 }
 
 ResourceClaim::ResourceClaim(const Path& path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
-    : claim_manager_(std::move(claim_manager)),
-      _contentFullPath(path) {
+    : _contentFullPath(path),
+      claim_manager_(std::move(claim_manager)) {
   if (claim_manager_) increaseFlowFileRecordOwnedCount();
 }
 
