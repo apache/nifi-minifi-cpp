@@ -70,7 +70,7 @@ ConfigFile::ConfigFile(const std::string& file_path) {
 }
 
 ConfigFile::Lines::const_iterator ConfigFile::findKey(const std::string& key) const {
-  return std::find_if(config_lines_.begin(), config_lines_.end(), [&key](const ConfigLine& config_line) {
+  return std::find_if(config_lines_.cbegin(), config_lines_.cend(), [&key](const ConfigLine& config_line) {
     return config_line.key_ == key;
   });
 }
@@ -82,7 +82,7 @@ ConfigFile::Lines::iterator ConfigFile::findKey(const std::string& key) {
 }
 
 utils::optional<std::string> ConfigFile::getValue(const std::string& key) const {
-  auto it = findKey(key);
+  const auto it = findKey(key);
   if (it != config_lines_.end()) {
     return it->value_;
   } else {
@@ -91,7 +91,7 @@ utils::optional<std::string> ConfigFile::getValue(const std::string& key) const 
 }
 
 void ConfigFile::update(const std::string& key, const std::string& value) {
-  const auto it = findKey(key);
+  auto it = findKey(key);
   if (it != config_lines_.end()) {
     it->updateValue(value);
   } else {
