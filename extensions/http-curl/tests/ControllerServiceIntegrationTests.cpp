@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_client = nullptr;
   {
     std::lock_guard<std::mutex> lock(control_mutex);
-    controller->load_without_reload();
+    controller->load();
     controller->start();
     ssl_client_cont = controller->getControllerServiceNode("SSLClientServiceTest");
     ssl_client_cont->enable();

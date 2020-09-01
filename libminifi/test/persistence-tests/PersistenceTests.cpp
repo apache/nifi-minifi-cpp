@@ -169,7 +169,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   {
     TestFlow flow(ff_repository, content_repo, prov_repo, setupMergeProcessor, MergeContent::Merge);
 
-    flowController->load_without_reload(flow.root);
+    flowController->load(flow.root);
     ff_repository->start();
 
     // write two files into the input
@@ -197,7 +197,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   {
     TestFlow flow(ff_repository, content_repo, prov_repo, setupMergeProcessor, MergeContent::Merge);
 
-    flowController->load_without_reload(flow.root);
+    flowController->load(flow.root);
     ff_repository->start();
     // wait for FlowFileRepository to start and notify the owners of
     // the resurrected FlowFiles
@@ -266,7 +266,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   {
     TestFlow flow(ff_repository, content_repo, prov_repo, setupContentUpdaterProcessor, {"success", "d"});
 
-    flowController->load_without_reload(flow.root);
+    flowController->load(flow.root);
     ff_repository->start();
 
     // write two files into the input
@@ -295,7 +295,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   {
     TestFlow flow(ff_repository, content_repo, prov_repo, setupContentUpdaterProcessor, {"success", "d"});
 
-    flowController->load_without_reload(flow.root);
+    flowController->load(flow.root);
     ff_repository->start();
     // wait for FlowFileRepository to start and notify the owners of
     // the resurrected FlowFiles

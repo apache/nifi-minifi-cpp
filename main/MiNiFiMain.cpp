@@ -293,7 +293,7 @@ int main(int argc, char **argv) {
 
   // Load flow from specified configuration file
   try {
-    controller->load_without_reload();
+    controller->load();
   }
   catch (std::exception &e) {
     logger->log_error("Failed to load configuration due to exception: %s", e.what());

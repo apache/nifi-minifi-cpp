@@ -246,7 +246,7 @@ class TestFlowController : public minifi::FlowController {
 
   ~TestFlowController() override = default;
 
-  void load_without_reload(const std::shared_ptr<core::ProcessGroup> &root = nullptr) override {
+  void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr) override {
   }
 
   int16_t start() override {

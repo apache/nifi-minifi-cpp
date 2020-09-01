@@ -127,7 +127,7 @@ void IntegrationBase::run(std::string test_file_location) {
 
   flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
                                                                                                 true);
-  flowController_->load_without_reload();
+  flowController_->load();
   updateProperties(flowController_);
   flowController_->start();
 

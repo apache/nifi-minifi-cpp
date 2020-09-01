@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
   org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 10005, 1);
 
-  controller->load_without_reload();
+  controller->load();
   controller->start();
 
   assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(std::chrono::seconds(2)), "Add processor SiteToSiteProvenanceReportingTask into process group MiNiFi Flow"));
