@@ -364,7 +364,10 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
 
     context->getProperty(RecursiveLookup.getName(), recursive_lookup_);
 
-    context->getProperty(LookupFrequency.getName(), lookup_frequency_);
+    int64_t lookup_frequency;
+    if (context->getProperty(LookupFrequency.getName(), lookup_frequency)) {
+      lookup_frequency_ = std::chrono::milliseconds{lookup_frequency};
+    }
 
     recoverState(context);
 
