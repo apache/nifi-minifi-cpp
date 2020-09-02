@@ -116,7 +116,7 @@ TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
     REQUIRE(it.second->getQueueSize() > 10);
   }
 
-  controller->stop(true);
+  controller->stop();
 
   REQUIRE(sinkProc->trigger_count == 0);
 
