@@ -298,29 +298,28 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   logger_->log_trace("Successfully configured CWEL");
 }
 
-bool ConsumeWindowsEventLog::commitAndSaveBookmark(const std::wstring &bookmarkXml, const std::shared_ptr<core::ProcessSession> &session) {
+bool ConsumeWindowsEventLog::commitAndSaveBookmark(const std::wstring &bookmark_xml, const std::shared_ptr<core::ProcessSession> &session) {
   {
     const TimeDiff time_diff;
     session->commit();
     logger_->log_debug("processQueue commit took %" PRId64 " ms", time_diff());
   }
 
-  const bool successful_save = bookmark_->saveBookmarkXml(bookmarkXml);
-  if (!successful_save) {
+  if (!bookmark_->saveBookmarkXml(bookmark_xml)) {
     logger_->log_error("Failed to save bookmark xml");
   }
 
   if (session->outgoingConnectionsFull("success")) {
-    logger_->log_debug("outgoingConnectionsFull");
+    logger_->log_debug("Outgoing success connection is full");
     return false;
   }
 
   return true;
 }
 
-void ConsumeWindowsEventLog::processEventLogs(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session,
+std::wstring ConsumeWindowsEventLog::populateSessionWithEventLogs(const std::shared_ptr<core::ProcessSession> &session,
     size_t& processed_event_count, const EVT_HANDLE& event_query_results) {
-  std::wstring bookmarkXml;
+  std::wstring bookmark_xml;
   logger_->log_trace("Enumerating the events in the result set after the bookmarked event.");
   while (processed_event_count < batch_commit_size_ || batch_commit_size_ == 0) {
     EVT_HANDLE next_event{};
@@ -341,15 +340,19 @@ void ConsumeWindowsEventLog::processEventLogs(const std::shared_ptr<core::Proces
     EventRender event_render;
     std::wstring new_bookmark_xml;
     if (createEventRender(next_event, event_render) && bookmark_->getNewBookmarkXml(next_event, new_bookmark_xml)) {
-      bookmarkXml = std::move(new_bookmark_xml);
+      bookmark_xml = std::move(new_bookmark_xml);
       processed_event_count++;
       putEventRenderFlowFileToSession(event_render, *session);
     }
   }
+  return bookmark_xml;
+}
 
-  logger_->log_trace("Finish enumerating events.");
-
-  if (processed_event_count > 0 && !commitAndSaveBookmark(bookmarkXml, session)) {
+void ConsumeWindowsEventLog::processEventLogs(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session,
+    size_t& processed_event_count, const EVT_HANDLE& event_query_results) {
+  std::wstring bookmark_xml = populateSessionWithEventLogs(session, processed_event_count, event_query_results);
+  logger_->log_trace("Finished enumerating events.");
+  if (processed_event_count > 0 && !commitAndSaveBookmark(bookmark_xml, session)) {
     context->yield();
   }
 }
@@ -372,7 +375,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   size_t processed_event_count = 0;
   const TimeDiff time_diff;
   const auto timeGuard = gsl::finally([&]() {
-    logger_->log_debug("processed %zu Events in %"  PRId64 " ms", processed_event_count, time_diff());
+    logger_->log_debug("Processed %zu events in %"  PRId64 " ms", processed_event_count, time_diff());
   });
 
   const auto event_query_results = EvtQuery(0, wstrChannel_.c_str(), wstrQuery_.c_str(), EvtQueryChannelPath);
