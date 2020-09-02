@@ -80,7 +80,7 @@ while :; do
     "--build_dir="* )
       BUILD_DIR="${1#*=}"
       ;;
-    -t|--travis)
+    -t|--continous-integration)
       NO_PROMPT="true"
       FEATURES_SELECTED="true"
       SKIP_CMAKE="${TRUE}"
