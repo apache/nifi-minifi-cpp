@@ -319,47 +319,38 @@ bool ConsumeWindowsEventLog::commitAndSaveBookmark(const std::wstring &bookmarkX
 }
 
 void ConsumeWindowsEventLog::processEventLogs(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session,
-    size_t& event_count, const EVT_HANDLE& event_query_results) {
-  size_t commitAndSaveBookmarkCount = 0;
+    size_t& processed_event_count, const EVT_HANDLE& event_query_results) {
   std::wstring bookmarkXml;
   logger_->log_trace("Enumerating the events in the result set after the bookmarked event.");
-  while (true) {
-    EVT_HANDLE hEvent{};
-    DWORD dwReturned{};
-    if (!EvtNext(event_query_results, 1, &hEvent, EVT_NEXT_TIMEOUT_MS, 0, &dwReturned)) {
+  while (processed_event_count < batch_commit_size_ || batch_commit_size_ == 0) {
+    EVT_HANDLE next_event{};
+    DWORD handles_set_count{};
+    if (!EvtNext(event_query_results, 1, &next_event, EVT_NEXT_TIMEOUT_MS, 0, &handles_set_count)) {
       if (ERROR_NO_MORE_ITEMS != GetLastError()) {
         LogWindowsError("Failed to get next event");
         continue;
         /* According to MS this iteration should only end when the return value is false AND
-         the error code is NO_MORE_ITEMS. See the following page for further details:
-         https://docs.microsoft.com/en-us/windows/win32/api/winevt/nf-winevt-evtnext */
+          the error code is NO_MORE_ITEMS. See the following page for further details:
+          https://docs.microsoft.com/en-us/windows/win32/api/winevt/nf-winevt-evtnext */
       }
       break;
     }
-    const auto guard_hEvent = gsl::finally([hEvent]() { EvtClose(hEvent); });
-    logger_->log_trace("Succesfully get the next hEvent, performing event rendering");
-    EventRender eventRender;
-    std::wstring newBookmarkXml;
-    if (createEventRender(hEvent, eventRender) && bookmark_->getNewBookmarkXml(hEvent, newBookmarkXml)) {
-      bookmarkXml = std::move(newBookmarkXml);
-      event_count++;
-      putEventRenderFlowFileToSession(eventRender, *session);
 
-      if (batch_commit_size_ != 0U && (event_count % batch_commit_size_ == 0)) {
-        if (!commitAndSaveBookmark(bookmarkXml, session)) {
-          context->yield();
-          return;
-        }
-
-        commitAndSaveBookmarkCount = event_count;
-      }
+    const auto guard_next_event = gsl::finally([next_event]() { EvtClose(next_event); });
+    logger_->log_trace("Succesfully got the next event, performing event rendering");
+    EventRender event_render;
+    std::wstring new_bookmark_xml;
+    if (createEventRender(next_event, event_render) && bookmark_->getNewBookmarkXml(next_event, new_bookmark_xml)) {
+      bookmarkXml = std::move(new_bookmark_xml);
+      processed_event_count++;
+      putEventRenderFlowFileToSession(event_render, *session);
     }
   }
 
   logger_->log_trace("Finish enumerating events.");
 
-  if (event_count > commitAndSaveBookmarkCount) {
-    commitAndSaveBookmark(bookmarkXml, session);
+  if (processed_event_count > 0 && !commitAndSaveBookmark(bookmarkXml, session)) {
+    context->yield();
   }
 }
 
@@ -378,10 +369,10 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   logger_->log_trace("CWEL onTrigger");
 
-  size_t event_count = 0;
+  size_t processed_event_count = 0;
   const TimeDiff time_diff;
   const auto timeGuard = gsl::finally([&]() {
-    logger_->log_debug("processed %zu Events in %"  PRId64 " ms", event_count, time_diff());
+    logger_->log_debug("processed %zu Events in %"  PRId64 " ms", processed_event_count, time_diff());
   });
 
   const auto event_query_results = EvtQuery(0, wstrChannel_.c_str(), wstrQuery_.c_str(), EvtQueryChannelPath);
@@ -409,7 +400,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 
   refreshTimeZoneData();
-  processEventLogs(context,session, event_count, event_query_results);
+  processEventLogs(context,session, processed_event_count, event_query_results);
 }
 
 wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
