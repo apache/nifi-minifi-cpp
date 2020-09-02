@@ -32,7 +32,9 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
+#ifdef OPENSSL_SUPPORT
 class Decryptor;
+#endif  // OPENSSL_SUPPORT
 
 class Configure : public Properties {
  public:
@@ -57,7 +59,9 @@ class Configure : public Properties {
     return agent_class_;
   }
 
+#ifdef OPENSSL_SUPPORT
   void decryptSensitiveProperties(const Decryptor& decryptor);
+#endif  // OPENSSL_SUPPORT
 
   // nifi.flow.configuration.file
   static const char *nifi_default_directory;

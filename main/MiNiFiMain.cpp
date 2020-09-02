@@ -62,6 +62,7 @@
 #include "MainHelper.h"
 
 namespace {
+#ifdef OPENSSL_SUPPORT
 bool containsEncryptedProperties(const minifi::Configure& minifi_properties) {
   const auto is_encrypted_property_marker = [&minifi_properties](const std::string& property_name) {
     return utils::StringUtils::endsWith(property_name, ".protected") &&
@@ -84,6 +85,7 @@ void decryptSensitiveProperties(minifi::Configure& minifi_properties, const std:
     logger.log_error("Encryption key not found, cannot decrypt sensitive properties!");
   }
 }
+#endif  // OPENSSL_SUPPORT
 }  // namespace
 
  // Variables that allow us to avoid a timed wait.
@@ -234,9 +236,11 @@ int main(int argc, char **argv) {
   configure->setHome(minifiHome);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
+#ifdef OPENSSL_SUPPORT
   if (containsEncryptedProperties(*configure)) {
     decryptSensitiveProperties(*configure, minifiHome, *logger);
   }
+#endif  // OPENSSL_SUPPORT
 
   if (argc >= 3 && std::string("docs") == argv[1]) {
     if (utils::file::FileUtils::create_dir(argv[2]) != 0) {

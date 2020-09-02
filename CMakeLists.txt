@@ -545,7 +545,7 @@ add_subdirectory(nanofi)
 add_dependencies(nanofi minifiexe)
 
 option(ENABLE_ENCRYPT_CONFIG_TOOL "Build the encrypt-config tool." ON)
-if (ENABLE_ENCRYPT_CONFIG_TOOL)
+if (ENABLE_ENCRYPT_CONFIG_TOOL AND NOT OPENSSL_OFF)
 	add_subdirectory(encrypt-config)
 	add_dependencies(encrypt-config minifi)
 endif()
@@ -777,7 +777,7 @@ if (NOT DISABLE_ROCKSDB AND NOT DISABLE_LIBARCHIVE)
 	registerTest("${TEST_DIR}/persistence-tests")
 endif()
 
-if (ENABLE_ENCRYPT_CONFIG_TOOL)
+if (ENABLE_ENCRYPT_CONFIG_TOOL AND NOT OPENSSL_OFF)
 	registerTest("encrypt-config/tests")
 endif()
 

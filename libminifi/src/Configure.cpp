@@ -18,8 +18,10 @@
 #include "properties/Configure.h"
 
 #include "core/logging/LoggerConfiguration.h"
-#include "properties/Decryptor.h"
 #include "utils/StringUtils.h"
+#ifdef OPENSSL_SUPPORT
+#include "properties/Decryptor.h"
+#endif  // OPENSSL_SUPPORT
 
 namespace org {
 namespace apache {
@@ -75,6 +77,7 @@ const char *Configure::nifi_state_management_provider_local_auto_persistence_int
 Configure::Configure()
     : Properties("MiNiFi configuration"), logger_(logging::LoggerFactory<Properties>::getLogger()) {}
 
+#ifdef OPENSSL_SUPPORT
 void Configure::decryptSensitiveProperties(const Decryptor& decryptor) {
   logger_->log_info("Decrypting sensitive properties...");
   int num_properties_decrypted = 0;
@@ -100,6 +103,7 @@ void Configure::decryptSensitiveProperties(const Decryptor& decryptor) {
 
   logger_->log_info("Finished decrypting %d sensitive properties.", num_properties_decrypted);
 }
+#endif  // OPENSSL_SUPPORT
 
 } /* namespace minifi */
 } /* namespace nifi */
