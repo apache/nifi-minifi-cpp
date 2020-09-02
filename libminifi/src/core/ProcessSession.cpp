@@ -280,7 +280,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
 
   try {
     uint64_t startTime = utils::timeutils::getTimeMillis();
-    std::shared_ptr<io::BaseStream> stream = content_session_->write(*claim, true);
+    std::shared_ptr<io::BaseStream> stream = content_session_->write(*claim, ContentSession::WriteMode::APPEND);
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for append");
     }

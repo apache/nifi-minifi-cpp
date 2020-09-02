@@ -382,10 +382,8 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDropFlow", "[mergefile
   context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MaxBinAge, "1 sec");
 
   core::ProcessSession sessionGenFlowFile(context);
-  // Generate 6 flowfiles, first threes merged to one, second thress merged to one
+  // Generate 5 flowfiles, first threes merged to one, the other two merged to one
   for (const int i : {0, 2, 5, 1, 3}) {
-    if (i == 4)
-      continue;
     const auto flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
     sessionGenFlowFile.import(flowFileName, flow, true, 0);
@@ -406,9 +404,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDropFlow", "[mergefile
   REQUIRE(processor->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
   processor->onSchedule(context, factory);
-  for (int i = 0; i < 6; i++) {
-    if (i == 4)
-      continue;
+  for (int i = 0; i < 5; i++) {
     auto session = std::make_shared<core::ProcessSession>(context);
     processor->onTrigger(context, session);
     session->commit();

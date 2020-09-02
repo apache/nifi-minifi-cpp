@@ -33,11 +33,16 @@ class ContentRepository;
 
 class ContentSession {
  public:
+  enum class WriteMode {
+    OVERWRITE,
+    APPEND
+  };
+
   explicit ContentSession(std::shared_ptr<ContentRepository> repository);
 
   std::shared_ptr<ResourceClaim> create();
 
-  std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resourceId, bool append = false);
+  std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resourceId, WriteMode mode = WriteMode::OVERWRITE);
 
   std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resourceId);
 

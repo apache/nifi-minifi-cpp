@@ -37,11 +37,11 @@ std::shared_ptr<ResourceClaim> ContentSession::create() {
   return claim;
 }
 
-std::shared_ptr<io::BaseStream> ContentSession::write(const std::shared_ptr<ResourceClaim>& resourceId, bool append) {
+std::shared_ptr<io::BaseStream> ContentSession::write(const std::shared_ptr<ResourceClaim>& resourceId, WriteMode mode) {
   auto it = managedResources_.find(resourceId);
   if (it == managedResources_.end()) {
-    if (!append) {
-      throw Exception(GENERAL_EXCEPTION, "Can only overwrite owned resource");
+    if (mode == WriteMode::OVERWRITE) {
+      throw Exception(REPOSITORY_EXCEPTION, "Can only overwrite owned resource");
     }
     auto& extension = extendedResources_[resourceId];
     if (!extension) {
@@ -49,7 +49,7 @@ std::shared_ptr<io::BaseStream> ContentSession::write(const std::shared_ptr<Reso
     }
     return extension;
   }
-  if (!append) {
+  if (mode == WriteMode::OVERWRITE) {
     it->second = std::make_shared<io::BaseStream>();
   }
   return it->second;
@@ -60,7 +60,7 @@ std::shared_ptr<io::BaseStream> ContentSession::read(const std::shared_ptr<Resou
   //  after the stream refactor is merged we should be able to share the underlying buffer
   //  between multiple InputStreams, moreover create a ConcatInputStream
   if (managedResources_.find(resourceId) != managedResources_.end() || extendedResources_.find(resourceId) != extendedResources_.end()) {
-    throw Exception(GENERAL_EXCEPTION, "Can only read non-modified resource");
+    throw Exception(REPOSITORY_EXCEPTION, "Can only read non-modified resource");
   }
   return repository_->read(resourceId);
 }
@@ -69,21 +69,21 @@ void ContentSession::commit() {
   for (const auto& resource : managedResources_) {
     auto outStream = repository_->write(resource.first);
     if (outStream == nullptr) {
-      throw Exception(GENERAL_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
+      throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
     }
     const auto size = resource.second->getSize();
     if (outStream->write(const_cast<uint8_t*>(resource.second->getBuffer()), size) != size) {
-      throw Exception(GENERAL_EXCEPTION, "Failed to write new resource: " + resource.first->getContentFullPath());
+      throw Exception(REPOSITORY_EXCEPTION, "Failed to write new resource: " + resource.first->getContentFullPath());
     }
   }
   for (const auto& resource : extendedResources_) {
     auto outStream = repository_->write(resource.first, true);
     if (outStream == nullptr) {
-      throw Exception(GENERAL_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
+      throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
     }
     const auto size = resource.second->getSize();
     if (outStream->write(const_cast<uint8_t*>(resource.second->getBuffer()), size) != size) {
-      throw Exception(GENERAL_EXCEPTION, "Failed to append to resource: " + resource.first->getContentFullPath());
+      throw Exception(REPOSITORY_EXCEPTION, "Failed to append to resource: " + resource.first->getContentFullPath());
     }
   }
 

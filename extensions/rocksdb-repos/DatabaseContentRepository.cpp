@@ -76,27 +76,27 @@ void DatabaseContentRepository::Session::commit() {
   auto dbContentRepository = std::static_pointer_cast<DatabaseContentRepository>(repository_);
   auto opendb = dbContentRepository->db_->open();
   if (!opendb) {
-    throw Exception(GENERAL_EXCEPTION, "Couldn't open rocksdb database to commit content changes");
+    throw Exception(REPOSITORY_EXCEPTION, "Couldn't open rocksdb database to commit content changes");
   }
   rocksdb::WriteBatch batch;
   for (const auto& resource : managedResources_) {
     auto outStream = dbContentRepository->write(resource.first, false, &batch);
     if (outStream == nullptr) {
-      throw Exception(GENERAL_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
+      throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
     }
     const auto size = resource.second->getSize();
     if (outStream->write(const_cast<uint8_t*>(resource.second->getBuffer()), size) != size) {
-      throw Exception(GENERAL_EXCEPTION, "Failed to write new resource: " + resource.first->getContentFullPath());
+      throw Exception(REPOSITORY_EXCEPTION, "Failed to write new resource: " + resource.first->getContentFullPath());
     }
   }
   for (const auto& resource : extendedResources_) {
     auto outStream = dbContentRepository->write(resource.first, true, &batch);
     if (outStream == nullptr) {
-      throw Exception(GENERAL_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
+      throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
     }
     const auto size = resource.second->getSize();
     if (outStream->write(const_cast<uint8_t*>(resource.second->getBuffer()), size) != size) {
-      throw Exception(GENERAL_EXCEPTION, "Failed to append to resource: " + resource.first->getContentFullPath());
+      throw Exception(REPOSITORY_EXCEPTION, "Failed to append to resource: " + resource.first->getContentFullPath());
     }
   }
 
@@ -104,7 +104,7 @@ void DatabaseContentRepository::Session::commit() {
   options.sync = true;
   rocksdb::Status status = opendb->Write(options, &batch);
   if (!status.ok()) {
-    throw std::runtime_error("Batch write failed: " + status.ToString());
+    throw Exception(REPOSITORY_EXCEPTION, "Batch write failed: " + status.ToString());
   }
 
   managedResources_.clear();
