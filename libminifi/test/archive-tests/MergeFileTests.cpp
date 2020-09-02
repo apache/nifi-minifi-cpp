@@ -186,7 +186,6 @@ class MergeTestController : public TestController {
   }
 
   std::shared_ptr<core::ProcessContext> context;
-  std::shared_ptr<core::ProcessorNode> node;
   std::shared_ptr<core::Processor> processor;
   std::shared_ptr<minifi::Connection> input;
   std::shared_ptr<minifi::Connection> output;
