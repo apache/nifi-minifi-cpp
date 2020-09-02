@@ -35,8 +35,8 @@ namespace repository {
  * Volatile flow file repository. keeps a running counter of the current location, freeing
  * those which we no longer hold.
  */
-class VolatileFlowFileRepository : public VolatileRepository<std::string>, public utils::safe_enable_shared_from_this<VolatileFlowFileRepository> {
-  using utils::safe_enable_shared_from_this<VolatileFlowFileRepository>::shared_from_this;
+class VolatileFlowFileRepository : public VolatileRepository<std::string>, public utils::EnableSharedFromThis<VolatileFlowFileRepository> {
+  using utils::EnableSharedFromThis<VolatileFlowFileRepository>::sharedFromThis;
 
  public:
   explicit VolatileFlowFileRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
@@ -61,7 +61,7 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
     if (purge_required_ && nullptr != content_repo_) {
       std::lock_guard<std::mutex> lock(purge_mutex_);
       for (auto purgeItem : purge_list_) {
-        std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
+        std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(sharedFromThis(), content_repo_);
         if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size())) {
           auto claim = eventRead->getResourceClaim();
           if (claim) claim->decreaseFlowFileRecordOwnedCount();

@@ -70,16 +70,25 @@ using std::void_t;
 
 namespace internal {
 
-struct safe_enable_shared_from_this_base : std::enable_shared_from_this<safe_enable_shared_from_this_base> {
-  virtual ~safe_enable_shared_from_this_base() = default;
+/*
+ * We need this base class to enable safe multiple inheritance
+ * from std::enable_shared_from_this, it also needs to be polymorphic
+ * to allow dynamic_cast to the derived class.
+ */
+struct EnableSharedFromThisBase : std::enable_shared_from_this<EnableSharedFromThisBase> {
+  virtual ~EnableSharedFromThisBase() = default;
 };
 
 }  // namespace internal
 
+/*
+ * The virtual inheritance ensures that there is only a single
+ * std::weak_ptr instance in each instance.
+ */
 template<typename T>
-struct safe_enable_shared_from_this : virtual internal::safe_enable_shared_from_this_base {
-  std::shared_ptr<T> shared_from_this() {
-    return std::dynamic_pointer_cast<T>(internal::safe_enable_shared_from_this_base::shared_from_this());
+struct EnableSharedFromThis : virtual internal::EnableSharedFromThisBase {
+  std::shared_ptr<T> sharedFromThis() {
+    return std::dynamic_pointer_cast<T>(internal::EnableSharedFromThisBase::shared_from_this());
   }
 };
 

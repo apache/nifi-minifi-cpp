@@ -40,7 +40,7 @@ namespace core {
 /**
  * Content repository definition that extends StreamManager.
  */
-class ContentRepository : public StreamManager<minifi::ResourceClaim>, public utils::safe_enable_shared_from_this<ContentRepository> {
+class ContentRepository : public StreamManager<minifi::ResourceClaim>, public utils::EnableSharedFromThis<ContentRepository> {
  public:
   virtual ~ContentRepository() = default;
 

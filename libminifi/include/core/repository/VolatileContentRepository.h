@@ -46,8 +46,8 @@ namespace repository {
 class VolatileContentRepository :
     public core::ContentRepository,
     public core::repository::VolatileRepository<ResourceClaim::Path>,
-    public utils::safe_enable_shared_from_this<VolatileContentRepository> {
-  using utils::safe_enable_shared_from_this<VolatileContentRepository>::shared_from_this;
+    public utils::EnableSharedFromThis<VolatileContentRepository> {
+  using utils::EnableSharedFromThis<VolatileContentRepository>::sharedFromThis;
 
  public:
   static const char *minimal_locking;

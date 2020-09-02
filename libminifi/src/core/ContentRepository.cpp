@@ -34,7 +34,7 @@ std::string ContentRepository::getStoragePath() const {
 }
 
 std::shared_ptr<ContentSession> ContentRepository::createSession() {
-  return std::make_shared<ContentSession>(shared_from_this());
+  return std::make_shared<ContentSession>(sharedFromThis());
 }
 
 bool ContentRepository::removeIfOrphaned(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
