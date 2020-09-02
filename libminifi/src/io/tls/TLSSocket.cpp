@@ -20,20 +20,22 @@
 #ifdef WIN32
 #include <WS2tcpip.h>
 #pragma comment(lib, "Ws2_32.lib")
-#endif /* WIN32 */
+#endif  // WIN32
+
 #include <fstream>
 #include <memory>
 #include <utility>
 #include <string>
 #include <vector>
-#include <Exception.h>
+
 #include "io/tls/TLSSocket.h"
 #include "io/tls/TLSUtils.h"
 #include "properties/Configure.h"
 #include "utils/StringUtils.h"
-#include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/GeneralUtils.h"
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -201,13 +203,11 @@ TLSSocket& TLSSocket::operator=(TLSSocket&& other) {
 }
 
 int16_t TLSSocket::initialize(bool blocking) {
-  bool is_server = false;
-  if (listeners_ > 0)
-    is_server = true;
+  const bool is_server = (listeners_ > 0);
 
   if (!blocking)
     setNonBlocking();
-  logger_->log_trace("Initializing TLSSocket %d", is_server);
+  logger_->log_trace("Initializing TLSSocket in %s mode", (is_server ? "server" : "client"));
   int16_t ret = context_->initialize(is_server);
 
   if (ret != 0) {
@@ -221,8 +221,7 @@ int16_t TLSSocket::initialize(bool blocking) {
     return -1;
   }
 
-  if (listeners_ == 0) {
-    // we have s2s secure config
+  if (!is_server) {
     ssl_ = SSL_new(context_->getContext());
     SSL_set_fd(ssl_, socket_file_descriptor_);
     connected_ = false;
@@ -388,14 +387,14 @@ int TLSSocket::read(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
 
 int TLSSocket::writeData(const uint8_t *value, unsigned int size, int fd) {
   gsl_Expects(size >= 0);
-  int bytes = 0;
+  unsigned int bytes = 0;
   int sent = 0;
   auto fd_ssl = get_ssl(fd);
   if (IsNullOrEmpty(fd_ssl)) {
     return -1;
   }
   while (bytes < size) {
-    sent = SSL_write(fd_ssl, value + bytes, size - bytes);
+    sent = SSL_write(fd_ssl, value + bytes, gsl::narrow<int>(size - bytes));
     // check for errors
     if (sent < 0) {
       int ret = 0;
@@ -407,7 +406,7 @@ int TLSSocket::writeData(const uint8_t *value, unsigned int size, int fd) {
     logger_->log_trace("WriteData socket %d send succeed %d", fd, sent);
     bytes += sent;
   }
-  return size;
+  return gsl::narrow<int>(size);
 }
 
 int TLSSocket::write(const uint8_t *value, int size) {

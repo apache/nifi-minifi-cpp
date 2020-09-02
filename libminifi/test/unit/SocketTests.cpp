@@ -171,7 +171,7 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket7]") {
   server.close();
 }
 
-#ifdef OPENSSL_ENABLED
+#ifdef OPENSSL_SUPPORT
 std::atomic<uint8_t> counter;
 std::mt19937_64 seed { std::random_device { }() };
 bool createSocket() {
@@ -239,4 +239,4 @@ TEST_CASE("TestTLSContextCreationNullptr", "[TestSocket10]") {
   minifi::io::TLSSocket *tls = dynamic_cast<minifi::io::TLSSocket*>(socket);
   REQUIRE(tls == nullptr);
 }
-#endif
+#endif  // OPENSSL_SUPPORT
