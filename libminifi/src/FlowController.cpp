@@ -209,25 +209,18 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   controller_map_->clear();
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
-  bool started = false;
   try {
     reinitializeSchedulersWithNewThreadPool();
     io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
     load(this->root_);
     flow_update_ = true;
-    started = start() == 0;
-
+    start();
     updating_ = false;
-
-    if (started) {
-      auto flowVersion = flow_configuration_->getFlowVersion();
-      if (flowVersion) {
-        logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
-        configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
-        configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
-      } else {
-        logger_->log_debug("Invalid flow version, not setting");
-      }
+    auto flowVersion = flow_configuration_->getFlowVersion();
+    if (flowVersion) {
+      logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
+      configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
+      configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
     }
   } catch (...) {
     this->root_ = std::move(prevRoot);
@@ -236,7 +229,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     updating_ = false;
   }
 
-  return started;
+  return true;
 }
 
 int16_t FlowController::stop() {
@@ -328,7 +321,7 @@ void FlowController::initializeUninitializedSchedulers() {
 }
 
 void FlowController::reinitializeSchedulersWithNewThreadPool() {
-  using core::controller::ControllerServiceProvider;
+  using ControllerServiceProvider = core::controller::ControllerServiceProvider;
   restartThreadPool();
   timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(gsl::not_null<ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
   event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(gsl::not_null<ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
