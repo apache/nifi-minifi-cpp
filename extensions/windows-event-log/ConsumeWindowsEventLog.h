@@ -123,8 +123,7 @@ private:
   bool commitAndSaveBookmark(const std::wstring &bookmarkXml, const std::shared_ptr<core::ProcessSession> &session);
   void processEventLogs(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session,
     size_t& event_count, const EVT_HANDLE& event_query_results);
-  void populateSessionWithEventLogs(size_t& processed_event_count, const EVT_HANDLE& event_query_results);
-  std::wstring ConsumeWindowsEventLog::populateSessionWithEventLogs(const std::shared_ptr<core::ProcessSession> &session,
+  std::wstring populateSessionWithEventLogs(const std::shared_ptr<core::ProcessSession> &session,
     size_t& processed_event_count, const EVT_HANDLE& event_query_results);
 
   // Logger

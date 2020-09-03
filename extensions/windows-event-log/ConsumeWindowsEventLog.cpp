@@ -375,7 +375,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   size_t processed_event_count = 0;
   const TimeDiff time_diff;
   const auto timeGuard = gsl::finally([&]() {
-    logger_->log_debug("Processed %zu events in %"  PRId64 " ms", processed_event_count, time_diff());
+    logger_->log_debug("processed %zu Events in %"  PRId64 " ms", processed_event_count, time_diff());
   });
 
   const auto event_query_results = EvtQuery(0, wstrChannel_.c_str(), wstrQuery_.c_str(), EvtQueryChannelPath);
