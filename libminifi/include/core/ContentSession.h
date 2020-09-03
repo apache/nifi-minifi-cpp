@@ -50,6 +50,8 @@ class ContentSession {
 
   void rollback();
 
+  virtual ~ContentSession() = default;
+
  protected:
   std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BaseStream>> managedResources_;
   std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BaseStream>> extendedResources_;
