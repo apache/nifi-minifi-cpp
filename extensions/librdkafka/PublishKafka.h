@@ -125,7 +125,7 @@ class PublishKafka : public core::Processor {
   utils::Regex attributeNameRegex_;
 
   std::atomic<bool> interrupted_{false};
-  std::mutex messages_mutex_;
+  std::mutex messages_mutex_;  // If both connection_mutex_ and messages_mutex_ are needed, always take connection_mutex_ first to avoid deadlock
   std::set<std::shared_ptr<Messages>> messages_set_;
 };
 
