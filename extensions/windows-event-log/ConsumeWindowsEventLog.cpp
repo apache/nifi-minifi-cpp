@@ -317,7 +317,7 @@ bool ConsumeWindowsEventLog::commitAndSaveBookmark(const std::wstring &bookmark_
   return true;
 }
 
-std::wstring ConsumeWindowsEventLog::populateSessionWithEventLogs(const std::shared_ptr<core::ProcessSession> &session,
+std::wstring ConsumeWindowsEventLog::processEventLogs(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session,
     size_t& processed_event_count, const EVT_HANDLE& event_query_results) {
   std::wstring bookmark_xml;
   logger_->log_trace("Enumerating the events in the result set after the bookmarked event.");
@@ -345,16 +345,8 @@ std::wstring ConsumeWindowsEventLog::populateSessionWithEventLogs(const std::sha
       putEventRenderFlowFileToSession(event_render, *session);
     }
   }
-  return bookmark_xml;
-}
-
-void ConsumeWindowsEventLog::processEventLogs(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session,
-    size_t& processed_event_count, const EVT_HANDLE& event_query_results) {
-  std::wstring bookmark_xml = populateSessionWithEventLogs(session, processed_event_count, event_query_results);
   logger_->log_trace("Finished enumerating events.");
-  if (processed_event_count > 0 && !commitAndSaveBookmark(bookmark_xml, session)) {
-    context->yield();
-  }
+  return bookmark_xml;
 }
 
 void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -403,7 +395,12 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 
   refreshTimeZoneData();
-  processEventLogs(context,session, processed_event_count, event_query_results);
+  auto bookmark_xml = processEventLogs(context,session, processed_event_count, event_query_results);
+
+  if (processed_event_count > 0 && !commitAndSaveBookmark(bookmark_xml, session)) {
+    context->yield();
+    return;
+  }
 }
 
 wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
