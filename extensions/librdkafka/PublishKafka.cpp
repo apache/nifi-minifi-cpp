@@ -542,6 +542,7 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
 void PublishKafka::notifyStop() {
   logger_->log_debug("notifyStop called");
   interrupted_ = true;
+  std::lock_guard<std::mutex> conn_lock(connection_mutex_);
   std::lock_guard<std::mutex> lock(messages_mutex_);
   for (auto& messages : messages_set_) {
     messages->interrupt();
