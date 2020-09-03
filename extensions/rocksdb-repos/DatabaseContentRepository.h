@@ -85,36 +85,36 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
         db_(nullptr),
         logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {
   }
-  virtual ~DatabaseContentRepository() {
+  ~DatabaseContentRepository() override {
     stop();
   }
 
   std::shared_ptr<ContentSession> createSession() override;
 
-  virtual bool initialize(const std::shared_ptr<minifi::Configure> &configuration);
+  bool initialize(const std::shared_ptr<minifi::Configure> &configuration) override;
 
-  virtual void stop();
+  void stop() override;
 
-  virtual std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append = false);
+  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append = false) override;
 
-  virtual std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim);
+  std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim) override;
 
-  virtual bool close(const minifi::ResourceClaim &claim) {
+  bool close(const minifi::ResourceClaim &claim) override {
     return remove(claim);
   }
 
-  virtual bool remove(const minifi::ResourceClaim &claim);
+  bool remove(const minifi::ResourceClaim> &claim) override;
 
-  virtual bool exists(const minifi::ResourceClaim &streamId);
+  bool exists(const minifi::ResourceClaim &streamId) override;
 
-  virtual void yield() {
+  void yield() override {
 
   }
 
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() {
+  bool isRunning() override {
     return true;
   }
 
@@ -122,12 +122,12 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
    * Determines if work is available by this connectable
    * @return boolean if work is available.
    */
-  virtual bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return true;
   }
 
  private:
-  std::shared_ptr<io::BaseStream> write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append, rocksdb::WriteBatch* batch);
+  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, rocksdb::WriteBatch* batch);
 
   bool is_valid_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
