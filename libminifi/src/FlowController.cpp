@@ -95,7 +95,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   }
   utils::IdGenerator::getIdGenerator()->generate(uuid_);
   setUUID(uuid_);
-  flow_update_ = false;
   // Setup the default values
   if (flow_configuration_ != nullptr) {
     configuration_filename_ = flow_configuration_->getConfigurationPath();
@@ -216,9 +215,6 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   bool started = false;
   try {
     load(this->root_, true);
-    flow_update_ = true;
-    started = start() == 0;
-
     updating_ = false;
 
     if (started) {
@@ -234,7 +230,6 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   } catch (...) {
     this->root_ = std::move(prevRoot);
     load(this->root_, true);
-    flow_update_ = true;
     updating_ = false;
   }
 
@@ -409,23 +404,16 @@ int16_t FlowController::start() {
   }
 }
 
-void FlowController::initializeC2() {
-  if (!c2_enabled_) {
-    return;
-  }
-
-  std::string c2_enable_str;
-  std::string class_str;
-
+std::tuple<std::string, bool> FlowController::getC2AgentClassAndEnableStateFromConfig() {
   // don't need to worry about the return code, only whether class_str is defined.
+  std::string class_str;
   configuration_->get("nifi.c2.agent.class", "c2.agent.class", class_str);
   configuration_->setAgentClass(class_str);
-
+  std::string c2_enable_str;
+  bool enable_c2 = true;
   if (configuration_->get(Configure::nifi_c2_enable, "c2.enable", c2_enable_str)) {
-    bool enable_c2 = true;
     utils::StringUtils::StringToBool(c2_enable_str, enable_c2);
-    c2_enabled_ = enable_c2;
-    if (c2_enabled_ && class_str.empty()) {
+    if (enable_c2 && class_str.empty()) {
       logger_->log_error("Class name must be defined when C2 is enabled");
       std::cerr << "Class name must be defined when C2 is enabled" << std::endl;
       stop();
@@ -441,43 +429,40 @@ void FlowController::initializeC2() {
      * The ticket that impacts this, MINIFICPP-664, should be reversed in the event that agent registration
      * can be performed and agent classes needn't be defined a priori.
      */
-    c2_enabled_ = false;
+    enable_c2 = false;
   }
 
-  if (!c2_enabled_) {
-    return;
-  }
+  return std::make_tuple(class_str, enable_c2);
+}
 
-  std::string identifier_str;
-  if (!configuration_->get("nifi.c2.agent.identifier", "c2.agent.identifier", identifier_str) || identifier_str.empty()) {
+std::string FlowController::getReloadedC2AgentIdentifier() {
+  std::string agent_identifier;
+  if (!configuration_->get("nifi.c2.agent.identifier", "c2.agent.identifier", agent_identifier) || agent_identifier.empty()) {
     // set to the flow controller's identifier
-    identifier_str = uuidStr_;
+    agent_identifier = uuidStr_;
   }
-  configuration_->setAgentIdentifier(identifier_str);
+  return agent_identifier;
+}
 
-  if (c2_initialized_ && !flow_update_) {
-    return;
+void FlowController::addQueueMetricsToDeviceInformation() {
+  std::shared_ptr<state::response::QueueMetrics> queueMetrics = std::make_shared<state::response::QueueMetrics>();
+  std::map<std::string, std::shared_ptr<Connection>> connections;
+  root_->getConnections(connections);
+  for (auto con : connections) {
+    queueMetrics->addConnection(con.second);
   }
+  device_information_[queueMetrics->getName()] = queueMetrics;
+}
 
-  device_information_.clear();
-  component_metrics_.clear();
-  component_metrics_by_id_.clear();
+void FlowController::addRepoMetricsToDeviceInformation() {
+  std::shared_ptr<state::response::RepositoryMetrics> repoMetrics = std::make_shared<state::response::RepositoryMetrics>();
+  repoMetrics->addRepository(provenance_repo_);
+  repoMetrics->addRepository(flow_file_repo_);
+  device_information_[repoMetrics->getName()] = repoMetrics;
+}
 
+void FlowController::addC2RootClassesFromConfigToRootMetricsNodes(const std::string& agent_identifier, const std::string& agent_class) {
   std::string class_csv;
-  if (root_ != nullptr) {
-    std::shared_ptr<state::response::QueueMetrics> queueMetrics = std::make_shared<state::response::QueueMetrics>();
-    std::map<std::string, std::shared_ptr<Connection>> connections;
-    root_->getConnections(connections);
-    for (auto con : connections) {
-      queueMetrics->addConnection(con.second);
-    }
-    device_information_[queueMetrics->getName()] = queueMetrics;
-    std::shared_ptr<state::response::RepositoryMetrics> repoMetrics = std::make_shared<state::response::RepositoryMetrics>();
-    repoMetrics->addRepository(provenance_repo_);
-    repoMetrics->addRepository(flow_file_repo_);
-    device_information_[repoMetrics->getName()] = repoMetrics;
-  }
-
   if (configuration_->get("nifi.c2.root.classes", class_csv)) {
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
@@ -490,8 +475,8 @@ void FlowController::initializeC2() {
       std::shared_ptr<state::response::ResponseNode> processor = std::static_pointer_cast<state::response::ResponseNode>(ptr);
       auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(processor);
       if (identifier != nullptr) {
-        identifier->setIdentifier(identifier_str);
-        identifier->setAgentClass(class_str);
+        identifier->setIdentifier(agent_identifier);
+        identifier->setAgentClass(agent_class);
       }
       auto monitor = std::dynamic_pointer_cast<state::response::AgentMonitor>(processor);
       if (monitor != nullptr) {
@@ -513,7 +498,10 @@ void FlowController::initializeC2() {
       root_response_nodes_[processor->getName()] = processor;
     }
   }
+}
 
+void FlowController::addFlowMetricClassesFromConfigToDeviceInformation() {
+  std::string class_csv;
   if (configuration_->get("nifi.flow.metrics.classes", class_csv)) {
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
     for (std::string clazz : classes) {
@@ -527,11 +515,11 @@ void FlowController::initializeC2() {
       device_information_[processor->getName()] = processor;
     }
   }
+}
 
-  // first we should get all component metrics, then
-  // we will build the mapping
-  std::vector<std::shared_ptr<core::Processor>> processors;
+void FlowController::buildComponentMetricMapping() {
   if (root_ != nullptr) {
+    std::vector<std::shared_ptr<core::Processor>> processors;
     root_->getAllProcessors(processors);
     for (const auto &processor : processors) {
       auto rep = std::dynamic_pointer_cast<state::response::ResponseNodeSource>(processor);
@@ -545,7 +533,6 @@ void FlowController::initializeC2() {
       }
     }
   }
-
   std::string class_definitions;
   if (configuration_->get("nifi.flow.metrics.class.definitions", class_definitions)) {
     std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
@@ -576,13 +563,44 @@ void FlowController::initializeC2() {
       }
     }
   }
+}
+
+void FlowController::initializeC2() {
+  if (!c2_enabled_) {
+    return;
+  }
+  // Apparently, we can only disable c2, never enable it
+  std::string agent_class;
+  std::tie(agent_class, c2_enabled_) = FlowController::getC2AgentClassAndEnableStateFromConfig();
+  if (!c2_enabled_) {
+    return;
+  }
+  const std::string agent_identifier = getReloadedC2AgentIdentifier();
+  configuration_->setAgentIdentifier(agent_identifier);
+  if (c2_initialized_) {
+    return;
+  }
+
+  device_information_.clear();
+
+  if (root_ != nullptr) {
+    addQueueMetricsToDeviceInformation();
+    addRepoMetricsToDeviceInformation();
+  }
+  addC2RootClassesFromConfigToRootMetricsNodes(agent_identifier, agent_class);
+  addFlowMetricClassesFromConfigToDeviceInformation();
+
+  component_metrics_.clear();
+  component_metrics_by_id_.clear();
+
+  // first we should get all component metrics, then
+  // we will build the mapping
+  buildComponentMetricMapping();
 
   loadC2ResponseConfiguration();
 
   if (!c2_initialized_) {
-    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(this,
-                                                             std::dynamic_pointer_cast<FlowController>(shared_from_this()),
-                                                             configuration_));
+    c2_agent_ = utils::make_unique<c2::C2Agent>(this, std::dynamic_pointer_cast<FlowController>(shared_from_this()), configuration_);
     c2_agent_->start();
     c2_initialized_ = true;
   }
