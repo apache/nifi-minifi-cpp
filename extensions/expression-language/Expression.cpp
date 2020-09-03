@@ -633,7 +633,7 @@ Value expr_toDate(const std::vector<Value> &args) {
 
 Value expr_now(const std::vector<Value> &args) {
   using namespace std::chrono;
-  int64_t unix_time_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+  int64_t unix_time_ms{duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()};
   return Value(unix_time_ms);
 }
 
