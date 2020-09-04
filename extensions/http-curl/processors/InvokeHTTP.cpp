@@ -283,6 +283,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   // create a transaction id
   std::string tx_id = generateId();
 
+  // Note: callback must be declared before callbackObj so that they are destructed in the correct order
   std::unique_ptr<utils::ByteInputCallBack> callback = nullptr;
   std::unique_ptr<utils::HTTPUploadCallback> callbackObj = nullptr;
 
