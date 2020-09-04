@@ -190,6 +190,11 @@ void HTTPClient::setUploadCallback(HTTPUploadCallback *callbackObj) {
   curl_easy_setopt(http_session_, CURLOPT_READDATA, static_cast<void*>(callbackObj));
 }
 
+void HTTPClient::setSeekFunction(HTTPUploadCallback *callbackObj) {
+  curl_easy_setopt(http_session_, CURLOPT_SEEKDATA, static_cast<void*>(callbackObj));
+  curl_easy_setopt(http_session_, CURLOPT_SEEKFUNCTION, &utils::HTTPRequestResponse::seek_callback);
+}
+
 struct curl_slist *HTTPClient::build_header_list(std::string regex, const std::map<std::string, std::string> &attributes) {
   if (http_session_) {
     for (auto attribute : attributes) {

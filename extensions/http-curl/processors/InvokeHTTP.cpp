@@ -145,8 +145,8 @@ void InvokeHTTP::initialize() {
   properties.insert(ProxyHost);
   properties.insert(ProxyPort);
   properties.insert(ProxyUsername);
-  properties.insert(UseChunkedEncoding);
   properties.insert(ProxyPassword);
+  properties.insert(UseChunkedEncoding);
   properties.insert(ContentType);
   properties.insert(SendBody);
   properties.insert(DisablePeerVerification);
@@ -246,6 +246,20 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
   if (context->getProperty(DisablePeerVerification.getName(), disablePeerVerification)) {
     utils::StringUtils::StringToBool(disablePeerVerification, disable_peer_verification_);
   }
+
+  std::string proxy_value;
+  if (context->getProperty(ProxyHost.getName(), proxy_value) && !proxy_value.empty()) {
+    proxy_.host = proxy_value;
+  }
+  if (context->getProperty(ProxyPort.getName(), proxy_value) && !proxy_value.empty()) {
+    proxy_.port = std::stoi(proxy_value);
+  }
+  if (context->getProperty(ProxyUsername.getName(), proxy_value) && !proxy_value.empty()) {
+    proxy_.username = proxy_value;
+  }
+  if (context->getProperty(ProxyPassword.getName(), proxy_value) && !proxy_value.empty()) {
+    proxy_.password = proxy_value;
+  }
 }
 
 InvokeHTTP::~InvokeHTTP() = default;
@@ -307,6 +321,8 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     client.setDisablePeerVerification();
   }
 
+  client.setHTTPProxy(proxy_);
+
   if (emitFlowFile(method_)) {
     logger_->log_trace("InvokeHTTP -- reading flowfile");
     std::shared_ptr<ResourceClaim> claim = flowFile->getResourceClaim();
@@ -321,6 +337,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
         client.appendHeader("Content-Length", std::to_string(flowFile->getSize()));
       }
       client.setUploadCallback(callbackObj.get());
+      client.setSeekFunction(callbackObj.get());
     } else {
       logger_->log_error("InvokeHTTP -- no resource claim");
     }

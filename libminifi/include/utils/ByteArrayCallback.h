@@ -57,6 +57,7 @@ class ByteInputCallBack : public InputStreamCallback {
   }
 
   virtual void seek(size_t pos) {
+    ptr = &vec[pos];
   }
 
   virtual void write(std::string content) {

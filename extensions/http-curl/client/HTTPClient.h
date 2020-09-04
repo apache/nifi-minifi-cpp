@@ -106,6 +106,8 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void setUploadCallback(HTTPUploadCallback *callbackObj) override;
 
+  void setSeekFunction(HTTPUploadCallback *callbackObj) override;
+
   virtual void setReadCallback(HTTPReadCallback *callbackObj);
 
   struct curl_slist *build_header_list(std::string regex, const std::map<std::string, std::string> &attributes);

@@ -178,6 +178,8 @@ class HTTPRequestResponse {
 
  public:
   static const size_t CALLBACK_ABORT = 0x10000000;
+  static const int SEEKFUNC_OK = 0;
+  static const int SEEKFUNC_FAIL = 1;
 
   const std::vector<char> &getData() {
     return data;
@@ -250,6 +252,23 @@ class HTTPRequestResponse {
     }
   }
 
+  static int seek_callback(void *p, long offset, int origin) {
+    try {
+      if (p == nullptr) {
+        return SEEKFUNC_FAIL;
+      }
+      HTTPUploadCallback *callback = reinterpret_cast<HTTPUploadCallback*>(p);
+      if (callback->stop) {
+        return SEEKFUNC_FAIL;
+      }
+      callback->pos = origin;
+      callback->ptr->seek(callback->getPos() + offset);
+      return SEEKFUNC_OK;
+    } catch (...) {
+      return SEEKFUNC_FAIL;
+    }
+  }
+
   int read_data(uint8_t *buf, size_t size) {
     size_t size_to_read = size;
     if (size_to_read > data.size()) {
@@ -298,6 +317,9 @@ class BaseHTTPClient {
   }
 
   virtual void setUploadCallback(HTTPUploadCallback *callbackObj) {
+  }
+
+  virtual void setSeekFunction(HTTPUploadCallback *callbackObj) {
   }
 
   virtual void setContentType(std::string content_type) {
