@@ -110,7 +110,7 @@ utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
   const YAML::Node destination_id_node = connectionNode_["destination id"];
   if (destination_id_node) {
     const utils::optional<utils::Identifier> destUUID = utils::Identifier::parse(destination_id_node.as<std::string>());
-    if(destUUID) {
+    if (destUUID) {
       logger_->log_debug("Using 'destination id' to match destination with same id for connection '%s': destination id => [%s]", name_, destUUID.value().to_string());
       return destUUID.value();
     }

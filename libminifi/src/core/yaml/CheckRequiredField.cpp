@@ -41,6 +41,10 @@ void checkRequiredField(const YAML::Node *yamlNode, const std::string &fieldName
       if (!yamlSection.empty()) {
         errMsg += " [in '" + yamlSection + "' section of configuration file]";
       }
+      const YAML::Mark mark = yamlNode->Mark();
+      if (!mark.is_null()) {
+        errMsg += " [line:column, pos at " + std::to_string(mark.line) + ":" + std::to_string(mark.column) + ", " + std::to_string(mark.pos) + "]";
+      }
     }
     logger->log_error(errMsg.c_str());
     throw std::invalid_argument(errMsg);
