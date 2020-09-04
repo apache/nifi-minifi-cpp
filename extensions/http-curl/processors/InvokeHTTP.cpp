@@ -283,6 +283,11 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   // create a transaction id
   std::string tx_id = generateId();
 
+  // Note: callback must be declared before callbackObj so that they are destructed in the correct order
+  std::unique_ptr<utils::ByteInputCallBack> callback = nullptr;
+  std::unique_ptr<utils::HTTPUploadCallback> callbackObj = nullptr;
+
+  // Client declared after the callbacks to make sure the callbacks are still available when the client is destructed
   utils::HTTPClient client(url_, ssl_context_service_);
 
   client.initialize(method_);
@@ -302,8 +307,6 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     client.setDisablePeerVerification();
   }
 
-  std::unique_ptr<utils::ByteInputCallBack> callback = nullptr;
-  std::unique_ptr<utils::HTTPUploadCallback> callbackObj = nullptr;
   if (emitFlowFile(method_)) {
     logger_->log_trace("InvokeHTTP -- reading flowfile");
     std::shared_ptr<ResourceClaim> claim = flowFile->getResourceClaim();
