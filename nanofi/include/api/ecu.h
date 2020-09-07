@@ -35,7 +35,7 @@ typedef struct proc_properties {
 } proc_properties;
 
 typedef struct processor_params {
-    char uuid_str[37]; //key
+    char uuid_str[37];  // key
     struct flow_file_list * ff_list;
     uint64_t curr_offset;
     struct proc_properties * properties;

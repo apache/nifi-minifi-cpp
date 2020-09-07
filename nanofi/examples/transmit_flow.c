@@ -86,10 +86,10 @@ int main(int argc, char **argv) {
   nifi_instance *instance = create_instance(instance_str, &port);
 
   // initializing will make the transmission slightly more efficient.
-  //initialize_instance(instance);
+  // initialize_instance(instance);
   transfer_file_or_directory(instance,file);
 
-  //Create flowfile without content (just a set of attributes)
+  // Create flowfile without content (just a set of attributes)
   flow_file_record * record = create_ff_object_nc();
 
   const char * custom_value = "transmitted value";

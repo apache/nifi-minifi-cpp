@@ -31,9 +31,9 @@ namespace minifi {
 namespace provenance {
 
 #define PROVENANCE_DIRECTORY "./provenance_repository"
-#define MAX_PROVENANCE_STORAGE_SIZE (10*1024*1024) // 10M
-#define MAX_PROVENANCE_ENTRY_LIFE_TIME (60000) // 1 minute
-#define PROVENANCE_PURGE_PERIOD (2500) // 2500 msec
+#define MAX_PROVENANCE_STORAGE_SIZE (10*1024*1024)  // 10M
+#define MAX_PROVENANCE_ENTRY_LIFE_TIME (60000)  // 1 minute
+#define PROVENANCE_PURGE_PERIOD (2500)  // 2500 msec
 
 class ProvenanceRepository : public core::Repository, public std::enable_shared_from_this<ProvenanceRepository> {
  public:

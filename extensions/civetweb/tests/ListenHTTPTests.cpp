@@ -110,9 +110,9 @@ class ListenHTTPTestsFixture {
   }
 
   void run_server() {
-    plan->runNextProcessor(); // GetFile
-    plan->runNextProcessor(); // UpdateAttribute
-    plan->runNextProcessor(); // ListenHTTP
+    plan->runNextProcessor();  // GetFile
+    plan->runNextProcessor();  // UpdateAttribute
+    plan->runNextProcessor();  // ListenHTTP
 
     auto raw_ptr = dynamic_cast<org::apache::nifi::minifi::processors::ListenHTTP*>(listen_http.get());
     std::string protocol = std::string("http") + (raw_ptr->isSecure() ? "s" : "");
@@ -158,7 +158,7 @@ class ListenHTTPTestsFixture {
             REQUIRE("" == response_body);
           }
 
-          plan->runNextProcessor(); // LogAttribute
+          plan->runNextProcessor();  // LogAttribute
           REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(payload.size()) + " Offset:0"));
         }
       }

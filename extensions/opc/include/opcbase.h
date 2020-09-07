@@ -80,4 +80,4 @@ class BaseOPCProcessor : public core::Processor {
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_OPCBASE_H
+#endif  // NIFI_MINIFI_CPP_OPCBASE_H

@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-//OPC includes
+// OPC includes
 #include "opc.h"
 
-//MiNiFi includes
+// MiNiFi includes
 #include "utils/StringUtils.h"
 #include "logging/Logger.h"
 #include "Exception.h"
 
 #include "utils/gsl.h"
 
-//Standard includes
+// Standard includes
 #include <stdlib.h>
 #include <iostream>
 #include <memory>

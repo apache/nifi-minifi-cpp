@@ -22,9 +22,9 @@
 #include <ws2tcpip.h>
 #else
 #include <sys/socket.h>  // socket
-#include <arpa/inet.h> // inet_addr
-#include <netdb.h> // hostent
-#include <unistd.h> // close
+#include <arpa/inet.h>  // inet_addr
+#include <netdb.h>  // hostent
+#include <unistd.h>  // close
 #endif
 
 #include <errno.h>
@@ -149,7 +149,6 @@ int readUTFLen(uint32_t * utflen, cstream * stream) {
 }
 
 int readUTF(char * buf, uint32_t buflen, cstream * stream) {
-  //return stream->impl->readData((uint8_t*)buf, buflen);
   return read_buffer((uint8_t*)buf, (int) buflen, stream);
 }
 

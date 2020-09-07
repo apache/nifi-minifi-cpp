@@ -70,4 +70,4 @@ void free_socket(cstream * stream);
 }
 #endif
 
-#endif //NIFI_MINIFI_CPP_CSTREAM_H
+#endif  // NIFI_MINIFI_CPP_CSTREAM_H

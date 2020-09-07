@@ -140,4 +140,4 @@ REGISTER_RESOURCE(CaptureRTSPFrame, "Captures a frame from the RTSP stream at sp
 } /* namespace org */
 
 
-#endif //NIFI_MINIFI_CPP_CAPTURERTSPFRAME_H
+#endif  // NIFI_MINIFI_CPP_CAPTURERTSPFRAME_H

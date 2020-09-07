@@ -164,7 +164,7 @@ std::string MetadataWalker::updateXmlMetadata(const std::string &xml, EVT_HANDLE
   if (result) {
     doc.traverse(walker);
     wel::XmlString writer;
-    doc.print(writer, "", pugi::format_raw); // no indentation or formatting
+    doc.print(writer, "", pugi::format_raw);  // no indentation or formatting
     return writer.xml_;
   }
   else {

@@ -325,7 +325,7 @@ class JVMLoader {
 
     current_error_ = std::string(messageBuffer, size);
 
-    //Free the buffer.
+    // Free the buffer.
     LocalFree(messageBuffer);
   }
 

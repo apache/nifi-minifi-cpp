@@ -190,7 +190,7 @@ std::string WindowsEventLogHeader::getEventHeader(const MetadataCollection& meta
   for (const auto &option : header_names_) {
     max = (std::max(max, option.second.size()));
   }
-  ++max; // increment by one to get space.
+  ++max;  // increment by one to get space.
   for (const auto &option : header_names_) {
     auto name = option.second;
     if (!name.empty()) {

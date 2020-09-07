@@ -83,7 +83,7 @@ class MQTTC2Protocol : public C2Protocol {
   // mqtt controller service reference.
   std::shared_ptr<controllers::MQTTControllerService> mqtt_service_;
   std::shared_ptr<logging::Logger> logger_;
-  //mqtt controller serviec name.
+  // mqtt controller serviec name.
   std::string controller_service_name_;
 
 

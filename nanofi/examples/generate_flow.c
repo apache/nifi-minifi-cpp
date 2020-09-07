@@ -57,8 +57,8 @@ int main(int argc, char **argv) {
   free_flowfile(record);
 
   // initializing will make the transmission slightly more efficient.
-  //initialize_instance(instance);
-  //transfer_file_or_directory(instance,file);
+  // initialize_instance(instance);
+  // transfer_file_or_directory(instance,file);
 
   free_flow(new_flow);
 

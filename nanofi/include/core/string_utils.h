@@ -91,4 +91,4 @@ void attach_lists(token_list * to, token_list * from);
 }
 #endif
 
-#endif //NIFI_MINIFI_CPP_STRING_UTILS_H
+#endif  // NIFI_MINIFI_CPP_STRING_UTILS_H

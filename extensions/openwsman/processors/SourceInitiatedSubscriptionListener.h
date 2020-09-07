@@ -170,4 +170,4 @@ REGISTER_RESOURCE(SourceInitiatedSubscriptionListener, "This processor implement
 } /* namespace apache */
 } /* namespace org */
 
-#endif // __SOURCE_INITIATED_SUBSCRIPTION_PROCESSOR_H__
+#endif  // __SOURCE_INITIATED_SUBSCRIPTION_PROCESSOR_H__

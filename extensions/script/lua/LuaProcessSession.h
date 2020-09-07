@@ -96,4 +96,4 @@ class LuaProcessSession {
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_LUAPROCESSSESSION_H
+#endif  // NIFI_MINIFI_CPP_LUAPROCESSSESSION_H

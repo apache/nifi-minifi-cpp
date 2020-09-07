@@ -38,4 +38,4 @@ void generate_uuid(const CIDGenerator * generator, char * out);
 }
 #endif
 
-#endif //NIFI_MINIFI_CPP_CUUID_H
+#endif  // NIFI_MINIFI_CPP_CUUID_H

@@ -52,7 +52,7 @@ void custom_processor_logic(processor_session * ps, processor_context * ctx) {
   char prop_value[50];
 
   if(get_property(ctx, "checksum_attr_name", prop_value, 50) != 0) {
-    return; // Attr name not found
+    return;  // Attr name not found
   }
 
   add_attribute(ffr, prop_value, (void*)md5string, strlen(md5string));
@@ -118,4 +118,4 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-#endif //OPENSSL_SUPPORT
+#endif  // OPENSSL_SUPPORT

@@ -69,9 +69,6 @@ DLL_EXPORT jstring JNICALL Java_org_apache_nifi_processor_JniProcessContext_getN
 
 DLL_EXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getControllerServiceLookup(JNIEnv *env, jobject obj);
 
-//getname
-//getControllerservicelookup
-
 #ifdef __cplusplus
 }
 #endif

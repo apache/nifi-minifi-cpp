@@ -83,4 +83,4 @@ REGISTER_RESOURCE(ExecuteSQL, "Execute provided SQL query. Query result rows wil
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_EXECUTESQL_H
+#endif  // NIFI_MINIFI_CPP_EXECUTESQL_H

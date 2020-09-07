@@ -42,4 +42,4 @@ public:
   std::atomic_bool terminate_{false};
 };
 
-#endif //NIFI_MINIFI_CPP_SERVERAWAREHANDLER_H
+#endif  // NIFI_MINIFI_CPP_SERVERAWAREHANDLER_H

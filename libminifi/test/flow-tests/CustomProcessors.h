@@ -112,4 +112,4 @@ REGISTER_RESOURCE(TestFlowFileGenerator, "Processor generating files and notifyi
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_CUSTOMPROCESSORS_H
+#endif  // NIFI_MINIFI_CPP_CUSTOMPROCESSORS_H

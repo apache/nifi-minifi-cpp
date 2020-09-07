@@ -74,4 +74,4 @@ class FrameReadCallback : public InputStreamCallback {
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_FRAMEIO_H
+#endif  // NIFI_MINIFI_CPP_FRAMEIO_H

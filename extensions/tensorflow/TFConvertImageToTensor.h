@@ -115,4 +115,4 @@ REGISTER_RESOURCE(TFConvertImageToTensor, "Converts the input image file into a 
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_TFCONVERTIMAGETOTENSOR_H
+#endif  // NIFI_MINIFI_CPP_TFCONVERTIMAGETOTENSOR_H

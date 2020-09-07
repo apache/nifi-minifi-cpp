@@ -70,9 +70,9 @@ static void setHostName(struct SiteToSiteCPeer * peer, const char * hostname) {
     return;
   }
   size_t host_len = strlen(hostname);
-  peer->_host = (char*)malloc(host_len + 1); // +1 for trailing zero
-  peer->_url = (char*)malloc(host_len + 14); // +1 for trailing zero, 1 for ':', at most 5 for port, 7 for "nifi://" suffix
-  memset(peer->_url, 0, host_len + 14); // make sure to have zero padding no matter the length of the port
+  peer->_host = (char*)malloc(host_len + 1);  // +1 for trailing zero
+  peer->_url = (char*)malloc(host_len + 14);  // +1 for trailing zero, 1 for ':', at most 5 for port, 7 for "nifi://" suffix
+  memset(peer->_url, 0, host_len + 14);  // make sure to have zero padding no matter the length of the port
   strncpy(peer->_host, hostname, host_len);
   strncpy(peer->_url, "nifi://", 7);
   strncpy(peer->_url + 7, hostname, host_len);
@@ -88,9 +88,9 @@ static void setPort(struct SiteToSiteCPeer * peer, uint16_t port) {
   peer->_port = port;
   if(peer->_url != NULL) {
     int i;
-    for(i = strlen(peer->_url) -1; i >= 0; --i) { // look for the last ':' in the string
+    for(i = strlen(peer->_url) -1; i >= 0; --i) {  // look for the last ':' in the string
       if(peer->_url[i] == ':'){
-        memset(peer->_url + i + 1, 0, 6); // zero the port area  - the new port can be shorter
+        memset(peer->_url + i + 1, 0, 6);  // zero the port area  - the new port can be shorter
         snprintf(peer->_url + i + 1, 6, "%d", peer->_port);
         break;
       }

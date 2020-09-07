@@ -140,7 +140,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
 
           session->transfer(flowFile, Success);
 
-          //Break the for(;;) waiting loop
+          // Break the for(;;) waiting loop
           break;
         } else {
           logger_->log_info("Satellite lock has not yet been acquired");

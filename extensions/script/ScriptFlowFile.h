@@ -47,4 +47,4 @@ class ScriptFlowFile {
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_SCRIPTFLOWFILE_H
+#endif  // NIFI_MINIFI_CPP_SCRIPTFLOWFILE_H

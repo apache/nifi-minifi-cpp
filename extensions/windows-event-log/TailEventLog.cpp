@@ -113,8 +113,6 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       
       flowFile->addAttribute("event_time", getTimeStamp(event_record->TimeGenerated));
       flowFile->addAttribute("event_type", typeToString(event_record->EventType));
-      //flowFile->addAttribute("", event_message);
-
       
       io::DataStream stream((const uint8_t*)(event_record + event_record->DataOffset), event_record->DataLength);
       // need an import from the data stream.

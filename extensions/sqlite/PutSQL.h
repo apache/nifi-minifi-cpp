@@ -85,4 +85,4 @@ REGISTER_RESOURCE(PutSQL, "Executes a SQL UPDATE or INSERT command. The content 
 } /* namespace apache */
 } /* namespace org */
 
-#endif //NIFI_MINIFI_CPP_PUTSQL_H
+#endif  // NIFI_MINIFI_CPP_PUTSQL_H
