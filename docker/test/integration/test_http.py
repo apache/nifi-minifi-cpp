@@ -56,3 +56,4 @@ def test_invoke_listen_with_proxy():
         cluster.deploy_flow(invoke_flow, name='minifi-invoke')
 
         assert cluster.check_output()
+        assert cluster.check_http_proxy_access()
