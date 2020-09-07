@@ -155,8 +155,8 @@ class InvokeHTTP : public core::Processor {
   bool use_chunked_encoding_{false};
   // penalize on no retry
   bool penalize_no_retry_{false};
-  bool disable_peer_verification_{false}; // ( makes susceptible for MITM attacks )
-  bool follow_redirects_{true};
+  // disable peer verification ( makes susceptible for MITM attacks )
+  bool disable_peer_verification_{false};
   utils::HTTPProxy proxy_;
 
  private:

@@ -66,7 +66,7 @@ class ByteInputCallBack : public InputStreamCallback {
   }
 
   virtual char *getBuffer(size_t pos) {
-    return ptr + pos;
+    return reinterpret_cast<char*>(&vec[0]) + pos;
   }
 
   virtual const size_t getRemaining(size_t pos) {
