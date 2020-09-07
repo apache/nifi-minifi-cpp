@@ -108,7 +108,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   }
 
   // Start to run the Flow Controller which internally start the root process group and all its children
-  // int16_t start() override;
   int16_t start() override;
   int16_t pause() override {
     return -1;
@@ -337,7 +336,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
  private:
   void restartThreadPool();
   void initializeUninitializedSchedulers();
-  void reinitializeSchedulersWithNewThreadPool();
+  void reinitializeSchedulersWithClearedThreadPool();
 
   template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>
   void conditionalReloadScheduler(std::shared_ptr<T>& scheduler, const bool condition) {

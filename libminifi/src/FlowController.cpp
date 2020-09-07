@@ -210,7 +210,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
   try {
-    reinitializeSchedulersWithNewThreadPool();
+    reinitializeSchedulersWithClearedThreadPool();
     io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
     load(this->root_);
     flow_update_ = true;
@@ -320,12 +320,12 @@ void FlowController::initializeUninitializedSchedulers() {
   conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_);
 }
 
-void FlowController::reinitializeSchedulersWithNewThreadPool() {
-  using ControllerServiceProvider = core::controller::ControllerServiceProvider;
+void FlowController::reinitializeSchedulersWithClearedThreadPool() {
+  using NonNullControllerServiceProviderPtr = gsl::not_null<core::controller::ControllerServiceProvider*>;
   restartThreadPool();
-  timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(gsl::not_null<ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
-  event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(gsl::not_null<ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
-  cron_scheduler_ = std::make_shared<CronDrivenSchedulingAgent>(gsl::not_null<ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+  timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(NonNullControllerServiceProviderPtr(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+  event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(NonNullControllerServiceProviderPtr(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+  cron_scheduler_ = std::make_shared<CronDrivenSchedulingAgent>(NonNullControllerServiceProviderPtr(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
 }
 
 void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root) {
