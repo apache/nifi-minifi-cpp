@@ -112,6 +112,8 @@ class SingleNodeDockerCluster(Cluster):
             self.deploy_minifi_cpp_flow(flow, name, vols)
         elif engine == 'kafka-broker':
             self.deploy_kafka_broker(name)
+        elif engine == 'http-proxy':
+            self.deploy_http_proxy()
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 
@@ -240,6 +242,28 @@ class SingleNodeDockerCluster(Cluster):
 
         self.containers[consumer.name] = consumer
         self.containers[broker.name] = broker
+
+    def deploy_http_proxy(self):
+        logging.info('Creating and running http-proxy docker container...')
+        dockerfile = dedent("""FROM {base_image}
+                RUN apt update && apt install -y apache2-utils
+                RUN htpasswd -b -c /etc/squid/.squid_users {proxy_username} {proxy_password}
+                RUN echo 'auth_param basic program /usr/lib/squid3/basic_ncsa_auth /etc/squid/.squid_users'  > /etc/squid/squid.conf && \
+                    echo 'auth_param basic realm proxy' >> /etc/squid/squid.conf && \
+                    echo 'acl authenticated proxy_auth REQUIRED' >> /etc/squid/squid.conf && \
+                    echo 'http_access allow authenticated' >> /etc/squid/squid.conf && \
+                    echo 'http_port {proxy_port}' >> /etc/squid/squid.conf
+                ENTRYPOINT ["/sbin/entrypoint.sh"]
+                """.format(base_image='sameersbn/squid:3.5.27-2', proxy_username='admin', proxy_password='test101', proxy_port='3128'))
+        configured_image = self.build_image(dockerfile, [])
+        consumer = self.client.containers.run(
+                    configured_image[0],
+                    detach=True,
+                    name='http-proxy',
+                    network=self.network.name,
+                    ports={'3128/tcp': 3128},
+                    )
+        self.containers[consumer.name] = consumer
 
     def build_image(self, dockerfile, context_files):
         conf_dockerfile_buffer = BytesIO()
@@ -432,8 +456,17 @@ class Processor(Connectable):
 class InvokeHTTP(Processor):
     def __init__(self, url,
                  method='GET',
+                 proxy_host='',
+                 proxy_port='',
+                 proxy_username='',
+                 proxy_password='',
                  ssl_context_service=None):
-        properties = {'Remote URL': url, 'HTTP Method': method}
+        properties = {'Remote URL': url,
+                      'HTTP Method': method,
+                      'Proxy Host': proxy_host,
+                      'Proxy Port': proxy_port,
+                      'invokehttp-proxy-username': proxy_username,
+                      'invokehttp-proxy-password': proxy_password}
 
         controller_services = []
 

@@ -17,6 +17,8 @@ import logging
 import shutil
 import uuid
 import tarfile
+import subprocess
+import sys
 from io import BytesIO
 from threading import Event
 
@@ -177,6 +179,15 @@ class DockerTestCluster(SingleNodeDockerCluster):
         if isinstance(self.output_validator, FileOutputValidator):
             return self.output_validator.validate(dir=kwargs.get('dir', ''))
         return self.output_validator.validate()
+
+    def check_http_proxy_access(self):
+        output = subprocess.check_output(["docker", "exec", "http-proxy", "cat", "/var/log/squid/access.log"]).decode(sys.stdout.encoding)
+        if "http://minifi-listen:8080/contentListener" in output and \
+           output.count("TCP_DENIED/407") != 0 and \
+           output.count("TCP_MISS/200") == output.count("TCP_DENIED/407"):
+            return True
+        return False
+
     def rm_out_child(self, dir):
         logging.info('Removing %s from output folder', self.tmp_test_output_dir + dir)
         shutil.rmtree(self.tmp_test_output_dir + dir)

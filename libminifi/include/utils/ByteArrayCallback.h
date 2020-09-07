@@ -57,6 +57,7 @@ class ByteInputCallBack : public InputStreamCallback {
   }
 
   virtual void seek(size_t pos) {
+    ptr = &vec[pos];
   }
 
   virtual void write(std::string content) {
@@ -65,7 +66,7 @@ class ByteInputCallBack : public InputStreamCallback {
   }
 
   virtual char *getBuffer(size_t pos) {
-    return ptr + pos;
+    return &vec[pos];
   }
 
   virtual const size_t getRemaining(size_t pos) {

@@ -83,7 +83,9 @@ core::Property InvokeHTTP::SSLContext(
                                                                                   "information for TLS/SSL (https) connections.")->isRequired(false)->withExclusiveProperty("Remote URL", "^http:.*$")
         ->asType<minifi::controllers::SSLContextService>()->build());
 core::Property InvokeHTTP::ProxyHost("Proxy Host", "The fully qualified hostname or IP address of the proxy server", "");
-core::Property InvokeHTTP::ProxyPort("Proxy Port", "The port of the proxy server", "");
+core::Property InvokeHTTP::ProxyPort(
+    core::PropertyBuilder::createProperty("Proxy Port")->withDescription("The port of the proxy server")
+        ->isRequired(false)->build());
 core::Property InvokeHTTP::ProxyUsername(
     core::PropertyBuilder::createProperty("invokehttp-proxy-username", "Proxy Username")->withDescription("Username to set when authenticating against proxy")->isRequired(false)->build());
 core::Property InvokeHTTP::ProxyPassword(
@@ -145,8 +147,8 @@ void InvokeHTTP::initialize() {
   properties.insert(ProxyHost);
   properties.insert(ProxyPort);
   properties.insert(ProxyUsername);
-  properties.insert(UseChunkedEncoding);
   properties.insert(ProxyPassword);
+  properties.insert(UseChunkedEncoding);
   properties.insert(ContentType);
   properties.insert(SendBody);
   properties.insert(DisablePeerVerification);
@@ -246,6 +248,12 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
   if (context->getProperty(DisablePeerVerification.getName(), disablePeerVerification)) {
     utils::StringUtils::StringToBool(disablePeerVerification, disable_peer_verification_);
   }
+
+  proxy_ = {};
+  context->getProperty(ProxyHost.getName(), proxy_.host);
+  context->getProperty(ProxyPort.getName(), proxy_.port);
+  context->getProperty(ProxyUsername.getName(), proxy_.username);
+  context->getProperty(ProxyPassword.getName(), proxy_.password);
 }
 
 InvokeHTTP::~InvokeHTTP() = default;
@@ -307,6 +315,8 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     client.setDisablePeerVerification();
   }
 
+  client.setHTTPProxy(proxy_);
+
   if (emitFlowFile(method_)) {
     logger_->log_trace("InvokeHTTP -- reading flowfile");
     std::shared_ptr<ResourceClaim> claim = flowFile->getResourceClaim();
@@ -321,6 +331,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
         client.appendHeader("Content-Length", std::to_string(flowFile->getSize()));
       }
       client.setUploadCallback(callbackObj.get());
+      client.setSeekFunction(callbackObj.get());
     } else {
       logger_->log_error("InvokeHTTP -- no resource claim");
     }
