@@ -276,11 +276,8 @@ else()
 endif()
 
 # spdlog
-add_library(spdlog INTERFACE)
-target_include_directories(spdlog INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/spdlog-1.7.0/include")
-if (NOT WIN32)
-	set_property(TARGET spdlog APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS "SPDLOG_ENABLE_SYSLOG")
-endif()
+include(BundledSpdlog)
+use_bundled_spdlog(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 # yaml-cpp
 include(BundledYamlCpp)
