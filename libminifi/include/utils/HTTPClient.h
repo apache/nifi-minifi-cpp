@@ -252,7 +252,7 @@ class HTTPRequestResponse {
     }
   }
 
-  static int seek_callback(void *p, long offset, int) {
+  static int seek_callback(void *p, int64_t offset, int) {
     try {
       if (p == nullptr) {
         return SEEKFUNC_FAIL;
@@ -261,7 +261,7 @@ class HTTPRequestResponse {
       if (callback->stop) {
         return SEEKFUNC_FAIL;
       }
-      if (callback->ptr->getBufferSize() <= offset) {
+      if (callback->ptr->getBufferSize() <= static_cast<size_t>(offset)) {
         return SEEKFUNC_FAIL;
       }
       callback->pos = offset;
