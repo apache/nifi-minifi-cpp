@@ -353,6 +353,8 @@ public:
   bool checkDefragment(std::unique_ptr<Bin> &bin);
 
  private:
+  void validatePropertyOptions();
+
   std::shared_ptr<logging::Logger> logger_;
   std::string mergeStrategy_;
   std::string mergeFormat_;

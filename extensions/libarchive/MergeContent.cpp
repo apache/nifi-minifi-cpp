@@ -147,6 +147,9 @@ void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessio
   if (context->getProperty(AttributeStrategy.getName(), value) && !value.empty()) {
     attributeStrategy_ = value;
   }
+
+  validatePropertyOptions();
+
   if (mergeStrategy_ == merge_content_options::MERGE_STRATEGY_DEFRAGMENT) {
     binManager_.setFileCount(FRAGMENT_COUNT_ATTRIBUTE);
   }
@@ -167,6 +170,33 @@ void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessio
     headerContent_ = header_;
     footerContent_ = footer_;
     demarcatorContent_ = demarcator_;
+  }
+}
+
+void MergeContent::validatePropertyOptions() {
+  if (mergeStrategy_ != merge_content_options::MERGE_STRATEGY_DEFRAGMENT &&
+      mergeStrategy_ != merge_content_options::MERGE_STRATEGY_BIN_PACK) {
+    logger_->log_error("Merge strategy not supported %s", mergeStrategy_);
+    throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid merge strategy: " + attributeStrategy_);
+  }
+
+  if (mergeFormat_ != merge_content_options::MERGE_FORMAT_CONCAT_VALUE &&
+      mergeFormat_ != merge_content_options::MERGE_FORMAT_TAR_VALUE &&
+      mergeFormat_ != merge_content_options::MERGE_FORMAT_ZIP_VALUE) {
+    logger_->log_error("Merge format not supported %s", mergeFormat_);
+    throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid merge format: " + mergeFormat_);
+  }
+
+  if (delimiterStrategy_ != merge_content_options::DELIMITER_STRATEGY_FILENAME &&
+      delimiterStrategy_ != merge_content_options::DELIMITER_STRATEGY_TEXT) {
+    logger_->log_error("Delimiter strategy not supported %s", delimiterStrategy_);
+    throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid delimiter strategy: " + delimiterStrategy_);
+  }
+
+  if (attributeStrategy_ != merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON &&
+      attributeStrategy_ != merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE) {
+    logger_->log_error("Attribute strategy not supported %s", attributeStrategy_);
+    throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid attribute strategy: " + attributeStrategy_);
   }
 }
 
@@ -265,7 +295,7 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
     KeepAllUniqueAttributesMerger(bin->getFlowFile()).mergeAttributes(session, merge_flow);
   else {
     logger_->log_error("Attribute strategy not supported %s", attributeStrategy_);
-    throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid attribute strategy: " + attributeStrategy_);
+    return false;
   }
 
   std::unique_ptr<MergeBin> mergeBin;
