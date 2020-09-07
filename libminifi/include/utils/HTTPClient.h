@@ -293,89 +293,57 @@ class HTTPRequestResponse {
 
 class BaseHTTPClient {
  public:
-  explicit BaseHTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) : response_code(-1) {
-  }
-
-  BaseHTTPClient() : response_code(-1) {
-  }
+  BaseHTTPClient() = default;
 
   virtual ~BaseHTTPClient() = default;
 
-  virtual void setVerbose(bool use_stderr = false) {
-  }
+  virtual void setVerbose(bool use_stderr = false) = 0;
 
-  virtual void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) {
-  }
+  virtual void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) = 0;
 
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setConnectionTimeout(int64_t timeout) {
-  }
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setConnectionTimeout(int64_t timeout) = 0;
 
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setReadTimeout(int64_t timeout) {
-  }
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setReadTimeout(int64_t timeout) = 0;
 
-  virtual void setConnectionTimeout(std::chrono::milliseconds timeout) {
-  }
+  virtual void setConnectionTimeout(std::chrono::milliseconds timeout) = 0;
 
-  virtual void setReadTimeout(std::chrono::milliseconds timeout) {
-  }
+  virtual void setReadTimeout(std::chrono::milliseconds timeout) = 0;
 
-  virtual void setUploadCallback(HTTPUploadCallback *callbackObj) {
-  }
+  virtual void setUploadCallback(HTTPUploadCallback *callbackObj) = 0;
 
-  virtual void setSeekFunction(HTTPUploadCallback *callbackObj) {
-  }
+  virtual void setSeekFunction(HTTPUploadCallback *callbackObj) = 0;
 
-  virtual void setContentType(std::string content_type) {
-  }
+  virtual void setContentType(std::string content_type) = 0;
 
-  virtual std::string escape(std::string string_to_escape) {
-    return "";
-  }
+  virtual std::string escape(std::string string_to_escape) = 0;
 
-  virtual void setPostFields(const std::string& input) {
-  }
+  virtual void setPostFields(const std::string& input) = 0;
 
-  virtual bool submit() {
-    return false;
-  }
+  virtual bool submit() = 0;
 
-  virtual int64_t getResponseCode() const {
-    return response_code;
-  }
+  virtual int64_t getResponseCode() const = 0;
 
-  virtual const char *getContentType() {
-    return "";
-  }
+  virtual const char *getContentType() = 0;
 
   virtual const std::vector<char> &getResponseBody() {
     return response_body_;
   }
 
-  virtual void appendHeader(const std::string &new_header) {
-  }
+  virtual void appendHeader(const std::string &new_header) = 0;
 
-  virtual void set_request_method(const std::string method) {
-  }
+  virtual void set_request_method(const std::string method) = 0;
 
-  virtual void setUseChunkedEncoding() {
-  }
+  virtual void setUseChunkedEncoding() = 0;
 
-  virtual void setDisablePeerVerification() {
-  }
+  virtual void setDisablePeerVerification() = 0;
 
-  virtual void setHTTPProxy(const utils::HTTPProxy &proxy) {
-  }
+  virtual void setHTTPProxy(const utils::HTTPProxy &proxy) = 0;
 
-  virtual void setDisableHostVerification() {
-  }
+  virtual void setDisableHostVerification() = 0;
 
-  virtual bool setSpecificSSLVersion(SSLVersion specific_version) {
-    return false;
-  }
+  virtual bool setSpecificSSLVersion(SSLVersion specific_version) = 0;
 
-  virtual bool setMinimumSSLVersion(SSLVersion minimum_version) {
-    return false;
-  }
+  virtual bool setMinimumSSLVersion(SSLVersion minimum_version) = 0;
 
   virtual const std::vector<std::string> &getHeaders() {
     return headers_;
@@ -386,14 +354,11 @@ class BaseHTTPClient {
   }
 
  protected:
-  int64_t response_code;
   std::vector<char> response_body_;
   std::vector<std::string> headers_;
   std::map<std::string, std::string> header_mapping_;
 
-  virtual inline bool matches(const std::string &value, const std::string &sregex) {
-    return false;
-  }
+  virtual inline bool matches(const std::string &value, const std::string &sregex) = 0;
 };
 
 extern std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password);
