@@ -48,8 +48,6 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-const char* Identifier::UUID_FORMAT_STRING = "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx";
-
 #ifdef WIN32
 namespace {
   void windowsUuidToUuidField(UUID* uuid, UUID_FIELD out) {

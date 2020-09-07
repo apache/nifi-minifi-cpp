@@ -107,7 +107,7 @@ class IdentifierBase {
 typedef uint8_t UUID_FIELD[16];
 
 class Identifier : public IdentifierBase<UUID_FIELD, std::string> {
-  static const char* UUID_FORMAT_STRING;
+  static constexpr const char* UUID_FORMAT_STRING = "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx";
 
  public:
   Identifier(UUID_FIELD u); // NOLINT
