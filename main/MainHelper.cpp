@@ -49,14 +49,8 @@ FILE* __cdecl _imp____iob_func() {
   return (FILE*)&bufs;
 }
 
-<<<<<<< HEAD
 FILE* __cdecl __imp___iob_func() {
-  struct _iobuf_VS2012 { // ...\Microsoft Visual Studio 11.0\VC\include\stdio.h #56
-=======
-FILE* __cdecl __imp___iob_func()
-{
   struct _iobuf_VS2012 {  // ...\Microsoft Visual Studio 11.0\VC\include\stdio.h #56
->>>>>>> MINIFICPP-1203 - Correct linter missing whitepaces before code and comments
     char *_ptr;
     int   _cnt;
     char *_base;

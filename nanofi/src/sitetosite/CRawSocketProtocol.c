@@ -72,10 +72,8 @@ typedef struct {
 
 int handShake(struct CRawSiteToSiteClient * client) {
   if (client->_peer_state != ESTABLISHED) {
-    // client->logger_->log_error("Site2Site peer state is not established while handshake");
     return -1;
   }
-  // client->logger_->log_debug("Site2Site Protocol Perform hand shake with destination port %s", client->_port_id_str);
 
   CIDGenerator gen;
   gen.implementation_ = CUUID_DEFAULT_IMPL;
@@ -152,8 +150,6 @@ int handShake(struct CRawSiteToSiteClient * client) {
   int ret_val = 0;
 
   if (client->_currentVersion >= 3) {
-
-    // ret = client->_peer->writeUTF(client->_peer->getURL());
     const char * urlstr = getURL(client->_peer);
     ret = writeUTF(urlstr, strlen(urlstr), False, client->_peer->_stream);
     if (ret <= 0) {

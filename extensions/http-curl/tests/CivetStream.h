@@ -119,7 +119,6 @@ class CivetStream : public io::BaseStream {
     return readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
   }
 
-  // size_t pos;
   struct mg_connection *conn;
 
  private:

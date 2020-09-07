@@ -130,7 +130,6 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
     }
 
     archiveStack.push(archiveMetadata);
-    // logger_->log_debug(archiveMetadata.toJsonString());
 
     std::string stackStr = archiveStack.toJsonString();
   
