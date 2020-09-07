@@ -247,19 +247,11 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     utils::StringUtils::StringToBool(disablePeerVerification, disable_peer_verification_);
   }
 
-  std::string proxy_value;
-  if (context->getProperty(ProxyHost.getName(), proxy_value) && !proxy_value.empty()) {
-    proxy_.host = proxy_value;
-  }
-  if (context->getProperty(ProxyPort.getName(), proxy_value) && !proxy_value.empty()) {
-    proxy_.port = std::stoi(proxy_value);
-  }
-  if (context->getProperty(ProxyUsername.getName(), proxy_value) && !proxy_value.empty()) {
-    proxy_.username = proxy_value;
-  }
-  if (context->getProperty(ProxyPassword.getName(), proxy_value) && !proxy_value.empty()) {
-    proxy_.password = proxy_value;
-  }
+  proxy_ = {};
+  context->getProperty(ProxyHost.getName(), proxy_.host);
+  context->getProperty(ProxyPort.getName(), proxy_.port);
+  context->getProperty(ProxyUsername.getName(), proxy_.username);
+  context->getProperty(ProxyPassword.getName(), proxy_.password);
 }
 
 InvokeHTTP::~InvokeHTTP() = default;

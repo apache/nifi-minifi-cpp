@@ -46,7 +46,7 @@ struct HTTPProxy {
   std::string host;
   std::string username;
   std::string password;
-  int port;
+  int port = 0;
 };
 
 struct HTTPUploadCallback {
