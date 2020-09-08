@@ -205,7 +205,7 @@ void ConsumeWindowsEventLog::initialize() {
   setSupportedRelationships({Success});
 }
 
-bool ConsumeWindowsEventLog::insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string & value) {
+bool ConsumeWindowsEventLog::insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string & value) const {
 
   wel::METADATA name = wel::WindowsEventLogMetadata::getMetadataFromString(key);
 
@@ -635,7 +635,7 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
   logger_->log_trace("Timezone name: %s, offset: %s", timezone_name_, timezone_offset_);
 }
 
-void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session) {
+void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session) const {
   struct WriteCallback : public OutputStreamCallback {
     WriteCallback(const std::string& str)
       : str_(str) {
