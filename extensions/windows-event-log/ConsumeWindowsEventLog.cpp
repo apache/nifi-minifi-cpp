@@ -317,8 +317,9 @@ bool ConsumeWindowsEventLog::commitAndSaveBookmark(const std::wstring &bookmark_
   return true;
 }
 
-std::wstring ConsumeWindowsEventLog::processEventLogs(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session,
-    size_t& processed_event_count, const EVT_HANDLE& event_query_results) {
+std::tuple<size_t, std::wstring> ConsumeWindowsEventLog::processEventLogs(const std::shared_ptr<core::ProcessContext> &context,
+    const std::shared_ptr<core::ProcessSession> &session, const EVT_HANDLE& event_query_results) {
+  size_t processed_event_count = 0;
   std::wstring bookmark_xml;
   logger_->log_trace("Enumerating the events in the result set after the bookmarked event.");
   while (processed_event_count < batch_commit_size_ || batch_commit_size_ == 0) {
@@ -346,7 +347,7 @@ std::wstring ConsumeWindowsEventLog::processEventLogs(const std::shared_ptr<core
     }
   }
   logger_->log_trace("Finished enumerating events.");
-  return bookmark_xml;
+  return std::make_tuple(processed_event_count, bookmark_xml);
 }
 
 void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -395,7 +396,10 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 
   refreshTimeZoneData();
-  auto bookmark_xml = processEventLogs(context,session, processed_event_count, event_query_results);
+
+  auto process_result = processEventLogs(context, session, event_query_results);
+  processed_event_count = std::get<0>(process_result);
+  std::wstring bookmark_xml = std::get<1>(process_result);
 
   if (processed_event_count > 0 && !commitAndSaveBookmark(bookmark_xml, session)) {
     context->yield();
