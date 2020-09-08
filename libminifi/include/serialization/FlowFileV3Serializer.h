@@ -29,7 +29,7 @@ namespace minifi {
 class FlowFileV3Serializer : public FlowFileSerializer {
   static constexpr uint8_t MAGIC_HEADER[] = {'N', 'i', 'F', 'i', 'F', 'F', '3'};
 
-  static constexpr uint16_t MAX_2_BYTE_VALUE = std::numeric_limits<uint16_t>::max();
+  static constexpr uint16_t MAX_2_BYTE_VALUE = (std::numeric_limits<uint16_t>::max)();
 
   static int writeLength(std::size_t length, const std::shared_ptr<io::BaseStream>& out);
 
