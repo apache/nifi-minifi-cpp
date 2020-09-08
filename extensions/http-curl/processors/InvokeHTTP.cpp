@@ -251,7 +251,10 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
 
   proxy_ = {};
   context->getProperty(ProxyHost.getName(), proxy_.host);
-  context->getProperty(ProxyPort.getName(), proxy_.port);
+  std::string port_str;
+  if (context->getProperty(ProxyPort.getName(), port_str) && !port_str.empty()) {
+    core::Property::StringToInt(port_str, proxy_.port);
+  }
   context->getProperty(ProxyUsername.getName(), proxy_.username);
   context->getProperty(ProxyPassword.getName(), proxy_.password);
 }
