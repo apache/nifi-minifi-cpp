@@ -245,7 +245,7 @@ public:
 // TarMerge Class
 class TarMerge: public ArchiveMerge, public MergeBin {
 public:
-  static const char *mimeType;
+  static constexpr const char *mimeType = "application/tar";
   void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
     std::string &demarcator, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) override;
   std::string getMergedContentType() override {
@@ -256,7 +256,7 @@ public:
 // ZipMerge Class
 class ZipMerge: public ArchiveMerge, public MergeBin {
 public:
-  static const char *mimeType;
+  static constexpr const char *mimeType = "application/zip";
   void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
     std::string &demarcator, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) override;
   std::string getMergedContentType() override {
