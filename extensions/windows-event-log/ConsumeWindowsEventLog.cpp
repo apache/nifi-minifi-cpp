@@ -397,11 +397,10 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   refreshTimeZoneData();
 
-  auto process_result = processEventLogs(context, session, event_query_results);
-  processed_event_count = std::get<0>(process_result);
-  std::wstring bookmark_xml = std::get<1>(process_result);
+  std::wstring bookmark_xml;
+  std::tie(processed_event_count, bookmark_xml) = processEventLogs(context, session, event_query_results);
 
- if (processed_event_count == 0 || !commitAndSaveBookmark(bookmark_xml, session)) {
+  if (processed_event_count == 0 || !commitAndSaveBookmark(bookmark_xml, session)) {
     context->yield();
     return;
   }
