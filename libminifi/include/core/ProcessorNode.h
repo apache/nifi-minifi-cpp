@@ -210,7 +210,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Set UUID in this instance
    * @param uuid uuid to apply to the internal representation.
    */
-  void setUUID(utils::Identifier &uuid) {
+  void setUUID(const utils::Identifier& uuid) {
     Connectable::setUUID(uuid);
     processor_->setUUID(uuid);
   }

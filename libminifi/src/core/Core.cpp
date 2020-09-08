@@ -27,7 +27,7 @@ namespace minifi {
 namespace core {
 
 // Set UUID
-void CoreComponent::setUUID(utils::Identifier &uuid) {
+void CoreComponent::setUUID(const utils::Identifier& uuid) {
   uuid_ = uuid;
   uuidStr_ = uuid_.to_string();
 }

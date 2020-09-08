@@ -158,7 +158,7 @@ class ProcessGroup {
   }
 
   // Set UUID
-  void setUUID(utils::Identifier &uuid) {
+  void setUUID(const utils::Identifier& uuid) {
     uuid_ = uuid;
   }
   // Get UUID
