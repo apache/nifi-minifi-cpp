@@ -350,8 +350,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in XML correctly", "[onTrigger]"
 }
 
 namespace {
-
-void batchCommitSizeTestHelper(int batch_commit_size) {
+void batchCommitSizeTestHelper(std::size_t num_events_read, std::size_t batch_commit_size, std::size_t expected_event_count) {
   TestController test_controller;
   LogTestController::getInstance().setDebug<ConsumeWindowsEventLog>();
   LogTestController::getInstance().setDebug<LogAttribute>();
@@ -372,19 +371,27 @@ void batchCommitSizeTestHelper(int batch_commit_size) {
   test_plan->reset();
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-  std::vector<std::string> events{"Event one", "Event two", "Event three", "Event four", "Event five"};
-  std::for_each(events.begin(), events.end(), [](const std::string& event){ reportEvent(APPLICATION_CHANNEL, event.c_str()); });
+  auto generate_events = [](const std::size_t event_count) {
+    std::vector<std::string> events;
+    for (auto i = 0; i < event_count; ++i) {
+      events.push_back("Event " + std::to_string(i));
+    }
+    return events;
+  };
+
+  for (const auto& event : generate_events(num_events_read))
+    reportEvent(APPLICATION_CHANNEL, event.c_str());
+
   test_controller.runSession(test_plan);
-  auto expected_event_count = events.size() <= batch_commit_size || batch_commit_size == 0 ? events.size() : batch_commit_size;
   REQUIRE(LogTestController::getInstance().contains("processed " + std::to_string(expected_event_count) + " Events"));
 }
 
 }  // namespace
 
 TEST_CASE("ConsumeWindowsEventLog batch commit size works", "[onTrigger]") {
-  batchCommitSizeTestHelper(1000);
-  batchCommitSizeTestHelper(5);
-  batchCommitSizeTestHelper(4);
-  batchCommitSizeTestHelper(1);
-  batchCommitSizeTestHelper(0);
+  batchCommitSizeTestHelper(5, 1000, 5);
+  batchCommitSizeTestHelper(5, 5, 5);
+  batchCommitSizeTestHelper(5, 4, 4);
+  batchCommitSizeTestHelper(5, 1, 1);
+  batchCommitSizeTestHelper(5, 0, 5);
 }
