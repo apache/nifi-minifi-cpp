@@ -187,7 +187,7 @@ class CoreComponent {
    * Set UUID in this instance
    * @param uuid uuid to apply to the internal representation.
    */
-  void setUUID(utils::Identifier &uuid);
+  void setUUID(const utils::Identifier& uuid);
 
   void setUUIDStr(const std::string &uuidStr);
 
