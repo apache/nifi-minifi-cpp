@@ -401,7 +401,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   processed_event_count = std::get<0>(process_result);
   std::wstring bookmark_xml = std::get<1>(process_result);
 
-  if (processed_event_count > 0 && !commitAndSaveBookmark(bookmark_xml, session)) {
+ if (processed_event_count == 0 || !commitAndSaveBookmark(bookmark_xml, session)) {
     context->yield();
     return;
   }
