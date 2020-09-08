@@ -39,6 +39,7 @@
 #include "ResourceClaim.h"
 #include "Connection.h"
 #include "io/OutputStream.h"
+#include "io/StreamPipe.h"
 
 namespace org {
 namespace apache {
@@ -46,21 +47,6 @@ namespace nifi {
 namespace minifi {
 
 #define DEFAULT_FLOWFILE_PATH "."
-
-// FlowFile IO Callback functions for input and output
-// throw exception for error
-class InputStreamCallback {
- public:
-  virtual ~InputStreamCallback() = default;
-  // virtual void process(std::ifstream *stream) = 0;
-
-  virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
-};
-class OutputStreamCallback {
- public:
-  virtual ~OutputStreamCallback() = default;
-  virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
-};
 
 namespace core {
 class ProcessSession;
