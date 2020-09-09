@@ -123,38 +123,18 @@ std::string MergeContent::readContent(std::string path) {
 }
 
 void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
-  std::string value;
   BinFiles::onSchedule(context, sessionFactory);
-  if (context->getProperty(MergeStrategy.getName(), value) && !value.empty()) {
-    mergeStrategy_ = value;
-  }
-  if (context->getProperty(MergeFormat.getName(), value) && !value.empty()) {
-    mergeFormat_ = value;
-  }
-  if (context->getProperty(CorrelationAttributeName.getName(), value) && !value.empty()) {
-    correlationAttributeName_ = value;
-  }
-  if (context->getProperty(DelimiterStrategy.getName(), value) && !value.empty()) {
-    delimiterStrategy_ = value;
-  }
-  if (context->getProperty(Header.getName(), value) && !value.empty()) {
-    header_ = value;
-  }
-  if (context->getProperty(Footer.getName(), value) && !value.empty()) {
-    footer_ = value;
-  }
-  if (context->getProperty(Demarcator.getName(), value) && !value.empty()) {
-    demarcator_ = value;
-  }
-  if (context->getProperty(KeepPath.getName(), value) && !value.empty()) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, keepPath_);
-  }
-  if (context->getProperty(AttributeStrategy.getName(), value) && !value.empty()) {
-    attributeStrategy_ = value;
-  }
-  if (context->getProperty(FlowFileSerializer.getName(), value) && !value.empty()) {
-    flowFileSerializer_ = value;
-  }
+
+  context->getProperty(MergeStrategy.getName(), mergeStrategy_);
+  context->getProperty(MergeFormat.getName(), mergeFormat_);
+  context->getProperty(CorrelationAttributeName.getName(), correlationAttributeName_);
+  context->getProperty(DelimiterStrategy.getName(), delimiterStrategy_);
+  context->getProperty(Header.getName(), header_);
+  context->getProperty(Footer.getName(), footer_);
+  context->getProperty(Demarcator.getName(), demarcator_);
+  context->getProperty(KeepPath.getName(), keepPath_);
+  context->getProperty(AttributeStrategy.getName(), attributeStrategy_);
+  context->getProperty(FlowFileSerializer.getName(), flowFileSerializer_);
 
   validatePropertyOptions();
 
@@ -205,6 +185,12 @@ void MergeContent::validatePropertyOptions() {
       attributeStrategy_ != merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE) {
     logger_->log_error("Attribute strategy not supported %s", attributeStrategy_);
     throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid attribute strategy: " + attributeStrategy_);
+  }
+
+  if (flowFileSerializer_ != merge_content_options::SERIALIZER_PAYLOAD &&
+      flowFileSerializer_ != merge_content_options::SERIALIZER_FLOW_FILE_V3) {
+    logger_->log_error("FlowFile serializer not supported %s", flowFileSerializer_);
+    throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid flowFile serializer: " + flowFileSerializer_);
   }
 }
 

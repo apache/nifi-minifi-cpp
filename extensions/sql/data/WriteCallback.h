@@ -33,7 +33,7 @@ public:
     : data_(data) {
   }
 
- int64_t process(std::shared_ptr<io::BaseStream> stream) {
+ int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
     if (data_.empty())
       return 0;
 

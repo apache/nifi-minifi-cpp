@@ -210,7 +210,7 @@ PutSFTP::ReadCallback::ReadCallback(const std::string& target_path,
 
 PutSFTP::ReadCallback::~ReadCallback() = default;
 
-int64_t PutSFTP::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t PutSFTP::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   if (!client_.putFile(target_path_,
       *stream,
       conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/,

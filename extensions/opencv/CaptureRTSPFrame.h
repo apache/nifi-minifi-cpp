@@ -69,7 +69,7 @@ class CaptureRTSPFrame : public core::Processor {
     }
     ~CaptureRTSPFrameWriteCallback() override = default;
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       int64_t ret = 0;
       imencode(image_encoding_, image_mat_, image_buf_);
       ret = stream->write(image_buf_.data(), image_buf_.size());

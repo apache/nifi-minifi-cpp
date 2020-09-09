@@ -604,7 +604,7 @@ SourceInitiatedSubscriptionListener::Handler::WriteCallback::WriteCallback(char*
     : text_(text) {
 }
 
-int64_t SourceInitiatedSubscriptionListener::Handler::WriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t SourceInitiatedSubscriptionListener::Handler::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   return stream->write(reinterpret_cast<uint8_t*>(text_), strlen(text_));
 }
 

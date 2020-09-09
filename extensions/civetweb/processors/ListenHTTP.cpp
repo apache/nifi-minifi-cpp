@@ -503,7 +503,7 @@ ListenHTTP::WriteCallback::WriteCallback(std::unique_ptr<io::BufferStream> reque
     : request_content_(std::move(request_content)) {
 }
 
-int64_t ListenHTTP::WriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t ListenHTTP::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   return stream->write(const_cast<uint8_t*>(request_content_->getBuffer()), request_content_->size());
 }
 

@@ -56,7 +56,7 @@ class TFExtractTopLabels : public core::Processor {
         : labels_(std::move(labels)) {
     }
     ~LabelsReadCallback() override = default;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
     std::shared_ptr<std::vector<std::string>> labels_;
@@ -68,7 +68,7 @@ class TFExtractTopLabels : public core::Processor {
         : tensor_proto_(std::move(tensor_proto)) {
     }
     ~TensorReadCallback() override = default;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
     std::shared_ptr<tensorflow::TensorProto> tensor_proto_;

@@ -71,7 +71,7 @@ class SensorBase : public core::Processor {
       }
       char *_data;
       uint64_t _dataSize;
-      int64_t process(std::shared_ptr<io::BaseStream> stream) {
+      int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
         int64_t ret = 0;
         if (_data && _dataSize > 0)
           ret = stream->write(reinterpret_cast<uint8_t*>(_data), _dataSize);

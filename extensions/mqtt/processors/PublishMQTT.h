@@ -75,7 +75,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
       read_size_ = 0;
     }
     ~ReadCallback() = default;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       if (flow_size_ < max_seg_size_)
         max_seg_size_ = flow_size_;
       std::vector<unsigned char> buffer;

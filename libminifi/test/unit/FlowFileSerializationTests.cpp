@@ -67,12 +67,12 @@ TEST_CASE("FFv3 Serializer", "[testFFv3]") {
   std::string serialized{reinterpret_cast<const char*>(result->getBuffer()), result->getSize()};
 
   std::string expected = "NiFiFF3";
-  expected += std::string{"\x00\x02", 2};  // number of attributes
-  expected += std::string{"\x00\x05", 2} + "first";  // first key
-  expected += std::string{"\x00\x03", 2} + "one";  // first value
-  expected += std::string{"\x00\x06", 2} + "second";  // second key
-  expected += std::string{"\x00\x03", 2} + "two";  // second value
-  expected += std::string{"\x00\x00\x00\x00\x00\x00\x00\x0f", 8} + content;  // payload of the flowFile
+  expected += std::string("\x00\x02", 2);  // number of attributes
+  expected += std::string("\x00\x05", 2) + "first";  // first key
+  expected += std::string("\x00\x03", 2) + "one";  // first value
+  expected += std::string("\x00\x06", 2) + "second";  // second key
+  expected += std::string("\x00\x03", 2) + "two";  // second value
+  expected += std::string("\x00\x00\x00\x00\x00\x00\x00\x0f", 8) + content;  // payload of the flowFile
 
   REQUIRE(serialized == expected);
 }

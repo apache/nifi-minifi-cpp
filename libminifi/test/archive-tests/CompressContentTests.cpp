@@ -56,7 +56,7 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
     if (archive_buffer_)
       delete[] archive_buffer_;
   }
-  int64_t process(std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
+  int64_t process(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
     int64_t total_read = 0;
     int64_t ret = 0;
     do {

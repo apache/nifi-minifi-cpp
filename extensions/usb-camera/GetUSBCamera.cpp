@@ -397,7 +397,7 @@ GetUSBCamera::PNGWriteCallback::PNGWriteCallback(std::shared_ptr<std::mutex> wri
       logger_(logging::LoggerFactory<PNGWriteCallback>::getLogger()) {
 }
 
-int64_t GetUSBCamera::PNGWriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t GetUSBCamera::PNGWriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   std::lock_guard<std::mutex> lock(*png_write_mtx_);
   logger_->log_info("Writing %d bytes of raw capture data to PNG output", frame_->data_bytes);
   png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
@@ -461,7 +461,7 @@ GetUSBCamera::RawWriteCallback::RawWriteCallback(uvc_frame_t *frame)
       logger_(logging::LoggerFactory<RawWriteCallback>::getLogger()) {
 }
 
-int64_t GetUSBCamera::RawWriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t GetUSBCamera::RawWriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   logger_->log_info("Writing %d bytes of raw capture data", frame_->data_bytes);
   return stream->write(reinterpret_cast<uint8_t *>(frame_->data), frame_->data_bytes);
 }

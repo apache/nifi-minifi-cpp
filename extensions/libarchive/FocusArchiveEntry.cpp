@@ -166,7 +166,7 @@ la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d,
   return read;
 }
 
-int64_t FocusArchiveEntry::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t FocusArchiveEntry::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   auto inputArchive = archive_read_new();
   struct archive_entry *entry;
   int64_t nlen = 0;

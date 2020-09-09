@@ -83,7 +83,7 @@ public:
     std::string &demarcator_;
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
     FlowFileSerializer& serializer_;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       int64_t ret = 0;
       if (!header_.empty()) {
         int64_t len = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(header_.data())), header_.size());
@@ -194,7 +194,7 @@ public:
       return totalWrote;
     }
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       struct archive *arch;
 
       arch = archive_write_new();

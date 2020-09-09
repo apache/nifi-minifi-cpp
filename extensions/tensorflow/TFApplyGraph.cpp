@@ -188,7 +188,7 @@ void TFApplyGraph::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   }
 }
 
-int64_t TFApplyGraph::GraphReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t TFApplyGraph::GraphReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   std::string graph_proto_buf;
   graph_proto_buf.resize(stream->size());
   auto num_read = stream->read(reinterpret_cast<uint8_t *>(&graph_proto_buf[0]),
@@ -202,7 +202,7 @@ int64_t TFApplyGraph::GraphReadCallback::process(std::shared_ptr<io::BaseStream>
   return num_read;
 }
 
-int64_t TFApplyGraph::TensorReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t TFApplyGraph::TensorReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   std::string tensor_proto_buf;
   tensor_proto_buf.resize(stream->size());
   auto num_read = stream->read(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
@@ -216,7 +216,7 @@ int64_t TFApplyGraph::TensorReadCallback::process(std::shared_ptr<io::BaseStream
   return num_read;
 }
 
-int64_t TFApplyGraph::TensorWriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t TFApplyGraph::TensorWriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   auto tensor_proto_buf = tensor_proto_->SerializeAsString();
   auto num_wrote = stream->write(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
                                      static_cast<int>(tensor_proto_buf.size()));

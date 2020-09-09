@@ -202,7 +202,7 @@ class FileReaderCallback : public OutputStreamCallback {
     openFile(file_name, offset, input_stream_, logger_);
   }
 
-  int64_t process(std::shared_ptr<io::BaseStream> output_stream) override {
+  int64_t process(const std::shared_ptr<io::BaseStream>& output_stream) override {
     io::CRCStream<io::BaseStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
 
     uint64_t num_bytes_written = 0;
@@ -281,7 +281,7 @@ class WholeFileReaderCallback : public OutputStreamCallback {
     return checksum_;
   }
 
-  int64_t process(std::shared_ptr<io::BaseStream> output_stream) override {
+  int64_t process(const std::shared_ptr<io::BaseStream>& output_stream) override {
     std::array<char, BUFFER_SIZE> buffer;
 
     io::CRCStream<io::BaseStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};

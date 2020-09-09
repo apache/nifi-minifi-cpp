@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <memory>
 #include "FlowFileSerializer.h"
 
 namespace org {

@@ -157,7 +157,7 @@ FetchSFTP::WriteCallback::WriteCallback(const std::string& remote_file,
 
 FetchSFTP::WriteCallback::~WriteCallback() = default;
 
-int64_t FetchSFTP::WriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t FetchSFTP::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   if (!client_.getFile(remote_file_, *stream)) {
     throw client_.getLastError();
   }

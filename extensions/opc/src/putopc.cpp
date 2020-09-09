@@ -421,7 +421,7 @@ namespace processors {
     }
   }
 
-  int64_t PutOPCProcessor::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
+  int64_t PutOPCProcessor::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
     buf_.clear();
     buf_.resize(stream->size());
 

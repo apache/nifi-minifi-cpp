@@ -61,7 +61,7 @@ class ApplyTemplate : public core::Processor {
   class WriteCallback : public OutputStreamCallback {
    public:
     WriteCallback(const std::string &templateFile, const std::shared_ptr<core::FlowFile> &flow_file);
-    int64_t process(std::shared_ptr<io::BaseStream> stream);
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream);
 
    private:
     std::shared_ptr<logging::Logger> logger_;

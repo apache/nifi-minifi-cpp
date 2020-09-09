@@ -59,7 +59,7 @@ class LuaProcessSession {
       lua_callback_ = input_stream_callback;
     }
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       auto lua_stream = std::make_shared<LuaBaseStream>(stream);
       sol::function callback = lua_callback_["process"];
       return callback(lua_callback_, lua_stream);
@@ -75,7 +75,7 @@ class LuaProcessSession {
       lua_callback_ = output_stream_callback;
     }
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       auto lua_stream = std::make_shared<LuaBaseStream>(stream);
       sol::function callback = lua_callback_["process"];
       return callback(lua_callback_, lua_stream);

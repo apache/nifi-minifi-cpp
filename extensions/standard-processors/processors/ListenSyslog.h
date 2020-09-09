@@ -134,7 +134,7 @@ class ListenSyslog : public core::Processor {
     }
     uint8_t *_data;
     uint64_t _dataSize;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       int64_t ret = 0;
       if (_data && _dataSize > 0)
         ret = stream->write(_data, _dataSize);

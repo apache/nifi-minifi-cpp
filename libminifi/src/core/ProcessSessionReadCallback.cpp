@@ -41,7 +41,7 @@ ProcessSessionReadCallback::ProcessSessionReadCallback(const std::string &tmpFil
 }
 
 // Copy the entire file contents to the temporary file
-int64_t ProcessSessionReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t ProcessSessionReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   // Copy file contents into tmp file
   _writeSucceeded = false;
   size_t size = 0;

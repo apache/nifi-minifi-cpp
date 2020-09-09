@@ -158,7 +158,7 @@ la_ssize_t UnfocusArchiveEntry::WriteCallback::write_cb(struct archive *, void *
   return data->stream->write(const_cast<uint8_t*>(ui_buffer), length);
 }
 
-int64_t UnfocusArchiveEntry::WriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t UnfocusArchiveEntry::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   auto outputArchive = archive_write_new();
   int64_t nlen = 0;
 

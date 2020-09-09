@@ -70,7 +70,7 @@ class TFConvertImageToTensor : public core::Processor {
         : tensor_(tensor) {
     }
     ~ImageReadCallback() override = default;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
     tensorflow::Tensor *tensor_;
@@ -82,7 +82,7 @@ class TFConvertImageToTensor : public core::Processor {
         : tensor_proto_(std::move(tensor_proto)) {
     }
     ~TensorWriteCallback() override = default;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
     std::shared_ptr<tensorflow::TensorProto> tensor_proto_;

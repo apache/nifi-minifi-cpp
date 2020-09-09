@@ -98,7 +98,7 @@ class GetUSBCamera : public core::Processor {
   class PNGWriteCallback : public OutputStreamCallback {
    public:
     PNGWriteCallback(std::shared_ptr<std::mutex> write_mtx, uvc_frame_t *frame, uint32_t width, uint32_t height);
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
     std::shared_ptr<std::mutex> png_write_mtx_;
@@ -113,7 +113,7 @@ class GetUSBCamera : public core::Processor {
   class RawWriteCallback : public OutputStreamCallback {
    public:
     explicit RawWriteCallback(uvc_frame_t *frame);
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
     uvc_frame_t *frame_;

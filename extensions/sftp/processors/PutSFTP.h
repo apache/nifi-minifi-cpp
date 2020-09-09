@@ -98,7 +98,7 @@ namespace processors {
         utils::SFTPClient& client,
         const std::string& conflict_resolution);
     ~ReadCallback();
-    virtual int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+    virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
     std::shared_ptr<logging::Logger> logger_;

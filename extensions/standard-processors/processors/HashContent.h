@@ -162,7 +162,7 @@ class HashContent : public core::Processor {
    public:
     ReadCallback(std::shared_ptr<core::FlowFile> flowFile, const HashContent& parent);
     ~ReadCallback() {}
-    int64_t process(std::shared_ptr<io::BaseStream> stream);
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream);
 
    private:
     std::shared_ptr<core::FlowFile> flowFile_;

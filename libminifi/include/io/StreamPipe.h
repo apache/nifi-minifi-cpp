@@ -21,6 +21,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include "BaseStream.h"
 
 namespace org {
@@ -33,14 +34,13 @@ namespace minifi {
 class InputStreamCallback {
  public:
   virtual ~InputStreamCallback() = default;
-  // virtual void process(std::ifstream *stream) = 0;
 
-  virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
+  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream) = 0;
 };
 class OutputStreamCallback {
  public:
   virtual ~OutputStreamCallback() = default;
-  virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
+  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream) = 0;
 };
 
 namespace internal {
@@ -82,7 +82,7 @@ class InputStreamPipe : public InputStreamCallback {
  public:
   explicit InputStreamPipe(std::shared_ptr<io::BaseStream> output) : output_(std::move(output)) {}
 
-  int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     return internal::pipe(stream, output_);
   }
 
@@ -94,7 +94,7 @@ class OutputStreamPipe : public OutputStreamCallback {
  public:
   explicit OutputStreamPipe(std::shared_ptr<io::BaseStream> input) : input_(std::move(input)) {}
 
-  int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     return internal::pipe(input_, stream);
   }
 

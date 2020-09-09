@@ -80,7 +80,7 @@ class PutFile : public core::Processor {
    public:
     ReadCallback(const std::string &tmp_file, const std::string &dest_file);
     ~ReadCallback() override;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
     bool commit();
 
    private:

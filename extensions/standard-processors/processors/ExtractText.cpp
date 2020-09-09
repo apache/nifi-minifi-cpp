@@ -112,7 +112,7 @@ void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession 
   session->transfer(flowFile, Success);
 }
 
-int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   int64_t ret = 0;
   uint64_t read_size = 0;
   bool regex_mode;

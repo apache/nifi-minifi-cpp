@@ -71,7 +71,7 @@ class FocusArchiveEntry : public core::Processor {
    public:
     explicit ReadCallback(core::Processor*, fileutils::FileManager *file_man, ArchiveMetadata *archiveMetadata);
     ~ReadCallback();
-    virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
+    virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream);
     bool isRunning() {return proc_->isRunning();}
 
    private:

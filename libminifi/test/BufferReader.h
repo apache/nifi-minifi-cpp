@@ -42,7 +42,7 @@ class BufferReader : public org::apache::nifi::minifi::InputStreamCallback {
     return total_read;
   }
 
-  int64_t process(std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
+  int64_t process(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
     return write(*stream.get(), stream->size());
   }
 
