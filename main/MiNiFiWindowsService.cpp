@@ -27,28 +27,6 @@
 #include "MainHelper.h"
 #include "core/FlowConfiguration.h"
 
-#ifdef LOG_INFO
-  #undef LOG_INFO
-#endif
-#ifdef LOG_ERROR
-  #undef LOG_ERROR
-#endif
-#ifdef LOG_LASTERROR
-  #undef LOG_LASTERROR
-#endif
-
-#ifdef DEBUG_SERVICE
-  #define LOG_INFO(...)       OutputDebug(__VA_ARGS__)
-  #define LOG_ERROR(...)      OutputDebug(__VA_ARGS__)
-  #define LOG_LASTERROR(str)  OutputDebug(str " lastError %x", GetLastError())
-#else
-  #define LOG_INFO(...)       Log()->log_info(__VA_ARGS__)
-  #define LOG_ERROR(...)      Log()->log_error(__VA_ARGS__)
-  #define LOG_LASTERROR(str)  Log()->log_error(str " lastError %x", GetLastError())
-#endif
-
-#undef DEBUG_SERVICE
-
 // Implemented in MiNiFiMain.cpp
 void SignalExitProcess();
 
@@ -89,21 +67,21 @@ void RunAsServiceIfNeeded() {
       [](DWORD argc, LPTSTR *argv) {
         setSyslogLogger();
 
-        LOG_INFO("ServiceCtrlDispatcher");
+        Log()->log_trace("ServiceCtrlDispatcher");
 
         s_hEvent = CreateEvent(0, TRUE, FALSE, SERVICE_TERMINATION_EVENT_NAME);
         if (!s_hEvent) {
-          LOG_LASTERROR("!CreateEvent");
+          Log()->log_error("!CreateEvent lastError %x", GetLastError());
           return;
         }
 
         s_statusHandle = RegisterServiceCtrlHandler(
           SERVICE_NAME,
           [](DWORD ctrlCode) {
-            LOG_INFO("ServiceCtrlHandler ctrlCode %d", ctrlCode);
+            Log()->log_trace("ServiceCtrlHandler ctrlCode %d", ctrlCode);
 
             if (SERVICE_CONTROL_STOP == ctrlCode) {
-              LOG_INFO("ServiceCtrlHandler ctrlCode = SERVICE_CONTROL_STOP");
+              Log()->log_trace("ServiceCtrlHandler ctrlCode = SERVICE_CONTROL_STOP");
 
               // Set service status SERVICE_STOP_PENDING.
               s_serviceStatus.dwControlsAccepted = 0;
@@ -111,40 +89,40 @@ void RunAsServiceIfNeeded() {
               s_serviceStatus.dwWin32ExitCode = 0;
 
               if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-                LOG_LASTERROR("!SetServiceStatus SERVICE_STOP_PENDING");
+                Log()->log_error("!SetServiceStatus SERVICE_STOP_PENDING lastError %x", GetLastError());
               }
 
               bool exeTerminated = false;
 
               SetEvent(s_hEvent);
 
-              LOG_INFO("Wait for exe termination");
+              Log()->log_info("Wait for exe termination");
               switch (auto res = WaitForSingleObject(s_hProcess, WAIT_TIME_EXE_TERMINATION)) {
                 case WAIT_OBJECT_0:
-                  LOG_INFO("Exe terminated");
+                  Log()->log_info("Exe terminated");
                   exeTerminated = true;
                   break;
 
                 case WAIT_TIMEOUT:
-                  LOG_ERROR("WaitForSingleObject timeout %d", WAIT_TIME_EXE_TERMINATION);
+                  Log()->log_error("WaitForSingleObject timeout %d", WAIT_TIME_EXE_TERMINATION);
                   break;
 
                 default:
-                  LOG_ERROR("!WaitForSingleObject return %d", res);
+                  Log()->log_error("!WaitForSingleObject return %d", res);
               }
 
               if (!exeTerminated) {
-                LOG_INFO("TerminateProcess");
+                Log()->log_info("TerminateProcess");
                 if (TerminateProcess(s_hProcess, 0)) {
                   s_serviceStatus.dwControlsAccepted = 0;
                   s_serviceStatus.dwCurrentState = SERVICE_STOPPED;
                   s_serviceStatus.dwWin32ExitCode = 0;
 
                   if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-                    LOG_LASTERROR("!SetServiceStatus SERVICE_STOPPED");
+                    Log()->log_error("!SetServiceStatus SERVICE_STOPPED lastError %x", GetLastError());
                   }
                 } else {
-                  LOG_LASTERROR("!TerminateProcess");
+                  Log()->log_error("!TerminateProcess lastError %x", GetLastError());
                 }
               }
             }
@@ -152,7 +130,7 @@ void RunAsServiceIfNeeded() {
         );
 
         if (!s_statusHandle) {
-          LOG_LASTERROR("!RegisterServiceCtrlHandler");
+          Log()->log_error("!RegisterServiceCtrlHandler lastError %x", GetLastError());
           return;
         }
 
@@ -165,7 +143,7 @@ void RunAsServiceIfNeeded() {
         s_serviceStatus.dwServiceSpecificExitCode = 0;
 
         if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-          LOG_LASTERROR("!SetServiceStatus SERVICE_START_PENDING");
+          Log()->log_error("!SetServiceStatus SERVICE_START_PENDING lastError %x", GetLastError());
           return;
         }
 
@@ -175,7 +153,7 @@ void RunAsServiceIfNeeded() {
         s_serviceStatus.dwWin32ExitCode = 0;
 
         if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-          LOG_LASTERROR("!SetServiceStatus SERVICE_RUNNING");
+          Log()->log_error("!SetServiceStatus SERVICE_RUNNING lastError %x", GetLastError());
 
           // Set service status SERVICE_START_PENDING.
           s_serviceStatus.dwControlsAccepted = 0;
@@ -183,7 +161,7 @@ void RunAsServiceIfNeeded() {
           s_serviceStatus.dwWin32ExitCode = GetLastError();
 
           if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-            LOG_LASTERROR("!SetServiceStatus SERVICE_STOPPED");
+            Log()->log_error("!SetServiceStatus SERVICE_STOPPED lastError %x", GetLastError());
           }
 
           return;
@@ -191,12 +169,12 @@ void RunAsServiceIfNeeded() {
 
         char filePath[MAX_PATH];
         if (!GetModuleFileName(0, filePath, _countof(filePath))) {
-          LOG_LASTERROR("!GetModuleFileName");
+          Log()->log_error("!GetModuleFileName lastError %x", GetLastError());
           return;
         }
 
         do {
-          LOG_INFO("Start exe path %s", filePath);
+          Log()->log_debug("Start exe path %s", filePath);
 
           STARTUPINFO startupInfo{};
           startupInfo.cb = sizeof(startupInfo);
@@ -204,36 +182,36 @@ void RunAsServiceIfNeeded() {
           PROCESS_INFORMATION processInformation{};
 
           if (!CreateProcess(filePath, 0, 0, 0, 0, FALSE, 0, 0, &startupInfo, &processInformation)) {
-            LOG_LASTERROR("!CreateProcess");
+            Log()->log_error("!CreateProcess lastError %x", GetLastError());
             return;
           }
 
           s_hProcess = processInformation.hProcess;
 
-          LOG_INFO("%s started", filePath);
+          Log()->log_info("%s started", filePath);
 
           auto res = WaitForSingleObject(processInformation.hProcess, INFINITE);
           CloseHandle(processInformation.hProcess);
           CloseHandle(processInformation.hThread);
 
           if (WAIT_FAILED == res) {
-            LOG_LASTERROR("!WaitForSingleObject hProcess");
+            Log()->log_error("!WaitForSingleObject hProcess lastError %x", GetLastError());
           } else if (WAIT_OBJECT_0 != res) {
-            LOG_ERROR("!WaitForSingleObject hProcess return %d", res);
+            Log()->log_error("!WaitForSingleObject hProcess return %d", res);
           }
 
-          LOG_INFO("Sleep %d sec before restarting exe", WAIT_TIME_EXE_RESTART/1000);
+          Log()->log_info("Sleep %d sec before restarting exe", WAIT_TIME_EXE_RESTART/1000);
           res = WaitForSingleObject(s_hEvent, WAIT_TIME_EXE_RESTART);
 
           if (WAIT_OBJECT_0 == res) {
-            LOG_INFO("Service was stopped, exe won't be restarted");
+            Log()->log_info("Service was stopped, exe won't be restarted");
             break;
           }
 
           if (WAIT_FAILED == res) {
-            LOG_LASTERROR("!WaitForSingleObject s_hEvent");
+            Log()->log_error("!WaitForSingleObject s_hEvent lastError %x", GetLastError());
           } if (WAIT_TIMEOUT != res) {
-            LOG_ERROR("!WaitForSingleObject s_hEvent return %d", res);
+            Log()->log_error("!WaitForSingleObject s_hEvent return %d", res);
           }
         } while (true);
 
@@ -242,7 +220,7 @@ void RunAsServiceIfNeeded() {
         s_serviceStatus.dwWin32ExitCode = 0;
 
         if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-          LOG_LASTERROR("!SetServiceStatus SERVICE_STOPPED");
+          Log()->log_error("!SetServiceStatus SERVICE_STOPPED lastError %x", GetLastError());
         }
       } 
     },
@@ -255,12 +233,12 @@ void RunAsServiceIfNeeded() {
       return;
     }
 
-    LOG_LASTERROR("!StartServiceCtrlDispatcher");
+    Log()->log_error("!StartServiceCtrlDispatcher lastError %x", GetLastError());
 
     ExitProcess(1);
   }
 
-  LOG_INFO("Service exit");
+  Log()->log_info("Service exit");
 
   ExitProcess(0);
 }
