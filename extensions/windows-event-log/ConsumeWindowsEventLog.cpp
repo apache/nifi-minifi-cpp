@@ -619,9 +619,13 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
   long tzbias = 0;
   bool dst = false;
   switch (ret) {
-    case TIME_ZONE_ID_UNKNOWN:
+    case TIME_ZONE_ID_INVALID:
       logger_->log_error("Failed to get timezone information!");
       return;  // Don't update members in case we cannot get data
+    case TIME_ZONE_ID_UNKNOWN:
+      tzstr = tzinfo.StandardName;
+      tzbias = tzinfo.Bias;
+      break;
     case TIME_ZONE_ID_DAYLIGHT:
       tzstr = tzinfo.DaylightName;
       dst = true;
