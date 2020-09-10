@@ -310,7 +310,10 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
    * Move assignment operator.
    */
   SiteToSitePeer& operator=(SiteToSitePeer&& other) {
-    stream_ = std::unique_ptr<org::apache::nifi::minifi::io::BaseStream>(other.stream_.release());
+    if (this == &other) {
+      return *this;
+    }
+    stream_ = std::move(other.stream_);
     host_ = std::move(other.host_);
     port_ = std::move(other.port_);
     local_network_interface_ = std::move(other.local_network_interface_);

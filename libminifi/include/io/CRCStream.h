@@ -71,15 +71,8 @@ class CRCStreamBase : public virtual Stream {
   }
 
  protected:
-  explicit CRCStreamBase(gsl::not_null<StreamType*> child_stream) : child_stream_(child_stream) {}
-  //  this implementation is here to make MSVC happy, declaration would be enough
-  //  as it will never get called (and should not be called)
-  CRCStreamBase() : child_stream_(gsl::make_not_null<StreamType*>(nullptr)) {
-    assert(false);
-  }
-
   uLong crc_ = 0;
-  gsl::not_null<StreamType*> child_stream_;
+  StreamType* child_stream_;
 };
 
 template<typename StreamType>
@@ -129,16 +122,19 @@ class CRCStream : public std::conditional<std::is_base_of<InputStream, StreamTyp
   using internal::CRCStreamBase<StreamType>::crc_;
 
  public:
-  explicit CRCStream(gsl::not_null<StreamType*> child_stream) : internal::CRCStreamBase<StreamType>(child_stream) {
+  explicit CRCStream(gsl::not_null<StreamType*> child_stream) {
+    child_stream_ = child_stream;
     crc_ = crc32(0L, Z_NULL, 0);
   }
 
-  CRCStream(gsl::not_null<StreamType*> child_stream, uint64_t initial_crc) : internal::CRCStreamBase<StreamType>(child_stream) {
+  CRCStream(gsl::not_null<StreamType*> child_stream, uint64_t initial_crc) {
+    child_stream_ = child_stream;
     crc_ = gsl::narrow<uLong>(initial_crc);
   }
 
-  CRCStream(CRCStream &&stream) noexcept : internal::CRCStreamBase<StreamType>(std::move(stream.child_stream_)){
-    crc_ = std::move(stream.crc_);
+  CRCStream(CRCStream &&stream) noexcept {
+    child_stream_ = utils::exchange(stream.child_stream_, nullptr);
+    crc_ = utils::exchange(stream.crc_, 0);
   }
 };
 

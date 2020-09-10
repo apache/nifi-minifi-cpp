@@ -123,7 +123,7 @@ TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
 
   stream.seek(4);
 
-  stream.write((const uint8_t*)nullptr, 0);
+  stream.write(nullptr, 0);
 
   stream.seek(0);
 
@@ -161,7 +161,7 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
 
   stream.seek(4);
 
-  stream.write((const uint8_t*)nullptr, 0);
+  stream.write(nullptr, 0);
 
   stream.seek(0);
 

@@ -500,7 +500,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
       case MORE_DATA:
         dataAvailable = true;
         logger_->log_trace("Site2Site peer indicates that data is available");
-        transaction = std::make_shared<Transaction>(direction, crcstream);
+        transaction = std::make_shared<Transaction>(direction, std::move(crcstream));
         known_transactions_[transaction->getUUIDStr()] = transaction;
         transactionID = transaction->getUUIDStr();
         transaction->setDataAvailable(dataAvailable);
@@ -509,7 +509,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
       case NO_MORE_DATA:
         dataAvailable = false;
         logger_->log_trace("Site2Site peer indicates that no data is available");
-        transaction = std::make_shared<Transaction>(direction, crcstream);
+        transaction = std::make_shared<Transaction>(direction, std::move(crcstream));
         known_transactions_[transaction->getUUIDStr()] = transaction;
         transactionID = transaction->getUUIDStr();
         transaction->setDataAvailable(dataAvailable);
@@ -526,7 +526,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
       return NULL;
     } else {
       org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(gsl::make_not_null(peer_.get()));
-      transaction = std::make_shared<Transaction>(direction, crcstream);
+      transaction = std::make_shared<Transaction>(direction, std::move(crcstream));
       known_transactions_[transaction->getUUIDStr()] = transaction;
       transactionID = transaction->getUUIDStr();
       logger_->log_trace("Site2Site create transaction %s", transaction->getUUIDStr());

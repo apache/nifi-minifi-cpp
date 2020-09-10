@@ -36,8 +36,8 @@ namespace sitetosite {
  */
 class HttpTransaction : public sitetosite::Transaction {
  public:
-  explicit HttpTransaction(sitetosite::TransferDirection direction, org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> &stream)
-      : Transaction(direction, stream),
+  explicit HttpTransaction(sitetosite::TransferDirection direction, org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> &&stream)
+      : Transaction(direction, std::move(stream)),
         client_ref_(nullptr) {
   }
 

@@ -73,7 +73,7 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
         logger_->log_debug("Location is empty");
       } else {
         org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(gsl::make_not_null(peer_.get()));
-        auto transaction = std::make_shared<HttpTransaction>(direction, crcstream);
+        auto transaction = std::make_shared<HttpTransaction>(direction, std::move(crcstream));
         transaction->initialize(this, url);
         auto transactionId = parseTransactionId(url);
         if (IsNullOrEmpty(transactionId))
