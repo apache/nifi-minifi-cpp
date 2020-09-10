@@ -77,6 +77,7 @@ class CRCStreamBase : public virtual Stream {
 
 template<typename StreamType>
 class InputCRCStream : public virtual CRCStreamBase<StreamType>, public InputStream {
+ protected:
   using CRCStreamBase<StreamType>::child_stream_;
   using CRCStreamBase<StreamType>::crc_;
 
@@ -96,6 +97,7 @@ class InputCRCStream : public virtual CRCStreamBase<StreamType>, public InputStr
 
 template<typename StreamType>
 class OutputCRCStream : public virtual CRCStreamBase<StreamType>, public OutputStream {
+ protected:
   using CRCStreamBase<StreamType>::child_stream_;
   using CRCStreamBase<StreamType>::crc_;
 
