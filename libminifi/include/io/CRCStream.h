@@ -72,7 +72,7 @@ class CRCStreamBase : public virtual Stream {
 
  protected:
   uLong crc_ = 0;
-  StreamType* child_stream_;
+  StreamType* child_stream_ = nullptr;
 };
 
 template<typename StreamType>
