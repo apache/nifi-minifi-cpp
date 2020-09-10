@@ -796,14 +796,6 @@ void ProcessSession::commit() {
         }
         if (record->isStored() && process_context_->getFlowFileRepository()->Delete(record->getUUIDStr())) {
           record->setStoredToRepository(false);
-          auto claim = record->getResourceClaim();
-          if (claim) {
-            claim->decreaseFlowFileRecordOwnedCount();
-            logger_->log_debug("Decrementing resource claim on behalf of the persisted instance %s %" PRIu64 " %s",
-                claim->getContentFullPath(), claim->getFlowFileRecordOwnedCount(), record->getUUIDStr());
-          } else {
-            logger_->log_debug("Flow does not contain content. no resource claim to decrement.");
-          }
         }
     }
 
@@ -978,8 +970,6 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
         // there is no rolling back expired FlowFiles
         if (record->isStored() && process_context_->getFlowFileRepository()->Delete(record->getUUIDStr())) {
           record->setStoredToRepository(false);
-          auto claim = record->getResourceClaim();
-          if (claim) claim->decreaseFlowFileRecordOwnedCount();
         }
       }
     }

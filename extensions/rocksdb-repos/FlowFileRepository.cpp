@@ -153,7 +153,9 @@ void FlowFileRepository::prune_stored_flowfiles() {
     std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
     std::string key = it->key().ToString();
     if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
-      logger_->log_debug("Found connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
+      // on behalf of the just resurrected persisted instance
+      auto claim = eventRead->getResourceClaim();
+      if (claim) claim->increaseFlowFileRecordOwnedCount();
       bool found = false;
       auto search = containers.find(eventRead->getConnectionUuid());
       found = (search != containers.end());
@@ -163,11 +165,9 @@ void FlowFileRepository::prune_stored_flowfiles() {
         found = (search != connectionMap.end());
       }
       if (found) {
+        logger_->log_debug("Found connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
         eventRead->setStoredToRepository(true);
         // we found the connection for the persistent flowFile
-        auto claim = eventRead->getResourceClaim();
-        // on behalf of the just resurrected persisted instance
-        if (claim) claim->increaseFlowFileRecordOwnedCount();
         // even if a processor immediately marks it for deletion, flush only happens after prune_stored_flowfiles
         search->second->put(eventRead);
       } else {

@@ -356,6 +356,19 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
         std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
 
     logger_->log_info("Loaded controller service provider");
+
+    /*
+     * Without reset we have to distinguish a fresh restart and a reload, to decide if we have to
+     * increment the claims' counter on behalf of the persisted instances.
+     * ResourceClaim::getStreamCount is not suitable as multiple persisted instances
+     * might have the same claim.
+     * e.g. without reset a streamCount of 3 could mean the following:
+     *  - it was a fresh restart and 3 instances of this claim have already been resurrected -> we must increment
+     *  - it was a reload and 3 instances have been persisted before the shutdown -> we must not increment
+     */
+    content_repo_->reset();
+    logger_->log_info("Reset content repository");
+
     // Load Flow File from Repo
     loadFlowRepo();
     logger_->log_info("Loaded flow repository");
@@ -395,6 +408,8 @@ int16_t FlowController::start() {
 
       if (this->root_ != nullptr) {
         start_time_ = std::chrono::steady_clock::now();
+        // watch out, this might immediately start the processors
+        // as the thread_pool_ is started in load()
         this->root_->startProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
       }
       initializeC2();
