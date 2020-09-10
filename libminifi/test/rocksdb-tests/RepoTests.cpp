@@ -232,6 +232,8 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
     repository->stop();
 
+    content_repo->reset();
+
     repository->loadComponent(content_repo);
 
     repository->start();
