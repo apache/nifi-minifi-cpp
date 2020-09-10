@@ -673,7 +673,9 @@ TEST_CASE("RawGzipCompressionDecompression", "[compressfiletest8]") {
   }
   SECTION("Long content") {
     std::stringstream content_ss;
-    for (size_t i = 0U; i < 1024 * 1024U; i++) {
+    // if only this part fails VolatileContentRepository's fixed max size
+    // and some change in the cleanup logic might interfere
+    for (size_t i = 0U; i < 512 * 1024U; i++) {
       content_ss << "foobar";
     }
     content = content_ss.str();
