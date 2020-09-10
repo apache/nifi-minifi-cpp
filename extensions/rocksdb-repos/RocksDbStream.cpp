@@ -24,7 +24,6 @@
 #include <string>
 #include <Exception.h>
 #include "io/validation.h"
-#include "utils/StreamUtils.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -52,7 +51,7 @@ void RocksDbStream::seek(uint64_t offset) {
 }
 
 int RocksDbStream::write(const uint8_t *value, int size) {
-  utils::internal::ensureNonNegativeWrite(size);
+  gsl_Expects(size >= 0);
   if (!IsNullOrEmpty(value) && write_enable_) {
     auto opendb = db_->open();
     if (!opendb) {
@@ -79,7 +78,7 @@ int RocksDbStream::write(const uint8_t *value, int size) {
 }
 
 int RocksDbStream::read(uint8_t *buf, int buflen) {
-  utils::internal::ensureNonNegativeRead(buflen);
+  gsl_Expects(buflen >= 0);
   if (!IsNullOrEmpty(buf) && exists_) {
     size_t amtToRead = gsl::narrow<size_t>(buflen);
     if (offset_ >= value_.size()) {

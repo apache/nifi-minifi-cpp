@@ -84,10 +84,11 @@ class CRCStreamBase : public virtual Stream {
 
 template<typename StreamType>
 class InputCRCStream : public virtual CRCStreamBase<StreamType>, public InputStream {
- public:
-  using InputStream::read;
   using CRCStreamBase<StreamType>::child_stream_;
   using CRCStreamBase<StreamType>::crc_;
+
+ public:
+  using InputStream::read;
 
   int read(uint8_t *buf, int buflen) override {
     int ret = child_stream_->read(buf, buflen);
@@ -102,10 +103,11 @@ class InputCRCStream : public virtual CRCStreamBase<StreamType>, public InputStr
 
 template<typename StreamType>
 class OutputCRCStream : public virtual CRCStreamBase<StreamType>, public OutputStream {
- public:
-  using OutputStream::write;
   using CRCStreamBase<StreamType>::child_stream_;
   using CRCStreamBase<StreamType>::crc_;
+
+ public:
+  using OutputStream::write;
 
   int write(const uint8_t *value, int size) override {
     int ret = child_stream_->write(value, size);

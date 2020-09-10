@@ -18,8 +18,6 @@
 #include <cstdint>
 #include <algorithm>
 #include "io/BufferStream.h"
-#include "utils/StreamUtils.h"
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -27,14 +25,14 @@ namespace minifi {
 namespace io {
 
 int BufferStream::write(const uint8_t *value, int size) {
-  utils::internal::ensureNonNegativeWrite(size);
+  gsl_Expects(size >= 0);
   buffer_.reserve(buffer_.size() + size);
   std::copy(value, value + size, std::back_inserter(buffer_));
   return size;
 }
 
 int BufferStream::read(uint8_t *buf, int len) {
-  utils::internal::ensureNonNegativeRead(len);
+  gsl_Expects(len >= 0);
   len = (std::min<uint64_t>)(len, buffer_.size() - readOffset_);
   auto begin = buffer_.begin() + readOffset_;
   std::copy(begin, begin + len, buf);

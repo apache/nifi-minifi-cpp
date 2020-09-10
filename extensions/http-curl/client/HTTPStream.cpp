@@ -26,7 +26,6 @@
 
 #include "HTTPCallback.h"
 #include "io/validation.h"
-#include "utils/StreamUtils.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -57,7 +56,7 @@ void HttpStream::seek(uint64_t offset) {
 // data stream overrides
 
 int HttpStream::write(const uint8_t *value, int size) {
-  utils::internal::ensureNonNegativeWrite(size);
+  gsl_Expects(size >= 0);
   if (!IsNullOrEmpty(value)) {
     if (!started_) {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -77,7 +76,7 @@ int HttpStream::write(const uint8_t *value, int size) {
 }
 
 int HttpStream::read(uint8_t *buf, int buflen) {
-  utils::internal::ensureNonNegativeRead(buflen);
+  gsl_Expects(buflen >= 0);
   if (!IsNullOrEmpty(buf)) {
     if (!started_) {
       std::lock_guard<std::mutex> lock(mutex_);

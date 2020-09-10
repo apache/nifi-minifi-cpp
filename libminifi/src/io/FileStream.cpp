@@ -25,8 +25,6 @@
 #include "io/FileStream.h"
 #include "io/InputStream.h"
 #include "io/OutputStream.h"
-#include "utils/StreamUtils.h"
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -86,7 +84,7 @@ void FileStream::seek(uint64_t offset) {
 }
 
 int FileStream::write(const uint8_t *value, int size) {
-  utils::internal::ensureNonNegativeWrite(size);
+  gsl_Expects(size >= 0);
   if (!IsNullOrEmpty(value)) {
     std::lock_guard<std::mutex> lock(file_lock_);
     if (file_stream_->write(reinterpret_cast<const char*>(value), size)) {
@@ -107,7 +105,7 @@ int FileStream::write(const uint8_t *value, int size) {
 }
 
 int FileStream::read(uint8_t *buf, int buflen) {
-  utils::internal::ensureNonNegativeRead(buflen);
+  gsl_Expects(buflen >= 0);
   if (!IsNullOrEmpty(buf)) {
     std::lock_guard<std::mutex> lock(file_lock_);
     if (!file_stream_) {

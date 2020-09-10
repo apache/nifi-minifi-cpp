@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include "Stream.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -77,7 +78,7 @@ class OutputStream : public virtual Stream {
     uint8_t buffer[sizeof(Integral)]{};
 
     for (std::size_t byteIdx = 0; byteIdx < sizeof(Integral); ++byteIdx) {
-      buffer[byteIdx] = static_cast<uint8_t>(value >> (8*(sizeof(Integral) - 1) - 8*byteIdx));
+      buffer[byteIdx] = gsl::narrow_cast<uint8_t>(value >> (8*(sizeof(Integral) - 1) - 8*byteIdx));
     }
 
     return write(buffer, sizeof(Integral));

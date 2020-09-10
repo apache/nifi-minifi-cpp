@@ -27,7 +27,6 @@
 #include "core/repository/AtomicRepoEntries.h"
 #include "Exception.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/StreamUtils.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -109,7 +108,7 @@ void AtomicEntryStream<T>::seek(uint64_t offset) {
 // data stream overrides
 template<typename T>
 int AtomicEntryStream<T>::write(const uint8_t *value, int size) {
-  utils::internal::ensureNonNegativeWrite(size);
+  gsl_Expects(size >= 0);
   if (size == 0) {
     return 0;
   }
@@ -128,7 +127,7 @@ int AtomicEntryStream<T>::write(const uint8_t *value, int size) {
 
 template<typename T>
 int AtomicEntryStream<T>::read(uint8_t *buf, int buflen) {
-  utils::internal::ensureNonNegativeRead(buflen);
+  gsl_Expects(buflen >= 0);
   if (buflen == 0) {
     return 0;
   }

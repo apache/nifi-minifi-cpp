@@ -23,7 +23,6 @@
 #include <string>
 #include <Exception.h>
 #include "io/validation.h"
-#include "utils/StreamUtils.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -47,7 +46,7 @@ void SecureDescriptorStream::seek(uint64_t offset) {
 // data stream overrides
 
 int SecureDescriptorStream::write(const uint8_t *value, int size) {
-  utils::internal::ensureNonNegativeWrite(size);
+  gsl_Expects(size >= 0);
   if (!IsNullOrEmpty(value)) {
     std::lock_guard<std::recursive_mutex> lock(file_lock_);
     int bytes = 0;
@@ -70,7 +69,7 @@ int SecureDescriptorStream::write(const uint8_t *value, int size) {
 }
 
 int SecureDescriptorStream::read(uint8_t *buf, int buflen) {
-  utils::internal::ensureNonNegativeRead(buflen);
+  gsl_Expects(buflen >= 0);
   if (!IsNullOrEmpty(buf)) {
     int total_read = 0;
       int status = 0;
