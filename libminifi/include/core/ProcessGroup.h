@@ -149,18 +149,6 @@ class ProcessGroup : public CoreComponent {
     return onschedule_retry_msec_;
   }
 
-  // Set UUID
-  void setUUID(const utils::Identifier& uuid) {
-    uuid_ = uuid;
-  }
-  // Get UUID
-  bool getUUID(utils::Identifier &uuid) {
-    if (uuid_ == nullptr) {
-      return false;
-    }
-    uuid = uuid_;
-    return true;
-  }
   // getVersion
   int getVersion() {
     return config_version_;

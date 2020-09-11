@@ -63,7 +63,7 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
       for (auto purgeItem : purge_list_) {
         utils::Identifier containerId;
         auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size(), content_repo_, containerId);
-        if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size())) {
+        if (eventRead) {
           auto claim = eventRead->getResourceClaim();
           if (claim) claim->decreaseFlowFileRecordOwnedCount();
         }

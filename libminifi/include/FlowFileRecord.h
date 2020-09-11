@@ -67,6 +67,7 @@ class ProcessSession;
 
 class FlowFileRecord : public core::FlowFile, public io::Serializable {
   friend class core::ProcessSession;
+
  public:
   bool Serialize(io::BufferStream &outStream);
 

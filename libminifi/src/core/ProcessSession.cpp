@@ -765,6 +765,7 @@ void ProcessSession::commit() {
           continue;
         }
         if (record->isStored() && process_context_->getFlowFileRepository()->Delete(record->getUUIDStr())) {
+          // mark for deletion in the flowFileRepository
           record->setStoredToRepository(false);
         }
     }

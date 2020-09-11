@@ -232,7 +232,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const uint8_t *buffe
     return {};
   }
 
-  file->claim_ = std::make_shared<ResourceClaim>(content_full_path, content_repo));
+  file->claim_ = std::make_shared<ResourceClaim>(content_full_path, content_repo);
 
   return file;
 }

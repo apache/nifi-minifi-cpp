@@ -66,6 +66,7 @@ class Connectable;
 
 class FlowFile : public CoreComponent, public ReferenceContainer {
  public:
+  FlowFile();
   static std::atomic<std::size_t> flowFileCount;
   ~FlowFile() override;
   FlowFile& operator=(const FlowFile& other);
@@ -261,12 +262,6 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   }
 
   /**
-   * Decrease the flow file record owned count for the resource claim and, if
-   * its counter is at zero, remove it from the repo.
-   */
-  void releaseClaim(const std::shared_ptr<ResourceClaim>& claim);
-
-  /**
    * Sets the original connection with a shared pointer.
    * @param connection shared connection.
    */
@@ -285,7 +280,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
     return stored;
   }
 
- private:
+ protected:
   bool stored;
   // Mark for deletion
   bool marked_delete_;

@@ -57,27 +57,7 @@ FlowFile::FlowFile()
 
 FlowFile::~FlowFile() {
   logger_->log_debug("Destroying flow file record,  UUID %s", getUUIDStr());
-  if (!claim_) {
-    logger_->log_debug("Claim is null ptr for %s", getUUIDStr());
-  }
-
-  claim_.set(*this, nullptr);
-
-  // Disown stash claims
-  for (auto &stashPair : stashedContent_) {
-    auto& stashClaim = stashPair.second;
-    stashClaim.set(*this, nullptr);
-  }
   --flowFileCount;
-}
-
-void FlowFile::releaseClaim(const std::shared_ptr<ResourceClaim>& claim) {
-  // Decrease the flow file record owned count for the resource claim
-  claim->decreaseFlowFileRecordOwnedCount();
-  logger_->log_debug("Detaching Resource Claim %s, %s, attempt " "%" PRIu64, getUUIDStr(), claim->getContentFullPath(), claim->getFlowFileRecordOwnedCount());
-  if (claim->removeIfOrphaned()) {
-    logger_->log_debug("Deleted Resource Claim %s", claim->getContentFullPath());
-  }
 }
 
 FlowFile& FlowFile::operator=(const FlowFile& other) {
