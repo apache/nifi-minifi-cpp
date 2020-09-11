@@ -85,7 +85,7 @@ bool FlowFileRecord::Serialize(io::BufferStream &outStream) {
   }
 
   utils::Identifier containerId;
-  if (original_connection_) original_connection_->getUUID(containerId);
+  if (connection_) connection_->getUUID(containerId);
   ret = outStream.write(containerId.to_string());
   if (ret <= 0) {
     return false;

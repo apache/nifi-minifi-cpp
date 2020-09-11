@@ -47,7 +47,7 @@ FlowFile::FlowFile()
       event_time_(0),
       claim_(nullptr),
       marked_delete_(false),
-      original_connection_() {
+      connection_() {
   id_ = numeric_id_generator_->generateId();
   entry_date_ = utils::timeutils::getTimeMillis();
   event_time_ = entry_date_;
@@ -72,7 +72,7 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
   penaltyExpiration_ms_ = other.penaltyExpiration_ms_;
   attributes_ = other.attributes_;
   claim_ = other.claim_;
-  original_connection_ = other.original_connection_;
+  connection_ = other.connection_;
   return *this;
 }
 
@@ -208,16 +208,16 @@ void FlowFile::setLineageStartDate(const uint64_t date) {
  * Sets the original connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setOriginalConnection(const std::shared_ptr<core::Connectable>& connection) {
-  original_connection_ = connection;
+void FlowFile::setConnection(const std::shared_ptr<core::Connectable>& connection) {
+  connection_ = connection;
 }
 
 /**
  * Returns the original connection referenced by this record.
  * @return shared original connection pointer.
  */
-std::shared_ptr<core::Connectable> FlowFile::getOriginalConnection() const {
-  return original_connection_;
+std::shared_ptr<core::Connectable> FlowFile::getConnection() const {
+  return connection_;
 }
 
 const std::string SpecialFlowAttribute::PATH = "path";

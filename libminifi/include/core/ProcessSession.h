@@ -142,7 +142,7 @@ class ProcessSession : public ReferenceContainer {
   // FlowFiles being modified by current process session
   std::map<std::string, std::shared_ptr<core::FlowFile>> _updatedFlowFiles;
   // Copy of the original FlowFiles being modified by current process session as above
-  std::map<std::string, std::shared_ptr<core::FlowFile>> _originalFlowFiles;
+  std::map<std::string, std::shared_ptr<core::FlowFile>> _flowFileSnapShots;
   // FlowFiles being added by current process session
   std::map<std::string, std::shared_ptr<core::FlowFile>> _addedFlowFiles;
   // FlowFiles being deleted by current process session

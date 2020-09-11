@@ -379,7 +379,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
 
       for (int keyIdx = 0; keyIdx < 100; ++keyIdx) {
         auto file = std::make_shared<minifi::FlowFileRecord>();
-        file->setOriginalConnection(connection);
+        file->setConnection(connection);
         // Serialize is sync
         REQUIRE(file->Persist(ff_repository));
         if (keyIdx % 2 == 0) {

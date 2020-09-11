@@ -140,7 +140,7 @@ standalone_processor * create_processor(const char *name, nifi_instance * instan
   if (instance == NULL) {
     nifi_port port;
     std::string port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
-    port.port_id = (char*)port_str.c_str();
+    port.port_id = const_cast<char*>(port_str.c_str());
     instance = create_instance("internal_standalone", &port);
   }
   auto flow = create_new_flow(instance);

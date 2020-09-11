@@ -340,8 +340,8 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     _attributes = flow->getAttributes();
     _size = flow->getSize();
     _offset = flow->getOffset();
-    if (flow->getOriginalConnection())
-      _sourceQueueIdentifier = flow->getOriginalConnection()->getName();
+    if (flow->getConnection())
+      _sourceQueueIdentifier = flow->getConnection()->getName();
     if (flow->getResourceClaim()) {
       _contentFullPath = flow->getResourceClaim()->getContentFullPath();
     }

@@ -39,15 +39,14 @@ namespace minifi {
 namespace processors {
 
 // Bin Class
-class Bin : public core::CoreComponent{
+class Bin {
  public:
   // Constructor
   /*!
    * Create a new Bin. Note: this object is not thread safe
    */
   explicit Bin(const uint64_t &minSize, const uint64_t &maxSize, const size_t &minEntries, const size_t & maxEntries, const std::string &fileCount, const std::string &groupId)
-      : CoreComponent(""),
-        minSize_(minSize),
+      : minSize_(minSize),
         maxSize_(maxSize),
         maxEntries_(maxEntries),
         minEntries_(minEntries),
@@ -56,6 +55,7 @@ class Bin : public core::CoreComponent{
         logger_(logging::LoggerFactory<Bin>::getLogger()) {
     queued_data_size_ = 0;
     creation_dated_ = utils::timeutils::getTimeMillis();
+    uuid_ = utils::IdGenerator::getIdGenerator()->generate();
     logger_->log_debug("Bin %s for group %s created", getUUIDStr(), groupId_);
   }
   virtual ~Bin() {
@@ -115,6 +115,11 @@ class Bin : public core::CoreComponent{
   int getSize() {
     return queue_.size();
   }
+
+  std::string getUUIDStr() {
+    return uuid_.to_string();
+  }
+
   std::string getGroupId() {
     return groupId_;
   }
@@ -134,6 +139,8 @@ class Bin : public core::CoreComponent{
   std::string fileCount_;
   std::string groupId_;
   std::shared_ptr<logging::Logger> logger_;
+  // A global unique identifier
+  utils::Identifier uuid_;
 };
 
 // BinManager Class

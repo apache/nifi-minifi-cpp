@@ -167,7 +167,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
         found = (search != connectionMap.end());
       }
       if (found) {
-        logger_->log_debug("Found connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
+        logger_->log_debug("Found connection for %s, path %s ", containerId.to_string(), eventRead->getContentFullPath());
         eventRead->setStoredToRepository(true);
         // we found the connection for the persistent flowFile
         // even if a processor immediately marks it for deletion, flush only happens after prune_stored_flowfiles

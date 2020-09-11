@@ -28,7 +28,7 @@ const std::string test_file_name = "tstFile.ext";
 static nifi_instance *create_instance_obj(const char *name = "random_instance") {
   nifi_port port;
   std::string port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
-  port.port_id = (char*)port_str.c_str();
+  port.port_id = const_cast<char*>(port_str.c_str());
   return create_instance_repo("random_instance", &port, "volatilerepository");
 }
 

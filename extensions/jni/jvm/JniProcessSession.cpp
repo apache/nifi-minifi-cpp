@@ -231,8 +231,8 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_putAt
   auto resValue = JniStringToUTF(env, value);
 
   if (!ptr->get()->addAttribute(resKey, resValue)) {
-    if (resKey != "uuid") { // don't update the keyed attribute uuid
-      ptr->get()->setAttribute(resKey, resValue);
+    if (resKey != minifi::core::SpecialFlowAttribute::UUID) {  // don't update the attribute uuid
+      ptr->get()->updateAttribute(resKey, resValue);
     }
   }
 
