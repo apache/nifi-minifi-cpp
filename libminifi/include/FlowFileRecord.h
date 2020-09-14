@@ -69,6 +69,8 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   friend class core::ProcessSession;
 
  public:
+  FlowFileRecord();
+
   bool Serialize(io::BufferStream &outStream);
 
   //! Serialize and Persistent to the repository

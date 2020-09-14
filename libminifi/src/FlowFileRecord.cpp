@@ -40,6 +40,11 @@ namespace minifi {
 std::shared_ptr<logging::Logger> FlowFileRecord::logger_ = logging::LoggerFactory<FlowFileRecord>::getLogger();
 std::atomic<uint64_t> FlowFileRecord::local_flow_seq_number_(0);
 
+FlowFileRecord::FlowFileRecord() {
+  id_ = local_flow_seq_number_++;
+  addAttribute(core::SpecialFlowAttribute::FILENAME, std::to_string(utils::timeutils::getTimeNano()));
+}
+
 std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository,
     const std::shared_ptr<core::ContentRepository>& content_repo, utils::Identifier& container) {
   std::string value;

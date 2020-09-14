@@ -335,7 +335,7 @@ void BinaryConcatenationMerge::merge(core::ProcessContext*, core::ProcessSession
   BinaryConcatenationMerge::WriteCallback callback(header, footer, demarcator, flows, session);
   session->write(merge_flow, &callback);
   session->putAttribute(merge_flow, core::SpecialFlowAttribute::MIME_TYPE, getMergedContentType());
-  std::string fileName = std::to_string(utils::timeutils::getTimeNano());
+  std::string fileName;
   if (flows.size() == 1) {
     flows.front()->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
   } else {
@@ -350,7 +350,7 @@ void TarMerge::merge(core::ProcessContext*, core::ProcessSession *session, std::
   ArchiveMerge::WriteCallback callback(std::string(merge_content_options::MERGE_FORMAT_TAR_VALUE), flows, session);
   session->write(merge_flow, &callback);
   session->putAttribute(merge_flow, core::SpecialFlowAttribute::MIME_TYPE, getMergedContentType());
-  std::string fileName = std::to_string(utils::timeutils::getTimeNano());
+  std::string fileName;
   merge_flow->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
   if (flows.size() == 1) {
     flows.front()->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
@@ -368,7 +368,7 @@ void ZipMerge::merge(core::ProcessContext*, core::ProcessSession *session, std::
   ArchiveMerge::WriteCallback callback(std::string(merge_content_options::MERGE_FORMAT_ZIP_VALUE), flows, session);
   session->write(merge_flow, &callback);
   session->putAttribute(merge_flow, core::SpecialFlowAttribute::MIME_TYPE, getMergedContentType());
-  std::string fileName = std::to_string(utils::timeutils::getTimeNano());
+  std::string fileName;
   merge_flow->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
   if (flows.size() == 1) {
     flows.front()->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);

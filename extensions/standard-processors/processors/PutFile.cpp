@@ -115,10 +115,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   }
 
   std::string filename;
-  if (!flowFile->getAttribute(core::SpecialFlowAttribute::FILENAME, filename)) {
-    filename = std::to_string(getTimeNano());
-    flowFile->addAttribute(core::SpecialFlowAttribute::FILENAME, filename);
-  }
+  flowFile->getAttribute(core::SpecialFlowAttribute::FILENAME, filename);
   std::string tmpFile = tmpWritePath(filename, directory);
 
   logger_->log_debug("PutFile using temporary file %s", tmpFile);
