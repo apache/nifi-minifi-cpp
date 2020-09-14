@@ -1,3 +1,4 @@
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements. See the NOTICE file
 # distributed with this work for additional information
@@ -16,10 +17,8 @@
 # under the License.
 #
 
-#!/bin/bash
-
 # Fail on errors
-set -e
+set -euo pipefail
 
 # Set env vars.
 UID_ARG=$1
@@ -38,7 +37,7 @@ else
   DOCKERFILE="Dockerfile"
 fi
 
-unset TAG
+TAG=""
 if [ "${IMAGE_TYPE}" != "release" ]; then
   TAG="${IMAGE_TYPE}-"
 fi
