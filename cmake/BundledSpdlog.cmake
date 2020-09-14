@@ -47,7 +47,7 @@ function(use_bundled_spdlog SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             spdlog-external
-            URL "https://github.com/gabime/spdlog/archive/v1.7.0.zip"
+            URL "https://github.com/gabime/spdlog/archive/v1.8.0.zip"
             SOURCE_DIR "${SPDLOG_SOURCE_DIR}"
             CMAKE_ARGS ${SPDLOG_CMAKE_ARGS}
             BUILD_BYPRODUCTS "${SPDLOG_LIBRARY}"
