@@ -17,40 +17,30 @@
 #
 
 # First stage: the build environment
-# Edge required for rocksdb
-FROM debian:stretch AS builder
-MAINTAINER Apache NiFi <dev@nifi.apache.org>
+FROM debian:stretch AS build_deps
+LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
-ARG UID
-ARG GID
 ARG MINIFI_VERSION
-ARG MINIFI_SOURCE_CODE
-ARG DUMP_LOCATION
-ARG ENABLE_JNI
 
 # Install the system dependencies needed for a build
 
-ENV USER root
 ENV MINIFI_BASE_DIR /opt/minifi
-RUN mkdir -p $MINIFI_BASE_DIR 
-USER $USER
+ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
 RUN apt-get update && apt-get install -y openjdk-8-jdk libpython3.5-dev openjdk-8-source sudo git maven
 
+RUN mkdir -p $MINIFI_BASE_DIR
+COPY . ${MINIFI_BASE_DIR}
 
-ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
 
-ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
-
-# Setup minificpp user
-RUN mkdir -p $MINIFI_BASE_DIR 
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
-
+FROM build_deps AS release
+ARG ENABLE_JNI
 # Perform the build
 RUN cd $MINIFI_BASE_DIR \
 	&& ./bootstrap.sh -e -t \
-	&& rm -rf build \ 
+	&& rm -rf build \
 	&& mkdir build \
 	&& cd build \
 	&& cmake -DUSE_SHARED_LIBS=  -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=$ENABLE_JNI .. \
-	&& make -j8 package 
+	&& make -j$(nproc) package
