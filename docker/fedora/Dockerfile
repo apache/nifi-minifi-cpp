@@ -17,42 +17,33 @@
 #
 
 # First stage: the build environment
-# Edge required for rocksdb
-FROM fedora:29 AS builder
-MAINTAINER Apache NiFi <dev@nifi.apache.org>
+FROM fedora:29 AS build_deps
+LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
-ARG UID
-ARG GID
 ARG MINIFI_VERSION
-ARG MINIFI_SOURCE_CODE
-ARG DUMP_LOCATION
-ARG ENABLE_JNI
+ARG UID=1000
+ARG GID=1000
 
 # Install the system dependencies needed for a build
 
 ENV USER root
 ENV MINIFI_BASE_DIR /opt/minifi
-RUN mkdir -p $MINIFI_BASE_DIR 
+RUN mkdir -p $MINIFI_BASE_DIR
 USER $USER
+ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 
 RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel flex bison make patch sudo git which maven libtool autoconf automake
 
-
-ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
-
-ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
-
-# Setup minificpp user
-RUN mkdir -p $MINIFI_BASE_DIR 
-#ENV JAVA_HOME /usr/lib/jvm/default-jvm
-#ENV PATH $PATH:/usr/lib/jvm/default-jvm/bin
+COPY --chown=${USER}:${USER} . ${MINIFI_BASE_DIR}
 
 
+FROM build_deps AS release
+ARG ENABLE_JNI
 # Perform the build
 RUN cd $MINIFI_BASE_DIR \
 	&& ./bootstrap.sh -e \
-	&& rm -rf build \ 
+	&& rm -rf build \
 	&& mkdir build \
 	&& cd build \
 	&& cmake3 -DUSE_SHARED_LIBS=  -DENABLE_MQTT=ON -DFAIL_ON_WARNINGS=OFF -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=$ENABLE_JNI .. \
-	&& make -j8 package 
+	&& make -j8 package

@@ -17,41 +17,34 @@
 #
 
 # First stage: the build environment
-# Edge required for rocksdb
-FROM centos:7 AS builder
-MAINTAINER Apache NiFi <dev@nifi.apache.org>
+FROM centos:7 AS build_deps
+LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
-ARG UID
-ARG GID
 ARG MINIFI_VERSION
-ARG MINIFI_SOURCE_CODE
-ARG DUMP_LOCATION
-ARG ENABLE_JNI
+ARG UID=1000
+ARG GID=1000
 
 # Install the system dependencies needed for a build
 
 ENV USER root
 ENV MINIFI_BASE_DIR /opt/minifi
-RUN mkdir -p $MINIFI_BASE_DIR 
+RUN mkdir -p $MINIFI_BASE_DIR
 USER $USER
+ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 
 RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel gcc g++ sudo git which maven make
 
-
-ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
-
-ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
-
-# Setup minificpp user
-RUN mkdir -p $MINIFI_BASE_DIR 
+COPY --chown=${USER}:${USER} . ${MINIFI_BASE_DIR}
 
 
+FROM build_deps AS release
+ARG ENABLE_JNI
 # Perform the build
 RUN cd $MINIFI_BASE_DIR \
 	&& ./bootstrap.sh -e -t \
-	&& rm -rf build \ 
+	&& rm -rf build \
 	&& mkdir build \
 	&& cd build \
 	&& cmake3 -DUSE_SHARED_LIBS=  -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=$ENABLE_JNI .. \
-	&& make -j8 package 
+	&& make -j8 package
 

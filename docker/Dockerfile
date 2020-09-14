@@ -21,7 +21,6 @@ FROM alpine:3.12 AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION
-ARG MINIFI_SOURCE_CODE
 ARG UID=1000
 ARG GID=1000
 
@@ -62,12 +61,13 @@ ENV MINIFI_BASE_DIR /opt/minifi
 ENV JAVA_HOME /usr/lib/jvm/default-jvm
 ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-${MINIFI_VERSION}
+ENV MINIFI_VERSION ${MINIFI_VERSION}
 
 # Setup minificpp user
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
 
 RUN install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR}
-COPY --chown=${USER}:${USER} ${MINIFI_SOURCE_CODE} ${MINIFI_BASE_DIR}
+COPY --chown=${USER}:${USER} . ${MINIFI_BASE_DIR}
 
 USER ${USER}
 
@@ -84,10 +84,11 @@ RUN cd ${MINIFI_BASE_DIR} \
 
 # Build stage of normal image
 FROM build_deps AS build_release
+ARG ENABLE_JNI
 RUN cd ${MINIFI_BASE_DIR} \
   && mkdir build \
   && cd build \
-  && cmake -DDISABLE_JEMALLOC=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=ON -DENABLE_LIBRDKAFKA=ON .. \
+  && cmake -DDISABLE_JEMALLOC=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=${ENABLE_JNI} -DENABLE_LIBRDKAFKA=ON .. \
   && make -j$(nproc) package \
   && tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
 
@@ -99,7 +100,6 @@ FROM alpine:3.12 AS common_runtime_deps
 ARG UID=1000
 ARG GID=1000
 ARG MINIFI_VERSION
-ARG MINIFI_SOURCE_CODE
 
 # Add testing repo for rocksdb
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories

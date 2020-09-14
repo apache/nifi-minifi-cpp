@@ -1,4 +1,3 @@
-#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements. See the NOTICE file
 # distributed with this work for additional information
@@ -17,52 +16,50 @@
 # under the License.
 #
 
+#!/bin/bash
+
+# Fail on errors
+set -e
+
 # Set env vars.
 UID_ARG=$1
 GID_ARG=$2
 MINIFI_VERSION=$3
-MINIFI_SOURCE_CODE=$4
-CMAKE_SOURCE_DIR=$5
-IMAGE_TYPE=${6:-release}
+IMAGE_TYPE=${4:-release}
+ENABLE_JNI=${5:-}
+DUMP_LOCATION=${6:-}
+DISTRO_NAME=${7:-}
+
+echo "NiFi-MiNiFi-CPP Version: ${MINIFI_VERSION}"
+
+if [ -n "${DISTRO_NAME}" ]; then
+  DOCKERFILE="${DISTRO_NAME}/Dockerfile"
+else
+  DOCKERFILE="Dockerfile"
+fi
 
 unset TAG
 if [ "${IMAGE_TYPE}" != "release" ]; then
   TAG="${IMAGE_TYPE}-"
 fi
 
-echo "NiFi-MiNiFi-CPP Version: ${MINIFI_VERSION}"
-echo "Current Working Directory: $(pwd)"
-echo "CMake Source Directory: ${CMAKE_SOURCE_DIR}"
-echo "MiNiFi Package: ${MINIFI_SOURCE_CODE}"
+if [ -n "${DISTRO_NAME}" ]; then
+  TAG="${TAG}${DISTRO_NAME}-"
+fi
 
-# Copy the MiNiFi source tree to the Docker working directory before building
-rm -rf "${CMAKE_SOURCE_DIR}/docker/minificppsource"
-mkdir -p "${CMAKE_SOURCE_DIR}/docker/minificppsource"
-rsync -avr \
-      --exclude '/*build*' \
-      --exclude '/*_repository*' \
-      --exclude '/logs' \
-      --exclude '/cmake-build-*' \
-      --exclude '/docker' \
-      --exclude '.git' \
-      --exclude '/extensions/expression-language/Parser.cpp' \
-      --exclude '/extensions/expression-language/Parser.hpp' \
-      --exclude '/extensions/expression-language/Scanner.cpp' \
-      --exclude '/extensions/expression-language/location.hh' \
-      --exclude '/extensions/expression-language/position.hh' \
-      --exclude '/extensions/expression-language/stack.hh' \
-      --delete \
-      "${CMAKE_SOURCE_DIR}/" \
-      "${CMAKE_SOURCE_DIR}/docker/minificppsource/"
+TAG="${TAG}${MINIFI_VERSION}"
 
 DOCKER_COMMAND="docker build --build-arg UID=${UID_ARG} \
                              --build-arg GID=${GID_ARG} \
                              --build-arg MINIFI_VERSION=${MINIFI_VERSION} \
-                             --build-arg MINIFI_SOURCE_CODE=${MINIFI_SOURCE_CODE} \
+                             --build-arg ENABLE_JNI=${ENABLE_JNI} \
                              --target ${IMAGE_TYPE} \
+                             -f ${DOCKERFILE} \
                              -t \
-                             apacheminificpp:${TAG}${MINIFI_VERSION} ."
-echo "Docker Command: '${DOCKER_COMMAND}'"
-DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}
+                             apacheminificpp:${TAG} .."
+echo "Docker Command: '$DOCKER_COMMAND'"
+${DOCKER_COMMAND}
 
-rm -rf "${CMAKE_SOURCE_DIR}/docker/minificppsource"
+if [ -n "${DUMP_LOCATION}" ]; then
+  docker run --rm --entrypoint cat "apacheminificpp:${TAG}" "/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz" > "${DUMP_LOCATION}/nifi-minifi-cpp-${DISTRO_NAME}-${MINIFI_VERSION}-bin.tar.gz"
+fi
