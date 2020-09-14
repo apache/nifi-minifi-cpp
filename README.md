@@ -62,7 +62,7 @@ The following table lists the base set of processors.
 
 | Extension Set        | Processors           |
 | ------------- |:-------------|
-| **Base**    | [AppendHostInfo](PROCESSORS.md#appendhostinfo)<br/>[ExecuteProcess](PROCESSORS.md#executeprocess)<br/>[ExtractText](PROCESSORS.md#extracttext)<br/> [GenerateFlowFile](PROCESSORS.md#generateflowfile)<br/>[GetFile](PROCESSORS.md#getfile)<br/>[GetTCP](PROCESSORS.md#gettcp)<br/>[HashContent](PROCESSORS.md#hashcontent)<br/>[LogAttribute](PROCESSORS.md#logattribute)<br/>[ListenSyslog](PROCESSORS.md#listensyslog)<br/>[PutFile](PROCESSORS.md#putfile)<br/>[RouteOnAttribute](PROCESSORS.md#routeonattribute)<br/>[TailFile](PROCESSORS.md#tailfile)<br/>[UpdateAttribute](PROCESSORS.md#updateattribute)<br/>[ListenHTTP](PROCESSORS.md#listenhttp) 
+| **Base**    | [AppendHostInfo](PROCESSORS.md#appendhostinfo)<br/>[ExecuteProcess](PROCESSORS.md#executeprocess)<br/>[ExtractText](PROCESSORS.md#extracttext)<br/> [GenerateFlowFile](PROCESSORS.md#generateflowfile)<br/>[GetFile](PROCESSORS.md#getfile)<br/>[GetTCP](PROCESSORS.md#gettcp)<br/>[HashContent](PROCESSORS.md#hashcontent)<br/>[ListenSyslog](PROCESSORS.md#listensyslog)<br/>[LogAttribute](PROCESSORS.md#logattribute)<br/>[PutFile](PROCESSORS.md#putfile)<br/>[RetryFlowFile](PROCESSORS.md#retryflowfile)<br/>[RouteOnAttribute](PROCESSORS.md#routeonattribute)<br/>[TailFile](PROCESSORS.md#tailfile)<br/>[UpdateAttribute](PROCESSORS.md#updateattribute)
 
 The next table outlines CMAKE flags that correspond with MiNiFi extensions. Extensions that are enabled by default ( such as CURL ), can be disabled with the respective CMAKE flag on the command line. 
 
@@ -73,24 +73,29 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | ------------- |:-------------| :-----|
 | Archive Extensions    | [ApplyTemplate](PROCESSORS.md#applytemplate)<br/>[CompressContent](PROCESSORS.md#compresscontent)<br/>[ManipulateArchive](PROCESSORS.md#manipulatearchive)<br/>[MergeContent](PROCESSORS.md#mergecontent)<br/>[FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)<br/>[UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)      |   -DBUILD_LIBARCHIVE=ON |
 | AWS | [AWSCredentialsService](CONTROLLERS.md#awsCredentialsService) | -DENABLE_AWS=ON  |
+| CivetWeb | [ListenHTTP](PROCESSORS.md#listenhttp)  | -DDISABLE_CIVET=ON |
 | CURL | [InvokeHTTP](PROCESSORS.md#invokehttp)      |    -DDISABLE_CURL=ON  |
 | GPS | GetGPS      |    -DENABLE_GPS=ON  |
 | Kafka | [PublishKafka](PROCESSORS.md#publishkafka)      |    -DENABLE_LIBRDKAFKA=ON  |
 | JNI | **NiFi Processors**     |    -DENABLE_JNI=ON  |
 | MQTT | [ConsumeMQTT](PROCESSORS.md#consumeMQTT)<br/>[PublishMQTT](PROCESSORS.md#publishMQTT)     |    -DENABLE_MQTT=ON  |
 | OpenCV | [CaptureRTSPFrame](PROCESSORS.md#captureRTSPFrame)     |    -DENABLE_OPENCV=ON  |
+| OpenWSMAN | SourceInitiatedSubscriptionListener | -DENABLE_OPENWSMAN=ON |
 | PCAP | [CapturePacket](PROCESSORS.md#capturepacket)      |    -DENABLE_PCAP=ON  |
 | Scripting | [ExecuteScript](PROCESSORS.md#executescript)<br/>**Custom Python Processors**     |    -DDISABLE_SCRIPTING=ON  |
-| SQLLite | [ExecuteSQL](PROCESSORS.md#executesql)<br/>[PutSQL](PROCESSORS.md#putsql)      |    -DENABLE_SQLITE=ON  |
+| Sensors | GetEnvironmentalSensors<br/>GetMovementSensors | -DENABLE_SENSORS=ON |
+| SFTP | [FetchSFTP](PROCESSORS.md#fetchsftp)<br/>[ListSFTP](PROCESSORS.md#listsftp)<br/>[PutSFTP](PROCESSORS.md#putsftp) | -DENABLE_SFTP=ON |
+| SQL | ExecuteSQL<br/>PutSQL<br/>QueryDatabaseTable<br/> | -DENABLE_SQL=ON  |
+| SQLite | [ExecuteSQL](PROCESSORS.md#executesql)<br/>[PutSQL](PROCESSORS.md#putsql)      |    -DENABLE_SQLITE=ON  |
 | Tensorflow | [TFApplyGraph](PROCESSORS.md#tfapplygraph)<br/>[TFConvertImageToTensor](PROCESSORS.md#tfconvertimagetotensor)<br/>[TFExtractTopLabels](PROCESSORS.md#tfextracttoplabels)<br/>      |    -DENABLE_TENSORFLOW=ON  |
 | USB Camera | [GetUSBCamera](PROCESSORS.md#getusbcamera)     |    -DENABLE_USB_CAMERA=ON  |
+| Windows Event Log (Windows only) | CollectorInitiatedSubscription<br/>ConsumeWindowsEventLog<br/>TailEventLog | -DENABLE_WEL=ON |
 
  Please see our [Python guide](extensions/script/README.md) on how to write Python processors and use them within MiNiFi C++. 
 
 ## Caveats
-* 0.7.0 represents a GA-release. We follow semver so you can expect API and ABI compatibility within minor releases. See [semver's website](https://semver.org/) for more information
-* Build and usage currently only supports Linux and OS X environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
-* Native Windows builds are possible with limited support. OPENSSL_ROOT_DIR must be specified to support OpenSSL support within your build.
+* We follow semver with regards to API compatibility, but no ABI compatibility is provided. See [semver's website](https://semver.org/) for more information
+* Build and usage currently only supports Windows, Linux and OS X environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
 * Provenance events generation is supported and are persisted using RocksDB. Volatile repositories can be used on systems without persistent storage.
 * If MiNiFi C++ is built with the OPC-UA extension enabled, it bundles [open62541](https://open62541.org/), which is available under the Mozilla Public License Version 2.0, a Category B license under [ASF 3rd party license policy](https://www.apache.org/legal/resolved.html#category-b).
 
@@ -139,18 +144,12 @@ or greater is recommended.
 and rebuild.
 
 #### Libraries / Development Headers
-* libboost and boost-devel
-  * 1.48.0 or greater
 * libcurl-openssl (If not available or desired, NSS will be used)
-* librocksdb4.1 and librocksdb-dev
 * libuuid and uuid-dev
 * openssl
 * Python 3 and development headers -- Required, unless Python support is disabled
 * Lua and development headers -- Optional, unless Lua support is enabled
 * libgps-dev -- Required if building libGPS support
-
-** NOTE: IF ROCKSDB IS NOT INSTALLED, IT WILL BE BUILT FROM THE THIRD PARTY
-DIRECTORY UNLESS YOU SPECIFY -DDISABLE_ROCKSDB=true WITH CMAKE ***
 
 #### CentOS 6
 
@@ -192,21 +191,21 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
   below.
 
 #### Windows
-  Build and Installation has been tested with Windows 10 using Visual Studio. You can build
+  Build and Installation has been tested with Windows 10 using Visual Studio 2017. You can build
   and create an MSI via the CPACK command. This requires the installation of the WiX
   toolset (http://wixtoolset.org/). To do this, open up a prompt into your build directory and 
   type 'cpack' . The CPACK command will automatically generate and provide you a path to the distributable
-  msi file. 
+  msi file. See [Windows.md](Windows.md) for more details.
 
 ### To run
 
 #### Libraries
 * libuuid
-* librocksdb *** IF NOT INSTALLED, WILL BE BUILT FROM THIRD PARTY DIRECTORY ***
+* librocksdb (built and statically linked)
 * libcurl-openssl (If not available or desired, NSS will be used)
-* libssl and libcrypto from openssl 
-* libarchive
-* librdkafka
+* libssl and libcrypto from openssl (built and statically linked)
+* libarchive (built and statically linked)
+* librdkafka (built and statically linked)
 * Python 3 -- Required, unless Python support is disabled
 * Lua -- Optional, unless Lua support is enabled
 * libusb -- Optional, unless USB Camera support is enabled
@@ -533,8 +532,6 @@ MiNiFi can also be installed as a system service using minifi.sh with an optiona
 
     $ ./bin/minifi.sh install [service name]
 
-*** Currently windows does not support installing a windows service. ***
-    
 ### Deploying
 MiNiFi C++ comes with a deployment script. This will build and package minifi. Additionally, a file named build_output will be
 created within the build directory that contains a manifest of build artifacts.
