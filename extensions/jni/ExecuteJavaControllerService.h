@@ -66,13 +66,6 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
         contextInstance(nullptr),
         logger_(logging::LoggerFactory<ExecuteJavaControllerService>::getLogger()) {
   }
-
-  explicit ExecuteJavaControllerService(const std::string &name, const std::string &id)
-      : ConfigurationContext(name, id),
-        clazzInstance(nullptr),
-        contextInstance(nullptr),
-        logger_(logging::LoggerFactory<ExecuteJavaControllerService>::getLogger()) {
-  }
   // Destructor
   virtual ~ExecuteJavaControllerService();
   // Processor Name
