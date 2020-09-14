@@ -117,7 +117,7 @@ class SingleNodeDockerCluster(Cluster):
                 RUN chown minificpp:minificpp {minifi_root}/conf/config.yml
                 USER minificpp
                 """.format(name=name,hostname=name,
-                           base_image='apacheminificpp:' + self.minifi_version,
+                           base_image='apacheminificpp:minimal-' + self.minifi_version,
                            minifi_root=self.minifi_root))
 
         test_flow_yaml = minifi_flow_yaml(flow)
