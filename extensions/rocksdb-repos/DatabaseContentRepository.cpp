@@ -80,7 +80,7 @@ void DatabaseContentRepository::Session::commit() {
   }
   rocksdb::WriteBatch batch;
   for (const auto& resource : managedResources_) {
-    auto outStream = dbContentRepository->write(resource.first, false, &batch);
+    auto outStream = dbContentRepository->write(*resource.first, false, &batch);
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
     }
@@ -90,7 +90,7 @@ void DatabaseContentRepository::Session::commit() {
     }
   }
   for (const auto& resource : extendedResources_) {
-    auto outStream = dbContentRepository->write(resource.first, true, &batch);
+    auto outStream = dbContentRepository->write(*resource.first, true, &batch);
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
     }
@@ -150,7 +150,7 @@ bool DatabaseContentRepository::remove(const minifi::ResourceClaim &claim) {
   rocksdb::Status status;
   status = opendb->Delete(rocksdb::WriteOptions(), claim.getContentFullPath());
   if (status.ok()) {
-    logger_->log_debug("Deleted %s", claim.getContentFullPath());
+    logger_->log_debug("Deleting resource %s", claim.getContentFullPath());
     return true;
   } else {
     logger_->log_debug("Attempted, but could not delete %s", claim.getContentFullPath());

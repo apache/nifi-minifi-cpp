@@ -103,7 +103,7 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
     return remove(claim);
   }
 
-  bool remove(const minifi::ResourceClaim> &claim) override;
+  bool remove(const minifi::ResourceClaim &claim) override;
 
   bool exists(const minifi::ResourceClaim &streamId) override;
 

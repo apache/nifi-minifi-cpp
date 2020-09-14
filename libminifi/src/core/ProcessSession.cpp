@@ -245,7 +245,7 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
 
   try {
     uint64_t startTime = utils::timeutils::getTimeMillis();
-    std::shared_ptr<io::BaseStream> stream = content_session_->write(*claim);
+    std::shared_ptr<io::BaseStream> stream = content_session_->write(claim);
     // Call the callback to write the content
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
@@ -280,7 +280,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
 
   try {
     uint64_t startTime = utils::timeutils::getTimeMillis();
-    std::shared_ptr<io::BaseStream> stream = content_session_->write(*claim, ContentSession::WriteMode::APPEND);
+    std::shared_ptr<io::BaseStream> stream = content_session_->write(claim, ContentSession::WriteMode::APPEND);
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for append");
     }
@@ -323,7 +323,7 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
 
     claim = flow->getResourceClaim();
 
-    std::shared_ptr<io::BaseStream> stream = content_session_->read(*claim);
+    std::shared_ptr<io::BaseStream> stream = content_session_->read(claim);
 
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for read");
@@ -356,7 +356,7 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
 
   try {
     auto startTime = utils::timeutils::getTimeMillis();
-    std::shared_ptr<io::BaseStream> content_stream = content_session_->write(*claim);
+    std::shared_ptr<io::BaseStream> content_stream = content_session_->write(claim);
 
     if (nullptr == content_stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Could not obtain claim for " + claim->getContentFullPath());
@@ -402,7 +402,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
     auto startTime = utils::timeutils::getTimeMillis();
     std::ifstream input;
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
-    std::shared_ptr<io::BaseStream> stream = content_session_->write(*claim);
+    std::shared_ptr<io::BaseStream> stream = content_session_->write(claim);
 
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open new flowfile content for write");
@@ -520,7 +520,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
           claim = content_session_->create();
         }
         if (stream == nullptr) {
-          stream = content_session_->write(*claim);
+          stream = content_session_->write(claim);
         }
         if (stream == nullptr) {
           logger_->log_error("Stream is null");

@@ -251,6 +251,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   LogTestController::getInstance().setTrace<minifi::FlowFileRecord>();
   LogTestController::getInstance().setTrace<core::repository::FlowFileRepository>();
   LogTestController::getInstance().setTrace<core::repository::VolatileRepository<minifi::ResourceClaim::Path>>();
+  LogTestController::getInstance().setTrace<core::repository::DatabaseContentRepository>();
 
   char format[] = "/var/tmp/test.XXXXXX";
   auto dir = testController.createTempDirectory(format);
@@ -303,6 +304,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
       // the processor added new content to the flowFile
       REQUIRE(claim != newClaim);
       // only this instance behind this shared_ptr keeps the resource alive
+      REQUIRE(claim.use_count() == 1);
       REQUIRE(claim->getFlowFileRecordOwnedCount() == 1);
       // one from the FlowFile and one from the persisted instance
       REQUIRE(newClaim->getFlowFileRecordOwnedCount() == 2);

@@ -33,31 +33,18 @@ std::string ContentRepository::getStoragePath() const {
   return directory_;
 }
 
+void ContentRepository::reset() {
+  std::lock_guard<std::mutex> lock(count_map_mutex_);
+  count_map_.clear();
+}
+
 std::shared_ptr<ContentSession> ContentRepository::createSession() {
   return std::make_shared<ContentSession>(sharedFromThis());
 }
 
-bool ContentRepository::removeIfOrphaned(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+uint32_t ContentRepository::getStreamCount(const minifi::ResourceClaim &streamId) {
   std::lock_guard<std::mutex> lock(count_map_mutex_);
-  const std::string str = streamId->getContentFullPath();
-  auto count = count_map_.find(str);
-  if (count != count_map_.end()) {
-    if (count_map_[str] == 0) {
-      remove(streamId);
-      count_map_.erase(str);
-      return true;
-    } else {
-      return false;
-    }
-  } else {
-    remove(streamId);
-    return true;
-  }
-}
-
-uint32_t ContentRepository::getStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
-  std::lock_guard<std::mutex> lock(count_map_mutex_);
-  auto cnt = count_map_.find(streamId->getContentFullPath());
+  auto cnt = count_map_.find(streamId.getContentFullPath());
   if (cnt != count_map_.end()) {
     return cnt->second;
   } else {
@@ -65,9 +52,9 @@ uint32_t ContentRepository::getStreamCount(const std::shared_ptr<minifi::Resourc
   }
 }
 
-void ContentRepository::incrementStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+void ContentRepository::incrementStreamCount(const minifi::ResourceClaim &streamId) {
   std::lock_guard<std::mutex> lock(count_map_mutex_);
-  const std::string str = streamId->getContentFullPath();
+  const std::string str = streamId.getContentFullPath();
   auto count = count_map_.find(str);
   if (count != count_map_.end()) {
     count_map_[str] = count->second + 1;
@@ -76,14 +63,17 @@ void ContentRepository::incrementStreamCount(const std::shared_ptr<minifi::Resou
   }
 }
 
-void ContentRepository::decrementStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+ContentRepository::StreamState ContentRepository::decrementStreamCount(const minifi::ResourceClaim &streamId) {
   std::lock_guard<std::mutex> lock(count_map_mutex_);
-  const std::string str = streamId->getContentFullPath();
+  const std::string str = streamId.getContentFullPath();
   auto count = count_map_.find(str);
-  if (count != count_map_.end() && count->second > 0) {
+  if (count != count_map_.end() && count->second > 1) {
     count_map_[str] = count->second - 1;
+    return StreamState::Alive;
   } else {
     count_map_.erase(str);
+    remove(streamId);
+    return StreamState::Deleted;
   }
 }
 

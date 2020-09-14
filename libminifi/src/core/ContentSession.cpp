@@ -62,12 +62,12 @@ std::shared_ptr<io::BaseStream> ContentSession::read(const std::shared_ptr<Resou
   if (managedResources_.find(resourceId) != managedResources_.end() || extendedResources_.find(resourceId) != extendedResources_.end()) {
     throw Exception(REPOSITORY_EXCEPTION, "Can only read non-modified resource");
   }
-  return repository_->read(resourceId);
+  return repository_->read(*resourceId);
 }
 
 void ContentSession::commit() {
   for (const auto& resource : managedResources_) {
-    auto outStream = repository_->write(resource.first);
+    auto outStream = repository_->write(*resource.first);
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
     }
@@ -77,7 +77,7 @@ void ContentSession::commit() {
     }
   }
   for (const auto& resource : extendedResources_) {
-    auto outStream = repository_->write(resource.first, true);
+    auto outStream = repository_->write(*resource.first, true);
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
     }
