@@ -93,11 +93,11 @@ std::string globToRegex(std::string glob) {
   return glob;
 }
 
-space_info space(const char* const path, std::error_code& ec) noexcept {
+space_info space(const path p, std::error_code& ec) noexcept {
   constexpr auto kErrVal = gsl::narrow_cast<std::uintmax_t>(-1);
 #if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
   struct statvfs svfs{};
-  const int statvfs_retval = statvfs(path, &svfs);
+  const int statvfs_retval = statvfs(p, &svfs);
   if (statvfs_retval == -1) {
     const std::error_code err_code{errno, std::generic_category()};
     ec = err_code;
@@ -129,11 +129,11 @@ space_info space(const char* const path, std::error_code& ec) noexcept {
   return space_info{capacity, free, available};
 }
 
-space_info space(const char* const path) {
+space_info space(const path p) {
   std::error_code ec;
-  const auto result = space(path, ec);  // const here doesn't break NRVO
+  const auto result = space(p, ec);  // const here doesn't break NRVO
   if (ec) {
-    throw filesystem_error{ec.message(), path, "", ec};
+    throw filesystem_error{ec.message(), p, "", ec};
   }
   return result;
 }

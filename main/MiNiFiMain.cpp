@@ -290,20 +290,26 @@ int main(int argc, char **argv) {
   std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
     new minifi::FlowController(prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo));
 
-  std::unique_ptr<minifi::DiskSpaceWatchdog> disk_space_watchdog;
+  std::unique_ptr<utils::CallBackTimer> disk_space_watchdog;
   const bool disk_space_watchdog_enable = (configure->get(minifi::Configure::minifi_disk_space_watchdog_enable) | utils::map([](const std::string& v){ return v == "true"; })).value_or(true);
   if (disk_space_watchdog_enable) {
     try {
-      std::vector<std::string> repo_paths;
-      repo_paths.reserve(3);
-      // REPOSITORY_DIRECTORY is a dummy path used by noop repositories
-      const auto path_valid = [](const std::string& p) { return !p.empty() && p != REPOSITORY_DIRECTORY; };
-      std::string prov_repo_path = prov_repo->getDirectory();
-      std::string flow_repo_path = flow_repo->getDirectory();
-      std::string content_repo_storage_path = content_repo->getStoragePath();
-      if (!prov_repo->isNoop() && path_valid(prov_repo_path)) { repo_paths.push_back(std::move(prov_repo_path)); }
-      if (!flow_repo->isNoop() && path_valid(flow_repo_path)) { repo_paths.push_back(std::move(flow_repo_path)); }
-      if (path_valid(content_repo_storage_path)) { repo_paths.push_back(std::move(content_repo_storage_path)); }
+      const auto repo_paths = [&] {
+        std::vector<std::string> repo_paths;
+        repo_paths.reserve(3)
+        // REPOSITORY_DIRECTORY is a dummy path used by noop repositories
+        const auto path_valid = [](const std::string& p) { return !p.empty() && p != REPOSITORY_DIRECTORY; };
+        std::string prov_repo_path = prov_repo->getDirectory();
+        std::string flow_repo_path = flow_repo->getDirectory();
+        std::string content_repo_storage_path = content_repo->getStoragePath();
+        if (!prov_repo->isNoop() && path_valid(prov_repo_path)) { repo_paths.push_back(std::move(prov_repo_path)); }
+        if (!flow_repo->isNoop() && path_valid(flow_repo_path)) { repo_paths.push_back(std::move(flow_repo_path)); }
+        if (path_valid(content_repo_storage_path)) { repo_paths.push_back(std::move(content_repo_storage_path)); }
+        return repo_paths;
+      }();
+      const auto repo_paths_span = gsl::make_span(repo_paths.data(), repo_paths.size());
+      const auto available_spaces = minifi::disk_space_watchdog::check_available_space(repo_paths_span, logger.get());
+      if(!minifi::disk_space_watchdog::check_available_space())
       disk_space_watchdog = utils::make_unique<minifi::DiskSpaceWatchdog>(*controller, *configure, std::move(repo_paths));
     } catch (const std::runtime_error& error) {
       logger->log_error(error.what());

@@ -32,6 +32,7 @@ namespace utils {
 namespace file {
 
 namespace PathUtils = ::org::apache::nifi::minifi::utils::file;
+using path = const char*;
 
 /**
  * Extracts the filename and path performing some validation of the path and output to ensure
@@ -80,7 +81,7 @@ class filesystem_error : public std::system_error {
   filesystem_error(const std::string& what_arg, const std::error_code ec)
       :std::system_error{ec, what_arg}
   {}
-  filesystem_error(const std::string& what_arg, const char* const path1, const char* const path2, const std::error_code ec)
+  filesystem_error(const std::string& what_arg, const path path1, const path path2, const std::error_code ec)
       :std::system_error{ec, what_arg}, paths_involved_{std::make_shared<const std::pair<std::string, std::string>>(path1, path2)}
   {}
 
@@ -88,8 +89,8 @@ class filesystem_error : public std::system_error {
   filesystem_error(const filesystem_error& o) = default;
   filesystem_error& operator=(const filesystem_error&) = default;
 
-  const char* path1() const noexcept { return paths_involved_->first.c_str(); }
-  const char* path2() const noexcept { return paths_involved_->second.c_str(); }
+  path path1() const noexcept { return paths_involved_->first.c_str(); }
+  path path2() const noexcept { return paths_involved_->second.c_str(); }
 
  private:
   std::shared_ptr<const std::pair<std::string, std::string>> paths_involved_;
@@ -98,8 +99,8 @@ class filesystem_error : public std::system_error {
 /**
  * Provides filesystem space information for the specified directory
  */
-space_info space(const char* path);
-space_info space(const char* path, std::error_code&) noexcept;
+space_info space(path);
+space_info space(path, std::error_code&) noexcept;
 
 }  // namespace file
 }  // namespace utils
