@@ -186,7 +186,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
             stats = container.stats(stream=False)
             logging.info('Container stats:\n%s', stats)
 
-    def check_output(self, timeout=5, subdir=''):
+    def check_output(self, timeout=10, subdir=''):
         """
         Wait for flow output, validate it, and log minifi output.
         """
