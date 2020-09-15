@@ -102,8 +102,8 @@ std::string EncryptConfig::base64DecodeAndValidateKey(const std::string& key) co
     return base64_decoded_key;
   } else {
     std::stringstream error;
-    error << "The encryption key\n    " << ENCRYPTION_KEY_PROPERTY_NAME << '=' << key << '\n'
-        << "in the bootstrap file\n    " << bootstrapFilePath() << '\n'
+    error << "The encryption key " << ENCRYPTION_KEY_PROPERTY_NAME << " in the bootstrap file\n"
+        << "    " << bootstrapFilePath() << '\n'
         << "is invalid; delete it to generate a new key.";
     throw std::runtime_error{error.str()};
   }

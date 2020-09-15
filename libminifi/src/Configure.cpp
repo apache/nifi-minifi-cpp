@@ -92,7 +92,7 @@ void Configure::decryptSensitiveProperties(const Decryptor& decryptor) {
       try {
         decrypted_property_value = decryptor.decrypt(utils::StringUtils::from_base64(property_value), property_key);
       } catch (const std::exception& ex) {
-        logger_->log_error("Could not decrypt property %s=%s; error: %s", property_key, property_value, ex.what());
+        logger_->log_error("Could not decrypt property %s; error: %s", property_key, ex.what());
         continue;
       }
       set(property_key, decrypted_property_value);
