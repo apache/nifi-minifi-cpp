@@ -42,8 +42,6 @@ class Connectable;
 class FlowFile : public CoreComponent, public ReferenceContainer {
  public:
   FlowFile();
-  static std::atomic<std::size_t> flowFileCount;
-  ~FlowFile() override;
   FlowFile& operator=(const FlowFile& other);
 
   using AttributeMap = utils::FlatMap<std::string, std::string>;

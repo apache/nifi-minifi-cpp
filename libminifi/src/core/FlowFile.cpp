@@ -35,8 +35,6 @@ std::shared_ptr<utils::IdGenerator> FlowFile::id_generator_ = utils::IdGenerator
 std::shared_ptr<utils::NonRepeatingStringGenerator> FlowFile::numeric_id_generator_ = std::make_shared<utils::NonRepeatingStringGenerator>();
 std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
 
-std::atomic<std::size_t> FlowFile::flowFileCount{0};
-
 FlowFile::FlowFile()
     : CoreComponent("FlowFile"),
       size_(0),
@@ -52,12 +50,6 @@ FlowFile::FlowFile()
   entry_date_ = utils::timeutils::getTimeMillis();
   event_time_ = entry_date_;
   lineage_start_date_ = entry_date_;
-  ++flowFileCount;
-}
-
-FlowFile::~FlowFile() {
-  logger_->log_debug("Destroying flow file record,  UUID %s", getUUIDStr());
-  --flowFileCount;
 }
 
 FlowFile& FlowFile::operator=(const FlowFile& other) {

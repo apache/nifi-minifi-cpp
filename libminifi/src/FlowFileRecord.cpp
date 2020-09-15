@@ -41,6 +41,8 @@ std::shared_ptr<logging::Logger> FlowFileRecord::logger_ = logging::LoggerFactor
 std::atomic<uint64_t> FlowFileRecord::local_flow_seq_number_(0);
 
 FlowFileRecord::FlowFileRecord() {
+  // TODO(adebreceni):
+  //  we should revisit if we need these in a follow-up ticket
   id_ = local_flow_seq_number_++;
   addAttribute(core::SpecialFlowAttribute::FILENAME, std::to_string(utils::timeutils::getTimeNano()));
 }

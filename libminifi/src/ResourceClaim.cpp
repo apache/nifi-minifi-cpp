@@ -40,8 +40,6 @@ void setDefaultDirectory(std::string path) {
   default_directory_path = path;
 }
 
-std::atomic<std::size_t> ResourceClaim::count{0};
-
 ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
     : _contentFullPath([&] {
         auto contentDirectory = claim_manager->getStoragePath();
@@ -55,7 +53,6 @@ ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>>
       logger_(logging::LoggerFactory<ResourceClaim>::getLogger()) {
   if (claim_manager_) increaseFlowFileRecordOwnedCount();
   logger_->log_debug("Resource Claim created %s", _contentFullPath);
-  ++count;
 }
 
 ResourceClaim::ResourceClaim(const Path& path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
