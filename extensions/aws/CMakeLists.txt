@@ -20,7 +20,7 @@
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(controllerservices)
 
-file(GLOB SOURCES "*.cpp" "s3/*.cpp" "controllerservices/*.cpp")
+file(GLOB SOURCES "*.cpp" "s3/*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
 
 add_library(minifi-aws STATIC ${SOURCES})
 
