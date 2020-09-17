@@ -18,6 +18,10 @@
  * limitations under the License.
  */
 #include "PutS3Object.h"
+#include "AWSCredentialsService.h"
+#include "properties/Properties.h"
+
+#include <string>
 
 namespace org {
 namespace apache {
@@ -64,6 +68,10 @@ const core::Property PutS3Object::CredentialsFile(
   core::PropertyBuilder::createProperty("Credentials File")
     ->withDescription("Path to a file containing AWS access key and secret key in properties file format.")
     ->build());
+const core::Property PutS3Object::AWSCredentialsProviderService(
+  core::PropertyBuilder::createProperty("AWS Credentials Provider service")
+    ->withDescription("The Controller Service that is used to obtain aws credentials provider")
+    ->build());
 const core::Property PutS3Object::StorageClass(
   core::PropertyBuilder::createProperty("Storage Class")
     ->isRequired(true)
@@ -95,17 +103,17 @@ const core::Property PutS3Object::EndpointOverrideURL(
                       "with other S3-compatible endpoints.")
     ->supportsExpressionLanguage(true)
     ->build());
-const core::Property PutS3Object::ProxyHost(
-  core::PropertyBuilder::createProperty("Proxy Host")
-      ->withDescription("Proxy host name or IP")
-      ->build());
-const core::Property PutS3Object::ProxyHostPort(
-    core::PropertyBuilder::createProperty("Proxy Host Port")
-      ->withDescription("Proxy host port")
-      ->build());
+// const core::Property PutS3Object::ProxyHost(
+//   core::PropertyBuilder::createProperty("Proxy Host")
+//       ->withDescription("Proxy host name or IP")
+//       ->build());
+// const core::Property PutS3Object::ProxyHostPort(
+//     core::PropertyBuilder::createProperty("Proxy Host Port")
+//       ->withDescription("Proxy host port")
+//       ->build());
 
-const core::Relationship PutS3Object::Success("success", "Any FlowFile that is successfully uploaded to AWS S3 will be routed to this Relationship");
-const core::Relationship PutS3Object::Failure("failure", "Any FlowFile that cannot be uploaded to AWS S3 will be routed to this Relationship");
+const core::Relationship PutS3Object::Success("success", "FlowFiles are routed to success relationship");
+const core::Relationship PutS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
 
 void PutS3Object::initialize() {
   // Set the supported properties
@@ -116,15 +124,15 @@ void PutS3Object::initialize() {
   properties.insert(AccessKey);
   properties.insert(SecretKey);
   properties.insert(CredentialsFile);
-  // properties.insert(AWSCredentialsProviderService);
+  properties.insert(AWSCredentialsProviderService);
   properties.insert(StorageClass);
   properties.insert(Region);
   properties.insert(CommunicationsTimeout);
   // properties.insert(ExpirationTimeRule);
   // properties.insert(SSLContextService);
   properties.insert(EndpointOverrideURL);
-  properties.insert(ProxyHost);
-  properties.insert(ProxyHostPort);
+  // properties.insert(ProxyHost);
+  // properties.insert(ProxyHostPort);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -133,12 +141,80 @@ void PutS3Object::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) {
+  std::string service_name;
+  if (context->getProperty(AWSCredentialsProviderService.getName(), service_name) && !IsNullOrEmpty(service_name)) {
+    std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
+    if (nullptr != service) {
+      auto aws_credentials_service = std::static_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(service);
+      return utils::make_optional<Aws::Auth::AWSCredentials>(aws_credentials_service->getAWSCredentials());
+    }
+  }
+  return utils::nullopt;
+}
 
+utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromProperties(const std::shared_ptr<core::ProcessContext> &context) {
+  std::string access_key;
+  context->getProperty(AccessKey.getName(), access_key);
+  std::string secret_key;
+  context->getProperty(SecretKey.getName(), secret_key);
+  if (!IsNullOrEmpty(access_key) && !IsNullOrEmpty(secret_key)) {
+    Aws::Auth::AWSCredentials creds(access_key, secret_key);
+    return utils::make_optional<Aws::Auth::AWSCredentials>(creds);
+  }
+  return utils::nullopt;
+}
+
+utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context) {
+  std::string credential_file;
+  if (context->getProperty(CredentialsFile.getName(), credential_file) && !IsNullOrEmpty(credential_file)) {
+    auto properties = std::make_shared<minifi::Properties>();
+    properties->loadConfigureFile(credential_file.c_str());
+    std::string access_key;
+    std::string secret_key;
+    if (properties->get("accessKey", access_key) && !IsNullOrEmpty(access_key) && properties->get("secretKey", secret_key) && !IsNullOrEmpty(secret_key)) {
+      Aws::Auth::AWSCredentials creds(access_key, secret_key);
+      return utils::make_optional<Aws::Auth::AWSCredentials>(creds);
+    }
+  }
+  return utils::nullopt;
+}
+
+Aws::Auth::AWSCredentials PutS3Object::getAWSCredentials(const std::shared_ptr<core::ProcessContext> &context) {
+  auto service_cred = getAWSCredentialsFromControllerService(context);
+  if (service_cred) {
+    logger_->log_info("AWS Credentials successfully set from controller service");
+    return service_cred.value();
+  }
+
+  auto prop_cred = getAWSCredentialsFromProperties(context);
+  if (prop_cred) {
+    logger_->log_info("AWS Credentials successfully set from properties");
+    return prop_cred.value();
+  }
+
+  auto file_cred = getAWSCredentialsFromFile(context);
+  if (file_cred) {
+    logger_->log_info("AWS Credentials successfully set from file");
+    return file_cred.value();
+  }
+
+  throw Exception(PROCESS_SCHEDULE_EXCEPTION, "No AWS credentials are set");
 }
 
 void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+  context->getProperty(ObjectKey.getName(), object_key_);
+  if (!context->getProperty(Bucket.getName(), bucket_)) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");
+  }
+  context->getProperty(ContentType.getName(), content_type_);
+  s3_wrapper_->setCredentials(getAWSCredentials(context));
+}
 
+void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  std::shared_ptr<core::FlowFile> flow_file = session->get();
+  session->putAttribute(flow_file, "s3.bucket", "asd");
+  session->transfer(flow_file, Success);
 }
 
 void PutS3Object::notifyStop() {

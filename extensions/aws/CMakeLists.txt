@@ -18,7 +18,7 @@
 #
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-include_directories(controllerservices)
+include_directories(controllerservices processors s3)
 
 file(GLOB SOURCES "*.cpp" "s3/*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
 

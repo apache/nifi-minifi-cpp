@@ -17,8 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __S3_H__
-#define __S3_H__
+#pragma once
+
+#include "AbstractS3Wrapper.h"
 
 #include <aws/core/Aws.h>
 #include <aws/s3/S3Client.h>
@@ -27,24 +28,26 @@
 #include <aws/core/utils/memory/stl/AWSString.h>
 #include <aws/core/utils/logging/DefaultLogSystem.h>
 #include <aws/core/utils/logging/AWSLogging.h>
+#include <aws/core/auth/AWSCredentialsProvider.h>
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace aws {
 namespace processors {
-
 
 class S3Initializer{
  public:
   S3Initializer(){
     Aws::InitAPI(options);
-    Aws::Utils::Logging::InitializeAWSLogging(
-        Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(
-            "RunUnitTests", Aws::Utils::Logging::LogLevel::Trace, "aws_sdk_"));
+    // Aws::Utils::Logging::InitializeAWSLogging(
+    //     Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(
+    //         "RunUnitTests", Aws::Utils::Logging::LogLevel::Trace, "aws_sdk_"));
   }
 
   ~S3Initializer(){
+    // Aws::Utils::Logging::ShutdownAWSLogging();
     Aws::ShutdownAPI(options);
   }
 
@@ -52,20 +55,28 @@ class S3Initializer{
   Aws::SDKOptions options;
 };
 
-class S3Singleton{
- public:
-  static S3Initializer *get(){
-    static S3Initializer init;
-    return &init;
+class S3Wrapper : public AbstractS3Wrapper {
+public:
+  S3Wrapper() {
   }
- private:
-  S3Singleton() = default;
+
+  void setCredentials(const Aws::Auth::AWSCredentials& cred) {
+    credentials_ = cred;
+  }
+
+  utils::optional<PutObjectResult> putObject(const Aws::String& bucketName,
+    const Aws::String& objectName,
+    const Aws::String& region) {
+      return utils::nullopt;
+  }
+
+private:
+  Aws::Auth::AWSCredentials credentials_;
 };
 
 } /* namespace processors */
+} /* namespace aws */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

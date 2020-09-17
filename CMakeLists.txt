@@ -495,7 +495,7 @@ option(ENABLE_AWS "Enables AWS support." OFF)
 if (ENABLE_AWS)
 	include(BundledAwsSdkCpp)
 	use_bundled_libaws(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(AWS-EXTENSIONS "AWS EXTENSIONS" "This enables AWS support" "extensions/aws")
+	createExtension(AWS-EXTENSIONS "AWS EXTENSIONS" "This enables AWS support" "extensions/aws" "${TEST_DIR}/aws-tests")
 endif()
 
 ## OpenCV Extesions

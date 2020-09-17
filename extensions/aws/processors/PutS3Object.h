@@ -20,8 +20,13 @@
 
 #pragma once
 
+#include "S3Wrapper.h"
 #include "core/Property.h"
 #include "core/Processor.h"
+#include "core/logging/Logger.h"
+#include "utils/OptionalUtils.h"
+
+#include <aws/core/auth/AWSCredentialsProvider.h>
 
 namespace org {
 namespace apache {
@@ -72,29 +77,46 @@ public:
   static const core::Property AccessKey;
   static const core::Property SecretKey;
   static const core::Property CredentialsFile;
+  static const core::Property AWSCredentialsProviderService;
   static const core::Property StorageClass;
   static const core::Property Region;
   static const core::Property CommunicationsTimeout;
   static const core::Property EndpointOverrideURL;
-  static const core::Property ProxyHost;
-  static const core::Property ProxyHostPort;
+  // static const core::Property ProxyHost;
+  // static const core::Property ProxyHostPort;
 
   // Supported Relationships
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
   explicit PutS3Object(std::string name, utils::Identifier uuid = utils::Identifier())
-      : core::Processor(std::move(name), uuid) {
+      : PutS3Object(name, uuid, utils::make_unique<S3Wrapper>()) {
+  }
+
+  explicit PutS3Object(std::string name, utils::Identifier uuid, std::unique_ptr<aws::processors::AbstractS3Wrapper> s3_wrapper)
+      : core::Processor(std::move(name), uuid)
+      , s3_wrapper_(std::move(s3_wrapper)) {
   }
 
   ~PutS3Object() override = default;
 
   bool supportsDynamicProperties() override { return true; }
   void initialize() override;
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void notifyStop() override;
 
+private:
+  utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context);
+  utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromProperties(const std::shared_ptr<core::ProcessContext> &context);
+  utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context);
+  Aws::Auth::AWSCredentials getAWSCredentials(const std::shared_ptr<core::ProcessContext> &context);
+
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutS3Object>::getLogger()};
+  std::string object_key_;
+  std::string bucket_;
+  std::string content_type_ = "application/octet-stream";
+  std::unique_ptr<aws::processors::AbstractS3Wrapper> s3_wrapper_;
 };
 
 REGISTER_RESOURCE(PutS3Object, "This Processor puts FlowFiles to an Amazon S3 Bucket.");
