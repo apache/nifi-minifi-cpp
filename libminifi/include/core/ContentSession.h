@@ -53,8 +53,8 @@ class ContentSession {
   virtual ~ContentSession() = default;
 
  protected:
-  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BaseStream>> managedResources_;
-  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BaseStream>> extendedResources_;
+  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> managedResources_;
+  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> extendedResources_;
   std::shared_ptr<ContentRepository> repository_;
 };
 

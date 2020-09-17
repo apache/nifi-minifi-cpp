@@ -33,7 +33,7 @@ ContentSession::ContentSession(std::shared_ptr<ContentRepository> repository) : 
 
 std::shared_ptr<ResourceClaim> ContentSession::create() {
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(repository_);
-  managedResources_[claim] = std::make_shared<io::BaseStream>();
+  managedResources_[claim] = std::make_shared<io::BufferStream>();
   return claim;
 }
 
@@ -45,12 +45,12 @@ std::shared_ptr<io::BaseStream> ContentSession::write(const std::shared_ptr<Reso
     }
     auto& extension = extendedResources_[resourceId];
     if (!extension) {
-      extension = std::make_shared<io::BaseStream>();
+      extension = std::make_shared<io::BufferStream>();
     }
     return extension;
   }
   if (mode == WriteMode::OVERWRITE) {
-    it->second = std::make_shared<io::BaseStream>();
+    it->second = std::make_shared<io::BufferStream>();
   }
   return it->second;
 }
@@ -71,7 +71,7 @@ void ContentSession::commit() {
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
     }
-    const auto size = resource.second->getSize();
+    const auto size = resource.second->size();
     if (outStream->write(const_cast<uint8_t*>(resource.second->getBuffer()), size) != size) {
       throw Exception(REPOSITORY_EXCEPTION, "Failed to write new resource: " + resource.first->getContentFullPath());
     }
@@ -81,7 +81,7 @@ void ContentSession::commit() {
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
     }
-    const auto size = resource.second->getSize();
+    const auto size = resource.second->size();
     if (outStream->write(const_cast<uint8_t*>(resource.second->getBuffer()), size) != size) {
       throw Exception(REPOSITORY_EXCEPTION, "Failed to append to resource: " + resource.first->getContentFullPath());
     }
