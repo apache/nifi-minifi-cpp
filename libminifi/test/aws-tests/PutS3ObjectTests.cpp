@@ -22,6 +22,7 @@
 #include "processors/GenerateFlowFile.h"
 #include "processors/LogAttribute.h"
 #include "s3/AbstractS3Wrapper.h"
+#include "utils/file/FileUtils.h"
 
 class MockS3Wrapper : public minifi::aws::processors::AbstractS3Wrapper {
 public:
@@ -82,6 +83,33 @@ protected:
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test basic property credential setting", "[awsCredentials]") {
   plan->setProperty(put_s3_object, "Access Key", "key");
   plan->setProperty(put_s3_object, "Secret Key", "secret");
+  test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSAccessKeyId() == "key");
+  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSSecretKey() == "secret");
+  REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:asd"));
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials file setting", "[awsCredentials]") {
+  char in_dir[] = "/tmp/gt.XXXXXX";
+  auto temp_path = test_controller.createTempDirectory(in_dir);
+  REQUIRE(!temp_path.empty());
+  std::string aws_credentials_file(temp_path + utils::file::FileUtils::get_separator() + "aws_creds.conf");
+  std::ofstream aws_credentials_file_stream(aws_credentials_file);
+  aws_credentials_file_stream << "accessKey=key" << std::endl;
+  aws_credentials_file_stream << "secretKey=secret" << std::endl;
+  aws_credentials_file_stream.close();
+  plan->setProperty(put_s3_object, "Credentials File", aws_credentials_file);
+  test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSAccessKeyId() == "key");
+  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSSecretKey() == "secret");
+  REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:asd"));
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials setting from AWS Credential service", "[awsCredentials]") {
+  auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
+  plan->setProperty(aws_cred_service, "Access Key", "key");
+  plan->setProperty(aws_cred_service, "Secret Key", "secret");
+  plan->setProperty(put_s3_object, "AWS Credentials Provider service", "AWSCredentialsService");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSAccessKeyId() == "key");
   REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSSecretKey() == "secret");

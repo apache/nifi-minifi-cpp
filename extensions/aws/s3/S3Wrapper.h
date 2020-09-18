@@ -60,14 +60,14 @@ public:
   S3Wrapper() {
   }
 
-  void setCredentials(const Aws::Auth::AWSCredentials& cred) {
+  void setCredentials(const Aws::Auth::AWSCredentials& cred) override {
     credentials_ = cred;
   }
 
   utils::optional<PutObjectResult> putObject(const Aws::String& bucketName,
     const Aws::String& objectName,
     const Aws::String& region) {
-      return utils::nullopt;
+      return PutObjectResult{};
   }
 
 private:
