@@ -19,7 +19,7 @@
 #include "core/Processor.h"
 #include "../TestBase.h"
 #include "processors/PutS3Object.h"
-#include "processors/GenerateFlowFile.h"
+#include "processors/GetFile.h"
 #include "processors/LogAttribute.h"
 #include "s3/AbstractS3Wrapper.h"
 #include "utils/file/FileUtils.h"
@@ -45,7 +45,7 @@ public:
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setTrace<processors::GenerateFlowFile>();
+    LogTestController::getInstance().setTrace<processors::GetFile>();
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setTrace<org::apache::nifi::minifi::aws::processors::PutS3Object>();
 
@@ -53,9 +53,16 @@ public:
     plan = test_controller.createPlan();
     mock_s3_wrapper_raw = new MockS3Wrapper();
     std::unique_ptr<minifi::aws::processors::AbstractS3Wrapper> mock_s3_wrapper(mock_s3_wrapper_raw);
-    // mock_s3_wrapper_raw = static_cast<MockS3Wrapper*>(mock_s3_wrapper.get());
     put_s3_object = std::make_shared<org::apache::nifi::minifi::aws::processors::PutS3Object>("PutS3Object", utils::Identifier(), std::move(mock_s3_wrapper));
-    plan->addProcessor("GenerateFlowFile", "GenerateFlowFile");
+
+    char input_dir_mask[] = "/tmp/gt.XXXXXX";
+    auto input_dir = test_controller.createTempDirectory(input_dir_mask);
+    std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + "input_data.log");
+    input_file_stream << "input_data" << std::endl;
+    input_file_stream.close();
+    auto get_file = plan->addProcessor("GetFile", "GetFile");
+    plan->setProperty(get_file, processors::GetFile::Directory.getName(), input_dir);
+    plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "false");
     plan->addProcessor(
       put_s3_object,
       "PutS3Object",
@@ -67,6 +74,20 @@ public:
       core::Relationship("success", "d"),
       true);
     plan->setProperty(put_s3_object, "Bucket", "testBucket");
+  }
+
+  void checkDefaultAttributes() {
+    REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
+    REQUIRE(LogTestController::getInstance().contains("key:s3.key value:input_data.log"));
+    REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/octet-stream"));
+  }
+
+  std::string createTempFile(const std::string& filename) {
+    char temp_dir[] = "/tmp/gt.XXXXXX";
+    auto temp_path = test_controller.createTempDirectory(temp_dir);
+    REQUIRE(!temp_path.empty());
+    std::string temp_file(temp_path + utils::file::FileUtils::get_separator() + filename);
+    return temp_file;
   }
 
   virtual ~PutS3ObjectTestsFixture() {
@@ -86,7 +107,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test basic property credential settin
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSAccessKeyId() == "key");
   REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSSecretKey() == "secret");
-  REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:asd"));
+  checkDefaultAttributes();
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials file setting", "[awsCredentials]") {
@@ -95,23 +116,23 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials file setting", "[aws
   REQUIRE(!temp_path.empty());
   std::string aws_credentials_file(temp_path + utils::file::FileUtils::get_separator() + "aws_creds.conf");
   std::ofstream aws_credentials_file_stream(aws_credentials_file);
-  aws_credentials_file_stream << "accessKey=key" << std::endl;
-  aws_credentials_file_stream << "secretKey=secret" << std::endl;
+  aws_credentials_file_stream << "accessKey=key1" << std::endl;
+  aws_credentials_file_stream << "secretKey=secret1" << std::endl;
   aws_credentials_file_stream.close();
   plan->setProperty(put_s3_object, "Credentials File", aws_credentials_file);
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSAccessKeyId() == "key");
-  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSSecretKey() == "secret");
-  REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:asd"));
+  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSAccessKeyId() == "key1");
+  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSSecretKey() == "secret1");
+  checkDefaultAttributes();
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials setting from AWS Credential service", "[awsCredentials]") {
   auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
-  plan->setProperty(aws_cred_service, "Access Key", "key");
-  plan->setProperty(aws_cred_service, "Secret Key", "secret");
+  plan->setProperty(aws_cred_service, "Access Key", "key2");
+  plan->setProperty(aws_cred_service, "Secret Key", "secret2");
   plan->setProperty(put_s3_object, "AWS Credentials Provider service", "AWSCredentialsService");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSAccessKeyId() == "key");
-  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSSecretKey() == "secret");
-  REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:asd"));
+  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSAccessKeyId() == "key2");
+  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSSecretKey() == "secret2");
+  checkDefaultAttributes();
 }

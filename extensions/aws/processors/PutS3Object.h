@@ -82,8 +82,6 @@ public:
   static const core::Property Region;
   static const core::Property CommunicationsTimeout;
   static const core::Property EndpointOverrideURL;
-  // static const core::Property ProxyHost;
-  // static const core::Property ProxyHostPort;
 
   // Supported Relationships
   static const core::Relationship Failure;
@@ -117,6 +115,10 @@ private:
   std::string bucket_;
   std::string content_type_ = "application/octet-stream";
   std::unique_ptr<aws::processors::AbstractS3Wrapper> s3_wrapper_;
+  std::string storage_class_;
+  std::string region_;
+  std::chrono::milliseconds communications_timeout_{30000};
+  std::string endpoint_override_url_;
 };
 
 REGISTER_RESOURCE(PutS3Object, "This Processor puts FlowFiles to an Amazon S3 Bucket.");

@@ -47,28 +47,6 @@ public:
     const Aws::String& region) = 0;
 
   virtual ~AbstractS3Wrapper() = default;
-
-// s3.bucket	The S3 bucket where the Object was put in S3
-// s3.key	The S3 key within where the Object was put in S3
-// s3.contenttype	The S3 content type of the S3 Object that put in S3
-// s3.version	The version of the S3 Object that was put to S3
-// s3.etag	The ETag of the S3 Object
-// s3.uploadId	The uploadId used to upload the Object to S3 - multipart only
-// s3.expiration	A human-readable form of the expiration date of the S3 object, if one is set
-// s3.sseAlgorithm	The server side encryption algorithm of the object
-// s3.usermetadata
-
-// bucket - input
-// key - input objectName
-// content type - input from properties
-// metadata - dynamic properties input
-
-//PutObjectResult
-// version - GetVersionId
-// etag - GetETag
-// expiration - GetExpiration
-// ssealgorithm - GetSSECustomerAlgorithm
-
 };
 
 } /* namespace processors */
