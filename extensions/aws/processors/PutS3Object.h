@@ -27,6 +27,7 @@
 #include "utils/OptionalUtils.h"
 
 #include <aws/core/auth/AWSCredentialsProvider.h>
+#include <sstream>
 
 namespace org {
 namespace apache {
@@ -104,6 +105,51 @@ public:
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void notifyStop() override;
 
+  class ReadCallback : public InputStreamCallback {
+  public:
+    static const uint64_t MAX_SIZE = 5UL * 1024UL * 1024UL * 1024UL; // 5GB limit on AWS
+    static const uint64_t BUFFER_SIZE = 4096;
+
+    ReadCallback(uint64_t flow_size, minifi::aws::processors::PutS3ObjectOptions options, aws::processors::AbstractS3Wrapper* s3_wrapper)
+      : flow_size_(flow_size)
+      , options_(std::move(options))
+      , s3_wrapper_(s3_wrapper) {
+    }
+
+    ~ReadCallback() = default;
+
+    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+      if (flow_size_ > MAX_SIZE) {
+        return -1;
+      }
+      std::vector<uint8_t> buffer;
+      auto data_stream = std::make_shared<std::stringstream>();
+      buffer.reserve(BUFFER_SIZE);
+      read_size_ = 0;
+      while (read_size_ < flow_size_) {
+        auto next_read_size = flow_size_ - read_size_ < BUFFER_SIZE ? flow_size_ - read_size_ : BUFFER_SIZE;
+        int read_ret = stream->read(buffer.data(), next_read_size);
+        if (read_ret < 0) {
+          return -1;
+        }
+        if (read_ret > 0) {
+          data_stream->write((char*)buffer.data(), next_read_size);
+          read_size_ += read_ret;
+        } else {
+          break;
+        }
+      }
+      result_ = s3_wrapper_->putObject(options_, data_stream);
+      return read_size_;
+    }
+
+    uint64_t flow_size_;
+    minifi::aws::processors::PutS3ObjectOptions options_;
+    aws::processors::AbstractS3Wrapper* s3_wrapper_;
+    uint64_t read_size_ = 0;
+    utils::optional<minifi::aws::processors::PutObjectResult> result_ = utils::nullopt;
+  };
+
 private:
   utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context);
   utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromProperties(const std::shared_ptr<core::ProcessContext> &context);
@@ -116,9 +162,6 @@ private:
   std::string content_type_ = "application/octet-stream";
   std::unique_ptr<aws::processors::AbstractS3Wrapper> s3_wrapper_;
   std::string storage_class_;
-  std::string region_;
-  std::chrono::milliseconds communications_timeout_{30000};
-  std::string endpoint_override_url_;
 };
 
 REGISTER_RESOURCE(PutS3Object, "This Processor puts FlowFiles to an Amazon S3 Bucket.");

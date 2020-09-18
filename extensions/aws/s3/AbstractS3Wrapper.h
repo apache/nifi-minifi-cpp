@@ -39,13 +39,19 @@ struct PutObjectResult {
   Aws::String ssealgorithm;
 };
 
+struct PutS3ObjectOptions {
+  Aws::String bucket_name;
+  Aws::String object_key;
+  Aws::S3::Model::StorageClass storage_class;
+};
+
 class AbstractS3Wrapper {
 public:
   virtual void setCredentials(const Aws::Auth::AWSCredentials& cred) = 0;
-  virtual utils::optional<PutObjectResult> putObject(const Aws::String& bucketName,
-    const Aws::String& objectName,
-    const Aws::String& region) = 0;
-
+  virtual void setRegion(const Aws::String& region) = 0;
+  virtual void setTimeout(uint64_t timeout) = 0;
+  virtual void setEndpointOverrideUrl(const Aws::String& url) = 0;
+  virtual utils::optional<PutObjectResult> putObject(const PutS3ObjectOptions& options, std::shared_ptr<Aws::IOStream> data_stream) = 0;
   virtual ~AbstractS3Wrapper() = default;
 };
 

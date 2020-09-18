@@ -206,21 +206,24 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   }
   logger_->log_debug("PutS3Object: Storage Class [%s]", storage_class_);
 
-  if (!context->getProperty(Region.getName(), region_) || region_.empty()) {
+  std::string value;
+  if (!context->getProperty(Region.getName(), value) || value.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Region property missing or invalid");
   }
-  logger_->log_debug("PutS3Object: Region [%s]", region_);
+  s3_wrapper_->setRegion(value);
+  logger_->log_debug("PutS3Object: Region [%s]", value);
 
   uint64_t timeout_val;
-  std::string timeout_str;
-  context->getProperty(CommunicationsTimeout.getName(), timeout_str);
-  if (core::Property::getTimeMSFromString(timeout_str, timeout_val)) {
-    communications_timeout_ =  std::chrono::milliseconds(timeout_val);
+  context->getProperty(CommunicationsTimeout.getName(), value);
+  if (core::Property::getTimeMSFromString(value, timeout_val)) {
+    s3_wrapper_->setTimeout(timeout_val);
+    logger_->log_debug("PutS3Object: Communications Timeout [%d]", timeout_val);
   }
-  logger_->log_debug("PutS3Object: Communications Timeout [%d]", communications_timeout_.count());
 
-  context->getProperty(EndpointOverrideURL.getName(), endpoint_override_url_);
-  logger_->log_debug("PutS3Object: Endpoint Override URL [%d]", endpoint_override_url_);
+  if (context->getProperty(EndpointOverrideURL.getName(), value) && !value.empty()) {
+    s3_wrapper_->setEndpointOverrideUrl(value);
+    logger_->log_debug("PutS3Object: Endpoint Override URL [%d]", value);
+  }
 }
 
 void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -237,29 +240,25 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
   session->putAttribute(flow_file, "s3.key", object_key_);
   session->putAttribute(flow_file, "s3.contenttype", content_type_);
 
-// s3.bucket	The S3 bucket where the Object was put in S3
-// s3.key	The S3 key within where the Object was put in S3
-// s3.contenttype	The S3 content type of the S3 Object that put in S3
+  minifi::aws::processors::PutS3ObjectOptions options;
+  options.bucket_name = bucket_;
+  options.object_key = object_key_;
+  options.storage_class = minifi::aws::processors::storage_class_map.at(storage_class_);
 
-// s3.version	The version of the S3 Object that was put to S3
-// s3.etag	The ETag of the S3 Object
-// s3.uploadId	The uploadId used to upload the Object to S3 - multipart only
-// s3.expiration	A human-readable form of the expiration date of the S3 object, if one is set
-// s3.sseAlgorithm	The server side encryption algorithm of the object
-// s3.usermetadata
+  PutS3Object::ReadCallback callback(flow_file->getSize(), std::move(options), s3_wrapper_.get());
+  session->read(flow_file, &callback);
+  if (callback.result_ == utils::nullopt) {
+    logger_->log_error("Failed to send flow to S3 bucket %s", bucket_);
+    session->transfer(flow_file, Failure);
+  } else {
+    session->putAttribute(flow_file, "s3.version", callback.result_.value().version);
+    session->putAttribute(flow_file, "s3.etag", callback.result_.value().etag);
+    session->putAttribute(flow_file, "s3.expiration", callback.result_.value().expiration);
+    session->putAttribute(flow_file, "s3.ssealgorithm", callback.result_.value().ssealgorithm);
 
-// bucket - input
-// key - input objectName
-// content type - input from properties
-// metadata - dynamic properties input
-
-//PutObjectResult
-// version - GetVersionId
-// etag - GetETag
-// expiration - GetExpiration
-// ssealgorithm - GetSSECustomerAlgorithm
-
-  session->transfer(flow_file, Success);
+    logger_->log_debug("Sent S3 object %s to bucket %s", object_key_, bucket_);
+    session->transfer(flow_file, Success);
+  }
 }
 
 void PutS3Object::notifyStop() {

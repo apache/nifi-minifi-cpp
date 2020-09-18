@@ -29,11 +29,11 @@ public:
   void setCredentials(const Aws::Auth::AWSCredentials& cred) override {
     credentials = cred;
   }
-
-  utils::optional<minifi::aws::processors::PutObjectResult> putObject(const Aws::String& bucketName,
-      const Aws::String& objectName,
-      const Aws::String& region) override {
-    return utils::nullopt;
+  void setRegion(const Aws::String& region) override {}
+  void setTimeout(uint64_t timeout) override {}
+  void setEndpointOverrideUrl(const Aws::String& url) override {}
+  utils::optional<minifi::aws::processors::PutObjectResult> putObject(const minifi::aws::processors::PutS3ObjectOptions& options, std::shared_ptr<Aws::IOStream> data_stream) override {
+    return minifi::aws::processors::PutObjectResult{};
   }
 
   Aws::Auth::AWSCredentials credentials;
@@ -47,13 +47,13 @@ public:
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
     LogTestController::getInstance().setTrace<processors::GetFile>();
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::aws::processors::PutS3Object>();
+    LogTestController::getInstance().setTrace<minifi::aws::processors::PutS3Object>();
 
     // Build MiNiFi processing graph
     plan = test_controller.createPlan();
     mock_s3_wrapper_raw = new MockS3Wrapper();
     std::unique_ptr<minifi::aws::processors::AbstractS3Wrapper> mock_s3_wrapper(mock_s3_wrapper_raw);
-    put_s3_object = std::make_shared<org::apache::nifi::minifi::aws::processors::PutS3Object>("PutS3Object", utils::Identifier(), std::move(mock_s3_wrapper));
+    put_s3_object = std::make_shared<minifi::aws::processors::PutS3Object>("PutS3Object", utils::Identifier(), std::move(mock_s3_wrapper));
 
     char input_dir_mask[] = "/tmp/gt.XXXXXX";
     auto input_dir = test_controller.createTempDirectory(input_dir_mask);
