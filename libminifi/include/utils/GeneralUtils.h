@@ -49,6 +49,14 @@ constexpr T intdiv_ceil(T numerator, T denominator) {
       : numerator / denominator + (numerator % denominator != 0));
 }
 
+// from https://stackoverflow.com/questions/15202474
+struct identity {
+    template<typename U>
+    constexpr auto operator()(U&& v) const noexcept -> decltype(std::forward<U>(v)) {
+        return std::forward<U>(v);
+    }
+};
+
 using gsl::owner;
 
 #if __cplusplus < 201402L

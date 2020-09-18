@@ -456,6 +456,24 @@ void messageDeliveryCallback(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage
   if (rkmessage->_private == nullptr) {
     return;
   }
+
+  rd_kafka_timestamp_type_t tstype;
+  int64_t timestamp;
+  rd_kafka_headers_t *hdrs;
+
+  std::printf("\u001b[36mMessage (offset %" PRId64 ", %zd bytes)\u001b[0m\n", rkmessage->offset, rkmessage->len);
+
+  timestamp = rd_kafka_message_timestamp(rkmessage, &tstype);
+  if (tstype != RD_KAFKA_TIMESTAMP_NOT_AVAILABLE) {
+    const char *tsname = "?";
+    if (tstype == RD_KAFKA_TIMESTAMP_CREATE_TIME) {
+      tsname = "create time";
+    } else if (tstype == RD_KAFKA_TIMESTAMP_LOG_APPEND_TIME) {
+      tsname = "log append time";
+    }
+    std::printf("\u001b[36mMessage timestamp: %s %" PRId64 " \u001b[33m(%ds ago)\u001b[0m\n", tsname, timestamp, !timestamp ? 0 : (int)time(NULL) - (int)(timestamp/1000));
+  }
+
   // allocated in ReadCallback::produce
   auto* const func = reinterpret_cast<std::function<void(rd_kafka_t*, const rd_kafka_message_t*)>*>(rkmessage->_private);
   try {

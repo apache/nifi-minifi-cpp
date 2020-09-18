@@ -111,7 +111,7 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
   logger_->log_debug("Connection %s created", name_);
 }
 
-bool Connection::isEmpty() {
+bool Connection::isEmpty() const {
   std::lock_guard<std::mutex> lock(mutex_);
 
   return queue_.empty();

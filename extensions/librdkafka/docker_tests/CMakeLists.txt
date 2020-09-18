@@ -29,10 +29,8 @@ FOREACH(testfile ${KAFKA_TESTS})
     createTests("${testfilename}")
     MATH(EXPR KAFKA_TEST_COUNT "${KAFKA_TEST_COUNT}+1")
     # The line below handles integration test
-	# target_include_directories(${testfilename} BEFORE PRIVATE "../../standard-processors/processors") # TODO(hunyadi): add this and rebuild the whole project
-    target_wholearchive_library(${testfilename} minifi-standard-processors)
+    add_test(NAME "${testfilename}" COMMAND "${testfilename}")
     target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
-    add_test(NAME "${testfilename}" COMMAND "${testfilename}" "${TEST_RESOURCES}/TestKafkaOnSchedule.yml"  "${TEST_RESOURCES}/")
 ENDFOREACH()
 
 message("-- Finished building ${KAFKA_TEST_COUNT} Kafka related test file(s)...")

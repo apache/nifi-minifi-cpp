@@ -20,13 +20,14 @@
 #define LIBMINIFI_TEST_TESTBASE_H_
 #include <cstdio>
 #include <cstdlib>
+#include <map>
+#include <set>
 #include <sstream>
+#include <utility>
+#include <vector>
 #include "ResourceClaim.h"
 #include "utils/file/FileUtils.h"
 #include "catch.hpp"
-#include <vector>
-#include <set>
-#include <map>
 #include "core/logging/Logger.h"
 #include "core/Core.h"
 #include "properties/Configure.h"
@@ -39,7 +40,6 @@
 #include "spdlog/sinks/ostream_sink.h"
 #include "spdlog/sinks/dist_sink.h"
 #include "unit/ProvenanceTestHelper.h"
-#include "core/Core.h"
 #include "core/FlowFile.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
@@ -49,7 +49,6 @@
 #include "core/controller/ControllerServiceNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "core/state/nodes/FlowInformation.h"
-#include "properties/Configure.h"
 #include "utils/ClassUtils.h"
 
 class LogTestController {
@@ -196,7 +195,7 @@ class LogTestController {
     }
     my_properties_->set("logger.root", "ERROR,ostream");
     my_properties_->set("logger." + core::getClassName<LogTestController>(), "INFO");
-    my_properties_->set("logger." + core::getClassName<logging::LoggerConfiguration>(), "DEBUG");
+    my_properties_->set("logger." + core::getClassName<logging::LoggerConfiguration>(), "INFO");
     std::shared_ptr<spdlog::sinks::dist_sink_mt> dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
     dist_sink->add_sink(std::make_shared<spdlog::sinks::ostream_sink_mt>(log_output, true));
     dist_sink->add_sink(std::make_shared<spdlog::sinks::stderr_sink_mt>());
@@ -223,7 +222,6 @@ class LogTestController {
 
 class TestPlan {
  public:
-
   explicit TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo,
                     const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version, const std::shared_ptr<minifi::Configure> &configuration, const char* state_dir);
 
@@ -233,22 +231,15 @@ class TestPlan {
                                                 core::Relationship relationship = core::Relationship("success", "description"), bool linkToPrevious = false) {
     return addProcessor(processor, name, { relationship }, linkToPrevious);
   }
-
   std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship = core::Relationship("success", "description"),
                                                 bool linkToPrevious = false) {
     return addProcessor(processor_name, name, { relationship }, linkToPrevious);
   }
+  std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
+  std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
+  std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const utils::Identifier& uuid, const std::string &name, const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
 
-  std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
-                                                bool linkToPrevious = false);
-
-  std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
-                                                bool linkToPrevious = false);
-
-  std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const utils::Identifier& uuid, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
-                                                bool linkToPrevious = false);
-
-  std::shared_ptr<minifi::Connection> addConnection(const std::shared_ptr<core::Processor>& source_proc, const core::Relationship& source_relationship, const std::shared_ptr<core::Processor>& destination_proc);
+  std::shared_ptr<minifi::Connection> addConnection(const std::shared_ptr<core::Processor>& source_proc, const core::Relationship& source_relationship, const std::shared_ptr<core::Processor>& destination_proc); // NOLINT
 
   std::shared_ptr<core::controller::ControllerServiceNode> addController(const std::string &controller_name, const std::string &name);
 
@@ -257,14 +248,27 @@ class TestPlan {
   bool setProperty(const std::shared_ptr<core::controller::ControllerServiceNode> controller_service_node, const std::string &prop, const std::string &value, bool dynamic = false);
 
   void reset(bool reschedule = false);
+  void increment_location() { ++location; }
+  void reset_location() { location = -1; }
 
+  std::vector<std::shared_ptr<core::Processor>>::iterator getProcessorItByUuid(const std::string& uuid);
+
+  void schedule_processor(const std::shared_ptr<core::Processor>& processor, const std::shared_ptr<core::ProcessContext>& context);
+  void schedule_processors();
+
+  // Note: all this verify logic is only used in TensorFlow tests as a replacement for UpdateAttribute
+  // It should probably not be the part of the standard way of running processors
+  bool runProcessor(const std::shared_ptr<core::Processor>& processor, std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
+  bool runProcessor(int target_location, std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
   bool runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
-
   bool runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
+  bool runCurrentProcessorUntilFlowfileIsProduced(const std::chrono::seconds& wait_duration);
 
   std::set<std::shared_ptr<provenance::ProvenanceEventRecord>> getProvenanceRecords();
 
   std::shared_ptr<core::FlowFile> getCurrentFlowFile();
+  std::vector<minifi::Connection*> getProcessorOutboundConnections(const std::shared_ptr<core::Processor>& processor);
+  std::shared_ptr<core::FlowFile> getFlowFileProducedByCurrentProcessor();
 
   std::shared_ptr<core::ProcessContext> getCurrentContext();
 
@@ -349,16 +353,15 @@ class TestPlan {
   std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> controller_service_nodes_;
   std::map<utils::Identifier, std::shared_ptr<core::Processor>> processor_mapping_;
   std::vector<std::shared_ptr<core::Processor>> processor_queue_;
-  std::vector<std::shared_ptr<core::Processor>> configured_processors_;
+  std::vector<std::shared_ptr<core::Processor>> configured_processors_;  // Do not assume ordering
   std::vector<std::shared_ptr<core::ProcessorNode>> processor_nodes_;
   std::vector<std::shared_ptr<core::ProcessContext>> processor_contexts_;
   std::vector<std::shared_ptr<core::ProcessSession>> process_sessions_;
-  std::vector<std::shared_ptr<core::ProcessSessionFactory>> factories_;
+  std::vector<std::shared_ptr<core::ProcessSessionFactory>> factories_;  // Do not assume ordering
   std::vector<std::shared_ptr<minifi::Connection>> relationships_;
   core::Relationship termination_;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 };
 
@@ -423,7 +426,6 @@ class TestController {
   std::shared_ptr<minifi::state::response::FlowVersion> flow_version_;
   LogTestController &log;
   std::vector<std::string> directories;
-
 };
 
 #endif /* LIBMINIFI_TEST_TESTBASE_H_ */

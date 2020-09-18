@@ -17,6 +17,7 @@
  */
 
 #include "./TestBase.h"
+#include "utils/IntegrationTestUtils.h"
 
 #include "spdlog/spdlog.h"
 
@@ -61,78 +62,51 @@ TestPlan::~TestPlan() {
   for (auto& processor : configured_processors_) {
     processor->setScheduledState(core::ScheduledState::STOPPED);
   }
+  for (auto& connection : relationships_) {
+    // This is a patch solving circular references between processors and connections
+    connection->setSource(nullptr);
+    connection->setDestination(nullptr);
+  }
   controller_services_provider_->clearControllerServices();
 }
 
 std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string& /*name*/, const std::initializer_list<core::Relationship>& relationships,
-                                                        bool linkToPrevious) {
+    bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
   std::lock_guard<std::recursive_mutex> guard(mutex);
-
   utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
-
   processor->setStreamFactory(stream_factory);
   // initialize the processor
   processor->initialize();
   processor->setFlowIdentifier(flow_version_->getFlowIdentifier());
-
   processor_mapping_[processor->getUUID()] = processor;
-
   if (!linkToPrevious) {
     termination_ = *(relationships.begin());
   } else {
     std::shared_ptr<core::Processor> last = processor_queue_.back();
-
     if (last == nullptr) {
       last = processor;
       termination_ = *(relationships.begin());
     }
-
-    std::stringstream connection_name;
-    connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
-    logger_->log_info("Creating %s connection for proc %d", connection_name.str(), processor_queue_.size() + 1);
-    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
-
     for (const auto& relationship : relationships) {
-      connection->addRelationship(relationship);
+      addConnection(last, relationship, processor);
     }
-
-    // link the connections so that we can test results at the end for this
-    connection->setSource(last);
-    connection->setDestination(processor);
-
-    connection->setSourceUUID(last->getUUID());
-    connection->setDestinationUUID(processor->getUUID());
-    last->addConnection(connection);
-    if (last != processor) {
-      processor->addConnection(connection);
-    }
-    relationships_.push_back(connection);
   }
-
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-
   processor_nodes_.push_back(node);
-
   // std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
-
   auto contextBuilder = core::ClassLoader::getDefaultClassLoader().instantiate<core::ProcessContextBuilder>("ProcessContextBuilder");
-
   contextBuilder = contextBuilder->withContentRepository(content_repo_)->withFlowFileRepository(flow_repo_)->withProvider(controller_services_provider_.get())->withProvenanceRepository(prov_repo_)->withConfiguration(configuration_);
-
   auto context = contextBuilder->build(node);
-
   processor_contexts_.push_back(context);
-
   processor_queue_.push_back(processor);
-
   return processor;
 }
 
 std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const utils::Identifier& uuid, const std::string &name,
-                                                        const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
+  const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
@@ -150,7 +124,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
 }
 
 std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
-                                                        bool linkToPrevious) {
+  bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
@@ -247,45 +221,50 @@ void TestPlan::reset(bool reschedule) {
   }
 }
 
-bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
-  if (!finalized) {
-    finalize();
+std::vector<std::shared_ptr<core::Processor>>::iterator TestPlan::getProcessorItByUuid(const std::string& uuid) {
+  const auto processor_node_matches_processor = [&uuid] (const std::shared_ptr<core::Processor>& processor) {
+    return processor->getUUIDStr() == uuid;
+  };
+  auto processor_found_at = std::find_if(processor_queue_.begin(), processor_queue_.end(), processor_node_matches_processor);
+  if (processor_found_at == processor_queue_.end()) {
+    throw std::runtime_error("Processor not found in test plan.");
   }
-  logger_->log_info("Running next processor %d, processor_queue_.size %d, processor_contexts_.size %d", location, processor_queue_.size(), processor_contexts_.size());
-  std::lock_guard<std::recursive_mutex> guard(mutex);
-  location++;
-  std::shared_ptr<core::Processor> processor = processor_queue_.at(location);
-  std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(location);
-  std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
-  factories_.push_back(factory);
+  return processor_found_at;
+}
+
+void TestPlan::schedule_processors() {
+  for(std::size_t target_location = 0; target_location < processor_queue_.size(); ++target_location) {
+    std::shared_ptr<core::Processor> processor = processor_queue_.at(target_location);
+    std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(target_location);
+    schedule_processor(processor, context);
+  }
+}
+
+void TestPlan::schedule_processor(const std::shared_ptr<core::Processor>& processor, const std::shared_ptr<core::ProcessContext>& context) {
   if (std::find(configured_processors_.begin(), configured_processors_.end(), processor) == configured_processors_.end()) {
+    // Ordering on factories and list of configured processors do not matter
+    std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
+    factories_.push_back(factory);
     processor->onSchedule(context, factory);
     configured_processors_.push_back(processor);
   }
-  std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
-  process_sessions_.push_back(current_session);
-  current_flowfile_ = nullptr;
-  processor->incrementActiveTasks();
-  processor->setScheduledState(core::ScheduledState::RUNNING);
-  if (verify != nullptr) {
-    verify(context, current_session);
-  } else {
-    logger_->log_info("Running %s", processor->getName());
-    processor->onTrigger(context, current_session);
-  }
-  current_session->commit();
-  return gsl::narrow<size_t>(location + 1) < processor_queue_.size();
 }
 
-bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+bool TestPlan::runProcessor(const std::shared_ptr<core::Processor>& processor, std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+  const std::size_t processor_location = std::distance(processor_queue_.begin(), getProcessorItByUuid(processor->getUUIDStr()));
+  return runProcessor(gsl::narrow<int>(processor_location), verify);
+}
+
+bool TestPlan::runProcessor(int target_location, std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
   if (!finalized) {
     finalize();
   }
-  logger_->log_info("Rerunning current processor %d, processor_queue_.size %d, processor_contexts_.size %d", location, processor_queue_.size(), processor_contexts_.size());
+  logger_->log_info("Running next processor %d, processor_queue_.size %d, processor_contexts_.size %d", target_location, processor_queue_.size(), processor_contexts_.size());
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
-  std::shared_ptr<core::Processor> processor = processor_queue_.at(location);
-  std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(location);
+  std::shared_ptr<core::Processor> processor = processor_queue_.at(target_location);
+  std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(target_location);
+  schedule_processor(processor, context);
   std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
   process_sessions_.push_back(current_session);
   current_flowfile_ = nullptr;
@@ -298,7 +277,48 @@ bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core
     processor->onTrigger(context, current_session);
   }
   current_session->commit();
-  return gsl::narrow<size_t>(location + 1) < processor_queue_.size();
+  return gsl::narrow<size_t>(target_location + 1) < processor_queue_.size();
+}
+
+bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+  std::lock_guard<std::recursive_mutex> guard(mutex);
+  ++location;
+  return runProcessor(location, verify);
+}
+
+bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+  std::lock_guard<std::recursive_mutex> guard(mutex);
+  return runProcessor(location);
+}
+
+bool TestPlan::runCurrentProcessorUntilFlowfileIsProduced(const std::chrono::seconds& wait_duration) {
+  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  const auto isFlowFileProduced = [&] {
+    runCurrentProcessor();
+    const std::vector<minifi::Connection*> connections = getProcessorOutboundConnections(processor_queue_.at(location));
+    return std::any_of(connections.cbegin(), connections.cend(), [] (const minifi::Connection* conn) { return !conn->isEmpty(); });
+  };
+  return verifyEventHappenedInPollTime(wait_duration, isFlowFileProduced);
+}
+
+std::shared_ptr<core::FlowFile> TestPlan::getFlowFileProducedByCurrentProcessor() {
+  const std::shared_ptr<core::Processor>& processor = processor_queue_.at(location);
+  std::vector<minifi::Connection*> connections = getProcessorOutboundConnections(processor);
+  for (auto connection : connections) {
+    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+    std::shared_ptr<core::FlowFile> flowfile = connection->poll(expiredFlowRecords);
+    if (flowfile) {
+      return flowfile;
+    }
+    if (expiredFlowRecords.empty()) {
+      continue;
+    }
+    if (expiredFlowRecords.size() != 1) {
+      throw std::runtime_error("Multiple expired flowfiles present in a single connection.");
+    }
+    return *expiredFlowRecords.begin();
+  }
+  return nullptr;
 }
 
 std::set<std::shared_ptr<provenance::ProvenanceEventRecord>> TestPlan::getProvenanceRecords() {
@@ -310,6 +330,20 @@ std::shared_ptr<core::FlowFile> TestPlan::getCurrentFlowFile() {
     current_flowfile_ = process_sessions_.at(location)->get();
   }
   return current_flowfile_;
+}
+
+std::vector<minifi::Connection*> TestPlan::getProcessorOutboundConnections(const std::shared_ptr<core::Processor>& processor) {
+  const auto is_processor_outbound_connection = [&processor] (const std::shared_ptr<minifi::Connection>& connection) {
+    // A connection is outbound from a processor if its source uuid matches the processor
+    return connection->getSource()->getUUIDStr() == processor->getUUIDStr();
+  };
+  std::vector<minifi::Connection*> connections;
+  for (auto relationship : relationships_) {
+    if (is_processor_outbound_connection(relationship)) {
+      connections.emplace_back(relationship.get());
+    }    
+  }
+  return connections;
 }
 
 
