@@ -18,6 +18,7 @@
 #include "ConfigFileEncryptor.h"
 
 #include <iostream>
+#include <string>
 
 #include "utils/StringUtils.h"
 

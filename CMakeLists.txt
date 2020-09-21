@@ -795,6 +795,9 @@ add_custom_target(linter
     COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
             ${CMAKE_SOURCE_DIR}/libminifi/include/ --
             ${CMAKE_SOURCE_DIR}/libminifi/test/
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/encrypt-config/ --
+            ${CMAKE_SOURCE_DIR}/encrypt-config/
     DEPENDS ${extensions})
 endif(NOT WIN32)
 

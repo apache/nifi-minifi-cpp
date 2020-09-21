@@ -17,7 +17,9 @@
 
 #include "ConfigFile.h"
 
+#include <algorithm>
 #include <fstream>
+#include <utility>
 
 #include "utils/StringUtils.h"
 

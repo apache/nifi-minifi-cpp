@@ -30,7 +30,7 @@ namespace encrypt_config {
 
 class ConfigLine {
  public:
-  ConfigLine(std::string line);
+  explicit ConfigLine(std::string line);
   ConfigLine(const std::string& key, const std::string& value);
 
   void updateValue(const std::string& value);
@@ -57,8 +57,8 @@ inline bool operator!=(const ConfigLine& left, const ConfigLine& right) {
 }
 
 class ConfigFile {
-public:
-  ConfigFile(const std::string& file_path);
+ public:
+  explicit ConfigFile(const std::string& file_path);
 
   utils::optional<std::string> getValue(const std::string& key) const;
   void update(const std::string& key, const std::string& value);
@@ -72,7 +72,7 @@ public:
 
   std::vector<std::string> getSensitiveProperties() const;
 
-private:
+ private:
   friend class ConfigFileTestAccessor;
   friend bool operator==(const ConfigFile&, const ConfigFile&);
   using Lines = std::vector<ConfigLine>;

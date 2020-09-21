@@ -37,8 +37,8 @@ bool check_encryption(const ConfigFile& test_file, const std::string& property_n
 
     auto length = base64_length(24 /* nonce */ + original_value_length + 16 /* tag */);
     return utils::Regex::matchesFullInput("[0-9A-Za-z/+=]{" + std::to_string(length) + "}", *encrypted_value);
-};
 }
+}  // namespace
 
 TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-config][encryptSensitivePropertiesInFile]") {
   utils::crypto::Bytes KEY = utils::crypto::stringToBytes(utils::StringUtils::from_base64(

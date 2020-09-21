@@ -27,11 +27,11 @@ namespace minifi {
 namespace encrypt_config {
 
 class EncryptConfig {
-public:
+ public:
   EncryptConfig(int argc, char* argv[]);
   void encryptSensitiveProperties() const;
 
-private:
+ private:
   std::string bootstrapFilePath() const;
   std::string propertiesFilePath() const;
 

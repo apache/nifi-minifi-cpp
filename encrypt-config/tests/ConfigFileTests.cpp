@@ -135,9 +135,7 @@ TEST_CASE("ConfigFile can update the value for a key", "[encrypt-config][update]
   }
 
   SECTION("nonexistent key") {
-    REQUIRE_THROWS(
-        test_file.update("nifi.bored.panda", "cat video");
-    );
+    REQUIRE_THROWS(test_file.update("nifi.bored.panda", "cat video"));
   }
 }
 
@@ -151,9 +149,7 @@ TEST_CASE("ConfigFile can add a new setting after an existing setting", "[encryp
   }
 
   SECTION("nonexistent key") {
-    REQUIRE_THROWS(
-      test_file.insertAfter("nifi.toil.api.password", "key", "value");
-    );
+    REQUIRE_THROWS(test_file.insertAfter("nifi.toil.api.password", "key", "value"));
   }
 }
 

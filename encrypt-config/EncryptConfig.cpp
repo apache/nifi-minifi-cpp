@@ -17,12 +17,11 @@
 
 #include "EncryptConfig.h"
 
-#include "cxxopts.hpp"
-
 #include <stdexcept>
 
 #include "ConfigFile.h"
 #include "ConfigFileEncryptor.h"
+#include "cxxopts.hpp"
 #include "utils/file/FileUtils.h"
 #include "utils/OptionalUtils.h"
 
