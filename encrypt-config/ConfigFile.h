@@ -52,6 +52,10 @@ inline bool operator==(const ConfigLine& left, const ConfigLine& right) {
   return left.getLine() == right.getLine();
 }
 
+inline bool operator!=(const ConfigLine& left, const ConfigLine& right) {
+  return !(left == right);
+}
+
 class ConfigFile {
 public:
   ConfigFile(const std::string& file_path);
@@ -84,6 +88,10 @@ private:
 
 inline bool operator==(const ConfigFile& left, const ConfigFile& right) {
   return left.config_lines_ == right.config_lines_;
+}
+
+inline bool operator!=(const ConfigFile& left, const ConfigFile& right) {
+  return !(left == right);
 }
 
 }  // namespace encrypt_config
