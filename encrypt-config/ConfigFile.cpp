@@ -71,20 +71,20 @@ ConfigFile::ConfigFile(const std::string& file_path) {
 
 ConfigFile::Lines::const_iterator ConfigFile::findKey(const std::string& key) const {
   return std::find_if(config_lines_.cbegin(), config_lines_.cend(), [&key](const ConfigLine& config_line) {
-    return config_line.key_ == key;
+    return config_line.getKey() == key;
   });
 }
 
 ConfigFile::Lines::iterator ConfigFile::findKey(const std::string& key) {
   return std::find_if(config_lines_.begin(), config_lines_.end(), [&key](const ConfigLine& config_line) {
-    return config_line.key_ == key;
+    return config_line.getKey() == key;
   });
 }
 
 utils::optional<std::string> ConfigFile::getValue(const std::string& key) const {
   const auto it = findKey(key);
   if (it != config_lines_.end()) {
-    return it->value_;
+    return it->getValue();
   } else {
     return utils::nullopt;
   }
@@ -114,7 +114,7 @@ void ConfigFile::append(const std::string& key, const std::string& value) {
 }
 
 int ConfigFile::erase(const std::string& key) {
-  auto has_this_key = [&key](const ConfigLine& line) { return line.key_ == key; };
+  auto has_this_key = [&key](const ConfigLine& line) { return line.getKey() == key; };
   auto new_end = std::remove_if(config_lines_.begin(), config_lines_.end(), has_this_key);
   auto num_removed = std::distance(new_end, config_lines_.end());
   config_lines_.erase(new_end, config_lines_.end());
@@ -124,7 +124,7 @@ int ConfigFile::erase(const std::string& key) {
 void ConfigFile::writeTo(const std::string& file_path) const {
   std::ofstream file{file_path};
   for (const auto& config_line : config_lines_) {
-    file << config_line.line_ << '\n';
+    file << config_line.getLine() << '\n';
   }
 }
 

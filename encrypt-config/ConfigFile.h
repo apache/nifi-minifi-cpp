@@ -29,19 +29,27 @@ namespace minifi {
 namespace encrypt_config {
 
 class ConfigLine {
-public:
+ public:
   ConfigLine(std::string line);
   ConfigLine(const std::string& key, const std::string& value);
 
   void updateValue(const std::string& value);
 
+  std::string getLine() const { return line_; }
+  std::string getKey() const { return key_; }
+  std::string getValue() const { return value_; }
+
+ private:
+  // NOTE(fgerlits): having both line_ and { key_, value } is redundant in many cases, but
+  // * we need the original line_ in order to preserve formatting, comments and blank lines
+  // * we could get rid of key_ and value_ and parse them each time from line_, but I think the code is clearer this way
   std::string line_;
   std::string key_;
   std::string value_;
 };
 
 inline bool operator==(const ConfigLine& left, const ConfigLine& right) {
-  return left.line_ == right.line_;
+  return left.getLine() == right.getLine();
 }
 
 class ConfigFile {
