@@ -55,7 +55,7 @@ extern "C" {
 #define DEFAULT_UID_PROPERTIES_FILE "./conf/minifi-uid.properties"
 #endif
 
-static const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
+constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 
 //! Define home environment variable
 #define MINIFI_HOME_ENV_KEY "MINIFI_HOME"

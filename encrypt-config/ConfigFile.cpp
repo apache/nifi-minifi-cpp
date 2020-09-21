@@ -22,9 +22,9 @@
 #include "utils/StringUtils.h"
 
 namespace {
-const std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES{"nifi.security.client.pass.phrase",
-                                                              "nifi.rest.api.password"};
-const char* ADDITIONAL_SENSITIVE_PROPS_PROPERTY_NAME = "nifi.sensitive.props.additional.keys";
+constexpr std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES{"nifi.security.client.pass.phrase",
+                                                                  "nifi.rest.api.password"};
+constexpr const char* ADDITIONAL_SENSITIVE_PROPS_PROPERTY_NAME = "nifi.sensitive.props.additional.keys";
 }  // namespace
 
 namespace org {

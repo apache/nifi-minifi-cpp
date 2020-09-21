@@ -26,10 +26,10 @@
 #include "utils/OptionalUtils.h"
 
 namespace {
-const char* CONF_DIRECTORY_NAME = "conf";
-const char* BOOTSTRAP_FILE_NAME = "bootstrap.conf";
-const char* MINIFI_PROPERTIES_FILE_NAME = "minifi.properties";
-const char* ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
+constexpr const char* CONF_DIRECTORY_NAME = "conf";
+constexpr const char* BOOTSTRAP_FILE_NAME = "bootstrap.conf";
+constexpr const char* MINIFI_PROPERTIES_FILE_NAME = "minifi.properties";
+constexpr const char* ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 const size_t ENCRYPTION_KEY_SIZE = 32;
 }  // namespace
 
