@@ -70,7 +70,7 @@ public:
 
   size_t size() const { return config_lines_.size(); }
 
-  int encryptSensitiveProperties(const utils::crypto::Bytes& encryption_key);
+  std::vector<std::string> getSensitiveProperties() const;
 
 private:
   friend class ConfigFileTestAccessor;
@@ -79,7 +79,6 @@ private:
 
   Lines::const_iterator findKey(const std::string& key) const;
   Lines::iterator findKey(const std::string& key);
-  std::vector<std::string> getSensitiveProperties() const;
   static std::vector<std::string> mergeProperties(std::vector<std::string> properties,
                                                   const std::vector<std::string>& additional_properties);
 

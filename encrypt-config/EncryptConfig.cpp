@@ -22,6 +22,7 @@
 #include <stdexcept>
 
 #include "ConfigFile.h"
+#include "ConfigFileEncryptor.h"
 #include "utils/file/FileUtils.h"
 #include "utils/OptionalUtils.h"
 
@@ -128,7 +129,7 @@ void EncryptConfig::encryptSensitiveProperties(const utils::crypto::Bytes& encry
     throw std::runtime_error{"Properties file " + propertiesFilePath() + " not found!"};
   }
 
-  int num_properties_encrypted = properties_file.encryptSensitiveProperties(encryption_key);
+  int num_properties_encrypted = encryptSensitivePropertiesInFile(properties_file, encryption_key);
   if (num_properties_encrypted == 0) {
     std::cout << "Could not find any (new) sensitive properties to encrypt in " << propertiesFilePath() << '\n';
     return;

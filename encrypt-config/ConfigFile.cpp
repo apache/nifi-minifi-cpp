@@ -128,36 +128,6 @@ void ConfigFile::writeTo(const std::string& file_path) const {
   }
 }
 
-int ConfigFile::encryptSensitiveProperties(const utils::crypto::Bytes& encryption_key) {
-  int num_properties_encrypted = 0;
-
-  for (const auto& property_key : getSensitiveProperties()) {
-    utils::optional<std::string> property_value = getValue(property_key);
-    if (!property_value) { continue; }
-
-    std::string encryption_type_key = property_key + ".protected";
-    utils::optional<std::string> encryption_type = getValue(encryption_type_key);
-
-    if (!encryption_type || encryption_type->empty() || *encryption_type == "plaintext") {
-      std::string encrypted_property_value = utils::StringUtils::to_base64(
-          utils::crypto::encrypt(*property_value, property_key, encryption_key));
-
-      update(property_key, encrypted_property_value);
-
-      if (encryption_type) {
-        update(encryption_type_key, utils::crypto::EncryptionType::name());
-      } else {
-        insertAfter(property_key, encryption_type_key, utils::crypto::EncryptionType::name());
-      }
-
-      std::cout << "Encrypted property: " << property_key << '\n';
-      ++num_properties_encrypted;
-    }
-  }
-
-  return num_properties_encrypted;
-}
-
 std::vector<std::string> ConfigFile::getSensitiveProperties() const {
   std::vector<std::string> sensitive_properties(DEFAULT_SENSITIVE_PROPERTIES.begin(), DEFAULT_SENSITIVE_PROPERTIES.end());
   const utils::optional<std::string> additional_sensitive_props_list = getValue(ADDITIONAL_SENSITIVE_PROPS_PROPERTY_NAME);
