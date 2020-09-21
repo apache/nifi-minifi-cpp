@@ -84,9 +84,6 @@ bool CallBackTimer::is_running() const {
   std::lock_guard<std::mutex> guard(mtx_);
   return execute_ && thd_.joinable();
 }
-CallBackTimer::CallBackTimer(CallBackTimer&&) {
-
-}
 
 } /* namespace utils */
 } /* namespace minifi */

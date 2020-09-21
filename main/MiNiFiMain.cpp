@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
   // Make a record of minifi home in the configured log file.
   logger->log_info("MINIFI_HOME=%s", minifiHome);
 
-  std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
+  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->setHome(minifiHome);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
@@ -287,30 +287,48 @@ int main(int argc, char **argv) {
 
   std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(prov_repo, flow_repo, content_repo, configure, stream_factory, nifi_configuration_class_name);
 
-  std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
-    new minifi::FlowController(prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo));
+  const auto controller = std::make_shared<minifi::FlowController>(prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo);
 
-  std::unique_ptr<utils::CallBackTimer> disk_space_watchdog;
   const bool disk_space_watchdog_enable = (configure->get(minifi::Configure::minifi_disk_space_watchdog_enable) | utils::map([](const std::string& v){ return v == "true"; })).value_or(true);
+  std::unique_ptr<utils::CallBackTimer> disk_space_watchdog;
   if (disk_space_watchdog_enable) {
     try {
       const auto repo_paths = [&] {
         std::vector<std::string> repo_paths;
-        repo_paths.reserve(3)
+        repo_paths.reserve(3);
         // REPOSITORY_DIRECTORY is a dummy path used by noop repositories
         const auto path_valid = [](const std::string& p) { return !p.empty() && p != REPOSITORY_DIRECTORY; };
-        std::string prov_repo_path = prov_repo->getDirectory();
-        std::string flow_repo_path = flow_repo->getDirectory();
-        std::string content_repo_storage_path = content_repo->getStoragePath();
+        auto prov_repo_path = prov_repo->getDirectory();
+        auto flow_repo_path = flow_repo->getDirectory();
+        auto content_repo_storage_path = content_repo->getStoragePath();
         if (!prov_repo->isNoop() && path_valid(prov_repo_path)) { repo_paths.push_back(std::move(prov_repo_path)); }
         if (!flow_repo->isNoop() && path_valid(flow_repo_path)) { repo_paths.push_back(std::move(flow_repo_path)); }
         if (path_valid(content_repo_storage_path)) { repo_paths.push_back(std::move(content_repo_storage_path)); }
         return repo_paths;
       }();
-      const auto repo_paths_span = gsl::make_span(repo_paths.data(), repo_paths.size());
-      const auto available_spaces = minifi::disk_space_watchdog::check_available_space(repo_paths_span, logger.get());
-      if(!minifi::disk_space_watchdog::check_available_space())
-      disk_space_watchdog = utils::make_unique<minifi::DiskSpaceWatchdog>(*controller, *configure, std::move(repo_paths));
+      const auto available_spaces = minifi::disk_space_watchdog::check_available_space(repo_paths, logger.get());
+      const auto config = minifi::disk_space_watchdog::read_config(*configure);
+      const auto min = [](const std::vector<std::uintmax_t>& spaces) {
+        const auto it = std::min_element(std::begin(spaces), std::end(spaces));
+        return it != spaces.end() ? *it : std::numeric_limits<std::uintmax_t>::max();
+      };
+      if (min(available_spaces) <= config.stop_threshold_bytes) {
+        logger->log_error("Cannot start MiNiFi due to insufficient available disk space");
+        return -1;
+      }
+      auto interval_switch = minifi::disk_space_watchdog::disk_space_interval_switch(config);
+      disk_space_watchdog = utils::make_unique<utils::CallBackTimer>(config.interval, [interval_switch, min, repo_paths, logger, &controller]() mutable {
+        const auto stop = [&]{ controller->stop(); controller->unload(); };
+        const auto restart = [&]{ controller->load(); controller->start(); };
+        const auto switch_state = interval_switch(min(minifi::disk_space_watchdog::check_available_space(repo_paths, logger.get())));
+        if (switch_state.state == utils::IntervalSwitchState::LOWER && switch_state.switched) {
+          logger->log_warn("Stopping flow controller due to insufficient disk space");
+          stop();
+        } else if (switch_state.state == utils::IntervalSwitchState::UPPER && switch_state.switched) {
+          logger->log_info("Restarting flow controller");
+          restart();
+        }
+      });
     } catch (const std::runtime_error& error) {
       logger->log_error(error.what());
       return -1;
