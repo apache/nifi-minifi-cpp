@@ -22,7 +22,9 @@
 
 #include "utils/OptionalUtils.h"
 
+#include <aws/core/auth/AWSCredentialsProvider.h>
 #include <aws/s3/S3Client.h>
+#include <aws/s3/model/PutObjectRequest.h>
 #include <string>
 
 namespace org {
@@ -47,12 +49,39 @@ struct PutS3ObjectOptions {
 
 class AbstractS3Wrapper {
 public:
-  virtual void setCredentials(const Aws::Auth::AWSCredentials& cred) = 0;
-  virtual void setRegion(const Aws::String& region) = 0;
-  virtual void setTimeout(uint64_t timeout) = 0;
-  virtual void setEndpointOverrideUrl(const Aws::String& url) = 0;
-  virtual utils::optional<PutObjectResult> putObject(const PutS3ObjectOptions& options, std::shared_ptr<Aws::IOStream> data_stream) = 0;
+  void setCredentials(const Aws::Auth::AWSCredentials& cred) {
+    credentials_ = cred;
+  }
+
+  void setRegion(const Aws::String& region) {
+    client_config_.region = region;
+  }
+
+  void setTimeout(uint64_t timeout) {
+    client_config_.connectTimeoutMs = timeout;
+  }
+
+  void setEndpointOverrideUrl(const Aws::String& url) {
+    client_config_.endpointOverride = url;
+  }
+
+  utils::optional<PutObjectResult> putObject(const PutS3ObjectOptions& options, std::shared_ptr<Aws::IOStream> data_stream) {
+    Aws::S3::Model::PutObjectRequest request;
+    request.SetBucket(options.bucket_name);
+    request.SetKey(options.object_key);
+    request.SetStorageClass(options.storage_class);
+    request.SetBody(data_stream);
+
+    return putObject(request);
+  }
+
   virtual ~AbstractS3Wrapper() = default;
+
+protected:
+  virtual utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) = 0;
+
+  Aws::Client::ClientConfiguration client_config_;
+  Aws::Auth::AWSCredentials credentials_;
 };
 
 } /* namespace processors */

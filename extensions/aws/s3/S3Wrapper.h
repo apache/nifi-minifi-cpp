@@ -30,7 +30,6 @@
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/Bucket.h>
 #include <aws/s3/model/StorageClass.h>
-#include <aws/s3/model/PutObjectRequest.h>
 
 namespace org {
 namespace apache {
@@ -63,34 +62,9 @@ static const std::map<std::string, Aws::S3::Model::StorageClass> storage_class_m
 };
 
 class S3Wrapper : public AbstractS3Wrapper {
-public:
-  S3Wrapper() {
-  }
-
-  void setCredentials(const Aws::Auth::AWSCredentials& cred) override {
-    credentials_ = cred;
-  }
-
-  void setRegion(const Aws::String& region) override {
-    client_config_.region = region;
-  }
-
-  void setTimeout(uint64_t timeout) override {
-    client_config_.connectTimeoutMs = timeout;
-  }
-
-  void setEndpointOverrideUrl(const Aws::String& url) override {
-    client_config_.endpointOverride = url;
-  }
-
-  utils::optional<PutObjectResult> putObject(const PutS3ObjectOptions& options, std::shared_ptr<Aws::IOStream> data_stream) override {
+protected:
+  utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override {
     Aws::S3::S3Client s3_client(client_config_);
-
-    Aws::S3::Model::PutObjectRequest request;
-    request.SetBucket(options.bucket_name);
-    request.SetKey(options.object_key);
-    request.SetBody(data_stream);
-
     Aws::S3::Model::PutObjectOutcome outcome = s3_client.PutObject(request);
 
     if (outcome.IsSuccess()) {
@@ -110,10 +84,6 @@ public:
         return utils::nullopt;
     }
   }
-
-private:
-  Aws::Client::ClientConfiguration client_config_;
-  Aws::Auth::AWSCredentials credentials_;
 };
 
 } /* namespace processors */

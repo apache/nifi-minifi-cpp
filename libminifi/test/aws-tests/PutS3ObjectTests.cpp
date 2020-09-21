@@ -24,19 +24,40 @@
 #include "s3/AbstractS3Wrapper.h"
 #include "utils/file/FileUtils.h"
 
+#include <iostream>
+
+const std::string S3_VERSION = "1.2.3";
+const std::string S3_ETAG = "tag-123";
+const std::string S3_EXPIRATION = "2020-02-20";
+const std::string S3_SSEALGORITHM = "aws:kms";
+
 class MockS3Wrapper : public minifi::aws::processors::AbstractS3Wrapper {
 public:
-  void setCredentials(const Aws::Auth::AWSCredentials& cred) override {
-    credentials = cred;
-  }
-  void setRegion(const Aws::String& region) override {}
-  void setTimeout(uint64_t timeout) override {}
-  void setEndpointOverrideUrl(const Aws::String& url) override {}
-  utils::optional<minifi::aws::processors::PutObjectResult> putObject(const minifi::aws::processors::PutS3ObjectOptions& options, std::shared_ptr<Aws::IOStream> data_stream) override {
-    return minifi::aws::processors::PutObjectResult{};
+  Aws::Auth::AWSCredentials getCredentials() const {
+    return credentials_;
   }
 
-  Aws::Auth::AWSCredentials credentials;
+  Aws::Client::ClientConfiguration getClientConfig() const {
+    return client_config_;
+  }
+
+  utils::optional<minifi::aws::processors::PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override {
+    std::istreambuf_iterator<char> eos;
+    put_s3_data = std::string(std::istreambuf_iterator<char>(*request.GetBody()), eos);
+    put_s3_options.bucket_name = request.GetBucket();
+    put_s3_options.object_key = request.GetKey();
+    put_s3_options.storage_class = request.GetStorageClass();
+
+    put_s3_result.version = S3_VERSION;
+    put_s3_result.etag = S3_ETAG;
+    put_s3_result.expiration = S3_EXPIRATION;
+    put_s3_result.ssealgorithm = S3_SSEALGORITHM;
+    return put_s3_result;
+  }
+
+  minifi::aws::processors::PutS3ObjectOptions put_s3_options;
+  minifi::aws::processors::PutObjectResult put_s3_result;
+  std::string put_s3_data;
 };
 
 class PutS3ObjectTestsFixture {
@@ -58,7 +79,7 @@ public:
     char input_dir_mask[] = "/tmp/gt.XXXXXX";
     auto input_dir = test_controller.createTempDirectory(input_dir_mask);
     std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + "input_data.log");
-    input_file_stream << "input_data" << std::endl;
+    input_file_stream << "input_data";
     input_file_stream.close();
     auto get_file = plan->addProcessor("GetFile", "GetFile");
     plan->setProperty(get_file, processors::GetFile::Directory.getName(), input_dir);
@@ -76,10 +97,24 @@ public:
     plan->setProperty(put_s3_object, "Bucket", "testBucket");
   }
 
+  void setBasicCredentials() {
+    plan->setProperty(put_s3_object, "Access Key", "key");
+    plan->setProperty(put_s3_object, "Secret Key", "secret");
+  }
+
   void checkDefaultAttributes() {
     REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
     REQUIRE(LogTestController::getInstance().contains("key:s3.key value:input_data.log"));
     REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/octet-stream"));
+    REQUIRE(LogTestController::getInstance().contains("key:s3.version value:" + S3_VERSION));
+    REQUIRE(LogTestController::getInstance().contains("key:s3.etag value:" + S3_ETAG));
+    REQUIRE(LogTestController::getInstance().contains("key:s3.expiration value:" + S3_EXPIRATION));
+    REQUIRE(LogTestController::getInstance().contains("key:s3.ssealgorithm value:" + S3_SSEALGORITHM));
+
+    REQUIRE(mock_s3_wrapper_raw->put_s3_options.storage_class == minifi::aws::processors::storage_class_map.at(minifi::aws::processors::storage_class::STANDARD));
+    REQUIRE(mock_s3_wrapper_raw->getClientConfig().region == minifi::aws::processors::region::US_WEST_2);
+    REQUIRE(mock_s3_wrapper_raw->getClientConfig().connectTimeoutMs == 30000);
+    REQUIRE(mock_s3_wrapper_raw->getClientConfig().endpointOverride.empty());
   }
 
   std::string createTempFile(const std::string& filename) {
@@ -105,9 +140,8 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test basic property credential settin
   plan->setProperty(put_s3_object, "Access Key", "key");
   plan->setProperty(put_s3_object, "Secret Key", "secret");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSAccessKeyId() == "key");
-  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSSecretKey() == "secret");
-  checkDefaultAttributes();
+  REQUIRE(mock_s3_wrapper_raw->getCredentials().GetAWSAccessKeyId() == "key");
+  REQUIRE(mock_s3_wrapper_raw->getCredentials().GetAWSSecretKey() == "secret");
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials file setting", "[awsCredentials]") {
@@ -121,9 +155,8 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials file setting", "[aws
   aws_credentials_file_stream.close();
   plan->setProperty(put_s3_object, "Credentials File", aws_credentials_file);
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSAccessKeyId() == "key1");
-  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSSecretKey() == "secret1");
-  checkDefaultAttributes();
+  REQUIRE(mock_s3_wrapper_raw->getCredentials().GetAWSAccessKeyId() == "key1");
+  REQUIRE(mock_s3_wrapper_raw->getCredentials().GetAWSSecretKey() == "secret1");
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials setting from AWS Credential service", "[awsCredentials]") {
@@ -132,7 +165,35 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials setting from AWS Cre
   plan->setProperty(aws_cred_service, "Secret Key", "secret2");
   plan->setProperty(put_s3_object, "AWS Credentials Provider service", "AWSCredentialsService");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSAccessKeyId() == "key2");
-  REQUIRE(mock_s3_wrapper_raw->credentials.GetAWSSecretKey() == "secret2");
+  REQUIRE(mock_s3_wrapper_raw->getCredentials().GetAWSAccessKeyId() == "key2");
+  REQUIRE(mock_s3_wrapper_raw->getCredentials().GetAWSSecretKey() == "secret2");
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test no credentials set", "[awsCredentials]") {
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", "[awsClientConfig]") {
+  setBasicCredentials();
+  test_controller.runSession(plan, true);
   checkDefaultAttributes();
+  REQUIRE(mock_s3_wrapper_raw->put_s3_data == "input_data");
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration", "[awsClientConfig]") {
+  setBasicCredentials();
+  plan->setProperty(put_s3_object, "Object Key", "custom_key");
+  plan->setProperty(put_s3_object, "Content Type", "application/tar");
+  plan->setProperty(put_s3_object, "Storage Class", minifi::aws::processors::storage_class::REDUCED_REDUNDANCY);
+  plan->setProperty(put_s3_object, "Region", minifi::aws::processors::region::US_EAST_1);
+  plan->setProperty(put_s3_object, "Communications Timeout", "10 Sec");
+  plan->setProperty(put_s3_object, "Endpoint Override URL", "http://localhost:1234");
+  test_controller.runSession(plan, true);
+  REQUIRE(LogTestController::getInstance().contains("key:s3.key value:custom_key"));
+  REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/tar"));
+  REQUIRE(mock_s3_wrapper_raw->put_s3_options.storage_class == minifi::aws::processors::storage_class_map.at(minifi::aws::processors::storage_class::REDUCED_REDUNDANCY));
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().connectTimeoutMs == 10000);
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().endpointOverride == "http://localhost:1234");
+  REQUIRE(mock_s3_wrapper_raw->put_s3_data == "input_data");
 }
