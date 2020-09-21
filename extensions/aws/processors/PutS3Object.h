@@ -24,6 +24,7 @@
 #include "core/Property.h"
 #include "core/Processor.h"
 #include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "utils/OptionalUtils.h"
 
 #include <aws/core/auth/AWSCredentialsProvider.h>

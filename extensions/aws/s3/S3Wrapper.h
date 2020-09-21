@@ -20,6 +20,8 @@
 #pragma once
 
 #include "AbstractS3Wrapper.h"
+#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 
 #include <aws/core/Aws.h>
 #include <aws/core/auth/AWSCredentialsProvider.h>
@@ -38,8 +40,8 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
-class S3Initializer{
- public:
+class S3Initializer {
+public:
   S3Initializer(){
     Aws::InitAPI(options);
     // Aws::Utils::Logging::InitializeAWSLogging(
@@ -47,12 +49,12 @@ class S3Initializer{
     //         "RunUnitTests", Aws::Utils::Logging::LogLevel::Trace, "aws_sdk_"));
   }
 
-  ~S3Initializer(){
+  ~S3Initializer() {
     // Aws::Utils::Logging::ShutdownAWSLogging();
     Aws::ShutdownAPI(options);
   }
 
- private:
+private:
   Aws::SDKOptions options;
 };
 
@@ -62,14 +64,18 @@ static const std::map<std::string, Aws::S3::Model::StorageClass> storage_class_m
 };
 
 class S3Wrapper : public AbstractS3Wrapper {
+public:
+  S3Wrapper() {
+    static S3Initializer s3_init;
+  }
+
 protected:
   utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override {
     Aws::S3::S3Client s3_client(client_config_);
     Aws::S3::Model::PutObjectOutcome outcome = s3_client.PutObject(request);
 
     if (outcome.IsSuccess()) {
-        // std::cout << "Added object '" << objectName << "' to bucket '"
-        //     << bucketName << "'.";
+        logger_->log_info("Added S3 object %s to bucket %s", request.GetKey(), request.GetBucket());
         PutObjectResult result;
         result.version = outcome.GetResult().GetVersionId();
         result.etag = outcome.GetResult().GetETag();
@@ -79,11 +85,13 @@ protected:
     }
     else
     {
-        // std::cout << "Error: PutObject: " <<
-        //     outcome.GetError().GetMessage() << std::endl;
+        logger_->log_error("PutS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
         return utils::nullopt;
     }
   }
+
+private:
+  std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3Wrapper>::getLogger()};
 };
 
 } /* namespace processors */
