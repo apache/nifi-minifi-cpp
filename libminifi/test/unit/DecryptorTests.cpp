@@ -56,3 +56,23 @@ TEST_CASE("Decryptor will throw if the value or the aad is incorrect", "[decrypt
   REQUIRE_THROWS(decryptor.decrypt("incorrect value", correct_aad));
   REQUIRE_THROWS(decryptor.decrypt(correct_value, "incorrect aad"));
 }
+
+TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProperties]") {
+  minifi::Configure configuration;
+  configuration.setHome("resources");
+  configuration.loadConfigureFile("encrypted.minifi.properties");
+  REQUIRE(configuration.getConfiguredKeys().size() > 0);
+
+  utils::crypto::Bytes encryption_key = utils::crypto::stringToBytes(utils::StringUtils::from_base64(
+      "ECYjbr+6fn+9jjAmJBVBVvc3cYEUxaOm6zmp9iPHSvQ="));
+  minifi::Decryptor decryptor{encryption_key};
+  decryptor.decryptSensitiveProperties(configuration);
+
+  utils::optional<std::string> passphrase = configuration.get("nifi.security.client.pass.phrase");
+  REQUIRE(passphrase);
+  REQUIRE(*passphrase == "SpeakFriendAndEnter");
+
+  utils::optional<std::string> password = configuration.get("nifi.rest.api.password");
+  REQUIRE(password);
+  REQUIRE(*password == "OpenSesame");
+}

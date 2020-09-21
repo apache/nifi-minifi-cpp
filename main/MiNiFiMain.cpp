@@ -80,7 +80,7 @@ void decryptSensitiveProperties(minifi::Configure& minifi_properties, const std:
   if (encryption_key_encoded) {
     utils::crypto::Bytes encryption_key = utils::crypto::stringToBytes(utils::StringUtils::from_base64(*encryption_key_encoded));
     minifi::Decryptor decryptor{encryption_key};
-    minifi_properties.decryptSensitiveProperties(decryptor);
+    decryptor.decryptSensitiveProperties(minifi_properties);
   } else {
     logger.log_error("Encryption key not found, cannot decrypt sensitive properties!");
   }

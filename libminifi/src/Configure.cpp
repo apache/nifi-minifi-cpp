@@ -17,12 +17,6 @@
  */
 #include "properties/Configure.h"
 
-#include "core/logging/LoggerConfiguration.h"
-#include "utils/StringUtils.h"
-#ifdef OPENSSL_SUPPORT
-#include "properties/Decryptor.h"
-#endif  // OPENSSL_SUPPORT
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -73,37 +67,6 @@ const char *Configure::nifi_c2_full_heartbeat = "nifi.c2.full.heartbeat";
 const char *Configure::nifi_state_management_provider_local = "nifi.state.management.provider.local";
 const char *Configure::nifi_state_management_provider_local_always_persist = "nifi.state.management.provider.local.always.persist";
 const char *Configure::nifi_state_management_provider_local_auto_persistence_interval = "nifi.state.management.provider.local.auto.persistence.interval";
-
-Configure::Configure()
-    : Properties("MiNiFi configuration"), logger_(logging::LoggerFactory<Properties>::getLogger()) {}
-
-#ifdef OPENSSL_SUPPORT
-void Configure::decryptSensitiveProperties(const Decryptor& decryptor) {
-  logger_->log_info("Decrypting sensitive properties...");
-  int num_properties_decrypted = 0;
-
-  for (const auto& property : properties_) {
-    const std::string& property_key = property.first;
-    const std::string& property_value = property.second;
-
-    utils::optional<std::string> encryption_type = get(property_key + ".protected");
-    if (Decryptor::isEncrypted(encryption_type)) {
-      std::string decrypted_property_value;
-      try {
-        decrypted_property_value = decryptor.decrypt(utils::StringUtils::from_base64(property_value), property_key);
-      } catch (const std::exception& ex) {
-        logger_->log_error("Could not decrypt property %s; error: %s", property_key, ex.what());
-        continue;
-      }
-      set(property_key, decrypted_property_value);
-      logger_->log_info("Decrypted property: %s", property_key);
-      ++num_properties_decrypted;
-    }
-  }
-
-  logger_->log_info("Finished decrypting %d sensitive properties.", num_properties_decrypted);
-}
-#endif  // OPENSSL_SUPPORT
 
 } /* namespace minifi */
 } /* namespace nifi */
