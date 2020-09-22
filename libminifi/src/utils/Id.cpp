@@ -76,10 +76,6 @@ namespace {
 
 Identifier::Identifier(const Data& data) : data_(data) {}
 
-Identifier::Identifier(const std::string& data) {
-  *this = data;
-}
-
 Identifier& Identifier::operator=(const Data& data) {
   data_ = data;
   return *this;

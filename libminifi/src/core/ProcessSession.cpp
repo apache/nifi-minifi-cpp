@@ -130,7 +130,9 @@ std::shared_ptr<core::FlowFile> ProcessSession::cloneDuringTransfer(std::shared_
   logger_->log_debug("Clone FlowFile with UUID %s during transfer", record->getUUIDStr());
   // Copy attributes
   for (const auto& attribute : parent->getAttributes()) {
-    if (attribute.first == SpecialFlowAttribute::ALTERNATE_IDENTIFIER || attribute.first == SpecialFlowAttribute::DISCARD_REASON || attribute.first == SpecialFlowAttribute::UUID) {
+    if (attribute.first == SpecialFlowAttribute::ALTERNATE_IDENTIFIER
+        || attribute.first == SpecialFlowAttribute::DISCARD_REASON
+        || attribute.first == SpecialFlowAttribute::UUID) {
       // Do not copy special attributes from parent
       continue;
     }

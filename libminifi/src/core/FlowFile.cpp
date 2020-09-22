@@ -24,6 +24,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 #include "core/FlowFile.h"
+#include "utils/requirements/Container.h"
 
 namespace org {
 namespace apache {
@@ -44,8 +45,7 @@ FlowFile::FlowFile()
       penaltyExpiration_ms_(0),
       event_time_(0),
       claim_(nullptr),
-      marked_delete_(false),
-      connection_() {
+      marked_delete_(false) {
   id_ = numeric_id_generator_->generateId();
   entry_date_ = utils::timeutils::getTimeMillis();
   event_time_ = entry_date_;
@@ -223,6 +223,11 @@ const std::string SpecialFlowAttribute::ALTERNATE_IDENTIFIER = "alternate.identi
 const std::string SpecialFlowAttribute::FLOW_ID = "flow.id";
 
 } /* namespace core */
+
+namespace utils {
+template struct assert_container<core::FlowFile::AttributeMap>;
+} /* namespace utils */
+
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

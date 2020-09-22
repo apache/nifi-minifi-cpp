@@ -150,7 +150,7 @@ bool FlowFileRecord::Persist(const std::shared_ptr<core::Repository>& flowReposi
     if (claim_) claim_->increaseFlowFileRecordOwnedCount();
     return true;
   } else {
-    logger_->log_error("NiFi FlowFile Store failed %s size " "%" PRIu64 " fail", getUUIDStr(), outStream.size());
+    logger_->log_error("NiFi FlowFile Store failed %s size " "%" PRIu64, getUUIDStr(), outStream.size());
     return false;
   }
 

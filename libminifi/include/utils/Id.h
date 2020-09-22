@@ -60,7 +60,6 @@ class Identifier {
 
   Identifier() = default;
   explicit Identifier(const Data& data);
-  explicit Identifier(const std::string& data);
   Identifier &operator=(const Data& data);
 
   Identifier &operator=(const std::string& idStr);

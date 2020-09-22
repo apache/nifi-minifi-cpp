@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_UTILS_FLATMAP_H_
-#define LIBMINIFI_INCLUDE_UTILS_FLATMAP_H_
+#pragma once
 
 #include <tuple>
 #include <functional>
@@ -32,24 +31,28 @@ namespace utils {
 
 template<typename K, typename V>
 class FlatMap{
+  using Container = std::vector<std::pair<K, V>>;
+
  public:
   using value_type = std::pair<K, V>;
+  using reference = value_type&;
+  using const_reference = const value_type&;
+  using difference_type = typename Container::difference_type;
+  using size_type = typename Container::size_type;
 
- private:
-  using Container = std::vector<value_type>;
-
- public:
   class iterator{
     friend class const_iterator;
     friend class FlatMap;
-    explicit iterator(typename Container::iterator it): it_(it) {}
+    explicit iterator(typename Container::iterator it) noexcept : it_(it) {}
 
    public:
-    using difference_type = void;
+    using difference_type = typename Container::iterator::difference_type;
     using value_type = FlatMap::value_type;
-    using pointer = void;
-    using reference = void;
-    using iterator_category = void;
+    using pointer = value_type*;
+    using reference = value_type&;
+    using iterator_category = std::forward_iterator_tag;
+
+    iterator() = default;
 
     value_type* operator->() const {return &(*it_);}
     value_type& operator*() const {return *it_;}
@@ -67,21 +70,29 @@ class FlatMap{
       return *this;
     }
 
+    iterator operator++(int) {
+      auto tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
    private:
     typename Container::iterator it_;
   };
 
   class const_iterator{
     friend class FlatMap;
-    explicit const_iterator(typename Container::const_iterator it): it_(it) {}
+    explicit const_iterator(typename Container::const_iterator it) noexcept : it_(it) {}
 
    public:
-    const_iterator(iterator it): it_(it.it_) {}  // NOLINT
-    using difference_type = void;
+    const_iterator(iterator it) noexcept : it_(it.it_) {}  // NOLINT
+    const_iterator() = default;
+
+    using difference_type = typename Container::const_iterator::difference_type;
     using value_type = const FlatMap::value_type;
-    using pointer = void;
-    using reference = void;
-    using iterator_category = void;
+    using pointer = value_type*;
+    using reference = value_type&;
+    using iterator_category = std::forward_iterator_tag;
 
     value_type* operator->() const {return &(*it_);}
     value_type& operator*() const {return *it_;}
@@ -97,6 +108,12 @@ class FlatMap{
     const_iterator& operator++() {
       ++it_;
       return *this;
+    }
+
+    const_iterator operator++(int) {
+      auto tmp = *this;
+      ++(*this);
+      return tmp;
     }
 
    private:
@@ -117,7 +134,7 @@ class FlatMap{
     return *this;
   }
 
-  std::size_t size() {
+  size_type size() const noexcept {
     return data_.size();
   }
 
@@ -182,20 +199,60 @@ class FlatMap{
     return end();
   }
 
-  iterator begin() {
+  iterator begin() noexcept {
     return iterator{data_.begin()};
   }
 
-  iterator end() {
+  iterator end() noexcept {
     return iterator{data_.end()};
   }
 
-  const_iterator begin() const {
+  const_iterator begin() const noexcept {
     return const_iterator{data_.begin()};
   }
 
-  const_iterator end() const {
+  const_iterator end() const noexcept {
     return const_iterator{data_.end()};
+  }
+
+  const_iterator cbegin() const noexcept {
+    return const_iterator{data_.begin()};
+  }
+
+  const_iterator cend() const noexcept {
+    return const_iterator{data_.end()};
+  }
+
+  bool operator==(const FlatMap& other) const {
+    if (size() != other.size()) {
+      return false;
+    }
+    // no linearity can be guaranteed unless we
+    // sort the underlying storage
+    for (const auto& item : *this) {
+      auto it = other.find(item.first);
+      if (it == other.end() || !(it.second == item.second)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool operator!=(const FlatMap& other) const {
+    return !(*this == other);
+  }
+
+  void swap(FlatMap& other) {
+    using std::swap;
+    swap(data_, other.data_);
+  }
+
+  size_type max_size() const noexcept {
+    return data_.max_size();
+  }
+
+  bool empty() const noexcept {
+    return data_.empty();
   }
 
  private:
@@ -207,5 +264,3 @@ class FlatMap{
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_FLATMAP_H_
