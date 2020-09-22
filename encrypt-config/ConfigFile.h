@@ -32,7 +32,7 @@ namespace encrypt_config {
 class ConfigLine {
  public:
   explicit ConfigLine(std::string line);
-  ConfigLine(const std::string& key, const std::string& value);
+  ConfigLine(std::string key, std::string value);
 
   void updateValue(const std::string& value);
 

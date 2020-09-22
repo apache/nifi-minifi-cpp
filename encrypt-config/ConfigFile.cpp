@@ -49,8 +49,8 @@ ConfigLine::ConfigLine(std::string line) : line_(line) {
   value_ = utils::StringUtils::trim(line.substr(index_of_first_equals_sign + 1));
 }
 
-ConfigLine::ConfigLine(const std::string& key, const std::string& value)
-  : line_{key + "=" + value}, key_{key}, value_{value} {
+ConfigLine::ConfigLine(std::string key, std::string value)
+  : line_{utils::StringUtils::join_pack(key, "=", value)}, key_{std::move(key)}, value_{std::move(value)} {
 }
 
 void ConfigLine::updateValue(const std::string& value) {
