@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include <istream>
 #include <string>
 #include <vector>
 
@@ -58,7 +59,8 @@ inline bool operator!=(const ConfigLine& left, const ConfigLine& right) {
 
 class ConfigFile {
  public:
-  explicit ConfigFile(const std::string& file_path);
+  explicit ConfigFile(std::istream& input_stream);
+  explicit ConfigFile(std::istream&& input_stream) : ConfigFile{input_stream} {}
 
   utils::optional<std::string> getValue(const std::string& key) const;
   void update(const std::string& key, const std::string& value);

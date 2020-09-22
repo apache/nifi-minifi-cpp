@@ -63,10 +63,9 @@ void ConfigLine::updateValue(const std::string& value) {
   }
 }
 
-ConfigFile::ConfigFile(const std::string& file_path) {
-  std::ifstream file{file_path};
+ConfigFile::ConfigFile(std::istream& input_stream) {
   std::string line;
-  while (std::getline(file, line)) {
+  while (std::getline(input_stream, line)) {
     config_lines_.push_back(ConfigLine{line});
   }
 }

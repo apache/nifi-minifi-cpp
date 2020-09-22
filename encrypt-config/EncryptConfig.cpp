@@ -80,7 +80,7 @@ std::string EncryptConfig::propertiesFilePath() const {
 }
 
 utils::crypto::Bytes EncryptConfig::getEncryptionKey() const {
-  encrypt_config::ConfigFile bootstrap_file{bootstrapFilePath()};
+  encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
   utils::optional<std::string> key_from_bootstrap_file = bootstrap_file.getValue(ENCRYPTION_KEY_PROPERTY_NAME);
 
   if (key_from_bootstrap_file && !key_from_bootstrap_file->empty()) {
@@ -111,7 +111,7 @@ std::string EncryptConfig::base64DecodeAndValidateKey(const std::string& key) co
 
 void EncryptConfig::writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes& encryption_key) const {
   std::string key_encoded = utils::StringUtils::to_base64(utils::crypto::bytesToString(encryption_key));
-  encrypt_config::ConfigFile bootstrap_file{bootstrapFilePath()};
+  encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
 
   if (bootstrap_file.getValue(ENCRYPTION_KEY_PROPERTY_NAME)) {
     bootstrap_file.update(ENCRYPTION_KEY_PROPERTY_NAME, key_encoded);
@@ -123,7 +123,7 @@ void EncryptConfig::writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes
 }
 
 void EncryptConfig::encryptSensitiveProperties(const utils::crypto::Bytes& encryption_key) const {
-  encrypt_config::ConfigFile properties_file{propertiesFilePath()};
+  encrypt_config::ConfigFile properties_file{std::ifstream{propertiesFilePath()}};
   if (properties_file.size() == 0) {
     throw std::runtime_error{"Properties file " + propertiesFilePath() + " not found!"};
   }
