@@ -26,6 +26,9 @@ set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 9)
 set(PROJECT_VERSION_PATCH 0)
 
+# Optional build number for linux distribution targets' tar.gz output
+set(BUILD_NUMBER "" CACHE STRING "Build number")
+
 include(CMakeDependentOption)
 include(CheckIncludeFile)
 include(FeatureSummary)
@@ -39,7 +42,7 @@ option(SKIP_TESTS "Skips building all tests." OFF)
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
 option(USE_SHARED_LIBS "Builds using shared libraries" ON)
 option(ENABLE_PYTHON "Instructs the build system to enable building shared objects for the python lib" OFF)
-cmake_dependent_option(STATIC_BUILD "Attempts to statically link as many dependencies as possible." ON "NOT ENABLE_PYTHON; NOT USE_SHARED_LIBS" OFF)  
+cmake_dependent_option(STATIC_BUILD "Attempts to statically link as many dependencies as possible." ON "NOT ENABLE_PYTHON; NOT USE_SHARED_LIBS" OFF)
 option(LIBC_STATIC "Instructs the build system to statically link libstdc++ and glibc into minifiexe. Experiemental" OFF)
 option(OPENSSL_OFF "Disables OpenSSL" OFF)
 option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
@@ -554,7 +557,7 @@ if (NOT DISABLE_CURL)
   if (ENABLE_PYTHON)
   	if (NOT WIN32)
   		add_subdirectory(python/library)
-  	endif()	
+  	endif()
   endif(ENABLE_PYTHON)
 endif()
 
@@ -587,7 +590,7 @@ if (WIN32)
 			"${BUILD_IDENTIFIER}"
 			"${BUILD_REV}")
 else()
-	execute_process(COMMAND 
+	execute_process(COMMAND
 			"${CMAKE_CURRENT_SOURCE_DIR}/generateVersion.sh"
 			"${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
 			${CMAKE_CURRENT_SOURCE_DIR}
@@ -722,9 +725,9 @@ else()
 	install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/main/minifi
 			DESTINATION bin
 			COMPONENT bin)
-endif() 
-        
-			
+endif()
+
+
 if (WIN32)
 	set(CPACK_GENERATOR "WIX")
 	set(CPACK_WIX_UPGRADE_GUID "FE29F801-3486-4E9E-AFF9-838C1A5C8D59")
