@@ -31,12 +31,14 @@ namespace utils {
 
 template<typename T>
 struct assert_legacy_input_iterator : assert_legacy_iterator<T> {
-  static_assert(is_equality_comparable<T>::value, "T is not equility comparable");
+  static_assert(is_equality_comparable<T>::value, "");
+  static_assert(std::is_same<decltype(*std::declval<const T>()), typename std::iterator_traits<T>::reference>::value, "");
+  static_assert(std::is_same<decltype(*std::declval<const T>().T::operator->()), typename std::iterator_traits<T>::reference>::value, "");
+  static_assert(std::is_convertible<decltype(*std::declval<T>()++), typename std::iterator_traits<T>::value_type>::value, "");
+
+ private:
   // checking for contextual convertibility
-  static_assert(true || (std::declval<const T>() != std::declval<const T>()), "");
-  static_assert(std::is_same<decltype(*std::declval<const T>()), typename std::iterator_traits<T>::reference>::value, "Dereference does not yield a reference");
-  static_assert(std::is_same<decltype(*std::declval<const T>().T::operator->()), typename std::iterator_traits<T>::reference>::value, "operator-> does not yield a reference");
-  static_assert(std::is_convertible<decltype(*std::declval<T>()++), typename std::iterator_traits<T>::value_type>::value, "Cannot convert (*it++) to value_type");
+  using _ = decltype(true || (std::declval<const T>() != std::declval<const T>()));
 };
 
 }  // namespace utils

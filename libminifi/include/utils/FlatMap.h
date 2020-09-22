@@ -247,6 +247,10 @@ class FlatMap{
     swap(data_, other.data_);
   }
 
+  friend void swap(FlatMap& lhs, FlatMap& rhs) {
+    lhs.swap(rhs);
+  }
+
   size_type max_size() const noexcept {
     return data_.max_size();
   }

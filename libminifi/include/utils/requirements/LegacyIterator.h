@@ -49,12 +49,12 @@ struct is_incrementable<T,
 
 template<typename T>
 struct assert_legacy_iterator {
-  static_assert(std::is_copy_constructible<T>::value, "T is not copy constructible");
-  static_assert(std::is_copy_assignable<T>::value, "T is not copy assignable");
-  static_assert(std::is_destructible<T>::value, "T is not destructible");
-  static_assert(is_swappable<T>::value, "T is not swappable");
-  static_assert(detail::is_dereferenceable<T>::value, "T is not dereferenceable");
-  static_assert(detail::is_incrementable<T>::value, "T is not incrementable");
+  static_assert(std::is_copy_constructible<T>::value, "");
+  static_assert(std::is_copy_assignable<T>::value, "");
+  static_assert(std::is_destructible<T>::value, "");
+  static_assert(is_swappable<T>::value, "");
+  static_assert(detail::is_dereferenceable<T>::value, "");
+  static_assert(detail::is_incrementable<T>::value, "");
 
  private:
   using value_type = typename std::iterator_traits<T>::value_type;

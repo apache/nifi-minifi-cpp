@@ -27,7 +27,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-namespace detail{
+namespace detail {
 
 using std::swap;
 
@@ -62,7 +62,7 @@ struct is_simple_function<R(Args...)> : std::true_type {};
 
 // variadic functions
 template<typename R, typename ...Args>
-struct is_simple_function<R(Args...,...)> : std::true_type {};
+struct is_simple_function<R(Args..., ...)> : std::true_type {};
 
 // template<typename R, typename ...Args>
 // struct is_simple_function<R(Args...) noexcept> : std::true_type {};
