@@ -28,6 +28,7 @@ IMAGE_TYPE=${4:-release}
 ENABLE_JNI=${5:-}
 DUMP_LOCATION=${6:-}
 DISTRO_NAME=${7:-}
+BUILD_NUMBER=${8:-}
 
 echo "NiFi-MiNiFi-CPP Version: ${MINIFI_VERSION}"
 
@@ -42,11 +43,19 @@ if [ "${IMAGE_TYPE}" != "release" ]; then
   TAG="${IMAGE_TYPE}-"
 fi
 
+TARGZ_TAG=""
 if [ -n "${DISTRO_NAME}" ]; then
   TAG="${TAG}${DISTRO_NAME}-"
+  TARGZ_TAG="${DISTRO_NAME}-"
 fi
 
 TAG="${TAG}${MINIFI_VERSION}"
+TARGZ_TAG="${TARGZ_TAG}${MINIFI_VERSION}"
+
+if [ -n "${BUILD_NUMBER}" ]; then
+  TAG="${TAG}-${BUILD_NUMBER}"
+  TARGZ_TAG="${TARGZ_TAG}-${BUILD_NUMBER}"
+fi
 
 DOCKER_COMMAND="docker build --build-arg UID=${UID_ARG} \
                              --build-arg GID=${GID_ARG} \
@@ -57,8 +66,8 @@ DOCKER_COMMAND="docker build --build-arg UID=${UID_ARG} \
                              -t \
                              apacheminificpp:${TAG} .."
 echo "Docker Command: '$DOCKER_COMMAND'"
-${DOCKER_COMMAND}
+DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}
 
 if [ -n "${DUMP_LOCATION}" ]; then
-  docker run --rm --entrypoint cat "apacheminificpp:${TAG}" "/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz" > "${DUMP_LOCATION}/nifi-minifi-cpp-${DISTRO_NAME}-${MINIFI_VERSION}-bin.tar.gz"
+  docker run --rm --entrypoint cat "apacheminificpp:${TAG}" "/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz" > "${DUMP_LOCATION}/nifi-minifi-cpp-${TARGZ_TAG}-bin.tar.gz"
 fi
