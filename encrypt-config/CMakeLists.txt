@@ -15,11 +15,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-
-cmake_minimum_required(VERSION 3.7)
-project(encrypt-config)
-set(VERSION, "0.1")
 
 file(GLOB ENCRYPT_CONFIG_FILES  "*.cpp")
 add_executable(encrypt-config "${ENCRYPT_CONFIG_FILES}")
