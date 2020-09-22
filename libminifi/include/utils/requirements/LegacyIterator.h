@@ -30,9 +30,6 @@ namespace utils {
 
 namespace detail {
 
-template<typename T>
-struct discard : std::true_type {};
-
 template<typename T, typename = void>
 struct is_dereferenceable : std::false_type {};
 
@@ -59,11 +56,12 @@ struct assert_legacy_iterator {
   static_assert(detail::is_dereferenceable<T>::value, "T is not dereferenceable");
   static_assert(detail::is_incrementable<T>::value, "T is not incrementable");
 
-  static_assert(detail::discard<typename std::iterator_traits<T>::value_type>::value, "Missing value_type");
-  static_assert(detail::discard<typename std::iterator_traits<T>::difference_type>::value, "Missing difference_type");
-  static_assert(detail::discard<typename std::iterator_traits<T>::reference>::value, "Missing reference");
-  static_assert(detail::discard<typename std::iterator_traits<T>::pointer>::value, "Missing pointer");
-  static_assert(detail::discard<typename std::iterator_traits<T>::iterator_category>::value, "Missing iterator_category");
+ private:
+  using value_type = typename std::iterator_traits<T>::value_type;
+  using difference_type = typename std::iterator_traits<T>::difference_type;
+  using reference = typename std::iterator_traits<T>::reference;
+  using pointer = typename std::iterator_traits<T>::pointer;
+  using iterator_category = typename std::iterator_traits<T>::iterator_category;
 };
 
 }  // namespace utils
