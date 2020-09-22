@@ -198,6 +198,23 @@ Aws::Auth::AWSCredentials PutS3Object::getAWSCredentials(const std::shared_ptr<c
   throw Exception(PROCESS_SCHEDULE_EXCEPTION, "No AWS credentials are set");
 }
 
+void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context) {
+  const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
+  bool first_property = true;
+  for (const auto &prop_key : dynamic_prop_keys) {
+    std::string prop_value = "";
+    if (context->getDynamicProperty(prop_key, prop_value) && !prop_value.empty()) {
+      logger_->log_debug("PutS3Object: DynamicProperty: [%s] -> [%s]", prop_key, prop_value);
+      if (first_property) {
+        user_metadata_ = prop_key + "=" + prop_value;
+        first_property = false;
+      } else {
+        user_metadata_ += "," + prop_key + "=" + prop_value;
+      }
+    }
+  }
+}
+
 void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   context->getProperty(ObjectKey.getName(), object_key_);
   if (!context->getProperty(Bucket.getName(), bucket_) || bucket_.empty()) {
@@ -237,6 +254,8 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Class property missing or invalid");
   }
   logger_->log_debug("PutS3Object: Server Side Encryption [%s]", server_side_encryption_);
+
+  fillUserMetadata(context);
 }
 
 void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -252,13 +271,9 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
   session->putAttribute(flow_file, "s3.bucket", bucket_);
   session->putAttribute(flow_file, "s3.key", object_key_);
   session->putAttribute(flow_file, "s3.contenttype", content_type_);
+  session->putAttribute(flow_file, "s3.usermetadata", user_metadata_);
 
-  minifi::aws::processors::PutS3ObjectOptions options;
-  options.bucket_name = bucket_;
-  options.object_key = object_key_;
-  options.storage_class = storage_class_;
-  options.server_side_encryption = server_side_encryption_;
-
+  minifi::aws::processors::PutS3ObjectOptions options{bucket_, object_key_, storage_class_, server_side_encryption_};
   PutS3Object::ReadCallback callback(flow_file->getSize(), std::move(options), s3_wrapper_.get());
   session->read(flow_file, &callback);
   if (callback.result_ == utils::nullopt) {
@@ -268,7 +283,7 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     session->putAttribute(flow_file, "s3.version", callback.result_.value().version);
     session->putAttribute(flow_file, "s3.etag", callback.result_.value().etag);
     session->putAttribute(flow_file, "s3.expiration", callback.result_.value().expiration);
-    session->putAttribute(flow_file, "s3.ssealgorithm", callback.result_.value().ssealgorithm);
+    session->putAttribute(flow_file, "s3.sseAlgorithm", callback.result_.value().ssealgorithm);
 
     logger_->log_debug("Sent S3 object %s to bucket %s", object_key_, bucket_);
     session->transfer(flow_file, Success);

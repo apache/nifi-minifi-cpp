@@ -165,6 +165,7 @@ private:
   utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromProperties(const std::shared_ptr<core::ProcessContext> &context);
   utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context);
   Aws::Auth::AWSCredentials getAWSCredentials(const std::shared_ptr<core::ProcessContext> &context);
+  void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);
 
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutS3Object>::getLogger()};
   std::string object_key_;
@@ -173,6 +174,7 @@ private:
   std::unique_ptr<aws::processors::AbstractS3Wrapper> s3_wrapper_;
   std::string storage_class_;
   std::string server_side_encryption_;
+  std::string user_metadata_;
 };
 
 REGISTER_RESOURCE(PutS3Object, "This Processor puts FlowFiles to an Amazon S3 Bucket.");

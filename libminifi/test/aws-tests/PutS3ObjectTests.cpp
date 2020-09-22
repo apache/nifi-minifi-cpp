@@ -106,20 +106,11 @@ public:
     plan->setProperty(put_s3_object, "Secret Key", "secret");
   }
 
-  void checkDefaultAttributes() {
-    REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
-    REQUIRE(LogTestController::getInstance().contains("key:s3.key value:input_data.log"));
-    REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/octet-stream"));
+  void checkPutObjectResults() {
     REQUIRE(LogTestController::getInstance().contains("key:s3.version value:" + S3_VERSION));
     REQUIRE(LogTestController::getInstance().contains("key:s3.etag value:" + S3_ETAG));
     REQUIRE(LogTestController::getInstance().contains("key:s3.expiration value:" + S3_EXPIRATION));
-    REQUIRE(LogTestController::getInstance().contains("key:s3.ssealgorithm value:" + S3_SSEALGORITHM));
-
-    REQUIRE(mock_s3_wrapper_raw->storage_class == Aws::S3::Model::StorageClass::STANDARD);
-    REQUIRE(mock_s3_wrapper_raw->server_side_encryption == Aws::S3::Model::ServerSideEncryption::NOT_SET);
-    REQUIRE(mock_s3_wrapper_raw->getClientConfig().region == minifi::aws::processors::region::US_WEST_2);
-    REQUIRE(mock_s3_wrapper_raw->getClientConfig().connectTimeoutMs == 30000);
-    REQUIRE(mock_s3_wrapper_raw->getClientConfig().endpointOverride.empty());
+    REQUIRE(LogTestController::getInstance().contains("key:s3.sseAlgorithm value:" + S3_SSEALGORITHM));
   }
 
   std::string createTempFile(const std::string& filename) {
@@ -181,7 +172,15 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test no credentials set", "[awsCreden
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", "[awsClientConfig]") {
   setBasicCredentials();
   test_controller.runSession(plan, true);
-  checkDefaultAttributes();
+  checkPutObjectResults();
+  REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
+  REQUIRE(LogTestController::getInstance().contains("key:s3.key value:input_data.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/octet-stream"));
+  REQUIRE(mock_s3_wrapper_raw->storage_class == Aws::S3::Model::StorageClass::STANDARD);
+  REQUIRE(mock_s3_wrapper_raw->server_side_encryption == Aws::S3::Model::ServerSideEncryption::NOT_SET);
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().region == minifi::aws::processors::region::US_WEST_2);
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().connectTimeoutMs == 30000);
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().endpointOverride.empty());
   REQUIRE(mock_s3_wrapper_raw->put_s3_data == "input_data");
 }
 
@@ -195,6 +194,8 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   plan->setProperty(put_s3_object, "Endpoint Override URL", "http://localhost:1234");
   plan->setProperty(put_s3_object, "Server Side Encryption", minifi::aws::processors::server_side_encryption::AES256);
   test_controller.runSession(plan, true);
+  checkPutObjectResults();
+  REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
   REQUIRE(LogTestController::getInstance().contains("key:s3.key value:custom_key"));
   REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/tar"));
   REQUIRE(mock_s3_wrapper_raw->storage_class == Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY);
@@ -203,4 +204,19 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().connectTimeoutMs == 10000);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().endpointOverride == "http://localhost:1234");
   REQUIRE(mock_s3_wrapper_raw->put_s3_data == "input_data");
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsMetaData]") {
+  setBasicCredentials();
+  plan->setProperty(put_s3_object, "meta_key", "meta_value", true);
+  test_controller.runSession(plan, true);
+  REQUIRE(LogTestController::getInstance().contains("key:s3.usermetadata value:meta_key=meta_value"));
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsMetaData]") {
+  setBasicCredentials();
+  plan->setProperty(put_s3_object, "meta_key1", "meta_value1", true);
+  plan->setProperty(put_s3_object, "meta_key2", "meta_value2", true);
+  test_controller.runSession(plan, true);
+  REQUIRE(LogTestController::getInstance().contains("key:s3.usermetadata value:meta_key1=meta_value1,meta_key2=meta_value2"));
 }
