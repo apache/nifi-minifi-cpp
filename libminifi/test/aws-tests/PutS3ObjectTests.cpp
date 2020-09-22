@@ -44,9 +44,10 @@ public:
   utils::optional<minifi::aws::processors::PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override {
     std::istreambuf_iterator<char> eos;
     put_s3_data = std::string(std::istreambuf_iterator<char>(*request.GetBody()), eos);
-    put_s3_options.bucket_name = request.GetBucket();
-    put_s3_options.object_key = request.GetKey();
-    put_s3_options.storage_class = request.GetStorageClass();
+    bucket_name = request.GetBucket();
+    object_key = request.GetKey();
+    storage_class = request.GetStorageClass();
+    server_side_encryption = request.GetServerSideEncryption();
 
     put_s3_result.version = S3_VERSION;
     put_s3_result.etag = S3_ETAG;
@@ -55,7 +56,10 @@ public:
     return put_s3_result;
   }
 
-  minifi::aws::processors::PutS3ObjectOptions put_s3_options;
+  std::string bucket_name;
+  std::string object_key;
+  Aws::S3::Model::StorageClass storage_class;
+  Aws::S3::Model::ServerSideEncryption server_side_encryption;
   minifi::aws::processors::PutObjectResult put_s3_result;
   std::string put_s3_data;
 };
@@ -111,7 +115,8 @@ public:
     REQUIRE(LogTestController::getInstance().contains("key:s3.expiration value:" + S3_EXPIRATION));
     REQUIRE(LogTestController::getInstance().contains("key:s3.ssealgorithm value:" + S3_SSEALGORITHM));
 
-    REQUIRE(mock_s3_wrapper_raw->put_s3_options.storage_class == minifi::aws::processors::storage_class_map.at(minifi::aws::processors::storage_class::STANDARD));
+    REQUIRE(mock_s3_wrapper_raw->storage_class == Aws::S3::Model::StorageClass::STANDARD);
+    REQUIRE(mock_s3_wrapper_raw->server_side_encryption == Aws::S3::Model::ServerSideEncryption::NOT_SET);
     REQUIRE(mock_s3_wrapper_raw->getClientConfig().region == minifi::aws::processors::region::US_WEST_2);
     REQUIRE(mock_s3_wrapper_raw->getClientConfig().connectTimeoutMs == 30000);
     REQUIRE(mock_s3_wrapper_raw->getClientConfig().endpointOverride.empty());
@@ -188,10 +193,12 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   plan->setProperty(put_s3_object, "Region", minifi::aws::processors::region::US_EAST_1);
   plan->setProperty(put_s3_object, "Communications Timeout", "10 Sec");
   plan->setProperty(put_s3_object, "Endpoint Override URL", "http://localhost:1234");
+  plan->setProperty(put_s3_object, "Server Side Encryption", minifi::aws::processors::server_side_encryption::AES256);
   test_controller.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("key:s3.key value:custom_key"));
   REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/tar"));
-  REQUIRE(mock_s3_wrapper_raw->put_s3_options.storage_class == minifi::aws::processors::storage_class_map.at(minifi::aws::processors::storage_class::REDUCED_REDUNDANCY));
+  REQUIRE(mock_s3_wrapper_raw->storage_class == Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY);
+  REQUIRE(mock_s3_wrapper_raw->server_side_encryption == Aws::S3::Model::ServerSideEncryption::AES256);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().connectTimeoutMs == 10000);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().endpointOverride == "http://localhost:1234");

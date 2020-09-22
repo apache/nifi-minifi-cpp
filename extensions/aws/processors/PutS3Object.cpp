@@ -103,6 +103,13 @@ const core::Property PutS3Object::EndpointOverrideURL(
                       "with other S3-compatible endpoints.")
     ->supportsExpressionLanguage(true)
     ->build());
+const core::Property PutS3Object::ServerSideEncryption(
+  core::PropertyBuilder::createProperty("Server Side Encryption")
+    ->isRequired(true)
+    ->withDefaultValue<std::string>(server_side_encryption::NONE)
+    ->withAllowableValues<std::string>({server_side_encryption::NONE, server_side_encryption::AES256, server_side_encryption::AWS_KMS})
+    ->withDescription("Specifies the algorithm used for server side encryption.")
+    ->build());
 
 const core::Relationship PutS3Object::Success("success", "FlowFiles are routed to success relationship");
 const core::Relationship PutS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
@@ -121,6 +128,7 @@ void PutS3Object::initialize() {
   properties.insert(Region);
   properties.insert(CommunicationsTimeout);
   properties.insert(EndpointOverrideURL);
+  properties.insert(ServerSideEncryption);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -224,6 +232,11 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     s3_wrapper_->setEndpointOverrideUrl(value);
     logger_->log_debug("PutS3Object: Endpoint Override URL [%d]", value);
   }
+
+  if (!context->getProperty(ServerSideEncryption.getName(), server_side_encryption_) || server_side_encryption_.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Class property missing or invalid");
+  }
+  logger_->log_debug("PutS3Object: Server Side Encryption [%s]", server_side_encryption_);
 }
 
 void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -243,7 +256,8 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
   minifi::aws::processors::PutS3ObjectOptions options;
   options.bucket_name = bucket_;
   options.object_key = object_key_;
-  options.storage_class = minifi::aws::processors::storage_class_map.at(storage_class_);
+  options.storage_class = storage_class_;
+  options.server_side_encryption = server_side_encryption_;
 
   PutS3Object::ReadCallback callback(flow_file->getSize(), std::move(options), s3_wrapper_.get());
   session->read(flow_file, &callback);

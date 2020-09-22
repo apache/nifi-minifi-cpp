@@ -58,11 +58,6 @@ private:
   Aws::SDKOptions options;
 };
 
-static const std::map<std::string, Aws::S3::Model::StorageClass> storage_class_map {
-  {"Standard", Aws::S3::Model::StorageClass::STANDARD},
-  {"ReducedRedundancy", Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY}
-};
-
 class S3Wrapper : public AbstractS3Wrapper {
 public:
   S3Wrapper() {

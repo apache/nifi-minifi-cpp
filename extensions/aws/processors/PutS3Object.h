@@ -67,6 +67,14 @@ namespace region
 
 } // namespace region
 
+namespace server_side_encryption
+{
+
+  constexpr const char *NONE = "None";
+  constexpr const char *AES256 = "AES256";
+  constexpr const char *AWS_KMS = "aws_kms";
+
+} // namespace server_side_encryption
 
 class PutS3Object : public core::Processor {
 public:
@@ -81,6 +89,7 @@ public:
   static const core::Property CredentialsFile;
   static const core::Property AWSCredentialsProviderService;
   static const core::Property StorageClass;
+  static const core::Property ServerSideEncryption;
   static const core::Property Region;
   static const core::Property CommunicationsTimeout;
   static const core::Property EndpointOverrideURL;
@@ -163,6 +172,7 @@ private:
   std::string content_type_ = "application/octet-stream";
   std::unique_ptr<aws::processors::AbstractS3Wrapper> s3_wrapper_;
   std::string storage_class_;
+  std::string server_side_encryption_;
 };
 
 REGISTER_RESOURCE(PutS3Object, "This Processor puts FlowFiles to an Amazon S3 Bucket.");

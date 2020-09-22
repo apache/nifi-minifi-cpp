@@ -25,6 +25,8 @@
 #include <aws/core/auth/AWSCredentialsProvider.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/PutObjectRequest.h>
+#include <aws/s3/model/StorageClass.h>
+#include <aws/s3/model/ServerSideEncryption.h>
 #include <string>
 
 namespace org {
@@ -41,10 +43,22 @@ struct PutObjectResult {
   Aws::String ssealgorithm;
 };
 
+static const std::map<std::string, Aws::S3::Model::StorageClass> storage_class_map {
+  {"Standard", Aws::S3::Model::StorageClass::STANDARD},
+  {"ReducedRedundancy", Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY}
+};
+
+static const std::map<std::string, Aws::S3::Model::ServerSideEncryption> server_side_encryption_map {
+  {"None", Aws::S3::Model::ServerSideEncryption::NOT_SET},
+  {"AES256", Aws::S3::Model::ServerSideEncryption::AES256},
+  {"aws_kms", Aws::S3::Model::ServerSideEncryption::aws_kms},
+};
+
 struct PutS3ObjectOptions {
-  Aws::String bucket_name;
-  Aws::String object_key;
-  Aws::S3::Model::StorageClass storage_class;
+  std::string bucket_name;
+  std::string object_key;
+  std::string storage_class;
+  std::string server_side_encryption;
 };
 
 class AbstractS3Wrapper {
@@ -69,7 +83,8 @@ public:
     Aws::S3::Model::PutObjectRequest request;
     request.SetBucket(options.bucket_name);
     request.SetKey(options.object_key);
-    request.SetStorageClass(options.storage_class);
+    request.SetStorageClass(storage_class_map.at(options.storage_class));
+    request.SetServerSideEncryption(server_side_encryption_map.at(options.server_side_encryption));
     request.SetBody(data_stream);
 
     return putObject(request);
