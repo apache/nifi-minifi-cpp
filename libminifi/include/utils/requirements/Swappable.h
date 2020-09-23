@@ -19,7 +19,7 @@
 #pragma once
 
 #include <utility>
-#include "../GeneralUtils.h"
+#include "utils/GeneralUtils.h"
 
 namespace org {
 namespace apache {

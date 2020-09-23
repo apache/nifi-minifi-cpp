@@ -18,8 +18,11 @@
 
 #pragma once
 
-#include "LegacyForwardIterator.h"
+#include <iterator>
+#include <utility>
 #include <type_traits>
+#include "LegacyForwardIterator.h"
+#include "EqualityComparable.h"
 
 namespace org {
 namespace apache {

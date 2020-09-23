@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <iterator>
 #include "LegacyInputIterator.h"
 
 namespace org {

@@ -20,6 +20,8 @@
 
 #include <type_traits>
 #include <iterator>
+#include <utility>
+#include "utils/GeneralUtils.h"
 #include "Swappable.h"
 
 namespace org {

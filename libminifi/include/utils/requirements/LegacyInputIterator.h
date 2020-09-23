@@ -18,10 +18,10 @@
 
 #pragma once
 
+#include <utility>
+#include <iterator>
 #include "LegacyIterator.h"
 #include "EqualityComparable.h"
-
-#include <iterator>
 
 namespace org {
 namespace apache {
