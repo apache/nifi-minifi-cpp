@@ -42,16 +42,6 @@ struct is_swappable_with_impl<T, U,
       swap(std::declval<U>(), std::declval<T>()))
     >> : std::true_type {};
 
-template<typename T, typename U, typename = void>
-struct is_nothrow_swappable_with_impl: std::false_type {};
-
-template<typename T, typename U>
-struct is_nothrow_swappable_with_impl<T, U,
-    typename std::enable_if<
-      noexcept(swap(std::declval<T>(), std::declval<U>())) &&
-      noexcept(swap(std::declval<U>(), std::declval<T>()))
-    >::type> : std::true_type {};
-
 // non-cv-qualified non-ref-qualified functions
 template<typename T>
 struct is_simple_function : std::false_type {};
@@ -63,12 +53,6 @@ struct is_simple_function<R(Args...)> : std::true_type {};
 // variadic functions
 template<typename R, typename ...Args>
 struct is_simple_function<R(Args..., ...)> : std::true_type {};
-
-// template<typename R, typename ...Args>
-// struct is_simple_function<R(Args...) noexcept> : std::true_type {};
-
-// template<typename R, typename ...Args>
-// struct is_simple_function<R(Args...,...) noexcept> : std::true_type {};
 
 template<typename T>
 struct is_referenceable {
@@ -88,19 +72,6 @@ struct is_swappable<T,
     typename std::enable_if<
       detail::is_referenceable<T>::value
     >::type> : is_swappable_with<T&, T&> {};
-
-template<typename T, typename U>
-using is_nothrow_swappable_with = detail::is_nothrow_swappable_with_impl<T, U>;
-
-template<typename T, typename = void>
-struct is_nothrow_swappable : std::false_type {};
-
-template<typename T>
-struct is_nothrow_swappable<T,
-    typename std::enable_if<
-      detail::is_referenceable<T>::value
-    >::type> : is_nothrow_swappable_with<T&, T&> {};
-
 
 }  // namespace utils
 }  // namespace minifi
