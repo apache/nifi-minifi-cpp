@@ -1,6 +1,6 @@
 /**
- * @file S3Wrapper.h
- * S3Wrapper class declaration
+ * @file S3Wrapper.cpp
+ * S3Wrapper class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,11 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
-
 #include "S3WrapperBase.h"
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+
 
 namespace org {
 namespace apache {
@@ -30,13 +27,32 @@ namespace minifi {
 namespace aws {
 namespace s3 {
 
-class S3Wrapper : public S3WrapperBase {
-protected:
-  minifi::utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override;
+void S3WrapperBase::setCredentials(const Aws::Auth::AWSCredentials& cred) {
+  credentials_ = cred;
+}
 
-private:
-  std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3Wrapper>::getLogger()};
-};
+void S3WrapperBase::setRegion(const Aws::String& region) {
+  client_config_.region = region;
+}
+
+void S3WrapperBase::setTimeout(uint64_t timeout) {
+  client_config_.connectTimeoutMs = timeout;
+}
+
+void S3WrapperBase::setEndpointOverrideUrl(const Aws::String& url) {
+  client_config_.endpointOverride = url;
+}
+
+minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutS3ObjectOptions& options, std::shared_ptr<Aws::IOStream> data_stream) {
+  Aws::S3::Model::PutObjectRequest request;
+  request.SetBucket(options.bucket_name);
+  request.SetKey(options.object_key);
+  request.SetStorageClass(storage_class_map.at(options.storage_class));
+  request.SetServerSideEncryption(server_side_encryption_map.at(options.server_side_encryption));
+  request.SetBody(data_stream);
+
+  return putObject(request);
+}
 
 } /* namespace s3 */
 } /* namespace aws */

@@ -1,6 +1,6 @@
 /**
- * @file S3Wrapper.h
- * S3Wrapper class declaration
+ * @file S3Wrapper.cpp
+ * S3Wrapper class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,11 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
+#include "S3Wrapper.h"
 
-#include "S3WrapperBase.h"
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include <aws/s3/S3Client.h>
+#include <aws/s3/model/Bucket.h>
+#include <aws/s3/model/StorageClass.h>
 
 namespace org {
 namespace apache {
@@ -30,13 +30,25 @@ namespace minifi {
 namespace aws {
 namespace s3 {
 
-class S3Wrapper : public S3WrapperBase {
-protected:
-  minifi::utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override;
+minifi::utils::optional<PutObjectResult> S3Wrapper::putObject(const Aws::S3::Model::PutObjectRequest& request) {
+  Aws::S3::S3Client s3_client(client_config_);
+  Aws::S3::Model::PutObjectOutcome outcome = s3_client.PutObject(request);
 
-private:
-  std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3Wrapper>::getLogger()};
-};
+  if (outcome.IsSuccess()) {
+      logger_->log_info("Added S3 object %s to bucket %s", request.GetKey(), request.GetBucket());
+      PutObjectResult result;
+      result.version = outcome.GetResult().GetVersionId();
+      result.etag = outcome.GetResult().GetETag();
+      result.expiration = outcome.GetResult().GetExpiration();
+      result.ssealgorithm = outcome.GetResult().GetSSECustomerAlgorithm();
+      return result;
+  }
+  else
+  {
+      logger_->log_error("PutS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
+      return minifi::utils::nullopt;
+  }
+}
 
 } /* namespace s3 */
 } /* namespace aws */

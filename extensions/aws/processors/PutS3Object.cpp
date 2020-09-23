@@ -137,31 +137,31 @@ void PutS3Object::initialize() {
   setSupportedRelationships(relationships);
 }
 
-utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) {
+minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) {
   std::string service_name;
   if (context->getProperty(AWSCredentialsProviderService.getName(), service_name) && !IsNullOrEmpty(service_name)) {
     std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
     if (nullptr != service) {
       auto aws_credentials_service = std::static_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(service);
-      return utils::make_optional<Aws::Auth::AWSCredentials>(aws_credentials_service->getAWSCredentials());
+      return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(aws_credentials_service->getAWSCredentials());
     }
   }
-  return utils::nullopt;
+  return minifi::utils::nullopt;
 }
 
-utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromProperties(const std::shared_ptr<core::ProcessContext> &context) {
+minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromProperties(const std::shared_ptr<core::ProcessContext> &context) {
   std::string access_key;
   context->getProperty(AccessKey.getName(), access_key);
   std::string secret_key;
   context->getProperty(SecretKey.getName(), secret_key);
   if (!IsNullOrEmpty(access_key) && !IsNullOrEmpty(secret_key)) {
     Aws::Auth::AWSCredentials creds(access_key, secret_key);
-    return utils::make_optional<Aws::Auth::AWSCredentials>(creds);
+    return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(creds);
   }
-  return utils::nullopt;
+  return minifi::utils::nullopt;
 }
 
-utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context) {
+minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context) {
   std::string credential_file;
   if (context->getProperty(CredentialsFile.getName(), credential_file) && !IsNullOrEmpty(credential_file)) {
     auto properties = std::make_shared<minifi::Properties>();
@@ -170,10 +170,10 @@ utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromFil
     std::string secret_key;
     if (properties->get("accessKey", access_key) && !IsNullOrEmpty(access_key) && properties->get("secretKey", secret_key) && !IsNullOrEmpty(secret_key)) {
       Aws::Auth::AWSCredentials creds(access_key, secret_key);
-      return utils::make_optional<Aws::Auth::AWSCredentials>(creds);
+      return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(creds);
     }
   }
-  return utils::nullopt;
+  return minifi::utils::nullopt;
 }
 
 Aws::Auth::AWSCredentials PutS3Object::getAWSCredentials(const std::shared_ptr<core::ProcessContext> &context) {
@@ -267,16 +267,16 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
 
   std::string filename;
   flow_file->getAttribute("filename", filename);
-  object_key_ = utils::StringUtils::replaceOne(object_key_, "${filename}", filename);
+  object_key_ = minifi::utils::StringUtils::replaceOne(object_key_, "${filename}", filename);
   session->putAttribute(flow_file, "s3.bucket", bucket_);
   session->putAttribute(flow_file, "s3.key", object_key_);
   session->putAttribute(flow_file, "s3.contenttype", content_type_);
   session->putAttribute(flow_file, "s3.usermetadata", user_metadata_);
 
-  minifi::aws::processors::PutS3ObjectOptions options{bucket_, object_key_, storage_class_, server_side_encryption_};
+  minifi::aws::s3::PutS3ObjectOptions options{bucket_, object_key_, storage_class_, server_side_encryption_};
   PutS3Object::ReadCallback callback(flow_file->getSize(), std::move(options), s3_wrapper_.get());
   session->read(flow_file, &callback);
-  if (callback.result_ == utils::nullopt) {
+  if (callback.result_ == minifi::utils::nullopt) {
     logger_->log_error("Failed to send flow to S3 bucket %s", bucket_);
     session->transfer(flow_file, Failure);
   } else {

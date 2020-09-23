@@ -21,17 +21,18 @@
 #include "processors/PutS3Object.h"
 #include "processors/GetFile.h"
 #include "processors/LogAttribute.h"
-#include "s3/AbstractS3Wrapper.h"
+#include "s3/S3WrapperBase.h"
 #include "utils/file/FileUtils.h"
 
 #include <iostream>
+#include <stdlib.h>
 
 const std::string S3_VERSION = "1.2.3";
 const std::string S3_ETAG = "tag-123";
 const std::string S3_EXPIRATION = "2020-02-20";
 const std::string S3_SSEALGORITHM = "aws:kms";
 
-class MockS3Wrapper : public minifi::aws::processors::AbstractS3Wrapper {
+class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
 public:
   Aws::Auth::AWSCredentials getCredentials() const {
     return credentials_;
@@ -41,7 +42,7 @@ public:
     return client_config_;
   }
 
-  utils::optional<minifi::aws::processors::PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override {
+  utils::optional<minifi::aws::s3::PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override {
     std::istreambuf_iterator<char> eos;
     put_s3_data = std::string(std::istreambuf_iterator<char>(*request.GetBody()), eos);
     bucket_name = request.GetBucket();
@@ -60,7 +61,7 @@ public:
   std::string object_key;
   Aws::S3::Model::StorageClass storage_class;
   Aws::S3::Model::ServerSideEncryption server_side_encryption;
-  minifi::aws::processors::PutObjectResult put_s3_result;
+  minifi::aws::s3::PutObjectResult put_s3_result;
   std::string put_s3_data;
 };
 
@@ -74,10 +75,14 @@ public:
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setTrace<minifi::aws::processors::PutS3Object>();
 
+    // Disable AWS get default region requests
+    char aws_env[]="AWS_EC2_METADATA_DISABLED=true";
+    putenv(aws_env);
+
     // Build MiNiFi processing graph
     plan = test_controller.createPlan();
     mock_s3_wrapper_raw = new MockS3Wrapper();
-    std::unique_ptr<minifi::aws::processors::AbstractS3Wrapper> mock_s3_wrapper(mock_s3_wrapper_raw);
+    std::unique_ptr<minifi::aws::s3::S3WrapperBase> mock_s3_wrapper(mock_s3_wrapper_raw);
     put_s3_object = std::make_shared<minifi::aws::processors::PutS3Object>("PutS3Object", utils::Identifier(), std::move(mock_s3_wrapper));
 
     char input_dir_mask[] = "/tmp/gt.XXXXXX";

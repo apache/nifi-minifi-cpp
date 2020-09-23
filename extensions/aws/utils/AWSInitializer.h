@@ -1,6 +1,6 @@
 /**
- * @file S3Wrapper.h
- * S3Wrapper class declaration
+ * @file AWSInitializer.h
+ * Initializing AWS SDK
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -19,26 +19,32 @@
  */
 #pragma once
 
-#include "S3WrapperBase.h"
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include <aws/core/Aws.h>
+#include <aws/core/auth/AWSCredentialsProvider.h>
+#include <aws/core/utils/memory/stl/AWSString.h>
+#include <aws/core/utils/logging/DefaultLogSystem.h>
+#include <aws/core/utils/logging/AWSLogging.h>
+#include <memory>
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace aws {
-namespace s3 {
+namespace utils {
 
-class S3Wrapper : public S3WrapperBase {
-protected:
-  minifi::utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override;
+class AWSInitializer {
+public:
+  static AWSInitializer& get();
+  ~AWSInitializer();
 
 private:
-  std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3Wrapper>::getLogger()};
+  AWSInitializer();
+
+  Aws::SDKOptions options_;
 };
 
-} /* namespace s3 */
+} /* namespace utils */
 } /* namespace aws */
 } /* namespace minifi */
 } /* namespace nifi */

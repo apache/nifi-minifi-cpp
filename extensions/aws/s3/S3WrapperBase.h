@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "utils/AWSInitializer.h"
 #include "utils/OptionalUtils.h"
 
 #include <aws/core/auth/AWSCredentialsProvider.h>
@@ -34,7 +35,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace aws {
-namespace processors {
+namespace s3 {
 
 struct PutObjectResult {
   Aws::String version;
@@ -61,45 +62,26 @@ struct PutS3ObjectOptions {
   std::string server_side_encryption;
 };
 
-class AbstractS3Wrapper {
+class S3WrapperBase {
 public:
-  void setCredentials(const Aws::Auth::AWSCredentials& cred) {
-    credentials_ = cred;
-  }
+  void setCredentials(const Aws::Auth::AWSCredentials& cred);
+  void setRegion(const Aws::String& region);
+  void setTimeout(uint64_t timeout);
+  void setEndpointOverrideUrl(const Aws::String& url);
 
-  void setRegion(const Aws::String& region) {
-    client_config_.region = region;
-  }
+  minifi::utils::optional<PutObjectResult> putObject(const PutS3ObjectOptions& options, std::shared_ptr<Aws::IOStream> data_stream);
 
-  void setTimeout(uint64_t timeout) {
-    client_config_.connectTimeoutMs = timeout;
-  }
-
-  void setEndpointOverrideUrl(const Aws::String& url) {
-    client_config_.endpointOverride = url;
-  }
-
-  utils::optional<PutObjectResult> putObject(const PutS3ObjectOptions& options, std::shared_ptr<Aws::IOStream> data_stream) {
-    Aws::S3::Model::PutObjectRequest request;
-    request.SetBucket(options.bucket_name);
-    request.SetKey(options.object_key);
-    request.SetStorageClass(storage_class_map.at(options.storage_class));
-    request.SetServerSideEncryption(server_side_encryption_map.at(options.server_side_encryption));
-    request.SetBody(data_stream);
-
-    return putObject(request);
-  }
-
-  virtual ~AbstractS3Wrapper() = default;
+  virtual ~S3WrapperBase() = default;
 
 protected:
-  virtual utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) = 0;
+  virtual minifi::utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) = 0;
 
+  utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   Aws::Client::ClientConfiguration client_config_;
   Aws::Auth::AWSCredentials credentials_;
 };
 
-} /* namespace processors */
+} /* namespace s3 */
 } /* namespace aws */
 } /* namespace minifi */
 } /* namespace nifi */

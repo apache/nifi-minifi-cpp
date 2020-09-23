@@ -98,11 +98,11 @@ public:
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
-  explicit PutS3Object(std::string name, utils::Identifier uuid = utils::Identifier())
-      : PutS3Object(name, uuid, utils::make_unique<S3Wrapper>()) {
+  explicit PutS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
+      : PutS3Object(name, uuid, minifi::utils::make_unique<aws::s3::S3Wrapper>()) {
   }
 
-  explicit PutS3Object(std::string name, utils::Identifier uuid, std::unique_ptr<aws::processors::AbstractS3Wrapper> s3_wrapper)
+  explicit PutS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
       : core::Processor(std::move(name), uuid)
       , s3_wrapper_(std::move(s3_wrapper)) {
   }
@@ -120,7 +120,7 @@ public:
     static const uint64_t MAX_SIZE = 5UL * 1024UL * 1024UL * 1024UL; // 5GB limit on AWS
     static const uint64_t BUFFER_SIZE = 4096;
 
-    ReadCallback(uint64_t flow_size, minifi::aws::processors::PutS3ObjectOptions options, aws::processors::AbstractS3Wrapper* s3_wrapper)
+    ReadCallback(uint64_t flow_size, minifi::aws::s3::PutS3ObjectOptions options, aws::s3::S3WrapperBase* s3_wrapper)
       : flow_size_(flow_size)
       , options_(std::move(options))
       , s3_wrapper_(s3_wrapper) {
@@ -154,16 +154,16 @@ public:
     }
 
     uint64_t flow_size_;
-    minifi::aws::processors::PutS3ObjectOptions options_;
-    aws::processors::AbstractS3Wrapper* s3_wrapper_;
+    minifi::aws::s3::PutS3ObjectOptions options_;
+    aws::s3::S3WrapperBase* s3_wrapper_;
     uint64_t read_size_ = 0;
-    utils::optional<minifi::aws::processors::PutObjectResult> result_ = utils::nullopt;
+    minifi::utils::optional<minifi::aws::s3::PutObjectResult> result_ = minifi::utils::nullopt;
   };
 
 private:
-  utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context);
-  utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromProperties(const std::shared_ptr<core::ProcessContext> &context);
-  utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context);
+  minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context);
+  minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromProperties(const std::shared_ptr<core::ProcessContext> &context);
+  minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context);
   Aws::Auth::AWSCredentials getAWSCredentials(const std::shared_ptr<core::ProcessContext> &context);
   void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);
 
@@ -171,7 +171,7 @@ private:
   std::string object_key_;
   std::string bucket_;
   std::string content_type_ = "application/octet-stream";
-  std::unique_ptr<aws::processors::AbstractS3Wrapper> s3_wrapper_;
+  std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper_;
   std::string storage_class_;
   std::string server_side_encryption_;
   std::string user_metadata_;

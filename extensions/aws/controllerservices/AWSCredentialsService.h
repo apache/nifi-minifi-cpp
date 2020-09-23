@@ -19,6 +19,7 @@
 #ifndef NIFI_MINIFI_CPP_AWSCREDENTIALSCONTROLLERSERVICE_H
 #define NIFI_MINIFI_CPP_AWSCREDENTIALSCONTROLLERSERVICE_H
 
+#include "utils/AWSInitializer.h"
 #include <string>
 #include <iostream>
 #include <memory>
@@ -48,7 +49,7 @@ class AWSCredentialsService : public core::controller::ControllerService {
   static core::Property AccessKey;
   static core::Property SecretKey;
 
-  explicit AWSCredentialsService(const std::string &name, const utils::Identifier& uuid = {})
+  explicit AWSCredentialsService(const std::string &name, const minifi::utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
         logger_(logging::LoggerFactory<AWSCredentialsService>::getLogger()) {
   }
@@ -80,6 +81,7 @@ class AWSCredentialsService : public core::controller::ControllerService {
   }
 
  private:
+  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   std::string s3Ack, s3Secret;
   Aws::Auth::AWSCredentials awsCredentials;
   Aws::Client::ClientConfiguration client_config_;

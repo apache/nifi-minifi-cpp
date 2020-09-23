@@ -1,6 +1,6 @@
 /**
- * @file S3Wrapper.h
- * S3Wrapper class declaration
+ * @file AWSInitializer.cpp
+ * AWSInitializer class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,28 +17,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
-
-#include "S3WrapperBase.h"
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "AWSInitializer.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace aws {
-namespace s3 {
+namespace utils {
 
-class S3Wrapper : public S3WrapperBase {
-protected:
-  minifi::utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override;
+AWSInitializer& AWSInitializer::get() {
+  static AWSInitializer instance;
+  return instance;
+}
 
-private:
-  std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3Wrapper>::getLogger()};
-};
+AWSInitializer::~AWSInitializer() {
+  // Aws::Utils::Logging::ShutdownAWSLogging();
+  Aws::ShutdownAPI(options_);
+}
 
-} /* namespace s3 */
+AWSInitializer::AWSInitializer(){
+  Aws::InitAPI(options_);
+  // Aws::Utils::Logging::InitializeAWSLogging(
+  //     Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(
+  //         "RunUnitTests", Aws::Utils::Logging::LogLevel::Trace, "aws_sdk_"));
+}
+
+} /* namespace utils */
 } /* namespace aws */
 } /* namespace minifi */
 } /* namespace nifi */
