@@ -205,6 +205,7 @@ void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &
     std::string prop_value = "";
     if (context->getDynamicProperty(prop_key, prop_value) && !prop_value.empty()) {
       logger_->log_debug("PutS3Object: DynamicProperty: [%s] -> [%s]", prop_key, prop_value);
+      put_s3_request_params_.user_metadata_map.emplace(prop_key, prop_value);
       if (first_property) {
         user_metadata_ = prop_key + "=" + prop_value;
         first_property = false;
@@ -216,20 +217,20 @@ void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &
 }
 
 void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  context->getProperty(ObjectKey.getName(), object_key_);
-  if (!context->getProperty(Bucket.getName(), bucket_) || bucket_.empty()) {
+  context->getProperty(ObjectKey.getName(), put_s3_request_params_.object_key);
+  if (!context->getProperty(Bucket.getName(), put_s3_request_params_.bucket) || put_s3_request_params_.bucket.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");
   }
-  logger_->log_debug("PutS3Object: Bucket [%s]", bucket_);
+  logger_->log_debug("PutS3Object: Bucket [%s]", put_s3_request_params_.bucket);
 
   context->getProperty(ContentType.getName(), content_type_);
   logger_->log_debug("PutS3Object: Content Type [%s]", content_type_);
 
   s3_wrapper_->setCredentials(getAWSCredentials(context));
-  if (!context->getProperty(StorageClass.getName(), storage_class_) || storage_class_.empty()) {
+  if (!context->getProperty(StorageClass.getName(), put_s3_request_params_.storage_class) || put_s3_request_params_.storage_class.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Class property missing or invalid");
   }
-  logger_->log_debug("PutS3Object: Storage Class [%s]", storage_class_);
+  logger_->log_debug("PutS3Object: Storage Class [%s]", put_s3_request_params_.storage_class);
 
   std::string value;
   if (!context->getProperty(Region.getName(), value) || value.empty()) {
@@ -250,10 +251,10 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     logger_->log_debug("PutS3Object: Endpoint Override URL [%d]", value);
   }
 
-  if (!context->getProperty(ServerSideEncryption.getName(), server_side_encryption_) || server_side_encryption_.empty()) {
+  if (!context->getProperty(ServerSideEncryption.getName(), put_s3_request_params_.server_side_encryption) || put_s3_request_params_.server_side_encryption.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Class property missing or invalid");
   }
-  logger_->log_debug("PutS3Object: Server Side Encryption [%s]", server_side_encryption_);
+  logger_->log_debug("PutS3Object: Server Side Encryption [%s]", put_s3_request_params_.server_side_encryption);
 
   fillUserMetadata(context);
 }
@@ -267,17 +268,16 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
 
   std::string filename;
   flow_file->getAttribute("filename", filename);
-  object_key_ = minifi::utils::StringUtils::replaceOne(object_key_, "${filename}", filename);
-  session->putAttribute(flow_file, "s3.bucket", bucket_);
-  session->putAttribute(flow_file, "s3.key", object_key_);
+  put_s3_request_params_.object_key = minifi::utils::StringUtils::replaceOne(put_s3_request_params_.object_key, "${filename}", filename);
+  session->putAttribute(flow_file, "s3.bucket", put_s3_request_params_.bucket);
+  session->putAttribute(flow_file, "s3.key", put_s3_request_params_.object_key);
   session->putAttribute(flow_file, "s3.contenttype", content_type_);
   session->putAttribute(flow_file, "s3.usermetadata", user_metadata_);
 
-  minifi::aws::s3::PutS3ObjectOptions options{bucket_, object_key_, storage_class_, server_side_encryption_};
-  PutS3Object::ReadCallback callback(flow_file->getSize(), std::move(options), s3_wrapper_.get());
+  PutS3Object::ReadCallback callback(flow_file->getSize(), put_s3_request_params_, s3_wrapper_.get());
   session->read(flow_file, &callback);
   if (callback.result_ == minifi::utils::nullopt) {
-    logger_->log_error("Failed to send flow to S3 bucket %s", bucket_);
+    logger_->log_error("Failed to send flow to S3 bucket %s", put_s3_request_params_.bucket);
     session->transfer(flow_file, Failure);
   } else {
     session->putAttribute(flow_file, "s3.version", callback.result_.value().version);
@@ -285,7 +285,7 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     session->putAttribute(flow_file, "s3.expiration", callback.result_.value().expiration);
     session->putAttribute(flow_file, "s3.sseAlgorithm", callback.result_.value().ssealgorithm);
 
-    logger_->log_debug("Sent S3 object %s to bucket %s", object_key_, bucket_);
+    logger_->log_debug("Sent S3 object %s to bucket %s", put_s3_request_params_.object_key, put_s3_request_params_.bucket);
     session->transfer(flow_file, Success);
   }
 }

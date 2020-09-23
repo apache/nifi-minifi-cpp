@@ -26,6 +26,7 @@
 
 #include <iostream>
 #include <stdlib.h>
+#include <map>
 
 const std::string S3_VERSION = "1.2.3";
 const std::string S3_ETAG = "tag-123";
@@ -49,6 +50,7 @@ public:
     object_key = request.GetKey();
     storage_class = request.GetStorageClass();
     server_side_encryption = request.GetServerSideEncryption();
+    user_metadata_map = request.GetMetadata();
 
     put_s3_result.version = S3_VERSION;
     put_s3_result.etag = S3_ETAG;
@@ -63,6 +65,7 @@ public:
   Aws::S3::Model::ServerSideEncryption server_side_encryption;
   minifi::aws::s3::PutObjectResult put_s3_result;
   std::string put_s3_data;
+  std::map<std::string, std::string> user_metadata_map;
 };
 
 class PutS3ObjectTestsFixture {
@@ -215,6 +218,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsMeta
   setBasicCredentials();
   plan->setProperty(put_s3_object, "meta_key", "meta_value", true);
   test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_wrapper_raw->user_metadata_map.at("meta_key") == "meta_value");
   REQUIRE(LogTestController::getInstance().contains("key:s3.usermetadata value:meta_key=meta_value"));
 }
 
@@ -223,5 +227,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsMe
   plan->setProperty(put_s3_object, "meta_key1", "meta_value1", true);
   plan->setProperty(put_s3_object, "meta_key2", "meta_value2", true);
   test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_wrapper_raw->user_metadata_map.at("meta_key1") == "meta_value1");
+  REQUIRE(mock_s3_wrapper_raw->user_metadata_map.at("meta_key2") == "meta_value2");
   REQUIRE(LogTestController::getInstance().contains("key:s3.usermetadata value:meta_key1=meta_value1,meta_key2=meta_value2"));
 }

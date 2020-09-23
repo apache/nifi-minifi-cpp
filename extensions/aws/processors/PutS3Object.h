@@ -120,7 +120,7 @@ public:
     static const uint64_t MAX_SIZE = 5UL * 1024UL * 1024UL * 1024UL; // 5GB limit on AWS
     static const uint64_t BUFFER_SIZE = 4096;
 
-    ReadCallback(uint64_t flow_size, minifi::aws::s3::PutS3ObjectOptions options, aws::s3::S3WrapperBase* s3_wrapper)
+    ReadCallback(uint64_t flow_size, const minifi::aws::s3::PutS3RequestParameters& options, aws::s3::S3WrapperBase* s3_wrapper)
       : flow_size_(flow_size)
       , options_(std::move(options))
       , s3_wrapper_(s3_wrapper) {
@@ -154,7 +154,7 @@ public:
     }
 
     uint64_t flow_size_;
-    minifi::aws::s3::PutS3ObjectOptions options_;
+    minifi::aws::s3::PutS3RequestParameters options_;
     aws::s3::S3WrapperBase* s3_wrapper_;
     uint64_t read_size_ = 0;
     minifi::utils::optional<minifi::aws::s3::PutObjectResult> result_ = minifi::utils::nullopt;
@@ -168,12 +168,9 @@ private:
   void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);
 
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutS3Object>::getLogger()};
-  std::string object_key_;
-  std::string bucket_;
+  aws::s3::PutS3RequestParameters put_s3_request_params_;
   std::string content_type_ = "application/octet-stream";
   std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper_;
-  std::string storage_class_;
-  std::string server_side_encryption_;
   std::string user_metadata_;
 };
 

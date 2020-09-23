@@ -43,12 +43,13 @@ void S3WrapperBase::setEndpointOverrideUrl(const Aws::String& url) {
   client_config_.endpointOverride = url;
 }
 
-minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutS3ObjectOptions& options, std::shared_ptr<Aws::IOStream> data_stream) {
+minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutS3RequestParameters& params, std::shared_ptr<Aws::IOStream> data_stream) {
   Aws::S3::Model::PutObjectRequest request;
-  request.SetBucket(options.bucket_name);
-  request.SetKey(options.object_key);
-  request.SetStorageClass(storage_class_map.at(options.storage_class));
-  request.SetServerSideEncryption(server_side_encryption_map.at(options.server_side_encryption));
+  request.SetBucket(params.bucket);
+  request.SetKey(params.object_key);
+  request.SetStorageClass(storage_class_map.at(params.storage_class));
+  request.SetServerSideEncryption(server_side_encryption_map.at(params.server_side_encryption));
+  request.SetMetadata(params.user_metadata_map);
   request.SetBody(data_stream);
 
   return putObject(request);

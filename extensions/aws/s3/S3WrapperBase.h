@@ -29,6 +29,7 @@
 #include <aws/s3/model/StorageClass.h>
 #include <aws/s3/model/ServerSideEncryption.h>
 #include <string>
+#include <map>
 
 namespace org {
 namespace apache {
@@ -55,11 +56,12 @@ static const std::map<std::string, Aws::S3::Model::ServerSideEncryption> server_
   {"aws_kms", Aws::S3::Model::ServerSideEncryption::aws_kms},
 };
 
-struct PutS3ObjectOptions {
-  std::string bucket_name;
+struct PutS3RequestParameters {
+  std::string bucket;
   std::string object_key;
   std::string storage_class;
   std::string server_side_encryption;
+  std::map<std::string, std::string> user_metadata_map;
 };
 
 class S3WrapperBase {
@@ -69,14 +71,14 @@ public:
   void setTimeout(uint64_t timeout);
   void setEndpointOverrideUrl(const Aws::String& url);
 
-  minifi::utils::optional<PutObjectResult> putObject(const PutS3ObjectOptions& options, std::shared_ptr<Aws::IOStream> data_stream);
+  minifi::utils::optional<PutObjectResult> putObject(const PutS3RequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
 
   virtual ~S3WrapperBase() = default;
 
 protected:
   virtual minifi::utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) = 0;
 
-  utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
+  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   Aws::Client::ClientConfiguration client_config_;
   Aws::Auth::AWSCredentials credentials_;
 };
