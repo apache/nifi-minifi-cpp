@@ -62,7 +62,8 @@ struct assert_container :
   static_assert(std::is_convertible<decltype(std::declval<T&>() == std::declval<T&>()), bool>::value, "");
   static_assert(std::is_convertible<decltype(std::declval<T&>() != std::declval<T&>()), bool>::value, "");
 
-  static_assert(std::is_same<decltype(std::declval<T&>().swap(std::declval<T&>())), void>::value, "");
+  static_assert(std::is_same<decltype(std::declval<T&>().swap(std::declval<T&>())), void>::value, "Member swap");
+  static_assert(std::is_same<decltype(swap(std::declval<T&>(), std::declval<T&>())), void>::value, "ADL swap");
   static_assert(std::is_same<decltype(std::declval<T&>().size()), typename T::size_type>::value, "");
   static_assert(std::is_same<decltype(std::declval<T&>().max_size()), typename T::size_type>::value, "");
 
