@@ -68,7 +68,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& k
   return record;
 }
 
-bool FlowFileRecord::Serialize(io::BufferStream &outStream) {
+bool FlowFileRecord::Serialize(io::OutputStream &outStream) {
   int ret;
 
   ret = outStream.write(event_time_);
@@ -157,30 +157,28 @@ bool FlowFileRecord::Persist(const std::shared_ptr<core::Repository>& flowReposi
   return true;
 }
 
-std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize, const std::shared_ptr<core::ContentRepository>& content_repo, utils::Identifier& container) {
+std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(io::InputStream& inStream, const std::shared_ptr<core::ContentRepository>& content_repo, utils::Identifier& container) {
   int ret;
 
   auto file = std::make_shared<FlowFileRecord>();
 
-  io::DataStream outStream(buffer, bufferSize);
-
-  ret = outStream.read(file->event_time_);
+  ret = inStream.read(file->event_time_);
   if (ret != 8) {
     return {};
   }
 
-  ret = outStream.read(file->entry_date_);
+  ret = inStream.read(file->entry_date_);
   if (ret != 8) {
     return {};
   }
 
-  ret = outStream.read(file->lineage_start_date_);
+  ret = inStream.read(file->lineage_start_date_);
   if (ret != 8) {
     return {};
   }
 
   std::string uuidStr;
-  ret = outStream.read(uuidStr)
+  ret = inStream.read(uuidStr);
   if (ret <= 0) {
     return {};
   }
@@ -192,7 +190,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const uint8_t *buffe
 
 
   std::string connectionUUIDStr;
-  ret = outStream.readUTF(connectionUUIDStr);
+  ret = inStream.read(connectionUUIDStr);
   if (ret <= 0) {
     return {};
   }
@@ -204,19 +202,19 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const uint8_t *buffe
 
   // read flow attributes
   uint32_t numAttributes = 0;
-  ret = outStream.read(numAttributes);
+  ret = inStream.read(numAttributes);
   if (ret != 4) {
     return {};
   }
 
   for (uint32_t i = 0; i < numAttributes; i++) {
     std::string key;
-    ret = outStream.read(key, true);
+    ret = inStream.read(key, true);
     if (ret <= 0) {
       return {};
     }
     std::string value;
-    ret = outStream.read(value, true);
+    ret = inStream.read(value, true);
     if (ret <= 0) {
       return {};
     }
@@ -224,17 +222,17 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const uint8_t *buffe
   }
 
   std::string content_full_path;
-  ret = outStream.readUTF(content_full_path);
+  ret = inStream.read(content_full_path);
   if (ret <= 0) {
     return {};
   }
 
-  ret = outStream.read(file->size_);
+  ret = inStream.read(file->size_);
   if (ret != 8) {
     return {};
   }
 
-  ret = outStream.read(file->offset_);
+  ret = inStream.read(file->offset_);
   if (ret != 8) {
     return {};
   }

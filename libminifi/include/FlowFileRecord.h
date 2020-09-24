@@ -38,6 +38,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "ResourceClaim.h"
 #include "Connection.h"
+#include "io/OutputStream.h"
 
 namespace org {
 namespace apache {
@@ -65,22 +66,23 @@ namespace core {
 class ProcessSession;
 }
 
-class FlowFileRecord : public core::FlowFile, public io::Serializable {
+class FlowFileRecord : public core::FlowFile {
   friend class core::ProcessSession;
 
  public:
   FlowFileRecord();
 
-  bool Serialize(io::BufferStream &outStream);
+  bool Serialize(io::OutputStream &outStream);
 
   //! Serialize and Persistent to the repository
   bool Persist(const std::shared_ptr<core::Repository>& flowRepository);
   //! DeSerialize
-  static std::shared_ptr<FlowFileRecord> DeSerialize(const uint8_t *buffer, int bufferSize, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
-  //! DeSerialize
-  static std::shared_ptr<FlowFileRecord> DeSerialize(io::BufferStream &stream, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container) {
-    return DeSerialize(stream.getBuffer(), gsl::narrow<int>(stream.size()), content_repo, container);
+  static std::shared_ptr<FlowFileRecord> DeSerialize(const uint8_t *buffer, int bufferSize, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container) {
+    io::BufferStream inStream{buffer, gsl::narrow<unsigned int>(bufferSize)};
+    return DeSerialize(inStream, content_repo, container);
   }
+  //! DeSerialize
+  static std::shared_ptr<FlowFileRecord> DeSerialize(io::InputStream &stream, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
   //! DeSerialize
   static std::shared_ptr<FlowFileRecord> DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository,
       const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
