@@ -65,12 +65,20 @@ struct PutS3RequestParameters {
   std::map<std::string, std::string> user_metadata_map;
 };
 
+struct ProxyOptions {
+  std::string host;
+  uint32_t port = 0;
+  std::string username;
+  std::string password;
+};
+
 class S3WrapperBase {
 public:
   void setCredentials(const Aws::Auth::AWSCredentials& cred);
   void setRegion(const Aws::String& region);
   void setTimeout(uint64_t timeout);
   void setEndpointOverrideUrl(const Aws::String& url);
+  void setProxy(const ProxyOptions& proxy);
 
   minifi::utils::optional<PutObjectResult> putObject(const PutS3RequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
 

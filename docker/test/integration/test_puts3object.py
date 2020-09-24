@@ -34,3 +34,27 @@ def test_puts3object():
 
         assert cluster.check_s3_server_object_data()
         assert cluster.check_s3_server_object_metadata()
+
+def test_puts3object_proxy():
+    """
+    Verify delivery of S3 object to AWS server through proxy server
+    """
+    flow = (GetFile('/tmp/input') \
+            >> PutS3Object(proxy_host='http-proxy',
+                           proxy_port='3128',
+                           proxy_username='admin',
+                           proxy_password='test101') \
+            >> LogAttribute() \
+            >> PutFile('/tmp/output/success'))
+
+    with DockerTestCluster(SingleFileOutputValidator('test', subdir='success')) as cluster:
+        cluster.put_test_data('LH_O#L|FD<FASD{FO#@$#$%^ "#"$L%:"@#$L":test_data#$#%#$%?{"F{')
+        cluster.deploy_flow(None, engine='http-proxy')
+        cluster.deploy_flow(None, engine='s3-server')
+        cluster.deploy_flow(flow, engine='minifi-cpp', name='minifi-cpp')
+
+        assert cluster.check_output(60)
+
+        assert cluster.check_http_proxy_access("http://s3-server:9090/test_bucket/test_object_key")
+        assert cluster.check_s3_server_object_data()
+        assert cluster.check_s3_server_object_metadata()

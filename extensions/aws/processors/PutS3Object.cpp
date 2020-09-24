@@ -110,6 +110,24 @@ const core::Property PutS3Object::ServerSideEncryption(
     ->withAllowableValues<std::string>({server_side_encryption::NONE, server_side_encryption::AES256, server_side_encryption::AWS_KMS})
     ->withDescription("Specifies the algorithm used for server side encryption.")
     ->build());
+const core::Property PutS3Object::ProxyHost(
+  core::PropertyBuilder::createProperty("Proxy Host")
+    ->withDescription("Proxy host name or IP")
+    ->supportsExpressionLanguage(true)
+    ->build());
+const core::Property PutS3Object::ProxyPort(
+  core::PropertyBuilder::createProperty("Proxy Port")
+    ->withDescription("The port number of the proxy host")
+    ->supportsExpressionLanguage(true)
+    ->build());
+const core::Property PutS3Object::ProxyUsername(
+    core::PropertyBuilder::createProperty("Proxy Username")
+    ->withDescription("Username to set when authenticating against proxy")
+    ->build());
+const core::Property PutS3Object::ProxyPassword(
+  core::PropertyBuilder::createProperty("Proxy Password")
+    ->withDescription("Password to set when authenticating against proxy")
+    ->build());
 
 const core::Relationship PutS3Object::Success("success", "FlowFiles are routed to success relationship");
 const core::Relationship PutS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
@@ -129,6 +147,10 @@ void PutS3Object::initialize() {
   properties.insert(CommunicationsTimeout);
   properties.insert(EndpointOverrideURL);
   properties.insert(ServerSideEncryption);
+  properties.insert(ProxyHost);
+  properties.insert(ProxyPort);
+  properties.insert(ProxyUsername);
+  properties.insert(ProxyPassword);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -216,6 +238,18 @@ void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &
   }
 }
 
+void PutS3Object::setProxy(const std::shared_ptr<core::ProcessContext> &context) {
+  aws::s3::ProxyOptions proxy;
+  context->getProperty(ProxyHost.getName(), proxy.host);
+  std::string port_str;
+  if (context->getProperty(ProxyPort.getName(), port_str) && !port_str.empty()) {
+    core::Property::StringToInt(port_str, proxy.port);
+  }
+  context->getProperty(ProxyUsername.getName(), proxy.username);
+  context->getProperty(ProxyPassword.getName(), proxy.password);
+  s3_wrapper_->setProxy(proxy);
+}
+
 void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   context->getProperty(ObjectKey.getName(), put_s3_request_params_.object_key);
   if (!context->getProperty(Bucket.getName(), put_s3_request_params_.bucket) || put_s3_request_params_.bucket.empty()) {
@@ -258,6 +292,7 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   logger_->log_debug("PutS3Object: Server Side Encryption [%s]", put_s3_request_params_.server_side_encryption);
 
   fillUserMetadata(context);
+  setProxy(context);
 }
 
 void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {

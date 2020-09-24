@@ -43,6 +43,14 @@ void S3WrapperBase::setEndpointOverrideUrl(const Aws::String& url) {
   client_config_.endpointOverride = url;
 }
 
+void S3WrapperBase::setProxy(const ProxyOptions& proxy) {
+  client_config_.proxyHost = proxy.host;
+  if (proxy.port != 0)
+    client_config_.proxyPort = proxy.port;
+  client_config_.proxyUserName = proxy.username;
+  client_config_.proxyPassword = proxy.password;
+}
+
 minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutS3RequestParameters& params, std::shared_ptr<Aws::IOStream> data_stream) {
   Aws::S3::Model::PutObjectRequest request;
   request.SetBucket(params.bucket);

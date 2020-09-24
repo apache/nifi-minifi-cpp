@@ -179,7 +179,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test no credentials set", "[awsCreden
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", "[awsClientConfig]") {
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", "[awsS3ClientConfig]") {
   setBasicCredentials();
   test_controller.runSession(plan, true);
   checkPutObjectResults();
@@ -192,10 +192,13 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().region == minifi::aws::processors::region::US_WEST_2);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().connectTimeoutMs == 30000);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().endpointOverride.empty());
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().proxyHost.empty());
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().proxyUserName.empty());
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().proxyPassword.empty());
   REQUIRE(mock_s3_wrapper_raw->put_s3_data == "input_data");
 }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration", "[awsClientConfig]") {
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration", "[awsS3ClientConfig]") {
   setBasicCredentials();
   plan->setProperty(put_s3_object, "Object Key", "custom_key");
   plan->setProperty(put_s3_object, "Content Type", "application/tar");
@@ -218,7 +221,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   REQUIRE(mock_s3_wrapper_raw->put_s3_data == "input_data");
 }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsMetaData]") {
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsS3MetaData]") {
   setBasicCredentials();
   plan->setProperty(put_s3_object, "meta_key", "meta_value", true);
   test_controller.runSession(plan, true);
@@ -226,7 +229,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsMeta
   REQUIRE(LogTestController::getInstance().contains("key:s3.usermetadata value:meta_key=meta_value"));
 }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsMetaData]") {
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3MetaData]") {
   setBasicCredentials();
   plan->setProperty(put_s3_object, "meta_key1", "meta_value1", true);
   plan->setProperty(put_s3_object, "meta_key2", "meta_value2", true);
@@ -234,4 +237,17 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsMe
   REQUIRE(mock_s3_wrapper_raw->metadata_map.at("meta_key1") == "meta_value1");
   REQUIRE(mock_s3_wrapper_raw->metadata_map.at("meta_key2") == "meta_value2");
   REQUIRE(LogTestController::getInstance().contains("key:s3.usermetadata value:meta_key1=meta_value1,meta_key2=meta_value2"));
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
+  setBasicCredentials();
+  plan->setProperty(put_s3_object, "Proxy Host", "host");
+  plan->setProperty(put_s3_object, "Proxy Port", "1234");
+  plan->setProperty(put_s3_object, "Proxy Username", "username");
+  plan->setProperty(put_s3_object, "Proxy Password", "password");
+  test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().proxyHost == "host");
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().proxyPort == 1234);
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().proxyUserName == "username");
+  REQUIRE(mock_s3_wrapper_raw->getClientConfig().proxyPassword == "password");
 }

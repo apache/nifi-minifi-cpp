@@ -93,6 +93,10 @@ public:
   static const core::Property Region;
   static const core::Property CommunicationsTimeout;
   static const core::Property EndpointOverrideURL;
+  static const core::Property ProxyHost;
+  static const core::Property ProxyPort;
+  static const core::Property ProxyUsername;
+  static const core::Property ProxyPassword;
 
   // Supported Relationships
   static const core::Relationship Failure;
@@ -166,6 +170,7 @@ private:
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context);
   Aws::Auth::AWSCredentials getAWSCredentials(const std::shared_ptr<core::ProcessContext> &context);
   void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);
+  void setProxy(const std::shared_ptr<core::ProcessContext> &context);
 
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutS3Object>::getLogger()};
   aws::s3::PutS3RequestParameters put_s3_request_params_;

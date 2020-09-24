@@ -200,13 +200,12 @@ class DockerTestCluster(SingleNodeDockerCluster):
             return False
         return self.output_validator.validate()
 
-    def check_http_proxy_access(self):
+    def check_http_proxy_access(self, url):
         output = subprocess.check_output(["docker", "exec", "http-proxy", "cat", "/var/log/squid/access.log"]).decode(sys.stdout.encoding)
-        if "http://minifi-listen:8080/contentListener" in output and \
-           output.count("TCP_DENIED/407") != 0 and \
-           output.count("TCP_MISS/200") == output.count("TCP_DENIED/407"):
-            return True
-        return False
+        return url in output and \
+            ((output.count("TCP_DENIED/407") != 0 and \
+              output.count("TCP_MISS/200") == output.count("TCP_DENIED/407")) or \
+             output.count("TCP_DENIED/407") == 0 and "TCP_MISS/200" in output)
 
     def check_s3_server_object_data(self):
         s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(sys.stdout.encoding).strip()
