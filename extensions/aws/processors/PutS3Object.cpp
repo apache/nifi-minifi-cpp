@@ -224,6 +224,7 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   logger_->log_debug("PutS3Object: Bucket [%s]", put_s3_request_params_.bucket);
 
   context->getProperty(ContentType.getName(), content_type_);
+  put_s3_request_params_.content_type = content_type_;
   logger_->log_debug("PutS3Object: Content Type [%s]", content_type_);
 
   s3_wrapper_->setCredentials(getAWSCredentials(context));

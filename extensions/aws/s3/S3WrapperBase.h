@@ -61,6 +61,7 @@ struct PutS3RequestParameters {
   std::string object_key;
   std::string storage_class;
   std::string server_side_encryption;
+  std::string content_type;
   std::map<std::string, std::string> user_metadata_map;
 };
 

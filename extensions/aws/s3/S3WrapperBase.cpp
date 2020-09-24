@@ -49,6 +49,7 @@ minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutS3Req
   request.SetKey(params.object_key);
   request.SetStorageClass(storage_class_map.at(params.storage_class));
   request.SetServerSideEncryption(server_side_encryption_map.at(params.server_side_encryption));
+  request.SetContentType(params.content_type);
   request.SetMetadata(params.user_metadata_map);
   request.SetBody(data_stream);
 

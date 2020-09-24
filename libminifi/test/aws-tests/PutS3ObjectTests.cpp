@@ -50,7 +50,8 @@ public:
     object_key = request.GetKey();
     storage_class = request.GetStorageClass();
     server_side_encryption = request.GetServerSideEncryption();
-    user_metadata_map = request.GetMetadata();
+    metadata_map = request.GetMetadata();
+    content_type = request.GetContentType();
 
     put_s3_result.version = S3_VERSION;
     put_s3_result.etag = S3_ETAG;
@@ -65,7 +66,8 @@ public:
   Aws::S3::Model::ServerSideEncryption server_side_encryption;
   minifi::aws::s3::PutObjectResult put_s3_result;
   std::string put_s3_data;
-  std::map<std::string, std::string> user_metadata_map;
+  std::map<std::string, std::string> metadata_map;
+  std::string content_type;
 };
 
 class PutS3ObjectTestsFixture {
@@ -184,6 +186,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
   REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
   REQUIRE(LogTestController::getInstance().contains("key:s3.key value:input_data.log"));
   REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/octet-stream"));
+  REQUIRE(mock_s3_wrapper_raw->content_type == "application/octet-stream");
   REQUIRE(mock_s3_wrapper_raw->storage_class == Aws::S3::Model::StorageClass::STANDARD);
   REQUIRE(mock_s3_wrapper_raw->server_side_encryption == Aws::S3::Model::ServerSideEncryption::NOT_SET);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().region == minifi::aws::processors::region::US_WEST_2);
@@ -206,6 +209,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
   REQUIRE(LogTestController::getInstance().contains("key:s3.key value:custom_key"));
   REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/tar"));
+  REQUIRE(mock_s3_wrapper_raw->content_type == "application/tar");
   REQUIRE(mock_s3_wrapper_raw->storage_class == Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY);
   REQUIRE(mock_s3_wrapper_raw->server_side_encryption == Aws::S3::Model::ServerSideEncryption::AES256);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
@@ -218,7 +222,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsMeta
   setBasicCredentials();
   plan->setProperty(put_s3_object, "meta_key", "meta_value", true);
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_raw->user_metadata_map.at("meta_key") == "meta_value");
+  REQUIRE(mock_s3_wrapper_raw->metadata_map.at("meta_key") == "meta_value");
   REQUIRE(LogTestController::getInstance().contains("key:s3.usermetadata value:meta_key=meta_value"));
 }
 
@@ -227,7 +231,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsMe
   plan->setProperty(put_s3_object, "meta_key1", "meta_value1", true);
   plan->setProperty(put_s3_object, "meta_key2", "meta_value2", true);
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_raw->user_metadata_map.at("meta_key1") == "meta_value1");
-  REQUIRE(mock_s3_wrapper_raw->user_metadata_map.at("meta_key2") == "meta_value2");
+  REQUIRE(mock_s3_wrapper_raw->metadata_map.at("meta_key1") == "meta_value1");
+  REQUIRE(mock_s3_wrapper_raw->metadata_map.at("meta_key2") == "meta_value2");
   REQUIRE(LogTestController::getInstance().contains("key:s3.usermetadata value:meta_key1=meta_value1,meta_key2=meta_value2"));
 }
