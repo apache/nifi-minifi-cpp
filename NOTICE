@@ -50,6 +50,7 @@ This software includes third party software subject to the following copyrights:
 - Android tool chain cmake build files - Copyright (c) 2010-2011, Ethan Rublee and Copyright (c) 2011-2014, Andrey Kamaev
 - gsl-lite - Copyright (c) 2015 Martin Moene and Copyright (c) 2015 Microsoft Corporation. All rights reserved.
 - optional-lite - Copyright (c) 2015-2018 Martin Moene under the Boost Software License
+- libsodium - Copyright (c) 2013 - 2018 Frank Denis under the ISC software license
 
 The licenses for these third party components are included in LICENSE.txt
 

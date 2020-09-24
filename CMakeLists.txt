@@ -245,6 +245,12 @@ if (NOT OPENSSL_OFF)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT")
 endif()
 
+# libsodium
+include(BundledLibSodium)
+use_bundled_libsodium("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSODIUM_STATIC=1")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSODIUM_STATIC=1")
+
 # zlib
 include(BundledZLIB)
 use_bundled_zlib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
