@@ -31,7 +31,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 struct IdentifierTestAccessor {
-  FIELD_ACCESSOR(Identifier, data_)
+  FIELD_ACCESSOR(data_)
 };
 }  // namespace utils
 }  // namespace minifi

@@ -17,22 +17,16 @@
 #ifndef LIBMINIFI_TEST_UTILS_H_
 #define LIBMINIFI_TEST_UTILS_H_
 
-#define FIELD_ACCESSOR(ClassName, field) \
-  static auto get_##field(ClassName& instance) -> decltype((instance.field)) { \
-    return instance.field; \
-  }\
-  static auto get_##field(const ClassName& instance) -> decltype((instance.field)) { \
-    return instance.field; \
+#define FIELD_ACCESSOR(field) \
+  template<typename T> \
+  static auto get_##field(T&& instance) -> decltype((std::forward<T>(instance).field)) { \
+    return std::forward<T>(instance).field; \
   }
 
-#define METHOD_ACCESSOR(ClassName, method) \
-  template<typename ...Args> \
-  static auto call_##method(ClassName& instance, Args&& ...args) -> decltype((instance.method(std::forward<Args>(args)...))) { \
-    return instance.method(std::forward<Args>(args)...); \
-  } \
-  template<typename ...Args> \
-  static auto call_##method(const ClassName& instance, Args&& ...args) -> decltype((instance.method(std::forward<Args>(args)...))) { \
-    return instance.method(std::forward<Args>(args)...); \
-  } \
+#define METHOD_ACCESSOR(method) \
+  template<typename T, typename ...Args> \
+  static auto call_##method(T&& instance, Args&& ...args) -> decltype((std::forward<T>(instance).method(std::forward<Args>(args)...))) { \
+    return std::forward<T>(instance).method(std::forward<Args>(args)...); \
+  }
 
 #endif  // LIBMINIFI_TEST_UTILS_H_
