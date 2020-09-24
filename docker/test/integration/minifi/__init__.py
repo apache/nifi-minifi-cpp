@@ -105,6 +105,8 @@ class SingleNodeDockerCluster(Cluster):
             self.deploy_kafka_broker(name)
         elif engine == 'http-proxy':
             self.deploy_http_proxy()
+        elif engine == 's3-server':
+            self.deploy_s3_server()
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 
@@ -117,7 +119,7 @@ class SingleNodeDockerCluster(Cluster):
                 RUN chown minificpp:minificpp {minifi_root}/conf/config.yml
                 USER minificpp
                 """.format(name=name,hostname=name,
-                           base_image='apacheminificpp:minimal-' + self.minifi_version,
+                           base_image='apacheminificpp:' + self.minifi_version,
                            minifi_root=self.minifi_root))
 
         test_flow_yaml = minifi_flow_yaml(flow)
@@ -157,12 +159,12 @@ class SingleNodeDockerCluster(Cluster):
         self.containers[container.name] = container
 
     def deploy_nifi_flow(self, flow, name, vols):
-        dockerfile = dedent("""FROM {base_image}
+        dockerfile = dedent(r"""FROM {base_image}
                 USER root
                 ADD flow.xml.gz {nifi_root}/conf/flow.xml.gz
                 RUN chown nifi:nifi {nifi_root}/conf/flow.xml.gz
-                RUN sed -i -e 's/^\(nifi.remote.input.host\)=.*/\\1={name}/' {nifi_root}/conf/nifi.properties
-                RUN sed -i -e 's/^\(nifi.remote.input.socket.port\)=.*/\\1=5000/' {nifi_root}/conf/nifi.properties
+                RUN sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties
+                RUN sed -i -e 's/^\(nifi.remote.input.socket.port\)=.*/\1=5000/' {nifi_root}/conf/nifi.properties
                 USER nifi
                 """.format(name=name,
                            base_image='apache/nifi:' + self.nifi_version,
@@ -261,6 +263,17 @@ class SingleNodeDockerCluster(Cluster):
                     name='http-proxy',
                     network=self.network.name,
                     ports={'3128/tcp': 3128},
+                    )
+        self.containers[consumer.name] = consumer
+
+    def deploy_s3_server(self):
+        consumer = self.client.containers.run(
+                    "adobe/s3mock:2.1.28",
+                    detach=True,
+                    name='s3-server',
+                    network=self.network.name,
+                    ports={'9090/tcp': 9090, '9191/tcp': 9191},
+                    environment=["initialBuckets=test_bucket"],
                     )
         self.containers[consumer.name] = consumer
 
@@ -575,6 +588,17 @@ class PublishKafkaSSL(Processor):
                                               auto_terminate=['success'],
                                               schedule=schedule)
 
+class PutS3Object(Processor):
+    def __init__(self):
+        super(PutS3Object, self).__init__('PutS3Object',
+                                          properties={
+                                            'Object Key': 'test_object_key',
+                                            'Bucket': 'test_bucket',
+                                            'Access Key': 'test_access_key',
+                                            'Secret Key': 'test_secret',
+                                            'Endpoint Override URL': "http://s3-server:9090",
+                                          },
+                                          auto_terminate=['success'])
 
 class InputPort(Connectable):
     def __init__(self, name=None, remote_process_group=None):
