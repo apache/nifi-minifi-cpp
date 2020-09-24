@@ -36,28 +36,9 @@ Properties::Properties(const std::string& name)
 }
 
 // Get the config value
-bool Properties::get(const std::string &key, std::string &value) const {
+bool Properties::getString(const std::string &key, std::string &value) const {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
-
-  if (it != properties_.end()) {
-    value = it->second;
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool Properties::get(const std::string &key, const std::string &alternate_key, std::string &value) const {
-  std::lock_guard<std::mutex> lock(mutex_);
-  auto it = properties_.find(key);
-
-  if (it == properties_.end()) {
-    it = properties_.find(alternate_key);
-    if (it != properties_.end()) {
-      logger_->log_warn("%s is an alternate property that may not be supported in future releases. Please use %s instead.", alternate_key, key);
-    }
-  }
 
   if (it != properties_.end()) {
     value = it->second;

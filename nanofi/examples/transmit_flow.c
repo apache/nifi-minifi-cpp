@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
 
   free_flowfile(record);
 
-  free_instance(instance);
+  free_nanofi_instance(instance);
 }
 
 

@@ -15,62 +15,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "properties/Configure.h"
+
+#include "utils/gsl.h"
+
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
-constexpr const char *Configure::nifi_default_directory;
-constexpr const char *Configure::nifi_c2_enable;
-constexpr const char *Configure::nifi_flow_configuration_file;
-constexpr const char *Configure::nifi_flow_configuration_file_exit_failure;
-constexpr const char *Configure::nifi_flow_configuration_file_backup_update;
-constexpr const char *Configure::nifi_flow_engine_threads;
-constexpr const char *Configure::nifi_flow_engine_alert_period;
-constexpr const char *Configure::nifi_flow_engine_event_driven_time_slice;
-constexpr const char *Configure::nifi_administrative_yield_duration;
-constexpr const char *Configure::nifi_bored_yield_duration;
-constexpr const char *Configure::nifi_graceful_shutdown_seconds;
-constexpr const char *Configure::nifi_flowcontroller_drain_timeout;
-constexpr const char *Configure::nifi_log_level;
-constexpr const char *Configure::nifi_server_name;
-constexpr const char *Configure::nifi_configuration_class_name;
-constexpr const char *Configure::nifi_flow_repository_class_name;
-constexpr const char *Configure::nifi_content_repository_class_name;
-constexpr const char *Configure::nifi_volatile_repository_options;
-constexpr const char *Configure::nifi_provenance_repository_class_name;
-constexpr const char *Configure::nifi_server_port;
-constexpr const char *Configure::nifi_server_report_interval;
-constexpr const char *Configure::nifi_provenance_repository_max_storage_size;
-constexpr const char *Configure::nifi_provenance_repository_max_storage_time;
-constexpr const char *Configure::nifi_provenance_repository_directory_default;
-constexpr const char *Configure::nifi_flowfile_repository_max_storage_size;
-constexpr const char *Configure::nifi_flowfile_repository_max_storage_time;
-constexpr const char *Configure::nifi_flowfile_repository_directory_default;
-constexpr const char *Configure::nifi_dbcontent_repository_directory_default;
-constexpr const char *Configure::nifi_remote_input_secure;
-constexpr const char *Configure::nifi_remote_input_http;
-constexpr const char *Configure::nifi_security_need_ClientAuth;
-constexpr const char *Configure::nifi_security_client_certificate;
-constexpr const char *Configure::nifi_security_client_private_key;
-constexpr const char *Configure::nifi_security_client_pass_phrase;
-constexpr const char *Configure::nifi_security_client_ca_certificate;
-constexpr const char *Configure::nifi_rest_api_user_name;
-constexpr const char *Configure::nifi_rest_api_password;
-constexpr const char *Configure::nifi_c2_file_watch;
-constexpr const char *Configure::nifi_c2_flow_id;
-constexpr const char *Configure::nifi_c2_flow_url;
-constexpr const char *Configure::nifi_c2_flow_base_url;
-constexpr const char *Configure::nifi_c2_full_heartbeat;
-constexpr const char *Configure::nifi_state_management_provider_local;
-constexpr const char *Configure::nifi_state_management_provider_local_always_persist;
-constexpr const char *Configure::nifi_state_management_provider_local_auto_persistence_interval;
-constexpr const char *Configure::minifi_disk_space_watchdog_enable;
-constexpr const char *Configure::minifi_disk_space_watchdog_interval;
-constexpr const char *Configure::minifi_disk_space_watchdog_stop_threshold;
-constexpr const char *Configure::minifi_disk_space_watchdog_restart_threshold;
+bool Configure::get(const std::string& key, std::string& value) const {
+  bool found = getString(key, value);
+  if (decryptor_ && found && isEncrypted(key)) {
+    value = decryptor_->decrypt(value);
+  }
+  return found;
+}
+
+bool Configure::get(const std::string& key, const std::string& alternate_key, std::string& value) const {
+  if (get(key, value)) {
+    return true;
+  } else if (get(alternate_key, value)) {
+    const auto logger = logging::LoggerFactory<Configure>::getLogger();
+    logger->log_warn("%s is an alternate property that may not be supported in future releases. Please use %s instead.", alternate_key, key);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+utils::optional<std::string> Configure::get(const std::string& key) const {
+  utils::optional<std::string> value = getString(key);
+  if (decryptor_ && value && isEncrypted(key)) {
+    return decryptor_->decrypt(*value);
+  } else {
+    return value;
+  }
+}
+
+bool Configure::isEncrypted(const std::string& key) const {
+  gsl_Expects(decryptor_);
+  utils::optional<std::string> encryption_marker = getString(key + ".protected");
+  return decryptor_->isValidEncryptionMarker(encryption_marker);
+}
 
 } /* namespace minifi */
 } /* namespace nifi */

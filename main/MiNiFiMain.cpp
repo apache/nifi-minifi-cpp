@@ -39,21 +39,21 @@
 
 #include <fcntl.h>
 #include <stdio.h>
-#include <cstdlib>
 #include <semaphore.h>
 #include <signal.h>
+#include <sodium.h>
+
+#include <cstdlib>
 #include <vector>
-#include <queue>
-#include <map>
 #include <iostream>
-#include <utils/file/FileUtils.h>
+
 #include "ResourceClaim.h"
 #include "core/Core.h"
-
 #include "core/FlowConfiguration.h"
 #include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
 #include "DiskSpaceWatchdog.h"
+#include "properties/Decryptor.h"
 #include "utils/file/PathUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
@@ -138,6 +138,11 @@ int main(int argc, char **argv) {
   }
 #endif
 
+  if (sodium_init() < 0) {
+    logger->log_error("Could not initialize the libsodium library!");
+    return -1;
+  }
+
   uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
 
   // initialize static functions that were defined apriori
@@ -205,7 +210,14 @@ int main(int argc, char **argv) {
   // Make a record of minifi home in the configured log file.
   logger->log_info("MINIFI_HOME=%s", minifiHome);
 
-  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
+  utils::optional<minifi::Decryptor> decryptor = minifi::Decryptor::create(minifiHome);
+  if (decryptor) {
+    logger->log_info("Found encryption key, will decrypt sensitive properties in the configuration");
+  } else {
+    logger->log_info("No encryption key found, will not decrypt sensitive properties in the configuration");
+  }
+
+  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>(decryptor);
   configure->setHome(minifiHome);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 

@@ -40,15 +40,14 @@ extern "C" {
 //! Main thread stop wait time
 #define STOP_WAIT_TIME_MS 30*1000
 //! Default YAML location
+
 #ifdef WIN32
 #define DEFAULT_NIFI_CONFIG_YML "\\conf\\config.yml"
-//! Default properties file paths
 #define DEFAULT_NIFI_PROPERTIES_FILE "\\conf\\minifi.properties"
 #define DEFAULT_LOG_PROPERTIES_FILE "\\conf\\minifi-log.properties"
 #define DEFAULT_UID_PROPERTIES_FILE "\\conf\\minifi-uid.properties"
 #else
 #define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
-//! Default properties file paths
 #define DEFAULT_NIFI_PROPERTIES_FILE "./conf/minifi.properties"
 #define DEFAULT_LOG_PROPERTIES_FILE "./conf/minifi-log.properties"
 #define DEFAULT_UID_PROPERTIES_FILE "./conf/minifi-uid.properties"

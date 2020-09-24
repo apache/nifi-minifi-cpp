@@ -109,7 +109,7 @@ public:
             free(pp);
         }
         free_standalone_processor(processor_);
-        free_instance(instance_);
+        free_nanofi_instance(instance_);
     }
 
     standalone_processor * getProcessor() const {

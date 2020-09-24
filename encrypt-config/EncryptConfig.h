@@ -17,32 +17,36 @@
 #pragma once
 
 #include <string>
-#include <utility>
 
-#include "properties/Configuration.h"
-#include "properties/Decryptor.h"
-#include "utils/OptionalUtils.h"
+#include "utils/EncryptionUtils.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace encrypt_config {
 
-class Configure : public Configuration {
+class EncryptConfig {
  public:
-  explicit Configure(utils::optional<Decryptor> decryptor = utils::nullopt)
-      : Configuration{}, decryptor_(std::move(decryptor)) {}
-
-  bool get(const std::string& key, std::string& value) const;
-  bool get(const std::string& key, const std::string& alternate_key, std::string& value) const;
-  utils::optional<std::string> get(const std::string& key) const;
+  EncryptConfig(int argc, char* argv[]);
+  void encryptSensitiveProperties() const;
 
  private:
-  bool isEncrypted(const std::string& key) const;
+  std::string bootstrapFilePath() const;
+  std::string propertiesFilePath() const;
 
-  utils::optional<Decryptor> decryptor_;
+  static std::string parseMinifiHomeFromTheOptions(int argc, char* argv[]);
+
+  utils::crypto::Bytes getEncryptionKey() const;
+  std::string hexDecodeAndValidateKey(const std::string& key) const;
+  void writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes& encryption_key) const;
+
+  void encryptSensitiveProperties(const utils::crypto::Bytes& encryption_key) const;
+
+  const std::string minifi_home_;
 };
 
+}  // namespace encrypt_config
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

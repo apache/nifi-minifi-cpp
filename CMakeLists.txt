@@ -245,6 +245,12 @@ if (NOT OPENSSL_OFF)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT")
 endif()
 
+# libsodium
+include(BundledLibSodium)
+use_bundled_libsodium("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSODIUM_STATIC=1")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSODIUM_STATIC=1")
+
 # zlib
 include(BundledZLIB)
 use_bundled_zlib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
@@ -544,9 +550,12 @@ endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 add_subdirectory(main)
-add_subdirectory(nanofi)
 
+add_subdirectory(nanofi)
 add_dependencies(nanofi minifiexe)
+
+add_subdirectory(encrypt-config)
+add_dependencies(encrypt-config minifi)
 
 if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
 	add_subdirectory(controller)
@@ -781,6 +790,8 @@ if (NOT DISABLE_ROCKSDB AND NOT DISABLE_LIBARCHIVE)
 	registerTest("${TEST_DIR}/persistence-tests")
 endif()
 
+registerTest("encrypt-config/tests")
+
 include(BuildDocs)
 
 include(DockerConfig)
@@ -795,6 +806,9 @@ add_custom_target(linter
     COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
             ${CMAKE_SOURCE_DIR}/libminifi/include/ --
             ${CMAKE_SOURCE_DIR}/libminifi/test/
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/encrypt-config/ --
+            ${CMAKE_SOURCE_DIR}/encrypt-config/
     DEPENDS ${extensions})
 endif(NOT WIN32)
 

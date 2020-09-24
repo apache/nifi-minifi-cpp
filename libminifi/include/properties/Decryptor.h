@@ -17,10 +17,8 @@
 #pragma once
 
 #include <string>
-#include <utility>
 
-#include "properties/Configuration.h"
-#include "properties/Decryptor.h"
+#include "utils/EncryptionUtils.h"
 #include "utils/OptionalUtils.h"
 
 namespace org {
@@ -28,20 +26,28 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-class Configure : public Configuration {
+class Decryptor {
  public:
-  explicit Configure(utils::optional<Decryptor> decryptor = utils::nullopt)
-      : Configuration{}, decryptor_(std::move(decryptor)) {}
+  explicit Decryptor(const utils::crypto::Bytes& encryption_key);
 
-  bool get(const std::string& key, std::string& value) const;
-  bool get(const std::string& key, const std::string& alternate_key, std::string& value) const;
-  utils::optional<std::string> get(const std::string& key) const;
+  static bool isValidEncryptionMarker(const utils::optional<std::string>& encryption_marker);
+  std::string decrypt(const std::string& encrypted_text) const;
+
+  static utils::optional<Decryptor> create(const std::string& minifi_home);
 
  private:
-  bool isEncrypted(const std::string& key) const;
-
-  utils::optional<Decryptor> decryptor_;
+  const utils::crypto::Bytes encryption_key_;
 };
+
+inline Decryptor::Decryptor(const utils::crypto::Bytes& encryption_key) : encryption_key_(encryption_key) {}
+
+inline bool Decryptor::isValidEncryptionMarker(const utils::optional<std::string>& encryption_marker) {
+  return encryption_marker && *encryption_marker == utils::crypto::EncryptionType::name();
+}
+
+inline std::string Decryptor::decrypt(const std::string& encrypted_text) const {
+  return utils::crypto::decrypt(encrypted_text, encryption_key_);
+}
 
 }  // namespace minifi
 }  // namespace nifi

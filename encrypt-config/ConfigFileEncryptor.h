@@ -16,33 +16,18 @@
  */
 #pragma once
 
-#include <string>
-#include <utility>
-
-#include "properties/Configuration.h"
-#include "properties/Decryptor.h"
-#include "utils/OptionalUtils.h"
+#include "ConfigFile.h"
+#include "utils/EncryptionUtils.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace encrypt_config {
 
-class Configure : public Configuration {
- public:
-  explicit Configure(utils::optional<Decryptor> decryptor = utils::nullopt)
-      : Configuration{}, decryptor_(std::move(decryptor)) {}
+uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes& encryption_key);
 
-  bool get(const std::string& key, std::string& value) const;
-  bool get(const std::string& key, const std::string& alternate_key, std::string& value) const;
-  utils::optional<std::string> get(const std::string& key) const;
-
- private:
-  bool isEncrypted(const std::string& key) const;
-
-  utils::optional<Decryptor> decryptor_;
-};
-
+}  // namespace encrypt_config
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

@@ -184,7 +184,7 @@ void free_standalone_processor(standalone_processor* proc) {
 
   if (ExecutionPlan::getProcWithPlanQty() == 0) {
     // The instance is not needed any more as there are no standalone processors in the system
-    free_instance(standalone_instance);
+    free_nanofi_instance(standalone_instance);
     standalone_instance = nullptr;
   }
 }
@@ -227,7 +227,7 @@ int set_instance_property(nifi_instance *instance, const char *key, const char *
  * Reclaims memory associated with a nifi instance structure.
  * @param instance nifi instance.
  */
-void free_instance(nifi_instance* instance) {
+void free_nanofi_instance(nifi_instance* instance) {
   NULL_CHECK(, instance);
   delete ((minifi::Instance*) instance->instance_ptr);
   free(instance->port.port_id);
