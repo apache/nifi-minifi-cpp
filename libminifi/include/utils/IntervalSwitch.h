@@ -64,6 +64,7 @@ class IntervalSwitch {
       return {new_state, switched};
     }
   }
+
  private:
   T lower_threshold_;
   T upper_threshold_;

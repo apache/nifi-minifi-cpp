@@ -30,7 +30,7 @@ namespace minifi {
 namespace {
 namespace chr = std::chrono;
 
-utils::optional<chr::milliseconds> string_to_milliseconds(const std::string& str) {
+utils::optional<chr::milliseconds> time_string_to_milliseconds(const std::string& str) {
   uint64_t millisec_value{};
   const bool success = core::Property::getTimeMSFromString(str, millisec_value);
   if (!success) return utils::nullopt;
@@ -38,8 +38,9 @@ utils::optional<chr::milliseconds> string_to_milliseconds(const std::string& str
 }
 
 template<typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-utils::optional<T> string_to_int(const std::string& str) {
+utils::optional<T> data_size_string_to_int(const std::string& str) {
   T result{};
+  // actually aware of data units like B, kB, MB, etc.
   const bool success = core::Property::StringToInt(str, result);
   if (!success) return utils::nullopt;
   return utils::make_optional(result);
@@ -50,9 +51,9 @@ utils::optional<T> string_to_int(const std::string& str) {
 
 namespace disk_space_watchdog {
 Config read_config(const Configure& conf) {
-  const auto interval_ms = conf.get(Configure::minifi_disk_space_watchdog_interval_ms) | utils::flatMap(string_to_milliseconds);
-  const auto stop_bytes = conf.get(Configure::minifi_disk_space_watchdog_stop_threshold_bytes) | utils::flatMap(string_to_int<std::uintmax_t>);
-  const auto restart_bytes = conf.get(Configure::minifi_disk_space_watchdog_restart_threshold_bytes) | utils::flatMap(string_to_int<std::uintmax_t>);
+  const auto interval_ms = conf.get(Configure::minifi_disk_space_watchdog_interval) | utils::flatMap(time_string_to_milliseconds);
+  const auto stop_bytes = conf.get(Configure::minifi_disk_space_watchdog_stop_threshold) | utils::flatMap(data_size_string_to_int<std::uintmax_t>);
+  const auto restart_bytes = conf.get(Configure::minifi_disk_space_watchdog_restart_threshold) | utils::flatMap(data_size_string_to_int<std::uintmax_t>);
   if (restart_bytes < stop_bytes) { throw std::runtime_error{"disk space watchdog stop threshold must be <= restart threshold"}; }
   constexpr auto mebibytes = 1024 * 1024;
   return {

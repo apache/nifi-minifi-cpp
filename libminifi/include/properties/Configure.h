@@ -109,9 +109,9 @@ class Configure : public Properties {
 
   // disk space watchdog options
   static const char *minifi_disk_space_watchdog_enable;
-  static const char *minifi_disk_space_watchdog_interval_ms;
-  static const char *minifi_disk_space_watchdog_stop_threshold_bytes;
-  static const char *minifi_disk_space_watchdog_restart_threshold_bytes;
+  static const char *minifi_disk_space_watchdog_interval;
+  static const char *minifi_disk_space_watchdog_stop_threshold;
+  static const char *minifi_disk_space_watchdog_restart_threshold;
 
  private:
   std::string agent_identifier_;

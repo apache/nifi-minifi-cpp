@@ -30,3 +30,21 @@ TEST_CASE("file::globToRegex works", "[globToRegex]") {
   REQUIRE(fs::globToRegex("Replace*Multiple*Asterisks") == "Replace.*Multiple.*Asterisks");
   REQUIRE(fs::globToRegex("ReplaceQuestionMark?.txt") == "ReplaceQuestionMark.\\.txt");
 }
+
+TEST_CASE("path::isAbsolutePath", "[path::isAbsolutePath]") {
+#ifdef WIN32
+  REQUIRE(fs::isAbsolutePath("C:\\"));
+  REQUIRE(fs::isAbsolutePath("C:\\Program Files"));
+  REQUIRE(fs::isAbsolutePath("C:\\Program Files\\ApacheNiFiMiNiFi\\nifi-minifi-cpp\\conf\\minifi.properties"));
+  REQUIRE(fs::isAbsolutePath("C:/"));
+  REQUIRE(fs::isAbsolutePath("C:/Program Files"));
+  REQUIRE(fs::isAbsolutePath("C:/Program Files/ApacheNiFiMiNiFi/nifi-minifi-cpp/conf/minifi.properties"));
+  REQUIRE(!fs::isAbsolutePath("/"));
+#else
+  REQUIRE(fs::isAbsolutePath("/"));
+  REQUIRE(fs::isAbsolutePath("/etc"));
+  REQUIRE(fs::isAbsolutePath("/opt/minifi/conf/minifi.properties"));
+#endif /* WIN32 */
+
+  REQUIRE(!fs::isAbsolutePath("hello"));
+}
