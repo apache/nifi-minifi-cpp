@@ -21,7 +21,7 @@
 
 namespace utils = org::apache::nifi::minifi::utils;
 
-TEST_CASE("optional operator| (map)", "[optional map]") {
+TEST_CASE("optional map", "[optional map]") {
   const auto test1 = utils::make_optional(6) | utils::map([](const int i) { return i * 2; });
   REQUIRE(12 == test1.value());
 
@@ -29,7 +29,7 @@ TEST_CASE("optional operator| (map)", "[optional map]") {
   REQUIRE(!test2.has_value());
 }
 
-TEST_CASE("optional operator>>= (bind)", "[optional bind]") {
+TEST_CASE("optional flatMap", "[optional flat map]") {
   const auto make_intdiv_noremainder = [](const int denom) {
     return [denom](const int num) { return num % denom == 0 ? utils::make_optional(num / denom) : utils::optional<int>{}; };
   };
