@@ -63,9 +63,6 @@ Config read_config(const Configure& conf) {
   };
 }
 
-utils::IntervalSwitch<std::uintmax_t> disk_space_interval_switch(Config config) {
-  return {config.stop_threshold_bytes, config.restart_threshold_bytes, utils::IntervalSwitchState::UPPER};
-}
 
 std::vector<std::uintmax_t> check_available_space(const std::vector<std::string>& paths, core::logging::Logger* logger) {
   std::vector<std::uintmax_t> result;
@@ -82,6 +79,7 @@ std::vector<std::uintmax_t> check_available_space(const std::vector<std::string>
   });
   return result;
 }
+
 }  // namespace disk_space_watchdog
 }  // namespace minifi
 }  // namespace nifi
