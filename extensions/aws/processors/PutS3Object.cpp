@@ -52,22 +52,22 @@ const core::Property PutS3Object::Bucket(
 const core::Property PutS3Object::ContentType(
   core::PropertyBuilder::createProperty("Content Type")
     ->withDescription("Sets the Content-Type HTTP header indicating the type of content stored in "
-                      "the associated object. The value of this header is a standard MIME type."
-                      " AWS S3 client will attempt to determine the correct content type if "
+                      "the associated object. The value of this header is a standard MIME type. "
+                      "AWS S3 client will attempt to determine the correct content type if "
                       "one hasn't been set yet. Users are responsible for ensuring a suitable "
-                      "content type is set when uploading streams. If no content type is provided"
-                      " and cannot be determined by the filename, the default content type "
+                      "content type is set when uploading streams. If no content type is provided "
+                      "and cannot be determined by the filename, the default content type "
                       "\"application/octet-stream\" will be used.")
     ->supportsExpressionLanguage(true)
     ->build());
 const core::Property PutS3Object::AccessKey(
   core::PropertyBuilder::createProperty("Access Key")
-    ->withDescription("AWS credential access key")
+    ->withDescription("AWS account access key")
     ->supportsExpressionLanguage(true)
     ->build());
 const core::Property PutS3Object::SecretKey(
   core::PropertyBuilder::createProperty("Secret Key")
-    ->withDescription("AWS credential secret key")
+    ->withDescription("AWS account secret key")
     ->supportsExpressionLanguage(true)
     ->build());
 const core::Property PutS3Object::CredentialsFile(
@@ -76,14 +76,14 @@ const core::Property PutS3Object::CredentialsFile(
     ->build());
 const core::Property PutS3Object::AWSCredentialsProviderService(
   core::PropertyBuilder::createProperty("AWS Credentials Provider service")
-    ->withDescription("The Controller Service that is used to obtain aws credentials provider")
+    ->withDescription("The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.")
     ->build());
 const core::Property PutS3Object::StorageClass(
   core::PropertyBuilder::createProperty("Storage Class")
     ->isRequired(true)
     ->withDefaultValue<std::string>(storage_class::STANDARD)
     ->withAllowableValues<std::string>({storage_class::STANDARD, storage_class::REDUCED_REDUNDANCY})
-    ->withDescription("")
+    ->withDescription("AWS S3 Storage Class")
     ->build());
 const core::Property PutS3Object::Region(
   core::PropertyBuilder::createProperty("Region")
@@ -93,7 +93,7 @@ const core::Property PutS3Object::Region(
       region::US_WEST_2, region::EU_WEST_1, region::EU_WEST_2, region::EU_CENTRAL_1, region::AP_SOUTH_1,
       region::AP_SOUTHEAST_1, region::AP_SOUTHEAST_2, region::AP_NORTHEAST_1, region::AP_NORTHEAST_2,
       region::SA_EAST_1, region::CN_NORTH_1, region::CA_CENTRAL_1})
-    ->withDescription("")
+    ->withDescription("AWS Region")
     ->build());
 const core::Property PutS3Object::CommunicationsTimeout(
   core::PropertyBuilder::createProperty("Communications Timeout")
@@ -103,31 +103,31 @@ const core::Property PutS3Object::CommunicationsTimeout(
     ->build());
 const core::Property PutS3Object::FullControlUserList(
   core::PropertyBuilder::createProperty("FullControl User List")
-    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Full Control for an object")
+    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Full Control for an object.")
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("${s3.permissions.full.users}")
     ->build());
 const core::Property PutS3Object::ReadPermissionUserList(
   core::PropertyBuilder::createProperty("Read Permission User List")
-    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Read Access for an object")
+    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Read Access for an object.")
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("${s3.permissions.read.users}")
     ->build());
 const core::Property PutS3Object::ReadACLUserList(
   core::PropertyBuilder::createProperty("Read ACL User List")
-    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to read the Access Control List for an object")
+    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to read the Access Control List for an object.")
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("${s3.permissions.readacl.users}")
     ->build());
 const core::Property PutS3Object::WriteACLUserList(
   core::PropertyBuilder::createProperty("Write ACL User List")
-    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to change the Access Control List for an object")
+    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to change the Access Control List for an object.")
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("${s3.permissions.writeacl.users}")
     ->build());
 const core::Property PutS3Object::CannedACL(
   core::PropertyBuilder::createProperty("Canned ACL")
-    ->withDescription("Amazon Canned ACL for an object; will be ignored if any other ACL/permission property is specified")
+    ->withDescription("Amazon Canned ACL for an object; will be ignored if any other ACL/permission property is specified.")
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("${s3.permissions.cannedacl}")
     ->withAllowableValues<std::string>({canned_acl::BUCKET_OWNER_FULL_CONTROL, canned_acl::BUCKET_OWNER_READ,
