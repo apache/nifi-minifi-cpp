@@ -308,19 +308,19 @@ int main(int argc, char **argv) {
       }();
       const auto available_spaces = minifi::disk_space_watchdog::check_available_space(repo_paths, logger.get());
       const auto config = minifi::disk_space_watchdog::read_config(*configure);
-      const auto min = [](const std::vector<std::uintmax_t>& spaces) {
+      const auto min_space = [](const std::vector<std::uintmax_t>& spaces) {
         const auto it = std::min_element(std::begin(spaces), std::end(spaces));
-        return it != spaces.end() ? *it : std::numeric_limits<std::uintmax_t>::max();
+        return it != spaces.end() ? *it : (std::numeric_limits<std::uintmax_t>::max)();
       };
-      if (min(available_spaces) <= config.stop_threshold_bytes) {
+      if (min_space(available_spaces) <= config.stop_threshold_bytes) {
         logger->log_error("Cannot start MiNiFi due to insufficient available disk space");
         return -1;
       }
       auto interval_switch = minifi::disk_space_watchdog::disk_space_interval_switch(config);
-      disk_space_watchdog = utils::make_unique<utils::CallBackTimer>(config.interval, [interval_switch, min, repo_paths, logger, &controller]() mutable {
+      disk_space_watchdog = utils::make_unique<utils::CallBackTimer>(config.interval, [interval_switch, min_space, repo_paths, logger, &controller]() mutable {
         const auto stop = [&]{ controller->stop(); controller->unload(); };
         const auto restart = [&]{ controller->load(); controller->start(); };
-        const auto switch_state = interval_switch(min(minifi::disk_space_watchdog::check_available_space(repo_paths, logger.get())));
+        const auto switch_state = interval_switch(min_space(minifi::disk_space_watchdog::check_available_space(repo_paths, logger.get())));
         if (switch_state.state == utils::IntervalSwitchState::LOWER && switch_state.switched) {
           logger->log_warn("Stopping flow controller due to insufficient disk space");
           stop();
