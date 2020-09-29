@@ -40,8 +40,9 @@
 #include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
+#include "../Utils.h"
 
-class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
+class ReadCallback: public minifi::InputStreamCallback {
  public:
   explicit ReadCallback(size_t size) :
       read_size_(0) {
@@ -56,7 +57,7 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
     if (archive_buffer_)
       delete[] archive_buffer_;
   }
-  int64_t process(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
+  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
     int64_t total_read = 0;
     int64_t ret = 0;
     do {
@@ -108,24 +109,24 @@ class CompressDecompressionTestController : public TestController{
   }
 
   void setupFlow() {
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<processors::CompressContent>();
+    LogTestController::getInstance().setTrace<processors::LogAttribute>();
     LogTestController::getInstance().setTrace<core::ProcessSession>();
     LogTestController::getInstance().setTrace<core::ProcessContext>();
     LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::io::FileStream>();
+    LogTestController::getInstance().setTrace<minifi::Connection>();
+    LogTestController::getInstance().setTrace<minifi::core::Connectable>();
+    LogTestController::getInstance().setTrace<minifi::io::FileStream>();
 
     std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
+    processor = std::make_shared<processors::CompressContent>("compresscontent");
     processor->initialize();
     utils::Identifier processoruuid = processor->getUUID();
     REQUIRE(processoruuid);
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+    content_repo->initialize(std::make_shared<minifi::Configure>());
     // connection from compress processor to log attribute
     output = std::make_shared<minifi::Connection>(repo, content_repo, "Output");
     output->addRelationship(core::Relationship("success", "compress successful output"));
@@ -206,8 +207,8 @@ class CompressTestController : public CompressDecompressionTestController {
 
  public:
   CompressTestController() {
-    char format[] = "/tmp/test.XXXXXX";
-    tempDir_ = get_global_controller().createTempDirectory(format);
+    char CompressionFormat[] = "/tmp/test.XXXXXX";
+    tempDir_ = get_global_controller().createTempDirectory(CompressionFormat);
     REQUIRE(!tempDir_.empty());
     raw_content_path_ = utils::file::FileUtils::concat_path(tempDir_, "minifi-expect-compresscontent.txt");
     compressed_content_path_ = utils::file::FileUtils::concat_path(tempDir_, "minifi-compresscontent");
@@ -234,11 +235,14 @@ class DecompressTestController : public CompressDecompressionTestController{
   }
 };
 
+using CompressionFormat = processors::CompressContent::ExtendedCompressionFormat;
+using CompressionMode = processors::CompressContent::CompressionMode;
+
 TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1]") {
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_GZIP);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  context->setProperty(processors::CompressContent::CompressLevel, "9");
+  context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -260,7 +264,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime);
+    flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/gzip");
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
@@ -273,10 +277,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
 }
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfiletest2]") {
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_GZIP);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  context->setProperty(processors::CompressContent::CompressLevel, "9");
+  context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -298,7 +302,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    REQUIRE(flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
+    REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string content(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
@@ -307,10 +311,10 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3]") {
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_BZIP2);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
+  context->setProperty(processors::CompressContent::CompressLevel, "9");
+  context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -332,7 +336,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime);
+    flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/bzip2");
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
@@ -346,10 +350,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfiletest4]") {
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_BZIP2);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
+  context->setProperty(processors::CompressContent::CompressLevel, "9");
+  context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -371,7 +375,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfilet
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    REQUIRE(flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
+    REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
@@ -380,10 +384,10 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5]") {
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_LZMA);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::LZMA));
+  context->setProperty(processors::CompressContent::CompressLevel, "9");
+  context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -411,7 +415,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime);
+    flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/x-lzma");
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
@@ -425,15 +429,15 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfiletest6]") {
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_ATTRIBUTE);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
+  context->setProperty(processors::CompressContent::CompressLevel, "9");
+  context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
   sessionGenFlowFile.import(compressedPath(), flow, true, 0);
-  flow->setAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, "application/x-lzma");
+  flow->setAttribute(core::SpecialFlowAttribute::MIME_TYPE, "application/x-lzma");
   sessionGenFlowFile.flushContent();
   input->put(flow);
 
@@ -457,7 +461,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    REQUIRE(flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
+    REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
@@ -466,10 +470,10 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletest7]") {
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_XZ_LZMA2);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::XZ_LZMA2));
+  context->setProperty(processors::CompressContent::CompressLevel, "9");
+  context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -497,7 +501,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime);
+    flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/x-xz");
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
@@ -511,15 +515,15 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfiletest8]") {
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_ATTRIBUTE);
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
-  context->setProperty(org::apache::nifi::minifi::processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
+  context->setProperty(processors::CompressContent::CompressLevel, "9");
+  context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
   sessionGenFlowFile.import(compressedPath(), flow, true, 0);
-  flow->setAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, "application/x-xz");
+  flow->setAttribute(core::SpecialFlowAttribute::MIME_TYPE, "application/x-xz");
   sessionGenFlowFile.flushContent();
   input->put(flow);
 
@@ -543,7 +547,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfil
   {
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
-    REQUIRE(flow1->getAttribute(org::apache::nifi::minifi::core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
+    REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
@@ -552,8 +556,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfil
 }
 
 TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfiletest8]") {
-  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
-  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::PutFile>();
+  LogTestController::getInstance().setTrace<processors::CompressContent>();
+  LogTestController::getInstance().setTrace<processors::PutFile>();
 
   // Create temporary directories
   char format_src[] = "/tmp/archives.XXXXXX";
@@ -599,8 +603,8 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   plan->setProperty(get_file, "Input Directory", src_dir);
 
   // Configure CompressContent processor for compression
-  plan->setProperty(compress_content, "Mode", MODE_COMPRESS);
-  plan->setProperty(compress_content, "Compression Format", COMPRESSION_FORMAT_GZIP);
+  plan->setProperty(compress_content, "Mode", toString(CompressionMode::Compress));
+  plan->setProperty(compress_content, "Compression Format", toString(CompressionFormat::GZIP));
   plan->setProperty(compress_content, "Update Filename", "true");
   plan->setProperty(compress_content, "Encapsulate in TAR", "false");
 
@@ -608,8 +612,8 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   plan->setProperty(put_compressed, "Directory", dst_dir);
 
   // Configure CompressContent processor for decompression
-  plan->setProperty(decompress_content, "Mode", MODE_DECOMPRESS);
-  plan->setProperty(decompress_content, "Compression Format", COMPRESSION_FORMAT_GZIP);
+  plan->setProperty(decompress_content, "Mode", toString(CompressionMode::Decompress));
+  plan->setProperty(decompress_content, "Compression Format", toString(CompressionFormat::GZIP));
   plan->setProperty(decompress_content, "Update Filename", "true");
   plan->setProperty(decompress_content, "Encapsulate in TAR", "false");
 
@@ -652,4 +656,70 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   REQUIRE(content == decompressed_content);
 
   LogTestController::getInstance().reset();
+}
+
+TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFileBatchTest]") {
+  std::vector<std::string> flowFileContents{
+    utils::StringUtils::repeat("0", 1000), utils::StringUtils::repeat("1", 1000),
+    utils::StringUtils::repeat("2", 1000), utils::StringUtils::repeat("3", 1000),
+  };
+  const std::size_t batchSize = 3;
+
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  context->setProperty(processors::CompressContent::CompressLevel, "9");
+  context->setProperty(processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(processors::CompressContent::BatchSize, std::to_string(batchSize));
+
+
+  core::ProcessSession sessionGenFlowFile(context);
+  for (const auto& content : flowFileContents) {
+    auto flow = sessionGenFlowFile.create();
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(content), flow);
+    sessionGenFlowFile.flushContent();
+    input->put(flow);
+  }
+
+  REQUIRE(processor->getName() == "compresscontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+
+  // Trigger once to process batchSize
+  {
+    auto session = std::make_shared<core::ProcessSession>(context);
+    processor->onTrigger(context, session);
+    session->commit();
+  }
+
+  // validate the compress content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::vector<std::shared_ptr<core::FlowFile>> outFiles;
+  while (std::shared_ptr<core::FlowFile> file = output->poll(expiredFlowRecords)) {
+    outFiles.push_back(std::move(file));
+  }
+  REQUIRE(outFiles.size() == batchSize);
+
+  // Trigger a second time to process the remaining files
+  {
+    auto session = std::make_shared<core::ProcessSession>(context);
+    processor->onTrigger(context, session);
+    session->commit();
+  }
+
+  while (std::shared_ptr<core::FlowFile> file = output->poll(expiredFlowRecords)) {
+    outFiles.push_back(std::move(file));
+  }
+  REQUIRE(outFiles.size() == flowFileContents.size());
+
+  for (std::size_t idx = 0; idx < outFiles.size(); ++idx) {
+    auto file = outFiles[idx];
+    std::string mime;
+    file->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
+    REQUIRE(mime == "application/gzip");
+    ReadCallback callback(gsl::narrow<size_t>(file->getSize()));
+    sessionGenFlowFile.read(file, &callback);
+    callback.archive_read();
+    std::string content(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
+    REQUIRE(flowFileContents[idx] == content);
+  }
 }

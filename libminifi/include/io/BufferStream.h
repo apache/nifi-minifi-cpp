@@ -21,6 +21,7 @@
 #include <iostream>
 #include <cstdint>
 #include <vector>
+#include <string>
 #include "BaseStream.h"
 
 namespace org {
@@ -35,6 +36,10 @@ class BufferStream : public BaseStream {
 
   BufferStream(const uint8_t *buf, const unsigned int len) {
     write(buf, len);
+  }
+
+  explicit BufferStream(const std::string& data) {
+    write(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
   }
 
   using BaseStream::read;

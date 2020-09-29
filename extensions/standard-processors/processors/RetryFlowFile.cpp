@@ -31,7 +31,7 @@ core::Property RetryFlowFile::RetryAttribute(core::PropertyBuilder::createProper
         "The name of the attribute that contains the current retry count for the FlowFile."
         "WARNING: If the name matches an attribute already on the FlowFile that does not contain a numerical value, "
         "the processor will either overwrite that attribute with '1' or fail based on configuration.")
-    ->withDefaultValue("flowfile.retries", core::StandardValidators::NON_BLANK_VALIDATOR())
+    ->withDefaultValue("flowfile.retries", core::StandardValidators::get().NON_BLANK_VALIDATOR)
     ->supportsExpressionLanguage(true)
     ->isRequired(true)
     ->build());

@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_TEST_UTILS_H_
-#define LIBMINIFI_TEST_UTILS_H_
+#pragma once
+
+#include <string>
 
 #define FIELD_ACCESSOR(field) \
   template<typename T> \
@@ -28,5 +29,3 @@
   static auto call_##method(T&& instance, Args&& ...args) -> decltype((std::forward<T>(instance).method(std::forward<Args>(args)...))) { \
     return std::forward<T>(instance).method(std::forward<Args>(args)...); \
   }
-
-#endif  // LIBMINIFI_TEST_UTILS_H_

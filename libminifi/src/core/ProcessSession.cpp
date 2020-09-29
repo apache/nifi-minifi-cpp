@@ -315,6 +315,9 @@ int ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStrea
   }
 }
 
+void ProcessSession::importFrom(io::InputStream&& stream, const std::shared_ptr<core::FlowFile> &flow) {
+  importFrom(stream, flow);
+}
 /**
  * Imports a file from the data stream
  * @param stream incoming data stream that contains the data to store into a file

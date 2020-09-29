@@ -112,7 +112,7 @@ class CachedValueValidator {
     validation_result_ = Result::RECOMPUTE;
   }
 
-  gsl::not_null<std::shared_ptr<PropertyValidator>> validator_{StandardValidators::VALID_VALIDATOR()};
+  gsl::not_null<std::shared_ptr<PropertyValidator>> validator_{StandardValidators::get().VALID_VALIDATOR};
   mutable Result validation_result_{Result::RECOMPUTE};
 };
 

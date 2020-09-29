@@ -21,7 +21,7 @@
 #define __BIN_FILES_H__
 
 #include <cinttypes>
-#include <climits>
+#include <limits>
 #include <deque>
 #include <map>
 #include "FlowFileRecord.h"
@@ -146,36 +146,23 @@ class Bin {
 // BinManager Class
 class BinManager {
  public:
-  // Constructor
-  /*!
-   * Create a new BinManager
-   */
-  BinManager()
-      : minSize_(0),
-        maxSize_(ULLONG_MAX),
-        maxEntries_(INT_MAX),
-        minEntries_(1),
-        binAge_(ULLONG_MAX),
-        binCount_(0),
-        logger_(logging::LoggerFactory<BinManager>::getLogger()) {
-  }
   virtual ~BinManager() {
     purge();
   }
-  void setMinSize(const uint64_t &size) {
-    minSize_ = size;
+  void setMinSize(uint64_t size) {
+    minSize_ = {size};
   }
-  void setMaxSize(const uint64_t &size) {
-    maxSize_ = size;
+  void setMaxSize(uint64_t size) {
+    maxSize_ = {size};
   }
-  void setMaxEntries(const int &entries) {
-    maxEntries_ = entries;
+  void setMaxEntries(uint32_t entries) {
+    maxEntries_ = {entries};
   }
-  void setMinEntries(const int &entries) {
-    minEntries_ = entries;
+  void setMinEntries(uint32_t entries) {
+    minEntries_ = {entries};
   }
-  void setBinAge(const uint64_t &age) {
-    binAge_ = age;
+  void setBinAge(uint64_t age) {
+    binAge_ = {age};
   }
   int getBinCount() {
     return binCount_;
@@ -201,17 +188,17 @@ class BinManager {
 
  private:
   std::mutex mutex_;
-  uint64_t minSize_;
-  uint64_t maxSize_;
-  int maxEntries_;
-  int minEntries_;
+  uint64_t minSize_{0};
+  uint64_t maxSize_{std::numeric_limits<decltype(maxSize_)>::max()};
+  uint32_t maxEntries_{std::numeric_limits<decltype(maxEntries_)>::max()};
+  uint32_t minEntries_{1};
   std::string fileCount_;
   // Bin Age in msec
-  uint64_t binAge_;
+  uint64_t binAge_{std::numeric_limits<decltype(binAge_)>::max()};
   std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>> >groupBinMap_;
   std::deque<std::unique_ptr<Bin>> readyBin_;
-  int binCount_;
-  std::shared_ptr<logging::Logger> logger_;
+  int binCount_{0};
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<BinManager>::getLogger()};
 };
 
 // BinFiles Class
@@ -219,15 +206,7 @@ class BinFiles : public core::Processor {
  protected:
   static core::Relationship Self;
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
-  explicit BinFiles(std::string name, utils::Identifier uuid = utils::Identifier())
-      : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<BinFiles>::getLogger()) {
-    maxBinCount_ = 100;
-  }
+  using core::Processor::Processor;
   // Destructor
   virtual ~BinFiles() = default;
   // Processor Name
@@ -239,6 +218,7 @@ class BinFiles : public core::Processor {
   static core::Property MaxEntries;
   static core::Property MaxBinCount;
   static core::Property MaxBinAge;
+  static core::Property BatchSize;
 
   // Supported Relationships
   static core::Relationship Failure;
@@ -308,8 +288,9 @@ class BinFiles : public core::Processor {
     std::unordered_set<std::shared_ptr<core::FlowFile>> incoming_files_;
   };
 
-  std::shared_ptr<logging::Logger> logger_;
-  int maxBinCount_;
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<BinFiles>::getLogger()};
+  uint32_t batchSize_{1};
+  uint32_t maxBinCount_{100};
   FlowFileStore file_store_;
 };
 

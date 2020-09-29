@@ -38,12 +38,34 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property BinFiles::MinSize("Minimum Group Size", "The minimum size of for the bundle", "0");
-core::Property BinFiles::MaxSize("Maximum Group Size", "The maximum size for the bundle. If not specified, there is no maximum.", "");
-core::Property BinFiles::MinEntries("Minimum Number of Entries", "The minimum number of files to include in a bundle", "1");
-core::Property BinFiles::MaxEntries("Maximum Number of Entries", "The maximum number of files to include in a bundle. If not specified, there is no maximum.", "");
-core::Property BinFiles::MaxBinAge("Max Bin Age", "The maximum age of a Bin that will trigger a Bin to be complete. Expected format is <duration> <time unit>", "");
-core::Property BinFiles::MaxBinCount("Maximum number of Bins", "Specifies the maximum number of bins that can be held in memory at any one time", "100");
+core::Property BinFiles::MinSize(
+    core::PropertyBuilder::createProperty("Minimum Group Size")
+    ->withDescription("The minimum size of for the bundle")
+    ->withDefaultValue<uint64_t>(0)->build());
+core::Property BinFiles::MaxSize(
+    core::PropertyBuilder::createProperty("Maximum Group Size")
+    ->withDescription("The maximum size for the bundle. If not specified, there is no maximum.")
+    ->withType(core::StandardValidators::get().UNSIGNED_LONG_VALIDATOR)->build());
+core::Property BinFiles::MinEntries(
+    core::PropertyBuilder::createProperty("Minimum Number of Entries")
+    ->withDescription("The minimum number of files to include in a bundle")
+    ->withDefaultValue<uint32_t>(1)->build());
+core::Property BinFiles::MaxEntries(
+    core::PropertyBuilder::createProperty("Maximum Number of Entries")
+    ->withDescription("The maximum number of files to include in a bundle. If not specified, there is no maximum.")
+    ->withType(core::StandardValidators::get().UNSIGNED_INT_VALIDATOR)->build());
+core::Property BinFiles::MaxBinAge(
+    core::PropertyBuilder::createProperty("Max Bin Age")
+    ->withDescription("The maximum age of a Bin that will trigger a Bin to be complete. Expected format is <duration> <time unit>")
+    ->withType(core::StandardValidators::get().TIME_PERIOD_VALIDATOR)->build());
+core::Property BinFiles::MaxBinCount(
+    core::PropertyBuilder::createProperty("Maximum number of Bins")
+    ->withDescription("Specifies the maximum number of bins that can be held in memory at any one time")
+    ->withDefaultValue<uint32_t>(100)->build());
+core::Property BinFiles::BatchSize(
+    core::PropertyBuilder::createProperty("Batch Size")
+    ->withDescription("Maximum number of FlowFiles processed in a single session")
+    ->withDefaultValue<uint32_t>(1)->build());
 core::Relationship BinFiles::Original("original", "The FlowFiles that were used to create the bundle");
 core::Relationship BinFiles::Failure("failure", "If the bundle cannot be created, all FlowFiles that would have been used to create the bundle will be transferred to failure");
 core::Relationship BinFiles::Self("__self__", "Marks the FlowFile to be owned by this processor");
@@ -65,6 +87,7 @@ void BinFiles::initialize() {
   properties.insert(MaxEntries);
   properties.insert(MaxBinAge);
   properties.insert(MaxBinCount);
+  properties.insert(BatchSize);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -74,40 +97,37 @@ void BinFiles::initialize() {
 }
 
 void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
-  std::string value;
-  int64_t valInt64;
-  int valInt;
-  if (context->getProperty(MinSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt64)) {
-    this->binManager_.setMinSize(valInt64);
-    logger_->log_debug("BinFiles: MinSize [%" PRId64 "]", valInt64);
+  uint32_t val32;
+  uint64_t val64;
+  if (context->getProperty(MinSize.getName(), val64)) {
+    this->binManager_.setMinSize({val64});
+    logger_->log_debug("BinFiles: MinSize [%" PRId64 "]", val64);
   }
-  value = "";
-  if (context->getProperty(MaxSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt64)) {
-    this->binManager_.setMaxSize(valInt64);
-    logger_->log_debug("BinFiles: MaxSize [%" PRId64 "]", valInt64);
+  if (context->getProperty(MaxSize.getName(), val64)) {
+    this->binManager_.setMaxSize({val64});
+    logger_->log_debug("BinFiles: MaxSize [%" PRId64 "]", val64);
   }
-  value = "";
-  if (context->getProperty(MinEntries.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
-    this->binManager_.setMinEntries(valInt);
-    logger_->log_debug("BinFiles: MinEntries [%d]", valInt);
+  if (context->getProperty(MinEntries.getName(), val32)) {
+    this->binManager_.setMinEntries({val32});
+    logger_->log_debug("BinFiles: MinEntries [%" PRIu32 "]", val32);
   }
-  value = "";
-  if (context->getProperty(MaxEntries.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
-    this->binManager_.setMaxEntries(valInt);
-    logger_->log_debug("BinFiles: MaxEntries [%d]", valInt);
+  if (context->getProperty(MaxEntries.getName(), val32)) {
+    this->binManager_.setMaxEntries({val32});
+    logger_->log_debug("BinFiles: MaxEntries [%" PRIu32 "]", val32);
   }
-  value = "";
-  if (context->getProperty(MaxBinCount.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
-    maxBinCount_ = valInt;
-    logger_->log_debug("BinFiles: MaxBinCount [%d]", valInt);
+  if (context->getProperty(MaxBinCount.getName(), maxBinCount_)) {
+    logger_->log_debug("BinFiles: MaxBinCount [%" PRIu32 "]", maxBinCount_);
   }
-  value = "";
-  if (context->getProperty(MaxBinAge.getName(), value) && !value.empty()) {
+  std::string maxBinAgeStr;
+  if (context->getProperty(MaxBinAge.getName(), maxBinAgeStr)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(value, valInt64, unit) && core::Property::ConvertTimeUnitToMS(valInt64, unit, valInt64)) {
-      this->binManager_.setBinAge(valInt64);
-      logger_->log_debug("BinFiles: MaxBinAge [%" PRId64 "]", valInt64);
+    if (core::Property::StringToTime(maxBinAgeStr, val64, unit) && core::Property::ConvertTimeUnitToMS(val64, unit, val64)) {
+      this->binManager_.setBinAge({val64});
+      logger_->log_debug("BinFiles: MaxBinAge [%" PRIu64 "]", val64);
     }
+  }
+  if (context->getProperty(BatchSize.getName(), batchSize_)) {
+    logger_->log_debug("BinFiles: BatchSize [%" PRIu32 "]", batchSize_);
   }
 }
 
@@ -259,9 +279,13 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
     }
   }
 
-  auto flow = session->get();
+  for (size_t i = 0; i < batchSize_; ++i) {
+    auto flow = session->get();
 
-  if (flow != nullptr) {
+    if (flow == nullptr) {
+      break;
+    }
+
     preprocessFlowFile(context.get(), session.get(), flow);
     std::string groupId = getGroupId(context.get(), flow);
 

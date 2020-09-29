@@ -109,6 +109,8 @@ class ProcessSession : public ReferenceContainer {
    * @param flow flow file
    */
   void importFrom(io::InputStream &stream, const std::shared_ptr<core::FlowFile> &flow);
+  void importFrom(io::InputStream&& stream, const std::shared_ptr<core::FlowFile> &flow);
+
   // import from the data source.
   void import(std::string source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource = true, uint64_t offset = 0);
   DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void import(std::string source, std::vector<std::shared_ptr<FlowFile>> &flows, bool keepSource, uint64_t offset, char inputDelimiter); // NOLINT
