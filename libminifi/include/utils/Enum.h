@@ -41,22 +41,22 @@ namespace utils {
   CALL(CONCAT(FOR_EACH_, COUNT ARGS), fn, delim, EXTRA, SPREAD ARGS)
 
 #define FOR_EACH_0(...)
-#define FOR_EACH_1(fn, delim, EXTRA, _1) fn(_1, 1, EXTRA)
-#define FOR_EACH_2(fn, delim, EXTRA, _1, _2) fn(_1, 1, EXTRA) delim() fn(_2, 2, EXTRA)
-#define FOR_EACH_3(fn, delim, EXTRA, _1, _2, _3) fn(_1, 1, EXTRA) delim() fn(_2, 2, EXTRA) delim() fn(_3, 3, EXTRA)
+#define FOR_EACH_1(fn, delim, EXTRA, _1) fn(_1, EXTRA)
+#define FOR_EACH_2(fn, delim, EXTRA, _1, _2) fn(_1, EXTRA) delim() fn(_2, EXTRA)
+#define FOR_EACH_3(fn, delim, EXTRA, _1, _2, _3) fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA)
 #define FOR_EACH_4(fn, delim, EXTRA, _1, _2, _3, _4) \
-  fn(_1, 1, EXTRA) delim() fn(_2, 2, EXTRA) delim() fn(_3, 3, EXTRA) delim() fn(_4, 4, EXTRA)
+  fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA) delim() fn(_4, EXTRA)
 #define FOR_EACH_5(fn, delim, EXTRA, _1, _2, _3, _4, _5) \
-  fn(_1, 1, EXTRA) delim() fn(_2, 2, EXTRA) delim() fn(_3, 3, EXTRA) delim() fn(_4, 4, EXTRA) delim() fn(_5, 5, EXTRA)
+  fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA) delim() fn(_4, EXTRA) delim() fn(_5, EXTRA)
 #define FOR_EACH_6(fn, delim, EXTRA, _1, _2, _3, _4, _5, _6) \
-  fn(_1, 1, EXTRA) delim() fn(_2, 2, EXTRA) delim() fn(_3, 3, EXTRA) delim() fn(_4, 4, EXTRA) delim() \
-  fn(_5, 5, EXTRA) delim() fn(_6, 6, EXTRA)
+  fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA) delim() fn(_4, EXTRA) delim() \
+  fn(_5, EXTRA) delim() fn(_6, EXTRA)
 #define FOR_EACH_7(fn, delim, EXTRA, _1, _2, _3, _4, _5, _6, _7) \
-  fn(_1, 1, EXTRA) delim() fn(_2, 2, EXTRA) delim() fn(_3, 3, EXTRA) delim() fn(_4, 4, EXTRA) delim() \
-  fn(_5, 5, EXTRA) delim() fn(_6, 6, EXTRA) delim() fn(_7, 7, EXTRA)
+  fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA) delim() fn(_4, EXTRA) delim() \
+  fn(_5, EXTRA) delim() fn(_6, EXTRA) delim() fn(_7, EXTRA)
 #define FOR_EACH_8(fn, delim, EXTRA, _1, _2, _3, _4, _5, _6, _7, _8) \
-  fn(_1, 1, EXTRA) delim() fn(_2, 2, EXTRA) delim() fn(_3, 3, EXTRA) delim() fn(_4, 4, EXTRA) delim() \
-  fn(_5, 5, EXTRA) delim() fn(_6, 6, EXTRA) delim() fn(_7, 7, EXTRA) delim() fn(_8, 8, EXTRA)
+  fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA) delim() fn(_4, EXTRA) delim() \
+  fn(_5, EXTRA) delim() fn(_6, EXTRA) delim() fn(_7, EXTRA) delim() fn(_8, EXTRA)
 
 #define _FIRST(a, b) a
 #define FIRST(x, ...) _FIRST x
@@ -108,7 +108,7 @@ namespace utils {
     } \
   };
 
-#define INCLUDE_BASE_FIELD(x, idx, extra) \
+#define INCLUDE_BASE_FIELD(x, extra) \
   x = HEAD extra::x
 
 #define SMART_ENUM_EXTEND(name, base, base_fields, ...) \
