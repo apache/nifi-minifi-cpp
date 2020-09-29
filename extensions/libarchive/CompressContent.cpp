@@ -42,14 +42,14 @@ core::Property CompressContent::CompressMode(
     core::PropertyBuilder::createProperty("Mode")->withDescription("Indicates whether the processor should compress content or decompress content.")
         ->isRequired(false)->withAllowableValues<std::string>({MODE_COMPRESS, MODE_DECOMPRESS})->withDefaultValue(MODE_COMPRESS)->build());
 core::Property CompressContent::CompressFormat(
-    core::PropertyBuilder::createProperty("Compression Format")->withDescription("The compression format to use.")
+    core::PropertyBuilder::createProperty("Compression CompressionFormat")->withDescription("The compression CompressionFormat to use.")
         ->isRequired(false)
         ->withAllowableValues<std::string>({
-          toString(ExtendedFormat::USE_MIME_TYPE),
-          toString(Format::GZIP),
-          toString(Format::BZIP2),
-          toString(Format::XZ_LZMA2),
-          toString(Format::LZMA)})->withDefaultValue(toString(ExtendedFormat::USE_MIME_TYPE))->build());
+          toString(ExtendedCompressionFormat::USE_MIME_TYPE),
+          toString(CompressionFormat::GZIP),
+          toString(CompressionFormat::BZIP2),
+          toString(CompressionFormat::XZ_LZMA2),
+          toString(CompressionFormat::LZMA)})->withDefaultValue(toString(ExtendedCompressionFormat::USE_MIME_TYPE))->build());
 core::Property CompressContent::UpdateFileName(
     core::PropertyBuilder::createProperty("Update Filename")->withDescription("Determines if filename extension need to be updated")
         ->isRequired(false)->withDefaultValue<bool>(false)->build());
@@ -68,19 +68,19 @@ core::Property CompressContent::BatchSize(
 core::Relationship CompressContent::Success("success", "FlowFiles will be transferred to the success relationship after successfully being compressed or decompressed");
 core::Relationship CompressContent::Failure("failure", "FlowFiles will be transferred to the failure relationship if they fail to compress/decompress");
 
-std::map<std::string, CompressContent::Format::Type> CompressContent::compressionFormatMimeTypeMap_{
-  {"application/gzip", Format::GZIP},
-  {"application/bzip2", Format::BZIP2},
-  {"application/x-bzip2", Format::BZIP2},
-  {"application/x-lzma", Format::LZMA},
-  {"application/x-xz", Format::XZ_LZMA2}
+std::map<std::string, CompressContent::CompressionFormat::Type> CompressContent::compressionFormatMimeTypeMap_{
+  {"application/gzip", CompressionFormat::GZIP},
+  {"application/bzip2", CompressionFormat::BZIP2},
+  {"application/x-bzip2", CompressionFormat::BZIP2},
+  {"application/x-lzma", CompressionFormat::LZMA},
+  {"application/x-xz", CompressionFormat::XZ_LZMA2}
 };
 
-std::map<CompressContent::Format::Type, std::string> CompressContent::fileExtension_{
-  {Format::GZIP, ".gz"},
-  {Format::LZMA, ".lzma"},
-  {Format::BZIP2, ".bz2"},
-  {Format::XZ_LZMA2, ".xz"}
+std::map<CompressContent::CompressionFormat::Type, std::string> CompressContent::fileExtension_{
+  {CompressionFormat::GZIP, ".gz"},
+  {CompressionFormat::LZMA, ".lzma"},
+  {CompressionFormat::BZIP2, ".bz2"},
+  {CompressionFormat::XZ_LZMA2, ".xz"}
 };
 
 void CompressContent::initialize() {
@@ -108,14 +108,14 @@ void CompressContent::onSchedule(core::ProcessContext *context, core::ProcessSes
     std::string compressFormatStr;
     context->getProperty(CompressFormat.getName(), compressFormatStr);
     std::transform(compressFormatStr.begin(), compressFormatStr.end(), compressFormatStr.begin(), ::tolower);
-    compressFormat_ = ExtendedFormat::parse(compressFormatStr.c_str());
+    compressFormat_ = ExtendedCompressionFormat::parse(compressFormatStr.c_str());
   }
 
   context->getProperty(UpdateFileName.getName(), updateFileName_);
   context->getProperty(EncapsulateInTar.getName(), encapsulateInTar_);
   context->getProperty(BatchSize.getName(), batchSize_);
 
-  logger_->log_info("Compress Content: Mode [%s] Format [%s] Level [%d] UpdateFileName [%d] EncapsulateInTar [%d]",
+  logger_->log_info("Compress Content: Mode [%s] CompressionFormat [%s] Level [%d] UpdateFileName [%d] EncapsulateInTar [%d]",
       compressMode_, toString(compressFormat_), compressLevel_, updateFileName_, encapsulateInTar_);
 }
 
@@ -136,8 +136,8 @@ CompressContent::TriggerResult CompressContent::onTriggerImpl(const std::shared_
 
   session->remove(flowFile);
 
-  Format::Type compressFormat;
-  if (compressFormat_ == ExtendedFormat::USE_MIME_TYPE) {
+  CompressionFormat::Type compressFormat;
+  if (compressFormat_ == ExtendedCompressionFormat::USE_MIME_TYPE) {
     std::string attr;
     flowFile->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attr);
     if (attr.empty()) {
@@ -149,28 +149,28 @@ CompressContent::TriggerResult CompressContent::onTriggerImpl(const std::shared_
     if (search != compressionFormatMimeTypeMap_.end()) {
       compressFormat = search->second;
     } else {
-      logger_->log_info("Mime type of %s is not indicated a support format, route to success", attr);
+      logger_->log_info("Mime type of %s is not indicated a support CompressionFormat, route to success", attr);
       session->transfer(flowFile, Success);
       return TriggerResult::CONTINUE;
     }
   } else {
-    compressFormat = ExtendedFormat::cast<Format>(compressFormat_);
+    compressFormat = ExtendedCompressionFormat::cast<CompressionFormat>(compressFormat_);
   }
   std::string mimeType = to_mimeType(compressFormat);
 
   // Validate
-  if (!encapsulateInTar_ && compressFormat != Format::GZIP) {
-    logger_->log_error("non-TAR encapsulated format only supports GZIP compression");
+  if (!encapsulateInTar_ && compressFormat != CompressionFormat::GZIP) {
+    logger_->log_error("non-TAR encapsulated CompressionFormat only supports GZIP compression");
     session->transfer(flowFile, Failure);
     return TriggerResult::CONTINUE;
   }
-  if (compressFormat == Format::BZIP2 && archive_bzlib_version() == nullptr) {
-    logger_->log_error("%s compression format is requested, but the agent was compiled without BZip2 support", compressFormat);
+  if (compressFormat == CompressionFormat::BZIP2 && archive_bzlib_version() == nullptr) {
+    logger_->log_error("%s compression CompressionFormat is requested, but the agent was compiled without BZip2 support", compressFormat);
     session->transfer(flowFile, Failure);
     return TriggerResult::CONTINUE;
   }
-  if ((compressFormat == Format::LZMA || compressFormat == Format::XZ_LZMA2) && archive_liblzma_version() == nullptr) {
-    logger_->log_error("%s compression format is requested, but the agent was compiled without LZMA support ", compressFormat);
+  if ((compressFormat == CompressionFormat::LZMA || compressFormat == CompressionFormat::XZ_LZMA2) && archive_liblzma_version() == nullptr) {
+    logger_->log_error("%s compression CompressionFormat is requested, but the agent was compiled without LZMA support ", compressFormat);
     session->transfer(flowFile, Failure);
     return TriggerResult::CONTINUE;
   }
@@ -220,15 +220,15 @@ CompressContent::TriggerResult CompressContent::onTriggerImpl(const std::shared_
   return TriggerResult::CONTINUE;
 }
 
-std::string CompressContent::to_mimeType(Format::Type format) {
-  switch (format) {
-    case Format::GZIP: return "application/gzip";
-    case Format::BZIP2: return "application/bzip2";
-    case Format::LZMA: return "application/x-lzma";
-    case Format::XZ_LZMA2: return "application/x-xz";
+std::string CompressContent::to_mimeType(CompressionFormat::Type CompressionFormat) {
+  switch (CompressionFormat) {
+    case CompressionFormat::GZIP: return "application/gzip";
+    case CompressionFormat::BZIP2: return "application/bzip2";
+    case CompressionFormat::LZMA: return "application/x-lzma";
+    case CompressionFormat::XZ_LZMA2: return "application/x-xz";
   }
-  throw Exception(ExceptionType::GENERAL_EXCEPTION, "Unknown compression format: "
-      + std::to_string(static_cast<int>(format)));
+  throw Exception(ExceptionType::GENERAL_EXCEPTION, "Unknown compression CompressionFormat: "
+      + std::to_string(static_cast<int>(CompressionFormat)));
 }
 
 } /* namespace processors */

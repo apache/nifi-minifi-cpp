@@ -213,7 +213,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragment", "[mergefiletest1]")
   // Generate 6 flowfiles, first three merged to one, second three merged to one
   for (const int i : {0, 2, 5, 4, 1, 3}) {
     const auto flow = sessionGenFlowFile.create();
-    sessionGenFlowFile.importContent(flowFileContents[i], flow);
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     // three bundle
     if (i < 3)
       flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
@@ -274,7 +274,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDelimiter", "[mergefil
   // Generate 6 flowfiles, first three merged to one, second three merged to one
   for (const int i : {0, 2, 5, 4, 1, 3}) {
     const auto flow = sessionGenFlowFile.create();
-    sessionGenFlowFile.importContent(flowFileContents[i], flow);
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     // three bundle
     if (i < 3)
       flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
@@ -331,7 +331,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDropFlow", "[mergefile
   // Generate 5 flowfiles, first threes merged to one, the other two merged to one
   for (const int i : {0, 2, 5, 1, 3}) {
     const auto flow = sessionGenFlowFile.create();
-    sessionGenFlowFile.importContent(flowFileContents[i], flow);
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     // three bundle
     if (i < 3)
       flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
@@ -394,7 +394,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileBinPack", "[mergefiletest4]") {
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
   for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = sessionGenFlowFile.create();
-    sessionGenFlowFile.importContent(flowFileContents[i], flow);
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     flow->setAttribute("tag", "tag");
     sessionGenFlowFile.flushContent();
     input->put(flow);
@@ -438,7 +438,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileTar", "[mergefiletest4]") {
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
   for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = sessionGenFlowFile.create();
-    sessionGenFlowFile.importContent(flowFileContents[i], flow);
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     flow->setAttribute("tag", "tag");
     sessionGenFlowFile.flushContent();
     input->put(flow);
@@ -489,7 +489,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileZip", "[mergefiletest5]") {
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
   for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = sessionGenFlowFile.create();
-    sessionGenFlowFile.importContent(flowFileContents[i], flow);
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     flow->setAttribute("tag", "tag");
     sessionGenFlowFile.flushContent();
     input->put(flow);
@@ -545,7 +545,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileOnAttribute", "[mergefiletest5]"
   // Generate 6 flowfiles, even files are merged to one, odd files are merged to an other
   for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = sessionGenFlowFile.create();
-    sessionGenFlowFile.importContent(flowFileContents[i], flow);
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     if (i % 2 == 0)
       flow->setAttribute("tag", "even");
     else
@@ -588,7 +588,7 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping Only C
   // Generate 3 flowfiles merging all into one
   for (const int i : {1, 2, 0}) {
     const auto flow = sessionGenFlowFile.create();
-    sessionGenFlowFile.importContent(flowFileContents[i], flow);
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
     flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
     flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
@@ -637,7 +637,7 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping All Un
   // Generate 3 flowfiles merging all into one
   for (const int i : {1, 2, 0}) {
     const auto flow = sessionGenFlowFile.create();
-    sessionGenFlowFile.importContent(flowFileContents[i], flow);
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
     flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
     flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
@@ -786,7 +786,7 @@ TEST_CASE_METHOD(MergeTestController, "Batch Size", "[testMergeFileBatchSize]") 
   // enqueue 5 (five) flowFiles
   for (const int i : {0, 1, 2, 3, 4}) {
     const auto flow = sessionGenFlowFile.create();
-    sessionGenFlowFile.importContent(flowFileContents[i], flow);
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     sessionGenFlowFile.flushContent();
     input->put(flow);
   }

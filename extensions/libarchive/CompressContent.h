@@ -219,7 +219,7 @@ public:
           archive_write_log_error_cleanup(arch);
           return -1;
         }
-        if (compress_format_ == toString(Format::GZIP)) {
+        if (compress_format_ == toString(CompressionFormat::GZIP)) {
           r = archive_write_add_filter_gzip(arch);
           if (r != ARCHIVE_OK) {
             archive_write_log_error_cleanup(arch);
@@ -232,19 +232,19 @@ public:
             archive_write_log_error_cleanup(arch);
             return -1;
           }
-        } else if (compress_format_ == toString(Format::BZIP2)) {
+        } else if (compress_format_ == toString(CompressionFormat::BZIP2)) {
           r = archive_write_add_filter_bzip2(arch);
           if (r != ARCHIVE_OK) {
             archive_write_log_error_cleanup(arch);
             return -1;
           }
-        } else if (compress_format_ == toString(Format::LZMA)) {
+        } else if (compress_format_ == toString(CompressionFormat::LZMA)) {
           r = archive_write_add_filter_lzma(arch);
           if (r != ARCHIVE_OK) {
             archive_write_log_error_cleanup(arch);
             return -1;
           }
-        } else if (compress_format_ == toString(Format::XZ_LZMA2)) {
+        } else if (compress_format_ == toString(CompressionFormat::XZ_LZMA2)) {
           r = archive_write_add_filter_xz(arch);
           if (r != ARCHIVE_OK) {
             archive_write_log_error_cleanup(arch);
@@ -420,14 +420,14 @@ public:
   // Initialize, over write by NiFi CompressContent
   virtual void initialize(void);
 
-  SMART_ENUM(Format,
+  SMART_ENUM(CompressionFormat,
     (GZIP, "gzip"),
     (LZMA, "lzma"),
     (XZ_LZMA2, "xz-lzma2"),
     (BZIP2, "bzip2")
   )
 
-  SMART_ENUM_EXTEND(ExtendedFormat, Format, (GZIP, LZMA, XZ_LZMA2, BZIP2),
+  SMART_ENUM_EXTEND(ExtendedCompressionFormat, CompressionFormat, (GZIP, LZMA, XZ_LZMA2, BZIP2),
     (USE_MIME_TYPE, "use mime.type attribute")
   )
 
@@ -437,19 +437,19 @@ private:
     CONTINUE
   };
 
-  static std::string to_mimeType(Format::Type format);
+  static std::string to_mimeType(CompressionFormat::Type format);
 
   TriggerResult onTriggerImpl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 
   std::shared_ptr<logging::Logger> logger_;
   int compressLevel_;
   std::string compressMode_;
-  ExtendedFormat::Type compressFormat_;
+  ExtendedCompressionFormat::Type compressFormat_;
   bool updateFileName_;
   bool encapsulateInTar_;
   uint32_t batchSize_{1};
-  static std::map<std::string, Format::Type> compressionFormatMimeTypeMap_;
-  static std::map<Format::Type, std::string> fileExtension_;
+  static std::map<std::string, CompressionFormat::Type> compressionFormatMimeTypeMap_;
+  static std::map<CompressionFormat::Type, std::string> fileExtension_;
 };
 
 REGISTER_RESOURCE(CompressContent, "Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm and updates the mime.type attribute as appropriate");

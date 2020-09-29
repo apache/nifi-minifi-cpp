@@ -207,8 +207,8 @@ class CompressTestController : public CompressDecompressionTestController {
 
  public:
   CompressTestController() {
-    char format[] = "/tmp/test.XXXXXX";
-    tempDir_ = get_global_controller().createTempDirectory(format);
+    char CompressionFormat[] = "/tmp/test.XXXXXX";
+    tempDir_ = get_global_controller().createTempDirectory(CompressionFormat);
     REQUIRE(!tempDir_.empty());
     raw_content_path_ = utils::file::FileUtils::concat_path(tempDir_, "minifi-expect-compresscontent.txt");
     compressed_content_path_ = utils::file::FileUtils::concat_path(tempDir_, "minifi-compresscontent");
@@ -235,11 +235,11 @@ class DecompressTestController : public CompressDecompressionTestController{
   }
 };
 
-using Format = processors::CompressContent::ExtendedFormat;
+using CompressionFormat = processors::CompressContent::ExtendedCompressionFormat;
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1]") {
   context->setProperty(processors::CompressContent::CompressMode, MODE_COMPRESS);
-  context->setProperty(processors::CompressContent::CompressFormat, toString(Format::GZIP));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
@@ -277,7 +277,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfiletest2]") {
   context->setProperty(processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-  context->setProperty(processors::CompressContent::CompressFormat, toString(Format::GZIP));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
@@ -311,7 +311,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3]") {
   context->setProperty(processors::CompressContent::CompressMode, MODE_COMPRESS);
-  context->setProperty(processors::CompressContent::CompressFormat, toString(Format::BZIP2));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
@@ -350,7 +350,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfiletest4]") {
   context->setProperty(processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-  context->setProperty(processors::CompressContent::CompressFormat, toString(Format::BZIP2));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
@@ -384,7 +384,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfilet
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5]") {
   context->setProperty(processors::CompressContent::CompressMode, MODE_COMPRESS);
-  context->setProperty(processors::CompressContent::CompressFormat, toString(Format::LZMA));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::LZMA));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
@@ -429,7 +429,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfiletest6]") {
   context->setProperty(processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-  context->setProperty(processors::CompressContent::CompressFormat, toString(Format::USE_MIME_TYPE));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
@@ -470,7 +470,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletest7]") {
   context->setProperty(processors::CompressContent::CompressMode, MODE_COMPRESS);
-  context->setProperty(processors::CompressContent::CompressFormat, toString(Format::XZ_LZMA2));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::XZ_LZMA2));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
@@ -515,7 +515,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfiletest8]") {
   context->setProperty(processors::CompressContent::CompressMode, MODE_DECOMPRESS);
-  context->setProperty(processors::CompressContent::CompressFormat, toString(Format::USE_MIME_TYPE));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
 
@@ -603,7 +603,7 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
 
   // Configure CompressContent processor for compression
   plan->setProperty(compress_content, "Mode", MODE_COMPRESS);
-  plan->setProperty(compress_content, "Compression Format", toString(Format::GZIP));
+  plan->setProperty(compress_content, "Compression CompressionFormat", toString(CompressionFormat::GZIP));
   plan->setProperty(compress_content, "Update Filename", "true");
   plan->setProperty(compress_content, "Encapsulate in TAR", "false");
 
@@ -612,7 +612,7 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
 
   // Configure CompressContent processor for decompression
   plan->setProperty(decompress_content, "Mode", MODE_DECOMPRESS);
-  plan->setProperty(decompress_content, "Compression Format", toString(Format::GZIP));
+  plan->setProperty(decompress_content, "Compression CompressionFormat", toString(CompressionFormat::GZIP));
   plan->setProperty(decompress_content, "Update Filename", "true");
   plan->setProperty(decompress_content, "Encapsulate in TAR", "false");
 
@@ -665,7 +665,7 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
   const std::size_t batchSize = 3;
 
   context->setProperty(processors::CompressContent::CompressMode, MODE_COMPRESS);
-  context->setProperty(processors::CompressContent::CompressFormat, toString(Format::GZIP));
+  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
   context->setProperty(processors::CompressContent::BatchSize, std::to_string(batchSize));
@@ -674,7 +674,7 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
   core::ProcessSession sessionGenFlowFile(context);
   for (const auto& content : flowFileContents) {
     auto flow = sessionGenFlowFile.create();
-    sessionGenFlowFile.importContent(content, flow);
+    sessionGenFlowFile.importFrom(minifi::io::BufferStream(content), flow);
     sessionGenFlowFile.flushContent();
     input->put(flow);
   }
@@ -713,7 +713,7 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
   for (std::size_t idx = 0; idx < outFiles.size(); ++idx) {
     auto file = outFiles[idx];
     std::string mime;
-    file->getAttribute(FlowAttributeKey(minifi::MIME_TYPE), mime);
+    file->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/gzip");
     ReadCallback callback(gsl::narrow<size_t>(file->getSize()));
     sessionGenFlowFile.read(file, &callback);
