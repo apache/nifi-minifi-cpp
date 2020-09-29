@@ -17,7 +17,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "AWSInitializer.h"
+
+#include <memory>
+
+#include "aws/core/auth/AWSCredentialsProvider.h"
+#include "aws/core/utils/memory/stl/AWSString.h"
+#include "aws/core/utils/logging/DefaultLogSystem.h"
+#include "aws/core/utils/logging/AWSLogging.h"
 
 namespace org {
 namespace apache {
@@ -32,15 +40,15 @@ AWSInitializer& AWSInitializer::get() {
 }
 
 AWSInitializer::~AWSInitializer() {
-  // Aws::Utils::Logging::ShutdownAWSLogging();
+  Aws::Utils::Logging::ShutdownAWSLogging();
   Aws::ShutdownAPI(options_);
 }
 
 AWSInitializer::AWSInitializer() {
   Aws::InitAPI(options_);
-  // Aws::Utils::Logging::InitializeAWSLogging(
-  //     Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(
-  //         "RunUnitTests", Aws::Utils::Logging::LogLevel::Trace, "aws_sdk_"));
+  Aws::Utils::Logging::InitializeAWSLogging(
+      Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(
+          "InitLogging", Aws::Utils::Logging::LogLevel::Info, "aws_sdk_"));
 }
 
 }  // namespace utils

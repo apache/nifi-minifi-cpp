@@ -276,6 +276,7 @@ void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &
       }
     }
   }
+  logger_->log_debug("PutS3Object: User metadata [%s]", user_metadata_);
 }
 
 bool PutS3Object::setProxy(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile>& flow_file) {
@@ -283,12 +284,15 @@ bool PutS3Object::setProxy(const std::shared_ptr<core::ProcessContext> &context,
   context->getProperty(ProxyHost, proxy.host, flow_file);
   std::string port_str;
   if (context->getProperty(ProxyPort, port_str, flow_file) && !port_str.empty() && !core::Property::StringToInt(port_str, proxy.port)) {
-    logger_->log_error("PutS3Object: Proxy port invalid");
+    logger_->log_error("Proxy port invalid");
     return false;
   }
   context->getProperty(ProxyUsername, proxy.username, flow_file);
   context->getProperty(ProxyPassword, proxy.password, flow_file);
-  s3_wrapper_->setProxy(proxy);
+  if (!proxy.host.empty()) {
+    s3_wrapper_->setProxy(proxy);
+    logger_->log_info("Proxy for PutS3Object was set.");
+  }
   return true;
 }
 
@@ -373,7 +377,7 @@ bool PutS3Object::getExpressionLanguageSupportedProperties(
   context->getProperty(ObjectKey, put_s3_request_params_.object_key, flow_file);
   logger_->log_debug("PutS3Object: Object Key [%s]", put_s3_request_params_.object_key);
   if (!context->getProperty(Bucket, put_s3_request_params_.bucket, flow_file) || put_s3_request_params_.bucket.empty()) {
-    logger_->log_error("PutS3Object: is invalid or empty", put_s3_request_params_.bucket);
+    logger_->log_error("Object Key is invalid or empty!", put_s3_request_params_.bucket);
     return false;
   }
   logger_->log_debug("PutS3Object: Bucket [%s]", put_s3_request_params_.bucket);
@@ -385,7 +389,7 @@ bool PutS3Object::getExpressionLanguageSupportedProperties(
 
   auto credentials = getAWSCredentials(context, flow_file);
   if (!credentials) {
-    logger_->log_error("PutS3Object: AWS Credentials not set");
+    logger_->log_error("AWS Credentials have not been set!");
     return false;
   }
   s3_wrapper_->setCredentials(credentials.value());
@@ -425,7 +429,7 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
   PutS3Object::ReadCallback callback(flow_file->getSize(), put_s3_request_params_, s3_wrapper_.get());
   session->read(flow_file, &callback);
   if (callback.result_ == minifi::utils::nullopt) {
-    logger_->log_error("Failed to send flow to S3 bucket %s", put_s3_request_params_.bucket);
+    logger_->log_error("Failed to upload S3 object to bucket %s", put_s3_request_params_.bucket);
     session->transfer(flow_file, Failure);
   } else {
     session->putAttribute(flow_file, "s3.version", callback.result_.value().version);
@@ -433,7 +437,7 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     session->putAttribute(flow_file, "s3.expiration", callback.result_.value().expiration);
     session->putAttribute(flow_file, "s3.sseAlgorithm", callback.result_.value().ssealgorithm);
 
-    logger_->log_debug("Sent S3 object %s to bucket %s", put_s3_request_params_.object_key, put_s3_request_params_.bucket);
+    logger_->log_debug("Successfully uploaded S3 object %s to bucket %s", put_s3_request_params_.object_key, put_s3_request_params_.bucket);
     session->transfer(flow_file, Success);
   }
 }

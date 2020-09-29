@@ -19,13 +19,7 @@
  */
 #pragma once
 
-#include <memory>
-
 #include "aws/core/Aws.h"
-#include "aws/core/auth/AWSCredentialsProvider.h"
-#include "aws/core/utils/memory/stl/AWSString.h"
-#include "aws/core/utils/logging/DefaultLogSystem.h"
-#include "aws/core/utils/logging/AWSLogging.h"
 
 namespace org {
 namespace apache {
