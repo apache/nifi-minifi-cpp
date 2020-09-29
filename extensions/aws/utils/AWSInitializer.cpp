@@ -36,16 +36,16 @@ AWSInitializer::~AWSInitializer() {
   Aws::ShutdownAPI(options_);
 }
 
-AWSInitializer::AWSInitializer(){
+AWSInitializer::AWSInitializer() {
   Aws::InitAPI(options_);
   // Aws::Utils::Logging::InitializeAWSLogging(
   //     Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(
   //         "RunUnitTests", Aws::Utils::Logging::LogLevel::Trace, "aws_sdk_"));
 }
 
-} /* namespace utils */
-} /* namespace aws */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace aws
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

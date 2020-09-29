@@ -19,6 +19,7 @@
  */
 #include "S3WrapperBase.h"
 
+#include <memory>
 
 namespace org {
 namespace apache {
@@ -68,9 +69,9 @@ minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutS3Req
   return putObject(request);
 }
 
-} /* namespace s3 */
-} /* namespace aws */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace s3
+}  // namespace aws
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

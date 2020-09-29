@@ -20,15 +20,20 @@
 
 #pragma once
 
+#include <sstream>
+#include <utility>
+#include <vector>
+#include <memory>
+#include <string>
+
+#include "aws/core/auth/AWSCredentialsProvider.h"
+
 #include "S3Wrapper.h"
 #include "core/Property.h"
 #include "core/Processor.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/OptionalUtils.h"
-
-#include <aws/core/auth/AWSCredentialsProvider.h>
-#include <sstream>
 
 namespace org {
 namespace apache {
@@ -37,16 +42,14 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
-namespace storage_class
-{
+namespace storage_class {
 
   constexpr const char *STANDARD = "Standard";
   constexpr const char *REDUCED_REDUNDANCY = "ReducedRedundancy";
 
-} // namespace storage_class
+}  // namespace storage_class
 
-namespace region
-{
+namespace region {
 
   constexpr const char *US_GOV_WEST_1 = "us-gov-west-1";
   constexpr const char *US_EAST_1 = "us-east-1";
@@ -65,19 +68,18 @@ namespace region
   constexpr const char *CN_NORTH_1 = "cn-north-1";
   constexpr const char *CA_CENTRAL_1 = "ca-central-1";
 
-} // namespace region
+}  // namespace region
 
-namespace server_side_encryption
-{
+namespace server_side_encryption {
 
   constexpr const char *NONE = "None";
   constexpr const char *AES256 = "AES256";
   constexpr const char *AWS_KMS = "aws_kms";
 
-} // namespace server_side_encryption
+}  // namespace server_side_encryption
 
 class PutS3Object : public core::Processor {
-public:
+ public:
   static constexpr char const* ProcessorName = "PutS3Object";
 
   // Supported Properties
@@ -121,11 +123,10 @@ public:
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  void notifyStop() override;
 
   class ReadCallback : public InputStreamCallback {
-  public:
-    static const uint64_t MAX_SIZE = 5UL * 1024UL * 1024UL * 1024UL; // 5GB limit on AWS
+   public:
+    static const uint64_t MAX_SIZE = 5UL * 1024UL * 1024UL * 1024UL;  // 5GB limit on AWS
     static const uint64_t BUFFER_SIZE = 4096;
 
     ReadCallback(uint64_t flow_size, const minifi::aws::s3::PutS3RequestParameters& options, aws::s3::S3WrapperBase* s3_wrapper)
@@ -151,7 +152,7 @@ public:
           return -1;
         }
         if (read_ret > 0) {
-          data_stream->write((char*)buffer.data(), next_read_size);
+          data_stream->write(reinterpret_cast<char*>(buffer.data()), next_read_size);
           read_size_ += read_ret;
         } else {
           break;
@@ -168,7 +169,7 @@ public:
     minifi::utils::optional<minifi::aws::s3::PutObjectResult> result_ = minifi::utils::nullopt;
   };
 
-private:
+ private:
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context);
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile>& flow_file);
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context);

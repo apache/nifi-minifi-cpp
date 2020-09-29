@@ -42,17 +42,15 @@ minifi::utils::optional<PutObjectResult> S3Wrapper::putObject(const Aws::S3::Mod
       result.expiration = outcome.GetResult().GetExpiration();
       result.ssealgorithm = outcome.GetResult().GetSSECustomerAlgorithm();
       return result;
-  }
-  else
-  {
+  } else {
       logger_->log_error("PutS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
       return minifi::utils::nullopt;
   }
 }
 
-} /* namespace s3 */
-} /* namespace aws */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace s3
+}  // namespace aws
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

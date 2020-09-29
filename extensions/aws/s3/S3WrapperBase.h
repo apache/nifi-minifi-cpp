@@ -20,16 +20,18 @@
 
 #pragma once
 
-#include "utils/AWSInitializer.h"
-#include "utils/OptionalUtils.h"
-
-#include <aws/core/auth/AWSCredentialsProvider.h>
-#include <aws/s3/S3Client.h>
-#include <aws/s3/model/PutObjectRequest.h>
-#include <aws/s3/model/StorageClass.h>
-#include <aws/s3/model/ServerSideEncryption.h>
 #include <string>
 #include <map>
+#include <memory>
+
+#include "aws/core/auth/AWSCredentialsProvider.h"
+#include "aws/s3/S3Client.h"
+#include "aws/s3/model/PutObjectRequest.h"
+#include "aws/s3/model/StorageClass.h"
+#include "aws/s3/model/ServerSideEncryption.h"
+
+#include "utils/AWSInitializer.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -77,7 +79,7 @@ struct ProxyOptions {
 };
 
 class S3WrapperBase {
-public:
+ public:
   void setCredentials(const Aws::Auth::AWSCredentials& cred);
   void setRegion(const Aws::String& region);
   void setTimeout(uint64_t timeout);
@@ -88,7 +90,7 @@ public:
 
   virtual ~S3WrapperBase() = default;
 
-protected:
+ protected:
   virtual minifi::utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) = 0;
 
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();

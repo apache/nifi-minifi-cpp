@@ -30,3 +30,5 @@ target_link_libraries(minifi-aws AWS::aws-cpp-sdk-s3)
 
 SET (AWS-EXTENSION minifi-aws PARENT_SCOPE)
 register_extension(minifi-aws)
+
+register_extension_linter(minifi-aws-extensions-linter)

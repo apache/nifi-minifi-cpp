@@ -17,13 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "PutS3Object.h"
-#include "AWSCredentialsService.h"
-#include "properties/Properties.h"
-#include "utils/StringUtils.h"
 
 #include <string>
 #include <regex>
+#include <set>
+#include <memory>
+
+#include "AWSCredentialsService.h"
+#include "properties/Properties.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -324,7 +328,7 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 std::string PutS3Object::parseAccessControlList(const std::string& comma_separated_list) {
   std::string result_list;
   bool is_first = true;
-  for (const auto& user: minifi::utils::StringUtils::split(comma_separated_list, ",")) {
+  for (const auto& user : minifi::utils::StringUtils::split(comma_separated_list, ",")) {
     if (is_first) {
       is_first = false;
     } else {
@@ -359,7 +363,7 @@ void PutS3Object::setAccessControl(const std::shared_ptr<core::ProcessContext> &
   }
   if (context->getProperty(WriteACLUserList, value, flow_file) && !value.empty()) {
     put_s3_request_params_.write_acl_user_list = parseAccessControlList(value);
-    logger_->log_debug("PutS3Object: Write ACL User List	 [%s]", value);
+    logger_->log_debug("PutS3Object: Write ACL User List [%s]", value);
   }
 }
 
@@ -432,10 +436,6 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     logger_->log_debug("Sent S3 object %s to bucket %s", put_s3_request_params_.object_key, put_s3_request_params_.bucket);
     session->transfer(flow_file, Success);
   }
-}
-
-void PutS3Object::notifyStop() {
-
 }
 
 }  // namespace processors

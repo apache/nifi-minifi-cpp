@@ -16,6 +16,10 @@
  * limitations under the License.
  */
 
+#include <stdlib.h>
+#include <iostream>
+#include <map>
+
 #include "core/Processor.h"
 #include "../TestBase.h"
 #include "processors/PutS3Object.h"
@@ -25,17 +29,13 @@
 #include "s3/S3WrapperBase.h"
 #include "utils/file/FileUtils.h"
 
-#include <iostream>
-#include <stdlib.h>
-#include <map>
-
 const std::string S3_VERSION = "1.2.3";
 const std::string S3_ETAG = "tag-123";
 const std::string S3_EXPIRATION = "2020-02-20";
 const std::string S3_SSEALGORITHM = "aws:kms";
 
 class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
-public:
+ public:
   Aws::Auth::AWSCredentials getCredentials() const {
     return credentials_;
   }
@@ -80,7 +80,7 @@ public:
 };
 
 class PutS3ObjectTestsFixture {
-public:
+ public:
   PutS3ObjectTestsFixture() {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
@@ -151,7 +151,7 @@ public:
     LogTestController::getInstance().reset();
   }
 
-protected:
+ protected:
   TestController test_controller;
   std::shared_ptr<TestPlan> plan;
   MockS3Wrapper* mock_s3_wrapper_raw;

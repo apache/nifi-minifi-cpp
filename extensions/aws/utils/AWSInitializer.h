@@ -19,12 +19,13 @@
  */
 #pragma once
 
-#include <aws/core/Aws.h>
-#include <aws/core/auth/AWSCredentialsProvider.h>
-#include <aws/core/utils/memory/stl/AWSString.h>
-#include <aws/core/utils/logging/DefaultLogSystem.h>
-#include <aws/core/utils/logging/AWSLogging.h>
 #include <memory>
+
+#include "aws/core/Aws.h"
+#include "aws/core/auth/AWSCredentialsProvider.h"
+#include "aws/core/utils/memory/stl/AWSString.h"
+#include "aws/core/utils/logging/DefaultLogSystem.h"
+#include "aws/core/utils/logging/AWSLogging.h"
 
 namespace org {
 namespace apache {
@@ -34,11 +35,11 @@ namespace aws {
 namespace utils {
 
 class AWSInitializer {
-public:
+ public:
   static AWSInitializer& get();
   ~AWSInitializer();
 
-private:
+ private:
   AWSInitializer();
 
   Aws::SDKOptions options_;
