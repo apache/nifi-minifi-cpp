@@ -110,7 +110,7 @@ space_info space(const path p, std::error_code& ec) noexcept {
   ULARGE_INTEGER free_bytes_available_to_caller;
   ULARGE_INTEGER total_number_of_bytes;
   ULARGE_INTEGER total_number_of_free_bytes;
-  const bool get_disk_free_space_ex_success = GetDiskFreeSpaceEx(path, &free_bytes_available_to_caller, &total_number_of_bytes,
+  const bool get_disk_free_space_ex_success = GetDiskFreeSpaceEx(p, &free_bytes_available_to_caller, &total_number_of_bytes,
       &total_number_of_free_bytes);
   if (!get_disk_free_space_ex_success) {
     const std::error_code err_code{gsl::narrow<int>(GetLastError()), std::system_category()};
