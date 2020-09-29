@@ -20,8 +20,10 @@
 #include "PutS3Object.h"
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"
+#include "utils/StringUtils.h"
 
 #include <string>
+#include <regex>
 
 namespace org {
 namespace apache {
@@ -95,6 +97,30 @@ const core::Property PutS3Object::CommunicationsTimeout(
     ->withDefaultValue<core::TimePeriodValue>("30 sec")
     ->withDescription("")
     ->build());
+const core::Property PutS3Object::FullControlUserList(
+  core::PropertyBuilder::createProperty("FullControl User List")
+    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Full Control for an object")
+    ->supportsExpressionLanguage(true)
+    ->withDefaultValue<std::string>("${s3.permissions.full.users}")
+    ->build());
+const core::Property PutS3Object::ReadPermissionUserList(
+  core::PropertyBuilder::createProperty("Read Permission User List")
+    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Read Access for an object")
+    ->supportsExpressionLanguage(true)
+    ->withDefaultValue<std::string>("${s3.permissions.read.users}")
+    ->build());
+const core::Property PutS3Object::ReadACLUserList(
+  core::PropertyBuilder::createProperty("Read ACL User List")
+    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to read the Access Control List for an object")
+    ->supportsExpressionLanguage(true)
+    ->withDefaultValue<std::string>("${s3.permissions.readacl.users}")
+    ->build());
+const core::Property PutS3Object::WriteACLUserList(
+  core::PropertyBuilder::createProperty("Write ACL User List")
+    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to change the Access Control List for an object")
+    ->supportsExpressionLanguage(true)
+    ->withDefaultValue<std::string>("${s3.permissions.writeacl.users}")
+    ->build());
 const core::Property PutS3Object::EndpointOverrideURL(
   core::PropertyBuilder::createProperty("Endpoint Override URL")
     ->withDescription("Endpoint URL to use instead of the AWS default including scheme, host, "
@@ -147,6 +173,10 @@ void PutS3Object::initialize() {
   properties.insert(StorageClass);
   properties.insert(Region);
   properties.insert(CommunicationsTimeout);
+  properties.insert(FullControlUserList);
+  properties.insert(ReadPermissionUserList);
+  properties.insert(ReadACLUserList);
+  properties.insert(WriteACLUserList);
   properties.insert(EndpointOverrideURL);
   properties.insert(ServerSideEncryption);
   properties.insert(ProxyHost);
@@ -291,6 +321,48 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   fillUserMetadata(context);
 }
 
+std::string PutS3Object::parseAccessControlList(const std::string& comma_separated_list) {
+  std::string result_list;
+  bool is_first = true;
+  for (const auto& user: minifi::utils::StringUtils::split(comma_separated_list, ",")) {
+    if (is_first) {
+      is_first = false;
+    } else {
+      result_list += ", ";
+    }
+
+    auto trimmed_user = minifi::utils::StringUtils::trim(user);
+    static const std::regex email_pattern("(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+");
+    if (std::regex_match(trimmed_user, email_pattern)) {
+      result_list += "emailAddress=\"" + trimmed_user + "\"";
+    } else {
+      result_list += "id=" + trimmed_user;
+    }
+  }
+
+  return result_list;
+}
+
+void PutS3Object::setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile>& flow_file) {
+  std::string value;
+  if (context->getProperty(FullControlUserList, value, flow_file) && !value.empty()) {
+    put_s3_request_params_.fullcontrol_user_list = parseAccessControlList(value);
+    logger_->log_debug("PutS3Object: Full Control User List [%s]", value);
+  }
+  if (context->getProperty(ReadPermissionUserList, value, flow_file) && !value.empty()) {
+    put_s3_request_params_.read_permission_user_list = parseAccessControlList(value);
+    logger_->log_debug("PutS3Object: Read Permission User List [%s]", value);
+  }
+  if (context->getProperty(ReadACLUserList, value, flow_file) && !value.empty()) {
+    put_s3_request_params_.read_acl_user_list = parseAccessControlList(value);
+    logger_->log_debug("PutS3Object: Read ACL User List [%s]", value);
+  }
+  if (context->getProperty(WriteACLUserList, value, flow_file) && !value.empty()) {
+    put_s3_request_params_.write_acl_user_list = parseAccessControlList(value);
+    logger_->log_debug("PutS3Object: Write ACL User List	 [%s]", value);
+  }
+}
+
 bool PutS3Object::getExpressionLanguageSupportedProperties(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile>& flow_file) {
@@ -325,6 +397,7 @@ bool PutS3Object::getExpressionLanguageSupportedProperties(
     logger_->log_debug("PutS3Object: Endpoint Override URL [%d]", value);
   }
 
+  setAccessControl(context, flow_file);
   return true;
 }
 

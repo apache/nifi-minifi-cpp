@@ -92,6 +92,10 @@ public:
   static const core::Property ServerSideEncryption;
   static const core::Property Region;
   static const core::Property CommunicationsTimeout;
+  static const core::Property FullControlUserList;
+  static const core::Property ReadPermissionUserList;
+  static const core::Property ReadACLUserList;
+  static const core::Property WriteACLUserList;
   static const core::Property EndpointOverrideURL;
   static const core::Property ProxyHost;
   static const core::Property ProxyPort;
@@ -172,6 +176,8 @@ private:
   void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);
   bool setProxy(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile>& flow_file);
   bool getExpressionLanguageSupportedProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile>& flow_file);
+  std::string parseAccessControlList(const std::string& comma_separated_list);
+  void setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile>& flow_file);
 
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutS3Object>::getLogger()};
   aws::s3::PutS3RequestParameters put_s3_request_params_;

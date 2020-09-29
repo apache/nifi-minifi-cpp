@@ -63,6 +63,10 @@ struct PutS3RequestParameters {
   std::string server_side_encryption;
   std::string content_type;
   std::map<std::string, std::string> user_metadata_map;
+  std::string fullcontrol_user_list;
+  std::string read_permission_user_list;
+  std::string read_acl_user_list;
+  std::string write_acl_user_list;
 };
 
 struct ProxyOptions {

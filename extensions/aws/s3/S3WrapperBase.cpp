@@ -60,6 +60,10 @@ minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutS3Req
   request.SetContentType(params.content_type);
   request.SetMetadata(params.user_metadata_map);
   request.SetBody(data_stream);
+  request.SetGrantFullControl(params.fullcontrol_user_list);
+  request.SetGrantRead(params.read_permission_user_list);
+  request.SetGrantReadACP(params.read_acl_user_list);
+  request.SetGrantWriteACP(params.write_acl_user_list);
 
   return putObject(request);
 }

@@ -53,6 +53,10 @@ public:
     server_side_encryption = request.GetServerSideEncryption();
     metadata_map = request.GetMetadata();
     content_type = request.GetContentType();
+    fullcontrol_user_list = request.GetGrantFullControl();
+    read_user_list = request.GetGrantRead();
+    read_acl_user_list = request.GetGrantReadACP();
+    write_acl_user_list = request.GetGrantWriteACP();
 
     put_s3_result.version = S3_VERSION;
     put_s3_result.etag = S3_ETAG;
@@ -69,6 +73,10 @@ public:
   std::string put_s3_data;
   std::map<std::string, std::string> metadata_map;
   std::string content_type;
+  std::string fullcontrol_user_list;
+  std::string read_user_list;
+  std::string read_acl_user_list;
+  std::string write_acl_user_list;
 };
 
 class PutS3ObjectTestsFixture {
@@ -268,4 +276,17 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") 
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().proxyPort == 1234);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().proxyUserName == "username");
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().proxyPassword == "password");
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3ACL]") {
+  setBasicCredentials();
+  plan->setProperty(update_attribute, "s3.permissions.full.users", "myuserid123, myuser@example.com", true);
+  plan->setProperty(update_attribute, "s3.permissions.read.users", "myuserid456,myuser2@example.com", true);
+  plan->setProperty(update_attribute, "s3.permissions.readacl.users", "myuserid789, otheruser", true);
+  plan->setProperty(update_attribute, "s3.permissions.writeacl.users", "myuser3@example.com", true);
+  test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_wrapper_raw->fullcontrol_user_list == "id=myuserid123, emailAddress=\"myuser@example.com\"");
+  REQUIRE(mock_s3_wrapper_raw->read_user_list == "id=myuserid456, emailAddress=\"myuser2@example.com\"");
+  REQUIRE(mock_s3_wrapper_raw->read_acl_user_list == "id=myuserid789, id=otheruser");
+  REQUIRE(mock_s3_wrapper_raw->write_acl_user_list == "emailAddress=\"myuser3@example.com\"");
 }
