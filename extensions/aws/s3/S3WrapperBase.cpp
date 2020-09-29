@@ -52,6 +52,13 @@ void S3WrapperBase::setProxy(const ProxyOptions& proxy) {
   client_config_.proxyPassword = proxy.password;
 }
 
+void S3WrapperBase::setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) {
+  if (canned_acl.empty() || canned_acl_map.find(canned_acl) == canned_acl_map.end())
+    return;
+
+  request.SetACL(canned_acl_map.at(canned_acl));
+}
+
 minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutS3RequestParameters& params, std::shared_ptr<Aws::IOStream> data_stream) {
   Aws::S3::Model::PutObjectRequest request;
   request.SetBucket(params.bucket);
@@ -65,6 +72,7 @@ minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutS3Req
   request.SetGrantRead(params.read_permission_user_list);
   request.SetGrantReadACP(params.read_acl_user_list);
   request.SetGrantWriteACP(params.write_acl_user_list);
+  setCannedAcl(request, params.canned_acl);
 
   return putObject(request);
 }

@@ -29,6 +29,7 @@
 #include "aws/s3/model/PutObjectRequest.h"
 #include "aws/s3/model/StorageClass.h"
 #include "aws/s3/model/ServerSideEncryption.h"
+#include "aws/s3/model/ObjectCannedACL.h"
 
 #include "utils/AWSInitializer.h"
 #include "utils/OptionalUtils.h"
@@ -58,6 +59,16 @@ static const std::map<std::string, Aws::S3::Model::ServerSideEncryption> server_
   {"aws_kms", Aws::S3::Model::ServerSideEncryption::aws_kms},
 };
 
+static const std::map<std::string, Aws::S3::Model::ObjectCannedACL> canned_acl_map {
+  {"BucketOwnerFullControl", Aws::S3::Model::ObjectCannedACL::bucket_owner_full_control},
+  {"BucketOwnerRead", Aws::S3::Model::ObjectCannedACL::bucket_owner_read},
+  {"AuthenticatedRead", Aws::S3::Model::ObjectCannedACL::authenticated_read},
+  {"PublicReadWrite", Aws::S3::Model::ObjectCannedACL::public_read_write},
+  {"PublicRead", Aws::S3::Model::ObjectCannedACL::public_read},
+  {"Private", Aws::S3::Model::ObjectCannedACL::private_},
+  {"AwsExecRead", Aws::S3::Model::ObjectCannedACL::aws_exec_read},
+};
+
 struct PutS3RequestParameters {
   std::string bucket;
   std::string object_key;
@@ -69,6 +80,7 @@ struct PutS3RequestParameters {
   std::string read_permission_user_list;
   std::string read_acl_user_list;
   std::string write_acl_user_list;
+  std::string canned_acl;
 };
 
 struct ProxyOptions {
@@ -92,6 +104,7 @@ class S3WrapperBase {
 
  protected:
   virtual minifi::utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) = 0;
+  void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl);
 
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   Aws::Client::ClientConfiguration client_config_;

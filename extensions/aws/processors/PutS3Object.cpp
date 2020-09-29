@@ -125,6 +125,14 @@ const core::Property PutS3Object::WriteACLUserList(
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("${s3.permissions.writeacl.users}")
     ->build());
+const core::Property PutS3Object::CannedACL(
+  core::PropertyBuilder::createProperty("Canned ACL")
+    ->withDescription("Amazon Canned ACL for an object; will be ignored if any other ACL/permission property is specified")
+    ->supportsExpressionLanguage(true)
+    ->withDefaultValue<std::string>("${s3.permissions.cannedacl}")
+    ->withAllowableValues<std::string>({canned_acl::BUCKET_OWNER_FULL_CONTROL, canned_acl::BUCKET_OWNER_READ,
+      canned_acl::AUTHENTICATED_READ, canned_acl::PUBLIC_READ_WRITE, canned_acl::PUBLIC_READ, canned_acl::PRIVATE, canned_acl::AWS_EXEC_READ})
+    ->build());
 const core::Property PutS3Object::EndpointOverrideURL(
   core::PropertyBuilder::createProperty("Endpoint Override URL")
     ->withDescription("Endpoint URL to use instead of the AWS default including scheme, host, "
@@ -181,6 +189,7 @@ void PutS3Object::initialize() {
   properties.insert(ReadPermissionUserList);
   properties.insert(ReadACLUserList);
   properties.insert(WriteACLUserList);
+  properties.insert(CannedACL);
   properties.insert(EndpointOverrideURL);
   properties.insert(ServerSideEncryption);
   properties.insert(ProxyHost);
@@ -369,6 +378,8 @@ void PutS3Object::setAccessControl(const std::shared_ptr<core::ProcessContext> &
     put_s3_request_params_.write_acl_user_list = parseAccessControlList(value);
     logger_->log_debug("PutS3Object: Write ACL User List [%s]", value);
   }
+  context->getProperty(CannedACL, put_s3_request_params_.canned_acl, flow_file);
+  logger_->log_debug("PutS3Object: Canned ACL [%s]", put_s3_request_params_.canned_acl);
 }
 
 bool PutS3Object::getExpressionLanguageSupportedProperties(

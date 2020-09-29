@@ -57,6 +57,8 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     read_user_list = request.GetGrantRead();
     read_acl_user_list = request.GetGrantReadACP();
     write_acl_user_list = request.GetGrantWriteACP();
+    write_acl_user_list = request.GetGrantWriteACP();
+    canned_acl = request.GetACL();
 
     put_s3_result.version = S3_VERSION;
     put_s3_result.etag = S3_ETAG;
@@ -77,6 +79,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
   std::string read_user_list;
   std::string read_acl_user_list;
   std::string write_acl_user_list;
+  Aws::S3::Model::ObjectCannedACL canned_acl;
 };
 
 class PutS3ObjectTestsFixture {
@@ -209,6 +212,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
   REQUIRE(mock_s3_wrapper_raw->content_type == "application/octet-stream");
   REQUIRE(mock_s3_wrapper_raw->storage_class == Aws::S3::Model::StorageClass::STANDARD);
   REQUIRE(mock_s3_wrapper_raw->server_side_encryption == Aws::S3::Model::ServerSideEncryption::NOT_SET);
+  REQUIRE(mock_s3_wrapper_raw->canned_acl == Aws::S3::Model::ObjectCannedACL::NOT_SET);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().region == minifi::aws::processors::region::US_WEST_2);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().connectTimeoutMs == 30000);
   REQUIRE(mock_s3_wrapper_raw->getClientConfig().endpointOverride.empty());
@@ -284,9 +288,11 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3
   plan->setProperty(update_attribute, "s3.permissions.read.users", "myuserid456,myuser2@example.com", true);
   plan->setProperty(update_attribute, "s3.permissions.readacl.users", "myuserid789, otheruser", true);
   plan->setProperty(update_attribute, "s3.permissions.writeacl.users", "myuser3@example.com", true);
+  plan->setProperty(update_attribute, "s3.permissions.cannedacl", "PublicReadWrite", true);
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_raw->fullcontrol_user_list == "id=myuserid123, emailAddress=\"myuser@example.com\"");
   REQUIRE(mock_s3_wrapper_raw->read_user_list == "id=myuserid456, emailAddress=\"myuser2@example.com\"");
   REQUIRE(mock_s3_wrapper_raw->read_acl_user_list == "id=myuserid789, id=otheruser");
   REQUIRE(mock_s3_wrapper_raw->write_acl_user_list == "emailAddress=\"myuser3@example.com\"");
+  REQUIRE(mock_s3_wrapper_raw->canned_acl == Aws::S3::Model::ObjectCannedACL::public_read_write);
 }

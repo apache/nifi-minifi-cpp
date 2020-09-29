@@ -78,6 +78,19 @@ namespace server_side_encryption {
 
 }  // namespace server_side_encryption
 
+
+namespace canned_acl {
+
+  constexpr const char *BUCKET_OWNER_FULL_CONTROL = "BucketOwnerFullControl";
+  constexpr const char *BUCKET_OWNER_READ = "BucketOwnerRead";
+  constexpr const char *AUTHENTICATED_READ = "AuthenticatedRead";
+  constexpr const char *PUBLIC_READ_WRITE = "PublicReadWrite";
+  constexpr const char *PUBLIC_READ = "PublicRead";
+  constexpr const char *PRIVATE = "Private";
+  constexpr const char *AWS_EXEC_READ = "AwsExecRead";
+
+}  // namespace canned_acl
+
 class PutS3Object : public core::Processor {
  public:
   static constexpr char const* ProcessorName = "PutS3Object";
@@ -98,6 +111,7 @@ class PutS3Object : public core::Processor {
   static const core::Property ReadPermissionUserList;
   static const core::Property ReadACLUserList;
   static const core::Property WriteACLUserList;
+  static const core::Property CannedACL;
   static const core::Property EndpointOverrideURL;
   static const core::Property ProxyHost;
   static const core::Property ProxyPort;
