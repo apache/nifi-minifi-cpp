@@ -89,6 +89,7 @@ void MergeContent::initialize() {
   properties.insert(MaxEntries);
   properties.insert(MaxBinAge);
   properties.insert(MaxBinCount);
+  properties.insert(BatchSize);
   properties.insert(MergeStrategy);
   properties.insert(MergeFormat);
   properties.insert(CorrelationAttributeName);

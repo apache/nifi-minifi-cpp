@@ -355,7 +355,7 @@ class Property {
       validator_ = StandardValidators::getValidator(ret.getValue());
     } else {
       ret = value;
-      validator_ = StandardValidators::VALID_VALIDATOR();
+      validator_ = StandardValidators::get().VALID_VALIDATOR;
     }
     return ret;
   }
@@ -369,7 +369,7 @@ class Property {
   bool is_collection_;
   PropertyValue default_value_;
   std::vector<PropertyValue> values_;
-  gsl::not_null<std::shared_ptr<PropertyValidator>> validator_{StandardValidators::VALID_VALIDATOR()};
+  gsl::not_null<std::shared_ptr<PropertyValidator>> validator_{StandardValidators::get().VALID_VALIDATOR};
   std::string display_name_;
   std::vector<PropertyValue> allowed_values_;
   // types represents the allowable types for this property
@@ -429,6 +429,12 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
     // inspect the type and add a validator to this.
     // there may be cases in which the validator is typed differently
     // and a validator can be added for this.
+    return shared_from_this();
+  }
+
+  std::shared_ptr<PropertyBuilder> withType(const std::shared_ptr<PropertyValidator> &validator) {
+    prop.validator_ = gsl::make_not_null(validator);
+    prop.default_value_.setValidator(gsl::make_not_null(validator));
     return shared_from_this();
   }
 

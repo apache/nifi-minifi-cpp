@@ -33,18 +33,13 @@
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "io/ZlibStream.h"
+#include "utils/Enum.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-
-#define COMPRESSION_FORMAT_ATTRIBUTE "use mime.type attribute"
-#define COMPRESSION_FORMAT_GZIP "gzip"
-#define COMPRESSION_FORMAT_BZIP2 "bzip2"
-#define COMPRESSION_FORMAT_XZ_LZMA2 "xz-lzma2"
-#define COMPRESSION_FORMAT_LZMA "lzma"
 
 #define MODE_COMPRESS "compress"
 #define MODE_DECOMPRESS "decompress"
@@ -72,6 +67,7 @@ public:
   static core::Property CompressFormat;
   static core::Property UpdateFileName;
   static core::Property EncapsulateInTar;
+  static core::Property BatchSize;
 
   // Supported Relationships
   static core::Relationship Failure;
@@ -149,7 +145,7 @@ public:
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
   public:
-    WriteCallback(std::string &compress_mode, int compress_level, std::string &compress_format,
+    WriteCallback(std::string &compress_mode, int compress_level, const std::string& compress_format,
         std::shared_ptr<core::FlowFile> &flow, const std::shared_ptr<core::ProcessSession> &session) :
         compress_mode_(compress_mode), compress_level_(compress_level), compress_format_(compress_format),
         flow_(flow), session_(session),
@@ -223,7 +219,7 @@ public:
           archive_write_log_error_cleanup(arch);
           return -1;
         }
-        if (compress_format_ == COMPRESSION_FORMAT_GZIP) {
+        if (compress_format_ == toString(Format::GZIP)) {
           r = archive_write_add_filter_gzip(arch);
           if (r != ARCHIVE_OK) {
             archive_write_log_error_cleanup(arch);
@@ -236,19 +232,19 @@ public:
             archive_write_log_error_cleanup(arch);
             return -1;
           }
-        } else if (compress_format_ == COMPRESSION_FORMAT_BZIP2) {
+        } else if (compress_format_ == toString(Format::BZIP2)) {
           r = archive_write_add_filter_bzip2(arch);
           if (r != ARCHIVE_OK) {
             archive_write_log_error_cleanup(arch);
             return -1;
           }
-        } else if (compress_format_ == COMPRESSION_FORMAT_LZMA) {
+        } else if (compress_format_ == toString(Format::LZMA)) {
           r = archive_write_add_filter_lzma(arch);
           if (r != ARCHIVE_OK) {
             archive_write_log_error_cleanup(arch);
             return -1;
           }
-        } else if (compress_format_ == COMPRESSION_FORMAT_XZ_LZMA2) {
+        } else if (compress_format_ == toString(Format::XZ_LZMA2)) {
           r = archive_write_add_filter_xz(arch);
           if (r != ARCHIVE_OK) {
             archive_write_log_error_cleanup(arch);
@@ -424,17 +420,36 @@ public:
   // Initialize, over write by NiFi CompressContent
   virtual void initialize(void);
 
-protected:
+  SMART_ENUM(Format,
+    (GZIP, "gzip"),
+    (LZMA, "lzma"),
+    (XZ_LZMA2, "xz-lzma2"),
+    (BZIP2, "bzip2")
+  )
+
+  SMART_ENUM_EXTEND(ExtendedFormat, Format, (GZIP, LZMA, XZ_LZMA2, BZIP2),
+    (USE_MIME_TYPE, "use mime.type attribute")
+  )
 
 private:
+  enum class TriggerResult {
+    BREAK,
+    CONTINUE
+  };
+
+  static std::string to_mimeType(Format::Type format);
+
+  TriggerResult onTriggerImpl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+
   std::shared_ptr<logging::Logger> logger_;
   int compressLevel_;
   std::string compressMode_;
-  std::string compressFormat_;
+  ExtendedFormat::Type compressFormat_;
   bool updateFileName_;
   bool encapsulateInTar_;
-  std::map<std::string, std::string> compressionFormatMimeTypeMap_;
-  std::map<std::string, std::string> fileExtension_;
+  uint32_t batchSize_{1};
+  static std::map<std::string, Format::Type> compressionFormatMimeTypeMap_;
+  static std::map<Format::Type, std::string> fileExtension_;
 };
 
 REGISTER_RESOURCE(CompressContent, "Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm and updates the mime.type attribute as appropriate");

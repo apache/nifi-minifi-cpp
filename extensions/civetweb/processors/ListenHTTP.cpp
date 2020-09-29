@@ -38,7 +38,7 @@ core::Property ListenHTTP::Port(
     core::PropertyBuilder::createProperty("Listening Port")
         ->withDescription("The Port to listen on for incoming connections. 0 means port is going to be selected randomly.")
         ->isRequired(true)
-        ->withDefaultValue<int>(80, core::StandardValidators::LISTEN_PORT_VALIDATOR())->build());
+        ->withDefaultValue<int>(80, core::StandardValidators::get().LISTEN_PORT_VALIDATOR)->build());
 
 core::Property ListenHTTP::AuthorizedDNPattern("Authorized DN Pattern", "A Regular Expression to apply against the Distinguished Name of incoming"
                                                " connections. If the Pattern does not match the DN, the connection will be refused.",

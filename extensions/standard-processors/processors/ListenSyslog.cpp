@@ -64,7 +64,7 @@ core::Property ListenSyslog::Protocol(
         "UDP")->build());
 
 core::Property ListenSyslog::Port(
-    core::PropertyBuilder::createProperty("Port")->withDescription("The port for Syslog communication")->withDefaultValue<int64_t>(514, core::StandardValidators::PORT_VALIDATOR())->build());
+    core::PropertyBuilder::createProperty("Port")->withDescription("The port for Syslog communication")->withDefaultValue<int64_t>(514, core::StandardValidators::get().PORT_VALIDATOR)->build());
 
 core::Relationship ListenSyslog::Success("success", "All files are routed to success");
 core::Relationship ListenSyslog::Invalid("invalid", "SysLog message format invalid");

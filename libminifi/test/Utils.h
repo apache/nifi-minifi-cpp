@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_TEST_UTILS_H_
-#define LIBMINIFI_TEST_UTILS_H_
+#pragma once
+
+#include <string>
 
 #define FIELD_ACCESSOR(field) \
   template<typename T> \
@@ -29,4 +30,11 @@
     return std::forward<T>(instance).method(std::forward<Args>(args)...); \
   }
 
-#endif  // LIBMINIFI_TEST_UTILS_H_
+std::string repeat(const std::string& str, std::size_t count) {
+  std::string result;
+  result.reserve(str.length() * count);
+  for (size_t i = 0; i < count; ++i) {
+    result += str;
+  }
+  return result;
+}

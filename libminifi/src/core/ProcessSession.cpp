@@ -365,6 +365,11 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
   }
 }
 
+void ProcessSession::importContent(const std::string &content, const std::shared_ptr<core::FlowFile> &flow) {
+  io::DataStream stream(reinterpret_cast<const uint8_t*>(content.data()), content.length());
+  importFrom(stream, flow);
+}
+
 void ProcessSession::import(std::string source, const std::shared_ptr<FlowFile> &flow, bool keepSource, uint64_t offset) {
   std::shared_ptr<ResourceClaim> claim = content_session_->create();
   size_t size = getpagesize();
