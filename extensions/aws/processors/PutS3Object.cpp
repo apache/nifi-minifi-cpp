@@ -53,12 +53,10 @@ const core::Property PutS3Object::ContentType(
   core::PropertyBuilder::createProperty("Content Type")
     ->withDescription("Sets the Content-Type HTTP header indicating the type of content stored in "
                       "the associated object. The value of this header is a standard MIME type. "
-                      "AWS S3 client will attempt to determine the correct content type if "
-                      "one hasn't been set yet. Users are responsible for ensuring a suitable "
-                      "content type is set when uploading streams. If no content type is provided "
-                      "and cannot be determined by the filename, the default content type "
+                      "If no content type is provided the default content type "
                       "\"application/octet-stream\" will be used.")
     ->supportsExpressionLanguage(true)
+    ->withDefaultValue<std::string>("application/octet-stream")
     ->build());
 const core::Property PutS3Object::AccessKey(
   core::PropertyBuilder::createProperty("Access Key")
@@ -394,9 +392,7 @@ bool PutS3Object::getExpressionLanguageSupportedProperties(
   }
   logger_->log_debug("PutS3Object: Bucket [%s]", put_s3_request_params_.bucket);
 
-  if (!context->getProperty(ContentType, put_s3_request_params_.content_type, flow_file) || put_s3_request_params_.content_type.empty()) {
-    put_s3_request_params_.content_type = "application/octet-stream";
-  }
+  context->getProperty(ContentType, put_s3_request_params_.content_type, flow_file);
   logger_->log_debug("PutS3Object: Content Type [%s]", put_s3_request_params_.content_type);
 
   auto credentials = getAWSCredentials(context, flow_file);
