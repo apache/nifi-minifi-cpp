@@ -27,15 +27,16 @@ namespace minifi {
 namespace utils {
 
 #define COMMA(...) ,
+#define MSVC_HACK(x) x
 
-#define _PICK(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, ...) _15
+#define PICK_(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, ...) _15
 #define COUNT(...) \
-  _PICK(__VA_ARGS__, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+  MSVC_HACK(PICK_(__VA_ARGS__, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
 
-#define _CONCAT(a, b) a ## b
-#define CONCAT(a, b) _CONCAT(a, b)
+#define CONCAT_(a, b) a ## b
+#define CONCAT(a, b) CONCAT_(a, b)
 
-#define CALL(Fn, ...) Fn (__VA_ARGS__)
+#define CALL(Fn, ...) MSVC_HACK(Fn(__VA_ARGS__))
 #define SPREAD(...) __VA_ARGS__
 
 #define FOR_EACH(fn, delim, ARGS) \
@@ -59,10 +60,10 @@ namespace utils {
   fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
   fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8)
 
-#define _FIRST(a, b) a
-#define FIRST(x, ...) _FIRST x
-#define _SECOND(a, b) b
-#define SECOND(x, ...) _SECOND x
+#define FIRST_(a, b) a
+#define FIRST(x, ...) FIRST_ x
+#define SECOND_(a, b) b
+#define SECOND(x, ...) SECOND_ x
 #define NOTHING()
 
 #define INCLUDE_BASE_FIELD(x) \

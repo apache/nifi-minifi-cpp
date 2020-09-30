@@ -20,21 +20,20 @@
 #include <string>
 #include <type_traits>
 #include "utils/Enum.h"
-#include "utils/GeneralUtils.h"
 #include "catch.hpp"
 
-using org::apache::nifi::minifi::utils::void_t;
+// we need this instead of void_t in GeneralUtils because of GCC4.8
+template<typename ...>
+struct make_void {
+  using type = void;
+};
 
-#define ID(...) __VA_ARGS__
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-#define COMPILE_ERROR(name, type, expr) \
-  template<typename, typename = void>              \
-  struct name : std::true_type {};\
+#define CHECK_COMPILE(name, enum, expr, result) \
+  template<typename, typename = void> \
+  struct does_compile ## name : std::false_type {};\
   template<typename T> \
-  struct name<T, void_t<decltype(T::ID expr)>> : std::false_type {}; \
-  static_assert(name<type>::value, "Expression: " STR((type::ID expr)) " is not supposed to compile");
+  struct does_compile ## name<T, typename make_void<decltype(T::SPREAD expr)>::type> : std::true_type {}; \
+  static_assert(does_compile ## name<enum>::value == result, "");
 
 SMART_ENUM(A,
   (_0, "zero"),
@@ -57,16 +56,18 @@ SMART_ENUM(Unrelated,
 // static tests
 namespace test {
 
-COMPILE_ERROR(_1, A, (template fromInt<2>()))
-COMPILE_ERROR(_2, B, (template cast<A, B::_2>()))
-COMPILE_ERROR(_3, B, (template fromInt<3>()))
-COMPILE_ERROR(_4, C, (template fromInt<4>()))
-COMPILE_ERROR(_5, C, (template cast<A, C::_2>()))
-COMPILE_ERROR(_6, C, (template cast<B, C::_3>()))
+CHECK_COMPILE(_2, B, (template cast<A, B::_2>()), false)
+CHECK_COMPILE(_3, B, (template fromInt<3>()), false)
+CHECK_COMPILE(_4, C, (template fromInt<4>()), false)
+CHECK_COMPILE(_5, C, (template cast<A, C::_2>()), false)
+CHECK_COMPILE(_6, C, (template cast<B, C::_3>()), false)
 
 // casting to unrelated
-COMPILE_ERROR(_7, B, (template cast<Unrelated, B::_0>()))
-COMPILE_ERROR(_8, B, (template cast<Unrelated>(B::_0)))
+CHECK_COMPILE(_7, B, (template cast<Unrelated, B::_0>()), false)
+CHECK_COMPILE(_8, B, (template cast<Unrelated>(B::_0)), false)
+
+// check for false negatives
+CHECK_COMPILE(_1, A, (template fromInt<0>()), true)
 
 }  // namespace test
 
