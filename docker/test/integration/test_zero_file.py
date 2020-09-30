@@ -24,7 +24,7 @@ def test_zero_file():
     port = InputPort('from-minifi', RemoteProcessGroup('http://nifi:8080/nifi'))
 
     recv_flow = (port
-                 >> LogAttribute()
+                 >> LogAttribute(schedule={'scheduling strategy': 'TIMER_DRIVEN'})
                  >> PutFile('/tmp/output'))
 
     send_flow = (GenerateFlowFile('0B')
