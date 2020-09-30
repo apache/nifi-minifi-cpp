@@ -52,17 +52,11 @@ class IntervalSwitch {
   detail::SwitchReturn operator()(const T& value) {
     const auto old_state = state_;
     if (less_(value, lower_threshold_)) {
-      const auto new_state = state_ = IntervalSwitchState::LOWER;
-      const bool switched = new_state != old_state;
-      return {new_state, switched};
-    } else if (less_(value, upper_threshold_)) {
-      const bool switched = false;
-      return {state_, switched};
-    } else {
-      const auto new_state = state_ = IntervalSwitchState::UPPER;
-      const bool switched = new_state != old_state;
-      return {new_state, switched};
+      state_ = IntervalSwitchState::LOWER;
+    } else if (!less_(value, upper_threshold_)) {
+      state_ = IntervalSwitchState::UPPER;
     }
+    return {state_, state_ != old_state};
   }
 
  private:
