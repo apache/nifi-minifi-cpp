@@ -1143,7 +1143,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Content Type|||Sets the Content-Type HTTP header indicating the type of content stored in the associated object. The value of this header is a standard MIME type.AWS S3 client will attempt to determine the correct content type if one hasn't been set yet. Users are responsible for ensuring a suitable content type is set when uploading streams. If no content type is provided and cannot be determined by the filename, the default content type "application/octet-stream" will be used.<br/>**Supports Expression Language: true**|
 |Access Key|||AWS account access key<br/>**Supports Expression Language: true**|
 |Secret Key|||AWS account secret key<br/>**Supports Expression Language: true**|
-|Credentials File|||Path to a file containing AWS access key and secret key in properties file format.|
+|Credentials File|||Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey|
 |AWS Credentials Provider service|||The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.|
 |**Storage Class**|Standard|Standard<br/>ReducedRedundancy|AWS S3 Storage Class|
 |**Region**|us-west-2|us-gov-west-1<br/>us-east-1<br/>us-east-2<br/>us-west-1<br/>us-west-2<br/>eu-west-1<br/>eu-west-2<br/>eu-central-1<br/>ap-south-1<br/>ap-southeast-1<br/>ap-southeast-2<br/>ap-northeast-1<br/>ap-northeast-2<br/>sa-east-1<br/>cn-north-1<br/>ca-central-1|AWS Region|

@@ -22,8 +22,6 @@
 #include <memory>
 
 #include "S3WrapperBase.h"
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -35,9 +33,6 @@ namespace s3 {
 class S3Wrapper : public S3WrapperBase {
  protected:
   minifi::utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override;
-
- private:
-  std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3Wrapper>::getLogger()};
 };
 
 }  // namespace s3

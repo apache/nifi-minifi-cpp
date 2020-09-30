@@ -86,7 +86,7 @@ RUN cd ${MINIFI_BASE_DIR} \
 FROM build_deps AS build_release
 ARG ENABLE_JNI
 RUN cd ${MINIFI_BASE_DIR} \
-  && mkdir -p build \
+  && mkdir build \
   && cd build \
   && cmake -DDISABLE_JEMALLOC=ON -DENABLE_AWS=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=${ENABLE_JNI} -DENABLE_LIBRDKAFKA=ON .. \
   && make -j$(nproc) package \

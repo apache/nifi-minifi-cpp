@@ -72,7 +72,7 @@ const core::Property PutS3Object::SecretKey(
     ->build());
 const core::Property PutS3Object::CredentialsFile(
   core::PropertyBuilder::createProperty("Credentials File")
-    ->withDescription("Path to a file containing AWS access key and secret key in properties file format.")
+    ->withDescription("Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey")
     ->build());
 const core::Property PutS3Object::AWSCredentialsProviderService(
   core::PropertyBuilder::createProperty("AWS Credentials Provider service")
@@ -204,9 +204,9 @@ void PutS3Object::initialize() {
   setSupportedRelationships(relationships);
 }
 
-minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) {
+minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
   std::string service_name;
-  if (context->getProperty(AWSCredentialsProviderService.getName(), service_name) && !IsNullOrEmpty(service_name)) {
+  if (context->getProperty(AWSCredentialsProviderService.getName(), service_name) && !service_name.empty()) {
     std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
     if (nullptr != service) {
       auto aws_credentials_service = std::static_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(service);
@@ -218,26 +218,26 @@ minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredential
 
 minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromProperties(
     const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile>& flow_file) {
+    const std::shared_ptr<core::FlowFile> &flow_file) const {
   std::string access_key;
   context->getProperty(AccessKey, access_key, flow_file);
   std::string secret_key;
   context->getProperty(SecretKey, secret_key, flow_file);
-  if (!IsNullOrEmpty(access_key) && !IsNullOrEmpty(secret_key)) {
+  if (!access_key.empty() && !secret_key.empty()) {
     Aws::Auth::AWSCredentials creds(access_key, secret_key);
     return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(creds);
   }
   return minifi::utils::nullopt;
 }
 
-minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context) {
+minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context) const {
   std::string credential_file;
-  if (context->getProperty(CredentialsFile.getName(), credential_file) && !IsNullOrEmpty(credential_file)) {
+  if (context->getProperty(CredentialsFile.getName(), credential_file) && !credential_file.empty()) {
     auto properties = std::make_shared<minifi::Properties>();
     properties->loadConfigureFile(credential_file.c_str());
     std::string access_key;
     std::string secret_key;
-    if (properties->get("accessKey", access_key) && !IsNullOrEmpty(access_key) && properties->get("secretKey", secret_key) && !IsNullOrEmpty(secret_key)) {
+    if (properties->get("accessKey", access_key) && !access_key.empty() && properties->get("secretKey", secret_key) && !secret_key.empty()) {
       Aws::Auth::AWSCredentials creds(access_key, secret_key);
       return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(creds);
     }
@@ -247,7 +247,7 @@ minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredential
 
 minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentials(
     const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile>& flow_file) {
+    const std::shared_ptr<core::FlowFile> &flow_file) const {
   auto prop_cred = getAWSCredentialsFromProperties(context, flow_file);
   if (prop_cred) {
     logger_->log_info("AWS Credentials successfully set from properties");
@@ -288,7 +288,7 @@ void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &
   logger_->log_debug("PutS3Object: User metadata [%s]", user_metadata_);
 }
 
-bool PutS3Object::setProxy(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile>& flow_file) {
+bool PutS3Object::setProxy(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {
   aws::s3::ProxyOptions proxy;
   context->getProperty(ProxyHost, proxy.host, flow_file);
   std::string port_str;
@@ -324,10 +324,11 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   logger_->log_debug("PutS3Object: Region [%s]", value);
 
   uint64_t timeout_val;
-  context->getProperty(CommunicationsTimeout.getName(), value);
-  if (core::Property::getTimeMSFromString(value, timeout_val)) {
+  if (context->getProperty(CommunicationsTimeout.getName(), value) && !value.empty() && core::Property::getTimeMSFromString(value, timeout_val)) {
     s3_wrapper_->setTimeout(timeout_val);
     logger_->log_debug("PutS3Object: Communications Timeout [%d]", timeout_val);
+  } else {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }
 
   if (!context->getProperty(ServerSideEncryption.getName(), put_s3_request_params_.server_side_encryption) || put_s3_request_params_.server_side_encryption.empty()) {
@@ -338,7 +339,7 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   fillUserMetadata(context);
 }
 
-std::string PutS3Object::parseAccessControlList(const std::string& comma_separated_list) {
+std::string PutS3Object::parseAccessControlList(const std::string &comma_separated_list) const {
   std::string result_list;
   bool is_first = true;
   for (const auto& user : minifi::utils::StringUtils::split(comma_separated_list, ",")) {
@@ -360,7 +361,7 @@ std::string PutS3Object::parseAccessControlList(const std::string& comma_separat
   return result_list;
 }
 
-void PutS3Object::setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile>& flow_file) {
+void PutS3Object::setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {
   std::string value;
   if (context->getProperty(FullControlUserList, value, flow_file) && !value.empty()) {
     put_s3_request_params_.fullcontrol_user_list = parseAccessControlList(value);
@@ -384,7 +385,7 @@ void PutS3Object::setAccessControl(const std::shared_ptr<core::ProcessContext> &
 
 bool PutS3Object::getExpressionLanguageSupportedProperties(
     const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile>& flow_file) {
+    const std::shared_ptr<core::FlowFile> &flow_file) {
   context->getProperty(ObjectKey, put_s3_request_params_.object_key, flow_file);
   logger_->log_debug("PutS3Object: Object Key [%s]", put_s3_request_params_.object_key);
   if (!context->getProperty(Bucket, put_s3_request_params_.bucket, flow_file) || put_s3_request_params_.bucket.empty()) {

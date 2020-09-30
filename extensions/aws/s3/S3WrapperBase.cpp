@@ -29,42 +29,47 @@ namespace aws {
 namespace s3 {
 
 void S3WrapperBase::setCredentials(const Aws::Auth::AWSCredentials& cred) {
+  logger_->log_debug("Setting new AWS credentials");
   credentials_ = cred;
 }
 
 void S3WrapperBase::setRegion(const Aws::String& region) {
+  logger_->log_debug("Setting new AWS region [%s]", region);
   client_config_.region = region;
 }
 
 void S3WrapperBase::setTimeout(uint64_t timeout) {
+  logger_->log_debug("Setting AWS client connection timeout [%d]", timeout);
   client_config_.connectTimeoutMs = timeout;
 }
 
 void S3WrapperBase::setEndpointOverrideUrl(const Aws::String& url) {
+  logger_->log_debug("Setting AWS endpoint url [%s]", url);
   client_config_.endpointOverride = url;
 }
 
 void S3WrapperBase::setProxy(const ProxyOptions& proxy) {
+  logger_->log_debug("Setting AWS client proxy host [%s] port [%d]", proxy.host, proxy.port);
   client_config_.proxyHost = proxy.host;
-  if (proxy.port != 0)
-    client_config_.proxyPort = proxy.port;
+  client_config_.proxyPort = proxy.port;
   client_config_.proxyUserName = proxy.username;
   client_config_.proxyPassword = proxy.password;
 }
 
-void S3WrapperBase::setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) {
-  if (canned_acl.empty() || canned_acl_map.find(canned_acl) == canned_acl_map.end())
+void S3WrapperBase::setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const {
+  if (canned_acl.empty() || CANNED_ACL_MAP.find(canned_acl) == CANNED_ACL_MAP.end())
     return;
 
-  request.SetACL(canned_acl_map.at(canned_acl));
+  logger_->log_debug("Setting AWS canned ACL [%s]", canned_acl);
+  request.SetACL(CANNED_ACL_MAP.at(canned_acl));
 }
 
-minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutS3RequestParameters& params, std::shared_ptr<Aws::IOStream> data_stream) {
+minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjectRequestParameters& params, std::shared_ptr<Aws::IOStream> data_stream) {
   Aws::S3::Model::PutObjectRequest request;
   request.SetBucket(params.bucket);
   request.SetKey(params.object_key);
-  request.SetStorageClass(storage_class_map.at(params.storage_class));
-  request.SetServerSideEncryption(server_side_encryption_map.at(params.server_side_encryption));
+  request.SetStorageClass(STORAGE_CLASS_MAP.at(params.storage_class));
+  request.SetServerSideEncryption(SERVER_SIDE_ENCRYPTION_MAP.at(params.server_side_encryption));
   request.SetContentType(params.content_type);
   request.SetMetadata(params.user_metadata_map);
   request.SetBody(data_stream);

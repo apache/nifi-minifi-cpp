@@ -31,6 +31,8 @@
 #include "aws/s3/model/ServerSideEncryption.h"
 #include "aws/s3/model/ObjectCannedACL.h"
 
+#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "utils/AWSInitializer.h"
 #include "utils/OptionalUtils.h"
 
@@ -41,25 +43,18 @@ namespace minifi {
 namespace aws {
 namespace s3 {
 
-struct PutObjectResult {
-  Aws::String version;
-  Aws::String etag;
-  Aws::String expiration;
-  Aws::String ssealgorithm;
-};
-
-static const std::map<std::string, Aws::S3::Model::StorageClass> storage_class_map {
+static const std::map<std::string, Aws::S3::Model::StorageClass> STORAGE_CLASS_MAP {
   {"Standard", Aws::S3::Model::StorageClass::STANDARD},
   {"ReducedRedundancy", Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY}
 };
 
-static const std::map<std::string, Aws::S3::Model::ServerSideEncryption> server_side_encryption_map {
+static const std::map<std::string, Aws::S3::Model::ServerSideEncryption> SERVER_SIDE_ENCRYPTION_MAP {
   {"None", Aws::S3::Model::ServerSideEncryption::NOT_SET},
   {"AES256", Aws::S3::Model::ServerSideEncryption::AES256},
   {"aws_kms", Aws::S3::Model::ServerSideEncryption::aws_kms},
 };
 
-static const std::map<std::string, Aws::S3::Model::ObjectCannedACL> canned_acl_map {
+static const std::map<std::string, Aws::S3::Model::ObjectCannedACL> CANNED_ACL_MAP {
   {"BucketOwnerFullControl", Aws::S3::Model::ObjectCannedACL::bucket_owner_full_control},
   {"BucketOwnerRead", Aws::S3::Model::ObjectCannedACL::bucket_owner_read},
   {"AuthenticatedRead", Aws::S3::Model::ObjectCannedACL::authenticated_read},
@@ -69,7 +64,14 @@ static const std::map<std::string, Aws::S3::Model::ObjectCannedACL> canned_acl_m
   {"AwsExecRead", Aws::S3::Model::ObjectCannedACL::aws_exec_read},
 };
 
-struct PutS3RequestParameters {
+struct PutObjectResult {
+  Aws::String version;
+  Aws::String etag;
+  Aws::String expiration;
+  Aws::String ssealgorithm;
+};
+
+struct PutObjectRequestParameters {
   std::string bucket;
   std::string object_key;
   std::string storage_class;
@@ -98,17 +100,18 @@ class S3WrapperBase {
   void setEndpointOverrideUrl(const Aws::String& url);
   void setProxy(const ProxyOptions& proxy);
 
-  minifi::utils::optional<PutObjectResult> putObject(const PutS3RequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
+  minifi::utils::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
 
   virtual ~S3WrapperBase() = default;
 
  protected:
   virtual minifi::utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) = 0;
-  void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl);
+  void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
 
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   Aws::Client::ClientConfiguration client_config_;
   Aws::Auth::AWSCredentials credentials_;
+  std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3WrapperBase>::getLogger()};
 };
 
 } /* namespace s3 */

@@ -20,12 +20,14 @@
 
 #include "AWSInitializer.h"
 
+#include <stdlib.h>
 #include <memory>
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "aws/core/utils/memory/stl/AWSString.h"
 #include "aws/core/utils/logging/DefaultLogSystem.h"
 #include "aws/core/utils/logging/AWSLogging.h"
+#include "aws/core/platform/Environment.h"
 
 namespace org {
 namespace apache {
@@ -45,6 +47,10 @@ AWSInitializer::~AWSInitializer() {
 }
 
 AWSInitializer::AWSInitializer() {
+  // AWS processors have their own region properties with default values
+  // so we do not need the AWS SDK to retrieve any region info
+  setenv("AWS_EC2_METADATA_DISABLED", "true", 1);
+
   Aws::InitAPI(options_);
   Aws::Utils::Logging::InitializeAWSLogging(
       Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(
