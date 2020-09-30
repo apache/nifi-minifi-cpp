@@ -473,7 +473,8 @@ class InvokeHTTP(Processor):
                  proxy_port='',
                  proxy_username='',
                  proxy_password='',
-                 ssl_context_service=None):
+                 ssl_context_service=None,
+                 schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         properties = {'Remote URL': url,
                       'HTTP Method': method,
                       'Proxy Host': proxy_host,
@@ -494,11 +495,12 @@ class InvokeHTTP(Processor):
                                                          'response',
                                                          'retry',
                                                          'failure',
-                                                         'no retry'])
+                                                         'no retry'],
+                                         schedule=schedule)
 
 
 class ListenHTTP(Processor):
-    def __init__(self, port, cert=None):
+    def __init__(self, port, cert=None, schedule=None):
         properties = {'Listening Port': port}
 
         if cert is not None:
@@ -507,46 +509,39 @@ class ListenHTTP(Processor):
 
         super(ListenHTTP, self).__init__('ListenHTTP',
                                          properties=properties,
-                                         auto_terminate=['success'])
+                                         auto_terminate=['success'],
+                                         schedule=schedule)
 
 
 class LogAttribute(Processor):
-    def __init__(self, ):
+    def __init__(self, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         super(LogAttribute, self).__init__('LogAttribute',
-                                           auto_terminate=['success'])
+                                           auto_terminate=['success'],
+                                           schedule=schedule)
 
 
-class DebugFlow(Processor):
-    def __init__(self, ):
-        super(DebugFlow, self).__init__('DebugFlow')
-
-class AttributesToJSON(Processor):
-    def __init__(self, destination, attributes):
-        super(AttributesToJSON, self).__init__('AttributesToJSON',
-                                      properties={'Destination': destination, 'Attributes List': attributes},
-                                      schedule={'scheduling period': '0 sec'},
-                                      auto_terminate=['failure'])
 class GetFile(Processor):
-    def __init__(self, input_dir):
+    def __init__(self, input_dir, schedule={'scheduling period': '2 sec'}):
         super(GetFile, self).__init__('GetFile',
                                       properties={'Input Directory': input_dir, 'Keep Source File': 'true'},
-                                      schedule={'scheduling period': '2 sec'},
+                                      schedule=schedule,
                                       auto_terminate=['success'])
+
 
 class GenerateFlowFile(Processor):
-    def __init__(self, file_size):
+    def __init__(self, file_size, schedule={'scheduling period': '0 sec'}):
         super(GenerateFlowFile, self).__init__('GenerateFlowFile',
                                       properties={'File Size': file_size},
-                                      schedule={'scheduling period': '0 sec'},
+                                      schedule=schedule,
                                       auto_terminate=['success'])
-
 
 
 class PutFile(Processor):
-    def __init__(self, output_dir):
+    def __init__(self, output_dir, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         super(PutFile, self).__init__('PutFile',
                                       properties={'Directory': output_dir},
-                                      auto_terminate=['success', 'failure'])
+                                      auto_terminate=['success', 'failure'],
+                                      schedule=schedule)
 
     def nifi_property_key(self, key):
         if key == 'Output Directory':
@@ -556,16 +551,17 @@ class PutFile(Processor):
 
 
 class PublishKafka(Processor):
-    def __init__(self):
+    def __init__(self, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         super(PublishKafka, self).__init__('PublishKafka',
                                            properties={'Client Name': 'nghiaxlee', 'Known Brokers': 'kafka-broker:9092', 'Topic Name': 'test',
                                                        'Batch Size': '10', 'Compress Codec': 'none', 'Delivery Guarantee': '1',
                                                        'Request Timeout': '10 sec', 'Message Timeout': '12 sec'},
-                                           auto_terminate=['success'])
+                                           auto_terminate=['success'],
+                                           schedule=schedule)
 
 
 class PublishKafkaSSL(Processor):
-    def __init__(self):
+    def __init__(self, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         super(PublishKafkaSSL, self).__init__('PublishKafka',
                                               properties={'Client Name': 'LMN', 'Known Brokers': 'kafka-broker:9093',
                                                           'Topic Name': 'test', 'Batch Size': '10',
@@ -576,7 +572,8 @@ class PublishKafkaSSL(Processor):
                                                           'Security Pass Phrase': 'abcdefgh',
                                                           'Security Private Key': '/tmp/resources/certs/client_LMN_client.key',
                                                           'Security Protocol': 'ssl'},
-                                              auto_terminate=['success'])
+                                              auto_terminate=['success'],
+                                              schedule=schedule)
 
 
 class InputPort(Connectable):
