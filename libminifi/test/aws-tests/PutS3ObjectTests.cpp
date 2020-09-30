@@ -122,13 +122,21 @@ class PutS3ObjectTestsFixture {
       "LogAttribute",
       core::Relationship("success", "d"),
       true);
-    plan->setProperty(update_attribute, "test.bucket", "testBucket", true);
-    plan->setProperty(put_s3_object, "Bucket", "${test.bucket}");
   }
 
   void setBasicCredentials() {
     plan->setProperty(put_s3_object, "Access Key", "key");
     plan->setProperty(put_s3_object, "Secret Key", "secret");
+  }
+
+  void setBucket() {
+    plan->setProperty(update_attribute, "test.bucket", "testBucket", true);
+    plan->setProperty(put_s3_object, "Bucket", "${test.bucket}");
+  }
+
+  void setRequiredProperties() {
+    setBasicCredentials();
+    setBucket();
   }
 
   void checkPutObjectResults() {
@@ -160,6 +168,7 @@ class PutS3ObjectTestsFixture {
 };
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test basic property credential setting", "[awsCredentials]") {
+  setBucket();
   plan->setProperty(update_attribute, "s3.accessKey", "key", true);
   plan->setProperty(put_s3_object, "Access Key", "${s3.accessKey}");
   plan->setProperty(update_attribute, "s3.secretKey", "secret", true);
@@ -170,6 +179,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test basic property credential settin
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials file setting", "[awsCredentials]") {
+  setBucket();
   char in_dir[] = "/tmp/gt.XXXXXX";
   auto temp_path = test_controller.createTempDirectory(in_dir);
   REQUIRE(!temp_path.empty());
@@ -185,6 +195,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials file setting", "[aws
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials setting from AWS Credential service", "[awsCredentials]") {
+  setBucket();
   auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
   plan->setProperty(aws_cred_service, "Access Key", "key2");
   plan->setProperty(aws_cred_service, "Secret Key", "secret2");
@@ -198,8 +209,31 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test no credentials set", "[awsCreden
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", "[awsS3ClientConfig]") {
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test no bucket is set", "[awsS3ClientConfig]") {
   setBasicCredentials();
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test storage class is empty", "[awsS3ClientConfig]") {
+  setRequiredProperties();
+  plan->setProperty(put_s3_object, "Storage Class", "");
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test region is empty", "[awsS3ClientConfig]") {
+  setRequiredProperties();
+  plan->setProperty(put_s3_object, "Region", "");
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test no server side encryption is set", "[awsS3ClientConfig]") {
+  setRequiredProperties();
+  plan->setProperty(put_s3_object, "Server Side Encryption", "");
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", "[awsS3ClientConfig]") {
+  setRequiredProperties();
   test_controller.runSession(plan, true);
   checkPutObjectResults();
   REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
@@ -219,7 +253,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration", "[awsS3ClientConfig]") {
-  setBasicCredentials();
+  setRequiredProperties();
   plan->setProperty(put_s3_object, "Object Key", "custom_key");
   plan->setProperty(update_attribute, "test.contentType", "application/tar", true);
   plan->setProperty(put_s3_object, "Content Type", "${test.contentType}");
@@ -244,7 +278,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsS3MetaData]") {
-  setBasicCredentials();
+  setRequiredProperties();
   plan->setProperty(put_s3_object, "meta_key", "meta_value", true);
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_ptr->metadata_map.at("meta_key") == "meta_value");
@@ -252,7 +286,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsS3Me
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3MetaData]") {
-  setBasicCredentials();
+  setRequiredProperties();
   plan->setProperty(put_s3_object, "meta_key1", "meta_value1", true);
   plan->setProperty(put_s3_object, "meta_key2", "meta_value2", true);
   test_controller.runSession(plan, true);
@@ -262,7 +296,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
-  setBasicCredentials();
+  setRequiredProperties();
   plan->setProperty(update_attribute, "test.proxyHost", "host", true);
   plan->setProperty(put_s3_object, "Proxy Host", "${test.proxyHost}");
   plan->setProperty(update_attribute, "test.proxyPort", "1234", true);
@@ -279,7 +313,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") 
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3ACL]") {
-  setBasicCredentials();
+  setRequiredProperties();
   plan->setProperty(update_attribute, "s3.permissions.full.users", "myuserid123, myuser@example.com", true);
   plan->setProperty(update_attribute, "s3.permissions.read.users", "myuserid456,myuser2@example.com", true);
   plan->setProperty(update_attribute, "s3.permissions.readacl.users", "myuserid789, otheruser", true);

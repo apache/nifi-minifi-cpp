@@ -330,7 +330,7 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   }
 
   if (!context->getProperty(ServerSideEncryption.getName(), put_s3_request_params_.server_side_encryption) || put_s3_request_params_.server_side_encryption.empty()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Class property missing or invalid");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Server Side Encryption property missing or invalid");
   }
   logger_->log_debug("PutS3Object: Server Side Encryption [%s]", put_s3_request_params_.server_side_encryption);
 
