@@ -37,26 +37,26 @@ namespace utils {
 #define CALL(Fn, ...) Fn (__VA_ARGS__)
 #define SPREAD(...) __VA_ARGS__
 
-#define FOR_EACH(fn, delim, ARGS, EXTRA) \
-  CALL(CONCAT(FOR_EACH_, COUNT ARGS), fn, delim, EXTRA, SPREAD ARGS)
+#define FOR_EACH(fn, delim, ARGS) \
+  CALL(CONCAT(FOR_EACH_, COUNT ARGS), fn, delim, SPREAD ARGS)
 
 #define FOR_EACH_0(...)
-#define FOR_EACH_1(fn, delim, EXTRA, _1) fn(_1, EXTRA)
-#define FOR_EACH_2(fn, delim, EXTRA, _1, _2) fn(_1, EXTRA) delim() fn(_2, EXTRA)
-#define FOR_EACH_3(fn, delim, EXTRA, _1, _2, _3) fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA)
-#define FOR_EACH_4(fn, delim, EXTRA, _1, _2, _3, _4) \
-  fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA) delim() fn(_4, EXTRA)
-#define FOR_EACH_5(fn, delim, EXTRA, _1, _2, _3, _4, _5) \
-  fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA) delim() fn(_4, EXTRA) delim() fn(_5, EXTRA)
-#define FOR_EACH_6(fn, delim, EXTRA, _1, _2, _3, _4, _5, _6) \
-  fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA) delim() fn(_4, EXTRA) delim() \
-  fn(_5, EXTRA) delim() fn(_6, EXTRA)
-#define FOR_EACH_7(fn, delim, EXTRA, _1, _2, _3, _4, _5, _6, _7) \
-  fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA) delim() fn(_4, EXTRA) delim() \
-  fn(_5, EXTRA) delim() fn(_6, EXTRA) delim() fn(_7, EXTRA)
-#define FOR_EACH_8(fn, delim, EXTRA, _1, _2, _3, _4, _5, _6, _7, _8) \
-  fn(_1, EXTRA) delim() fn(_2, EXTRA) delim() fn(_3, EXTRA) delim() fn(_4, EXTRA) delim() \
-  fn(_5, EXTRA) delim() fn(_6, EXTRA) delim() fn(_7, EXTRA) delim() fn(_8, EXTRA)
+#define FOR_EACH_1(fn, delim, _1) fn(_1)
+#define FOR_EACH_2(fn, delim, _1, _2) fn(_1) delim() fn(_2)
+#define FOR_EACH_3(fn, delim, _1, _2, _3) fn(_1) delim() fn(_2) delim() fn(_3)
+#define FOR_EACH_4(fn, delim, _1, _2, _3, _4) \
+  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4)
+#define FOR_EACH_5(fn, delim, _1, _2, _3, _4, _5) \
+  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() fn(_5)
+#define FOR_EACH_6(fn, delim, _1, _2, _3, _4, _5, _6) \
+  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
+  fn(_5) delim() fn(_6)
+#define FOR_EACH_7(fn, delim, _1, _2, _3, _4, _5, _6, _7) \
+  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
+  fn(_5) delim() fn(_6) delim() fn(_7)
+#define FOR_EACH_8(fn, delim, _1, _2, _3, _4, _5, _6, _7, _8) \
+  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
+  fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8)
 
 #define _FIRST(a, b) a
 #define FIRST(x, ...) _FIRST x
@@ -64,100 +64,81 @@ namespace utils {
 #define SECOND(x, ...) _SECOND x
 #define NOTHING()
 
-#define ACCESS(x, ...) \
-  Type::FIRST(x)
+#define INCLUDE_BASE_FIELD(x) \
+  x = Base::x
 
-#define HEAD(x, ...) x
-
-#define SMART_ENUM(name, ...) \
-  struct name { \
-    enum Type { \
-      FOR_EACH(FIRST, COMMA, (__VA_ARGS__), ()) \
-    }; \
-    static constexpr std::size_t length = COUNT(__VA_ARGS__); \
-    static constexpr Type keys[]{ \
-      FOR_EACH(ACCESS, COMMA, (__VA_ARGS__), ()) \
-    }; \
-    static constexpr const char* values[]{ \
-      FOR_EACH(SECOND, COMMA, (__VA_ARGS__), ()) \
-    }; \
+#define SMART_ENUM_BODY(name, ...) \
+    static constexpr int length = Base::length + COUNT(__VA_ARGS__); \
     friend const char* toString(Type a) { \
-      int index = static_cast<int>(a); \
-      if (0 <= index && index < length) { \
-        return values[index]; \
-      } \
-      throw std::runtime_error(std::string("Cannot stringify unknown instance in enum \"" #name "\" : \"") \
-          + std::to_string(index) + "\""); \
+      return toStringImpl(a, #name); \
     } \
     static Type parse(const char* str) { \
-      for (std::size_t idx = 0; idx < sizeof(keys) / sizeof(keys[0]); ++idx) { \
-        if (std::strcmp(str, toString(keys[idx])) == 0) \
-          return keys[idx]; \
+      for (int idx = 0; idx < length; ++idx) { \
+        if (std::strcmp(str, toString(static_cast<Type>(idx))) == 0) \
+          return static_cast<Type>(idx); \
       } \
       throw std::runtime_error(std::string("Unknown instance in enum \"" #name "\" : \"") + str + "\""); \
     } \
-    template<int x, typename = typename std::enable_if<(0 <= x && x < length)>::type> \
-    static Type fromInt() { \
-      return Type(x); \
-    } \
-    static Type fromInt(int x) { \
-      if (0 <= x && x < length) { \
-        return Type(x); \
-      } \
-      throw std::out_of_range("Cannot convert " + std::to_string(x) + " to enum \"" + #name + "\""); \
-    } \
-  };
-
-#define INCLUDE_BASE_FIELD(x, extra) \
-  x = HEAD extra::x
-
-#define SMART_ENUM_EXTEND(name, base, base_fields, ...) \
-  struct name : public base { \
-    enum Type { \
-      FOR_EACH(INCLUDE_BASE_FIELD, COMMA, base_fields, (base)), \
-      FOR_EACH(FIRST, COMMA, (__VA_ARGS__), ()) \
-    }; \
-    static constexpr std::size_t length = base::length + COUNT(__VA_ARGS__); \
-    static_assert((COUNT base_fields) == base::length, "Must enumerate all base instance values"); \
-    static constexpr Type keys[]{ \
-      FOR_EACH(ACCESS, COMMA, (__VA_ARGS__), ()) \
-    }; \
-    static constexpr const char* values[]{ \
-      FOR_EACH(SECOND, COMMA, (__VA_ARGS__), ()) \
-    }; \
-    friend const char* toString(Type a) { \
-      int index = static_cast<int>(a); \
-      if (base::length <= index && index < length) { \
-        return values[index - base::length]; \
-      } \
-      return toString(base::Type(a)); \
-    } \
-    static Type parse(const char* str) { \
-      for (std::size_t idx = 0; idx < sizeof(keys)/sizeof(keys[0]); ++idx) { \
-        if (std::strcmp(str, toString(keys[idx])) == 0) \
-          return keys[idx]; \
-      } \
-      return Type(base::parse(str)); \
-    } \
-    template<typename T, Type value, typename = decltype(T::template fromInt<static_cast<int>(value)>())> \
+    template<typename T, Type value, typename = typename std::enable_if<std::is_base_of<T, name>::value>::type, typename = decltype(T::template fromInt<static_cast<int>(value)>())> \
     static typename T::Type cast() { \
       return T::template fromInt<static_cast<int>(value)>(); \
     } \
-    template<typename T> \
+    template<typename T, typename = typename std::enable_if<std::is_base_of<T, name>::value>::type> \
     static typename T::Type cast(Type value) { \
       return T::fromInt(static_cast<int>(value)); \
     } \
     template<int x, typename = typename std::enable_if<(0 <= x && x < length)>::type> \
     static Type fromInt() { \
-      return Type(x); \
+      return static_cast<Type>(x); \
     } \
     static Type fromInt(int x) { \
       if (0 <= x && x < length) { \
-        return Type(x); \
+        return static_cast<Type>(x); \
       } \
       throw std::out_of_range("Cannot convert " + std::to_string(x) + " to enum \"" + #name + "\""); \
     } \
+    \
+   protected: \
+    static const char* toStringImpl(Type a, const char* DerivedName) { \
+      static constexpr const char* values[]{ \
+        FOR_EACH(SECOND, COMMA, (__VA_ARGS__)) \
+      }; \
+      int index = static_cast<int>(a); \
+      if (Base::length <= index && index < length) { \
+        return values[index - Base::length]; \
+      } \
+      return Base::toStringImpl(static_cast<Base::Type>(a), DerivedName); \
+    }
+
+#define SMART_ENUM(name, ...) \
+  struct name : ::org::apache::nifi::minifi::utils::EnumBase { \
+    using Base = ::org::apache::nifi::minifi::utils::EnumBase; \
+    enum Type { \
+      FOR_EACH(FIRST, COMMA, (__VA_ARGS__)) \
+    }; \
+    SMART_ENUM_BODY(name, __VA_ARGS__) \
   };
+
+#define SMART_ENUM_EXTEND(name, base, base_fields, ...) \
+  struct name : public base { \
+    using Base = base; \
+    enum Type { \
+      FOR_EACH(INCLUDE_BASE_FIELD, COMMA, base_fields), \
+      FOR_EACH(FIRST, COMMA, (__VA_ARGS__)) \
+    }; \
+    static_assert((COUNT base_fields) == Base::length, "Must enumerate all base instance values"); \
+    SMART_ENUM_BODY(name, __VA_ARGS__) \
+  };
+
+struct EnumBase {
+  enum Type {};
+  static constexpr int length = 0;
+ protected:
+  static const char* toStringImpl(Type a, const char* DerivedName) {
+    throw std::runtime_error(std::string("Cannot stringify unknown instance in enum \"") + DerivedName + "\" : \""
+          + std::to_string(static_cast<int>(a)) + "\"");
+  }
+};
 
 }  // namespace utils
 }  // namespace minifi

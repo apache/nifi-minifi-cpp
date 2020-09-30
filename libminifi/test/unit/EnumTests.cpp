@@ -36,11 +36,23 @@ using org::apache::nifi::minifi::utils::void_t;
   struct name<T, void_t<decltype(T::ID expr)>> : std::false_type {}; \
   static_assert(name<type>::value, "Expression: " STR((type::ID expr)) " is not supposed to compile");
 
-SMART_ENUM(A, (_0, "zero"), (_1, "one"))
+SMART_ENUM(A,
+  (_0, "zero"),
+  (_1, "one")
+)
 
-SMART_ENUM_EXTEND(B, A, (_0, _1), (_2, "two"))
+SMART_ENUM_EXTEND(B, A, (_0, _1),
+  (_2, "two")
+)
 
-SMART_ENUM_EXTEND(C, B, (_0, _1, _2), (_3, "three"))
+SMART_ENUM_EXTEND(C, B, (_0, _1, _2),
+  (_3, "three")
+)
+
+SMART_ENUM(Unrelated,
+  (a, "a"),
+  (b, "b")
+)
 
 // static tests
 namespace test {
@@ -51,6 +63,10 @@ COMPILE_ERROR(_3, B, (template fromInt<3>()))
 COMPILE_ERROR(_4, C, (template fromInt<4>()))
 COMPILE_ERROR(_5, C, (template cast<A, C::_2>()))
 COMPILE_ERROR(_6, C, (template cast<B, C::_3>()))
+
+// casting to unrelated
+COMPILE_ERROR(_7, B, (template cast<Unrelated, B::_0>()))
+COMPILE_ERROR(_8, B, (template cast<Unrelated>(B::_0)))
 
 }  // namespace test
 
