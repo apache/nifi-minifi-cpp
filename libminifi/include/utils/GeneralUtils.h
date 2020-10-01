@@ -19,7 +19,6 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_
 
-#include <cmath>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -43,10 +42,11 @@ using std::make_unique;
 #endif /* < C++14 */
 
 template<typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-T intdiv_ceil(T numerator, T denominator) {
-  gsl_Expects(numerator >= 0 && denominator > 0);
+constexpr T intdiv_ceil(T numerator, T denominator) {
   // note: division and remainder is 1 instruction on x86
-  return numerator / denominator + (numerator % denominator > 0);
+  return gsl_Expects(denominator != 0), ((numerator >= 0) != (denominator > 0)
+      ? numerator / denominator  // negative result rounds towards zero, i.e. up
+      : numerator / denominator + (numerator % denominator != 0));
 }
 
 using gsl::owner;
