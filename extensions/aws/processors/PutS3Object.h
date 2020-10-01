@@ -67,6 +67,11 @@ class PutS3Object : public core::Processor {
  public:
   static constexpr char const* ProcessorName = "PutS3Object";
 
+  static const std::set<std::string> CANNED_ACLS;
+  static const std::set<std::string> REGIONS;
+  static const std::set<std::string> STORAGE_CLASSES;
+  static const std::set<std::string> SERVER_SIDE_ENCRYPTIONS;
+
   // Supported Properties
   static const core::Property ObjectKey;
   static const core::Property Bucket;
@@ -93,8 +98,6 @@ class PutS3Object : public core::Processor {
   // Supported Relationships
   static const core::Relationship Failure;
   static const core::Relationship Success;
-
-  static const std::set<std::string> CANNED_ACLS;
 
   explicit PutS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
       : PutS3Object(name, uuid, minifi::utils::make_unique<aws::s3::S3Wrapper>()) {

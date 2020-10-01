@@ -46,6 +46,12 @@ std::set<T> getMapKeys(const std::map<T,U>& m) {
 }
 
 const std::set<std::string> PutS3Object::CANNED_ACLS(getMapKeys(minifi::aws::s3::CANNED_ACL_MAP));
+const std::set<std::string> PutS3Object::REGIONS({region::US_GOV_WEST_1, region::US_EAST_1, region::US_EAST_2, region::US_WEST_1,
+  region::US_WEST_2, region::EU_WEST_1, region::EU_WEST_2, region::EU_CENTRAL_1, region::AP_SOUTH_1,
+  region::AP_SOUTHEAST_1, region::AP_SOUTHEAST_2, region::AP_NORTHEAST_1, region::AP_NORTHEAST_2,
+  region::SA_EAST_1, region::CN_NORTH_1, region::CA_CENTRAL_1});
+const std::set<std::string> PutS3Object::STORAGE_CLASSES(getMapKeys(minifi::aws::s3::STORAGE_CLASS_MAP));
+const std::set<std::string> PutS3Object::SERVER_SIDE_ENCRYPTIONS(getMapKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP));
 
 const core::Property PutS3Object::ObjectKey(
   core::PropertyBuilder::createProperty("Object Key")
@@ -91,17 +97,14 @@ const core::Property PutS3Object::StorageClass(
   core::PropertyBuilder::createProperty("Storage Class")
     ->isRequired(true)
     ->withDefaultValue<std::string>("Standard")
-    ->withAllowableValues<std::string>(getMapKeys(minifi::aws::s3::STORAGE_CLASS_MAP))
+    ->withAllowableValues<std::string>(PutS3Object::STORAGE_CLASSES)
     ->withDescription("AWS S3 Storage Class")
     ->build());
 const core::Property PutS3Object::Region(
   core::PropertyBuilder::createProperty("Region")
     ->isRequired(true)
     ->withDefaultValue<std::string>(region::US_WEST_2)
-    ->withAllowableValues<std::string>({region::US_GOV_WEST_1, region::US_EAST_1, region::US_EAST_2, region::US_WEST_1,
-      region::US_WEST_2, region::EU_WEST_1, region::EU_WEST_2, region::EU_CENTRAL_1, region::AP_SOUTH_1,
-      region::AP_SOUTHEAST_1, region::AP_SOUTHEAST_2, region::AP_NORTHEAST_1, region::AP_NORTHEAST_2,
-      region::SA_EAST_1, region::CN_NORTH_1, region::CA_CENTRAL_1})
+    ->withAllowableValues<std::string>(PutS3Object::REGIONS)
     ->withDescription("AWS Region")
     ->build());
 const core::Property PutS3Object::CommunicationsTimeout(
@@ -152,7 +155,7 @@ const core::Property PutS3Object::ServerSideEncryption(
   core::PropertyBuilder::createProperty("Server Side Encryption")
     ->isRequired(true)
     ->withDefaultValue<std::string>("None")
-    ->withAllowableValues<std::string>(getMapKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP))
+    ->withAllowableValues<std::string>(PutS3Object::SERVER_SIDE_ENCRYPTIONS)
     ->withDescription("Specifies the algorithm used for server side encryption.")
     ->build());
 const core::Property PutS3Object::ProxyHost(
@@ -318,13 +321,15 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   }
   logger_->log_debug("PutS3Object: Bucket [%s]", put_s3_request_params_.bucket);
 
-  if (!context->getProperty(StorageClass.getName(), put_s3_request_params_.storage_class) || put_s3_request_params_.storage_class.empty()) {
+  if (!context->getProperty(StorageClass.getName(), put_s3_request_params_.storage_class)
+      || put_s3_request_params_.storage_class.empty()
+      || STORAGE_CLASSES.find(put_s3_request_params_.storage_class) == STORAGE_CLASSES.end()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Class property missing or invalid");
   }
   logger_->log_debug("PutS3Object: Storage Class [%s]", put_s3_request_params_.storage_class);
 
   std::string value;
-  if (!context->getProperty(Region.getName(), value) || value.empty()) {
+  if (!context->getProperty(Region.getName(), value) || value.empty() || REGIONS.find(value) == REGIONS.end()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Region property missing or invalid");
   }
   s3_wrapper_->setRegion(value);
@@ -338,7 +343,9 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }
 
-  if (!context->getProperty(ServerSideEncryption.getName(), put_s3_request_params_.server_side_encryption) || put_s3_request_params_.server_side_encryption.empty()) {
+  if (!context->getProperty(ServerSideEncryption.getName(), put_s3_request_params_.server_side_encryption)
+      || put_s3_request_params_.server_side_encryption.empty()
+      || SERVER_SIDE_ENCRYPTIONS.find(put_s3_request_params_.server_side_encryption) == SERVER_SIDE_ENCRYPTIONS.end()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Server Side Encryption property missing or invalid");
   }
   logger_->log_debug("PutS3Object: Server Side Encryption [%s]", put_s3_request_params_.server_side_encryption);
@@ -371,6 +378,7 @@ std::string PutS3Object::parseAccessControlList(const std::string &comma_separat
 bool PutS3Object::setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {
   context->getProperty(CannedACL, put_s3_request_params_.canned_acl, flow_file);
   if (!put_s3_request_params_.canned_acl.empty() && CANNED_ACLS.find(put_s3_request_params_.canned_acl) == CANNED_ACLS.end()) {
+    logger_->log_error("Canned ACL is invalid!");
     return false;
   }
   logger_->log_debug("PutS3Object: Canned ACL [%s]", put_s3_request_params_.canned_acl);
