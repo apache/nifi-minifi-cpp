@@ -57,5 +57,5 @@ int main(int argc, char **argv) {
   fprintf(stderr, "Dragons!!!");
   free_flowfile(record);
   free_flow(new_flow);
-  free_instance(instance);
+  free_nanofi_instance(instance);
 }

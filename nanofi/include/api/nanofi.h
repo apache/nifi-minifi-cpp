@@ -92,7 +92,7 @@ void initialize_instance(nifi_instance * instance);
  * It's recommended to free all flows before freeing the instance.
  * @param instance instance to be freed
  **/
-void free_instance(nifi_instance * instance);
+void free_nanofi_instance(nifi_instance * instance);
 
 /****
  * ##################################################################

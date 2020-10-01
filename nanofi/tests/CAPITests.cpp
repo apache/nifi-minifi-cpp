@@ -98,7 +98,7 @@ TEST_CASE("Test Creation of instance, one processor", "[createInstanceAndFlow]")
   processor *test_proc = add_processor(test_flow, "GenerateFlowFile");
   REQUIRE(test_proc != nullptr);
   free_flow(test_flow);
-  free_instance(instance);
+  free_nanofi_instance(instance);
 }
 
 TEST_CASE("Invalid processor returns null", "[addInvalidProcessor]") {
@@ -110,7 +110,7 @@ TEST_CASE("Invalid processor returns null", "[addInvalidProcessor]") {
   processor *no_proc = add_processor(test_flow, "");
   REQUIRE(no_proc == nullptr);
   free_flow(test_flow);
-  free_instance(instance);
+  free_nanofi_instance(instance);
 }
 
 TEST_CASE("Set valid and invalid properties", "[setProcesssorProperties]") {
@@ -128,7 +128,7 @@ TEST_CASE("Set valid and invalid properties", "[setProcesssorProperties]") {
   REQUIRE(set_property(test_proc, nullptr, "Blah") != 0);  // Empty attribute
   REQUIRE(set_property(nullptr, "Invalid Attribute", "Blah") != 0);  // Invalid processor
   free_flow(test_flow);
-  free_instance(instance);
+  free_nanofi_instance(instance);
 }
 
 TEST_CASE("get file and put file", "[getAndPutFile]") {
@@ -177,7 +177,7 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
 
   free_flow(test_flow);
 
-  free_instance(instance);
+  free_nanofi_instance(instance);
 }
 
 TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
@@ -253,7 +253,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   free_flowfile(record);
 
   free_flow(test_flow);
-  free_instance(instance);
+  free_nanofi_instance(instance);
 }
 
 TEST_CASE("Test error handling callback", "[errorHandling]") {
@@ -298,7 +298,7 @@ TEST_CASE("Test error handling callback", "[errorHandling]") {
   failure_count = 0;
 
   free_flow(test_flow);
-  free_instance(instance);
+  free_nanofi_instance(instance);
 }
 
 TEST_CASE("Test standalone processors", "[testStandalone]") {
@@ -388,7 +388,7 @@ TEST_CASE("Test interaction of flow and standlone processors", "[testStandaloneW
   REQUIRE(test_file_content == put_data);
 
   free_flow(test_flow);
-  free_instance(instance);
+  free_nanofi_instance(instance);
   free_standalone_processor(putfile_proc);
 }
 
@@ -454,7 +454,7 @@ TEST_CASE("Test custom processor", "[TestCutomProcessor]") {
 TEST_CASE("C API robustness test", "[TestRobustness]") {
   free_flow(nullptr);
   free_standalone_processor(nullptr);
-  free_instance(nullptr);
+  free_nanofi_instance(nullptr);
 
   REQUIRE(create_processor(nullptr, nullptr) == nullptr);
 
@@ -536,5 +536,5 @@ TEST_CASE("C API robustness test", "[TestRobustness]") {
 
   free_flow(test_flow);
 
-  free_instance(instance);
+  free_nanofi_instance(instance);
 }

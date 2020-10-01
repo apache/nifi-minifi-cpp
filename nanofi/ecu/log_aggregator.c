@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
     clear_content_repo(params.instance);
     delete_all_flow_files_from_proc(uuid_str);
     free_standalone_processor(params.processor);
-    free_instance(params.instance);
+    free_nanofi_instance(params.instance);
     free_proc_params(uuid_str);
     return 0;
 }
