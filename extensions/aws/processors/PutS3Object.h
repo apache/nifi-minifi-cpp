@@ -94,6 +94,8 @@ class PutS3Object : public core::Processor {
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
+  static const std::set<std::string> CANNED_ACLS;
+
   explicit PutS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
       : PutS3Object(name, uuid, minifi::utils::make_unique<aws::s3::S3Wrapper>()) {
   }
@@ -164,7 +166,8 @@ class PutS3Object : public core::Processor {
   bool setProxy(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
   bool getExpressionLanguageSupportedProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
   std::string parseAccessControlList(const std::string &comma_separated_list) const;
-  void setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
+  bool setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
+  bool setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
 
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutS3Object>::getLogger()};
   aws::s3::PutObjectRequestParameters put_s3_request_params_;

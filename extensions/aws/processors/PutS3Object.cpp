@@ -45,6 +45,8 @@ std::set<T> getMapKeys(const std::map<T,U>& m) {
   return keys;
 }
 
+const std::set<std::string> PutS3Object::CANNED_ACLS(getMapKeys(minifi::aws::s3::CANNED_ACL_MAP));
+
 const core::Property PutS3Object::ObjectKey(
   core::PropertyBuilder::createProperty("Object Key")
     ->withDescription("The key of the S3 object")
@@ -134,10 +136,9 @@ const core::Property PutS3Object::WriteACLUserList(
     ->build());
 const core::Property PutS3Object::CannedACL(
   core::PropertyBuilder::createProperty("Canned ACL")
-    ->withDescription("Amazon Canned ACL for an object; will be ignored if any other ACL/permission property is specified.")
+    ->withDescription("Amazon Canned ACL for an object. Allowed values: BucketOwnerFullControl, BucketOwnerRead, AuthenticatedRead, PublicReadWrite, PublicRead, Private, AwsExecRead; will be ignored if any other ACL/permission property is specified.")
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("${s3.permissions.cannedacl}")
-    ->withAllowableValues<std::string>(getMapKeys(minifi::aws::s3::CANNED_ACL_MAP))
     ->build());
 const core::Property PutS3Object::EndpointOverrideURL(
   core::PropertyBuilder::createProperty("Endpoint Override URL")
@@ -367,7 +368,16 @@ std::string PutS3Object::parseAccessControlList(const std::string &comma_separat
   return result_list;
 }
 
-void PutS3Object::setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {
+bool PutS3Object::setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {
+  context->getProperty(CannedACL, put_s3_request_params_.canned_acl, flow_file);
+  if (!put_s3_request_params_.canned_acl.empty() && CANNED_ACLS.find(put_s3_request_params_.canned_acl) == CANNED_ACLS.end()) {
+    return false;
+  }
+  logger_->log_debug("PutS3Object: Canned ACL [%s]", put_s3_request_params_.canned_acl);
+  return true;
+}
+
+bool PutS3Object::setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {
   std::string value;
   if (context->getProperty(FullControlUserList, value, flow_file) && !value.empty()) {
     put_s3_request_params_.fullcontrol_user_list = parseAccessControlList(value);
@@ -385,8 +395,8 @@ void PutS3Object::setAccessControl(const std::shared_ptr<core::ProcessContext> &
     put_s3_request_params_.write_acl_user_list = parseAccessControlList(value);
     logger_->log_debug("PutS3Object: Write ACL User List [%s]", value);
   }
-  context->getProperty(CannedACL, put_s3_request_params_.canned_acl, flow_file);
-  logger_->log_debug("PutS3Object: Canned ACL [%s]", put_s3_request_params_.canned_acl);
+
+  return setCannedAcl(context, flow_file);
 }
 
 bool PutS3Object::getExpressionLanguageSupportedProperties(
@@ -421,8 +431,7 @@ bool PutS3Object::getExpressionLanguageSupportedProperties(
     logger_->log_debug("PutS3Object: Endpoint Override URL [%d]", value);
   }
 
-  setAccessControl(context, flow_file);
-  return true;
+  return setAccessControl(context, flow_file);
 }
 
 void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
