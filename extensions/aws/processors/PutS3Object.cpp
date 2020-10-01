@@ -36,6 +36,8 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
+namespace {
+
 template<typename T, typename U>
 std::set<T> getMapKeys(const std::map<T,U>& m) {
   std::set<T> keys;
@@ -44,6 +46,8 @@ std::set<T> getMapKeys(const std::map<T,U>& m) {
   }
   return keys;
 }
+
+}  // namespace
 
 const std::set<std::string> PutS3Object::CANNED_ACLS(getMapKeys(minifi::aws::s3::CANNED_ACL_MAP));
 const std::set<std::string> PutS3Object::REGIONS({region::US_GOV_WEST_1, region::US_EAST_1, region::US_EAST_2, region::US_WEST_1,
