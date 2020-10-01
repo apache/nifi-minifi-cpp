@@ -32,18 +32,38 @@ TEST_CASE("GeneralUtils::make_unique", "[make_unique]") {
   REQUIRE("test string" == *pstr);
 }
 
-TEST_CASE("GeneralUtils::intdiv_ceil", "[intdiv_ceil]") {
-  REQUIRE(0 == utils::intdiv_ceil(0, 1));
-  REQUIRE(0 == utils::intdiv_ceil(0, 2));
-  REQUIRE(1 == utils::intdiv_ceil(1, 2));
-  REQUIRE(1 == utils::intdiv_ceil(1, 3));
-  REQUIRE(1 == utils::intdiv_ceil(3, 3));
-  REQUIRE(2 == utils::intdiv_ceil(4, 3));
-  REQUIRE(2 == utils::intdiv_ceil(4, 3));
-  REQUIRE(0 == utils::intdiv_ceil(-1, 3));
-  REQUIRE(-1 == utils::intdiv_ceil(-3, 3));
-  REQUIRE(-1 == utils::intdiv_ceil(-4, 3));
-}
+// intdiv_ceil
+static_assert(0 == utils::intdiv_ceil(0, 1), "");
+static_assert(0 == utils::intdiv_ceil(0, 2), "");
+static_assert(1 == utils::intdiv_ceil(1, 2), "");
+static_assert(1 == utils::intdiv_ceil(1, 3), "");
+static_assert(1 == utils::intdiv_ceil(3, 3), "");
+static_assert(2 == utils::intdiv_ceil(4, 3), "");
+static_assert(2 == utils::intdiv_ceil(5, 3), "");
+static_assert(0 == utils::intdiv_ceil(-1, 3), "");
+static_assert(-1 == utils::intdiv_ceil(-3, 3), "");
+static_assert(-1 == utils::intdiv_ceil(-4, 3), "");
+static_assert(2 == utils::intdiv_ceil(-4, -3), "");
+static_assert(2 == utils::intdiv_ceil(-5, -3), "");
+static_assert(0 == utils::intdiv_ceil(1, -3), "");
+static_assert(-1 == utils::intdiv_ceil(5, -3), "");
+static_assert(3 == utils::intdiv_ceil(6, 2), "");
+static_assert(-3 == utils::intdiv_ceil(-6, 2), "");
+static_assert(-3 == utils::intdiv_ceil(6, -2), "");
+static_assert(3 == utils::intdiv_ceil(-6, -2), "");
+static_assert(0 == utils::intdiv_ceil(0, -10), "");
+
+template<int N, int D, typename = void>
+struct does_compile : std::false_type {};
+
+template<int N, int D>
+struct does_compile<N, D,
+    // we must force evaluation so decltype won't do
+    typename std::enable_if<(utils::intdiv_ceil(N, D), true)>::type> : std::true_type {};
+
+static_assert(does_compile<2, 3>::value, "does_compile should work");
+static_assert(!does_compile<1, 0>::value, "constexpr division by zero shouldn't compile");
+
 
 TEST_CASE("GeneralUtils::exchange", "[exchange]") {
   int a = 1;
