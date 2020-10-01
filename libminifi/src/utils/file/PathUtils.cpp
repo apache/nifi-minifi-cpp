@@ -93,11 +93,11 @@ std::string globToRegex(std::string glob) {
   return glob;
 }
 
-space_info space(const path p, std::error_code& ec) noexcept {
+space_info space(const path path, std::error_code& ec) noexcept {
   constexpr auto kErrVal = gsl::narrow_cast<std::uintmax_t>(-1);
 #if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
   struct statvfs svfs{};
-  const int statvfs_retval = statvfs(p, &svfs);
+  const int statvfs_retval = statvfs(path, &svfs);
   if (statvfs_retval == -1) {
     const std::error_code err_code{errno, std::generic_category()};
     ec = err_code;
@@ -110,7 +110,7 @@ space_info space(const path p, std::error_code& ec) noexcept {
   ULARGE_INTEGER free_bytes_available_to_caller;
   ULARGE_INTEGER total_number_of_bytes;
   ULARGE_INTEGER total_number_of_free_bytes;
-  const bool get_disk_free_space_ex_success = GetDiskFreeSpaceEx(p, &free_bytes_available_to_caller, &total_number_of_bytes,
+  const bool get_disk_free_space_ex_success = GetDiskFreeSpaceEx(path, &free_bytes_available_to_caller, &total_number_of_bytes,
       &total_number_of_free_bytes);
   if (!get_disk_free_space_ex_success) {
     const std::error_code err_code{gsl::narrow<int>(GetLastError()), std::system_category()};
@@ -129,11 +129,11 @@ space_info space(const path p, std::error_code& ec) noexcept {
   return space_info{capacity, free, available};
 }
 
-space_info space(const path p) {
+space_info space(const path path) {
   std::error_code ec;
-  const auto result = space(p, ec);  // const here doesn't break NRVO
+  const auto result = space(path, ec);  // const here doesn't break NRVO
   if (ec) {
-    throw filesystem_error{ec.message(), p, "", ec};
+    throw filesystem_error{ec.message(), path, "", ec};
   }
   return result;
 }
