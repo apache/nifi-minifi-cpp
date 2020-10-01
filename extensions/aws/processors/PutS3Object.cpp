@@ -36,6 +36,15 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
+template<typename T, typename U>
+std::set<T> getMapKeys(const std::map<T,U>& m) {
+  std::set<T> keys;
+  for (const auto& pair : m) {
+    keys.insert(pair.first);
+  }
+  return keys;
+}
+
 const core::Property PutS3Object::ObjectKey(
   core::PropertyBuilder::createProperty("Object Key")
     ->withDescription("The key of the S3 object")
@@ -79,8 +88,8 @@ const core::Property PutS3Object::AWSCredentialsProviderService(
 const core::Property PutS3Object::StorageClass(
   core::PropertyBuilder::createProperty("Storage Class")
     ->isRequired(true)
-    ->withDefaultValue<std::string>(storage_class::STANDARD)
-    ->withAllowableValues<std::string>({storage_class::STANDARD, storage_class::REDUCED_REDUNDANCY})
+    ->withDefaultValue<std::string>("Standard")
+    ->withAllowableValues<std::string>(getMapKeys(minifi::aws::s3::STORAGE_CLASS_MAP))
     ->withDescription("AWS S3 Storage Class")
     ->build());
 const core::Property PutS3Object::Region(
@@ -128,8 +137,7 @@ const core::Property PutS3Object::CannedACL(
     ->withDescription("Amazon Canned ACL for an object; will be ignored if any other ACL/permission property is specified.")
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("${s3.permissions.cannedacl}")
-    ->withAllowableValues<std::string>({canned_acl::BUCKET_OWNER_FULL_CONTROL, canned_acl::BUCKET_OWNER_READ,
-      canned_acl::AUTHENTICATED_READ, canned_acl::PUBLIC_READ_WRITE, canned_acl::PUBLIC_READ, canned_acl::PRIVATE, canned_acl::AWS_EXEC_READ})
+    ->withAllowableValues<std::string>(getMapKeys(minifi::aws::s3::CANNED_ACL_MAP))
     ->build());
 const core::Property PutS3Object::EndpointOverrideURL(
   core::PropertyBuilder::createProperty("Endpoint Override URL")
@@ -142,8 +150,8 @@ const core::Property PutS3Object::EndpointOverrideURL(
 const core::Property PutS3Object::ServerSideEncryption(
   core::PropertyBuilder::createProperty("Server Side Encryption")
     ->isRequired(true)
-    ->withDefaultValue<std::string>(server_side_encryption::NONE)
-    ->withAllowableValues<std::string>({server_side_encryption::NONE, server_side_encryption::AES256, server_side_encryption::AWS_KMS})
+    ->withDefaultValue<std::string>("None")
+    ->withAllowableValues<std::string>(getMapKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP))
     ->withDescription("Specifies the algorithm used for server side encryption.")
     ->build());
 const core::Property PutS3Object::ProxyHost(

@@ -252,12 +252,12 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   plan->setProperty(put_s3_object, "Object Key", "custom_key");
   plan->setProperty(update_attribute, "test.contentType", "application/tar", true);
   plan->setProperty(put_s3_object, "Content Type", "${test.contentType}");
-  plan->setProperty(put_s3_object, "Storage Class", minifi::aws::processors::storage_class::REDUCED_REDUNDANCY);
+  plan->setProperty(put_s3_object, "Storage Class", "ReducedRedundancy");
   plan->setProperty(put_s3_object, "Region", minifi::aws::processors::region::US_EAST_1);
   plan->setProperty(put_s3_object, "Communications Timeout", "10 Sec");
   plan->setProperty(update_attribute, "test.endpoint", "http://localhost:1234", true);
   plan->setProperty(put_s3_object, "Endpoint Override URL", "${test.endpoint}");
-  plan->setProperty(put_s3_object, "Server Side Encryption", minifi::aws::processors::server_side_encryption::AES256);
+  plan->setProperty(put_s3_object, "Server Side Encryption", "AES256");
   test_controller.runSession(plan, true);
   checkPutObjectResults();
   REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));

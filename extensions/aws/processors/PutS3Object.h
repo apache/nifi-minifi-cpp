@@ -42,13 +42,6 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
-namespace storage_class {
-
-  constexpr const char *STANDARD = "Standard";
-  constexpr const char *REDUCED_REDUNDANCY = "ReducedRedundancy";
-
-}  // namespace storage_class
-
 namespace region {
 
   constexpr const char *US_GOV_WEST_1 = "us-gov-west-1";
@@ -69,27 +62,6 @@ namespace region {
   constexpr const char *CA_CENTRAL_1 = "ca-central-1";
 
 }  // namespace region
-
-namespace server_side_encryption {
-
-  constexpr const char *NONE = "None";
-  constexpr const char *AES256 = "AES256";
-  constexpr const char *AWS_KMS = "aws_kms";
-
-}  // namespace server_side_encryption
-
-
-namespace canned_acl {
-
-  constexpr const char *BUCKET_OWNER_FULL_CONTROL = "BucketOwnerFullControl";
-  constexpr const char *BUCKET_OWNER_READ = "BucketOwnerRead";
-  constexpr const char *AUTHENTICATED_READ = "AuthenticatedRead";
-  constexpr const char *PUBLIC_READ_WRITE = "PublicReadWrite";
-  constexpr const char *PUBLIC_READ = "PublicRead";
-  constexpr const char *PRIVATE = "Private";
-  constexpr const char *AWS_EXEC_READ = "AwsExecRead";
-
-}  // namespace canned_acl
 
 class PutS3Object : public core::Processor {
  public:
