@@ -68,7 +68,7 @@ TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-
     ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
     std::string original_password = test_file.getValue("nifi.rest.api.password").value();
 
-    int num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
+    uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
 
     REQUIRE(num_properties_encrypted == 1);
     REQUIRE(test_file.size() == 102);
@@ -77,7 +77,7 @@ TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-
     SECTION("calling encryptSensitiveProperties a second time does nothing") {
       ConfigFile test_file_copy = test_file;
 
-      int num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
+      uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
 
       REQUIRE(num_properties_encrypted == 0);
       REQUIRE(test_file == test_file_copy);
@@ -97,7 +97,7 @@ TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-
         test_file.update("nifi.rest.api.password.protected", "plaintext");
       }
 
-      int num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
+      uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
 
       REQUIRE(num_properties_encrypted == 1);
       REQUIRE(check_encryption(test_file, "nifi.rest.api.password", original_password.length()));
@@ -113,7 +113,7 @@ TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-
     std::string original_password = test_file.getValue("nifi.rest.api.password").value();
     std::string original_pass_phrase = test_file.getValue("nifi.security.client.pass.phrase").value();
 
-    int num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
+    uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
 
     REQUIRE(num_properties_encrypted == 4);
     REQUIRE(test_file.size() == original_file_size + 4);

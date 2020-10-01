@@ -28,10 +28,12 @@
 #include "utils/OptionalUtils.h"
 
 namespace {
+
 constexpr const char* CONF_DIRECTORY_NAME = "conf";
 constexpr const char* BOOTSTRAP_FILE_NAME = "bootstrap.conf";
 constexpr const char* MINIFI_PROPERTIES_FILE_NAME = "minifi.properties";
 constexpr const char* ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
+
 }  // namespace
 
 namespace org {
@@ -132,7 +134,7 @@ void EncryptConfig::encryptSensitiveProperties(const utils::crypto::Bytes& encry
     throw std::runtime_error{"Properties file " + propertiesFilePath() + " not found!"};
   }
 
-  int num_properties_encrypted = encryptSensitivePropertiesInFile(properties_file, encryption_key);
+  uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(properties_file, encryption_key);
   if (num_properties_encrypted == 0) {
     std::cout << "Could not find any (new) sensitive properties to encrypt in " << propertiesFilePath() << '\n';
     return;

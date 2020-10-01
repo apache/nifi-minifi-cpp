@@ -28,7 +28,7 @@ namespace nifi {
 namespace minifi {
 namespace encrypt_config {
 
-int encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes& encryption_key) {
+uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes& encryption_key) {
   int num_properties_encrypted = 0;
 
   for (const auto& property_key : config_file.getSensitiveProperties()) {
