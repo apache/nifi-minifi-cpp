@@ -167,68 +167,63 @@ class PutS3ObjectTestsFixture {
   std::shared_ptr<core::Processor> update_attribute;
 };
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test basic property credential setting", "[awsCredentials]") {
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCredentials]") {
   setBucket();
-  plan->setProperty(update_attribute, "s3.accessKey", "key", true);
-  plan->setProperty(put_s3_object, "Access Key", "${s3.accessKey}");
-  plan->setProperty(update_attribute, "s3.secretKey", "secret", true);
-  plan->setProperty(put_s3_object, "Secret Key", "${s3.secretKey}");
+
+  SECTION("Test credentials not set") {
+    plan->setProperty(update_attribute, "s3.accessKey", "key", true);
+    plan->setProperty(put_s3_object, "Access Key", "${s3.accessKey}");
+    plan->setProperty(update_attribute, "s3.secretKey", "secret", true);
+    plan->setProperty(put_s3_object, "Secret Key", "${s3.secretKey}");
+  }
+
+  SECTION("Test credentials file setting") {
+    char in_dir[] = "/tmp/gt.XXXXXX";
+    auto temp_path = test_controller.createTempDirectory(in_dir);
+    REQUIRE(!temp_path.empty());
+    std::string aws_credentials_file(temp_path + utils::file::FileUtils::get_separator() + "aws_creds.conf");
+    std::ofstream aws_credentials_file_stream(aws_credentials_file);
+    aws_credentials_file_stream << "accessKey=key" << std::endl;
+    aws_credentials_file_stream << "secretKey=secret" << std::endl;
+    aws_credentials_file_stream.close();
+    plan->setProperty(put_s3_object, "Credentials File", aws_credentials_file);
+  }
+
+  SECTION("Test credentials setting from AWS Credential service") {
+    auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
+    plan->setProperty(aws_cred_service, "Access Key", "key");
+    plan->setProperty(aws_cred_service, "Secret Key", "secret");
+    plan->setProperty(put_s3_object, "AWS Credentials Provider service", "AWSCredentialsService");
+  }
+
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSAccessKeyId() == "key");
   REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSSecretKey() == "secret");
 }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials file setting", "[awsCredentials]") {
-  setBucket();
-  char in_dir[] = "/tmp/gt.XXXXXX";
-  auto temp_path = test_controller.createTempDirectory(in_dir);
-  REQUIRE(!temp_path.empty());
-  std::string aws_credentials_file(temp_path + utils::file::FileUtils::get_separator() + "aws_creds.conf");
-  std::ofstream aws_credentials_file_stream(aws_credentials_file);
-  aws_credentials_file_stream << "accessKey=key1" << std::endl;
-  aws_credentials_file_stream << "secretKey=secret1" << std::endl;
-  aws_credentials_file_stream.close();
-  plan->setProperty(put_s3_object, "Credentials File", aws_credentials_file);
-  test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSAccessKeyId() == "key1");
-  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSSecretKey() == "secret1");
-}
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[awsS3Config]") {
+  SECTION("Test credentials not set") {
+  }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials setting from AWS Credential service", "[awsCredentials]") {
-  setBucket();
-  auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
-  plan->setProperty(aws_cred_service, "Access Key", "key2");
-  plan->setProperty(aws_cred_service, "Secret Key", "secret2");
-  plan->setProperty(put_s3_object, "AWS Credentials Provider service", "AWSCredentialsService");
-  test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSAccessKeyId() == "key2");
-  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSSecretKey() == "secret2");
-}
+  SECTION("Test no bucket is set") {
+    setBasicCredentials();
+  }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test no credentials set", "[awsCredentials]") {
-  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
-}
+  SECTION("Test storage class is empty") {
+    setRequiredProperties();
+    plan->setProperty(put_s3_object, "Storage Class", "");
+  }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test no bucket is set", "[awsS3ClientConfig]") {
-  setBasicCredentials();
-  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
-}
+  SECTION("Test region is empty") {
+    setRequiredProperties();
+    plan->setProperty(put_s3_object, "Region", "");
+  }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test storage class is empty", "[awsS3ClientConfig]") {
-  setRequiredProperties();
-  plan->setProperty(put_s3_object, "Storage Class", "");
-  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
-}
+  SECTION("Test no server side encryption is set") {
+    setRequiredProperties();
+    plan->setProperty(put_s3_object, "Server Side Encryption", "");
+  }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test region is empty", "[awsS3ClientConfig]") {
-  setRequiredProperties();
-  plan->setProperty(put_s3_object, "Region", "");
-  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
-}
-
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test no server side encryption is set", "[awsS3ClientConfig]") {
-  setRequiredProperties();
-  plan->setProperty(put_s3_object, "Server Side Encryption", "");
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
 
