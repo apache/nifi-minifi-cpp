@@ -148,9 +148,9 @@ TEST_CASE("ConfigFile can add a new setting after an existing setting", "[encryp
   ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
 
   SECTION("valid key") {
-    test_file.insertAfter("nifi.rest.api.password", "nifi.rest.api.password.protected", "XChaCha20-Poly1305");
+    test_file.insertAfter("nifi.rest.api.password", "nifi.rest.api.password.protected", "my-cipher-name");
     REQUIRE(test_file.size() == 102);
-    REQUIRE(test_file.getValue("nifi.rest.api.password.protected") == utils::optional<std::string>{"XChaCha20-Poly1305"});
+    REQUIRE(test_file.getValue("nifi.rest.api.password.protected") == utils::optional<std::string>{"my-cipher-name"});
   }
 
   SECTION("nonexistent key") {
