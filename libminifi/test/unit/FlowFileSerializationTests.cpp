@@ -25,14 +25,20 @@
 #include "core/FlowFile.h"
 #include "../TestBase.h"
 
+std::shared_ptr<minifi::FlowFileRecord> createEmptyFlowFile() {
+  auto flowFile = std::make_shared<minifi::FlowFileRecord>();
+  flowFile->removeAttribute(core::SpecialFlowAttribute::FILENAME);
+  return flowFile;
+}
+
 TEST_CASE("Payload Serializer", "[testPayload]") {
   std::string content = "flowFileContent";
-  auto contentStream = std::make_shared<minifi::io::BaseStream>();
+  auto contentStream = std::make_shared<minifi::io::BufferStream>();
   contentStream->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(content.data())), content.length());
 
-  auto result = std::make_shared<minifi::io::BaseStream>();
+  auto result = std::make_shared<minifi::io::BufferStream>();
 
-  auto flowFile = std::make_shared<minifi::FlowFileRecord>(nullptr, nullptr);
+  auto flowFile = createEmptyFlowFile();
   flowFile->setSize(content.size());
   flowFile->addAttribute("first", "one");
   flowFile->addAttribute("second", "two");
@@ -42,19 +48,19 @@ TEST_CASE("Payload Serializer", "[testPayload]") {
   });
   serializer.serialize(flowFile, result);
 
-  std::string serialized{reinterpret_cast<const char*>(result->getBuffer()), result->getSize()};
+  std::string serialized{reinterpret_cast<const char*>(result->getBuffer()), result->size()};
 
   REQUIRE(serialized == content);
 }
 
 TEST_CASE("FFv3 Serializer", "[testFFv3]") {
   std::string content = "flowFileContent";
-  auto contentStream = std::make_shared<minifi::io::BaseStream>();
+  auto contentStream = std::make_shared<minifi::io::BufferStream>();
   contentStream->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(content.data())), content.length());
 
-  auto result = std::make_shared<minifi::io::BaseStream>();
+  auto result = std::make_shared<minifi::io::BufferStream>();
 
-  auto flowFile = std::make_shared<minifi::FlowFileRecord>(nullptr, nullptr);
+  auto flowFile = createEmptyFlowFile();
   flowFile->setSize(content.size());
   flowFile->addAttribute("first", "one");
   flowFile->addAttribute("second", "two");
@@ -64,7 +70,7 @@ TEST_CASE("FFv3 Serializer", "[testFFv3]") {
   });
   serializer.serialize(flowFile, result);
 
-  std::string serialized{reinterpret_cast<const char*>(result->getBuffer()), result->getSize()};
+  std::string serialized{reinterpret_cast<const char*>(result->getBuffer()), result->size()};
 
   std::string expected = "NiFiFF3";
   expected += std::string("\x00\x02", 2);  // number of attributes

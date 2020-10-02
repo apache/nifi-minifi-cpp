@@ -125,10 +125,10 @@ public:
 // Archive Class
 class ArchiveMerge {
 public:
- class ArchiveWriter : public io::BaseStream{
+ class ArchiveWriter : public io::OutputStream {
   public:
    ArchiveWriter(struct archive *arch, struct archive_entry *entry) : arch_(arch), entry_(entry) {}
-   int writeData(uint8_t* data, int size) override {
+   int write(const uint8_t* data, int size) override {
      if (!header_emitted_) {
        if (archive_write_header(arch_, entry_) != ARCHIVE_OK) {
          return -1;
@@ -246,8 +246,8 @@ public:
 class TarMerge: public ArchiveMerge, public MergeBin {
 public:
   static constexpr const char *mimeType = "application/tar";
-  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
-    std::string &demarcator, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) override;
+  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
+             FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &merge_flow) override;
   std::string getMergedContentType() override {
     return mimeType;
   }
@@ -257,8 +257,8 @@ public:
 class ZipMerge: public ArchiveMerge, public MergeBin {
 public:
   static constexpr const char *mimeType = "application/zip";
-  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
-    std::string &demarcator, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) override;
+  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
+             FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &merge_flow) override;
   std::string getMergedContentType() override {
     return mimeType;
   }

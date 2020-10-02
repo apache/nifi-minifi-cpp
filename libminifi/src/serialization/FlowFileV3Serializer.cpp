@@ -26,7 +26,7 @@ namespace minifi {
 
 constexpr uint8_t FlowFileV3Serializer::MAGIC_HEADER[];
 
-int FlowFileV3Serializer::writeLength(std::size_t length, const std::shared_ptr<io::BaseStream>& out) {
+int FlowFileV3Serializer::writeLength(std::size_t length, const std::shared_ptr<io::OutputStream>& out) {
   if (length < MAX_2_BYTE_VALUE) {
     return out->write(static_cast<uint16_t>(length));
   }
@@ -45,7 +45,7 @@ int FlowFileV3Serializer::writeLength(std::size_t length, const std::shared_ptr<
   return sum;
 }
 
-int FlowFileV3Serializer::writeString(const std::string &str, const std::shared_ptr<io::BaseStream> &out) {
+int FlowFileV3Serializer::writeString(const std::string &str, const std::shared_ptr<io::OutputStream> &out) {
   int sum = 0;
   int ret;
   ret = writeLength(str.length(), out);
@@ -64,7 +64,7 @@ int FlowFileV3Serializer::writeString(const std::string &str, const std::shared_
   return sum;
 }
 
-int FlowFileV3Serializer::serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::BaseStream>& out) {
+int FlowFileV3Serializer::serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) {
   int sum = 0;
   int ret;
   ret = out->write(const_cast<uint8_t*>(MAGIC_HEADER), sizeof(MAGIC_HEADER));

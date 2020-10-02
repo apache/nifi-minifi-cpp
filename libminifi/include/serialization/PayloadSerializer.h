@@ -19,6 +19,7 @@
 #pragma once
 
 #include <memory>
+#include "io/OutputStream.h"
 #include "FlowFileSerializer.h"
 
 namespace org {
@@ -30,7 +31,7 @@ class PayloadSerializer : public FlowFileSerializer {
  public:
   using FlowFileSerializer::FlowFileSerializer;
 
-  int serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::BaseStream>& out) override;
+  int serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) override;
 };
 
 } /* namespace minifi */

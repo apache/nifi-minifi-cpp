@@ -877,11 +877,13 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
   std::vector<std::shared_ptr<core::FlowFile>> files;
 
   for (const auto& content : std::vector<std::string>{"first ff content", "second ff content", "some other data"}) {
-    minifi::io::DataStream contentStream{reinterpret_cast<const uint8_t*>(content.data()), static_cast<int>(content.length())};
+    minifi::io::BufferStream contentStream{reinterpret_cast<const uint8_t*>(content.data()), static_cast<unsigned>(content.length())};
     auto ff = session.create();
-    session.importFrom(contentStream, ff);
+    ff->removeAttribute(core::SpecialFlowAttribute::FILENAME);
     ff->addAttribute("one", "banana");
     ff->addAttribute("two", "seven");
+    session.importFrom(contentStream, ff);
+    session.flushContent();
     files.push_back(ff);
     input->put(ff);
   }
@@ -905,7 +907,7 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
     usedSerializer = &ffV3Serializer;
   }
 
-  auto result = std::make_shared<minifi::io::BaseStream>();
+  auto result = std::make_shared<minifi::io::BufferStream>();
   writeString(header, result);
   bool first = true;
   for (const auto& ff : files) {
@@ -917,7 +919,7 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
   }
   writeString(footer, result);
 
-  std::string expected{reinterpret_cast<const char*>(result->getBuffer()), result->getSize()};
+  std::string expected{reinterpret_cast<const char*>(result->getBuffer()), result->size()};
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
   processor->onSchedule(context, factory);

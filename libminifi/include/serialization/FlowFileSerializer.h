@@ -28,7 +28,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-class BaseStream;
+class OutputStream;
 
 } /* namespace io */
 
@@ -46,7 +46,7 @@ class FlowFileSerializer {
 
   explicit FlowFileSerializer(FlowFileReader reader) : reader_(std::move(reader)) {}
 
-  virtual int serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::BaseStream>& out) = 0;
+  virtual int serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) = 0;
 
   virtual ~FlowFileSerializer() = default;
 

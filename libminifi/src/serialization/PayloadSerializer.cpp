@@ -24,7 +24,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-int PayloadSerializer::serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::BaseStream>& out) {
+int PayloadSerializer::serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) {
   InputStreamPipe pipe(out);
   return reader_(flowFile, &pipe);
 }
