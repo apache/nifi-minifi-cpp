@@ -219,7 +219,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
 }
 
 std::string CompressContent::to_mimeType(CompressionFormat format) {
-  switch (format.value) {
+  switch (format.value()) {
     case CompressionFormat::GZIP: return "application/gzip";
     case CompressionFormat::BZIP2: return "application/bzip2";
     case CompressionFormat::LZMA: return "application/x-lzma";

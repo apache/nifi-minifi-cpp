@@ -70,11 +70,14 @@ namespace utils {
   x = Base::x
 
 #define SMART_ENUM_BODY(Clazz, ...) \
-    constexpr Clazz(Type value = static_cast<Type>(-1)) : value{value} {} \
-    Type value; \
+    constexpr Clazz(Type value = static_cast<Type>(-1)) : value_{value} {} \
+   private: \
+    Type value_; \
+   public: \
+    Type value() const { \
+      return value_; \
+    } \
     struct detail : Base::detail { \
-      friend struct Clazz; \
-     protected: \
       static const char* toStringImpl(Type a, const char* DerivedName) { \
         static constexpr const char* values[]{ \
           FOR_EACH(SECOND, COMMA, (__VA_ARGS__)) \
@@ -91,25 +94,25 @@ namespace utils {
       return detail::toStringImpl(a, #Clazz); \
     } \
     const char* toString() const { \
-      return detail::toStringImpl(value, #Clazz); \
+      return detail::toStringImpl(value_, #Clazz); \
     } \
     bool operator==(Type val) const { \
-      return value == val; \
+      return value_ == val; \
     } \
     bool operator!=(Type val) const { \
-      return value != val; \
+      return value_ != val; \
     } \
     bool operator==(const Clazz& other) const { \
-      return value == other.value; \
+      return value_ == other.value_; \
     } \
     bool operator!=(const Clazz& other) const { \
-      return value != other.value; \
+      return value_ != other.value_; \
     } \
     bool operator<(const Clazz& other) const { \
-      return value < other.value;\
+      return value_ < other.value_;\
     } \
     explicit operator bool() const { \
-      int idx = static_cast<int>(value); \
+      int idx = static_cast<int>(value_); \
       return 0 <= idx && idx < length; \
     } \
     static Clazz parse(const char* str) { \
@@ -121,8 +124,8 @@ namespace utils {
     } \
     template<typename T, typename = typename std::enable_if<std::is_base_of<typename T::detail, detail>::value>::type> \
     T cast() const { \
-      if (0 <= value && value < T::length) { \
-        return static_cast<typename T::Type>(value); \
+      if (0 <= value_ && value_ < T::length) { \
+        return static_cast<typename T::Type>(value_); \
       } \
       return {}; \
     }
@@ -151,7 +154,6 @@ struct EnumBase {
   enum Type {};
   static constexpr int length = 0;
   struct detail {
-   protected:
     static const char* toStringImpl(Type a, const char* DerivedName) {
       throw std::runtime_error(std::string("Cannot stringify unknown instance in enum \"") + DerivedName + "\" : \""
                                + std::to_string(static_cast<int>(a)) + "\"");
