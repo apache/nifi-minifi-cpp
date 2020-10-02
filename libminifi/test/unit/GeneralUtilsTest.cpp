@@ -32,13 +32,14 @@ TEST_CASE("GeneralUtils::make_unique", "[make_unique]") {
   REQUIRE("test string" == *pstr);
 }
 
+// intdiv_ceil
 static_assert(0 == utils::intdiv_ceil(0, 1), "");
 static_assert(0 == utils::intdiv_ceil(0, 2), "");
 static_assert(1 == utils::intdiv_ceil(1, 2), "");
 static_assert(1 == utils::intdiv_ceil(1, 3), "");
 static_assert(1 == utils::intdiv_ceil(3, 3), "");
 static_assert(2 == utils::intdiv_ceil(4, 3), "");
-static_assert(2 == utils::intdiv_ceil(4, 3), "");
+static_assert(2 == utils::intdiv_ceil(5, 3), "");
 static_assert(0 == utils::intdiv_ceil(-1, 3), "");
 static_assert(-1 == utils::intdiv_ceil(-3, 3), "");
 static_assert(-1 == utils::intdiv_ceil(-4, 3), "");
@@ -46,6 +47,13 @@ static_assert(2 == utils::intdiv_ceil(-4, -3), "");
 static_assert(2 == utils::intdiv_ceil(-5, -3), "");
 static_assert(0 == utils::intdiv_ceil(1, -3), "");
 static_assert(-1 == utils::intdiv_ceil(5, -3), "");
+static_assert(3 == utils::intdiv_ceil(6, 2), "");
+static_assert(-3 == utils::intdiv_ceil(-6, 2), "");
+static_assert(-3 == utils::intdiv_ceil(6, -2), "");
+static_assert(3 == utils::intdiv_ceil(-6, -2), "");
+static_assert(0 == utils::intdiv_ceil(0, -10), "");
+// static_assert(0 == utils::intdiv_ceil(1, 0), "");  // shouldn't compile
+
 
 TEST_CASE("GeneralUtils::exchange", "[exchange]") {
   int a = 1;
