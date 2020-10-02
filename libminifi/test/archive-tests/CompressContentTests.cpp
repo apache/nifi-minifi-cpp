@@ -603,7 +603,7 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
 
   // Configure CompressContent processor for compression
   plan->setProperty(compress_content, "Mode", MODE_COMPRESS);
-  plan->setProperty(compress_content, "Compression CompressionFormat", toString(CompressionFormat::GZIP));
+  plan->setProperty(compress_content, "Compression Format", toString(CompressionFormat::GZIP));
   plan->setProperty(compress_content, "Update Filename", "true");
   plan->setProperty(compress_content, "Encapsulate in TAR", "false");
 
@@ -612,7 +612,7 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
 
   // Configure CompressContent processor for decompression
   plan->setProperty(decompress_content, "Mode", MODE_DECOMPRESS);
-  plan->setProperty(decompress_content, "Compression CompressionFormat", toString(CompressionFormat::GZIP));
+  plan->setProperty(decompress_content, "Compression Format", toString(CompressionFormat::GZIP));
   plan->setProperty(decompress_content, "Update Filename", "true");
   plan->setProperty(decompress_content, "Encapsulate in TAR", "false");
 

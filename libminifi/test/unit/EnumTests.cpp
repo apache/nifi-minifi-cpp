@@ -28,12 +28,12 @@ struct make_void {
   using type = void;
 };
 
-#define CHECK_COMPILE(name, enum, expr, result) \
+#define CHECK_COMPILE(name, clazz, expr, result) \
   template<typename, typename = void> \
   struct does_compile ## name : std::false_type {};\
   template<typename T> \
-  struct does_compile ## name<T, typename make_void<decltype(T::SPREAD expr)>::type> : std::true_type {}; \
-  static_assert(does_compile ## name<enum>::value == result, "");
+  struct does_compile ## name<T, typename make_void<decltype(std::declval<T>().template expr)>::type> : std::true_type {}; \
+  static_assert(does_compile ## name<clazz>::value == result, "");
 
 SMART_ENUM(A,
   (_0, "zero"),
@@ -56,58 +56,44 @@ SMART_ENUM(Unrelated,
 // static tests
 namespace test {
 
-CHECK_COMPILE(_2, B, (template cast<A, B::_2>()), false)
-CHECK_COMPILE(_3, B, (template fromInt<3>()), false)
-CHECK_COMPILE(_4, C, (template fromInt<4>()), false)
-CHECK_COMPILE(_5, C, (template cast<A, C::_2>()), false)
-CHECK_COMPILE(_6, C, (template cast<B, C::_3>()), false)
+CHECK_COMPILE(_1, B, cast<A>(), true)
+CHECK_COMPILE(_2, C, cast<A>(), true)
+CHECK_COMPILE(_3, C, cast<B>(), true)
 
-// casting to unrelated
-CHECK_COMPILE(_7, B, (template cast<Unrelated, B::_0>()), false)
-CHECK_COMPILE(_8, B, (template cast<Unrelated>(B::_0)), false)
-
-// check for false negatives
-CHECK_COMPILE(_1, A, (template fromInt<0>()), true)
+// casting to unrelated fails
+CHECK_COMPILE(_7, B, cast<Unrelated>(), false)
+CHECK_COMPILE(_8, B, cast<Unrelated>(), false)
 
 }  // namespace test
 
-TEST_CASE("Enum fromInt static") {
-  REQUIRE(A::fromInt<0>() == A::_0);
-  REQUIRE(B::fromInt<2>() == B::_2);
-  REQUIRE(C::fromInt<3>() == C::_3);
-}
+TEST_CASE("Enum checks") {
+  REQUIRE(!A{});
+  REQUIRE(!B{});
+  REQUIRE(A{A::Type(0)});
+  REQUIRE(B{B::Type(1)});
 
-TEST_CASE("Enum cast static") {
-  REQUIRE((B::cast<A, B::_0>() == A::_0));
-  REQUIRE((C::cast<A, C::_0>() == A::_0));
-  REQUIRE((C::cast<B, C::_0>() == B::_0));
-  REQUIRE((C::cast<B, C::_2>() == B::_2));
-}
-
-TEST_CASE("Enum runtime checks") {
-  REQUIRE_THROWS(A::parse("not_any"));
+  REQUIRE(!A::parse("not_any"));
   REQUIRE(A::parse("zero") == A::_0);
   REQUIRE(B::parse("zero") == B::_0);
   REQUIRE(C::parse("one") == C::_1);
   REQUIRE(C::parse("three") == C::_3);
-  REQUIRE_THROWS(C::parse("nada"));
+  REQUIRE(!C::parse("nada"));
 
+  REQUIRE(A{A::_0}.toString() == std::string{"zero"});
   REQUIRE(toString(A::_0) == std::string{"zero"});
+  REQUIRE(B{B::_0}.toString() == std::string{"zero"});
   REQUIRE(toString(B::_0) == std::string{"zero"});
   REQUIRE(toString(B::_2) == std::string{"two"});
   REQUIRE(toString(C::_1) == std::string{"one"});
   REQUIRE(toString(C::_3) == std::string{"three"});
   REQUIRE_THROWS(toString(A::Type(55)));
   REQUIRE_THROWS(toString(C::Type(-1)));
+  REQUIRE_THROWS(C{}.toString());
 
-  REQUIRE(A::fromInt(0) == A::_0);
-  REQUIRE(B::fromInt(0) == B::_0);
-  REQUIRE(B::fromInt(2) == B::_2);
-
-  REQUIRE(B::cast<A>(B::_0) == A::_0);
-  REQUIRE(C::cast<A>(C::_1) == A::_1);
-  REQUIRE(C::cast<B>(C::_2) == B::_2);
-  REQUIRE_THROWS(C::cast<B>(C::_3));
-  REQUIRE_THROWS(C::cast<A>(C::_3));
-  REQUIRE_THROWS(B::cast<A>(B::_2));
+  REQUIRE(B{B::_0}.cast<A>() == A{A::_0});
+  REQUIRE(C{C::_1}.cast<A>() == A::_1);
+  REQUIRE(C{C::_2}.cast<B>() == B::_2);
+  REQUIRE(!C{C::_3}.cast<B>());
+  REQUIRE(!C{C::_3}.cast<A>());
+  REQUIRE(!B{B::_2}.cast<A>());
 }

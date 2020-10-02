@@ -69,77 +69,94 @@ namespace utils {
 #define INCLUDE_BASE_FIELD(x) \
   x = Base::x
 
-#define SMART_ENUM_BODY(name, ...) \
+#define SMART_ENUM_BODY(Clazz, ...) \
+    constexpr Clazz(Type value = static_cast<Type>(-1)) : value{value} {} \
+    Type value; \
+    struct detail : Base::detail { \
+      friend struct Clazz; \
+     protected: \
+      static const char* toStringImpl(Type a, const char* DerivedName) { \
+        static constexpr const char* values[]{ \
+          FOR_EACH(SECOND, COMMA, (__VA_ARGS__)) \
+        }; \
+        int index = static_cast<int>(a); \
+        if (Base::length <= index && index < length) { \
+          return values[index - Base::length]; \
+        } \
+        return Base::detail::toStringImpl(static_cast<Base::Type>(a), DerivedName); \
+      } \
+    }; \
     static constexpr int length = Base::length + COUNT(__VA_ARGS__); \
     friend const char* toString(Type a) { \
-      return toStringImpl(a, #name); \
+      return detail::toStringImpl(a, #Clazz); \
     } \
-    static Type parse(const char* str) { \
+    const char* toString() const { \
+      return detail::toStringImpl(value, #Clazz); \
+    } \
+    bool operator==(Type val) const { \
+      return value == val; \
+    } \
+    bool operator!=(Type val) const { \
+      return value != val; \
+    } \
+    bool operator==(const Clazz& other) const { \
+      return value == other.value; \
+    } \
+    bool operator!=(const Clazz& other) const { \
+      return value != other.value; \
+    } \
+    bool operator<(const Clazz& other) const { \
+      return value < other.value;\
+    } \
+    explicit operator bool() const { \
+      int idx = static_cast<int>(value); \
+      return 0 <= idx && idx < length; \
+    } \
+    static Clazz parse(const char* str) { \
       for (int idx = 0; idx < length; ++idx) { \
-        if (std::strcmp(str, toString(static_cast<Type>(idx))) == 0) \
+        if (std::strcmp(str, detail::toStringImpl(static_cast<Type>(idx), #Clazz)) == 0) \
           return static_cast<Type>(idx); \
       } \
-      throw std::runtime_error(std::string("Unknown instance in enum \"" #name "\" : \"") + str + "\""); \
+      return {}; \
     } \
-    template<typename T, Type value, typename = typename std::enable_if<std::is_base_of<T, name>::value>::type, typename = decltype(T::template fromInt<static_cast<int>(value)>())> \
-    static typename T::Type cast() { \
-      return T::template fromInt<static_cast<int>(value)>(); \
-    } \
-    template<typename T, typename = typename std::enable_if<std::is_base_of<T, name>::value>::type> \
-    static typename T::Type cast(Type value) { \
-      return T::fromInt(static_cast<int>(value)); \
-    } \
-    template<int x, typename = typename std::enable_if<(0 <= x && x < length)>::type> \
-    static Type fromInt() { \
-      return static_cast<Type>(x); \
-    } \
-    static Type fromInt(int x) { \
-      if (0 <= x && x < length) { \
-        return static_cast<Type>(x); \
+    template<typename T, typename = typename std::enable_if<std::is_base_of<typename T::detail, detail>::value>::type> \
+    T cast() const { \
+      if (0 <= value && value < T::length) { \
+        return static_cast<typename T::Type>(value); \
       } \
-      throw std::out_of_range("Cannot convert " + std::to_string(x) + " to enum \"" + #name + "\""); \
-    } \
-    \
-   protected: \
-    static const char* toStringImpl(Type a, const char* DerivedName) { \
-      static constexpr const char* values[]{ \
-        FOR_EACH(SECOND, COMMA, (__VA_ARGS__)) \
-      }; \
-      int index = static_cast<int>(a); \
-      if (Base::length <= index && index < length) { \
-        return values[index - Base::length]; \
-      } \
-      return Base::toStringImpl(static_cast<Base::Type>(a), DerivedName); \
+      return {}; \
     }
 
-#define SMART_ENUM(name, ...) \
-  struct name : ::org::apache::nifi::minifi::utils::EnumBase { \
+#define SMART_ENUM(Clazz, ...) \
+  struct Clazz { \
     using Base = ::org::apache::nifi::minifi::utils::EnumBase; \
     enum Type { \
       FOR_EACH(FIRST, COMMA, (__VA_ARGS__)) \
     }; \
-    SMART_ENUM_BODY(name, __VA_ARGS__) \
+    SMART_ENUM_BODY(Clazz, __VA_ARGS__) \
   };
 
-#define SMART_ENUM_EXTEND(name, base, base_fields, ...) \
-  struct name : public base { \
+#define SMART_ENUM_EXTEND(Clazz, base, base_fields, ...) \
+  struct Clazz { \
     using Base = base; \
     enum Type { \
       FOR_EACH(INCLUDE_BASE_FIELD, COMMA, base_fields), \
       FOR_EACH(FIRST, COMMA, (__VA_ARGS__)) \
     }; \
     static_assert((COUNT base_fields) == Base::length, "Must enumerate all base instance values"); \
-    SMART_ENUM_BODY(name, __VA_ARGS__) \
+    SMART_ENUM_BODY(Clazz, __VA_ARGS__) \
   };
 
 struct EnumBase {
   enum Type {};
   static constexpr int length = 0;
- protected:
-  static const char* toStringImpl(Type a, const char* DerivedName) {
-    throw std::runtime_error(std::string("Cannot stringify unknown instance in enum \"") + DerivedName + "\" : \""
-          + std::to_string(static_cast<int>(a)) + "\"");
-  }
+  struct detail {
+   protected:
+    static const char* toStringImpl(Type a, const char* DerivedName) {
+      throw std::runtime_error(std::string("Cannot stringify unknown instance in enum \"") + DerivedName + "\" : \""
+                               + std::to_string(static_cast<int>(a)) + "\"");
+    }
+  };
 };
 
 }  // namespace utils
