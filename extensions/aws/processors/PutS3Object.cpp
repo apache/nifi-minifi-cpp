@@ -223,8 +223,10 @@ minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredential
   if (context->getProperty(AWSCredentialsProviderService.getName(), service_name) && !service_name.empty()) {
     std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
     if (nullptr != service) {
-      auto aws_credentials_service = std::static_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(service);
-      return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(aws_credentials_service->getAWSCredentials());
+      auto aws_credentials_service = std::dynamic_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(service);
+      if (aws_credentials_service) {
+        return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(aws_credentials_service->getAWSCredentials());
+      }
     }
   }
   return minifi::utils::nullopt;
@@ -368,7 +370,7 @@ std::string PutS3Object::parseAccessControlList(const std::string &comma_separat
     }
 
     auto trimmed_user = minifi::utils::StringUtils::trim(user);
-    static const std::regex email_pattern("(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+");
+    static const std::regex email_pattern("\\w+@\\w+\\.\\w+");
     if (std::regex_match(trimmed_user, email_pattern)) {
       result_list += "emailAddress=\"" + trimmed_user + "\"";
     } else {

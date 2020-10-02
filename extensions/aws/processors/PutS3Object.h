@@ -126,9 +126,7 @@ class PutS3Object : public core::Processor {
       , s3_wrapper_(s3_wrapper) {
     }
 
-    ~ReadCallback() = default;
-
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
       if (flow_size_ > MAX_SIZE) {
         return -1;
       }
