@@ -120,7 +120,7 @@ void EncryptConfig::writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes
   std::string key_encoded = utils::StringUtils::to_hex(utils::crypto::bytesToString(encryption_key));
   encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
 
-  if (bootstrap_file.getValue(ENCRYPTION_KEY_PROPERTY_NAME)) {
+  if (bootstrap_file.hasValue(ENCRYPTION_KEY_PROPERTY_NAME)) {
     bootstrap_file.update(ENCRYPTION_KEY_PROPERTY_NAME, key_encoded);
   } else {
     bootstrap_file.append(ENCRYPTION_KEY_PROPERTY_NAME, key_encoded);

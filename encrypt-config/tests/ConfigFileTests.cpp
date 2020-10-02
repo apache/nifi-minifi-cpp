@@ -106,6 +106,14 @@ TEST_CASE("ConfigFile can parse a simple config file", "[encrypt-config][constru
   REQUIRE(test_file.size() == 101);
 }
 
+TEST_CASE("ConfigFile can test whether a key is present", "[encrypt-config][hasValue]") {
+  ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
+  REQUIRE(test_file.hasValue("nifi.version"));
+  REQUIRE(test_file.hasValue("nifi.c2.flow.id"));  // present but blank
+  REQUIRE(!test_file.hasValue("nifi.remote.input.secure"));  // commented out
+  REQUIRE(!test_file.hasValue("nifi.this.property.does.not.exist"));
+}
+
 TEST_CASE("ConfigFile can read empty properties correctly", "[encrypt-config][constructor]") {
   ConfigFile test_file{std::ifstream{"resources/with-additional-sensitive-props.minifi.properties"}};
   REQUIRE(test_file.size() == 103);

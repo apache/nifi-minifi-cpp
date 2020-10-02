@@ -54,6 +54,7 @@ class ConfigFile {
   explicit ConfigFile(std::istream& input_stream);
   explicit ConfigFile(std::istream&& input_stream) : ConfigFile{input_stream} {}
 
+  bool hasValue(const std::string& key) const;
   utils::optional<std::string> getValue(const std::string& key) const;
   void update(const std::string& key, const std::string& value);
   void insertAfter(const std::string& after_key, const std::string& key, const std::string& value);

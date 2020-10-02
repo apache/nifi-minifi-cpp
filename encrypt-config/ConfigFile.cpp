@@ -82,6 +82,11 @@ ConfigFile::Lines::iterator ConfigFile::findKey(const std::string& key) {
   });
 }
 
+bool ConfigFile::hasValue(const std::string& key) const {
+  const auto it = findKey(key);
+  return (it != config_lines_.end());
+}
+
 utils::optional<std::string> ConfigFile::getValue(const std::string& key) const {
   const auto it = findKey(key);
   if (it != config_lines_.end()) {
@@ -137,7 +142,7 @@ std::vector<std::string> ConfigFile::getSensitiveProperties() const {
     sensitive_properties = mergeProperties(sensitive_properties, additional_sensitive_properties);
   }
 
-  const auto not_found = [this](const std::string& property_name) { return !getValue(property_name); };
+  const auto not_found = [this](const std::string& property_name) { return !hasValue(property_name); };
   const auto new_end = std::remove_if(sensitive_properties.begin(), sensitive_properties.end(), not_found);
   sensitive_properties.erase(new_end, sensitive_properties.end());
 
