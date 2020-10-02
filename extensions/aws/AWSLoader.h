@@ -50,6 +50,7 @@ class AWSObjectFactory : public core::ObjectFactory {
   std::vector<std::string> getClassNames() override {
     std::vector<std::string> class_names;
     class_names.push_back("AWSCredentialsService");
+    class_names.push_back("PutS3Object");
     return class_names;
   }
 
