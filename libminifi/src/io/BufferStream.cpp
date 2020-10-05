@@ -17,7 +17,9 @@
  */
 #include <cstdint>
 #include <algorithm>
+#include <cstring>
 #include "io/BufferStream.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -26,8 +28,9 @@ namespace io {
 
 int BufferStream::write(const uint8_t *value, int size) {
   gsl_Expects(size >= 0);
-  buffer_.reserve(buffer_.size() + size);
-  std::copy(value, value + size, std::back_inserter(buffer_));
+  size_t originalSize = buffer_.size();
+  buffer_.resize(originalSize + size);
+  std::memcpy(buffer_.data() + originalSize, value, size);
   return size;
 }
 
