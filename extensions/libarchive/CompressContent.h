@@ -432,7 +432,7 @@ public:
   virtual void initialize(void);
 
 private:
-  static std::string to_mimeType(CompressionFormat format);
+  static std::string toMimeType(CompressionFormat format);
 
   void processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<core::ProcessSession>& session);
 

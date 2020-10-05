@@ -330,6 +330,8 @@ class TimePeriodValidator : public PropertyValidator {
 // STATIC DEFINITIONS
 
 class StandardValidators {
+  StandardValidators();
+
  public:
   static const StandardValidators& get() {
     static StandardValidators init;
@@ -355,8 +357,6 @@ class StandardValidators {
       return init.VALID_VALIDATOR;
     }
   }
-
-  StandardValidators();
 
  public:
   gsl::not_null<std::shared_ptr<PropertyValidator>> INVALID;

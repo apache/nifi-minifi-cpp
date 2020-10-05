@@ -155,7 +155,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   } else {
     compressFormat = compressFormat_.cast<CompressionFormat>();
   }
-  std::string mimeType = to_mimeType(compressFormat);
+  std::string mimeType = toMimeType(compressFormat);
 
   // Validate
   if (!encapsulateInTar_ && compressFormat != CompressionFormat::GZIP) {
@@ -218,7 +218,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   }
 }
 
-std::string CompressContent::to_mimeType(CompressionFormat format) {
+std::string CompressContent::toMimeType(CompressionFormat format) {
   switch (format.value()) {
     case CompressionFormat::GZIP: return "application/gzip";
     case CompressionFormat::BZIP2: return "application/bzip2";
