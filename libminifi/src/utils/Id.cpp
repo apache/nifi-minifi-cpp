@@ -185,7 +185,7 @@ uint64_t IdGenerator::getRandomDeviceSegment(int numBits) const {
 void IdGenerator::initialize(const std::shared_ptr<Properties>& properties) {
   std::string implementation_str;
   implementation_ = UUID_TIME_IMPL;
-  if (properties->get("uid.implementation", implementation_str)) {
+  if (properties->getString("uid.implementation", implementation_str)) {
     std::transform(implementation_str.begin(), implementation_str.end(), implementation_str.begin(), ::tolower);
     if (UUID_RANDOM_STR == implementation_str || UUID_WINDOWS_RANDOM_STR == implementation_str) {
       logging::LOG_DEBUG(logger_) << "Using uuid_generate_random for uids.";
@@ -202,7 +202,7 @@ void IdGenerator::initialize(const std::shared_ptr<Properties>& properties) {
       std::string device_segment;
       uint64_t prefix = timestamp;
       if (device_bits > 0) {
-        if (properties->get("uid.minifi.device.segment", device_segment)) {
+        if (properties->getString("uid.minifi.device.segment", device_segment)) {
           prefix = getDeviceSegmentFromString(device_segment, device_bits);
         } else {
           logging::LOG_WARN(logger_) << "uid.minifi.device.segment not specified, generating random device segment";

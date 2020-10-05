@@ -86,7 +86,7 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   std::lock_guard<std::mutex> lock(mutex);
   root_namespace_ = initialize_namespaces(logger_properties);
   std::string spdlog_pattern;
-  if (!logger_properties->get("spdlog.pattern", spdlog_pattern)) {
+  if (!logger_properties->getString("spdlog.pattern", spdlog_pattern)) {
     spdlog_pattern = spdlog_default_pattern;
   }
 
@@ -94,7 +94,7 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
    * There is no need to shorten names per spdlog sink as this is a per log instance.
    */
   std::string shorten_names_str;
-  if (logger_properties->get("spdlog.shorten_names", shorten_names_str)) {
+  if (logger_properties->getString("spdlog.shorten_names", shorten_names_str)) {
     utils::StringUtils::StringToBool(shorten_names_str, shorten_names_);
   }
 
@@ -137,7 +137,7 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
   for (auto const & appender_key : logger_properties->get_keys_of_type(appender_type)) {
     std::string appender_name = appender_key.substr(appender_type.length() + 1);
     std::string appender_type;
-    if (!logger_properties->get(appender_key, appender_type)) {
+    if (!logger_properties->getString(appender_key, appender_type)) {
       appender_type = "stderr";
     }
     std::transform(appender_type.begin(), appender_type.end(), appender_type.begin(), ::tolower);
@@ -146,11 +146,11 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       sink_map[appender_name] = std::make_shared<spdlog::sinks::null_sink_st>();
     } else if ("rollingappender" == appender_type || "rolling appender" == appender_type || "rolling" == appender_type) {
       std::string file_name;
-      if (!logger_properties->get(appender_key + ".file_name", file_name)) {
+      if (!logger_properties->getString(appender_key + ".file_name", file_name)) {
         file_name = "minifi-app.log";
       }
       std::string directory;
-      if (!logger_properties->get(appender_key + ".directory", directory)) {
+      if (!logger_properties->getString(appender_key + ".directory", directory)) {
         // The below part assumes logger_properties->getHome() is existing
         // Cause minifiHome must be set at MiNiFiMain.cpp?
         directory = logger_properties->getHome() + utils::file::FileUtils::get_separator() + "logs";
@@ -164,7 +164,7 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
 
       int max_files = 3;
       std::string max_files_str = "";
-      if (logger_properties->get(appender_key + ".max_files", max_files_str)) {
+      if (logger_properties->getString(appender_key + ".max_files", max_files_str)) {
         try {
           max_files = std::stoi(max_files_str);
         } catch (const std::invalid_argument &) {
@@ -174,7 +174,7 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
 
       int max_file_size = 5 * 1024 * 1024;
       std::string max_file_size_str = "";
-      if (logger_properties->get(appender_key + ".max_file_size", max_file_size_str)) {
+      if (logger_properties->getString(appender_key + ".max_file_size", max_file_size_str)) {
         try {
           max_file_size = std::stoi(max_file_size_str);
         } catch (const std::invalid_argument &) {
@@ -197,7 +197,7 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
   std::string logger_type = "logger";
   for (auto const & logger_key : logger_properties->get_keys_of_type(logger_type)) {
     std::string logger_def;
-    if (!logger_properties->get(logger_key, logger_def)) {
+    if (!logger_properties->getString(logger_key, logger_def)) {
       continue;
     }
     bool first = true;

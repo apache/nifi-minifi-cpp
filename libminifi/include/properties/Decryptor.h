@@ -26,14 +26,14 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-class Configure;
-
 class Decryptor {
  public:
   explicit Decryptor(const utils::crypto::Bytes& encryption_key);
+
   static bool isValidEncryptionMarker(const utils::optional<std::string>& encryption_marker);
   std::string decrypt(const std::string& encrypted_text) const;
-  void decryptSensitiveProperties(Configure& configure) const;
+
+  static utils::optional<Decryptor> create(const std::string& minifi_home);
 
  private:
   const utils::crypto::Bytes encryption_key_;

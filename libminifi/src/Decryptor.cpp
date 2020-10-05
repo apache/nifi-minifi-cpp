@@ -17,40 +17,35 @@
  */
 #include "properties/Decryptor.h"
 
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "properties/Configure.h"
+#include "properties/Properties.h"
+#include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
+
+namespace {
+
+#ifdef WIN32
+constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "\\conf\\bootstrap.conf";
+#else
+constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "./conf/bootstrap.conf";
+#endif  // WIN32
+
+constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
+
+}  // namespace
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
-void Decryptor::decryptSensitiveProperties(Configure& configure) const {
-  std::shared_ptr<minifi::core::logging::Logger> logger = logging::LoggerFactory<Decryptor>::getLogger();
-  logger->log_info("Decrypting sensitive properties...");
-  int num_properties_decrypted = 0;
-
-  for (const auto& property_key : configure.getConfiguredKeys()) {
-    const std::string property_value = configure.get(property_key).value();
-
-    utils::optional<std::string> encryption_marker = configure.get(property_key + ".protected");
-    if (Decryptor::isValidEncryptionMarker(encryption_marker)) {
-      std::string decrypted_property_value;
-      try {
-        decrypted_property_value = decrypt(property_value);
-      } catch (const std::exception& ex) {
-        logger->log_error("Could not decrypt property %s; error: %s", property_key, ex.what());
-        continue;
-      }
-      configure.set(property_key, decrypted_property_value);
-      logger->log_info("Decrypted property: %s", property_key);
-      ++num_properties_decrypted;
-    }
-  }
-
-  logger->log_info("Finished decrypting %d sensitive properties.", num_properties_decrypted);
+utils::optional<minifi::Decryptor> Decryptor::create(const std::string& minifi_home) {
+  minifi::Properties bootstrap_conf;
+  bootstrap_conf.setHome(minifi_home);
+  bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
+  return bootstrap_conf.getString(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME)
+      | utils::map([](const std::string& encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); })
+      | utils::map([](const std::string& encryption_key) { return utils::crypto::stringToBytes(encryption_key); })
+      | utils::map([](const utils::crypto::Bytes& encryption_key_bytes) { return minifi::Decryptor{encryption_key_bytes}; });
 }
 
 } /* namespace minifi */

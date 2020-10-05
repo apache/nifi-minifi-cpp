@@ -85,21 +85,27 @@ TEST_CASE("Decryptor will throw if the value is incorrect", "[decrypt]") {
 }
 
 TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProperties]") {
-  minifi::Configure configuration;
+  utils::crypto::Bytes encryption_key = utils::crypto::stringToBytes(utils::StringUtils::from_hex(
+      "5506c28d0fe265299e294a4c766b723a48986764953e93d38b3c627176fd10ed"));
+  minifi::Decryptor decryptor{encryption_key};
+
+  minifi::Configure configuration{decryptor};
   configuration.setHome("resources");
   configuration.loadConfigureFile("encrypted.minifi.properties");
   REQUIRE(configuration.getConfiguredKeys().size() > 0);
 
-  utils::crypto::Bytes encryption_key = utils::crypto::stringToBytes(utils::StringUtils::from_hex(
-      "5506c28d0fe265299e294a4c766b723a48986764953e93d38b3c627176fd10ed"));
-  minifi::Decryptor decryptor{encryption_key};
-  decryptor.decryptSensitiveProperties(configuration);
-
-  utils::optional<std::string> passphrase = configuration.get("nifi.security.client.pass.phrase");
+  utils::optional<std::string> passphrase = configuration.get(minifi::Configure::nifi_security_client_pass_phrase);
   REQUIRE(passphrase);
   REQUIRE(*passphrase == "SpeakFriendAndEnter");
 
-  utils::optional<std::string> password = configuration.get("nifi.rest.api.password");
+  utils::optional<std::string> password = configuration.get(minifi::Configure::nifi_rest_api_password);
   REQUIRE(password);
   REQUIRE(*password == "OpenSesame");
+
+  utils::optional<std::string> unencrypted_property = configuration.get(minifi::Configure::nifi_bored_yield_duration);
+  REQUIRE(unencrypted_property);
+  REQUIRE(*unencrypted_property == "10 millis");
+
+  utils::optional<std::string> nonexistent_property = configuration.get("this.property.does.not.exist");
+  REQUIRE_FALSE(nonexistent_property);
 }

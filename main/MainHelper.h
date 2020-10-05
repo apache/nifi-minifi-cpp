@@ -43,19 +43,15 @@ extern "C" {
 
 #ifdef WIN32
 #define DEFAULT_NIFI_CONFIG_YML "\\conf\\config.yml"
-#define DEFAULT_NIFI_BOOTSTRAP_FILE "\\conf\\bootstrap.conf"
 #define DEFAULT_NIFI_PROPERTIES_FILE "\\conf\\minifi.properties"
 #define DEFAULT_LOG_PROPERTIES_FILE "\\conf\\minifi-log.properties"
 #define DEFAULT_UID_PROPERTIES_FILE "\\conf\\minifi-uid.properties"
 #else
 #define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
-#define DEFAULT_NIFI_BOOTSTRAP_FILE "./conf/bootstrap.conf"
 #define DEFAULT_NIFI_PROPERTIES_FILE "./conf/minifi.properties"
 #define DEFAULT_LOG_PROPERTIES_FILE "./conf/minifi-log.properties"
 #define DEFAULT_UID_PROPERTIES_FILE "./conf/minifi-uid.properties"
 #endif
-
-constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 
 //! Define home environment variable
 #define MINIFI_HOME_ENV_KEY "MINIFI_HOME"

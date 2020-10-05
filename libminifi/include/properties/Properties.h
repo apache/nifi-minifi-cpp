@@ -65,7 +65,7 @@ class Properties {
    * @param value value in which to place the map's stored property value
    * @returns true if found, false otherwise.
    */
-  bool get(const std::string &key, std::string &value) const;
+  bool getString(const std::string &key, std::string &value) const;
 
   /**
    * Returns the config value by placing it into the referenced param value
@@ -76,7 +76,7 @@ class Properties {
    * @param value value in which to place the map's stored property value
    * @returns true if found, false otherwise.
    */
-  bool get(const std::string &key, const std::string &alternate_key, std::string &value) const;
+  bool getString(const std::string &key, const std::string &alternate_key, std::string &value) const;
 
   /**
    * Returns the configuration value or an empty string.
@@ -90,9 +90,9 @@ class Properties {
    * @param key key to look up
    * @returns the value if found, nullopt otherwise.
    */
-  utils::optional<std::string> get(const std::string& key) const {
+  utils::optional<std::string> getString(const std::string& key) const {
     std::string result;
-    const bool found = get(key, result);
+    const bool found = getString(key, result);
     if (found) {
       return result;
     } else {

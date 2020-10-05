@@ -1,7 +1,4 @@
 /**
- * @file Configure.h
- * Configure class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,108 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_PROPERTIES_CONFIGURE_H_
-#define LIBMINIFI_INCLUDE_PROPERTIES_CONFIGURE_H_
+#pragma once
 
 #include <string>
-#include <mutex>
-#include "properties/Properties.h"
+#include <utility>
+
+#include "properties/Configuration.h"
+#include "properties/Decryptor.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
-class Configure : public Properties {
+class Configure : public Configuration {
  public:
-  Configure() : Properties("MiNiFi configuration") {}
+  explicit Configure(utils::optional<Decryptor> decryptor = utils::nullopt)
+      : Configuration{}, decryptor_(std::move(decryptor)) {}
 
-  void setAgentIdentifier(const std::string &identifier) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    agent_identifier_ = identifier;
-  }
-  std::string getAgentIdentifier() const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return agent_identifier_;
-  }
-
-  void setAgentClass(const std::string& agentClass) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    agent_class_ = agentClass;
-  }
-
-  std::string getAgentClass() const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return agent_class_;
-  }
-
-  // nifi.flow.configuration.file
-  static constexpr const char *nifi_default_directory = "nifi.default.directory";
-  static constexpr const char *nifi_flow_configuration_file = "nifi.flow.configuration.file";
-  static constexpr const char *nifi_flow_configuration_file_exit_failure = "nifi.flow.configuration.file.exit.onfailure";
-  static constexpr const char *nifi_flow_configuration_file_backup_update = "nifi.flow.configuration.backup.on.update";
-  static constexpr const char *nifi_flow_engine_threads = "nifi.flow.engine.threads";
-  static constexpr const char *nifi_flow_engine_alert_period = "nifi.flow.engine.alert.period";
-  static constexpr const char *nifi_flow_engine_event_driven_time_slice = "nifi.flow.engine.event.driven.time.slice";
-  static constexpr const char *nifi_administrative_yield_duration = "nifi.administrative.yield.duration";
-  static constexpr const char *nifi_bored_yield_duration = "nifi.bored.yield.duration";
-  static constexpr const char *nifi_graceful_shutdown_seconds = "nifi.flowcontroller.graceful.shutdown.period";
-  static constexpr const char *nifi_flowcontroller_drain_timeout = "nifi.flowcontroller.drain.timeout";
-  static constexpr const char *nifi_log_level = "nifi.log.level";
-  static constexpr const char *nifi_server_name = "nifi.server.name";
-  static constexpr const char *nifi_configuration_class_name = "nifi.flow.configuration.class.name";
-  static constexpr const char *nifi_flow_repository_class_name = "nifi.flowfile.repository.class.name";
-  static constexpr const char *nifi_content_repository_class_name = "nifi.content.repository.class.name";
-  static constexpr const char *nifi_volatile_repository_options = "nifi.volatile.repository.options.";
-  static constexpr const char *nifi_provenance_repository_class_name = "nifi.provenance.repository.class.name";
-  static constexpr const char *nifi_server_port = "nifi.server.port";
-  static constexpr const char *nifi_server_report_interval = "nifi.server.report.interval";
-  static constexpr const char *nifi_provenance_repository_max_storage_size = "nifi.provenance.repository.max.storage.size";
-  static constexpr const char *nifi_provenance_repository_max_storage_time = "nifi.provenance.repository.max.storage.time";
-  static constexpr const char *nifi_provenance_repository_directory_default = "nifi.provenance.repository.directory.default";
-  static constexpr const char *nifi_flowfile_repository_max_storage_size = "nifi.flowfile.repository.max.storage.size";
-  static constexpr const char *nifi_flowfile_repository_max_storage_time = "nifi.flowfile.repository.max.storage.time";
-  static constexpr const char *nifi_flowfile_repository_directory_default = "nifi.flowfile.repository.directory.default";
-  static constexpr const char *nifi_dbcontent_repository_directory_default = "nifi.database.content.repository.directory.default";
-  static constexpr const char *nifi_remote_input_secure = "nifi.remote.input.secure";
-  static constexpr const char *nifi_remote_input_http = "nifi.remote.input.http.enabled";
-  static constexpr const char *nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
-  // site2site security config
-  static constexpr const char *nifi_security_client_certificate = "nifi.security.client.certificate";
-  static constexpr const char *nifi_security_client_private_key = "nifi.security.client.private.key";
-  static constexpr const char *nifi_security_client_pass_phrase = "nifi.security.client.pass.phrase";
-  static constexpr const char *nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
-
-  // nifi rest api user name and password
-  static constexpr const char *nifi_rest_api_user_name = "nifi.rest.api.user.name";
-  static constexpr const char *nifi_rest_api_password = "nifi.rest.api.password";
-  // c2 options
-  static constexpr const char *nifi_c2_enable = "nifi.c2.enable";
-  static constexpr const char *nifi_c2_file_watch = "nifi.c2.file.watch";
-  static constexpr const char *nifi_c2_flow_id = "nifi.c2.flow.id";
-  static constexpr const char *nifi_c2_flow_url = "nifi.c2.flow.url";
-  static constexpr const char *nifi_c2_flow_base_url = "nifi.c2.flow.base.url";
-  static constexpr const char *nifi_c2_full_heartbeat = "nifi.c2.full.heartbeat";
-
-  // state management options
-  static constexpr const char *nifi_state_management_provider_local = "nifi.state.management.provider.local";
-  static constexpr const char *nifi_state_management_provider_local_always_persist = "nifi.state.management.provider.local.always.persist";
-  static constexpr const char *nifi_state_management_provider_local_auto_persistence_interval = "nifi.state.management.provider.local.auto.persistence.interval";
-
-  // disk space watchdog options
-  static constexpr const char *minifi_disk_space_watchdog_enable = "minifi.disk.space.watchdog.enable";
-  static constexpr const char *minifi_disk_space_watchdog_interval = "minifi.disk.space.watchdog.interval";
-  static constexpr const char *minifi_disk_space_watchdog_stop_threshold = "minifi.disk.space.watchdog.stop.threshold";
-  static constexpr const char *minifi_disk_space_watchdog_restart_threshold = "minifi.disk.space.watchdog.restart.threshold";
+  bool get(const std::string& key, std::string& value) const;
+  bool get(const std::string& key, const std::string& alternate_key, std::string& value) const;
+  utils::optional<std::string> get(const std::string& key) const;
 
  private:
-  std::string agent_identifier_;
-  std::string agent_class_;
-  mutable std::mutex mutex_;
+  bool isEncrypted(const std::string& key) const;
+
+  utils::optional<Decryptor> decryptor_;
 };
 
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-#endif  // LIBMINIFI_INCLUDE_PROPERTIES_CONFIGURE_H_

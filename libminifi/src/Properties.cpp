@@ -36,7 +36,7 @@ Properties::Properties(const std::string& name)
 }
 
 // Get the config value
-bool Properties::get(const std::string &key, std::string &value) const {
+bool Properties::getString(const std::string &key, std::string &value) const {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 
@@ -48,7 +48,7 @@ bool Properties::get(const std::string &key, std::string &value) const {
   }
 }
 
-bool Properties::get(const std::string &key, const std::string &alternate_key, std::string &value) const {
+bool Properties::getString(const std::string &key, const std::string &alternate_key, std::string &value) const {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 

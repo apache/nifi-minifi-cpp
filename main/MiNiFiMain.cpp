@@ -61,31 +61,6 @@
 #include "AgentDocs.h"
 #include "MainHelper.h"
 
-namespace {
-bool containsEncryptedProperties(const minifi::Configure& minifi_properties) {
-  const auto is_encrypted_property_marker = [&minifi_properties](const std::string& property_name) {
-    return utils::StringUtils::endsWith(property_name, ".protected") &&
-        minifi::Decryptor::isValidEncryptionMarker(minifi_properties.get(property_name));
-  };
-  const auto property_names = minifi_properties.getConfiguredKeys();
-  return std::any_of(property_names.begin(), property_names.end(), is_encrypted_property_marker);
-}
-
-void decryptSensitiveProperties(minifi::Configure& minifi_properties, const std::string& minifi_home, logging::Logger& logger) {
-  minifi::Properties bootstrap_conf;
-  bootstrap_conf.setHome(minifi_home);
-  bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
-  utils::optional<std::string> encryption_key_encoded = bootstrap_conf.get(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME);
-  if (encryption_key_encoded) {
-    utils::crypto::Bytes encryption_key = utils::crypto::stringToBytes(utils::StringUtils::from_hex(*encryption_key_encoded));
-    minifi::Decryptor decryptor{encryption_key};
-    decryptor.decryptSensitiveProperties(minifi_properties);
-  } else {
-    logger.log_error("Encryption key not found, cannot decrypt sensitive properties!");
-  }
-}
-}  // namespace
-
  // Variables that allow us to avoid a timed wait.
 sem_t *running;
 //! Flow Controller
@@ -235,13 +210,16 @@ int main(int argc, char **argv) {
   // Make a record of minifi home in the configured log file.
   logger->log_info("MINIFI_HOME=%s", minifiHome);
 
-  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
+  utils::optional<minifi::Decryptor> decryptor = minifi::Decryptor::create(minifiHome);
+  if (decryptor) {
+    logger->log_info("Found encryption key, will decrypt sensitive properties in the configuration");
+  } else {
+    logger->log_info("No encryption key found, will not decrypt sensitive properties in the configuration");
+  }
+
+  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>(decryptor);
   configure->setHome(minifiHome);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
-
-  if (containsEncryptedProperties(*configure)) {
-    decryptSensitiveProperties(*configure, minifiHome, *logger);
-  }
 
   if (argc >= 3 && std::string("docs") == argv[1]) {
     if (utils::file::FileUtils::create_dir(argv[2]) != 0) {
