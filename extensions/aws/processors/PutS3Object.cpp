@@ -21,7 +21,6 @@
 #include "PutS3Object.h"
 
 #include <string>
-#include <regex>
 #include <set>
 #include <memory>
 
@@ -370,8 +369,7 @@ std::string PutS3Object::parseAccessControlList(const std::string &comma_separat
     }
 
     auto trimmed_user = minifi::utils::StringUtils::trim(user);
-    static const std::regex email_pattern("\\w+@\\w+\\.\\w+");
-    if (std::regex_match(trimmed_user, email_pattern)) {
+    if (trimmed_user.find('@') != std::string::npos) {
       result_list += "emailAddress=\"" + trimmed_user + "\"";
     } else {
       result_list += "id=" + trimmed_user;
