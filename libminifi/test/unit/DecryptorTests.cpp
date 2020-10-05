@@ -109,3 +109,12 @@ TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProper
   utils::optional<std::string> nonexistent_property = configuration.get("this.property.does.not.exist");
   REQUIRE_FALSE(nonexistent_property);
 }
+
+TEST_CASE("Decryptor can be created from a bootstrap file", "[create]") {
+  utils::optional<minifi::Decryptor> valid_decryptor = minifi::Decryptor::create("resources");
+  REQUIRE(valid_decryptor);
+  REQUIRE(valid_decryptor->decrypt("HvbPejGT3ur9/00gXQK/dJCYwaNqhopf||CiXKiNaljSN7VkLXP5zfJnb4+4UcKIG3ddwuVfSPpkRRfT4=") == "SpeakFriendAndEnter");
+
+  utils::optional<minifi::Decryptor> invalid_decryptor = minifi::Decryptor::create("there.is.no.such.directory");
+  REQUIRE_FALSE(invalid_decryptor);
+}
