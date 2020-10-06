@@ -24,7 +24,6 @@
 #include <regex>
 
 #include <CivetServer.h>
-#include <concurrentqueue.h>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -32,6 +31,7 @@
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/MinifiConcurrentQueue.h"
 
 namespace org {
 namespace apache {
@@ -42,6 +42,8 @@ namespace processors {
 // ListenHTTP Class
 class ListenHTTP : public core::Processor {
  public:
+
+  using FlowFileBufferPair=std::pair<std::shared_ptr<core::FlowFile>, std::shared_ptr<io::BufferStream>>;
 
   // Constructor
   /*!
@@ -66,6 +68,8 @@ class ListenHTTP : public core::Processor {
   static core::Property SSLVerifyPeer;
   static core::Property SSLMinimumVersion;
   static core::Property HeadersAsAttributesRegex;
+  static core::Property BatchSize;
+  static core::Property BufferSize;
   // Supported Relationships
   static core::Relationship Success;
 
@@ -88,10 +92,11 @@ class ListenHTTP : public core::Processor {
             core::ProcessContext *context,
             core::ProcessSessionFactory *sessionFactory,
             std::string &&authDNPattern,
-            std::string &&headersAsAttributesPattern);
-    bool handlePost(CivetServer *server, struct mg_connection *conn);
-    bool handleGet(CivetServer *server, struct mg_connection *conn);
-    bool handleHead(CivetServer *server, struct mg_connection *conn);
+            std::string &&headersAsAttributesPattern,
+            std::size_t buffer_size);
+    bool handlePost(CivetServer *server, struct mg_connection *conn) override;
+    bool handleGet(CivetServer *server, struct mg_connection *conn) override;
+    bool handleHead(CivetServer *server, struct mg_connection *conn) override;
 
     /**
      * Sets a static response body string to be used for a given URI, with a number of seconds it will be kept in memory.
@@ -112,20 +117,22 @@ class ListenHTTP : public core::Processor {
       }
     }
 
+    std::size_t buffer_size_;
+    utils::ConcurrentQueue<FlowFileBufferPair> request_buffer;
+
    private:
-    // Send HTTP 500 error response to client
-    void send_error_response(struct mg_connection *conn);
+    void send_http_500(struct mg_connection *conn);
+    void send_http_503(struct mg_connection *conn);
     bool auth_request(mg_connection *conn, const mg_request_info *req_info) const;
     void set_header_attributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const;
     void write_body(mg_connection *conn, const mg_request_info *req_info, bool include_payload = true);
+    std::shared_ptr<io::BufferStream> createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info);
 
     std::string base_uri_;
     std::regex auth_dn_regex_;
     std::regex headers_as_attrs_regex_;
     core::ProcessContext *process_context_;
     core::ProcessSessionFactory *session_factory_;
-
-    // Logger
     std::shared_ptr<logging::Logger> logger_;
     std::map<std::string, response_body> response_uri_map_;
     std::mutex uri_map_mutex_;
@@ -155,15 +162,12 @@ class ListenHTTP : public core::Processor {
   // Write callback for transferring data from HTTP request to content repo
   class WriteCallback : public OutputStreamCallback {
    public:
-    WriteCallback(struct mg_connection *conn, const struct mg_request_info *reqInfo);
+    WriteCallback(std::shared_ptr<io::BufferStream>);
     int64_t process(std::shared_ptr<io::BaseStream> stream);
 
    private:
-    // Logger
     std::shared_ptr<logging::Logger> logger_;
-
-    struct mg_connection *conn_;
-    const struct mg_request_info *req_info_;
+    std::shared_ptr<io::BufferStream> request_content_;
   };
 
   static int log_message(const struct mg_connection *conn, const char *message) {
@@ -205,13 +209,12 @@ class ListenHTTP : public core::Processor {
   void notifyStop() override;
 
  private:
-  // Logger
   std::shared_ptr<logging::Logger> logger_;
-
   CivetCallbacks callbacks_;
   std::unique_ptr<CivetServer> server_;
   std::unique_ptr<Handler> handler_;
   std::string listeningPort;
+  std::size_t batch_size_;
 };
 
 REGISTER_RESOURCE(ListenHTTP, "Starts an HTTP Server and listens on a given base path to transform incoming requests into FlowFiles. The default URI of the Service will be "
