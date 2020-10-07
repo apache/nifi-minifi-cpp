@@ -52,7 +52,8 @@ const std::set<std::string> PutS3Object::CANNED_ACLS(getMapKeys(minifi::aws::s3:
 const std::set<std::string> PutS3Object::REGIONS({region::US_GOV_WEST_1, region::US_EAST_1, region::US_EAST_2, region::US_WEST_1,
   region::US_WEST_2, region::EU_WEST_1, region::EU_WEST_2, region::EU_CENTRAL_1, region::AP_SOUTH_1,
   region::AP_SOUTHEAST_1, region::AP_SOUTHEAST_2, region::AP_NORTHEAST_1, region::AP_NORTHEAST_2,
-  region::SA_EAST_1, region::CN_NORTH_1, region::CA_CENTRAL_1});
+  region::SA_EAST_1, region::CN_NORTH_1, region::CA_CENTRAL_1, region::AF_SOUTH_1, region::AP_EAST_1, region::AP_NORTHEAST_3,
+  region::CN_NORTHWEST_1, region::EU_SOUTH_1, region::EU_WEST_3, region::EU_NORTH_1, region::ME_SOUTH_1, region::US_GOV_EAST_1});
 const std::set<std::string> PutS3Object::STORAGE_CLASSES(getMapKeys(minifi::aws::s3::STORAGE_CLASS_MAP));
 const std::set<std::string> PutS3Object::SERVER_SIDE_ENCRYPTIONS(getMapKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP));
 

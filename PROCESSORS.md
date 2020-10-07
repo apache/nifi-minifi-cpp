@@ -1146,7 +1146,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Credentials File|||Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey|
 |AWS Credentials Provider service|||The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.|
 |**Storage Class**|Standard|Standard<br/>ReducedRedundancy|AWS S3 Storage Class|
-|**Region**|us-west-2|us-gov-west-1<br/>us-east-1<br/>us-east-2<br/>us-west-1<br/>us-west-2<br/>eu-west-1<br/>eu-west-2<br/>eu-central-1<br/>ap-south-1<br/>ap-southeast-1<br/>ap-southeast-2<br/>ap-northeast-1<br/>ap-northeast-2<br/>sa-east-1<br/>cn-north-1<br/>ca-central-1|AWS Region|
+|**Region**|us-west-2|us-gov-west-1<br/>us-east-1<br/>us-east-2<br/>us-west-1<br/>us-west-2<br/>eu-west-1<br/>eu-west-2<br/>eu-central-1<br/>ap-south-1<br/>ap-southeast-1<br/>ap-southeast-2<br/>ap-northeast-1<br/>ap-northeast-2<br/>sa-east-1<br/>cn-north-1<br/>ca-central-1<br/>af-south-1<br/>ap-east-1<br/>ap-northeast-3<br/>cn-northwest-1<br/>eu-south-1<br/>eu-west-3<br/>eu-north-1<br/>me-south-1<br/>us-gov-east-1|AWS Region|
 |**Communications Timeout**|30 sec|||
 |FullControl User List|${s3.permissions.full.users}||A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Full Control for an object.<br/>**Supports Expression Language: true**|
 |Read Permission User List|${s3.permissions.read.users}||A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Read Access for an object.<br/>**Supports Expression Language: true**|

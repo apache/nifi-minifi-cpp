@@ -60,6 +60,15 @@ namespace region {
   constexpr const char *SA_EAST_1 = "sa-east-1";
   constexpr const char *CN_NORTH_1 = "cn-north-1";
   constexpr const char *CA_CENTRAL_1 = "ca-central-1";
+  constexpr const char *AF_SOUTH_1 = "af-south-1";
+  constexpr const char *AP_EAST_1 = "ap-east-1";
+  constexpr const char *AP_NORTHEAST_3 = "ap-northeast-3";
+  constexpr const char *CN_NORTHWEST_1 = "cn-northwest-1";
+  constexpr const char *EU_SOUTH_1 = "eu-south-1";
+  constexpr const char *EU_WEST_3 = "eu-west-3";
+  constexpr const char *EU_NORTH_1 = "eu-north-1";
+  constexpr const char *ME_SOUTH_1 = "me-south-1";
+  constexpr const char *US_GOV_EAST_1 = "us-gov-east-1";
 
 }  // namespace region
 
