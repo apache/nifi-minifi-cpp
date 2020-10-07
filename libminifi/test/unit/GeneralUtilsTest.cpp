@@ -52,7 +52,16 @@ static_assert(-3 == utils::intdiv_ceil(-6, 2), "");
 static_assert(-3 == utils::intdiv_ceil(6, -2), "");
 static_assert(3 == utils::intdiv_ceil(-6, -2), "");
 static_assert(0 == utils::intdiv_ceil(0, -10), "");
-// static_assert(0 == utils::intdiv_ceil(1, 0), "");  // shouldn't compile
+
+template<int N, int D, typename = void>
+struct does_compile : std::false_type {};
+
+template<int N, int D>
+struct does_compile<N, D,
+    // we must force evaluation so decltype won't do
+    typename std::enable_if<(utils::intdiv_ceil(N, D), true)>::type> : std::true_type {};
+
+static_assert(!does_compile<1, 0>::value, "");
 
 
 TEST_CASE("GeneralUtils::exchange", "[exchange]") {
