@@ -17,7 +17,9 @@
  */
 #include <cstdint>
 #include <algorithm>
+#include <cstring>
 #include "io/BufferStream.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
