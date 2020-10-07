@@ -45,7 +45,12 @@ namespace s3 {
 
 static const std::map<std::string, Aws::S3::Model::StorageClass> STORAGE_CLASS_MAP {
   {"Standard", Aws::S3::Model::StorageClass::STANDARD},
-  {"ReducedRedundancy", Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY}
+  {"ReducedRedundancy", Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY},
+  {"StandardIA", Aws::S3::Model::StorageClass::STANDARD_IA},
+  {"OnezoneIA", Aws::S3::Model::StorageClass::ONEZONE_IA},
+  {"IntelligentTiering", Aws::S3::Model::StorageClass::INTELLIGENT_TIERING},
+  {"Glacier", Aws::S3::Model::StorageClass::GLACIER},
+  {"DeepArchive", Aws::S3::Model::StorageClass::DEEP_ARCHIVE}
 };
 
 static const std::map<std::string, Aws::S3::Model::ServerSideEncryption> SERVER_SIDE_ENCRYPTION_MAP {
