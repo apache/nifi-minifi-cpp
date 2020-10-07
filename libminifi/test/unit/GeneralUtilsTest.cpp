@@ -61,7 +61,8 @@ struct does_compile<N, D,
     // we must force evaluation so decltype won't do
     typename std::enable_if<(utils::intdiv_ceil(N, D), true)>::type> : std::true_type {};
 
-static_assert(!does_compile<1, 0>::value, "");
+static_assert(does_compile<2, 3>::value, "does_compile should work");
+static_assert(!does_compile<1, 0>::value, "constexpr division by zero shouldn't compile");
 
 
 TEST_CASE("GeneralUtils::exchange", "[exchange]") {
