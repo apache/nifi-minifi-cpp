@@ -44,7 +44,7 @@ namespace {
     }
     return escaped.str();
   }
-}
+}  // namespace
 
 namespace org {
 namespace apache {
