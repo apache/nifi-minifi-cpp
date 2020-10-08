@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 }
 
 class UnorderedMapKeyValueStoreServiceTestFixture {
-public:
+ public:
   UnorderedMapKeyValueStoreServiceTestFixture() {
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setTrace<minifi::controllers::PersistableKeyValueStoreService>();
@@ -88,7 +88,7 @@ public:
     LogTestController::getInstance().reset();
   }
 
-protected:
+ protected:
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
