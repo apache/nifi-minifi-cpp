@@ -48,7 +48,9 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
   static core::Property File;
 
   void onEnable() override;
-  void initialize() override;
+  void initialize() override {
+    initializeNonVirtual();
+  }
   void notifyStop() override;
 
   bool set(const std::string& key, const std::string& value) override;
@@ -59,7 +61,9 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
 
   bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
 
-  bool persist() override;
+  bool persist() override {
+    persistNonVirtual();
+  }
 
  protected:
   using AbstractAutoPersistingKeyValueStoreService::getImpl;
@@ -75,10 +79,12 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
 
   bool load();
 
-  std::string escape(const std::string& str);
   bool parseLine(const std::string& line, std::string& key, std::string& value);
 
  private:
+  void initializeNonVirtual();
+  bool persistNonVirtual();
+
   std::shared_ptr<logging::Logger> logger_;
 };
 
