@@ -52,7 +52,7 @@ class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from
 
     bool persist() override;
 
-  private:
+   private:
     std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider_;
     utils::Identifier id_;
     bool state_valid_;
