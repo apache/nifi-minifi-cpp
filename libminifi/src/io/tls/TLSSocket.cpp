@@ -224,6 +224,7 @@ int16_t TLSSocket::initialize(bool blocking) {
   if (!is_server) {
     ssl_ = SSL_new(context_->getContext());
     SSL_set_fd(ssl_, socket_file_descriptor_);
+    SSL_set_tlsext_host_name(ssl_, requested_hostname_.c_str());  // SNI extension
     connected_ = false;
     int rez = SSL_connect(ssl_);
     if (rez < 0) {
