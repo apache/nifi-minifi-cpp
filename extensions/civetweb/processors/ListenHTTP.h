@@ -52,8 +52,8 @@ class ListenHTTP : public core::Processor {
   ListenHTTP(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ListenHTTP>::getLogger()) {
-    callbacks_.log_message = &log_message;
-    callbacks_.log_access = &log_access;
+    callbacks_.log_message = &logMessage;
+    callbacks_.log_access = &logAccess;
   }
   // Destructor
   virtual ~ListenHTTP();
@@ -90,7 +90,6 @@ class ListenHTTP : public core::Processor {
    public:
     Handler(std::string base_uri,
             core::ProcessContext *context,
-            core::ProcessSessionFactory *sessionFactory,
             std::string &&authDNPattern,
             std::string &&headersAsAttributesPattern,
             std::size_t buffer_size);
@@ -102,7 +101,7 @@ class ListenHTTP : public core::Processor {
      * Sets a static response body string to be used for a given URI, with a number of seconds it will be kept in memory.
      * @param response
      */
-    void set_response_body(struct response_body response) {
+    void setResponseBody(struct response_body response) {
       std::lock_guard<std::mutex> guard(uri_map_mutex_);
 
       if (response.body.empty()) {
@@ -121,18 +120,18 @@ class ListenHTTP : public core::Processor {
     utils::ConcurrentQueue<FlowFileBufferPair> request_buffer;
 
    private:
-    void send_http_500(struct mg_connection *conn);
-    void send_http_503(struct mg_connection *conn);
-    bool auth_request(mg_connection *conn, const mg_request_info *req_info) const;
-    void set_header_attributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const;
-    void write_body(mg_connection *conn, const mg_request_info *req_info, bool include_payload = true);
+    void sendHttp500(struct mg_connection *conn);
+    void sendHttp503(struct mg_connection *conn);
+    bool authRequest(mg_connection *conn, const mg_request_info *req_info) const;
+    void setHeaderAttributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const;
+    void writeBody(mg_connection *conn, const mg_request_info *req_info, bool include_payload = true);
     std::shared_ptr<io::BufferStream> createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info);
+    bool enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::shared_ptr<io::BufferStream>);
 
     std::string base_uri_;
     std::regex auth_dn_regex_;
     std::regex headers_as_attrs_regex_;
     core::ProcessContext *process_context_;
-    core::ProcessSessionFactory *session_factory_;
     std::shared_ptr<logging::Logger> logger_;
     std::map<std::string, response_body> response_uri_map_;
     std::mutex uri_map_mutex_;
@@ -170,7 +169,7 @@ class ListenHTTP : public core::Processor {
     std::shared_ptr<io::BufferStream> request_content_;
   };
 
-  static int log_message(const struct mg_connection *conn, const char *message) {
+  static int logMessage(const struct mg_connection *conn, const char *message) {
     try {
       struct mg_context* ctx = mg_get_context(conn);
       /* CivetServer stores 'this' as the userdata when calling mg_start */
@@ -188,7 +187,7 @@ class ListenHTTP : public core::Processor {
     return 0;
   }
 
-  static int log_access(const struct mg_connection *conn, const char *message) {
+  static int logAccess(const struct mg_connection *conn, const char *message) {
     try {
       struct mg_context* ctx = mg_get_context(conn);
       /* CivetServer stores 'this' as the userdata when calling mg_start */
@@ -209,6 +208,9 @@ class ListenHTTP : public core::Processor {
   void notifyStop() override;
 
  private:
+  void processIncomingFlowFile(core::ProcessSession *session);
+  void processRequestBuffer(core::ProcessSession *session);
+
   std::shared_ptr<logging::Logger> logger_;
   CivetCallbacks callbacks_;
   std::unique_ptr<CivetServer> server_;
