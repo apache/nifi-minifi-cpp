@@ -103,15 +103,42 @@ bool Identifier::operator==(const Identifier& other) const {
   return data_ == other.data_;
 }
 
-std::string Identifier::to_string() const {
-  char uuidStr[37]{};  // 36+1 for the \0
-  snprintf(uuidStr, sizeof(uuidStr), UUID_FORMAT_STRING,
-           data_[0], data_[1], data_[2], data_[3],
-           data_[4], data_[5],
-           data_[6], data_[7],
-           data_[8], data_[9],
-           data_[10], data_[11], data_[12], data_[13], data_[14], data_[15]);
-  return {uuidStr};
+bool Identifier::operator<(const Identifier &other) const {
+  return data_ < other.data_;
+}
+
+SmallString<36> Identifier::to_string() const {
+  SmallString<36> uuidStr;
+  // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx is 36 long: 16 bytes * 2 hex digits / byte + 4 hyphens
+  int byteIdx = 0;
+  int charIdx = 0;
+
+  // [xxxxxxxx]-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  while (byteIdx < 4) {
+    uuidStr[charIdx++] = hex_lut[data_[byteIdx] >> 4];
+    uuidStr[charIdx++] = hex_lut[data_[byteIdx++] & 0xf];
+  }
+  // xxxxxxxx[-]xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  uuidStr[charIdx++] = '-';
+
+  // xxxxxxxx-[xxxx-xxxx-xxxx-]xxxxxxxxxxxx - 3x 2 bytes and a hyphen
+  for (int idx = 0; idx < 3; ++idx) {
+    uuidStr[charIdx++] = hex_lut[data_[byteIdx] >> 4];
+    uuidStr[charIdx++] = hex_lut[data_[byteIdx++] & 0xf];
+    uuidStr[charIdx++] = hex_lut[data_[byteIdx] >> 4];
+    uuidStr[charIdx++] = hex_lut[data_[byteIdx++] & 0xf];
+    uuidStr[charIdx++] = '-';
+  }
+
+  // xxxxxxxx-xxxx-xxxx-xxxx-[xxxxxxxxxxxx] - the rest, i.e. until byte 16
+  while (byteIdx < 16) {
+    uuidStr[charIdx++] = hex_lut[data_[byteIdx] >> 4];
+    uuidStr[charIdx++] = hex_lut[data_[byteIdx++] & 0xf];
+  }
+
+  // null terminator
+  uuidStr[charIdx] = 0;
+  return uuidStr;
 }
 
 utils::optional<Identifier> Identifier::parse(const std::string &str) {

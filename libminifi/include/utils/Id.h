@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include "SmallString.h"
 
 #ifndef WIN32
 class uuid;
@@ -53,6 +54,7 @@ namespace utils {
 class Identifier {
   friend struct IdentifierTestAccessor;
   static constexpr const char* UUID_FORMAT_STRING = "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx";
+  static constexpr const char* hex_lut = "0123456789abcdef";
 
  public:
   using Data = std::array<uint8_t, 16>;
@@ -65,10 +67,19 @@ class Identifier {
 
   bool operator!=(const Identifier& other) const;
   bool operator==(const Identifier& other) const;
+  bool operator<(const Identifier& other) const;
 
   bool isNil() const;
 
-  std::string to_string() const;
+  // Numerous places query the string representation
+  // just to then forward the temporary to build logs,
+  // streams, or others. Dynamically allocating in these
+  // instances is wasteful as we immediately discard
+  // the result. The difference on the test machine is 8x,
+  // building the representation itself takes 10ns, while
+  // subsequently turning it into a std::string would take
+  // 70ns more.
+  SmallString<36> to_string() const;
 
   static utils::optional<Identifier> parse(const std::string& str);
 

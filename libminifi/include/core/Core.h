@@ -193,9 +193,8 @@ class CoreComponent {
   // unsigned const char *getUUID();
   /**
    * Return the UUID string
-   * @param constant reference to the UUID str
    */
-  std::string getUUIDStr() const {
+  utils::SmallString<36> getUUIDStr() const {
     return uuid_.to_string();
   }
 

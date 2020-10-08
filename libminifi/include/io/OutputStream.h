@@ -23,6 +23,7 @@
 #include <string>
 #include "Stream.h"
 #include "utils/gsl.h"
+#include "utils/SmallString.h"
 
 namespace org {
 namespace apache {
@@ -67,6 +68,11 @@ class OutputStream : public virtual Stream {
    * @return resulting write size
    **/
   int write(const char* str, bool widen = false);
+
+  template<size_t N>
+  int write(const utils::SmallString<N>& str, bool widen = false) {
+    return write(str.c_str(), widen);
+  }
 
   /**
   * writes sizeof(Integral) bytes to the stream
