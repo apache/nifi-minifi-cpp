@@ -27,6 +27,7 @@
 
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
+#include "utils/FixedLengthString.h"
 
 namespace org {
 namespace apache {
@@ -51,6 +52,11 @@ class LoggerControl {
 
 inline char const* conditional_conversion(std::string const& str) {
   return str.c_str();
+}
+
+template<size_t N>
+inline char const* conditional_conversion(const utils::FixedLengthString<N>& arr) {
+  return arr.data();
 }
 
 template<typename T>

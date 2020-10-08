@@ -200,7 +200,7 @@ class FlowInformation : public FlowMonitor {
 
         SerializedResponseNode queueUUIDNode;
         queueUUIDNode.name = "uuid";
-        queueUUIDNode.value = queue.second->getUUIDStr();
+        queueUUIDNode.value = std::string{queue.second->getUUIDStr()};
 
         SerializedResponseNode queuesize;
         queuesize.name = "size";

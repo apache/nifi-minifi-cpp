@@ -139,25 +139,37 @@ class ProcessSession : public ReferenceContainer {
   ProcessSession &operator=(const ProcessSession &parent) = delete;
 
  protected:
+  struct FlowFileUpdate {
+    std::shared_ptr<FlowFile> modified;
+    std::shared_ptr<FlowFile> snapshot;
+  };
+
   // FlowFiles being modified by current process session
-  std::map<std::string, std::shared_ptr<core::FlowFile>> _updatedFlowFiles;
-  // Copy of the original FlowFiles being modified by current process session as above
-  std::map<std::string, std::shared_ptr<core::FlowFile>> _flowFileSnapShots;
+  std::map<utils::Identifier, FlowFileUpdate> _updatedFlowFiles;
   // FlowFiles being added by current process session
-  std::map<std::string, std::shared_ptr<core::FlowFile>> _addedFlowFiles;
+  std::map<utils::Identifier, std::shared_ptr<core::FlowFile>> _addedFlowFiles;
   // FlowFiles being deleted by current process session
-  std::map<std::string, std::shared_ptr<core::FlowFile>> _deletedFlowFiles;
+  std::vector<std::shared_ptr<core::FlowFile>> _deletedFlowFiles;
   // FlowFiles being transfered to the relationship
-  std::map<std::string, Relationship> _transferRelationship;
+  std::map<utils::Identifier, Relationship> _transferRelationship;
   // FlowFiles being cloned for multiple connections per relationship
-  std::map<std::string, std::shared_ptr<core::FlowFile>> _clonedFlowFiles;
+  std::vector<std::shared_ptr<core::FlowFile>> _clonedFlowFiles;
 
  private:
+  enum class RouteResult {
+    Ok_Routed,
+    Ok_AutoTerminated,
+    Ok_Deleted,
+    Error_NoRelationship
+  };
+
+  RouteResult routeFlowFile(const std::shared_ptr<FlowFile>& record);
+
   void persistFlowFilesBeforeTransfer(
       std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap,
-      const std::map<std::string, std::shared_ptr<FlowFile>>& originalFlowFileSnapShots);
+      const std::map<utils::Identifier, FlowFileUpdate>& modifiedFlowFiles);
   // Clone the flow file during transfer to multiple connections for a relationship
-  std::shared_ptr<core::FlowFile> cloneDuringTransfer(std::shared_ptr<core::FlowFile> &parent);
+  std::shared_ptr<core::FlowFile> cloneDuringTransfer(const std::shared_ptr<core::FlowFile> &parent);
   // ProcessContext
   std::shared_ptr<ProcessContext> process_context_;
   // Logger

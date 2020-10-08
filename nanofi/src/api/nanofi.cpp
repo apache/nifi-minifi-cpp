@@ -170,7 +170,7 @@ void clear_content_repo(const nifi_instance * instance) {
 }
 
 void get_proc_uuid_from_processor(standalone_processor * proc, char * uuid_target) {
-    strcpy(uuid_target, proc->getUUIDStr().c_str());
+    strcpy(uuid_target, proc->getUUIDStr().data());
 }
 
 void get_proc_uuid_from_context(const processor_context * ctx, char * uuid_target) {

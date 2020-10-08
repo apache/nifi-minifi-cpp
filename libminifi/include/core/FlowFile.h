@@ -220,11 +220,6 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    */
   uint64_t getOffset() const;
 
-  bool getUUID(utils::Identifier& other) {
-    other = uuid_;
-    return true;
-  }
-
   // Check whether it is still being penalized
   bool isPenalized() const {
     return penaltyExpiration_ms_ > 0 && penaltyExpiration_ms_ > utils::timeutils::getTimeMillis();
