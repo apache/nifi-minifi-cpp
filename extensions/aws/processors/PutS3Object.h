@@ -44,31 +44,31 @@ namespace processors {
 
 namespace region {
 
-  constexpr const char *US_GOV_WEST_1 = "us-gov-west-1";
-  constexpr const char *US_EAST_1 = "us-east-1";
-  constexpr const char *US_EAST_2 = "us-east-2";
-  constexpr const char *US_WEST_1 = "us-west-1";
-  constexpr const char *US_WEST_2 = "us-west-2";
-  constexpr const char *EU_WEST_1 = "eu-west-1";
-  constexpr const char *EU_WEST_2 = "eu-west-2";
-  constexpr const char *EU_CENTRAL_1 = "eu-central-1";
-  constexpr const char *AP_SOUTH_1 = "ap-south-1";
-  constexpr const char *AP_SOUTHEAST_1 = "ap-southeast-1";
-  constexpr const char *AP_SOUTHEAST_2 = "ap-southeast-2";
-  constexpr const char *AP_NORTHEAST_1 = "ap-northeast-1";
-  constexpr const char *AP_NORTHEAST_2 = "ap-northeast-2";
-  constexpr const char *SA_EAST_1 = "sa-east-1";
-  constexpr const char *CN_NORTH_1 = "cn-north-1";
-  constexpr const char *CA_CENTRAL_1 = "ca-central-1";
-  constexpr const char *AF_SOUTH_1 = "af-south-1";
-  constexpr const char *AP_EAST_1 = "ap-east-1";
-  constexpr const char *AP_NORTHEAST_3 = "ap-northeast-3";
-  constexpr const char *CN_NORTHWEST_1 = "cn-northwest-1";
-  constexpr const char *EU_SOUTH_1 = "eu-south-1";
-  constexpr const char *EU_WEST_3 = "eu-west-3";
-  constexpr const char *EU_NORTH_1 = "eu-north-1";
-  constexpr const char *ME_SOUTH_1 = "me-south-1";
-  constexpr const char *US_GOV_EAST_1 = "us-gov-east-1";
+constexpr const char *AF_SOUTH_1 = "af-south-1";
+constexpr const char *AP_EAST_1 = "ap-east-1";
+constexpr const char *AP_NORTHEAST_1 = "ap-northeast-1";
+constexpr const char *AP_NORTHEAST_2 = "ap-northeast-2";
+constexpr const char *AP_NORTHEAST_3 = "ap-northeast-3";
+constexpr const char *AP_SOUTH_1 = "ap-south-1";
+constexpr const char *AP_SOUTHEAST_1 = "ap-southeast-1";
+constexpr const char *AP_SOUTHEAST_2 = "ap-southeast-2";
+constexpr const char *CA_CENTRAL_1 = "ca-central-1";
+constexpr const char *CN_NORTH_1 = "cn-north-1";
+constexpr const char *CN_NORTHWEST_1 = "cn-northwest-1";
+constexpr const char *EU_CENTRAL_1 = "eu-central-1";
+constexpr const char *EU_NORTH_1 = "eu-north-1";
+constexpr const char *EU_SOUTH_1 = "eu-south-1";
+constexpr const char *EU_WEST_1 = "eu-west-1";
+constexpr const char *EU_WEST_2 = "eu-west-2";
+constexpr const char *EU_WEST_3 = "eu-west-3";
+constexpr const char *ME_SOUTH_1 = "me-south-1";
+constexpr const char *SA_EAST_1 = "sa-east-1";
+constexpr const char *US_EAST_1 = "us-east-1";
+constexpr const char *US_EAST_2 = "us-east-2";
+constexpr const char *US_GOV_EAST_1 = "us-gov-east-1";
+constexpr const char *US_GOV_WEST_1 = "us-gov-west-1";
+constexpr const char *US_WEST_1 = "us-west-1";
+constexpr const char *US_WEST_2 = "us-west-2";
 
 }  // namespace region
 
