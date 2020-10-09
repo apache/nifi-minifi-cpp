@@ -15,9 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "properties/Configure.h"
 
 #include "gsl.h"
+
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -33,11 +36,15 @@ bool Configure::get(const std::string& key, std::string& value) const {
 }
 
 bool Configure::get(const std::string& key, const std::string& alternate_key, std::string& value) const {
-  bool found = getString(key, alternate_key, value);
-  if (decryptor_ && found && isEncrypted(key)) {
-    value = decryptor_->decrypt(value);
+  if (get(key, value)) {
+    return true;
+  } else if (get(alternate_key, value)) {
+    const auto logger = logging::LoggerFactory<Configure>::getLogger();
+    logger->log_warn("%s is an alternate property that may not be supported in future releases. Please use %s instead.", alternate_key, key);
+    return true;
+  } else {
+    return false;
   }
-  return found;
 }
 
 utils::optional<std::string> Configure::get(const std::string& key) const {

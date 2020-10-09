@@ -68,17 +68,6 @@ class Properties {
   bool getString(const std::string &key, std::string &value) const;
 
   /**
-   * Returns the config value by placing it into the referenced param value
-   * Uses alternate_key if key is not found within the map.
-   *
-   * @param key key to look up
-   * @param alternate_key is the secondary lookup key if key is not found
-   * @param value value in which to place the map's stored property value
-   * @returns true if found, false otherwise.
-   */
-  bool getString(const std::string &key, const std::string &alternate_key, std::string &value) const;
-
-  /**
    * Returns the configuration value or an empty string.
    * @return value corresponding to key or empty value.
    */

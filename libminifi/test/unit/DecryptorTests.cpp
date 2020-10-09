@@ -102,6 +102,10 @@ TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProper
   REQUIRE(password);
   REQUIRE(*password == "OpenSesame");
 
+  std::string agent_identifier;
+  REQUIRE(configuration.get("nifi.c2.agent.identifier", "c2.agent.identifier", agent_identifier));
+  REQUIRE(agent_identifier == "TailFileTester-001");
+
   utils::optional<std::string> unencrypted_property = configuration.get(minifi::Configure::nifi_bored_yield_duration);
   REQUIRE(unencrypted_property);
   REQUIRE(*unencrypted_property == "10 millis");
