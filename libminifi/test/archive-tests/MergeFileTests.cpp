@@ -859,9 +859,9 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
   auto input = testController.input;
   auto output = testController.output;
 
-  const std::string header = "BEGIN{";
-  const std::string footer = "}END";
-  const std::string demarcator = "_";
+  std::string header = "BEGIN{";
+  std::string footer = "}END";
+  std::string demarcator = "_";
 
   core::ProcessSession session(context);
 
@@ -888,23 +888,24 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
     input->put(ff);
   }
 
-  context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
   context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
   context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
   context->setProperty(processors::MergeContent::Header, header);
   context->setProperty(processors::MergeContent::Footer, footer);
   context->setProperty(processors::MergeContent::Demarcator, demarcator);
   context->setProperty(processors::BinFiles::MinEntries, "3");
-  SECTION("Default is the Payload Serializer") {
-    usedSerializer = &payloadSerializer;
-  }
+
   SECTION("Payload Serializer") {
-    context->setProperty(processors::MergeContent::FlowFileSerializer, processors::merge_content_options::SERIALIZER_PAYLOAD);
+    context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
     usedSerializer = &payloadSerializer;
   }
   SECTION("FlowFileV3 Serializer") {
-    context->setProperty(processors::MergeContent::FlowFileSerializer, processors::merge_content_options::SERIALIZER_FLOW_FILE_V3);
+    context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE);
     usedSerializer = &ffV3Serializer;
+    // only Binary Concatenation take these into account
+    header = "";
+    demarcator = "";
+    footer = "";
   }
 
   auto result = std::make_shared<minifi::io::BufferStream>();

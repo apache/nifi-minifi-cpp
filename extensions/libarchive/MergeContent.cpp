@@ -51,7 +51,11 @@ core::Property MergeContent::MergeStrategy(
 core::Property MergeContent::MergeFormat(
   core::PropertyBuilder::createProperty("Merge Format")
   ->withDescription("Merge Format")
-  ->withAllowableValues<std::string>({merge_content_options::MERGE_FORMAT_CONCAT_VALUE, merge_content_options::MERGE_FORMAT_TAR_VALUE, merge_content_options::MERGE_FORMAT_ZIP_VALUE})
+  ->withAllowableValues<std::string>({
+      merge_content_options::MERGE_FORMAT_CONCAT_VALUE,
+      merge_content_options::MERGE_FORMAT_TAR_VALUE,
+      merge_content_options::MERGE_FORMAT_ZIP_VALUE,
+      merge_content_options::MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE})
   ->withDefaultValue(merge_content_options::MERGE_FORMAT_CONCAT_VALUE)->build());
 core::Property MergeContent::CorrelationAttributeName("Correlation Attribute Name", "Correlation Attribute Name", "");
 core::Property MergeContent::DelimiterStrategy(
@@ -74,11 +78,6 @@ core::Property MergeContent::AttributeStrategy(
                     "only the attributes that exist on all FlowFiles in the bundle, with the same value, will be preserved.")
   ->withAllowableValues<std::string>({merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON, merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE})
   ->withDefaultValue(merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON)->build());
-core::Property MergeContent::FlowFileSerializer(
-  core::PropertyBuilder::createProperty("Flow File Serializer")
-  ->withDescription("Determines how to flow files should be serialized before merging")
-  ->withAllowableValues<std::string>({merge_content_options::SERIALIZER_PAYLOAD, merge_content_options::SERIALIZER_FLOW_FILE_V3})
-  ->withDefaultValue(merge_content_options::SERIALIZER_PAYLOAD)->build());
 core::Relationship MergeContent::Merge("merged", "The FlowFile containing the merged content");
 
 void MergeContent::initialize() {
@@ -99,7 +98,6 @@ void MergeContent::initialize() {
   properties.insert(Demarcator);
   properties.insert(KeepPath);
   properties.insert(AttributeStrategy);
-  properties.insert(FlowFileSerializer);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -134,7 +132,6 @@ void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessio
   context->getProperty(Demarcator.getName(), demarcator_);
   context->getProperty(KeepPath.getName(), keepPath_);
   context->getProperty(AttributeStrategy.getName(), attributeStrategy_);
-  context->getProperty(FlowFileSerializer.getName(), flowFileSerializer_);
 
   validatePropertyOptions();
 
@@ -143,6 +140,19 @@ void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessio
   }
   logger_->log_debug("Merge Content: Strategy [%s] Format [%s] Correlation Attribute [%s] Delimiter [%s]", mergeStrategy_, mergeFormat_, correlationAttributeName_, delimiterStrategy_);
   logger_->log_debug("Merge Content: Footer [%s] Header [%s] Demarcator [%s] KeepPath [%d]", footer_, header_, demarcator_, keepPath_);
+
+  if (mergeFormat_ != merge_content_options::MERGE_FORMAT_CONCAT_VALUE) {
+    if (!header_.empty()) {
+      logger_->log_warn("Header property only works with the Binary Concatenation format, value [%s] is ignored", header_);
+    }
+    if (!footer_.empty()) {
+      logger_->log_warn("Footer property only works with the Binary Concatenation format, value [%s] is ignored", footer_);
+    }
+    if (!demarcator_.empty()) {
+      logger_->log_warn("Demarcator property only works with the Binary Concatenation format, value [%s] is ignored", demarcator_);
+    }
+  }
+
   if (delimiterStrategy_ == merge_content_options::DELIMITER_STRATEGY_FILENAME) {
     if (!header_.empty()) {
       headerContent_ = readContent(header_);
@@ -170,7 +180,8 @@ void MergeContent::validatePropertyOptions() {
 
   if (mergeFormat_ != merge_content_options::MERGE_FORMAT_CONCAT_VALUE &&
       mergeFormat_ != merge_content_options::MERGE_FORMAT_TAR_VALUE &&
-      mergeFormat_ != merge_content_options::MERGE_FORMAT_ZIP_VALUE) {
+      mergeFormat_ != merge_content_options::MERGE_FORMAT_ZIP_VALUE &&
+      mergeFormat_ != merge_content_options::MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE) {
     logger_->log_error("Merge format not supported %s", mergeFormat_);
     throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid merge format: " + mergeFormat_);
   }
@@ -185,12 +196,6 @@ void MergeContent::validatePropertyOptions() {
       attributeStrategy_ != merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE) {
     logger_->log_error("Attribute strategy not supported %s", attributeStrategy_);
     throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid attribute strategy: " + attributeStrategy_);
-  }
-
-  if (flowFileSerializer_ != merge_content_options::SERIALIZER_PAYLOAD &&
-      flowFileSerializer_ != merge_content_options::SERIALIZER_FLOW_FILE_V3) {
-    logger_->log_error("FlowFile serializer not supported %s", flowFileSerializer_);
-    throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid flowFile serializer: " + flowFileSerializer_);
   }
 }
 
@@ -292,31 +297,36 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
     return false;
   }
 
-  std::unique_ptr<MergeBin> mergeBin;
-  if (mergeFormat_ == merge_content_options::MERGE_FORMAT_CONCAT_VALUE)
-    mergeBin = utils::make_unique<BinaryConcatenationMerge>(headerContent_, footerContent_, demarcatorContent_);
-  else if (mergeFormat_ == merge_content_options::MERGE_FORMAT_TAR_VALUE)
-    mergeBin = utils::make_unique<TarMerge>();
-  else if (mergeFormat_ == merge_content_options::MERGE_FORMAT_ZIP_VALUE)
-    mergeBin = utils::make_unique<ZipMerge>();
-  else {
-    logger_->log_error("Merge format not supported %s", mergeFormat_);
-    return false;
-  }
+  auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, InputStreamCallback* cb) {
+    return session->read(ff, cb);
+  };
 
-  std::unique_ptr<minifi::FlowFileSerializer> serializer;
-  if (flowFileSerializer_ == merge_content_options::SERIALIZER_PAYLOAD){
-    serializer = utils::make_unique<PayloadSerializer>([&](const std::shared_ptr<core::FlowFile>& ff, InputStreamCallback* cb) {return session->read(ff, cb);});
-  } else if (flowFileSerializer_ == merge_content_options::SERIALIZER_FLOW_FILE_V3) {
-    serializer = utils::make_unique<FlowFileV3Serializer>([&](const std::shared_ptr<core::FlowFile>& ff, InputStreamCallback* cb) {return session->read(ff, cb);});
+  const char* mimeType;
+  std::unique_ptr<MergeBin> mergeBin;
+  std::unique_ptr<minifi::FlowFileSerializer> serializer = utils::make_unique<PayloadSerializer>(flowFileReader);
+  if (mergeFormat_ == merge_content_options::MERGE_FORMAT_CONCAT_VALUE) {
+    mergeBin = utils::make_unique<BinaryConcatenationMerge>(headerContent_, footerContent_, demarcatorContent_);
+    mimeType = "application/octet-stream";
+  } else if (mergeFormat_ == merge_content_options::MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE) {
+    // disregard header, demarcator, footer
+    mergeBin = utils::make_unique<BinaryConcatenationMerge>("", "", "");
+    serializer = utils::make_unique<FlowFileV3Serializer>(flowFileReader);
+    mimeType = "application/flowfile-v3";
+  } else if (mergeFormat_ == merge_content_options::MERGE_FORMAT_TAR_VALUE) {
+    mergeBin = utils::make_unique<TarMerge>();
+    mimeType = "application/tar";
+  } else if (mergeFormat_ == merge_content_options::MERGE_FORMAT_ZIP_VALUE) {
+    mergeBin = utils::make_unique<ZipMerge>();
+    mimeType = "application/zip";
   } else {
-    logger_->log_error("Flow file serializer not supported %s", flowFileSerializer_);
+    logger_->log_error("Merge format not supported %s", mergeFormat_);
     return false;
   }
 
   std::shared_ptr<core::FlowFile> mergeFlow;
   try {
     mergeBin->merge(context, session, bin->getFlowFile(), *serializer, merge_flow);
+    session->putAttribute(merge_flow, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
   } catch (...) {
     logger_->log_error("Merge Content merge catch exception");
     return false;
@@ -343,7 +353,6 @@ void BinaryConcatenationMerge::merge(core::ProcessContext *context, core::Proces
     std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) {
   BinaryConcatenationMerge::WriteCallback callback(header_, footer_, demarcator_, flows, serializer);
   session->write(merge_flow, &callback);
-  session->putAttribute(merge_flow, core::SpecialFlowAttribute::MIME_TYPE, getMergedContentType());
   std::string fileName;
   if (flows.size() == 1) {
     flows.front()->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
@@ -358,7 +367,6 @@ void TarMerge::merge(core::ProcessContext *context, core::ProcessSession *sessio
     std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) {
   ArchiveMerge::WriteCallback callback(std::string(merge_content_options::MERGE_FORMAT_TAR_VALUE), flows, serializer);
   session->write(merge_flow, &callback);
-  session->putAttribute(merge_flow, core::SpecialFlowAttribute::MIME_TYPE, getMergedContentType());
   std::string fileName;
   merge_flow->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
   if (flows.size() == 1) {
@@ -376,7 +384,6 @@ void ZipMerge::merge(core::ProcessContext *context, core::ProcessSession *sessio
     std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) {
   ArchiveMerge::WriteCallback callback(std::string(merge_content_options::MERGE_FORMAT_ZIP_VALUE), flows, serializer);
   session->write(merge_flow, &callback);
-  session->putAttribute(merge_flow, core::SpecialFlowAttribute::MIME_TYPE, getMergedContentType());
   std::string fileName;
   merge_flow->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
   if (flows.size() == 1) {

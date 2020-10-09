@@ -40,21 +40,18 @@ constexpr const char *MERGE_STRATEGY_DEFRAGMENT = "Defragment";
 constexpr const char *MERGE_FORMAT_TAR_VALUE = "TAR";
 constexpr const char *MERGE_FORMAT_ZIP_VALUE = "ZIP";
 constexpr const char *MERGE_FORMAT_CONCAT_VALUE = "Binary Concatenation";
+constexpr const char* MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE = "FlowFile Stream, v3";
 constexpr const char *DELIMITER_STRATEGY_FILENAME = "Filename";
 constexpr const char *DELIMITER_STRATEGY_TEXT = "Text";
 constexpr const char *ATTRIBUTE_STRATEGY_KEEP_COMMON = "Keep Only Common Attributes";
 constexpr const char *ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attributes";
-constexpr const char *SERIALIZER_PAYLOAD = "Payload";
-constexpr const char *SERIALIZER_FLOW_FILE_V3 = "FFv3";
 
 } /* namespace merge_content_options */
 
 // MergeBin Class
 class MergeBin {
-public:
-
+ public:
   virtual ~MergeBin() = default;
-  virtual std::string getMergedContentType() = 0;
   // merge the flows in the bin
   virtual void merge(core::ProcessContext *context, core::ProcessSession *session,
       std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) = 0;
@@ -62,13 +59,9 @@ public:
 
 // BinaryConcatenationMerge Class
 class BinaryConcatenationMerge : public MergeBin {
-public:
+ public:
   BinaryConcatenationMerge(const std::string& header, const std::string& footer, const std::string& demarcator);
 
-  static constexpr const char *mimeType = "application/octet-stream";
-  std::string getMergedContentType() {
-    return mimeType;
-  }
   void merge(core::ProcessContext *context, core::ProcessSession *session,
       std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile);
   // Nest Callback Class for write stream
@@ -124,7 +117,7 @@ public:
 
 // Archive Class
 class ArchiveMerge {
-public:
+ public:
  class ArchiveWriter : public io::OutputStream {
   public:
    ArchiveWriter(struct archive *arch, struct archive_entry *entry) : arch_(arch), entry_(entry) {}
@@ -157,7 +150,7 @@ public:
  };
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
-  public:
+   public:
     WriteCallback(std::string merge_type, std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer)
         : merge_type_(merge_type), flows_(flows), serializer_(serializer),
           logger_(logging::LoggerFactory<ArchiveMerge>::getLogger()) {
@@ -244,33 +237,26 @@ public:
 
 // TarMerge Class
 class TarMerge: public ArchiveMerge, public MergeBin {
-public:
-  static constexpr const char *mimeType = "application/tar";
+ public:
   void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
              FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &merge_flow) override;
-  std::string getMergedContentType() override {
-    return mimeType;
-  }
 };
 
 // ZipMerge Class
 class ZipMerge: public ArchiveMerge, public MergeBin {
-public:
-  static constexpr const char *mimeType = "application/zip";
+ public:
   void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
              FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &merge_flow) override;
-  std::string getMergedContentType() override {
-    return mimeType;
-  }
 };
 
 class AttributeMerger {
-public:
+ public:
   explicit AttributeMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : flows_(flows) {}
   void mergeAttributes(core::ProcessSession *session, const std::shared_ptr<core::FlowFile> &merge_flow);
   virtual ~AttributeMerger() = default;
-protected:
+
+ protected:
   std::map<std::string, std::string> getMergedAttributes();
   virtual void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string> &merged_attributes) = 0;
 
@@ -278,27 +264,29 @@ protected:
 };
 
 class KeepOnlyCommonAttributesMerger: public AttributeMerger {
-public:
+ public:
   explicit KeepOnlyCommonAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : AttributeMerger(flows) {}
-protected:
+
+ protected:
   void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string> &merged_attributes) override;
 };
 
 class KeepAllUniqueAttributesMerger: public AttributeMerger {
-public:
+ public:
   explicit KeepAllUniqueAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : AttributeMerger(flows) {}
-protected:
+
+ protected:
   void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string> &merged_attributes) override;
 
-private:
+ private:
   std::vector<std::string> removed_attributes_;
 };
 
 // MergeContent Class
 class MergeContent : public processors::BinFiles {
-public:
+ public:
   // Constructor
   /*!
    * Create a new processor
@@ -326,7 +314,6 @@ public:
   static core::Property Footer;
   static core::Property Demarcator;
   static core::Property AttributeStrategy;
-  static core::Property FlowFileSerializer;
 
   // Supported Relationships
   static core::Relationship Merge;
@@ -367,7 +354,6 @@ public:
   std::string footerContent_;
   std::string demarcatorContent_;
   std::string attributeStrategy_;
-  std::string flowFileSerializer_;
   // readContent
   std::string readContent(std::string path);
 };
