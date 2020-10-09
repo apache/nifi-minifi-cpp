@@ -66,7 +66,7 @@ class BinaryConcatenationMerge : public MergeBin {
       std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile);
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
-  public:
+   public:
     WriteCallback(std::string &header, std::string &footer, std::string &demarcator,
         std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer) :
       header_(header), footer_(footer), demarcator_(demarcator), flows_(flows), serializer_(serializer) {
@@ -118,36 +118,37 @@ class BinaryConcatenationMerge : public MergeBin {
 // Archive Class
 class ArchiveMerge {
  public:
- class ArchiveWriter : public io::OutputStream {
-  public:
-   ArchiveWriter(struct archive *arch, struct archive_entry *entry) : arch_(arch), entry_(entry) {}
-   int write(const uint8_t* data, int size) override {
-     if (!header_emitted_) {
-       if (archive_write_header(arch_, entry_) != ARCHIVE_OK) {
-         return -1;
-       }
-       header_emitted_ = true;
-     }
-     int totalWrote = 0;
-     int remaining = size;
-     while (remaining > 0) {
-      int ret = archive_write_data(arch_, data + totalWrote, remaining);
-      if (ret < 0) {
-        return ret;
+  class ArchiveWriter : public io::OutputStream {
+   public:
+    ArchiveWriter(struct archive *arch, struct archive_entry *entry) : arch_(arch), entry_(entry) {}
+    int write(const uint8_t* data, int size) override {
+      if (!header_emitted_) {
+        if (archive_write_header(arch_, entry_) != ARCHIVE_OK) {
+          return -1;
+        }
+        header_emitted_ = true;
       }
-      if (ret == 0) {
-        break;
+      int totalWrote = 0;
+      int remaining = size;
+      while (remaining > 0) {
+        int ret = archive_write_data(arch_, data + totalWrote, remaining);
+        if (ret < 0) {
+          return ret;
+        }
+        if (ret == 0) {
+          break;
+        }
+        totalWrote += ret;
+        remaining -= ret;
       }
-      totalWrote += ret;
-      remaining -= ret;
-     }
-     return totalWrote;
-   }
-  private:
-   struct archive *arch_;
-   struct archive_entry *entry_;
-   bool header_emitted_{false};
- };
+      return totalWrote;
+    }
+
+   private:
+    struct archive *arch_;
+    struct archive_entry *entry_;
+    bool header_emitted_{false};
+  };
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
    public:
