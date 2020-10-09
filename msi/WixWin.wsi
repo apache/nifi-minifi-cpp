@@ -304,8 +304,8 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                 <IniFile Id="ConfigFileE" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.enable" Value="true" />
                 <IniFile Id="ConfigFileP" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.protocol.class" Value="[AGENT_PROTOCOL]" />
                 <IniFile Id="ConfigFileT" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.heartbeat.period" Value="[AGENT_HEARTBEAT]" />
-                <IniFile Id="ConfigFileH" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="c2.rest.url" Value="[SERVER_HEARTBEAT]" />
-                <IniFile Id="ConfigFileAck" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="c2.rest.url.ack" Value="[SERVER_ACK]" />
+                <IniFile Id="ConfigFileH" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.rest.url" Value="[SERVER_HEARTBEAT]" />
+                <IniFile Id="ConfigFileAck" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.rest.url.ack" Value="[SERVER_ACK]" />
                 <Condition><![CDATA[ENABLEC2="1"]]></Condition>
               </Component>
               <Component Id="UpdateConfigNotExist" Guid="87658309-0339-425c-8633-f54ffaaa4946">
