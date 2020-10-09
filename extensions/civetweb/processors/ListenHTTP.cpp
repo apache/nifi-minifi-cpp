@@ -57,18 +57,21 @@ core::Property ListenHTTP::SSLMinimumVersion(
         ->isRequired(false)
         ->withAllowableValues<std::string>({"TLS1.2"})
         ->withDefaultValue("TLS1.2")->build());
-core::Property ListenHTTP::BatchSize(
-    core::PropertyBuilder::createProperty("Batch Size")
-        ->withDescription("Maximum number of flow files to be processed in a batch")
-        ->withDefaultValue<std::size_t>(0)->build());
-core::Property ListenHTTP::BufferSize(
-    core::PropertyBuilder::createProperty("Buffer Size")
-        ->withDescription("Maximum number of HTTP Requests to be buffered before processing them in the flow. If set to 0 it is unlimited.")
-        ->withDefaultValue<std::size_t>(0)->build());
 
 core::Property ListenHTTP::HeadersAsAttributesRegex("HTTP Headers to receive as Attributes (Regex)", "Specifies the Regular Expression that determines the names of HTTP Headers that"
                                                     " should be passed along as FlowFile attributes",
                                                     "");
+
+core::Property ListenHTTP::BatchSize(
+    core::PropertyBuilder::createProperty("Batch Size")
+        ->withDescription("Maximum number of buffered requests to be processed in a single batch. If set to zero all buffered requests are processed.")
+        ->withDefaultValue<std::size_t>(0)->build());
+
+core::Property ListenHTTP::BufferSize(
+    core::PropertyBuilder::createProperty("Buffer Size")
+        ->withDescription("Maximum number of HTTP Requests allowed to be buffered before processing them when the processor is triggered. "
+                          "If the buffer full, the request is refused. If set to zero the buffer is unlimited.")
+        ->withDefaultValue<std::size_t>(0)->build());
 
 core::Relationship ListenHTTP::Success("success", "All files are routed to success");
 
