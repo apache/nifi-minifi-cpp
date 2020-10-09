@@ -54,7 +54,7 @@ namespace utils {
 class Identifier {
   friend struct IdentifierTestAccessor;
   static constexpr const char* UUID_FORMAT_STRING = "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx";
-  static constexpr const char hex_lut[] = "0123456789abcdef";
+  static constexpr const char* hex_lut = "0123456789abcdef";
 
  public:
   using Data = std::array<uint8_t, 16>;
