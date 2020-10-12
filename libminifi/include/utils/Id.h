@@ -73,6 +73,8 @@ class Identifier {
   static utils::optional<Identifier> parse(const std::string& str);
 
  private:
+  static bool parseByte(Data& data, const uint8_t* input, int& charIdx, int& byteIdx);
+
   Data data_{};
 };
 

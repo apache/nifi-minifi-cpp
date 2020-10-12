@@ -323,6 +323,14 @@ class StringUtils {
   }
 
   /**
+   * Hexdecodes a single character in the set [0-9a-fA-F]
+   * @param ch the character to be decoded
+   * @param output the reference where the result should be written
+   * @return true on success
+   */
+  static bool from_hex(uint8_t ch, uint8_t& output);
+
+  /**
    * Hexdecodes the hexencoded string in data, ignoring every character that is not [0-9a-fA-F]
    * @param data the output buffer where the hexdecoded bytes will be written. Must be at least length / 2 bytes long.
    * @param data_length pointer to the length of data the data buffer. It will be filled with the length of the decoded bytes.

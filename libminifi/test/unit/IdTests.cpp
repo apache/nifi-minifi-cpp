@@ -163,6 +163,30 @@ TEST_CASE("Test parse", "[id]") {
   LogTestController::getInstance().reset();
 }
 
+TEST_CASE("Test parse invalid", "[id]") {
+  TestController test_controller;
+
+  LogTestController::getInstance().setDebug<utils::IdGenerator>();
+  std::shared_ptr<minifi::Properties> id_props = std::make_shared<minifi::Properties>();
+  id_props->set("uid.implementation", "time");
+
+  std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
+  generator->initialize(id_props);
+
+  const std::string malformedStrs[]{
+    "12",  // drastically shorter
+    "12345678-1234-1234-1234-123456789ab",  // shorter by one
+    "12345678-1234-1234-1234-123456789abc0",  // longer by one ('0')
+    "123456789-123-1234-1234-123456789abc",  // first block is longer, but second shorter
+    "12345678-1234-1234-1234-123456789abZ",  // contains invalid character at the end
+    "utter garbage but exactly 36 chars  "  // utter garbage
+  };
+
+  for (const auto& str : malformedStrs) {
+    REQUIRE(!utils::Identifier::parse(str));
+  }
+}
+
 TEST_CASE("Test to_string", "[id]") {
   TestController test_controller;
 

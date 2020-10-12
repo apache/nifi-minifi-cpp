@@ -22,6 +22,7 @@
 #endif
 
 #include "utils/Id.h"
+#include "utils/StringUtils.h"
 
 #define __STDC_FORMAT_MACROS 1
 #include <inttypes.h>
@@ -115,16 +116,34 @@ std::string Identifier::to_string() const {
 
 utils::optional<Identifier> Identifier::parse(const std::string &str) {
   Identifier id;
-  int assigned = sscanf(str.c_str(), UUID_FORMAT_STRING,
-      &id.data_[0], &id.data_[1], &id.data_[2], &id.data_[3],
-      &id.data_[4], &id.data_[5],
-      &id.data_[6], &id.data_[7],
-      &id.data_[8], &id.data_[9],
-      &id.data_[10], &id.data_[11], &id.data_[12], &id.data_[13], &id.data_[14], &id.data_[15]);
-  if (assigned != 16) {
-    return utils::nullopt;
+  if (str.length() != 36) return {};
+  int charIdx = 0;
+  int byteIdx = 0;
+  auto input = reinterpret_cast<const uint8_t*>(str.c_str());
+  while(byteIdx < 4) {
+    if (!parseByte(id.data_, input, charIdx, byteIdx)) return {};
+  }
+  if (input[charIdx++] != '-') return {};
+
+  for (size_t idx = 0; idx < 3; ++idx) {
+    if (!parseByte(id.data_, input, charIdx, byteIdx)) return {};
+    if (!parseByte(id.data_, input, charIdx, byteIdx)) return {};
+    if (input[charIdx++] != '-') return {};
+  }
+  while(byteIdx < 16) {
+    if(!parseByte(id.data_, input, charIdx, byteIdx)) return {};
   }
   return id;
+}
+
+bool Identifier::parseByte(Data &data, const uint8_t *input, int &charIdx, int &byteIdx) {
+  uint8_t upper, lower;
+  if (!StringUtils::from_hex(input[charIdx++], upper)
+      || !StringUtils::from_hex(input[charIdx++], lower)) {
+    return false;
+  }
+  data[byteIdx++] = (upper << 4) | lower;
+  return true;
 }
 
 IdGenerator::IdGenerator()
