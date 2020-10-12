@@ -181,6 +181,7 @@ TEST_CASE("Test parse invalid", "[id]") {
     {"123456789-123-1234-1234-123456789abc", false},  // first block is longer, but second shorter
     {"12345678-1234-1234-1234-123456789abZ", false},  // contains invalid character at the end
     {"123456780123401234012340123456789abc", false},  // missing delimiters
+    {"12345678-12-34-1234-1234-123456789ab", false},  // exra hyphen
     {"utter garbage but exactly 36 chars  ", false}  // utter garbage
   };
 
