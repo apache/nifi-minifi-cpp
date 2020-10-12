@@ -236,9 +236,10 @@ class DecompressTestController : public CompressDecompressionTestController{
 };
 
 using CompressionFormat = processors::CompressContent::ExtendedCompressionFormat;
+using CompressionMode = processors::CompressContent::CompressionMode;
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1]") {
-  context->setProperty(processors::CompressContent::CompressMode, MODE_COMPRESS);
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
   context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
@@ -276,7 +277,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
 }
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfiletest2]") {
-  context->setProperty(processors::CompressContent::CompressMode, MODE_DECOMPRESS);
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
   context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
@@ -310,7 +311,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3]") {
-  context->setProperty(processors::CompressContent::CompressMode, MODE_COMPRESS);
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
   context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
@@ -349,7 +350,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfiletest4]") {
-  context->setProperty(processors::CompressContent::CompressMode, MODE_DECOMPRESS);
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
   context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
@@ -383,7 +384,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5]") {
-  context->setProperty(processors::CompressContent::CompressMode, MODE_COMPRESS);
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
   context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::LZMA));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
@@ -428,7 +429,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfiletest6]") {
-  context->setProperty(processors::CompressContent::CompressMode, MODE_DECOMPRESS);
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
   context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
@@ -469,7 +470,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletest7]") {
-  context->setProperty(processors::CompressContent::CompressMode, MODE_COMPRESS);
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
   context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::XZ_LZMA2));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
@@ -514,7 +515,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfiletest8]") {
-  context->setProperty(processors::CompressContent::CompressMode, MODE_DECOMPRESS);
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
   context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");
@@ -602,7 +603,7 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   plan->setProperty(get_file, "Input Directory", src_dir);
 
   // Configure CompressContent processor for compression
-  plan->setProperty(compress_content, "Mode", MODE_COMPRESS);
+  plan->setProperty(compress_content, "Mode", toString(CompressionMode::Compress));
   plan->setProperty(compress_content, "Compression Format", toString(CompressionFormat::GZIP));
   plan->setProperty(compress_content, "Update Filename", "true");
   plan->setProperty(compress_content, "Encapsulate in TAR", "false");
@@ -611,7 +612,7 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   plan->setProperty(put_compressed, "Directory", dst_dir);
 
   // Configure CompressContent processor for decompression
-  plan->setProperty(decompress_content, "Mode", MODE_DECOMPRESS);
+  plan->setProperty(decompress_content, "Mode", toString(CompressionMode::Decompress));
   plan->setProperty(decompress_content, "Compression Format", toString(CompressionFormat::GZIP));
   plan->setProperty(decompress_content, "Update Filename", "true");
   plan->setProperty(decompress_content, "Encapsulate in TAR", "false");
@@ -664,7 +665,7 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
   };
   const std::size_t batchSize = 3;
 
-  context->setProperty(processors::CompressContent::CompressMode, MODE_COMPRESS);
+  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
   context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
   context->setProperty(processors::CompressContent::CompressLevel, "9");
   context->setProperty(processors::CompressContent::UpdateFileName, "true");

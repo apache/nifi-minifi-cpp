@@ -40,16 +40,13 @@ core::Property CompressContent::CompressLevel(
         ->isRequired(false)->withDefaultValue<int>(1)->build());
 core::Property CompressContent::CompressMode(
     core::PropertyBuilder::createProperty("Mode")->withDescription("Indicates whether the processor should compress content or decompress content.")
-        ->isRequired(false)->withAllowableValues<std::string>({MODE_COMPRESS, MODE_DECOMPRESS})->withDefaultValue(MODE_COMPRESS)->build());
+        ->isRequired(false)->withAllowableValues(CompressionMode::values())
+        ->withDefaultValue(toString(CompressionMode::Compress))->build());
 core::Property CompressContent::CompressFormat(
     core::PropertyBuilder::createProperty("Compression Format")->withDescription("The compression format to use.")
         ->isRequired(false)
-        ->withAllowableValues<std::string>({
-          toString(ExtendedCompressionFormat::USE_MIME_TYPE),
-          toString(CompressionFormat::GZIP),
-          toString(CompressionFormat::BZIP2),
-          toString(CompressionFormat::XZ_LZMA2),
-          toString(CompressionFormat::LZMA)})->withDefaultValue(toString(ExtendedCompressionFormat::USE_MIME_TYPE))->build());
+        ->withAllowableValues(ExtendedCompressionFormat::values())
+        ->withDefaultValue(toString(ExtendedCompressionFormat::USE_MIME_TYPE))->build());
 core::Property CompressContent::UpdateFileName(
     core::PropertyBuilder::createProperty("Update Filename")->withDescription("Determines if filename extension need to be updated")
         ->isRequired(false)->withDefaultValue<bool>(false)->build());
@@ -68,7 +65,7 @@ core::Property CompressContent::BatchSize(
 core::Relationship CompressContent::Success("success", "FlowFiles will be transferred to the success relationship after successfully being compressed or decompressed");
 core::Relationship CompressContent::Failure("failure", "FlowFiles will be transferred to the failure relationship if they fail to compress/decompress");
 
-std::map<std::string, CompressContent::CompressionFormat> CompressContent::compressionFormatMimeTypeMap_{
+const std::map<std::string, CompressContent::CompressionFormat> CompressContent::compressionFormatMimeTypeMap_{
   {"application/gzip", CompressionFormat::GZIP},
   {"application/bzip2", CompressionFormat::BZIP2},
   {"application/x-bzip2", CompressionFormat::BZIP2},
@@ -76,7 +73,7 @@ std::map<std::string, CompressContent::CompressionFormat> CompressContent::compr
   {"application/x-xz", CompressionFormat::XZ_LZMA2}
 };
 
-std::map<CompressContent::CompressionFormat, std::string> CompressContent::fileExtension_{
+const std::map<CompressContent::CompressionFormat, std::string> CompressContent::fileExtension_{
   {CompressionFormat::GZIP, ".gz"},
   {CompressionFormat::LZMA, ".lzma"},
   {CompressionFormat::BZIP2, ".bz2"},
@@ -103,23 +100,13 @@ void CompressContent::initialize() {
 void CompressContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
   context->getProperty(CompressLevel.getName(), compressLevel_);
   context->getProperty(CompressMode.getName(), compressMode_);
-
-  {
-    std::string compressFormatStr;
-    context->getProperty(CompressFormat.getName(), compressFormatStr);
-    std::transform(compressFormatStr.begin(), compressFormatStr.end(), compressFormatStr.begin(), ::tolower);
-    compressFormat_ = ExtendedCompressionFormat::parse(compressFormatStr.c_str());
-    if (!compressFormat_) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unknown compression format: \"" + compressFormatStr + "\"");
-    }
-  }
-
+  context->getProperty(CompressFormat.getName(), compressFormat_);
   context->getProperty(UpdateFileName.getName(), updateFileName_);
   context->getProperty(EncapsulateInTar.getName(), encapsulateInTar_);
   context->getProperty(BatchSize.getName(), batchSize_);
 
   logger_->log_info("Compress Content: Mode [%s] Format [%s] Level [%d] UpdateFileName [%d] EncapsulateInTar [%d]",
-      compressMode_, compressFormat_.toString(), compressLevel_, updateFileName_, encapsulateInTar_);
+      compressMode_.toString(), compressFormat_.toString(), compressLevel_, updateFileName_, encapsulateInTar_);
 }
 
 void CompressContent::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -198,7 +185,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   } else {
     std::string fileName;
     result->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
-    if (compressMode_ == MODE_COMPRESS) {
+    if (compressMode_ == CompressionMode::Compress) {
       session->putAttribute(result, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
       if (updateFileName_) {
         fileName = fileName + fileExtension;
@@ -225,7 +212,7 @@ std::string CompressContent::toMimeType(CompressionFormat format) {
     case CompressionFormat::LZMA: return "application/x-lzma";
     case CompressionFormat::XZ_LZMA2: return "application/x-xz";
   }
-  throw Exception(GENERAL_EXCEPTION, std::string("Unknown compression format: ") + format.toString());
+  throw Exception(GENERAL_EXCEPTION, "Invalid compression format");
 }
 
 } /* namespace processors */

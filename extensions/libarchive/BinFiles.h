@@ -149,19 +149,19 @@ class BinManager {
   virtual ~BinManager() {
     purge();
   }
-  void setMinSize(const uint64_t &size) {
+  void setMinSize(uint64_t size) {
     minSize_ = {size};
   }
-  void setMaxSize(const uint64_t &size) {
+  void setMaxSize(uint64_t size) {
     maxSize_ = {size};
   }
-  void setMaxEntries(const uint32_t &entries) {
+  void setMaxEntries(uint32_t entries) {
     maxEntries_ = {entries};
   }
-  void setMinEntries(const uint32_t &entries) {
+  void setMinEntries(uint32_t entries) {
     minEntries_ = {entries};
   }
-  void setBinAge(const uint64_t &age) {
+  void setBinAge(uint64_t age) {
     binAge_ = {age};
   }
   int getBinCount() {

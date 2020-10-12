@@ -19,6 +19,7 @@
 
 #include <string>
 #include <cstring>
+#include <set>
 
 namespace org {
 namespace apache {
@@ -71,6 +72,8 @@ namespace utils {
 
 #define SMART_ENUM_BODY(Clazz, ...) \
     constexpr Clazz(Type value = static_cast<Type>(-1)) : value_{value} {} \
+    Clazz(const std::string& str) : value_{parse(str.c_str()).value_} {} \
+    Clazz(const char* str) : value_{parse(str).value_} {} \
    private: \
     Type value_; \
    public: \
@@ -78,6 +81,16 @@ namespace utils {
       return value_; \
     } \
     struct detail : Base::detail { \
+      static std::set<std::string> values() { \
+        static constexpr const char* ownValues[]{ \
+          FOR_EACH(SECOND, COMMA, (__VA_ARGS__)) \
+        }; \
+        std::set<std::string> values = Base::detail::values(); \
+        for (auto value : ownValues) { \
+          values.emplace(value); \
+        } \
+        return values; \
+      } \
       static const char* toStringImpl(Type a, const char* DerivedName) { \
         static constexpr const char* values[]{ \
           FOR_EACH(SECOND, COMMA, (__VA_ARGS__)) \
@@ -95,6 +108,9 @@ namespace utils {
     } \
     const char* toString() const { \
       return detail::toStringImpl(value_, #Clazz); \
+    } \
+    static std::set<std::string> values() { \
+      return detail::values(); \
     } \
     bool operator==(Type val) const { \
       return value_ == val; \
@@ -115,10 +131,13 @@ namespace utils {
       int idx = static_cast<int>(value_); \
       return 0 <= idx && idx < length; \
     } \
-    static Clazz parse(const char* str) { \
+    static Clazz parse(const char* str, bool throw_on_invalid = true) { \
       for (int idx = 0; idx < length; ++idx) { \
         if (std::strcmp(str, detail::toStringImpl(static_cast<Type>(idx), #Clazz)) == 0) \
           return static_cast<Type>(idx); \
+      } \
+      if (throw_on_invalid) { \
+        throw std::runtime_error(std::string("Cannot convert \"") + str + "\" to " #Clazz); \
       } \
       return {}; \
     } \
@@ -154,6 +173,9 @@ struct EnumBase {
   enum Type {};
   static constexpr int length = 0;
   struct detail {
+    static std::set<std::string> values() {
+      return {};
+    }
     static const char* toStringImpl(Type a, const char* DerivedName) {
       throw std::runtime_error(std::string("Cannot stringify unknown instance in enum \"") + DerivedName + "\" : \""
                                + std::to_string(static_cast<int>(a)) + "\"");

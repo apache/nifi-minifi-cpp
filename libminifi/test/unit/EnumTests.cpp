@@ -72,12 +72,18 @@ TEST_CASE("Enum checks") {
   REQUIRE(A{A::Type(0)});
   REQUIRE(B{B::Type(1)});
 
-  REQUIRE(!A::parse("not_any"));
+  REQUIRE(A::values() == (std::set<std::string>{"zero", "one"}));
+  REQUIRE(B::values() == (std::set<std::string>{"zero", "one", "two"}));
+  REQUIRE(C::values() == (std::set<std::string>{"zero", "one", "two", "three"}));
+
+  REQUIRE_THROWS(A::parse("not_any"));
+  REQUIRE(!A::parse("not_any", false));
   REQUIRE(A::parse("zero") == A::_0);
   REQUIRE(B::parse("zero") == B::_0);
   REQUIRE(C::parse("one") == C::_1);
   REQUIRE(C::parse("three") == C::_3);
-  REQUIRE(!C::parse("nada"));
+  REQUIRE_THROWS(C::parse("nada"));
+  REQUIRE(!C::parse("nada", false));
 
   REQUIRE(A{A::_0}.toString() == std::string{"zero"});
   REQUIRE(toString(A::_0) == std::string{"zero"});

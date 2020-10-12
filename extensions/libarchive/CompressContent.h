@@ -41,9 +41,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-#define MODE_COMPRESS "compress"
-#define MODE_DECOMPRESS "decompress"
-
 // CompressContent Class
 class CompressContent: public core::Processor {
 public:
@@ -72,6 +69,11 @@ public:
   // Supported Relationships
   static core::Relationship Failure;
   static core::Relationship Success;
+
+  SMART_ENUM(CompressionMode,
+    (Compress, "compress"),
+    (Decompress, "decompress")
+  )
 
   SMART_ENUM(CompressionFormat,
     (GZIP, "gzip"),
@@ -156,7 +158,7 @@ public:
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
   public:
-    WriteCallback(std::string &compress_mode, int compress_level, CompressionFormat compress_format,
+    WriteCallback(CompressionMode compress_mode, int compress_level, CompressionFormat compress_format,
         const std::shared_ptr<core::FlowFile> &flow, const std::shared_ptr<core::ProcessSession> &session) :
         compress_mode_(compress_mode), compress_level_(compress_level), compress_format_(compress_format),
         flow_(flow), session_(session),
@@ -168,7 +170,7 @@ public:
     }
     ~WriteCallback() = default;
 
-    std::string compress_mode_;
+    CompressionMode compress_mode_;
     int compress_level_;
     CompressionFormat compress_format_;
     std::shared_ptr<core::FlowFile> flow_;
@@ -219,7 +221,7 @@ public:
       struct archive *arch;
       int r;
 
-      if (compress_mode_ == MODE_COMPRESS) {
+      if (compress_mode_ == CompressionMode::Compress) {
         arch = archive_write_new();
         if (!arch) {
           status_ = -1;
@@ -353,7 +355,7 @@ public:
 
   class GzipWriteCallback : public OutputStreamCallback {
    public:
-    GzipWriteCallback(std::string compress_mode, int compress_level, std::shared_ptr<core::FlowFile> flow, std::shared_ptr<core::ProcessSession> session)
+    GzipWriteCallback(CompressionMode compress_mode, int compress_level, std::shared_ptr<core::FlowFile> flow, std::shared_ptr<core::ProcessSession> session)
       : logger_(logging::LoggerFactory<CompressContent>::getLogger())
       , compress_mode_(std::move(compress_mode))
       , compress_level_(compress_level)
@@ -362,7 +364,7 @@ public:
     }
 
     std::shared_ptr<logging::Logger> logger_;
-    std::string compress_mode_;
+    CompressionMode compress_mode_;
     int compress_level_;
     std::shared_ptr<core::FlowFile> flow_;
     std::shared_ptr<core::ProcessSession> session_;
@@ -401,7 +403,7 @@ public:
       };
 
       std::shared_ptr<io::ZlibBaseStream> filterStream;
-      if (compress_mode_ == MODE_COMPRESS) {
+      if (compress_mode_ == CompressionMode::Compress) {
         filterStream = std::make_shared<io::ZlibCompressStream>(gsl::make_not_null(outputStream.get()), io::ZlibCompressionFormat::GZIP, compress_level_);
       } else {
         filterStream = std::make_shared<io::ZlibDecompressStream>(gsl::make_not_null(outputStream.get()), io::ZlibCompressionFormat::GZIP);
@@ -438,13 +440,13 @@ private:
 
   std::shared_ptr<logging::Logger> logger_;
   int compressLevel_;
-  std::string compressMode_;
+  CompressionMode compressMode_;
   ExtendedCompressionFormat compressFormat_;
   bool updateFileName_;
   bool encapsulateInTar_;
   uint32_t batchSize_{1};
-  static std::map<std::string, CompressionFormat> compressionFormatMimeTypeMap_;
-  static std::map<CompressionFormat, std::string> fileExtension_;
+  static const std::map<std::string, CompressionFormat> compressionFormatMimeTypeMap_;
+  static const std::map<CompressionFormat, std::string> fileExtension_;
 };
 
 REGISTER_RESOURCE(CompressContent, "Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm and updates the mime.type attribute as appropriate");
