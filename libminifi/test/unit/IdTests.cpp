@@ -173,17 +173,19 @@ TEST_CASE("Test parse invalid", "[id]") {
   std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
   generator->initialize(id_props);
 
-  const std::string malformedStrs[]{
-    "12",  // drastically shorter
-    "12345678-1234-1234-1234-123456789ab",  // shorter by one
-    "12345678-1234-1234-1234-123456789abc0",  // longer by one ('0')
-    "123456789-123-1234-1234-123456789abc",  // first block is longer, but second shorter
-    "12345678-1234-1234-1234-123456789abZ",  // contains invalid character at the end
-    "utter garbage but exactly 36 chars  "  // utter garbage
+  const std::map<std::string, bool> test_cases{
+    {"12", false},  // drastically shorter
+    {"12345678-1234-1234-1234-123456789abc", true},  // ok
+    {"12345678-1234-1234-1234-123456789ab", false},  // shorter by one
+    {"12345678-1234-1234-1234-123456789abc0", false},  // longer by one ('0')
+    {"123456789-123-1234-1234-123456789abc", false},  // first block is longer, but second shorter
+    {"12345678-1234-1234-1234-123456789abZ", false},  // contains invalid character at the end
+    {"123456780123401234012340123456789abc", false},  // missing delimiters
+    {"utter garbage but exactly 36 chars  ", false}  // utter garbage
   };
 
-  for (const auto& str : malformedStrs) {
-    REQUIRE(!utils::Identifier::parse(str));
+  for (const auto& it : test_cases) {
+    REQUIRE(static_cast<bool>(utils::Identifier::parse(it.first)) == it.second);
   }
 }
 
