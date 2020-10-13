@@ -18,7 +18,7 @@
 
 #include "properties/Configure.h"
 
-#include "gsl.h"
+#include "utils/gsl.h"
 
 #include "core/logging/LoggerConfiguration.h"
 
