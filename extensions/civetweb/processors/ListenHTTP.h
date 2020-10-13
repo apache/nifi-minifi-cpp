@@ -42,8 +42,7 @@ namespace processors {
 // ListenHTTP Class
 class ListenHTTP : public core::Processor {
  public:
-
-  using FlowFileBufferPair=std::pair<std::shared_ptr<core::FlowFile>, std::shared_ptr<io::BufferStream>>;
+  using FlowFileBufferPair=std::pair<std::shared_ptr<FlowFileRecord>, std::unique_ptr<io::BufferStream>>;
 
   // Constructor
   /*!
@@ -125,8 +124,8 @@ class ListenHTTP : public core::Processor {
     bool authRequest(mg_connection *conn, const mg_request_info *req_info) const;
     void setHeaderAttributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const;
     void writeBody(mg_connection *conn, const mg_request_info *req_info, bool include_payload = true);
-    std::shared_ptr<io::BufferStream> createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info);
-    bool enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::shared_ptr<io::BufferStream>);
+    std::unique_ptr<io::BufferStream> createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info);
+    bool enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::unique_ptr<io::BufferStream>);
 
     std::string base_uri_;
     std::regex auth_dn_regex_;
@@ -161,7 +160,7 @@ class ListenHTTP : public core::Processor {
   // Write callback for transferring data from HTTP request to content repo
   class WriteCallback : public OutputStreamCallback {
    public:
-    WriteCallback(std::shared_ptr<io::BufferStream>);
+    WriteCallback(std::unique_ptr<io::BufferStream>);
     int64_t process(std::shared_ptr<io::BaseStream> stream);
 
    private:
@@ -208,6 +207,8 @@ class ListenHTTP : public core::Processor {
   void notifyStop() override;
 
  private:
+  static const std::size_t DEFAULT_BUFFER_SIZE;
+
   void processIncomingFlowFile(core::ProcessSession *session);
   void processRequestBuffer(core::ProcessSession *session);
 

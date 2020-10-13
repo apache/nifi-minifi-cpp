@@ -26,6 +26,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
+const std::size_t ListenHTTP::DEFAULT_BUFFER_SIZE = 20000;
+
 core::Property ListenHTTP::BasePath(
     core::PropertyBuilder::createProperty("Base Path")
         ->withDescription("Base path for incoming connections")
@@ -65,13 +67,13 @@ core::Property ListenHTTP::HeadersAsAttributesRegex("HTTP Headers to receive as 
 core::Property ListenHTTP::BatchSize(
     core::PropertyBuilder::createProperty("Batch Size")
         ->withDescription("Maximum number of buffered requests to be processed in a single batch. If set to zero all buffered requests are processed.")
-        ->withDefaultValue<std::size_t>(0)->build());
+        ->withDefaultValue<std::size_t>(ListenHTTP::DEFAULT_BUFFER_SIZE)->build());
 
 core::Property ListenHTTP::BufferSize(
     core::PropertyBuilder::createProperty("Buffer Size")
         ->withDescription("Maximum number of HTTP Requests allowed to be buffered before processing them when the processor is triggered. "
                           "If the buffer full, the request is refused. If set to zero the buffer is unlimited.")
-        ->withDefaultValue<std::size_t>(0)->build());
+        ->withDefaultValue<std::size_t>(ListenHTTP::DEFAULT_BUFFER_SIZE)->build());
 
 core::Relationship ListenHTTP::Success("success", "All files are routed to success");
 
@@ -265,7 +267,7 @@ void ListenHTTP::processIncomingFlowFile(core::ProcessSession *session) {
 
 void ListenHTTP::processRequestBuffer(core::ProcessSession *session) {
   std::size_t flow_file_count = 0;
-  while (batch_size_ == 0 || batch_size_ > flow_file_count) {
+  for (; batch_size_ == 0 || batch_size_ > flow_file_count; ++flow_file_count) {
     FlowFileBufferPair flow_file_buffer_pair;
     if (!handler_->request_buffer.tryDequeue(flow_file_buffer_pair)) {
       break;
@@ -274,14 +276,12 @@ void ListenHTTP::processRequestBuffer(core::ProcessSession *session) {
     auto flow_file = flow_file_buffer_pair.first;
     session->add(flow_file);
 
-    auto request_stream = flow_file_buffer_pair.second;
-    if (request_stream) {
-      WriteCallback callback(request_stream);
+    if (flow_file_buffer_pair.second) {
+      WriteCallback callback(std::move(flow_file_buffer_pair.second));
       session->write(flow_file, &callback);
     }
 
     session->transfer(flow_file, Success);
-    ++flow_file_count;
   }
 
   logger_->log_debug("ListenHTTP transferred %d flow files from HTTP request buffer", flow_file_count);
@@ -325,7 +325,7 @@ void ListenHTTP::Handler::setHeaderAttributes(const mg_request_info *req_info, c
   }
 }
 
-bool ListenHTTP::Handler::enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::shared_ptr<io::BufferStream> content_buffer) {
+bool ListenHTTP::Handler::enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::unique_ptr<io::BufferStream> content_buffer) {
   auto flow_file = std::make_shared<FlowFileRecord>();
   auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
   if (flow_version != nullptr) {
@@ -342,7 +342,7 @@ bool ListenHTTP::Handler::enqueueRequest(mg_connection *conn, const mg_request_i
   if (buffer_size_ == 0 || request_buffer.size() < buffer_size_) {
     request_buffer.enqueue(std::make_pair(std::move(flow_file), std::move(content_buffer)));
   } else {
-    logger_->log_error("ListenHTTP buffer is full");
+    logger_->log_warn("ListenHTTP buffer is full");
     sendHttp503(conn);
     return true;
   }
@@ -368,7 +368,7 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *
   // Always send 100 Continue, as allowed per standard to minimize client delay (https://www.w3.org/Protocols/rfc2616/rfc2616-sec8.html)
   mg_printf(conn, "HTTP/1.1 100 Continue\r\n\r\n");
 
-  return enqueueRequest(conn, req_info, createContentBuffer(conn, req_info));
+  return enqueueRequest(conn, req_info, std::move(createContentBuffer(conn, req_info)));
 }
 
 bool ListenHTTP::Handler::authRequest(mg_connection *conn, const mg_request_info *req_info) const {
@@ -456,8 +456,8 @@ void ListenHTTP::Handler::writeBody(mg_connection *conn, const mg_request_info *
   }
 }
 
-std::shared_ptr<io::BufferStream> ListenHTTP::Handler::createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info) {
-  auto content_buffer = std::make_shared<io::BufferStream>();
+std::unique_ptr<io::BufferStream> ListenHTTP::Handler::createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info) {
+  auto content_buffer = utils::make_unique<io::BufferStream>();
   int64_t rlen;
   int64_t nlen = 0;
   int64_t tlen = req_info->content_length;
@@ -488,9 +488,9 @@ std::shared_ptr<io::BufferStream> ListenHTTP::Handler::createContentBuffer(struc
   return content_buffer;
 }
 
-ListenHTTP::WriteCallback::WriteCallback(std::shared_ptr<io::BufferStream> request_content)
+ListenHTTP::WriteCallback::WriteCallback(std::unique_ptr<io::BufferStream> request_content)
     : logger_(logging::LoggerFactory<ListenHTTP::WriteCallback>::getLogger())
-    , request_content_(request_content) {
+    , request_content_(std::move(request_content)) {
 }
 
 int64_t ListenHTTP::WriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
