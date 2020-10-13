@@ -23,6 +23,7 @@
 #include <type_traits>
 #include <utility>
 #include <functional>
+#include <set>
 
 #include "gsl.h"
 

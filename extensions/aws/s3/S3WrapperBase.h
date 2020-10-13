@@ -77,9 +77,12 @@ struct PutObjectResult {
   Aws::String ssealgorithm;
 };
 
-struct PutObjectRequestParameters {
+struct S3RequestParameters {
   std::string bucket;
   std::string object_key;
+};
+
+struct PutObjectRequestParameters : public S3RequestParameters {
   std::string storage_class;
   std::string server_side_encryption;
   std::string content_type;
