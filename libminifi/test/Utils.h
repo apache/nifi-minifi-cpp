@@ -29,12 +29,3 @@
   static auto call_##method(T&& instance, Args&& ...args) -> decltype((std::forward<T>(instance).method(std::forward<Args>(args)...))) { \
     return std::forward<T>(instance).method(std::forward<Args>(args)...); \
   }
-
-std::string repeat(const std::string& str, std::size_t count) {
-  std::string result;
-  result.reserve(str.length() * count);
-  for (size_t i = 0; i < count; ++i) {
-    result += str;
-  }
-  return result;
-}

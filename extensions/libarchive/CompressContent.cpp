@@ -110,12 +110,18 @@ void CompressContent::onSchedule(core::ProcessContext *context, core::ProcessSes
 }
 
 void CompressContent::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  for (size_t i = 0; i < batchSize_; ++i) {
+  size_t processedFlowFileCount = 0;
+  for (; processedFlowFileCount < batchSize_; ++processedFlowFileCount) {
     std::shared_ptr<core::FlowFile> flowFile = session->get();
     if (!flowFile) {
       break;
     }
     processFlowFile(flowFile, session);
+  }
+  if (processedFlowFileCount == 0) {
+    // we got no flowFiles
+    context->yield();
+    return;
   }
 }
 

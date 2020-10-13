@@ -331,6 +331,28 @@ class StringUtils {
   static bool from_hex(uint8_t ch, uint8_t& output);
 
   /**
+   * Creates a string that is a concatenation of count instances of the provided string.
+   * @tparam TChar char type of the string (char or wchar_t)
+   * @param str that is to be repeated
+   * @param count the number of times the string is repeated
+   * @return the result string
+   */
+  template<typename TChar>
+  static std::basic_string<TChar> repeat(const TChar* str, size_t count) {
+    std::basic_string<TChar> result;
+    result.reserve(std::basic_string<TChar>::traits_type::length(str) * count);
+    for (size_t idx = 0; idx < count; ++idx) {
+      result += str;
+    }
+    return result;
+  }
+
+  template<typename TChar>
+  static std::basic_string<TChar> repeat(const std::basic_string<TChar>& str, size_t count) {
+    return repeat(str.c_str(), count);
+  }
+
+  /**
    * Hexdecodes the hexencoded string in data, ignoring every character that is not [0-9a-fA-F]
    * @param data the output buffer where the hexdecoded bytes will be written. Must be at least length / 2 bytes long.
    * @param data_length pointer to the length of data the data buffer. It will be filled with the length of the decoded bytes.

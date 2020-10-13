@@ -149,6 +149,16 @@ namespace utils {
       return {}; \
     }
 
+/**
+ * These macros provide an encapsulation of enum-like behavior offering the following:
+ *  - switch safety: the compiler can detect if some enum cases are not handled
+ *  - string conversion: convert between enum instances and their string representations (toString, parse)
+ *  - validity: check if it contains a value that is an invalid enum value
+ *  - extensibility: extend an enum with new values and safely* cast from derived to base
+ *                   (* "safely" here means that there is no casting between unrelated enums)
+ *  - reflection: access the set of all string representations
+ */
+
 #define SMART_ENUM(Clazz, ...) \
   struct Clazz { \
     using Base = ::org::apache::nifi::minifi::utils::EnumBase; \

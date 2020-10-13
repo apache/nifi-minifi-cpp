@@ -185,7 +185,7 @@ class MergeTestController : public TestController {
     context = std::make_shared<core::ProcessContext>(std::make_shared<core::ProcessorNode>(processor), nullptr, repo, repo, content_repo);
 
     for (size_t i = 0; i < 6; ++i) {
-      flowFileContents[i] = repeat(std::to_string(i), 32);
+      flowFileContents[i] = utils::StringUtils::repeat(std::to_string(i), 32);
     }
   }
   ~MergeTestController() {
