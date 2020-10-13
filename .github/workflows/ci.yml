@@ -1,22 +1,6 @@
 name: "MiNiFi-CPP CI"
 on: [push, pull_request, workflow_dispatch]
 jobs:
-  macos_xcode_10_3:
-    name: "macos-xcode10.3"
-    runs-on: macos-10.15
-    timeout-minutes: 60
-    steps:
-      - id: checkout
-        uses: actions/checkout@v2
-      - id: install_dependencies
-        run: brew install ossp-uuid boost flex openssl python lua libpcap xz libssh2
-      - id: setup_env
-        run: |
-          echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
-          echo "::set-env name=CMAKE_BUILD_OPTIONS::-DENABLE_PCAP=TRUE -DENABLE_LUA_SCRIPTING=1"
-          sudo xcode-select -switch /Applications/Xcode_10.3.app
-      - id: build
-        run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
   macos_xcode_11_2_1:
     name: "macos-xcode11.2.1"
     runs-on: macos-10.15
@@ -31,6 +15,22 @@ jobs:
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
           echo "::set-env name=CMAKE_BUILD_OPTIONS::-DENABLE_PCAP=TRUE -DENABLE_LUA_SCRIPTING=1"
           sudo xcode-select -switch /Applications/Xcode_11.2.1.app
+      - id: build
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
+  macos_xcode_11_7:
+    name: "macos-xcode12.0"
+    runs-on: macos-10.15
+    timeout-minutes: 60
+    steps:
+      - id: checkout
+        uses: actions/checkout@v2
+      - id: install_dependencies
+        run: brew install ossp-uuid boost flex openssl python lua libpcap xz libssh2
+      - id: setup_env
+        run: |
+          echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
+          echo "::set-env name=CMAKE_BUILD_OPTIONS::-DENABLE_PCAP=TRUE -DENABLE_LUA_SCRIPTING=1"
+          sudo xcode-select -switch /Applications/Xcode_12.app
       - id: build
         run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
   windows:
