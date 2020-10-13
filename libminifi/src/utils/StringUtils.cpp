@@ -167,6 +167,14 @@ std::string StringUtils::replaceMap(std::string source_string, const std::map<st
   return result_string;
 }
 
+bool StringUtils::from_hex(uint8_t ch, uint8_t& output) {
+  if (ch > 127) {
+    return false;
+  }
+  output = hex_lut[ch];
+  return output != SKIP;
+}
+
 bool StringUtils::from_hex(uint8_t* data, size_t* data_length, const char* hex, size_t hex_length) {
   if (*data_length < hex_length / 2) {
     return false;

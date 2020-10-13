@@ -163,6 +163,33 @@ TEST_CASE("Test parse", "[id]") {
   LogTestController::getInstance().reset();
 }
 
+TEST_CASE("Test parse invalid", "[id]") {
+  TestController test_controller;
+
+  LogTestController::getInstance().setDebug<utils::IdGenerator>();
+  std::shared_ptr<minifi::Properties> id_props = std::make_shared<minifi::Properties>();
+  id_props->set("uid.implementation", "time");
+
+  std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
+  generator->initialize(id_props);
+
+  const std::map<std::string, bool> test_cases{
+    {"12", false},  // drastically shorter
+    {"12345678-1234-1234-1234-123456789abc", true},  // ok
+    {"12345678-1234-1234-1234-123456789ab", false},  // shorter by one
+    {"12345678-1234-1234-1234-123456789abc0", false},  // longer by one ('0')
+    {"123456789-123-1234-1234-123456789abc", false},  // first block is longer, but second shorter
+    {"12345678-1234-1234-1234-123456789abZ", false},  // contains invalid character at the end
+    {"123456780123401234012340123456789abc", false},  // missing delimiters
+    {"12345678-12-34-1234-1234-123456789ab", false},  // exra hyphen
+    {"utter garbage but exactly 36 chars  ", false}  // utter garbage
+  };
+
+  for (const auto& it : test_cases) {
+    REQUIRE(static_cast<bool>(utils::Identifier::parse(it.first)) == it.second);
+  }
+}
+
 TEST_CASE("Test to_string", "[id]") {
   TestController test_controller;
 
