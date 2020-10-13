@@ -368,7 +368,7 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *
   // Always send 100 Continue, as allowed per standard to minimize client delay (https://www.w3.org/Protocols/rfc2616/rfc2616-sec8.html)
   mg_printf(conn, "HTTP/1.1 100 Continue\r\n\r\n");
 
-  return enqueueRequest(conn, req_info, std::move(createContentBuffer(conn, req_info)));
+  return enqueueRequest(conn, req_info, createContentBuffer(conn, req_info));
 }
 
 bool ListenHTTP::Handler::authRequest(mg_connection *conn, const mg_request_info *req_info) const {
