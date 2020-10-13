@@ -177,19 +177,25 @@ TEST_CASE("ConfigFile can add a new setting at the end", "[encrypt-config][appen
 }
 
 TEST_CASE("ConfigFile can write to a new file", "[encrypt-config][writeTo]") {
-    ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
-    test_file.update("nifi.bored.yield.duration", "20 millis");
+  ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
+  test_file.update("nifi.bored.yield.duration", "20 millis");
 
-    char format[] = "/tmp/ConfigFileTests.tmp.XXXXXX";
-    std::string temp_dir = utils::file::create_temp_directory(format);
-    auto remove_directory = gsl::finally([&temp_dir]() { utils::file::delete_dir(temp_dir); });
-    std::string file_path = utils::file::concat_path(temp_dir, "minifi.properties");
+  char format[] = "/tmp/ConfigFileTests.tmp.XXXXXX";
+  std::string temp_dir = utils::file::create_temp_directory(format);
+  auto remove_directory = gsl::finally([&temp_dir]() { utils::file::delete_dir(temp_dir); });
+  std::string file_path = utils::file::concat_path(temp_dir, "minifi.properties");
 
-    test_file.writeTo(file_path);
+  test_file.writeTo(file_path);
 
-    ConfigFile test_file_copy{std::ifstream{file_path}};
-    REQUIRE(test_file.size() == test_file_copy.size());
-    REQUIRE(test_file_copy.getValue("nifi.bored.yield.duration") == utils::optional<std::string>{"20 millis"});
+  ConfigFile test_file_copy{std::ifstream{file_path}};
+  REQUIRE(test_file.size() == test_file_copy.size());
+  REQUIRE(test_file_copy.getValue("nifi.bored.yield.duration") == utils::optional<std::string>{"20 millis"});
+}
+
+TEST_CASE("ConfigFile will throw if we try to write to an invalid file name", "[encrypt-config][writeTo]") {
+  ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
+  const char* file_path = "/tmp/3915913c-b37d-4adc-b6a8-b8e36e44c639/6ede949c-12b3-4a91-8956-71bc6ab6f73e/some.file";
+  REQUIRE_THROWS(test_file.writeTo(file_path));
 }
 
 TEST_CASE("ConfigFile can merge lists of property names", "[encrypt-config][mergeProperties]") {

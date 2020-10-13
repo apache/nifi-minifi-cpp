@@ -128,9 +128,15 @@ int ConfigFile::erase(const std::string& key) {
 }
 
 void ConfigFile::writeTo(const std::string& file_path) const {
-  std::ofstream file{file_path};
-  for (const auto& config_line : config_lines_) {
-    file << config_line.getLine() << '\n';
+  try {
+    std::ofstream file{file_path};
+    file.exceptions(std::ios::failbit | std::ios::badbit);
+
+    for (const auto& config_line : config_lines_) {
+      file << config_line.getLine() << '\n';
+    }
+  } catch (const std::exception&) {
+    throw std::runtime_error{"Could not write to file " + file_path};
   }
 }
 
