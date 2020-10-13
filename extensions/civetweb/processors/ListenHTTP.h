@@ -151,7 +151,7 @@ class ListenHTTP : public core::Processor {
     int64_t process(std::shared_ptr<io::BaseStream> stream) override;
 
    private:
-    std::shared_ptr<io::BufferStream> request_content_;
+    std::unique_ptr<io::BufferStream> request_content_;
   };
 
   static int logMessage(const struct mg_connection *conn, const char *message) {
