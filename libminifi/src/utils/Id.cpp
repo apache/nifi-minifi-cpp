@@ -22,7 +22,6 @@
 #endif
 
 #include "utils/Id.h"
-#include "utils/StringUtils.h"
 
 #define __STDC_FORMAT_MACROS 1
 #include <inttypes.h>
@@ -34,7 +33,6 @@
 #include <string>
 #include <limits>
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/StringUtils.h"
 
 #ifdef WIN32
 #include "Rpc.h"
@@ -42,6 +40,8 @@
 #pragma comment(lib, "Rpcrt4.lib")
 #pragma comment(lib, "Ws2_32.lib")
 #endif
+
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -121,9 +121,9 @@ utils::optional<Identifier> Identifier::parse(const std::string &str) {
   int charIdx = 0;
   int byteIdx = 0;
   auto input = reinterpret_cast<const uint8_t*>(str.c_str());
-  
+
   // [xxxxxxxx]-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-  while(byteIdx < 4) {
+  while (byteIdx < 4) {
     if (!parseByte(id.data_, input, charIdx, byteIdx)) return {};
   }
   // xxxxxxxx[-]xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -135,10 +135,10 @@ utils::optional<Identifier> Identifier::parse(const std::string &str) {
     if (!parseByte(id.data_, input, charIdx, byteIdx)) return {};
     if (input[charIdx++] != '-') return {};
   }
-  
+
   // xxxxxxxx-xxxx-xxxx-xxxx-[xxxxxxxxxxxx] - the rest, i.e. until byte 16
-  while(byteIdx < 16) {
-    if(!parseByte(id.data_, input, charIdx, byteIdx)) return {};
+  while (byteIdx < 16) {
+    if (!parseByte(id.data_, input, charIdx, byteIdx)) return {};
   }
   return id;
 }
