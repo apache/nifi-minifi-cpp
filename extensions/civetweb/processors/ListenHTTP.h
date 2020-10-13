@@ -78,7 +78,7 @@ class ListenHTTP : public core::Processor {
   std::string getPort() const;
   bool isSecure() const;
 
-  struct response_body {
+  struct ResponseBody {
     std::string uri;
     std::string mime_type;
     std::string body;
@@ -90,8 +90,7 @@ class ListenHTTP : public core::Processor {
     Handler(std::string base_uri,
             core::ProcessContext *context,
             std::string &&authDNPattern,
-            std::string &&headersAsAttributesPattern,
-            std::size_t buffer_size);
+            std::string &&headersAsAttributesPattern);
     bool handlePost(CivetServer *server, struct mg_connection *conn) override;
     bool handleGet(CivetServer *server, struct mg_connection *conn) override;
     bool handleHead(CivetServer *server, struct mg_connection *conn) override;
@@ -100,23 +99,9 @@ class ListenHTTP : public core::Processor {
      * Sets a static response body string to be used for a given URI, with a number of seconds it will be kept in memory.
      * @param response
      */
-    void setResponseBody(struct response_body response) {
-      std::lock_guard<std::mutex> guard(uri_map_mutex_);
+    void setResponseBody(const ResponseBody& response);
 
-      if (response.body.empty()) {
-        logger_->log_info("Unregistering response body for URI '%s'",
-                          response.uri);
-        response_uri_map_.erase(response.uri);
-      } else {
-        logger_->log_info("Registering response body for URI '%s' of length %lu",
-                          response.uri,
-                          response.body.size());
-        response_uri_map_[response.uri] = std::move(response);
-      }
-    }
-
-    std::size_t buffer_size_;
-    utils::ConcurrentQueue<FlowFileBufferPair> request_buffer;
+    bool dequeueRequest(FlowFileBufferPair &flow_file_buffer_pair);
 
    private:
     void sendHttp500(struct mg_connection *conn);
@@ -125,15 +110,17 @@ class ListenHTTP : public core::Processor {
     void setHeaderAttributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const;
     void writeBody(mg_connection *conn, const mg_request_info *req_info, bool include_payload = true);
     std::unique_ptr<io::BufferStream> createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info);
-    bool enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::unique_ptr<io::BufferStream>);
+    void enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::unique_ptr<io::BufferStream>);
 
     std::string base_uri_;
     std::regex auth_dn_regex_;
     std::regex headers_as_attrs_regex_;
     core::ProcessContext *process_context_;
     std::shared_ptr<logging::Logger> logger_;
-    std::map<std::string, response_body> response_uri_map_;
+    std::map<std::string, ResponseBody> response_uri_map_;
     std::mutex uri_map_mutex_;
+    std::size_t buffer_size_;
+    utils::ConcurrentQueue<FlowFileBufferPair> request_buffer_;
   };
 
   class ResponseBodyReadCallback : public InputStreamCallback {
@@ -141,7 +128,7 @@ class ListenHTTP : public core::Processor {
     explicit ResponseBodyReadCallback(std::string *out_str)
         : out_str_(out_str) {
     }
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
       out_str_->resize(stream->size());
       uint64_t num_read = stream->read(reinterpret_cast<uint8_t *>(&(*out_str_)[0]),
                                            gsl::narrow<int>(stream->size()));
@@ -161,10 +148,9 @@ class ListenHTTP : public core::Processor {
   class WriteCallback : public OutputStreamCallback {
    public:
     WriteCallback(std::unique_ptr<io::BufferStream>);
-    int64_t process(std::shared_ptr<io::BaseStream> stream);
+    int64_t process(std::shared_ptr<io::BaseStream> stream) override;
 
    private:
-    std::shared_ptr<logging::Logger> logger_;
     std::shared_ptr<io::BufferStream> request_content_;
   };
 
