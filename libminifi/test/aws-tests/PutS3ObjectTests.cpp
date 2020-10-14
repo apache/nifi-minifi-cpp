@@ -170,7 +170,7 @@ class PutS3ObjectTestsFixture {
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCredentials]") {
   setBucket();
 
-  SECTION("Test credentials not set") {
+  SECTION("Test property credentials") {
     plan->setProperty(update_attribute, "s3.accessKey", "key", true);
     plan->setProperty(put_s3_object, "Access Key", "${s3.accessKey}");
     plan->setProperty(update_attribute, "s3.secretKey", "secret", true);
