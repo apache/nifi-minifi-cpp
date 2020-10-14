@@ -13,10 +13,9 @@ jobs:
       - id: setup_env
         run: |
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
-          echo "CMAKE_BUILD_OPTIONS=\"-DENABLE_PCAP=TRUE -DENABLE_LUA_SCRIPTING=1\"" >> $GITHUB_ENV
           sudo xcode-select -switch /Applications/Xcode_11.2.1.app
       - id: build
-        run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_LUA_SCRIPTING=1 -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
   macos_xcode_11_7:
     name: "macos-xcode12.0"
     runs-on: macos-10.15
@@ -29,10 +28,9 @@ jobs:
       - id: setup_env
         run: |
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
-          echo "CMAKE_BUILD_OPTIONS=\"-DENABLE_PCAP=TRUE -DENABLE_LUA_SCRIPTING=1\"" >> $GITHUB_ENV
           sudo xcode-select -switch /Applications/Xcode_12.app
       - id: build
-        run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_LUA_SCRIPTING=1 -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
   windows:
     name: "windows"
     runs-on: windows-2016
@@ -77,7 +75,6 @@ jobs:
             ubuntu-16.04-ccache-refs/heads/main-
       - id: install_deps
         run: |
-          echo "CMAKE_BUILD_OPTIONS=\"-DENABLE_PCAP=TRUE\"" >> $GITHUB_ENV
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -99,7 +96,6 @@ jobs:
             ubuntu-16.04-gcc-4.8-ccache-refs/heads/main-
       - id: install_deps
         run: |
-          echo "CMAKE_BUILD_OPTIONS=\"-DENABLE_PCAP=TRUE\"" >> $GITHUB_ENV
           sudo apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
           sudo apt update
           sudo apt install -y gcc-4.8 g++-4.8 bison flex libboost-all-dev uuid-dev openssl libcurl4-openssl-dev ccache libpython3-dev liblua5.1-0-dev libpcap-dev libssh2-1-dev
@@ -125,7 +121,6 @@ jobs:
             ubuntu-20.04-ccache-refs/heads/main-
       - id: install_deps
         run: |
-          echo "CMAKE_BUILD_OPTIONS=\"-DENABLE_PCAP=TRUE\"" >> $GITHUB_ENV
           sudo apt install -y ccache libfl-dev
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -147,7 +142,6 @@ jobs:
             ubuntu-16.04-all-ccache-refs/heads/main-
       - id: install_deps
         run: |
-          echo "CMAKE_BUILD_OPTIONS=\"-DENABLE_PCAP=TRUE\"" >> $GITHUB_ENV
           sudo apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
           sudo apt update
           sudo apt install -y ccache openjdk-8-jdk maven
@@ -171,7 +165,6 @@ jobs:
             debian-ccache-refs/heads/main-
       - id: install_deps
         run: |
-          echo "CMAKE_BUILD_OPTIONS=\"-DENABLE_PCAP=TRUE\"" >> $GITHUB_ENV
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -193,7 +186,6 @@ jobs:
             centos-ccache-refs/heads/main-
       - id: install_deps
         run: |
-          echo "CMAKE_BUILD_OPTIONS=\"-DENABLE_PCAP=TRUE\"" >> $GITHUB_ENV
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -215,7 +207,6 @@ jobs:
             fedora-ccache-refs/heads/main-
       - id: install_deps
         run: |
-          echo "CMAKE_BUILD_OPTIONS=\"-DENABLE_PCAP=TRUE\"" >> $GITHUB_ENV
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -237,7 +228,6 @@ jobs:
             ubuntu-18.04-ccache-refs/heads/main
       - id: install_deps
         run: |
-          echo "CMAKE_BUILD_OPTIONS=\"-DENABLE_PCAP=TRUE\"" >> $GITHUB_ENV
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -259,7 +249,6 @@ jobs:
             ubuntu-16.04-shared-ccache-refs/heads/main-
       - id: install_deps
         run: |
-          echo "CMAKE_BUILD_OPTIONS=\"-DENABLE_PCAP=TRUE\"" >> $GITHUB_ENV
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
