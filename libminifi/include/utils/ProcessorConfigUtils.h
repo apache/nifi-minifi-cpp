@@ -28,7 +28,7 @@ namespace utils {
 std::string getRequiredPropertyOrThrow(const core::ProcessContext* context, const std::string& property_name) {
   std::string value;
   if (!context->getProperty(property_name, value)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + "property missing or invalid");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + " property missing or invalid");
   }
   return value;
 }
@@ -44,19 +44,16 @@ std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::Proc
 }
 
 bool parseBooleanPropertyOrThrow(core::ProcessContext* context, const std::string& property_name) {
-  // Assuming StringUtils::StringToBool is corrected
   bool value;
-  if (!utils::StringUtils::StringToBool(getRequiredPropertyOrThrow(context, property_name), value)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + "property missing or invalid");
-  }
-  return value;
+  std::string value_str = getRequiredPropertyOrThrow(context, property_name);
+  return utils::StringUtils::StringToBool(value_str, value);
 }
 
 std::chrono::milliseconds parseTimePropertyMSOrThrow(core::ProcessContext* context, const std::string& property_name) {
   core::TimeUnit unit;
   uint64_t time_value_ms;
   if (!core::Property::StringToTime(getRequiredPropertyOrThrow(context, property_name), time_value_ms, unit) || !core::Property::ConvertTimeUnitToMS(time_value_ms, unit, time_value_ms)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + "property missing or invalid");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + " property missing or invalid");
   }
   return std::chrono::milliseconds(time_value_ms);
 }

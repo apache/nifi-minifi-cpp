@@ -24,6 +24,7 @@
 #include "core/Processor.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "rdkafka.h"
+#include "rdkafka_utils.h"
 #include "KafkaConnection.h"
 
 namespace org {
@@ -31,31 +32,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-
-// TODO(hunyadi): move all these to a separate file included by PublishKafka and ConsumeKafka
-struct rd_kafka_conf_deleter {
-  void operator()(rd_kafka_conf_t* ptr) const noexcept { rd_kafka_conf_destroy(ptr); }
-};
-struct rd_kafka_topic_conf_deleter {
-  void operator()(rd_kafka_topic_conf_t* ptr) const noexcept { rd_kafka_topic_conf_destroy(ptr); }
-};
-struct rd_kafka_consumer_deleter {
-  void operator()(rd_kafka_t* ptr) const noexcept {
-    std::cerr << "\u001b[37;1mconsumer_deleter\u001b[0m" << std::endl;
-    rd_kafka_unsubscribe(ptr);
-    rd_kafka_consumer_close(ptr);
-    rd_kafka_destroy(ptr);
-    std::cerr << "\u001b[37;1mconsumer_deleter done\u001b[0m" << std::endl;
-  }
-};
-struct rd_kafka_topic_partition_list_deleter {
-  void operator()(rd_kafka_topic_partition_list_t* ptr) const noexcept { rd_kafka_topic_partition_list_destroy(ptr); }
-};
-struct rd_kafka_topic_deleter {
-  void operator()(rd_kafka_topic_t* ptr) const noexcept { rd_kafka_topic_destroy(ptr); }
-};
-
-
 
 class ConsumeKafka : public core::Processor {
  public:
@@ -109,7 +85,7 @@ class ConsumeKafka : public core::Processor {
   // virtual ~ConsumeKafka() = default;
   virtual ~ConsumeKafka() {
     logger_->log_debug("\u001b[37;1mConsumeKafka destructor.\u001b[0m");
-  };
+  }
 
  public:
   bool supportsDynamicProperties() override {
@@ -156,14 +132,9 @@ class ConsumeKafka : public core::Processor {
   utils::optional<unsigned int> max_uncommitted_time_seconds_;
   std::chrono::milliseconds communications_timeout_milliseconds_;
 
-  // KafkaConnectionKey key_;
-  // std::unique_ptr<KafkaConnection> conn_;
-  // std::mutex connection_mutex_;
-
-  std::unique_ptr<rd_kafka_conf_t, rd_kafka_conf_deleter> conf_;
-  std::unique_ptr<rd_kafka_t, rd_kafka_consumer_deleter> consumer_;
-  std::unique_ptr<rd_kafka_topic_partition_list_t, rd_kafka_topic_partition_list_deleter> kf_topic_partition_list_;
-  // std::vector<std::unique_ptr<rd_kafka_topic_t, rd_kafka_topic_deleter>> kf_topics_;
+  std::unique_ptr<rd_kafka_t, utils::rd_kafka_consumer_deleter> consumer_;
+  std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf_;
+  std::unique_ptr<rd_kafka_topic_partition_list_t, utils::rd_kafka_topic_partition_list_deleter> kf_topic_partition_list_;
 
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ConsumeKafka>::getLogger()};
 };

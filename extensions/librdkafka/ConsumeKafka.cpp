@@ -175,24 +175,15 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
   configureNewConnection(context);
 }
 
-void setKafkaConfigurationField(rd_kafka_conf_t* configuration, const std::string& field_name, const std::string& value) {
-  static std::array<char, 512U> errstr{};
-  rd_kafka_conf_res_t result;
-  result = rd_kafka_conf_set(configuration, field_name.c_str(), value.c_str(), errstr.data(), errstr.size());
-  // logger_->log_debug("Setting kafka configuration field bootstrap.servers:= %s", value);
-  if (result != RD_KAFKA_CONF_OK) {
-    auto error_msg = utils::StringUtils::join_pack("ConsumeKafka configuration error", errstr.data());
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-  }
-}
-
+// TODO(hunyadi): maybe move this to the kafka utils?
 void print_topics_list(std::shared_ptr<logging::Logger> logger, rd_kafka_topic_partition_list_t* kf_topic_partition_list) {
   for (std::size_t i = 0; i < kf_topic_partition_list->cnt; ++i) {
-      logger->log_debug("kf_topic_partition_list: \u001b[33m[topic: %s, partition: %d, offset: %lld]\u001b[0m",
-      kf_topic_partition_list->elems[i].topic, kf_topic_partition_list->elems[i].partition, kf_topic_partition_list->elems[i].offset);
+    logger->log_debug("kf_topic_partition_list: \u001b[33m[topic: %s, partition: %d, offset:%lld] \u001b[0m",
+    kf_topic_partition_list->elems[i].topic, kf_topic_partition_list->elems[i].partition, kf_topic_partition_list->elems[i].offset);
   }
 }
 
+// TODO(hunyadi): maybe move this to the kafka utils?
 void ConsumeKafka::print_kafka_message(const rd_kafka_message_t* rkmessage) const {
   if (rkmessage->err != RD_KAFKA_RESP_ERR_NO_ERROR) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "ConsumeKafka: received error message from broker.");
@@ -240,13 +231,14 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t err, rd_kafka_topic_partit
       break;
 
     default:
-      logger->log_debug("failed: %s\n", rd_kafka_err2str(err)); rd_kafka_assign(rk, NULL);
+      logger->log_debug("failed: %s", rd_kafka_err2str(err));
+      rd_kafka_assign(rk, NULL);
       break;
   }
 }
 
 void ConsumeKafka::createTopicPartitionList() {
-  kf_topic_partition_list_ = { rd_kafka_topic_partition_list_new(topic_names_.size()), rd_kafka_topic_partition_list_deleter() };
+  kf_topic_partition_list_ = { rd_kafka_topic_partition_list_new(topic_names_.size()), utils::rd_kafka_topic_partition_list_deleter() };
 
   // On subscriptions any topics prefixed with ^ will be regex matched
   if (topic_name_format_ == "pattern") {
@@ -271,7 +263,9 @@ void ConsumeKafka::createTopicPartitionList() {
 }
 
 void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
-  conf_ = { rd_kafka_conf_new(),  rd_kafka_conf_deleter() };
+  using utils::setKafkaConfigurationField;
+
+  conf_ = { rd_kafka_conf_new(), utils::rd_kafka_conf_deleter() };
   if (conf_ == nullptr) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to create rd_kafka_conf_t object");
   }
@@ -285,17 +279,18 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
   // setKafkaConfigurationField(conf_.get(), "debug", "all");
   setKafkaConfigurationField(conf_.get(), "bootstrap.servers", utils::getRequiredPropertyOrThrow(context, KafkaBrokers.getName()));  // TODO(hunyadi): replace this with kafka_brokers_
   setKafkaConfigurationField(conf_.get(), "auto.offset.reset", "latest");
+  setKafkaConfigurationField(conf_.get(), "enable.auto.commit", "false");
   setKafkaConfigurationField(conf_.get(), "enable.auto.offset.store", "false");
   setKafkaConfigurationField(conf_.get(), "isolation.level", honor_transactions_ ? "read_committed" : "read_uncommitted");
   setKafkaConfigurationField(conf_.get(), "group.id", group_id_);
-  setKafkaConfigurationField(conf_.get(), "compression.codec", "snappy");
-  setKafkaConfigurationField(conf_.get(), "batch.num.messages", std::to_string(max_poll_records_.value_or(10000)));  // FIXME(hunyadi): this has a default value, maybe not optional(?)
+  setKafkaConfigurationField(conf_.get(), "compression.codec", "snappy");  // FIXME(hunyadi): this seems like a producer property
+  setKafkaConfigurationField(conf_.get(), "batch.num.messages", std::to_string(max_poll_records_.value_or(10000)));  // FIXME(hunyadi): this has a default value, maybe not optional(?) // FIXME(hunyadi): this seems like a producer property // NOLINT
 
   std::array<char, 512U> errstr{};
-  consumer_ = { rd_kafka_new(RD_KAFKA_CONSUMER, conf_.release(), errstr.data(), errstr.size()), rd_kafka_consumer_deleter() };
+  consumer_ = { rd_kafka_new(RD_KAFKA_CONSUMER, conf_.release(), errstr.data(), errstr.size()), utils::rd_kafka_consumer_deleter() };
   if (consumer_ == nullptr) {
-    auto error_msg = utils::StringUtils::join_pack("Failed to create Kafka consumer ", errstr.data());
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
+    const std::string error_msg { errstr.begin(), errstr.end() };
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to create Kafka consumer %s" + error_msg);
   }
 
   createTopicPartitionList();
@@ -305,7 +300,6 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
     logger_->log_error("\u001b[31mrd_kafka_poll_set_consumer error %d: %s\u001b[0m", poll_set_consumer_response, rd_kafka_err2str(poll_set_consumer_response));
   }
 
-  // Manual offset reset. I could not get the tests working otherwise
   logger_->log_info("Resetting offset manually.");
   while (true) {
     rd_kafka_message_t* message_wrapper = rd_kafka_consumer_poll(consumer_.get(), communications_timeout_milliseconds_.count());
@@ -317,6 +311,7 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
     const int async = 0;
     logger_->log_info("\u001b[33mCommitting offset: %" PRId64 ".\u001b[0m", message_wrapper->offset);
     rd_kafka_commit_message(consumer_.get(), message_wrapper, async);  // TODO(hunyadi): check this for potential rollback requirements
+    rd_kafka_message_destroy(message_wrapper);  // TODO(hunyadi): this will be a deleter
   }
   logger_->log_info("Done resetting offset manually.");
 }
@@ -358,11 +353,10 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
   if (message.empty()) {
     return;
   }
-  rd_kafka_message_destroy(message_wrapper);  // TODO(hunyadi): this will be a deleter
 
   // Commit offsets on broker for the provided list of partitions
   const int async = 0;
-  kf_topic_partition_list_->elems[0].offset = message_wrapper->offset;  // FIXME(hunyadi): get the proper partition for the message
+  // kf_topic_partition_list_->elems[0].offset = message_wrapper->offset;  // FIXME(hunyadi): get the proper partition for the message
   // rd_kafka_commit(consumer_.get(), kf_topic_partition_list_.get(), async);  // TODO(hunyadi): check this for potential rollback requirements
   rd_kafka_commit_message(consumer_.get(), message_wrapper, async);  // TODO(hunyadi): check this for potential rollback requirements
   logger_->log_info("\u001b[33mCommitting offset: %" PRId64 ".\u001b[0m", message_wrapper->offset);
@@ -371,6 +365,7 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
   if (flowFile == nullptr) {
     return;
   }
+  rd_kafka_message_destroy(message_wrapper);  // TODO(hunyadi): this will be a deleter
 
   std::vector<char> stream_compatible_message(message.begin(), message.end());
   char* message_data = &stream_compatible_message[0];
