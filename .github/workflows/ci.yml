@@ -256,7 +256,7 @@ jobs:
   docker_integration_tests:
     name: "Docker integration tests"
     runs-on: ubuntu-20.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - id: checkout
         uses: actions/checkout@v2
