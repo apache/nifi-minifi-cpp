@@ -16,83 +16,11 @@
  * limitations under the License.
  */
 
-#include <stdlib.h>
-#include <iostream>
-#include <map>
-
-#include "core/Processor.h"
-#include "../TestBase.h"
+#include "S3TestsFixture.h"
 #include "processors/PutS3Object.h"
-#include "processors/GetFile.h"
-#include "processors/LogAttribute.h"
-#include "processors/UpdateAttribute.h"
-#include "utils/file/FileUtils.h"
-#include "MockS3Wrapper.h"
 
-class PutS3ObjectTestsFixture {
+class PutS3ObjectTestsFixture : public S3TestsFixture<minifi::aws::processors::PutS3Object> {
  public:
-  PutS3ObjectTestsFixture() {
-    // Disable retrieving AWS metadata for tests
-    #ifdef WIN32
-    _putenv_s("AWS_EC2_METADATA_DISABLED", "true");
-    #else
-    setenv("AWS_EC2_METADATA_DISABLED", "true", 1);
-    #endif
-
-    LogTestController::getInstance().setDebug<TestPlan>();
-    LogTestController::getInstance().setDebug<minifi::core::Processor>();
-    LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setTrace<processors::GetFile>();
-    LogTestController::getInstance().setDebug<processors::UpdateAttribute>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<minifi::aws::processors::PutS3Object>();
-
-    // Build MiNiFi processing graph
-    plan = test_controller.createPlan();
-    mock_s3_wrapper_ptr = new MockS3Wrapper();
-    std::unique_ptr<minifi::aws::s3::S3WrapperBase> mock_s3_wrapper(mock_s3_wrapper_ptr);
-    put_s3_object = std::make_shared<minifi::aws::processors::PutS3Object>("PutS3Object", utils::Identifier(), std::move(mock_s3_wrapper));
-
-    char input_dir_mask[] = "/tmp/gt.XXXXXX";
-    auto input_dir = test_controller.createTempDirectory(input_dir_mask);
-    std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + "input_data.log");
-    input_file_stream << "input_data";
-    input_file_stream.close();
-    get_file = plan->addProcessor("GetFile", "GetFile");
-    plan->setProperty(get_file, processors::GetFile::Directory.getName(), input_dir);
-    plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "false");
-    update_attribute = plan->addProcessor(
-      "UpdateAttribute",
-      "UpdateAttribute",
-      core::Relationship("success", "d"),
-      true);
-    plan->addProcessor(
-      put_s3_object,
-      "PutS3Object",
-      core::Relationship("success", "d"),
-      true);
-    plan->addProcessor(
-      "LogAttribute",
-      "LogAttribute",
-      core::Relationship("success", "d"),
-      true);
-  }
-
-  void setBasicCredentials() {
-    plan->setProperty(put_s3_object, "Access Key", "key");
-    plan->setProperty(put_s3_object, "Secret Key", "secret");
-  }
-
-  void setBucket() {
-    plan->setProperty(update_attribute, "test.bucket", "testBucket", true);
-    plan->setProperty(put_s3_object, "Bucket", "${test.bucket}");
-  }
-
-  void setRequiredProperties() {
-    setBasicCredentials();
-    setBucket();
-  }
-
   void checkPutObjectResults() {
     REQUIRE(LogTestController::getInstance().contains("key:s3.version value:" + S3_VERSION));
     REQUIRE(LogTestController::getInstance().contains("key:s3.etag value:" + S3_ETAG_UNQUOTED));
@@ -106,26 +34,6 @@ class PutS3ObjectTestsFixture {
     REQUIRE(!LogTestController::getInstance().contains("key:s3.expiration value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
     REQUIRE(!LogTestController::getInstance().contains("key:s3.sseAlgorithm value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
   }
-
-  std::string createTempFile(const std::string& filename) {
-    char temp_dir[] = "/tmp/gt.XXXXXX";
-    auto temp_path = test_controller.createTempDirectory(temp_dir);
-    REQUIRE(!temp_path.empty());
-    std::string temp_file(temp_path + utils::file::FileUtils::get_separator() + filename);
-    return temp_file;
-  }
-
-  virtual ~PutS3ObjectTestsFixture() {
-    LogTestController::getInstance().reset();
-  }
-
- protected:
-  TestController test_controller;
-  std::shared_ptr<TestPlan> plan;
-  MockS3Wrapper* mock_s3_wrapper_ptr;
-  std::shared_ptr<core::Processor> put_s3_object;
-  std::shared_ptr<core::Processor> get_file;
-  std::shared_ptr<core::Processor> update_attribute;
 };
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCredentials]") {
@@ -133,9 +41,9 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
 
   SECTION("Test property credentials") {
     plan->setProperty(update_attribute, "s3.accessKey", "key", true);
-    plan->setProperty(put_s3_object, "Access Key", "${s3.accessKey}");
+    plan->setProperty(s3_processor, "Access Key", "${s3.accessKey}");
     plan->setProperty(update_attribute, "s3.secretKey", "secret", true);
-    plan->setProperty(put_s3_object, "Secret Key", "${s3.secretKey}");
+    plan->setProperty(s3_processor, "Secret Key", "${s3.secretKey}");
   }
 
 
@@ -143,7 +51,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
     auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
     plan->setProperty(aws_cred_service, "Access Key", "key");
     plan->setProperty(aws_cred_service, "Secret Key", "secret");
-    plan->setProperty(put_s3_object, "AWS Credentials Provider service", "AWSCredentialsService");
+    plan->setProperty(s3_processor, "AWS Credentials Provider service", "AWSCredentialsService");
   }
 
   SECTION("Test credentials file setting") {
@@ -155,7 +63,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
     aws_credentials_file_stream << "accessKey=key" << std::endl;
     aws_credentials_file_stream << "secretKey=secret" << std::endl;
     aws_credentials_file_stream.close();
-    plan->setProperty(put_s3_object, "Credentials File", aws_credentials_file);
+    plan->setProperty(s3_processor, "Credentials File", aws_credentials_file);
   }
 
   SECTION("Test credentials file setting from AWS Credentials service") {
@@ -169,7 +77,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
     aws_credentials_file_stream.close();
     auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
     plan->setProperty(aws_cred_service, "Credentials File", aws_credentials_file);
-    plan->setProperty(put_s3_object, "AWS Credentials Provider service", "AWSCredentialsService");
+    plan->setProperty(s3_processor, "AWS Credentials Provider service", "AWSCredentialsService");
   }
 
   SECTION("Test credentials setting using default credential chain") {
@@ -180,7 +88,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
     setenv("AWS_ACCESS_KEY_ID", "key", 1);
     setenv("AWS_SECRET_ACCESS_KEY", "secret", 1);
     #endif
-    plan->setProperty(put_s3_object, "Use Default Credentials", "true");
+    plan->setProperty(s3_processor, "Use Default Credentials", "true");
   }
 
   SECTION("Test credentials setting from AWS Credentials service using default credential chain") {
@@ -193,7 +101,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
     setenv("AWS_ACCESS_KEY_ID", "key", 1);
     setenv("AWS_SECRET_ACCESS_KEY", "secret", 1);
     #endif
-    plan->setProperty(put_s3_object, "AWS Credentials Provider service", "AWSCredentialsService");
+    plan->setProperty(s3_processor, "AWS Credentials Provider service", "AWSCredentialsService");
   }
 
   test_controller.runSession(plan, true);
@@ -216,17 +124,17 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[aw
 
   SECTION("Test storage class is empty") {
     setRequiredProperties();
-    plan->setProperty(put_s3_object, "Storage Class", "");
+    plan->setProperty(s3_processor, "Storage Class", "");
   }
 
   SECTION("Test region is empty") {
     setRequiredProperties();
-    plan->setProperty(put_s3_object, "Region", "");
+    plan->setProperty(s3_processor, "Region", "");
   }
 
   SECTION("Test no server side encryption is set") {
     setRequiredProperties();
-    plan->setProperty(put_s3_object, "Server Side Encryption", "");
+    plan->setProperty(s3_processor, "Server Side Encryption", "");
   }
 
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
@@ -236,7 +144,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
   setRequiredProperties();
   test_controller.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
-  REQUIRE(LogTestController::getInstance().contains("key:s3.key value:input_data.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:s3.key value:" + INPUT_FILENAME));
   REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/octet-stream"));
   checkPutObjectResults();
   REQUIRE(mock_s3_wrapper_ptr->content_type == "application/octet-stream");
@@ -249,7 +157,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyHost.empty());
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyUserName.empty());
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyPassword.empty());
-  REQUIRE(mock_s3_wrapper_ptr->put_s3_data == "input_data");
+  REQUIRE(mock_s3_wrapper_ptr->put_s3_data == INPUT_DATA);
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration with empty result", "[awsS3ClientConfig]") {
@@ -264,15 +172,15 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration wi
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration", "[awsS3ClientConfig]") {
   setRequiredProperties();
-  plan->setProperty(put_s3_object, "Object Key", "custom_key");
+  plan->setProperty(s3_processor, "Object Key", "custom_key");
   plan->setProperty(update_attribute, "test.contentType", "application/tar", true);
-  plan->setProperty(put_s3_object, "Content Type", "${test.contentType}");
-  plan->setProperty(put_s3_object, "Storage Class", "ReducedRedundancy");
-  plan->setProperty(put_s3_object, "Region", minifi::aws::processors::region::US_EAST_1);
-  plan->setProperty(put_s3_object, "Communications Timeout", "10 Sec");
+  plan->setProperty(s3_processor, "Content Type", "${test.contentType}");
+  plan->setProperty(s3_processor, "Storage Class", "ReducedRedundancy");
+  plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::US_EAST_1);
+  plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
   plan->setProperty(update_attribute, "test.endpoint", "http://localhost:1234", true);
-  plan->setProperty(put_s3_object, "Endpoint Override URL", "${test.endpoint}");
-  plan->setProperty(put_s3_object, "Server Side Encryption", "AES256");
+  plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
+  plan->setProperty(s3_processor, "Server Side Encryption", "AES256");
   test_controller.runSession(plan, true);
   checkPutObjectResults();
   REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
@@ -284,12 +192,12 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().connectTimeoutMs == 10000);
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
-  REQUIRE(mock_s3_wrapper_ptr->put_s3_data == "input_data");
+  REQUIRE(mock_s3_wrapper_ptr->put_s3_data == INPUT_DATA);
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsS3MetaData]") {
   setRequiredProperties();
-  plan->setProperty(put_s3_object, "meta_key", "meta_value", true);
+  plan->setProperty(s3_processor, "meta_key", "meta_value", true);
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_ptr->metadata_map.at("meta_key") == "meta_value");
   REQUIRE(LogTestController::getInstance().contains("key:s3.usermetadata value:meta_key=meta_value"));
@@ -297,8 +205,8 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsS3Me
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3MetaData]") {
   setRequiredProperties();
-  plan->setProperty(put_s3_object, "meta_key1", "meta_value1", true);
-  plan->setProperty(put_s3_object, "meta_key2", "meta_value2", true);
+  plan->setProperty(s3_processor, "meta_key1", "meta_value1", true);
+  plan->setProperty(s3_processor, "meta_key2", "meta_value2", true);
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_ptr->metadata_map.at("meta_key1") == "meta_value1");
   REQUIRE(mock_s3_wrapper_ptr->metadata_map.at("meta_key2") == "meta_value2");
@@ -308,13 +216,13 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
   setRequiredProperties();
   plan->setProperty(update_attribute, "test.proxyHost", "host", true);
-  plan->setProperty(put_s3_object, "Proxy Host", "${test.proxyHost}");
+  plan->setProperty(s3_processor, "Proxy Host", "${test.proxyHost}");
   plan->setProperty(update_attribute, "test.proxyPort", "1234", true);
-  plan->setProperty(put_s3_object, "Proxy Port", "${test.proxyPort}");
+  plan->setProperty(s3_processor, "Proxy Port", "${test.proxyPort}");
   plan->setProperty(update_attribute, "test.proxyUsername", "username", true);
-  plan->setProperty(put_s3_object, "Proxy Username", "${test.proxyUsername}");
+  plan->setProperty(s3_processor, "Proxy Username", "${test.proxyUsername}");
   plan->setProperty(update_attribute, "test.proxyPassword", "password", true);
-  plan->setProperty(put_s3_object, "Proxy Password", "${test.proxyPassword}");
+  plan->setProperty(s3_processor, "Proxy Password", "${test.proxyPassword}");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyHost == "host");
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyPort == 1234);
@@ -325,15 +233,15 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3ACL]") {
   setRequiredProperties();
   plan->setProperty(update_attribute, "s3.permissions.full.users", "myuserid123, myuser@example.com", true);
-  plan->setProperty(put_s3_object, "FullControl User List", "${s3.permissions.full.users}");
+  plan->setProperty(s3_processor, "FullControl User List", "${s3.permissions.full.users}");
   plan->setProperty(update_attribute, "s3.permissions.read.users", "myuserid456,myuser2@example.com", true);
-  plan->setProperty(put_s3_object, "Read Permission User List", "${s3.permissions.read.users}");
+  plan->setProperty(s3_processor, "Read Permission User List", "${s3.permissions.read.users}");
   plan->setProperty(update_attribute, "s3.permissions.readacl.users", "myuserid789, otheruser", true);
-  plan->setProperty(put_s3_object, "Read ACL User List", "${s3.permissions.readacl.users}");
+  plan->setProperty(s3_processor, "Read ACL User List", "${s3.permissions.readacl.users}");
   plan->setProperty(update_attribute, "s3.permissions.writeacl.users", "myuser3@example.com", true);
-  plan->setProperty(put_s3_object, "Write ACL User List", "${s3.permissions.writeacl.users}");
+  plan->setProperty(s3_processor, "Write ACL User List", "${s3.permissions.writeacl.users}");
   plan->setProperty(update_attribute, "s3.permissions.cannedacl", "PublicReadWrite", true);
-  plan->setProperty(put_s3_object, "Canned ACL", "${s3.permissions.cannedacl}");
+  plan->setProperty(s3_processor, "Canned ACL", "${s3.permissions.cannedacl}");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_ptr->fullcontrol_user_list == "id=myuserid123, emailAddress=\"myuser@example.com\"");
   REQUIRE(mock_s3_wrapper_ptr->read_user_list == "id=myuserid456, emailAddress=\"myuser2@example.com\"");
