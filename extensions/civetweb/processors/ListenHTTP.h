@@ -50,7 +50,8 @@ class ListenHTTP : public core::Processor {
    */
   ListenHTTP(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
-        logger_(logging::LoggerFactory<ListenHTTP>::getLogger()) {
+        logger_(logging::LoggerFactory<ListenHTTP>::getLogger()),
+        batch_size_(0) {
     callbacks_.log_message = &logMessage;
     callbacks_.log_access = &logAccess;
   }

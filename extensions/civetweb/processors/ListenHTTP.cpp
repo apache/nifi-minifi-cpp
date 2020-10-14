@@ -208,7 +208,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   server_.reset(new CivetServer(options, &callbacks_, &logger_));
 
   context->getProperty(BatchSize.getName(), batch_size_);
-  logger_->log_debug("ListenHTTP using %s: %d", BatchSize.getName(), batch_size_);
+  logger_->log_debug("ListenHTTP using %s: %zu", BatchSize.getName(), batch_size_);
 
   handler_.reset(new Handler(basePath, context, std::move(authDNPattern), std::move(headersAsAttributesPattern)));
   server_->addHandler(basePath, handler_.get());
@@ -290,7 +290,7 @@ ListenHTTP::Handler::Handler(std::string base_uri, core::ProcessContext *context
       process_context_(context),
       logger_(logging::LoggerFactory<ListenHTTP::Handler>::getLogger()) {
   context->getProperty(BufferSize.getName(), buffer_size_);
-  logger_->log_debug("ListenHTTP using %s: %d", BufferSize.getName(), buffer_size_);
+  logger_->log_debug("ListenHTTP using %s: %zu", BufferSize.getName(), buffer_size_);
 }
 
 void ListenHTTP::Handler::sendHttp500(mg_connection* const conn) {
