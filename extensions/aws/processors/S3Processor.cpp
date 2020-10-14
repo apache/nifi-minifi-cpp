@@ -118,24 +118,9 @@ const core::Property S3Processor::UseDefaultCredentials(
     ->isRequired(true)
     ->build());
 
-void S3Processor::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(ObjectKey);
-  properties.insert(Bucket);
-  properties.insert(AccessKey);
-  properties.insert(SecretKey);
-  properties.insert(CredentialsFile);
-  properties.insert(AWSCredentialsProviderService);
-  properties.insert(Region);
-  properties.insert(CommunicationsTimeout);
-  properties.insert(EndpointOverrideURL);
-  properties.insert(ProxyHost);
-  properties.insert(ProxyPort);
-  properties.insert(ProxyUsername);
-  properties.insert(ProxyPassword);
-  properties.insert(UseDefaultCredentials);
-  setSupportedProperties(properties);
+const std::set<core::Property> S3Processor::getSupportedProperties() {
+  return {ObjectKey, Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
+    EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials};
 }
 
 minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {

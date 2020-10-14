@@ -124,6 +124,14 @@ minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjec
   }
 }
 
+bool S3WrapperBase::deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version) {
+  Aws::S3::Model::DeleteObjectRequest request;
+  request.SetBucket(bucket);
+  request.SetKey(object_key);
+  request.SetVersionId(version);
+  return sendDeleteObjectRequest(request);
+}
+
 }  // namespace s3
 }  // namespace aws
 }  // namespace minifi

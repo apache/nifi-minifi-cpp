@@ -28,6 +28,8 @@
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "aws/s3/S3Client.h"
 #include "aws/s3/model/PutObjectRequest.h"
+#include "aws/s3/model/PutObjectResult.h"
+#include "aws/s3/model/DeleteObjectRequest.h"
 #include "aws/s3/model/StorageClass.h"
 #include "aws/s3/model/ServerSideEncryption.h"
 #include "aws/s3/model/ObjectCannedACL.h"
@@ -77,12 +79,9 @@ struct PutObjectResult {
   Aws::String ssealgorithm;
 };
 
-struct S3RequestParameters {
+struct PutObjectRequestParameters {
   std::string bucket;
   std::string object_key;
-};
-
-struct PutObjectRequestParameters : public S3RequestParameters {
   std::string storage_class;
   std::string server_side_encryption;
   std::string content_type;
@@ -110,11 +109,13 @@ class S3WrapperBase {
   void setProxy(const ProxyOptions& proxy);
 
   minifi::utils::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
+  bool deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version);
 
   virtual ~S3WrapperBase() = default;
 
  protected:
   virtual minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3::Model::PutObjectRequest& request) = 0;
+  virtual bool sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectRequest& request) = 0;
   void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
   static std::string getExpiryDate(const std::string& expiration);
   static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
