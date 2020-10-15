@@ -23,7 +23,6 @@
 
 #include "ConfigFile.h"
 #include "ConfigFileEncryptor.h"
-#include "cxxopts.hpp"
 #include "utils/file/FileUtils.h"
 #include "utils/OptionalUtils.h"
 
@@ -49,23 +48,32 @@ EncryptConfig::EncryptConfig(int argc, char* argv[]) : minifi_home_(parseMinifiH
 }
 
 std::string EncryptConfig::parseMinifiHomeFromTheOptions(int argc, char* argv[]) {
-  cxxopts::Options options("encrypt-config", "Encrypt sensitive minifi properties");
-  options.add_options()
-      ("h,help", "Shows help")
-      ("m,minifi-home", "The MINIFI_HOME directory", cxxopts::value<std::string>());
-
-  auto parse_result = options.parse(argc, argv);
-
-  if (parse_result.count("help")) {
-    std::cout << options.help() << '\n';
-    std::exit(0);
-  }
-
-  if (parse_result.count("minifi-home")) {
-    return parse_result["minifi-home"].as<std::string>();
-  } else {
+  if (argc < 2) {
     throw std::runtime_error{"Required parameter missing: --minifi-home"};
   }
+
+  if (argc >= 2) {
+    for (int i = 1; i < argc; ++i) {
+      std::string argstr(argv[i]);
+      if ((argstr == "-h") || (argstr == "--help")) {
+        std::cout << "Usage: encrypt-config -m <your-minifi-home>" << std::endl;
+        std::exit(0);
+      }
+    }
+  }
+
+  if (argc >= 3) {
+    for (int i = 1; i < argc; ++i) {
+      std::string argstr(argv[i]);
+      if ((argstr == "-m") || (argstr == "--minifi-home")) {
+        if (i+1 < argc) {
+          return std::string(argv[i+1]);
+        }
+      }
+    }
+  }
+
+  throw std::runtime_error{"Required parameter missing: --minifi-home"};
 }
 
 void EncryptConfig::encryptSensitiveProperties() const {
