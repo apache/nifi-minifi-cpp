@@ -23,7 +23,7 @@
 #include <string>
 #include "Stream.h"
 #include "utils/gsl.h"
-#include "utils/FixedLengthString.h"
+#include "utils/SmallString.h"
 
 namespace org {
 namespace apache {
@@ -70,8 +70,8 @@ class OutputStream : public virtual Stream {
   int write(const char* str, bool widen = false);
 
   template<size_t N>
-  int write(const utils::FixedLengthString<N>& str, bool widen = false) {
-    return write(std::string{str}, widen);
+  int write(const utils::SmallString<N>& str, bool widen = false) {
+    return write(str.data(), widen);
   }
 
   /**

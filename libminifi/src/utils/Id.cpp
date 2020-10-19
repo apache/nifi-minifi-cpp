@@ -107,15 +107,21 @@ bool Identifier::operator<(const Identifier &other) const {
   return data_ < other.data_;
 }
 
-FixedLengthString<36> Identifier::to_string() const {
-  FixedLengthString<36> uuidStr;
+SmallString<36> Identifier::to_string() const {
+  SmallString<36> uuidStr;
+  // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx is 36 long: 16 bytes * 2 hex digits / byte + 4 hyphens
   int byteIdx = 0;
   int charIdx = 0;
+
+  // [xxxxxxxx]-xxxx-xxxx-xxxx-xxxxxxxxxxxx
   while (byteIdx < 4) {
     uuidStr[charIdx++] = hex_lut[data_[byteIdx] >> 4];
     uuidStr[charIdx++] = hex_lut[data_[byteIdx++] & 0xf];
   }
+  // xxxxxxxx[-]xxxx-xxxx-xxxx-xxxxxxxxxxxx
   uuidStr[charIdx++] = '-';
+
+  // xxxxxxxx-[xxxx-xxxx-xxxx-]xxxxxxxxxxxx - 3x 2 bytes and a hyphen
   for (int idx = 0; idx < 3; ++idx) {
     uuidStr[charIdx++] = hex_lut[data_[byteIdx] >> 4];
     uuidStr[charIdx++] = hex_lut[data_[byteIdx++] & 0xf];
@@ -123,10 +129,14 @@ FixedLengthString<36> Identifier::to_string() const {
     uuidStr[charIdx++] = hex_lut[data_[byteIdx++] & 0xf];
     uuidStr[charIdx++] = '-';
   }
+
+  // xxxxxxxx-xxxx-xxxx-xxxx-[xxxxxxxxxxxx] - the rest, i.e. until byte 16
   while (byteIdx < 16) {
     uuidStr[charIdx++] = hex_lut[data_[byteIdx] >> 4];
     uuidStr[charIdx++] = hex_lut[data_[byteIdx++] & 0xf];
   }
+
+  // null terminator
   uuidStr[charIdx] = 0;
   return uuidStr;
 }

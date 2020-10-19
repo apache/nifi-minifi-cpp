@@ -28,53 +28,53 @@ namespace minifi {
 namespace utils {
 
 template<size_t N>
-class FixedLengthString : public std::array<char, N + 1> {
+class SmallString : public std::array<char, N + 1> {
  public:
   operator std::string() const {  // NOLINT
     return {this->data()};
   }
 
-  friend std::ostream &operator<<(std::ostream &out, const FixedLengthString &str) {
+  friend std::ostream &operator<<(std::ostream &out, const SmallString &str) {
     return out << str.data();
   }
 
-  friend std::string operator+(const std::string &lhs, const FixedLengthString &rhs) {
+  friend std::string operator+(const std::string &lhs, const SmallString &rhs) {
     return lhs + rhs.data();
   }
 
-  friend std::string operator+(std::string &&lhs, const FixedLengthString &rhs) {
+  friend std::string operator+(std::string &&lhs, const SmallString &rhs) {
     return std::move(lhs) + rhs.data();
   }
 
-  friend std::string operator+(const FixedLengthString &lhs, const std::string &rhs) {
+  friend std::string operator+(const SmallString &lhs, const std::string &rhs) {
     return lhs.data() + rhs;
   }
 
-  friend std::string operator+(const FixedLengthString &lhs, std::string &&rhs) {
+  friend std::string operator+(const SmallString &lhs, std::string &&rhs) {
     return lhs.data() + std::move(rhs);
   }
 
-  friend bool operator==(const std::string& lhs, const FixedLengthString& rhs) {
+  friend bool operator==(const std::string& lhs, const SmallString& rhs) {
     return lhs == rhs.data();
   }
 
-  friend bool operator==(const FixedLengthString& lhs, const std::string& rhs) {
+  friend bool operator==(const SmallString& lhs, const std::string& rhs) {
     return lhs.data() == rhs;
   }
 
-  friend bool operator==(const FixedLengthString& lhs, const FixedLengthString& rhs) {
+  friend bool operator==(const SmallString& lhs, const SmallString& rhs) {
     return static_cast<std::array<char, N + 1>>(lhs) == static_cast<std::array<char, N + 1>>(rhs);
   }
 
-  friend bool operator!=(const std::string& lhs, const FixedLengthString& rhs) {
+  friend bool operator!=(const std::string& lhs, const SmallString& rhs) {
     return !(lhs == rhs);
   }
 
-  friend bool operator!=(const FixedLengthString& lhs, const std::string& rhs) {
+  friend bool operator!=(const SmallString& lhs, const std::string& rhs) {
     return !(lhs == rhs);
   }
 
-  friend bool operator!=(const FixedLengthString& lhs, const FixedLengthString& rhs) {
+  friend bool operator!=(const SmallString& lhs, const SmallString& rhs) {
     return !(lhs == rhs);
   }
 };

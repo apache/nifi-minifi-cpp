@@ -23,7 +23,7 @@
 #include <memory>
 #include <string>
 #include <thread>
-#include "FixedLengthString.h"
+#include "SmallString.h"
 
 #ifndef WIN32
 class uuid;
@@ -71,7 +71,7 @@ class Identifier {
 
   bool isNil() const;
 
-  FixedLengthString<36> to_string() const;
+  SmallString<36> to_string() const;
 
   static utils::optional<Identifier> parse(const std::string& str);
 
