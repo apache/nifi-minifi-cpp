@@ -23,7 +23,7 @@
 #include <string>
 #include <set>
 #include <memory>
-#include <map>
+#include <utility>
 
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"

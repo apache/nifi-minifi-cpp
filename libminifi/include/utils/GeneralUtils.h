@@ -24,6 +24,7 @@
 #include <utility>
 #include <functional>
 #include <set>
+#include <map>
 
 #include "gsl.h"
 

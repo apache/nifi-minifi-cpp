@@ -20,6 +20,9 @@
 
 #include "DeleteS3Object.h"
 
+#include <set>
+#include <memory>
+
 namespace org {
 namespace apache {
 namespace nifi {

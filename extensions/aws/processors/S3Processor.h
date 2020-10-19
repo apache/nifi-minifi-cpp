@@ -23,6 +23,7 @@
 #include <utility>
 #include <memory>
 #include <string>
+#include <set>
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
 

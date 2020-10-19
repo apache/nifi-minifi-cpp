@@ -21,6 +21,9 @@
 #pragma once
 
 #include <sstream>
+#include <utility>
+#include <memory>
+#include <string>
 
 #include "S3Processor.h"
 #include "utils/GeneralUtils.h"
