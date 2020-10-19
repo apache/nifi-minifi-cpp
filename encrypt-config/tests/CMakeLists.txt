@@ -30,10 +30,9 @@ foreach(testfile ${ENCRYPT_CONFIG_TESTS})
   target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/encrypt-config")
   target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include")
   target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/test")
-  target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/cxxopts/include")
 
   target_wholearchive_library(${testfilename} minifi)
-  target_link_libraries(${testfilename} ${CATCH_MAIN_LIB} cxxopts)
+  target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
   add_test(NAME ${testfilename} COMMAND ${testfilename} WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
   math(EXPR ENCRYPT_CONFIG_TEST_COUNT "${ENCRYPT_CONFIG_TEST_COUNT}+1")

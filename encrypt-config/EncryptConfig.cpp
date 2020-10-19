@@ -32,6 +32,7 @@ constexpr const char* CONF_DIRECTORY_NAME = "conf";
 constexpr const char* BOOTSTRAP_FILE_NAME = "bootstrap.conf";
 constexpr const char* MINIFI_PROPERTIES_FILE_NAME = "minifi.properties";
 constexpr const char* ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
+constexpr const char* USAGE_STRING = "Usage: encrypt-config --minifi-home <your-minifi-home>";
 
 }  // namespace
 
@@ -48,15 +49,11 @@ EncryptConfig::EncryptConfig(int argc, char* argv[]) : minifi_home_(parseMinifiH
 }
 
 std::string EncryptConfig::parseMinifiHomeFromTheOptions(int argc, char* argv[]) {
-  if (argc < 2) {
-    throw std::runtime_error{"Required parameter missing: --minifi-home"};
-  }
-
   if (argc >= 2) {
     for (int i = 1; i < argc; ++i) {
       std::string argstr(argv[i]);
       if ((argstr == "-h") || (argstr == "--help")) {
-        std::cout << "Usage: encrypt-config -m <your-minifi-home>" << std::endl;
+        std::cout << USAGE_STRING << std::endl;
         std::exit(0);
       }
     }
@@ -73,7 +70,7 @@ std::string EncryptConfig::parseMinifiHomeFromTheOptions(int argc, char* argv[])
     }
   }
 
-  throw std::runtime_error{"Required parameter missing: --minifi-home"};
+  throw std::runtime_error{USAGE_STRING};
 }
 
 void EncryptConfig::encryptSensitiveProperties() const {
