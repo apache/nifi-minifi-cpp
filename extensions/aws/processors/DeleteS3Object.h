@@ -48,7 +48,7 @@ class DeleteS3Object : public S3Processor {
   }
 
   explicit DeleteS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
-      : S3Processor(std::move(name), uuid, std::move(s3_wrapper)) {
+      : S3Processor(std::move(name), uuid, logging::LoggerFactory<DeleteS3Object>::getLogger(), std::move(s3_wrapper)) {
   }
 
   ~DeleteS3Object() override = default;

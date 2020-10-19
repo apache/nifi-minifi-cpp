@@ -70,7 +70,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     object_key = request.GetKey();
     version = request.GetVersionId();
 
-    return true;
+    return delete_object_result;
   }
 
   std::string bucket_name;
@@ -88,4 +88,5 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
   Aws::S3::Model::ObjectCannedACL canned_acl;
   std::string version;
   bool get_empty_result = false;
+  bool delete_object_result = true;
 };

@@ -36,4 +36,22 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test success case", "[awsS3DeleteS
   REQUIRE(mock_s3_wrapper_ptr->bucket_name == "testBucket");
   REQUIRE(mock_s3_wrapper_ptr->object_key == INPUT_FILENAME);
   REQUIRE(mock_s3_wrapper_ptr->version == "v1");
+  REQUIRE(LogTestController::getInstance().contains("Successfully deleted S3 object"));
+}
+
+TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test failure case", "[awsS3DeleteFailure]") {
+  auto log_failure = plan->addProcessor(
+      "LogAttribute",
+      "LogFailure",
+      core::Relationship("failure", "d"));
+  plan->addConnection(s3_processor, core::Relationship("failure", "d"), log_failure);
+  setRequiredProperties();
+  plan->setProperty(s3_processor, "Version", "v1");
+  log_failure->setAutoTerminatedRelationships({{core::Relationship("success", "d")}});
+  mock_s3_wrapper_ptr->delete_object_result = false;
+  test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_wrapper_ptr->bucket_name == "testBucket");
+  REQUIRE(mock_s3_wrapper_ptr->object_key == INPUT_FILENAME);
+  REQUIRE(mock_s3_wrapper_ptr->version == "v1");
+  REQUIRE(LogTestController::getInstance().contains("Failed to delete S3 object"));
 }

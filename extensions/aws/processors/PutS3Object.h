@@ -65,7 +65,7 @@ class PutS3Object : public S3Processor {
   }
 
   explicit PutS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
-      : S3Processor(std::move(name), uuid, std::move(s3_wrapper)) {
+      : S3Processor(std::move(name), uuid, logging::LoggerFactory<PutS3Object>::getLogger(), std::move(s3_wrapper)) {
   }
 
   ~PutS3Object() override = default;
