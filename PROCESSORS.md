@@ -10,6 +10,7 @@
 - [CaptureRTSPFrame](#capturertspframe)
 - [CompressContent](#compresscontent)
 - [ConsumeMQTT](#consumemqtt)
+- [DeleteS3Object](#deletes3object)
 - [ExecuteProcess](#executeprocess)
 - [ExecutePythonProcessor](#executepythonprocessor)
 - [ExecuteSQL](#executesql)
@@ -206,6 +207,39 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|FlowFiles that are sent successfully to the destination are transferred to this relationship|
+
+
+## DeleteS3Object
+
+### Description
+
+Deletes FlowFiles on an Amazon S3 Bucket. If attempting to delete a file that does not exist, FlowFile is routed to success.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Object Key**|${filename}||The key of the S3 object<br/>**Supports Expression Language: true**|
+|**Bucket**|||The S3 bucket<br/>**Supports Expression Language: true**|
+|Access Key|||AWS account access key<br/>**Supports Expression Language: true**|
+|Secret Key|||AWS account secret key<br/>**Supports Expression Language: true**|
+|Credentials File|||Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey|
+|AWS Credentials Provider service|||The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.|
+|**Region**|us-west-2|af-south-1<br/>ap-east-1<br/>ap-northeast-1<br/>ap-northeast-2<br/>ap-northeast-3<br/>ap-south-1<br/>ap-southeast-1<br/>ap-southeast-2<br/>ca-central-1<br/>cn-north-1<br/>cn-northwest-1<br/>eu-central-1<br/>eu-north-1<br/>eu-south-1<br/>eu-west-1<br/>eu-west-2<br/>eu-west-3<br/>me-south-1<br/>sa-east-1<br/>us-east-1<br/>us-east-2<br/>us-gov-east-1<br/>us-gov-west-1<br/>us-west-1<br/>us-west-2|AWS Region|
+|**Communications Timeout**|30 sec|||
+|Version|||The Version of the Object to delete<br/>**Supports Expression Language: true**|
+|Endpoint Override URL|||Endpoint URL to use instead of the AWS default including scheme, host, port, and path. The AWS libraries select an endpoint URL based on the AWS region, but this property overrides the selected endpoint URL, allowing use with other S3-compatible endpoints.<br/>**Supports Expression Language: true**|
+|Proxy Host|||Proxy host name or IP<br/>**Supports Expression Language: true**|
+|Proxy Port|||The port number of the proxy host<br/>**Supports Expression Language: true**|
+|Proxy Username|||Username to set when authenticating against proxy<br/>**Supports Expression Language: true**|
+|Proxy Password|||Password to set when authenticating against proxy<br/>**Supports Expression Language: true**|
+### Relationships
+
+| Name | Description |
+| - | - |
+|failure|FlowFiles are routed to failure relationship|
+|success|FlowFiles are routed to success relationship|
 
 
 ## ExecuteProcess
