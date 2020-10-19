@@ -39,6 +39,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Bookmark.h"
+#include "utils/Deleters.h"
 
 #include "utils/gsl.h"
 
@@ -514,30 +515,32 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
 
 bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& eventRender) {
   logger_->log_trace("Rendering an event");
-  DWORD size = 0;
+  DWORD size = sizeof(WCHAR) * 4096;
+  WCHAR stackBuffer[4096];
+  std::unique_ptr<WCHAR, utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>> buf{stackBuffer, { stackBuffer }};
+
   DWORD used = 0;
   DWORD propertyCount = 0;
-  EvtRender(NULL, hEvent, EvtRenderEventXml, size, 0, &used, &propertyCount);
-  if (ERROR_INSUFFICIENT_BUFFER != GetLastError()) {
-    LOG_LAST_ERROR(EvtRender);
-    return false;
-  }
-
-  if (used > maxBufferSize_) {
-    logger_->log_error("Dropping event because it couldn't be rendered within %" PRIu64 " bytes.", maxBufferSize_);
-    return false;
-  }
-
-  size = used;
-  std::vector<wchar_t> buf(size / 2 + 1);
-  if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
-    LOG_LAST_ERROR(EvtRender);
-    return false;
+  if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, buf.get(), &used, &propertyCount)) {
+    if (ERROR_INSUFFICIENT_BUFFER != GetLastError()) {
+      LOG_LAST_ERROR(EvtRender);
+      return false;
+    }
+    if (used > maxBufferSize_) {
+      logger_->log_error("Dropping event because it couldn't be rendered within %" PRIu64 " bytes.", maxBufferSize_);
+      return false;
+    }
+    size = used;
+    buf.reset((LPWSTR)malloc(size));
+    if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, buf.get(), &used, &propertyCount)) {
+      LOG_LAST_ERROR(EvtRender);
+      return false;
+    }
   }
 
   logger_->log_debug("Event rendered with size %" PRIu32 ". Performing doc traversing...", size);
 
-  std::string xml = wel::to_string(&buf[0]);
+  std::string xml = wel::to_string(buf.get());
 
   pugi::xml_document doc;
   pugi::xml_parse_result result = doc.load_string(xml.c_str());

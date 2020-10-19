@@ -31,10 +31,11 @@ namespace wel {
 
 void WindowsEventLogMetadataImpl::renderMetadata() {
   DWORD status = ERROR_SUCCESS;
-  DWORD dwBufferSize = 0;
+  DWORD dwBufferSize = sizeof(EVT_VARIANT) * 4096;
+  EVT_VARIANT stackBuffer[4096];
+  std::unique_ptr<EVT_VARIANT, utils::StackAwareDeleter<EVT_VARIANT, utils::FreeDeleter>> rendered_values{ stackBuffer, {stackBuffer} };
   DWORD dwBufferUsed = 0;
   DWORD dwPropertyCount = 0;
-  std::unique_ptr< EVT_VARIANT, utils::FreeDeleter> rendered_values;
 
   auto context = EvtCreateRenderContext(0, NULL, EvtRenderContextSystem);
   if (context == NULL) {
@@ -43,10 +44,10 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
   const auto contextGuard = gsl::finally([&context](){
     EvtClose(context);
   });
-  if (!EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, nullptr, &dwBufferUsed, &dwPropertyCount)) {
+  if (!EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount)) {
     if (ERROR_INSUFFICIENT_BUFFER == (status = GetLastError())) {
       dwBufferSize = dwBufferUsed;
-      rendered_values = std::unique_ptr<EVT_VARIANT, utils::FreeDeleter>((PEVT_VARIANT)(malloc(dwBufferSize)));
+      rendered_values.reset((PEVT_VARIANT)(malloc(dwBufferSize)));
       if (rendered_values) {
         EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount);
       }
@@ -118,8 +119,9 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
 }
 
 std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const {
-  LPWSTR string_buffer = NULL;
-  DWORD string_buffer_size = 0;
+  DWORD string_buffer_size = 4096;
+  WCHAR stackBuffer[4096];
+  std::unique_ptr<WCHAR, utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>> string_buffer{ stackBuffer, {stackBuffer} };
   DWORD string_buffer_used = 0;
   DWORD result = 0;
 
@@ -129,34 +131,29 @@ std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS f
     return event_data;
   }
 
-  if (!EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, NULL, flags, string_buffer_size, string_buffer, &string_buffer_used)) {
+
+  if (!EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, NULL, flags, string_buffer_size, string_buffer.get(), &string_buffer_used)) {
     result = GetLastError();
     if (ERROR_INSUFFICIENT_BUFFER == result) {
       string_buffer_size = string_buffer_used;
 
-      string_buffer = (LPWSTR) malloc(string_buffer_size * sizeof(WCHAR));
+      string_buffer.reset((LPWSTR) malloc(string_buffer_size * sizeof(WCHAR)));
 
-      if (string_buffer) {
-
-        if ((EvtFormatMessageKeyword == flags))
-          string_buffer[string_buffer_size - 1] = L'\0';
-
-        EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, NULL, flags, string_buffer_size, string_buffer, &string_buffer_used);
-        if ((EvtFormatMessageKeyword == flags))
-          string_buffer[string_buffer_used - 1] = L'\0';
-        std::wstring str(string_buffer);
-        event_data = std::string(str.begin(), str.end());
-        free(string_buffer);
-      }
+      EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, NULL, flags, string_buffer_size, string_buffer.get(), &string_buffer_used);
     }
   }
+  if ((EvtFormatMessageKeyword == flags))
+    string_buffer.get()[string_buffer_used - 1] = L'\0';
+  std::wstring str(string_buffer.get());
+  event_data = std::string(str.begin(), str.end());
   return event_data;
 }
 
 std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const {
   std::string returnValue;
-  std::unique_ptr<WCHAR, utils::FreeDeleter> pBuffer;
-  DWORD dwBufferSize = 0;
+  DWORD dwBufferSize = 4096;
+  WCHAR stackBuffer[4096];
+  std::unique_ptr<WCHAR, utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>> pBuffer{ stackBuffer, {stackBuffer} };
   DWORD dwBufferUsed = 0;
   DWORD status = 0;
 
@@ -173,7 +170,7 @@ std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) cons
     /* All C++ examples use malloc and even HeapAlloc in some cases. To avoid any problems ( with EvtFormatMessage calling
       free for example ) we will continue to use malloc and use a custom deleter with unique_ptr.
     '*/
-    pBuffer = std::unique_ptr<WCHAR, utils::FreeDeleter>((LPWSTR)malloc(dwBufferSize * sizeof(WCHAR)));
+    pBuffer.reset((LPWSTR)malloc(dwBufferSize * sizeof(WCHAR)));
     if (!pBuffer) {
       return returnValue;
     }

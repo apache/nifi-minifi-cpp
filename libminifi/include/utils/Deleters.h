@@ -26,6 +26,7 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 #endif /* WIN32 */
+#include <memory>
 
 namespace org {
 namespace apache {
@@ -38,6 +39,23 @@ struct FreeDeleter {
     // free(null) is guaranteed to be safe, so no need to be defensive.
     free(ptr);
   }
+};
+
+template<typename T, typename D>
+struct StackAwareDeleter {
+  StackAwareDeleter(T* stackInstance, const D& impl = {})
+    : stackInstance_{stackInstance},
+      impl_{impl} {}
+
+  void operator()(T* const ptr) const noexcept(noexcept(impl_(ptr))) {
+    if (ptr != stackInstance_) {
+      impl_(ptr);
+    }
+  }
+
+ private:
+  T* stackInstance_;
+  D impl_;
 };
 
 struct addrinfo_deleter {
