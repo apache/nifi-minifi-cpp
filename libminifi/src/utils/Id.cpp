@@ -107,8 +107,8 @@ bool Identifier::operator<(const Identifier &other) const {
   return data_ < other.data_;
 }
 
-SmallString<36> Identifier::to_string() const {
-  SmallString<36> uuidStr;
+UUIDString Identifier::to_string() const {
+  UUIDString uuidStr;
   // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx is 36 long: 16 bytes * 2 hex digits / byte + 4 hyphens
   int byteIdx = 0;
   int charIdx = 0;

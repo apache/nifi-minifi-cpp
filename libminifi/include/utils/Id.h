@@ -51,6 +51,8 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+using UUIDString = SmallString<36>;
+
 class Identifier {
   friend struct IdentifierTestAccessor;
   static constexpr const char* UUID_FORMAT_STRING = "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx";
@@ -71,7 +73,7 @@ class Identifier {
 
   bool isNil() const;
 
-  SmallString<36> to_string() const;
+  UUIDString to_string() const;
 
   static utils::optional<Identifier> parse(const std::string& str);
 

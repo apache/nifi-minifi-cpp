@@ -31,35 +31,39 @@ template<size_t N>
 class SmallString : public std::array<char, N + 1> {
  public:
   operator std::string() const {  // NOLINT
-    return {this->data()};
+    return {c_str()};
+  }
+
+  const char* c_str() const {
+    return this->data();
   }
 
   friend std::ostream &operator<<(std::ostream &out, const SmallString &str) {
-    return out << str.data();
+    return out << str.c_str();
   }
 
   friend std::string operator+(const std::string &lhs, const SmallString &rhs) {
-    return lhs + rhs.data();
+    return lhs + rhs.c_str();
   }
 
   friend std::string operator+(std::string &&lhs, const SmallString &rhs) {
-    return std::move(lhs) + rhs.data();
+    return std::move(lhs) + rhs.c_str();
   }
 
   friend std::string operator+(const SmallString &lhs, const std::string &rhs) {
-    return lhs.data() + rhs;
+    return lhs.c_str() + rhs;
   }
 
   friend std::string operator+(const SmallString &lhs, std::string &&rhs) {
-    return lhs.data() + std::move(rhs);
+    return lhs.c_str() + std::move(rhs);
   }
 
   friend bool operator==(const std::string& lhs, const SmallString& rhs) {
-    return lhs == rhs.data();
+    return lhs == rhs.c_str();
   }
 
   friend bool operator==(const SmallString& lhs, const std::string& rhs) {
-    return lhs.data() == rhs;
+    return lhs.c_str() == rhs;
   }
 
   friend bool operator==(const SmallString& lhs, const SmallString& rhs) {

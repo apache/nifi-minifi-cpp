@@ -56,7 +56,7 @@ inline char const* conditional_conversion(std::string const& str) {
 
 template<size_t N>
 inline char const* conditional_conversion(const utils::SmallString<N>& arr) {
-  return arr.data();
+  return arr.c_str();
 }
 
 template<typename T>

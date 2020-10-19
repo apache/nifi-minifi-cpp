@@ -71,7 +71,7 @@ class OutputStream : public virtual Stream {
 
   template<size_t N>
   int write(const utils::SmallString<N>& str, bool widen = false) {
-    return write(str.data(), widen);
+    return write(str.c_str(), widen);
   }
 
   /**
