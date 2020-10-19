@@ -54,7 +54,7 @@ bool S3Wrapper::sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectReques
     logger_->log_info("S3 object %s was not found in bucket %s", request.GetKey(), request.GetBucket());
     return true;
   } else {
-    logger_->log_error("PutS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
+    logger_->log_error("DeleteS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
     return false;
   }
 }
