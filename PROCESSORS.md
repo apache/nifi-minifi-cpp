@@ -941,6 +941,45 @@ In the list below, the names of required properties appear in bold. Any other pr
 |success|Successfully put OPC-UA node|
 
 
+## PutS3Object
+
+### Description
+
+Puts FlowFiles to an Amazon S3 Bucket. The upload uses either the PutS3Object method. The PutS3Object method send the file in a single synchronous call, but it has a 5GB size limit. Larger files sent using the multipart upload methods are currently not supported. The AWS libraries select an endpoint URL based on the AWS region, but this can be overridden with the 'Endpoint Override URL' property for use with other S3-compatible endpoints. The S3 API specifies that the maximum file size for a PutS3Object upload is 5GB.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Object Key**|${filename}||The key of the S3 object<br/>**Supports Expression Language: true**|
+|**Bucket**|||The S3 bucket<br/>**Supports Expression Language: true**|
+|Content Type|||Sets the Content-Type HTTP header indicating the type of content stored in the associated object. The value of this header is a standard MIME type. If no content type is provided the default content type "application/octet-stream" will be used.<br/>**Supports Expression Language: true**|
+|Access Key|||AWS account access key<br/>**Supports Expression Language: true**|
+|Secret Key|||AWS account secret key<br/>**Supports Expression Language: true**|
+|Credentials File|||Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey|
+|AWS Credentials Provider service|||The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.|
+|**Storage Class**|Standard|Standard<br/>ReducedRedundancy<br/>StandardIA<br/>OnezoneIA<br/>IntelligentTiering<br/>Glacier<br/>DeepArchive|AWS S3 Storage Class|
+|**Region**|us-west-2|af-south-1<br/>ap-east-1<br/>ap-northeast-1<br/>ap-northeast-2<br/>ap-northeast-3<br/>ap-south-1<br/>ap-southeast-1<br/>ap-southeast-2<br/>ca-central-1<br/>cn-north-1<br/>cn-northwest-1<br/>eu-central-1<br/>eu-north-1<br/>eu-south-1<br/>eu-west-1<br/>eu-west-2<br/>eu-west-3<br/>me-south-1<br/>sa-east-1<br/>us-east-1<br/>us-east-2<br/>us-gov-east-1<br/>us-gov-west-1<br/>us-west-1<br/>us-west-2|AWS Region|
+|**Communications Timeout**|30 sec|||
+|FullControl User List|${s3.permissions.full.users}||A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Full Control for an object.<br/>**Supports Expression Language: true**|
+|Read Permission User List|${s3.permissions.read.users}||A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Read Access for an object.<br/>**Supports Expression Language: true**|
+|Read ACL User List|${s3.permissions.readacl.users}||A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to read the Access Control List for an object.<br/>**Supports Expression Language: true**|
+|Write ACL User List|${s3.permissions.writeacl.users}||A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to change the Access Control List for an object.<br/>**Supports Expression Language: true**||Amazon Canned ACL for an object. Allowed values: BucketOwnerFullControl, BucketOwnerRead, AuthenticatedRead, PublicReadWrite, PublicRead, Private, AwsExecRead; will be ignored if any other ACL/permission property is specified.<br/>**Supports Expression Language: true**|
+|Endpoint Override URL|||Endpoint URL to use instead of the AWS default including scheme, host, port, and path. The AWS libraries select an endpoint URL based on the AWS region, but this property overrides the selected endpoint URL, allowing use with other S3-compatible endpoints.<br/>**Supports Expression Language: true**|
+|**Server Side Encryption**|None|None<br/>AES256<br/>aws_kms|Specifies the algorithm used for server side encryption.|
+|Proxy Host|||Proxy host name or IP<br/>**Supports Expression Language: true**|
+|Proxy Port|||The port number of the proxy host<br/>**Supports Expression Language: true**|
+|Proxy Username|||Username to set when authenticating against proxy<br/>**Supports Expression Language: true**|
+|Proxy Password|||Password to set when authenticating against proxy<br/>**Supports Expression Language: true**|
+### Relationships
+
+| Name | Description |
+| - | - |
+|failure|FlowFiles are routed to failure relationship|
+|success|FlowFiles are routed to success relationship|
+
+
 ## PutSFTP
 
 ### Description
@@ -1126,42 +1165,3 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |failure|Failed files are transferred to failure|
 |success|All files are routed to success|
-
-
-## PutS3Object
-
-### Description
-
-Puts FlowFiles to an Amazon S3 Bucket. The upload uses either the PutS3Object method. The PutS3Object method send the file in a single synchronous call, but it has a 5GB size limit. Larger files sent using the multipart upload methods are currently not supported. The AWS libraries select an endpoint URL based on the AWS region, but this can be overridden with the 'Endpoint Override URL' property for use with other S3-compatible endpoints. The S3 API specifies that the maximum file size for a PutS3Object upload is 5GB.
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name | Default Value | Allowable Values | Description |
-| - | - | - | - |
-|**Object Key**|${filename}||The key of the S3 object<br/>**Supports Expression Language: true**|
-|**Bucket**|||The S3 bucket<br/>**Supports Expression Language: true**|
-|Content Type|||Sets the Content-Type HTTP header indicating the type of content stored in the associated object. The value of this header is a standard MIME type. If no content type is provided the default content type "application/octet-stream" will be used.<br/>**Supports Expression Language: true**|
-|Access Key|||AWS account access key<br/>**Supports Expression Language: true**|
-|Secret Key|||AWS account secret key<br/>**Supports Expression Language: true**|
-|Credentials File|||Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey|
-|AWS Credentials Provider service|||The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.|
-|**Storage Class**|Standard|Standard<br/>ReducedRedundancy<br/>StandardIA<br/>OnezoneIA<br/>IntelligentTiering<br/>Glacier<br/>DeepArchive|AWS S3 Storage Class|
-|**Region**|us-west-2|af-south-1<br/>ap-east-1<br/>ap-northeast-1<br/>ap-northeast-2<br/>ap-northeast-3<br/>ap-south-1<br/>ap-southeast-1<br/>ap-southeast-2<br/>ca-central-1<br/>cn-north-1<br/>cn-northwest-1<br/>eu-central-1<br/>eu-north-1<br/>eu-south-1<br/>eu-west-1<br/>eu-west-2<br/>eu-west-3<br/>me-south-1<br/>sa-east-1<br/>us-east-1<br/>us-east-2<br/>us-gov-east-1<br/>us-gov-west-1<br/>us-west-1<br/>us-west-2|AWS Region|
-|**Communications Timeout**|30 sec|||
-|FullControl User List|${s3.permissions.full.users}||A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Full Control for an object.<br/>**Supports Expression Language: true**|
-|Read Permission User List|${s3.permissions.read.users}||A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Read Access for an object.<br/>**Supports Expression Language: true**|
-|Read ACL User List|${s3.permissions.readacl.users}||A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to read the Access Control List for an object.<br/>**Supports Expression Language: true**|
-|Write ACL User List|${s3.permissions.writeacl.users}||A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to change the Access Control List for an object.<br/>**Supports Expression Language: true**||Amazon Canned ACL for an object. Allowed values: BucketOwnerFullControl, BucketOwnerRead, AuthenticatedRead, PublicReadWrite, PublicRead, Private, AwsExecRead; will be ignored if any other ACL/permission property is specified.<br/>**Supports Expression Language: true**|
-|Endpoint Override URL|||Endpoint URL to use instead of the AWS default including scheme, host, port, and path. The AWS libraries select an endpoint URL based on the AWS region, but this property overrides the selected endpoint URL, allowing use with other S3-compatible endpoints.<br/>**Supports Expression Language: true**|
-|**Server Side Encryption**|None|None<br/>AES256<br/>aws_kms|Specifies the algorithm used for server side encryption.|
-|Proxy Host|||Proxy host name or IP<br/>**Supports Expression Language: true**|
-|Proxy Port|||The port number of the proxy host<br/>**Supports Expression Language: true**|
-|Proxy Username|||Username to set when authenticating against proxy<br/>**Supports Expression Language: true**|
-|Proxy Password|||Password to set when authenticating against proxy<br/>**Supports Expression Language: true**|
-### Relationships
-
-| Name | Description |
-| - | - |
-|failure|FlowFiles are routed to failure relationship|
-|success|FlowFiles are routed to success relationship|
