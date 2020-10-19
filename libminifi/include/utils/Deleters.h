@@ -26,6 +26,7 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 #endif /* WIN32 */
+#include <utility>
 
 namespace org {
 namespace apache {
@@ -38,6 +39,31 @@ struct FreeDeleter {
     // free(null) is guaranteed to be safe, so no need to be defensive.
     free(ptr);
   }
+};
+
+/**
+ * Allows smart pointers to store a pointer both
+ * to the stack and the heap while ensuring selective
+ * destruction of only heap allocated objects.
+ * @tparam T type of the object
+ * @tparam D type of the deleter used for heap instances
+ */
+template<typename T, typename D>
+struct StackAwareDeleter {
+  template<typename ...Args>
+  explicit StackAwareDeleter(T* stack_instance, Args&& ...args)
+    : stack_instance_{stack_instance},
+      impl_{std::forward<Args>(args)...} {}
+
+  void operator()(T* const ptr) const noexcept(noexcept(impl_(ptr))) {
+    if (ptr != stack_instance_) {
+      impl_(ptr);
+    }
+  }
+
+ private:
+  T* stack_instance_;
+  D impl_;
 };
 
 struct addrinfo_deleter {

@@ -31,10 +31,12 @@ namespace wel {
 
 void WindowsEventLogMetadataImpl::renderMetadata() {
   DWORD status = ERROR_SUCCESS;
-  DWORD dwBufferSize = 0;
+  EVT_VARIANT stackBuffer[4096];
+  DWORD dwBufferSize = sizeof(stackBuffer);
+  using Deleter = utils::StackAwareDeleter<EVT_VARIANT, utils::FreeDeleter>;
+  std::unique_ptr<EVT_VARIANT, Deleter> rendered_values{ stackBuffer, Deleter{stackBuffer} };
   DWORD dwBufferUsed = 0;
   DWORD dwPropertyCount = 0;
-  std::unique_ptr< EVT_VARIANT, utils::FreeDeleter> rendered_values;
 
   auto context = EvtCreateRenderContext(0, NULL, EvtRenderContextSystem);
   if (context == NULL) {
@@ -43,13 +45,14 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
   const auto contextGuard = gsl::finally([&context](){
     EvtClose(context);
   });
-  if (!EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, nullptr, &dwBufferUsed, &dwPropertyCount)) {
+  if (!EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount)) {
     if (ERROR_INSUFFICIENT_BUFFER == (status = GetLastError())) {
       dwBufferSize = dwBufferUsed;
-      rendered_values = std::unique_ptr<EVT_VARIANT, utils::FreeDeleter>((PEVT_VARIANT)(malloc(dwBufferSize)));
-      if (rendered_values) {
-        EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount);
+      rendered_values.reset((PEVT_VARIANT)(malloc(dwBufferSize)));
+      if (!rendered_values) {
+        return;
       }
+      EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount);
     }
     else {
       return;
@@ -118,9 +121,11 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
 }
 
 std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const {
-  LPWSTR string_buffer = NULL;
-  DWORD string_buffer_size = 0;
-  DWORD string_buffer_used = 0;
+  WCHAR stack_buffer[4096];
+  DWORD num_chars_in_buffer = sizeof(stack_buffer) / sizeof(stack_buffer[0]);
+  using Deleter = utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>;
+  std::unique_ptr<WCHAR, Deleter> buffer{ stack_buffer, Deleter{stack_buffer} };
+  DWORD num_chars_used = 0;
   DWORD result = 0;
 
   std::string event_data;
@@ -129,56 +134,56 @@ std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS f
     return event_data;
   }
 
-  if (!EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, NULL, flags, string_buffer_size, string_buffer, &string_buffer_used)) {
+
+  if (!EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, NULL, flags, num_chars_in_buffer, buffer.get(), &num_chars_used)) {
     result = GetLastError();
     if (ERROR_INSUFFICIENT_BUFFER == result) {
-      string_buffer_size = string_buffer_used;
+      num_chars_in_buffer = num_chars_used;
 
-      string_buffer = (LPWSTR) malloc(string_buffer_size * sizeof(WCHAR));
-
-      if (string_buffer) {
-
-        if ((EvtFormatMessageKeyword == flags))
-          string_buffer[string_buffer_size - 1] = L'\0';
-
-        EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, NULL, flags, string_buffer_size, string_buffer, &string_buffer_used);
-        if ((EvtFormatMessageKeyword == flags))
-          string_buffer[string_buffer_used - 1] = L'\0';
-        std::wstring str(string_buffer);
-        event_data = std::string(str.begin(), str.end());
-        free(string_buffer);
+      buffer.reset((LPWSTR) malloc(num_chars_in_buffer * sizeof(WCHAR)));
+      if (!buffer) {
+        return event_data;
       }
+
+      EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, NULL, flags, num_chars_in_buffer, buffer.get(), &num_chars_used);
     }
   }
+  if (EvtFormatMessageKeyword == flags) {
+    buffer.get()[num_chars_used - 1] = L'\0';
+  }
+  std::wstring str(buffer.get());
+  event_data = std::string(str.begin(), str.end());
   return event_data;
 }
 
 std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const {
   std::string returnValue;
-  std::unique_ptr<WCHAR, utils::FreeDeleter> pBuffer;
-  DWORD dwBufferSize = 0;
-  DWORD dwBufferUsed = 0;
+  WCHAR stack_buffer[4096];
+  DWORD num_chars_in_buffer = sizeof(stack_buffer) / sizeof(stack_buffer[0]);
+  using Deleter = utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>;
+  std::unique_ptr<WCHAR, Deleter> buffer{ stack_buffer, Deleter{stack_buffer} };
+  DWORD num_chars_used = 0;
   DWORD status = 0;
 
-  EvtFormatMessage(metadata_provider_, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, dwBufferSize, pBuffer.get(), &dwBufferUsed);
-  if (dwBufferUsed == 0) {
+  EvtFormatMessage(metadata_provider_, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, num_chars_in_buffer, buffer.get(), &num_chars_used);
+  if (num_chars_used == 0) {
     return returnValue;
   }
 
   //  we need to get the size of the buffer
   status = GetLastError();
   if (ERROR_INSUFFICIENT_BUFFER == status) {
-    dwBufferSize = dwBufferUsed;
+    num_chars_in_buffer = num_chars_used;
 
     /* All C++ examples use malloc and even HeapAlloc in some cases. To avoid any problems ( with EvtFormatMessage calling
       free for example ) we will continue to use malloc and use a custom deleter with unique_ptr.
     '*/
-    pBuffer = std::unique_ptr<WCHAR, utils::FreeDeleter>((LPWSTR)malloc(dwBufferSize * sizeof(WCHAR)));
-    if (!pBuffer) {
+    buffer.reset((LPWSTR)malloc(num_chars_in_buffer * sizeof(WCHAR)));
+    if (!buffer) {
       return returnValue;
     }
 
-    EvtFormatMessage(metadata_provider_, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, dwBufferSize, pBuffer.get(), &dwBufferUsed);
+    EvtFormatMessage(metadata_provider_, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, num_chars_in_buffer, buffer.get(), &num_chars_used);
   }
 
   if (ERROR_EVT_MESSAGE_NOT_FOUND == status || ERROR_EVT_MESSAGE_ID_NOT_FOUND == status) {
@@ -186,7 +191,7 @@ std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) cons
   }
 
   // convert wstring to std::string
-  return to_string(pBuffer.get());
+  return to_string(buffer.get());
 }
 
 void WindowsEventLogHeader::setDelimiter(const std::string &delim) {
