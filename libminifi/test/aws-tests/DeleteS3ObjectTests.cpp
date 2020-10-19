@@ -31,7 +31,8 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test required property not set", "
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test success case", "[awsS3DeleteSuccess]") {
   setRequiredProperties();
-  plan->setProperty(s3_processor, "Version", "v1");
+  plan->setProperty(update_attribute, "s3.version", "v1", true);
+  plan->setProperty(s3_processor, "Version", "${s3.version}");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_ptr->bucket_name == "testBucket");
   REQUIRE(mock_s3_wrapper_ptr->object_key == INPUT_FILENAME);
