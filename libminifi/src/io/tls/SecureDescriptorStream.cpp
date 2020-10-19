@@ -47,6 +47,9 @@ void SecureDescriptorStream::seek(uint64_t offset) {
 
 int SecureDescriptorStream::write(const uint8_t *value, int size) {
   gsl_Expects(size >= 0);
+  if (size == 0) {
+    return 0;
+  }
   if (!IsNullOrEmpty(value)) {
     std::lock_guard<std::recursive_mutex> lock(file_lock_);
     int bytes = 0;
@@ -70,6 +73,9 @@ int SecureDescriptorStream::write(const uint8_t *value, int size) {
 
 int SecureDescriptorStream::read(uint8_t *buf, int buflen) {
   gsl_Expects(buflen >= 0);
+  if (buflen == 0) {
+    return 0;
+  }
   if (!IsNullOrEmpty(buf)) {
     int total_read = 0;
       int status = 0;

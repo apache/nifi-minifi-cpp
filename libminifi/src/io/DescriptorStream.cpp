@@ -45,6 +45,9 @@ void DescriptorStream::seek(uint64_t offset) {
 
 int DescriptorStream::write(const uint8_t *value, int size) {
   gsl_Expects(size >= 0);
+  if (size == 0) {
+    return 0;
+  }
   if (!IsNullOrEmpty(value)) {
     std::lock_guard<std::recursive_mutex> lock(file_lock_);
 #ifdef WIN32
@@ -63,6 +66,9 @@ int DescriptorStream::write(const uint8_t *value, int size) {
 
 int DescriptorStream::read(uint8_t *buf, int buflen) {
   gsl_Expects(buflen >= 0);
+  if (buflen == 0) {
+    return 0;
+  }
   if (!IsNullOrEmpty(buf)) {
 #ifdef WIN32
     auto size_read = _read(fd_, buf, buflen);
