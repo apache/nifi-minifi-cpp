@@ -62,6 +62,9 @@ class RocksDbStream : public io::BaseStream {
     return size_;
   }
 
+  using BaseStream::write;
+  using BaseStream::read;
+
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data

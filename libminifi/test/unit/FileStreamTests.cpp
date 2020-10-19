@@ -246,3 +246,19 @@ TEST_CASE("TestFileExceedSize", "[TestLoader]") {
 
   std::remove(ss.str().c_str());
 }
+
+TEST_CASE("Write zero bytes") {
+  TestController testController;
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+  minifi::io::FileStream stream(utils::file::concat_path(dir, "test.txt"), 0, true);
+  REQUIRE(stream.write(nullptr, 0) == 0);
+}
+
+TEST_CASE("Read zero bytes") {
+  TestController testController;
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+  minifi::io::FileStream stream(utils::file::concat_path(dir, "test.txt"), 0, true);
+  REQUIRE(stream.read(nullptr, 0) == 0);
+}

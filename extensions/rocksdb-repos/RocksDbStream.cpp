@@ -52,7 +52,13 @@ void RocksDbStream::seek(uint64_t offset) {
 
 int RocksDbStream::write(const uint8_t *value, int size) {
   gsl_Expects(size >= 0);
-  if (!IsNullOrEmpty(value) && write_enable_) {
+  if (!write_enable_) {
+    return -1;
+  }
+  if (size == 0) {
+    return 0;
+  }
+  if (!IsNullOrEmpty(value)) {
     auto opendb = db_->open();
     if (!opendb) {
       return -1;
@@ -79,7 +85,13 @@ int RocksDbStream::write(const uint8_t *value, int size) {
 
 int RocksDbStream::read(uint8_t *buf, int buflen) {
   gsl_Expects(buflen >= 0);
-  if (!IsNullOrEmpty(buf) && exists_) {
+  if (!exists_) {
+    return -1;
+  }
+  if (buflen == 0) {
+    return 0;
+  }
+  if (!IsNullOrEmpty(buf)) {
     size_t amtToRead = gsl::narrow<size_t>(buflen);
     if (offset_ >= value_.size()) {
       return 0;

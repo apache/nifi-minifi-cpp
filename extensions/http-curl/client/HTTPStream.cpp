@@ -57,6 +57,9 @@ void HttpStream::seek(uint64_t offset) {
 
 int HttpStream::write(const uint8_t *value, int size) {
   gsl_Expects(size >= 0);
+  if (size == 0) {
+    return 0;
+  }
   if (!IsNullOrEmpty(value)) {
     if (!started_) {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -77,6 +80,9 @@ int HttpStream::write(const uint8_t *value, int size) {
 
 int HttpStream::read(uint8_t *buf, int buflen) {
   gsl_Expects(buflen >= 0);
+  if (buflen == 0) {
+    return 0;
+  }
   if (!IsNullOrEmpty(buf)) {
     if (!started_) {
       std::lock_guard<std::mutex> lock(mutex_);
