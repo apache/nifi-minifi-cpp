@@ -120,7 +120,7 @@ class ListenHTTP : public core::Processor {
     std::shared_ptr<logging::Logger> logger_;
     std::map<std::string, ResponseBody> response_uri_map_;
     std::mutex uri_map_mutex_;
-    std::size_t buffer_size_;
+    uint64_t buffer_size_;
     utils::ConcurrentQueue<FlowFileBufferPair> request_buffer_;
   };
 
@@ -194,7 +194,7 @@ class ListenHTTP : public core::Processor {
   void notifyStop() override;
 
  private:
-  static const std::size_t DEFAULT_BUFFER_SIZE;
+  static const uint64_t DEFAULT_BUFFER_SIZE;
 
   void processIncomingFlowFile(core::ProcessSession *session);
   void processRequestBuffer(core::ProcessSession *session);
@@ -204,7 +204,7 @@ class ListenHTTP : public core::Processor {
   std::unique_ptr<CivetServer> server_;
   std::unique_ptr<Handler> handler_;
   std::string listeningPort;
-  std::size_t batch_size_;
+  uint64_t batch_size_;
 };
 
 REGISTER_RESOURCE(ListenHTTP, "Starts an HTTP Server and listens on a given base path to transform incoming requests into FlowFiles. The default URI of the Service will be "

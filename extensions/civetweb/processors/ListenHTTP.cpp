@@ -26,7 +26,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::size_t ListenHTTP::DEFAULT_BUFFER_SIZE = 20000;
+const uint64_t ListenHTTP::DEFAULT_BUFFER_SIZE = 20000;
 
 core::Property ListenHTTP::BasePath(
     core::PropertyBuilder::createProperty("Base Path")
@@ -67,13 +67,13 @@ core::Property ListenHTTP::HeadersAsAttributesRegex("HTTP Headers to receive as 
 core::Property ListenHTTP::BatchSize(
     core::PropertyBuilder::createProperty("Batch Size")
         ->withDescription("Maximum number of buffered requests to be processed in a single batch. If set to zero all buffered requests are processed.")
-        ->withDefaultValue<std::size_t>(ListenHTTP::DEFAULT_BUFFER_SIZE)->build());
+        ->withDefaultValue<uint64_t>(ListenHTTP::DEFAULT_BUFFER_SIZE)->build());
 
 core::Property ListenHTTP::BufferSize(
     core::PropertyBuilder::createProperty("Buffer Size")
         ->withDescription("Maximum number of HTTP Requests allowed to be buffered before processing them when the processor is triggered. "
                           "If the buffer full, the request is refused. If set to zero the buffer is unlimited.")
-        ->withDefaultValue<std::size_t>(ListenHTTP::DEFAULT_BUFFER_SIZE)->build());
+        ->withDefaultValue<uint64_t>(ListenHTTP::DEFAULT_BUFFER_SIZE)->build());
 
 core::Relationship ListenHTTP::Success("success", "All files are routed to success");
 
