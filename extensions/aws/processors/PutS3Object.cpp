@@ -23,6 +23,7 @@
 #include <string>
 #include <set>
 #include <memory>
+#include <map>
 
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"
@@ -38,7 +39,7 @@ namespace processors {
 namespace {
 
 template<typename T, typename U>
-std::set<T> getMapKeys(const std::map<T,U>& m) {
+std::set<T> getMapKeys(const std::map<T, U>& m) {
   std::set<T> keys;
   for (const auto& pair : m) {
     keys.insert(pair.first);
@@ -131,19 +132,22 @@ const core::Property PutS3Object::ReadPermissionUserList(
     ->build());
 const core::Property PutS3Object::ReadACLUserList(
   core::PropertyBuilder::createProperty("Read ACL User List")
-    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to read the Access Control List for an object.")
+    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to read "
+                      "the Access Control List for an object.")
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("${s3.permissions.readacl.users}")
     ->build());
 const core::Property PutS3Object::WriteACLUserList(
   core::PropertyBuilder::createProperty("Write ACL User List")
-    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to change the Access Control List for an object.")
+    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to change "
+                      "the Access Control List for an object.")
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("${s3.permissions.writeacl.users}")
     ->build());
 const core::Property PutS3Object::CannedACL(
   core::PropertyBuilder::createProperty("Canned ACL")
-    ->withDescription("Amazon Canned ACL for an object. Allowed values: BucketOwnerFullControl, BucketOwnerRead, AuthenticatedRead, PublicReadWrite, PublicRead, Private, AwsExecRead; will be ignored if any other ACL/permission property is specified.")
+    ->withDescription("Amazon Canned ACL for an object. Allowed values: BucketOwnerFullControl, BucketOwnerRead, AuthenticatedRead, "
+                      "PublicReadWrite, PublicRead, Private, AwsExecRead; will be ignored if any other ACL/permission property is specified.")
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("${s3.permissions.cannedacl}")
     ->build());
