@@ -75,6 +75,20 @@ def test_delete_s3_object():
         assert cluster.check_output(60)
         assert cluster.is_s3_bucket_empty()
 
+def test_delete_s3_non_existing_object():
+    """
+    Verify deletion of a non-existing S3 object should succeed
+    """
+    flow = (GetFile('/tmp/input')
+            >> DeleteS3Object() \
+            >> PutFile('/tmp/output/success'))
+
+    with DockerTestCluster(SingleFileOutputValidator('test', subdir='success')) as cluster:
+        cluster.put_test_data('test_data')
+        cluster.deploy_flow(None, engine='s3-server')
+        cluster.deploy_flow(flow, engine='minifi-cpp', name='minifi-cpp')
+        assert cluster.check_output(60)
+
 def test_delete_s3_object_proxy():
     """
     Verify deletion of S3 object through proxy server
