@@ -208,8 +208,8 @@ bool PutS3Object::getExpressionLanguageSupportedProperties(
   if (!S3Processor::getExpressionLanguageSupportedProperties(context, flow_file)) {
     return false;
   }
-  put_s3_request_params_.object_key = object_key_;
-  put_s3_request_params_.bucket = bucket_;
+  put_s3_request_params_.object_key = std::move(object_key_);
+  put_s3_request_params_.bucket = std::move(bucket_);
 
   context->getProperty(ContentType, put_s3_request_params_.content_type, flow_file);
   logger_->log_debug("PutS3Object: Content Type [%s]", put_s3_request_params_.content_type);
