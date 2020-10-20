@@ -34,6 +34,7 @@ class S3TestsFixture {
  public:
   const std::string INPUT_FILENAME = "input_data.log";
   const std::string INPUT_DATA = "input_data";
+  const std::string S3_BUCKET = "testBucket";
 
   S3TestsFixture() {
     // Disable retrieving AWS metadata for tests
@@ -125,7 +126,7 @@ class S3TestsFixture {
   }
 
   void setBucket() {
-    plan->setProperty(update_attribute, "test.bucket", "testBucket", true);
+    plan->setProperty(update_attribute, "test.bucket", S3_BUCKET, true);
     plan->setProperty(s3_processor, "Bucket", "${test.bucket}");
   }
 

@@ -24,12 +24,15 @@
 #include <map>
 #include <unordered_map>
 #include <memory>
+#include <sstream>
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "aws/s3/S3Client.h"
 #include "aws/s3/model/PutObjectRequest.h"
 #include "aws/s3/model/PutObjectResult.h"
 #include "aws/s3/model/DeleteObjectRequest.h"
+#include "aws/s3/model/GetObjectRequest.h"
+#include "aws/s3/model/GetObjectResult.h"
 #include "aws/s3/model/StorageClass.h"
 #include "aws/s3/model/ServerSideEncryption.h"
 #include "aws/s3/model/ObjectCannedACL.h"
@@ -38,6 +41,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/AWSInitializer.h"
 #include "utils/OptionalUtils.h"
+#include "io/BaseStream.h"
 
 namespace org {
 namespace apache {
@@ -73,10 +77,10 @@ static const std::unordered_map<std::string, Aws::S3::Model::ObjectCannedACL> CA
 };
 
 struct PutObjectResult {
-  Aws::String version;
-  Aws::String etag;
-  Aws::String expiration;
-  Aws::String ssealgorithm;
+  std::string version;
+  std::string etag;
+  std::string expiration;
+  std::string ssealgorithm;
 };
 
 struct PutObjectRequestParameters {
@@ -91,6 +95,29 @@ struct PutObjectRequestParameters {
   std::string read_acl_user_list;
   std::string write_acl_user_list;
   std::string canned_acl;
+};
+
+struct GetObjectRequestParameters {
+  std::string bucket;
+  std::string object_key;
+  std::string version;
+  bool requester_pays = false;
+};
+
+struct GetObjectResult {
+ public:
+  std::string path;
+  std::string absolute_path;
+  std::string filename;
+  std::string mime_type;
+  std::string etag;
+  std::string expiration_time;
+  std::string expiration_time_rule_id;
+  std::string ssealgorithm;
+  std::string version;
+  int64_t write_size = 0;
+
+  void setFilePaths(const std::string& key);
 };
 
 struct ProxyOptions {
@@ -110,14 +137,17 @@ class S3WrapperBase {
 
   minifi::utils::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
   bool deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version = "");
+  minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& input_params, const std::shared_ptr<io::BaseStream>& fetched_body);
 
   virtual ~S3WrapperBase() = default;
 
  protected:
   virtual minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3::Model::PutObjectRequest& request) = 0;
   virtual bool sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectRequest& request) = 0;
+  virtual minifi::utils::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request) = 0;
   void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
-  static std::string getExpiryDate(const std::string& expiration);
+  int64_t writeFetchedBody(Aws::IOStream& source, const int64_t data_size, const std::shared_ptr<io::BaseStream>& output);
+  static std::pair<std::string, std::string> getExpirationPair(const std::string& expiration);
   static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
 
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
