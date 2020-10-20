@@ -86,6 +86,18 @@ std::string S3WrapperBase::getEncryptionString(Aws::S3::Model::ServerSideEncrypt
   return "";
 }
 
+std::string S3WrapperBase::removeQuotes(const std::string& tag) {
+  if (tag.size() < 2) {
+    return tag;
+  }
+
+  if (tag[0] == '"' && tag[tag.size() - 1] == '"') {
+    return tag.substr(1, tag.size() - 2);
+  }
+
+  return tag;
+}
+
 minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjectRequestParameters& params, std::shared_ptr<Aws::IOStream> data_stream) {
   Aws::S3::Model::PutObjectRequest request;
   request.SetBucket(params.bucket);
@@ -104,7 +116,8 @@ minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjec
   auto aws_result = putObject(request);
   if (aws_result) {
     PutObjectResult result;
-    result.etag = aws_result.value().GetETag();
+    // Etags are returned by AWS with quotemarks that should be trimmed
+    result.etag = removeQuotes(aws_result.value().GetETag());
     result.version = aws_result.value().GetVersionId();
 
     // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format

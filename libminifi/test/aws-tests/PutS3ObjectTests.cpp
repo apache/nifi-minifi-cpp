@@ -30,7 +30,8 @@
 #include "utils/file/FileUtils.h"
 
 const std::string S3_VERSION = "1.2.3";
-const std::string S3_ETAG = "tag-123";
+const std::string S3_ETAG = "\"tag-123\"";
+const std::string S3_ETAG_UNQUOTED = "tag-123";
 const std::string S3_EXPIRATION = "expiry-date=\"Wed, 28 Oct 2020 00:00:00 GMT\", rule-id=\"my_expiration_rule\"";
 const std::string S3_EXPIRATION_DATE = "Wed, 28 Oct 2020 00:00:00 GMT";
 const Aws::S3::Model::ServerSideEncryption S3_SSEALGORITHM = Aws::S3::Model::ServerSideEncryption::aws_kms;
@@ -143,7 +144,7 @@ class PutS3ObjectTestsFixture {
 
   void checkPutObjectResults() {
     REQUIRE(LogTestController::getInstance().contains("key:s3.version value:" + S3_VERSION));
-    REQUIRE(LogTestController::getInstance().contains("key:s3.etag value:" + S3_ETAG));
+    REQUIRE(LogTestController::getInstance().contains("key:s3.etag value:" + S3_ETAG_UNQUOTED));
     REQUIRE(LogTestController::getInstance().contains("key:s3.expiration value:" + S3_EXPIRATION_DATE));
     REQUIRE(LogTestController::getInstance().contains("key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
   }

@@ -114,6 +114,7 @@ class S3WrapperBase {
   void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
   static std::string getExpiryDate(const std::string& expiration);
   static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
+  static std::string removeQuotes(const std::string& tag);
 
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   Aws::Client::ClientConfiguration client_config_;
