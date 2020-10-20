@@ -515,8 +515,8 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
 
 bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& eventRender) {
   logger_->log_trace("Rendering an event");
-  DWORD size = sizeof(WCHAR) * 4096;
   WCHAR stackBuffer[4096];
+  DWORD size = sizeof(stackBuffer);
   using Deleter = utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>;
   std::unique_ptr<WCHAR, Deleter> buf{stackBuffer, Deleter{ stackBuffer }};
 
@@ -533,13 +533,16 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
     }
     size = used;
     buf.reset((LPWSTR)malloc(size));
+    if (!buf) {
+      return false;
+    }
     if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, buf.get(), &used, &propertyCount)) {
       LOG_LAST_ERROR(EvtRender);
       return false;
     }
   }
 
-  logger_->log_debug("Event rendered with size %" PRIu32 ". Performing doc traversing...", size);
+  logger_->log_debug("Event rendered with size %" PRIu32 ". Performing doc traversing...", used);
 
   std::string xml = wel::to_string(buf.get());
 
