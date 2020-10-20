@@ -41,21 +41,28 @@ struct FreeDeleter {
   }
 };
 
+/**
+ * Allows smart pointers to store a pointer both
+ * to the stack and the heap while ensuring selective
+ * destruction of only heap allocated objects.
+ * @tparam T type of the object
+ * @tparam D type of the deleter used for heap instances
+ */
 template<typename T, typename D>
 struct StackAwareDeleter {
   template<typename ...Args>
-  explicit StackAwareDeleter(T* stackInstance, Args&& ...args)
-    : stackInstance_{stackInstance},
+  explicit StackAwareDeleter(T* stack_instance, Args&& ...args)
+    : stack_instance_{stack_instance},
       impl_{std::forward<Args>(args)...} {}
 
   void operator()(T* const ptr) const noexcept(noexcept(impl_(ptr))) {
-    if (ptr != stackInstance_) {
+    if (ptr != stack_instance_) {
       impl_(ptr);
     }
   }
 
  private:
-  T* stackInstance_;
+  T* stack_instance_;
   D impl_;
 };
 
