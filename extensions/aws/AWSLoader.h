@@ -26,6 +26,7 @@
 #include "utils/StringUtils.h"
 #include "controllerservices/AWSCredentialsService.h"
 #include "processors/PutS3Object.h"
+#include "processors/DeleteS3Object.h"
 
 class AWSObjectFactory : public core::ObjectFactory {
  public:
@@ -51,6 +52,7 @@ class AWSObjectFactory : public core::ObjectFactory {
     std::vector<std::string> class_names;
     class_names.push_back("AWSCredentialsService");
     class_names.push_back("PutS3Object");
+    class_names.push_back("DeleteS3Object");
     return class_names;
   }
 
@@ -59,6 +61,8 @@ class AWSObjectFactory : public core::ObjectFactory {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::aws::controllers::AWSCredentialsService>());
     } else if (utils::StringUtils::equalsIgnoreCase(class_name, "PutS3Object")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::aws::processors::PutS3Object>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "DeleteS3Object")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::aws::processors::DeleteS3Object>());
     } else {
       return nullptr;
     }
