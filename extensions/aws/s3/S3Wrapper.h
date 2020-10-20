@@ -21,6 +21,7 @@
 
 #include <memory>
 
+#include "aws/s3/model/PutObjectResult.h"
 #include "S3WrapperBase.h"
 
 namespace org {
@@ -32,7 +33,7 @@ namespace s3 {
 
 class S3Wrapper : public S3WrapperBase {
  protected:
-  minifi::utils::optional<PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override;
+  minifi::utils::optional<Aws::S3::Model::PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override;
 };
 
 }  // namespace s3

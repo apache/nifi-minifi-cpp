@@ -20,6 +20,7 @@
 #include "S3WrapperBase.h"
 
 #include <memory>
+#include <regex>
 
 namespace org {
 namespace apache {
@@ -64,6 +65,27 @@ void S3WrapperBase::setCannedAcl(Aws::S3::Model::PutObjectRequest& request, cons
   request.SetACL(CANNED_ACL_MAP.at(canned_acl));
 }
 
+std::string S3WrapperBase::getExpiryDate(const std::string& expiration) {
+  static const std::regex expr = std::regex("expiry-date=\"(.*)\", rule-id=\"(.*)\"");
+  std::smatch match;
+  std::regex_search(expiration, match, expr);
+  if (match.size() < 2)
+    return "";
+  return match[1];
+}
+
+std::string S3WrapperBase::getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption) {
+  auto it = std::find_if(SERVER_SIDE_ENCRYPTION_MAP.begin(), SERVER_SIDE_ENCRYPTION_MAP.end(),
+    [&](const std::pair<std::string, const Aws::S3::Model::ServerSideEncryption&> pair) {
+      return pair.second == encryption;
+    }
+  );
+  if (it != SERVER_SIDE_ENCRYPTION_MAP.end()) {
+    return it->first;
+  }
+  return "";
+}
+
 minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjectRequestParameters& params, std::shared_ptr<Aws::IOStream> data_stream) {
   Aws::S3::Model::PutObjectRequest request;
   request.SetBucket(params.bucket);
@@ -79,7 +101,20 @@ minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjec
   request.SetGrantWriteACP(params.write_acl_user_list);
   setCannedAcl(request, params.canned_acl);
 
-  return putObject(request);
+  auto aws_result = putObject(request);
+  if (aws_result) {
+    PutObjectResult result;
+    result.etag = aws_result.value().GetETag();
+    result.version = aws_result.value().GetVersionId();
+
+    // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format
+    // s3.expiration only needs the date member of this pair
+    result.expiration = getExpiryDate(aws_result.value().GetExpiration());
+    result.ssealgorithm = getEncryptionString(aws_result.value().GetServerSideEncryption());
+    return result;
+  } else {
+    return minifi::utils::nullopt;
+  }
 }
 
 }  // namespace s3

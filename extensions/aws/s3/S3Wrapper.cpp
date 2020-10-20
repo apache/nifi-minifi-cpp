@@ -30,18 +30,13 @@ namespace minifi {
 namespace aws {
 namespace s3 {
 
-minifi::utils::optional<PutObjectResult> S3Wrapper::putObject(const Aws::S3::Model::PutObjectRequest& request) {
+minifi::utils::optional<Aws::S3::Model::PutObjectResult> S3Wrapper::putObject(const Aws::S3::Model::PutObjectRequest& request) {
   Aws::S3::S3Client s3_client(credentials_, client_config_);
   Aws::S3::Model::PutObjectOutcome outcome = s3_client.PutObject(request);
 
   if (outcome.IsSuccess()) {
       logger_->log_info("Added S3 object %s to bucket %s", request.GetKey(), request.GetBucket());
-      PutObjectResult result;
-      result.version = outcome.GetResult().GetVersionId();
-      result.etag = outcome.GetResult().GetETag();
-      result.expiration = outcome.GetResult().GetExpiration();
-      result.ssealgorithm = outcome.GetResult().GetSSECustomerAlgorithm();
-      return result;
+      return outcome.GetResultWithOwnership();
   } else {
       logger_->log_error("PutS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
       return minifi::utils::nullopt;

@@ -31,8 +31,10 @@
 
 const std::string S3_VERSION = "1.2.3";
 const std::string S3_ETAG = "tag-123";
-const std::string S3_EXPIRATION = "2020-02-20";
-const std::string S3_SSEALGORITHM = "aws:kms";
+const std::string S3_EXPIRATION = "expiry-date=\"Wed, 28 Oct 2020 00:00:00 GMT\", rule-id=\"my_expiration_rule\"";
+const std::string S3_EXPIRATION_DATE = "Wed, 28 Oct 2020 00:00:00 GMT";
+const Aws::S3::Model::ServerSideEncryption S3_SSEALGORITHM = Aws::S3::Model::ServerSideEncryption::aws_kms;
+const std::string S3_SSEALGORITHM_STR = "aws_kms";
 
 class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
  public:
@@ -44,7 +46,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     return client_config_;
   }
 
-  utils::optional<minifi::aws::s3::PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override {
+  minifi::utils::optional<Aws::S3::Model::PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override {
     std::istreambuf_iterator<char> eos;
     put_s3_data = std::string(std::istreambuf_iterator<char>(*request.GetBody()), eos);
     bucket_name = request.GetBucket();
@@ -60,10 +62,10 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     write_acl_user_list = request.GetGrantWriteACP();
     canned_acl = request.GetACL();
 
-    put_s3_result.version = S3_VERSION;
-    put_s3_result.etag = S3_ETAG;
-    put_s3_result.expiration = S3_EXPIRATION;
-    put_s3_result.ssealgorithm = S3_SSEALGORITHM;
+    put_s3_result.SetVersionId(S3_VERSION);
+    put_s3_result.SetETag(S3_ETAG);
+    put_s3_result.SetExpiration(S3_EXPIRATION);
+    put_s3_result.SetServerSideEncryption(S3_SSEALGORITHM);
     return put_s3_result;
   }
 
@@ -71,7 +73,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
   std::string object_key;
   Aws::S3::Model::StorageClass storage_class;
   Aws::S3::Model::ServerSideEncryption server_side_encryption;
-  minifi::aws::s3::PutObjectResult put_s3_result;
+  Aws::S3::Model::PutObjectResult put_s3_result;
   std::string put_s3_data;
   std::map<std::string, std::string> metadata_map;
   std::string content_type;
@@ -142,8 +144,8 @@ class PutS3ObjectTestsFixture {
   void checkPutObjectResults() {
     REQUIRE(LogTestController::getInstance().contains("key:s3.version value:" + S3_VERSION));
     REQUIRE(LogTestController::getInstance().contains("key:s3.etag value:" + S3_ETAG));
-    REQUIRE(LogTestController::getInstance().contains("key:s3.expiration value:" + S3_EXPIRATION));
-    REQUIRE(LogTestController::getInstance().contains("key:s3.sseAlgorithm value:" + S3_SSEALGORITHM));
+    REQUIRE(LogTestController::getInstance().contains("key:s3.expiration value:" + S3_EXPIRATION_DATE));
+    REQUIRE(LogTestController::getInstance().contains("key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
   }
 
   std::string createTempFile(const std::string& filename) {
