@@ -26,7 +26,7 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 #endif /* WIN32 */
-#include <memory>
+#include <utility>
 
 namespace org {
 namespace apache {
@@ -43,9 +43,10 @@ struct FreeDeleter {
 
 template<typename T, typename D>
 struct StackAwareDeleter {
-  StackAwareDeleter(T* stackInstance, const D& impl = {})
+  template<typename ...Args>
+  explicit StackAwareDeleter(T* stackInstance, Args&& ...args)
     : stackInstance_{stackInstance},
-      impl_{impl} {}
+      impl_{std::forward<Args>(args)...} {}
 
   void operator()(T* const ptr) const noexcept(noexcept(impl_(ptr))) {
     if (ptr != stackInstance_) {

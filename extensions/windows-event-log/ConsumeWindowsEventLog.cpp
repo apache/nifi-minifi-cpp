@@ -517,7 +517,8 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
   logger_->log_trace("Rendering an event");
   DWORD size = sizeof(WCHAR) * 4096;
   WCHAR stackBuffer[4096];
-  std::unique_ptr<WCHAR, utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>> buf{stackBuffer, { stackBuffer }};
+  using Deleter = utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>;
+  std::unique_ptr<WCHAR, Deleter> buf{stackBuffer, Deleter{ stackBuffer }};
 
   DWORD used = 0;
   DWORD propertyCount = 0;

@@ -33,7 +33,8 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
   DWORD status = ERROR_SUCCESS;
   DWORD dwBufferSize = sizeof(EVT_VARIANT) * 4096;
   EVT_VARIANT stackBuffer[4096];
-  std::unique_ptr<EVT_VARIANT, utils::StackAwareDeleter<EVT_VARIANT, utils::FreeDeleter>> rendered_values{ stackBuffer, {stackBuffer} };
+  using Deleter = utils::StackAwareDeleter<EVT_VARIANT, utils::FreeDeleter>;
+  std::unique_ptr<EVT_VARIANT, Deleter> rendered_values{ stackBuffer, Deleter{stackBuffer} };
   DWORD dwBufferUsed = 0;
   DWORD dwPropertyCount = 0;
 
@@ -121,7 +122,8 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
 std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const {
   DWORD string_buffer_size = 4096;
   WCHAR stackBuffer[4096];
-  std::unique_ptr<WCHAR, utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>> string_buffer{ stackBuffer, {stackBuffer} };
+  using Deleter = utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>;
+  std::unique_ptr<WCHAR, Deleter> string_buffer{ stackBuffer, Deleter{stackBuffer} };
   DWORD string_buffer_used = 0;
   DWORD result = 0;
 
@@ -153,7 +155,8 @@ std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) cons
   std::string returnValue;
   DWORD dwBufferSize = 4096;
   WCHAR stackBuffer[4096];
-  std::unique_ptr<WCHAR, utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>> pBuffer{ stackBuffer, {stackBuffer} };
+  using Deleter = utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>;
+  std::unique_ptr<WCHAR, Deleter> pBuffer{ stackBuffer, Deleter{stackBuffer} };
   DWORD dwBufferUsed = 0;
   DWORD status = 0;
 
