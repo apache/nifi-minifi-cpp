@@ -25,9 +25,9 @@
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "aws/core/utils/memory/stl/AWSString.h"
-#include "aws/core/utils/logging/DefaultLogSystem.h"
 #include "aws/core/utils/logging/AWSLogging.h"
 #include "aws/core/platform/Environment.h"
+#include "AWSSdkLogger.h"
 
 namespace org {
 namespace apache {
@@ -53,8 +53,7 @@ AWSInitializer::AWSInitializer() {
 
   Aws::InitAPI(options_);
   Aws::Utils::Logging::InitializeAWSLogging(
-      Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(
-          "InitLogging", Aws::Utils::Logging::LogLevel::Info, "aws_sdk_"));
+      std::make_shared<AWSSdkLogger>());
 }
 
 }  // namespace utils
