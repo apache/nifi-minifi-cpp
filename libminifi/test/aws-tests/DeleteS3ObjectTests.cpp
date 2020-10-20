@@ -21,9 +21,44 @@
 
 using DeleteS3ObjectTestsFixture = S3TestsFixture<minifi::aws::processors::DeleteS3Object>;
 
+TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test AWS credential setting", "[awsCredentials]") {
+  setBucket();
+
+  SECTION("Test property credentials") {
+    setAccesKeyCredentialsInProcessor();
+  }
+
+  SECTION("Test credentials setting from AWS Credentials service") {
+    setAccessKeyCredentialsInController();
+    setCredentialsService();
+  }
+
+  SECTION("Test credentials file setting") {
+    setCredentialFile(s3_processor);
+  }
+
+  SECTION("Test credentials file setting from AWS Credentials service") {
+    setCredentialFile(aws_credentials_service);
+    setCredentialsService();
+  }
+
+  SECTION("Test credentials setting using default credential chain") {
+    setUseDefaultCredentialsChain(s3_processor);
+  }
+
+  SECTION("Test credentials setting from AWS Credentials service using default credential chain") {
+    setUseDefaultCredentialsChain(aws_credentials_service);
+    setCredentialsService();
+  }
+
+  test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSAccessKeyId() == "key");
+  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSSecretKey() == "secret");
+}
+
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test required property not set", "[awsS3Config]") {
   SECTION("Test no bucket is set") {
-    setBasicCredentials();
+    setAccesKeyCredentialsInProcessor();
   }
 
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
@@ -55,4 +90,11 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test failure case", "[awsS3DeleteF
   REQUIRE(mock_s3_wrapper_ptr->object_key == INPUT_FILENAME);
   REQUIRE(mock_s3_wrapper_ptr->version == "v1");
   REQUIRE(LogTestController::getInstance().contains("Failed to delete S3 object"));
+}
+
+TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
+  setRequiredProperties();
+  setProxy();
+  test_controller.runSession(plan, true);
+  checkProxySettings();
 }

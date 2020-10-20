@@ -40,68 +40,30 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
   setBucket();
 
   SECTION("Test property credentials") {
-    plan->setProperty(update_attribute, "s3.accessKey", "key", true);
-    plan->setProperty(s3_processor, "Access Key", "${s3.accessKey}");
-    plan->setProperty(update_attribute, "s3.secretKey", "secret", true);
-    plan->setProperty(s3_processor, "Secret Key", "${s3.secretKey}");
+    setAccesKeyCredentialsInProcessor();
   }
 
-
   SECTION("Test credentials setting from AWS Credentials service") {
-    auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
-    plan->setProperty(aws_cred_service, "Access Key", "key");
-    plan->setProperty(aws_cred_service, "Secret Key", "secret");
-    plan->setProperty(s3_processor, "AWS Credentials Provider service", "AWSCredentialsService");
+    setAccessKeyCredentialsInController();
+    setCredentialsService();
   }
 
   SECTION("Test credentials file setting") {
-    char in_dir[] = "/tmp/gt.XXXXXX";
-    auto temp_path = test_controller.createTempDirectory(in_dir);
-    REQUIRE(!temp_path.empty());
-    std::string aws_credentials_file(temp_path + utils::file::FileUtils::get_separator() + "aws_creds.conf");
-    std::ofstream aws_credentials_file_stream(aws_credentials_file);
-    aws_credentials_file_stream << "accessKey=key" << std::endl;
-    aws_credentials_file_stream << "secretKey=secret" << std::endl;
-    aws_credentials_file_stream.close();
-    plan->setProperty(s3_processor, "Credentials File", aws_credentials_file);
+    setCredentialFile(s3_processor);
   }
 
   SECTION("Test credentials file setting from AWS Credentials service") {
-    char in_dir[] = "/tmp/gt.XXXXXX";
-    auto temp_path = test_controller.createTempDirectory(in_dir);
-    REQUIRE(!temp_path.empty());
-    std::string aws_credentials_file(temp_path + utils::file::FileUtils::get_separator() + "aws_creds.conf");
-    std::ofstream aws_credentials_file_stream(aws_credentials_file);
-    aws_credentials_file_stream << "accessKey=key" << std::endl;
-    aws_credentials_file_stream << "secretKey=secret" << std::endl;
-    aws_credentials_file_stream.close();
-    auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
-    plan->setProperty(aws_cred_service, "Credentials File", aws_credentials_file);
-    plan->setProperty(s3_processor, "AWS Credentials Provider service", "AWSCredentialsService");
+    setCredentialFile(aws_credentials_service);
+    setCredentialsService();
   }
 
   SECTION("Test credentials setting using default credential chain") {
-    #ifdef WIN32
-    _putenv_s("AWS_ACCESS_KEY_ID", "key");
-    _putenv_s("AWS_SECRET_ACCESS_KEY", "secret");
-    #else
-    setenv("AWS_ACCESS_KEY_ID", "key", 1);
-    setenv("AWS_SECRET_ACCESS_KEY", "secret", 1);
-    #endif
-    plan->setProperty(s3_processor, "Use Default Credentials", "true");
+    setUseDefaultCredentialsChain(s3_processor);
   }
 
   SECTION("Test credentials setting from AWS Credentials service using default credential chain") {
-    auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
-    plan->setProperty(aws_cred_service, "Use Default Credentials", "true");
-    #ifdef WIN32
-    _putenv_s("AWS_ACCESS_KEY_ID", "key");
-    _putenv_s("AWS_SECRET_ACCESS_KEY", "secret");
-    #else
-    setenv("AWS_ACCESS_KEY_ID", "key", 1);
-    setenv("AWS_SECRET_ACCESS_KEY", "secret", 1);
-    #endif
-    plan->setProperty(s3_processor, "AWS Credentials Provider service", "AWSCredentialsService");
+    setUseDefaultCredentialsChain(aws_credentials_service);
+    setCredentialsService();
   }
 
   test_controller.runSession(plan, true);
@@ -114,7 +76,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[aw
   }
 
   SECTION("Test no bucket is set") {
-    setBasicCredentials();
+    setAccesKeyCredentialsInProcessor();
   }
 
   SECTION("Test no object key is set") {
@@ -215,19 +177,9 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
   setRequiredProperties();
-  plan->setProperty(update_attribute, "test.proxyHost", "host", true);
-  plan->setProperty(s3_processor, "Proxy Host", "${test.proxyHost}");
-  plan->setProperty(update_attribute, "test.proxyPort", "1234", true);
-  plan->setProperty(s3_processor, "Proxy Port", "${test.proxyPort}");
-  plan->setProperty(update_attribute, "test.proxyUsername", "username", true);
-  plan->setProperty(s3_processor, "Proxy Username", "${test.proxyUsername}");
-  plan->setProperty(update_attribute, "test.proxyPassword", "password", true);
-  plan->setProperty(s3_processor, "Proxy Password", "${test.proxyPassword}");
+  setProxy();
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyHost == "host");
-  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyPort == 1234);
-  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyUserName == "username");
-  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyPassword == "password");
+  checkProxySettings();
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3ACL]") {

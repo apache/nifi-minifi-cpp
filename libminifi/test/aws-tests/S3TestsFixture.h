@@ -80,11 +80,48 @@ class S3TestsFixture {
       "LogAttribute",
       core::Relationship("success", "d"),
       true);
+    aws_credentials_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
   }
 
-  void setBasicCredentials() {
-    plan->setProperty(s3_processor, "Access Key", "key");
-    plan->setProperty(s3_processor, "Secret Key", "secret");
+  void setAccesKeyCredentialsInProcessor() {
+    plan->setProperty(update_attribute, "s3.accessKey", "key", true);
+    plan->setProperty(s3_processor, "Access Key", "${s3.accessKey}");
+    plan->setProperty(update_attribute, "s3.secretKey", "secret", true);
+    plan->setProperty(s3_processor, "Secret Key", "${s3.secretKey}");
+  }
+
+  void setAccessKeyCredentialsInController() {
+    plan->setProperty(aws_credentials_service, "Access Key", "key");
+    plan->setProperty(aws_credentials_service, "Secret Key", "secret");
+  }
+
+  template<typename Component>
+  void setCredentialFile(const Component &component) {
+    char in_dir[] = "/tmp/gt.XXXXXX";
+    auto temp_path = test_controller.createTempDirectory(in_dir);
+    REQUIRE(!temp_path.empty());
+    std::string aws_credentials_file(temp_path + utils::file::FileUtils::get_separator() + "aws_creds.conf");
+    std::ofstream aws_credentials_file_stream(aws_credentials_file);
+    aws_credentials_file_stream << "accessKey=key" << std::endl;
+    aws_credentials_file_stream << "secretKey=secret" << std::endl;
+    aws_credentials_file_stream.close();
+    plan->setProperty(component, "Credentials File", aws_credentials_file);
+  }
+
+  template<typename Component>
+  void setUseDefaultCredentialsChain(const Component &component) {
+    #ifdef WIN32
+    _putenv_s("AWS_ACCESS_KEY_ID", "key");
+    _putenv_s("AWS_SECRET_ACCESS_KEY", "secret");
+    #else
+    setenv("AWS_ACCESS_KEY_ID", "key", 1);
+    setenv("AWS_SECRET_ACCESS_KEY", "secret", 1);
+    #endif
+    plan->setProperty(component, "Use Default Credentials", "true");
+  }
+
+  void setCredentialsService() {
+    plan->setProperty(s3_processor, "AWS Credentials Provider service", "AWSCredentialsService");
   }
 
   void setBucket() {
@@ -93,8 +130,26 @@ class S3TestsFixture {
   }
 
   void setRequiredProperties() {
-    setBasicCredentials();
+    setAccesKeyCredentialsInProcessor();
     setBucket();
+  }
+
+  void setProxy() {
+    plan->setProperty(update_attribute, "test.proxyHost", "host", true);
+    plan->setProperty(s3_processor, "Proxy Host", "${test.proxyHost}");
+    plan->setProperty(update_attribute, "test.proxyPort", "1234", true);
+    plan->setProperty(s3_processor, "Proxy Port", "${test.proxyPort}");
+    plan->setProperty(update_attribute, "test.proxyUsername", "username", true);
+    plan->setProperty(s3_processor, "Proxy Username", "${test.proxyUsername}");
+    plan->setProperty(update_attribute, "test.proxyPassword", "password", true);
+    plan->setProperty(s3_processor, "Proxy Password", "${test.proxyPassword}");
+  }
+
+  void checkProxySettings() {
+    REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyHost == "host");
+    REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyPort == 1234);
+    REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyUserName == "username");
+    REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyPassword == "password");
   }
 
   std::string createTempFile(const std::string& filename) {
@@ -116,4 +171,5 @@ class S3TestsFixture {
   std::shared_ptr<core::Processor> s3_processor;
   std::shared_ptr<core::Processor> get_file;
   std::shared_ptr<core::Processor> update_attribute;
+  std::shared_ptr<core::controller::ControllerServiceNode> aws_credentials_service;
 };
