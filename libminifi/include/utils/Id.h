@@ -73,6 +73,14 @@ class Identifier {
 
   bool isNil() const;
 
+  // Numerous places query the string representation
+  // just to then forward the temporary to build logs,
+  // streams, or others. Dynamically allocating in these
+  // instances is wasteful as we immediately discard
+  // the result. The difference on the test machine is 8x,
+  // building the representation itself takes 10ns, while
+  // subsequently turning it into a std::string would take
+  // 70ns more.
   UUIDString to_string() const;
 
   static utils::optional<Identifier> parse(const std::string& str);
