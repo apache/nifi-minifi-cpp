@@ -56,7 +56,7 @@ set_property(TARGET minifi-pcap PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 add_dependencies(minifi-pcap pcappp)
 
-target_link_libraries (minifi-pcap ${PCAP_LIBRARIES} ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a)
+target_link_libraries (minifi-pcap ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a ${PCAP_LIBRARIES})
 if (APPLE)
 	target_link_libraries(minifi-pcap "-framework CoreFoundation")
 	target_link_libraries(minifi-pcap "-framework SystemConfiguration")

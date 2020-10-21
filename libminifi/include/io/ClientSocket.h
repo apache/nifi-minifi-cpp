@@ -55,7 +55,9 @@ using ip4addr = in_addr;
 #else
 using SocketDescriptor = int;
 using ip4addr = in_addr_t;
+#undef INVALID_SOCKET
 static constexpr SocketDescriptor INVALID_SOCKET = -1;
+#undef SOCKET_ERROR
 static constexpr int SOCKET_ERROR = -1;
 #endif /* WIN32 */
 
