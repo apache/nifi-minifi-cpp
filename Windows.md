@@ -34,7 +34,7 @@ The project previously required OpenSSL to be installed. If you follow our build
 Though the project is written in C++, JNI functionality supports running Java processors stored in NiFi Archives. These can be run
 in a much smaller memory footprint and consume fewer resources. If your systems do not support Java or you do not want a JDK installed, please use non-JNI builds.
 
-## Building with Visual Studio 
+## Building with Visual Studio
 
 Make sure your Visual Studio installation includes the "Visual C++ tools for CMake" and "Visual C++ ATL for x86 and x64" options.
 You can also add these after installation using the Visual Studio Installer app. We also advise
@@ -46,7 +46,7 @@ A file named CMakeSettings.json provides the CMake configuration.
 CMake must generate its cache, under Cache in the CMake Menu. After that is complete go to 'Build Only' under the CMake menu. Due to limitations in Visual Studio's CMake support, it is advised
 that you build `minifi.lib` then `minifi.exe` targets.  `Build All` works, too, but it takes much longer.
 Once you have built these targets, you may use the `cpack` command to build your MSI. If you are building with JNI functionality the MSI will be
-significantly larger (about 160 MB) since it contains the base NARs to run the standard set of Apache NiFi processors. 
+significantly larger (about 160 MB) since it contains the base NARs to run the standard set of Apache NiFi processors.
 
 ## Building via the build script
 
@@ -60,6 +60,10 @@ After the build directory it will take optional parameters modifying the CMake c
 | /P | Enables MSI creation |
 | /K | Enables Kafka extension |
 | /J | Enables JNI |
+| /S | Enables SQL |
+| /C | Enables CoAP |
+| /A | Enables AWS |
+| /M | Creates installer with merge modules |
 | /64 | Creates 64-bit build instead of a 32-bit one |
 | /D | Builds RelWithDebInfo build instead of Release |
 | /DD | Builds Debug build instead of Release |
