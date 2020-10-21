@@ -151,9 +151,7 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
     base_dir_ = "/tmp/";
   }
 
-  utils::Identifier dir_ext;
-
-  id_generator_->generate(dir_ext);
+  utils::Identifier dir_ext = id_generator_->generate();
 
   base_path_ = dir_ext.to_string();
 
