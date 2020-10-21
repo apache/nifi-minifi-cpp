@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <thread>
+#include <type_traits>
 
 struct sd_journal;
 
@@ -48,6 +49,12 @@ class JournalHandle final {
  public:
   enum class JournalType { USER, SYSTEM, BOTH };
   explicit JournalHandle(JournalType = JournalType::BOTH);
+
+  template<typename F>
+  auto visit(F f) -> decltype(f(std::declval<sd_journal*>())) {
+    gsl_Expects(std::this_thread::get_id() == owner_thread_id_);
+    return f(handle_.get());
+  }
  private:
   std::thread::id owner_thread_id_;
   std::unique_ptr<sd_journal, detail::JournalHandleDeleter> handle_;

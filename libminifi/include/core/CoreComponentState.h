@@ -19,6 +19,7 @@
 #define LIBMINIFI_INCLUDE_CORE_CORECOMPONENTSTATE_H_
 
 #include "Core.h"
+#include "utils/OptionalUtils.h"
 
 #include <cstdint>
 #include <memory>
@@ -41,6 +42,15 @@ class CoreComponentStateManager {
   virtual bool set(const CoreComponentState& kvs) = 0;
 
   virtual bool get(CoreComponentState& kvs) = 0;
+
+  utils::optional<std::unordered_map<std::string, std::string>> get() {
+    std::unordered_map<std::string, std::string> out;
+    if (get(out)) {
+      return out;
+    } else {
+      return utils::nullopt;
+    }
+  }
 
   virtual bool clear() = 0;
 

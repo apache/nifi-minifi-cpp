@@ -30,6 +30,10 @@ class WorkerThread final {
  public:
   WorkerThread() :thread_{&WorkerThread::run, this} {}
 
+  WorkerThread(const WorkerThread&) = delete;
+  WorkerThread(WorkerThread&&) = delete;
+  WorkerThread& operator=(WorkerThread) = delete;
+
   ~WorkerThread() {
     work_.stop();
     thread_.join();
@@ -41,11 +45,11 @@ class WorkerThread final {
  private:
   void run() noexcept {
     while (work_.isRunning()) {
-      work_.consumeWait([](std::function<void() noexcept>& f) { f(); });
+      work_.consumeWait([](std::packaged_task<void()>&& f) { f(); });
     }
   }
   std::thread thread_;
-  utils::ConditionConcurrentQueue<std::function<void() noexcept>> work_;
+  utils::ConditionConcurrentQueue<std::packaged_task<void()>> work_;
 };
 
 /**
