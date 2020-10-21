@@ -49,7 +49,11 @@ AWSInitializer::~AWSInitializer() {
 AWSInitializer::AWSInitializer() {
   // AWS processors have their own region properties with default values
   // so we do not need the AWS SDK to retrieve any region info
+  #ifdef WIN32
+  _putenv_s("AWS_EC2_METADATA_DISABLED", "true");
+  #else
   setenv("AWS_EC2_METADATA_DISABLED", "true", 1);
+  #endif
 
   Aws::InitAPI(options_);
   Aws::Utils::Logging::InitializeAWSLogging(

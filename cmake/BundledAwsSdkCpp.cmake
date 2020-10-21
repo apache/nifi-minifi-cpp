@@ -25,12 +25,14 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     # Define byproducts
     if (WIN32)
         set(SUFFIX "lib")
+        set(PREFIX "")
     else()
         set(SUFFIX "a")
+        set(PREFIX "lib")
     endif()
     set(BYPRODUCTS
-            "${CMAKE_INSTALL_LIBDIR}/libaws-cpp-sdk-core.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/libaws-cpp-sdk-s3.${SUFFIX}")
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
 
     FOREACH(BYPRODUCT ${BYPRODUCTS})
         LIST(APPEND AWSSDK_LIBRARIES_LIST "${BINARY_DIR}/thirdparty/libaws-install/${BYPRODUCT}")
@@ -80,7 +82,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             INSTALL_DIR "${BINARY_DIR}/thirdparty/libaws-install"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${AWS_C_COMMON_CMAKE_ARGS}
-            BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/libaws-c-common.${SUFFIX}"
+            BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}"
             EXCLUDE_FROM_ALL TRUE
     )
     ExternalProject_Add(
@@ -91,7 +93,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             INSTALL_DIR "${BINARY_DIR}/thirdparty/libaws-install"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${AWS_CHECKSUM_CMAKE_ARGS}
-            BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/libaws-checksums.${SUFFIX}"
+            BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}"
             EXCLUDE_FROM_ALL TRUE
     )
     ExternalProject_Add(
@@ -102,7 +104,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             INSTALL_DIR "${BINARY_DIR}/thirdparty/libaws-install"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${AWS_C_EVENT_STREAM_CMAKE_ARGS}
-            BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/libaws-c-event-stream.${SUFFIX}"
+            BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}"
             EXCLUDE_FROM_ALL TRUE
     )
     ExternalProject_Add(
@@ -130,16 +132,16 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     set(LIBAWS_INCLUDE_DIR "${BINARY_DIR}/thirdparty/libaws-install/include" CACHE STRING "" FORCE)
     set(LIBAWS_LIBRARIES
             ${AWSSDK_LIBRARIES_LIST}
-            "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/libaws-c-event-stream.${SUFFIX}"
-            "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/libaws-c-common.${SUFFIX}"
-            "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/libaws-checksums.${SUFFIX}"
+            "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}"
+            "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}"
+            "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}"
             CACHE STRING "" FORCE)
 
     # Create imported targets
     file(MAKE_DIRECTORY ${LIBAWS_INCLUDE_DIR})
 
     add_library(AWS::aws-c-common STATIC IMPORTED)
-    set_target_properties(AWS::aws-c-common PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/libaws-c-common.${SUFFIX}")
+    set_target_properties(AWS::aws-c-common PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}")
     add_dependencies(AWS::aws-c-common aws-c-common-external)
     set_property(TARGET AWS::aws-c-common APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBAWS_INCLUDE_DIR})
     set_property(TARGET AWS::aws-c-common APPEND PROPERTY INTERFACE_LINK_LIBRARIES CURL::libcurl OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB Threads::Threads)
@@ -148,7 +150,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     endif()
 
     add_library(AWS::aws-checksums STATIC IMPORTED)
-    set_target_properties(AWS::aws-checksums PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/libaws-checksums.${SUFFIX}")
+    set_target_properties(AWS::aws-checksums PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}")
     add_dependencies(AWS::aws-checksums aws-checksums-external)
     set_property(TARGET AWS::aws-checksums APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBAWS_INCLUDE_DIR})
     set_property(TARGET AWS::aws-checksums APPEND PROPERTY INTERFACE_LINK_LIBRARIES CURL::libcurl OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB Threads::Threads)
@@ -157,7 +159,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     endif()
 
     add_library(AWS::aws-c-event-stream STATIC IMPORTED)
-    set_target_properties(AWS::aws-c-event-stream PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/libaws-c-event-stream.${SUFFIX}")
+    set_target_properties(AWS::aws-c-event-stream PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}")
     add_dependencies(AWS::aws-c-event-stream aws-c-event-stream-external)
     set_property(TARGET AWS::aws-c-event-stream APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBAWS_INCLUDE_DIR})
     set_property(TARGET AWS::aws-c-event-stream APPEND PROPERTY INTERFACE_LINK_LIBRARIES AWS::aws-c-common AWS::aws-checksums CURL::libcurl OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB Threads::Threads)
@@ -166,16 +168,19 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     endif()
 
     add_library(AWS::aws-cpp-sdk-core STATIC IMPORTED)
-    set_target_properties(AWS::aws-cpp-sdk-core PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/libaws-cpp-sdk-core.${SUFFIX}")
+    set_target_properties(AWS::aws-cpp-sdk-core PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}")
     add_dependencies(AWS::aws-cpp-sdk-core aws-sdk-cpp-external)
     set_property(TARGET AWS::aws-cpp-sdk-core APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBAWS_INCLUDE_DIR})
     set_property(TARGET AWS::aws-cpp-sdk-core APPEND PROPERTY INTERFACE_LINK_LIBRARIES AWS::aws-c-event-stream AWS::aws-c-common AWS::aws-checksums CURL::libcurl OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB Threads::Threads)
     if (APPLE)
         set_property(TARGET AWS::aws-cpp-sdk-core APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-framework CoreFoundation")
     endif()
+    if (WIN32)
+        set_property(TARGET AWS::aws-cpp-sdk-core APPEND PROPERTY INTERFACE_LINK_LIBRARIES userenv.lib ws2_32.lib Wininet.lib winhttp.lib bcrypt.lib version.lib)
+    endif()
 
     add_library(AWS::aws-cpp-sdk-s3 STATIC IMPORTED)
-    set_target_properties(AWS::aws-cpp-sdk-s3 PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/libaws-cpp-sdk-s3.${SUFFIX}")
+    set_target_properties(AWS::aws-cpp-sdk-s3 PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
     add_dependencies(AWS::aws-cpp-sdk-s3 aws-sdk-cpp-external)
     set_property(TARGET AWS::aws-cpp-sdk-s3 APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBAWS_INCLUDE_DIR})
     set_property(TARGET AWS::aws-cpp-sdk-s3 APPEND PROPERTY INTERFACE_LINK_LIBRARIES CURL::libcurl OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB Threads::Threads AWS::aws-cpp-sdk-core)
