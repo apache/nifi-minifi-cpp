@@ -51,7 +51,7 @@ class JournalHandle final {
   explicit JournalHandle(JournalType = JournalType::BOTH);
 
   template<typename F>
-  auto visit(F f) -> decltype(f(std::declval<sd_journal*>())) {
+  auto visit(F f) const -> decltype(f(std::declval<sd_journal*>())) {
     gsl_Expects(std::this_thread::get_id() == owner_thread_id_);
     return f(handle_.get());
   }

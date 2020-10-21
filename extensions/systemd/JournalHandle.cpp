@@ -43,7 +43,7 @@ std::unique_ptr<sd_journal, detail::JournalHandleDeleter> journal_open(const Jou
 }
 }  // namespace
 
-JournalHandle::JournalHandle(JournalType type)
+JournalHandle::JournalHandle(const JournalType type)
     :owner_thread_id_{std::this_thread::get_id()},
     handle_{journal_open(type)}
 { }

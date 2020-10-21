@@ -31,9 +31,7 @@ class ConsumeJournald final : public core::Processor {
   {}
 
   ~ConsumeJournald() final {
-    worker_.enqueue([this] {
-      journal_handle_.reset();
-    }).get();
+    notifyStop();
   }
 
   void initialize() final {
@@ -42,9 +40,17 @@ class ConsumeJournald final : public core::Processor {
     setSupportedRelationships({Success});
   }
 
-  void onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* sessionFactory) final {
+  void notifyStop() final {
+    if (!journal_handle_) { return; }
+    worker_.enqueue([this] {
+      journal_handle_.reset();
+    }).get();
+  }
+
+  void onSchedule(core::ProcessContext* const context, core::ProcessSessionFactory* const sessionFactory) final {
     gsl_Expects(context && sessionFactory);
     state_manager_ = context->getStateManager();
+    journal_handle_ = utils::make_optional(worker_.enqueue([]{ return JournalHandle{}; }).get());
     worker_.enqueue([this] {
       journal_handle_->visit([this](sd_journal* const journal) {
         const auto cursor = state_manager_->get() | utils::map([](std::unordered_map<std::string, std::string>&& m) { return m.at(CURSOR_KEY); });
@@ -57,7 +63,7 @@ class ConsumeJournald final : public core::Processor {
     }).get();
   }
 
-  void onTrigger(core::ProcessContext* context, core::ProcessSession* session) final {
+  void onTrigger(core::ProcessContext* const context, core::ProcessSession* const session) final {
     gsl_Expects(context && session);
     auto cursor_and_messages = getCursorAndMessageBatch().get();
     state_manager_->set({{"cursor", std::move(cursor_and_messages.first)}});
@@ -88,13 +94,13 @@ class ConsumeJournald final : public core::Processor {
     std::string value;
   };
 
-  static gsl::span<const char> enumerateJournalEntry(sd_journal* const journal) {
+  static utils::optional<gsl::span<const char>> enumerateJournalEntry(sd_journal* const journal) {
     gsl_Expects(journal);
     const void* data_ptr{};
     size_t data_length{};
     const auto status_code = sd_journal_enumerate_data(journal, &data_ptr, &data_length);
     if (status_code == 0) return {};
-    if (status_code < 0) throw std::system_error{ -status_code, std::generic_category() };
+    if (status_code < 0) throw SystemErrorException{ "sd_journal_enumerate_data", std::generic_category().default_error_condition(-status_code) };
     gsl_Ensures(data_ptr && "if sd_journal_enumerate_data was successful, then data_ptr must be set");
     gsl_Ensures(data_length > 0 && "if sd_journal_enumerate_data was successful, then data_length must be greater than zero");
     const char* const data_str_ptr = reinterpret_cast<const char*>(data_ptr);
@@ -103,10 +109,15 @@ class ConsumeJournald final : public core::Processor {
 
   static utils::optional<journal_field> getNextField(sd_journal* const journal) {
     gsl_Expects(journal);
-    const auto field = enumerateJournalEntry(journal);
-    const auto eq_pos = std::find(std::begin(field), std::end(field), '=');
-    gsl_Ensures(eq_pos != std::end(field) && "field string must contain an equals sign");
-    return journal_field{utils::span_to<std::string>(field.subspan(0, eq_pos - std::begin(field))), std::string{eq_pos + 1}};
+    return enumerateJournalEntry(journal) | utils::map([](gsl::span<const char> field) {
+      const auto eq_pos = std::find(std::begin(field), std::end(field), '=');
+      gsl_Ensures(eq_pos != std::end(field) && "field string must contain an equals sign");
+      const auto eq_idx = eq_pos - std::begin(field);
+      return journal_field{
+          utils::span_to<std::string>(field.subspan(0, eq_idx)),
+          utils::span_to<std::string>(field.subspan(eq_idx + 1))
+      };
+    });
   }
 
   std::future<std::pair<std::string, std::vector<std::vector<journal_field>>>> getCursorAndMessageBatch() {
@@ -126,7 +137,7 @@ class ConsumeJournald final : public core::Processor {
 
         char* cursor_out;
         const auto err_code = sd_journal_get_cursor(journal, &cursor_out);
-        if (err_code < 0) throw std::system_error{ -err_code, std::generic_category() };
+        if (err_code < 0) throw SystemErrorException{"sd_journal_get_cursor", std::generic_category().default_error_condition(-err_code)};
         gsl_Ensures(cursor_out);
         cursor.reset(cursor_out);
       });
@@ -138,7 +149,7 @@ class ConsumeJournald final : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger();
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   Worker worker_;
-  utils::optional<JournalHandle> journal_handle_ = utils::make_optional(worker_.enqueue([]{ return JournalHandle{}; }).get());
+  utils::optional<JournalHandle> journal_handle_;
 
   std::size_t batch_size_ = 10;
 };

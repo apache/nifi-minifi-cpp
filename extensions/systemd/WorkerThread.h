@@ -41,10 +41,10 @@ class WorkerThread final {
  private:
   void run() noexcept;
 
-  std::thread thread_;
   utils::ConditionConcurrentQueue<std::packaged_task<void()>> work_;
+  std::thread thread_;
 };
-}
+}  // namespace detail
 
 /**
  * A worker that executes arbitrary functions with no parameters asynchronously on an internal thread, returning a future to the result.
