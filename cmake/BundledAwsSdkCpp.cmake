@@ -16,6 +16,12 @@
 # under the License.
 
 function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
+    if (WIN32)
+        set(CMAKE_INSTALL_LIBDIR "lib")
+    else()
+        include(GNUInstallDirs)
+    endif()
+
     # Define byproducts
     if (WIN32)
         set(SUFFIX "lib")
