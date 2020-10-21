@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <regex>
+#include <utility>
 
 #include "utils/StringUtils.h"
 
@@ -80,8 +81,7 @@ std::string S3WrapperBase::getEncryptionString(Aws::S3::Model::ServerSideEncrypt
   auto it = std::find_if(SERVER_SIDE_ENCRYPTION_MAP.begin(), SERVER_SIDE_ENCRYPTION_MAP.end(),
     [&](const std::pair<std::string, const Aws::S3::Model::ServerSideEncryption&> pair) {
       return pair.second == encryption;
-    }
-  );
+    });
   if (it != SERVER_SIDE_ENCRYPTION_MAP.end()) {
     return it->first;
   }

@@ -27,8 +27,8 @@
 namespace MapUtils = org::apache::nifi::minifi::utils::MapUtils;
 
 TEST_CASE("TestMapUtils::getKeys", "[getKeys]") {
-  REQUIRE(MapUtils::getKeys(std::map<int,int>()) == std::set<int>());
-  REQUIRE(MapUtils::getKeys(std::unordered_map<int,int>()) == std::set<int>());
+  REQUIRE(MapUtils::getKeys(std::map<int, int>()) == std::set<int>());
+  REQUIRE(MapUtils::getKeys(std::unordered_map<int, int>()) == std::set<int>());
 
   std::map<int, std::string> test_map{
     std::make_pair(1, "one"),
