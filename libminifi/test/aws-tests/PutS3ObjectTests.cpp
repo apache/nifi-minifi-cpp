@@ -313,10 +313,15 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3ACL]") {
   setRequiredProperties();
   plan->setProperty(update_attribute, "s3.permissions.full.users", "myuserid123, myuser@example.com", true);
+  plan->setProperty(put_s3_object, "FullControl User List", "${s3.permissions.full.users}");
   plan->setProperty(update_attribute, "s3.permissions.read.users", "myuserid456,myuser2@example.com", true);
+  plan->setProperty(put_s3_object, "Read Permission User List", "${s3.permissions.read.users}");
   plan->setProperty(update_attribute, "s3.permissions.readacl.users", "myuserid789, otheruser", true);
+  plan->setProperty(put_s3_object, "Read ACL User List", "${s3.permissions.readacl.users}");
   plan->setProperty(update_attribute, "s3.permissions.writeacl.users", "myuser3@example.com", true);
+  plan->setProperty(put_s3_object, "Write ACL User List", "${s3.permissions.writeacl.users}");
   plan->setProperty(update_attribute, "s3.permissions.cannedacl", "PublicReadWrite", true);
+  plan->setProperty(put_s3_object, "Canned ACL", "${s3.permissions.cannedacl}");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_ptr->fullcontrol_user_list == "id=myuserid123, emailAddress=\"myuser@example.com\"");
   REQUIRE(mock_s3_wrapper_ptr->read_user_list == "id=myuserid456, emailAddress=\"myuser2@example.com\"");

@@ -48,10 +48,8 @@ const std::set<std::string> PutS3Object::SERVER_SIDE_ENCRYPTIONS(minifi::utils::
 
 const core::Property PutS3Object::ObjectKey(
   core::PropertyBuilder::createProperty("Object Key")
-    ->withDescription("The key of the S3 object")
-    ->isRequired(true)
+    ->withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
     ->supportsExpressionLanguage(true)
-    ->withDefaultValue<std::string>("${filename}")
     ->build());
 const core::Property PutS3Object::Bucket(
   core::PropertyBuilder::createProperty("Bucket")
@@ -110,34 +108,29 @@ const core::Property PutS3Object::FullControlUserList(
   core::PropertyBuilder::createProperty("FullControl User List")
     ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Full Control for an object.")
     ->supportsExpressionLanguage(true)
-    ->withDefaultValue<std::string>("${s3.permissions.full.users}")
     ->build());
 const core::Property PutS3Object::ReadPermissionUserList(
   core::PropertyBuilder::createProperty("Read Permission User List")
     ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Read Access for an object.")
     ->supportsExpressionLanguage(true)
-    ->withDefaultValue<std::string>("${s3.permissions.read.users}")
     ->build());
 const core::Property PutS3Object::ReadACLUserList(
   core::PropertyBuilder::createProperty("Read ACL User List")
     ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to read "
                       "the Access Control List for an object.")
     ->supportsExpressionLanguage(true)
-    ->withDefaultValue<std::string>("${s3.permissions.readacl.users}")
     ->build());
 const core::Property PutS3Object::WriteACLUserList(
   core::PropertyBuilder::createProperty("Write ACL User List")
     ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to change "
                       "the Access Control List for an object.")
     ->supportsExpressionLanguage(true)
-    ->withDefaultValue<std::string>("${s3.permissions.writeacl.users}")
     ->build());
 const core::Property PutS3Object::CannedACL(
   core::PropertyBuilder::createProperty("Canned ACL")
     ->withDescription("Amazon Canned ACL for an object. Allowed values: BucketOwnerFullControl, BucketOwnerRead, AuthenticatedRead, "
                       "PublicReadWrite, PublicRead, Private, AwsExecRead; will be ignored if any other ACL/permission property is specified.")
     ->supportsExpressionLanguage(true)
-    ->withDefaultValue<std::string>("${s3.permissions.cannedacl}")
     ->build());
 const core::Property PutS3Object::EndpointOverrideURL(
   core::PropertyBuilder::createProperty("Endpoint Override URL")
@@ -408,9 +401,12 @@ bool PutS3Object::getExpressionLanguageSupportedProperties(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   context->getProperty(ObjectKey, put_s3_request_params_.object_key, flow_file);
+  if (put_s3_request_params_.object_key.empty()) {
+    flow_file->getAttribute("filename", put_s3_request_params_.object_key);
+  }
   logger_->log_debug("PutS3Object: Object Key [%s]", put_s3_request_params_.object_key);
   if (!context->getProperty(Bucket, put_s3_request_params_.bucket, flow_file) || put_s3_request_params_.bucket.empty()) {
-    logger_->log_error("Object Key is invalid or empty!", put_s3_request_params_.bucket);
+    logger_->log_error("Bucket is invalid or empty!", put_s3_request_params_.bucket);
     return false;
   }
   logger_->log_debug("PutS3Object: Bucket [%s]", put_s3_request_params_.bucket);
