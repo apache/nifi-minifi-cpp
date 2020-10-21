@@ -484,6 +484,22 @@ class StringUtils {
     return {last_pos, occurrences};
   }
 
+  /**
+   * If the string starts and ends with the given character, the leading and trailing characters are removed.
+   * @param str incoming string
+   * @param c the character to be removed
+   * @return the modified string if the framing character matches otherwise the incoming string
+   */
+  static std::string removeFramingCharacters(const std::string& str, char c) {
+    if (str.size() < 2) {
+      return str;
+    }
+    if (str[0] == c && str[str.size() - 1] == c) {
+      return str.substr(1, str.size() - 2);
+    }
+    return str;
+  }
+
  private:
   inline static char nibble_to_hex(uint8_t nibble, bool uppercase) {
     if (nibble < 10) {

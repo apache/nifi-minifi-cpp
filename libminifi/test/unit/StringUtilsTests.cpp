@@ -380,3 +380,11 @@ TEST_CASE("StringUtils::countOccurrences works correctly", "[countOccurrences]")
   REQUIRE(utils::StringUtils::countOccurrences("abc", "") == std::make_pair(size_t{3}, 4));  // "" occurs at the start, between chars, and at the end
   REQUIRE(utils::StringUtils::countOccurrences("", "") == std::make_pair(size_t{0}, 1));
 }
+
+TEST_CASE("StringUtils::removeFramingCharacters works correctly", "[removeFramingCharacters]") {
+  REQUIRE(utils::StringUtils::removeFramingCharacters("", 'a') == "");
+  REQUIRE(utils::StringUtils::removeFramingCharacters("a", 'a') == "a");
+  REQUIRE(utils::StringUtils::removeFramingCharacters("aa", 'a') == "");
+  REQUIRE(utils::StringUtils::removeFramingCharacters("\"abba\"", '"') == "abba");
+  REQUIRE(utils::StringUtils::removeFramingCharacters("\"\"abba\"\"", '"') == "\"abba\"");
+}
