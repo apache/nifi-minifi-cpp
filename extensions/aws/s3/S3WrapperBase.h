@@ -21,7 +21,7 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <memory>
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
@@ -43,7 +43,7 @@ namespace minifi {
 namespace aws {
 namespace s3 {
 
-static const std::map<std::string, Aws::S3::Model::StorageClass> STORAGE_CLASS_MAP {
+static const std::unordered_map<std::string, Aws::S3::Model::StorageClass> STORAGE_CLASS_MAP {
   {"Standard", Aws::S3::Model::StorageClass::STANDARD},
   {"ReducedRedundancy", Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY},
   {"StandardIA", Aws::S3::Model::StorageClass::STANDARD_IA},
@@ -53,13 +53,13 @@ static const std::map<std::string, Aws::S3::Model::StorageClass> STORAGE_CLASS_M
   {"DeepArchive", Aws::S3::Model::StorageClass::DEEP_ARCHIVE}
 };
 
-static const std::map<std::string, Aws::S3::Model::ServerSideEncryption> SERVER_SIDE_ENCRYPTION_MAP {
+static const std::unordered_map<std::string, Aws::S3::Model::ServerSideEncryption> SERVER_SIDE_ENCRYPTION_MAP {
   {"None", Aws::S3::Model::ServerSideEncryption::NOT_SET},
   {"AES256", Aws::S3::Model::ServerSideEncryption::AES256},
   {"aws_kms", Aws::S3::Model::ServerSideEncryption::aws_kms},
 };
 
-static const std::map<std::string, Aws::S3::Model::ObjectCannedACL> CANNED_ACL_MAP {
+static const std::unordered_map<std::string, Aws::S3::Model::ObjectCannedACL> CANNED_ACL_MAP {
   {"BucketOwnerFullControl", Aws::S3::Model::ObjectCannedACL::bucket_owner_full_control},
   {"BucketOwnerRead", Aws::S3::Model::ObjectCannedACL::bucket_owner_read},
   {"AuthenticatedRead", Aws::S3::Model::ObjectCannedACL::authenticated_read},

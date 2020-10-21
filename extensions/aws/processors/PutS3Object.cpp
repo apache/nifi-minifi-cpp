@@ -28,6 +28,7 @@
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"
 #include "utils/StringUtils.h"
+#include "utils/MapUtils.h"
 
 namespace org {
 namespace apache {
@@ -36,27 +37,14 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
-namespace {
-
-template<typename T, typename U>
-std::set<T> getMapKeys(const std::map<T, U>& m) {
-  std::set<T> keys;
-  for (const auto& pair : m) {
-    keys.insert(pair.first);
-  }
-  return keys;
-}
-
-}  // namespace
-
-const std::set<std::string> PutS3Object::CANNED_ACLS(getMapKeys(minifi::aws::s3::CANNED_ACL_MAP));
+const std::set<std::string> PutS3Object::CANNED_ACLS(minifi::utils::MapUtils::getKeys(minifi::aws::s3::CANNED_ACL_MAP));
 const std::set<std::string> PutS3Object::REGIONS({region::AF_SOUTH_1, region::AP_EAST_1, region::AP_NORTHEAST_1,
   region::AP_NORTHEAST_2, region::AP_NORTHEAST_3, region::AP_SOUTH_1, region::AP_SOUTHEAST_1, region::AP_SOUTHEAST_2,
   region::CA_CENTRAL_1, region::CN_NORTH_1, region::CN_NORTHWEST_1, region::EU_CENTRAL_1, region::EU_NORTH_1,
   region::EU_SOUTH_1, region::EU_WEST_1, region::EU_WEST_2, region::EU_WEST_3, region::ME_SOUTH_1, region::SA_EAST_1,
   region::US_EAST_1, region::US_EAST_2, region::US_GOV_EAST_1, region::US_GOV_WEST_1, region::US_WEST_1, region::US_WEST_2});
-const std::set<std::string> PutS3Object::STORAGE_CLASSES(getMapKeys(minifi::aws::s3::STORAGE_CLASS_MAP));
-const std::set<std::string> PutS3Object::SERVER_SIDE_ENCRYPTIONS(getMapKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP));
+const std::set<std::string> PutS3Object::STORAGE_CLASSES(minifi::utils::MapUtils::getKeys(minifi::aws::s3::STORAGE_CLASS_MAP));
+const std::set<std::string> PutS3Object::SERVER_SIDE_ENCRYPTIONS(minifi::utils::MapUtils::getKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP));
 
 const core::Property PutS3Object::ObjectKey(
   core::PropertyBuilder::createProperty("Object Key")
