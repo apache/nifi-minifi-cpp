@@ -245,7 +245,7 @@ minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredential
     properties->loadConfigureFile(credential_file.c_str());
     std::string access_key;
     std::string secret_key;
-    if (properties->get("accessKey", access_key) && !access_key.empty() && properties->get("secretKey", secret_key) && !secret_key.empty()) {
+    if (properties->getString("accessKey", access_key) && !access_key.empty() && properties->getString("secretKey", secret_key) && !secret_key.empty()) {
       Aws::Auth::AWSCredentials creds(access_key, secret_key);
       return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(creds);
     }
