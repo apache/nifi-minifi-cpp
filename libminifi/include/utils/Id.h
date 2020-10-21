@@ -51,8 +51,6 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-using UUIDString = SmallString<36>;
-
 class Identifier {
   friend struct IdentifierTestAccessor;
   static constexpr const char* UUID_FORMAT_STRING = "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx";
@@ -81,7 +79,7 @@ class Identifier {
   // building the representation itself takes 10ns, while
   // subsequently turning it into a std::string would take
   // 70ns more.
-  UUIDString to_string() const;
+  SmallString<36> to_string() const;
 
   static utils::optional<Identifier> parse(const std::string& str);
 

@@ -194,7 +194,7 @@ class CoreComponent {
   /**
    * Return the UUID string
    */
-  utils::UUIDString getUUIDStr() const {
+  utils::SmallString<36> getUUIDStr() const {
     return uuid_.to_string();
   }
 
