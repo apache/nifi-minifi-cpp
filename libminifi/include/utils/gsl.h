@@ -17,6 +17,8 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_GSL_H_
 #define LIBMINIFI_INCLUDE_UTILS_GSL_H_
 
+#include <type_traits>
+
 #include <gsl-lite/gsl-lite.hpp>
 
 namespace org {
@@ -25,6 +27,19 @@ namespace nifi {
 namespace minifi {
 
 namespace gsl = ::gsl_lite;
+
+namespace utils {
+template<typename Container, typename T>
+auto span_to(gsl::span<T> span)
+    -> typename std::enable_if<std::is_constructible<Container, typename gsl::span<T>::iterator, typename gsl::span<T>::iterator>::value && std::is_convertible<T, typename Container::value_type>::value, Container>::type {
+  return Container(std::begin(span), std::end(span));
+}
+template<template<typename...> class Container, typename T>
+auto span_to(gsl::span<T> span)
+    -> typename std::enable_if<std::is_constructible<Container<T>, typename gsl::span<T>::iterator, typename gsl::span<T>::iterator>::value, Container<T>>::type {
+  return span_to<Container<T>>(span);
+}
+}  // namespace utils
 
 }  // namespace minifi
 }  // namespace nifi

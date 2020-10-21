@@ -19,7 +19,7 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
 
-add_library(minifi-systemd STATIC JournalHandle.cpp ConsumeJournald.cpp)
+add_library(minifi-systemd STATIC JournalHandle.cpp ConsumeJournald.cpp WorkerThread.cpp)
 set_property(TARGET minifi-systemd PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(minifi-systemd ${LIBMINIFI} Threads::Threads systemd)

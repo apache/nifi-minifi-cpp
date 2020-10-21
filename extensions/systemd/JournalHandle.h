@@ -18,11 +18,11 @@
 
 #pragma once
 
-#include "WorkerThread.h"
-
 #include <memory>
 #include <thread>
 #include <type_traits>
+
+#include "utils/gsl.h"
 
 struct sd_journal;
 

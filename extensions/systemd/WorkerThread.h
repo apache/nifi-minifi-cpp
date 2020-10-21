@@ -18,39 +18,33 @@
 #pragma once
 
 #include "utils/MinifiConcurrentQueue.h"
-#include "utils/gsl.h"
 
-#include <functional>
 #include <future>
 #include <thread>
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
 
+namespace detail {
 class WorkerThread final {
  public:
-  WorkerThread() :thread_{&WorkerThread::run, this} {}
+  WorkerThread();
 
   WorkerThread(const WorkerThread&) = delete;
   WorkerThread(WorkerThread&&) = delete;
   WorkerThread& operator=(WorkerThread) = delete;
 
-  ~WorkerThread() {
-    work_.stop();
-    thread_.join();
-  }
+  ~WorkerThread();
 
   template<typename... Args>
-  void enqueue(Args&&... args) { work_.enqueue(std::forward<Args>(args)...); }
+  void enqueue(Args&& ... args) { work_.enqueue(std::forward<Args>(args)...); }
 
  private:
-  void run() noexcept {
-    while (work_.isRunning()) {
-      work_.consumeWait([](std::packaged_task<void()>&& f) { f(); });
-    }
-  }
+  void run() noexcept;
+
   std::thread thread_;
   utils::ConditionConcurrentQueue<std::packaged_task<void()>> work_;
 };
+}
 
 /**
  * A worker that executes arbitrary functions with no parameters asynchronously on an internal thread, returning a future to the result.
@@ -66,7 +60,7 @@ class Worker final {
     return future;
   }
  private:
-  WorkerThread worker_thread_;
+  detail::WorkerThread worker_thread_;
 };
 
 }}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd

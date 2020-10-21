@@ -185,6 +185,17 @@ class FlatMap{
     return {iterator{data_.begin() + data_.size() - 1}, true};
   }
 
+  template<typename M>
+  std::pair<iterator, bool> insert_or_assign(K&& key, M&& value) {
+    auto it = find(key);
+    if (it != end()) {
+      it->second = std::forward<M>(value);
+      return {it, false};
+    }
+    data_.emplace_back(std::move(key), std::forward<M>(value));
+    return {iterator{data_.begin() + data_.size() - 1}, true};
+  }
+
   iterator find(const K& key) {
     for (auto it = data_.begin(); it != data_.end(); ++it) {
       if (it->first == key) return iterator{it};

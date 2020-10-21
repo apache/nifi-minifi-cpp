@@ -37,6 +37,7 @@
 #include "FlowFile.h"
 #include "WeakReference.h"
 #include "provenance/Provenance.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -96,6 +97,8 @@ class ProcessSession : public ReferenceContainer {
   int read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback);
   // Execute the given write callback against the content
   void write(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback);
+  // Replace content with buffer
+  void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer);
   // Execute the given write/append callback against the content
   void append(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback);
   // Penalize the flow
