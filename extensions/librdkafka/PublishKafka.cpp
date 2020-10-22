@@ -922,7 +922,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     if (context->getDynamicProperty(MessageKeyField, kafkaKey, flowFile) && !kafkaKey.empty()) {
       logger_->log_debug("PublishKafka: Message Key Field [%s]", kafkaKey);
     } else {
-      kafkaKey = flowFile->getUUIDStr();
+      kafkaKey = std::string{flowFile->getUUIDStr()};
     }
 
     auto thisTopic = conn_->getTopic(topic);
