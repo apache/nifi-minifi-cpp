@@ -155,7 +155,7 @@ class MergeTestController : public TestController {
     utils::Identifier processoruuid = processor->getUUID();
     REQUIRE(processoruuid);
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<minifi::processors::LogAttribute>("logattribute");
-    utils::Identifier logAttributeuuid= logAttributeProcessor->getUUID();
+    utils::Identifier logAttributeuuid = logAttributeProcessor->getUUID();
     REQUIRE(logAttributeuuid);
 
     // output from merge processor to log attribute

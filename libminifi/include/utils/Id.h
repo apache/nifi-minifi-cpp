@@ -98,10 +98,6 @@ class Identifier {
   Data data_{};
 };
 
-struct IdHash {
-
-};
-
 class IdGenerator {
  public:
   Identifier generate();

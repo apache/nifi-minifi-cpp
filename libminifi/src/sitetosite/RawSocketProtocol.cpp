@@ -574,7 +574,8 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
     if (!complete(transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Complete Failed in transaction " + transactionID.to_string());
     }
-    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID.to_string() << " successfully send flow record " << transaction->current_transfers_ << " content bytes " << transaction->_bytes;
+    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID.to_string()
+        << " successfully send flow record " << transaction->current_transfers_ << " content bytes " << transaction->_bytes;
   } catch (std::exception &exception) {
     if (transaction)
       deleteTransaction(transactionID);

@@ -39,7 +39,7 @@ bool PersistableKeyValueStoreService::getImpl(const utils::Identifier& key, std:
 
 bool PersistableKeyValueStoreService::getImpl(std::map<utils::Identifier, std::string>& kvs) {
   std::unordered_map<std::string, std::string> states;
-  if (!get(states)){
+  if (!get(states)) {
     return false;
   }
   kvs.clear();
