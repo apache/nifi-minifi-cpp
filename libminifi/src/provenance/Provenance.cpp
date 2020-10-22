@@ -415,7 +415,7 @@ void ProvenanceReporter::commit() {
     std::unique_ptr<io::BufferStream> stramptr(new io::BufferStream());
     event->Serialize(*stramptr.get());
 
-    flowData.emplace_back(event->getUUIDStr(), std::move(stramptr));
+    flowData.emplace_back(std::string{event->getUUIDStr()}, std::move(stramptr));
   }
   repo_->MultiPut(flowData);
 }
