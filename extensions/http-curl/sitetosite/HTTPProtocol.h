@@ -98,7 +98,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
     return true;
   }
 
-  virtual std::shared_ptr<Transaction> createTransaction(std::string &transactionID, TransferDirection direction) override;
+  virtual std::shared_ptr<Transaction> createTransaction(TransferDirection direction) override;
 
   // Transfer flow files for the process session
   // virtual bool transferFlowFiles(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
@@ -106,7 +106,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   virtual bool transmitPayload(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, const std::string &payload,
                                std::map<std::string, std::string> attributes) override;
   // deleteTransaction
-  virtual void deleteTransaction(std::string transactionID) override;
+  virtual void deleteTransaction(const utils::Identifier& transactionID) override;
 
  protected:
 
@@ -114,7 +114,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
    * Closes the transaction
    * @param transactionID transaction id reference.
    */
-  void closeTransaction(const std::string &transactionID);
+  void closeTransaction(const utils::Identifier &transactionID);
 
   virtual int readResponse(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message) override;
   // write respond
@@ -155,7 +155,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
 
   virtual void tearDown() override;
 
-  const std::string parseTransactionId(const std::string &uri);
+  utils::optional<utils::Identifier> parseTransactionId(const std::string &uri);
 
   std::unique_ptr<utils::HTTPClient> create_http_client(const std::string &uri, const std::string &method = "POST", bool setPropertyHeaders = false) {
     std::unique_ptr<utils::HTTPClient> http_client_ = std::unique_ptr<utils::HTTPClient>(new minifi::utils::HTTPClient(uri, ssl_context_service_));

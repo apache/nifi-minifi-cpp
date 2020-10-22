@@ -121,8 +121,8 @@ class CompressDecompressionTestController : public TestController{
 
     processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
     processor->initialize();
-    utils::Identifier processoruuid;
-    REQUIRE(true == processor->getUUID(processoruuid));
+    utils::Identifier processoruuid = processor->getUUID();
+    REQUIRE(processoruuid);
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());

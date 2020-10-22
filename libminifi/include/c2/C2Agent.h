@@ -238,7 +238,7 @@ class C2Agent : public state::UpdateController {
 
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
 
-  std::vector<std::string> task_ids_;
+  std::vector<utils::Identifier> task_ids_;
 
   bool manifest_sent_;
 

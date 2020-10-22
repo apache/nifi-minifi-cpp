@@ -35,18 +35,18 @@ namespace minifi {
 utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                         const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (this->running_ && processor->isRunning()) {
-    auto uuidStr = processor->getUUIDStr();
+    auto uuid = processor->getUUID();
     std::chrono::system_clock::time_point result;
     std::chrono::system_clock::time_point from = std::chrono::system_clock::now();
     {
       std::lock_guard<std::mutex> locK(mutex_);
 
-      auto sched_f = schedules_.find(uuidStr);
+      auto sched_f = schedules_.find(uuid);
       if (sched_f != std::end(schedules_)) {
-        result = last_exec_[uuidStr];
+        result = last_exec_[uuid];
         if (from >= result) {
           result = sched_f->second.cron_to_next(from);
-          last_exec_[uuidStr] = result;
+          last_exec_[uuid] = result;
         } else {
           // we may be woken up a little early so that we can honor our time.
           // in this case we can return the next time to run with the expectation
@@ -56,8 +56,8 @@ utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(const std::shared_ptr<c
       } else {
         Bosma::Cron schedule(processor->getCronPeriod());
         result = schedule.cron_to_next(from);
-        last_exec_[uuidStr] = result;
-        schedules_.insert(std::make_pair(uuidStr, schedule));
+        last_exec_[uuid] = result;
+        schedules_.insert(std::make_pair(uuid, schedule));
       }
     }
 

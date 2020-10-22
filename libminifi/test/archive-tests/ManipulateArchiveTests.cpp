@@ -107,8 +107,7 @@ TEST_CASE("Test creation of ManipulateArchive", "[manipulatearchiveCreate]") {
   TestController testController;
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ManipulateArchive>("processorname");
   REQUIRE(processor->getName() == "processorname");
-  utils::Identifier processoruuid;
-  REQUIRE(true == processor->getUUID(processoruuid));
+  REQUIRE(processor->getUUID());
 }
 
 TEST_CASE("Test ManipulateArchive Touch", "[testManipulateArchiveTouch]") {

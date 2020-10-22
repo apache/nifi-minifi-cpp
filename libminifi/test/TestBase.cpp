@@ -78,7 +78,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   processor->initialize();
   processor->setFlowIdentifier(flow_version_->getFlowIdentifier());
 
-  processor_mapping_[processor->getUUIDStr()] = processor;
+  processor_mapping_[processor->getUUID()] = processor;
 
   if (!linkToPrevious) {
     termination_ = *(relationships.begin());
@@ -104,9 +104,9 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
     connection->setDestination(processor);
 
     utils::Identifier uuid_copy, uuid_copy_next;
-    last->getUUID(uuid_copy);
+    uuid_copy = last->getUUID();
     connection->setSourceUUID(uuid_copy);
-    processor->getUUID(uuid_copy_next);
+    uuid_copy_next = processor->getUUID();
     connection->setDestinationUUID(uuid_copy_next);
     last->addConnection(connection);
     if (last != processor) {
@@ -173,9 +173,9 @@ std::shared_ptr<minifi::Connection> TestPlan::addConnection(const std::shared_pt
   connection->setDestination(destination_proc);
 
   utils::Identifier uuid_copy_src, uuid_copy_dest;
-  source_proc->getUUID(uuid_copy_src);
+  uuid_copy_src = source_proc->getUUID();
   connection->setSourceUUID(uuid_copy_src);
-  destination_proc->getUUID(uuid_copy_dest);
+  uuid_copy_dest = destination_proc->getUUID();
   connection->setDestinationUUID(uuid_copy_dest);
   source_proc->addConnection(connection);
   if (source_proc != destination_proc) {
@@ -335,8 +335,7 @@ std::shared_ptr<minifi::Connection> TestPlan::buildFinalConnection(std::shared_p
   if (setDest)
     connection->setDestination(processor);
 
-  utils::Identifier uuid_copy;
-  last->getUUID(uuid_copy);
+  utils::Identifier uuid_copy = last->getUUID();
   connection->setSourceUUID(uuid_copy);
   if (setDest)
     connection->setDestinationUUID(uuid_copy);

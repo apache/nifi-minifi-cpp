@@ -101,7 +101,7 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   minifi::FlowFileRecord record;
 
-  std::string uuid = record.getUUIDStr();
+  std::string uuid = std::string{record.getUUIDStr()};
 
   record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
 
@@ -171,7 +171,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
     REQUIRE(record.Persist(repository));
 
-    REQUIRE(repository->Delete(record.getUUIDStr()));
+    REQUIRE(repository->Delete(std::string{record.getUUIDStr()}));
     claim->decreaseFlowFileRecordOwnedCount();
 
     repository->flush();
@@ -292,8 +292,8 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
    */
   {
     std::shared_ptr<core::Processor> processor = std::make_shared<core::Processor>("dummy");
-    utils::Identifier uuid;
-    REQUIRE(processor->getUUID(uuid));
+    utils::Identifier uuid = processor->getUUID();
+    REQUIRE(uuid);
     input->setSourceUUID(uuid);
     processor->addConnection(input);
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
@@ -357,7 +357,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
   auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
   auto connection = std::make_shared<minifi::Connection>(nullptr, nullptr, "Connection");
-  std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap{{connection->getUUIDStr(), connection}};
+  std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap{{std::string{connection->getUUIDStr()}, connection}};
   // initialize repository
   {
     std::shared_ptr<TestFlowFileRepository> ff_repository = std::make_shared<TestFlowFileRepository>("flowFileRepository");
@@ -384,7 +384,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
         REQUIRE(file->Persist(ff_repository));
         if (keyIdx % 2 == 0) {
           // delete every second flowFile
-          REQUIRE(ff_repository->Delete(file->getUUIDStr()));
+          REQUIRE(ff_repository->Delete(std::string{file->getUUIDStr()}));
         }
       }
       stop = true;

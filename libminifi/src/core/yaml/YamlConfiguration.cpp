@@ -619,7 +619,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
             // lastly, look the processor up by name
             auto srcProcessor = parent->findProcessorByName(connectionSrcProcName);
             if (NULL != srcProcessor) {
-              srcProcessor->getUUID(srcUUID);
+              srcUUID = srcProcessor->getUUID();
               logger_->log_debug("Using 'source name' to match source with same name for "
                                  "connection '%s': source name => [%s]",
                                  name, connectionSrcProcName);
@@ -657,7 +657,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
             // look the processor up by name
             auto destProcessor = parent->findProcessorByName(connectionDestProcName);
             if (NULL != destProcessor) {
-              destProcessor->getUUID(destUUID);
+              destUUID = destProcessor->getUUID();
               logger_->log_debug("Using 'destination name' to match destination with same name for "
                                  "connection '%s': destination name => [%s]",
                                  name, connectionDestProcName);
@@ -971,7 +971,7 @@ std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode, const std::
     }
   } else {
     utils::Identifier uuid = id_generator_->generate();
-    id = uuid.to_string();
+    id = std::string{uuid.to_string()};
     logger_->log_debug("Generating random ID: id => [%s]", id);
   }
   return id;

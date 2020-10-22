@@ -31,7 +31,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
+bool SchedulingAgent::hasWorkToDo(const std::shared_ptr<core::Processor>& processor) {
   // Whether it has work to do
   if (processor->getTriggerWhenEmpty() || !processor->hasIncomingConnections() || processor->flowFilesQueued())
     return true;
@@ -49,7 +49,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::enableControllerService(
 
   // only need to run this once.
   auto monitor = utils::make_unique<utils::ComplexMonitor>();
-  utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
+  utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, std::string{serviceNode->getUUIDStr()}, std::move(monitor));
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
   std::future<utils::TaskRescheduleInfo> future;
@@ -69,7 +69,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService
 
   // only need to run this once.
   auto monitor = utils::make_unique<utils::ComplexMonitor>();
-  utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
+  utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, std::string{serviceNode->getUUIDStr()}, std::move(monitor));
 
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
@@ -80,7 +80,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService
   return future;
 }
 
-bool SchedulingAgent::hasTooMuchOutGoing(std::shared_ptr<core::Processor> processor) {
+bool SchedulingAgent::hasTooMuchOutGoing(const std::shared_ptr<core::Processor>& processor) {
   return processor->flowFilesOutGoingFull();
 }
 

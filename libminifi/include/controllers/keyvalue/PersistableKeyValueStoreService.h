@@ -19,6 +19,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <map>
 
 #include "KeyValueStoreService.h"
 #include "AbstractCoreComponentStateManagerProvider.h"
@@ -40,10 +41,10 @@ class PersistableKeyValueStoreService : virtual public KeyValueStoreService, pub
   virtual bool persist() = 0;
 
  protected:
-  bool setImpl(const std::string& key, const std::string& value) override;
-  bool getImpl(const std::string& key, std::string& value) override;
-  bool getImpl(std::unordered_map<std::string, std::string>& kvs) override;
-  bool removeImpl(const std::string& key) override;
+  bool setImpl(const utils::Identifier& key, const std::string& value) override;
+  bool getImpl(const utils::Identifier& key, std::string& value) override;
+  bool getImpl(std::map<utils::Identifier, std::string>& kvs) override;
+  bool removeImpl(const utils::Identifier& key) override;
   bool persistImpl() override;
 };
 

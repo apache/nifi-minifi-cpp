@@ -59,9 +59,16 @@ inline char const* conditional_conversion(const utils::SmallString<N>& arr) {
   return arr.c_str();
 }
 
-template<typename T>
+template<typename T, typename = typename std::enable_if<
+    std::is_arithmetic<T>::value ||
+    std::is_enum<T>::value ||
+    std::is_pointer<T>::value>::type>
 inline T conditional_conversion(T const& t) {
   return t;
+}
+
+inline char const* conditional_conversion(const char* str) {
+  return str;
 }
 
 template<typename ... Args>

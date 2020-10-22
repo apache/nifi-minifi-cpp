@@ -157,7 +157,7 @@ TEST_CASE("Test parse", "[id]") {
   for (const auto& test_case : test_cases) {
     utils::Identifier id = utils::Identifier::parse(test_case.first).value();
     REQUIRE(memcmp(IdentifierTestAccessor::get_data_(id).data(), test_case.second.data(), 16U) == 0);
-    REQUIRE(utils::StringUtils::equalsIgnoreCase(test_case.first, id.to_string()));
+    REQUIRE(utils::StringUtils::equalsIgnoreCase(test_case.first, std::string{id.to_string()}));
   }
 
   LogTestController::getInstance().reset();
@@ -202,7 +202,7 @@ TEST_CASE("Test to_string", "[id]") {
 
   utils::Identifier id = generator->generate();
 
-  std::string id_str = id.to_string();
+  std::string id_str = std::string{id.to_string()};
   std::cerr << "Generated UUID " << id_str << std::endl;
 
   REQUIRE(36 == id_str.length());

@@ -32,7 +32,7 @@ namespace controllers {
 
 AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::AbstractCoreComponentStateManager(
     std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider,
-    const std::string& id)
+    const utils::Identifier& id)
     : provider_(std::move(provider))
     , id_(id)
     , state_valid_(false) {
@@ -82,17 +82,17 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
 
 AbstractCoreComponentStateManagerProvider::~AbstractCoreComponentStateManagerProvider() = default;
 
-std::shared_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManagerProvider::getCoreComponentStateManager(const std::string& uuid) {
+std::shared_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManagerProvider::getCoreComponentStateManager(const utils::Identifier& uuid) {
   return std::make_shared<AbstractCoreComponentStateManager>(shared_from_this(), uuid);
 }
 
-std::unordered_map<std::string, std::unordered_map<std::string, std::string>> AbstractCoreComponentStateManagerProvider::getAllCoreComponentStates() {
-  std::unordered_map<std::string, std::string> all_serialized;
+std::map<utils::Identifier, std::unordered_map<std::string, std::string>> AbstractCoreComponentStateManagerProvider::getAllCoreComponentStates() {
+  std::map<utils::Identifier, std::string> all_serialized;
   if (!getImpl(all_serialized)) {
     return {};
   }
 
-  std::unordered_map<std::string, std::unordered_map<std::string, std::string>> all_deserialized;
+  std::map<utils::Identifier, std::unordered_map<std::string, std::string>> all_deserialized;
   for (const auto& serialized : all_serialized) {
     std::unordered_map<std::string, std::string> deserialized;
     if (deserialize(serialized.second, deserialized)) {

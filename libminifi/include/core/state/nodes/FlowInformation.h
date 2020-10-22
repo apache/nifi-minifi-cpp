@@ -55,12 +55,12 @@ class FlowVersion : public DeviceInformation {
  public:
   FlowVersion()
       : DeviceInformation("FlowVersion") {
-    setFlowVersion("", "", getUUIDStr());
+    setFlowVersion("", "", std::string{getUUIDStr()});
   }
 
   explicit FlowVersion(const std::string &registry_url, const std::string &bucket_id, const std::string &flow_id)
       : DeviceInformation("FlowVersion") {
-    setFlowVersion(registry_url, bucket_id, flow_id.empty() ? getUUIDStr() : flow_id);
+    setFlowVersion(registry_url, bucket_id, flow_id.empty() ? std::string{getUUIDStr()} : flow_id);
   }
 
   explicit FlowVersion(FlowVersion &&fv)
@@ -240,7 +240,7 @@ class FlowInformation : public FlowMonitor {
 
         SerializedResponseNode uuidNode;
         uuidNode.name = "uuid";
-        uuidNode.value = component->getComponentUUID();
+        uuidNode.value = std::string{component->getComponentUUID().to_string()};
 
         SerializedResponseNode componentStatusNode;
         componentStatusNode.name = "running";

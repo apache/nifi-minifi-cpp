@@ -135,7 +135,7 @@ class TestRepository : public core::Repository {
 
   bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &store) override {
     std::string value;
-    Get(store->getUUIDStr(), value);
+    Get(std::string{store->getUUIDStr()}, value);
     store->DeSerialize(reinterpret_cast<const uint8_t*>(value.c_str()), value.size());
     return true;
   }

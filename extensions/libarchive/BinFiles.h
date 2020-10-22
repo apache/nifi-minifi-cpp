@@ -116,7 +116,7 @@ class Bin {
     return queue_.size();
   }
 
-  std::string getUUIDStr() {
+  utils::SmallString<36> getUUIDStr() {
     return uuid_.to_string();
   }
 

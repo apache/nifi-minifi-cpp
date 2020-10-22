@@ -29,20 +29,29 @@ PersistableKeyValueStoreService::PersistableKeyValueStoreService(const std::stri
 
 PersistableKeyValueStoreService::~PersistableKeyValueStoreService() = default;
 
-bool PersistableKeyValueStoreService::setImpl(const std::string& key, const std::string& value) {
-  return set(key, value);
+bool PersistableKeyValueStoreService::setImpl(const utils::Identifier& key, const std::string& value) {
+  return set(std::string{key.to_string()}, value);
 }
 
-bool PersistableKeyValueStoreService::getImpl(const std::string& key, std::string& value) {
-  return get(key, value);
+bool PersistableKeyValueStoreService::getImpl(const utils::Identifier& key, std::string& value) {
+  return get(std::string{key.to_string()}, value);
 }
 
-bool PersistableKeyValueStoreService::getImpl(std::unordered_map<std::string, std::string>& kvs) {
-  return get(kvs);
+bool PersistableKeyValueStoreService::getImpl(std::map<utils::Identifier, std::string>& kvs) {
+  std::unordered_map<std::string, std::string> states;
+  if (!get(states)){
+    return false;
+  }
+  kvs.clear();
+  for (const auto& state : states) {
+    const auto uuid = utils::Identifier::parse(state.first);
+    kvs[uuid.value()] = state.second;
+  }
+  return true;
 }
 
-bool PersistableKeyValueStoreService::removeImpl(const std::string& key) {
-  return remove(key);
+bool PersistableKeyValueStoreService::removeImpl(const utils::Identifier& key) {
+  return remove(std::string{key.to_string()});
 }
 
 bool PersistableKeyValueStoreService::persistImpl() {

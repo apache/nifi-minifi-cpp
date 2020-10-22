@@ -142,10 +142,9 @@ void C2Agent::start() {
   task_ids_.clear();
   for (const auto& function : functions_) {
     utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
-    const std::string uuid_str = uuid.to_string();
-    task_ids_.push_back(uuid_str);
+    task_ids_.push_back(uuid);
     auto monitor = utils::make_unique<utils::ComplexMonitor>();
-    utils::Worker<utils::TaskRescheduleInfo> functor(function, uuid_str, std::move(monitor));
+    utils::Worker<utils::TaskRescheduleInfo> functor(function, std::string{uuid.to_string()}, std::move(monitor));
     std::future<utils::TaskRescheduleInfo> future;
     thread_pool_.execute(std::move(functor), future);
   }
@@ -157,7 +156,7 @@ void C2Agent::start() {
 void C2Agent::stop() {
   controller_running_ = false;
   for (const auto& id : task_ids_) {
-    thread_pool_.stopTasks(id);
+    thread_pool_.stopTasks(std::string{id.to_string()});
   }
   thread_pool_.shutdown();
   logger_->log_info("C2 agent stopped");
@@ -450,7 +449,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
               state_manager->persist();
               component->start();
             } else {
-              logger_->log_warn("Failed to get StateManager for component %s", component->getComponentUUID());
+              logger_->log_warn("Failed to get StateManager for component %s", component->getComponentUUID().to_string());
             }
           }
         } else {
@@ -604,7 +603,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       auto core_component_states = state_manager_provider->getAllCoreComponentStates();
       for (const auto& core_component_state : core_component_states) {
         C2Payload state(Operation::ACKNOWLEDGE, resp.ident, false, true);
-        state.setLabel(core_component_state.first);
+        state.setLabel(std::string{core_component_state.first.to_string()});
         for (const auto& kv : core_component_state.second) {
           C2ContentResponse entry(Operation::ACKNOWLEDGE);
           entry.name = kv.first;

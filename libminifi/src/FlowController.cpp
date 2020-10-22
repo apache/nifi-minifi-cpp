@@ -462,7 +462,7 @@ void FlowController::initializeC2() {
   std::string identifier_str;
   if (!configuration_->get("nifi.c2.agent.identifier", "c2.agent.identifier", identifier_str) || identifier_str.empty()) {
     // set to the flow controller's identifier
-    identifier_str = getUUIDStr();
+    identifier_str = std::string{getUUIDStr()};
   }
   configuration_->setAgentIdentifier(identifier_str);
 
@@ -866,7 +866,7 @@ std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowContro
  * Returns controller service components referenced by serviceIdentifier from the embedded
  * controller service provider;
  */
-std::shared_ptr<core::controller::ControllerService> FlowController::getControllerServiceForComponent(const std::string &serviceIdentifier, const std::string &componentId) {
+std::shared_ptr<core::controller::ControllerService> FlowController::getControllerServiceForComponent(const std::string &serviceIdentifier, const utils::Identifier &componentId) {
   return controller_service_provider_->getControllerServiceForComponent(serviceIdentifier, componentId);
 }
 

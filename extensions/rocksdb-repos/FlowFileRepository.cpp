@@ -159,11 +159,11 @@ void FlowFileRepository::prune_stored_flowfiles() {
       auto claim = eventRead->getResourceClaim();
       if (claim) claim->increaseFlowFileRecordOwnedCount();
       bool found = false;
-      auto search = containers.find(containerId.to_string());
+      auto search = containers.find(std::string{containerId.to_string()});
       found = (search != containers.end());
       if (!found) {
         // for backward compatibility
-        search = connectionMap.find(containerId.to_string());
+        search = connectionMap.find(std::string{containerId.to_string()});
         found = (search != connectionMap.end());
       }
       if (found) {

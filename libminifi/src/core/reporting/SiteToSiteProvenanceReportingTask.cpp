@@ -68,16 +68,29 @@ void setJsonStr(const std::string& key, const std::string& value, rapidjson::Val
   parent.AddMember(keyVal, valueVal, alloc);
 }
 
-rapidjson::Value getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc) { // NOLINT
+rapidjson::Value getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc) {
   rapidjson::Value Val;
   Val.SetString(value.c_str(), value.length(), alloc);
   return Val;
 }
 
-void appendJsonStr(const std::string& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) { // NOLINT
+template<size_t N>
+rapidjson::Value getStringValue(const utils::SmallString<N>& value, rapidjson::Document::AllocatorType& alloc) {
+  rapidjson::Value Val;
+  Val.SetString(value.c_str(), value.length(), alloc);
+  return Val;
+}
+
+void appendJsonStr(const std::string& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {
   rapidjson::Value valueVal;
-  const char* c_val = value.c_str();
-  valueVal.SetString(c_val, value.length(), alloc);
+  valueVal.SetString(value.c_str(), value.length(), alloc);
+  parent.PushBack(valueVal, alloc);
+}
+
+template<size_t N>
+void appendJsonStr(const utils::SmallString<N>& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {
+  rapidjson::Value valueVal;
+  valueVal.SetString(value.c_str(), value.length(), alloc);
   parent.PushBack(valueVal, alloc);
 }
 
@@ -105,12 +118,12 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(const std::shared_ptr<core
 
     recordJson.AddMember("entityType", "org.apache.nifi.flowfile.FlowFile", alloc);
 
-    recordJson.AddMember("eventId", getStringValue(record->getEventId(), alloc), alloc);
+    recordJson.AddMember("eventId", getStringValue(record->getEventId().to_string(), alloc), alloc);
     recordJson.AddMember("eventType", getStringValue(provenance::ProvenanceEventRecord::ProvenanceEventTypeStr[record->getEventType()], alloc), alloc);
     recordJson.AddMember("details", getStringValue(record->getDetails(), alloc), alloc);
     recordJson.AddMember("componentId", getStringValue(record->getComponentId(), alloc), alloc);
     recordJson.AddMember("componentType", getStringValue(record->getComponentType(), alloc), alloc);
-    recordJson.AddMember("entityId", getStringValue(record->getFlowFileUuid(), alloc), alloc);
+    recordJson.AddMember("entityId", getStringValue(record->getFlowFileUuid().to_string(), alloc), alloc);
     recordJson.AddMember("transitUri", getStringValue(record->getTransitUri(), alloc), alloc);
     recordJson.AddMember("remoteIdentifier", getStringValue(record->getSourceSystemFlowFileIdentifier(), alloc), alloc);
     recordJson.AddMember("alternateIdentifier", getStringValue(record->getAlternateIdentifierUri(), alloc), alloc);
@@ -121,12 +134,12 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(const std::shared_ptr<core
     recordJson.AddMember("updatedAttributes", updatedAttributesJson, alloc);
 
     for (auto parentUUID : record->getParentUuids()) {
-      appendJsonStr(parentUUID, parentUuidJson, alloc);
+      appendJsonStr(parentUUID.to_string(), parentUuidJson, alloc);
     }
     recordJson.AddMember("parentIds", parentUuidJson, alloc);
 
     for (auto childUUID : record->getChildrenUuids()) {
-      appendJsonStr(childUUID, childUuidJson, alloc);
+      appendJsonStr(childUUID.to_string(), childUuidJson, alloc);
     }
     recordJson.AddMember("childIds", childUuidJson, alloc);
 

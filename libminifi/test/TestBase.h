@@ -330,7 +330,7 @@ class TestPlan {
 
   std::shared_ptr<minifi::state::response::FlowVersion> flow_version_;
   std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> controller_service_nodes_;
-  std::map<std::string, std::shared_ptr<core::Processor>> processor_mapping_;
+  std::map<utils::Identifier, std::shared_ptr<core::Processor>> processor_mapping_;
   std::vector<std::shared_ptr<core::Processor>> processor_queue_;
   std::vector<std::shared_ptr<core::Processor>> configured_processors_;
   std::vector<std::shared_ptr<core::ProcessorNode>> processor_nodes_;

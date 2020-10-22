@@ -54,8 +54,7 @@ TEST_CASE("Test Creation of HashContent", "[HashContentCreate]") {
   TestController testController;
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::HashContent>("processorname");
   REQUIRE(processor->getName() == "processorname");
-  utils::Identifier processoruuid;
-  REQUIRE(processor->getUUID(processoruuid));
+  REQUIRE(processor->getUUID());
 }
 
 TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {

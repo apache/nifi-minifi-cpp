@@ -246,24 +246,24 @@ class Transaction {
     current_transfers_ = 0;
     total_transfers_ = 0;
     _bytes = 0;
-
-    // Generate the global UUID for the transaction
-    uuid_str_ = uuid_.to_string();
   }
   // Destructor
   virtual ~Transaction() = default;
   // getUUIDStr
-  std::string getUUIDStr() {
-    return uuid_str_;
+  utils::SmallString<36> getUUIDStr() {
+    return uuid_.to_string();
   }
 
-  void setTransactionId(const std::string str) {
-    setUUIDStr(str);
+  utils::Identifier getUUID() const {
+    return uuid_;
   }
 
-  void setUUIDStr(const std::string &str) {
-    uuid_str_ = str;
-    uuid_ = str;
+  void setTransactionId(const utils::Identifier& id) {
+    setUUID(id);
+  }
+
+  void setUUID(const utils::Identifier &id) {
+    uuid_ = id;
   }
 
   // getState
@@ -323,8 +323,6 @@ class Transaction {
 
   // A global unique identifier
   utils::Identifier uuid_;
-  // UUID string
-  std::string uuid_str_;
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };

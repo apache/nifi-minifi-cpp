@@ -58,8 +58,7 @@ TEST_CASE("Import null data") {
   content_repo->initialize(config);
 
   auto processor = std::make_shared<core::Processor>("dummy");
-  utils::Identifier uuid;
-  processor->getUUID(uuid);
+  utils::Identifier uuid = processor->getUUID();
   auto output = std::make_shared<minifi::Connection>(ff_repository, content_repo, "output");
   output->addRelationship({"out", ""});
   output->setSourceUUID(uuid);

@@ -108,7 +108,7 @@ class ExecutionPlan {
   std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship = core::Relationship("success", "description"),
   bool linkToPrevious = false);
 
-  bool setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value);
+  bool setProperty(const std::shared_ptr<core::Processor>& proc, const std::string &prop, const std::string &value);
 
   void reset();
 
@@ -141,7 +141,7 @@ class ExecutionPlan {
   }
 
   void setNextFlowFile(std::shared_ptr<core::FlowFile> ptr){
-    next_ff_ = ptr;
+    next_ff_ = std::move(ptr);
   }
 
   bool hasProcessor() {
@@ -154,16 +154,16 @@ class ExecutionPlan {
       std::function<void(core::ProcessSession*, core::ProcessContext *)> ontrigger_callback,
       std::function<void(core::ProcessContext *)> onschedule_callback = {});
 
-  static std::shared_ptr<ExecutionPlan> getPlan(const std::string& uuid) {
+  static std::shared_ptr<ExecutionPlan> getPlan(const utils::Identifier& uuid) {
     auto it = proc_plan_map_.find(uuid);
     return it != proc_plan_map_.end() ? it->second : nullptr;
   }
 
-  static void addProcessorWithPlan(const std::string &uuid, std::shared_ptr<ExecutionPlan> plan) {
-    proc_plan_map_[uuid] = plan;
+  static void addProcessorWithPlan(const utils::Identifier &uuid, std::shared_ptr<ExecutionPlan> plan) {
+    proc_plan_map_[uuid] = std::move(plan);
   }
 
-  static bool removeProcWithPlan(const std::string& uuid) {
+  static bool removeProcWithPlan(const utils::Identifier& uuid) {
     return proc_plan_map_.erase(uuid) > 0;
   }
 
@@ -221,7 +221,7 @@ class ExecutionPlan {
   std::shared_ptr<core::ProcessSession> current_session_;
   std::shared_ptr<core::FlowFile> current_flowfile_;
 
-  std::map<std::string, std::shared_ptr<core::Processor>> processor_mapping_;
+  std::map<utils::Identifier, std::shared_ptr<core::Processor>> processor_mapping_;
   std::vector<std::shared_ptr<core::Processor>> processor_queue_;
   std::vector<std::shared_ptr<core::Processor>> configured_processors_;
   std::vector<std::shared_ptr<core::ProcessorNode>> processor_nodes_;
@@ -238,7 +238,7 @@ class ExecutionPlan {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<FailureHandler> failure_handler_;
-  static std::unordered_map<std::string, std::shared_ptr<ExecutionPlan>> proc_plan_map_;
+  static std::map<utils::Identifier, std::shared_ptr<ExecutionPlan>> proc_plan_map_;
   static std::map<std::string, custom_processor_args> custom_processors;
 };
 

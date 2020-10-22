@@ -93,7 +93,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::create(const std::shared_ptr<cor
     }
     record->setLineageStartDate(parent->getlineageStartDate());
     record->setLineageIdentifiers(parent->getlineageIdentifiers());
-    parent->getlineageIdentifiers().push_back(parent->getUUIDStr());
+    parent->getlineageIdentifiers().push_back(parent->getUUID());
   }
 
   utils::Identifier uuid;
@@ -144,7 +144,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::cloneDuringTransfer(const std::s
   }
   record->setLineageStartDate(parent->getlineageStartDate());
   record->setLineageIdentifiers(parent->getlineageIdentifiers());
-  record->getlineageIdentifiers().push_back(parent->getUUIDStr());
+  record->getlineageIdentifiers().push_back(parent->getUUID());
 
   // Copy Resource Claim
   std::shared_ptr<ResourceClaim> parent_claim = parent->getResourceClaim();
@@ -737,7 +737,7 @@ void ProcessSession::commit() {
         if (!record->isDeleted()) {
           continue;
         }
-        if (record->isStored() && process_context_->getFlowFileRepository()->Delete(record->getUUIDStr())) {
+        if (record->isStored() && process_context_->getFlowFileRepository()->Delete(std::string{record->getUUIDStr()})) {
           // mark for deletion in the flowFileRepository
           record->setStoredToRepository(false);
         }
@@ -871,7 +871,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
       auto original = snapshotIt != modifiedFlowFiles.end() ? snapshotIt->second.snapshot : nullptr;
       if (shouldDropEmptyFiles && ff->getSize() == 0) {
         // the receiver promised to drop this FF, no need for it anymore
-        if (ff->isStored() && flowFileRepo->Delete(ff->getUUIDStr())) {
+        if (ff->isStored() && flowFileRepo->Delete(std::string{ff->getUUIDStr()})) {
           // original must be non-null since this flowFile is already stored in the repos ->
           // must have come from a session->get()
           assert(original);
@@ -911,7 +911,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
         details << process_context_->getProcessorNode()->getName() << " expire flow record " << record->getUUIDStr();
         provenance_report_->expire(record, details.str());
         // there is no rolling back expired FlowFiles
-        if (record->isStored() && process_context_->getFlowFileRepository()->Delete(record->getUUIDStr())) {
+        if (record->isStored() && process_context_->getFlowFileRepository()->Delete(std::string{record->getUUIDStr()})) {
           record->setStoredToRepository(false);
         }
       }

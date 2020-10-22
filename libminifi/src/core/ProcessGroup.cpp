@@ -98,7 +98,7 @@ bool ProcessGroup::isRootProcessGroup() {
   return (type_ == ROOT_PROCESS_GROUP);
 }
 
-void ProcessGroup::addProcessor(std::shared_ptr<Processor> processor) {
+void ProcessGroup::addProcessor(const std::shared_ptr<Processor>& processor) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   if (processors_.find(processor) == processors_.end()) {
@@ -108,7 +108,7 @@ void ProcessGroup::addProcessor(std::shared_ptr<Processor> processor) {
   }
 }
 
-void ProcessGroup::removeProcessor(std::shared_ptr<Processor> processor) {
+void ProcessGroup::removeProcessor(const std::shared_ptr<Processor>& processor) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   if (processors_.find(processor) != processors_.end()) {
@@ -138,7 +138,7 @@ void ProcessGroup::removeProcessGroup(ProcessGroup *child) {
   }
 }
 
-void ProcessGroup::startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler,
+void ProcessGroup::startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler,
     const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
   std::unique_lock<std::recursive_mutex> lock(mutex_);
 
@@ -190,7 +190,7 @@ void ProcessGroup::startProcessingProcessors(const std::shared_ptr<TimerDrivenSc
   }
 }
 
-void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
+void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
                                    const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
@@ -213,7 +213,7 @@ void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAg
   }
 }
 
-void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
+void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
                                   const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler, const std::function<bool(const std::shared_ptr<Processor>&)>& filter) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
@@ -258,8 +258,7 @@ void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAge
 std::shared_ptr<Processor> ProcessGroup::findProcessorById(const utils::Identifier& uuid) const {
   const auto id_matches = [&] (const std::shared_ptr<Processor>& processor) {
     logger_->log_debug("Current processor is %s", processor->getName());
-    utils::Identifier processorUUID;
-    return processor->getUUID(processorUUID) && uuid == processorUUID;
+    return uuid && uuid == processor->getUUID();
   };
   return findProcessor(id_matches);
 }
@@ -308,12 +307,11 @@ void ProcessGroup::updatePropertyValue(std::string processorName, std::string pr
   for (auto processGroup : child_process_groups_) {
     processGroup->updatePropertyValue(processorName, propertyName, propertyValue);
   }
-  return;
 }
 
 void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connection>> &connectionMap) {
   for (auto connection : connections_) {
-    connectionMap[connection->getUUIDStr()] = connection;
+    connectionMap[std::string{connection->getUUIDStr()}] = connection;
     connectionMap[connection->getName()] = connection;
   }
   for (auto processGroup : child_process_groups_) {
@@ -323,7 +321,7 @@ void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connecti
 
 void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connectable>> &connectionMap) {
   for (auto connection : connections_) {
-    connectionMap[connection->getUUIDStr()] = connection;
+    connectionMap[std::string{connection->getUUIDStr()}] = connection;
     connectionMap[connection->getName()] = connection;
   }
   for (auto processGroup : child_process_groups_) {
@@ -333,57 +331,45 @@ void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connecta
 
 void ProcessGroup::getFlowFileContainers(std::map<std::string, std::shared_ptr<Connectable>> &containers) const {
   for (auto connection : connections_) {
-    containers[connection->getUUIDStr()] = connection;
+    containers[std::string{connection->getUUIDStr()}] = connection;
     containers[connection->getName()] = connection;
   }
   for (auto processor : processors_) {
     // processors can also own FlowFiles
-    containers[processor->getUUIDStr()] = processor;
+    containers[std::string{processor->getUUIDStr()}] = processor;
   }
   for (auto processGroup : child_process_groups_) {
     processGroup->getFlowFileContainers(containers);
   }
 }
 
-void ProcessGroup::addConnection(std::shared_ptr<Connection> connection) {
+void ProcessGroup::addConnection(const std::shared_ptr<Connection>& connection) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   if (connections_.find(connection) == connections_.end()) {
     // We do not have the same connection in this process group yet
     connections_.insert(connection);
     logger_->log_debug("Add connection %s into process group %s", connection->getName(), name_);
-    utils::Identifier sourceUUID;
-    std::shared_ptr<Processor> source = NULL;
-    connection->getSourceUUID(sourceUUID);
-    source = this->findProcessorById(sourceUUID);
+    std::shared_ptr<Processor> source = this->findProcessorById(connection->getSourceUUID());
     if (source)
       source->addConnection(connection);
-    std::shared_ptr<Processor> destination = NULL;
-    utils::Identifier destinationUUID;
-    connection->getDestinationUUID(destinationUUID);
-    destination = this->findProcessorById(destinationUUID);
+    std::shared_ptr<Processor> destination = this->findProcessorById(connection->getDestinationUUID());
     if (destination && destination != source)
       destination->addConnection(connection);
   }
 }
 
-void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
+void ProcessGroup::removeConnection(const std::shared_ptr<Connection>& connection) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   if (connections_.find(connection) != connections_.end()) {
     // We do not have the same connection in this process group yet
     connections_.erase(connection);
     logger_->log_debug("Remove connection %s into process group %s", connection->getName(), name_);
-    utils::Identifier sourceUUID;
-    std::shared_ptr<Processor> source = NULL;
-    connection->getSourceUUID(sourceUUID);
-    source = this->findProcessorById(sourceUUID);
+    std::shared_ptr<Processor> source = this->findProcessorById(connection->getSourceUUID());
     if (source)
       source->removeConnection(connection);
-    std::shared_ptr<Processor> destination = NULL;
-    utils::Identifier destinationUUID;
-    connection->getDestinationUUID(destinationUUID);
-    destination = this->findProcessorById(destinationUUID);
+    std::shared_ptr<Processor> destination = this->findProcessorById(connection->getDestinationUUID());
     if (destination && destination != source)
       destination->removeConnection(connection);
   }

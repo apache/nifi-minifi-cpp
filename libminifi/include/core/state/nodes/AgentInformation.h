@@ -476,7 +476,7 @@ class AgentStatus : public StateMonitorNode {
 
         SerializedResponseNode uuidNode;
         uuidNode.name = "uuid";
-        uuidNode.value = component->getComponentUUID();
+        uuidNode.value = std::string{component->getComponentUUID().to_string()};
 
         SerializedResponseNode componentStatusNode;
         componentStatusNode.name = "running";

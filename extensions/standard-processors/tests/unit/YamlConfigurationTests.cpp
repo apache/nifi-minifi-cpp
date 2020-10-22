@@ -140,9 +140,8 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("TailFile"));
-  utils::Identifier uuid;
-  rootFlowConfig->findProcessorByName("TailFile")->getUUID(uuid);
-  REQUIRE(!uuid.isNil());
+  utils::Identifier uuid = rootFlowConfig->findProcessorByName("TailFile")->getUUID();
+  REQUIRE(uuid);
   REQUIRE(!rootFlowConfig->findProcessorByName("TailFile")->getUUIDStr().empty());
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
   REQUIRE(
@@ -443,9 +442,8 @@ NiFi Properties Overrides: {}
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("TailFile"));
-  utils::Identifier uuid;
-  rootFlowConfig->findProcessorByName("TailFile")->getUUID(uuid);
-  REQUIRE(!uuid.isNil());
+  utils::Identifier uuid = rootFlowConfig->findProcessorByName("TailFile")->getUUID();
+  REQUIRE(uuid);
   REQUIRE(!rootFlowConfig->findProcessorByName("TailFile")->getUUIDStr().empty());
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
   REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
@@ -496,9 +494,8 @@ Processors:
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("PutFile"));
-  utils::Identifier uuid;
-  rootFlowConfig->findProcessorByName("PutFile")->getUUID(uuid);
-  REQUIRE(!uuid.isNil());
+  utils::Identifier uuid = rootFlowConfig->findProcessorByName("PutFile")->getUUID();
+  REQUIRE(uuid);
   REQUIRE(!rootFlowConfig->findProcessorByName("PutFile")->getUUIDStr().empty());
 
   REQUIRE(LogTestController::getInstance().contains("[warning] Unable to set the dynamic property "
@@ -537,9 +534,8 @@ Processors:
 
     REQUIRE(rootFlowConfig);
     REQUIRE(rootFlowConfig->findProcessorByName("GetFile"));
-    utils::Identifier uuid;
-    rootFlowConfig->findProcessorByName("GetFile")->getUUID(uuid);
-    REQUIRE(!uuid.isNil());
+    utils::Identifier uuid = rootFlowConfig->findProcessorByName("GetFile")->getUUID();
+    REQUIRE(uuid);
     REQUIRE(!rootFlowConfig->findProcessorByName("GetFile")->getUUIDStr().empty());
   } catch (const std::exception &e) {
     caught_exception = true;
@@ -580,9 +576,8 @@ Processors:
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("XYZ"));
-  utils::Identifier uuid;
-  rootFlowConfig->findProcessorByName("XYZ")->getUUID(uuid);
-  REQUIRE(!uuid.isNil());
+  utils::Identifier uuid = rootFlowConfig->findProcessorByName("XYZ")->getUUID();
+  REQUIRE(uuid);
   REQUIRE(!rootFlowConfig->findProcessorByName("XYZ")->getUUIDStr().empty());
 }
 

@@ -168,10 +168,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
     return "FlowController";
   }
 
-  std::string getComponentUUID() const override {
-    utils::Identifier ident;
-    root_->getUUID(ident);
-    return ident.to_string();
+  utils::Identifier getComponentUUID() const override {
+    return root_->getUUID();
   }
 
   // get version
@@ -283,7 +281,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Returns controller service components referenced by serviceIdentifier from the embedded
    * controller service provider;
    */
-  std::shared_ptr<core::controller::ControllerService> getControllerServiceForComponent(const std::string &serviceIdentifier, const std::string &componentId) override;
+  std::shared_ptr<core::controller::ControllerService> getControllerServiceForComponent(const std::string &serviceIdentifier, const utils::Identifier &componentId) override;
 
   /**
    * Enables all controller services for the provider.

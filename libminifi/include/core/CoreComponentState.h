@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include <map>
 #include <string>
 
 namespace org {
@@ -48,13 +49,13 @@ class CoreComponentStateManagerProvider {
  public:
   virtual ~CoreComponentStateManagerProvider() = default;
 
-  virtual std::shared_ptr<CoreComponentStateManager> getCoreComponentStateManager(const std::string& uuid) = 0;
+  virtual std::shared_ptr<CoreComponentStateManager> getCoreComponentStateManager(const utils::Identifier& uuid) = 0;
 
   virtual std::shared_ptr<CoreComponentStateManager> getCoreComponentStateManager(const CoreComponent& component) {
-    return getCoreComponentStateManager(component.getUUIDStr());
+    return getCoreComponentStateManager(component.getUUID());
   }
 
-  virtual std::unordered_map<std::string, std::unordered_map<std::string, std::string>> getAllCoreComponentStates() = 0;
+  virtual std::map<utils::Identifier, std::unordered_map<std::string, std::string>> getAllCoreComponentStates() = 0;
 };
 
 }  // namespace core

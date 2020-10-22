@@ -63,8 +63,8 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
 
  private:
   std::mutex mutex_;
-  std::map<std::string, Bosma::Cron> schedules_;
-  std::map<std::string, std::chrono::system_clock::time_point> last_exec_;
+  std::map<utils::Identifier, Bosma::Cron> schedules_;
+  std::map<utils::Identifier, std::chrono::system_clock::time_point> last_exec_;
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   CronDrivenSchedulingAgent(const CronDrivenSchedulingAgent &parent);

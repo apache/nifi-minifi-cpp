@@ -75,7 +75,7 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   ThreadedSchedulingAgent &operator=(const ThreadedSchedulingAgent &parent);
   std::shared_ptr<logging::Logger> logger_;
 
-  std::set<std::string> processors_running_;  // Set just for easy usage
+  std::set<utils::Identifier> processors_running_;  // Set just for easy usage
 };
 
 }  // namespace minifi

@@ -124,14 +124,10 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
     }
   });
 
-  utils::Identifier srcUUID;
-  utils::Identifier destUUID;
+  utils::Identifier srcUUID = connection->getSourceUUID();
+  utils::Identifier destUUID = connection->getDestinationUUID();
 
-  connection->getSourceUUID(srcUUID);
-  connection->getDestinationUUID(destUUID);
-  std::string my_uuid = uuid_.to_string();
-  std::string destination_uuid = destUUID.to_string();
-  if (my_uuid == destination_uuid) {
+  if (uuid_ == destUUID) {
     // Connection is destination to the current processor
     if (_incomingConnections.find(connection) == _incomingConnections.end()) {
       _incomingConnections.insert(connection);
@@ -141,8 +137,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
       result = SetAs::OUTPUT;
     }
   }
-  std::string source_uuid = srcUUID.to_string();
-  if (my_uuid == source_uuid) {
+  if (uuid_ == srcUUID) {
     const auto &rels = connection->getRelationships();
     for (auto i = rels.begin(); i != rels.end(); i++) {
       const auto relationship = (*i).getName();
@@ -181,13 +176,10 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
 
   std::lock_guard<std::mutex> lock(getGraphMutex());
 
-  utils::Identifier srcUUID;
-  utils::Identifier destUUID;
-
   std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
 
-  connection->getSourceUUID(srcUUID);
-  connection->getDestinationUUID(destUUID);
+  utils::Identifier srcUUID = connection->getSourceUUID();
+  utils::Identifier destUUID = connection->getDestinationUUID();
 
   if (uuid_ == destUUID) {
     // Connection is destination to the current processor
