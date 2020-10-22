@@ -72,6 +72,14 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test success case", "[awsS3DeleteS
   REQUIRE(mock_s3_wrapper_ptr->bucket_name == "testBucket");
   REQUIRE(mock_s3_wrapper_ptr->object_key == INPUT_FILENAME);
   REQUIRE(mock_s3_wrapper_ptr->version == "v1");
+  REQUIRE(mock_s3_wrapper_ptr->version_has_been_set);
+  REQUIRE(LogTestController::getInstance().contains("Successfully deleted S3 object"));
+}
+
+TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test empty version", "[awsS3DeleteNoVersion]") {
+  setRequiredProperties();
+  test_controller.runSession(plan, true);
+  REQUIRE(!mock_s3_wrapper_ptr->version_has_been_set);
   REQUIRE(LogTestController::getInstance().contains("Successfully deleted S3 object"));
 }
 

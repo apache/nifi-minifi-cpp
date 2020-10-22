@@ -128,7 +128,9 @@ bool S3WrapperBase::deleteObject(const std::string& bucket, const std::string& o
   Aws::S3::Model::DeleteObjectRequest request;
   request.SetBucket(bucket);
   request.SetKey(object_key);
-  request.SetVersionId(version);
+  if (!version.empty()) {
+    request.SetVersionId(version);
+  }
   return sendDeleteObjectRequest(request);
 }
 
