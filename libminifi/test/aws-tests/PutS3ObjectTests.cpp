@@ -222,6 +222,11 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[aw
     setBasicCredentials();
   }
 
+  SECTION("Test no object key is set") {
+    setRequiredProperties();
+    plan->setProperty(update_attribute, "filename", "", true);
+  }
+
   SECTION("Test storage class is empty") {
     setRequiredProperties();
     plan->setProperty(put_s3_object, "Storage Class", "");

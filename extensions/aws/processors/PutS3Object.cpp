@@ -402,7 +402,10 @@ bool PutS3Object::getExpressionLanguageSupportedProperties(
     const std::shared_ptr<core::FlowFile> &flow_file) {
   context->getProperty(ObjectKey, put_s3_request_params_.object_key, flow_file);
   if (put_s3_request_params_.object_key.empty()) {
-    flow_file->getAttribute("filename", put_s3_request_params_.object_key);
+    if (!flow_file->getAttribute("filename", put_s3_request_params_.object_key) || put_s3_request_params_.object_key.empty()) {
+      logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
+      return false;
+    }
   }
   logger_->log_debug("PutS3Object: Object Key [%s]", put_s3_request_params_.object_key);
   if (!context->getProperty(Bucket, put_s3_request_params_.bucket, flow_file) || put_s3_request_params_.bucket.empty()) {
