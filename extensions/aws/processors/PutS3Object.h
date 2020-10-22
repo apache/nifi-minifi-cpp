@@ -179,6 +179,7 @@ class PutS3Object : public core::Processor {
   std::string parseAccessControlList(const std::string &comma_separated_list) const;
   bool setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
   bool setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
+  void setAttributes(const std::shared_ptr<core::ProcessSession> &session,  const std::shared_ptr<core::FlowFile> &flow_file, const minifi::aws::s3::PutObjectResult &put_object_result);
 
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutS3Object>::getLogger()};
   aws::s3::PutObjectRequestParameters put_s3_request_params_;

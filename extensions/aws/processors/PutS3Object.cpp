@@ -435,6 +435,31 @@ bool PutS3Object::getExpressionLanguageSupportedProperties(
   return setAccessControl(context, flow_file);
 }
 
+void PutS3Object::setAttributes(
+    const std::shared_ptr<core::ProcessSession> &session,
+    const std::shared_ptr<core::FlowFile> &flow_file,
+    const minifi::aws::s3::PutObjectResult &put_object_result) {
+  session->putAttribute(flow_file, "s3.bucket", put_s3_request_params_.bucket);
+  session->putAttribute(flow_file, "s3.key", put_s3_request_params_.object_key);
+  session->putAttribute(flow_file, "s3.contenttype", put_s3_request_params_.content_type);
+
+  if (!user_metadata_.empty()) {
+    session->putAttribute(flow_file, "s3.usermetadata", user_metadata_);
+  }
+  if (!put_object_result.version.empty()) {
+    session->putAttribute(flow_file, "s3.version", put_object_result.version);
+  }
+  if (!put_object_result.etag.empty()) {
+    session->putAttribute(flow_file, "s3.etag", put_object_result.etag);
+  }
+  if (!put_object_result.expiration.empty()) {
+    session->putAttribute(flow_file, "s3.expiration", put_object_result.expiration);
+  }
+  if (!put_object_result.ssealgorithm.empty()) {
+    session->putAttribute(flow_file, "s3.sseAlgorithm", put_object_result.ssealgorithm);
+  }
+}
+
 void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   logger_->log_debug("PutS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
@@ -447,22 +472,13 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     return;
   }
 
-  session->putAttribute(flow_file, "s3.bucket", put_s3_request_params_.bucket);
-  session->putAttribute(flow_file, "s3.key", put_s3_request_params_.object_key);
-  session->putAttribute(flow_file, "s3.contenttype", put_s3_request_params_.content_type);
-  session->putAttribute(flow_file, "s3.usermetadata", user_metadata_);
-
   PutS3Object::ReadCallback callback(flow_file->getSize(), put_s3_request_params_, s3_wrapper_.get());
   session->read(flow_file, &callback);
   if (callback.result_ == minifi::utils::nullopt) {
     logger_->log_error("Failed to upload S3 object to bucket %s", put_s3_request_params_.bucket);
     session->transfer(flow_file, Failure);
   } else {
-    session->putAttribute(flow_file, "s3.version", callback.result_.value().version);
-    session->putAttribute(flow_file, "s3.etag", callback.result_.value().etag);
-    session->putAttribute(flow_file, "s3.expiration", callback.result_.value().expiration);
-    session->putAttribute(flow_file, "s3.sseAlgorithm", callback.result_.value().ssealgorithm);
-
+    setAttributes(session, flow_file, callback.result_.value());
     logger_->log_debug("Successfully uploaded S3 object %s to bucket %s", put_s3_request_params_.object_key, put_s3_request_params_.bucket);
     session->transfer(flow_file, Success);
   }

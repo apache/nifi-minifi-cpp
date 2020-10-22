@@ -133,11 +133,11 @@ class LogTestController {
 
   }
 
-  bool contains(const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3)) {
-    return contains(log_output, ending, timeout);
+  bool contains(const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3), std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) {
+    return contains(log_output, ending, timeout, sleep_interval);
   }
 
-  bool contains(const std::ostringstream &stream, const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3)) {
+  bool contains(const std::ostringstream &stream, const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3), std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) {
     if (ending.length() == 0) {
       return false;
     }
@@ -150,7 +150,7 @@ class LogTestController {
       auto now = std::chrono::system_clock::now();
       timed_out = std::chrono::duration_cast<std::chrono::milliseconds>(now - start) > std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
       if (!found && !timed_out) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(sleep_interval);
       }
     } while (!found && !timed_out);
 

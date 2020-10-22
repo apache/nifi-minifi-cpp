@@ -63,10 +63,12 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     write_acl_user_list = request.GetGrantWriteACP();
     canned_acl = request.GetACL();
 
-    put_s3_result.SetVersionId(S3_VERSION);
-    put_s3_result.SetETag(S3_ETAG);
-    put_s3_result.SetExpiration(S3_EXPIRATION);
-    put_s3_result.SetServerSideEncryption(S3_SSEALGORITHM);
+    if (!get_empty_result) {
+      put_s3_result.SetVersionId(S3_VERSION);
+      put_s3_result.SetETag(S3_ETAG);
+      put_s3_result.SetExpiration(S3_EXPIRATION);
+      put_s3_result.SetServerSideEncryption(S3_SSEALGORITHM);
+    }
     return put_s3_result;
   }
 
@@ -83,6 +85,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
   std::string read_acl_user_list;
   std::string write_acl_user_list;
   Aws::S3::Model::ObjectCannedACL canned_acl;
+  bool get_empty_result = false;
 };
 
 class PutS3ObjectTestsFixture {
@@ -147,6 +150,13 @@ class PutS3ObjectTestsFixture {
     REQUIRE(LogTestController::getInstance().contains("key:s3.etag value:" + S3_ETAG_UNQUOTED));
     REQUIRE(LogTestController::getInstance().contains("key:s3.expiration value:" + S3_EXPIRATION_DATE));
     REQUIRE(LogTestController::getInstance().contains("key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
+  }
+
+  void checkEmptyPutObjectResults() {
+    REQUIRE(!LogTestController::getInstance().contains("key:s3.version value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+    REQUIRE(!LogTestController::getInstance().contains("key:s3.etag value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+    REQUIRE(!LogTestController::getInstance().contains("key:s3.expiration value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+    REQUIRE(!LogTestController::getInstance().contains("key:s3.sseAlgorithm value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
   }
 
   std::string createTempFile(const std::string& filename) {
@@ -233,10 +243,10 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[aw
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", "[awsS3ClientConfig]") {
   setRequiredProperties();
   test_controller.runSession(plan, true);
-  checkPutObjectResults();
   REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
   REQUIRE(LogTestController::getInstance().contains("key:s3.key value:input_data.log"));
   REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/octet-stream"));
+  checkPutObjectResults();
   REQUIRE(mock_s3_wrapper_ptr->content_type == "application/octet-stream");
   REQUIRE(mock_s3_wrapper_ptr->storage_class == Aws::S3::Model::StorageClass::STANDARD);
   REQUIRE(mock_s3_wrapper_ptr->server_side_encryption == Aws::S3::Model::ServerSideEncryption::NOT_SET);
@@ -248,6 +258,16 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyUserName.empty());
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyPassword.empty());
   REQUIRE(mock_s3_wrapper_ptr->put_s3_data == "input_data");
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration with empty result", "[awsS3ClientConfig]") {
+  setRequiredProperties();
+  mock_s3_wrapper_ptr->get_empty_result = true;
+  test_controller.runSession(plan, true);
+  REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:testBucket"));
+  REQUIRE(LogTestController::getInstance().contains("key:s3.key value:input_data.log"));
+  REQUIRE(LogTestController::getInstance().contains("key:s3.contenttype value:application/octet-stream"));
+  checkEmptyPutObjectResults();
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration", "[awsS3ClientConfig]") {

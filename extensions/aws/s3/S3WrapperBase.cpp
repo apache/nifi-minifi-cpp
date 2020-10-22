@@ -78,6 +78,10 @@ std::string S3WrapperBase::getExpiryDate(const std::string& expiration) {
 }
 
 std::string S3WrapperBase::getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption) {
+  if (encryption == Aws::S3::Model::ServerSideEncryption::NOT_SET) {
+    return "";
+  }
+
   auto it = std::find_if(SERVER_SIDE_ENCRYPTION_MAP.begin(), SERVER_SIDE_ENCRYPTION_MAP.end(),
     [&](const std::pair<std::string, const Aws::S3::Model::ServerSideEncryption&> pair) {
       return pair.second == encryption;
