@@ -30,7 +30,7 @@ namespace minifi {
 namespace aws {
 namespace s3 {
 
-minifi::utils::optional<Aws::S3::Model::PutObjectResult> S3Wrapper::putObject(const Aws::S3::Model::PutObjectRequest& request) {
+minifi::utils::optional<Aws::S3::Model::PutObjectResult> S3Wrapper::sendPutObjectRequest(const Aws::S3::Model::PutObjectRequest& request) {
   Aws::S3::S3Client s3_client(credentials_, client_config_);
   Aws::S3::Model::PutObjectOutcome outcome = s3_client.PutObject(request);
 

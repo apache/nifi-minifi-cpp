@@ -107,7 +107,7 @@ minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjec
   request.SetGrantWriteACP(params.write_acl_user_list);
   setCannedAcl(request, params.canned_acl);
 
-  auto aws_result = putObject(request);
+  auto aws_result = sendPutObjectRequest(request);
   if (aws_result) {
     PutObjectResult result;
     // Etags are returned by AWS in quoted form that should be removed

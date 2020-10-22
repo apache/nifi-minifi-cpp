@@ -47,9 +47,9 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     return client_config_;
   }
 
-  minifi::utils::optional<Aws::S3::Model::PutObjectResult> putObject(const Aws::S3::Model::PutObjectRequest& request) override {
-    std::istreambuf_iterator<char> eos;
-    put_s3_data = std::string(std::istreambuf_iterator<char>(*request.GetBody()), eos);
+  minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3::Model::PutObjectRequest& request) override {
+    std::istreambuf_iterator<char> buf_it;
+    put_s3_data = std::string(std::istreambuf_iterator<char>(*request.GetBody()), buf_it);
     bucket_name = request.GetBucket();
     object_key = request.GetKey();
     storage_class = request.GetStorageClass();
