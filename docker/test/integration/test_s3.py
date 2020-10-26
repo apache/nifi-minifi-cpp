@@ -107,3 +107,38 @@ def test_delete_s3_object_proxy():
         assert cluster.check_output(60)
         assert cluster.is_s3_bucket_empty()
         assert cluster.check_http_proxy_access("http://s3-server:9090/test_bucket/test_object_key")
+
+def test_fetch_s3_object():
+    """
+    Verify fetch of S3 object
+    """
+    put_flow = (GetFile('/tmp/input') >> PutS3Object())
+    fetch_flow = (GenerateFlowFile("1 kB", schedule={'scheduling period': '5 sec'}) >> FetchS3Object() >> LogAttribute() >> PutFile('/tmp/output/success'))
+
+    with DockerTestCluster(SingleFileOutputValidator('test', subdir='success')) as cluster:
+        cluster.put_test_data('test_data')
+        cluster.deploy_flow(None, engine='s3-server')
+        cluster.deploy_flow(put_flow, engine='minifi-cpp', name='minifi-cpp-put')
+        cluster.deploy_flow(fetch_flow, engine='minifi-cpp', name='minifi-cpp-fetch')
+        assert cluster.check_output(60)
+
+def test_fetch_s3_object_proxy():
+    """
+    Verify fetch of S3 object
+    """
+    put_flow = (GetFile('/tmp/input') >> PutS3Object() >> LogAttribute())
+    fetch_flow = (GenerateFlowFile("1 kB", schedule={'scheduling period': '5 sec'}) \
+                  >> FetchS3Object(proxy_host='http-proxy',
+                                   proxy_port='3128',
+                                   proxy_username='admin',
+                                   proxy_password='test101') \
+                  >> LogAttribute() >> PutFile('/tmp/output/success'))
+
+    with DockerTestCluster(SingleFileOutputValidator('test', subdir='success')) as cluster:
+        cluster.put_test_data('test_data')
+        cluster.deploy_flow(None, engine='s3-server')
+        cluster.deploy_flow(None, engine='http-proxy')
+        cluster.deploy_flow(put_flow, engine='minifi-cpp', name='minifi-cpp-put')
+        cluster.deploy_flow(fetch_flow, engine='minifi-cpp', name='minifi-cpp-fetch')
+        assert cluster.check_output(60)
+        assert cluster.check_http_proxy_access("http://s3-server:9090/test_bucket/test_object_key")
