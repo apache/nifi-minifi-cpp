@@ -132,7 +132,7 @@ class PutS3Object : public core::Processor {
 
     ReadCallback(uint64_t flow_size, const minifi::aws::s3::PutObjectRequestParameters& options, aws::s3::S3WrapperBase* s3_wrapper)
       : flow_size_(flow_size)
-      , options_(std::move(options))
+      , options_(options)
       , s3_wrapper_(s3_wrapper) {
     }
 
@@ -162,7 +162,7 @@ class PutS3Object : public core::Processor {
     }
 
     uint64_t flow_size_;
-    minifi::aws::s3::PutObjectRequestParameters options_;
+    const minifi::aws::s3::PutObjectRequestParameters& options_;
     aws::s3::S3WrapperBase* s3_wrapper_;
     uint64_t read_size_ = 0;
     minifi::utils::optional<minifi::aws::s3::PutObjectResult> result_ = minifi::utils::nullopt;
