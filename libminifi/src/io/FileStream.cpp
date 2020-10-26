@@ -122,7 +122,12 @@ int FileStream::read(uint8_t *buf, int buflen) {
       file_stream_->clear();
       file_stream_->seekg(0, file_stream_->end);
       file_stream_->seekp(0, file_stream_->end);
-      size_t len = gsl::narrow<size_t>(file_stream_->tellg());
+      auto tellg_result = file_stream_->tellg();
+      if (tellg_result < 0) {
+        logging::LOG_ERROR(logger_) << "Tellg call on file stream failed.";
+        return -1;
+      }
+      size_t len = gsl::narrow<size_t>(tellg_result);
       size_t ret = len - offset_;
       offset_ = len;
       length_ = len;

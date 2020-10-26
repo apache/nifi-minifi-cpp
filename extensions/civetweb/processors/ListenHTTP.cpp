@@ -26,6 +26,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
+const uint64_t ListenHTTP::DEFAULT_BUFFER_SIZE = 20000;
+
 core::Property ListenHTTP::BasePath(
     core::PropertyBuilder::createProperty("Base Path")
         ->withDescription("Base path for incoming connections")
@@ -53,7 +55,7 @@ core::Property ListenHTTP::SSLVerifyPeer(
 
 core::Property ListenHTTP::SSLMinimumVersion(
     core::PropertyBuilder::createProperty("SSL Minimum Version")
-        -> withDescription("Minimum TLS/SSL version allowed (TLS1.2)")
+        ->withDescription("Minimum TLS/SSL version allowed (TLS1.2)")
         ->isRequired(false)
         ->withAllowableValues<std::string>({"TLS1.2"})
         ->withDefaultValue("TLS1.2")->build());
@@ -61,6 +63,17 @@ core::Property ListenHTTP::SSLMinimumVersion(
 core::Property ListenHTTP::HeadersAsAttributesRegex("HTTP Headers to receive as Attributes (Regex)", "Specifies the Regular Expression that determines the names of HTTP Headers that"
                                                     " should be passed along as FlowFile attributes",
                                                     "");
+
+core::Property ListenHTTP::BatchSize(
+    core::PropertyBuilder::createProperty("Batch Size")
+        ->withDescription("Maximum number of buffered requests to be processed in a single batch. If set to zero all buffered requests are processed.")
+        ->withDefaultValue<uint64_t>(ListenHTTP::DEFAULT_BUFFER_SIZE)->build());
+
+core::Property ListenHTTP::BufferSize(
+    core::PropertyBuilder::createProperty("Buffer Size")
+        ->withDescription("Maximum number of HTTP Requests allowed to be buffered before processing them when the processor is triggered. "
+                          "If the buffer full, the request is refused. If set to zero the buffer is unlimited.")
+        ->withDefaultValue<uint64_t>(ListenHTTP::DEFAULT_BUFFER_SIZE)->build());
 
 core::Relationship ListenHTTP::Success("success", "All files are routed to success");
 
@@ -77,6 +90,8 @@ void ListenHTTP::initialize() {
   properties.insert(SSLVerifyPeer);
   properties.insert(SSLMinimumVersion);
   properties.insert(HeadersAsAttributesRegex);
+  properties.insert(BatchSize);
+  properties.insert(BufferSize);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -191,7 +206,11 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   }
 
   server_.reset(new CivetServer(options, &callbacks_, &logger_));
-  handler_.reset(new Handler(basePath, context, sessionFactory, std::move(authDNPattern), std::move(headersAsAttributesPattern)));
+
+  context->getProperty(BatchSize.getName(), batch_size_);
+  logger_->log_debug("ListenHTTP using %s: %zu", BatchSize.getName(), batch_size_);
+
+  handler_.reset(new Handler(basePath, context, std::move(authDNPattern), std::move(headersAsAttributesPattern)));
   server_->addHandler(basePath, handler_.get());
 
   if (randomPort) {
@@ -212,9 +231,13 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 ListenHTTP::~ListenHTTP() = default;
 
 void ListenHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+  logger_->log_debug("OnTrigger ListenHTTP");
+  processIncomingFlowFile(session);
+  processRequestBuffer(session);
+}
 
-  // Do nothing if there are no incoming files
+void ListenHTTP::processIncomingFlowFile(core::ProcessSession *session) {
+  std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
     return;
   }
@@ -222,41 +245,67 @@ void ListenHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
   std::string type;
   flow_file->getAttribute("http.type", type);
 
-  if (type == "response_body") {
-
-    if (handler_) {
-      struct response_body response { "", "", "" };
-      ResponseBodyReadCallback cb(&response.body);
-      flow_file->getAttribute("filename", response.uri);
-      flow_file->getAttribute("mime.type", response.mime_type);
-      if (response.mime_type.empty()) {
-        logger_->log_warn("Using default mime type of application/octet-stream for response body file: %s", response.uri);
-        response.mime_type = "application/octet-stream";
-      }
-      session->read(flow_file, &cb);
-      handler_->set_response_body(std::move(response));
+  if (type == "response_body" && handler_) {
+    ResponseBody response;
+    ResponseBodyReadCallback cb(&response.body);
+    flow_file->getAttribute("filename", response.uri);
+    flow_file->getAttribute("mime.type", response.mime_type);
+    if (response.mime_type.empty()) {
+      logger_->log_warn("Using default mime type of application/octet-stream for response body file: %s", response.uri);
+      response.mime_type = "application/octet-stream";
     }
+    session->read(flow_file, &cb);
+    handler_->setResponseBody(std::move(response));
   }
 
   session->remove(flow_file);
 }
 
-ListenHTTP::Handler::Handler(std::string base_uri, core::ProcessContext *context, core::ProcessSessionFactory *session_factory, std::string &&auth_dn_regex, std::string &&header_as_attrs_regex)
+void ListenHTTP::processRequestBuffer(core::ProcessSession *session) {
+  std::size_t flow_file_count = 0;
+  for (; batch_size_ == 0 || batch_size_ > flow_file_count; ++flow_file_count) {
+    FlowFileBufferPair flow_file_buffer_pair;
+    if (!handler_->dequeueRequest(flow_file_buffer_pair)) {
+      break;
+    }
+
+    auto flow_file = flow_file_buffer_pair.first;
+    session->add(flow_file);
+
+    if (flow_file_buffer_pair.second) {
+      WriteCallback callback(std::move(flow_file_buffer_pair.second));
+      session->write(flow_file, &callback);
+    }
+
+    session->transfer(flow_file, Success);
+  }
+
+  logger_->log_debug("ListenHTTP transferred %zu flow files from HTTP request buffer", flow_file_count);
+}
+
+ListenHTTP::Handler::Handler(std::string base_uri, core::ProcessContext *context, std::string &&auth_dn_regex, std::string &&header_as_attrs_regex)
     : base_uri_(std::move(base_uri)),
       auth_dn_regex_(std::move(auth_dn_regex)),
       headers_as_attrs_regex_(std::move(header_as_attrs_regex)),
+      process_context_(context),
       logger_(logging::LoggerFactory<ListenHTTP::Handler>::getLogger()) {
-  process_context_ = context;
-  session_factory_ = session_factory;
+  context->getProperty(BufferSize.getName(), buffer_size_);
+  logger_->log_debug("ListenHTTP using %s: %zu", BufferSize.getName(), buffer_size_);
 }
 
-void ListenHTTP::Handler::send_error_response(struct mg_connection *conn) {
+void ListenHTTP::Handler::sendHttp500(mg_connection* const conn) {
   mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n"
-            "Content-Type: text/html\r\n"
-            "Content-Length: 0\r\n\r\n");
+                  "Content-Type: text/html\r\n"
+                  "Content-Length: 0\r\n\r\n");
 }
 
-void ListenHTTP::Handler::set_header_attributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const {
+void ListenHTTP::Handler::sendHttp503(mg_connection* const conn) {
+  mg_printf(conn, "HTTP/1.1 503 Service Unavailable\r\n"
+                  "Content-Type: text/html\r\n"
+                  "Content-Length: 0\r\n\r\n");
+}
+
+void ListenHTTP::Handler::setHeaderAttributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const {
   // Add filename from "filename" header value (and pattern headers)
   for (int i = 0; i < req_info->num_headers; i++) {
     auto header = &req_info->http_headers[i];
@@ -273,6 +322,27 @@ void ListenHTTP::Handler::set_header_attributes(const mg_request_info *req_info,
   }
 }
 
+void ListenHTTP::Handler::enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::unique_ptr<io::BufferStream> content_buffer) {
+  auto flow_file = std::make_shared<FlowFileRecord>();
+  auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
+  if (flow_version != nullptr) {
+    flow_file->setAttribute(core::SpecialFlowAttribute::FLOW_ID, flow_version->getFlowId());
+  }
+
+  setHeaderAttributes(req_info, flow_file);
+
+  if (buffer_size_ == 0 || request_buffer_.size() < buffer_size_) {
+    request_buffer_.enqueue(std::make_pair(std::move(flow_file), std::move(content_buffer)));
+  } else {
+    logger_->log_warn("ListenHTTP buffer is full, '%s' request for '%s' uri was dropped", req_info->request_method, req_info->request_uri);
+    sendHttp503(conn);
+    return;
+  }
+
+  mg_printf(conn, "HTTP/1.1 200 OK\r\n");
+  writeBody(conn, req_info);
+}
+
 bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *conn) {
   auto req_info = mg_get_request_info(conn);
   if (!req_info) {
@@ -281,47 +351,18 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *
   }
   logger_->log_debug("ListenHTTP handling POST request of length %lld", req_info->content_length);
 
-  if (!auth_request(conn, req_info)) {
+  if (!authRequest(conn, req_info)) {
     return true;
   }
 
   // Always send 100 Continue, as allowed per standard to minimize client delay (https://www.w3.org/Protocols/rfc2616/rfc2616-sec8.html)
   mg_printf(conn, "HTTP/1.1 100 Continue\r\n\r\n");
 
-  auto session = session_factory_->createSession();
-  ListenHTTP::WriteCallback callback(conn, req_info);
-  auto flow_file = session->create();
-
-  if (!flow_file) {
-    send_error_response(conn);
-    return true;
-  }
-
-  try {
-    session->write(flow_file, &callback);
-    set_header_attributes(req_info, flow_file);
-
-    session->transfer(flow_file, Success);
-    session->commit();
-  } catch (std::exception &exception) {
-    logger_->log_error("ListenHTTP Caught Exception %s", exception.what());
-    send_error_response(conn);
-    session->rollback();
-    throw;
-  } catch (...) {
-    logger_->log_error("ListenHTTP Caught Exception Processor::onTrigger");
-    send_error_response(conn);
-    session->rollback();
-    throw;
-  }
-
-  mg_printf(conn, "HTTP/1.1 200 OK\r\n");
-  write_body(conn, req_info);
-
+  enqueueRequest(conn, req_info, createContentBuffer(conn, req_info));
   return true;
 }
 
-bool ListenHTTP::Handler::auth_request(mg_connection *conn, const mg_request_info *req_info) const {
+bool ListenHTTP::Handler::authRequest(mg_connection *conn, const mg_request_info *req_info) const {
   // If this is a two-way TLS connection, authorize the peer against the configured pattern
   bool authorized = true;
   if (req_info->is_ssl && req_info->client_cert != nullptr) {
@@ -344,38 +385,11 @@ bool ListenHTTP::Handler::handleGet(CivetServer *server, struct mg_connection *c
   }
   logger_->log_debug("ListenHTTP handling GET request of URI %s", req_info->request_uri);
 
-  if (!auth_request(conn, req_info)) {
+  if (!authRequest(conn, req_info)) {
     return true;
   }
 
-  auto session = session_factory_->createSession();
-  auto flow_file = session->create();
-
-  if (!flow_file) {
-    send_error_response(conn);
-    return true;
-  }
-
-  try {
-    set_header_attributes(req_info, flow_file);
-
-    session->transfer(flow_file, Success);
-    session->commit();
-  } catch (std::exception &exception) {
-    logger_->log_error("ListenHTTP Caught Exception %s", exception.what());
-    send_error_response(conn);
-    session->rollback();
-    throw;
-  } catch (...) {
-    logger_->log_error("ListenHTTP Caught Exception Processor::onTrigger");
-    send_error_response(conn);
-    session->rollback();
-    throw;
-  }
-
-  mg_printf(conn, "HTTP/1.1 200 OK\r\n");
-  write_body(conn, req_info);
-
+  enqueueRequest(conn, req_info, nullptr);
   return true;
 }
 
@@ -387,21 +401,40 @@ bool ListenHTTP::Handler::handleHead(CivetServer *server, struct mg_connection *
   }
   logger_->log_debug("ListenHTTP handling HEAD request of URI %s", req_info->request_uri);
 
-  if (!auth_request(conn, req_info)) {
+  if (!authRequest(conn, req_info)) {
     return true;
   }
 
   mg_printf(conn, "HTTP/1.1 200 OK\r\n");
-  write_body(conn, req_info, false /*include_payload*/);
+  writeBody(conn, req_info, false /*include_payload*/);
 
   return true;
 }
 
-void ListenHTTP::Handler::write_body(mg_connection *conn, const mg_request_info *req_info, bool include_payload /*=true*/) {
+void ListenHTTP::Handler::setResponseBody(const ResponseBody& response) {
+  std::lock_guard<std::mutex> guard(uri_map_mutex_);
+
+  if (response.body.empty()) {
+    logger_->log_info("Unregistering response body for URI '%s'",
+                      response.uri);
+    response_uri_map_.erase(response.uri);
+  } else {
+    logger_->log_info("Registering response body for URI '%s' of length %lu",
+                      response.uri,
+                      response.body.size());
+    response_uri_map_[response.uri] = std::move(response);
+  }
+}
+
+bool ListenHTTP::Handler::dequeueRequest(FlowFileBufferPair &flow_file_buffer_pair) {
+  return request_buffer_.tryDequeue(flow_file_buffer_pair);
+}
+
+void ListenHTTP::Handler::writeBody(mg_connection *conn, const mg_request_info *req_info, bool include_payload /*=true*/) {
   const auto &request_uri_str = std::string(req_info->request_uri);
 
   if (request_uri_str.size() > base_uri_.size() + 1) {
-    struct response_body response { };
+    ResponseBody response;
 
     {
       // Attempt to minimize time holding mutex (it would be nice to have a lock-free concurrent map here)
@@ -434,16 +467,11 @@ void ListenHTTP::Handler::write_body(mg_connection *conn, const mg_request_info 
   }
 }
 
-ListenHTTP::WriteCallback::WriteCallback(struct mg_connection *conn, const struct mg_request_info *reqInfo)
-    : logger_(logging::LoggerFactory<ListenHTTP::WriteCallback>::getLogger()) {
-  conn_ = conn;
-  req_info_ = reqInfo;
-}
-
-int64_t ListenHTTP::WriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
+std::unique_ptr<io::BufferStream> ListenHTTP::Handler::createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info) {
+  auto content_buffer = utils::make_unique<io::BufferStream>();
   int64_t rlen;
   int64_t nlen = 0;
-  int64_t tlen = req_info_->content_length;
+  int64_t tlen = req_info->content_length;
   uint8_t buf[16384];
 
   // if we have no content length we should call mg_read until
@@ -456,19 +484,27 @@ int64_t ListenHTTP::WriteCallback::process(std::shared_ptr<io::BaseStream> strea
     }
 
     // Read a buffer of data from client
-    rlen = mg_read(conn_, &buf[0], (size_t) rlen);
+    rlen = mg_read(conn, &buf[0], (size_t) rlen);
 
     if (rlen <= 0) {
       break;
     }
 
     // Transfer buffer data to the output stream
-    stream->write(&buf[0], gsl::narrow<int>(rlen));
+    content_buffer->write(&buf[0], gsl::narrow<int>(rlen));
 
     nlen += rlen;
   }
 
-  return nlen;
+  return content_buffer;
+}
+
+ListenHTTP::WriteCallback::WriteCallback(std::unique_ptr<io::BufferStream> request_content)
+    : request_content_(std::move(request_content)) {
+}
+
+int64_t ListenHTTP::WriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
+  return stream->write(const_cast<uint8_t*>(request_content_->getBuffer()), request_content_->size());
 }
 
 bool ListenHTTP::isSecure() const {

@@ -45,15 +45,15 @@
 - [UpdateAttribute](#updateattribute)
 ## AppendHostInfo
 
-### Description 
+### Description
 
 Appends host information such as IP address and hostname as an attribute to incoming flowfiles.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Hostname Attribute|source.hostname||Flowfile attribute to used to record the agent's hostname|
 |IP Attribute|source.ipv4||Flowfile attribute to used to record the agent's IP address|
 |Network Interface Name|eth0||Network interface from which to read an IP v4 address|
@@ -66,15 +66,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## ApplyTemplate
 
-### Description 
+### Description
 
 Applies the mustache template specified by the "Template" property and writes the output to the flow file content. FlowFile attributes are used as template parameters.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Template|||Path to the input mustache template file|
 ### Relationships
 
@@ -85,15 +85,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## BinFiles
 
-### Description 
+### Description
 
 Bins flow files into buckets based on the number of entries or size of entries
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Max Bin Age|||The maximum age of a Bin that will trigger a Bin to be complete. Expected format is <duration> <time unit>|
 |Maximum Group Size|||The maximum size for the bundle. If not specified, there is no maximum.|
 |Maximum Number of Entries|||The maximum number of files to include in a bundle. If not specified, there is no maximum.|
@@ -110,15 +110,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## CapturePacket
 
-### Description 
+### Description
 
 CapturePacket captures and writes one or more packets into a PCAP file that will be used as the content of a flow file. Configuration options exist to adjust the batching of PCAP files. PCAP batching will place a single PCAP into a flow file. A regular expression selects network interfaces. Bluetooth network interfaces can be selected through a separate option.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Base Directory|/tmp/||Scratch directory for PCAP files|
 |Batch Size|50||The number of packets to combine within a given PCAP|
 |Capture Bluetooth|false||True indicates that we support bluetooth interfaces|
@@ -132,15 +132,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## CaptureRTSPFrame
 
-### Description 
+### Description
 
 Captures a frame from the RTSP stream at specified intervals.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Image Encoding|.jpg||The encoding that should be applied the the frame images captured from the RTSP stream|
 |RTSP Hostname|||Hostname of the RTSP stream we are trying to connect to|
 |RTSP Password|||Password used to connect to the RTSP stream|
@@ -157,15 +157,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## CompressContent
 
-### Description 
+### Description
 
 Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm and updates the mime.type attribute as appropriate
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Compression Format|use mime.type attribute||The compression format to use.|
 |Compression Level|1||The compression level to use; this is valid only when using GZIP compression.|
 |Mode|compress||Indicates whether the processor should compress content or decompress content.|
@@ -180,15 +180,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## ConsumeMQTT
 
-### Description 
+### Description
 
 This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. The the payload of the MQTT message becomes content of a FlowFile
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Broker URI|||The URI to use to connect to the MQTT broker|
 |Client ID|||MQTT client ID to use|
 |Connection Timeout|30 sec||Maximum time interval the client will wait for the network connection to the MQTT server|
@@ -209,15 +209,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## ExecuteProcess
 
-### Description 
+### Description
 
 Runs an operating system command specified by the user and writes the output of that command to a FlowFile. If the command is expected to be long-running,the Processor can output the partial data on a specified interval. When this option is used, the output is expected to be in textual format,as it typically does not make sense to split binary data on arbitrary time-based intervals.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Batch Duration|0 sec||If the process is expected to be long-running and produce textual output, a batch duration can be specified.|
 |Command|||Specifies the command to be executed; if just the name of an executable is provided, it must be in the user's environment PATH.<br/>**Supports Expression Language: true**|
 |Command Arguments|||The arguments to supply to the executable delimited by white space. White space can be escaped by enclosing it in double-quotes.<br/>**Supports Expression Language: true**|
@@ -232,16 +232,16 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## ExecutePythonProcessor
 
-### Description 
+### Description
 
 Executes a script given the flow file and a process session. The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back. Scripts must define an onTrigger function which accepts NiFi Context and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the concurrent tasks to 1. The python script files are expected to contain `describe(procesor)` and `onTrigger(context, session)`.
 
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Script File|||Path to script file to execute. Only one of Script File or Script Body may be used|
 |Script Body|||Script to execute|
 ### Relationships
@@ -254,15 +254,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## ExecuteSQL
 
-### Description 
+### Description
 
 Execute provided SQL query. Query result rows will be outputted as new flow files with attribute keys equal to result column names and values equal to result values. There will be one output FlowFile per result row. This processor can be scheduled to run using the standard timer-based scheduling methods, or it can be triggered by an incoming FlowFile. If it is triggered by an incoming FlowFile, then attributes of that FlowFile will be available when evaluating the query.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Connection URL|||The database URL to connect to|
 |SQL Statement|||The SQL statement to execute|
 ### Relationships
@@ -276,15 +276,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## ExecuteScript
 
-### Description 
+### Description
 
 Executes a script given the flow file and a process session. The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back. Scripts must define an onTrigger function which accepts NiFi Context and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the concurrent tasks to 1.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Module Directory|||Comma-separated list of paths to files and/or directories which contain modules required by the script|
 |Script Body|||Body of script to execute. Only one of Script File or Script Body may be used|
 |Script Engine|python||The engine to execute scripts (python, lua)|
@@ -300,15 +300,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## ExtractText
 
-### Description 
+### Description
 
 Extracts the content of a FlowFile and places it into an attribute.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Attribute|||Attribute to set from content|
 |Enable Case-insensitive Matching|false||Indicates that two characters match even if they are in a different case. |
 |Enable repeating capture group|false||f set to true, every string matching the capture groups will be extracted. Otherwise, if the Regular Expression matches more than once, only the first match will be extracted.|
@@ -325,15 +325,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## FetchOPCProcessor
 
-### Description 
+### Description
 
 Fetches OPC-UA node
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Application URI|||Application URI of the client in the format 'urn:unconfigured:application'. Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.|
 |Certificate path|||Path to the DER-encoded cert file|
 |Key path|||Path to the DER-encoded key file|
@@ -356,15 +356,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## FetchSFTP
 
-### Description 
+### Description
 
 Fetches the content of a file from a remote SFTP server and overwrites the contents of an incoming FlowFile with the content of the remote file.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |**Completion Strategy**|None|Delete File<br>Move File<br>None<br>|Specifies what to do with the original file on the server once it has been pulled into NiFi. If the Completion Strategy fails, a warning will be logged but the data will still be transferred.|
 |**Connection Timeout**|30 sec||Amount of time to wait before timing out while creating a connection|
 |**Create Directory**|false||Specifies whether or not the remote directory should be created if it does not exist.|
@@ -399,15 +399,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## FocusArchiveEntry
 
-### Description 
+### Description
 
 Allows manipulation of entries within an archive (e.g. TAR) by focusing on one entry within the archive at a time. When an archive entry is focused, that entry is treated as the content of the FlowFile and may be manipulated independently of the rest of the archive. To restore the FlowFile to its original state, use UnfocusArchiveEntry.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Path|||The path within the archive to focus ("/" to focus the total archive)|
 ### Relationships
 
@@ -418,15 +418,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## GenerateFlowFile
 
-### Description 
+### Description
 
 This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Batch Size|1||The number of FlowFiles to be transferred in each invocation|
 |Data Format|Binary|Text<br>Binary<br>|Specifies whether the data should be Text or Binary|
 |File Size|1 kB||The size of the file that will be used|
@@ -440,15 +440,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## GetFile
 
-### Description 
+### Description
 
 Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Batch Size|10||The maximum number of files to pull in each iteration|
 |File Filter|[^\.].*||Only files whose names match the given regular expression will be picked up|
 |Ignore Hidden Files|true||Indicates whether or not hidden files should be ignored|
@@ -469,15 +469,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## GetGPS
 
-### Description 
+### Description
 
 Obtains GPS coordinates from the GPSDHost and port.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |GPSD Host|localhost||The host running the GPSD daemon|
 |GPSD Port|2947||The GPSD daemon port|
 |GPSD Wait Time|50000000||Timeout value for waiting for data from the GPSD instance|
@@ -490,15 +490,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## GetTCP
 
-### Description 
+### Description
 
 Establishes a TCP Server that defines and retrieves one or more byte messages from clients
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |SSL Context Service|||SSL Context Service Name|
 |Stay Connected|true||Determines if we keep the same socket despite having no data|
 |concurrent-handler-count|1||Number of concurrent handlers for this session|
@@ -516,15 +516,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## GetUSBCamera
 
-### Description 
+### Description
 
 Gets images from USB Video Class (UVC)-compatible devices. Outputs one flow file per frame at the rate specified by the FPS property in the format specified by the Format property.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |FPS|1||Frames per second to capture from USB camera|
 |Format|PNG||Frame format (currently only PNG and RAW are supported; RAW is a binary pixel buffer of RGB values)|
 |Height|||Target height of image to capture from USB camera|
@@ -542,18 +542,18 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## HashContent
 
-### Description 
+### Description
 
 HashContent calculates the checksum of the content of the flowfile and adds it as an attribute. Configuration options exist to select hashing algorithm and set the name of the attribute.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Hash Algorithm|SHA256||Name of the algorithm used to generate checksum|
 |Hash Attribute|Checksum||Attribute to store checksum to|
-### Properties 
+### Properties
 
 | Name | Description |
 | - | - |
@@ -563,15 +563,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## InvokeHTTP
 
-### Description 
+### Description
 
 An HTTP client processor which can interact with a configurable HTTP Endpoint. The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Always Output Response|false||Will force a response FlowFile to be generated and routed to the 'Response' relationship regardless of what the server status code received is |
 |Attributes to Send|||Regular expression that defines which attributes to send as HTTP headers in the request. If not defined, no attributes are sent as headers.|
 |Connection Timeout|5 secs||Max wait time for connection to remote service.|
@@ -597,15 +597,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## ListSFTP
 
-### Description 
+### Description
 
 Performs a listing of the files residing on an SFTP server. For each file that is found on the remote server, a new FlowFile will be created with the filename attribute set to the name of the file on the remote server. This can then be used in conjunction with FetchSFTP in order to fetch those files.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |**Connection Timeout**|30 sec||Amount of time to wait before timing out while creating a connection|
 |**Data Timeout**|30 sec||When transferring a file between the local and remote system, this value specifies how long is allowed to elapse without any data being transferred between systems|
 |Entity Tracking Initial Listing Target|All Available|All Available<br>Tracking Time Window<br>|Specify how initial listing should be handled. Used by 'Tracking Entities' strategy.|
@@ -646,17 +646,19 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## ListenHTTP
 
-### Description 
+### Description
 
 Starts an HTTP Server and listens on a given base path to transform incoming requests into FlowFiles. The default URI of the Service will be http://{hostname}:{port}/contentListener. Only HEAD, POST, and GET requests are supported. PUT, and DELETE will result in an error and the HTTP response status code 405. The response body text for all requests, by default, is empty (length of 0). A static response body can be set for a given URI by sending input files to ListenHTTP with the http.type attribute set to response_body. The response body FlowFile filename attribute is appended to the Base Path property (separated by a /) when mapped to incoming requests. The mime.type attribute of the response body FlowFile is used for the Content-type header in responses. Response body content can be cleared by sending an empty (size 0) FlowFile for a given URI mapping.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Authorized DN Pattern|.*||A Regular Expression to apply against the Distinguished Name of incoming connections. If the Pattern does not match the DN, the connection will be refused.|
 |Base Path|contentListener||Base path for incoming connections|
+|Batch Size|0||Maximum number of buffered requests to be processed in a single batch. If set to zero all buffered requests are processed.|
+|Buffer Size|0||Maximum number of HTTP Requests allowed to be buffered before processing them when the processor is triggered. If the buffer full, the request is refused. If set to zero the buffer is unlimited.|
 |HTTP Headers to receive as Attributes (Regex)|||Specifies the Regular Expression that determines the names of HTTP Headers that should be passed along as FlowFile attributes|
 |**Listening Port**|80||The Port to listen on for incoming connections. 0 means port is going to be selected randomly.|
 |SSL Certificate|||File containing PEM-formatted file including TLS/SSL certificate and key|
@@ -672,15 +674,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## ListenSyslog
 
-### Description 
+### Description
 
 Listens for Syslog messages being sent to a given port over TCP or UDP. Incoming messages are checked against regular expressions for RFC5424 and RFC3164 formatted messages. The format of each message is: (<PRIORITY>)(VERSION )(TIMESTAMP) (HOSTNAME) (BODY) where version is optional. The timestamp can be an RFC5424 timestamp with a format of "yyyy-MM-dd'T'HH:mm:ss.SZ" or "yyyy-MM-dd'T'HH:mm:ss.S+hh:mm", or it can be an RFC3164 timestamp with a format of "MMM d HH:mm:ss". If an incoming messages matches one of these patterns, the message will be parsed and the individual pieces will be placed in FlowFile attributes, with the original message in the content of the FlowFile. If an incoming message does not match one of these patterns it will not be parsed and the syslog.valid attribute will be set to false with the original message in the content of the FlowFile. Valid messages will be transferred on the success relationship, and invalid messages will be transferred on the invalid relationship.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Max Batch Size|1||The maximum number of Syslog events to add to a single FlowFile.|
 |Max Number of TCP Connections|2||The maximum number of concurrent connections to accept Syslog messages in TCP mode.|
 |Max Size of Socket Buffer|1 MB||The maximum size of the socket buffer that should be used.|
@@ -699,15 +701,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## LogAttribute
 
-### Description 
+### Description
 
 Logs attributes of flow files in the MiNiFi application log.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Attributes to Ignore|||A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.|
 |Attributes to Log|||A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.|
 |FlowFiles To Log|1||Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously.|
@@ -725,15 +727,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## ManipulateArchive
 
-### Description 
+### Description
 
 Performs an operation which manipulates an archive without needing to split the archive into multiple FlowFiles.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |After|||For operations which result in new entries, places the new entry after the entry specified by this property.|
 |Before|||For operations which result in new entries, places the new entry before the entry specified by this property.|
 |Destination|||Destination for operations (touch, move or copy) which result in new entries.|
@@ -749,16 +751,16 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## MergeContent
 
-### Description 
+### Description
 
 Merges a Group of FlowFiles together based on a user-defined strategy and packages them into a single FlowFile. MergeContent should be configured with only one incoming connection as it won't create grouped Flow Files.This processor updates the mime.type attribute as appropriate.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
+| Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
-|Attribute Strategy|Keep Only Common Attributes|Keep Only Common Attributes<Br>Keep All Unique Attributes<Br>|Determines which FlowFile attributes should be added to the bundle. If 'Keep All Unique Attributes' is selected, any attribute on any FlowFile that gets bundled will be kept unless its value conflicts with the value from another FlowFile (in which case neither, or none, of the conflicting attributes will be kept). If 'Keep Only Common Attributes' is selected, only the attributes that exist on all FlowFiles in the bundle, with the same value, will be preserved.| 
+|Attribute Strategy|Keep Only Common Attributes|Keep Only Common Attributes<Br>Keep All Unique Attributes<Br>|Determines which FlowFile attributes should be added to the bundle. If 'Keep All Unique Attributes' is selected, any attribute on any FlowFile that gets bundled will be kept unless its value conflicts with the value from another FlowFile (in which case neither, or none, of the conflicting attributes will be kept). If 'Keep Only Common Attributes' is selected, only the attributes that exist on all FlowFiles in the bundle, with the same value, will be preserved.|
 |Correlation Attribute Name|||Correlation Attribute Name|
 |Delimiter Strategy|Filename||Determines if Header, Footer, and Demarcator should point to files|
 |Demarcator File|||Filename specifying the demarcator to use|
@@ -784,15 +786,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## MotionDetector
 
-### Description 
+### Description
 
 Detect motion from captured images.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |**Dilate iteration**|10||For image processing, if an object is detected as 2 separate objects, increase this value|
 |**Image Encoding**|.jpg|.jpg<br>.png<br>|The encoding that should be applied to the output|
 |**Minimum Area**|100||We only consider the movement regions with area greater than this.|
@@ -808,15 +810,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## PublishKafka
 
-### Description 
+### Description
 
 This Processor puts the contents of a FlowFile to a Topic in Apache Kafka. The content of a FlowFile becomes the contents of a Kafka message. This message is optionally assigned a key by using the <Kafka Key> Property.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Attributes to Send as Headers|||Any attribute whose name matches the regex will be added to the Kafka messages as a Header|
 |Batch Size|10||Maximum number of messages batched in one MessageSet|
 |**Client Name**|||Client Name to use when communicating with Kafka<br/>**Supports Expression Language: true**|
@@ -853,15 +855,15 @@ Supports Expression Language: true (will be evaluated using flow file attributes
 
 ## PublishMQTT
 
-### Description 
+### Description
 
 PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Broker URI|||The URI to use to connect to the MQTT broker|
 |Client ID|||MQTT client ID to use|
 |Connection Timeout|30 sec||Maximum time interval the client will wait for the network connection to the MQTT server|
@@ -883,15 +885,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## PutFile
 
-### Description 
+### Description
 
 Writes the contents of a FlowFile to the local file system
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Conflict Resolution Strategy|fail|fail<br>ignore<br>replace<br>|Indicates what should happen when a file with the same name already exists in the output directory|
 |**Create Missing Directories**|true||If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.|
 |Directory|.||The output directory to which to put files<br/>**Supports Expression Language: true**|
@@ -906,15 +908,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## PutOPCProcessor
 
-### Description 
+### Description
 
 Creates/updates  OPC nodes
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Application URI|||Application URI of the client in the format 'urn:unconfigured:application'. Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.|
 |Certificate path|||Path to the DER-encoded cert file|
 |Key path|||Path to the DER-encoded key file|
@@ -940,15 +942,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## PutSFTP
 
-### Description 
+### Description
 
 Sends FlowFiles to an SFTP Server
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |**Batch Size**|500||The maximum number of FlowFiles to send in a single connection|
 |**Conflict Resolution**|NONE|FAIL<br>IGNORE<br>NONE<br>REJECT<br>RENAME<br>REPLACE<br>|Determines how to handle the problem of filename collisions|
 |**Connection Timeout**|30 sec||Amount of time to wait before timing out while creating a connection|
@@ -989,15 +991,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## PutSQL
 
-### Description 
+### Description
 
 Executes a SQL UPDATE or INSERT command. The content of an incoming FlowFile is expected to be the SQL command to execute. The SQL command may use the ? character to bind parameters. In this case, the parameters to use must exist as FlowFile attributes with the naming convention sql.args.N.type and sql.args.N.value, where N is a positive integer. The content of the FlowFile is expected to be in UTF-8 format.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |Batch Size|1||The maximum number of flow files to process in one batch|
 |Connection URL|||The database URL to connect to|
 |SQL Statement|||The SQL statement to execute|
@@ -1048,15 +1050,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## RouteOnAttribute
 
-### Description 
+### Description
 
 Routes FlowFiles based on their Attributes using the Attribute Expression Language.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 ### Relationships
 
 | Name | Description |
@@ -1067,15 +1069,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## TailFile
 
-### Description 
+### Description
 
 "Tails" a file, or a list of files, ingesting data from the file as it is written to the file. The file is expected to be textual. Data is ingested only when a new line is encountered (carriage return or new-line character or combination). If the file to tail is periodically "rolled over", as is generally the case with log files, an optional Rolling Filename Pattern can be used to retrieve data from files that have rolled over, even if the rollover occurred while NiFi was not running (provided that the data still exists upon restart of NiFi). It is generally advisable to set the Run Schedule to a few seconds, rather than running with the default value of 0 secs, as this Processor will consume a lot of resources if scheduled very aggressively. At this time, this Processor does not support ingesting files that have been compressed when 'rolled over'.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 |File to Tail|||Fully-qualified filename of the file that should be tailed when using single file mode, or a file regex when using multifile mode|
 |Input Delimiter|||Specifies the character that should be used for delimiting the data being tailedfrom the incoming file.If none is specified, data will be ingested as it becomes available.|
 |State File|TailFileState||Specifies the file that should be used for storing state about what data has been ingested so that upon restart NiFi can resume from where it left off|
@@ -1090,15 +1092,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## UnfocusArchiveEntry
 
-### Description 
+### Description
 
 Restores a FlowFile which has had an archive entry focused via FocusArchiveEntry to its original state.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 ### Relationships
 
 | Name | Description |
@@ -1108,15 +1110,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ## UpdateAttribute
 
-### Description 
+### Description
 
 This processor updates the attributes of a FlowFile using properties that are added by the user. This allows you to set default attribute changes that affect every FlowFile going through the processor, equivalent to the "basic" usage in Apache NiFi.
-### Properties 
+### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
 ### Relationships
 
 | Name | Description |

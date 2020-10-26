@@ -35,6 +35,14 @@
 
 class ListenHTTPTestsFixture {
  public:
+  struct HttpResponseExpectations {
+    HttpResponseExpectations(bool s, int64_t r) : should_succeed(s), response_code(r) {}
+    HttpResponseExpectations() : HttpResponseExpectations(true, 200) {}
+
+    bool should_succeed;
+    int64_t response_code;
+  };
+
   ListenHTTPTestsFixture() {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
@@ -89,6 +97,8 @@ class ListenHTTPTestsFixture {
 
     // Configure ListenHTTP processor
     plan->setProperty(listen_http, "Listening Port", "0");
+
+    plan->setProperty(log_attribute, "FlowFiles To Log", "0");
   }
 
   virtual ~ListenHTTPTestsFixture() {
@@ -110,6 +120,9 @@ class ListenHTTPTestsFixture {
   }
 
   void run_server() {
+    plan->setProperty(listen_http, "Batch Size", std::to_string(batch_size_));
+    plan->setProperty(listen_http, "Buffer Size", std::to_string(buffer_size_));
+
     plan->runNextProcessor();  // GetFile
     plan->runNextProcessor();  // UpdateAttribute
     plan->runNextProcessor();  // ListenHTTP
@@ -122,49 +135,79 @@ class ListenHTTPTestsFixture {
     url = protocol + "://localhost:" + portstr + "/contentListener/" + endpoint;
   }
 
-  void test_connect(bool should_succeed = true, int64_t response_code = 200) {
-    if (client == nullptr) {
-      client = std::unique_ptr<utils::HTTPClient>(new utils::HTTPClient());
-      client->initialize(method, url, ssl_context_service);
-      client->setVerbose();
-      for (const auto &header : headers) {
-        client->appendHeader(header.first, header.second);
-      }
-      if (method == "POST") {
-        client->setPostFields(payload);
-      }
+  void initialize_client() {
+    if (client != nullptr) {
+      return;
     }
-    auto res = client->submit();
-    if (should_succeed) {
-      REQUIRE(res);
-      REQUIRE(response_code == client->getResponseCode());
-      if (response_code == 200) {
-        if (endpoint == "test") {
-          std::string content_type;
-          if (!update_attribute->getDynamicProperty("mime.type", content_type)) {
-            content_type = "application/octet-stream";
-          }
-          REQUIRE(content_type == utils::StringUtils::trim(client->getParsedHeaders().at("Content-type")));
-          REQUIRE("19" == utils::StringUtils::trim(client->getParsedHeaders().at("Content-length")));
-        } else {
-          REQUIRE("0" == utils::StringUtils::trim(client->getParsedHeaders().at("Content-length")));
-        }
-        if (method == "GET" || method == "POST") {
-          const auto &body_chars = client->getResponseBody();
-          std::string response_body(body_chars.data(), body_chars.size());
-          if (endpoint == "test") {
-            REQUIRE("Hello response body" == response_body);
-          } else {
-            REQUIRE("" == response_body);
-          }
 
-          plan->runNextProcessor();  // LogAttribute
-          REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(payload.size()) + " Offset:0"));
-        }
-      }
-    } else {
-      REQUIRE(!res);
+    client = std::unique_ptr<utils::HTTPClient>(new utils::HTTPClient());
+    client->initialize(method, url, ssl_context_service);
+    client->setVerbose();
+    for (const auto &header : headers) {
+      client->appendHeader(header.first, header.second);
     }
+    if (method == "POST") {
+      client->setPostFields(payload);
+    }
+  }
+
+  void check_content_type() {
+    if (endpoint == "test") {
+      std::string content_type;
+      if (!update_attribute->getDynamicProperty("mime.type", content_type)) {
+        content_type = "application/octet-stream";
+      }
+      REQUIRE(content_type == utils::StringUtils::trim(client->getParsedHeaders().at("Content-type")));
+      REQUIRE("19" == utils::StringUtils::trim(client->getParsedHeaders().at("Content-length")));
+    } else {
+      REQUIRE("0" == utils::StringUtils::trim(client->getParsedHeaders().at("Content-length")));
+    }
+  }
+
+  void check_response_body() {
+    if (method != "GET" && method != "POST") {
+      return;
+    }
+
+    const auto &body_chars = client->getResponseBody();
+    std::string response_body(body_chars.data(), body_chars.size());
+    if (endpoint == "test") {
+      REQUIRE("Hello response body" == response_body);
+    } else {
+      REQUIRE("" == response_body);
+    }
+  }
+
+  void check_response(const bool success, const HttpResponseExpectations& expect) {
+    if (!expect.should_succeed) {
+      REQUIRE(!success);
+      REQUIRE(expect.response_code == client->getResponseCode());
+      return;
+    }
+
+    REQUIRE(success);
+    REQUIRE(expect.response_code == client->getResponseCode());
+    if (expect.response_code != 200) {
+      return;
+    }
+
+    check_content_type();
+    check_response_body();
+  }
+
+  void test_connect(const std::vector<HttpResponseExpectations>& response_expectaitons = {HttpResponseExpectations{}}, std::size_t expected_commited_requests = 1) {
+    initialize_client();
+
+    for (const auto& expect : response_expectaitons) {
+      check_response(client->submit(), expect);
+    }
+
+    plan->runCurrentProcessor();  // ListenHTTP
+    plan->runNextProcessor();  // LogAttribute
+    if (expected_commited_requests > 0 && (method == "GET" || method == "POST")) {
+      REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(payload.size()) + " Offset:0"));
+    }
+    REQUIRE(LogTestController::getInstance().contains("Logged " + std::to_string(expected_commited_requests) + " flow files"));
   }
 
  protected:
@@ -183,6 +226,8 @@ class ListenHTTPTestsFixture {
   std::string endpoint = "test";
   std::string url;
   std::unique_ptr<utils::HTTPClient> client;
+  std::size_t batch_size_ = 0;
+  std::size_t buffer_size_ = 0;
 };
 
 TEST_CASE("ListenHTTP creation", "[basic]") {
@@ -211,7 +256,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP PUT", "[basic]") {
 
   method = "PUT";
 
-  test_connect(true /*should_succeed*/, 405);
+  test_connect({HttpResponseExpectations{true, 405}}, 0);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP DELETE", "[basic]") {
@@ -219,7 +264,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP DELETE", "[basic]") {
 
   method = "DELETE";
 
-  test_connect(true /*should_succeed*/, 405);
+  test_connect({HttpResponseExpectations{true, 405}}, 0);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP HEAD", "[basic]") {
@@ -227,11 +272,12 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP HEAD", "[basic]") {
 
   method = "HEAD";
 
-  test_connect();
+  test_connect({HttpResponseExpectations{}}, 0);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP no body", "[basic]") {
   endpoint = "test2";
+
 
   SECTION("GET") {
     method = "GET";
@@ -245,7 +291,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP no body", "[basic]") {
   }
 
   run_server();
-  test_connect();
+  const std::size_t expected_commited_requests = (method == "POST" || method == "GET") ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP body with different mime type", "[basic][mime]") {
@@ -263,7 +310,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP body with different mime type", "
   }
 
   run_server();
-  test_connect();
+  const std::size_t expected_commited_requests = (method == "POST" || method == "GET") ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP all headers", "[basic][headers]") {
@@ -308,6 +356,65 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP filtered headers", "[headers]") {
   REQUIRE(false == LogTestController::getInstance().contains("key:bar value:2", std::chrono::seconds(0) /*timeout*/));
 }
 
+TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP Batch tests", "[batch]") {
+  std::size_t expected_processed_request_count = 0;
+  std::vector<HttpResponseExpectations> requests;
+  auto create_requests = [&](std::size_t successful, std::size_t failed) {
+    for (auto i = 0; i < successful; ++i) {
+      requests.push_back(HttpResponseExpectations{true,200});
+    }
+    for (auto i = 0; i < failed; ++i) {
+      requests.push_back(HttpResponseExpectations{true,503});
+    }
+  };
+
+  SECTION("Batch size same as request count") {
+    batch_size_ = 5;
+    create_requests(5, 0);
+    expected_processed_request_count = 5;
+
+    SECTION("GET") {
+      method = "GET";
+    }
+    SECTION("POST") {
+      method = "POST";
+      payload = "Test payload";
+    }
+  }
+
+  SECTION("Batch size smaller than request count") {
+    batch_size_ = 4;
+    create_requests(5, 0);
+    expected_processed_request_count = 4;
+
+    SECTION("GET") {
+      method = "GET";
+    }
+    SECTION("POST") {
+      method = "POST";
+      payload = "Test payload";
+    }
+  }
+
+  SECTION("Buffer size smaller than request count") {
+    batch_size_ = 5;
+    buffer_size_ = 3;
+    create_requests(3, 2);
+    expected_processed_request_count = 3;
+
+    SECTION("GET") {
+      method = "GET";
+    }
+    SECTION("POST") {
+      method = "POST";
+      payload = "Test payload";
+    }
+  }
+
+  run_server();
+  test_connect(requests, expected_processed_request_count);
+}
+
 #ifdef OPENSSL_SUPPORT
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS without CA", "[basic][https]") {
   plan->setProperty(listen_http, "SSL Certificate", utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "resources/server.pem"));
@@ -326,7 +433,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS without CA", "[basic][https]") {
   }
 
   run_server();
-  test_connect();
+  const std::size_t expected_commited_requests = (method == "POST" || method == "GET") ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS without client cert", "[basic][https]") {
@@ -347,7 +455,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS without client cert", "[basic][h
   }
 
   run_server();
-  test_connect();
+  const std::size_t expected_commited_requests = (method == "POST" || method == "GET") ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from good CA", "[https]") {
@@ -369,7 +478,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from good CA", 
   }
 
   run_server();
-  test_connect();
+  const std::size_t expected_commited_requests = (method == "POST" || method == "GET") ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with PKCS12 client cert from good CA", "[https]") {
@@ -391,7 +501,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with PKCS12 client cert from goo
   }
 
   run_server();
-  test_connect();
+  const std::size_t expected_commited_requests = (method == "POST" || method == "GET") ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "[https]") {
@@ -399,6 +510,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "
   plan->setProperty(listen_http, "SSL Certificate Authority", utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "resources/goodCA.crt"));
 
   bool should_succeed = false;
+  int64_t response_code = 0;
+  std::size_t expected_commited_requests = 0;
   SECTION("verify peer") {
     should_succeed = false;
     plan->setProperty(listen_http, "SSL Verify Peer", "yes");
@@ -416,13 +529,16 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "
   }
   SECTION("do not verify peer") {
     should_succeed = true;
+    response_code = 200;
 
     SECTION("GET") {
       method = "GET";
+      expected_commited_requests = 1;
     }
     SECTION("POST") {
       method = "POST";
       payload = "Test payload";
+      expected_commited_requests = 1;
     }
     SECTION("HEAD") {
       method = "HEAD";
@@ -432,7 +548,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "
   create_ssl_context_service("goodCA.crt", "badCA_goodClient.pem");
 
   run_server();
-  test_connect(should_succeed);
+  test_connect({HttpResponseExpectations{should_succeed, response_code}}, expected_commited_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with matching DN", "[https][DN]") {
@@ -455,7 +571,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with matching D
   }
 
   run_server();
-  test_connect();
+  const std::size_t expected_commited_requests = (method == "POST" || method == "GET") ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matching DN", "[https][DN]") {
@@ -464,6 +581,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matchi
   plan->setProperty(listen_http, "Authorized DN Pattern", ".*/CN=good\\..*");
 
   int64_t response_code = 0;
+  std::size_t expected_commited_requests = 0;
   SECTION("verify peer") {
     plan->setProperty(listen_http, "SSL Verify Peer", "yes");
     response_code = 403;
@@ -484,10 +602,12 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matchi
 
     SECTION("GET") {
       method = "GET";
+      expected_commited_requests = 1;
     }
     SECTION("POST") {
       method = "POST";
       payload = "Test payload";
+      expected_commited_requests = 1;
     }
     SECTION("HEAD") {
       method = "HEAD";
@@ -497,7 +617,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matchi
   create_ssl_context_service("goodCA.crt", "goodCA_badClient.pem");
 
   run_server();
-  test_connect(true /*should_succeed*/, response_code /*response_code*/);
+  test_connect({HttpResponseExpectations{true, response_code}}, expected_commited_requests);
 }
 
 #if CURL_AT_LEAST_VERSION(7, 54, 0)
@@ -528,7 +648,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
   }
   REQUIRE(client->setSpecificSSLVersion(utils::SSLVersion::TLSv1_1));
 
-  test_connect(false /*should_succeed*/);
+  test_connect({HttpResponseExpectations{false, 0}}, 0);
 }
 #endif
 #endif

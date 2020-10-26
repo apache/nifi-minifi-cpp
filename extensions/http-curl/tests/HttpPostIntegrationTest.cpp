@@ -33,7 +33,7 @@
 
 class HttpTestHarness : public HTTPIntegrationBase {
 public:
-  HttpTestHarness() {
+  HttpTestHarness() : HTTPIntegrationBase(4000) {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }
