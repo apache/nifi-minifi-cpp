@@ -281,7 +281,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
   }
 }
 
-void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback) {
+int ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback) {
   try {
     std::shared_ptr<ResourceClaim> claim = nullptr;
 
@@ -289,7 +289,7 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
       // No existed claim for read, we throw exception
       logger_->log_debug("For %s, no resource claim but size is %d", flow->getUUIDStr(), flow->getSize());
       if (flow->getSize() == 0) {
-        return;
+        return 0;
       }
       throw Exception(FILE_OPERATION_EXCEPTION, "No Content Claim existed for read");
     }
@@ -304,9 +304,11 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
 
     stream->seek(flow->getOffset());
 
-    if (callback->process(stream) < 0) {
+    int ret = callback->process(stream);
+    if (ret < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
+    return ret;
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;

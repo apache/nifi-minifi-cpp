@@ -25,6 +25,7 @@
 #include "archive_entry.h"
 #include "archive.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "serialization/FlowFileSerializer.h"
 
 namespace org {
 namespace apache {
@@ -38,11 +39,8 @@ constexpr const char *MERGE_STRATEGY_BIN_PACK = "Bin-Packing Algorithm";
 constexpr const char *MERGE_STRATEGY_DEFRAGMENT = "Defragment";
 constexpr const char *MERGE_FORMAT_TAR_VALUE = "TAR";
 constexpr const char *MERGE_FORMAT_ZIP_VALUE = "ZIP";
-constexpr const char *MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE = "FlowFile Stream, v3";
-constexpr const char *MERGE_FORMAT_FLOWFILE_STREAM_V2_VALUE = "FlowFile Stream, v2";
-constexpr const char *MERGE_FORMAT_FLOWFILE_TAR_V1_VALUE = "FlowFile Tar, v1";
 constexpr const char *MERGE_FORMAT_CONCAT_VALUE = "Binary Concatenation";
-constexpr const char *MERGE_FORMAT_AVRO_VALUE = "Avro";
+constexpr const char* MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE = "FlowFile Stream, v3";
 constexpr const char *DELIMITER_STRATEGY_FILENAME = "Filename";
 constexpr const char *DELIMITER_STRATEGY_TEXT = "Text";
 constexpr const char *ATTRIBUTE_STRATEGY_KEEP_COMMON = "Keep Only Common Attributes";
@@ -52,63 +50,33 @@ constexpr const char *ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attr
 
 // MergeBin Class
 class MergeBin {
-public:
-
+ public:
   virtual ~MergeBin() = default;
-  virtual std::string getMergedContentType() = 0;
   // merge the flows in the bin
   virtual void merge(core::ProcessContext *context, core::ProcessSession *session,
-      std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer, std::string &demarcator,
-      const std::shared_ptr<core::FlowFile> &flowFile) = 0;
+      std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) = 0;
 };
 
 // BinaryConcatenationMerge Class
 class BinaryConcatenationMerge : public MergeBin {
-public:
-  static const char *mimeType;
-  std::string getMergedContentType() override {
-    return mimeType;
-  }
-  void merge(
-    core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
-    std::string &header, std::string &footer, std::string &demarcator, const std::shared_ptr<core::FlowFile> &flowFile) override;
-  // Nest Callback Class for read stream
-  class ReadCallback : public InputStreamCallback {
-   public:
-    ReadCallback(uint64_t size, std::shared_ptr<io::BaseStream> stream)
-        : buffer_size_(size), stream_(stream) {
-    }
-    ~ReadCallback() = default;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      uint8_t buffer[4096U];
-      int64_t ret = 0;
-      uint64_t read_size = 0;
-      while (read_size < buffer_size_) {
-        int readRet = stream->read(buffer, sizeof(buffer));
-        if (readRet > 0) {
-          ret += stream_->write(buffer, readRet);
-          read_size += readRet;
-        } else {
-          break;
-        }
-      }
-      return ret;
-    }
-    uint64_t buffer_size_;
-    std::shared_ptr<io::BaseStream> stream_;
-  };
+ public:
+  BinaryConcatenationMerge(const std::string& header, const std::string& footer, const std::string& demarcator);
+
+  void merge(core::ProcessContext *context, core::ProcessSession *session,
+      std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile);
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
-  public:
-    WriteCallback(std::string &header, std::string &footer, std::string &demarcator, std::deque<std::shared_ptr<core::FlowFile>> &flows, core::ProcessSession *session) :
-      header_(header), footer_(footer), demarcator_(demarcator), flows_(flows), session_(session) {
+   public:
+    WriteCallback(std::string &header, std::string &footer, std::string &demarcator,
+        std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer) :
+      header_(header), footer_(footer), demarcator_(demarcator), flows_(flows), serializer_(serializer) {
     }
     std::string &header_;
     std::string &footer_;
     std::string &demarcator_;
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
-    core::ProcessSession *session_;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    FlowFileSerializer& serializer_;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       int64_t ret = 0;
       if (!header_.empty()) {
         int64_t len = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(header_.data())), header_.size());
@@ -124,9 +92,10 @@ public:
             return len;
           ret += len;
         }
-        ReadCallback readCb(flow->getSize(), stream);
-        session_->read(flow, &readCb);
-        ret += flow->getSize();
+        int len = serializer_.serialize(flow, stream);
+        if (len < 0)
+          return len;
+        ret += len;
         isFirst = false;
       }
       if (!footer_.empty()) {
@@ -138,46 +107,54 @@ public:
       return ret;
     }
   };
+
+ private:
+  std::string header_;
+  std::string footer_;
+  std::string demarcator_;
 };
 
 
 // Archive Class
 class ArchiveMerge {
-public:
-  // Nest Callback Class for read stream
-  class ReadCallback: public InputStreamCallback {
-  public:
-    ReadCallback(uint64_t size, struct archive *arch, struct archive_entry *entry) :
-        buffer_size_(size), arch_(arch), entry_(entry) {
-    }
-    ~ReadCallback() = default;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      uint8_t buffer[4096U];
-      int64_t ret = 0;
-      uint64_t read_size = 0;
-      ret = archive_write_header(arch_, entry_);
-      while (read_size < buffer_size_) {
-        int readRet = stream->read(buffer, sizeof(buffer));
-        if (readRet > 0) {
-          ret += archive_write_data(arch_, buffer, readRet);
-          read_size += readRet;
+ public:
+  class ArchiveWriter : public io::OutputStream {
+   public:
+    ArchiveWriter(struct archive *arch, struct archive_entry *entry) : arch_(arch), entry_(entry) {}
+    int write(const uint8_t* data, int size) override {
+      if (!header_emitted_) {
+        if (archive_write_header(arch_, entry_) != ARCHIVE_OK) {
+          return -1;
         }
-        else {
+        header_emitted_ = true;
+      }
+      int totalWrote = 0;
+      int remaining = size;
+      while (remaining > 0) {
+        int ret = archive_write_data(arch_, data + totalWrote, remaining);
+        if (ret < 0) {
+          return ret;
+        }
+        if (ret == 0) {
           break;
         }
+        totalWrote += ret;
+        remaining -= ret;
       }
-      return ret;
+      return totalWrote;
     }
-    uint64_t buffer_size_;
+
+   private:
     struct archive *arch_;
     struct archive_entry *entry_;
+    bool header_emitted_{false};
   };
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
-  public:
-    WriteCallback(std::string merge_type, std::deque<std::shared_ptr<core::FlowFile>> &flows, core::ProcessSession *session) :
-        merge_type_(merge_type), flows_(flows), session_(session),
-        logger_(logging::LoggerFactory<ArchiveMerge>::getLogger()) {
+   public:
+    WriteCallback(std::string merge_type, std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer)
+        : merge_type_(merge_type), flows_(flows), serializer_(serializer),
+          logger_(logging::LoggerFactory<ArchiveMerge>::getLogger()) {
       size_ = 0;
       stream_ = nullptr;
     }
@@ -185,20 +162,33 @@ public:
 
     std::string merge_type_;
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
-    core::ProcessSession *session_;
     std::shared_ptr<io::BaseStream> stream_;
-    int64_t size_;
+    size_t size_;
     std::shared_ptr<logging::Logger> logger_;
+    FlowFileSerializer& serializer_;
 
     static la_ssize_t archive_write(struct archive *arch, void *context, const void *buff, size_t size) {
       WriteCallback *callback = (WriteCallback *) context;
-      la_ssize_t ret = callback->stream_->write(reinterpret_cast<uint8_t*>(const_cast<void*>(buff)), size);
-      if (ret > 0)
-        callback->size_ += (int64_t) ret;
-      return ret;
+      uint8_t* data = reinterpret_cast<uint8_t*>(const_cast<void*>(buff));
+      la_ssize_t totalWrote = 0;
+      size_t remaining = size;
+      while (remaining > 0) {
+        la_ssize_t ret = callback->stream_->write(data + totalWrote, remaining);
+        if (ret < 0) {
+          // libarchive expects us to return -1 on error
+          return -1;
+        }
+        if (ret == 0) {
+          break;
+        }
+        callback->size_ += ret;
+        totalWrote += ret;
+        remaining -= ret;
+      }
+      return totalWrote;
     }
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       struct archive *arch;
 
       arch = archive_write_new();
@@ -232,8 +222,10 @@ public:
             }
           }
         }
-        ReadCallback readCb(flow->getSize(), arch, entry);
-        session_->read(flow, &readCb);
+        int ret = serializer_.serialize(flow, std::make_shared<ArchiveWriter>(arch, entry));
+        if (ret < 0) {
+          return ret;
+        }
         archive_entry_free(entry);
       }
 
@@ -246,33 +238,26 @@ public:
 
 // TarMerge Class
 class TarMerge: public ArchiveMerge, public MergeBin {
-public:
-  static const char *mimeType;
-  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
-    std::string &demarcator, const std::shared_ptr<core::FlowFile> &flowFile) override;
-  std::string getMergedContentType() override {
-    return mimeType;
-  }
+ public:
+  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
+             FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &merge_flow) override;
 };
 
 // ZipMerge Class
 class ZipMerge: public ArchiveMerge, public MergeBin {
-public:
-  static const char *mimeType;
-  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
-    std::string &demarcator, const std::shared_ptr<core::FlowFile> &flowFile) override;
-  std::string getMergedContentType() override {
-    return mimeType;
-  }
+ public:
+  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
+             FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &merge_flow) override;
 };
 
 class AttributeMerger {
-public:
+ public:
   explicit AttributeMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : flows_(flows) {}
   void mergeAttributes(core::ProcessSession *session, const std::shared_ptr<core::FlowFile> &merge_flow);
   virtual ~AttributeMerger() = default;
-protected:
+
+ protected:
   std::map<std::string, std::string> getMergedAttributes();
   virtual void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string> &merged_attributes) = 0;
 
@@ -280,27 +265,29 @@ protected:
 };
 
 class KeepOnlyCommonAttributesMerger: public AttributeMerger {
-public:
+ public:
   explicit KeepOnlyCommonAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : AttributeMerger(flows) {}
-protected:
+
+ protected:
   void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string> &merged_attributes) override;
 };
 
 class KeepAllUniqueAttributesMerger: public AttributeMerger {
-public:
+ public:
   explicit KeepAllUniqueAttributesMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : AttributeMerger(flows) {}
-protected:
+
+ protected:
   void processFlowFile(const std::shared_ptr<core::FlowFile> &flow_file, std::map<std::string, std::string> &merged_attributes) override;
 
-private:
+ private:
   std::vector<std::string> removed_attributes_;
 };
 
 // MergeContent Class
 class MergeContent : public processors::BinFiles {
-public:
+ public:
   // Constructor
   /*!
    * Create a new processor

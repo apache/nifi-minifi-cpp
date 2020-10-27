@@ -70,7 +70,7 @@ class UnfocusArchiveEntry : public core::Processor {
   class WriteCallback : public OutputStreamCallback {
    public:
     explicit WriteCallback(ArchiveMetadata *archiveMetadata);
-    int64_t process(std::shared_ptr<io::BaseStream> stream);
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream);
    private:
     //! Logger
     std::shared_ptr<Logger> logger_;

@@ -26,7 +26,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-int64_t FileOutputCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t FileOutputCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   if (stream->size() > 0) {
     file_stream_.write(reinterpret_cast<char*>(const_cast<uint8_t*>(stream->getBuffer())), stream->size());
     size_ += stream->size();

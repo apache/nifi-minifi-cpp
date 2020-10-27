@@ -93,7 +93,7 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
   session->transfer(flowFile, Success);
 }
 
-int64_t HashContent::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t HashContent::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   // This throws in case algo is not found, but that's fine
   parent_.logger_->log_trace("Searching for %s", parent_.algoName_);
   auto algo = HashAlgos.at(parent_.algoName_);

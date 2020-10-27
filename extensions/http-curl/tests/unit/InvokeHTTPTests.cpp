@@ -150,7 +150,7 @@ class CallBack : public minifi::OutputStreamCallback {
   }
   virtual ~CallBack() {
   }
-  virtual int64_t process(std::shared_ptr<minifi::io::BaseStream> stream) {
+  virtual int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
     // leaving the typo for posterity sake
     std::string st = "we're gnna write some test stuff";
     return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(st.c_str())), st.length());

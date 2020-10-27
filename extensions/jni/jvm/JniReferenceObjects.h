@@ -103,7 +103,7 @@ class JniByteOutStream : public minifi::OutputStreamCallback {
   }
 
   virtual ~JniByteOutStream() = default;
-  virtual int64_t process(std::shared_ptr<minifi::io::BaseStream> stream) {
+  virtual int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
     return stream->write((uint8_t*) bytes_, length_);
   }
  private:
@@ -126,7 +126,7 @@ class JniByteInputStream : public minifi::InputStreamCallback {
     if (buffer_)
       delete[] buffer_;
   }
-  int64_t process(std::shared_ptr<minifi::io::BaseStream> stream) {
+  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
     stream_ = stream;
     return 0;
   }

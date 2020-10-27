@@ -377,7 +377,7 @@ class ReadCallback : public InputStreamCallback {
   ReadCallback(const ReadCallback&) = delete;
   ReadCallback& operator=(ReadCallback) = delete;
 
-  int64_t process(const std::shared_ptr<io::BaseStream> stream) override {
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     std::vector<unsigned char> buffer;
 
     buffer.resize(max_seg_size_);

@@ -49,7 +49,7 @@ class FileOutputCallback : public ByteOutputCallback {
 
   virtual ~FileOutputCallback() = default;
 
-  int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
   const std::vector<char> to_string() override;
 

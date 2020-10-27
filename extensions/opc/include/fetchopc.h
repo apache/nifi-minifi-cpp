@@ -82,7 +82,7 @@ protected:
     WriteCallback(std::string&& data)
       : data_(data) {
     }
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(data_.c_str())), data_.size());
     }
   };

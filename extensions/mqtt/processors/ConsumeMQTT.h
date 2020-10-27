@@ -79,7 +79,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
       status_ = 0;
     }
     MQTTClient_message *message_;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       int64_t len = stream->write(reinterpret_cast<uint8_t*>(message_->payload), message_->payloadlen);
       if (len < 0)
         status_ = -1;

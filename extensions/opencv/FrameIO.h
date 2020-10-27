@@ -32,7 +32,7 @@ class FrameWriteCallback : public OutputStreamCallback {
     }
     ~FrameWriteCallback() override = default;
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       int64_t ret = 0;
       imencode(image_encoding_, image_mat_, image_buf_);
       ret = stream->write(image_buf_.data(), image_buf_.size());
@@ -52,7 +52,7 @@ class FrameReadCallback : public InputStreamCallback {
     }
     ~FrameReadCallback() override = default;
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       int64_t ret = 0;
       image_buf_.resize(stream->getSize());
       ret = stream->read(image_buf_.data(), static_cast<int>(stream->getSize()));

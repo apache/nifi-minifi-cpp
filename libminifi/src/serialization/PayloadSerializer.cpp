@@ -16,32 +16,18 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <string>
-
-#include "FlowFileRecord.h"
+#include "serialization/PayloadSerializer.h"
+#include "core/ProcessSession.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
-class WriteCallback : public OutputStreamCallback {
-public:
-  explicit WriteCallback(const std::string& data)
-    : data_(data) {
-  }
-
- int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-    if (data_.empty())
-      return 0;
-
-    return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(data_.c_str())), data_.size());
-  }
-
- const std::string& data_;
-};
+int PayloadSerializer::serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) {
+  InputStreamPipe pipe(out);
+  return reader_(flowFile, &pipe);
+}
 
 } /* namespace minifi */
 } /* namespace nifi */

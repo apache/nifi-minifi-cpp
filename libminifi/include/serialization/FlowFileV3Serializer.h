@@ -18,29 +18,30 @@
 
 #pragma once
 
+#include <limits>
 #include <string>
-
-#include "FlowFileRecord.h"
+#include <memory>
+#include "io/OutputStream.h"
+#include "FlowFileSerializer.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
-class WriteCallback : public OutputStreamCallback {
-public:
-  explicit WriteCallback(const std::string& data)
-    : data_(data) {
-  }
+class FlowFileV3Serializer : public FlowFileSerializer {
+  static constexpr uint8_t MAGIC_HEADER[] = {'N', 'i', 'F', 'i', 'F', 'F', '3'};
 
- int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-    if (data_.empty())
-      return 0;
+  static constexpr uint16_t MAX_2_BYTE_VALUE = (std::numeric_limits<uint16_t>::max)();
 
-    return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(data_.c_str())), data_.size());
-  }
+  static int writeLength(std::size_t length, const std::shared_ptr<io::OutputStream>& out);
 
- const std::string& data_;
+  static int writeString(const std::string& str, const std::shared_ptr<io::OutputStream>& out);
+
+ public:
+  using FlowFileSerializer::FlowFileSerializer;
+
+  int serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) override;
 };
 
 } /* namespace minifi */

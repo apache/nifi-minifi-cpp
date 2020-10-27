@@ -85,7 +85,7 @@ public:
         flow_(flow), arch_(arch), entry_(entry), status_(0), logger_(logging::LoggerFactory<CompressContent>::getLogger()) {
     }
     ~ReadCallbackCompress() = default;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       uint8_t buffer[4096U];
       int64_t ret = 0;
       uint64_t read_size = 0;
@@ -130,7 +130,7 @@ public:
       origin_offset_ = flow_->getOffset();
     }
     ~ReadCallbackDecompress() = default;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       read_size_ = 0;
       stream->seek(offset_);
       int readRet = stream->read(buffer_, sizeof(buffer_));
@@ -208,7 +208,7 @@ public:
       archive_read_free(arch);
     }
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       struct archive *arch;
       int r;
 
@@ -361,7 +361,7 @@ public:
     std::shared_ptr<core::ProcessSession> session_;
     bool success_{false};
 
-    int64_t process(std::shared_ptr<io::BaseStream> outputStream) override {
+    int64_t process(const std::shared_ptr<io::BaseStream>& outputStream) override {
       class ReadCallback : public InputStreamCallback {
        public:
         ReadCallback(GzipWriteCallback& writer, std::shared_ptr<io::OutputStream> outputStream)
@@ -369,7 +369,7 @@ public:
           , outputStream_(std::move(outputStream)) {
         }
 
-        int64_t process(std::shared_ptr<io::BaseStream> inputStream) override {
+        int64_t process(const std::shared_ptr<io::BaseStream>& inputStream) override {
           std::vector<uint8_t> buffer(16 * 1024U);
           int64_t read_size = 0;
           while (read_size < gsl::narrow<int64_t>(writer_.flow_->getSize())) {

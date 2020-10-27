@@ -64,7 +64,7 @@ class PyProcessSession {
       py_callback_ = input_stream_callback;
     }
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       auto py_stream = std::make_shared<PyBaseStream>(stream);
       return py_callback_.attr("process")(py_stream).cast<int64_t>();
     }
@@ -79,7 +79,7 @@ class PyProcessSession {
       py_callback_ = output_stream_callback;
     }
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       auto py_stream = std::make_shared<PyBaseStream>(stream);
       return py_callback_.attr("process")(py_stream).cast<int64_t>();
     }

@@ -80,7 +80,7 @@ class PutOPCProcessor : public BaseOPCProcessor {
   class ReadCallback : public InputStreamCallback {
   public:
     ReadCallback(std::shared_ptr<logging::Logger> logger) : logger_(logger) {}
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
     const std::vector<uint8_t>& getContent() const { return buf_; }
 
   private:

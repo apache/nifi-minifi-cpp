@@ -290,7 +290,7 @@ class WriteCallback : public OutputStreamCallback {
   }
   DataPacket *_packet;
   // void process(std::ofstream *stream) {
-  int64_t process(std::shared_ptr<io::BaseStream> stream) {
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
     uint8_t buffer[16384];
     uint64_t len = _packet->_size;
     uint64_t total = 0;
@@ -316,7 +316,7 @@ class ReadCallback : public InputStreamCallback {
       : _packet(packet) {
   }
   DataPacket *_packet;
-  int64_t process(std::shared_ptr<io::BaseStream> stream) {
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
     _packet->_size = 0;
     uint8_t buffer[8192] = { 0 };
     int readSize;

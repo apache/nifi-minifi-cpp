@@ -36,6 +36,8 @@
 #include "processors/LogAttribute.h"
 #include "../TestBase.h"
 #include "../unit/ProvenanceTestHelper.h"
+#include "serialization/FlowFileV3Serializer.h"
+#include "serialization/PayloadSerializer.h"
 
 std::string FLOW_FILE;
 std::string EXPECT_MERGE_CONTENT_FIRST;
@@ -93,7 +95,7 @@ class FixedBuffer : public org::apache::nifi::minifi::InputStreamCallback {
     } while (size_ != capacity_);
     return total_read;
   }
-  int64_t process(std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
+  int64_t process(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
     return write(*stream.get(), capacity_);
   }
 
@@ -844,4 +846,99 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping All Un
   REQUIRE(attributes["tagUnique2"] == "unique2");
   REQUIRE(attributes["tagCommon"] == "common");
   REQUIRE(attributes["mime.type"] == "application/tar");
+}
+
+void writeString(const std::string& str, const std::shared_ptr<minifi::io::BaseStream>& out) {
+  out->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), str.length());
+}
+
+TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
+  MergeTestController testController;
+  auto context = testController.context;
+  auto processor = testController.processor;
+  auto input = testController.input;
+  auto output = testController.output;
+
+  std::string header = "BEGIN{";
+  std::string footer = "}END";
+  std::string demarcator = "_";
+
+  core::ProcessSession session(context);
+
+  minifi::PayloadSerializer payloadSerializer([&] (const std::shared_ptr<core::FlowFile>& ff, minifi::InputStreamCallback* cb) {
+    return session.read(ff, cb);
+  });
+  minifi::FlowFileV3Serializer ffV3Serializer([&] (const std::shared_ptr<core::FlowFile>& ff, minifi::InputStreamCallback* cb) {
+    return session.read(ff, cb);
+  });
+
+  minifi::FlowFileSerializer* usedSerializer;
+
+  std::vector<std::shared_ptr<core::FlowFile>> files;
+
+  for (const auto& content : std::vector<std::string>{"first ff content", "second ff content", "some other data"}) {
+    minifi::io::BufferStream contentStream{reinterpret_cast<const uint8_t*>(content.data()), static_cast<unsigned>(content.length())};
+    auto ff = session.create();
+    ff->removeAttribute(core::SpecialFlowAttribute::FILENAME);
+    ff->addAttribute("one", "banana");
+    ff->addAttribute("two", "seven");
+    session.importFrom(contentStream, ff);
+    session.flushContent();
+    files.push_back(ff);
+    input->put(ff);
+  }
+
+  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(processors::MergeContent::Header, header);
+  context->setProperty(processors::MergeContent::Footer, footer);
+  context->setProperty(processors::MergeContent::Demarcator, demarcator);
+  context->setProperty(processors::BinFiles::MinEntries, "3");
+
+  SECTION("Payload Serializer") {
+    context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
+    usedSerializer = &payloadSerializer;
+  }
+  SECTION("FlowFileV3 Serializer") {
+    context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE);
+    usedSerializer = &ffV3Serializer;
+    // only Binary Concatenation take these into account
+    header = "";
+    demarcator = "";
+    footer = "";
+  }
+
+  auto result = std::make_shared<minifi::io::BufferStream>();
+  writeString(header, result);
+  bool first = true;
+  for (const auto& ff : files) {
+    if (!first) {
+      writeString(demarcator, result);
+    }
+    first = false;
+    usedSerializer->serialize(ff, result);
+  }
+  writeString(footer, result);
+
+  std::string expected{reinterpret_cast<const char*>(result->getBuffer()), result->size()};
+
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  processor->onSchedule(context, factory);
+  for (int i = 0; i < 3; i++) {
+    auto mergeSession = std::make_shared<core::ProcessSession>(context);
+    processor->onTrigger(context, mergeSession);
+    mergeSession->commit();
+  }
+
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow = output->poll(expiredFlowRecords);
+
+  REQUIRE(expiredFlowRecords.empty());
+  {
+    FixedBuffer callback(flow->getSize());
+    session.read(flow, &callback);
+    REQUIRE(callback.to_string() == expected);
+  }
+
+  LogTestController::getInstance().reset();
 }

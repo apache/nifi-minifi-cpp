@@ -92,7 +92,7 @@ class DataHandlerCallback : public OutputStreamCallback {
 
   virtual ~DataHandlerCallback() = default;
 
-  virtual int64_t process(std::shared_ptr<io::BaseStream> stream) {
+  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
     return stream->write(message_, size_);
   }
 

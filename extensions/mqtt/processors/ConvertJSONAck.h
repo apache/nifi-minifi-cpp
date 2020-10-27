@@ -73,7 +73,7 @@ class ConvertJSONAck : public ConvertBase {
    public:
     ReadCallback() = default;
     ~ReadCallback() = default;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       int64_t ret = 0;
       if (nullptr == stream)
         return 0;

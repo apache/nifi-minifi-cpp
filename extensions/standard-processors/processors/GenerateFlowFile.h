@@ -70,7 +70,7 @@ class GenerateFlowFile : public core::Processor {
     WriteCallback(const std::vector<char>& data) : data_(data) { // NOLINT
     }
     std::vector<char> data_;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       int64_t ret = 0;
       if (data_.size() > 0)
         ret = stream->write(reinterpret_cast<uint8_t*>(&data_[0]), data_.size());

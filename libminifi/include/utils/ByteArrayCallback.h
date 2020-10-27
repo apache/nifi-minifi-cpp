@@ -42,7 +42,7 @@ class ByteInputCallBack : public InputStreamCallback {
 
   virtual ~ByteInputCallBack() = default;
 
-  virtual int64_t process(std::shared_ptr<io::BaseStream> stream) {
+  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
     stream->seek(0);
 
     if (stream->size() > 0) {
@@ -107,7 +107,7 @@ class ByteOutputCallback : public OutputStreamCallback {
     close();
   }
 
-  virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
+  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream);
 
   virtual const std::vector<char> to_string();
 
@@ -155,7 +155,7 @@ class StreamOutputCallback : public ByteOutputCallback {
 
   virtual void write(char *data, size_t size);
 
-  virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
+  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream);
 };
 
 }  // namespace utils

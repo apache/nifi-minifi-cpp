@@ -18,29 +18,40 @@
 
 #pragma once
 
-#include <string>
-
-#include "FlowFileRecord.h"
+#include <memory>
+#include <utility>
+#include <functional>
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace io {
 
-class WriteCallback : public OutputStreamCallback {
-public:
-  explicit WriteCallback(const std::string& data)
-    : data_(data) {
-  }
+class OutputStream;
 
- int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-    if (data_.empty())
-      return 0;
+} /* namespace io */
 
-    return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(data_.c_str())), data_.size());
-  }
+namespace core {
 
- const std::string& data_;
+class FlowFile;
+
+} /* namespace core */
+
+class InputStreamCallback;
+
+class FlowFileSerializer {
+ public:
+  using FlowFileReader = std::function<int(const std::shared_ptr<core::FlowFile>&, InputStreamCallback*)>;
+
+  explicit FlowFileSerializer(FlowFileReader reader) : reader_(std::move(reader)) {}
+
+  virtual int serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) = 0;
+
+  virtual ~FlowFileSerializer() = default;
+
+ protected:
+  FlowFileReader reader_;
 };
 
 } /* namespace minifi */

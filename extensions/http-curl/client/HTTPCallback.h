@@ -78,7 +78,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
     seekInner(lock, pos);
   }
 
-  int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     std::vector<char> vec;
 
     if (stream->size() > 0) {

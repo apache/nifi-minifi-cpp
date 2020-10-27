@@ -172,7 +172,7 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   }
 }
 
-int64_t ExecuteSQL::SQLReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t ExecuteSQL::SQLReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   sql_->resize(stream->size());
   auto num_read = static_cast<uint64_t >(stream->read(reinterpret_cast<uint8_t *>(&(*sql_)[0]),
                                                           static_cast<int>(stream->size())));

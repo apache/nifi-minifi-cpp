@@ -242,7 +242,7 @@ PutFile::ReadCallback::ReadCallback(const std::string &tmp_file, const std::stri
 }
 
 // Copy the entire file contents to the temporary file
-int64_t PutFile::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
+int64_t PutFile::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   // Copy file contents into tmp file
   write_succeeded_ = false;
   size_t size = 0;

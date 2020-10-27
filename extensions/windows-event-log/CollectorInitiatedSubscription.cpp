@@ -633,7 +633,7 @@ int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::Pro
       status_ = 0;
     }
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       return stream->write((uint8_t*)&str_[0], str_.size());
     }
 

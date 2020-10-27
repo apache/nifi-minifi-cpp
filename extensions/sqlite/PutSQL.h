@@ -60,7 +60,7 @@ class PutSQL : public core::Processor {
     explicit SQLReadCallback(std::shared_ptr<std::string> sql)
         : sql_(std::move(sql)) {
     }
-    int64_t process(std::shared_ptr<io::BaseStream> stream) override;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
     std::shared_ptr<std::string> sql_;
