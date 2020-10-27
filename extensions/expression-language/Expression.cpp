@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <chrono>
 #include <utility>
 #include <iostream>
 #include <iomanip>
@@ -53,6 +54,8 @@
 
 #ifdef EXPRESSION_LANGUAGE_USE_DATE
 #include "date/tz.h"
+#else
+#include <ctime>
 #endif  // EXPRESSION_LANGUAGE_USE_DATE
 
 namespace org {
@@ -625,6 +628,47 @@ Value expr_toDate(const std::vector<Value> &args) {
   auto utct = date::make_zoned(utc, t);
   auto zt = date::make_zoned(zone, utct.get_local_time());
   return Value(std::chrono::duration_cast<std::chrono::milliseconds>(zt.get_sys_time().time_since_epoch()).count());
+}
+
+#else
+
+Value expr_format(const std::vector<Value>& args)
+{
+  const std::chrono::milliseconds dur(args.at(0).asUnsignedLong());
+  const std::chrono::time_point<std::chrono::system_clock> dt(dur);
+  const auto unix_time = std::chrono::system_clock::to_time_t(dt);
+  const auto zoned_time = [&args, unix_time] {
+    std::tm buf;
+    if (args.size() > 2 && args[2].asString() == "UTC") {
+#ifdef WIN32
+      const auto err = gmtime_s(&buf, &unix_time);
+#else
+      const std::tm* const not_thread_safe_internal_ptr = gmtime(&unix_time);
+      if (not_thread_safe_internal_ptr) { buf = *not_thread_safe_internal_ptr; }
+      const auto err = errno;
+#endif /* WIN32 */
+      if (err) { throw std::system_error{err, std::generic_category()}; }
+    } else if (args.size() > 2) {
+      throw std::domain_error{"format() with Non-UTC custom timezone is only supported when compiled with the date.h library"};
+    } else {
+#ifdef WIN32
+      const auto err = localtime_s(&buf, &unix_time);
+#else
+      const std::tm* const not_thread_safe_internal_ptr = localtime(&unix_time);
+      if (not_thread_safe_internal_ptr) { buf = *not_thread_safe_internal_ptr; }
+      const auto err = errno;
+#endif /* WIN32 */
+      if (err) { throw std::system_error{err, std::generic_category()}; }
+    }
+    return buf;
+  }();
+  std::stringstream result_s;
+  result_s << std::put_time(&zoned_time, args.at(1).asString().c_str());
+  return Value(result_s.str());
+}
+
+Value expr_toDate(const std::vector<Value>&) {
+  throw std::domain_error{"toDate() is only supported when compiled with the date.h library"};
 }
 
 #endif  // EXPRESSION_LANGUAGE_USE_DATE
@@ -1490,12 +1534,10 @@ Expression make_dynamic_function(const std::string &function_name, const std::ve
     return make_count(function_name, args);
   } else if (function_name == "join") {
     return make_join(function_name, args);
-#ifdef EXPRESSION_LANGUAGE_USE_DATE
   } else if (function_name == "format") {
     return make_dynamic_function_incomplete<expr_format>(function_name, args, 1);
   } else if (function_name == "toDate") {
     return make_dynamic_function_incomplete<expr_toDate>(function_name, args, 1);
-#endif  // EXPRESSION_LANGUAGE_USE_DATE
   } else if (function_name == "now") {
     return make_dynamic_function_incomplete<expr_now>(function_name, args, 0);
   } else {
