@@ -88,7 +88,7 @@ ARG ENABLE_JNI
 RUN cd ${MINIFI_BASE_DIR} \
   && mkdir build \
   && cd build \
-  && cmake -DDISABLE_JEMALLOC=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=${ENABLE_JNI} -DENABLE_LIBRDKAFKA=ON .. \
+  && cmake -DDISABLE_JEMALLOC=ON -DENABLE_AWS=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=${ENABLE_JNI} -DENABLE_LIBRDKAFKA=ON .. \
   && make -j$(nproc) package \
   && tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
 

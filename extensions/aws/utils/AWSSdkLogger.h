@@ -1,6 +1,6 @@
 /**
- * @file S3.h
- * GetGPS class declaration
+ * @file AWSSdkLogger.h
+ * AWS SDK Logger class
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,55 +17,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __S3_H__
-#define __S3_H__
+#pragma once
 
-#include <aws/core/Aws.h>
-#include <aws/s3/S3Client.h>
-#include <aws/s3/model/Bucket.h>
+#include <memory>
 
-#include <aws/core/utils/memory/stl/AWSString.h>
-#include <aws/core/utils/logging/DefaultLogSystem.h>
-#include <aws/core/utils/logging/AWSLogging.h>
+#include "aws/core/utils/logging/LogSystemInterface.h"
+#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace processors {
+namespace aws {
+namespace utils {
 
-
-class S3Initializer{
+class AWSSdkLogger : public Aws::Utils::Logging::LogSystemInterface {
  public:
-  S3Initializer(){
-    Aws::InitAPI(options);
-    Aws::Utils::Logging::InitializeAWSLogging(
-        Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(
-            "RunUnitTests", Aws::Utils::Logging::LogLevel::Trace, "aws_sdk_"));
-  }
-
-  ~S3Initializer(){
-    Aws::ShutdownAPI(options);
-  }
+  Aws::Utils::Logging::LogLevel GetLogLevel() const override;
+  void Log(Aws::Utils::Logging::LogLevel log_level, const char* tag, const char* format_str, ...) override;
+  void LogStream(Aws::Utils::Logging::LogLevel log_level, const char* tag, const Aws::OStringStream &message_stream) override;
+  void Flush() override;
 
  private:
-  Aws::SDKOptions options;
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AWSSdkLogger>::getLogger()};
 };
 
-class S3Singleton{
- public:
-  static S3Initializer *get(){
-    static S3Initializer init;
-    return &init;
-  }
- private:
-  S3Singleton() = default;
-};
-
-} /* namespace processors */
+} /* namespace utils */
+} /* namespace aws */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

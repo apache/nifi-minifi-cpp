@@ -261,7 +261,7 @@ jobs:
       - id: checkout
         uses: actions/checkout@v2
       - id: build
-        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT .. && make docker-minimal
+        run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DENABLE_JNI=OFF .. && make docker
       - id: install_deps
         run: sudo apt install -y python3-virtualenv
       - id: test

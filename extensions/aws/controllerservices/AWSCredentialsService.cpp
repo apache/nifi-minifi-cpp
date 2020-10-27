@@ -18,6 +18,8 @@
 
 #include "AWSCredentialsService.h"
 
+#include <set>
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -49,9 +51,9 @@ void AWSCredentialsService::onEnable() {
   awsCredentials = creds;
 }
 
-} /* namespace controllers */
-} /* namespace AWS */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace controllers
+}  // namespace aws
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

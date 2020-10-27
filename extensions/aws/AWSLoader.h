@@ -16,15 +16,18 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_AWSLOADER_H
-#define NIFI_MINIFI_CPP_AWSLOADER_H
+#pragma once
+
+#include <vector>
+#include <string>
+#include <memory>
 
 #include "core/ClassLoader.h"
 #include "utils/StringUtils.h"
 #include "controllerservices/AWSCredentialsService.h"
+#include "processors/PutS3Object.h"
 
 class AWSObjectFactory : public core::ObjectFactory {
-
  public:
   AWSObjectFactory() = default;
 
@@ -32,11 +35,11 @@ class AWSObjectFactory : public core::ObjectFactory {
    * Gets the name of the object.
    * @return class name of processor
    */
-  virtual std::string getName() override{
+  std::string getName() override {
     return "AWSObjectFactory";
   }
 
-  virtual std::string getClassName() override{
+  std::string getClassName() override {
     return "AWSObjectFactory";
   }
 
@@ -44,15 +47,18 @@ class AWSObjectFactory : public core::ObjectFactory {
    * Gets the class name for the object
    * @return class name for the processor.
    */
-  virtual std::vector<std::string> getClassNames() override{
+  std::vector<std::string> getClassNames() override {
     std::vector<std::string> class_names;
     class_names.push_back("AWSCredentialsService");
+    class_names.push_back("PutS3Object");
     return class_names;
   }
 
-  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override{
+  std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
     if (utils::StringUtils::equalsIgnoreCase(class_name, "AWSCredentialsService")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::aws::controllers::AWSCredentialsService>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "PutS3Object")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::aws::processors::PutS3Object>());
     } else {
       return nullptr;
     }
@@ -64,5 +70,3 @@ class AWSObjectFactory : public core::ObjectFactory {
 extern "C" {
 DLL_EXPORT void *createAWSFactory(void);
 }
-
-#endif  // NIFI_MINIFI_CPP_AWSLOADER_H

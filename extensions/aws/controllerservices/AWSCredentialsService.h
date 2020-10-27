@@ -16,24 +16,25 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_AWSCREDENTIALSCONTROLLERSERVICE_H
-#define NIFI_MINIFI_CPP_AWSCREDENTIALSCONTROLLERSERVICE_H
+#pragma once
 
 #include <string>
 #include <iostream>
 #include <memory>
+
+#include "aws/s3/model/Bucket.h"
+#include "aws/s3/model/PutObjectRequest.h"
+#include "aws/core/Aws.h"
+#include "aws/core/auth/AWSCredentials.h"
+#include "aws/s3/S3Client.h"
+
+#include "utils/AWSInitializer.h"
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "io/validation.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/FlowConfiguration.h"
-
-#include <aws/s3/S3Client.h>
-#include <aws/s3/model/Bucket.h>
-#include <aws/s3/model/PutObjectRequest.h>
-#include <aws/core/Aws.h>
-#include <aws/core/auth/AWSCredentials.h>
 
 namespace org {
 namespace apache {
@@ -44,11 +45,10 @@ namespace controllers {
 
 class AWSCredentialsService : public core::controller::ControllerService {
  public:
-
   static core::Property AccessKey;
   static core::Property SecretKey;
 
-  explicit AWSCredentialsService(const std::string &name, const utils::Identifier& uuid = {})
+  explicit AWSCredentialsService(const std::string &name, const minifi::utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
         logger_(logging::LoggerFactory<AWSCredentialsService>::getLogger()) {
   }
@@ -56,30 +56,29 @@ class AWSCredentialsService : public core::controller::ControllerService {
   explicit AWSCredentialsService(const std::string &name, const std::shared_ptr<Configure> &configuration)
       : ControllerService(name),
         logger_(logging::LoggerFactory<AWSCredentialsService>::getLogger()) {
-
   }
 
-  virtual void initialize() override;
+  void initialize() override;
 
-  virtual void yield() override {
-
+  void yield() override {
   };
 
-  virtual bool isWorkAvailable() override {
+  bool isWorkAvailable() override {
     return false;
   };
 
-  virtual bool isRunning() override {
+  bool isRunning() override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 
-  virtual void onEnable() override;
+  void onEnable() override;
 
   Aws::Auth::AWSCredentials getAWSCredentials() {
     return awsCredentials;
   }
 
  private:
+  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   std::string s3Ack, s3Secret;
   Aws::Auth::AWSCredentials awsCredentials;
   Aws::Client::ClientConfiguration client_config_;
@@ -88,11 +87,9 @@ class AWSCredentialsService : public core::controller::ControllerService {
 
 REGISTER_RESOURCE(AWSCredentialsService, "AWS Credentials Management Service");
 
-} /* namespace controllers */
-} /* namespace AWS */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_AWSCREDENTIALSCONTROLLERSERVICE_H
+}  // namespace controllers
+}  // namespace aws
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
