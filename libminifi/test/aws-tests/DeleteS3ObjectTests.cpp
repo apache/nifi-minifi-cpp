@@ -64,23 +64,42 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test required property not set", "
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
 
-TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test success case", "[awsS3DeleteSuccess]") {
+TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
+  setRequiredProperties();
+  setProxy();
+  test_controller.runSession(plan, true);
+  checkProxySettings();
+}
+
+TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test success case with default values", "[awsS3DeleteSuccess]") {
+  setRequiredProperties();
+  test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_wrapper_ptr->bucket_name == "testBucket");
+  REQUIRE(mock_s3_wrapper_ptr->object_key == INPUT_FILENAME);
+  REQUIRE(!mock_s3_wrapper_ptr->version_has_been_set);
+  REQUIRE(LogTestController::getInstance().contains("Successfully deleted S3 object"));
+}
+
+TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test version setting", "[awsS3DeleteWithVersion]") {
   setRequiredProperties();
   plan->setProperty(update_attribute, "s3.version", "v1", true);
   plan->setProperty(s3_processor, "Version", "${s3.version}");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->bucket_name == "testBucket");
-  REQUIRE(mock_s3_wrapper_ptr->object_key == INPUT_FILENAME);
   REQUIRE(mock_s3_wrapper_ptr->version == "v1");
   REQUIRE(mock_s3_wrapper_ptr->version_has_been_set);
   REQUIRE(LogTestController::getInstance().contains("Successfully deleted S3 object"));
 }
 
-TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test empty version", "[awsS3DeleteNoVersion]") {
+TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test optional client configuration values", "[awsS3DeleteOptionalClientConfig]") {
   setRequiredProperties();
+  plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::US_EAST_1);
+  plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
+  plan->setProperty(update_attribute, "test.endpoint", "http://localhost:1234", true);
+  plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
   test_controller.runSession(plan, true);
-  REQUIRE(!mock_s3_wrapper_ptr->version_has_been_set);
-  REQUIRE(LogTestController::getInstance().contains("Successfully deleted S3 object"));
+  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
+  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().connectTimeoutMs == 10000);
+  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
 }
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test failure case", "[awsS3DeleteFailure]") {
@@ -98,11 +117,4 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test failure case", "[awsS3DeleteF
   REQUIRE(mock_s3_wrapper_ptr->object_key == INPUT_FILENAME);
   REQUIRE(mock_s3_wrapper_ptr->version == "v1");
   REQUIRE(LogTestController::getInstance().contains("Failed to delete S3 object"));
-}
-
-TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
-  setRequiredProperties();
-  setProxy();
-  test_controller.runSession(plan, true);
-  checkProxySettings();
 }
