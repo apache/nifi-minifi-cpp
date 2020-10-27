@@ -74,9 +74,9 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test success case with default values", "[awsS3DeleteSuccess]") {
   setRequiredProperties();
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->bucket_name == "testBucket");
-  REQUIRE(mock_s3_wrapper_ptr->object_key == INPUT_FILENAME);
-  REQUIRE(!mock_s3_wrapper_ptr->version_has_been_set);
+  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetBucket() == "testBucket");
+  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetKey() == INPUT_FILENAME);
+  REQUIRE(!mock_s3_wrapper_ptr->delete_object_request.VersionIdHasBeenSet());
   REQUIRE(LogTestController::getInstance().contains("Successfully deleted S3 object"));
 }
 
@@ -85,8 +85,8 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test version setting", "[awsS3Dele
   plan->setProperty(update_attribute, "s3.version", "v1", true);
   plan->setProperty(s3_processor, "Version", "${s3.version}");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->version == "v1");
-  REQUIRE(mock_s3_wrapper_ptr->version_has_been_set);
+  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetVersionId() == "v1");
+  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.VersionIdHasBeenSet());
   REQUIRE(LogTestController::getInstance().contains("Successfully deleted S3 object"));
 }
 
@@ -111,10 +111,10 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test failure case", "[awsS3DeleteF
   setRequiredProperties();
   plan->setProperty(s3_processor, "Version", "v1");
   log_failure->setAutoTerminatedRelationships({{core::Relationship("success", "d")}});
-  mock_s3_wrapper_ptr->delete_object_result = false;
+  mock_s3_wrapper_ptr->setDeleteObjectResult(false);
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->bucket_name == "testBucket");
-  REQUIRE(mock_s3_wrapper_ptr->object_key == INPUT_FILENAME);
-  REQUIRE(mock_s3_wrapper_ptr->version == "v1");
+  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetBucket() == "testBucket");
+  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetKey() == INPUT_FILENAME);
+  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetVersionId() == "v1");
   REQUIRE(LogTestController::getInstance().contains("Failed to delete S3 object"));
 }

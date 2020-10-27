@@ -32,31 +32,11 @@ const std::string S3_SSEALGORITHM_STR = "aws_kms";
 
 class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
  public:
-  Aws::Auth::AWSCredentials getCredentials() const {
-    return credentials_;
-  }
-
-  Aws::Client::ClientConfiguration getClientConfig() const {
-    return client_config_;
-  }
-
   minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3::Model::PutObjectRequest& request) override {
-    std::istreambuf_iterator<char> buf_it;
-    put_s3_data = std::string(std::istreambuf_iterator<char>(*request.GetBody()), buf_it);
-    bucket_name = request.GetBucket();
-    object_key = request.GetKey();
-    storage_class = request.GetStorageClass();
-    server_side_encryption = request.GetServerSideEncryption();
-    metadata_map = request.GetMetadata();
-    content_type = request.GetContentType();
-    fullcontrol_user_list = request.GetGrantFullControl();
-    read_user_list = request.GetGrantRead();
-    read_acl_user_list = request.GetGrantReadACP();
-    write_acl_user_list = request.GetGrantWriteACP();
-    write_acl_user_list = request.GetGrantWriteACP();
-    canned_acl = request.GetACL();
+    put_object_request = request;
 
-    if (!get_empty_result) {
+    Aws::S3::Model::PutObjectResult put_s3_result;
+    if (!return_empty_result_) {
       put_s3_result.SetVersionId(S3_VERSION);
       put_s3_result.SetETag(S3_ETAG);
       put_s3_result.SetExpiration(S3_EXPIRATION);
@@ -66,29 +46,35 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
   }
 
   bool sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectRequest& request) override {
-    bucket_name = request.GetBucket();
-    object_key = request.GetKey();
-    version = request.GetVersionId();
-    version_has_been_set = request.VersionIdHasBeenSet();
-
-    return delete_object_result;
+    delete_object_request = request;
+    return delete_object_result_;
   }
 
-  std::string bucket_name;
-  std::string object_key;
-  Aws::S3::Model::StorageClass storage_class;
-  Aws::S3::Model::ServerSideEncryption server_side_encryption;
-  Aws::S3::Model::PutObjectResult put_s3_result;
-  std::string put_s3_data;
-  std::map<std::string, std::string> metadata_map;
-  std::string content_type;
-  std::string fullcontrol_user_list;
-  std::string read_user_list;
-  std::string read_acl_user_list;
-  std::string write_acl_user_list;
-  Aws::S3::Model::ObjectCannedACL canned_acl;
-  std::string version;
-  bool version_has_been_set = false;
-  bool get_empty_result = false;
-  bool delete_object_result = true;
+  Aws::Auth::AWSCredentials getCredentials() const {
+    return credentials_;
+  }
+
+  Aws::Client::ClientConfiguration getClientConfig() const {
+    return client_config_;
+  }
+
+  std::string getPutObjectRequestBody() const {
+    std::istreambuf_iterator<char> buf_it;
+    return std::string(std::istreambuf_iterator<char>(*put_object_request.GetBody()), buf_it);
+  }
+
+  void returnEmptyS3Result(bool return_empty_result = true) {
+    return_empty_result_ = return_empty_result;
+  }
+
+  void setDeleteObjectResult(bool delete_object_result) {
+    delete_object_result_ = delete_object_result;
+  }
+
+  Aws::S3::Model::PutObjectRequest put_object_request;
+  Aws::S3::Model::DeleteObjectRequest delete_object_request;
+
+ private:
+  bool delete_object_result_ = true;
+  bool return_empty_result_ = false;
 };
