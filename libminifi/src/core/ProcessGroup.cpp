@@ -258,7 +258,8 @@ void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAge
 std::shared_ptr<Processor> ProcessGroup::findProcessorById(const utils::Identifier& uuid) const {
   const auto id_matches = [&] (const std::shared_ptr<Processor>& processor) {
     logger_->log_debug("Current processor is %s", processor->getName());
-    return uuid && uuid == processor->getUUID();
+    utils::Identifier processorUUID = processor->getUUID();
+    return processorUUID && uuid == processorUUID;
   };
   return findProcessor(id_matches);
 }
