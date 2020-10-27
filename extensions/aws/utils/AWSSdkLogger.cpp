@@ -70,28 +70,7 @@ void AWSSdkLogger::Log(Aws::Utils::Logging::LogLevel log_level, const char* tag,
 }
 
 void AWSSdkLogger::LogStream(Aws::Utils::Logging::LogLevel log_level, const char* tag, const Aws::OStringStream &message_stream) {
-  switch (log_level) {
-    case Aws::Utils::Logging::LogLevel::Trace:
-      logger_->log_trace("[%s] %s", tag, message_stream.str().c_str());
-      break;
-    case Aws::Utils::Logging::LogLevel::Debug:
-      logger_->log_debug("[%s] %s", tag, message_stream.str().c_str());
-      break;
-    case Aws::Utils::Logging::LogLevel::Info:
-      logger_->log_info("[%s] %s", tag, message_stream.str().c_str());
-      break;
-    case Aws::Utils::Logging::LogLevel::Warn:
-      logger_->log_warn("[%s] %s", tag, message_stream.str().c_str());
-      break;
-    case Aws::Utils::Logging::LogLevel::Error:
-      logger_->log_error("[%s] %s", tag, message_stream.str().c_str());
-      break;
-    case Aws::Utils::Logging::LogLevel::Fatal:
-      logger_->log_error("[%s] %s", tag, message_stream.str().c_str());
-      break;
-    default:
-      break;
-  }
+  Log(log_level, tag, message_stream.str().c_str());
 }
 
 void AWSSdkLogger::Flush() {

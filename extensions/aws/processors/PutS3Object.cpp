@@ -37,6 +37,9 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
+const uint64_t PutS3Object::ReadCallback::MAX_SIZE = 5UL * 1024UL * 1024UL * 1024UL;  // 5GB limit on AWS
+const uint64_t PutS3Object::ReadCallback::BUFFER_SIZE = 4096;
+
 const std::set<std::string> PutS3Object::CANNED_ACLS(minifi::utils::MapUtils::getKeys(minifi::aws::s3::CANNED_ACL_MAP));
 const std::set<std::string> PutS3Object::REGIONS({region::AF_SOUTH_1, region::AP_EAST_1, region::AP_NORTHEAST_1,
   region::AP_NORTHEAST_2, region::AP_NORTHEAST_3, region::AP_SOUTH_1, region::AP_SOUTHEAST_1, region::AP_SOUTHEAST_2,
@@ -320,7 +323,7 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   logger_->log_debug("PutS3Object: Storage Class [%s]", put_s3_request_params_.storage_class);
 
   std::string value;
-  if (!context->getProperty(Region.getName(), value) || value.empty() || REGIONS.find(value) == REGIONS.end()) {
+  if (!context->getProperty(Region.getName(), value) || value.empty() || REGIONS.count(value) == 0) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Region property missing or invalid");
   }
   s3_wrapper_->setRegion(value);
@@ -345,24 +348,16 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 }
 
 std::string PutS3Object::parseAccessControlList(const std::string &comma_separated_list) const {
-  std::string result_list;
-  bool is_first = true;
-  for (const auto& user : minifi::utils::StringUtils::split(comma_separated_list, ",")) {
-    if (is_first) {
-      is_first = false;
-    } else {
-      result_list += ", ";
-    }
-
+  auto users = minifi::utils::StringUtils::split(comma_separated_list, ",");
+  for (auto& user : users) {
     auto trimmed_user = minifi::utils::StringUtils::trim(user);
     if (trimmed_user.find('@') != std::string::npos) {
-      result_list += "emailAddress=\"" + trimmed_user + "\"";
+      user = "emailAddress=\"" + trimmed_user + "\"";
     } else {
-      result_list += "id=" + trimmed_user;
+      user = "id=" + trimmed_user;
     }
   }
-
-  return result_list;
+  return minifi::utils::StringUtils::join(", ", users);
 }
 
 bool PutS3Object::setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {

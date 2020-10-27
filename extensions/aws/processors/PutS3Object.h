@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <set>
+#include <algorithm>
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
 
@@ -127,8 +128,8 @@ class PutS3Object : public core::Processor {
 
   class ReadCallback : public InputStreamCallback {
    public:
-    static const uint64_t MAX_SIZE = 5UL * 1024UL * 1024UL * 1024UL;  // 5GB limit on AWS
-    static const uint64_t BUFFER_SIZE = 4096;
+    static const uint64_t MAX_SIZE;
+    static const uint64_t BUFFER_SIZE;
 
     ReadCallback(uint64_t flow_size, const minifi::aws::s3::PutObjectRequestParameters& options, aws::s3::S3WrapperBase* s3_wrapper)
       : flow_size_(flow_size)
@@ -145,7 +146,7 @@ class PutS3Object : public core::Processor {
       buffer.reserve(BUFFER_SIZE);
       read_size_ = 0;
       while (read_size_ < flow_size_) {
-        auto next_read_size = flow_size_ - read_size_ < BUFFER_SIZE ? flow_size_ - read_size_ : BUFFER_SIZE;
+        auto next_read_size = std::min(flow_size_ - read_size_, BUFFER_SIZE);
         int read_ret = stream->read(buffer.data(), next_read_size);
         if (read_ret < 0) {
           return -1;
