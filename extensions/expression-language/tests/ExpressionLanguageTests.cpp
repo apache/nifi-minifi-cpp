@@ -1238,14 +1238,6 @@ TEST_CASE("Parse Date", "[expressionParseDate]") {  // NOLINT
   REQUIRE("1398841200000" == expr({ flow_file_a }).asString());
 }
 
-TEST_CASE("Format Date", "[expressionFormatDate]") {  // NOLINT
-  auto expr = expression::compile("${message:format('%m-%d-%Y', 'GMT')}");
-
-  auto flow_file_a = std::make_shared<core::FlowFile>();
-  flow_file_a->addAttribute("message", "1394755200000");
-  REQUIRE("03-14-2014" == expr({ flow_file_a }).asString());
-}
-
 TEST_CASE("Reformat Date", "[expressionReformatDate]") {  // NOLINT
   auto expr = expression::compile("${message:toDate('%Y/%m/%d', 'GMT'):format('%m-%d-%Y', 'America/New_York')}");
 
@@ -1253,6 +1245,8 @@ TEST_CASE("Reformat Date", "[expressionReformatDate]") {  // NOLINT
   flow_file_a->addAttribute("message", "2014/03/14");
   REQUIRE("03-13-2014" == expr({ flow_file_a }).asString());
 }
+
+#endif  // EXPRESSION_LANGUAGE_USE_DATE
 
 TEST_CASE("Now Date", "[expressionNowDate]") {  // NOLINT
   auto expr = expression::compile("${now():format('%Y')}");
@@ -1266,7 +1260,21 @@ TEST_CASE("Now Date", "[expressionNowDate]") {  // NOLINT
   REQUIRE((lt.tm_year + 1900) == expr({ flow_file_a }).asUnsignedLong());
 }
 
-#endif  // EXPRESSION_LANGUAGE_USE_DATE
+TEST_CASE("Format Date", "[expressionFormatDate]") {  // NOLINT
+  auto expr = expression::compile("${message:format('%m-%d-%Y', 'GMT')}");
+
+  auto flow_file_a = std::make_shared<core::FlowFile>();
+  flow_file_a->addAttribute("message", "1394755200000");
+  REQUIRE("03-14-2014" == expr({ flow_file_a }).asString());
+}
+
+TEST_CASE("Format Date", "[expressionFormatDate]") {  // NOLINT
+  auto expr = expression::compile("${message:format('%m-%d-%Y', 'UTC')}");
+
+  auto flow_file_a = std::make_shared<core::FlowFile>();
+  flow_file_a->addAttribute("message", "1394755200000");
+  REQUIRE("03-14-2014" == expr({ flow_file_a }).asString());
+}
 
 TEST_CASE("IP", "[expressionIP]") {  // NOLINT
   auto expr = expression::compile("${ip()}");

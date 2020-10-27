@@ -639,7 +639,8 @@ Value expr_format(const std::vector<Value>& args)
   const auto unix_time = std::chrono::system_clock::to_time_t(dt);
   const auto zoned_time = [&args, unix_time] {
     std::tm buf;
-    if (args.size() > 2 && args[2].asString() == "UTC") {
+    const auto requested_timezone = args.size() > 2 ? args[2].asString() : std::string{};
+    if (requested_timezone == "UTC" || requested_timezone == "GMT") {
 #ifdef WIN32
       const auto err = gmtime_s(&buf, &unix_time);
 #else
@@ -648,7 +649,7 @@ Value expr_format(const std::vector<Value>& args)
       const auto err = errno;
 #endif /* WIN32 */
       if (err) { throw std::system_error{err, std::generic_category()}; }
-    } else if (args.size() > 2) {
+    } else if (!requested_timezone.empty()) {
       throw std::domain_error{"format() with Non-UTC custom timezone is only supported when compiled with the date.h library"};
     } else {
 #ifdef WIN32
