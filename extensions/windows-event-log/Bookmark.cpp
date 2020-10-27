@@ -30,7 +30,7 @@ namespace minifi {
 namespace processors {
 static const std::string BOOKMARK_KEY = "bookmark";
 
-Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, bool processOldEvents, std::shared_ptr<core::CoreComponentStateManager> state_manager, std::shared_ptr<logging::Logger> logger)
+Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const utils::Identifier& uuid, bool processOldEvents, std::shared_ptr<core::CoreComponentStateManager> state_manager, std::shared_ptr<logging::Logger> logger)
   : logger_(logger)
   , state_manager_(state_manager) {
   std::unordered_map<std::string, std::string> state_map;
@@ -39,7 +39,7 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
   } else if (!bookmarkRootDir.empty()) {
     filePath_ = utils::file::FileUtils::concat_path(
       utils::file::FileUtils::concat_path(
-        utils::file::FileUtils::concat_path(bookmarkRootDir, "uuid"), uuid), "Bookmark.txt");
+        utils::file::FileUtils::concat_path(bookmarkRootDir, "uuid"), std::string{ uuid.to_string() }), "Bookmark.txt");
 
     std::wstring bookmarkXml;
     if (getBookmarkXmlFromFile(bookmarkXml)) {

@@ -285,7 +285,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
       logger_->log_error("State Directory is empty");
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "State Directory is empty");
     }
-    bookmark_ = std::make_unique<Bookmark>(wstrChannel_, wstrQuery_, bookmarkDir, getUUIDStr(), processOldEvents, state_manager_, logger_);
+    bookmark_ = std::make_unique<Bookmark>(wstrChannel_, wstrQuery_, bookmarkDir, getUUID(), processOldEvents, state_manager_, logger_);
     if (!*bookmark_) {
       bookmark_.reset();
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bookmark is empty");
@@ -671,7 +671,7 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
     session.putAttribute(flowFile, "Timezone name", timezone_name_);
     session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
-    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
+    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, std::string{ getUUIDStr() }, "Consume windows event logs", 0);
     session.transfer(flowFile, Success);
   }
 
@@ -683,7 +683,7 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "text/plain");
     session.putAttribute(flowFile, "Timezone name", timezone_name_);
     session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
-    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
+    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, std::string{ getUUIDStr() }, "Consume windows event logs", 0);
     session.transfer(flowFile, Success);
   }
 }
