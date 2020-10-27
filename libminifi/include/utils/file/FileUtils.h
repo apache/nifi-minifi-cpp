@@ -548,7 +548,7 @@ inline std::string concat_path(const std::string& root, const std::string& child
 inline std::string create_temp_directory(char* format) {
 #ifdef WIN32
   const std::string tempDirectory = concat_path(get_temp_directory(),
-      minifi::utils::IdGenerator::getIdGenerator()->generate().to_string());
+      std::string{minifi::utils::IdGenerator::getIdGenerator()->generate().to_string()});
   create_dir(tempDirectory);
   return tempDirectory;
 #else
