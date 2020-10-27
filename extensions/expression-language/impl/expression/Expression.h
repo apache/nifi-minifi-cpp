@@ -21,14 +21,14 @@
 #define EXPRESSION_LANGUAGE_USE_REGEX
 
 // Disable regex in EL for incompatible compilers
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9)
+#if !defined(WIN32) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9))
 #undef EXPRESSION_LANGUAGE_USE_REGEX
 #endif
 
 #define EXPRESSION_LANGUAGE_USE_DATE
 
 // Disable date in EL for incompatible compilers
-#if __GNUC__ < 5
+#if defined(WIN32) || __GNUC__ < 5
 #undef EXPRESSION_LANGUAGE_USE_DATE
 #endif
 
