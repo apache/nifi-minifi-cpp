@@ -1261,19 +1261,13 @@ TEST_CASE("Now Date", "[expressionNowDate]") {  // NOLINT
 }
 
 TEST_CASE("Format Date", "[expressionFormatDate]") {  // NOLINT
-  auto expr = expression::compile("${message:format('%m-%d-%Y', 'GMT')}");
+  auto expr_gmt = expression::compile("${message:format('%m-%d-%Y', 'GMT')}");
+  auto expr_utc = expression::compile("${message:format('%m-%d-%Y', 'UTC')}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "1394755200000");
-  REQUIRE("03-14-2014" == expr({ flow_file_a }).asString());
-}
-
-TEST_CASE("Format Date", "[expressionFormatDate]") {  // NOLINT
-  auto expr = expression::compile("${message:format('%m-%d-%Y', 'UTC')}");
-
-  auto flow_file_a = std::make_shared<core::FlowFile>();
-  flow_file_a->addAttribute("message", "1394755200000");
-  REQUIRE("03-14-2014" == expr({ flow_file_a }).asString());
+  REQUIRE("03-14-2014" == expr_gmt({ flow_file_a }).asString());
+  REQUIRE("03-14-2014" == expr_utc({ flow_file_a }).asString());
 }
 
 TEST_CASE("IP", "[expressionIP]") {  // NOLINT
