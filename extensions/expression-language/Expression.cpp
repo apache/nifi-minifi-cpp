@@ -56,7 +56,6 @@
 #include "date/tz.h"
 #else
 #include <ctime>
-#include <iomanip>
 #endif  // EXPRESSION_LANGUAGE_USE_DATE
 
 namespace org {
@@ -664,9 +663,9 @@ Value expr_format(const std::vector<Value>& args)
     }
     return buf;
   }();
-  std::stringstream result_s;
-  result_s << std::put_time(&zoned_time, args.at(1).asString().c_str());
-  return Value(result_s.str());
+  char result_buf[512] = {0};
+  std::strftime(result_buf, 512, args.at(1).asString().c_str(), &zoned_time);
+  return Value(std::string(result_buf));
 }
 
 Value expr_toDate(const std::vector<Value>&) {
