@@ -34,10 +34,6 @@ class SmallString : public std::array<char, N + 1> {
     return {c_str()};
   }
 
-  size_t size() const noexcept {
-    return std::array<char, N+1>::size();
-  }
-
   size_t length() const noexcept {
     return N;
   }
