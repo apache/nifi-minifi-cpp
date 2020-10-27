@@ -74,10 +74,6 @@ class Identifier {
   bool operator==(const Identifier& other) const;
   bool operator<(const Identifier& other) const;
 
-  bool operator<(const Identifier& other) const {
-    return data_ < other.data_;
-  }
-
   bool isNil() const;
 
   // Numerous places query the string representation
