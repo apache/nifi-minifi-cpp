@@ -56,6 +56,7 @@
 #include "date/tz.h"
 #else
 #include <ctime>
+#include <iomanip>
 #endif  // EXPRESSION_LANGUAGE_USE_DATE
 
 namespace org {
