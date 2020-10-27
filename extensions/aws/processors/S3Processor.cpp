@@ -125,16 +125,21 @@ const std::set<core::Property> S3Processor::getSupportedProperties() {
 
 minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
   std::string service_name;
-  if (context->getProperty(AWSCredentialsProviderService.getName(), service_name) && !service_name.empty()) {
-    std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
-    if (nullptr != service) {
-      auto aws_credentials_service = std::dynamic_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(service);
-      if (aws_credentials_service) {
-        return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(aws_credentials_service->getAWSCredentials());
-      }
-    }
+  if (!context->getProperty(AWSCredentialsProviderService.getName(), service_name) || service_name.empty()) {
+    return minifi::utils::nullopt;
   }
-  return minifi::utils::nullopt;
+
+  std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
+  if (!service) {
+    return minifi::utils::nullopt;
+  }
+
+  auto aws_credentials_service = std::dynamic_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(service);
+  if (!aws_credentials_service) {
+    return minifi::utils::nullopt;
+  }
+
+  return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(aws_credentials_service->getAWSCredentials());
 }
 
 minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentials(
@@ -205,13 +210,12 @@ bool S3Processor::getExpressionLanguageSupportedProperties(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   context->getProperty(ObjectKey, object_key_, flow_file);
-  if (object_key_.empty()) {
-    if (!flow_file->getAttribute("filename", object_key_) || object_key_.empty()) {
-      logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
-      return false;
-    }
+  if (object_key_.empty() && (!flow_file->getAttribute("filename", object_key_) || object_key_.empty())) {
+    logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
+    return false;
   }
   logger_->log_debug("S3Processor: Object Key [%s]", object_key_);
+
   if (!context->getProperty(Bucket, bucket_, flow_file) || bucket_.empty()) {
     logger_->log_error("Bucket is invalid or empty!", bucket_);
     return false;
