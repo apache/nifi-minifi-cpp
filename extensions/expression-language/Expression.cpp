@@ -175,7 +175,7 @@ Value expr_ip(const std::vector<Value> &args) {
 }
 
 Value expr_uuid(const std::vector<Value> &args) {
-  return Value(std::string{utils::IdGenerator::getIdGenerator()->generate().to_string()});
+  return Value(utils::IdGenerator::getIdGenerator()->generate().to_string());
 }
 
 Value expr_toUpper(const std::vector<Value> &args) {

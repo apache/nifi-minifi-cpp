@@ -30,7 +30,7 @@ namespace utils {
 template<size_t N>
 class SmallString : public std::array<char, N + 1> {
  public:
-  explicit operator std::string() const {
+  operator std::string() const {  // NOLINT
     return {c_str()};
   }
 

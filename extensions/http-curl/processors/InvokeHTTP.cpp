@@ -262,7 +262,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
 InvokeHTTP::~InvokeHTTP() = default;
 
 std::string InvokeHTTP::generateId() {
-  return std::string{utils::IdGenerator::getIdGenerator()->generate().to_string()};
+  return utils::IdGenerator::getIdGenerator()->generate().to_string();
 }
 
 bool InvokeHTTP::emitFlowFile(const std::string &method) {

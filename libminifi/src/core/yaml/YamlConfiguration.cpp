@@ -970,8 +970,7 @@ std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode, const std::
                                   "of YAML::NodeType::Scalar.");
     }
   } else {
-    utils::Identifier uuid = id_generator_->generate();
-    id = std::string{uuid.to_string()};
+    id = id_generator_->generate().to_string();
     logger_->log_debug("Generating random ID: id => [%s]", id);
   }
   return id;

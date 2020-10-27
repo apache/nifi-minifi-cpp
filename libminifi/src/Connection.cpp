@@ -231,7 +231,7 @@ void Connection::drain(bool delete_permanently) {
     queue_.pop();
     logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
     if (delete_permanently) {
-      if (item->isStored() && flow_repository_->Delete(std::string{item->getUUIDStr()})) {
+      if (item->isStored() && flow_repository_->Delete(item->getUUIDStr())) {
         item->setStoredToRepository(false);
         auto claim = item->getResourceClaim();
         if (claim) claim->decreaseFlowFileRecordOwnedCount();

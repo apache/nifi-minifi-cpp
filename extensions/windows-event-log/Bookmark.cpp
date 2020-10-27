@@ -39,7 +39,7 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
   } else if (!bookmarkRootDir.empty()) {
     filePath_ = utils::file::FileUtils::concat_path(
       utils::file::FileUtils::concat_path(
-        utils::file::FileUtils::concat_path(bookmarkRootDir, "uuid"), std::string{ uuid.to_string() }), "Bookmark.txt");
+        utils::file::FileUtils::concat_path(bookmarkRootDir, "uuid"), uuid.to_string()), "Bookmark.txt");
 
     std::wstring bookmarkXml;
     if (getBookmarkXmlFromFile(bookmarkXml)) {

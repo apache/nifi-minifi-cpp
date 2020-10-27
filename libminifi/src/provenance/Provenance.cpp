@@ -62,7 +62,7 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
     logger_->log_error("Repo could not be assigned");
     return false;
   }
-  ret = repo->Get(std::string{getUUIDStr()}, value);
+  ret = repo->Get(getUUIDStr(), value);
 
   if (!ret) {
     logger_->log_error("NiFi Provenance Store event %s can not be found", getUUIDStr());
@@ -225,7 +225,7 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableCo
   Serialize(outStream);
 
   // Persist to the DB
-  if (!repo->Serialize(std::string{getUUIDStr()}, const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
+  if (!repo->Serialize(getUUIDStr(), const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
     logger_->log_error("NiFi Provenance Store event %s size %llu fail", getUUIDStr(), outStream.size());
   }
   return true;
@@ -415,7 +415,7 @@ void ProvenanceReporter::commit() {
     std::unique_ptr<io::BufferStream> stramptr(new io::BufferStream());
     event->Serialize(*stramptr.get());
 
-    flowData.emplace_back(std::string{event->getUUIDStr()}, std::move(stramptr));
+    flowData.emplace_back(event->getUUIDStr(), std::move(stramptr));
   }
   repo_->MultiPut(flowData);
 }

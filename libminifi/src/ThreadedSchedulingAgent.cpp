@@ -72,7 +72,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     return;
   }
 
-  if (thread_pool_.isTaskRunning(std::string{processor->getUUIDStr()})) {
+  if (thread_pool_.isTaskRunning(processor->getUUIDStr())) {
     logger_->log_warn("Can not schedule threads for processor %s because there are existing threads running", processor->getName());
     return;
   }
@@ -103,7 +103,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
 
     // create a functor that will be submitted to the thread pool.
     auto monitor = utils::make_unique<utils::ComplexMonitor>();
-    utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, std::string{processor->getUUIDStr()}, std::move(monitor));
+    utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, processor->getUUIDStr(), std::move(monitor));
     // move the functor into the thread pool. While a future is returned
     // we aren't terribly concerned with the result.
     std::future<utils::TaskRescheduleInfo> future;
@@ -118,7 +118,7 @@ void ThreadedSchedulingAgent::stop() {
   std::lock_guard<std::mutex> lock(mutex_);
   for (const auto& p : processors_running_) {
     logger_->log_error("SchedulingAgent is stopped before processor was unscheduled: %s", p.to_string());
-    thread_pool_.stopTasks(std::string{p.to_string()});
+    thread_pool_.stopTasks(p.to_string());
   }
 }
 
@@ -131,7 +131,7 @@ void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> proces
     return;
   }
 
-  thread_pool_.stopTasks(std::string{processor->getUUIDStr()});
+  thread_pool_.stopTasks(processor->getUUIDStr());
 
   processor->clearActiveTask();
 

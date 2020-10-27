@@ -174,7 +174,7 @@ class YamlConfiguration : public FlowConfiguration {
     // set the controller services into the root group.
     for (auto controller_service : controller_services_->getAllControllerServices()) {
       root->addControllerService(controller_service->getName(), controller_service);
-      root->addControllerService(std::string{controller_service->getUUIDStr()}, controller_service);
+      root->addControllerService(controller_service->getUUIDStr(), controller_service);
     }
 
     return std::unique_ptr<core::ProcessGroup>(root);

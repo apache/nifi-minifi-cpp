@@ -111,7 +111,7 @@ void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSessio
   }
   uint64_t retry_property_value = maybe_retry_property_value.value();
   const std::string last_retried_by_property_name = retry_attribute_ + ".uuid";
-  const std::string current_processor_uuid = std::string{getUUIDStr()};
+  const std::string current_processor_uuid = getUUIDStr();
   std::string last_retried_by_uuid;
   if (flow_file->getAttribute(last_retried_by_property_name, last_retried_by_uuid)) {
     if (last_retried_by_uuid != current_processor_uuid) {

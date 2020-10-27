@@ -144,7 +144,7 @@ void C2Agent::start() {
     utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
     task_ids_.push_back(uuid);
     auto monitor = utils::make_unique<utils::ComplexMonitor>();
-    utils::Worker<utils::TaskRescheduleInfo> functor(function, std::string{uuid.to_string()}, std::move(monitor));
+    utils::Worker<utils::TaskRescheduleInfo> functor(function, uuid.to_string(), std::move(monitor));
     std::future<utils::TaskRescheduleInfo> future;
     thread_pool_.execute(std::move(functor), future);
   }
@@ -156,7 +156,7 @@ void C2Agent::start() {
 void C2Agent::stop() {
   controller_running_ = false;
   for (const auto& id : task_ids_) {
-    thread_pool_.stopTasks(std::string{id.to_string()});
+    thread_pool_.stopTasks(id.to_string());
   }
   thread_pool_.shutdown();
   logger_->log_info("C2 agent stopped");
@@ -603,7 +603,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       auto core_component_states = state_manager_provider->getAllCoreComponentStates();
       for (const auto& core_component_state : core_component_states) {
         C2Payload state(Operation::ACKNOWLEDGE, resp.ident, false, true);
-        state.setLabel(std::string{core_component_state.first.to_string()});
+        state.setLabel(core_component_state.first.to_string());
         for (const auto& kv : core_component_state.second) {
           C2ContentResponse entry(Operation::ACKNOWLEDGE);
           entry.name = kv.first;

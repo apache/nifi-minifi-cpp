@@ -153,7 +153,7 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
 
   utils::Identifier dir_ext = id_generator_->generate();
 
-  base_path_ = std::string{dir_ext.to_string()};
+  base_path_ = dir_ext.to_string();
 
   const std::vector<pcpp::PcapLiveDevice*>& devList = pcpp::PcapLiveDeviceList::getInstance().getPcapLiveDevicesList();
   for (auto iter : devList) {

@@ -146,7 +146,7 @@ bool FlowFileRecord::Persist(const std::shared_ptr<core::Repository>& flowReposi
     return false;
   }
 
-  if (flowRepository->Put(std::string{getUUIDStr()}, const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
+  if (flowRepository->Put(getUUIDStr(), const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
     logger_->log_debug("NiFi FlowFile Store event %s size " "%" PRIu64 " success", getUUIDStr(), outStream.size());
     // on behalf of the persisted record instance
     if (claim_) claim_->increaseFlowFileRecordOwnedCount();

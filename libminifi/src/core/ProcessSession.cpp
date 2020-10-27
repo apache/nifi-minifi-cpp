@@ -733,7 +733,7 @@ void ProcessSession::commit() {
         if (!record->isDeleted()) {
           continue;
         }
-        if (record->isStored() && process_context_->getFlowFileRepository()->Delete(std::string{record->getUUIDStr()})) {
+        if (record->isStored() && process_context_->getFlowFileRepository()->Delete(record->getUUIDStr())) {
           // mark for deletion in the flowFileRepository
           record->setStoredToRepository(false);
         }
@@ -846,7 +846,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
       std::unique_ptr<io::BufferStream> stream(new io::BufferStream());
       std::static_pointer_cast<FlowFileRecord>(ff)->Serialize(*stream);
 
-      flowData.emplace_back(std::string{ff->getUUIDStr()}, std::move(stream));
+      flowData.emplace_back(ff->getUUIDStr(), std::move(stream));
     }
   }
 
@@ -866,7 +866,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
       auto original = snapshotIt != modifiedFlowFiles.end() ? snapshotIt->second.snapshot : nullptr;
       if (shouldDropEmptyFiles && ff->getSize() == 0) {
         // the receiver promised to drop this FF, no need for it anymore
-        if (ff->isStored() && flowFileRepo->Delete(std::string{ff->getUUIDStr()})) {
+        if (ff->isStored() && flowFileRepo->Delete(ff->getUUIDStr())) {
           // original must be non-null since this flowFile is already stored in the repos ->
           // must have come from a session->get()
           assert(original);
@@ -906,7 +906,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
         details << process_context_->getProcessorNode()->getName() << " expire flow record " << record->getUUIDStr();
         provenance_report_->expire(record, details.str());
         // there is no rolling back expired FlowFiles
-        if (record->isStored() && process_context_->getFlowFileRepository()->Delete(std::string{record->getUUIDStr()})) {
+        if (record->isStored() && process_context_->getFlowFileRepository()->Delete(record->getUUIDStr())) {
           record->setStoredToRepository(false);
         }
       }

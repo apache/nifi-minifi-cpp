@@ -55,12 +55,12 @@ class FlowVersion : public DeviceInformation {
  public:
   FlowVersion()
       : DeviceInformation("FlowVersion") {
-    setFlowVersion("", "", std::string{getUUIDStr()});
+    setFlowVersion("", "", getUUIDStr());
   }
 
   explicit FlowVersion(const std::string &registry_url, const std::string &bucket_id, const std::string &flow_id)
       : DeviceInformation("FlowVersion") {
-    setFlowVersion(registry_url, bucket_id, flow_id.empty() ? std::string{getUUIDStr()} : flow_id);
+    setFlowVersion(registry_url, bucket_id, flow_id.empty() ? getUUIDStr() : flow_id);
   }
 
   explicit FlowVersion(FlowVersion &&fv)
@@ -145,7 +145,7 @@ class FlowMonitor : public StateMonitorNode {
 
   void addConnection(const std::shared_ptr<minifi::Connection> &connection) {
     if (nullptr != connection) {
-      connections_.insert(std::make_pair(std::string{connection->getUUIDStr()}, connection));
+      connections_.insert(std::make_pair(connection->getUUIDStr(), connection));
     }
   }
 

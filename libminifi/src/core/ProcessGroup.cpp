@@ -312,7 +312,7 @@ void ProcessGroup::updatePropertyValue(std::string processorName, std::string pr
 
 void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connection>> &connectionMap) {
   for (auto connection : connections_) {
-    connectionMap[std::string{connection->getUUIDStr()}] = connection;
+    connectionMap[connection->getUUIDStr()] = connection;
     connectionMap[connection->getName()] = connection;
   }
   for (auto processGroup : child_process_groups_) {
@@ -322,7 +322,7 @@ void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connecti
 
 void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connectable>> &connectionMap) {
   for (auto connection : connections_) {
-    connectionMap[std::string{connection->getUUIDStr()}] = connection;
+    connectionMap[connection->getUUIDStr()] = connection;
     connectionMap[connection->getName()] = connection;
   }
   for (auto processGroup : child_process_groups_) {
@@ -332,12 +332,12 @@ void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connecta
 
 void ProcessGroup::getFlowFileContainers(std::map<std::string, std::shared_ptr<Connectable>> &containers) const {
   for (auto connection : connections_) {
-    containers[std::string{connection->getUUIDStr()}] = connection;
+    containers[connection->getUUIDStr()] = connection;
     containers[connection->getName()] = connection;
   }
   for (auto processor : processors_) {
     // processors can also own FlowFiles
-    containers[std::string{processor->getUUIDStr()}] = processor;
+    containers[processor->getUUIDStr()] = processor;
   }
   for (auto processGroup : child_process_groups_) {
     processGroup->getFlowFileContainers(containers);

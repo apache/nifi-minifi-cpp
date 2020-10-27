@@ -244,7 +244,7 @@ bool RawSiteToSiteClient::handShake() {
 
   std::map<std::string, std::string> properties;
   properties[HandShakePropertyStr[GZIP]] = "false";
-  properties[HandShakePropertyStr[PORT_IDENTIFIER]] = std::string{port_id_.to_string()};
+  properties[HandShakePropertyStr[PORT_IDENTIFIER]] = port_id_.to_string();
   properties[HandShakePropertyStr[REQUEST_EXPIRATION_MILLIS]] = std::to_string(_timeOut);
   if (_currentVersion >= 5) {
     if (_batchCount > 0)

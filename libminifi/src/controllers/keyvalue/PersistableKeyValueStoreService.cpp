@@ -30,11 +30,11 @@ PersistableKeyValueStoreService::PersistableKeyValueStoreService(const std::stri
 PersistableKeyValueStoreService::~PersistableKeyValueStoreService() = default;
 
 bool PersistableKeyValueStoreService::setImpl(const utils::Identifier& key, const std::string& value) {
-  return set(std::string{key.to_string()}, value);
+  return set(key.to_string(), value);
 }
 
 bool PersistableKeyValueStoreService::getImpl(const utils::Identifier& key, std::string& value) {
-  return get(std::string{key.to_string()}, value);
+  return get(key.to_string(), value);
 }
 
 bool PersistableKeyValueStoreService::getImpl(std::map<utils::Identifier, std::string>& kvs) {
@@ -51,7 +51,7 @@ bool PersistableKeyValueStoreService::getImpl(std::map<utils::Identifier, std::s
 }
 
 bool PersistableKeyValueStoreService::removeImpl(const utils::Identifier& key) {
-  return remove(std::string{key.to_string()});
+  return remove(key.to_string());
 }
 
 bool PersistableKeyValueStoreService::persistImpl() {
