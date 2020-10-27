@@ -638,30 +638,33 @@ Value expr_format(const std::vector<Value>& args)
   const std::chrono::time_point<std::chrono::system_clock> dt(dur);
   const auto unix_time = std::chrono::system_clock::to_time_t(dt);
   const auto zoned_time = [&args, unix_time] {
-    std::tm buf;
+    std::tm buf{};
     const auto requested_timezone = args.size() > 2 ? args[2].asString() : std::string{};
     if (requested_timezone == "UTC" || requested_timezone == "GMT") {
 #ifdef WIN32
       const auto err = gmtime_s(&buf, &unix_time);
+      if (!err) { return buf; }
+      throw std::system_error{err, std::generic_category()};
 #else
-      const std::tm* const not_thread_safe_internal_ptr = gmtime(&unix_time);
-      if (not_thread_safe_internal_ptr) { buf = *not_thread_safe_internal_ptr; }
-      const auto err = errno;
+      tzset();
+      const std::tm* const result = gmtime_r(&unix_time, &buf);
+      if (result) { return *result; }
+      throw std::system_error{errno, std::generic_category()};
 #endif /* WIN32 */
-      if (err) { throw std::system_error{err, std::generic_category()}; }
     } else if (!requested_timezone.empty()) {
       throw std::domain_error{"format() with Non-UTC custom timezone is only supported when compiled with the date.h library"};
     } else {
 #ifdef WIN32
       const auto err = localtime_s(&buf, &unix_time);
+      if (!err) { return buf; }
+      throw std::system_error{err, std::generic_category()};
 #else
-      const std::tm* const not_thread_safe_internal_ptr = localtime(&unix_time);
-      if (not_thread_safe_internal_ptr) { buf = *not_thread_safe_internal_ptr; }
-      const auto err = errno;
+      tzset();
+      const std::tm* const result = localtime_r(&unix_time, &buf);
+      if (result) { return *result; }
+      throw std::system_error{errno, std::generic_category()};
 #endif /* WIN32 */
-      if (err) { throw std::system_error{err, std::generic_category()}; }
     }
-    return buf;
   }();
   char result_buf[512] = {0};
   std::strftime(result_buf, 512, args.at(1).asString().c_str(), &zoned_time);
