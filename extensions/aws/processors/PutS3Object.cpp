@@ -44,6 +44,11 @@ const std::set<std::string> PutS3Object::CANNED_ACLS(minifi::utils::MapUtils::ge
 const std::set<std::string> PutS3Object::STORAGE_CLASSES(minifi::utils::MapUtils::getKeys(minifi::aws::s3::STORAGE_CLASS_MAP));
 const std::set<std::string> PutS3Object::SERVER_SIDE_ENCRYPTIONS(minifi::utils::MapUtils::getKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP));
 
+const core::Property PutS3Object::ObjectKey(
+  core::PropertyBuilder::createProperty("Object Key")
+    ->withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
+    ->supportsExpressionLanguage(true)
+    ->build());
 const core::Property PutS3Object::ContentType(
   core::PropertyBuilder::createProperty("Content Type")
     ->withDescription("Sets the Content-Type HTTP header indicating the type of content stored in "
@@ -101,7 +106,7 @@ const core::Relationship PutS3Object::Failure("failure", "FlowFiles are routed t
 
 void PutS3Object::initialize() {
   // Add new supported properties
-  updateSupportedProperties({ContentType, StorageClass, FullControlUserList, ReadPermissionUserList,
+  updateSupportedProperties({ObjectKey, ContentType, StorageClass, FullControlUserList, ReadPermissionUserList,
     ReadACLUserList, WriteACLUserList, CannedACL, ServerSideEncryption});
   // Set the supported relationships
   setSupportedRelationships({Failure, Success});
@@ -202,11 +207,17 @@ minifi::utils::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildP
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) {
   aws::s3::PutObjectRequestParameters params;
-  params.object_key = common_properties.object_key;
   params.bucket = common_properties.bucket;
   params.user_metadata_map = user_metadata_map_;
   params.server_side_encryption = server_side_encryption_;
   params.storage_class = storage_class_;
+
+  context->getProperty(ObjectKey, params.object_key, flow_file);
+  if (params.object_key.empty() && (!flow_file->getAttribute("filename", params.object_key) || params.object_key.empty())) {
+    logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
+    return minifi::utils::nullopt;
+  }
+  logger_->log_debug("S3Processor: Object Key [%s]", params.object_key);
 
   context->getProperty(ContentType, params.content_type, flow_file);
   logger_->log_debug("PutS3Object: Content Type [%s]", params.content_type);

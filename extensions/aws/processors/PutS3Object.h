@@ -51,6 +51,7 @@ class PutS3Object : public S3Processor {
   static const std::set<std::string> SERVER_SIDE_ENCRYPTIONS;
 
   // Supported Properties
+  static const core::Property ObjectKey;
   static const core::Property ContentType;
   static const core::Property StorageClass;
   static const core::Property ServerSideEncryption;

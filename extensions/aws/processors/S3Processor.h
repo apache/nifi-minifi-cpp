@@ -85,7 +85,6 @@ class S3Processor : public core::Processor {
   static const std::set<std::string> REGIONS;
 
   // Supported Properties
-  static const core::Property ObjectKey;
   static const core::Property Bucket;
   static const core::Property AccessKey;
   static const core::Property SecretKey;

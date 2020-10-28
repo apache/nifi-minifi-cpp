@@ -42,11 +42,6 @@ const std::set<std::string> S3Processor::REGIONS({region::AF_SOUTH_1, region::AP
   region::EU_SOUTH_1, region::EU_WEST_1, region::EU_WEST_2, region::EU_WEST_3, region::ME_SOUTH_1, region::SA_EAST_1,
   region::US_EAST_1, region::US_EAST_2, region::US_GOV_EAST_1, region::US_GOV_WEST_1, region::US_WEST_1, region::US_WEST_2});
 
-const core::Property S3Processor::ObjectKey(
-  core::PropertyBuilder::createProperty("Object Key")
-    ->withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
-    ->supportsExpressionLanguage(true)
-    ->build());
 const core::Property S3Processor::Bucket(
   core::PropertyBuilder::createProperty("Bucket")
     ->withDescription("The S3 bucket")
@@ -123,7 +118,7 @@ S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const
   : core::Processor(std::move(name), uuid)
   , logger_(logger)
   , s3_wrapper_(minifi::utils::make_unique<aws::s3::S3Wrapper>()) {
-  setSupportedProperties({ObjectKey, Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
+  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
                           EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials});
 }
 
@@ -131,7 +126,7 @@ S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const
   : core::Processor(std::move(name), uuid)
   , logger_(logger)
   , s3_wrapper_(std::move(s3_wrapper)) {
-  setSupportedProperties({ObjectKey, Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
+  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
                           EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials});
 }
 
@@ -221,13 +216,6 @@ minifi::utils::optional<CommonProperties> S3Processor::getCommonELSupportedPrope
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   CommonProperties properties;
-  context->getProperty(ObjectKey, properties.object_key, flow_file);
-  if (properties.object_key.empty() && (!flow_file->getAttribute("filename", properties.object_key) || properties.object_key.empty())) {
-    logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
-    return minifi::utils::nullopt;
-  }
-  logger_->log_debug("S3Processor: Object Key [%s]", properties.object_key);
-
   if (!context->getProperty(Bucket, properties.bucket, flow_file) || properties.bucket.empty()) {
     logger_->log_error("Bucket '%s' is invalid or empty!", properties.bucket);
     return minifi::utils::nullopt;

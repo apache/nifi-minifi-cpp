@@ -43,6 +43,7 @@ class DeleteS3Object : public S3Processor {
   static constexpr char const* ProcessorName = "DeleteS3Object";
 
   // Supported Properties
+  static const core::Property ObjectKey;
   static const core::Property Version;
 
   // Supported Relationships

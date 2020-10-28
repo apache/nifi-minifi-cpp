@@ -44,6 +44,7 @@ class FetchS3Object : public S3Processor {
   static constexpr char const* ProcessorName = "FetchS3Object";
 
   // Supported Properties
+  static const core::Property ObjectKey;
   static const core::Property Version;
   static const core::Property RequesterPays;
 
