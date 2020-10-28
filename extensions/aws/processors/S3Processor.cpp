@@ -230,7 +230,6 @@ bool S3Processor::getExpressionLanguageSupportedProperties(
   s3_wrapper_->setCredentials(credentials.value());
 
   if (!setProxy(context, flow_file)) {
-    context->yield();
     return false;
   }
 
