@@ -250,7 +250,7 @@ class Transaction {
   // Destructor
   virtual ~Transaction() = default;
   // getUUIDStr
-  utils::SmallString<36> getUUIDStr() {
+  utils::SmallString<36> getUUIDStr() const {
     return uuid_.to_string();
   }
 
