@@ -116,9 +116,9 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
 void ThreadedSchedulingAgent::stop() {
   SchedulingAgent::stop();
   std::lock_guard<std::mutex> lock(mutex_);
-  for (const auto& p : processors_running_) {
-    logger_->log_error("SchedulingAgent is stopped before processor was unscheduled: %s", p.to_string());
-    thread_pool_.stopTasks(p.to_string());
+  for (const auto& processor_id : processors_running_) {
+    logger_->log_error("SchedulingAgent is stopped before processor was unscheduled: %s", processor_id.to_string());
+    thread_pool_.stopTasks(processor_id.to_string());
   }
 }
 

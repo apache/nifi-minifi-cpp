@@ -44,8 +44,10 @@ bool PersistableKeyValueStoreService::getImpl(std::map<utils::Identifier, std::s
   }
   kvs.clear();
   for (const auto& state : states) {
-    const auto uuid = utils::Identifier::parse(state.first);
-    kvs[uuid.value()] = state.second;
+    utils::optional<utils::Identifier> optional_uuid = utils::Identifier::parse(state.first);
+    if (optional_uuid) {
+      kvs[optional_uuid.value()] = state.second;
+    }
   }
   return true;
 }
