@@ -29,7 +29,7 @@ using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
 using org::apache::nifi::minifi::utils::file::get_file_content;
 using org::apache::nifi::minifi::utils::file::get_separator;
 
-class FetchS3ObjectTestsFixture : public S3TestsFixture<minifi::aws::processors::FetchS3Object> {
+class FetchS3ObjectTestsFixture : public FlowProcessorS3TestsFixture<minifi::aws::processors::FetchS3Object> {
  public:
   FetchS3ObjectTestsFixture() {
     auto putfile = plan->addProcessor(

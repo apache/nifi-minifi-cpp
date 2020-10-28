@@ -24,7 +24,7 @@ namespace {
 
 using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
 
-class PutS3ObjectTestsFixture : public S3TestsFixture<minifi::aws::processors::PutS3Object> {
+class PutS3ObjectTestsFixture : public FlowProcessorS3TestsFixture<minifi::aws::processors::PutS3Object> {
  public:
   void checkPutObjectResults() {
     REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.version value:" + S3_VERSION));

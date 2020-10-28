@@ -72,6 +72,32 @@ minifi::utils::optional<Aws::S3::Model::GetObjectResult> S3Wrapper::sendGetObjec
   }
 }
 
+minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> S3Wrapper::sendListObjectsRequest(const Aws::S3::Model::ListObjectsV2Request& request) {
+  Aws::S3::S3Client s3_client(credentials_, client_config_);
+  auto outcome = s3_client.ListObjectsV2(request);
+
+  if (outcome.IsSuccess()) {
+    logger_->log_info("ListObjectsV2 successful of bucket %s", request.GetBucket());
+    return outcome.GetResultWithOwnership();
+  } else {
+    logger_->log_error("ListObjectsV2 failed with the following: '%s'", outcome.GetError().GetMessage());
+    return minifi::utils::nullopt;
+  }
+}
+
+minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> S3Wrapper::sendListVersionsRequest(const Aws::S3::Model::ListObjectVersionsRequest& request) {
+  Aws::S3::S3Client s3_client(credentials_, client_config_);
+  auto outcome = s3_client.ListObjectVersions(request);
+
+  if (outcome.IsSuccess()) {
+    logger_->log_info("ListObjectVersions successful of bucket %s", request.GetBucket());
+    return outcome.GetResultWithOwnership();
+  } else {
+    logger_->log_error("ListObjectVersions failed with the following: '%s'", outcome.GetError().GetMessage());
+    return minifi::utils::nullopt;
+  }
+}
+
 }  // namespace s3
 }  // namespace aws
 }  // namespace minifi

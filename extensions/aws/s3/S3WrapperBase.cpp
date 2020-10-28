@@ -188,6 +188,73 @@ minifi::utils::optional<GetObjectResult> S3WrapperBase::getObject(const GetObjec
   return result;
 }
 
+void S3WrapperBase::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, std::vector<ListedObjectAttributes>& listed_objects) {
+  for (const auto& version : content) {
+    ListedObjectAttributes attributes;
+    attributes.etag = minifi::utils::StringUtils::removeFramingCharacters(version.GetETag(), '"');
+    attributes.filename = version.GetKey();
+    attributes.is_latest = version.GetIsLatest();
+    attributes.last_modified = version.GetLastModified().Millis();
+    attributes.length = version.GetSize();
+    attributes.store_class = VERSION_STORAGE_CLASS_MAP.at(version.GetStorageClass());
+    attributes.version = version.GetVersionId();
+    listed_objects.push_back(attributes);
+  }
+}
+
+void S3WrapperBase::addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, std::vector<ListedObjectAttributes>& listed_objects) {
+  for (const auto& object : content) {
+    ListedObjectAttributes attributes;
+    attributes.etag = minifi::utils::StringUtils::removeFramingCharacters(object.GetETag(), '"');
+    attributes.filename = object.GetKey();
+    attributes.is_latest = true;
+    attributes.last_modified = object.GetLastModified().Millis();
+    attributes.length = object.GetSize();
+    attributes.store_class = OBJECT_STORAGE_CLASS_MAP.at(object.GetStorageClass());
+    listed_objects.push_back(attributes);
+  }
+}
+
+minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::listVersions(const ListRequestParameters& params) {
+  auto request = createListRequest<Aws::S3::Model::ListObjectVersionsRequest>(params);
+  std::vector<ListedObjectAttributes> attribute_list;
+  nonstd::optional_lite::optional<Aws::S3::Model::ListObjectVersionsResult> aws_result;
+  do {
+    aws_result = sendListVersionsRequest(request);
+    if (!aws_result) {
+      return minifi::utils::nullopt;
+    }
+    addListResults(aws_result->GetVersions(), attribute_list);
+    request.SetKeyMarker(aws_result->GetNextKeyMarker());
+    request.SetVersionIdMarker(aws_result->GetNextVersionIdMarker());
+  } while(aws_result->GetIsTruncated());
+
+  return attribute_list;
+}
+
+minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::listObjects(const ListRequestParameters& params) {
+  auto request = createListRequest<Aws::S3::Model::ListObjectsV2Request>(params);
+  std::vector<ListedObjectAttributes> attribute_list;
+  nonstd::optional_lite::optional<Aws::S3::Model::ListObjectsV2Result> aws_result;
+  do {
+    aws_result = sendListObjectsRequest(request);
+    if (!aws_result) {
+      return minifi::utils::nullopt;
+    }
+    addListResults(aws_result->GetContents(), attribute_list);
+    request.SetContinuationToken(aws_result->GetContinuationToken());
+  } while(aws_result->GetIsTruncated());
+
+  return attribute_list;
+}
+
+minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::listBucket(const ListRequestParameters& params) {
+  if (params.use_versions) {
+    return listVersions(params);
+  }
+  return listObjects(params);
+}
+
 }  // namespace s3
 }  // namespace aws
 }  // namespace minifi

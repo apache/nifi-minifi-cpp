@@ -50,8 +50,6 @@ class S3TestsFixture {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setTrace<processors::GetFile>();
-    LogTestController::getInstance().setDebug<processors::UpdateAttribute>();
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setTrace<T>();
 
@@ -60,37 +58,7 @@ class S3TestsFixture {
     mock_s3_wrapper_ptr = new MockS3Wrapper();
     std::unique_ptr<minifi::aws::s3::S3WrapperBase> mock_s3_wrapper(mock_s3_wrapper_ptr);
     s3_processor = std::shared_ptr<T>(new T("S3Processor", utils::Identifier(), std::move(mock_s3_wrapper)));
-
-    auto input_dir = createTempDir(&test_controller);
-    std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + INPUT_FILENAME);
-    input_file_stream << INPUT_DATA;
-    input_file_stream.close();
-    get_file = plan->addProcessor("GetFile", "GetFile");
-    plan->setProperty(get_file, processors::GetFile::Directory.getName(), input_dir);
-    plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "false");
-    update_attribute = plan->addProcessor(
-      "UpdateAttribute",
-      "UpdateAttribute",
-      core::Relationship("success", "d"),
-      true);
-    plan->addProcessor(
-      s3_processor,
-      "S3Processor",
-      core::Relationship("success", "d"),
-      true);
-    plan->addProcessor(
-      "LogAttribute",
-      "LogAttribute",
-      core::Relationship("success", "d"),
-      true);
     aws_credentials_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
-  }
-
-  void setAccesKeyCredentialsInProcessor() {
-    plan->setProperty(update_attribute, "s3.accessKey", "key", true);
-    plan->setProperty(s3_processor, "Access Key", "${s3.accessKey}");
-    plan->setProperty(update_attribute, "s3.secretKey", "secret", true);
-    plan->setProperty(s3_processor, "Secret Key", "${s3.secretKey}");
   }
 
   void setAccessKeyCredentialsInController() {
@@ -100,8 +68,7 @@ class S3TestsFixture {
 
   template<typename Component>
   void setCredentialFile(const Component &component) {
-    char in_dir[] = "/tmp/gt.XXXXXX";
-    auto temp_path = test_controller.createTempDirectory(in_dir);
+    auto temp_path = createTempDir(&test_controller);
     REQUIRE(!temp_path.empty());
     std::string aws_credentials_file(temp_path + utils::file::FileUtils::get_separator() + "aws_creds.conf");
     std::ofstream aws_credentials_file_stream(aws_credentials_file);
@@ -127,25 +94,13 @@ class S3TestsFixture {
     plan->setProperty(s3_processor, "AWS Credentials Provider service", "AWSCredentialsService");
   }
 
-  void setBucket() {
-    plan->setProperty(update_attribute, "test.bucket", S3_BUCKET, true);
-    plan->setProperty(s3_processor, "Bucket", "${test.bucket}");
-  }
+  virtual void setAccesKeyCredentialsInProcessor() = 0;
+  virtual void setBucket() = 0;
+  virtual void setProxy() = 0;
 
   void setRequiredProperties() {
     setAccesKeyCredentialsInProcessor();
     setBucket();
-  }
-
-  void setProxy() {
-    plan->setProperty(update_attribute, "test.proxyHost", "host", true);
-    plan->setProperty(s3_processor, "Proxy Host", "${test.proxyHost}");
-    plan->setProperty(update_attribute, "test.proxyPort", "1234", true);
-    plan->setProperty(s3_processor, "Proxy Port", "${test.proxyPort}");
-    plan->setProperty(update_attribute, "test.proxyUsername", "username", true);
-    plan->setProperty(s3_processor, "Proxy Username", "${test.proxyUsername}");
-    plan->setProperty(update_attribute, "test.proxyPassword", "password", true);
-    plan->setProperty(s3_processor, "Proxy Password", "${test.proxyPassword}");
   }
 
   void checkProxySettings() {
@@ -164,7 +119,100 @@ class S3TestsFixture {
   std::shared_ptr<TestPlan> plan;
   MockS3Wrapper* mock_s3_wrapper_ptr;
   std::shared_ptr<core::Processor> s3_processor;
-  std::shared_ptr<core::Processor> get_file;
   std::shared_ptr<core::Processor> update_attribute;
   std::shared_ptr<core::controller::ControllerServiceNode> aws_credentials_service;
+};
+
+template<typename T>
+class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
+ public:
+  const std::string INPUT_FILENAME = "input_data.log";
+  const std::string INPUT_DATA = "input_data";
+
+  FlowProcessorS3TestsFixture() {
+    LogTestController::getInstance().setTrace<processors::GetFile>();
+    LogTestController::getInstance().setDebug<processors::UpdateAttribute>();
+
+    auto input_dir = createTempDir(&this->test_controller);
+    std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + INPUT_FILENAME);
+    input_file_stream << INPUT_DATA;
+    input_file_stream.close();
+    auto get_file = this->plan->addProcessor("GetFile", "GetFile");
+    this->plan->setProperty(get_file, processors::GetFile::Directory.getName(), input_dir);
+    this->plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "false");
+    update_attribute = this->plan->addProcessor(
+      "UpdateAttribute",
+      "UpdateAttribute",
+      core::Relationship("success", "d"),
+      true);
+    this->plan->addProcessor(
+      this->s3_processor,
+      "S3Processor",
+      core::Relationship("success", "d"),
+      true);
+    auto log_attribute = this->plan->addProcessor(
+      "LogAttribute",
+      "LogAttribute",
+      core::Relationship("success", "d"),
+      true);
+    this->plan->setProperty(log_attribute, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  }
+
+  void setAccesKeyCredentialsInProcessor() override {
+    this->plan->setProperty(update_attribute, "s3.accessKey", "key", true);
+    this->plan->setProperty(this->s3_processor, "Access Key", "${s3.accessKey}");
+    this->plan->setProperty(update_attribute, "s3.secretKey", "secret", true);
+    this->plan->setProperty(this->s3_processor, "Secret Key", "${s3.secretKey}");
+  }
+
+  void setBucket() override {
+    this->plan->setProperty(update_attribute, "test.bucket", this->S3_BUCKET, true);
+    this->plan->setProperty(this->s3_processor, "Bucket", "${test.bucket}");
+  }
+
+  void setProxy() override {
+    this->plan->setProperty(update_attribute, "test.proxyHost", "host", true);
+    this->plan->setProperty(this->s3_processor, "Proxy Host", "${test.proxyHost}");
+    this->plan->setProperty(update_attribute, "test.proxyPort", "1234", true);
+    this->plan->setProperty(this->s3_processor, "Proxy Port", "${test.proxyPort}");
+    this->plan->setProperty(update_attribute, "test.proxyUsername", "username", true);
+    this->plan->setProperty(this->s3_processor, "Proxy Username", "${test.proxyUsername}");
+    this->plan->setProperty(update_attribute, "test.proxyPassword", "password", true);
+    this->plan->setProperty(this->s3_processor, "Proxy Password", "${test.proxyPassword}");
+  }
+
+ protected:
+  std::shared_ptr<core::Processor> update_attribute;
+};
+
+template<typename T>
+class FlowProducerS3TestsFixture : public S3TestsFixture<T> {
+ public:
+  FlowProducerS3TestsFixture() {
+    this->plan->addProcessor(
+      this->s3_processor,
+      "S3Processor");
+    auto log_attribute = this->plan->addProcessor(
+      "LogAttribute",
+      "LogAttribute",
+      core::Relationship("success", "d"),
+      true);
+    this->plan->setProperty(log_attribute, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  }
+
+  void setAccesKeyCredentialsInProcessor() override {
+    this->plan->setProperty(this->s3_processor, "Access Key", "key");
+    this->plan->setProperty(this->s3_processor, "Secret Key", "secret");
+  }
+
+  void setBucket() override {
+    this->plan->setProperty(this->s3_processor, "Bucket", this->S3_BUCKET);
+  }
+
+  void setProxy() override {
+    this->plan->setProperty(this->s3_processor, "Proxy Host", "host");
+    this->plan->setProperty(this->s3_processor, "Proxy Port", "1234");
+    this->plan->setProperty(this->s3_processor, "Proxy Username", "username");
+    this->plan->setProperty(this->s3_processor, "Proxy Password", "password");
+  }
 };

@@ -22,7 +22,7 @@
 
 namespace {
 
-using DeleteS3ObjectTestsFixture = S3TestsFixture<minifi::aws::processors::DeleteS3Object>;
+using DeleteS3ObjectTestsFixture = FlowProcessorS3TestsFixture<minifi::aws::processors::DeleteS3Object>;
 using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test AWS credential setting", "[awsCredentials]") {

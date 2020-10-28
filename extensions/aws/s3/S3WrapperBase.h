@@ -34,6 +34,10 @@
 #include "aws/s3/model/DeleteObjectRequest.h"
 #include "aws/s3/model/GetObjectRequest.h"
 #include "aws/s3/model/GetObjectResult.h"
+#include "aws/s3/model/ListObjectsV2Request.h"
+#include "aws/s3/model/ListObjectsV2Result.h"
+#include "aws/s3/model/ListObjectVersionsRequest.h"
+#include "aws/s3/model/ListObjectVersionsResult.h"
 #include "aws/s3/model/StorageClass.h"
 #include "aws/s3/model/ServerSideEncryption.h"
 #include "aws/s3/model/ObjectCannedACL.h"
@@ -59,6 +63,20 @@ static const std::unordered_map<std::string, Aws::S3::Model::StorageClass> STORA
   {"IntelligentTiering", Aws::S3::Model::StorageClass::INTELLIGENT_TIERING},
   {"Glacier", Aws::S3::Model::StorageClass::GLACIER},
   {"DeepArchive", Aws::S3::Model::StorageClass::DEEP_ARCHIVE}
+};
+
+static const std::unordered_map<Aws::S3::Model::ObjectStorageClass, std::string> OBJECT_STORAGE_CLASS_MAP {
+  {Aws::S3::Model::ObjectStorageClass::STANDARD, "Standard"},
+  {Aws::S3::Model::ObjectStorageClass::REDUCED_REDUNDANCY, "ReducedRedundancy"},
+  {Aws::S3::Model::ObjectStorageClass::STANDARD_IA, "StandardIA"},
+  {Aws::S3::Model::ObjectStorageClass::ONEZONE_IA, "OnezoneIA"},
+  {Aws::S3::Model::ObjectStorageClass::INTELLIGENT_TIERING, "IntelligentTiering"},
+  {Aws::S3::Model::ObjectStorageClass::GLACIER, "Glacier"},
+  {Aws::S3::Model::ObjectStorageClass::DEEP_ARCHIVE, "DeepArchive"}
+};
+
+static const std::unordered_map<Aws::S3::Model::ObjectVersionStorageClass, std::string> VERSION_STORAGE_CLASS_MAP {
+  {Aws::S3::Model::ObjectVersionStorageClass::STANDARD, "Standard"}
 };
 
 static const std::unordered_map<std::string, Aws::S3::Model::ServerSideEncryption> SERVER_SIDE_ENCRYPTION_MAP {
@@ -125,6 +143,23 @@ struct GetObjectResult {
   void setFilePaths(const std::string& key);
 };
 
+struct ListRequestParameters {
+  std::string bucket;
+  std::string delimiter;
+  std::string prefix;
+  bool use_versions = false;
+};
+
+struct ListedObjectAttributes {
+  std::string filename;
+  std::string etag;
+  bool is_latest = false;
+  int64_t last_modified = 0;
+  int length = 0;
+  std::string store_class;
+  std::string version;
+};
+
 struct ProxyOptions {
   std::string host;
   uint32_t port = 0;
@@ -143,6 +178,7 @@ class S3WrapperBase {
   minifi::utils::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
   bool deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version = "");
   minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, const std::shared_ptr<io::BaseStream>& fetched_body);
+  minifi::utils::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
 
   virtual ~S3WrapperBase() = default;
 
@@ -150,10 +186,27 @@ class S3WrapperBase {
   virtual minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3::Model::PutObjectRequest& request) = 0;
   virtual bool sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectRequest& request) = 0;
   virtual minifi::utils::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request) = 0;
+  virtual minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(const Aws::S3::Model::ListObjectsV2Request& request) = 0;
+  virtual minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(const Aws::S3::Model::ListObjectVersionsRequest& request) = 0;
+
   void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
   int64_t writeFetchedBody(Aws::IOStream& source, const int64_t data_size, const std::shared_ptr<io::BaseStream>& output);
   static Expiration getExpiration(const std::string& expiration);
   static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
+
+  minifi::utils::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);
+  minifi::utils::optional<std::vector<ListedObjectAttributes>> listObjects(const ListRequestParameters& params);
+  void addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, std::vector<ListedObjectAttributes>& listed_objects);
+  void addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, std::vector<ListedObjectAttributes>& listed_objects);
+
+  template<typename ListRequest>
+  ListRequest createListRequest(const ListRequestParameters& params) {
+    ListRequest request;
+    request.SetBucket(params.bucket);
+    request.SetDelimiter(params.delimiter);
+    request.SetPrefix(params.prefix);
+    return request;
+  }
 
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   Aws::Client::ClientConfiguration client_config_;
