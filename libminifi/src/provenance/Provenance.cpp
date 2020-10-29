@@ -87,7 +87,7 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
 bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStream& outStream) {
   int ret;
 
-  ret = outStream.write(this->getUUIDStr());
+  ret = outStream.write(this->uuid_);
   if (ret <= 0) {
     return false;
   }
@@ -128,7 +128,7 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStrea
     return false;
   }
 
-  ret = outStream.write(this->flow_uuid_.to_string());
+  ret = outStream.write(this->flow_uuid_);
   if (ret <= 0) {
     return false;
   }
@@ -184,7 +184,7 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStrea
       return false;
     }
     for (const auto& parentUUID : _parentUuids) {
-      ret = outStream.write(parentUUID.to_string());
+      ret = outStream.write(parentUUID);
       if (ret <= 0) {
         return false;
       }
@@ -195,7 +195,7 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStrea
       return false;
     }
     for (const auto& childUUID : _childrenUuids) {
-      ret = outStream.write(childUUID.to_string());
+      ret = outStream.write(childUUID);
       if (ret <= 0) {
         return false;
       }
