@@ -86,7 +86,7 @@ bool FlowFileRecord::Serialize(io::OutputStream &outStream) {
     return false;
   }
 
-  ret = outStream.write(getUUIDStr());
+  ret = outStream.write(uuid_);
   if (ret <= 0) {
     return false;
   }
@@ -95,7 +95,7 @@ bool FlowFileRecord::Serialize(io::OutputStream &outStream) {
   if (connection_) {
     containerId = connection_->getUUID();
   }
-  ret = outStream.write(containerId.to_string());
+  ret = outStream.write(containerId);
   if (ret <= 0) {
     return false;
   }
@@ -179,28 +179,15 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(io::InputStream& inS
     return {};
   }
 
-  std::string uuidStr;
-  ret = inStream.read(uuidStr);
+  ret = inStream.read(file->uuid_);
   if (ret <= 0) {
     return {};
   }
-  utils::optional<utils::Identifier> parsedUUID = utils::Identifier::parse(uuidStr);
-  if (!parsedUUID) {
-    return {};
-  }
-  file->uuid_ = parsedUUID.value();
 
-
-  std::string connectionUUIDStr;
-  ret = inStream.read(connectionUUIDStr);
+  ret = inStream.read(container);
   if (ret <= 0) {
     return {};
   }
-  utils::optional<utils::Identifier> parsedConnectionUUID = utils::Identifier::parse(connectionUUIDStr);
-  if (!parsedConnectionUUID) {
-    return {};
-  }
-  container = parsedConnectionUUID.value();
 
   // read flow attributes
   uint32_t numAttributes = 0;

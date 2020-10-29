@@ -303,13 +303,10 @@ std::shared_ptr<minifi::Connection> ExecutionPlan::connectProcessors(std::shared
   // link the connections so that we can test results at the end for this
   connection->setSource(src_proc);
 
-  utils::Identifier uuid_copy, uuid_copy_next;
-  uuid_copy = src_proc->getUUID();
-  connection->setSourceUUID(uuid_copy);
+  connection->setSourceUUID(src_proc->getUUID());
   if (set_dst) {
     connection->setDestination(dst_proc);
-    uuid_copy_next = dst_proc->getUUID();
-    connection->setDestinationUUID(uuid_copy_next);
+    connection->setDestinationUUID(dst_proc->getUUID());
     if (src_proc != dst_proc) {
       dst_proc->addConnection(connection);
     }

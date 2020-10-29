@@ -236,14 +236,7 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
 
   org::apache::nifi::minifi::io::BufferStream outStream(buffer, bufferSize);
 
-  std::string uuidStr;
-  ret = outStream.read(uuidStr);
-  utils::optional<utils::Identifier> uuid = utils::Identifier::parse(uuidStr);
-  if (!uuid) {
-    return false;
-  }
-  uuid_ = uuid.value();
-
+  ret = outStream.read(uuid_);
   if (ret <= 0) {
     return false;
   }
@@ -285,19 +278,12 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
     return false;
   }
 
-  std::string flowUUIDStr;
-  ret = outStream.read(flowUUIDStr);
+  ret = outStream.read(this->flow_uuid_);
   if (ret <= 0) {
     return false;
   }
-  utils::optional<utils::Identifier> flowUUID = utils::Identifier::parse(flowUUIDStr);
-  if (!flowUUID) {
-    return false;
-  }
-  this->flow_uuid_ = flowUUID.value();
 
   ret = outStream.read(this->_details);
-
   if (ret <= 0) {
     return false;
   }
@@ -352,16 +338,12 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
     }
 
     for (uint32_t i = 0; i < number; i++) {
-      std::string parentUUIDStr;
-      ret = outStream.read(parentUUIDStr);
+      utils::Identifier parentUUID;
+      ret = outStream.read(parentUUID);
       if (ret <= 0) {
         return false;
       }
-      utils::optional<utils::Identifier> parentUUID = utils::Identifier::parse(parentUUIDStr);
-      if (!parentUUID) {
-        return false;
-      }
-      this->addParentUuid(parentUUID.value());
+      this->addParentUuid(parentUUID);
     }
     number = 0;
     ret = outStream.read(number);
@@ -369,16 +351,12 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
       return false;
     }
     for (uint32_t i = 0; i < number; i++) {
-      std::string childUUIDStr;
-      ret = outStream.read(childUUIDStr);
+      utils::Identifier childUUID;
+      ret = outStream.read(childUUID);
       if (ret <= 0) {
         return false;
       }
-      utils::optional<utils::Identifier> childUUID = utils::Identifier::parse(childUUIDStr);
-      if (!childUUID) {
-        return false;
-      }
-      this->addChildUuid(childUUID.value());
+      this->addChildUuid(childUUID);
     }
   } else if (this->_eventType == ProvenanceEventRecord::SEND || this->_eventType == ProvenanceEventRecord::FETCH) {
     ret = outStream.read(this->_transitUri);

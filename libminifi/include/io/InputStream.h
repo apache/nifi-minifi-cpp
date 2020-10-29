@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include "Stream.h"
+#include "utils/Id.h"
 
 namespace org {
 namespace apache {
@@ -57,6 +58,13 @@ class InputStream : public virtual Stream {
    * @return resulting read size
    **/
   int read(bool& value);
+
+  /**
+   * read a uuid from stream
+   * @param value reference to the output
+   * @return resulting read size
+   **/
+  int read(utils::Identifier& value);
 
   /**
   * reads sizeof(Integral) bytes from the stream

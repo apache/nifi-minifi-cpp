@@ -103,11 +103,8 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
     connection->setSource(last);
     connection->setDestination(processor);
 
-    utils::Identifier uuid_copy, uuid_copy_next;
-    uuid_copy = last->getUUID();
-    connection->setSourceUUID(uuid_copy);
-    uuid_copy_next = processor->getUUID();
-    connection->setDestinationUUID(uuid_copy_next);
+    connection->setSourceUUID(last->getUUID());
+    connection->setDestinationUUID(processor->getUUID());
     last->addConnection(connection);
     if (last != processor) {
       processor->addConnection(connection);
@@ -172,11 +169,8 @@ std::shared_ptr<minifi::Connection> TestPlan::addConnection(const std::shared_pt
   connection->setSource(source_proc);
   connection->setDestination(destination_proc);
 
-  utils::Identifier uuid_copy_src, uuid_copy_dest;
-  uuid_copy_src = source_proc->getUUID();
-  connection->setSourceUUID(uuid_copy_src);
-  uuid_copy_dest = destination_proc->getUUID();
-  connection->setDestinationUUID(uuid_copy_dest);
+  connection->setSourceUUID(source_proc->getUUID());
+  connection->setDestinationUUID(destination_proc->getUUID());
   source_proc->addConnection(connection);
   if (source_proc != destination_proc) {
     destination_proc->addConnection(connection);

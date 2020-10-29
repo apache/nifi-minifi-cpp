@@ -24,6 +24,7 @@
 #include "Stream.h"
 #include "utils/gsl.h"
 #include "utils/SmallString.h"
+#include "utils/Id.h"
 
 namespace org {
 namespace apache {
@@ -54,6 +55,13 @@ class OutputStream : public virtual Stream {
    * @return resulting write size
    **/
   int write(bool value);
+
+  /**
+   * write Identifier to stream
+   * @param value non encoded value
+   * @return resulting write size
+   **/
+  int write(const utils::Identifier& value);
 
   /**
    * write string to stream
