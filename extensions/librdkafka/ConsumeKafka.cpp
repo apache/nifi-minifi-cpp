@@ -21,9 +21,7 @@
 
 #include "core/PropertyValidation.h"
 #include "utils/ProcessorConfigUtils.h"
-
-// TODO(hunyadi): obsolete after debugging is done
-#include <cstdio>
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -185,7 +183,7 @@ void print_topics_list(std::shared_ptr<logging::Logger> logger, rd_kafka_topic_p
 
 // TODO(hunyadi): maybe move this to the kafka utils?
 void ConsumeKafka::print_kafka_message(const rd_kafka_message_t* rkmessage) const {
-  if (rkmessage->err != RD_KAFKA_RESP_ERR_NO_ERROR) {
+  if (RD_KAFKA_RESP_ERR_NO_ERROR != rkmessage->err) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "ConsumeKafka: received error message from broker.");
   }
   std::string topicName = rd_kafka_topic_name(rkmessage->rkt);
@@ -205,8 +203,9 @@ void ConsumeKafka::print_kafka_message(const rd_kafka_message_t* rkmessage) cons
   }
 
   logger_->log_debug("Message: \u001b[33m%s\u001b[0m", message.c_str());
-  logger_->log_debug("Topic: %s, Key: %s,\n\u001b[32mOffset: %" PRId64 ", (%zd bytes)\nMessage timestamp: %s %" PRId64 " \u001b[33m(%ds ago)\u001b[0m",
-      topicName.c_str(), ((key != nullptr ? key : "no key was provided")), rkmessage->offset, rkmessage->len, tsname, timestamp, !timestamp ? 0 : (int)time(NULL) - (int)(timestamp/1000));
+  logger_->log_debug("Topic: %s, Key: %s,\n\u001b[32mOffset: %" PRId64 ", (%zd bytes)\nMessage timestamp: %s %" PRId64 " \u001b[33m(%ds ago)\u001b[0m", topicName.c_str(),
+      ((key != nullptr ? key : "[None]")), rkmessage->offset, rkmessage->len, tsname,
+      timestamp, !timestamp ? 0 : static_cast<int>(time(NULL)) - static_cast<int>(timestamp / 1000));
 }
 
 // TODO(hunyadi): this is a test for trying to manually set new connections offsets to latest
@@ -257,7 +256,7 @@ void ConsumeKafka::createTopicPartitionList() {
   // Does not seem to be triggering a rebalance (maybe librdkafka bug?)
   // This might happen until the cross-overship between processors and connections are settled
   rd_kafka_resp_err_t subscribe_response = rd_kafka_subscribe(consumer_.get(), kf_topic_partition_list_.get());
-  if (subscribe_response != RD_KAFKA_RESP_ERR_NO_ERROR) {
+  if (RD_KAFKA_RESP_ERR_NO_ERROR != subscribe_response) {
     logger_->log_error("\u001b[31mrd_kafka_subscribe error %d: %s\u001b[0m", subscribe_response, rd_kafka_err2str(subscribe_response));
   }
 }
@@ -302,16 +301,17 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
 
   logger_->log_info("Resetting offset manually.");
   while (true) {
-    rd_kafka_message_t* message_wrapper = rd_kafka_consumer_poll(consumer_.get(), communications_timeout_milliseconds_.count());
+    std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
+        message_wrapper{ rd_kafka_consumer_poll(consumer_.get(), communications_timeout_milliseconds_.count()), utils::rd_kafka_message_deleter() };
+
     if (!message_wrapper) {
       break;
     }
-    print_kafka_message(message_wrapper);
+    print_kafka_message(message_wrapper.get());
     // Commit offsets on broker for the provided list of partitions
     const int async = 0;
     logger_->log_info("\u001b[33mCommitting offset: %" PRId64 ".\u001b[0m", message_wrapper->offset);
-    rd_kafka_commit_message(consumer_.get(), message_wrapper, async);  // TODO(hunyadi): check this for potential rollback requirements
-    rd_kafka_message_destroy(message_wrapper);  // TODO(hunyadi): this will be a deleter
+    rd_kafka_commit_message(consumer_.get(), message_wrapper.get(), async);  // TODO(hunyadi): check this for potential rollback requirements
   }
   logger_->log_info("Done resetting offset manually.");
 }
@@ -344,44 +344,51 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
 
   print_topics_list(logger_, kf_topic_partition_list_.get());
 
-  rd_kafka_message_t* message_wrapper = rd_kafka_consumer_poll(consumer_.get(), communications_timeout_milliseconds_.count());
+  std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter> message_wrapper{
+      rd_kafka_consumer_poll(consumer_.get(), communications_timeout_milliseconds_.count()), utils::rd_kafka_message_deleter()};
   if (!message_wrapper) {
     return;
   }
 
-  std::string message = extract_message(message_wrapper);
+  std::string message = extract_message(message_wrapper.get());
   if (message.empty()) {
     return;
   }
 
   // Commit offsets on broker for the provided list of partitions
   const int async = 0;
-  // kf_topic_partition_list_->elems[0].offset = message_wrapper->offset;  // FIXME(hunyadi): get the proper partition for the message
-  // rd_kafka_commit(consumer_.get(), kf_topic_partition_list_.get(), async);  // TODO(hunyadi): check this for potential rollback requirements
-  rd_kafka_commit_message(consumer_.get(), message_wrapper, async);  // TODO(hunyadi): check this for potential rollback requirements
+  rd_kafka_commit_message(consumer_.get(), message_wrapper.get(), async);  // TODO(hunyadi): check this for potential rollback requirements
   logger_->log_info("\u001b[33mCommitting offset: %" PRId64 ".\u001b[0m", message_wrapper->offset);
 
-  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
-  if (flowFile == nullptr) {
+  std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
+  if (flow_file == nullptr) {
     return;
   }
-  rd_kafka_message_destroy(message_wrapper);  // TODO(hunyadi): this will be a deleter
 
   std::vector<char> stream_compatible_message(message.begin(), message.end());
   char* message_data = &stream_compatible_message[0];
   WriteCallback callback(message_data, stream_compatible_message.size());
-  session->write(flowFile, &callback);
-  session->transfer(flowFile, Success);
+  session->write(flow_file, &callback);
 
+  for (const std::string& header_name : headers_to_add_as_attributes_) {
+    {
+      // Headers fetched this way are freed when rd_kafka_message_destroy is called
+      // Detaching them using rd_kafka_message_detach_headers does not seem to work
+      rd_kafka_headers_t* headers_raw;
+      if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_message_headers(message_wrapper.get(), &headers_raw)) {
+        logger_->log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
+      }
+      const char* value;  // Freeing this causes double free
+      std::size_t size;
+      if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_header_get(headers_raw, 0, header_name.c_str(), (const void**)(&value), &size)) {
+        logger_->log_error("Failed to read message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
+      }
+      logger_->log_info("%.*s", gsl::narrow<int>(size), value);
+      flow_file->setAttribute(header_name, std::string{ value, size });
+    }
+  }
 
-  static std::size_t size_counter;
-  std::string dump_file_path = "/tmp/consumekafka_test/" + std::to_string(size_counter++);
-  FILE* dump_file = std::fopen(dump_file_path.c_str(), "w");
-  rd_kafka_dump(dump_file, consumer_.get());
-  std::fclose(dump_file);
-
-  // std::lock_guard<std::mutex> lock_connection(connection_mutex_);
-  // logger_->log_debug("ConsumeKafka onTrigger: connection locked.");
+  session->transfer(flow_file, Success);
 }
 
 }  // namespace processors

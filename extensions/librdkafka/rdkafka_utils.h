@@ -72,6 +72,14 @@ struct rd_kafka_topic_deleter {
   void operator()(rd_kafka_topic_t* ptr) const noexcept { std::cerr << "\u001b[37;1mtopic_deleter\u001b[0m" << std::endl; rd_kafka_topic_destroy(ptr); }
 };
 
+struct rd_kafka_message_deleter {
+  void operator()(rd_kafka_message_t* ptr) const noexcept { rd_kafka_message_destroy(ptr); }
+};
+
+struct rd_kafka_headers_deleter {
+  void operator()(rd_kafka_headers_t* ptr) const noexcept { rd_kafka_headers_destroy(ptr); }
+};
+
 void setKafkaConfigurationField(rd_kafka_conf_t* configuration, const std::string& field_name, const std::string& value);
 
 }  // namespace utils

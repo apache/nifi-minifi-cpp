@@ -77,13 +77,14 @@ class KafkaTestProducer {
     }
   }
 
-  void publish_messages_to_topic(const std::vector<std::string>& messages_on_topic, std::vector<PublishEvent> events) {
+  // Uses all the headers for every published message
+  void publish_messages_to_topic(const std::vector<std::string>& messages_on_topic, std::vector<PublishEvent> events, const std::vector<std::pair<std::string, std::string>>& message_headers) {
     auto next_message = messages_on_topic.cbegin();
     for (const PublishEvent event : events) {
       switch (event) {
         case PublishEvent::PUBLISH:
           REQUIRE(messages_on_topic.cend() != next_message);
-          publish_message(*next_message);
+          publish_message(*next_message, message_headers);
           std::advance(next_message, 1);
           break;
         case PublishEvent::TRANSACTION_START:
@@ -102,10 +103,29 @@ class KafkaTestProducer {
   }
 
  private:
-  void publish_message(const std::string& message) {
+  void publish_message(const std::string& message, const std::vector<std::pair<std::string, std::string>>& message_headers) {
     logger_->log_debug("Producing: %s", message.c_str());
-    if (rd_kafka_produce(topic_.get(), RD_KAFKA_PARTITION_UA, RD_KAFKA_MSG_F_FREE, strdup(message.c_str()), message.size(), nullptr, 0, nullptr)) {
-      logger_->log_error("Producer failure: %d", rd_kafka_last_error());
+    std::unique_ptr<rd_kafka_headers_t, utils::rd_kafka_headers_deleter> headers(rd_kafka_headers_new(message_headers.size()), utils::rd_kafka_headers_deleter());
+    if (!headers) {
+      throw std::runtime_error("Generating message headers failed.");
+    }
+    for (const std::pair<std::string, std::string>& message_header : message_headers) {
+      rd_kafka_header_add(headers.get(),
+          const_cast<char*>(message_header.first.c_str()), message_header.first.size(),
+          const_cast<char*>(message_header.second.c_str()), message_header.second.size());
+    }
+
+    if (!rd_kafka_producev(
+        producer_.get(),
+        RD_KAFKA_V_RKT(topic_.get()),
+        RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA),
+        RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY),
+        RD_KAFKA_V_VALUE(const_cast<char*>(&message[0]), message.size()),
+        RD_KAFKA_V_HEADERS(headers.release()),
+        // RD_KAFKA_V_KEY(key_.c_str(), key_.size()),
+        // RD_KAFKA_V_OPAQUE(callback_ptr.get()),
+        RD_KAFKA_V_END)) {
+      logger_->log_error("Producer failure: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
     }
   }
 
@@ -137,9 +157,10 @@ class ConsumeKafkaTest {
       bool expect_config_valid,
       const std::string& expect_flowfiles_from_messages,  // TODO(hunyadi): upgrade to enum
       bool expect_fixed_message_order,
-      const std::vector<std::string>& expect_header_attributes,
+      const std::vector<std::pair<std::string, std::string>>& expect_header_attributes,
       const std::vector<std::string>& messages_on_topic,
       const std::vector<KafkaTestProducer::PublishEvent>& transaction_events,
+      const std::vector<std::pair<std::string, std::string>>& message_headers,
       const std::string& kafka_brokers,
       const std::string& security_protocol,
       const std::string& topic_names,
@@ -208,7 +229,7 @@ class ConsumeKafkaTest {
     const bool transactions_committed = transaction_events.back() == KafkaTestProducer::PublishEvent::TRANSACTION_COMMIT;
 
     KafkaTestProducer producer(kafka_brokers, PRODUCER_TOPIC, is_transactional);
-    producer.publish_messages_to_topic(messages_on_topic, transaction_events);
+    producer.publish_messages_to_topic(messages_on_topic, transaction_events, message_headers);
 
     if (!expect_config_valid) {
       // TODO(hunyadi): Add function to the TestPlan that checks if scheduling ConsumeKafka succeeds
@@ -225,11 +246,14 @@ class ConsumeKafkaTest {
         REQUIRE(false == plan_->runCurrentProcessorUntilFlowfileIsProduced(MAX_CONSUMEKAFKA_POLL_TIME_SECONDS));
         return;
       }
-      INFO("ConsumeKafka timed out when waiting to receive the message published to the kafka broker.");
+      SCOPED_INFO("ConsumeKafka timed out when waiting to receive the message published to the kafka broker.");
       REQUIRE(plan_->runCurrentProcessorUntilFlowfileIsProduced(MAX_CONSUMEKAFKA_POLL_TIME_SECONDS));
       plan_->runNextProcessor();  // ExtractText
       plan_->runNextProcessor();  // LogAttribute
       flowFilesProduced.emplace_back(plan_->getFlowFileProducedByCurrentProcessor());
+      for (const auto& exp_header : expect_header_attributes) {
+        REQUIRE(exp_header.second == flowFilesProduced.back()->getAttribute(exp_header.first).value().get());
+      }
       plan_->reset_location();
     }
 
@@ -239,8 +263,10 @@ class ConsumeKafkaTest {
       const auto r = rhs->getAttribute(ATTRIBUTE_FOR_CAPTURING_CONTENT).value().get();
       return lhs->getAttribute(ATTRIBUTE_FOR_CAPTURING_CONTENT).value().get() < rhs->getAttribute(ATTRIBUTE_FOR_CAPTURING_CONTENT).value().get();
     };
-    INFO("The flowfiles generated by ConsumeKafka are invalid (probably nullptr).");
-    CHECK_NOTHROW(std::sort(flowFilesProduced.begin(), flowFilesProduced.end(), contentOrderOfFlowFile));
+    {
+      SCOPED_INFO("The flowfiles generated by ConsumeKafka are invalid (probably nullptr).");
+      CHECK_NOTHROW(std::sort(flowFilesProduced.begin(), flowFilesProduced.end(), contentOrderOfFlowFile));
+    }
     std::vector<std::string> sorted_messages(messages_on_topic);
     std::sort(sorted_messages.begin(), sorted_messages.end());
     const auto flowFileContentMatchesMessage = [&] (const std::shared_ptr<core::FlowFile>& flowfile, const std::string message) {
@@ -313,32 +339,32 @@ TEST_CASE_METHOD(ConsumeKafkaTest, "Publish and receive flow-files from Kafka.",
   std::vector<KafkaTestProducer::PublishEvent> NON_COMMITTED_TRANSACTION    { TRANSACTION_START, PUBLISH, PUBLISH };
   std::vector<KafkaTestProducer::PublishEvent> COMMIT_AND_CANCEL            { TRANSACTION_START, PUBLISH, CANCEL };
 
-  //               EXP_CONF_VALID   EXP_HEADER_ATTRIBUTES                                                                                               KAFKA_BROKERS                                   TOPIC_NAME_FORMAT                             OFFSET_RESET                                           MESSAGE_HEADER_ENCODING                                               MAX_UNCOMMITTED_TIME // NOLINT
-  //                      EXP_FF_FROM_MESSAGES                                                      MESSAGES_ON_TOPIC                                             SECURITY_PROTOCOL                           HONOR_TRANSACTIONS                       KEY_ATTRIBUTE_ENCODING                                            HEADERS_TO_ADD_AS_ATTRIBUTES                                       // NOLINT
-  //                           EXP_FIXED_MESSAGE_ORDER                                                                             TRANSACTION_TYPE                                                TOPIC_NAMES                                      GROUP_ID                                     MESSAGE_DEMARCATOR                                                      MAX_POLL_RECORDS                      // NOLINT
-  // singleConsumerWithPlainTextTest(true, "both", false, {}, {              "Ulysses",                   "James Joyce"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  singleConsumerWithPlainTextTest(true, "both", false, {}, {     "The Great Gatsby",           "F. Scott Fitzgerald"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest", "names"  ,    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  // singleConsumerWithPlainTextTest(true, "both", false, {}, {        "War and Peace",                   "Lev Tolstoy"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT", "a,b,c,ConsumeKafkaTest,d", "names"  ,    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  singleConsumerWithPlainTextTest(true, "both", false, {}, { "Nineteen Eighty Four",                 "George Orwell"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest", "pattern",    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  singleConsumerWithPlainTextTest(true, "both", false, {}, {               "Hamlet",           "William Shakespeare"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT",      "Cons[emu]*KafkaTest", "pattern",    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
+  //               EXP_CONF_VALID                                EXP_HEADER_ATTRIBUTES                                                                                                                                               KAFKA_BROKERS                                   TOPIC_NAME_FORMAT                             OFFSET_RESET                                           MESSAGE_HEADER_ENCODING                                               MAX_UNCOMMITTED_TIME // NOLINT
+  //                      EXP_FF_FROM_MESSAGES                                                                                   MESSAGES_ON_TOPIC                                                                                            SECURITY_PROTOCOL                           HONOR_TRANSACTIONS                       KEY_ATTRIBUTE_ENCODING                                            HEADERS_TO_ADD_AS_ATTRIBUTES                                       // NOLINT
+  //                           EXP_FIXED_MESSAGE_ORDER                                                                                                          TRANSACTION_TYPE                                                                                               TOPIC_NAMES                                      GROUP_ID                                     MESSAGE_DEMARCATOR                                                      MAX_POLL_RECORDS                      // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {              "Ulysses",                   "James Joyce"},   NON_TRANSACTIONAL_MESSAGES,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {     "The Great Gatsby",           "F. Scott Fitzgerald"},   NON_TRANSACTIONAL_MESSAGES,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest", "names"  ,    {}, {"test_group_id"}, {},        {}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
+  // singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {        "War and Peace",                   "Lev Tolstoy"},   NON_TRANSACTIONAL_MESSAGES,                                               {}, "localhost:9092", "PLAINTEXT", "a,b,c,ConsumeKafkaTest,d", "names"  ,    {}, {"test_group_id"}, {},        {}, {},        {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                                        {}, { "Nineteen Eighty Four",                 "George Orwell"},   NON_TRANSACTIONAL_MESSAGES,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest", "pattern",    {}, {"test_group_id"}, {},        {}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {               "Hamlet",           "William Shakespeare"},   NON_TRANSACTIONAL_MESSAGES,                                               {}, "localhost:9092", "PLAINTEXT",      "Cons[emu]*KafkaTest", "pattern",    {}, {"test_group_id"}, {},        {}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
 
   // TODO(hunyadi): Encoded messages yet to be tested
-  // singleConsumerWithPlainTextTest(true, "both", false, {}, {          "The Odyssey",                        "Ὅμηρος"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  // singleConsumerWithPlainTextTest(true, "both", false, {}, {               "Lolita", "Владимир Владимирович Набоков"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {}, {"utf-8"}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  // singleConsumerWithPlainTextTest(true, "both", false, {}, { "Crime and Punishment",  "Фёдор Михайлович Достоевский"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},   {"hex"}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
+  // singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {          "The Odyssey",                        "Ὅμηρος"},   NON_TRANSACTIONAL_MESSAGES,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
+  // singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {               "Lolita", "Владимир Владимирович Набоков"},   NON_TRANSACTIONAL_MESSAGES,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {}, {"utf-8"}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
+  // singleConsumerWithPlainTextTest(true, "both", false,                                        {}, { "Crime and Punishment",  "Фёдор Михайлович Достоевский"},   NON_TRANSACTIONAL_MESSAGES,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},   {"hex"}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
 
-  singleConsumerWithPlainTextTest(true, "both", false, {}, {  "Pride and Prejudice",                   "Jane Austen"}, SINGLE_COMMITTED_TRANSACTION, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  singleConsumerWithPlainTextTest(true, "both", false, {}, {                 "Dune",                 "Frank Herbert"},    TWO_SEPARATE_TRANSACTIONS, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  singleConsumerWithPlainTextTest(true, "both", false, {}, {      "The Black Sheep",              "Honore De Balzac"},    NON_COMMITTED_TRANSACTION, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  singleConsumerWithPlainTextTest(true, "both", false, {}, {     "Gospel of Thomas",                                },            COMMIT_AND_CANCEL, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  singleConsumerWithPlainTextTest(true, "both", false, {}, { "Operation Dark Heart",                                },            COMMIT_AND_CANCEL, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  singleConsumerWithPlainTextTest(true, "both", false, {}, {               "Brexit",                                },            COMMIT_AND_CANCEL, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {}, false, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {  "Pride and Prejudice",                   "Jane Austen"}, SINGLE_COMMITTED_TRANSACTION,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {                 "Dune",                 "Frank Herbert"},    TWO_SEPARATE_TRANSACTIONS,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {      "The Black Sheep",              "Honore De Balzac"},    NON_COMMITTED_TRANSACTION,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {     "Gospel of Thomas",                                },            COMMIT_AND_CANCEL,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                                        {}, { "Operation Dark Heart",                                },            COMMIT_AND_CANCEL,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {               "Brexit",                                },            COMMIT_AND_CANCEL,                                               {}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {}, false, {"test_group_id"}, {},        {}, {}, {},        {}, {}, "1 sec", "2 sec" ); // NOLINT
 
-  // TODO(hunyadi): Message headers are yet to be tested
-  // singleConsumerWithPlainTextTest(true, "both", false, {}, {             "Magician",              "Raymond E. Feist"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  // singleConsumerWithPlainTextTest(true, "both", false, {}, {             "Homeland",               "R. A. Salvatore"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  // singleConsumerWithPlainTextTest(true, "both", false, {}, {             "Mistborn",             "Brandon Sanderson"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
-  // singleConsumerWithPlainTextTest(true, "both", false, {}, {"The Lord of the Rings",              "J. R. R. Tolkien"},   NON_TRANSACTIONAL_MESSAGES, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                 {{{"Rating"}, {"10/10"}}}, {             "Magician",              "Raymond E. Feist"},   NON_TRANSACTIONAL_MESSAGES,                        {{{"Rating"}, {"10/10"}}}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {}, {"Rating"}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,                                        {}, {             "Homeland",               "R. A. Salvatore"},   NON_TRANSACTIONAL_MESSAGES,             {{{"Contains dark elves"}, {"Yes"}}}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {},         {}, {}, "1 sec", "2 sec" ); // NOLINT
+  // It is what it is, we seem to keep the first header when multiple ones of the same name are present, we cannot control which one to keep
+  singleConsumerWithPlainTextTest(true, "both", false,                 {{{"Metal"}, {"Copper"}}}, {             "Mistborn",             "Brandon Sanderson"},   NON_TRANSACTIONAL_MESSAGES, {{{"Metal"}, {"Copper"}}, {{"Metal"}, {"Iron"}}}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {},  {"Metal"}, {}, "1 sec", "2 sec" ); // NOLINT
+  singleConsumerWithPlainTextTest(true, "both", false,   {{{"Parts"}, {"First, second, third"}}}, {"The Lord of the Rings",              "J. R. R. Tolkien"},   NON_TRANSACTIONAL_MESSAGES,          {{{"Parts"}, {"First, second, third"}}}, "localhost:9092", "PLAINTEXT",         "ConsumeKafkaTest",        {},    {}, {"test_group_id"}, {},        {}, {}, {},  {"Parts"}, {}, "1 sec", "2 sec" ); // NOLINT
 }
 
 }  // namespace
