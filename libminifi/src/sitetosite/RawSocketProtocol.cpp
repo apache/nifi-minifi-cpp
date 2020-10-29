@@ -236,7 +236,7 @@ bool RawSiteToSiteClient::handShake() {
   logger_->log_debug("Site2Site Protocol Perform hand shake with destination port %s", port_id_.to_string());
   _commsIdentifier = id_generator_->generate();
 
-  int ret = peer_->write(_commsIdentifier.to_string());
+  int ret = peer_->write(_commsIdentifier);
 
   if (ret <= 0) {
     return false;
