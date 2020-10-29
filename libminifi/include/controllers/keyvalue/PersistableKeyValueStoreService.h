@@ -41,8 +41,8 @@ class PersistableKeyValueStoreService : virtual public KeyValueStoreService, pub
   virtual bool persist() = 0;
 
  protected:
-  bool setImpl(const utils::Identifier& key, const std::string& value) override;
-  bool getImpl(const utils::Identifier& key, std::string& value) override;
+  bool setImpl(const utils::Identifier& key, const std::string& serialized_state) override;
+  bool getImpl(const utils::Identifier& key, std::string& serialized_state) override;
   bool getImpl(std::map<utils::Identifier, std::string>& kvs) override;
   bool removeImpl(const utils::Identifier& key) override;
   bool persistImpl() override;

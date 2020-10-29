@@ -32,13 +32,15 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+using CoreComponentState = std::unordered_map<std::string, std::string>;
+
 class CoreComponentStateManager {
  public:
   virtual ~CoreComponentStateManager() = default;
 
-  virtual bool set(const std::unordered_map<std::string, std::string>& kvs) = 0;
+  virtual bool set(const CoreComponentState& kvs) = 0;
 
-  virtual bool get(std::unordered_map<std::string, std::string>& kvs) = 0;
+  virtual bool get(CoreComponentState& kvs) = 0;
 
   virtual bool clear() = 0;
 
@@ -55,7 +57,7 @@ class CoreComponentStateManagerProvider {
     return getCoreComponentStateManager(component.getUUID());
   }
 
-  virtual std::map<utils::Identifier, std::unordered_map<std::string, std::string>> getAllCoreComponentStates() = 0;
+  virtual std::map<utils::Identifier, CoreComponentState> getAllCoreComponentStates() = 0;
 };
 
 }  // namespace core

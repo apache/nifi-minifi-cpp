@@ -45,14 +45,14 @@ class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from
     std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider_;
     utils::Identifier id_;
     bool state_valid_;
-    std::unordered_map<std::string, std::string> state_;
+    core::CoreComponentState state_;
 
    public:
     AbstractCoreComponentStateManager(std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider, const utils::Identifier& id);
 
-    bool set(const std::unordered_map<std::string, std::string>& kvs) override;
+    bool set(const core::CoreComponentState& kvs) override;
 
-    bool get(std::unordered_map<std::string, std::string>& kvs) override;
+    bool get(core::CoreComponentState& kvs) override;
 
     bool clear() override;
 
@@ -60,14 +60,14 @@ class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from
   };
 
  protected:
-  virtual bool setImpl(const utils::Identifier& key, const std::string& value) = 0;
-  virtual bool getImpl(const utils::Identifier& key, std::string& value) = 0;
+  virtual bool setImpl(const utils::Identifier& key, const std::string& serialized_state) = 0;
+  virtual bool getImpl(const utils::Identifier& key, std::string& serialized_state) = 0;
   virtual bool getImpl(std::map<utils::Identifier, std::string>& kvs) = 0;
   virtual bool removeImpl(const utils::Identifier& key) = 0;
   virtual bool persistImpl() = 0;
 
-  virtual std::string serialize(const std::unordered_map<std::string, std::string>& kvs);
-  bool deserialize(const std::string& serialized, std::unordered_map<std::string, std::string>& kvs);
+  virtual std::string serialize(const core::CoreComponentState& kvs);
+  bool deserialize(const std::string& serialized, core::CoreComponentState& kvs);
 };
 
 }  // namespace controllers
