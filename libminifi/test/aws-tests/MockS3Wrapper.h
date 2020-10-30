@@ -25,7 +25,8 @@
 #include "s3/S3WrapperBase.h"
 #include "aws/core/utils/DateTime.h"
 
-const std::string S3_VERSION = "1.2.3";
+const std::string S3_VERSION_1 = "1.2.3";
+const std::string S3_VERSION_2 = "1.2.4";
 const std::string S3_ETAG = "\"tag-123\"";
 const std::string S3_ETAG_UNQUOTED = "tag-123";
 const std::string S3_EXPIRATION = "expiry-date=\"Wed, 28 Oct 2020 00:00:00 GMT\", rule-id=\"my_expiration_rule\"";
@@ -45,22 +46,22 @@ const std::string S3_STORAGE_CLASS_STR = "Standard";
 class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
  public:
   MockS3Wrapper() {
-    for(auto i = 1; i <= S3_OBJECT_COUNT; ++i) {
+    for(auto i = 0; i < S3_OBJECT_COUNT; ++i) {
       Aws::S3::Model::ObjectVersion version;
       version.SetKey(S3_KEY_PREFIX + std::to_string(i));
       version.SetETag(S3_ETAG_PREFIX + std::to_string(i));
       version.SetIsLatest(false);
       version.SetStorageClass(Aws::S3::Model::ObjectVersionStorageClass::STANDARD);
-      version.SetVersionId("V1");
+      version.SetVersionId(S3_VERSION_1);
       version.SetSize(S3_OBJECT_SIZE);
       version.SetLastModified(Aws::Utils::DateTime(S3_OBJECT_AGE_MILLISECONDS));
       listed_versions_.push_back(version);
-      version.SetVersionId("V2");
+      version.SetVersionId(S3_VERSION_2);
       version.SetIsLatest(true);
       listed_versions_.push_back(version);
     }
 
-    for(auto i = 1; i <= S3_OBJECT_COUNT; ++i) {
+    for(auto i = 0; i < S3_OBJECT_COUNT; ++i) {
       Aws::S3::Model::Object object;
       object.SetKey(S3_KEY_PREFIX + std::to_string(i));
       object.SetETag(S3_ETAG_PREFIX + std::to_string(i));
@@ -76,7 +77,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
 
     Aws::S3::Model::PutObjectResult put_s3_result;
     if (!return_empty_result_) {
-      put_s3_result.SetVersionId(S3_VERSION);
+      put_s3_result.SetVersionId(S3_VERSION_1);
       put_s3_result.SetETag(S3_ETAG);
       put_s3_result.SetExpiration(S3_EXPIRATION);
       put_s3_result.SetServerSideEncryption(S3_SSEALGORITHM);
@@ -94,7 +95,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
 
     Aws::S3::Model::GetObjectResult get_s3_result;
     if (!return_empty_result_) {
-      get_s3_result.SetVersionId(S3_VERSION);
+      get_s3_result.SetVersionId(S3_VERSION_1);
       get_s3_result.SetETag(S3_ETAG);
       get_s3_result.SetExpiration(S3_EXPIRATION);
       get_s3_result.SetServerSideEncryption(S3_SSEALGORITHM);
@@ -130,7 +131,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     Aws::S3::Model::ListObjectVersionsResult list_version_result;
     if (request.GetKeyMarker().empty() && request.GetVersionIdMarker().empty()) {
       list_version_result.SetKeyMarker("continue_key");
-      list_version_result.SetVersionIdMarker("continue_version");
+      list_version_result.SetNextVersionIdMarker("continue_version");
       list_version_result.SetIsTruncated(true);
       for (auto i = 0; i < listed_versions_.size() / 2; ++i) {
         list_version_result.AddVersions(listed_versions_[i]);

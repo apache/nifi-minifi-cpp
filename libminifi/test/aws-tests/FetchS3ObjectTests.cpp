@@ -119,7 +119,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test default properties", "[awsS3Co
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.expirationTime value:" + S3_EXPIRATION_DATE));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.expirationTimeRuleId value:" + S3_EXPIRATION_TIME_RULE_ID));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.version value:" + S3_VERSION));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.version value:" + S3_VERSION_1));
   REQUIRE(get_file_content(output_dir + get_separator() + INPUT_FILENAME) == S3_CONTENT);
   REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetVersionId().empty());
   REQUIRE(!mock_s3_wrapper_ptr->get_object_request.VersionIdHasBeenSet());
@@ -155,10 +155,10 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test subdirectories on AWS", "[awsS
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test optional values are set in request", "[awsS3Config]") {
   setRequiredProperties();
-  plan->setProperty(s3_processor, "Version", S3_VERSION);
+  plan->setProperty(s3_processor, "Version", S3_VERSION_1);
   plan->setProperty(s3_processor, "Requester Pays", "true");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetVersionId() == S3_VERSION);
+  REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetVersionId() == S3_VERSION_1);
   REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::requester);
 }
 
