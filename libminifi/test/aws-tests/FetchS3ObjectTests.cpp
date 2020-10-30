@@ -65,6 +65,11 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test required property not set", "[
     setBasicCredentials();
   }
 
+  SECTION("Test no object key is set") {
+    setRequiredProperties();
+    plan->setProperty(update_attribute, "filename", "", true);
+  }
+
   SECTION("Test region is empty") {
     setRequiredProperties();
     plan->setProperty(s3_processor, "Region", "");
