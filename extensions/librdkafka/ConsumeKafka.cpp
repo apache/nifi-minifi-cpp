@@ -96,6 +96,8 @@ core::Property ConsumeKafka::MessageDemarcator(core::PropertyBuilder::createProp
 core::Property ConsumeKafka::MessageHeaderEncoding(core::PropertyBuilder::createProperty("Message Header Encoding")
   ->withDescription("Any message header that is found on a Kafka message will be added to the outbound FlowFile as an attribute. This property indicates the Character Encoding "
       "to use for deserializing the headers.")
+  ->withAllowableValues<std::string>({MSG_HEADER_ENCODING_UTF_8})
+  ->withDefaultValue(MSG_HEADER_ENCODING_UTF_8)
   ->build());
 
 core::Property ConsumeKafka::HeadersToAddAsAttributes(core::PropertyBuilder::createProperty("Headers To Add As Attributes")
@@ -164,6 +166,7 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
   // Optional properties
   context->getProperty(MessageDemarcator.getName(), message_demarcator_);
   context->getProperty(MessageHeaderEncoding.getName(), message_header_encoding_);
+
   headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.getName());
   max_poll_records_ = utils::getOptionalUintProperty(context, MaxPollRecords.getName());
   max_uncommitted_time_seconds_ = utils::getOptionalUintProperty(context, MaxUncommittedTime.getName());
@@ -182,31 +185,7 @@ void print_topics_list(std::shared_ptr<logging::Logger> logger, rd_kafka_topic_p
 }
 
 // TODO(hunyadi): maybe move this to the kafka utils?
-void ConsumeKafka::print_kafka_message(const rd_kafka_message_t* rkmessage) const {
-  if (RD_KAFKA_RESP_ERR_NO_ERROR != rkmessage->err) {
-      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "ConsumeKafka: received error message from broker.");
-  }
-  std::string topicName = rd_kafka_topic_name(rkmessage->rkt);
-  std::string message(reinterpret_cast<char*>(rkmessage->payload), rkmessage->len);
-  char* key = reinterpret_cast<char*>(rkmessage->key);
-  rd_kafka_timestamp_type_t tstype;
-  int64_t timestamp;
-  rd_kafka_headers_t *hdrs;
-  timestamp = rd_kafka_message_timestamp(rkmessage, &tstype);
-  const char *tsname = "?";
-  if (tstype != RD_KAFKA_TIMESTAMP_NOT_AVAILABLE) {
-    if (tstype == RD_KAFKA_TIMESTAMP_CREATE_TIME) {
-      tsname = "create time";
-    } else if (tstype == RD_KAFKA_TIMESTAMP_LOG_APPEND_TIME) {
-      tsname = "log append time";
-    }
-  }
 
-  logger_->log_debug("Message: \u001b[33m%s\u001b[0m", message.c_str());
-  logger_->log_debug("Topic: %s, Key: %s,\n\u001b[32mOffset: %" PRId64 ", (%zd bytes)\nMessage timestamp: %s %" PRId64 " \u001b[33m(%ds ago)\u001b[0m", topicName.c_str(),
-      ((key != nullptr ? key : "[None]")), rkmessage->offset, rkmessage->len, tsname,
-      timestamp, !timestamp ? 0 : static_cast<int>(time(NULL)) - static_cast<int>(timestamp / 1000));
-}
 
 // TODO(hunyadi): this is a test for trying to manually set new connections offsets to latest
 void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/) {
@@ -307,7 +286,7 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
     if (!message_wrapper) {
       break;
     }
-    print_kafka_message(message_wrapper.get());
+    utils::print_kafka_message(message_wrapper.get(), logger_);
     // Commit offsets on broker for the provided list of partitions
     const int async = 0;
     logger_->log_info("\u001b[33mCommitting offset: %" PRId64 ".\u001b[0m", message_wrapper->offset);
@@ -317,11 +296,21 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
 }
 
 std::string ConsumeKafka::extract_message(const rd_kafka_message_t* rkmessage) {
-    if (rkmessage->err != RD_KAFKA_RESP_ERR_NO_ERROR) {
-        throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "ConsumeKafka: received error message from broker.");
-    }
-    print_kafka_message(rkmessage);
-    return { reinterpret_cast<char*>(rkmessage->payload), rkmessage->len };
+  if (rkmessage->err != RD_KAFKA_RESP_ERR_NO_ERROR) {
+      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "ConsumeKafka: received error message from broker.");
+  }
+  utils::print_kafka_message(rkmessage, logger_);
+  return { reinterpret_cast<char*>(rkmessage->payload), rkmessage->len };
+}
+
+utils::KafkaEncoding ConsumeKafka::key_attr_encoding_attr_to_enum() {
+  if (utils::StringUtils::equalsIgnoreCase(key_attribute_encoding_, KEY_ATTR_ENCODING_UTF_8)) {
+    return utils::KafkaEncoding::UTF8;
+  }
+  if (utils::StringUtils::equalsIgnoreCase(key_attribute_encoding_, KEY_ATTR_ENCODING_HEX)) {
+    return utils::KafkaEncoding::HEX;
+  }
+  throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Key Attribute Encoding property not recognized.");
 }
 
 class WriteCallback : public OutputStreamCallback {
@@ -344,48 +333,50 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
 
   print_topics_list(logger_, kf_topic_partition_list_.get());
 
-  std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter> message_wrapper{
+  std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter> message{
       rd_kafka_consumer_poll(consumer_.get(), communications_timeout_milliseconds_.count()), utils::rd_kafka_message_deleter()};
-  if (!message_wrapper) {
+  if (!message) {
     return;
   }
 
-  std::string message = extract_message(message_wrapper.get());
-  if (message.empty()) {
+  std::string message_content = extract_message(message.get());
+  if (message_content.empty()) {
     return;
   }
 
   // Commit offsets on broker for the provided list of partitions
   const int async = 0;
-  rd_kafka_commit_message(consumer_.get(), message_wrapper.get(), async);  // TODO(hunyadi): check this for potential rollback requirements
-  logger_->log_info("\u001b[33mCommitting offset: %" PRId64 ".\u001b[0m", message_wrapper->offset);
+  rd_kafka_commit_message(consumer_.get(), message.get(), async);  // TODO(hunyadi): check this for potential rollback requirements
+  logger_->log_info("\u001b[33mCommitting offset: %" PRId64 ".\u001b[0m", message->offset);
 
   std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
   if (flow_file == nullptr) {
     return;
   }
 
-  std::vector<char> stream_compatible_message(message.begin(), message.end());
-  char* message_data = &stream_compatible_message[0];
-  WriteCallback callback(message_data, stream_compatible_message.size());
+  WriteCallback callback(&message_content[0], message_content.size());
   session->write(flow_file, &callback);
 
   for (const std::string& header_name : headers_to_add_as_attributes_) {
-    {
-      // Headers fetched this way are freed when rd_kafka_message_destroy is called
-      // Detaching them using rd_kafka_message_detach_headers does not seem to work
-      rd_kafka_headers_t* headers_raw;
-      if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_message_headers(message_wrapper.get(), &headers_raw)) {
-        logger_->log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
-      }
-      const char* value;  // Freeing this causes double free
-      std::size_t size;
-      if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_header_get(headers_raw, 0, header_name.c_str(), (const void**)(&value), &size)) {
-        logger_->log_error("Failed to read message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
-      }
-      logger_->log_info("%.*s", gsl::narrow<int>(size), value);
-      flow_file->setAttribute(header_name, std::string{ value, size });
+    // Headers fetched this way are freed when rd_kafka_message_destroy is called
+    // Detaching them using rd_kafka_message_detach_headers does not seem to work
+    rd_kafka_headers_t* headers_raw;
+    if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_message_headers(message.get(), &headers_raw)) {
+      logger_->log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
     }
+    const char* value;  // Not to be freed
+    std::size_t size;
+    if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_header_get(headers_raw, 0, header_name.c_str(), (const void**)(&value), &size)) {
+      logger_->log_error("Failed to read message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
+    }
+    logger_->log_info("%.*s", gsl::narrow<int>(size), value);
+    // Encoding is not needed as the only allowable value here is UTF-8
+    flow_file->setAttribute(header_name, std::string{ value, size });
+  }
+
+  const utils::optional<std::string> message_key = utils::get_encoded_message_key(message.get(), key_attr_encoding_attr_to_enum());
+  if (message_key) {
+    flow_file->setAttribute(KAFKA_MESSAGE_KEY_ATTR, message_key.value());
   }
 
   session->transfer(flow_file, Success);

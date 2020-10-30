@@ -78,6 +78,9 @@ class ConsumeKafka : public core::Processor {
   // Message Header Encoding allowable values
   static constexpr char const* MSG_HEADER_ENCODING_UTF_8 = "UTF-8";
 
+  // Flowfile attributes written
+  static constexpr char const* KAFKA_MESSAGE_KEY_ATTR = "kafka.key";
+
   explicit ConsumeKafka(std::string name, utils::Identifier uuid = utils::Identifier()) :
       Processor(name, uuid),
       logger_(logging::LoggerFactory<ConsumeKafka>::getLogger()) {}
@@ -111,10 +114,10 @@ class ConsumeKafka : public core::Processor {
  private:
   // void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/);
 
-  void print_kafka_message(const rd_kafka_message_t* rkmessage) const;
   void createTopicPartitionList();
   void configureNewConnection(const core::ProcessContext* context);
   std::string extract_message(const rd_kafka_message_t* rkmessage);
+  utils::KafkaEncoding key_attr_encoding_attr_to_enum();
 
  private:
   std::vector<std::string> kafka_brokers_;

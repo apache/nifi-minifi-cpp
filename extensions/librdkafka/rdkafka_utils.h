@@ -21,7 +21,10 @@
 
 #include <thread>
 #include <chrono>
+#include <memory>
 
+#include "core/logging/LoggerConfiguration.h"
+#include "utils/OptionalUtils.h"
 #include "rdkafka.h"
 
 // TODO(hunyadi): check if these would be useful in PublishKafka
@@ -31,6 +34,11 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
+
+enum class KafkaEncoding {
+  UTF8,
+  HEX
+};
 
 struct rd_kafka_conf_deleter {
   void operator()(rd_kafka_conf_t* ptr) const noexcept { rd_kafka_conf_destroy(ptr); }
@@ -81,6 +89,8 @@ struct rd_kafka_headers_deleter {
 };
 
 void setKafkaConfigurationField(rd_kafka_conf_t* configuration, const std::string& field_name, const std::string& value);
+void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_ptr<logging::Logger>& logger);
+optional<std::string> get_encoded_message_key(const rd_kafka_message_t* message, KafkaEncoding encoding);
 
 }  // namespace utils
 }  // namespace minifi

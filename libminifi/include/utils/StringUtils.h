@@ -117,12 +117,11 @@ class StringUtils {
   /**
    * Compares strings by lower casing them.
    */
-  static inline bool equalsIgnoreCase(const std::string &left, const std::string right) {
-    if (left.length() == right.length()) {
-      return std::equal(right.begin(), right.end(), left.begin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
-    } else {
+  static inline bool equalsIgnoreCase(const std::string& left, const std::string& right) {
+    if (left.length() != right.length()) {
       return false;
     }
+    return std::equal(right.cbegin(), right.cend(), left.cbegin(), [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
   }
 
   static std::vector<std::string> split(const std::string &str, const std::string &delimiter);
