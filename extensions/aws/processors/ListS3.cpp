@@ -43,6 +43,12 @@ const core::Property ListS3::UseVersions(
     ->withDefaultValue<bool>(false)
     ->withDescription("Specifies whether to use S3 versions, if applicable. If false, only the latest version of each object will be returned.")
     ->build());
+const core::Property ListS3::MinimumObjectAge(
+  core::PropertyBuilder::createProperty("Minimum Object Age")
+    ->isRequired(true)
+    ->withDefaultValue<core::TimePeriodValue>("0 sec")
+    ->withDescription("The minimum age that an S3 object must be in order to be considered; any object younger than this amount of time (according to last modification date) will be ignored.")
+    ->build());
 
 const core::Relationship ListS3::Success("success", "FlowFiles are routed to success relationship");
 
@@ -52,6 +58,7 @@ void ListS3::initialize() {
   properties.insert(Delimiter);
   properties.insert(Prefix);
   properties.insert(UseVersions);
+  properties.insert(MinimumObjectAge);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -74,6 +81,12 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
 
   context->getProperty(UseVersions.getName(), list_request_params_.use_versions);
   logger_->log_debug("ListS3: UseVersions [%s]", list_request_params_.use_versions ? "true" : "false");
+
+  std::string min_obj_age_str;
+  if (!context->getProperty(MinimumObjectAge.getName(), min_obj_age_str) || min_obj_age_str.empty() || !core::Property::getTimeMSFromString(min_obj_age_str, list_request_params_.min_object_age)) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Minimum Object Age missing or invalid");
+  }
+  logger_->log_debug("S3Processor: Minimum Object Age [%d]", min_obj_age_str, list_request_params_.min_object_age);
 }
 
 void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {

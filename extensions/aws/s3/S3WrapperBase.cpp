@@ -188,8 +188,12 @@ minifi::utils::optional<GetObjectResult> S3WrapperBase::getObject(const GetObjec
   return result;
 }
 
-void S3WrapperBase::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, std::vector<ListedObjectAttributes>& listed_objects) {
+void S3WrapperBase::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects) {
   for (const auto& version : content) {
+    if (last_bucket_list_timestamp - min_object_age < version.GetLastModified().Millis()) {
+      continue;
+    }
+
     ListedObjectAttributes attributes;
     attributes.etag = minifi::utils::StringUtils::removeFramingCharacters(version.GetETag(), '"');
     attributes.filename = version.GetKey();
@@ -202,8 +206,12 @@ void S3WrapperBase::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersi
   }
 }
 
-void S3WrapperBase::addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, std::vector<ListedObjectAttributes>& listed_objects) {
+void S3WrapperBase::addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects) {
   for (const auto& object : content) {
+    if (last_bucket_list_timestamp - min_object_age < object.GetLastModified().Millis()) {
+      continue;
+    }
+
     ListedObjectAttributes attributes;
     attributes.etag = minifi::utils::StringUtils::removeFramingCharacters(object.GetETag(), '"');
     attributes.filename = object.GetKey();
@@ -224,7 +232,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::list
     if (!aws_result) {
       return minifi::utils::nullopt;
     }
-    addListResults(aws_result->GetVersions(), attribute_list);
+    addListResults(aws_result->GetVersions(), params.min_object_age, attribute_list);
     request.SetKeyMarker(aws_result->GetNextKeyMarker());
     request.SetVersionIdMarker(aws_result->GetNextVersionIdMarker());
   } while(aws_result->GetIsTruncated());
@@ -241,7 +249,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::list
     if (!aws_result) {
       return minifi::utils::nullopt;
     }
-    addListResults(aws_result->GetContents(), attribute_list);
+    addListResults(aws_result->GetContents(), params.min_object_age, attribute_list);
     request.SetContinuationToken(aws_result->GetContinuationToken());
   } while(aws_result->GetIsTruncated());
 
@@ -249,6 +257,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::list
 }
 
 minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::listBucket(const ListRequestParameters& params) {
+  last_bucket_list_timestamp = Aws::Utils::DateTime::CurrentTimeMillis();
   if (params.use_versions) {
     return listVersions(params);
   }

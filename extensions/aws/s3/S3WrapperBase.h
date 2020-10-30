@@ -148,6 +148,7 @@ struct ListRequestParameters {
   std::string delimiter;
   std::string prefix;
   bool use_versions = false;
+  uint64_t min_object_age = 0;
 };
 
 struct ListedObjectAttributes {
@@ -196,8 +197,8 @@ class S3WrapperBase {
 
   minifi::utils::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);
   minifi::utils::optional<std::vector<ListedObjectAttributes>> listObjects(const ListRequestParameters& params);
-  void addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, std::vector<ListedObjectAttributes>& listed_objects);
-  void addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, std::vector<ListedObjectAttributes>& listed_objects);
+  void addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
+  void addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
 
   template<typename ListRequest>
   ListRequest createListRequest(const ListRequestParameters& params) {
@@ -212,6 +213,7 @@ class S3WrapperBase {
   Aws::Client::ClientConfiguration client_config_;
   Aws::Auth::AWSCredentials credentials_;
   std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3WrapperBase>::getLogger()};
+  uint64_t last_bucket_list_timestamp = 0;
 };
 
 } /* namespace s3 */

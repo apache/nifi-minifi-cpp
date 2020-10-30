@@ -40,7 +40,7 @@ const std::string S3_KEY_PREFIX = "KEY_";
 const std::string S3_ETAG_PREFIX = "ETAG_";
 const std::size_t S3_OBJECT_COUNT = 10;
 const int64_t S3_OBJECT_SIZE = 1024;
-const int64_t S3_OBJECT_AGE_MILLISECONDS = 1603989854123;
+const int64_t S3_OBJECT_OLD_AGE_MILLISECONDS = 652924800;
 const std::string S3_STORAGE_CLASS_STR = "Standard";
 
 class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
@@ -54,10 +54,11 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
       version.SetStorageClass(Aws::S3::Model::ObjectVersionStorageClass::STANDARD);
       version.SetVersionId(S3_VERSION_1);
       version.SetSize(S3_OBJECT_SIZE);
-      version.SetLastModified(Aws::Utils::DateTime(S3_OBJECT_AGE_MILLISECONDS));
+      version.SetLastModified(Aws::Utils::DateTime(S3_OBJECT_OLD_AGE_MILLISECONDS));
       listed_versions_.push_back(version);
       version.SetVersionId(S3_VERSION_2);
       version.SetIsLatest(true);
+      version.SetLastModified(Aws::Utils::DateTime::CurrentTimeMillis());
       listed_versions_.push_back(version);
     }
 
@@ -67,7 +68,11 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
       object.SetETag(S3_ETAG_PREFIX + std::to_string(i));
       object.SetStorageClass(Aws::S3::Model::ObjectStorageClass::STANDARD);
       object.SetSize(S3_OBJECT_SIZE);
-      object.SetLastModified(Aws::Utils::DateTime(S3_OBJECT_AGE_MILLISECONDS));
+      if (i % 2 == 0) {
+        object.SetLastModified(Aws::Utils::DateTime(S3_OBJECT_OLD_AGE_MILLISECONDS));
+      } else {
+        object.SetLastModified(Aws::Utils::DateTime::CurrentTimeMillis());
+      }
       listed_objects_.push_back(object);
     }
   }

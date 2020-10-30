@@ -39,6 +39,7 @@ class ListS3 : public S3Processor {
   static const core::Property Delimiter;
   static const core::Property Prefix;
   static const core::Property UseVersions;
+  static const core::Property MinimumObjectAge;
 
   // Supported Relationships
   static const core::Relationship Success;
