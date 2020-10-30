@@ -69,21 +69,21 @@ void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_
       timestamp, !timestamp ? 0 : static_cast<int>(time(NULL)) - static_cast<int>(timestamp / 1000));
 }
 
+std::string get_encoded_string(const std::string& input, KafkaEncoding encoding) {
+  switch (encoding) {
+    case KafkaEncoding::UTF8:
+      return input;
+    case KafkaEncoding::HEX:
+      return StringUtils::to_hex(input, /* uppercase = */ true);
+  }
+  throw std::runtime_error("Invalid encoding selected for encoding.");
+}
+
 optional<std::string> get_encoded_message_key(const rd_kafka_message_t* message, KafkaEncoding encoding) {
   if (nullptr == message->key) {
     return {};
   }
-  const char* key = reinterpret_cast<const char*>(message->key);
-  const std::size_t key_len = message->key_len;
-  switch (encoding) {
-    case KafkaEncoding::UTF8:
-      return std::string{key, key_len};
-    case KafkaEncoding::HEX:
-      return StringUtils::to_hex({key, key_len}, /* uppercase = */ true);
-    default:
-      throw std::runtime_error("Invalid encoding selected for kafka message key encoding.");
-  }
-  return {};
+  return get_encoded_string({reinterpret_cast<const char*>(message->key), message->key_len}, encoding);
 }
 
 }  // namespace utils

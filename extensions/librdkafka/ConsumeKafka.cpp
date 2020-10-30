@@ -96,7 +96,7 @@ core::Property ConsumeKafka::MessageDemarcator(core::PropertyBuilder::createProp
 core::Property ConsumeKafka::MessageHeaderEncoding(core::PropertyBuilder::createProperty("Message Header Encoding")
   ->withDescription("Any message header that is found on a Kafka message will be added to the outbound FlowFile as an attribute. This property indicates the Character Encoding "
       "to use for deserializing the headers.")
-  ->withAllowableValues<std::string>({MSG_HEADER_ENCODING_UTF_8})
+  ->withAllowableValues<std::string>({MSG_HEADER_ENCODING_UTF_8, MSG_HEADER_ENCODING_HEX})
   ->withDefaultValue(MSG_HEADER_ENCODING_UTF_8)
   ->build());
 
@@ -106,6 +106,17 @@ core::Property ConsumeKafka::HeadersToAddAsAttributes(core::PropertyBuilder::cre
       "header is selected by the provided regex, then those two messages must be added to different FlowFiles. As a result, users should be cautious about using a "
       "regex like \".*\" if messages are expected to have header values that are unique per message, such as an identifier or timestamp, because it will prevent MiNiFi "
       "from bundling the messages together efficiently.")
+  ->build());
+
+core::Property ConsumeKafka::DuplicateHeaderHandling(core::PropertyBuilder::createProperty("Duplicate Header Handling")
+  ->withDescription("For headers to be added as attributes, this option specifies how to handle cases where multiple headers are present with the same key. "
+      "For example in case of receiving these two headers: \"Accept: text/html\" and \"Accept: application/xml\" and we want to attach the value of \"Accept\" "
+      "as a FlowFile attribute:\n"
+      " - \"Keep First\" attaches: \"Accept -> text/html\"\n"
+      " - \"Keep Latest\" attaches: \"Accept -> application/xml\"\n"
+      " - \"Comma-separated Merge\" attaches: \"Accept -> text/html, application/xml\"\n")
+  ->withAllowableValues<std::string>({MSG_HEADER_KEEP_FIRST, MSG_HEADER_KEEP_LATEST, MSG_HEADER_COMMA_SEPARATED_MERGE})
+  ->withDefaultValue(MSG_HEADER_KEEP_LATEST) // Mirroring NiFi behaviour
   ->build());
 
 core::Property ConsumeKafka::MaxPollRecords(core::PropertyBuilder::createProperty("Max Poll Records")
@@ -142,6 +153,7 @@ void ConsumeKafka::initialize() {
     MessageDemarcator,
     MessageHeaderEncoding,
     HeadersToAddAsAttributes,
+    DuplicateHeaderHandling,
     MaxPollRecords,
     MaxUncommittedTime,
     CommunicationsTimeout
@@ -166,6 +178,7 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
   // Optional properties
   context->getProperty(MessageDemarcator.getName(), message_demarcator_);
   context->getProperty(MessageHeaderEncoding.getName(), message_header_encoding_);
+  context->getProperty(DuplicateHeaderHandling.getName(), duplicate_header_handling_);
 
   headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.getName());
   max_poll_records_ = utils::getOptionalUintProperty(context, MaxPollRecords.getName());
@@ -310,7 +323,53 @@ utils::KafkaEncoding ConsumeKafka::key_attr_encoding_attr_to_enum() {
   if (utils::StringUtils::equalsIgnoreCase(key_attribute_encoding_, KEY_ATTR_ENCODING_HEX)) {
     return utils::KafkaEncoding::HEX;
   }
+  throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "\"Key Attribute Encoding\" property not recognized.");
+}
+
+utils::KafkaEncoding ConsumeKafka::message_header_encoding_attr_to_enum() {
+  if (utils::StringUtils::equalsIgnoreCase(message_header_encoding_, MSG_HEADER_ENCODING_UTF_8)) {
+    return utils::KafkaEncoding::UTF8;
+  }
+  if (utils::StringUtils::equalsIgnoreCase(message_header_encoding_, MSG_HEADER_ENCODING_HEX)) {
+    return utils::KafkaEncoding::HEX;
+  }
   throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Key Attribute Encoding property not recognized.");
+}
+
+std::string ConsumeKafka::resolve_duplicate_headers(const std::vector<std::string>& matching_headers) {
+  if(MSG_HEADER_KEEP_FIRST == duplicate_header_handling_) {
+    return matching_headers.front();
+  }
+  if(MSG_HEADER_KEEP_LATEST == duplicate_header_handling_) {
+    return matching_headers.back();
+  }
+  if(MSG_HEADER_COMMA_SEPARATED_MERGE == duplicate_header_handling_) {
+    return utils::StringUtils::join(", ", matching_headers);
+  }
+  throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "\"Duplicate Header Handling\" property not recognized.");
+}
+
+std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_message_t* message, const std::string& header_name) {
+  // Headers fetched this way are freed when rd_kafka_message_destroy is called
+  // Detaching them using rd_kafka_message_detach_headers does not seem to work
+  rd_kafka_headers_t* headers_raw;
+  if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_message_headers(message, &headers_raw)) {
+    logger_->log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
+  }
+  std::vector<std::string> matching_headers;
+  for(std::size_t header_idx = 0;; ++header_idx)
+  {
+    const char* value;  // Not to be freed
+    std::size_t size;
+    if(RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_header_get(headers_raw, header_idx, header_name.c_str(), (const void**)(&value), &size)) {
+      break;
+    }
+    if(size < std::numeric_limits<int>::max()) {
+      logger_->log_debug("%.*s", static_cast<int>(size), value);
+    }
+    matching_headers.emplace_back(value, size);
+  }
+  return matching_headers;
 }
 
 class WriteCallback : public OutputStreamCallback {
@@ -358,20 +417,10 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
   session->write(flow_file, &callback);
 
   for (const std::string& header_name : headers_to_add_as_attributes_) {
-    // Headers fetched this way are freed when rd_kafka_message_destroy is called
-    // Detaching them using rd_kafka_message_detach_headers does not seem to work
-    rd_kafka_headers_t* headers_raw;
-    if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_message_headers(message.get(), &headers_raw)) {
-      logger_->log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
+    const auto matching_headers = get_matching_headers(message.get(), header_name);
+    if(matching_headers.size()) {
+      flow_file->setAttribute(header_name, utils::get_encoded_string(resolve_duplicate_headers(matching_headers), message_header_encoding_attr_to_enum()));
     }
-    const char* value;  // Not to be freed
-    std::size_t size;
-    if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_header_get(headers_raw, 0, header_name.c_str(), (const void**)(&value), &size)) {
-      logger_->log_error("Failed to read message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
-    }
-    logger_->log_info("%.*s", gsl::narrow<int>(size), value);
-    // Encoding is not needed as the only allowable value here is UTF-8
-    flow_file->setAttribute(header_name, std::string{ value, size });
   }
 
   const utils::optional<std::string> message_key = utils::get_encoded_message_key(message.get(), key_attr_encoding_attr_to_enum());

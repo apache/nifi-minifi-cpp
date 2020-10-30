@@ -49,6 +49,7 @@ class ConsumeKafka : public core::Processor {
   static core::Property MessageDemarcator;
   static core::Property MessageHeaderEncoding;
   static core::Property HeadersToAddAsAttributes;
+  static core::Property DuplicateHeaderHandling;
   static core::Property MaxPollRecords;
   static core::Property MaxUncommittedTime;
   static core::Property CommunicationsTimeout;
@@ -77,6 +78,12 @@ class ConsumeKafka : public core::Processor {
 
   // Message Header Encoding allowable values
   static constexpr char const* MSG_HEADER_ENCODING_UTF_8 = "UTF-8";
+  static constexpr char const* MSG_HEADER_ENCODING_HEX = "Hex";
+
+  // Duplicate Header Handling allowable values
+  static constexpr char const* MSG_HEADER_KEEP_FIRST = "Keep First";
+  static constexpr char const* MSG_HEADER_KEEP_LATEST = "Keep Latest";
+  static constexpr char const* MSG_HEADER_COMMA_SEPARATED_MERGE = "Comma-separated Merge";
 
   // Flowfile attributes written
   static constexpr char const* KAFKA_MESSAGE_KEY_ATTR = "kafka.key";
@@ -118,6 +125,9 @@ class ConsumeKafka : public core::Processor {
   void configureNewConnection(const core::ProcessContext* context);
   std::string extract_message(const rd_kafka_message_t* rkmessage);
   utils::KafkaEncoding key_attr_encoding_attr_to_enum();
+  utils::KafkaEncoding message_header_encoding_attr_to_enum();
+  std::string resolve_duplicate_headers(const std::vector<std::string>& matching_headers);
+  std::vector<std::string> get_matching_headers(const rd_kafka_message_t* message, const std::string& header_name);
 
  private:
   std::vector<std::string> kafka_brokers_;
@@ -129,7 +139,8 @@ class ConsumeKafka : public core::Processor {
   std::string offset_reset_;  // Easier handled as string than enum
   std::string key_attribute_encoding_;  // Easier handled as string than enum
   std::string message_demarcator_;
-  std::string message_header_encoding_;  // This is a placeholder, only UTF-8 is supported here
+  std::string message_header_encoding_;
+  std::string duplicate_header_handling_;  // Easier handled as string than enum
   std::vector<std::string> headers_to_add_as_attributes_;
   utils::optional<unsigned int> max_poll_records_;
   utils::optional<unsigned int> max_uncommitted_time_seconds_;
