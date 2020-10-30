@@ -415,7 +415,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Proxy Username|||Username to set when authenticating against proxy<br/>**Supports Expression Language: true**|
 |Proxy Password|||Password to set when authenticating against proxy<br/>**Supports Expression Language: true**|
 |Version|||The Version of the Object to download<br/>**Supports Expression Language: true**|
-|Requester Pays|false||If true, indicates that the requester consents to pay any charges associated with retrieving objects from the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'.|
+|**Requester Pays**|false||If true, indicates that the requester consents to pay any charges associated with retrieving objects from the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'.|
 ### Relationships
 
 | Name | Description |

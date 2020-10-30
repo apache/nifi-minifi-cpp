@@ -37,6 +37,7 @@ const core::Property FetchS3Object::Version(
     ->build());
 const core::Property FetchS3Object::RequesterPays(
   core::PropertyBuilder::createProperty("Requester Pays")
+    ->isRequired(true)
     ->withDefaultValue<bool>(false)
     ->withDescription("If true, indicates that the requester consents to pay any charges associated with retrieving objects from the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'.")
     ->build());
