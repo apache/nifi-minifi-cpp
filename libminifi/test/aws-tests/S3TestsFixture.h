@@ -72,7 +72,7 @@ class S3TestsFixture {
       true);
     plan->addProcessor(
       s3_processor,
-      "PutS3Object",
+      "S3Processor",
       core::Relationship("success", "d"),
       true);
     plan->addProcessor(
@@ -150,14 +150,6 @@ class S3TestsFixture {
     REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyPort == 1234);
     REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyUserName == "username");
     REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyPassword == "password");
-  }
-
-  std::string createTempFile(const std::string& filename) {
-    char temp_dir[] = "/tmp/gt.XXXXXX";
-    auto temp_path = test_controller.createTempDirectory(temp_dir);
-    REQUIRE(!temp_path.empty());
-    std::string temp_file(temp_path + utils::file::FileUtils::get_separator() + filename);
-    return temp_file;
   }
 
   virtual ~S3TestsFixture() {

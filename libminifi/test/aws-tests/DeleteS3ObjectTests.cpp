@@ -57,8 +57,21 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test AWS credential setting", "[aw
 }
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test required property not set", "[awsS3Config]") {
+  SECTION("Test credentials not set") {
+  }
+
   SECTION("Test no bucket is set") {
     setAccesKeyCredentialsInProcessor();
+  }
+
+  SECTION("Test no object key is set") {
+    setRequiredProperties();
+    plan->setProperty(update_attribute, "filename", "", true);
+  }
+
+  SECTION("Test region is empty") {
+    setRequiredProperties();
+    plan->setProperty(s3_processor, "Region", "");
   }
 
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
