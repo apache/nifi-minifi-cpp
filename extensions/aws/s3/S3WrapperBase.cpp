@@ -103,20 +103,20 @@ std::string S3WrapperBase::getEncryptionString(Aws::S3::Model::ServerSideEncrypt
   return "";
 }
 
-minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjectRequestParameters& params, std::shared_ptr<Aws::IOStream> data_stream) {
+minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjectRequestParameters& put_object_params, std::shared_ptr<Aws::IOStream> data_stream) {
   Aws::S3::Model::PutObjectRequest request;
-  request.SetBucket(params.bucket);
-  request.SetKey(params.object_key);
-  request.SetStorageClass(STORAGE_CLASS_MAP.at(params.storage_class));
-  request.SetServerSideEncryption(SERVER_SIDE_ENCRYPTION_MAP.at(params.server_side_encryption));
-  request.SetContentType(params.content_type);
-  request.SetMetadata(params.user_metadata_map);
+  request.SetBucket(put_object_params.bucket);
+  request.SetKey(put_object_params.object_key);
+  request.SetStorageClass(STORAGE_CLASS_MAP.at(put_object_params.storage_class));
+  request.SetServerSideEncryption(SERVER_SIDE_ENCRYPTION_MAP.at(put_object_params.server_side_encryption));
+  request.SetContentType(put_object_params.content_type);
+  request.SetMetadata(put_object_params.user_metadata_map);
   request.SetBody(data_stream);
-  request.SetGrantFullControl(params.fullcontrol_user_list);
-  request.SetGrantRead(params.read_permission_user_list);
-  request.SetGrantReadACP(params.read_acl_user_list);
-  request.SetGrantWriteACP(params.write_acl_user_list);
-  setCannedAcl(request, params.canned_acl);
+  request.SetGrantFullControl(put_object_params.fullcontrol_user_list);
+  request.SetGrantRead(put_object_params.read_permission_user_list);
+  request.SetGrantReadACP(put_object_params.read_acl_user_list);
+  request.SetGrantWriteACP(put_object_params.write_acl_user_list);
+  setCannedAcl(request, put_object_params.canned_acl);
 
   auto aws_result = sendPutObjectRequest(request);
   if (!aws_result) {
@@ -165,14 +165,14 @@ int64_t S3WrapperBase::writeFetchedBody(Aws::IOStream& source, const int64_t dat
   return write_size;
 }
 
-minifi::utils::optional<GetObjectResult> S3WrapperBase::getObject(const GetObjectRequestParameters& input_params, const std::shared_ptr<io::BaseStream>& out_body) {
+minifi::utils::optional<GetObjectResult> S3WrapperBase::getObject(const GetObjectRequestParameters& get_object_params, const std::shared_ptr<io::BaseStream>& out_body) {
   Aws::S3::Model::GetObjectRequest request;
-  request.SetBucket(input_params.bucket);
-  request.SetKey(input_params.object_key);
-  if (!input_params.version.empty()) {
-    request.SetVersionId(input_params.version);
+  request.SetBucket(get_object_params.bucket);
+  request.SetKey(get_object_params.object_key);
+  if (!get_object_params.version.empty()) {
+    request.SetVersionId(get_object_params.version);
   }
-  if (input_params.requester_pays) {
+  if (get_object_params.requester_pays) {
     request.SetRequestPayer(Aws::S3::Model::RequestPayer::requester);
   }
   auto aws_result = sendGetObjectRequest(request);
@@ -181,7 +181,7 @@ minifi::utils::optional<GetObjectResult> S3WrapperBase::getObject(const GetObjec
   }
 
   GetObjectResult result;
-  result.setFilePaths(input_params.object_key);
+  result.setFilePaths(get_object_params.object_key);
   result.mime_type = aws_result->GetContentType();
   result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result->GetETag(), '"');
   auto expiration = getExpirationPair(aws_result.value().GetExpiration());

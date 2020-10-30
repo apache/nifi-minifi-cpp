@@ -137,7 +137,7 @@ class S3WrapperBase {
 
   minifi::utils::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
   bool deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version = "");
-  minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& input_params, const std::shared_ptr<io::BaseStream>& fetched_body);
+  minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, const std::shared_ptr<io::BaseStream>& fetched_body);
 
   virtual ~S3WrapperBase() = default;
 
