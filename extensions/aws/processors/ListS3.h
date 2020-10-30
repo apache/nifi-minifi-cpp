@@ -40,6 +40,7 @@ class ListS3 : public S3Processor {
   static const core::Property Prefix;
   static const core::Property UseVersions;
   static const core::Property MinimumObjectAge;
+  static const core::Property WriteObjectTags;
 
   // Supported Relationships
   static const core::Relationship Success;
@@ -60,6 +61,7 @@ class ListS3 : public S3Processor {
 
  private:
   aws::s3::ListRequestParameters list_request_params_;
+  bool write_object_tags_ = false;
 };
 
 REGISTER_RESOURCE(ListS3, "This Processor retrieves a listing of objects from an Amazon S3 bucket.");

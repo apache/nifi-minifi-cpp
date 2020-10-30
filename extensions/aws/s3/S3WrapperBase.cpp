@@ -264,6 +264,24 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::list
   return listObjects(params);
 }
 
+minifi::utils::optional<std::map<std::string, std::string>> S3WrapperBase::getObjectTags(const std::string& bucket, const std::string& object_key, const std::string& version) {
+  Aws::S3::Model::GetObjectTaggingRequest request;
+  request.SetBucket(bucket);
+  request.SetKey(object_key);
+  if (!version.empty()) {
+    request.SetVersionId(version);
+  }
+  auto aws_result = sendGetObjectTaggingRequest(request);
+  if (!aws_result) {
+    return minifi::utils::nullopt;
+  }
+  std::map<std::string, std::string> tags;
+  for (const auto& tag : aws_result->GetTagSet()) {
+    tags.emplace(tag.GetKey(), tag.GetValue());
+  }
+  return tags;
+}
+
 }  // namespace s3
 }  // namespace aws
 }  // namespace minifi

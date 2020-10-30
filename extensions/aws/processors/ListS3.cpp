@@ -49,6 +49,12 @@ const core::Property ListS3::MinimumObjectAge(
     ->withDefaultValue<core::TimePeriodValue>("0 sec")
     ->withDescription("The minimum age that an S3 object must be in order to be considered; any object younger than this amount of time (according to last modification date) will be ignored.")
     ->build());
+const core::Property ListS3::WriteObjectTags(
+  core::PropertyBuilder::createProperty("Write Object Tags")
+    ->isRequired(true)
+    ->withDefaultValue<bool>(false)
+    ->withDescription("If set to 'True', the tags associated with the S3 object will be written as FlowFile attributes")
+    ->build());
 
 const core::Relationship ListS3::Success("success", "FlowFiles are routed to success relationship");
 
@@ -59,6 +65,7 @@ void ListS3::initialize() {
   properties.insert(Prefix);
   properties.insert(UseVersions);
   properties.insert(MinimumObjectAge);
+  properties.insert(WriteObjectTags);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -87,6 +94,9 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Minimum Object Age missing or invalid");
   }
   logger_->log_debug("S3Processor: Minimum Object Age [%d]", min_obj_age_str, list_request_params_.min_object_age);
+
+  context->getProperty(WriteObjectTags.getName(), write_object_tags_);
+  logger_->log_debug("ListS3: WriteObjectTags [%s]", write_object_tags_ ? "true" : "false");
 }
 
 void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -110,6 +120,14 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     session->putAttribute(flow_file, "s3.storeClass", object.store_class);
     if (!object.version.empty()) {
       session->putAttribute(flow_file, "s3.version", object.version);
+    }
+    if (write_object_tags_) {
+      auto get_object_tags_result = s3_wrapper_->getObjectTags(list_request_params_.bucket, object.filename, object.version);
+      if (get_object_tags_result) {
+        for (const auto& tag : get_object_tags_result.value()) {
+          session->putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
+        }
+      }
     }
     session->transfer(flow_file, Success);
   }

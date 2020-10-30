@@ -98,6 +98,19 @@ minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> S3Wrapper::sen
   }
 }
 
+minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> S3Wrapper::sendGetObjectTaggingRequest(const Aws::S3::Model::GetObjectTaggingRequest& request) {
+  Aws::S3::S3Client s3_client(credentials_, client_config_);
+  auto outcome = s3_client.GetObjectTagging(request);
+
+  if (outcome.IsSuccess()) {
+    logger_->log_info("Got tags for S3 object %s from bucket %s", request.GetKey(), request.GetBucket());
+    return outcome.GetResultWithOwnership();
+  } else {
+    logger_->log_error("GetObjectTagging failed with the following: '%s'", outcome.GetError().GetMessage());
+    return minifi::utils::nullopt;
+  }
+}
+
 }  // namespace s3
 }  // namespace aws
 }  // namespace minifi

@@ -42,6 +42,10 @@ const std::size_t S3_OBJECT_COUNT = 10;
 const int64_t S3_OBJECT_SIZE = 1024;
 const int64_t S3_OBJECT_OLD_AGE_MILLISECONDS = 652924800;
 const std::string S3_STORAGE_CLASS_STR = "Standard";
+const std::unordered_map<std::string, std::string> S3_OBJECT_TAGS {
+  std::make_pair("tag1", "value1"),
+  std::make_pair("tag2", "value2")
+};
 
 class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
  public:
@@ -111,7 +115,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     return minifi::utils::make_optional(std::move(get_s3_result));
   }
 
-  minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(const Aws::S3::Model::ListObjectsV2Request& request) {
+  minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(const Aws::S3::Model::ListObjectsV2Request& request) override {
     list_object_request = request;
 
     Aws::S3::Model::ListObjectsV2Result list_object_result;
@@ -130,7 +134,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     return list_object_result;
   }
 
-  minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(const Aws::S3::Model::ListObjectVersionsRequest& request) {
+  minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(const Aws::S3::Model::ListObjectVersionsRequest& request) override {
     list_version_request = request;
 
     Aws::S3::Model::ListObjectVersionsResult list_version_result;
@@ -148,6 +152,18 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
       }
     }
     return list_version_result;
+  }
+
+  minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(const Aws::S3::Model::GetObjectTaggingRequest& request) override {
+    get_object_tagging_request = request;
+    Aws::S3::Model::GetObjectTaggingResult result;
+    for (const auto& tag_pair : S3_OBJECT_TAGS) {
+      Aws::S3::Model::Tag tag;
+      tag.SetKey(tag_pair.first);
+      tag.SetValue(tag_pair.second);
+      result.AddTagSet(tag);
+    }
+    return result;
   }
 
   Aws::Auth::AWSCredentials getCredentials() const {
@@ -184,6 +200,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
   Aws::S3::Model::GetObjectRequest get_object_request;
   Aws::S3::Model::ListObjectsV2Request list_object_request;
   Aws::S3::Model::ListObjectVersionsRequest list_version_request;
+  Aws::S3::Model::GetObjectTaggingRequest get_object_tagging_request;
 
  private:
   std::vector<Aws::S3::Model::ObjectVersion> listed_versions_;
