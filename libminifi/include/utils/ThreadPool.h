@@ -228,7 +228,8 @@ class ThreadPool {
   /**
    * Returns true if a task is running.
    */
-  bool isTaskRunning(const TaskId &identifier) const {
+  bool isTaskRunning(const TaskId &identifier) {
+    std::unique_lock<std::mutex> lock(worker_queue_mutex_);
     const auto iter = task_status_.find(identifier);
     if (iter == task_status_.end())
       return false;
