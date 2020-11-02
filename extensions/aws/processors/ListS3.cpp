@@ -55,6 +55,19 @@ const core::Property ListS3::WriteObjectTags(
     ->withDefaultValue<bool>(false)
     ->withDescription("If set to 'True', the tags associated with the S3 object will be written as FlowFile attributes")
     ->build());
+const core::Property ListS3::WriteUserMetadata(
+  core::PropertyBuilder::createProperty("Write User Metadata")
+    ->isRequired(true)
+    ->withDefaultValue<bool>(false)
+    ->withDescription("If set to 'True', the user defined metadata associated with the S3 object will be added to FlowFile attributes/records")
+    ->build());
+const core::Property ListS3::RequesterPays(
+  core::PropertyBuilder::createProperty("Requester Pays")
+    ->isRequired(true)
+    ->withDefaultValue<bool>(false)
+    ->withDescription("If true, indicates that the requester consents to pay any charges associated with listing the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'. "
+                      "Note that this setting is only used if Write User Metadata is true.")
+    ->build());
 
 const core::Relationship ListS3::Success("success", "FlowFiles are routed to success relationship");
 
@@ -66,6 +79,8 @@ void ListS3::initialize() {
   properties.insert(UseVersions);
   properties.insert(MinimumObjectAge);
   properties.insert(WriteObjectTags);
+  properties.insert(WriteUserMetadata);
+  properties.insert(RequesterPays);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -97,6 +112,55 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
 
   context->getProperty(WriteObjectTags.getName(), write_object_tags_);
   logger_->log_debug("ListS3: WriteObjectTags [%s]", write_object_tags_ ? "true" : "false");
+
+  context->getProperty(WriteUserMetadata.getName(), write_user_metadata_);
+  logger_->log_debug("ListS3: WriteUserMetadata [%s]", write_user_metadata_ ? "true" : "false");
+
+  context->getProperty(RequesterPays.getName(), requester_pays_);
+  logger_->log_debug("ListS3: RequesterPays [%s]", requester_pays_ ? "true" : "false");
+}
+
+void ListS3::writeObjectTags(
+    const std::string& bucket,
+    aws::s3::ListedObjectAttributes object,
+    const std::shared_ptr<core::ProcessSession> &session,
+    const std::shared_ptr<core::FlowFile> &flow_file) {
+  if (!write_object_tags_) {
+    return;
+  }
+
+  auto get_object_tags_result = s3_wrapper_->getObjectTags(bucket, object.filename, object.version);
+  if (get_object_tags_result) {
+    for (const auto& tag : get_object_tags_result.value()) {
+      session->putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
+    }
+  } else {
+    logger_->log_warn("Failed to get object tags for object %s in bucket %s", object.filename, bucket);
+  }
+}
+
+void ListS3::writeUserMetadata(
+    const std::string& bucket,
+    aws::s3::ListedObjectAttributes object,
+    const std::shared_ptr<core::ProcessSession> &session,
+    const std::shared_ptr<core::FlowFile> &flow_file) {
+  if (!write_user_metadata_) {
+    return;
+  }
+
+  aws::s3::GetObjectRequestParameters params;
+  params.bucket = list_request_params_.bucket;
+  params.object_key = object.filename;
+  params.version = object.version;
+  params.requester_pays = requester_pays_;
+  auto get_object_tags_result = s3_wrapper_->getObject(params);
+  if (get_object_tags_result) {
+    for (const auto& metadata : get_object_tags_result->user_metadata_map) {
+      session->putAttribute(flow_file, "s3.user.metadata." + metadata.first, metadata.second);
+    }
+  } else {
+    logger_->log_warn("Failed to get object metadata for object %s in bucket %s", params.object_key, params.bucket);
+  }
 }
 
 void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -121,14 +185,9 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     if (!object.version.empty()) {
       session->putAttribute(flow_file, "s3.version", object.version);
     }
-    if (write_object_tags_) {
-      auto get_object_tags_result = s3_wrapper_->getObjectTags(list_request_params_.bucket, object.filename, object.version);
-      if (get_object_tags_result) {
-        for (const auto& tag : get_object_tags_result.value()) {
-          session->putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
-        }
-      }
-    }
+    writeObjectTags(list_request_params_.bucket, object, session, flow_file);
+    writeUserMetadata(list_request_params_.bucket, object, session, flow_file);
+
     session->transfer(flow_file, Success);
   }
 }

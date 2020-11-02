@@ -141,6 +141,7 @@ struct GetObjectResult {
   std::string ssealgorithm;
   std::string version;
   int64_t write_size = 0;
+  std::map<std::string, std::string> user_metadata_map;
 
   void setFilePaths(const std::string& key);
 };
@@ -180,7 +181,7 @@ class S3WrapperBase {
 
   minifi::utils::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
   bool deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version = "");
-  minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, const std::shared_ptr<io::BaseStream>& fetched_body);
+  minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, const std::shared_ptr<io::BaseStream>& fetched_body = nullptr);
   minifi::utils::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
   minifi::utils::optional<std::map<std::string, std::string>> getObjectTags(const std::string& bucket, const std::string& object_key, const std::string& version = 0);
 

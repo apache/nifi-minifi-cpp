@@ -121,13 +121,13 @@ minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjec
 
   PutObjectResult result;
   // Etags are returned by AWS in quoted form that should be removed
-  result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result.value().GetETag(), '"');
-  result.version = aws_result.value().GetVersionId();
+  result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result->GetETag(), '"');
+  result.version = aws_result->GetVersionId();
 
   // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format
   // s3.expiration only needs the date member of this pair
-  result.expiration_time = getExpiration(aws_result.value().GetExpiration()).expiration_time;
-  result.ssealgorithm = getEncryptionString(aws_result.value().GetServerSideEncryption());
+  result.expiration_time = getExpiration(aws_result->GetExpiration()).expiration_time;
+  result.ssealgorithm = getEncryptionString(aws_result->GetServerSideEncryption());
   return result;
 }
 
@@ -180,10 +180,15 @@ minifi::utils::optional<GetObjectResult> S3WrapperBase::getObject(const GetObjec
   result.setFilePaths(get_object_params.object_key);
   result.mime_type = aws_result->GetContentType();
   result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result->GetETag(), '"');
-  result.expiration = getExpiration(aws_result.value().GetExpiration());
+  result.expiration = getExpiration(aws_result->GetExpiration());
   result.ssealgorithm = getEncryptionString(aws_result->GetServerSideEncryption());
   result.version = aws_result->GetVersionId();
-  result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), out_body);
+  for (const auto& metadata : aws_result->GetMetadata()) {
+    result.user_metadata_map.emplace(metadata.first, metadata.second);
+  }
+  if (out_body != nullptr) {
+    result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), out_body);
+  }
 
   return result;
 }

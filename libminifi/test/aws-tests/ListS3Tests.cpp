@@ -101,6 +101,7 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test listing with versioning", "[awsS3List
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.length value:" + std::to_string(S3_OBJECT_SIZE)) == S3_OBJECT_COUNT * 2);
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.storeClass value:" + S3_STORAGE_CLASS_STR) == S3_OBJECT_COUNT * 2);
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.tag") == 0);
+  REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.user.metadata") == 0);
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test if optional request values are set without versioning", "[awsS3ListOptionalValues]") {
@@ -146,4 +147,15 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test write object tags", "[awsS3ListTags]"
   for (const auto& tag : S3_OBJECT_TAGS) {
     REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.tag." + tag.first + " value:" + tag.second) == S3_OBJECT_COUNT);
   }
+}
+
+TEST_CASE_METHOD(ListS3TestsFixture, "Test write user metadata", "[awsS3ListMetadata]") {
+  setRequiredProperties();
+  plan->setProperty(s3_processor, "Write User Metadata", "true");
+  plan->setProperty(s3_processor, "Requester Pays", "true");
+  test_controller.runSession(plan, true);
+  for (const auto& metadata : S3_OBJECT_USER_METADATA) {
+    REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.user.metadata." + metadata.first + " value:" + metadata.second) == S3_OBJECT_COUNT);
+  }
+  REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::requester);
 }

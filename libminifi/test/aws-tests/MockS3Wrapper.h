@@ -21,6 +21,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <map>
 
 #include "s3/S3WrapperBase.h"
 #include "aws/core/utils/DateTime.h"
@@ -42,9 +43,13 @@ const std::size_t S3_OBJECT_COUNT = 10;
 const int64_t S3_OBJECT_SIZE = 1024;
 const int64_t S3_OBJECT_OLD_AGE_MILLISECONDS = 652924800;
 const std::string S3_STORAGE_CLASS_STR = "Standard";
-const std::unordered_map<std::string, std::string> S3_OBJECT_TAGS {
+const std::map<std::string, std::string> S3_OBJECT_TAGS {
   std::make_pair("tag1", "value1"),
   std::make_pair("tag2", "value2")
+};
+const std::map<std::string, std::string> S3_OBJECT_USER_METADATA {
+  std::make_pair("metadata_key_1", "metadata_value_1"),
+  std::make_pair("metadata_key_2", "metadata_value_2")
 };
 
 class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
@@ -111,6 +116,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
       get_s3_result.SetContentType(S3_CONTENT_TYPE);
       get_s3_result.ReplaceBody(new std::stringstream(S3_CONTENT));
       get_s3_result.SetContentLength(S3_CONTENT.size());
+      get_s3_result.SetMetadata(S3_OBJECT_USER_METADATA);
     }
     return minifi::utils::make_optional(std::move(get_s3_result));
   }

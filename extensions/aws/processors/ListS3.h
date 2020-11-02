@@ -41,6 +41,8 @@ class ListS3 : public S3Processor {
   static const core::Property UseVersions;
   static const core::Property MinimumObjectAge;
   static const core::Property WriteObjectTags;
+  static const core::Property WriteUserMetadata;
+  static const core::Property RequesterPays;
 
   // Supported Relationships
   static const core::Relationship Success;
@@ -60,8 +62,21 @@ class ListS3 : public S3Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
+  void writeObjectTags(
+    const std::string& bucket,
+    aws::s3::ListedObjectAttributes object,
+    const std::shared_ptr<core::ProcessSession> &session,
+    const std::shared_ptr<core::FlowFile> &flow_file);
+  void writeUserMetadata(
+    const std::string& bucket,
+    aws::s3::ListedObjectAttributes object,
+    const std::shared_ptr<core::ProcessSession> &session,
+    const std::shared_ptr<core::FlowFile> &flow_file);
+
   aws::s3::ListRequestParameters list_request_params_;
   bool write_object_tags_ = false;
+  bool write_user_metadata_ = false;
+  bool requester_pays_ = false;
 };
 
 REGISTER_RESOURCE(ListS3, "This Processor retrieves a listing of objects from an Amazon S3 bucket.");
