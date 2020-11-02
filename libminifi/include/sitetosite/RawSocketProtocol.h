@@ -158,7 +158,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
 
   // Creation of a new transaction, return the transaction ID if success,
   // Return NULL when any error occurs
-  virtual std::shared_ptr<Transaction> createTransaction(std::string &transactionID, TransferDirection direction);
+  virtual std::shared_ptr<Transaction> createTransaction(TransferDirection direction);
 
   //! Transfer string for the process session
   virtual bool transmitPayload(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, const std::string &payload,
@@ -186,7 +186,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   std::atomic<uint64_t> _timeOut;
 
   // commsIdentifier
-  std::string _commsIdentifier;
+  utils::Identifier _commsIdentifier;
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer

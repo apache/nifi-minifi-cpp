@@ -16,6 +16,7 @@
  */
 
 #include "controllers/keyvalue/PersistableKeyValueStoreService.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -29,20 +30,34 @@ PersistableKeyValueStoreService::PersistableKeyValueStoreService(const std::stri
 
 PersistableKeyValueStoreService::~PersistableKeyValueStoreService() = default;
 
-bool PersistableKeyValueStoreService::setImpl(const std::string& key, const std::string& value) {
-  return set(key, value);
+bool PersistableKeyValueStoreService::setImpl(const utils::Identifier& key, const std::string& serialized_state) {
+  return set(key.to_string(), serialized_state);
 }
 
-bool PersistableKeyValueStoreService::getImpl(const std::string& key, std::string& value) {
-  return get(key, value);
+bool PersistableKeyValueStoreService::getImpl(const utils::Identifier& key, std::string& serialized_state) {
+  return get(key.to_string(), serialized_state);
 }
 
-bool PersistableKeyValueStoreService::getImpl(std::unordered_map<std::string, std::string>& kvs) {
-  return get(kvs);
+bool PersistableKeyValueStoreService::getImpl(std::map<utils::Identifier, std::string>& kvs) {
+  std::unordered_map<std::string, std::string> states;
+  if (!get(states)) {
+    return false;
+  }
+  kvs.clear();
+  for (const auto& state : states) {
+    utils::optional<utils::Identifier> optional_uuid = utils::Identifier::parse(state.first);
+    if (optional_uuid) {
+      kvs[optional_uuid.value()] = state.second;
+    } else {
+      logging::LoggerFactory<PersistableKeyValueStoreService>::getLogger()
+          ->log_error("Found non-UUID key \"%s\" in storage implementation", state.first);
+    }
+  }
+  return true;
 }
 
-bool PersistableKeyValueStoreService::removeImpl(const std::string& key) {
-  return remove(key);
+bool PersistableKeyValueStoreService::removeImpl(const utils::Identifier& key) {
+  return remove(key.to_string());
 }
 
 bool PersistableKeyValueStoreService::persistImpl() {

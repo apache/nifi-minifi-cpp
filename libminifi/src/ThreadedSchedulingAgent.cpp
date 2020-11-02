@@ -110,16 +110,15 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     thread_pool_.execute(std::move(functor), future);
   }
   logger_->log_debug("Scheduled thread %d concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName());
-  processors_running_.insert(processor->getUUIDStr());
-  return;
+  processors_running_.insert(processor->getUUID());
 }
 
 void ThreadedSchedulingAgent::stop() {
   SchedulingAgent::stop();
   std::lock_guard<std::mutex> lock(mutex_);
-  for (const auto& p : processors_running_) {
-    logger_->log_error("SchedulingAgent is stopped before processor was unscheduled: %s", p);
-    thread_pool_.stopTasks(p);
+  for (const auto& processor_id : processors_running_) {
+    logger_->log_error("SchedulingAgent is stopped before processor was unscheduled: %s", processor_id.to_string());
+    thread_pool_.stopTasks(processor_id.to_string());
   }
 }
 
@@ -138,7 +137,7 @@ void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> proces
 
   processor->setScheduledState(core::STOPPED);
 
-  processors_running_.erase(processor->getUUIDStr());
+  processors_running_.erase(processor->getUUID());
 }
 
 } /* namespace minifi */

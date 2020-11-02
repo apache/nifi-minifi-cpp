@@ -66,8 +66,7 @@ ProcessSession::~ProcessSession() {
 }
 
 void ProcessSession::add(const std::shared_ptr<core::FlowFile> &record) {
-  utils::Identifier uuid;
-  record->getUUID(uuid);
+  utils::Identifier uuid = record->getUUID();
   if (_updatedFlowFiles.find(uuid) != _updatedFlowFiles.end()) {
     throw Exception(ExceptionType::PROCESSOR_EXCEPTION, "Mustn't add file that was provided by this session");
   }
@@ -93,11 +92,10 @@ std::shared_ptr<core::FlowFile> ProcessSession::create(const std::shared_ptr<cor
     }
     record->setLineageStartDate(parent->getlineageStartDate());
     record->setLineageIdentifiers(parent->getlineageIdentifiers());
-    parent->getlineageIdentifiers().push_back(parent->getUUIDStr());
+    parent->getlineageIdentifiers().push_back(parent->getUUID());
   }
 
-  utils::Identifier uuid;
-  record->getUUID(uuid);
+  utils::Identifier uuid = record->getUUID();
   _addedFlowFiles[uuid] = record;
   logger_->log_debug("Create FlowFile with UUID %s", record->getUUIDStr());
   std::stringstream details;
@@ -144,7 +142,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::cloneDuringTransfer(const std::s
   }
   record->setLineageStartDate(parent->getlineageStartDate());
   record->setLineageIdentifiers(parent->getlineageIdentifiers());
-  record->getlineageIdentifiers().push_back(parent->getUUIDStr());
+  record->getlineageIdentifiers().push_back(parent->getUUID());
 
   // Copy Resource Claim
   std::shared_ptr<ResourceClaim> parent_claim = parent->getResourceClaim();
@@ -207,8 +205,7 @@ void ProcessSession::penalize(const std::shared_ptr<core::FlowFile> &flow) {
 
 void ProcessSession::transfer(const std::shared_ptr<core::FlowFile> &flow, Relationship relationship) {
   logging::LOG_INFO(logger_) << "Transferring " << flow->getUUIDStr() << " from " << process_context_->getProcessorNode()->getName() << " to relationship " << relationship.getName();
-  utils::Identifier uuid;
-  flow->getUUID(uuid);
+  utils::Identifier uuid = flow->getUUID();
   _transferRelationship[uuid] = relationship;
   flow->setDeleted(false);
 }
@@ -637,8 +634,7 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
   if (record->isDeleted()) {
     return RouteResult::Ok_Deleted;
   }
-  utils::Identifier uuid;
-  record->getUUID(uuid);
+  utils::Identifier uuid = record->getUUID();
   auto itRelationship = _transferRelationship.find(uuid);
   if (itRelationship == _transferRelationship.end()) {
     return RouteResult::Error_NoRelationship;
@@ -867,8 +863,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
     const bool shouldDropEmptyFiles = connection ? connection->getDropEmptyFlowFiles() : false;
     auto& flows = transaction.second;
     for (auto &ff : flows) {
-      utils::Identifier uuid;
-      ff->getUUID(uuid);
+      utils::Identifier uuid = ff->getUUID();
       auto snapshotIt = modifiedFlowFiles.find(uuid);
       auto original = snapshotIt != modifiedFlowFiles.end() ? snapshotIt->second.snapshot : nullptr;
       if (shouldDropEmptyFiles && ff->getSize() == 0) {
@@ -924,8 +919,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
       std::shared_ptr<FlowFile> snapshot = std::make_shared<FlowFileRecord>();
       *snapshot = *ret;
       logger_->log_debug("Create Snapshot FlowFile with UUID %s", snapshot->getUUIDStr());
-      utils::Identifier uuid;
-      ret->getUUID(uuid);
+      utils::Identifier uuid = ret->getUUID();
       _updatedFlowFiles[uuid] = {ret, snapshot};
       auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
       if (flow_version != nullptr) {

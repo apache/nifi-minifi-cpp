@@ -89,7 +89,7 @@ private:
 class TailFileTestResourceManager {
 public:
     TailFileTestResourceManager(const std::string& processor_name, void(*callback)(processor_session * ps, processor_context * ctx)) {
-        std::string port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
+        auto port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
         nifi_port port;
         port.port_id = const_cast<char*>(port_str.c_str());
         const char * instance_str = "nifi";

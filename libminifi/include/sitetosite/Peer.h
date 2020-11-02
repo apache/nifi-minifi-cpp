@@ -85,8 +85,8 @@ class Peer {
     return secure_;
   }
 
-  void getPortId(utils::Identifier &other) const {
-    other = port_id_;
+  utils::Identifier getPortId() const {
+    return port_id_;
   }
 
  protected:

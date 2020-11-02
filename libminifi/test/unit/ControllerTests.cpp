@@ -38,8 +38,9 @@ class TestStateController : public minifi::state::StateController {
     return "TestStateController";
   }
 
-  virtual std::string getComponentUUID() const {
-    return "uuid";
+  virtual utils::Identifier getComponentUUID() const {
+    static auto dummyUUID = utils::Identifier::parse("12345678-1234-1234-1234-123456789abc").value();
+    return dummyUUID;
   }
 
   /**
@@ -92,8 +93,9 @@ class TestUpdateSink : public minifi::state::StateMonitor {
     return "TestUpdateSink";
   }
 
-  virtual std::string getComponentUUID() const {
-    return "uuid";
+  virtual utils::Identifier getComponentUUID() const {
+    static auto dummyUUID = utils::Identifier::parse("12345678-1234-1234-1234-123456789abc").value();
+    return dummyUUID;
   }
   /**
    * Start the client

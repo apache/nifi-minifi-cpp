@@ -45,6 +45,8 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+using TaskId = std::string;
+
 /**
  * Worker task
  * purpose: Provides a wrapper for the functor
@@ -53,7 +55,7 @@ namespace utils {
 template<typename T>
 class Worker {
  public:
-  explicit Worker(const std::function<T()> &task, const std::string &identifier, std::unique_ptr<AfterExecute<T>> run_determinant)
+  explicit Worker(const std::function<T()> &task, const TaskId &identifier, std::unique_ptr<AfterExecute<T>> run_determinant)
       : identifier_(identifier),
         next_exec_time_(std::chrono::steady_clock::now()),
         task(task),
@@ -61,7 +63,7 @@ class Worker {
     promise = std::make_shared<std::promise<T>>();
   }
 
-  explicit Worker(const std::function<T()> &task, const std::string &identifier)
+  explicit Worker(const std::function<T()> &task, const TaskId &identifier)
       : identifier_(identifier),
         next_exec_time_(std::chrono::steady_clock::now()),
         task(task),
@@ -69,7 +71,7 @@ class Worker {
     promise = std::make_shared<std::promise<T>>();
   }
 
-  explicit Worker(const std::string identifier = "")
+  explicit Worker(const TaskId& identifier = {})
       : identifier_(identifier),
         next_exec_time_(std::chrono::steady_clock::now()) {
   }
@@ -104,7 +106,7 @@ class Worker {
     return true;
   }
 
-  virtual void setIdentifier(const std::string identifier) {
+  virtual void setIdentifier(const TaskId& identifier) {
     identifier_ = identifier;
   }
 
@@ -123,12 +125,12 @@ class Worker {
 
   std::shared_ptr<std::promise<T>> getPromise() const;
 
-  const std::string &getIdentifier() const {
+  const TaskId &getIdentifier() const {
     return identifier_;
   }
 
  protected:
-  std::string identifier_;
+  TaskId identifier_;
   std::chrono::time_point<std::chrono::steady_clock> next_exec_time_;
   std::function<T()> task;
   std::unique_ptr<AfterExecute<T>> run_determinant_;
@@ -221,12 +223,12 @@ class ThreadPool {
    * @param identifier for worker tasks. Note that these tasks won't
    * immediately stop.
    */
-  void stopTasks(const std::string &identifier);
+  void stopTasks(const TaskId &identifier);
 
   /**
    * Returns true if a task is running.
    */
-  bool isTaskRunning(const std::string &identifier) const {
+  bool isTaskRunning(const TaskId &identifier) const {
     try {
       return task_status_.at(identifier) == true;
     } catch (const std::out_of_range &) {
@@ -341,7 +343,7 @@ class ThreadPool {
 // notification for new delayed tasks that's before the current ones
   std::condition_variable delayed_task_available_;
 // map to identify if a task should be
-  std::map<std::string, bool> task_status_;
+  std::map<TaskId, bool> task_status_;
 // manager mutex
   std::recursive_mutex manager_mutex_;
   // thread pool name

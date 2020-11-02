@@ -292,8 +292,8 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
    */
   {
     std::shared_ptr<core::Processor> processor = std::make_shared<core::Processor>("dummy");
-    utils::Identifier uuid;
-    REQUIRE(processor->getUUID(uuid));
+    utils::Identifier uuid = processor->getUUID();
+    REQUIRE(uuid);
     input->setSourceUUID(uuid);
     processor->addConnection(input);
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);

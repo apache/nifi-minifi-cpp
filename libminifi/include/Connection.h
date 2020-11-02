@@ -66,12 +66,12 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
     dest_uuid_ = uuid;
   }
   // Get Source Processor UUID
-  void getSourceUUID(utils::Identifier &uuid) {
-    uuid = src_uuid_;
+  utils::Identifier getSourceUUID() const {
+    return src_uuid_;
   }
   // Get Destination Processor UUID
-  void getDestinationUUID(utils::Identifier &uuid) {
-    uuid = dest_uuid_;
+  utils::Identifier getDestinationUUID() const {
+    return dest_uuid_;
   }
 
   // Set Connection Source Processor

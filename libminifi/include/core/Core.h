@@ -181,14 +181,11 @@ class CoreComponent {
    */
   void setUUID(const utils::Identifier& uuid);
 
-  void setUUIDStr(const std::string &uuidStr);
-
   /**
-   * Returns the UUID through the provided object.
-   * @param uuid uuid struct to which we will copy the memory
-   * @return success of request
+   * Returns the UUID.
+   * @return the uuid of the component
    */
-  bool getUUID(utils::Identifier &uuid) const;
+  utils::Identifier getUUID() const;
 
   // unsigned const char *getUUID();
   /**

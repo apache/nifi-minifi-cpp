@@ -88,7 +88,7 @@ class SiteToSiteClient : public core::Connectable {
    * @param transactionID transaction identifier
    * @param direction direction of transfer
    */
-  virtual std::shared_ptr<Transaction> createTransaction(std::string &transactionID, TransferDirection direction) = 0;
+  virtual std::shared_ptr<Transaction> createTransaction(TransferDirection direction) = 0;
 
   /**
    * Transfers flow files
@@ -134,7 +134,7 @@ class SiteToSiteClient : public core::Connectable {
 
   // Receive the data packet from the transaction
   // Return false when any error occurs
-  bool receive(std::string transactionID, DataPacket *packet, bool &eof);
+  bool receive(const utils::Identifier& transactionID, DataPacket *packet, bool &eof);
   /**
    * Transfers raw data and attributes  to server
    * @param context process context
@@ -148,7 +148,6 @@ class SiteToSiteClient : public core::Connectable {
 
   void setPortId(utils::Identifier &id) {
     port_id_ = id;
-    port_id_str_ = port_id_.to_string();
   }
 
   /**
@@ -169,8 +168,8 @@ class SiteToSiteClient : public core::Connectable {
    * Provides a reference to the port identifier
    * @returns port identifier
    */
-  const std::string getPortId() const {
-    return port_id_str_;
+  utils::Identifier getPortId() const {
+    return port_id_;
   }
 
   /**
@@ -213,19 +212,19 @@ class SiteToSiteClient : public core::Connectable {
   }
 
   // Return -1 when any error occurs
-  virtual int16_t send(std::string transactionID, DataPacket *packet, const std::shared_ptr<core::FlowFile> &flowFile, const std::shared_ptr<core::ProcessSession> &session);
+  virtual int16_t send(const utils::Identifier& transactionID, DataPacket *packet, const std::shared_ptr<core::FlowFile> &flowFile, const std::shared_ptr<core::ProcessSession> &session);
 
  protected:
   // Cancel the transaction
-  virtual void cancel(std::string transactionID);
+  virtual void cancel(const utils::Identifier& transactionID);
   // Complete the transaction
-  virtual bool complete(std::string transactionID);
+  virtual bool complete(const utils::Identifier& transactionID);
   // Error the transaction
-  virtual void error(std::string transactionID);
+  virtual void error(const utils::Identifier& transactionID);
 
-  virtual bool confirm(std::string transactionID);
+  virtual bool confirm(const utils::Identifier& transactionID);
   // deleteTransaction
-  virtual void deleteTransaction(std::string transactionID);
+  virtual void deleteTransaction(const utils::Identifier& transactionID);
 
   virtual void tearDown() = 0;
 
@@ -246,9 +245,6 @@ class SiteToSiteClient : public core::Connectable {
   // Peer State
   PeerState peer_state_;
 
-  // portIDStr
-  std::string port_id_str_;
-
   // portId
   utils::Identifier port_id_;
 
@@ -261,7 +257,7 @@ class SiteToSiteClient : public core::Connectable {
   std::atomic<bool> running_;
 
   // transaction map
-  std::map<std::string, std::shared_ptr<Transaction>> known_transactions_;
+  std::map<utils::Identifier, std::shared_ptr<Transaction>> known_transactions_;
 
   // BATCH_SEND_NANOS
   uint64_t _batchSendNanos;

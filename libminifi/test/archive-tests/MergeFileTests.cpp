@@ -154,11 +154,11 @@ class MergeTestController : public TestController {
 
     processor = std::make_shared<processors::MergeContent>("mergecontent");
     processor->initialize();
-    utils::Identifier processoruuid;
-    REQUIRE(processor->getUUID(processoruuid));
+    utils::Identifier processoruuid = processor->getUUID();
+    REQUIRE(processoruuid);
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<minifi::processors::LogAttribute>("logattribute");
-    utils::Identifier logAttributeuuid;
-    REQUIRE(logAttributeProcessor->getUUID(logAttributeuuid));
+    utils::Identifier logAttributeuuid = logAttributeProcessor->getUUID();
+    REQUIRE(logAttributeuuid);
 
     // output from merge processor to log attribute
     output = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");

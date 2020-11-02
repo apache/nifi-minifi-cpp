@@ -154,9 +154,9 @@ class ProcessGroup : public CoreComponent {
     return config_version_;
   }
   // Start Processing
-  void startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
+  void startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
   // Stop Processing
-  void stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler, const std::function<bool(const std::shared_ptr<Processor>&)>& filter = [] (const std::shared_ptr<Processor>&) {return true;}); // NOLINT
+  void stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler, const std::function<bool(const std::shared_ptr<Processor>&)>& filter = [] (const std::shared_ptr<Processor>&) {return true;}); // NOLINT
   // Whether it is root process group
   bool isRootProcessGroup();
   // set parent process group
@@ -170,15 +170,15 @@ class ProcessGroup : public CoreComponent {
     return parent_process_group_;
   }
   // Add processor
-  void addProcessor(std::shared_ptr<Processor> processor);
+  void addProcessor(const std::shared_ptr<Processor>& processor);
   // Remove processor
-  void removeProcessor(std::shared_ptr<Processor> processor);
+  void removeProcessor(const std::shared_ptr<Processor>& processor);
   // Add child processor group
   void addProcessGroup(ProcessGroup *child);
   // Remove child processor group
   void removeProcessGroup(ProcessGroup *child);
   // ! Add connections
-  void addConnection(std::shared_ptr<Connection> connection);
+  void addConnection(const std::shared_ptr<Connection>& connection);
   // Generic find
   template <typename Fun>
   std::shared_ptr<Processor> findProcessor(Fun condition) const {
@@ -216,7 +216,7 @@ class ProcessGroup : public CoreComponent {
   std::shared_ptr<core::controller::ControllerServiceNode> findControllerService(const std::string &nodeId);
 
   // removeConnection
-  void removeConnection(std::shared_ptr<Connection> connection);
+  void removeConnection(const std::shared_ptr<Connection>& connection);
   // update property value
   void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue);
 
@@ -231,7 +231,7 @@ class ProcessGroup : public CoreComponent {
   std::size_t getTotalFlowFileCount() const;
 
  protected:
-  void startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
+  void startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
 
   // version
   int config_version_;

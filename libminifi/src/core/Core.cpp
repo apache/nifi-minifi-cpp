@@ -31,16 +31,9 @@ void CoreComponent::setUUID(const utils::Identifier& uuid) {
   uuid_ = uuid;
 }
 
-void CoreComponent::setUUIDStr(const std::string &uuidStr) {
-  uuid_ = uuidStr;
-}
 // Get UUID
-bool CoreComponent::getUUID(utils::Identifier &uuid) const {
-  if (uuid_.isNil()) {
-    return false;
-  }
-  uuid = uuid_;
-  return true;
+utils::Identifier CoreComponent::getUUID() const {
+  return uuid_;
 }
 
 // Set Processor Name

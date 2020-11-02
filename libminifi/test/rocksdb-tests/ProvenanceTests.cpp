@@ -39,7 +39,7 @@ TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventReco
 TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "componentid", "componenttype");
 
-  std::string eventId = record1.getEventId();
+  utils::Identifier eventId = record1.getEventId();
 
   std::string smileyface = ":)";
   record1.setDetails(smileyface);
@@ -62,7 +62,7 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
 
 TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE, "componentid", "componenttype");
-  std::string eventId = record1.getEventId();
+  utils::Identifier eventId = record1.getEventId();
   std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<minifi::FlowFileRecord>();
   ffr1->setAttribute("potato", "potatoe");
   ffr1->setAttribute("tomato", "tomatoe");
@@ -79,8 +79,8 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   REQUIRE(record2.DeSerialize(testRepository) == true);
   REQUIRE(record1.getChildrenUuids().size() == 1);
   REQUIRE(record2.getChildrenUuids().size() == 1);
-  std::string childId = record2.getChildrenUuids().at(0);
-  REQUIRE(childId == ffr1->getUUIDStr());
+  utils::Identifier childId = record2.getChildrenUuids().at(0);
+  REQUIRE(childId == ffr1->getUUID());
   record2.removeChildUuid(childId);
   REQUIRE(record2.getChildrenUuids().size() == 0);
 }
@@ -88,7 +88,7 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
 TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "componentid", "componenttype");
 
-  std::string eventId = record1.getEventId();
+  utils::Identifier eventId = record1.getEventId();
 
   std::string smileyface = ":)";
   record1.setDetails(smileyface);
@@ -113,7 +113,7 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
 
 TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[TestFlowAndProv1]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE, "componentid", "componenttype");
-  std::string eventId = record1.getEventId();
+  utils::Identifier eventId = record1.getEventId();
   std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<minifi::FlowFileRecord>();
   ffr1->setAttribute("potato", "potatoe");
   ffr1->setAttribute("tomato", "tomatoe");
@@ -131,8 +131,8 @@ TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[Test
   REQUIRE(record2.DeSerialize(testRepository) == true);
   REQUIRE(record1.getChildrenUuids().size() == 1);
   REQUIRE(record2.getChildrenUuids().size() == 1);
-  std::string childId = record2.getChildrenUuids().at(0);
-  REQUIRE(childId == ffr1->getUUIDStr());
+  utils::Identifier childId = record2.getChildrenUuids().at(0);
+  REQUIRE(childId == ffr1->getUUID());
   record2.removeChildUuid(childId);
   REQUIRE(record2.getChildrenUuids().size() == 0);
 }
@@ -140,7 +140,7 @@ TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[Test
 TEST_CASE("Test Provenance record serialization NoOp", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "componentid", "componenttype");
 
-  std::string eventId = record1.getEventId();
+  utils::Identifier eventId = record1.getEventId();
 
   std::string smileyface = ":)";
   record1.setDetails(smileyface);

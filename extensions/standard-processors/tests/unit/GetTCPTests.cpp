@@ -63,11 +63,11 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   processor->setStreamFactory(stream_factory);
   processor->initialize();
 
-  utils::Identifier processoruuid;
-  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier processoruuid = processor->getUUID();
+  REQUIRE(processoruuid);
 
-  utils::Identifier logattribute_uuid;
-  REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
+  utils::Identifier logattribute_uuid = logAttribute->getUUID();
+  REQUIRE(logattribute_uuid);
 
   REQUIRE(processoruuid.to_string() != logattribute_uuid.to_string());
 
@@ -175,11 +175,11 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
   processor->setStreamFactory(stream_factory);
   processor->initialize();
 
-  utils::Identifier processoruuid;
-  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier processoruuid = processor->getUUID();
+  REQUIRE(processoruuid);
 
-  utils::Identifier logattribute_uuid;
-  REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
+  utils::Identifier logattribute_uuid = logAttribute->getUUID();
+  REQUIRE(logattribute_uuid);
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
   connection->addRelationship(core::Relationship("partial", "description"));
@@ -297,11 +297,11 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
   processor->setStreamFactory(stream_factory);
   processor->initialize();
 
-  utils::Identifier processoruuid;
-  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier processoruuid = processor->getUUID();
+  REQUIRE(processoruuid);
 
-  utils::Identifier logattribute_uuid;
-  REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
+  utils::Identifier logattribute_uuid = logAttribute->getUUID();
+  REQUIRE(logattribute_uuid);
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
   connection->addRelationship(core::Relationship("success", "description"));

@@ -139,14 +139,14 @@ standalone_processor * create_processor(const char *name, nifi_instance * instan
   }
   if (instance == NULL) {
     nifi_port port;
-    std::string port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
+    auto port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
     port.port_id = const_cast<char*>(port_str.c_str());
     instance = create_instance("internal_standalone", &port);
   }
   auto flow = create_new_flow(instance);
   std::shared_ptr<ExecutionPlan> plan(flow);
   plan->addProcessor(ptr, name);
-  ExecutionPlan::addProcessorWithPlan(ptr->getUUIDStr(), plan);
+  ExecutionPlan::addProcessorWithPlan(ptr->getUUID(), plan);
   return static_cast<standalone_processor*>(ptr.get());
 }
 
@@ -180,7 +180,7 @@ void get_proc_uuid_from_context(const processor_context * ctx, char * uuid_targe
 
 void free_standalone_processor(standalone_processor* proc) {
   NULL_CHECK(, proc);
-  ExecutionPlan::removeProcWithPlan(proc->getUUIDStr());
+  ExecutionPlan::removeProcWithPlan(proc->getUUID());
 
   if (ExecutionPlan::getProcWithPlanQty() == 0) {
     // The instance is not needed any more as there are no standalone processors in the system
@@ -288,7 +288,7 @@ flow_file_record * generate_flow(processor_context * ctx) {
     }
     ffr->crp = static_cast<void*>(new std::shared_ptr<minifi::core::ContentRepository>(ctx->getContentRepository()));
 
-    auto plan = ExecutionPlan::getPlan(ctx->getProcessorNode()->getProcessor()->getUUIDStr());
+    auto plan = ExecutionPlan::getPlan(ctx->getProcessorNode()->getProcessor()->getUUID());
 
     if (!plan) {
         return nullptr;
@@ -690,7 +690,7 @@ flow_file_record *invoke_ff(standalone_processor* proc, const flow_file_record *
   if (proc == nullptr) {
     return nullptr;
   }
-  auto plan = ExecutionPlan::getPlan(proc->getUUIDStr());
+  auto plan = ExecutionPlan::getPlan(proc->getUUID());
   if (!plan) {
     // This is not a standalone processor, shouldn't be used with invoke!
     return nullptr;
@@ -726,7 +726,7 @@ flow_file_record *invoke_chunk(standalone_processor* proc, uint8_t* buf, uint64_
     return nullptr;
   }
 
-  auto plan = ExecutionPlan::getPlan(proc->getUUIDStr());
+  auto plan = ExecutionPlan::getPlan(proc->getUUID());
   if (!plan) {
     // This is not a standalone processor, shouldn't be used with invoke!
     return nullptr;

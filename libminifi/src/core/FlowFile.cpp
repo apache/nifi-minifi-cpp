@@ -138,7 +138,7 @@ uint64_t FlowFile::getlineageStartDate() const {
   return lineage_start_date_;
 }
 
-std::vector<std::string> &FlowFile::getlineageIdentifiers() {
+std::vector<utils::Identifier> &FlowFile::getlineageIdentifiers() {
   return lineage_Identifiers_;
 }
 

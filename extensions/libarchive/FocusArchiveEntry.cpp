@@ -84,7 +84,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
       session->import(entryMetadata.tmpFileName, flowFile, false, 0);
       utils::Identifier stashKeyUuid = id_generator_->generate();
       logger_->log_debug("FocusArchiveEntry generated stash key %s for entry %s", stashKeyUuid.to_string(), entryMetadata.entryName);
-      entryMetadata.stashKey.assign(stashKeyUuid.to_string());
+      entryMetadata.stashKey = stashKeyUuid.to_string();
 
       if (entryMetadata.entryName == archiveMetadata.focusedEntry) {
         targetEntryStashKey = entryMetadata.stashKey;

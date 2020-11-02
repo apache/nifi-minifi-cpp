@@ -866,7 +866,7 @@ std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowContro
  * Returns controller service components referenced by serviceIdentifier from the embedded
  * controller service provider;
  */
-std::shared_ptr<core::controller::ControllerService> FlowController::getControllerServiceForComponent(const std::string &serviceIdentifier, const std::string &componentId) {
+std::shared_ptr<core::controller::ControllerService> FlowController::getControllerServiceForComponent(const std::string &serviceIdentifier, const utils::Identifier &componentId) {
   return controller_service_provider_->getControllerServiceForComponent(serviceIdentifier, componentId);
 }
 

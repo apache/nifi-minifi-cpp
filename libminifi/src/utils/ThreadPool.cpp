@@ -194,7 +194,7 @@ void ThreadPool<T>::start() {
 }
 
 template<typename T>
-void ThreadPool<T>::stopTasks(const std::string &identifier) {
+void ThreadPool<T>::stopTasks(const TaskId &identifier) {
   std::unique_lock<std::mutex> lock(worker_queue_mutex_);
   task_status_[identifier] = false;
 }

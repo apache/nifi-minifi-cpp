@@ -57,8 +57,8 @@ int main(int argc, char **argv) {
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<
       TestFlowController>(test_repo, test_repo, content_repo);
 
-  utils::Identifier processoruuid;
-  assert(true == processor->getUUID(processoruuid));
+  utils::Identifier processoruuid = processor->getUUID();
+  assert(processoruuid);
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "executeProcessConnection");
   connection->addRelationship(core::Relationship("success", "description"));
 

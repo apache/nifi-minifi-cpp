@@ -28,17 +28,13 @@ ProcessorNode::ProcessorNode(const std::shared_ptr<Connectable> &processor)
     : processor_(processor),
       Connectable(processor->getName()),
       ConfigurableComponent() {
-  utils::Identifier copy;
-  processor->getUUID(copy);
-  setUUID(copy);
+  setUUID(processor->getUUID());
 }
 
 ProcessorNode::ProcessorNode(const ProcessorNode &other)
     : processor_(other.processor_),
       Connectable(other.getName()) {
-  utils::Identifier copy;
-  processor_->getUUID(copy);
-  setUUID(copy);
+  setUUID(processor_->getUUID());
 }
 
 ProcessorNode::ProcessorNode(const ProcessorNode &&other)

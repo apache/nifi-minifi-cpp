@@ -36,36 +36,11 @@ TEST_CASE("TestSetPortId", "[S2S1]") {
 
   minifi::sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 
-  std::string uuid_str = "c56a4180-65aa-42ec-a945-5fd21dec0538";
-
-  utils::Identifier fakeUUID;
-
-  fakeUUID = uuid_str;
+  utils::Identifier fakeUUID = utils::Identifier::parse("c56a4180-65aa-42ec-a945-5fd21dec0538").value();
 
   protocol.setPortId(fakeUUID);
 
-  REQUIRE(uuid_str == protocol.getPortId());
-}
-
-TEST_CASE("TestSetPortIdUppercase", "[S2S2]") {
-  std::unique_ptr<minifi::sitetosite::SiteToSitePeer> peer = std::unique_ptr<minifi::sitetosite::SiteToSitePeer>(
-      new minifi::sitetosite::SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::BufferStream>(new org::apache::nifi::minifi::io::BufferStream()), "fake_host", 65433, ""));
-
-  minifi::sitetosite::RawSiteToSiteClient protocol(std::move(peer));
-
-  std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
-
-  utils::Identifier fakeUUID;
-
-  fakeUUID = uuid_str;
-
-  protocol.setPortId(fakeUUID);
-
-  REQUIRE(uuid_str != protocol.getPortId());
-
-  std::transform(uuid_str.begin(), uuid_str.end(), uuid_str.begin(), ::tolower);
-
-  REQUIRE(uuid_str == protocol.getPortId());
+  REQUIRE(fakeUUID == protocol.getPortId());
 }
 
 void sunny_path_bootstrap(SiteToSiteResponder *collector) {
@@ -98,11 +73,7 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
 
   minifi::sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 
-  std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
-
-  utils::Identifier fakeUUID;
-
-  fakeUUID = uuid_str;
+  utils::Identifier fakeUUID = utils::Identifier::parse("C56A4180-65AA-42EC-A945-5FD21DEC0538").value();
 
   protocol.setPortId(fakeUUID);
 
@@ -137,10 +108,11 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
 
   // start to send the stuff
   // Create the transaction
-  std::string transactionID;
   std::string payload = "Test MiNiFi payload";
   std::shared_ptr<minifi::sitetosite::Transaction> transaction;
-  transaction = protocol.createTransaction(transactionID, minifi::sitetosite::SEND);
+  transaction = protocol.createTransaction(minifi::sitetosite::SEND);
+  REQUIRE(transaction);
+  auto transactionID = transaction->getUUID();
   collector->get_next_client_response();
   REQUIRE(collector->get_next_client_response() == "SEND_FLOWFILES");
   std::map<std::string, std::string> attributes;

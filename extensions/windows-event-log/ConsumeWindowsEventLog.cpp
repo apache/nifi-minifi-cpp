@@ -285,7 +285,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
       logger_->log_error("State Directory is empty");
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "State Directory is empty");
     }
-    bookmark_ = std::make_unique<Bookmark>(wstrChannel_, wstrQuery_, bookmarkDir, getUUIDStr(), processOldEvents, state_manager_, logger_);
+    bookmark_ = std::make_unique<Bookmark>(wstrChannel_, wstrQuery_, bookmarkDir, getUUID(), processOldEvents, state_manager_, logger_);
     if (!*bookmark_) {
       bookmark_.reset();
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bookmark is empty");

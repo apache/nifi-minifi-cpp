@@ -85,7 +85,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   /**
    * Get lineage identifiers
    */
-  std::vector<std::string> &getlineageIdentifiers();
+  std::vector<utils::Identifier> &getlineageIdentifiers();
 
   /**
    * Returns whether or not this flow file record
@@ -124,7 +124,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    */
   void setLineageStartDate(const uint64_t date);
 
-  void setLineageIdentifiers(const std::vector<std::string>& lineage_Identifiers) {
+  void setLineageIdentifiers(const std::vector<utils::Identifier>& lineage_Identifiers) {
     lineage_Identifiers_ = lineage_Identifiers;
   }
   /**
@@ -278,7 +278,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   // UUID string
   // std::string uuid_str_;
   // UUID string for all parents
-  std::vector<std::string> lineage_Identifiers_;
+  std::vector<utils::Identifier> lineage_Identifiers_;
 
   // Orginal connection queue that this flow file was dequeued from
   std::shared_ptr<core::Connectable> connection_;

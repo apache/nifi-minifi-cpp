@@ -111,7 +111,7 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
     return false;
   }
 
-  logger_->log_debug("Negotiate protocol version with destination port %s current version %d", port_id_str_, _currentVersion);
+  logger_->log_debug("Negotiate protocol version with destination port %s current version %d", port_id_.to_string(), _currentVersion);
 
   int ret = peer_->write(getResourceName());
 
@@ -175,7 +175,7 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
     return false;
   }
 
-  logger_->log_trace("Negotiate Codec version with destination port %s current version %d", port_id_str_, _currentCodecVersion);
+  logger_->log_trace("Negotiate Codec version with destination port %s current version %d", port_id_.to_string(), _currentCodecVersion);
 
   int ret = peer_->write(getCodecResourceName());
 
@@ -233,8 +233,8 @@ bool RawSiteToSiteClient::handShake() {
     logger_->log_error("Site2Site peer state is not established while handshake");
     return false;
   }
-  logger_->log_debug("Site2Site Protocol Perform hand shake with destination port %s", port_id_str_);
-  _commsIdentifier = id_generator_->generate().to_string();
+  logger_->log_debug("Site2Site Protocol Perform hand shake with destination port %s", port_id_.to_string());
+  _commsIdentifier = id_generator_->generate();
 
   int ret = peer_->write(_commsIdentifier);
 
@@ -244,7 +244,7 @@ bool RawSiteToSiteClient::handShake() {
 
   std::map<std::string, std::string> properties;
   properties[HandShakePropertyStr[GZIP]] = "false";
-  properties[HandShakePropertyStr[PORT_IDENTIFIER]] = port_id_str_;
+  properties[HandShakePropertyStr[PORT_IDENTIFIER]] = port_id_.to_string();
   properties[HandShakePropertyStr[REQUEST_EXPIRATION_MILLIS]] = std::to_string(_timeOut);
   if (_currentVersion >= 5) {
     if (_batchCount > 0)
@@ -314,7 +314,7 @@ bool RawSiteToSiteClient::handShake() {
   }
 
   // All known error cases handled here
-  logger_->log_error("Site2Site HandShake Failed because destination port, %s, is %s", port_id_str_, error);
+  logger_->log_error("Site2Site HandShake Failed because destination port, %s, is %s", port_id_.to_string(), error);
   ret = -1;
   return false;
 }
@@ -425,7 +425,7 @@ bool RawSiteToSiteClient::negotiateCodec() {
     return false;
   }
 
-  logger_->log_trace("Site2Site Protocol Negotiate Codec with destination port %s", port_id_str_);
+  logger_->log_trace("Site2Site Protocol Negotiate Codec with destination port %s", port_id_.to_string());
 
   int status = writeRequestType(NEGOTIATE_FLOWFILE_CODEC);
 
@@ -463,7 +463,7 @@ bool RawSiteToSiteClient::bootstrap() {
   }
 }
 
-std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string &transactionID, TransferDirection direction) {
+std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(TransferDirection direction) {
   int ret;
   bool dataAvailable;
   std::shared_ptr<Transaction> transaction = nullptr;
@@ -498,8 +498,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
         dataAvailable = true;
         logger_->log_trace("Site2Site peer indicates that data is available");
         transaction = std::make_shared<Transaction>(direction, std::move(crcstream));
-        known_transactions_[transaction->getUUIDStr()] = transaction;
-        transactionID = transaction->getUUIDStr();
+        known_transactions_[transaction->getUUID()] = transaction;
         transaction->setDataAvailable(dataAvailable);
         logger_->log_trace("Site2Site create transaction %s", transaction->getUUIDStr());
         return transaction;
@@ -507,8 +506,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
         dataAvailable = false;
         logger_->log_trace("Site2Site peer indicates that no data is available");
         transaction = std::make_shared<Transaction>(direction, std::move(crcstream));
-        known_transactions_[transaction->getUUIDStr()] = transaction;
-        transactionID = transaction->getUUIDStr();
+        known_transactions_[transaction->getUUID()] = transaction;
         transaction->setDataAvailable(dataAvailable);
         logger_->log_trace("Site2Site create transaction %s", transaction->getUUIDStr());
         return transaction;
@@ -524,8 +522,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
     } else {
       org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(gsl::make_not_null(peer_.get()));
       transaction = std::make_shared<Transaction>(direction, std::move(crcstream));
-      known_transactions_[transaction->getUUIDStr()] = transaction;
-      transactionID = transaction->getUUIDStr();
+      known_transactions_[transaction->getUUID()] = transaction;
       logger_->log_trace("Site2Site create transaction %s", transaction->getUUIDStr());
       return transaction;
     }
@@ -552,8 +549,7 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
   }
 
   // Create the transaction
-  std::string transactionID;
-  transaction = createTransaction(transactionID, SEND);
+  transaction = createTransaction(SEND);
 
   if (transaction == NULL) {
     context->yield();
@@ -561,22 +557,25 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
     throw Exception(SITE2SITE_EXCEPTION, "Can not create transaction");
   }
 
+  utils::Identifier transactionID = transaction->getUUID();
+
   try {
     DataPacket packet(getLogger(), transaction, attributes, payload);
 
     int16_t resp = send(transactionID, &packet, nullptr, session);
     if (resp == -1) {
-      throw Exception(SITE2SITE_EXCEPTION, "Send Failed in transaction " + transactionID);
+      throw Exception(SITE2SITE_EXCEPTION, "Send Failed in transaction " + transactionID.to_string());
     }
-    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID << " sent bytes length" << payload.length();
+    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID.to_string() << " sent bytes length" << payload.length();
 
     if (!confirm(transactionID)) {
-      throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed in transaction " + transactionID);
+      throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed in transaction " + transactionID.to_string());
     }
     if (!complete(transactionID)) {
-      throw Exception(SITE2SITE_EXCEPTION, "Complete Failed in transaction " + transactionID);
+      throw Exception(SITE2SITE_EXCEPTION, "Complete Failed in transaction " + transactionID.to_string());
     }
-    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID << " successfully send flow record " << transaction->current_transfers_ << " content bytes " << transaction->_bytes;
+    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID.to_string()
+        << " successfully send flow record " << transaction->current_transfers_ << " content bytes " << transaction->_bytes;
   } catch (std::exception &exception) {
     if (transaction)
       deleteTransaction(transactionID);

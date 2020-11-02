@@ -154,7 +154,7 @@ class StateController {
 
   virtual std::string getComponentName() const = 0;
 
-  virtual std::string getComponentUUID() const = 0;
+  virtual utils::Identifier getComponentUUID() const = 0;
   /**
    * Start the client
    */

@@ -31,7 +31,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
+bool SchedulingAgent::hasWorkToDo(const std::shared_ptr<core::Processor>& processor) {
   // Whether it has work to do
   if (processor->getTriggerWhenEmpty() || !processor->hasIncomingConnections() || processor->flowFilesQueued())
     return true;
@@ -80,7 +80,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService
   return future;
 }
 
-bool SchedulingAgent::hasTooMuchOutGoing(std::shared_ptr<core::Processor> processor) {
+bool SchedulingAgent::hasTooMuchOutGoing(const std::shared_ptr<core::Processor>& processor) {
   return processor->flowFilesOutGoingFull();
 }
 

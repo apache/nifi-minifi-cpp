@@ -170,12 +170,12 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   // Destructor
   virtual ~ProvenanceEventRecord() = default;
   // Get the Event ID
-  std::string getEventId() {
-    return getUUIDStr();
+  utils::Identifier getEventId() {
+    return getUUID();
   }
 
-  void setEventId(const std::string &id) {
-    setUUIDStr(id);
+  void setEventId(const utils::Identifier &id) {
+    setUUID(id);
   }
   // Get Attributes
   std::map<std::string, std::string> getAttributes() {
@@ -222,7 +222,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     return _componentType;
   }
   // Get FlowFileUuid
-  std::string getFlowFileUuid() {
+  utils::Identifier getFlowFileUuid() {
     return flow_uuid_;
   }
   // Get content full path
@@ -230,7 +230,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     return _contentFullPath;
   }
   // Get LineageIdentifiers
-  std::vector<std::string> getLineageIdentifiers() {
+  std::vector<utils::Identifier> getLineageIdentifiers() {
     return _lineageIdentifiers;
   }
   // Get Details
@@ -258,36 +258,34 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     _sourceSystemFlowFileIdentifier = identifier;
   }
   // Get Parent UUIDs
-  std::vector<std::string> getParentUuids() {
+  std::vector<utils::Identifier> getParentUuids() {
     return _parentUuids;
   }
   // Add Parent UUID
-  void addParentUuid(std::string uuid) {
+  void addParentUuid(const utils::Identifier& uuid) {
     if (std::find(_parentUuids.begin(), _parentUuids.end(), uuid) != _parentUuids.end())
       return;
     else
       _parentUuids.push_back(uuid);
   }
   // Add Parent Flow File
-  void addParentFlowFile(std::shared_ptr<core::FlowFile> flow) {
-    addParentUuid(flow->getUUIDStr());
-    return;
+  void addParentFlowFile(const std::shared_ptr<core::FlowFile>& flow) {
+    addParentUuid(flow->getUUID());
   }
   // Remove Parent UUID
-  void removeParentUuid(std::string uuid) {
+  void removeParentUuid(const utils::Identifier& uuid) {
     _parentUuids.erase(std::remove(_parentUuids.begin(), _parentUuids.end(), uuid), _parentUuids.end());
   }
   // Remove Parent Flow File
-  void removeParentFlowFile(std::shared_ptr<core::FlowFile> flow) {
-    removeParentUuid(flow->getUUIDStr());
-    return;
+  void removeParentFlowFile(const std::shared_ptr<core::FlowFile>& flow) {
+    removeParentUuid(flow->getUUID());
   }
   // Get Children UUIDs
-  std::vector<std::string> getChildrenUuids() {
+  std::vector<utils::Identifier> getChildrenUuids() {
     return _childrenUuids;
   }
   // Add Child UUID
-  void addChildUuid(std::string uuid) {
+  void addChildUuid(const utils::Identifier& uuid) {
     if (std::find(_childrenUuids.begin(), _childrenUuids.end(), uuid) != _childrenUuids.end())
       return;
     else
@@ -295,17 +293,16 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   }
   // Add Child Flow File
   void addChildFlowFile(std::shared_ptr<core::FlowFile> flow) {
-    addChildUuid(flow->getUUIDStr());
+    addChildUuid(flow->getUUID());
     return;
   }
   // Remove Child UUID
-  void removeChildUuid(std::string uuid) {
+  void removeChildUuid(const utils::Identifier& uuid) {
     _childrenUuids.erase(std::remove(_childrenUuids.begin(), _childrenUuids.end(), uuid), _childrenUuids.end());
   }
   // Remove Child Flow File
   void removeChildFlowFile(std::shared_ptr<core::FlowFile> flow) {
-    removeChildUuid(flow->getUUIDStr());
-    return;
+    removeChildUuid(flow->getUUID());
   }
   // Get AlternateIdentifierUri
   std::string getAlternateIdentifierUri() {
@@ -336,7 +333,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     _entryDate = flow->getEntryDate();
     _lineageStartDate = flow->getlineageStartDate();
     _lineageIdentifiers = flow->getlineageIdentifiers();
-    flow_uuid_ = flow->getUUIDStr();
+    flow_uuid_ = flow->getUUID();
     _attributes = flow->getAttributes();
     _size = flow->getSize();
     _offset = flow->getOffset();
@@ -407,7 +404,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   // Size in bytes of the data corresponding to this flow file
   uint64_t _size;
   // flow uuid
-  std::string flow_uuid_;
+  utils::Identifier flow_uuid_;
   // Offset to the content
   uint64_t _offset;
   // Full path to the content
@@ -415,15 +412,15 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   // Attributes key/values pairs for the flow record
   std::map<std::string, std::string> _attributes;
   // UUID string for all parents
-  std::vector<std::string> _lineageIdentifiers;
+  std::vector<utils::Identifier> _lineageIdentifiers;
   // transitUri
   std::string _transitUri;
   // sourceSystemFlowFileIdentifier
   std::string _sourceSystemFlowFileIdentifier;
   // parent UUID
-  std::vector<std::string> _parentUuids;
+  std::vector<utils::Identifier> _parentUuids;
   // child UUID
-  std::vector<std::string> _childrenUuids;
+  std::vector<utils::Identifier> _childrenUuids;
   // detail
   std::string _details;
   // sourceQueueIdentifier

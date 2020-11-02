@@ -90,9 +90,9 @@ class SchedulingAgent {
   // onTrigger, return whether the yield is need
   bool onTrigger(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
   // Whether agent has work to do
-  bool hasWorkToDo(std::shared_ptr<core::Processor> processor);
+  bool hasWorkToDo(const std::shared_ptr<core::Processor>& processor);
   // Whether the outgoing need to be backpressure
-  bool hasTooMuchOutGoing(std::shared_ptr<core::Processor> processor);
+  bool hasTooMuchOutGoing(const std::shared_ptr<core::Processor>& processor);
   // start
   void start() {
     running_ = true;

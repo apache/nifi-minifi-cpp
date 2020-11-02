@@ -46,8 +46,8 @@ class ProcessorController : public StateController {
     return processor_->getName();
   }
 
-  virtual std::string getComponentUUID() const {
-    return processor_->getUUIDStr();
+  virtual utils::Identifier getComponentUUID() const {
+    return processor_->getUUID();
   }
 
   std::shared_ptr<core::Processor> getProcessor() {

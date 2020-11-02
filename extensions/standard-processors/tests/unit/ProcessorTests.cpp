@@ -65,8 +65,8 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   char format[] = "/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
-  utils::Identifier processoruuid;
-  REQUIRE(true == processor->getUUID(processoruuid));
+  utils::Identifier processoruuid = processor->getUUID();
+  REQUIRE(processoruuid);
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "getfileCreate2Connection");
 
@@ -150,8 +150,8 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   char format[] = "/tmp/gt.XXXXXX";
   const auto dir = testController.createTempDirectory(format);
 
-  utils::Identifier processoruuid;
-  REQUIRE(processor->getUUID(processoruuid));
+  utils::Identifier processoruuid = processor->getUUID();
+  REQUIRE(processoruuid);
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "getfileCreate2Connection");
 
@@ -249,8 +249,7 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   connection->addRelationship(core::Relationship("success", "description"));
 
 
-  utils::Identifier processoruuid;
-  processor->getUUID(processoruuid);
+  utils::Identifier processoruuid = processor->getUUID();
 
   // link the connections so that we can test results at the end for this
   connection->setSource(processor);

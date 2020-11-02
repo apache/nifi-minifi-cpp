@@ -32,7 +32,7 @@ namespace controllers {
 
 AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::AbstractCoreComponentStateManager(
     std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider,
-    const std::string& id)
+    const utils::Identifier& id)
     : provider_(std::move(provider))
     , id_(id)
     , state_valid_(false) {
@@ -42,7 +42,7 @@ AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::Ab
   }
 }
 
-bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::set(const std::unordered_map<std::string, std::string>& kvs) {
+bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::set(const core::CoreComponentState& kvs) {
   if (provider_->setImpl(id_, provider_->serialize(kvs))) {
     state_valid_ = true;
     state_ = kvs;
@@ -52,7 +52,7 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
   }
 }
 
-bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::get(std::unordered_map<std::string, std::string>& kvs) {
+bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::get(core::CoreComponentState& kvs) {
   if (!state_valid_) {
     return false;
   }
@@ -82,19 +82,19 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
 
 AbstractCoreComponentStateManagerProvider::~AbstractCoreComponentStateManagerProvider() = default;
 
-std::shared_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManagerProvider::getCoreComponentStateManager(const std::string& uuid) {
+std::shared_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManagerProvider::getCoreComponentStateManager(const utils::Identifier& uuid) {
   return std::make_shared<AbstractCoreComponentStateManager>(shared_from_this(), uuid);
 }
 
-std::unordered_map<std::string, std::unordered_map<std::string, std::string>> AbstractCoreComponentStateManagerProvider::getAllCoreComponentStates() {
-  std::unordered_map<std::string, std::string> all_serialized;
+std::map<utils::Identifier, core::CoreComponentState> AbstractCoreComponentStateManagerProvider::getAllCoreComponentStates() {
+  std::map<utils::Identifier, std::string> all_serialized;
   if (!getImpl(all_serialized)) {
     return {};
   }
 
-  std::unordered_map<std::string, std::unordered_map<std::string, std::string>> all_deserialized;
+  std::map<utils::Identifier, core::CoreComponentState> all_deserialized;
   for (const auto& serialized : all_serialized) {
-    std::unordered_map<std::string, std::string> deserialized;
+    core::CoreComponentState deserialized;
     if (deserialize(serialized.second, deserialized)) {
       all_deserialized.emplace(serialized.first, std::move(deserialized));
     }
@@ -103,7 +103,7 @@ std::unordered_map<std::string, std::unordered_map<std::string, std::string>> Ab
   return all_deserialized;
 }
 
-std::string AbstractCoreComponentStateManagerProvider::serialize(const std::unordered_map<std::string, std::string>& kvs) {
+std::string AbstractCoreComponentStateManagerProvider::serialize(const core::CoreComponentState& kvs) {
   rapidjson::Document doc(rapidjson::kObjectType);
   rapidjson::Document::AllocatorType &alloc = doc.GetAllocator();
   for (const auto& kv : kvs) {
@@ -117,7 +117,7 @@ std::string AbstractCoreComponentStateManagerProvider::serialize(const std::unor
   return buffer.GetString();
 }
 
-bool AbstractCoreComponentStateManagerProvider::deserialize(const std::string& serialized, std::unordered_map<std::string, std::string>& kvs) {
+bool AbstractCoreComponentStateManagerProvider::deserialize(const std::string& serialized, core::CoreComponentState& kvs) {
   rapidjson::StringStream stream(serialized.c_str());
   rapidjson::Document doc;
   rapidjson::ParseResult res = doc.ParseStream(stream);

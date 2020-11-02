@@ -87,7 +87,7 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
 bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStream& outStream) {
   int ret;
 
-  ret = outStream.write(this->getUUIDStr());
+  ret = outStream.write(this->uuid_);
   if (ret <= 0) {
     return false;
   }
@@ -236,14 +236,7 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
 
   org::apache::nifi::minifi::io::BufferStream outStream(buffer, bufferSize);
 
-  std::string uuidStr;
-  ret = outStream.read(uuidStr);
-  utils::optional<utils::Identifier> uuid = utils::Identifier::parse(uuidStr);
-  if (!uuid) {
-    return false;
-  }
-  uuid_ = uuid.value();
-
+  ret = outStream.read(uuid_);
   if (ret <= 0) {
     return false;
   }
@@ -291,7 +284,6 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
   }
 
   ret = outStream.read(this->_details);
-
   if (ret <= 0) {
     return false;
   }
@@ -346,7 +338,7 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
     }
 
     for (uint32_t i = 0; i < number; i++) {
-      std::string parentUUID;
+      utils::Identifier parentUUID;
       ret = outStream.read(parentUUID);
       if (ret <= 0) {
         return false;
@@ -359,7 +351,7 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
       return false;
     }
     for (uint32_t i = 0; i < number; i++) {
-      std::string childUUID;
+      utils::Identifier childUUID;
       ret = outStream.read(childUUID);
       if (ret <= 0) {
         return false;

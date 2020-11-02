@@ -252,15 +252,15 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param uuid uuid struct to which we will copy the memory
    * @return success of request
    */
-  bool getUUID(utils::Identifier &uuid) {
-    return processor_->getUUID(uuid);
+  utils::Identifier getUUID() const {
+    return processor_->getUUID();
   }
 
   /**
    * Return the UUID string
    * @return the UUID str
    */
-  std::string getUUIDStr() const {
+  utils::SmallString<36> getUUIDStr() const {
     return processor_->getUUIDStr();
   }
 

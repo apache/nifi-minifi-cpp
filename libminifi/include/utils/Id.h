@@ -32,6 +32,7 @@ class uuid;
 #include "core/logging/Logger.h"
 #include "properties/Properties.h"
 #include "OptionalUtils.h"
+#include "SmallString.h"
 
 #define UUID_TIME_IMPL 0
 #define UUID_RANDOM_IMPL 1
@@ -64,6 +65,10 @@ class Identifier {
   Identifier &operator=(const Data& data);
 
   Identifier &operator=(const std::string& idStr);
+
+  explicit operator bool() const {
+    return !isNil();
+  }
 
   bool operator!=(const Identifier& other) const;
   bool operator==(const Identifier& other) const;

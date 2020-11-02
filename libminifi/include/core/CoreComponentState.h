@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include <map>
 #include <string>
 
 namespace org {
@@ -31,13 +32,15 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+using CoreComponentState = std::unordered_map<std::string, std::string>;
+
 class CoreComponentStateManager {
  public:
   virtual ~CoreComponentStateManager() = default;
 
-  virtual bool set(const std::unordered_map<std::string, std::string>& kvs) = 0;
+  virtual bool set(const CoreComponentState& kvs) = 0;
 
-  virtual bool get(std::unordered_map<std::string, std::string>& kvs) = 0;
+  virtual bool get(CoreComponentState& kvs) = 0;
 
   virtual bool clear() = 0;
 
@@ -48,13 +51,13 @@ class CoreComponentStateManagerProvider {
  public:
   virtual ~CoreComponentStateManagerProvider() = default;
 
-  virtual std::shared_ptr<CoreComponentStateManager> getCoreComponentStateManager(const std::string& uuid) = 0;
+  virtual std::shared_ptr<CoreComponentStateManager> getCoreComponentStateManager(const utils::Identifier& uuid) = 0;
 
   virtual std::shared_ptr<CoreComponentStateManager> getCoreComponentStateManager(const CoreComponent& component) {
-    return getCoreComponentStateManager(component.getUUIDStr());
+    return getCoreComponentStateManager(component.getUUID());
   }
 
-  virtual std::unordered_map<std::string, std::unordered_map<std::string, std::string>> getAllCoreComponentStates() = 0;
+  virtual std::map<utils::Identifier, CoreComponentState> getAllCoreComponentStates() = 0;
 };
 
 }  // namespace core

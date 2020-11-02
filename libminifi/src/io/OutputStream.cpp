@@ -41,6 +41,10 @@ int OutputStream::write(bool value) {
   return write(&temp, 1);
 }
 
+int OutputStream::write(const utils::Identifier &value) {
+  return write(value.to_string());
+}
+
 int OutputStream::write(const std::string& str, bool widen) {
   return write_str(str.c_str(), str.length(), widen);
 }

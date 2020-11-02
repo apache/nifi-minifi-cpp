@@ -564,8 +564,8 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps restore sta
   REQUIRE(LogTestController::getInstance().contains("from ListSFTP to relationship success"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file1.ext"));
 
-  utils::Identifier list_sftp_uuid;
-  REQUIRE(true == list_sftp->getUUID(list_sftp_uuid));
+  utils::Identifier list_sftp_uuid = list_sftp->getUUID();
+  REQUIRE(list_sftp_uuid);
   createPlan(&list_sftp_uuid);
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Timestamps");
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
@@ -606,8 +606,8 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps restore sta
   REQUIRE("nifi_test" == state.at("remote_path"));
   REQUIRE("Tracking Timestamps" == state.at("listing_strategy"));
 
-  utils::Identifier list_sftp_uuid;
-  REQUIRE(true == list_sftp->getUUID(list_sftp_uuid));
+  utils::Identifier list_sftp_uuid = list_sftp->getUUID();
+  REQUIRE(list_sftp_uuid);
   createPlan(&list_sftp_uuid);
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Timestamps");
   plan->setProperty(list_sftp, "Remote Path", "/nifi_test");
@@ -848,8 +848,8 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities restore state
   REQUIRE(LogTestController::getInstance().contains("from ListSFTP to relationship success"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file1.ext"));
 
-  utils::Identifier list_sftp_uuid;
-  REQUIRE(true == list_sftp->getUUID(list_sftp_uuid));
+  utils::Identifier list_sftp_uuid = list_sftp->getUUID();
+  REQUIRE(list_sftp_uuid);
   createPlan(&list_sftp_uuid);
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
@@ -908,8 +908,8 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities restore state
   REQUIRE("nifi_test" == state.at("remote_path"));
   REQUIRE("Tracking Entities" == state.at("listing_strategy"));
 
-  utils::Identifier list_sftp_uuid;
-  REQUIRE(true == list_sftp->getUUID(list_sftp_uuid));
+  utils::Identifier list_sftp_uuid = list_sftp->getUUID();
+  REQUIRE(list_sftp_uuid);
   createPlan(&list_sftp_uuid);
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
   plan->setProperty(list_sftp, "Remote Path", "/nifi_test");

@@ -24,7 +24,7 @@
 #include <string>
 
 std::shared_ptr<utils::IdGenerator> ExecutionPlan::id_generator_ = utils::IdGenerator::getIdGenerator();
-std::unordered_map<std::string, std::shared_ptr<ExecutionPlan>> ExecutionPlan::proc_plan_map_ = {};
+std::map<utils::Identifier, std::shared_ptr<ExecutionPlan>> ExecutionPlan::proc_plan_map_ = {};
 std::map<std::string, custom_processor_args> ExecutionPlan::custom_processors = {};
 
 ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo)
@@ -68,7 +68,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj,
   return addProcessor(proc, CallbackProcessorName, core::Relationship("success", "description"), true);
 }
 
-bool ExecutionPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value) {
+bool ExecutionPlan::setProperty(const std::shared_ptr<core::Processor>& proc, const std::string &prop, const std::string &value) {
   uint32_t i = 0;
   logger_->log_debug("Attempting to set property %s %s for %s", prop, value, proc->getName());
   for (i = 0; i < processor_queue_.size(); i++) {
@@ -95,7 +95,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_p
   // initialize the processor
   processor->initialize();
 
-  processor_mapping_[processor->getUUIDStr()] = processor;
+  processor_mapping_[processor->getUUID()] = processor;
 
   if (!linkToPrevious) {
     termination_ = relationship;
@@ -303,13 +303,10 @@ std::shared_ptr<minifi::Connection> ExecutionPlan::connectProcessors(std::shared
   // link the connections so that we can test results at the end for this
   connection->setSource(src_proc);
 
-  utils::Identifier uuid_copy, uuid_copy_next;
-  src_proc->getUUID(uuid_copy);
-  connection->setSourceUUID(uuid_copy);
+  connection->setSourceUUID(src_proc->getUUID());
   if (set_dst) {
     connection->setDestination(dst_proc);
-    dst_proc->getUUID(uuid_copy_next);
-    connection->setDestinationUUID(uuid_copy_next);
+    connection->setDestinationUUID(dst_proc->getUUID());
     if (src_proc != dst_proc) {
       dst_proc->addConnection(connection);
     }

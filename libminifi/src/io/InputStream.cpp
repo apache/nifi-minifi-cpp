@@ -21,6 +21,7 @@
 #include <string>
 #include <algorithm>
 #include "io/InputStream.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -45,6 +46,20 @@ int InputStream::read(bool &value) {
   }
   value = buf;
   return 1;
+}
+
+int InputStream::read(utils::Identifier &value) {
+  std::string uuidStr;
+  int ret = read(uuidStr);
+  if (ret < 0) {
+    return ret;
+  }
+  auto optional_uuid = utils::Identifier::parse(uuidStr);
+  if (!optional_uuid) {
+    return -1;
+  }
+  value = optional_uuid.value();
+  return ret;
 }
 
 int InputStream::read(std::string &str, bool widen) {
