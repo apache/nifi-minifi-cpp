@@ -20,6 +20,9 @@
 
 #include "ListS3.h"
 
+#include <tuple>
+#include <algorithm>
+
 #include "utils/StringUtils.h"
 
 namespace org {
@@ -28,6 +31,9 @@ namespace nifi {
 namespace minifi {
 namespace aws {
 namespace processors {
+
+const std::string ListS3::LATEST_LISTED_KEY_PREFIX = "listed_key.";
+const std::string ListS3::LATEST_LISTED_KEY_TIMESTAMP = "listed_key.timestamp";
 
 const core::Property ListS3::Delimiter(
   core::PropertyBuilder::createProperty("Delimiter")
@@ -90,6 +96,12 @@ void ListS3::initialize() {
 
 void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   S3Processor::onSchedule(context, sessionFactory);
+
+  state_manager_ = context->getStateManager();
+  if (state_manager_ == nullptr) {
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
+  }
+
   if (!getExpressionLanguageSupportedProperties(context, nullptr)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required property is not set or invalid");
   }
@@ -108,7 +120,7 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   if (!context->getProperty(MinimumObjectAge.getName(), min_obj_age_str) || min_obj_age_str.empty() || !core::Property::getTimeMSFromString(min_obj_age_str, list_request_params_.min_object_age)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Minimum Object Age missing or invalid");
   }
-  logger_->log_debug("S3Processor: Minimum Object Age [%d]", min_obj_age_str, list_request_params_.min_object_age);
+  logger_->log_debug("S3Processor: Minimum Object Age [%llud]", min_obj_age_str, list_request_params_.min_object_age);
 
   context->getProperty(WriteObjectTags.getName(), write_object_tags_);
   logger_->log_debug("ListS3: WriteObjectTags [%s]", write_object_tags_ ? "true" : "false");
@@ -163,6 +175,49 @@ void ListS3::writeUserMetadata(
   }
 }
 
+std::vector<std::string> ListS3::getLatestListedKeys(const std::unordered_map<std::string, std::string> state) {
+  std::vector<std::string> latest_listed_keys;
+  for (const auto& kvp : state) {
+    if (kvp.first.rfind(LATEST_LISTED_KEY_PREFIX, 0) == 0) {
+      latest_listed_keys.push_back(kvp.second);
+    }
+  }
+  return latest_listed_keys;
+}
+
+std::tuple<int64_t, std::vector<std::string>> ListS3::getCurrentState(const std::shared_ptr<core::ProcessContext> &context) {
+  std::unordered_map<std::string, std::string> state;
+  if (!state_manager_->get(state)) {
+    logger_->log_debug("No stored state for listed objects was found");
+    return std::make_tuple(0, std::vector<std::string>());
+  }
+  auto stored_listed_keys = getLatestListedKeys(state);
+
+  std::string stored_listed_key_timestamp_str;
+  auto it = state.find(LATEST_LISTED_KEY_TIMESTAMP);
+  if (it != state.end()) {
+    stored_listed_key_timestamp_str = it->second;
+  }
+
+  int64_t stored_listed_key_timestamp = 0;
+  if (!stored_listed_key_timestamp_str.empty()) {
+    core::Property::StringToInt(stored_listed_key_timestamp_str, stored_listed_key_timestamp);
+  }
+
+  logger_->log_debug("Restored previous listed timestamp %lld", stored_listed_key_timestamp);
+  return std::make_tuple(stored_listed_key_timestamp, stored_listed_keys);
+}
+
+void ListS3::storeState(const std::shared_ptr<core::ProcessContext> &context, const int64_t latest_listed_key_timestamp, const std::vector<std::string> &latest_listed_keys) {
+  std::unordered_map<std::string, std::string> state;
+  state[LATEST_LISTED_KEY_TIMESTAMP] = std::to_string(latest_listed_key_timestamp);
+  for (std::size_t i = 0; i < latest_listed_keys.size(); ++i) {
+    state[LATEST_LISTED_KEY_PREFIX + std::to_string(i)] = latest_listed_keys[i];
+  }
+  logger_->log_debug("Stored new listed timestamp %lld", latest_listed_key_timestamp);
+  state_manager_->set(state);
+}
+
 void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   logger_->log_debug("ListS3 onTrigger");
 
@@ -173,7 +228,24 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     return;
   }
 
+  if (aws_results->size() == 0) {
+    return;
+  }
+
+  int64_t stored_listed_key_timestamp = 0;
+  std::vector<std::string> stored_listed_keys;
+  std::tie(stored_listed_key_timestamp, stored_listed_keys) = getCurrentState(context);
+
+  int64_t latest_listed_key_timestamp = stored_listed_key_timestamp;
+  std::vector<std::string> latest_listed_keys = stored_listed_keys;
+  std::size_t files_transferred = 0;
+
   for (const auto& object : aws_results.value()) {
+    if (stored_listed_key_timestamp > object.last_modified ||
+        stored_listed_key_timestamp == object.last_modified && std::find(stored_listed_keys.begin(), stored_listed_keys.end(), object.filename) != stored_listed_keys.end()) {
+      continue;
+    }
+
     auto flow_file = session->create();
     session->putAttribute(flow_file, "s3.bucket", list_request_params_.bucket);
     session->putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, object.filename);
@@ -189,7 +261,19 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     writeUserMetadata(list_request_params_.bucket, object, session, flow_file);
 
     session->transfer(flow_file, Success);
+    ++files_transferred;
+
+    if (latest_listed_key_timestamp < object.last_modified) {
+      latest_listed_key_timestamp = object.last_modified;
+      latest_listed_keys.clear();
+      latest_listed_keys.push_back(object.filename);
+    } else if (latest_listed_key_timestamp == object.last_modified) {
+      latest_listed_keys.push_back(object.filename);
+    }
   }
+
+  logger_->log_debug("ListS3 transferred %d flow files", files_transferred);
+  storeState(context, latest_listed_key_timestamp, latest_listed_keys);
 }
 
 }  // namespace processors

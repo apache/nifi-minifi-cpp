@@ -19,6 +19,7 @@ from minifi.core.DockerTestDirectoryBindings import DockerTestDirectoryBindings
 from minifi.validators.EmptyFilesOutPutValidator import EmptyFilesOutPutValidator
 from minifi.validators.NoFileOutPutValidator import NoFileOutPutValidator
 from minifi.validators.SingleFileOutputValidator import SingleFileOutputValidator
+from minifi.validators.MultiFileOutputValidator import MultiFileOutputValidator
 
 class MiNiFi_integration_test():
     def __init__(self, context):
@@ -55,7 +56,7 @@ class MiNiFi_integration_test():
 
         # The cluster deleter is not reliable for cleaning up
         docker_client = docker.from_env()
-        for container_id in container_ids:    
+        for container_id in container_ids:
             self.delete_docker_container_by_id(container_id)
 
         del self.docker_directory_bindings
@@ -119,7 +120,7 @@ class MiNiFi_integration_test():
         self.connectable_nodes.append(processor)
 
     def get_or_create_node_by_name(self, node_name):
-        node = self.get_node_by_name(node_name) 
+        node = self.get_node_by_name(node_name)
         if node is None:
             if node_name == "RemoteProcessGroup":
                 raise Exception("Trying to register RemoteProcessGroup without an input port or address.")
@@ -152,8 +153,7 @@ class MiNiFi_integration_test():
         input_port_node.set_uuid(uuid.uuid3(remote_process_group.get_uuid(), "input_port"))
         return input_port_node
 
-    def add_test_data(self, path, test_data):
-        file_name = str(uuid.uuid4())
+    def add_test_data(self, path, test_data, file_name=str(uuid.uuid4())):
         self.docker_directory_bindings.put_file_to_docker_path(self.test_id, path, file_name, test_data.encode('utf-8'))
 
     def put_test_resource(self, file_name, contents):
@@ -178,6 +178,11 @@ class MiNiFi_integration_test():
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, 1, subdir)
 
+    def check_for_multiple_files_generated(self, file_count, timeout_seconds, subdir=''):
+        output_validator = MultiFileOutputValidator(file_count, subdir)
+        output_validator.set_output_dir(self.file_system_observer.get_output_dir())
+        self.check_output(timeout_seconds, output_validator, file_count, subdir)
+
     def check_for_multiple_empty_files_generated(self, timeout_seconds, subdir=''):
         output_validator = EmptyFilesOutPutValidator()
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
@@ -186,7 +191,7 @@ class MiNiFi_integration_test():
     def check_output(self, timeout_seconds, output_validator, max_files, subdir):
         if subdir:
             output_validator.subdir = subdir
-        self.file_system_observer.wait_for_output(timeout_seconds, max_files)
+        self.file_system_observer.wait_for_output(timeout_seconds, output_validator, max_files)
         for cluster in self.clusters.values():
             # Logs for both nifi and minifi, but not other engines
             cluster.log_nifi_output()

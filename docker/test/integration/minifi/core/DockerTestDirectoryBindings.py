@@ -74,7 +74,7 @@ class DockerTestDirectoryBindings:
     @staticmethod
     def put_file_contents(file_abs_path, contents):
         logging.info('Writing %d bytes of content to file: %s', len(contents), file_abs_path)
-        with open(file_abs_path, 'wb') as test_input_file:
+        with open(file_abs_path, 'ab') as test_input_file:
             test_input_file.write(contents)
 
     def put_test_resource(self, test_id, file_name, contents):

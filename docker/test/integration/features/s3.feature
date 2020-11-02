@@ -37,7 +37,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the "success" relationship of the PutS3Object processor is connected to the PutFile
 
     And a s3 server "s3" is set up in correspondence with the PutS3Object
-    And the http proxy server "http-proxy" is set up 
+    And the http proxy server "http-proxy" is set up
     When all instances start up
 
     Then a flowfile with the content "test" is placed in the monitored directory in less than 150 seconds
@@ -98,7 +98,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
       | DeleteS3Object | success           | PutFile          |
 
     And a s3 server "s3" is set up in correspondence with the PutS3Object
-    And the http proxy server "http-proxy" is set up 
+    And the http proxy server "http-proxy" is set up
 
     When all instances start up
 
@@ -147,9 +147,52 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
       | FetchS3Object    | success           | PutFile          |
 
     And a s3 server "s3" is set up in correspondence with the PutS3Object
-    And a http proxy server "http-proxy" is set up accordingly 
+    And a http proxy server "http-proxy" is set up accordingly
 
     When all instances start up
 
     Then a flowfile with the content "test" is placed in the monitored directory in less than 150 seconds
+    And no errors were generated on the "http-proxy" regarding "http://s3-server:9090/test_bucket/test_object_key"
+
+  Scenario: A MiNiFi instance can list an S3 bucket directly
+    Given a TailFile processor with the "File to Tail" property set to "/tmp/input/test_file.log"
+    And the "Input Delimiter" of the TailFile processor is set to "%"
+    And a file with filename "test_file.log" and content "test_data%" is present in "/tmp/input"
+    And a PutS3Object processor set up to communicate with an s3 server
+    And the "Object Key" of the PutS3Object processor is set to "${filename}"
+    And the "success" relationship of the TailFile processor is connected to the PutS3Object
+
+    Given a ListS3 processor in the "secondary" flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the ListS3 processor is connected to the PutFile
+
+    And a s3 server "s3" is set up in correspondence with the PutS3Object
+
+    When all instances start up
+    And content "test_data2%" is added to file "test_file.log" present in directory "/tmp/input" 5 seconds later
+
+    Then 2 flowfiles are placed in the monitored directory in less than 60 seconds
+
+  Scenario: A MiNiFi instance can list an S3 bucket objects via a http-proxy
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
+    And a PutS3Object processor set up to communicate with an s3 server
+    And the "success" relationship of the GetFile processor is connected to the PutS3Object
+
+    Given a ListS3 processor in the "secondary" flow
+    And these processor properties are set to match the http proxy:
+      | processor name | property name  | property value |
+      | ListS3         | Proxy Host     | http-proxy     |
+      | ListS3         | Proxy Port     | 3128           |
+      | ListS3         | Proxy Username | admin          |
+      | ListS3         | Proxy Password | test101        |
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the ListS3 processor is connected to the PutFile
+
+    And a s3 server "s3" is set up in correspondence with the PutS3Object
+    And a http proxy server "http-proxy" is set up accordingly
+
+    When all instances start up
+
+    Then 1 flowfile is placed in the monitored directory in less than 120 seconds
     And no errors were generated on the "http-proxy" regarding "http://s3-server:9090/test_bucket/test_object_key"

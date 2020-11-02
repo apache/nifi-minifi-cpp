@@ -21,6 +21,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <unordered_map>
 
 #include "S3Processor.h"
 
@@ -34,6 +36,8 @@ namespace processors {
 class ListS3 : public S3Processor {
  public:
   static constexpr char const* ProcessorName = "ListS3";
+  static const std::string LATEST_LISTED_KEY_PREFIX;
+  static const std::string LATEST_LISTED_KEY_TIMESTAMP;
 
   // Supported Properties
   static const core::Property Delimiter;
@@ -72,11 +76,15 @@ class ListS3 : public S3Processor {
     aws::s3::ListedObjectAttributes object,
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file);
+  std::vector<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> state);
+  std::tuple<int64_t, std::vector<std::string>> getCurrentState(const std::shared_ptr<core::ProcessContext> &context);
+  void storeState(const std::shared_ptr<core::ProcessContext> &context, const int64_t latest_listed_key_timestamp, const std::vector<std::string> &latest_listed_keys);
 
   aws::s3::ListRequestParameters list_request_params_;
   bool write_object_tags_ = false;
   bool write_user_metadata_ = false;
   bool requester_pays_ = false;
+  std::shared_ptr<core::CoreComponentStateManager> state_manager_ = nullptr;
 };
 
 REGISTER_RESOURCE(ListS3, "This Processor retrieves a listing of objects from an Amazon S3 bucket.");

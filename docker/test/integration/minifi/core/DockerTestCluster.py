@@ -9,7 +9,6 @@ import uuid
 
 from .SingleNodeDockerCluster import SingleNodeDockerCluster
 from .utils import retry_check
-from .FileSystemObserver import FileSystemObserver
 
 class DockerTestCluster(SingleNodeDockerCluster):
     def __init__(self):
