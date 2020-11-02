@@ -180,10 +180,15 @@ class Property {
 // Compare
   bool operator <(const Property & right) const;
 
-// Convert TimeUnit to MilliSecond
   template<typename T>
   static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit, T &out) {
-    if (unit == MILLISECOND) {
+    if (unit == NANOSECOND) {
+      out = input / 1000 / 1000;
+      return true;
+    } else if (unit == MICROSECOND) {
+      out = input / 1000;
+      return true;
+    } else if (unit == MILLISECOND) {
       out = input;
       return true;
     } else if (unit == SECOND) {
@@ -198,9 +203,6 @@ class Property {
     } else if (unit == DAY) {
       out = 24 * 60 * 60 * 1000;
       return true;
-    } else if (unit == NANOSECOND) {
-      out = input / 1000 / 1000;
-      return true;
     } else {
       return false;
     }
@@ -214,10 +216,15 @@ class Property {
     return ConvertTimeUnitToMS<uint64_t>(input, unit, out);
   }
 
-// Convert TimeUnit to NanoSecond
   template<typename T>
   static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, T &out) {
-    if (unit == MILLISECOND) {
+    if (unit == NANOSECOND) {
+      out = input;
+      return true;
+    } else if (unit == MICROSECOND) {
+      out = input * 1000;
+      return true;
+    } else if (unit == MILLISECOND) {
       out = input * 1000 * 1000;
       return true;
     } else if (unit == SECOND) {
@@ -229,20 +236,18 @@ class Property {
     } else if (unit == HOUR) {
       out = input * 60 * 60 * 1000 * 1000 * 1000;
       return true;
-    } else if (unit == NANOSECOND) {
-      out = input;
+    } else if (unit == DAY) {
+      out = input * 24 * 60 * 60 * 1000 * 1000 * 1000;
       return true;
     } else {
       return false;
     }
   }
 
-// Convert TimeUnit to NanoSecond
   static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, uint64_t &out) {
     return ConvertTimeUnitToNS<uint64_t>(input, unit, out);
   }
 
-// Convert TimeUnit to NanoSecond
   static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, int64_t &out) {
     return ConvertTimeUnitToNS<int64_t>(input, unit, out);
   }
