@@ -550,6 +550,7 @@ enum TimeUnit {
   MINUTE,
   SECOND,
   MILLISECOND,
+  MICROSECOND,
   NANOSECOND
 };
 
