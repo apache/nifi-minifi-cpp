@@ -51,6 +51,9 @@ const std::map<std::string, std::string> S3_OBJECT_USER_METADATA {
   std::make_pair("metadata_key_1", "metadata_value_1"),
   std::make_pair("metadata_key_2", "metadata_value_2")
 };
+const std::string S3_KEY_MARKER = "continue_key";
+const std::string S3_VERSION_ID_MARKER = "continue_version";
+const std::string S3_CONTINUATION_TOKEN = "continue";
 
 class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
  public:
@@ -125,8 +128,15 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     list_object_request = request;
 
     Aws::S3::Model::ListObjectsV2Result list_object_result;
+    if (!is_listing_truncated_) {
+      for (auto i = 0; i < listed_objects_.size(); ++i) {
+        list_object_result.AddContents(listed_objects_[i]);
+      }
+      return list_object_result;
+    }
+
     if (request.GetContinuationToken().empty()) {
-      list_object_result.SetContinuationToken("continue");
+      list_object_result.SetNextContinuationToken(S3_CONTINUATION_TOKEN);
       list_object_result.SetIsTruncated(true);
       for (auto i = 0; i < listed_objects_.size() / 2; ++i) {
         list_object_result.AddContents(listed_objects_[i]);
@@ -144,9 +154,16 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     list_version_request = request;
 
     Aws::S3::Model::ListObjectVersionsResult list_version_result;
+    if (!is_listing_truncated_) {
+      for (auto i = 0; i < listed_versions_.size(); ++i) {
+        list_version_result.AddVersions(listed_versions_[i]);
+      }
+      return list_version_result;
+    }
+
     if (request.GetKeyMarker().empty() && request.GetVersionIdMarker().empty()) {
-      list_version_result.SetKeyMarker("continue_key");
-      list_version_result.SetNextVersionIdMarker("continue_version");
+      list_version_result.SetNextKeyMarker(S3_KEY_MARKER);
+      list_version_result.SetNextVersionIdMarker(S3_VERSION_ID_MARKER);
       list_version_result.SetIsTruncated(true);
       for (auto i = 0; i < listed_versions_.size() / 2; ++i) {
         list_version_result.AddVersions(listed_versions_[i]);
@@ -201,6 +218,10 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
     return listed_objects_;
   }
 
+  void setListingTruncated(bool is_listing_truncated) {
+    is_listing_truncated_ = is_listing_truncated;
+  }
+
   Aws::S3::Model::PutObjectRequest put_object_request;
   Aws::S3::Model::DeleteObjectRequest delete_object_request;
   Aws::S3::Model::GetObjectRequest get_object_request;
@@ -213,4 +234,5 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
   std::vector<Aws::S3::Model::Object> listed_objects_;
   bool delete_object_result_ = true;
   bool return_empty_result_ = false;
+  bool is_listing_truncated_ = false;
 };

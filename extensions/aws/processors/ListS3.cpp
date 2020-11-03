@@ -224,6 +224,7 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
   }
 
   if (aws_results->size() == 0) {
+    logger_->log_debug("No S3 object were found in bucket %s", list_request_params_.bucket);
     return;
   }
 

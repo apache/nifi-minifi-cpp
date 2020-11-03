@@ -237,9 +237,13 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::list
     if (!aws_result) {
       return minifi::utils::nullopt;
     }
-    addListResults(aws_result->GetVersions(), params.min_object_age, attribute_list);
-    request.SetKeyMarker(aws_result->GetNextKeyMarker());
-    request.SetVersionIdMarker(aws_result->GetNextVersionIdMarker());
+    const auto& versions = aws_result->GetVersions();
+    logger_->log_debug("AWS S3 List operation returned %d versions. This result is truncated: %s", versions.size(), aws_result->GetIsTruncated() ? "true" : "false");
+    addListResults(versions, params.min_object_age, attribute_list);
+    if (aws_result->GetIsTruncated()) {
+      request.SetKeyMarker(aws_result->GetNextKeyMarker());
+      request.SetVersionIdMarker(aws_result->GetNextVersionIdMarker());
+    }
   } while (aws_result->GetIsTruncated());
 
   return attribute_list;
@@ -254,8 +258,12 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::list
     if (!aws_result) {
       return minifi::utils::nullopt;
     }
-    addListResults(aws_result->GetContents(), params.min_object_age, attribute_list);
-    request.SetContinuationToken(aws_result->GetContinuationToken());
+    const auto& objects = aws_result->GetContents();
+    logger_->log_debug("AWS S3 List operation returned %d objects. This result is truncated: %s", objects.size(), aws_result->GetIsTruncated() ? "true" : "false");
+    addListResults(objects, params.min_object_age, attribute_list);
+    if (aws_result->GetIsTruncated()) {
+      request.SetContinuationToken(aws_result->GetNextContinuationToken());
+    }
   } while (aws_result->GetIsTruncated());
 
   return attribute_list;
