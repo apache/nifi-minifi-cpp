@@ -23,6 +23,9 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <utility>
+#include <tuple>
+#include <memory>
 
 #include "S3Processor.h"
 

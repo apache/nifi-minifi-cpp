@@ -240,7 +240,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::list
     addListResults(aws_result->GetVersions(), params.min_object_age, attribute_list);
     request.SetKeyMarker(aws_result->GetNextKeyMarker());
     request.SetVersionIdMarker(aws_result->GetNextVersionIdMarker());
-  } while(aws_result->GetIsTruncated());
+  } while (aws_result->GetIsTruncated());
 
   return attribute_list;
 }
@@ -256,7 +256,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::list
     }
     addListResults(aws_result->GetContents(), params.min_object_age, attribute_list);
     request.SetContinuationToken(aws_result->GetContinuationToken());
-  } while(aws_result->GetIsTruncated());
+  } while (aws_result->GetIsTruncated());
 
   return attribute_list;
 }

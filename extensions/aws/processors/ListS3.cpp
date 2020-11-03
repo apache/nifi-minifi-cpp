@@ -22,6 +22,9 @@
 
 #include <tuple>
 #include <algorithm>
+#include <set>
+#include <utility>
+#include <memory>
 
 #include "utils/StringUtils.h"
 
