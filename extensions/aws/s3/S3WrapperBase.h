@@ -109,7 +109,7 @@ class S3WrapperBase {
   void setProxy(const ProxyOptions& proxy);
 
   minifi::utils::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
-  bool deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version);
+  bool deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version = "");
 
   virtual ~S3WrapperBase() = default;
 
