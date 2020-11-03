@@ -33,6 +33,9 @@
 #include <type_traits>
 #include "utils/FailurePolicy.h"
 #include "utils/GeneralUtils.h"
+#include "utils/OptionalUtils.h"
+#include "utils/StringView.h"
+#include "utils/StringViewUtils.h"
 
 #if defined(WIN32) || (__cplusplus >= 201103L && (!defined(__GLIBCXX__) || (__cplusplus >= 201402L) ||  (defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE > 4)))
 #define HAVE_REGEX_CPP 1
@@ -80,6 +83,8 @@ class StringUtils {
    */
   static bool StringToBool(std::string input, bool &output);
 
+  static utils::optional<bool> toBool(const std::string& input);
+
   // Trim String utils
 
   /**
@@ -113,12 +118,8 @@ class StringUtils {
   /**
    * Compares strings by lower casing them.
    */
-  static inline bool equalsIgnoreCase(const std::string &left, const std::string right) {
-    if (left.length() == right.length()) {
-      return std::equal(right.begin(), right.end(), left.begin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
-    } else {
-      return false;
-    }
+  static inline bool equalsIgnoreCase(const std::string &left, const std::string& right) {
+    return StringViewUtils::equalsIgnoreCase(StringView(left), StringView(right));
   }
 
   static std::vector<std::string> split(const std::string &str, const std::string &delimiter);
@@ -147,6 +148,17 @@ class StringUtils {
     if (endString.size() > value.size())
       return false;
     return std::equal(endString.rbegin(), endString.rend(), value.rbegin());
+  }
+
+  inline static bool startsWith(const std::string &value, const std::string & startString) {
+    if (startString.size() > value.size()) {
+      return false;
+    }
+    return std::equal(startString.begin(), startString.end(), value.begin());
+  }
+
+  inline static bool startsWith(const std::string& value, char ch) {
+    return value.size() != 0 && value[0] == ch;
   }
 
   inline static std::string hex_ascii(const std::string& in) {

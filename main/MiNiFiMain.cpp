@@ -297,7 +297,15 @@ int main(int argc, char **argv) {
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configure);
 
-  std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(prov_repo, flow_repo, content_repo, configure, stream_factory, nifi_configuration_class_name);
+  bool should_encrypt_flow_config = (configure->get(minifi::Configure::nifi_flow_configuration_encrypt)
+      | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
+
+  auto flow_config_provider = std::make_shared<utils::file::FileSystem>(
+      should_encrypt_flow_config,
+      utils::crypto::EncryptionProvider::create(minifiHome));
+
+  std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(
+      prov_repo, flow_repo, content_repo, configure, stream_factory, nifi_configuration_class_name, "", flow_config_provider);
 
   const auto controller = std::make_shared<minifi::FlowController>(prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo);
 

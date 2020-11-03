@@ -96,10 +96,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
     throw std::runtime_error("Must supply a configuration.");
   }
   flow_update_ = false;
-  // Setup the default values
-  if (flow_configuration_ != nullptr) {
-    configuration_filename_ = flow_configuration_->getConfigurationPath();
-  }
   running_ = false;
   initialized_ = false;
   c2_initialized_ = false;
@@ -108,22 +104,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   protocol_ = utils::make_unique<FlowControlProtocol>(this, configuration_);
 
   if (!headless_mode) {
-    std::string rawConfigFileString;
-    configuration_->get(Configure::nifi_flow_configuration_file, rawConfigFileString);
-
-    if (!rawConfigFileString.empty()) {
-      configuration_filename_ = rawConfigFileString;
-    }
-
-    const auto adjustedFilename = [&]() -> std::string {
-      if (configuration_filename_.empty()) { return {}; }
-      if (utils::file::isAbsolutePath(configuration_filename_.c_str())) {
-        return configuration_filename_;
-      }
-      return utils::file::FileUtils::concat_path(configuration_->getHome(), configuration_filename_);
-    }();
     initializeExternalComponents();
-    initializePaths(adjustedFilename);
   }
 }
 
@@ -139,23 +120,6 @@ void FlowController::initializeExternalComponents() {
     logger_->log_debug("PythonCreator loaded...");
     pythoncreator->configure(configuration_);
   }
-}
-
-void FlowController::initializePaths(const std::string &adjustedFilename) {
-  const char *path = nullptr;
-#ifndef WIN32
-  char full_path[PATH_MAX];
-  path = realpath(adjustedFilename.c_str(), full_path);
-#else
-  path = adjustedFilename.c_str();
-#endif
-
-  if (path == nullptr) {
-    throw std::runtime_error("Path is not specified. Either manually set MINIFI_HOME or ensure ../conf exists");
-  }
-  std::string pathString(path);
-  configuration_filename_ = pathString;
-  logger_->log_info("FlowController NiFi Configuration file %s", pathString);
 }
 
 utils::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFromConfiguration() {
@@ -320,17 +284,18 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
     stop();
   }
   if (!initialized_) {
-    if (root) {
-      logger_->log_info("Load Flow Controller from provided root");
-    } else {
-      logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
-    }
-
     if (reload) {
       io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
     }
 
-    this->root_ = root == nullptr ? std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_)) : root;
+    if (root) {
+      logger_->log_info("Load Flow Controller from provided root");
+      this->root_ = root;
+    } else {
+      logger_->log_info("Instantiating new flow");
+      this->root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot());
+    }
+
     logger_->log_info("Loaded root processor Group");
     logger_->log_info("Initializing timers");
     controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
@@ -884,11 +849,14 @@ void FlowController::disableAllControllerServices() {
   controller_service_provider_->disableAllControllerServices();
 }
 
-int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration) {
+int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration, bool persist) {
   if (applyConfiguration(source, configuration)) {
-    return 1;
-  } else {
+    if (persist) {
+      flow_configuration_->persist(configuration);
+    }
     return 0;
+  } else {
+    return -1;
   }
 }
 

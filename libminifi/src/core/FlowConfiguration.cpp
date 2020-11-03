@@ -104,6 +104,27 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
   return payload;
 }
 
+bool FlowConfiguration::persist(const std::string &configuration) {
+  // update nifi.flow.configuration.file=./conf/config.yml
+  std::string config_file;
+  configuration_->get(minifi::Configure::nifi_flow_configuration_file, config_file);
+  config_file = utils::file::FileUtils::resolve(configuration_->getHome(), config_file);
+
+  std::string config_file_backup = config_file + ".bak";
+  bool backup_file = (configuration_->get(minifi::Configure::nifi_flow_configuration_file_backup_update)
+                      | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
+
+  if (backup_file) {
+    if (utils::file::FileUtils::copy_file(config_file, config_file_backup) != 0) {
+      logger_->log_debug("Cannot copy %s to %s", config_file, config_file_backup);
+      return false;
+    }
+    logger_->log_debug("Copy %s to %s", config_file, config_file_backup);
+  }
+
+  return filesystem_->write(config_file, configuration);
+}
+
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(std::string name, utils::Identifier & uuid, int version) {
   return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::ROOT_PROCESS_GROUP, name, uuid, version));
 }

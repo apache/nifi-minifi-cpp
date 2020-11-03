@@ -118,7 +118,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   }
   // Unload the current flow YAML, clean the root process group and all its children
   int16_t stop() override;
-  int16_t applyUpdate(const std::string &source, const std::string &configuration) override;
+  int16_t applyUpdate(const std::string &source, const std::string &configuration, bool persist) override;
   int16_t drainRepositories() override {
     return -1;
   }
@@ -328,11 +328,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   void loadFlowRepo();
   void initializeExternalComponents();
 
-  /**
-   * Initializes flow controller paths.
-   */
-  virtual void initializePaths(const std::string &adjustedFilename);
-
   utils::optional<std::chrono::milliseconds> loadShutdownTimeoutFromConfiguration();
 
  private:
@@ -353,8 +348,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::atomic<bool> running_;
   std::atomic<bool> updating_;
 
-  // conifiguration filename
-  std::string configuration_filename_;
   std::atomic<bool> c2_initialized_;
   std::atomic<bool> flow_update_;
   std::atomic<bool> c2_enabled_;

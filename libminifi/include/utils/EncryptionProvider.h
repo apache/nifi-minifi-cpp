@@ -14,41 +14,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
 
-#include <string>
+#pragma once
 
 #include "utils/EncryptionUtils.h"
 #include "utils/OptionalUtils.h"
-#include "utils/EncryptionProvider.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace utils {
+namespace crypto {
 
-class Decryptor {
+class EncryptionProvider {
  public:
-  explicit Decryptor(utils::crypto::EncryptionProvider provider)
-      : provider_(std::move(provider)) {}
+  explicit EncryptionProvider(Bytes encryption_key)
+      : encryption_key_(std::move(encryption_key)) {}
 
-  static bool isValidEncryptionMarker(const utils::optional<std::string>& encryption_marker) {
-    return encryption_marker && *encryption_marker == utils::crypto::EncryptionType::name();
+  static utils::optional<EncryptionProvider> create(const std::string& home_path);
+
+  std::string encrypt(const std::string& data) const {
+    return utils::crypto::encrypt(data, encryption_key_);
   }
 
-  std::string decrypt(const std::string& encrypted_text) const {
-    return provider_.decrypt(encrypted_text);
-  }
-
-  static utils::optional<Decryptor> create(const std::string& minifi_home) {
-    return utils::crypto::EncryptionProvider::create(minifi_home)
-        | utils::map([](const utils::crypto::EncryptionProvider& provider) {return Decryptor{provider};});
+  std::string decrypt(const std::string& data) const {
+    return utils::crypto::decrypt(data, encryption_key_);
   }
 
  private:
-  const utils::crypto::EncryptionProvider provider_;
+  const Bytes encryption_key_;
 };
 
+}  // namespace crypto
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

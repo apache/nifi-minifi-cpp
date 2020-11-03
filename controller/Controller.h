@@ -267,7 +267,8 @@ std::shared_ptr<core::controller::ControllerService> getControllerService(const 
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
-  std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(prov_repo, flow_repo, content_repo, configuration, stream_factory, nifi_configuration_class_name);
+  std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(
+      prov_repo, flow_repo, content_repo, configuration, stream_factory, nifi_configuration_class_name);
 
   std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
       new minifi::FlowController(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo));
@@ -324,7 +325,8 @@ void printManifest(const std::shared_ptr<minifi::Configure> &configuration) {
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
-  std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(prov_repo, flow_repo, content_repo, configuration, stream_factory, nifi_configuration_class_name);
+  std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(
+      prov_repo, flow_repo, content_repo, configuration, stream_factory, nifi_configuration_class_name);
 
   std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
       new minifi::FlowController(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo, "manifest", false));

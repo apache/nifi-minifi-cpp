@@ -77,49 +77,49 @@ class TestUpdateSink : public minifi::state::StateMonitor {
         controller(controller),
         update_calls(0) {
   }
-  virtual std::vector<std::shared_ptr<StateController>> getComponents(const std::string &name) {
+  std::vector<std::shared_ptr<StateController>> getComponents(const std::string &name) override {
     std::vector<std::shared_ptr<StateController>> vec;
     vec.push_back(controller);
     return vec;
   }
 
-  virtual std::vector<std::shared_ptr<StateController>> getAllComponents() {
+  std::vector<std::shared_ptr<StateController>> getAllComponents() override {
     std::vector<std::shared_ptr<StateController>> vec;
     vec.push_back(controller);
     return vec;
   }
 
-  virtual std::string getComponentName() const {
+  std::string getComponentName() const override {
     return "TestUpdateSink";
   }
 
-  virtual utils::Identifier getComponentUUID() const {
+  utils::Identifier getComponentUUID() const override {
     static auto dummyUUID = utils::Identifier::parse("12345678-1234-1234-1234-123456789abc").value();
     return dummyUUID;
   }
   /**
    * Start the client
    */
-  virtual int16_t start() {
+  int16_t start() override {
     is_running = true;
     return 0;
   }
   /**
    * Stop the client
    */
-  virtual int16_t stop() {
+  int16_t stop() override {
     is_running = false;
     return 0;
   }
 
-  virtual bool isRunning() {
+  bool isRunning() override {
     return is_running;
   }
 
-  virtual int16_t pause() {
+  int16_t pause() override {
     return 0;
   }
-  virtual std::vector<BackTrace> getTraces() {
+  std::vector<BackTrace> getTraces() override {
     std::vector<BackTrace> traces;
     return traces;
   }
@@ -131,14 +131,14 @@ class TestUpdateSink : public minifi::state::StateMonitor {
   /**
    * Drain repositories
    */
-  virtual int16_t drainRepositories() {
+  int16_t drainRepositories() override {
     return 0;
   }
 
   /**
    * Clear connection for the agent.
    */
-  virtual int16_t clearConnection(const std::string &connection) {
+  int16_t clearConnection(const std::string &connection) override {
     clear_calls++;
     return 0;
   }
@@ -149,7 +149,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
    * < 0 is an error code
    * 0 is success
    */
-  virtual int16_t applyUpdate(const std::string &source, const std::string &configuration) {
+  int16_t applyUpdate(const std::string &source, const std::string &configuration, bool persist = false) override {
     update_calls++;
     return 0;
   }
@@ -158,7 +158,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
    * Apply an update that the agent must decode. This is useful for certain operations
    * that can't be encapsulated within these definitions.
    */
-  virtual int16_t applyUpdate(const std::string &source, const std::shared_ptr<minifi::state::Update> &updateController) {
+  int16_t applyUpdate(const std::string &source, const std::shared_ptr<minifi::state::Update> &updateController) override {
     return 0;
   }
 
@@ -166,7 +166,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
    * Returns uptime for this module.
    * @return uptime for the current state monitor.
    */
-  virtual uint64_t getUptime() {
+  uint64_t getUptime() override {
     return 8765309;
   }
 

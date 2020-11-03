@@ -120,7 +120,7 @@ void IntegrationBase::run(std::string test_file_location) {
   state_dir = utils::file::FileUtils::create_temp_directory(state_dir_name_template);
   core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_service_provider.get(), configuration, state_dir.c_str());
 
-  std::shared_ptr<core::ProcessGroup> pg(yaml_config.getRoot(test_file_location));
+  std::shared_ptr<core::ProcessGroup> pg(yaml_config.getRoot());
   queryRootProcessGroup(pg);
 
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);

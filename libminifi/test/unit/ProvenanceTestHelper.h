@@ -289,10 +289,6 @@ class TestFlowController : public minifi::FlowController {
   std::shared_ptr<minifi::Connection> createConnection(std::string name, utils::Identifier &  uuid) {
     return 0;
   }
-
- protected:
-  void initializePaths(const std::string &adjustedFilename) override {
-  }
 };
 #if defined(__clang__)
 #pragma clang diagnostic pop

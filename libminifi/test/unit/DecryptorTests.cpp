@@ -23,7 +23,7 @@ namespace utils = org::apache::nifi::minifi::utils;
 
 TEST_CASE("Decryptor can decide whether a property is encrypted", "[isValidEncryptionMarker]") {
   utils::crypto::Bytes encryption_key;
-  minifi::Decryptor decryptor{encryption_key};
+  minifi::Decryptor decryptor{utils::crypto::EncryptionProvider{encryption_key}};
 
   REQUIRE(minifi::Decryptor::isValidEncryptionMarker(utils::nullopt) == false);
   REQUIRE(minifi::Decryptor::isValidEncryptionMarker(utils::optional<std::string>{""}) == false);
@@ -36,7 +36,7 @@ TEST_CASE("Decryptor can decide whether a property is encrypted", "[isValidEncry
 TEST_CASE("Decryptor can decrypt a property", "[decrypt]") {
   utils::crypto::Bytes encryption_key = utils::crypto::stringToBytes(utils::StringUtils::from_hex(
       "4024b327fdc987ce3eb43dd1f690b9987e4072e0020e3edf4349ce1ad91a4e38"));
-  minifi::Decryptor decryptor{encryption_key};
+  minifi::Decryptor decryptor{utils::crypto::EncryptionProvider{encryption_key}};
 
   std::string encrypted_value = "l3WY1V27knTiPa6jVX0jrq4qjmKsySOu||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo=";
   REQUIRE(decryptor.decrypt(encrypted_value) == "CorrectHorseBatteryStaple");
@@ -45,7 +45,7 @@ TEST_CASE("Decryptor can decrypt a property", "[decrypt]") {
 TEST_CASE("Decryptor will throw if the value is incorrect", "[decrypt]") {
   utils::crypto::Bytes encryption_key = utils::crypto::stringToBytes(utils::StringUtils::from_hex(
       "4024b327fdc987ce3eb43dd1f690b9987e4072e0020e3edf4349ce1ad91a4e38"));
-  minifi::Decryptor decryptor{encryption_key};
+  minifi::Decryptor decryptor{utils::crypto::EncryptionProvider{encryption_key}};
 
   // correct nonce + ciphertext and mac: "l3WY1V27knTiPa6jVX0jrq4qjmKsySOu||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo="
 
@@ -87,7 +87,7 @@ TEST_CASE("Decryptor will throw if the value is incorrect", "[decrypt]") {
 TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProperties]") {
   utils::crypto::Bytes encryption_key = utils::crypto::stringToBytes(utils::StringUtils::from_hex(
       "5506c28d0fe265299e294a4c766b723a48986764953e93d38b3c627176fd10ed"));
-  minifi::Decryptor decryptor{encryption_key};
+  minifi::Decryptor decryptor{utils::crypto::EncryptionProvider{encryption_key}};
 
   minifi::Configure configuration{decryptor};
   configuration.setHome("resources");

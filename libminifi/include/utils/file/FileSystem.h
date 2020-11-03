@@ -14,41 +14,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
 #include <string>
-
-#include "utils/EncryptionUtils.h"
 #include "utils/OptionalUtils.h"
 #include "utils/EncryptionProvider.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace utils {
+namespace file {
 
-class Decryptor {
+class FileSystem {
  public:
-  explicit Decryptor(utils::crypto::EncryptionProvider provider)
-      : provider_(std::move(provider)) {}
+  explicit FileSystem(bool should_encrypt = false, utils::optional<utils::crypto::EncryptionProvider> encryptor = {});
 
-  static bool isValidEncryptionMarker(const utils::optional<std::string>& encryption_marker) {
-    return encryption_marker && *encryption_marker == utils::crypto::EncryptionType::name();
-  }
+  FileSystem(const FileSystem&) = delete;
+  FileSystem(FileSystem&&) = delete;
+  FileSystem& operator=(const FileSystem&) = delete;
+  FileSystem& operator=(FileSystem&&) = delete;
 
-  std::string decrypt(const std::string& encrypted_text) const {
-    return provider_.decrypt(encrypted_text);
-  }
+  utils::optional<std::string> read(const std::string& file_name);
 
-  static utils::optional<Decryptor> create(const std::string& minifi_home) {
-    return utils::crypto::EncryptionProvider::create(minifi_home)
-        | utils::map([](const utils::crypto::EncryptionProvider& provider) {return Decryptor{provider};});
-  }
+  bool write(const std::string& file_name, const std::string& file_content);
 
  private:
-  const utils::crypto::EncryptionProvider provider_;
+  bool should_encrypt_;
+  utils::optional<utils::crypto::EncryptionProvider> encryptor_;
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<FileSystem>::getLogger()};
 };
 
+}  // namespace file
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

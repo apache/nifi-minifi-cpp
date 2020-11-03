@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
 
-  std::shared_ptr<core::ProcessGroup> pg(yaml_config.getRoot(args.test_file));
+  std::shared_ptr<core::ProcessGroup> pg(yaml_config.getRoot());
 
   std::shared_ptr<core::controller::StandardControllerServiceProvider> provider = std::make_shared<core::controller::StandardControllerServiceProvider>(map, pg, std::make_shared<minifi::Configure>());
   std::shared_ptr<core::controller::ControllerServiceNode> mockNode = pg->findControllerService("MockItLikeIts1995");

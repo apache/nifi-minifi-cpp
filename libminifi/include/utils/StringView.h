@@ -14,41 +14,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
 #include <string>
-
-#include "utils/EncryptionUtils.h"
-#include "utils/OptionalUtils.h"
-#include "utils/EncryptionProvider.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace utils {
 
-class Decryptor {
+class StringView {
  public:
-  explicit Decryptor(utils::crypto::EncryptionProvider provider)
-      : provider_(std::move(provider)) {}
 
-  static bool isValidEncryptionMarker(const utils::optional<std::string>& encryption_marker) {
-    return encryption_marker && *encryption_marker == utils::crypto::EncryptionType::name();
+  constexpr StringView(const char* begin, const char* end) : begin_(begin), end_(end) {}
+  explicit StringView(const char* str) : begin_(str), end_(begin_ + std::char_traits<char>::length(str)) {}
+  explicit StringView(const std::string& str): begin_(&*str.begin()), end_(begin_ + str.length()) {}
+
+  constexpr const char* begin() const noexcept {
+    return begin_;
   }
 
-  std::string decrypt(const std::string& encrypted_text) const {
-    return provider_.decrypt(encrypted_text);
+  constexpr const char* end() const noexcept {
+    return end_;
   }
 
-  static utils::optional<Decryptor> create(const std::string& minifi_home) {
-    return utils::crypto::EncryptionProvider::create(minifi_home)
-        | utils::map([](const utils::crypto::EncryptionProvider& provider) {return Decryptor{provider};});
+  constexpr bool empty() const noexcept {
+    return begin_ == end_;
+  }
+
+  std::reverse_iterator<const char*> rbegin() const noexcept {
+    return std::reverse_iterator<const char*>{end_};
+  }
+
+  std::reverse_iterator<const char*> rend() const noexcept {
+    return std::reverse_iterator<const char*>{begin_};
+  }
+
+  constexpr size_t size() const noexcept {
+    return end_ - begin_;
+  }
+
+  constexpr size_t length() const noexcept {
+    return size();
   }
 
  private:
-  const utils::crypto::EncryptionProvider provider_;
+  const char* begin_;
+  const char* end_;
 };
 
+}  // namespace core
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

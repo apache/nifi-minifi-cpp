@@ -108,7 +108,7 @@ class PersistableKeyValueStoreServiceTestsFixture {
 
     yaml_config = std::unique_ptr<core::YamlConfiguration>(new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, config_yaml));
 
-    process_group = yaml_config->getRoot(config_yaml);
+    process_group = yaml_config->getRoot();
     persistable_key_value_store_service_node = process_group->findControllerService("testcontroller");
     REQUIRE(persistable_key_value_store_service_node != nullptr);
     persistable_key_value_store_service_node->enable();

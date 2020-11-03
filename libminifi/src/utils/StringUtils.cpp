@@ -16,7 +16,7 @@
  */
 
 #include "utils/StringUtils.h"
-
+#include "utils/StringViewUtils.h"
 #include "utils/Environment.h"
 
 namespace org {
@@ -31,8 +31,12 @@ bool StringUtils::StringToBool(std::string input, bool &output) {
   return output;
 }
 
+utils::optional<bool> StringUtils::toBool(const std::string& str) {
+  return StringViewUtils::toBool(StringView(str));
+}
+
 std::string StringUtils::trim(std::string s) {
-  return trimRight(trimLeft(s));
+  return trimRight(trimLeft(std::move(s)));
 }
 
 std::vector<std::string> StringUtils::split(const std::string &str, const std::string &delimiter) {
