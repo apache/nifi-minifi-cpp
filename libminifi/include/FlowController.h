@@ -46,6 +46,7 @@
 #include "core/state/nodes/FlowInformation.h"
 #include "core/state/nodes/MetricsBase.h"
 #include "core/state/UpdateController.h"
+#include "c2/C2Client.h"
 #include "CronDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
@@ -66,7 +67,7 @@ namespace minifi {
  * Flow Controller class. Generally used by FlowController factory
  * as a singleton.
  */
-class FlowController : public core::controller::ControllerServiceProvider, public state::response::NodeReporter,  public state::StateMonitor, public std::enable_shared_from_this<FlowController> {
+ class FlowController : public core::controller::ControllerServiceProvider,  public state::StateMonitor, public c2::C2Client, public std::enable_shared_from_this<FlowController> {
  public:
   /**
    * Flow controller constructor
@@ -178,6 +179,12 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
       return std::to_string(root_->getVersion());
     else
       return "0";
+  }
+
+  utils::Identifier getControllerUUID() const override {
+    utils::Identifier uuid;
+    getUUID(uuid);
+    return uuid;
   }
 
   /**
@@ -294,19 +301,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   void disableAllControllerServices() override;
 
   /**
-   * Retrieves metrics node
-   * @return metrics response node
-   */
-  std::shared_ptr<state::response::ResponseNode> getMetricsNode(const std::string& metricsClass) const override;
-
-  /**
-   * Retrieves root nodes configured to be included in heartbeat
-   * @param includeManifest -- determines if manifest is to be included
-   * @return a list of response nodes
-   */
-  std::vector<std::shared_ptr<state::response::ResponseNode>> getHeartbeatNodes(bool includeManifest) const override;
-
-  /**
    * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
    * @return the agent manifest response node
    */
@@ -316,14 +310,9 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   std::vector<BackTrace> getTraces() override;
 
-  void initializeC2();
   void stopC2();
 
  protected:
-  void loadC2ResponseConfiguration();
-  void loadC2ResponseConfiguration(const std::string &prefix);
-  std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode>);
-
   // function to load the flow file repo.
   void loadFlowRepo();
   void initializeExternalComponents();
@@ -342,22 +331,12 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // flow controller mutex
   std::recursive_mutex mutex_;
 
-  // Root Process Group
-  std::shared_ptr<core::ProcessGroup> root_;
   // Whether it is running
   std::atomic<bool> running_;
   std::atomic<bool> updating_;
 
-  std::atomic<bool> c2_initialized_;
-  std::atomic<bool> flow_update_;
-  std::atomic<bool> c2_enabled_;
   // Whether it has already been initialized (load the flow XML already)
   std::atomic<bool> initialized_;
-  // Provenance Repo
-  std::shared_ptr<core::Repository> provenance_repo_;
-  // FlowFile Repo
-  std::shared_ptr<core::Repository> flow_file_repo_;
-  std::shared_ptr<core::ContentRepository> content_repo_;
   // Thread pool for schedulers
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
   // Flow Timer Scheduler
@@ -368,29 +347,15 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::shared_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
   // FlowControl Protocol
   std::unique_ptr<FlowControlProtocol> protocol_;
-  std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::controller::ControllerServiceMap> controller_service_map_;
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
-  // flow configuration object.
-  std::unique_ptr<core::FlowConfiguration> flow_configuration_;
   // metrics information
   std::chrono::steady_clock::time_point start_time_;
-  mutable std::mutex metrics_mutex_;
-  // root_nodes cache
-  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
-  // metrics cache
-  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> device_information_;
-  // metrics cache
-  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> component_metrics_;
-  std::map<uint8_t, std::vector<std::shared_ptr<state::response::ResponseNode>>> component_metrics_by_id_;
-  // metrics last run
-  std::chrono::steady_clock::time_point last_metrics_capture_;
 
  private:
   std::chrono::milliseconds shutdown_check_interval_{1000};
   std::shared_ptr<logging::Logger> logger_;
   std::string serial_number_;
-  std::unique_ptr<state::UpdateController> c2_agent_;
 };
 
 }  // namespace minifi
