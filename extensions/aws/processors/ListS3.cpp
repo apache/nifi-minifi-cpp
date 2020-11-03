@@ -59,13 +59,13 @@ const core::Property ListS3::WriteObjectTags(
   core::PropertyBuilder::createProperty("Write Object Tags")
     ->isRequired(true)
     ->withDefaultValue<bool>(false)
-    ->withDescription("If set to 'True', the tags associated with the S3 object will be written as FlowFile attributes")
+    ->withDescription("If set to 'true', the tags associated with the S3 object will be written as FlowFile attributes.")
     ->build());
 const core::Property ListS3::WriteUserMetadata(
   core::PropertyBuilder::createProperty("Write User Metadata")
     ->isRequired(true)
     ->withDefaultValue<bool>(false)
-    ->withDescription("If set to 'True', the user defined metadata associated with the S3 object will be added to FlowFile attributes/records")
+    ->withDescription("If set to 'true', the user defined metadata associated with the S3 object will be added to FlowFile attributes/records.")
     ->build());
 const core::Property ListS3::RequesterPays(
   core::PropertyBuilder::createProperty("Requester Pays")
