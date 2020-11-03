@@ -24,6 +24,7 @@
 #include <utility>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "S3Processor.h"
 #include "utils/GeneralUtils.h"

@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <memory>
 #include <sstream>
+#include <utility>
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "aws/s3/S3Client.h"

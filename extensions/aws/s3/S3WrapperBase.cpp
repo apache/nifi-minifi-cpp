@@ -22,6 +22,7 @@
 #include <memory>
 #include <regex>
 #include <utility>
+#include <vector>
 
 #include "utils/StringUtils.h"
 
