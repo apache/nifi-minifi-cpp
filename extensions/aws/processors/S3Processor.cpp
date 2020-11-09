@@ -24,6 +24,7 @@
 #include <set>
 #include <memory>
 
+#include "S3Wrapper.h"
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"
 #include "utils/StringUtils.h"
@@ -117,6 +118,18 @@ const core::Property S3Processor::UseDefaultCredentials(
     ->withDefaultValue<bool>(false)
     ->isRequired(true)
     ->build());
+
+S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger)
+  : core::Processor(std::move(name), uuid)
+  , logger_(logger)
+  , s3_wrapper_(minifi::utils::make_unique<aws::s3::S3Wrapper>()) {
+}
+
+S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
+  : core::Processor(std::move(name), uuid)
+  , logger_(logger)
+  , s3_wrapper_(std::move(s3_wrapper)) {
+}
 
 const std::set<core::Property> S3Processor::getSupportedProperties() {
   return {ObjectKey, Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,

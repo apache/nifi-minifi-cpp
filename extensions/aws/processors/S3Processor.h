@@ -27,7 +27,7 @@
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
 
-#include "S3Wrapper.h"
+#include "S3WrapperBase.h"
 #include "AWSCredentialsProvider.h"
 #include "core/Property.h"
 #include "core/Processor.h"
@@ -92,11 +92,8 @@ class S3Processor : public core::Processor {
   static const core::Property ProxyPassword;
   static const core::Property UseDefaultCredentials;
 
-  explicit S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
-      : core::Processor(std::move(name), uuid)
-      , logger_(logger)
-      , s3_wrapper_(std::move(s3_wrapper)) {
-  }
+  explicit S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger);
+  explicit S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper);
 
   bool supportsDynamicProperties() override { return true; }
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;

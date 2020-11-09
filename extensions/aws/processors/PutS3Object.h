@@ -61,11 +61,11 @@ class PutS3Object : public S3Processor {
   static const core::Relationship Success;
 
   explicit PutS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
-      : PutS3Object(name, uuid, minifi::utils::make_unique<aws::s3::S3Wrapper>()) {
+    : S3Processor(std::move(name), uuid, logging::LoggerFactory<PutS3Object>::getLogger()) {
   }
 
   explicit PutS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
-      : S3Processor(std::move(name), uuid, logging::LoggerFactory<PutS3Object>::getLogger(), std::move(s3_wrapper)) {
+    : S3Processor(std::move(name), uuid, logging::LoggerFactory<PutS3Object>::getLogger(), std::move(s3_wrapper)) {
   }
 
   ~PutS3Object() override = default;

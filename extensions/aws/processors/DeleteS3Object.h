@@ -47,11 +47,11 @@ class DeleteS3Object : public S3Processor {
   static const core::Relationship Success;
 
   explicit DeleteS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
-      : DeleteS3Object(name, uuid, minifi::utils::make_unique<aws::s3::S3Wrapper>()) {
+    : S3Processor(std::move(name), uuid, logging::LoggerFactory<DeleteS3Object>::getLogger()) {
   }
 
   explicit DeleteS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
-      : S3Processor(std::move(name), uuid, logging::LoggerFactory<DeleteS3Object>::getLogger(), std::move(s3_wrapper)) {
+    : S3Processor(std::move(name), uuid, logging::LoggerFactory<DeleteS3Object>::getLogger(), std::move(s3_wrapper)) {
   }
 
   ~DeleteS3Object() override = default;
