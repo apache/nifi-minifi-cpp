@@ -339,17 +339,12 @@ class StringUtils {
    */
   template<typename TChar>
   static std::basic_string<TChar> repeat(const TChar* str, size_t count) {
-    std::basic_string<TChar> result;
-    result.reserve(std::basic_string<TChar>::traits_type::length(str) * count);
-    for (size_t idx = 0; idx < count; ++idx) {
-      result += str;
-    }
-    return result;
+    return repeat(std::basic_string<TChar>(str), count);
   }
 
   template<typename TChar>
   static std::basic_string<TChar> repeat(const std::basic_string<TChar>& str, size_t count) {
-    return repeat(str.c_str(), count);
+    return join("", std::vector<std::basic_string<TChar>>(count, str));
   }
 
   /**
