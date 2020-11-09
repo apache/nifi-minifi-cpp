@@ -72,6 +72,9 @@ if (${FORCE_COLORED_OUTPUT})
 	   add_compile_options (-fcolor-diagnostics)
 	endif ()
 endif ()
+option(AWS_ENABLE_UNITY_BUILD "If enabled, AWS SDK libraries will be built as a single, generated .cpp file. \
+	This can significantly reduce static library size as well as speed up a single compilation time, but it is regenerated \
+	and recompiled in every iterative build instance. Turn off to avoid recompilation." ON)
 
 cmake_dependent_option(ASAN_BUILD "Uses AddressSanitizer to instrument the code" OFF "NOT WIN32" OFF)
 
