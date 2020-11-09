@@ -41,6 +41,8 @@
 #include "aws/s3/model/ListObjectVersionsResult.h"
 #include "aws/s3/model/GetObjectTaggingRequest.h"
 #include "aws/s3/model/GetObjectTaggingResult.h"
+#include "aws/s3/model/HeadObjectRequest.h"
+#include "aws/s3/model/HeadObjectResult.h"
 #include "aws/s3/model/StorageClass.h"
 #include "aws/s3/model/ServerSideEncryption.h"
 #include "aws/s3/model/ObjectCannedACL.h"
@@ -172,6 +174,9 @@ struct ProxyOptions {
   std::string password;
 };
 
+using HeadObjectRequestParameters = GetObjectRequestParameters;
+using HeadObjectResult = GetObjectResult;
+
 class S3WrapperBase {
  public:
   void setCredentials(const Aws::Auth::AWSCredentials& cred);
@@ -182,9 +187,10 @@ class S3WrapperBase {
 
   minifi::utils::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
   bool deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version = "");
-  minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, const std::shared_ptr<io::BaseStream>& fetched_body = nullptr);
+  minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, const std::shared_ptr<io::BaseStream>& fetched_body);
   minifi::utils::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
   minifi::utils::optional<std::map<std::string, std::string>> getObjectTags(const std::string& bucket, const std::string& object_key, const std::string& version = 0);
+  minifi::utils::optional<HeadObjectResult> headObject(const HeadObjectRequestParameters& head_object_params);
 
   virtual ~S3WrapperBase() = default;
 
@@ -195,6 +201,7 @@ class S3WrapperBase {
   virtual minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(const Aws::S3::Model::ListObjectsV2Request& request) = 0;
   virtual minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(const Aws::S3::Model::ListObjectVersionsRequest& request) = 0;
   virtual minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(const Aws::S3::Model::GetObjectTaggingRequest& request) = 0;
+  virtual minifi::utils::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(const Aws::S3::Model::HeadObjectRequest& request) = 0;
 
   void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
   int64_t writeFetchedBody(Aws::IOStream& source, const int64_t data_size, const std::shared_ptr<io::BaseStream>& output);

@@ -186,9 +186,7 @@ minifi::utils::optional<GetObjectResult> S3WrapperBase::getObject(const GetObjec
   for (const auto& metadata : aws_result->GetMetadata()) {
     result.user_metadata_map.emplace(metadata.first, metadata.second);
   }
-  if (out_body != nullptr) {
-    result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), out_body);
-  }
+  result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), out_body);
 
   return result;
 }
@@ -293,6 +291,38 @@ minifi::utils::optional<std::map<std::string, std::string>> S3WrapperBase::getOb
     tags.emplace(tag.GetKey(), tag.GetValue());
   }
   return tags;
+}
+
+minifi::utils::optional<HeadObjectResult> S3WrapperBase::headObject(const HeadObjectRequestParameters& head_object_params) {
+  Aws::S3::Model::HeadObjectRequest request;
+  request.SetBucket(head_object_params.bucket);
+  request.SetKey(head_object_params.object_key);
+  if (!head_object_params.version.empty()) {
+    request.SetVersionId(head_object_params.version);
+  }
+  if (head_object_params.requester_pays) {
+    request.SetRequestPayer(Aws::S3::Model::RequestPayer::requester);
+  }
+
+  auto aws_result = sendHeadObjectRequest(request);
+  if (!aws_result) {
+    return minifi::utils::nullopt;
+  }
+
+  HeadObjectResult result;
+  result.setFilePaths(head_object_params.object_key);
+  result.mime_type = aws_result->GetContentType();
+  result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result->GetETag(), '"');
+  auto expiration = getExpirationPair(aws_result->GetExpiration());
+  result.expiration_time = expiration.first;
+  result.expiration_time_rule_id = expiration.second;
+  result.ssealgorithm = getEncryptionString(aws_result->GetServerSideEncryption());
+  result.version = aws_result->GetVersionId();
+  for (const auto& metadata : aws_result->GetMetadata()) {
+    result.user_metadata_map.emplace(metadata.first, metadata.second);
+  }
+
+  return result;
 }
 
 }  // namespace s3

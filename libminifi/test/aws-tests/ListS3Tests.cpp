@@ -161,7 +161,7 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test write user metadata", "[awsS3ListMeta
   for (const auto& metadata : S3_OBJECT_USER_METADATA) {
     REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.user.metadata." + metadata.first + " value:" + metadata.second) == S3_OBJECT_COUNT);
   }
-  REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::requester);
+  REQUIRE(mock_s3_wrapper_ptr->head_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::requester);
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test truncated listing without versioning", "[awsS3ListObjects]") {

@@ -111,6 +111,19 @@ minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> S3Wrapper::sendG
   }
 }
 
+minifi::utils::optional<Aws::S3::Model::HeadObjectResult> S3Wrapper::sendHeadObjectRequest(const Aws::S3::Model::HeadObjectRequest& request) {
+  Aws::S3::S3Client s3_client(credentials_, client_config_);
+  auto outcome = s3_client.HeadObject(request);
+
+  if (outcome.IsSuccess()) {
+    logger_->log_info("HeadS3Object successful for key %s from bucket %s", request.GetKey(), request.GetBucket());
+    return outcome.GetResultWithOwnership();
+  } else {
+    logger_->log_error("HeadS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
+    return minifi::utils::nullopt;
+  }
+}
+
 }  // namespace s3
 }  // namespace aws
 }  // namespace minifi

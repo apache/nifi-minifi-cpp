@@ -155,14 +155,14 @@ void ListS3::writeUserMetadata(
     return;
   }
 
-  aws::s3::GetObjectRequestParameters params;
+  aws::s3::HeadObjectRequestParameters params;
   params.bucket = list_request_params_.bucket;
   params.object_key = object.filename;
   params.version = object.version;
   params.requester_pays = requester_pays_;
-  auto get_object_tags_result = s3_wrapper_->getObject(params);
-  if (get_object_tags_result) {
-    for (const auto& metadata : get_object_tags_result->user_metadata_map) {
+  auto head_object_tags_result = s3_wrapper_->headObject(params);
+  if (head_object_tags_result) {
+    for (const auto& metadata : head_object_tags_result->user_metadata_map) {
       session->putAttribute(flow_file, "s3.user.metadata." + metadata.first, metadata.second);
     }
   } else {
