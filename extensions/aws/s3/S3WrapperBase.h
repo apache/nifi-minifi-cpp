@@ -51,6 +51,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/AWSInitializer.h"
 #include "utils/OptionalUtils.h"
+#include "utils/StringUtils.h"
 #include "io/BaseStream.h"
 
 namespace org {
@@ -133,8 +134,7 @@ struct GetObjectRequestParameters {
   bool requester_pays = false;
 };
 
-struct GetObjectResult {
- public:
+struct HeadObjectResult {
   std::string path;
   std::string absolute_path;
   std::string filename;
@@ -143,10 +143,13 @@ struct GetObjectResult {
   Expiration expiration;
   std::string ssealgorithm;
   std::string version;
-  int64_t write_size = 0;
   std::map<std::string, std::string> user_metadata_map;
 
   void setFilePaths(const std::string& key);
+};
+
+struct GetObjectResult : public HeadObjectResult {
+  int64_t write_size = 0;
 };
 
 struct ListRequestParameters {
@@ -175,7 +178,6 @@ struct ProxyOptions {
 };
 
 using HeadObjectRequestParameters = GetObjectRequestParameters;
-using HeadObjectResult = GetObjectResult;
 
 class S3WrapperBase {
  public:
@@ -222,11 +224,40 @@ class S3WrapperBase {
     return request;
   }
 
+  template<typename FetchObjectRequest>
+  FetchObjectRequest createFetchObjectRequest(const GetObjectRequestParameters& get_object_params) {
+    FetchObjectRequest request;
+    request.SetBucket(get_object_params.bucket);
+    request.SetKey(get_object_params.object_key);
+    if (!get_object_params.version.empty()) {
+      request.SetVersionId(get_object_params.version);
+    }
+    if (get_object_params.requester_pays) {
+      request.SetRequestPayer(Aws::S3::Model::RequestPayer::requester);
+    }
+    return request;
+  }
+
+  template<typename AwsResult, typename FetchObjectResult>
+  FetchObjectResult fillFetchObjectResult(const GetObjectRequestParameters& get_object_params, const AwsResult& fetch_object_result) {
+    FetchObjectResult result;
+    result.setFilePaths(get_object_params.object_key);
+    result.mime_type = fetch_object_result.GetContentType();
+    result.etag = minifi::utils::StringUtils::removeFramingCharacters(fetch_object_result.GetETag(), '"');
+    result.expiration = getExpiration(fetch_object_result.GetExpiration());
+    result.ssealgorithm = getEncryptionString(fetch_object_result.GetServerSideEncryption());
+    result.version = fetch_object_result.GetVersionId();
+    for (const auto& metadata : fetch_object_result.GetMetadata()) {
+      result.user_metadata_map.emplace(metadata.first, metadata.second);
+    }
+    return result;
+  }
+
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   Aws::Client::ClientConfiguration client_config_;
   Aws::Auth::AWSCredentials credentials_;
   std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3WrapperBase>::getLogger()};
-  uint64_t last_bucket_list_timestamp = 0;
+  uint64_t last_bucket_list_timestamp_ = 0;
 };
 
 } /* namespace s3 */

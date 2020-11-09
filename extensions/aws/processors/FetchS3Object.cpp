@@ -89,7 +89,7 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     session->transfer(flow_file, Failure);
     return;
   }
-  logger_->log_debug("S3Processor: Object Key [%s]", get_object_params.object_key);
+  logger_->log_debug("FetchS3Object: Object Key [%s]", get_object_params.object_key);
 
   context->getProperty(Version, get_object_params.version, flow_file);
   logger_->log_debug("FetchS3Object: Version [%s]", get_object_params.version);

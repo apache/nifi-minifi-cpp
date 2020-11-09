@@ -34,7 +34,7 @@ namespace minifi {
 namespace aws {
 namespace s3 {
 
-void GetObjectResult::setFilePaths(const std::string& key) {
+void HeadObjectResult::setFilePaths(const std::string& key) {
   absolute_path = key;
   std::tie(path, filename) = minifi::utils::file::FileUtils::split_path(key, true /*force_posix*/);
 }
@@ -162,38 +162,20 @@ int64_t S3WrapperBase::writeFetchedBody(Aws::IOStream& source, const int64_t dat
 }
 
 minifi::utils::optional<GetObjectResult> S3WrapperBase::getObject(const GetObjectRequestParameters& get_object_params, const std::shared_ptr<io::BaseStream>& out_body) {
-  Aws::S3::Model::GetObjectRequest request;
-  request.SetBucket(get_object_params.bucket);
-  request.SetKey(get_object_params.object_key);
-  if (!get_object_params.version.empty()) {
-    request.SetVersionId(get_object_params.version);
-  }
-  if (get_object_params.requester_pays) {
-    request.SetRequestPayer(Aws::S3::Model::RequestPayer::requester);
-  }
+  auto request = createFetchObjectRequest<Aws::S3::Model::GetObjectRequest>(get_object_params);
   auto aws_result = sendGetObjectRequest(request);
   if (!aws_result) {
     return minifi::utils::nullopt;
   }
-
-  GetObjectResult result;
-  result.setFilePaths(get_object_params.object_key);
-  result.mime_type = aws_result->GetContentType();
-  result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result->GetETag(), '"');
-  result.expiration = getExpiration(aws_result->GetExpiration());
-  result.ssealgorithm = getEncryptionString(aws_result->GetServerSideEncryption());
-  result.version = aws_result->GetVersionId();
-  for (const auto& metadata : aws_result->GetMetadata()) {
-    result.user_metadata_map.emplace(metadata.first, metadata.second);
-  }
+  auto result = fillFetchObjectResult<Aws::S3::Model::GetObjectResult, GetObjectResult>(get_object_params, aws_result.value());
   result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), out_body);
-
   return result;
 }
 
 void S3WrapperBase::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects) {
   for (const auto& version : content) {
-    if (last_bucket_list_timestamp - min_object_age < version.GetLastModified().Millis()) {
+    if (last_bucket_list_timestamp_ - min_object_age < version.GetLastModified().Millis()) {
+      logger_->log_debug("Object version %s of key %s skipped due to minimum object age filter", version.GetVersionId(), version.GetKey());
       continue;
     }
 
@@ -211,7 +193,8 @@ void S3WrapperBase::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersi
 
 void S3WrapperBase::addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects) {
   for (const auto& object : content) {
-    if (last_bucket_list_timestamp - min_object_age < object.GetLastModified().Millis()) {
+    if (last_bucket_list_timestamp_ - min_object_age < object.GetLastModified().Millis()) {
+      logger_->log_debug("Object with key %s skipped due to minimum object age filter", object.GetKey());
       continue;
     }
 
@@ -268,7 +251,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::list
 }
 
 minifi::utils::optional<std::vector<ListedObjectAttributes>> S3WrapperBase::listBucket(const ListRequestParameters& params) {
-  last_bucket_list_timestamp = Aws::Utils::DateTime::CurrentTimeMillis();
+  last_bucket_list_timestamp_ = Aws::Utils::DateTime::CurrentTimeMillis();
   if (params.use_versions) {
     return listVersions(params);
   }
@@ -294,35 +277,12 @@ minifi::utils::optional<std::map<std::string, std::string>> S3WrapperBase::getOb
 }
 
 minifi::utils::optional<HeadObjectResult> S3WrapperBase::headObject(const HeadObjectRequestParameters& head_object_params) {
-  Aws::S3::Model::HeadObjectRequest request;
-  request.SetBucket(head_object_params.bucket);
-  request.SetKey(head_object_params.object_key);
-  if (!head_object_params.version.empty()) {
-    request.SetVersionId(head_object_params.version);
-  }
-  if (head_object_params.requester_pays) {
-    request.SetRequestPayer(Aws::S3::Model::RequestPayer::requester);
-  }
-
+  auto request = createFetchObjectRequest<Aws::S3::Model::HeadObjectRequest>(head_object_params);
   auto aws_result = sendHeadObjectRequest(request);
   if (!aws_result) {
     return minifi::utils::nullopt;
   }
-
-  HeadObjectResult result;
-  result.setFilePaths(head_object_params.object_key);
-  result.mime_type = aws_result->GetContentType();
-  result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result->GetETag(), '"');
-  auto expiration = getExpirationPair(aws_result->GetExpiration());
-  result.expiration_time = expiration.first;
-  result.expiration_time_rule_id = expiration.second;
-  result.ssealgorithm = getEncryptionString(aws_result->GetServerSideEncryption());
-  result.version = aws_result->GetVersionId();
-  for (const auto& metadata : aws_result->GetMetadata()) {
-    result.user_metadata_map.emplace(metadata.first, metadata.second);
-  }
-
-  return result;
+  return fillFetchObjectResult<Aws::S3::Model::HeadObjectResult, HeadObjectResult>(head_object_params, aws_result.value());
 }
 
 }  // namespace s3

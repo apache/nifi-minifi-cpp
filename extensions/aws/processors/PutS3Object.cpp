@@ -217,7 +217,7 @@ minifi::utils::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildP
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
     return minifi::utils::nullopt;
   }
-  logger_->log_debug("S3Processor: Object Key [%s]", params.object_key);
+  logger_->log_debug("PutS3Object: Object Key [%s]", params.object_key);
 
   context->getProperty(ContentType, params.content_type, flow_file);
   logger_->log_debug("PutS3Object: Content Type [%s]", params.content_type);

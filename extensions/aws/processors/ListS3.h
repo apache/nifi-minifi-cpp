@@ -70,18 +70,22 @@ class ListS3 : public S3Processor {
 
  private:
   void writeObjectTags(
-    const std::string& bucket,
-    aws::s3::ListedObjectAttributes object,
+    const std::string &bucket,
+    const aws::s3::ListedObjectAttributes &object_attributes,
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file);
   void writeUserMetadata(
-    const std::string& bucket,
-    aws::s3::ListedObjectAttributes object,
+    const std::string &bucket,
+    const aws::s3::ListedObjectAttributes &object_attributes,
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file);
-  std::vector<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> state);
+  std::vector<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state);
+  uint64_t getLatestListedKeyTimestamp(const std::unordered_map<std::string, std::string> &state);
   std::tuple<int64_t, std::vector<std::string>> getCurrentState(const std::shared_ptr<core::ProcessContext> &context);
   void storeState(const std::shared_ptr<core::ProcessContext> &context, const int64_t latest_listed_key_timestamp, const std::vector<std::string> &latest_listed_keys);
+  void createNewFlowFile(
+    const std::shared_ptr<core::ProcessSession> &session,
+    const aws::s3::ListedObjectAttributes &object_attributes);
 
   aws::s3::ListRequestParameters list_request_params_;
   bool write_object_tags_ = false;

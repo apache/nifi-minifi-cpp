@@ -128,27 +128,27 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
 }
 
 void ListS3::writeObjectTags(
-    const std::string& bucket,
-    aws::s3::ListedObjectAttributes object,
+    const std::string &bucket,
+    const aws::s3::ListedObjectAttributes &object_attributes,
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   if (!write_object_tags_) {
     return;
   }
 
-  auto get_object_tags_result = s3_wrapper_->getObjectTags(bucket, object.filename, object.version);
+  auto get_object_tags_result = s3_wrapper_->getObjectTags(bucket, object_attributes.filename, object_attributes.version);
   if (get_object_tags_result) {
     for (const auto& tag : get_object_tags_result.value()) {
       session->putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
     }
   } else {
-    logger_->log_warn("Failed to get object tags for object %s in bucket %s", object.filename, bucket);
+    logger_->log_warn("Failed to get object tags for object %s in bucket %s", object_attributes.filename, bucket);
   }
 }
 
 void ListS3::writeUserMetadata(
-    const std::string& bucket,
-    aws::s3::ListedObjectAttributes object,
+    const std::string &bucket,
+    const aws::s3::ListedObjectAttributes &object_attributes,
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   if (!write_user_metadata_) {
@@ -157,8 +157,8 @@ void ListS3::writeUserMetadata(
 
   aws::s3::HeadObjectRequestParameters params;
   params.bucket = list_request_params_.bucket;
-  params.object_key = object.filename;
-  params.version = object.version;
+  params.object_key = object_attributes.filename;
+  params.version = object_attributes.version;
   params.requester_pays = requester_pays_;
   auto head_object_tags_result = s3_wrapper_->headObject(params);
   if (head_object_tags_result) {
@@ -170,7 +170,7 @@ void ListS3::writeUserMetadata(
   }
 }
 
-std::vector<std::string> ListS3::getLatestListedKeys(const std::unordered_map<std::string, std::string> state) {
+std::vector<std::string> ListS3::getLatestListedKeys(const std::unordered_map<std::string, std::string> &state) {
   std::vector<std::string> latest_listed_keys;
   for (const auto& kvp : state) {
     if (kvp.first.rfind(LATEST_LISTED_KEY_PREFIX, 0) == 0) {
@@ -180,14 +180,7 @@ std::vector<std::string> ListS3::getLatestListedKeys(const std::unordered_map<st
   return latest_listed_keys;
 }
 
-std::tuple<int64_t, std::vector<std::string>> ListS3::getCurrentState(const std::shared_ptr<core::ProcessContext> &context) {
-  std::unordered_map<std::string, std::string> state;
-  if (!state_manager_->get(state)) {
-    logger_->log_debug("No stored state for listed objects was found");
-    return std::make_tuple(0, std::vector<std::string>());
-  }
-  auto stored_listed_keys = getLatestListedKeys(state);
-
+uint64_t ListS3::getLatestListedKeyTimestamp(const std::unordered_map<std::string, std::string> &state) {
   std::string stored_listed_key_timestamp_str;
   auto it = state.find(LATEST_LISTED_KEY_TIMESTAMP);
   if (it != state.end()) {
@@ -199,8 +192,20 @@ std::tuple<int64_t, std::vector<std::string>> ListS3::getCurrentState(const std:
     core::Property::StringToInt(stored_listed_key_timestamp_str, stored_listed_key_timestamp);
   }
 
+  return stored_listed_key_timestamp;
+}
+
+std::tuple<int64_t, std::vector<std::string>> ListS3::getCurrentState(const std::shared_ptr<core::ProcessContext> &context) {
+  std::unordered_map<std::string, std::string> state;
+  if (!state_manager_->get(state)) {
+    logger_->log_info("No stored state for listed objects was found");
+    return std::make_tuple(0, std::vector<std::string>());
+  }
+
+  auto stored_listed_key_timestamp = getLatestListedKeyTimestamp(state);
   logger_->log_debug("Restored previous listed timestamp %lld", stored_listed_key_timestamp);
-  return std::make_tuple(stored_listed_key_timestamp, stored_listed_keys);
+
+  return std::make_tuple(stored_listed_key_timestamp, getLatestListedKeys(state));
 }
 
 void ListS3::storeState(const std::shared_ptr<core::ProcessContext> &context, const int64_t latest_listed_key_timestamp, const std::vector<std::string> &latest_listed_keys) {
@@ -211,6 +216,26 @@ void ListS3::storeState(const std::shared_ptr<core::ProcessContext> &context, co
   }
   logger_->log_debug("Stored new listed timestamp %lld", latest_listed_key_timestamp);
   state_manager_->set(state);
+}
+
+void ListS3::createNewFlowFile(
+    const std::shared_ptr<core::ProcessSession> &session,
+    const aws::s3::ListedObjectAttributes &object_attributes) {
+  auto flow_file = session->create();
+  session->putAttribute(flow_file, "s3.bucket", list_request_params_.bucket);
+  session->putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, object_attributes.filename);
+  session->putAttribute(flow_file, "s3.etag", object_attributes.etag);
+  session->putAttribute(flow_file, "s3.isLatest", object_attributes.is_latest ? "true" : "false");
+  session->putAttribute(flow_file, "s3.lastModified", std::to_string(object_attributes.last_modified));
+  session->putAttribute(flow_file, "s3.length", std::to_string(object_attributes.length));
+  session->putAttribute(flow_file, "s3.storeClass", object_attributes.store_class);
+  if (!object_attributes.version.empty()) {
+    session->putAttribute(flow_file, "s3.version", object_attributes.version);
+  }
+  writeObjectTags(list_request_params_.bucket, object_attributes, session, flow_file);
+  writeUserMetadata(list_request_params_.bucket, object_attributes, session, flow_file);
+
+  session->transfer(flow_file, Success);
 }
 
 void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -236,35 +261,26 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
   std::vector<std::string> latest_listed_keys = stored_listed_keys;
   std::size_t files_transferred = 0;
 
-  for (const auto& object : aws_results.value()) {
-    if (stored_listed_key_timestamp > object.last_modified ||
-        stored_listed_key_timestamp == object.last_modified && std::find(stored_listed_keys.begin(), stored_listed_keys.end(), object.filename) != stored_listed_keys.end()) {
+  auto was_object_listed_already = [&](const aws::s3::ListedObjectAttributes &object_attributes) {
+    return stored_listed_key_timestamp > object_attributes.last_modified ||
+      (stored_listed_key_timestamp == object_attributes.last_modified &&
+        std::find(stored_listed_keys.begin(), stored_listed_keys.end(), object_attributes.filename) != stored_listed_keys.end());
+  };
+
+  for (const auto& object_attributes : aws_results.value()) {
+    if (was_object_listed_already(object_attributes)) {
       continue;
     }
 
-    auto flow_file = session->create();
-    session->putAttribute(flow_file, "s3.bucket", list_request_params_.bucket);
-    session->putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, object.filename);
-    session->putAttribute(flow_file, "s3.etag", object.etag);
-    session->putAttribute(flow_file, "s3.isLatest", object.is_latest ? "true" : "false");
-    session->putAttribute(flow_file, "s3.lastModified", std::to_string(object.last_modified));
-    session->putAttribute(flow_file, "s3.length", std::to_string(object.length));
-    session->putAttribute(flow_file, "s3.storeClass", object.store_class);
-    if (!object.version.empty()) {
-      session->putAttribute(flow_file, "s3.version", object.version);
-    }
-    writeObjectTags(list_request_params_.bucket, object, session, flow_file);
-    writeUserMetadata(list_request_params_.bucket, object, session, flow_file);
-
-    session->transfer(flow_file, Success);
+    createNewFlowFile(session, object_attributes);
     ++files_transferred;
 
-    if (latest_listed_key_timestamp < object.last_modified) {
-      latest_listed_key_timestamp = object.last_modified;
+    if (latest_listed_key_timestamp < object_attributes.last_modified) {
+      latest_listed_key_timestamp = object_attributes.last_modified;
       latest_listed_keys.clear();
-      latest_listed_keys.push_back(object.filename);
-    } else if (latest_listed_key_timestamp == object.last_modified) {
-      latest_listed_keys.push_back(object.filename);
+      latest_listed_keys.push_back(object_attributes.filename);
+    } else if (latest_listed_key_timestamp == object_attributes.last_modified) {
+      latest_listed_keys.push_back(object_attributes.filename);
     }
   }
 

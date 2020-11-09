@@ -72,7 +72,7 @@ void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     session->transfer(flow_file, Failure);
     return;
   }
-  logger_->log_debug("S3Processor: Object Key [%s]", object_key);
+  logger_->log_debug("DeleteS3Object: Object Key [%s]", object_key);
 
   std::string version;
   context->getProperty(Version, version, flow_file);

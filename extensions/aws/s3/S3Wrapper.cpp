@@ -35,7 +35,7 @@ minifi::utils::optional<Aws::S3::Model::PutObjectResult> S3Wrapper::sendPutObjec
   auto outcome = s3_client.PutObject(request);
 
   if (outcome.IsSuccess()) {
-      logger_->log_info("Added S3 object '%s' to bucket '%s'", request.GetKey(), request.GetBucket());
+      logger_->log_debug("Added S3 object '%s' to bucket '%s'", request.GetKey(), request.GetBucket());
       return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("PutS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
@@ -48,10 +48,10 @@ bool S3Wrapper::sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectReques
   Aws::S3::Model::DeleteObjectOutcome outcome = s3_client.DeleteObject(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_info("Deleted S3 object '%s' from bucket '%s'", request.GetKey(), request.GetBucket());
+    logger_->log_debug("Deleted S3 object '%s' from bucket '%s'", request.GetKey(), request.GetBucket());
     return true;
   } else if (outcome.GetError().GetErrorType() == Aws::S3::S3Errors::NO_SUCH_KEY) {
-    logger_->log_info("S3 object '%s' was not found in bucket '%s'", request.GetKey(), request.GetBucket());
+    logger_->log_debug("S3 object '%s' was not found in bucket '%s'", request.GetKey(), request.GetBucket());
     return true;
   } else {
     logger_->log_error("DeleteS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
@@ -64,7 +64,7 @@ minifi::utils::optional<Aws::S3::Model::GetObjectResult> S3Wrapper::sendGetObjec
   auto outcome = s3_client.GetObject(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_info("Fetched S3 object %s from bucket %s", request.GetKey(), request.GetBucket());
+    logger_->log_debug("Fetched S3 object %s from bucket %s", request.GetKey(), request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("FetchS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
@@ -77,7 +77,7 @@ minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> S3Wrapper::sendList
   auto outcome = s3_client.ListObjectsV2(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_info("ListObjectsV2 successful of bucket %s", request.GetBucket());
+    logger_->log_debug("ListObjectsV2 successful of bucket %s", request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("ListObjectsV2 failed with the following: '%s'", outcome.GetError().GetMessage());
@@ -90,7 +90,7 @@ minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> S3Wrapper::sen
   auto outcome = s3_client.ListObjectVersions(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_info("ListObjectVersions successful of bucket %s", request.GetBucket());
+    logger_->log_debug("ListObjectVersions successful of bucket %s", request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("ListObjectVersions failed with the following: '%s'", outcome.GetError().GetMessage());
@@ -103,7 +103,7 @@ minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> S3Wrapper::sendG
   auto outcome = s3_client.GetObjectTagging(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_info("Got tags for S3 object %s from bucket %s", request.GetKey(), request.GetBucket());
+    logger_->log_debug("Got tags for S3 object %s from bucket %s", request.GetKey(), request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("GetObjectTagging failed with the following: '%s'", outcome.GetError().GetMessage());
@@ -116,7 +116,7 @@ minifi::utils::optional<Aws::S3::Model::HeadObjectResult> S3Wrapper::sendHeadObj
   auto outcome = s3_client.HeadObject(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_info("HeadS3Object successful for key %s from bucket %s", request.GetKey(), request.GetBucket());
+    logger_->log_debug("HeadS3Object successful for key %s from bucket %s", request.GetKey(), request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("HeadS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
