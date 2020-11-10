@@ -17,6 +17,8 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <cctype>
 #include <cinttypes>
 #include <memory>
@@ -24,6 +26,12 @@
 #include <system_error>
 #include <utility>
 #include "utils/OptionalUtils.h"
+
+#ifdef _MSC_VER
+#ifndef PATH_MAX
+#define PATH_MAX 260
+#endif
+#endif
 
 namespace org {
 namespace apache {
