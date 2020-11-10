@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <iterator>
 
 namespace org {
 namespace apache {
@@ -27,7 +28,6 @@ namespace utils {
 
 class StringView {
  public:
-
   constexpr StringView(const char* begin, const char* end) : begin_(begin), end_(end) {}
   explicit StringView(const char* str) : begin_(str), end_(begin_ + std::char_traits<char>::length(str)) {}
   explicit StringView(const std::string& str): begin_(&*str.begin()), end_(begin_ + str.length()) {}
@@ -65,7 +65,7 @@ class StringView {
   const char* end_;
 };
 
-}  // namespace core
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

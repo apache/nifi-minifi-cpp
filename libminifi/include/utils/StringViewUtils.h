@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <cctype>
+#include <algorithm>
 #include "StringView.h"
 
 namespace org {
@@ -26,7 +28,6 @@ namespace minifi {
 namespace utils {
 
 struct StringViewUtils {
-
   static inline bool equalsIgnoreCase(StringView left, StringView right) {
     if (left.length() != right.length()) {
       return false;
@@ -36,11 +37,11 @@ struct StringViewUtils {
   }
 
   static inline StringView trimRight(StringView view) {
-    return {view.begin(), std::find_if(view.rbegin(), view.rend(), [](char c) -> bool { return !isspace(c); }).base()};
+    return {view.begin(), std::find_if(view.rbegin(), view.rend(), [](char c) -> bool { return !std::isspace(c); }).base()};
   }
 
   static inline StringView trimLeft(StringView view) {
-    return {std::find_if(view.begin(), view.end(), [] (char c) {return !isspace(c);}), view.end()};
+    return {std::find_if(view.begin(), view.end(), [] (char c) {return !std::isspace(c);}), view.end()};
   }
 
   static StringView trim(StringView view) {
@@ -57,10 +58,9 @@ struct StringViewUtils {
     }
     return {};
   }
-
 };
 
-}  // namespace core
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

@@ -288,6 +288,10 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
     } else {
       logger_->log_info("Instantiating new flow");
       this->root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot());
+      if (!this->root_ && !isC2Enabled()) {
+        logger_->log_error("Couldn't instantiate flow, and c2 is not enabled.");
+        throw Exception(ExceptionType::GENERAL_EXCEPTION, "No flow could be instantiated");
+      }
     }
 
     logger_->log_info("Loaded root processor Group");

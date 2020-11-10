@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 
 #include "utils/EncryptionUtils.h"
 #include "utils/OptionalUtils.h"

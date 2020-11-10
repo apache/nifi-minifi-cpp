@@ -20,6 +20,8 @@
 
 #include <memory>
 #include <vector>
+#include <map>
+#include <string>
 #include "core/state/UpdateController.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "properties/Configure.h"
@@ -50,6 +52,9 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   std::shared_ptr<state::response::ResponseNode> getMetricsNode(const std::string& metrics_class) const override;
 
   std::vector<std::shared_ptr<state::response::ResponseNode>> getHeartbeatNodes(bool include_manifest) const override;
+
+ protected:
+  bool isC2Enabled() const;
 
  private:
   void loadC2ResponseConfiguration(const std::string &prefix);

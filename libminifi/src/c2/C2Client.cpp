@@ -46,6 +46,15 @@ C2Client::C2Client(
       filesystem_(std::move(filesystem)),
       logger_(std::move(logger)) {}
 
+bool C2Client::isC2Enabled() const {
+  std::string c2_enable_str;
+  bool c2_enabled = false;
+  if (configuration_->get(Configure::nifi_c2_enable, "c2.enable", c2_enable_str)) {
+    utils::StringUtils::StringToBool(c2_enable_str, c2_enabled);
+  }
+  return c2_enabled;
+}
+
 void C2Client::initialize(core::controller::ControllerServiceProvider *controller, const std::shared_ptr<state::StateMonitor> &update_sink) {
   std::lock_guard<std::mutex> lock(metrics_mutex_);
 
@@ -53,13 +62,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
   configuration_->get("nifi.c2.agent.class", "c2.agent.class", class_str);
   configuration_->setAgentClass(class_str);
 
-  std::string c2_enable_str;
-  bool c2_enabled = false;
-  if (configuration_->get(Configure::nifi_c2_enable, "c2.enable", c2_enable_str)) {
-    utils::StringUtils::StringToBool(c2_enable_str, c2_enabled);
-  }
-
-  if (!c2_enabled) {
+  if (!isC2Enabled()) {
     return;
   }
 

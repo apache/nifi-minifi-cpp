@@ -38,7 +38,7 @@ constexpr const char *DEFAULT_NIFI_BOOTSTRAP_FILE = "./conf/bootstrap.conf";
 
 constexpr const char *CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 
-}
+}  // namespace
 
 utils::optional<EncryptionProvider> EncryptionProvider::create(const std::string& home_path) {
   minifi::Properties bootstrap_conf;

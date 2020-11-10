@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "core/Core.h"
 #include "Connection.h"
