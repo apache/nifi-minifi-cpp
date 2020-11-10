@@ -31,6 +31,7 @@
 #include "utils/Id.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileSystem.h"
+#include "utils/OptionalUtils.h"
 #include "yaml-cpp/yaml.h"
 
 namespace org {
@@ -59,13 +60,12 @@ class YamlConfiguration : public FlowConfiguration {
  public:
   explicit YamlConfiguration(const std::shared_ptr<core::Repository>& repo, const std::shared_ptr<core::Repository>& flow_file_repo,
                              const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<io::StreamFactory>& stream_factory,
-                             const std::shared_ptr<Configure>& configuration, const std::string& path = DEFAULT_FLOW_YAML_FILE_NAME,
+                             const std::shared_ptr<Configure>& configuration, const utils::optional<std::string>& path = {},
                              const std::shared_ptr<utils::file::FileSystem>& filesystem = std::make_shared<utils::file::FileSystem>())
       : FlowConfiguration(repo, flow_file_repo, content_repo, stream_factory, configuration,
-                          IsNullOrEmpty(path) ? DEFAULT_FLOW_YAML_FILE_NAME : path, filesystem),
-        logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {
-    stream_factory_ = stream_factory;
-  }
+                          path.value_or(DEFAULT_FLOW_YAML_FILE_NAME), filesystem),
+        stream_factory_(stream_factory),
+        logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {}
 
   ~YamlConfiguration() override = default;
 

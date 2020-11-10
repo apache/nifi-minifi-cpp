@@ -28,6 +28,7 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "c2/C2Agent.h"
 #include "core/state/nodes/FlowInformation.h"
+#include "utils/file/FileSystem.h"
 
 namespace org {
 namespace apache {
@@ -38,13 +39,14 @@ namespace c2 {
 C2Client::C2Client(
     std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
     std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
-    std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<logging::Logger> logger)
+    std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
+    std::shared_ptr<logging::Logger> logger)
     : core::Flow(std::move(provenance_repo), std::move(flow_file_repo), std::move(content_repo), std::move(flow_configuration)),
-      initialized_(false),
       configuration_(std::move(configuration)),
+      filesystem_(std::move(filesystem)),
       logger_(std::move(logger)) {}
 
-void C2Client::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink) {
+void C2Client::initialize(core::controller::ControllerServiceProvider *controller, const std::shared_ptr<state::StateMonitor> &update_sink) {
   std::lock_guard<std::mutex> lock(metrics_mutex_);
 
   std::string class_str;
@@ -111,16 +113,18 @@ void C2Client::initialize(core::controller::ControllerServiceProvider* controlle
       if (monitor != nullptr) {
         monitor->addRepository(provenance_repo_);
         monitor->addRepository(flow_file_repo_);
-        monitor->setStateMonitor(updateSink);
+        monitor->setStateMonitor(update_sink);
       }
       auto flowMonitor = std::dynamic_pointer_cast<state::response::FlowMonitor>(processor);
       std::map<std::string, std::shared_ptr<Connection>> connections;
-      root_->getConnections(connections);
+      if (root_ != nullptr) {
+        root_->getConnections(connections);
+      }
       if (flowMonitor != nullptr) {
-        for (auto& con : connections) {
+        for (auto &con : connections) {
           flowMonitor->addConnection(con.second);
         }
-        flowMonitor->setStateMonitor(updateSink);
+        flowMonitor->setStateMonitor(update_sink);
         flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
       }
       root_response_nodes_[processor->getName()] = processor;
@@ -191,7 +195,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider* controlle
   loadC2ResponseConfiguration("nifi.c2.root.class.definitions");
 
   if (!initialized_) {
-    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(controller, updateSink, configuration_));
+    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(controller, update_sink, configuration_, filesystem_));
     c2_agent_->start();
     initialized_ = true;
   }
@@ -200,53 +204,49 @@ void C2Client::initialize(core::controller::ControllerServiceProvider* controlle
 // must hold the metrics_mutex_
 void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
   std::string class_definitions;
+  if (!configuration_->get(prefix, class_definitions)) {
+    return;
+  }
 
-  if (configuration_->get(prefix, class_definitions)) {
-    std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+  std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
 
-    for (const std::string& metricsClass : classes) {
-      try {
-        std::stringstream option;
-        option << prefix << "." << metricsClass;
+  for (const std::string& metricsClass : classes) {
+    try {
+      std::string option = prefix + "." + metricsClass;
+      std::string classOption = option + ".classes";
+      std::string nameOption = option + ".name";
 
-        std::stringstream classOption;
-        classOption << option.str() << ".classes";
-
-        std::stringstream nameOption;
-        nameOption << option.str() << ".name";
-        std::string name;
-
-        if (configuration_->get(nameOption.str(), name)) {
-          std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
-          if (configuration_->get(classOption.str(), class_definitions)) {
-            std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-            for (const std::string& clazz : classes) {
-              // instantiate the object
-              auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-              if (nullptr == ptr) {
-                auto metric = component_metrics_.find(clazz);
-                if (metric != component_metrics_.end()) {
-                  ptr = metric->second;
-                } else {
-                  logger_->log_error("No metric defined for %s", clazz);
-                  continue;
-                }
-              }
-              auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
-              std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
-            }
-
-          } else {
-            std::stringstream optionName;
-            optionName << option.str() << "." << name;
-            auto node = loadC2ResponseConfiguration(optionName.str(), new_node);
-          }
-
-          root_response_nodes_[name] = new_node;
-        }
-      } catch (...) {
-        logger_->log_error("Could not create metrics class %s", metricsClass);
+      std::string name;
+      if (!configuration_->get(nameOption, name)) {
+        continue;
       }
+      std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
+      if (configuration_->get(classOption, class_definitions)) {
+        std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+        for (const std::string& clazz : classes) {
+          // instantiate the object
+          auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
+          if (nullptr == ptr) {
+            auto metric = component_metrics_.find(clazz);
+            if (metric != component_metrics_.end()) {
+              ptr = metric->second;
+            } else {
+              logger_->log_error("No metric defined for %s", clazz);
+              continue;
+            }
+          }
+          auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
+          std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
+        }
+
+      } else {
+        std::string optionName = option + "." + name;
+        auto node = loadC2ResponseConfiguration(optionName, new_node);
+      }
+
+      root_response_nodes_[name] = new_node;
+    } catch (...) {
+      logger_->log_error("Could not create metrics class %s", metricsClass);
     }
   }
 }
@@ -254,73 +254,68 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
 // must hold the metrics_mutex_
 std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node) {
   std::string class_definitions;
-  if (configuration_->get(prefix, class_definitions)) {
-    std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+  if (!configuration_->get(prefix, class_definitions)) {
+    return prev_node;
+  }
+  std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
 
-    for (const std::string& metricsClass : classes) {
-      try {
-        std::stringstream option;
-        option << prefix << "." << metricsClass;
+  for (const std::string& metricsClass : classes) {
+    try {
+      std::string option = prefix + "." + metricsClass;
+      std::string classOption = option + ".classes";
+      std::string nameOption = option + ".name";
 
-        std::stringstream classOption;
-        classOption << option.str() << ".classes";
-
-        std::stringstream nameOption;
-        nameOption << option.str() << ".name";
-        std::string name;
-
-        if (configuration_->get(nameOption.str(), name)) {
-          std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
-          if (name.find(",") != std::string::npos) {
-            std::vector<std::string> sub_classes = utils::StringUtils::split(name, ",");
-            for (std::string subClassStr : classes) {
-              auto node = loadC2ResponseConfiguration(subClassStr, prev_node);
-              if (node != nullptr)
-                std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(node);
-            }
-
-          } else {
-            if (configuration_->get(classOption.str(), class_definitions)) {
-              std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-              for (const std::string& clazz : classes) {
-                // instantiate the object
-                auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-                if (nullptr == ptr) {
-                  auto metric = component_metrics_.find(clazz);
-                  if (metric != component_metrics_.end()) {
-                    ptr = metric->second;
-                  } else {
-                    logger_->log_error("No metric defined for %s", clazz);
-                    continue;
-                  }
-                }
-
-                auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
-                std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
-              }
-              if (!new_node->isEmpty())
-                std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(new_node);
-
-            } else {
-              std::stringstream optionName;
-              optionName << option.str() << "." << name;
-              auto sub_node = loadC2ResponseConfiguration(optionName.str(), new_node);
-              std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(sub_node);
-            }
-          }
-        }
-      } catch (...) {
-        logger_->log_error("Could not create metrics class %s", metricsClass);
+      std::string name;
+      if (!configuration_->get(nameOption, name)) {
+        continue;
       }
+      std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
+      if (name.find(',') != std::string::npos) {
+        std::vector<std::string> sub_classes = utils::StringUtils::split(name, ",");
+        for (const std::string& subClassStr : classes) {
+          auto node = loadC2ResponseConfiguration(subClassStr, prev_node);
+          if (node != nullptr)
+            std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(node);
+        }
+      } else {
+        if (configuration_->get(classOption, class_definitions)) {
+          std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+          for (const std::string& clazz : classes) {
+            // instantiate the object
+            auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
+            if (nullptr == ptr) {
+              auto metric = component_metrics_.find(clazz);
+              if (metric != component_metrics_.end()) {
+                ptr = metric->second;
+              } else {
+                logger_->log_error("No metric defined for %s", clazz);
+                continue;
+              }
+            }
+
+            auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
+            std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
+          }
+          if (!new_node->isEmpty())
+            std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(new_node);
+
+        } else {
+          std::string optionName = option + "." + name;
+          auto sub_node = loadC2ResponseConfiguration(optionName, new_node);
+          std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(sub_node);
+        }
+      }
+    } catch (...) {
+      logger_->log_error("Could not create metrics class %s", metricsClass);
     }
   }
   return prev_node;
 }
 
-std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const std::string& metricsClass) const {
+std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
   std::lock_guard<std::mutex> lock(metrics_mutex_);
-  if (!metricsClass.empty()) {
-    const auto citer = component_metrics_.find(metricsClass);
+  if (!metrics_class.empty()) {
+    const auto citer = component_metrics_.find(metrics_class);
     if (citer != component_metrics_.end()) {
       return citer->second;
     }
@@ -333,11 +328,11 @@ std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const st
   return nullptr;
 }
 
-std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbeatNodes(bool includeManifest) const {
+std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbeatNodes(bool include_manifest) const {
   std::lock_guard<std::mutex> lock(metrics_mutex_);
   std::string fullHb{"true"};
   configuration_->get("nifi.c2.full.heartbeat", fullHb);
-  const bool include = includeManifest || fullHb == "true";
+  const bool include = include_manifest || fullHb == "true";
 
   std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
   for (const auto& entry : root_response_nodes_) {

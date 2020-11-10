@@ -40,6 +40,7 @@
 #include "utils/Id.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/ThreadPool.h"
+#include "utils/file/FileSystem.h"
 
 namespace org {
 namespace apache {
@@ -65,7 +66,8 @@ class C2Agent : public state::UpdateController {
 
   C2Agent(core::controller::ControllerServiceProvider* controller,
           const std::shared_ptr<state::StateMonitor> &updateSink,
-          const std::shared_ptr<Configure> &configure);
+          const std::shared_ptr<Configure> &configure,
+          const std::shared_ptr<utils::file::FileSystem>& filesystem = std::make_shared<utils::file::FileSystem>());
   virtual ~C2Agent() noexcept {
     delete protocol_.load();
   }
@@ -206,6 +208,8 @@ class C2Agent : public state::UpdateController {
 
   // shared pointer to the configuration of this agent
   std::shared_ptr<Configure> configuration_;
+
+  std::shared_ptr<utils::file::FileSystem> filesystem_;
 
   // shared pointer to the running c2 configuration.
   std::shared_ptr<Configure> running_c2_configuration;

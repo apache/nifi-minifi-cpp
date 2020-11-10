@@ -66,6 +66,7 @@ bool FileSystem::write(const std::string& file_name, const std::string& file_con
     logger_->log_debug("No encryption is required for file %s", file_name);
     output << file_content;
   }
+  output.close();
   return static_cast<bool>(output);
 }
 

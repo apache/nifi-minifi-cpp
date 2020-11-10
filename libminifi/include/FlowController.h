@@ -54,6 +54,7 @@
 #include "properties/Configure.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "utils/Id.h"
+#include "utils/file/FileSystem.h"
 
 namespace org {
 namespace apache {
@@ -69,25 +70,17 @@ namespace minifi {
  */
  class FlowController : public core::controller::ControllerServiceProvider,  public state::StateMonitor, public c2::C2Client, public std::enable_shared_from_this<FlowController> {
  public:
-  /**
-   * Flow controller constructor
-   */
-  explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                          std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo, std::string name, bool headless_mode);
+  FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
+                          std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
+                          std::shared_ptr<core::ContentRepository> content_repo, std::string name = DEFAULT_ROOT_GROUP_NAME,
+                          bool headless_mode = false, std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>());
 
-  explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                          std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo)
-      : FlowController(std::move(provenance_repo), std::move(flow_file_repo), std::move(configure), std::move(flow_configuration), std::move(content_repo), DEFAULT_ROOT_GROUP_NAME, false) {
-  }
+   FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
+                  std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
+                  std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<utils::file::FileSystem> filesystem)
+       : FlowController(std::move(provenance_repo), std::move(flow_file_repo), std::move(configure), std::move(flow_configuration),
+                        std::move(content_repo), DEFAULT_ROOT_GROUP_NAME, false, std::move(filesystem)) {}
 
-  explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                          std::unique_ptr<core::FlowConfiguration> flow_configuration)
-      : FlowController(std::move(provenance_repo), std::move(flow_file_repo), std::move(configure), std::move(flow_configuration),
-          std::make_shared<core::repository::FileSystemRepository>(), DEFAULT_ROOT_GROUP_NAME, false) {
-    content_repo_->initialize(configuration_);
-  }
-
-  // Destructor
   ~FlowController() override;
 
   // Get the provenance repository
@@ -170,6 +163,9 @@ namespace minifi {
   }
 
   utils::Identifier getComponentUUID() const override {
+    if (!root_) {
+      return {};
+    }
     return root_->getUUID();
   }
 

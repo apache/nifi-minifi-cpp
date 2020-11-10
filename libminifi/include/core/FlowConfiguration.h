@@ -39,6 +39,7 @@
 #include "io/StreamFactory.h"
 #include "core/state/nodes/FlowInformation.h"
 #include "utils/file/FileSystem.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -66,8 +67,8 @@ class FlowConfiguration : public CoreComponent {
    */
   explicit FlowConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo,
                              std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<io::StreamFactory> stream_factory,
-                             std::shared_ptr<Configure> configuration, const std::string& path,
-                             std::shared_ptr<utils::file::FileSystem> filesystem = {})
+                             std::shared_ptr<Configure> configuration, const utils::optional<std::string>& path,
+                             std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>())
       : CoreComponent(core::getClassName<FlowConfiguration>()),
         flow_file_repo_(std::move(flow_file_repo)),
         content_repo_(std::move(content_repo)),
@@ -82,16 +83,21 @@ class FlowConfiguration : public CoreComponent {
     configuration->get(Configure::nifi_c2_flow_url, flowUrl);
     flow_version_ = std::make_shared<state::response::FlowVersion>(flowUrl, bucket_id, flowId);
 
-    config_path_ = utils::file::PathUtils::canonicalize(path);
-    if (!config_path_) {
-      logger_->log_error("Config path is not specified. Either manually set MINIFI_HOME or ensure ../conf exists");
+    if (!path) {
+      logger_->log_error("Configuration path is not specified.");
+    } else {
+      config_path_ = utils::file::PathUtils::canonicalize(*path);
+      if (!config_path_) {
+        logger_->log_error("Couldn't find config file \"%s\".", *path);
+        config_path_ = path;
+      }
     }
 
     // it is okay if this has already been called
     initialize_static_functions();
   }
 
-  virtual ~FlowConfiguration();
+  ~FlowConfiguration() override;
 
   // Create Processor (Node/Input/Output Port) based on the name
   std::shared_ptr<core::Processor> createProcessor(std::string name, utils::Identifier &uuid);

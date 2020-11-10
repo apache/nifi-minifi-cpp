@@ -54,6 +54,7 @@
 #include "core/Connectable.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
+#include "utils/file/FileSystem.h"
 #include "utils/HTTPClient.h"
 #include "utils/GeneralUtils.h"
 #include "io/NetworkPrioritizer.h"
@@ -70,10 +71,13 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                               std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode)
+FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
+                               std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
+                               std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode,
+                               std::shared_ptr<utils::file::FileSystem> filesystem)
     : core::controller::ControllerServiceProvider(core::getClassName<FlowController>()),
-      c2::C2Client(std::move(configure), std::move(provenance_repo), std::move(flow_file_repo), std::move(content_repo), std::move(flow_configuration)),
+      c2::C2Client(std::move(configure), std::move(provenance_repo), std::move(flow_file_repo),
+                   std::move(content_repo), std::move(flow_configuration), std::move(filesystem)),
       running_(false),
       updating_(false),
       initialized_(false),

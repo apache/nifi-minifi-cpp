@@ -37,6 +37,7 @@
 #include "utils/file/DiffUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
+#include "utils/file/FileSystem.h"
 #include "utils/GeneralUtils.h"
 #include "utils/HTTPClient.h"
 #include "utils/Environment.h"
@@ -51,13 +52,15 @@ namespace c2 {
 
 C2Agent::C2Agent(core::controller::ControllerServiceProvider* controller,
                  const std::shared_ptr<state::StateMonitor> &updateSink,
-                 const std::shared_ptr<Configure> &configuration)
+                 const std::shared_ptr<Configure> &configuration,
+                 const std::shared_ptr<utils::file::FileSystem>& filesystem)
     : heart_beat_period_(3000),
       max_c2_responses(5),
       update_sink_(updateSink),
       update_service_(nullptr),
       controller_(controller),
       configuration_(configuration),
+      filesystem_(filesystem),
       protocol_(nullptr),
       logger_(logging::LoggerFactory<C2Agent>::getLogger()),
       thread_pool_(2, false, nullptr, "C2 threadpool") {
@@ -203,7 +206,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       }
     }
 
-    // if not defined we won't beable to update
+    // if not defined we won't be able to update
     configure->get("nifi.c2.agent.bin.location", "c2.agent.bin.location", bin_location_);
   }
   std::string heartbeat_reporters;
@@ -352,7 +355,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
     case Operation::CLEAR:
       // we've been told to clear something
       if (resp.name == "connection") {
-        for (auto connection : resp.operation_arguments) {
+        for (const auto& connection : resp.operation_arguments) {
           logger_->log_debug("Clearing connection %s", connection.second.to_string());
           update_sink_->clearConnection(connection.second.to_string());
         }
@@ -389,11 +392,9 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       }
 
       break;
-    case Operation::UPDATE: {
+    case Operation::UPDATE:
       handle_update(resp);
-    }
       break;
-
     case Operation::DESCRIBE:
       handle_describe(resp);
       break;
@@ -686,7 +687,7 @@ utils::TaskRescheduleInfo C2Agent::produce() {
             logger_->log_error("Exception occurred while consuming payload. error: %s", e.what());
           }
           catch(...) {
-            logger_->log_error("Unknonwn exception occurred while consuming payload.");
+            logger_->log_error("Unknown exception occurred while consuming payload.");
           }
         });
 
@@ -719,9 +720,9 @@ utils::TaskRescheduleInfo C2Agent::consume() {
 utils::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
   if (!utils::StringUtils::startsWith(uri, "http") || protocol_.load() == nullptr) {
     // try to open the file
-    std::ifstream file(uri);
-    if (file.good()) {
-      return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+    utils::optional<std::string> content = filesystem_->read(uri);
+    if (content) {
+      return content;
     }
   }
   // couldn't open as file and we have no protocol to request the file from

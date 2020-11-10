@@ -29,6 +29,7 @@
 #include "core/ContentRepository.h"
 #include "core/ProcessGroup.h"
 #include "core/Flow.h"
+#include "utils/file/FileSystem.h"
 
 namespace org {
 namespace apache {
@@ -38,17 +39,17 @@ namespace c2 {
 
 class C2Client : public core::Flow, public state::response::NodeReporter {
  public:
-  explicit C2Client(
+  C2Client(
       std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
       std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
-      std::unique_ptr<core::FlowConfiguration> flow_configuration,
+      std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
       std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<C2Client>::getLogger());
 
-  void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink);
+  void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &update_sink);
 
-  std::shared_ptr<state::response::ResponseNode> getMetricsNode(const std::string& metricsClass) const override;
+  std::shared_ptr<state::response::ResponseNode> getMetricsNode(const std::string& metrics_class) const override;
 
-  std::vector<std::shared_ptr<state::response::ResponseNode>> getHeartbeatNodes(bool includeManifest) const override;
+  std::vector<std::shared_ptr<state::response::ResponseNode>> getHeartbeatNodes(bool include_manifest) const override;
 
  private:
   void loadC2ResponseConfiguration(const std::string &prefix);
@@ -56,6 +57,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
 
  protected:
   std::shared_ptr<Configure> configuration_;
+  std::shared_ptr<utils::file::FileSystem> filesystem_;
   std::unique_ptr<state::UpdateController> c2_agent_;
 
  private:
