@@ -157,12 +157,12 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
     return;
   }
   if (compressFormat == CompressionFormat::BZIP2 && archive_bzlib_version() == nullptr) {
-    logger_->log_error("%s compression format is requested, but the agent was compiled without BZip2 support", compressFormat);
+    logger_->log_error("%s compression format is requested, but the agent was compiled without BZip2 support", compressFormat.toString());
     session->transfer(flowFile, Failure);
     return;
   }
   if ((compressFormat == CompressionFormat::LZMA || compressFormat == CompressionFormat::XZ_LZMA2) && archive_liblzma_version() == nullptr) {
-    logger_->log_error("%s compression format is requested, but the agent was compiled without LZMA support ", compressFormat);
+    logger_->log_error("%s compression format is requested, but the agent was compiled without LZMA support ", compressFormat.toString());
     session->transfer(flowFile, Failure);
     return;
   }
