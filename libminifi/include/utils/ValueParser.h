@@ -215,8 +215,6 @@ bool StringToTime(const std::string& input, Out& output, core::TimeUnit& timeuni
     return false;
   }
 }
-
-
 } /* namespace internal */
 } /* namespace utils */
 } /* namespace minifi */

@@ -27,7 +27,7 @@ enum class ParsingStatus { ParsingFail , ParsingSuccessful , ValuesMatch };
 enum class ConversionTestTarget { MS, NS };
 
 ParsingStatus checkTimeValue(const std::string &input, int64_t t1, core::TimeUnit t2) {
-  int64_t TimeVal;
+  int64_t TimeVal = 0;
   core::TimeUnit unit;
   bool parsing_succeeded = org::apache::nifi::minifi::core::Property::StringToTime(input, TimeVal, unit);
   if (parsing_succeeded) {
@@ -42,18 +42,14 @@ ParsingStatus checkTimeValue(const std::string &input, int64_t t1, core::TimeUni
 }
 
 bool conversionTest(uint64_t number, core::TimeUnit unit, uint64_t check, ConversionTestTarget conversionUnit) {
-  uint64_t out;
-  bool returnStatus;
+  uint64_t out = 0;
+  bool returnStatus = false;
   if (conversionUnit == ConversionTestTarget::NS) {
     returnStatus = org::apache::nifi::minifi::core::Property::ConvertTimeUnitToNS(number, unit, out);
   } else if (conversionUnit == ConversionTestTarget::MS) {
     returnStatus = org::apache::nifi::minifi::core::Property::ConvertTimeUnitToMS(number, unit, out);
   }
-  if (returnStatus && out == check) {
-    return true;
-  } else {
-    return false;
-  }
+  return returnStatus && out == check;
 }
 
 TEST_CASE("Test Boolean Conversion", "[testboolConversion]") {
