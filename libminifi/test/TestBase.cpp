@@ -301,6 +301,16 @@ bool TestPlan::runCurrentProcessorUntilFlowfileIsProduced(const std::chrono::sec
   return verifyEventHappenedInPollTime(wait_duration, isFlowFileProduced);
 }
 
+std::size_t TestPlan::getNumFlowFileProducedByCurrentProcessor() {
+  const std::shared_ptr<core::Processor>& processor = processor_queue_.at(location);
+  std::vector<minifi::Connection*> connections = getProcessorOutboundConnections(processor);
+  std::size_t num_flow_files = 0;
+  for (auto connection : connections) {
+    num_flow_files += connection->getQueueSize();
+  }
+  return num_flow_files;
+}
+
 std::shared_ptr<core::FlowFile> TestPlan::getFlowFileProducedByCurrentProcessor() {
   const std::shared_ptr<core::Processor>& processor = processor_queue_.at(location);
   std::vector<minifi::Connection*> connections = getProcessorOutboundConnections(processor);

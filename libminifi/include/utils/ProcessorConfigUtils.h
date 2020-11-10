@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <vector>
+#include <string>
+
 #include "utils/StringUtils.h"
 
 namespace org {

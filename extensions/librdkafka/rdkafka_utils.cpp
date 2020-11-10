@@ -52,7 +52,6 @@ void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_
   const std::size_t key_len = rkmessage->key_len;
   rd_kafka_timestamp_type_t tstype;
   int64_t timestamp;
-  rd_kafka_headers_t *hdrs;
   timestamp = rd_kafka_message_timestamp(rkmessage, &tstype);
   const char *tsname = "?";
   if (tstype != RD_KAFKA_TIMESTAMP_NOT_AVAILABLE) {
@@ -62,11 +61,35 @@ void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_
       tsname = "log append time";
     }
   }
+  const int64_t seconds_since_timestamp = timestamp ? static_cast<int64_t>(time(NULL)) - static_cast<int64_t>(timestamp / 1000) : 0;
 
-  logger->log_debug("Message: \u001b[33m%s\u001b[0m", message.c_str());
-  logger->log_debug("Topic: %s, Key: %.*s,\n\u001b[32mOffset: %" PRId64 ", (%zd bytes)\nMessage timestamp: %s %" PRId64 " \u001b[33m(%ds ago)\u001b[0m", topicName.c_str(),
-      key != nullptr ? key_len : 6, ((key != nullptr ? key : "[None]")), rkmessage->offset, rkmessage->len, tsname,
-      timestamp, !timestamp ? 0 : static_cast<int>(time(NULL)) - static_cast<int>(timestamp / 1000));
+  std::string headers_as_string;
+  rd_kafka_headers_t* hdrs;
+  const rd_kafka_resp_err_t get_header_response = rd_kafka_message_headers(rkmessage, &hdrs);
+  if (RD_KAFKA_RESP_ERR_NO_ERROR == get_header_response) {
+    std::vector<std::string> header_list;
+    kafka_headers_for_each(hdrs, [&] (const std::string& key, const std::string& val) { header_list.emplace_back(key + ": " + val); });
+    headers_as_string = StringUtils::join(", ", header_list);
+  } else if (RD_KAFKA_RESP_ERR__NOENT != get_header_response) {
+    logger->log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
+  }
+
+  std::string message_as_string;
+  message_as_string += "[Topic](" + topicName + "), ";
+  message_as_string += "[Key](" + (key != nullptr ? std::string(key, key_len) : std::string("[None]")) + "), ";
+  message_as_string += "[Offset](" +  std::to_string(rkmessage->offset) + "), ";
+  message_as_string += "[Message Length](" + std::to_string(rkmessage->len) + "), ";
+  message_as_string += "[Timestamp](" + std::string(tsname) + " " + std::to_string(timestamp) + " (" + std::to_string(seconds_since_timestamp) + " s ago)), ";
+  message_as_string += "[Headers](";
+  message_as_string += "\u001b[33m" + headers_as_string + "\u001b[0m)\n";
+  message_as_string += "[Payload](\u001b[32m" + message + "\u001b[0m)";
+
+  logger -> log_debug("Message: %s", message_as_string.c_str());
+
+  // logger->log_debug("Message: \u001b[33m%s\u001b[0m", message.c_str());
+  // logger->log_debug("Topic: %s, Key: %.*s,\n\u001b[32mOffset: %" PRId64 ", (%zd bytes)\nMessage timestamp: %s %" PRId64 " \u001b[33m(%ds ago)\u001b[0m", topicName.c_str(),
+  //     key != nullptr ? key_len : 6, ((key != nullptr ? key : "[None]")), rkmessage->offset, rkmessage->len, tsname,
+  //     timestamp, !timestamp ? 0 : static_cast<int>(time(NULL)) - static_cast<int>(timestamp / 1000));
 }
 
 std::string get_encoded_string(const std::string& input, KafkaEncoding encoding) {

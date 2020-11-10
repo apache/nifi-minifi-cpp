@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 #include <memory>
 
@@ -88,6 +89,7 @@ class ConsumeKafka : public core::Processor {
   // Flowfile attributes written
   static constexpr char const* KAFKA_MESSAGE_KEY_ATTR = "kafka.key";
 
+
   explicit ConsumeKafka(std::string name, utils::Identifier uuid = utils::Identifier()) :
       Processor(name, uuid),
       logger_(logging::LoggerFactory<ConsumeKafka>::getLogger()) {}
@@ -119,6 +121,7 @@ class ConsumeKafka : public core::Processor {
   void initialize() override;
 
  private:
+  static constexpr const std::size_t DEFAULT_MAX_POLL_RECORD{ 10000 };
   // void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/);
 
   void createTopicPartitionList();
@@ -142,7 +145,7 @@ class ConsumeKafka : public core::Processor {
   std::string message_header_encoding_;
   std::string duplicate_header_handling_;  // Easier handled as string than enum
   std::vector<std::string> headers_to_add_as_attributes_;
-  utils::optional<unsigned int> max_poll_records_;
+  std::size_t max_poll_records_;
   utils::optional<unsigned int> max_uncommitted_time_seconds_;
   std::chrono::milliseconds communications_timeout_milliseconds_;
 
@@ -153,7 +156,9 @@ class ConsumeKafka : public core::Processor {
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ConsumeKafka>::getLogger()};
 };
 
-REGISTER_RESOURCE(ConsumeKafka, "Consumes messages from Apache Kafka and transform them into MiNiFi FlowFiles."); // NOLINT
+REGISTER_RESOURCE(ConsumeKafka, "Consumes messages from Apache Kafka and transform them into MiNiFi FlowFiles. "
+    "The application should make sure that the processor is triggered at regular intervals, even if no messages are expected, "
+    "to serve any queued callbacks waiting to be called. Rebalancing can also only happen on trigger."); // NOLINT
 
 }  // namespace processors
 }  // namespace minifi

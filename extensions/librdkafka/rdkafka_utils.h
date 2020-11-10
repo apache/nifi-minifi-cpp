@@ -17,11 +17,13 @@
 
 #pragma once
 
-#include <string>
-
-#include <thread>
+#include <algorithm>
 #include <chrono>
 #include <memory>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/OptionalUtils.h"
@@ -71,11 +73,9 @@ struct rd_kafka_topic_partition_list_deleter {
   void operator()(rd_kafka_topic_partition_list_t* ptr) const noexcept { rd_kafka_topic_partition_list_destroy(ptr); }
 };
 
-// FIXME(hunyadi): delete if this is not needed
 struct rd_kafka_topic_conf_deleter {
   void operator()(rd_kafka_topic_conf_t* ptr) const noexcept { rd_kafka_topic_conf_destroy(ptr); }
 };
-// FIXME(hunyadi): delete if this is not needed
 struct rd_kafka_topic_deleter {
   void operator()(rd_kafka_topic_t* ptr) const noexcept { std::cerr << "\u001b[37;1mtopic_deleter\u001b[0m" << std::endl; rd_kafka_topic_destroy(ptr); }
 };
@@ -87,6 +87,16 @@ struct rd_kafka_message_deleter {
 struct rd_kafka_headers_deleter {
   void operator()(rd_kafka_headers_t* ptr) const noexcept { rd_kafka_headers_destroy(ptr); }
 };
+
+template <typename T>
+void kafka_headers_for_each(const rd_kafka_headers_t* headers, T&& key_value_handle) {
+  const char *key;  // Null terminated, not to be freed
+  const void *value;
+  std::size_t size;
+  for (std::size_t i = 0; RD_KAFKA_RESP_ERR_NO_ERROR == rd_kafka_header_get_all(headers, i, &key, &value, &size); ++i) {
+    std::forward<T>(key_value_handle)(std::string(key), std::string(static_cast<const char*>(value), size));
+  }
+}
 
 void setKafkaConfigurationField(rd_kafka_conf_t* configuration, const std::string& field_name, const std::string& value);
 void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_ptr<logging::Logger>& logger);
