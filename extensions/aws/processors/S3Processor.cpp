@@ -116,16 +116,15 @@ const core::Property S3Processor::UseDefaultCredentials(
 
 S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger)
   : core::Processor(std::move(name), uuid)
-  , logger_(logger)
-  , s3_wrapper_(minifi::utils::make_unique<aws::s3::S3Wrapper>()) {
+  , logger_(logger) {
   setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
                           EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials});
 }
 
-S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
+S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
   : core::Processor(std::move(name), uuid)
   , logger_(logger)
-  , s3_wrapper_(std::move(s3_wrapper)) {
+  , s3_wrapper_(std::move(s3_request_sender)) {
   setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
                           EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials});
 }
@@ -200,12 +199,12 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   if (!context->getProperty(Region.getName(), value) || value.empty() || REGIONS.count(value) == 0) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Region property missing or invalid");
   }
-  s3_wrapper_->setRegion(value);
+  s3_wrapper_.setRegion(value);
   logger_->log_debug("S3Processor: Region [%s]", value);
 
   uint64_t timeout_val;
   if (context->getProperty(CommunicationsTimeout.getName(), value) && !value.empty() && core::Property::getTimeMSFromString(value, timeout_val)) {
-    s3_wrapper_->setTimeout(timeout_val);
+    s3_wrapper_.setTimeout(timeout_val);
     logger_->log_debug("S3Processor: Communications Timeout [%d]", timeout_val);
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
@@ -244,12 +243,12 @@ minifi::utils::optional<CommonProperties> S3Processor::getCommonELSupportedPrope
 }
 
 void S3Processor::configureS3Wrapper(const CommonProperties &common_properties) {
-  s3_wrapper_->setCredentials(common_properties.credentials);
+  s3_wrapper_.setCredentials(common_properties.credentials);
   if (!common_properties.proxy.host.empty()) {
-    s3_wrapper_->setProxy(common_properties.proxy);
+    s3_wrapper_.setProxy(common_properties.proxy);
   }
   if (!common_properties.endpoint_override_url.empty()) {
-    s3_wrapper_->setEndpointOverrideUrl(common_properties.endpoint_override_url);
+    s3_wrapper_.setEndpointOverrideUrl(common_properties.endpoint_override_url);
   }
 }
 

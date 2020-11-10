@@ -82,7 +82,7 @@ void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   {
     std::lock_guard<std::mutex> lock(s3_wrapper_mutex_);
     configureS3Wrapper(common_properties.value());
-    delete_succeeded = s3_wrapper_->deleteObject(common_properties->bucket, object_key, version);
+    delete_succeeded = s3_wrapper_.deleteObject(common_properties->bucket, object_key, version);
   }
 
   if (delete_succeeded) {

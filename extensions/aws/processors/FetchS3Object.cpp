@@ -94,7 +94,7 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   context->getProperty(Version, get_object_params.version, flow_file);
   logger_->log_debug("FetchS3Object: Version [%s]", get_object_params.version);
 
-  WriteCallback callback(flow_file->getSize(), get_object_params, s3_wrapper_.get());
+  WriteCallback callback(flow_file->getSize(), get_object_params, s3_wrapper_);
   {
     std::lock_guard<std::mutex> lock(s3_wrapper_mutex_);
     configureS3Wrapper(common_properties.value());

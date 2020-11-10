@@ -27,7 +27,7 @@
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"
 #include "utils/file/FileUtils.h"
-#include "MockS3Wrapper.h"
+#include "MockS3RequestSender.h"
 #include "utils/TestUtils.h"
 
 using org::apache::nifi::minifi::utils::createTempDir;
@@ -55,9 +55,9 @@ class S3TestsFixture {
 
     // Build MiNiFi processing graph
     plan = test_controller.createPlan();
-    mock_s3_wrapper_ptr = new MockS3Wrapper();
-    std::unique_ptr<minifi::aws::s3::S3WrapperBase> mock_s3_wrapper(mock_s3_wrapper_ptr);
-    s3_processor = std::shared_ptr<T>(new T("S3Processor", utils::Identifier(), std::move(mock_s3_wrapper)));
+    mock_s3_request_sender_ptr = new MockS3RequestSender();
+    std::unique_ptr<minifi::aws::s3::S3RequestSender> mock_s3_request_sender(mock_s3_request_sender_ptr);
+    s3_processor = std::shared_ptr<T>(new T("S3Processor", utils::Identifier(), std::move(mock_s3_request_sender)));
     aws_credentials_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
   }
 
@@ -104,10 +104,10 @@ class S3TestsFixture {
   }
 
   void checkProxySettings() {
-    REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyHost == "host");
-    REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyPort == 1234);
-    REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyUserName == "username");
-    REQUIRE(mock_s3_wrapper_ptr->getClientConfig().proxyPassword == "password");
+    REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost == "host");
+    REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPort == 1234);
+    REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName == "username");
+    REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword == "password");
   }
 
   virtual ~S3TestsFixture() {
@@ -117,7 +117,7 @@ class S3TestsFixture {
  protected:
   TestController test_controller;
   std::shared_ptr<TestPlan> plan;
-  MockS3Wrapper* mock_s3_wrapper_ptr;
+  MockS3RequestSender* mock_s3_request_sender_ptr;
   std::shared_ptr<core::Processor> s3_processor;
   std::shared_ptr<core::Processor> update_attribute;
   std::shared_ptr<core::controller::ControllerServiceNode> aws_credentials_service;

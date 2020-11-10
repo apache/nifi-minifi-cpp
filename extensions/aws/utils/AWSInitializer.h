@@ -20,6 +20,7 @@
 #pragma once
 
 #include "aws/core/Aws.h"
+#include "aws/core/utils/xml/XmlSerializer.h"
 
 // This macro from the Windows headers is used to map the GetMessage
 // name to either GetMessageW or GetMessageA depending on the UNICODE

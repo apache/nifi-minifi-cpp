@@ -246,8 +246,8 @@ void PutS3Object::setAttributes(
   if (!put_object_result.etag.empty()) {
     session->putAttribute(flow_file, "s3.etag", put_object_result.etag);
   }
-  if (!put_object_result.expiration_time.empty()) {
-    session->putAttribute(flow_file, "s3.expiration", put_object_result.expiration_time);
+  if (!put_object_result.expiration.empty()) {
+    session->putAttribute(flow_file, "s3.expiration", put_object_result.expiration);
   }
   if (!put_object_result.ssealgorithm.empty()) {
     session->putAttribute(flow_file, "s3.sseAlgorithm", put_object_result.ssealgorithm);
@@ -274,7 +274,7 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     return;
   }
 
-  PutS3Object::ReadCallback callback(flow_file->getSize(), put_s3_request_params.value(), s3_wrapper_.get());
+  PutS3Object::ReadCallback callback(flow_file->getSize(), put_s3_request_params.value(), s3_wrapper_);
   {
     std::lock_guard<std::mutex> lock(s3_wrapper_mutex_);
     configureS3Wrapper(common_properties.value());

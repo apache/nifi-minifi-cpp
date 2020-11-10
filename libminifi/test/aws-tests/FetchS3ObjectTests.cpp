@@ -75,8 +75,8 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test AWS credential setting", "[aws
   }
 
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSAccessKeyId() == "key");
-  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSSecretKey() == "secret");
+  REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSAccessKeyId() == "key");
+  REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
 }
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test required property not set", "[awsS3Config]") {
@@ -121,14 +121,14 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test default properties", "[awsS3Co
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.version value:" + S3_VERSION_1));
   REQUIRE(get_file_content(output_dir + get_separator() + INPUT_FILENAME) == S3_CONTENT);
-  REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetVersionId().empty());
-  REQUIRE(!mock_s3_wrapper_ptr->get_object_request.VersionIdHasBeenSet());
-  REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::NOT_SET);
+  REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetVersionId().empty());
+  REQUIRE(!mock_s3_request_sender_ptr->get_object_request.VersionIdHasBeenSet());
+  REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::NOT_SET);
 }
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test empty optional S3 results", "[awsS3Config]") {
   setRequiredProperties();
-  mock_s3_wrapper_ptr->returnEmptyS3Result();
+  mock_s3_request_sender_ptr->returnEmptyS3Result();
   test_controller.runSession(plan, true);
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.bucket value:" + S3_BUCKET));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:filename value:" + INPUT_FILENAME));
@@ -158,8 +158,8 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test optional values are set in req
   plan->setProperty(s3_processor, "Version", S3_VERSION_1);
   plan->setProperty(s3_processor, "Requester Pays", "true");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetVersionId() == S3_VERSION_1);
-  REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::requester);
+  REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetVersionId() == S3_VERSION_1);
+  REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::requester);
 }
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test non-default client configuration values", "[awsS3Config]") {
@@ -169,9 +169,9 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test non-default client configurati
   plan->setProperty(update_attribute, "test.endpoint", "http://localhost:1234", true);
   plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
-  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().connectTimeoutMs == 10000);
-  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
 }
 
 }  // namespace

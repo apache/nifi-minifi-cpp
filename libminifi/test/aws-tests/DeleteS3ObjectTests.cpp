@@ -56,8 +56,8 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test AWS credential setting", "[aw
   }
 
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSAccessKeyId() == "key");
-  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSSecretKey() == "secret");
+  REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSAccessKeyId() == "key");
+  REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
 }
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test required property not set", "[awsS3Config]") {
@@ -91,9 +91,9 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test success case with default values", "[awsS3DeleteSuccess]") {
   setRequiredProperties();
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetBucket() == "testBucket");
-  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetKey() == INPUT_FILENAME);
-  REQUIRE(!mock_s3_wrapper_ptr->delete_object_request.VersionIdHasBeenSet());
+  REQUIRE(mock_s3_request_sender_ptr->delete_object_request.GetBucket() == "testBucket");
+  REQUIRE(mock_s3_request_sender_ptr->delete_object_request.GetKey() == INPUT_FILENAME);
+  REQUIRE(!mock_s3_request_sender_ptr->delete_object_request.VersionIdHasBeenSet());
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Successfully deleted S3 object"));
 }
 
@@ -102,8 +102,8 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test version setting", "[awsS3Dele
   plan->setProperty(update_attribute, "s3.version", "v1", true);
   plan->setProperty(s3_processor, "Version", "${s3.version}");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetVersionId() == "v1");
-  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.VersionIdHasBeenSet());
+  REQUIRE(mock_s3_request_sender_ptr->delete_object_request.GetVersionId() == "v1");
+  REQUIRE(mock_s3_request_sender_ptr->delete_object_request.VersionIdHasBeenSet());
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Successfully deleted S3 object"));
 }
 
@@ -114,9 +114,9 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test optional client configuration
   plan->setProperty(update_attribute, "test.endpoint", "http://localhost:1234", true);
   plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
-  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().connectTimeoutMs == 10000);
-  REQUIRE(mock_s3_wrapper_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
 }
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test failure case", "[awsS3DeleteFailure]") {
@@ -128,11 +128,11 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test failure case", "[awsS3DeleteF
   setRequiredProperties();
   plan->setProperty(s3_processor, "Version", "v1");
   log_failure->setAutoTerminatedRelationships({{core::Relationship("success", "d")}});
-  mock_s3_wrapper_ptr->setDeleteObjectResult(false);
+  mock_s3_request_sender_ptr->setDeleteObjectResult(false);
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetBucket() == "testBucket");
-  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetKey() == INPUT_FILENAME);
-  REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetVersionId() == "v1");
+  REQUIRE(mock_s3_request_sender_ptr->delete_object_request.GetBucket() == "testBucket");
+  REQUIRE(mock_s3_request_sender_ptr->delete_object_request.GetKey() == INPUT_FILENAME);
+  REQUIRE(mock_s3_request_sender_ptr->delete_object_request.GetVersionId() == "v1");
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Failed to delete S3 object"));
 }
 

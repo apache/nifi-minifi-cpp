@@ -136,7 +136,7 @@ void ListS3::writeObjectTags(
     return;
   }
 
-  auto get_object_tags_result = s3_wrapper_->getObjectTags(bucket, object_attributes.filename, object_attributes.version);
+  auto get_object_tags_result = s3_wrapper_.getObjectTags(bucket, object_attributes.filename, object_attributes.version);
   if (get_object_tags_result) {
     for (const auto& tag : get_object_tags_result.value()) {
       session->putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
@@ -160,7 +160,7 @@ void ListS3::writeUserMetadata(
   params.object_key = object_attributes.filename;
   params.version = object_attributes.version;
   params.requester_pays = requester_pays_;
-  auto head_object_tags_result = s3_wrapper_->headObject(params);
+  auto head_object_tags_result = s3_wrapper_.headObject(params);
   if (head_object_tags_result) {
     for (const auto& metadata : head_object_tags_result->user_metadata_map) {
       session->putAttribute(flow_file, "s3.user.metadata." + metadata.first, metadata.second);
@@ -241,7 +241,7 @@ void ListS3::createNewFlowFile(
 void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   logger_->log_debug("ListS3 onTrigger");
 
-  auto aws_results = s3_wrapper_->listBucket(list_request_params_);
+  auto aws_results = s3_wrapper_.listBucket(list_request_params_);
   if (!aws_results) {
     logger_->log_error("Failed to list S3 bucket %s", list_request_params_.bucket);
     context->yield();

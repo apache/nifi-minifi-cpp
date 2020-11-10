@@ -23,7 +23,7 @@
 #include <vector>
 #include <map>
 
-#include "s3/S3WrapperBase.h"
+#include "s3/S3RequestSender.h"
 #include "aws/core/utils/DateTime.h"
 
 const std::string S3_VERSION_1 = "1.2.3";
@@ -55,9 +55,9 @@ const std::string S3_KEY_MARKER = "continue_key";
 const std::string S3_VERSION_ID_MARKER = "continue_version";
 const std::string S3_CONTINUATION_TOKEN = "continue";
 
-class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
+class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
  public:
-  MockS3Wrapper() {
+  MockS3RequestSender() {
     for(auto i = 0; i < S3_OBJECT_COUNT; ++i) {
       Aws::S3::Model::ObjectVersion version;
       version.SetKey(S3_KEY_PREFIX + std::to_string(i));

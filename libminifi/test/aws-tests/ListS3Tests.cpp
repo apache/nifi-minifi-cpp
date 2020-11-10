@@ -38,8 +38,8 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test AWS credential setting", "[awsCredent
   }
 
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSAccessKeyId() == "key");
-  REQUIRE(mock_s3_wrapper_ptr->getCredentials().GetAWSSecretKey() == "secret");
+  REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSAccessKeyId() == "key");
+  REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test required property not set", "[awsS3Errors]") {
@@ -79,7 +79,7 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test listing without versioning", "[awsS3L
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.version") == 0);
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.storeClass value:" + S3_STORAGE_CLASS_STR) == S3_OBJECT_COUNT);
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.tag") == 0);
-  REQUIRE(!mock_s3_wrapper_ptr->list_object_request.ContinuationTokenHasBeenSet());
+  REQUIRE(!mock_s3_request_sender_ptr->list_object_request.ContinuationTokenHasBeenSet());
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test listing with versioning", "[awsS3ListVersions]") {
@@ -104,8 +104,8 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test listing with versioning", "[awsS3List
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.storeClass value:" + S3_STORAGE_CLASS_STR) == S3_OBJECT_COUNT * 2);
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.tag") == 0);
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.user.metadata") == 0);
-  REQUIRE(!mock_s3_wrapper_ptr->list_version_request.KeyMarkerHasBeenSet());
-  REQUIRE(!mock_s3_wrapper_ptr->list_version_request.VersionIdMarkerHasBeenSet());
+  REQUIRE(!mock_s3_request_sender_ptr->list_version_request.KeyMarkerHasBeenSet());
+  REQUIRE(!mock_s3_request_sender_ptr->list_version_request.VersionIdMarkerHasBeenSet());
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test if optional request values are set without versioning", "[awsS3ListOptionalValues]") {
@@ -113,8 +113,8 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test if optional request values are set wi
   plan->setProperty(s3_processor, "Delimiter", "/");
   plan->setProperty(s3_processor, "Prefix", "test/");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->list_object_request.GetDelimiter() == "/");
-  REQUIRE(mock_s3_wrapper_ptr->list_object_request.GetPrefix() == "test/");
+  REQUIRE(mock_s3_request_sender_ptr->list_object_request.GetDelimiter() == "/");
+  REQUIRE(mock_s3_request_sender_ptr->list_object_request.GetPrefix() == "test/");
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test if optional request values are set with versioning", "[awsS3ListOptionalValues]") {
@@ -123,8 +123,8 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test if optional request values are set wi
   plan->setProperty(s3_processor, "Prefix", "test/");
   plan->setProperty(s3_processor, "Use Versions", "true");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_wrapper_ptr->list_version_request.GetDelimiter() == "/");
-  REQUIRE(mock_s3_wrapper_ptr->list_version_request.GetPrefix() == "test/");
+  REQUIRE(mock_s3_request_sender_ptr->list_version_request.GetDelimiter() == "/");
+  REQUIRE(mock_s3_request_sender_ptr->list_version_request.GetPrefix() == "test/");
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test minimum age property handling with non-versioned objects", "[awsS3ListMinAge]") {
@@ -161,12 +161,12 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test write user metadata", "[awsS3ListMeta
   for (const auto& metadata : S3_OBJECT_USER_METADATA) {
     REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.user.metadata." + metadata.first + " value:" + metadata.second) == S3_OBJECT_COUNT);
   }
-  REQUIRE(mock_s3_wrapper_ptr->head_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::requester);
+  REQUIRE(mock_s3_request_sender_ptr->head_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::requester);
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test truncated listing without versioning", "[awsS3ListObjects]") {
   setRequiredProperties();
-  mock_s3_wrapper_ptr->setListingTruncated(true);
+  mock_s3_request_sender_ptr->setListingTruncated(true);
   test_controller.runSession(plan, true);
   for (auto i = 0; i < S3_OBJECT_COUNT; ++i) {
     REQUIRE(LogTestController::getInstance().contains("key:filename value:" + S3_KEY_PREFIX + std::to_string(i)));
@@ -181,14 +181,14 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test truncated listing without versioning"
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.version") == 0);
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.storeClass value:" + S3_STORAGE_CLASS_STR) == S3_OBJECT_COUNT);
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.tag") == 0);
-  REQUIRE(mock_s3_wrapper_ptr->list_object_request.ContinuationTokenHasBeenSet());
-  REQUIRE(mock_s3_wrapper_ptr->list_object_request.GetContinuationToken() == S3_CONTINUATION_TOKEN);
+  REQUIRE(mock_s3_request_sender_ptr->list_object_request.ContinuationTokenHasBeenSet());
+  REQUIRE(mock_s3_request_sender_ptr->list_object_request.GetContinuationToken() == S3_CONTINUATION_TOKEN);
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test truncated listing with versioning", "[awsS3ListVersions]") {
   setRequiredProperties();
   plan->setProperty(s3_processor, "Use Versions", "true");
-  mock_s3_wrapper_ptr->setListingTruncated(true);
+  mock_s3_request_sender_ptr->setListingTruncated(true);
   test_controller.runSession(plan, true);
   for (auto i = 0; i < S3_OBJECT_COUNT; ++i) {
     // 2 versions of every object
@@ -207,8 +207,8 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test truncated listing with versioning", "
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.storeClass value:" + S3_STORAGE_CLASS_STR) == S3_OBJECT_COUNT * 2);
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.tag") == 0);
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.user.metadata") == 0);
-  REQUIRE(mock_s3_wrapper_ptr->list_version_request.KeyMarkerHasBeenSet());
-  REQUIRE(mock_s3_wrapper_ptr->list_version_request.GetKeyMarker() == S3_KEY_MARKER);
-  REQUIRE(mock_s3_wrapper_ptr->list_version_request.VersionIdMarkerHasBeenSet());
-  REQUIRE(mock_s3_wrapper_ptr->list_version_request.GetVersionIdMarker() == S3_VERSION_ID_MARKER);
+  REQUIRE(mock_s3_request_sender_ptr->list_version_request.KeyMarkerHasBeenSet());
+  REQUIRE(mock_s3_request_sender_ptr->list_version_request.GetKeyMarker() == S3_KEY_MARKER);
+  REQUIRE(mock_s3_request_sender_ptr->list_version_request.VersionIdMarkerHasBeenSet());
+  REQUIRE(mock_s3_request_sender_ptr->list_version_request.GetVersionIdMarker() == S3_VERSION_ID_MARKER);
 }
