@@ -112,10 +112,7 @@ void PutS3Object::initialize() {
   properties.insert(ServerSideEncryption);
   setSupportedProperties(properties);
   // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Failure);
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedRelationships({Failure, Success});
 }
 
 void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context) {
@@ -246,6 +243,7 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
   logger_->log_debug("PutS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
+    context->yield();
     return;
   }
 

@@ -45,10 +45,7 @@ void DeleteS3Object::initialize() {
   properties.insert(Version);
   setSupportedProperties(properties);
   // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Failure);
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedRelationships({Failure, Success});
 }
 
 bool DeleteS3Object::getExpressionLanguageSupportedProperties(
@@ -67,6 +64,7 @@ void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   logger_->log_debug("DeleteS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
+    context->yield();
     return;
   }
 
@@ -79,7 +77,7 @@ void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     logger_->log_debug("Successfully deleted S3 object %s from bucket %s", object_key_, bucket_);
     session->transfer(flow_file, Success);
   } else {
-    logger_->log_debug("Failed to delete S3 object %s from bucket %s", object_key_, bucket_);
+    logger_->log_error("Failed to delete S3 object %s from bucket %s", object_key_, bucket_);
     session->transfer(flow_file, Failure);
   }
 }
