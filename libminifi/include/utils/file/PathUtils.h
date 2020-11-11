@@ -17,8 +17,7 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <climits>
 #include <cctype>
 #include <cinttypes>
 #include <memory>
