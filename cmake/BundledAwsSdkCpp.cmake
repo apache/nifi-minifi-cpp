@@ -68,7 +68,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             -DBUILD_ONLY=s3
             -DENABLE_TESTING=OFF
             -DBUILD_SHARED_LIBS=OFF
-            -DENABLE_UNITY_BUILD=ON
+            -DENABLE_UNITY_BUILD=${AWS_ENABLE_UNITY_BUILD}
             -DBUILD_DEPS=OFF)
 
     append_third_party_passthrough_args(AWS_SDK_CPP_CMAKE_ARGS "${AWS_SDK_CPP_CMAKE_ARGS}")
