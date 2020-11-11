@@ -62,7 +62,7 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
   bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
 
   bool persist() override {
-    persistNonVirtual();
+    return persistNonVirtual();
   }
 
  protected:
