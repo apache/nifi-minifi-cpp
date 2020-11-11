@@ -20,6 +20,7 @@
 #include <cctype>
 #include <algorithm>
 #include "StringView.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {

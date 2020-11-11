@@ -19,6 +19,7 @@
 
 #include <string>
 #include <iterator>
+#include <algorithm>
 
 namespace org {
 namespace apache {
@@ -58,6 +59,55 @@ class StringView {
 
   constexpr size_t length() const noexcept {
     return size();
+  }
+
+  friend bool operator==(const StringView& lhs, const std::string& rhs) {
+    if (lhs.length() != rhs.length()) {
+      return false;
+    }
+    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+  }
+
+  friend bool operator==(const StringView& lhs, const char* rhs) {
+    if (lhs.length() != std::char_traits<char>::length(rhs)) {
+      return false;
+    }
+    return std::equal(lhs.begin(), lhs.end(), rhs);
+  }
+
+  friend bool operator==(const StringView& lhs, const StringView& rhs) {
+    if (lhs.length() != rhs.length()) {
+      return false;
+    }
+    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+  }
+
+  friend bool operator==(const std::string& lhs, const StringView& rhs) {
+    return rhs == lhs;
+  }
+
+  friend bool operator==(const char* lhs, const StringView& rhs) {
+    return rhs == lhs;
+  }
+
+  friend bool operator!=(const StringView& lhs, const std::string& rhs) {
+    return !(lhs == rhs);
+  }
+
+  friend bool operator!=(const StringView& lhs, const char* rhs) {
+    return !(lhs == rhs);
+  }
+
+  friend bool operator!=(const StringView& lhs, const StringView& rhs) {
+    return !(lhs == rhs);
+  }
+
+  friend bool operator!=(const std::string& lhs, const StringView& rhs) {
+    return rhs != lhs;
+  }
+
+  friend bool operator!=(const char* lhs, const StringView& rhs) {
+    return rhs != lhs;
   }
 
  private:

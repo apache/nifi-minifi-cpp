@@ -482,11 +482,19 @@ class C2UpdateHandler : public ServerAwareHandler {
     return true;
   }
 
-  virtual void setC2RestResponse(const std::string& url, const std::string& name) {
-    response_ = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
-        "\"operation\" : \"update\", "
-        "\"operationid\" : \"8675309\", "
-        "\"name\": \"" + name + "\", \"content\": { \"location\": \"" + url + "\"}}]}";
+  void setC2RestResponse(const std::string& url, const std::string& name, const utils::optional<std::string>& persist = {}) {
+    std::string content = "{\"location\": \"" + url + "\"";
+    if (persist) {
+      content += ", \"persist\": \"" + *persist + "\"";
+    }
+    content += "}";
+    response_ =
+        "{\"operation\" : \"heartbeat\", "
+          "\"requested_operations\": [  {"
+            "\"operation\" : \"update\", "
+            "\"operationid\" : \"8675309\", "
+            "\"name\": \"" + name + "\", "
+            "\"content\": " + content + "}]}";
   }
 
   std::atomic<size_t> calls_{0};
