@@ -183,24 +183,24 @@ bool StringToTime(const std::string& input, Out& output, core::TimeUnit& timeuni
   std::string unit(end);
   std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
 
-  if (unit == "sec" || unit == "s" || unit == "second" || unit == "seconds" || unit == "secs") {
-    timeunit = core::TimeUnit::SECOND;
+  if (unit == "ns" || unit == "nano" || unit == "nanos" || unit == "nanoseconds") {
+    timeunit = core::TimeUnit::NANOSECOND;
     output = ival;
     return true;
-  } else if (unit == "msec" || unit == "ms" || unit == "millisecond" || unit == "milliseconds" || unit == "msecs") {
+  } else if (unit == "us" || unit == "micro" || unit == "micros" || unit == "microseconds" || unit == "microsecond") {
+    timeunit = core::TimeUnit::MICROSECOND;
+    output = ival;
+    return true;
+  } else if (unit == "msec" || unit == "ms" || unit == "millisecond" || unit == "milliseconds" || unit == "msecs" || unit == "millis" || unit == "milli") {
     timeunit = core::TimeUnit::MILLISECOND;
+    output = ival;
+    return true;
+  } else if (unit == "sec" || unit == "s" || unit == "second" || unit == "seconds" || unit == "secs") {
+    timeunit = core::TimeUnit::SECOND;
     output = ival;
     return true;
   } else if (unit == "min" || unit == "m" || unit == "mins" || unit == "minute" || unit == "minutes") {
     timeunit = core::TimeUnit::MINUTE;
-    output = ival;
-    return true;
-  } else if (unit == "ns" || unit == "nano" || unit == "nanos" || unit == "nanoseconds") {
-    timeunit = core::TimeUnit::NANOSECOND;
-    output = ival;
-    return true;
-  } else if (unit == "ms" || unit == "milli" || unit == "millis" || unit == "milliseconds") {
-    timeunit = core::TimeUnit::MILLISECOND;
     output = ival;
     return true;
   } else if (unit == "h" || unit == "hr" || unit == "hour" || unit == "hrs" || unit == "hours") {
@@ -215,7 +215,6 @@ bool StringToTime(const std::string& input, Out& output, core::TimeUnit& timeuni
     return false;
   }
 }
-
 } /* namespace internal */
 } /* namespace utils */
 } /* namespace minifi */
