@@ -76,7 +76,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     setProperties(processorController->getProcessor());
   }
 
-  void run(std::string flow_yml_path) override {
+  void run(const std::string& flow_yml_path, const utils::optional<std::string>& bootstrap_file = {}) override {
     setupFlow(flow_yml_path);
     startFlowController();
 
