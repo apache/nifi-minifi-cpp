@@ -22,6 +22,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <mutex>
 #include "core/state/UpdateController.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "properties/Configure.h"
@@ -53,6 +54,8 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
 
   std::vector<std::shared_ptr<state::response::ResponseNode>> getHeartbeatNodes(bool include_manifest) const override;
 
+  void stopC2();
+
  protected:
   bool isC2Enabled() const;
 
@@ -69,11 +72,10 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   std::atomic_bool initialized_{false};
   std::shared_ptr<logging::Logger> logger_;
 
-  mutable std::mutex metrics_mutex_;
+  mutable std::recursive_mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> device_information_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> component_metrics_;
-  std::map<uint8_t, std::vector<std::shared_ptr<state::response::ResponseNode>>> component_metrics_by_id_;
 
  protected:
   std::atomic<bool> flow_update_{false};

@@ -46,6 +46,12 @@ C2Client::C2Client(
       filesystem_(std::move(filesystem)),
       logger_(std::move(logger)) {}
 
+void C2Client::stopC2() {
+  if (c2_agent_) {
+    c2_agent_->stop();
+  }
+}
+
 bool C2Client::isC2Enabled() const {
   std::string c2_enable_str;
   bool c2_enabled = false;
@@ -56,8 +62,6 @@ bool C2Client::isC2Enabled() const {
 }
 
 void C2Client::initialize(core::controller::ControllerServiceProvider *controller, const std::shared_ptr<state::StateMonitor> &update_sink) {
-  std::lock_guard<std::mutex> lock(metrics_mutex_);
-
   std::string class_str;
   configuration_->get("nifi.c2.agent.class", "c2.agent.class", class_str);
   configuration_->setAgentClass(class_str);
@@ -82,6 +86,12 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     return;
   }
 
+  std::lock_guard<std::recursive_mutex> guard(metrics_mutex_);
+
+  device_information_.clear();
+  component_metrics_.clear();
+  // root_response_nodes_ was not cleared before, it is unclear if that was intentional
+
   std::string class_csv;
   if (root_ != nullptr) {
     std::shared_ptr<state::response::QueueMetrics> queueMetrics = std::make_shared<state::response::QueueMetrics>();
@@ -101,12 +111,11 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
     for (const std::string& clazz : classes) {
-      auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-      if (nullptr == ptr) {
+      auto processor = std::dynamic_pointer_cast<state::response::ResponseNode>(core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz));
+      if (nullptr == processor) {
         logger_->log_error("No metric defined for %s", clazz);
         continue;
       }
-      std::shared_ptr<state::response::ResponseNode> processor = std::static_pointer_cast<state::response::ResponseNode>(ptr);
       auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(processor);
       if (identifier != nullptr) {
         identifier->setIdentifier(identifier_str);
@@ -119,11 +128,11 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
         monitor->setStateMonitor(update_sink);
       }
       auto flowMonitor = std::dynamic_pointer_cast<state::response::FlowMonitor>(processor);
-      std::map<std::string, std::shared_ptr<Connection>> connections;
-      if (root_ != nullptr) {
-        root_->getConnections(connections);
-      }
       if (flowMonitor != nullptr) {
+        std::map<std::string, std::shared_ptr<Connection>> connections;
+        if (root_ != nullptr) {
+          root_->getConnections(connections);
+        }
         for (auto &con : connections) {
           flowMonitor->addConnection(con.second);
         }
@@ -147,8 +156,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     }
   }
 
-  // first we should get all component metrics, then
-  // we will build the mapping
+  // get all component metrics
   std::vector<std::shared_ptr<core::Processor>> processors;
   if (root_ != nullptr) {
     root_->getAllProcessors(processors);
@@ -165,36 +173,6 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     }
   }
 
-  std::string class_definitions;
-  if (configuration_->get("nifi.flow.metrics.class.definitions", class_definitions)) {
-    std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-
-    for (const std::string& metricsClass : classes) {
-      try {
-        int id = std::stoi(metricsClass);
-        std::stringstream option;
-        option << "nifi.flow.metrics.class.definitions." << metricsClass;
-        if (configuration_->get(option.str(), class_definitions)) {
-          std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-
-          for (const std::string& clazz : classes) {
-            auto ret = component_metrics_[clazz];
-            if (nullptr == ret) {
-              ret = device_information_[clazz];
-            }
-            if (nullptr == ret) {
-              logger_->log_error("No metric defined for %s", clazz);
-              continue;
-            }
-            component_metrics_by_id_[id].push_back(ret);
-          }
-        }
-      } catch (...) {
-        logger_->log_error("Could not create metrics class %s", metricsClass);
-      }
-    }
-  }
-
   loadC2ResponseConfiguration("nifi.c2.root.class.definitions");
 
   if (!initialized_) {
@@ -204,8 +182,9 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
   }
 }
 
-// must hold the metrics_mutex_
 void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
+  std::lock_guard<std::recursive_mutex> guard(metrics_mutex_);
+
   std::string class_definitions;
   if (!configuration_->get(prefix, class_definitions)) {
     return;
@@ -254,8 +233,9 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
   }
 }
 
-// must hold the metrics_mutex_
 std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node) {
+  std::lock_guard<std::recursive_mutex> guard(metrics_mutex_);
+
   std::string class_definitions;
   if (!configuration_->get(prefix, class_definitions)) {
     return prev_node;
@@ -316,7 +296,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
 }
 
 std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
-  std::lock_guard<std::mutex> lock(metrics_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(metrics_mutex_);
   if (!metrics_class.empty()) {
     const auto citer = component_metrics_.find(metrics_class);
     if (citer != component_metrics_.end()) {
@@ -332,7 +312,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const st
 }
 
 std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbeatNodes(bool include_manifest) const {
-  std::lock_guard<std::mutex> lock(metrics_mutex_);
+  std::lock_guard<std::recursive_mutex> lock(metrics_mutex_);
   std::string fullHb{"true"};
   configuration_->get("nifi.c2.full.heartbeat", fullHb);
   const bool include = include_manifest || fullHb == "true";

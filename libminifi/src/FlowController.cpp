@@ -136,11 +136,6 @@ FlowController::~FlowController() {
   provenance_repo_ = nullptr;
 }
 
-void FlowController::stopC2() {
-  if (c2_agent_)
-    c2_agent_->stop();
-}
-
 bool FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {

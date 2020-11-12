@@ -306,8 +306,6 @@ class FlowController : public core::controller::ControllerServiceProvider,  publ
 
   std::vector<BackTrace> getTraces() override;
 
-  void stopC2();
-
  protected:
   // function to load the flow file repo.
   void loadFlowRepo();
