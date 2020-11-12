@@ -52,8 +52,8 @@ class ConsumeKafka : public core::Processor {
   static core::Property HeadersToAddAsAttributes;
   static core::Property DuplicateHeaderHandling;
   static core::Property MaxPollRecords;
-  static core::Property MaxUncommittedTime;
-  static core::Property CommunicationsTimeout;
+  static core::Property MaxPollTime;
+  static core::Property SessionTimeout;
 
   // Supported Relationships
   static const core::Relationship Success;
@@ -122,6 +122,7 @@ class ConsumeKafka : public core::Processor {
 
  private:
   static constexpr const std::size_t DEFAULT_MAX_POLL_RECORD{ 10000 };
+  static constexpr const std::size_t METADATA_COMMUNICATIONS_TIMEOUT_MS{ 60000 };
   // void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/);
 
   void createTopicPartitionList();
@@ -146,8 +147,9 @@ class ConsumeKafka : public core::Processor {
   std::string duplicate_header_handling_;  // Easier handled as string than enum
   std::vector<std::string> headers_to_add_as_attributes_;
   std::size_t max_poll_records_;
-  utils::optional<unsigned int> max_uncommitted_time_seconds_;
+  std::chrono::milliseconds max_poll_time_milliseconds_;
   std::chrono::milliseconds communications_timeout_milliseconds_;
+  std::chrono::milliseconds session_timeout_milliseconds_;
 
   std::unique_ptr<rd_kafka_t, utils::rd_kafka_consumer_deleter> consumer_;
   std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf_;

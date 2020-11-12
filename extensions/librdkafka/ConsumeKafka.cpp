@@ -70,7 +70,6 @@ core::Property ConsumeKafka::HonorTransactions(core::PropertyBuilder::createProp
 core::Property ConsumeKafka::GroupID(core::PropertyBuilder::createProperty("Group ID")
   ->withDescription("A Group ID is used to identify consumers that are within the same consumer group. Corresponds to Kafka's 'group.id' property.")
   ->supportsExpressionLanguage(true)
-  ->isRequired(true)
   ->build());
 
 core::Property ConsumeKafka::OffsetReset(core::PropertyBuilder::createProperty("Offset Reset")
@@ -91,8 +90,7 @@ core::Property ConsumeKafka::KeyAttributeEncoding(core::PropertyBuilder::createP
 core::Property ConsumeKafka::MessageDemarcator(core::PropertyBuilder::createProperty("Message Demarcator")
   ->withDescription("Since KafkaConsumer receives messages in batches, you have an option to output FlowFiles which contains all Kafka messages in a single batch "
       "for a given topic and partition and this property allows you to provide a string (interpreted as UTF-8) to use for demarcating apart multiple Kafka messages. "
-      "This is an optional property and if not provided each Kafka message received will result in a single FlowFile which time it is triggered. "
-      "To enter special character such as 'new line' use CTRL+Enter or Shift+Enter depending on the OS.")
+      "This is an optional property and if not provided each Kafka message received will result in a single FlowFile which time it is triggered. ")
   ->supportsExpressionLanguage(true)
   ->build());
 
@@ -119,26 +117,27 @@ core::Property ConsumeKafka::DuplicateHeaderHandling(core::PropertyBuilder::crea
       " - \"Keep Latest\" attaches: \"Accept -> application/xml\"\n"
       " - \"Comma-separated Merge\" attaches: \"Accept -> text/html, application/xml\"\n")
   ->withAllowableValues<std::string>({MSG_HEADER_KEEP_FIRST, MSG_HEADER_KEEP_LATEST, MSG_HEADER_COMMA_SEPARATED_MERGE})
-  ->withDefaultValue(MSG_HEADER_KEEP_LATEST) // Mirroring NiFi behaviour
+  ->withDefaultValue(MSG_HEADER_KEEP_LATEST)  // Mirroring NiFi behaviour
   ->build());
 
 core::Property ConsumeKafka::MaxPollRecords(core::PropertyBuilder::createProperty("Max Poll Records")
-  ->withDescription("Specifies the maximum number of records Kafka should return in a single poll.")
+  ->withDescription("Specifies the maximum number of records Kafka should return when polling each time the processor is triggered.")
   ->withDefaultValue<unsigned int>(10000)
   ->build());
 
-core::Property ConsumeKafka::MaxUncommittedTime(core::PropertyBuilder::createProperty("Max Uncommitted Time")
-  ->withDescription("Specifies the maximum amount of time allowed to pass before offsets must be committed. This value impacts how often offsets will be committed. "
-      "Committing offsets less often increases throughput but also increases the window of potential data duplication in the event of a rebalance or FlowController restart between commits."
-      "This value is also related to maximum poll records and the use of a message demarcator. When using a message demarcator we can have far more uncommitted messages than when we're not "
-      "as there is much less for us to keep track of in memory.")
-  ->withDefaultValue<core::TimePeriodValue>("1 second")
+core::Property ConsumeKafka::MaxPollTime(core::PropertyBuilder::createProperty("Max Poll Time")
+  ->withDescription("Specifies the maximum amount of time the consumer can use for polling data from the brokers. "
+      "Polling is a blocking operation, so the upper limit of this value is specified in 4 seconds.")
+  ->withDefaultValue<core::TimePeriodValue>("1 second")  // TODO(hunyadi): add validator
+  ->isRequired(true)
   ->build());
 
-core::Property ConsumeKafka::CommunicationsTimeout(core::PropertyBuilder::createProperty("Communications Timeout")
-  ->withDescription("Specifies the timeout that the consumer should use when communicating with the Kafka Broker")
+core::Property ConsumeKafka::SessionTimeout(core::PropertyBuilder::createProperty("Session Timeout")
+  ->withDescription("Client group session and failure detection timeout. The consumer sends periodic heartbeats "
+      "to indicate its liveness to the broker. If no hearts are received by the broker for a group member within "
+      "the session timeout, the broker will remove the consumer from the group and trigger a rebalance. "
+      "The allowed range is configured with the broker configuration properties group.min.session.timeout.ms and group.max.session.timeout.ms.")
   ->withDefaultValue<core::TimePeriodValue>("60 seconds")
-  ->isRequired(true)
   ->build());
 
 const core::Relationship ConsumeKafka::Success("success", "Incoming kafka messages as flowfiles");
@@ -158,8 +157,8 @@ void ConsumeKafka::initialize() {
     HeadersToAddAsAttributes,
     DuplicateHeaderHandling,
     MaxPollRecords,
-    MaxUncommittedTime,
-    CommunicationsTimeout
+    MaxPollTime,
+    SessionTimeout
   });
   setSupportedRelationships({
     Success,
@@ -168,15 +167,16 @@ void ConsumeKafka::initialize() {
 
 void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /* sessionFactory */) {
   // Required properties
-  kafka_brokers_                       = utils::listFromRequiredCommaSeparatedProperty(context, KafkaBrokers.getName());
-  security_protocol_                   = utils::getRequiredPropertyOrThrow(context, SecurityProtocol.getName());
-  topic_names_                         = utils::listFromRequiredCommaSeparatedProperty(context, TopicNames.getName());
-  topic_name_format_                   = utils::getRequiredPropertyOrThrow(context, TopicNameFormat.getName());
-  honor_transactions_                  = utils::parseBooleanPropertyOrThrow(context, HonorTransactions.getName());
-  group_id_                            = utils::getRequiredPropertyOrThrow(context, GroupID.getName());
-  offset_reset_                        = utils::getRequiredPropertyOrThrow(context, OffsetReset.getName());
-  key_attribute_encoding_              = utils::getRequiredPropertyOrThrow(context, KeyAttributeEncoding.getName());
-  communications_timeout_milliseconds_ = utils::parseTimePropertyMSOrThrow(context, CommunicationsTimeout.getName());
+  kafka_brokers_                = utils::listFromRequiredCommaSeparatedProperty(context, KafkaBrokers.getName());
+  security_protocol_            = utils::getRequiredPropertyOrThrow(context, SecurityProtocol.getName());
+  topic_names_                  = utils::listFromRequiredCommaSeparatedProperty(context, TopicNames.getName());
+  topic_name_format_            = utils::getRequiredPropertyOrThrow(context, TopicNameFormat.getName());
+  honor_transactions_           = utils::parseBooleanPropertyOrThrow(context, HonorTransactions.getName());
+  group_id_                     = utils::getRequiredPropertyOrThrow(context, GroupID.getName());
+  offset_reset_                 = utils::getRequiredPropertyOrThrow(context, OffsetReset.getName());
+  key_attribute_encoding_       = utils::getRequiredPropertyOrThrow(context, KeyAttributeEncoding.getName());
+  max_poll_time_milliseconds_   = utils::parseTimePropertyMSOrThrow(context, MaxPollTime.getName());
+  session_timeout_milliseconds_ = utils::parseTimePropertyMSOrThrow(context, SessionTimeout.getName());
 
   // Optional properties
   context->getProperty(MessageDemarcator.getName(), message_demarcator_);
@@ -185,7 +185,6 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
 
   headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.getName());
   max_poll_records_ = gsl::narrow<std::size_t>(utils::getOptionalUintProperty(context, MaxPollRecords.getName()).value_or(DEFAULT_MAX_POLL_RECORD));
-  max_uncommitted_time_seconds_ = utils::getOptionalUintProperty(context, MaxUncommittedTime.getName());
   // TODO(hunyadi): add dynamic property support for kafka configuration properties
   // readDynamicPropertyKeys(context);
 
@@ -212,7 +211,7 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t err, rd_kafka_topic_partit
       //   partitions->elems[i].offset = RD_KAFKA_OFFSET_END;
       // }
       print_topics_list(logger, partitions);
-      rd_kafka_assign(rk, partitions); // TODO(hunyadi): check incremental assign
+      rd_kafka_assign(rk, partitions);  // TODO(hunyadi): check incremental assign
       break;
 
     case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
@@ -295,7 +294,7 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
   logger_->log_info("Resetting offset manually.");
   while (true) {
     std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
-        message_wrapper{ rd_kafka_consumer_poll(consumer_.get(), communications_timeout_milliseconds_.count()), utils::rd_kafka_message_deleter() };
+        message_wrapper{ rd_kafka_consumer_poll(consumer_.get(), max_poll_time_milliseconds_.count()), utils::rd_kafka_message_deleter() };
 
     if (!message_wrapper || RD_KAFKA_RESP_ERR_NO_ERROR != message_wrapper->err) {
       break;
@@ -394,16 +393,15 @@ class WriteCallback : public OutputStreamCallback {
 void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
   logger_->log_debug("ConsumeKafka onTrigger");
 
-  print_topics_list(logger_, kf_topic_partition_list_.get());
 
-  // std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter> message { rd_kafka_consumer_poll(consumer_.get(), communications_timeout_milliseconds_.count()), utils::rd_kafka_message_deleter() }; // NOLINT
   std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>> messages;
   messages.reserve(max_poll_records_);
   while (messages.size() < max_poll_records_) {
-    logger_-> log_debug("Polling for new messages...");
-    rd_kafka_message_t* message = rd_kafka_consumer_poll(consumer_.get(), communications_timeout_milliseconds_.count());
+    logger_-> log_debug("Polling for new messages for %d milliseconds...", max_poll_time_milliseconds_.count());
+    // TODO(hunyadi): rd_kafka_position() call might be needed
+    rd_kafka_message_t* message = rd_kafka_consumer_poll(consumer_.get(), max_poll_time_milliseconds_.count());
     if (!message || RD_KAFKA_RESP_ERR_NO_ERROR != message->err) {
-      return;
+      break;
     }
     utils::print_kafka_message(message, logger_);
     messages.emplace_back(std::move(message), utils::rd_kafka_message_deleter());
@@ -412,55 +410,54 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
   if (messages.empty()) {
     return;
   }
-  // for (const auto& message: messages) {}
-  auto& message = messages.front();
-
-  std::string message_content = extract_message(message.get());
-  if (message_content.empty()) {
-    logger_->log_debug("\u001b[31mError: message received contains no data.\u001b[0m");
-    return;
-  }
-
-  // Commit offsets on broker for the provided list of partitions
-  const int async = 0;
-  if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_commit_message(consumer_.get(), message.get(), async)) {
-    logger_ -> log_error("\u001b[31mCommitting offsets failed.\u001b[0m");
-  }  // TODO(hunyadi): check this for potential rollback requirements
-  if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_position(consumer_.get(), kf_topic_partition_list_.get())) {
-    logger_ -> log_error("\u001b[31mRetrieving current offsets for topics+partitions failed.\u001b[0m");
-  }
-  print_topics_list(logger_, kf_topic_partition_list_.get());
-  if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_committed(consumer_.get(), kf_topic_partition_list_.get(), communications_timeout_milliseconds_.count())) {
-    logger_ -> log_error("\u001b[31mRetrieving committed offsets for topics+partitions failed.\u001b[0m");
-  }
-  print_topics_list(logger_, kf_topic_partition_list_.get());
-
-  std::vector<std::string> split_message;
-  if (message_demarcator_.size()) {
-    split_message = utils::StringUtils::split(message_content, message_demarcator_);
-  } else {
-    split_message.push_back(message_content);
-  }
-  for (auto& flowfile_content : split_message) {
-    std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
-    if (flow_file == nullptr) {
+  for (const auto& message : messages) {
+    std::string message_content = extract_message(message.get());
+    if (message_content.empty()) {
+      logger_->log_debug("\u001b[31mError: message received contains no data.\u001b[0m");
       return;
     }
-    // flowfile_content is consumed here
-    WriteCallback stream_writer_callback(&flowfile_content[0], flowfile_content.size());
-    session->write(flow_file, &stream_writer_callback);
-    // TODO(hunyadi): extract this into a sunction that creates a vector of attributes to add to flowfiles
-    for (const std::string& header_name : headers_to_add_as_attributes_) {
-      const auto matching_headers = get_matching_headers(message.get(), header_name);
-      if (matching_headers.size()) {
-        flow_file->setAttribute(header_name, utils::get_encoded_string(resolve_duplicate_headers(matching_headers), message_header_encoding_attr_to_enum()));
+
+    // Commit offsets on broker for the provided list of partitions
+    const int async = 0;
+    // TODO(hunyadi): check commit queue requirements
+    if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_commit_message(consumer_.get(), message.get(), async)) {
+      logger_ -> log_error("\u001b[31mCommitting offsets failed.\u001b[0m");
+    }  // TODO(hunyadi): check this for potential rollback requirements
+    if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_position(consumer_.get(), kf_topic_partition_list_.get())) {
+      logger_ -> log_error("\u001b[31mRetrieving current offsets for topics+partitions failed.\u001b[0m");
+    }
+    if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_committed(consumer_.get(), kf_topic_partition_list_.get(), METADATA_COMMUNICATIONS_TIMEOUT_MS)) {
+      logger_ -> log_error("\u001b[31mRetrieving committed offsets for topics+partitions failed.\u001b[0m");
+    }
+    // print_topics_list(logger_, kf_topic_partition_list_.get());
+
+    std::vector<std::string> split_message;
+    if (message_demarcator_.size()) {
+      split_message = utils::StringUtils::split(message_content, message_demarcator_);
+    } else {
+      split_message.push_back(message_content);
+    }
+    for (auto& flowfile_content : split_message) {
+      std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
+      if (flow_file == nullptr) {
+        return;
       }
+      // flowfile_content is consumed here
+      WriteCallback stream_writer_callback(&flowfile_content[0], flowfile_content.size());
+      session->write(flow_file, &stream_writer_callback);
+      // TODO(hunyadi): extract this into a sunction that creates a vector of attributes to add to flowfiles
+      for (const std::string& header_name : headers_to_add_as_attributes_) {
+        const auto matching_headers = get_matching_headers(message.get(), header_name);
+        if (matching_headers.size()) {
+          flow_file->setAttribute(header_name, utils::get_encoded_string(resolve_duplicate_headers(matching_headers), message_header_encoding_attr_to_enum()));
+        }
+      }
+      const utils::optional<std::string> message_key = utils::get_encoded_message_key(message.get(), key_attr_encoding_attr_to_enum());
+      if (message_key) {
+        flow_file->setAttribute(KAFKA_MESSAGE_KEY_ATTR, message_key.value());
+      }
+      session->transfer(flow_file, Success);
     }
-    const utils::optional<std::string> message_key = utils::get_encoded_message_key(message.get(), key_attr_encoding_attr_to_enum());
-    if (message_key) {
-      flow_file->setAttribute(KAFKA_MESSAGE_KEY_ATTR, message_key.value());
-    }
-    session->transfer(flow_file, Success);
   }
 }
 
