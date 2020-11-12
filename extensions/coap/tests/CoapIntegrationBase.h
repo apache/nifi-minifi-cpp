@@ -44,7 +44,7 @@ class CoapIntegrationBase : public IntegrationBase {
     server.reset();
   }
 
-  virtual void run(std::string test_file_location) override {
+  void run(const std::string& test_file_location, const utils::optional<std::string>& bootstrap_file = {}) override {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
