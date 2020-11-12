@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,26 +14,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_TLS_TLSUTILS_H_
-#define LIBMINIFI_INCLUDE_IO_TLS_TLSUTILS_H_
+#pragma once
 
-#include <atomic>
-#include <cstdint>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace io {
+namespace utils {
 namespace tls {
 
-int pemPassWordCb(char *buf, int size, int rwflag, void *userdata);
+class DistinguishedName {
+ public:
+  explicit DistinguishedName(const std::vector<std::string>& components);
+  static DistinguishedName fromCommaSeparated(const std::string& comma_separated_components);
+  static DistinguishedName fromSlashSeparated(const std::string& slash_separated_components);
+
+  utils::optional<std::string> getCN() const;
+  std::string toString() const;
+
+  friend bool operator==(const DistinguishedName& left, const DistinguishedName& right) { return left.components_ == right.components_; }
+  friend bool operator!=(const DistinguishedName& left, const DistinguishedName& right) { return !(left == right); }
+
+ private:
+  std::vector<std::string> components_;
+};
 
 }  // namespace tls
-}  // namespace io
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_IO_TLS_TLSUTILS_H_

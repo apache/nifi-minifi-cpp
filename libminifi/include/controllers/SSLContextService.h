@@ -21,18 +21,24 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
+
+#ifdef WIN32
+#include <windows.h>
+#include <wincrypt.h>
+#endif
+
 #ifdef OPENSSL_SUPPORT
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
 #include <openssl/pkcs12.h>
-#include "io/tls/TLSUtils.h"
 #endif
 #include <iostream>
 #include <memory>
 #include <string>
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
+#include "utils/tls/ExtendedKeyUsage.h"
 #include "io/validation.h"
 #include "../core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -89,28 +95,50 @@ class SSLContextService : public core::controller::ControllerService {
         logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
     setConfiguration(configuration);
     initialize();
-    // set the properties based on the configuration
-    core::Property property("Client Certificate", "Client Certificate");
-    core::Property privKey("Private Key", "Private Key file");
-    core::Property passphrase_prop("Passphrase", "Client passphrase. Either a file or unencrypted text");
-    core::Property caCert("CA Certificate", "CA certificate file");
 
+    // set the properties based on the configuration
     std::string value;
     if (configuration_->get(Configure::nifi_security_client_certificate, value)) {
-      setProperty(property.getName(), value);
+      setProperty(ClientCertificate.getName(), value);
     }
 
     if (configuration_->get(Configure::nifi_security_client_private_key, value)) {
-      setProperty(privKey.getName(), value);
+      setProperty(PrivateKey.getName(), value);
     }
 
     if (configuration_->get(Configure::nifi_security_client_pass_phrase, value)) {
-      setProperty(passphrase_prop.getName(), value);
+      setProperty(Passphrase.getName(), value);
     }
 
     if (configuration_->get(Configure::nifi_security_client_ca_certificate, value)) {
-      setProperty(caCert.getName(), value);
+      setProperty(CACertificate.getName(), value);
     }
+
+    if (configuration_->get(Configure::nifi_security_use_system_cert_store, value)) {
+      setProperty(UseSystemCertStore.getName(), value);
+    }
+
+#ifdef WIN32
+    if (configuration_->get(Configure::nifi_security_windows_cert_store_location, value)) {
+      setProperty(CertStoreLocation.getName(), value);
+    }
+
+    if (configuration_->get(Configure::nifi_security_windows_server_cert_store, value)) {
+      setProperty(ServerCertStore.getName(), value);
+    }
+
+    if (configuration_->get(Configure::nifi_security_windows_client_cert_store, value)) {
+      setProperty(ClientCertStore.getName(), value);
+    }
+
+    if (configuration_->get(Configure::nifi_security_windows_client_cert_cn, value)) {
+      setProperty(ClientCertCN.getName(), value);
+    }
+
+    if (configuration_->get(Configure::nifi_security_windows_client_cert_key_usage, value)) {
+      setProperty(ClientCertKeyUsage.getName(), value);
+    }
+#endif  // WIN32
   }
 
   virtual void initialize();
@@ -144,17 +172,38 @@ class SSLContextService : public core::controller::ControllerService {
 
   virtual void onEnable();
 
+  static const core::Property ClientCertificate;
+  static const core::Property PrivateKey;
+  static const core::Property Passphrase;
+  static const core::Property CACertificate;
+  static const core::Property UseSystemCertStore;
+#ifdef WIN32
+  static const core::Property CertStoreLocation;
+  static const core::Property ServerCertStore;
+  static const core::Property ClientCertStore;
+  static const core::Property ClientCertCN;
+  static const core::Property ClientCertKeyUsage;
+#endif  // WIN32
+
  protected:
-  virtual void initializeTLS();
+  virtual void initializeProperties();
 
   std::mutex initialization_mutex_;
   std::atomic<bool> initialized_;
   std::atomic<bool> valid_;
-  std::string certificate;
+  std::string certificate_;
   std::string private_key_;
   std::string passphrase_;
   std::string passphrase_file_;
   std::string ca_certificate_;
+  bool use_system_cert_store_ = false;
+#ifdef WIN32
+  std::string cert_store_location_;
+  std::string server_cert_store_;
+  std::string client_cert_store_;
+  std::string client_cert_cn_;
+  utils::tls::ExtendedKeyUsage client_cert_key_usage_;
+#endif  // WIN32
 
 #ifdef OPENSSL_SUPPORT
   static std::string getLatestOpenSSLErrorString() {
@@ -173,6 +222,17 @@ class SSLContextService : public core::controller::ControllerService {
   }
 
  private:
+#ifdef OPENSSL_SUPPORT
+  bool addP12CertificateToSSLContext(SSL_CTX* ctx) const;
+  bool addPemCertificateToSSLContext(SSL_CTX* ctx) const;
+  bool addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* ctx) const;
+  bool addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX* ctx) const;
+#ifdef WIN32
+  bool useClientCertificate(SSL_CTX* ctx, PCCERT_CONTEXT certificate) const;
+  void addServerCertificateToSSLStore(X509_STORE* ssl_store, PCCERT_CONTEXT certificate) const;
+#endif  // WIN32
+#endif  // OPENSSL_SUPPORT
+
   std::shared_ptr<logging::Logger> logger_;
 };
 typedef int (SSLContextService::*ptr)(char *, int, int, void *);

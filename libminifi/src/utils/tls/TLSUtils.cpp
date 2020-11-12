@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "io/tls/TLSUtils.h"
+#include "utils/tls/TLSUtils.h"
 
 #include <cstring>
 #include <string>
@@ -26,7 +26,7 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace io {
+namespace utils {
 namespace tls {
 
 int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
@@ -51,7 +51,7 @@ int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
 }
 
 }  // namespace tls
-}  // namespace io
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

@@ -86,6 +86,12 @@ class Configuration : public Properties {
   static constexpr const char *nifi_security_client_private_key = "nifi.security.client.private.key";
   static constexpr const char *nifi_security_client_pass_phrase = "nifi.security.client.pass.phrase";
   static constexpr const char *nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
+  static constexpr const char *nifi_security_use_system_cert_store = "nifi.security.use.system.cert.store";
+  static constexpr const char *nifi_security_windows_cert_store_location = "nifi.security.windows.cert.store.location";
+  static constexpr const char *nifi_security_windows_server_cert_store = "nifi.security.windows.server.cert.store";
+  static constexpr const char *nifi_security_windows_client_cert_store = "nifi.security.windows.client.cert.store";
+  static constexpr const char *nifi_security_windows_client_cert_cn = "nifi.security.windows.client.cert.cn";
+  static constexpr const char *nifi_security_windows_client_cert_key_usage = "nifi.security.windows.client.cert.key.usage";
 
   // nifi rest api user name and password
   static constexpr const char *nifi_rest_api_user_name = "nifi.rest.api.user.name";
