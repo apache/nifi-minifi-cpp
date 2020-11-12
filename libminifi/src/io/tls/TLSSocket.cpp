@@ -29,12 +29,12 @@
 #include <vector>
 
 #include "io/tls/TLSSocket.h"
-#include "io/tls/TLSUtils.h"
 #include "properties/Configure.h"
 #include "utils/StringUtils.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
+#include "utils/tls/TLSUtils.h"
 
 namespace org {
 namespace apache {
@@ -115,7 +115,7 @@ int16_t TLSContext::initialize(bool server_method) {
         file.close();
         passphrase = password;
       }
-      SSL_CTX_set_default_passwd_cb(local_context.get(), io::tls::pemPassWordCb);
+      SSL_CTX_set_default_passwd_cb(local_context.get(), utils::tls::pemPassWordCb);
       SSL_CTX_set_default_passwd_cb_userdata(local_context.get(), &passphrase);
     }
 
