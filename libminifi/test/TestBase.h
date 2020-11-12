@@ -278,6 +278,10 @@ class TestPlan {
     return logger_;
   }
 
+  std::string getStateDir() const {
+    return state_dir_;
+  }
+
   std::shared_ptr<core::CoreComponentStateManagerProvider> getStateManagerProvider() {
     return state_manager_provider_;
   }
