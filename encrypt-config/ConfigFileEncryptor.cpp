@@ -33,7 +33,7 @@ bool isEncrypted(const utils::optional<std::string>& encryption_type) {
 }
 
 uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes & encryption_key) {
-  return encryptSensitivePropertiesInFile(config_file, utils::crypto::EncryptionKeys{.encryption_key = encryption_key});
+  return encryptSensitivePropertiesInFile(config_file, utils::crypto::EncryptionKeys{{}, encryption_key});
 }
 
 uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::EncryptionKeys& keys) {

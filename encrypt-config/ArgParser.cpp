@@ -30,17 +30,17 @@ namespace minifi {
 namespace encrypt_config {
 
 const std::vector<Argument> Arguments::simple_arguments_{
-    {.names = {"--minifi-home", "-m"},
-     .required = true,
-     .value_name = "minifi home",
-     .description = "Specifies the home directory used by the minifi agent"}
+    {std::vector<std::string>{"--minifi-home", "-m"},
+     true,
+     "minifi home",
+     "Specifies the home directory used by the minifi agent"}
 };
 
 const std::vector<FlagArgument> Arguments::flag_arguments_{
-    {.names = {"--help", "-h"},
-     .description = "Prints this help message"},
-    {.names = {"--encrypt-flow-config"},
-     .description = "If set, the flow configuration file (as specified in minifi.properties) is also encrypted."}
+    {std::vector<std::string>{"--help", "-h"},
+     "Prints this help message"},
+    {std::vector<std::string>{"--encrypt-flow-config"},
+     "If set, the flow configuration file (as specified in minifi.properties) is also encrypted."}
 };
 
 std::string Arguments::getHelp() {

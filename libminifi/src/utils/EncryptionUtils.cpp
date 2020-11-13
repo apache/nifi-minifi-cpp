@@ -121,7 +121,7 @@ EncryptedData parseEncrypted(const std::string& input) {
   Bytes nonce = utils::StringUtils::from_base64(nonce_and_rest[0].data(), nonce_and_rest[0].size());
   Bytes ciphertext_plus_mac = utils::StringUtils::from_base64(nonce_and_rest[1].data(), nonce_and_rest[1].size());
 
-  return EncryptedData{.nonce = nonce, .ciphertext_plus_mac = ciphertext_plus_mac};
+  return EncryptedData{nonce, ciphertext_plus_mac};
 }
 
 bool isEncrypted(const std::string& input) {
