@@ -23,7 +23,7 @@ if [[ $# -lt 1 ]]; then
   exit 1
 fi
 
-docker_dir="$( cd ${0%/*} && pwd )"
+docker_dir="$( cd "${0%/*}" && pwd )"
 
 export MINIFI_VERSION=$1
 
@@ -34,6 +34,7 @@ if [[ ! -d ./test-env-py3 ]]; then
 fi
 
 echo "Activating virtual environment..." 1>&2
+# shellcheck disable=SC1091
 . ./test-env-py3/bin/activate
 pip install --trusted-host pypi.python.org --upgrade pip setuptools
 
@@ -43,9 +44,17 @@ echo "Installing test dependencies..." 1>&2
 # hint include/library paths if homewbrew is in use
 if brew list 2> /dev/null | grep openssl > /dev/null 2>&1; then
   echo "Using homebrew paths for openssl" 1>&2
-  export LDFLAGS="-L$(brew --prefix openssl)/lib"
-  export CFLAGS="-I$(brew --prefix openssl)/include"
-  export SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include"
+  LDFLAGS="-L$(brew --prefix openssl)/lib"
+  export LDFLAGS
+  CFLAGS="-I$(brew --prefix openssl)/include"
+  export CFLAGS
+  SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include"
+  export SWIG_FEATURES
+fi
+
+if ! command swig -version &> /dev/null; then
+  echo "Swig could not be found on your system (dependency of m2crypto python library). Please install swig to continue."
+  exit 1
 fi
 
 pip install --upgrade \
@@ -54,9 +63,12 @@ pip install --upgrade \
             PyYAML \
             m2crypto \
             watchdog
-export JAVA_HOME="/usr/lib/jvm/default-jvm"
-export PATH="$PATH:/usr/lib/jvm/default-jvm/bin"
+JAVA_HOME="/usr/lib/jvm/default-jvm"
+export JAVA_HOME
+PATH="$PATH:/usr/lib/jvm/default-jvm/bin"
+export PATH
 
-export PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
+PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
+export PYTHONPATH
 
 exec pytest -s -v "${docker_dir}"/test/integration

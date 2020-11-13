@@ -21,7 +21,16 @@ well as other systems which are available in docker, such as Apache NiFi.
 
 * Currently test_https.py does not work due to the upgrade to NiFi 1.7. This will be resolved as
   soon as possible.
-  
+
+## Test environment
+
+The test framework is written in Python 3 and uses pip3 to add required packages.
+
+The tests use docker containers so docker engine should be installed on your system. Check the [get docker](https://docs.docker.com/get-docker/) page for further information.
+
+One of the required python packages is the `m2crypto` package which depends on `swig` for compilation,
+so `swig` should also be installed on your system (e.g. `sudo apt install swig` on debian based systems).
+
 ## Test Execution Lifecycle
 
 Each test involves the following stages as part of its execution lifecycle:
@@ -131,7 +140,7 @@ with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
 ```
 
 Note that a docker cluster must be created inside of a *with* structure to
-ensure that all resources are ccreated and destroyed cleanly. 
+ensure that all resources are created and destroyed cleanly.
 
 ### Insertion of test input data
 
@@ -217,4 +226,3 @@ with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
   ...
   assert cluster.check_output()
 ```
-
