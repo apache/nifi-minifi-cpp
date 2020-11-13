@@ -28,7 +28,15 @@ namespace nifi {
 namespace minifi {
 namespace encrypt_config {
 
-uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes& encryption_key) {
+bool isEncrypted(const utils::optional<std::string>& encryption_type) {
+  return encryption_type && !encryption_type->empty() && *encryption_type  != "plaintext";
+}
+
+uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes & encryption_key) {
+  return encryptSensitivePropertiesInFile(config_file, utils::crypto::EncryptionKeys{.encryption_key = encryption_key});
+}
+
+uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::EncryptionKeys& keys) {
   int num_properties_encrypted = 0;
 
   for (const auto& property_key : config_file.getSensitiveProperties()) {
@@ -38,20 +46,37 @@ uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::
     std::string encryption_type_key = property_key + ".protected";
     utils::optional<std::string> encryption_type = config_file.getValue(encryption_type_key);
 
-    if (!encryption_type || encryption_type->empty() || *encryption_type == "plaintext") {
-      std::string encrypted_property_value = utils::crypto::encrypt(*property_value, encryption_key);
-
-      config_file.update(property_key, encrypted_property_value);
-
-      if (encryption_type) {
-        config_file.update(encryption_type_key, utils::crypto::EncryptionType::name());
-      } else {
-        config_file.insertAfter(property_key, encryption_type_key, utils::crypto::EncryptionType::name());
+    std::string raw_value = *property_value;
+    if (isEncrypted(encryption_type)) {
+      try {
+        utils::crypto::decrypt(raw_value, keys.encryption_key);
+        std::cout << "Property \"" << property_key << "\" is already properly encrypted.\n";
+        continue;
+      } catch (const std::exception&) {}
+      if (!keys.decryption_key) {
+        std::cerr << "No deprecated key is provided to attempt decryption of property \"" << property_key << "\"\n";
+        std::exit(1);
       }
-
-      std::cout << "Encrypted property: " << property_key << '\n';
-      ++num_properties_encrypted;
+      try {
+        raw_value = utils::crypto::decrypt(raw_value, *keys.decryption_key);
+      } catch (const std::exception&) {
+        std::cerr << "Couldn't decrypt property \"" << property_key << "\" using the deprecated key.\n";
+        throw;
+      }
     }
+
+    std::string encrypted_property_value = utils::crypto::encrypt(raw_value, keys.encryption_key);
+
+    config_file.update(property_key, encrypted_property_value);
+
+    if (encryption_type) {
+      config_file.update(encryption_type_key, utils::crypto::EncryptionType::name());
+    } else {
+      config_file.insertAfter(property_key, encryption_type_key, utils::crypto::EncryptionType::name());
+    }
+
+    std::cout << "Encrypted property: " << property_key << '\n';
+    ++num_properties_encrypted;
   }
 
   return num_properties_encrypted;

@@ -32,7 +32,9 @@ FileSystem::FileSystem(bool should_encrypt, utils::optional<utils::crypto::Encry
     : should_encrypt_(should_encrypt),
       encryptor_(std::move(encryptor)) {
   if (should_encrypt_ && !encryptor) {
-    throw std::invalid_argument("Requested file encryption but no encryption utility was provided");
+    std::string err_message = "Requested file encryption but no encryption utility was provided";
+    logger_->log_error(err_message.c_str());
+    throw std::invalid_argument(err_message);
   }
 }
 

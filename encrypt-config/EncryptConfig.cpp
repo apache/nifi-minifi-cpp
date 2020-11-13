@@ -31,8 +31,8 @@ namespace {
 constexpr const char* CONF_DIRECTORY_NAME = "conf";
 constexpr const char* BOOTSTRAP_FILE_NAME = "bootstrap.conf";
 constexpr const char* MINIFI_PROPERTIES_FILE_NAME = "minifi.properties";
+constexpr const char* DECRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key.deprecated";
 constexpr const char* ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
-constexpr const char* USAGE_STRING = "Usage: encrypt-config --minifi-home <your-minifi-home>";
 
 }  // namespace
 
@@ -42,40 +42,72 @@ namespace nifi {
 namespace minifi {
 namespace encrypt_config {
 
-EncryptConfig::EncryptConfig(int argc, char* argv[]) : minifi_home_(parseMinifiHomeFromTheOptions(argc, argv)) {
+EncryptConfig::EncryptConfig(const std::string& minifi_home) : minifi_home_(minifi_home) {
   if (sodium_init() < 0) {
     throw std::runtime_error{"Could not initialize the libsodium library!"};
   }
+  keys_ = getEncryptionKeys();
 }
 
-std::string EncryptConfig::parseMinifiHomeFromTheOptions(int argc, char* argv[]) {
-  if (argc >= 2) {
-    for (int i = 1; i < argc; ++i) {
-      std::string argstr(argv[i]);
-      if ((argstr == "-h") || (argstr == "--help")) {
-        std::cout << USAGE_STRING << std::endl;
-        std::exit(0);
-      }
-    }
+EncryptConfig::EncryptionType EncryptConfig::encryptSensitiveProperties() const {
+  encryptSensitiveProperties(keys_);
+  if (keys_.decryption_key) {
+    return EncryptionType::RE_ENCRYPT;
   }
-
-  if (argc >= 3) {
-    for (int i = 1; i < argc; ++i) {
-      std::string argstr(argv[i]);
-      if ((argstr == "-m") || (argstr == "--minifi-home")) {
-        if (i+1 < argc) {
-          return std::string(argv[i+1]);
-        }
-      }
-    }
-  }
-
-  throw std::runtime_error{USAGE_STRING};
+  return EncryptionType::ENCRYPT;
 }
 
-void EncryptConfig::encryptSensitiveProperties() const {
-  utils::crypto::Bytes encryption_key = getEncryptionKey();
-  encryptSensitiveProperties(encryption_key);
+void EncryptConfig::encryptFlowConfig() const {
+  encrypt_config::ConfigFile properties_file{std::ifstream{propertiesFilePath()}};
+  utils::optional<std::string> config_path = properties_file.getValue(Configure::nifi_flow_configuration_file);
+  if (!config_path) {
+    config_path = utils::file::PathUtils::resolve(minifi_home_, "conf/config.yml");
+    std::cout << "Couldn't find path of configuration file, using default: \"" << *config_path << "\"\n";
+  } else {
+    config_path = utils::file::PathUtils::resolve(minifi_home_, *config_path);
+    std::cout << "Encrypting flow configuration file: \"" << *config_path << "\"\n";
+  }
+  std::string config_content;
+  try {
+    std::ifstream config_file{*config_path, std::ios::binary};
+    config_file.exceptions(std::ios::failbit | std::ios::badbit);
+    config_content = std::string{std::istreambuf_iterator<char>(config_file), {}};
+  } catch (...) {
+    std::cerr << "Error while reading flow configuration file \"" << *config_path << "\"\n";
+    throw;
+  }
+  try {
+    utils::crypto::decrypt(config_content, keys_.encryption_key);
+    std::cout << "Flow config file is already properly encrypted.\n";
+    return;
+  } catch (const std::exception&) {}
+
+  if (utils::crypto::isEncrypted(config_content)) {
+    if (!keys_.decryption_key) {
+      std::cerr << "Config file is encrypted, but no deprecated key is set.\n";
+      std::exit(1);
+    }
+    std::cout << "Trying to decrypt flow config file using the deprecated key ...\n";
+    try {
+      config_content = utils::crypto::decrypt(config_content, *keys_.decryption_key);
+    } catch (const std::exception&) {
+      std::cerr << "Flow config is encrypted, but couldn't be decrypted.\n";
+      std::exit(1);
+    }
+  } else {
+    std::cout << "Flow config file is not encrypted, using as-is.\n";
+  }
+
+  std::string encrypted_content = utils::crypto::encrypt(config_content, keys_.encryption_key);
+  try {
+    std::ofstream encrypted_file{*config_path, std::ios::binary};
+    encrypted_file.exceptions(std::ios::failbit | std::ios::badbit);
+    encrypted_file << encrypted_content;
+  } catch (...) {
+    std::cerr << "Error while writing encrypted flow configuration file \"" << *config_path << "\"\n";
+    throw;
+  }
+  std::cout << "Successfully encrypted flow configuration file: \"" << *config_path << "\"\n";
 }
 
 std::string EncryptConfig::bootstrapFilePath() const {
@@ -90,33 +122,44 @@ std::string EncryptConfig::propertiesFilePath() const {
       MINIFI_PROPERTIES_FILE_NAME);
 }
 
-utils::crypto::Bytes EncryptConfig::getEncryptionKey() const {
+utils::crypto::EncryptionKeys EncryptConfig::getEncryptionKeys() const {
   encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
-  utils::optional<std::string> key_from_bootstrap_file = bootstrap_file.getValue(ENCRYPTION_KEY_PROPERTY_NAME);
+  utils::optional<std::string> decryption_key_hex = bootstrap_file.getValue(DECRYPTION_KEY_PROPERTY_NAME);
+  utils::optional<std::string> encryption_key_hex = bootstrap_file.getValue(ENCRYPTION_KEY_PROPERTY_NAME);
 
-  if (key_from_bootstrap_file && !key_from_bootstrap_file->empty()) {
-    std::string binary_key = hexDecodeAndValidateKey(*key_from_bootstrap_file);
+  utils::crypto::EncryptionKeys keys;
+  if (!decryption_key_hex || decryption_key_hex->empty()) {
+    std::cout << "No decryption key was provided\n";
+  } else {
+    std::string binary_key = hexDecodeAndValidateKey(*decryption_key_hex, DECRYPTION_KEY_PROPERTY_NAME);
+    std::cout << "Decryption key found in " << bootstrapFilePath() << "\n";
+    keys.decryption_key = utils::crypto::stringToBytes(binary_key);
+  }
+
+  if (encryption_key_hex && !encryption_key_hex->empty()) {
+    std::string binary_key = hexDecodeAndValidateKey(*encryption_key_hex, ENCRYPTION_KEY_PROPERTY_NAME);
     std::cout << "Using the existing encryption key found in " << bootstrapFilePath() << '\n';
-    return utils::crypto::stringToBytes(binary_key);
+    keys.encryption_key = utils::crypto::stringToBytes(binary_key);
   } else {
     std::cout << "Generating a new encryption key...\n";
     utils::crypto::Bytes encryption_key = utils::crypto::generateKey();
     writeEncryptionKeyToBootstrapFile(encryption_key);
     std::cout << "Wrote the new encryption key to " << bootstrapFilePath() << '\n';
-    return encryption_key;
+    keys.encryption_key = encryption_key;
   }
+  return keys;
 }
 
-std::string EncryptConfig::hexDecodeAndValidateKey(const std::string& key) const {
+std::string EncryptConfig::hexDecodeAndValidateKey(const std::string& key, const std::string& key_name) const {
   // Note: from_hex() allows [and skips] non-hex characters
   std::string binary_key = utils::StringUtils::from_hex(key);
   if (binary_key.size() == utils::crypto::EncryptionType::keyLength()) {
     return binary_key;
   } else {
     std::stringstream error;
-    error << "The encryption key " << ENCRYPTION_KEY_PROPERTY_NAME << " in the bootstrap file\n"
+    error << "The encryption key \"" << key_name << "\" in the bootstrap file\n"
         << "    " << bootstrapFilePath() << '\n'
-        << "is invalid; delete it to generate a new key.";
+        << "is invalid.";
     throw std::runtime_error{error.str()};
   }
 }
@@ -134,13 +177,13 @@ void EncryptConfig::writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes
   bootstrap_file.writeTo(bootstrapFilePath());
 }
 
-void EncryptConfig::encryptSensitiveProperties(const utils::crypto::Bytes& encryption_key) const {
+void EncryptConfig::encryptSensitiveProperties(const utils::crypto::EncryptionKeys& keys) const {
   encrypt_config::ConfigFile properties_file{std::ifstream{propertiesFilePath()}};
   if (properties_file.size() == 0) {
     throw std::runtime_error{"Properties file " + propertiesFilePath() + " not found!"};
   }
 
-  uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(properties_file, encryption_key);
+  uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(properties_file, keys);
   if (num_properties_encrypted == 0) {
     std::cout << "Could not find any (new) sensitive properties to encrypt in " << propertiesFilePath() << '\n';
     return;

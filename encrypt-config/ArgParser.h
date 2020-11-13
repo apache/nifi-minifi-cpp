@@ -16,8 +16,10 @@
  */
 #pragma once
 
-#include "ConfigFile.h"
-#include "utils/EncryptionUtils.h"
+#include <set>
+#include <vector>
+#include <map>
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -25,9 +27,42 @@ namespace nifi {
 namespace minifi {
 namespace encrypt_config {
 
-uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes& encryption_key);
+struct Argument {
+  std::vector<std::string> names;
+  bool required;
+  std::string value_name;
+  std::string description;
+};
 
-uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::EncryptionKeys& keys);
+struct FlagArgument {
+  std::vector<std::string> names;
+  std::string description;
+};
+
+class Arguments {
+  static const std::vector<Argument> simple_arguments_;
+  static const std::vector<FlagArgument> flag_arguments_;
+
+  void set(const std::string& key, const std::string& value);
+
+  void set(const std::string& bool_key);
+
+  static utils::optional<Argument> getSimpleArg(const std::string& key);
+  static utils::optional<FlagArgument> getFlag(const std::string& flag);
+
+ public:
+  static Arguments parse(int argc, char* argv[]);
+
+  static std::string getHelp();
+
+  utils::optional<std::string> get(const std::string& key) const;
+
+  bool isSet(const std::string& flag) const;
+
+ private:
+  std::map<std::string, std::string> simple_args_;
+  std::set<std::string> flag_args_;
+};
 
 }  // namespace encrypt_config
 }  // namespace minifi

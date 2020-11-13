@@ -19,6 +19,7 @@
 #include <string>
 
 #include "utils/EncryptionUtils.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -28,22 +29,28 @@ namespace encrypt_config {
 
 class EncryptConfig {
  public:
-  EncryptConfig(int argc, char* argv[]);
-  void encryptSensitiveProperties() const;
+  enum class EncryptionType {
+    ENCRYPT,
+    RE_ENCRYPT
+  };
+
+  explicit EncryptConfig(const std::string& minifi_home);
+  EncryptionType encryptSensitiveProperties() const;
+
+  void encryptFlowConfig() const;
 
  private:
   std::string bootstrapFilePath() const;
   std::string propertiesFilePath() const;
 
-  static std::string parseMinifiHomeFromTheOptions(int argc, char* argv[]);
-
-  utils::crypto::Bytes getEncryptionKey() const;
-  std::string hexDecodeAndValidateKey(const std::string& key) const;
+  utils::crypto::EncryptionKeys getEncryptionKeys() const;
+  std::string hexDecodeAndValidateKey(const std::string& key, const std::string& key_name) const;
   void writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes& encryption_key) const;
 
-  void encryptSensitiveProperties(const utils::crypto::Bytes& encryption_key) const;
+  void encryptSensitiveProperties(const utils::crypto::EncryptionKeys& encryption_key) const;
 
   const std::string minifi_home_;
+  utils::crypto::EncryptionKeys keys_;
 };
 
 }  // namespace encrypt_config
