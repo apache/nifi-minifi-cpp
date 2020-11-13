@@ -59,21 +59,21 @@ A subset of the Apache NiFi [Expression Language](EXPRESSIONS.md) is supported.
 
 MiNiFi - C++ supports the following C++ processors:
 
-The following table lists the base set of processors.  
+The following table lists the base set of processors.
 
 | Extension Set        | Processors           |
 | ------------- |:-------------|
 | **Base**    | [AppendHostInfo](PROCESSORS.md#appendhostinfo)<br/>[ExecuteProcess](PROCESSORS.md#executeprocess)<br/>[ExtractText](PROCESSORS.md#extracttext)<br/> [GenerateFlowFile](PROCESSORS.md#generateflowfile)<br/>[GetFile](PROCESSORS.md#getfile)<br/>[GetTCP](PROCESSORS.md#gettcp)<br/>[HashContent](PROCESSORS.md#hashcontent)<br/>[ListenSyslog](PROCESSORS.md#listensyslog)<br/>[LogAttribute](PROCESSORS.md#logattribute)<br/>[PutFile](PROCESSORS.md#putfile)<br/>[RetryFlowFile](PROCESSORS.md#retryflowfile)<br/>[RouteOnAttribute](PROCESSORS.md#routeonattribute)<br/>[TailFile](PROCESSORS.md#tailfile)<br/>[UpdateAttribute](PROCESSORS.md#updateattribute)
 
-The next table outlines CMAKE flags that correspond with MiNiFi extensions. Extensions that are enabled by default ( such as CURL ), can be disabled with the respective CMAKE flag on the command line. 
+The next table outlines CMAKE flags that correspond with MiNiFi extensions. Extensions that are enabled by default ( such as CURL ), can be disabled with the respective CMAKE flag on the command line.
 
-Through JNI extensions you can run NiFi processors using NARs. The JNI extension set allows you to run these Java processors. MiNiFi C++ will favor C++ implementations over Java implements. In the case where a processor is implemented in either language, the one in C++ will be selected; however, will remain transparent to the consumer. 
+Through JNI extensions you can run NiFi processors using NARs. The JNI extension set allows you to run these Java processors. MiNiFi C++ will favor C++ implementations over Java implements. In the case where a processor is implemented in either language, the one in C++ will be selected; however, will remain transparent to the consumer.
 
 
 | Extension Set        | Processors           | CMAKE Flag  |
 | ------------- |:-------------| :-----|
 | Archive Extensions    | [ApplyTemplate](PROCESSORS.md#applytemplate)<br/>[CompressContent](PROCESSORS.md#compresscontent)<br/>[ManipulateArchive](PROCESSORS.md#manipulatearchive)<br/>[MergeContent](PROCESSORS.md#mergecontent)<br/>[FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)<br/>[UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)      |   -DBUILD_LIBARCHIVE=ON |
-| AWS | [AWSCredentialsService](CONTROLLERS.md#awsCredentialsService) | -DENABLE_AWS=ON  |
+| AWS | [AWSCredentialsService](CONTROLLERS.md#awsCredentialsService)<br/>[PutS3Object](PROCESSORS.md#puts3object)<br/>[DeleteS3Object](PROCESSORS.md#deletes3object) | -DENABLE_AWS=ON  |
 | CivetWeb | [ListenHTTP](PROCESSORS.md#listenhttp)  | -DDISABLE_CIVET=ON |
 | CURL | [InvokeHTTP](PROCESSORS.md#invokehttp)      |    -DDISABLE_CURL=ON  |
 | GPS | GetGPS      |    -DENABLE_GPS=ON  |
@@ -92,7 +92,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | USB Camera | [GetUSBCamera](PROCESSORS.md#getusbcamera)     |    -DENABLE_USB_CAMERA=ON  |
 | Windows Event Log (Windows only) | CollectorInitiatedSubscription<br/>ConsumeWindowsEventLog<br/>TailEventLog | -DENABLE_WEL=ON |
 
- Please see our [Python guide](extensions/script/README.md) on how to write Python processors and use them within MiNiFi C++. 
+ Please see our [Python guide](extensions/script/README.md) on how to write Python processors and use them within MiNiFi C++.
 
 ## Caveats
 * We follow semver with regards to API compatibility, but no ABI compatibility is provided. See [semver's website](https://semver.org/) for more information
@@ -121,11 +121,11 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 The following utilities are needed to build external projects, when bundled
 versions of LibreSSL, cURL, or zlib are used:
 
-* patch 
-* autoconf 
-* automake 
-* libtool 
-  
+* patch
+* autoconf
+* automake
+* libtool
+
 **NOTE** if Lua support is enabled, then a C++ compiler with support for c++-14 must be used. If using GCC, version 6.x
 or greater is recommended.
 
@@ -133,7 +133,7 @@ or greater is recommended.
 
 **NOTE** if Kafka support is enabled, a recent version of a compiler supporting C++-11 regexes must be used. GCC versions >= 4.9.x are recommended.
 
-**NOTE** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove: 
+**NOTE** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove:
 
  * extensions/expression-language/Parser.cpp
  * extensions/expression-language/Parser.hpp
@@ -194,7 +194,7 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
 #### Windows
   Build and Installation has been tested with Windows 10 using Visual Studio 2017. You can build
   and create an MSI via the CPACK command. This requires the installation of the WiX
-  toolset (http://wixtoolset.org/). To do this, open up a prompt into your build directory and 
+  toolset (http://wixtoolset.org/). To do this, open up a prompt into your build directory and
   type 'cpack' . The CPACK command will automatically generate and provide you a path to the distributable
   msi file. See [Windows.md](Windows.md) for more details.
 
@@ -218,7 +218,7 @@ The needed dependencies can be installed with the following commands for:
 ##### Yum based Linux Distributions
 
 **NOTE** if a newer compiler is required, such as when Lua support is enabled, it is recommended to use a newer compiler
-using a devtools-* package from the Software Collections (SCL). 
+using a devtools-* package from the Software Collections (SCL).
 
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
@@ -373,11 +373,11 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
     * Extension cannot be installed due to
       version of cmake or other software, or
       incompatibility with other extensions
-    
-    Enter choice [ A - W or 1-4 ] 
+
+    Enter choice [ A - W or 1-4 ]
   ```
 
-- Boostrap now saves state between runs. State will automatically be saved. Provide -c or --clear to clear this state. The -i option provides a guided menu install with the ability to change 
+- Boostrap now saves state between runs. State will automatically be saved. Provide -c or --clear to clear this state. The -i option provides a guided menu install with the ability to change
 advanced features.
 
 ### Building
@@ -392,7 +392,7 @@ advanced features.
 
 - Perform a `cmake ..` to generate the project files
   - Optionally disable or enable extensions. Please visit our guide [extensions guide](Extensions.md) for flags or our wiki entry on
-    [customizing builds](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=74685143) for more information on this topic. 
+    [customizing builds](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=74685143) for more information on this topic.
   ```
   # ~/Development/code/apache/nifi-minifi-cpp on git:master
   $ cmake ..
@@ -513,7 +513,7 @@ from the project directory. Further instructions are available in the [Snapcraft
 
 ### Configuring
 The 'conf' directory in the root contains a template config.yml document, minifi.properties, and minifi-log.properties. Please see our [Configuration document](CONFIGURE.md) for details on how to configure agents.
-         
+
 ### Running
 After completing a [build](#building), the application can be run by issuing the following from :
 
@@ -521,7 +521,7 @@ After completing a [build](#building), the application can be run by issuing the
 
 By default, this will make use of a config.yml located in the conf directory.  This configuration file location can be altered by adjusting the property `nifi.flow.configuration.file` in minifi.properties located in the conf directory.
 
-### Stopping  
+### Stopping
 
 MiNiFi can then be stopped by issuing:
 
@@ -537,12 +537,12 @@ MiNiFi can also be installed as a system service using minifi.sh with an optiona
 MiNiFi C++ comes with a deployment script. This will build and package minifi. Additionally, a file named build_output will be
 created within the build directory that contains a manifest of build artifacts.
 
-    $ deploy.sh <build identifier> 
+    $ deploy.sh <build identifier>
 
 The build identifier will be carried with the deployed binary for the configuration you specify. By default all extensions will be built.
 
-On Windows it is suggested that MSI be used for installation. 
-    
+On Windows it is suggested that MSI be used for installation.
+
 ### Extensions
 
 Please see [Extensions.md](Extensions.md) on how to build and run conditionally built dependencies and extensions.
