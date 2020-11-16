@@ -178,9 +178,7 @@ class FlowController : public core::controller::ControllerServiceProvider,  publ
   }
 
   utils::Identifier getControllerUUID() const override {
-    utils::Identifier uuid;
-    getUUID(uuid);
-    return uuid;
+    return getUUID();
   }
 
   /**
