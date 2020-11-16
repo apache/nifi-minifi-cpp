@@ -21,8 +21,9 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+include_directories(controllerservices processors storage ${CMAKE_SOURCE_DIR}/extensions/azure)
 
-file(GLOB SOURCES "*.cpp" "storage/*.cpp" "controllerservices/*.cpp")
+file(GLOB SOURCES "*.cpp" "storage/*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
 
 add_library(minifi-azure STATIC ${SOURCES})
 

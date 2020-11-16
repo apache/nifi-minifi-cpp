@@ -1,6 +1,6 @@
 /**
- * @file BlobStorageWrapper.cpp
- * BlobStorageWrapper class implementation
+ * @file BlobStorage.h
+ * BlobStorage class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,8 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#include "BlobStorageWrapper.h"
+#include <string>
+#include <vector>
+
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -27,21 +31,29 @@ namespace minifi {
 namespace azure {
 namespace storage {
 
-BlobStorageWrapper::BlobStorageWrapper(const std::string &connection_string, const std::string &container_name)
-  : container_client_(Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string, container_name)) {
-}
+struct UploadBlobResult {
+  std::string primary_uri;
+  std::string etag;
+  std::size_t length;
+  std::string timestamp;
+};
 
-bool BlobStorageWrapper::uploadBlob(const std::string &blob_name, const std::vector<uint8_t> &buffer) {
-  try
-  {
-    auto blob_client = container_client_.GetBlockBlobClient(blob_name);
-    Azure::Core::Http::MemoryBodyStream data(buffer);
-    blob_client.Upload(&data);
-    return true;
-  } catch (const std::runtime_error&) {
-    return false;
+class BlobStorage {
+ public:
+  BlobStorage(const std::string &connection_string, const std::string &container_name)
+    : connection_string_(connection_string)
+    , container_name_(container_name) {
   }
-}
+
+  virtual void createContainer() = 0;
+  virtual void resetClientIfNeeded(const std::string &connection_string, const std::string &container_name) = 0;
+  virtual utils::optional<UploadBlobResult> uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) = 0;
+  virtual ~BlobStorage() = default;
+
+ protected:
+  std::string connection_string_;
+  std::string container_name_;
+};
 
 }  // namespace storage
 }  // namespace azure

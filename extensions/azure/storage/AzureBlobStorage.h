@@ -1,6 +1,6 @@
 /**
- * @file BlobStorageWrapper.h
- * BlobStorageWrapper class declaration
+ * @file AzureBlobStorage.h
+ * AzureBlobStorage class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -21,8 +21,12 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
+#include "BlobStorage.h"
 #include "azure/storage/blobs/blob.hpp"
+#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -31,13 +35,16 @@ namespace minifi {
 namespace azure {
 namespace storage {
 
-class BlobStorageWrapper {
+class AzureBlobStorage : public BlobStorage {
  public:
-  BlobStorageWrapper(const std::string &connection_string, const std::string &container_name);
-  bool uploadBlob(const std::string &blob_name, const std::vector<uint8_t> &buffer);
+  AzureBlobStorage(const std::string &connection_string, const std::string &container_name);
+  void createContainer() override;
+  void resetClientIfNeeded(const std::string &connection_string, const std::string &container_name) override;
+  utils::optional<UploadBlobResult> uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) override;
 
  private:
-  Azure::Storage::Blobs::BlobContainerClient container_client_;
+  std::unique_ptr<Azure::Storage::Blobs::BlobContainerClient> container_client_;
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureBlobStorage>::getLogger()};
 };
 
 }  // namespace storage
