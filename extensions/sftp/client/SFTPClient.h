@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+#include "Exception.h"
 #include "utils/HTTPClient.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -47,6 +48,12 @@ enum class SFTPError : uint8_t {
   SFTP_ERROR_COMMUNICATIONS_FAILURE,
   SFTP_ERROR_IO_ERROR,
   SFTP_ERROR_UNEXPECTED
+};
+
+struct SFTPException : Exception {
+  explicit SFTPException(const SFTPError err)
+      :Exception{ExceptionType::FILE_OPERATION_EXCEPTION, fmt::format("SFTP Error {0}", static_cast<int>(err))}
+  {}
 };
 
 class LastSFTPError {

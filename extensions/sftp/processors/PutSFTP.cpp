@@ -215,7 +215,7 @@ int64_t PutSFTP::ReadCallback::process(const std::shared_ptr<io::BaseStream>& st
       *stream,
       conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/,
       stream->size() /*expected_size*/)) {
-    throw client_.getLastError();
+    throw utils::SFTPException{client_.getLastError()};
   }
   return stream->size();
 }

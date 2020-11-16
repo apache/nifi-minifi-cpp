@@ -159,7 +159,7 @@ FetchSFTP::WriteCallback::~WriteCallback() = default;
 
 int64_t FetchSFTP::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   if (!client_.getFile(remote_file_, *stream)) {
-    throw client_.getLastError();
+    throw utils::SFTPException{client_.getLastError()};
   }
   return stream->size();
 }

@@ -27,6 +27,7 @@
 #include <string>
 #include <memory>
 
+#include "Exception.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -44,7 +45,7 @@ namespace io {
     auto logger = logging::LoggerFactory<RandomServerSocket>::getLogger();
     for (uint16_t i = 0; i < retries; ++i) {
       setPort(dis(gen));
-      if (initialize() == 0) {
+      if (RandomServerSocket::initialize() == 0) {
         logger->log_info("Created socket listens on generated port: %hu", getPort());
         return;
       }
@@ -52,7 +53,7 @@ namespace io {
     std::stringstream error;
     error << "Couldn't bind to a port between " << offset << " and " << offset+range << " in " << retries << " try!";
     logger->log_error(error.str().c_str());
-    throw error.str();
+    throw Exception{ExceptionType::GENERAL_EXCEPTION, error.str()};
   }
 
 } /* namespace io */

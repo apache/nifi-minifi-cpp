@@ -250,11 +250,10 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         parentGroup->addProcessor(processor);
       }
     } else {
-      throw new std::invalid_argument("Cannot instantiate a MiNiFi instance without a defined Processors configuration node.");
+      throw std::invalid_argument("Cannot instantiate a MiNiFi instance without a defined Processors configuration node.");
     }
   } else {
-    throw new std::invalid_argument("Cannot instantiate a MiNiFi instance without a defined "
-                                    "Processors configuration node.");
+    throw std::invalid_argument("Cannot instantiate a MiNiFi instance without a defined Processors configuration node.");
   }
 }
 
