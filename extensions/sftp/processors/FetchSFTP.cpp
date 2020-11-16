@@ -159,7 +159,7 @@ FetchSFTP::WriteCallback::~WriteCallback() = default;
 
 int64_t FetchSFTP::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   if (!client_.getFile(remote_file_, *stream)) {
-    throw client_.getLastError();
+    throw utils::SFTPException{client_.getLastError()};
   }
   return stream->size();
 }
@@ -214,18 +214,19 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   WriteCallback write_callback(remote_file, *client);
   try {
     session->write(flow_file, &write_callback);
-  } catch (const utils::SFTPError& error) {
-    switch (error) {
-      case utils::SFTPError::SFTP_ERROR_PERMISSION_DENIED:
+  } catch (const utils::SFTPException& ex) {
+    logger_->log_debug(ex.what());
+    switch (ex.error().value()) {
+      case utils::SFTPError::PermissionDenied:
         session->transfer(flow_file, PermissionDenied);
         put_connection_back_to_cache();
         return;
-      case utils::SFTPError::SFTP_ERROR_FILE_NOT_EXISTS:
+      case utils::SFTPError::FileDoesNotExist:
         session->transfer(flow_file, NotFound);
         put_connection_back_to_cache();
         return;
-      case utils::SFTPError::SFTP_ERROR_COMMUNICATIONS_FAILURE:
-      case utils::SFTPError::SFTP_ERROR_IO_ERROR:
+      case utils::SFTPError::CommunicationFailure:
+      case utils::SFTPError::IoError:
         session->transfer(flow_file, CommsFailure);
         return;
       default:

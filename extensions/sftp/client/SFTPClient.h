@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+#include "Exception.h"
+#include "utils/Enum.h"
 #include "utils/HTTPClient.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -39,14 +41,24 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-enum class SFTPError : uint8_t {
-  SFTP_ERROR_OK = 0,
-  SFTP_ERROR_PERMISSION_DENIED,
-  SFTP_ERROR_FILE_NOT_EXISTS,
-  SFTP_ERROR_FILE_ALREADY_EXISTS,
-  SFTP_ERROR_COMMUNICATIONS_FAILURE,
-  SFTP_ERROR_IO_ERROR,
-  SFTP_ERROR_UNEXPECTED
+SMART_ENUM(SFTPError,
+    (Ok, "Ok"),
+    (PermissionDenied, "Permission denied"),
+    (FileDoesNotExist, "File does not exist"),
+    (FileAlreadyExists, "File already exists"),
+    (CommunicationFailure, "Communication failure"),
+    (IoError, "IO error"),
+    (Unexpected, "Unexpected"));
+
+class SFTPException : public Exception {
+ public:
+  explicit SFTPException(const SFTPError err)
+      :Exception{ExceptionType::FILE_OPERATION_EXCEPTION, fmt::format("SFTP Error: {0}", err.toString())},
+      error_{err}
+  {}
+  SFTPError error() const noexcept { return error_; }
+ private:
+  SFTPError error_;
 };
 
 class LastSFTPError {
@@ -58,8 +70,8 @@ class LastSFTPError {
   LastSFTPError& operator=(const LastSFTPError&) = delete;
   LastSFTPError& operator=(LastSFTPError&&) = delete;
 
-  LastSFTPError& operator=(unsigned long libssh2_sftp_error);
-  LastSFTPError& operator=(const SFTPError& sftp_error);
+  LastSFTPError& setLibssh2Error(unsigned long libssh2_sftp_error);
+  LastSFTPError& setSftpError(const SFTPError& sftp_error);
   operator unsigned long() const;
   operator SFTPError() const;
 
@@ -148,7 +160,6 @@ class SFTPClient {
   bool setAttributes(const std::string& path, const SFTPAttributes& attrs);
 
  protected:
-
   /*
    * The maximum size libssh2 is willing to read or write in one go is 30000 bytes.
    * (See MAX_SFTP_OUTGOING_SIZE and MAX_SFTP_READ_SIZE).
@@ -162,27 +173,27 @@ class SFTPClient {
   const uint16_t port_;
   const std::string username_;
 
-  LIBSSH2_KNOWNHOSTS *ssh_known_hosts_;
-  bool strict_host_checking_;
+  LIBSSH2_KNOWNHOSTS *ssh_known_hosts_ = nullptr;
+  bool strict_host_checking_ = false;
 
-  bool password_authentication_enabled_;
+  bool password_authentication_enabled_ = false;
   std::string password_;
 
-  bool public_key_authentication_enabled_;
+  bool public_key_authentication_enabled_ = false;
   std::string private_key_file_path_;
   std::string private_key_passphrase_;
 
-  int64_t data_timeout_;
+  int64_t data_timeout_ = 0;
 
-  bool send_keepalive_;
+  bool send_keepalive_ = false;
 
   std::vector<char> curl_errorbuffer_;
 
-  CURL *easy_;
-  LIBSSH2_SESSION *ssh_session_;
-  LIBSSH2_SFTP *sftp_session_;
+  CURL *easy_ = nullptr;
+  LIBSSH2_SESSION *ssh_session_ = nullptr;
+  LIBSSH2_SFTP *sftp_session_ = nullptr;
 
-  bool connected_;
+  bool connected_ = false;
 
   LastSFTPError last_error_;
 };

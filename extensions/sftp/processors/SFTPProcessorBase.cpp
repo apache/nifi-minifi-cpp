@@ -430,7 +430,7 @@ SFTPProcessorBase::CreateDirectoryHierarchyError SFTPProcessorBase::createDirect
   if (!disable_directory_listing) {
     LIBSSH2_SFTP_ATTRIBUTES attrs;
     if (!client.stat(remote_path, true /*follow_symlinks*/, attrs)) {
-      if (client.getLastError() != utils::SFTPError::SFTP_ERROR_FILE_NOT_EXISTS) {
+      if (client.getLastError() != utils::SFTPError::FileDoesNotExist) {
         logger_->log_error("Failed to stat %s", remote_path.c_str());
       }
       should_create_directory = true;
@@ -448,10 +448,10 @@ SFTPProcessorBase::CreateDirectoryHierarchyError SFTPProcessorBase::createDirect
       LIBSSH2_SFTP_ATTRIBUTES attrs;
       if (!client.stat(remote_path, true /*follow_symlinks*/, attrs)) {
         auto last_error = client.getLastError();
-        if (last_error == utils::SFTPError::SFTP_ERROR_FILE_NOT_EXISTS) {
+        if (last_error == utils::SFTPError::FileDoesNotExist) {
           logger_->log_error("Could not find remote directory %s after creating it", remote_path.c_str());
           return CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_NOT_FOUND;
-        } else if (last_error == utils::SFTPError::SFTP_ERROR_PERMISSION_DENIED) {
+        } else if (last_error == utils::SFTPError::PermissionDenied) {
           logger_->log_error("Permission denied when reading remote directory %s after creating it", remote_path.c_str());
           return CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_PERMISSION_DENIED;
         } else {

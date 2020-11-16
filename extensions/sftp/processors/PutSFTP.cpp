@@ -215,7 +215,7 @@ int64_t PutSFTP::ReadCallback::process(const std::shared_ptr<io::BaseStream>& st
       *stream,
       conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/,
       stream->size() /*expected_size*/)) {
-    throw client_.getLastError();
+    throw utils::SFTPException{client_.getLastError()};
   }
   return stream->size();
 }
@@ -325,7 +325,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     std::string target_path = utils::file::FileUtils::concat_path(remote_path, filename, true /*force_posix*/);
     LIBSSH2_SFTP_ATTRIBUTES attrs;
     if (!client->stat(target_path, true /*follow_symlinks*/, attrs)) {
-      if (client->getLastError() != utils::SFTPError::SFTP_ERROR_FILE_NOT_EXISTS) {
+      if (client->getLastError() != utils::SFTPError::FileDoesNotExist) {
         logger_->log_error("Failed to stat %s", target_path.c_str());
         session->transfer(flow_file, Failure);
         return true;
@@ -362,7 +362,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
           possible_resolved_filename = possible_resolved_filename_ss.str();
           std::string possible_resolved_path = utils::file::FileUtils::concat_path(remote_path, possible_resolved_filename, true /*force_posix*/);
           if (!client->stat(possible_resolved_path, true /*follow_symlinks*/, attrs)) {
-            if (client->getLastError() == utils::SFTPError::SFTP_ERROR_FILE_NOT_EXISTS) {
+            if (client->getLastError() == utils::SFTPError::FileDoesNotExist) {
               unique_name_generated = true;
               break;
             } else {
@@ -427,7 +427,8 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   ReadCallback read_callback(target_path.c_str(), *client, conflict_resolution_);
   try {
     session->read(flow_file, &read_callback);
-  } catch (const utils::SFTPError&) {
+  } catch (const utils::SFTPException& ex) {
+    logger_->log_debug(ex.what());
     session->transfer(flow_file, Failure);
     return true;
   }
