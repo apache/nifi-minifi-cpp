@@ -106,6 +106,8 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
   static bool StringToTime(std::string input, uint64_t &output, TimeUnit &timeunit) {
     return utils::internal::StringToTime(input, output, timeunit);
   }
+
+  TimePeriodValue& operator=(const TimePeriodValue& other) = default;
 };
 
 /**

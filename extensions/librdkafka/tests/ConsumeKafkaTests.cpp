@@ -236,6 +236,7 @@ class ConsumeKafkaTest {
     optional_set_property(consume_kafka, ConsumeKafka::HeadersToAddAsAttributes.getName(), headers_to_add_as_attributes);
     optional_set_property(consume_kafka, ConsumeKafka::DuplicateHeaderHandling.getName(), duplicate_header_handling);
     optional_set_property(consume_kafka, ConsumeKafka::MaxPollRecords.getName(), max_poll_records);
+    // optional_set_property(consume_kafka, ConsumeKafka::MaxPollTime.getName(), "20 seconds");
     optional_set_property(consume_kafka, ConsumeKafka::MaxPollTime.getName(), max_poll_time);
     optional_set_property(consume_kafka, ConsumeKafka::SessionTimeout.getName(), session_timeout);
 

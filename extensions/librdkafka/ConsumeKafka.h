@@ -32,6 +32,34 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace core {
+class ConsumeKafkaMaxPollTimeValidator : public TimePeriodValidator {
+ public:
+  ConsumeKafkaMaxPollTimeValidator(const std::string &name) // NOLINT
+      : TimePeriodValidator(name) {
+  }
+  ~ConsumeKafkaMaxPollTimeValidator() override = default;
+
+  ValidationResult validate(const std::string& subject, const std::shared_ptr<minifi::state::response::Value>& input) const override {
+    const ValidationResult time_period_validator_result = TimePeriodValidator::validate(subject, input);
+    if (!time_period_validator_result.valid()) {
+      return time_period_validator_result;
+    }
+    return time_period_validator_result;  // TODO(hunyadi): replace
+  }
+
+  ValidationResult validate(const std::string& subject, const std::string& input) const override {
+    uint64_t value;
+    TimeUnit timeUnit;
+    uint64_t value_as_ms;
+    return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(
+        core::TimePeriodValue::StringToTime(input, value, timeUnit) &&
+        org::apache::nifi::minifi::core::Property::ConvertTimeUnitToMS(value, timeUnit, value_as_ms) &&
+        0 < value_as_ms && value_as_ms <= 4000).build();
+  }
+};
+
+}  // namespace core
 namespace processors {
 
 class ConsumeKafka : public core::Processor {

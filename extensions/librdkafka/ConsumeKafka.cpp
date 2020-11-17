@@ -129,7 +129,7 @@ core::Property ConsumeKafka::MaxPollRecords(core::PropertyBuilder::createPropert
 core::Property ConsumeKafka::MaxPollTime(core::PropertyBuilder::createProperty("Max Poll Time")
   ->withDescription("Specifies the maximum amount of time the consumer can use for polling data from the brokers. "
       "Polling is a blocking operation, so the upper limit of this value is specified in 4 seconds.")
-  ->withDefaultValue<core::TimePeriodValue>(DEFAULT_MAX_POLL_TIME)  // TODO(hunyadi): add validator
+  ->withDefaultValue(DEFAULT_MAX_POLL_TIME, std::make_shared<core::ConsumeKafkaMaxPollTimeValidator>(std::string("ConsumeKafkaMaxPollTimeValidator")))  // TODO(hunyadi): add validator
   ->isRequired(true)
   ->build());
 
