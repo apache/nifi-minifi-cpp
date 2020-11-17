@@ -67,19 +67,19 @@ static const char* sftp_strerror(unsigned long err) {
 static SFTPError libssh2_sftp_error_to_sftp_error(unsigned long libssh2_sftp_error) {
   switch (libssh2_sftp_error) {
     case LIBSSH2_FX_OK:
-      return SFTPError::SFTP_ERROR_OK;
+      return SFTPError::Ok;
     case LIBSSH2_FX_NO_SUCH_FILE:
     case LIBSSH2_FX_NO_SUCH_PATH:
-      return SFTPError::SFTP_ERROR_FILE_NOT_EXISTS;
+      return SFTPError::FileDoesNotExist;
     case LIBSSH2_FX_FILE_ALREADY_EXISTS:
-      return SFTPError::SFTP_ERROR_FILE_ALREADY_EXISTS;
+      return SFTPError::FileAlreadyExists;
     case LIBSSH2_FX_PERMISSION_DENIED:
     case LIBSSH2_FX_WRITE_PROTECT:
     case LIBSSH2_FX_LOCK_CONFLICT:
-      return SFTPError::SFTP_ERROR_PERMISSION_DENIED;
+      return SFTPError::PermissionDenied;
     case LIBSSH2_FX_NO_CONNECTION:
     case LIBSSH2_FX_CONNECTION_LOST:
-      return SFTPError::SFTP_ERROR_COMMUNICATIONS_FAILURE;
+      return SFTPError::CommunicationFailure;
     case LIBSSH2_FX_EOF:
     case LIBSSH2_FX_FAILURE:
     case LIBSSH2_FX_BAD_MESSAGE:
@@ -94,7 +94,7 @@ static SFTPError libssh2_sftp_error_to_sftp_error(unsigned long libssh2_sftp_err
     case LIBSSH2_FX_INVALID_FILENAME:
     case LIBSSH2_FX_LINK_LOOP:
     default:
-      return SFTPError::SFTP_ERROR_UNEXPECTED;
+      return SFTPError::Unexpected;
   }
 }
 
@@ -103,16 +103,16 @@ constexpr size_t SFTPClient::MAX_BUFFER_SIZE;
 LastSFTPError::LastSFTPError()
     : sftp_error_set_(false)
     , libssh2_sftp_error_(LIBSSH2_FX_OK)
-    , sftp_error_(SFTPError::SFTP_ERROR_OK) {
+    , sftp_error_(SFTPError::Ok) {
 }
 
-LastSFTPError& LastSFTPError::operator=(unsigned long libssh2_sftp_error) {
+LastSFTPError& LastSFTPError::setLibssh2Error(unsigned long libssh2_sftp_error) {
   sftp_error_set_ = false;
   libssh2_sftp_error_ = libssh2_sftp_error;
   return *this;
 }
 
-LastSFTPError& LastSFTPError::operator=(const SFTPError& sftp_error) {
+LastSFTPError& LastSFTPError::setSftpError(const SFTPError& sftp_error) {
   sftp_error_set_ = true;
   sftp_error_ = sftp_error;
   return *this;
@@ -140,18 +140,7 @@ SFTPClient::SFTPClient(const std::string &hostname, uint16_t port, const std::st
       hostname_(hostname),
       port_(port),
       username_(username),
-      ssh_known_hosts_(nullptr),
-      strict_host_checking_(false),
-      password_authentication_enabled_(false),
-      public_key_authentication_enabled_(false),
-      data_timeout_(0),
-      send_keepalive_(false),
-      curl_errorbuffer_(CURL_ERROR_SIZE, '\0'),
-      easy_(nullptr),
-      ssh_session_(nullptr),
-      sftp_session_(nullptr),
-      connected_(false),
-      last_error_() {
+      curl_errorbuffer_(CURL_ERROR_SIZE, '\0') {
   easy_ = curl_easy_init();
   if (easy_ == nullptr) {
     throw std::runtime_error("Cannot create curl easy handle");
@@ -496,10 +485,10 @@ bool SFTPClient::getFile(const std::string& path, io::BaseStream& output, int64_
     int ssh_errno = libssh2_session_last_errno(ssh_session_);
     /* We can only get the sftp error in this case if the ssh error is a protocol error */
     if (ssh_errno == LIBSSH2_ERROR_SFTP_PROTOCOL) {
-      last_error_ = libssh2_sftp_last_error(sftp_session_);
+      last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
       logger_->log_error("Failed to open remote file \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
     } else {
-      last_error_ = SFTPError::SFTP_ERROR_IO_ERROR;
+      last_error_.setSftpError(SFTPError::IoError);
       char *err_msg = nullptr;
       libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
       logger_->log_error("Failed to open remote file \"%s\" due to an underlying SSH error: %s", path.c_str(), err_msg);
@@ -516,7 +505,7 @@ bool SFTPClient::getFile(const std::string& path, io::BaseStream& output, int64_
   do {
     ssize_t read_ret = libssh2_sftp_read(file_handle, reinterpret_cast<char*>(buf.data()), buf.size());
     if (read_ret < 0) {
-      last_error_ = SFTPError::SFTP_ERROR_IO_ERROR;
+      last_error_.setSftpError(SFTPError::IoError);
       logger_->log_error("Failed to read remote file \"%s\"", path.c_str());
       return false;
     } else if (read_ret == 0) {
@@ -529,7 +518,7 @@ bool SFTPClient::getFile(const std::string& path, io::BaseStream& output, int64_
     while (remaining > 0) {
       int write_ret = output.write(buf.data() + (read_ret - remaining), remaining);
       if (write_ret < 0) {
-        last_error_ = LIBSSH2_FX_OK;
+        last_error_.setLibssh2Error(LIBSSH2_FX_OK);
         logger_->log_error("Failed to write output");
         return false;
       }
@@ -538,7 +527,7 @@ bool SFTPClient::getFile(const std::string& path, io::BaseStream& output, int64_
   } while (true);
 
   if (expected_size >= 0 && total_read != expected_size) {
-    last_error_ = LIBSSH2_FX_OK;
+    last_error_.setLibssh2Error(LIBSSH2_FX_OK);
     logger_->log_error("Remote file \"%s\" has unexpected size, expected: %ld, actual: %lu", path.c_str(), expected_size, total_read);
     return false;
   }
@@ -554,10 +543,10 @@ bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool ov
     int ssh_errno = libssh2_session_last_errno(ssh_session_);
     /* We can only get the sftp error in this case if the ssh error is a protocol error */
     if (ssh_errno == LIBSSH2_ERROR_SFTP_PROTOCOL) {
-      last_error_ = libssh2_sftp_last_error(sftp_session_);
+      last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
       logger_->log_error("Failed to open remote file \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
     } else {
-      last_error_ = SFTPError::SFTP_ERROR_IO_ERROR;
+      last_error_.setSftpError(SFTPError::IoError);
       char *err_msg = nullptr;
       libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
       logger_->log_error("Failed to open remote file \"%s\" due to an underlying SSH error: %s", path.c_str(), err_msg);
@@ -579,7 +568,7 @@ bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool ov
   do {
     int read_ret = input.read(buf.data(), buf.size());
     if (read_ret < 0) {
-      last_error_ = LIBSSH2_FX_OK;
+      last_error_.setLibssh2Error(LIBSSH2_FX_OK);
       logger_->log_error("Error while reading input");
       return false;
     } else if (read_ret == 0) {
@@ -592,7 +581,7 @@ bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool ov
     while (remaining > 0) {
       int write_ret = libssh2_sftp_write(file_handle, reinterpret_cast<char*>(buf.data() + (read_ret - remaining)), remaining);
       if (write_ret < 0) {
-        last_error_ = SFTPError::SFTP_ERROR_IO_ERROR;
+        last_error_.setSftpError(SFTPError::IoError);
         logger_->log_error("Failed to write remote file \"%s\"", path.c_str());
         return false;
       }
@@ -602,7 +591,7 @@ bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool ov
   } while (true);
 
   if (expected_size >= 0 && total_read != expected_size) {
-    last_error_ = LIBSSH2_FX_OK;
+    last_error_.setLibssh2Error(LIBSSH2_FX_OK);
     logger_->log_error("Input has unexpected size, expected: %ld, actual: %lu", path.c_str(), expected_size, total_read);
     return false;
   }
@@ -634,7 +623,7 @@ bool SFTPClient::rename(const std::string& source_path, const std::string& targe
       }
       continue;
     }
-    last_error_ = libssh2_sftp_last_error(sftp_session_);
+    last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
     logger_->log_error("Failed to rename remote file \"%s\" to \"%s\", error: %s",
         source_path.c_str(),
         target_path.c_str(),
@@ -646,7 +635,7 @@ bool SFTPClient::rename(const std::string& source_path, const std::string& targe
 
 bool SFTPClient::createDirectoryHierarchy(const std::string& path) {
   if (path.empty()) {
-    last_error_ = LIBSSH2_FX_OK;
+    last_error_.setLibssh2Error(LIBSSH2_FX_OK);
     return false;
   }
   bool absolute = path[0] == '/';
@@ -664,7 +653,7 @@ bool SFTPClient::createDirectoryHierarchy(const std::string& path) {
       if (err != LIBSSH2_FX_FILE_ALREADY_EXISTS &&
           err != LIBSSH2_FX_FAILURE &&
           err != LIBSSH2_FX_PERMISSION_DENIED) {
-        last_error_ = err;
+        last_error_.setLibssh2Error(err);
         logger_->log_error("Failed to create remote directory \"%s\", error: %s", current_dir.c_str(), sftp_strerror(last_error_));
         return false;
       } else {
@@ -677,7 +666,7 @@ bool SFTPClient::createDirectoryHierarchy(const std::string& path) {
 
 bool SFTPClient::removeFile(const std::string& path) {
   if (libssh2_sftp_unlink(sftp_session_, path.c_str()) != 0) {
-    last_error_ = libssh2_sftp_last_error(sftp_session_);
+    last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
     logger_->log_error("Failed to remove remote file \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
     return false;
   }
@@ -686,7 +675,7 @@ bool SFTPClient::removeFile(const std::string& path) {
 
 bool SFTPClient::removeDirectory(const std::string& path) {
   if (libssh2_sftp_rmdir(sftp_session_, path.c_str()) != 0) {
-    last_error_ = libssh2_sftp_last_error(sftp_session_);
+    last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
     logger_->log_error("Failed to remove remote directory \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
     return false;
   }
@@ -702,7 +691,7 @@ bool SFTPClient::listDirectory(const std::string& path, bool follow_symlinks,
                                                           0 /* mode */,
                                                           LIBSSH2_SFTP_OPENDIR);
   if (dir_handle == nullptr) {
-    last_error_ = libssh2_sftp_last_error(sftp_session_);
+    last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
     logger_->log_error("Failed to open remote directory \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
     return false;
   }
@@ -721,7 +710,7 @@ bool SFTPClient::listDirectory(const std::string& path, bool follow_symlinks,
                                       longentry.size(),
                                       &attrs);
     if (ret < 0) {
-      last_error_ = libssh2_sftp_last_error(sftp_session_);
+      last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
       logger_->log_error("Failed to read remote directory \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
       return false;
     } else if (ret == 0) {
@@ -746,7 +735,7 @@ bool SFTPClient::stat(const std::string& path, bool follow_symlinks, LIBSSH2_SFT
                             path.length(),
                             follow_symlinks ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT,
                             &result) != 0) {
-    last_error_ = libssh2_sftp_last_error(sftp_session_);
+    last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
     logger_->log_debug("Failed to stat remote path \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
     return false;
   }
@@ -790,7 +779,7 @@ bool SFTPClient::setAttributes(const std::string& path, const SFTPAttributes& in
                            path.length(),
                            LIBSSH2_SFTP_SETSTAT,
                            &attrs) != 0) {
-    last_error_ = libssh2_sftp_last_error(sftp_session_);
+    last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
     logger_->log_debug("Failed to setstat on remote path \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
     return false;
   }
