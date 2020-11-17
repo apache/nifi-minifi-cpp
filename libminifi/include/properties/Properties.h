@@ -34,6 +34,10 @@ namespace nifi {
 namespace minifi {
 
 class Properties {
+  struct PropertyValue {
+    std::string value;
+    bool changed;
+  };
  public:
   Properties(const std::string& name = ""); // NOLINT
 
@@ -45,19 +49,19 @@ class Properties {
 
   // Clear the load config
   void clear() {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     properties_.clear();
   }
   // Set the config value
   void set(const std::string &key, const std::string &value) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    properties_[key] = value;
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    properties_[key] = PropertyValue{value, true};
     dirty_ = true;
   }
   // Check whether the config value existed
-  bool has(std::string key) const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return properties_.count(key) > 0;
+  bool has(const std::string& key) const {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    return properties_.find(key) != properties_.end();
   }
   /**
    * Returns the config value by placing it into the referenced param value
@@ -79,18 +83,7 @@ class Properties {
    * @param key key to look up
    * @returns the value if found, nullopt otherwise.
    */
-  utils::optional<std::string> getString(const std::string& key) const {
-    std::string result;
-    const bool found = getString(key, result);
-    if (found) {
-      return result;
-    } else {
-      return utils::nullopt;
-    }
-  }
-
-  // Parse one line in configure file like key=value
-  bool parseConfigureFileLine(char *buf, std::string &prop_key, std::string &prop_value);
+  utils::optional<std::string> getString(const std::string& key) const;
 
   /**
    * Load configure file
@@ -100,7 +93,7 @@ class Properties {
 
   // Set the determined MINIFI_HOME
   void setHome(std::string minifiHome) {
-    minifi_home_ = minifiHome;
+    minifi_home_ = std::move(minifiHome);
   }
 
   std::vector<std::string> getConfiguredKeys() const {
@@ -115,24 +108,21 @@ class Properties {
   std::string getHome() const {
     return minifi_home_;
   }
-  // Parse Command Line
-  void parseCommandLine(int argc, char **argv);
 
   bool persistProperties();
 
  protected:
-  bool validateConfigurationFile(const std::string &file);
-
-  std::map<std::string, std::string> properties_;
-
+  std::map<std::string, std::string> getProperties() const;
 
  private:
-  std::atomic<bool> dirty_;
+  std::map<std::string, PropertyValue> properties_;
+
+  bool dirty_{false};
 
   std::string properties_file_;
 
   // Mutex for protection
-  mutable std::mutex mutex_;
+  mutable std::recursive_mutex mutex_;
   // Logger
   std::shared_ptr<minifi::core::logging::Logger> logger_;
   // Home location for this executable

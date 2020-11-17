@@ -63,7 +63,7 @@ const char* LoggerConfiguration::spdlog_default_pattern = "[%Y-%m-%d %H:%M:%S.%e
 std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &type) {
   std::vector<std::string> appenders;
   std::string prefix = type + ".";
-  for (auto const & entry : properties_) {
+  for (auto const & entry : getProperties()) {
     if (entry.first.rfind(prefix, 0) == 0 && entry.first.find(".", prefix.length() + 1) == std::string::npos) {
       appenders.push_back(entry.first);
     }

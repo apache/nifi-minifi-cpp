@@ -403,7 +403,7 @@ inline int create_dir(const std::string& path, bool recursive = true) {
 #endif
 }
 
-inline int copy_file(const std::string &path_from, const std::string dest_path) {
+inline int copy_file(const std::string &path_from, const std::string& dest_path) {
   std::ifstream src(path_from, std::ios::binary);
   if (!src.is_open())
     return -1;
