@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#ifdef BOOST_VERSION
+#ifdef USE_BOOST
 #include <boost/filesystem.hpp>
 
 #else
@@ -79,11 +79,11 @@ class FileManager {
   }
 
   std::string unique_file(bool keep = false) {
-#ifdef BOOST_VERSION
+#ifdef USE_BOOST
     return boost::filesystem::unique_path().native();
-#else  // BOOST_VERSION
+#else  // USE_BOOST
     return unique_file(std::string{}, keep);
-#endif  // BOOST_VERSION
+#endif  // USE_BOOST
   }
 
 

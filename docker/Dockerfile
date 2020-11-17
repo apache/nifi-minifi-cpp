@@ -39,7 +39,6 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
   wget \
   gdb \
   musl-dev \
-  boost-dev \
   vim \
   util-linux-dev \
   curl-dev \

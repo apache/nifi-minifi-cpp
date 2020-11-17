@@ -61,6 +61,9 @@ class PutFile : public core::Processor {
   static core::Property ConflictResolution;
   static core::Property CreateDirs;
   static core::Property MaxDestFiles;
+#ifndef WIN32
+  static core::Property Permissions;
+#endif
   // Supported Relationships
   static core::Relationship Success;
   static core::Relationship Failure;
@@ -110,6 +113,20 @@ class PutFile : public core::Processor {
                const std::string &destDir);
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
+
+#ifndef WIN32
+  class FilePermissions {
+    static const uint32_t MINIMUM_INVALID_PERMISSIONS_VALUE = 1 << 9;
+   public:
+    bool valid() { return permissions_ < MINIMUM_INVALID_PERMISSIONS_VALUE; }
+    uint32_t getValue() const { return permissions_; }
+    void setValue(uint32_t perms) { permissions_ = perms; }
+   private:
+    uint32_t permissions_ = MINIMUM_INVALID_PERMISSIONS_VALUE;
+  };
+  FilePermissions permissions_;
+  void getPermissions(core::ProcessContext *context, const std::shared_ptr<core::FlowFile> &flow_file);
+#endif
 };
 
 REGISTER_RESOURCE(PutFile, "Writes the contents of a FlowFile to the local file system");

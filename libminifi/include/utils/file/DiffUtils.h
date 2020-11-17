@@ -20,7 +20,7 @@
 #include <fstream>
 #include <sstream>
 
-#ifdef BOOST_VERSION
+#ifdef USE_BOOST
 #include <boost/filesystem.hpp>
 
 #else
