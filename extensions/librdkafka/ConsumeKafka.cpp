@@ -30,7 +30,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-constexpr const std::size_t ConsumeKafka::DEFAULT_MAX_POLL_RECORD;
+constexpr const std::size_t ConsumeKafka::DEFAULT_MAX_POLL_RECORDS;
+constexpr char const* ConsumeKafka::DEFAULT_MAX_POLL_TIME;
 
 core::Property ConsumeKafka::KafkaBrokers(core::PropertyBuilder::createProperty("Kafka Brokers")
   ->withDescription("A comma-separated list of known Kafka Brokers in the format <host>:<port>.")
@@ -122,13 +123,13 @@ core::Property ConsumeKafka::DuplicateHeaderHandling(core::PropertyBuilder::crea
 
 core::Property ConsumeKafka::MaxPollRecords(core::PropertyBuilder::createProperty("Max Poll Records")
   ->withDescription("Specifies the maximum number of records Kafka should return when polling each time the processor is triggered.")
-  ->withDefaultValue<unsigned int>(10000)
+  ->withDefaultValue<unsigned int>(DEFAULT_MAX_POLL_RECORDS)
   ->build());
 
 core::Property ConsumeKafka::MaxPollTime(core::PropertyBuilder::createProperty("Max Poll Time")
   ->withDescription("Specifies the maximum amount of time the consumer can use for polling data from the brokers. "
       "Polling is a blocking operation, so the upper limit of this value is specified in 4 seconds.")
-  ->withDefaultValue<core::TimePeriodValue>("1 second")  // TODO(hunyadi): add validator
+  ->withDefaultValue<core::TimePeriodValue>(DEFAULT_MAX_POLL_TIME)  // TODO(hunyadi): add validator
   ->isRequired(true)
   ->build());
 
@@ -184,7 +185,7 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
   context->getProperty(DuplicateHeaderHandling.getName(), duplicate_header_handling_);
 
   headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.getName());
-  max_poll_records_ = gsl::narrow<std::size_t>(utils::getOptionalUintProperty(context, MaxPollRecords.getName()).value_or(DEFAULT_MAX_POLL_RECORD));
+  max_poll_records_ = gsl::narrow<std::size_t>(utils::getOptionalUintProperty(context, MaxPollRecords.getName()).value_or(DEFAULT_MAX_POLL_RECORDS));
   // TODO(hunyadi): add dynamic property support for kafka configuration properties
   // readDynamicPropertyKeys(context);
 
@@ -201,12 +202,14 @@ void print_topics_list(std::shared_ptr<logging::Logger> logger, rd_kafka_topic_p
 
 // TODO(hunyadi): this is a test for trying to manually set new connections offsets to latest
 void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/) {
+  // Cooperative, incremental assignment is not supported in the current librdkafka version
   std::shared_ptr<logging::Logger> logger{logging::LoggerFactory<ConsumeKafka>::getLogger()};
   logger->log_debug("\u001b[37;1mRebalance triggered.\u001b[0m");
   switch (err) {
     case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
+      // TODO(hunyadi): this lacks error handling for assign calls, check librdkafka examples directory
       logger->log_debug("assigned");
-      // FIXME(hunyadi): this should only happen when running the tests -> move this implementation there
+      // FIXME(hunyadi): this might be an alternative for manual offset resets
       // for (std::size_t i = 0; i < partitions->cnt; ++i) {
       //   partitions->elems[i].offset = RD_KAFKA_OFFSET_END;
       // }
@@ -216,6 +219,7 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t err, rd_kafka_topic_partit
 
     case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
       logger->log_debug("revoked:");
+      rd_kafka_commit(rk, partitions, /* async = */ 0);  // Sync commit, maybe unneccessary
       print_topics_list(logger, partitions);
       rd_kafka_assign(rk, NULL);
       break;
@@ -274,6 +278,8 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
   setKafkaConfigurationField(conf_.get(), "isolation.level", honor_transactions_ ? "read_committed" : "read_uncommitted");
   setKafkaConfigurationField(conf_.get(), "group.id", group_id_);
   setKafkaConfigurationField(conf_.get(), "compression.codec", "snappy");  // FIXME(hunyadi): this seems like a producer property
+  setKafkaConfigurationField(conf_.get(), "session.timeout.ms", std::to_string(session_timeout_milliseconds_.count()));  // FIXME(hunyadi): this seems like a producer property
+  // setKafkaConfigurationField(conf_.get(), "max.poll.interval.ms", "600000");  // Twice the default, arbitrarily chosen
 
   std::array<char, 512U> errstr{};
   consumer_ = { rd_kafka_new(RD_KAFKA_CONSUMER, conf_.release(), errstr.data(), errstr.size()), utils::rd_kafka_consumer_deleter() };
@@ -290,6 +296,7 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
   }
 
   // rd_kafka_seek(kf_topic_partition_list_.get(), RD_KAFKA_PARTITION_UA, RD_KAFKA_OFFSET_END, communications_timeout_milliseconds_.count());
+
 
   logger_->log_info("Resetting offset manually.");
   while (true) {
@@ -393,18 +400,20 @@ class WriteCallback : public OutputStreamCallback {
 void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
   logger_->log_debug("ConsumeKafka onTrigger");
 
-
   std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>> messages;
   messages.reserve(max_poll_records_);
-  while (messages.size() < max_poll_records_) {
+  const auto start = std::chrono::high_resolution_clock::now();
+  auto elapsed = std::chrono::high_resolution_clock::now() - start;
+  while (messages.size() < max_poll_records_ && elapsed < max_poll_time_milliseconds_) {
     logger_-> log_debug("Polling for new messages for %d milliseconds...", max_poll_time_milliseconds_.count());
     // TODO(hunyadi): rd_kafka_position() call might be needed
-    rd_kafka_message_t* message = rd_kafka_consumer_poll(consumer_.get(), max_poll_time_milliseconds_.count());
+    rd_kafka_message_t* message = rd_kafka_consumer_poll(consumer_.get(), std::chrono::duration_cast<std::chrono::milliseconds>(max_poll_time_milliseconds_ - elapsed).count());
     if (!message || RD_KAFKA_RESP_ERR_NO_ERROR != message->err) {
       break;
     }
     utils::print_kafka_message(message, logger_);
     messages.emplace_back(std::move(message), utils::rd_kafka_message_deleter());
+    elapsed = std::chrono::high_resolution_clock::now() - start;
   }
 
   if (messages.empty()) {
@@ -445,7 +454,7 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
       // flowfile_content is consumed here
       WriteCallback stream_writer_callback(&flowfile_content[0], flowfile_content.size());
       session->write(flow_file, &stream_writer_callback);
-      // TODO(hunyadi): extract this into a sunction that creates a vector of attributes to add to flowfiles
+      // TODO(hunyadi): extract this into a function that creates a vector of attributes to add to flowfiles
       for (const std::string& header_name : headers_to_add_as_attributes_) {
         const auto matching_headers = get_matching_headers(message.get(), header_name);
         if (matching_headers.size()) {

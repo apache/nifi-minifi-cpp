@@ -89,6 +89,9 @@ class ConsumeKafka : public core::Processor {
   // Flowfile attributes written
   static constexpr char const* KAFKA_MESSAGE_KEY_ATTR = "kafka.key";
 
+  static constexpr const std::size_t DEFAULT_MAX_POLL_RECORDS{ 10000 };
+  static constexpr char const* DEFAULT_MAX_POLL_TIME = "4 seconds";
+  static constexpr const std::size_t METADATA_COMMUNICATIONS_TIMEOUT_MS{ 60000 };
 
   explicit ConsumeKafka(std::string name, utils::Identifier uuid = utils::Identifier()) :
       Processor(name, uuid),
@@ -121,8 +124,6 @@ class ConsumeKafka : public core::Processor {
   void initialize() override;
 
  private:
-  static constexpr const std::size_t DEFAULT_MAX_POLL_RECORD{ 10000 };
-  static constexpr const std::size_t METADATA_COMMUNICATIONS_TIMEOUT_MS{ 60000 };
   // void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/);
 
   void createTopicPartitionList();
