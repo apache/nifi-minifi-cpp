@@ -23,7 +23,7 @@
 #include <map>
 #include <string>
 #include <mutex>
-#include "core/state/UpdateController.h"
+#include "c2/C2Agent.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "properties/Configure.h"
 #include "core/logging/Logger.h"
@@ -58,6 +58,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
 
  protected:
   bool isC2Enabled() const;
+  utils::optional<std::string> fetchFlow(const std::string& uri) const;
 
  private:
   void initializeComponentMetrics();
@@ -67,9 +68,9 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
  protected:
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<utils::file::FileSystem> filesystem_;
-  std::unique_ptr<state::UpdateController> c2_agent_;
 
  private:
+  std::unique_ptr<C2Agent> c2_agent_;
   std::atomic_bool initialized_{false};
   std::shared_ptr<logging::Logger> logger_;
 

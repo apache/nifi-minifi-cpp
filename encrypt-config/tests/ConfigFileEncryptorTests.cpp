@@ -46,15 +46,17 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace encrypt_config {
 
 // NOTE(fgerlits): these ==/!= operators are in the test file on purpose, and should not be part of production code,
 // as they take a varying amount of time depending on which character in the line differs, so they would open up
 // our code to timing attacks.  If you need == in production code, make sure to compare all pairs of chars/lines.
-bool operator==(const ConfigLine& left, const ConfigLine& right) { return left.getLine() == right.getLine(); }
-bool operator!=(const ConfigLine& left, const ConfigLine& right) { return !(left == right); }
-bool operator==(const ConfigFile& left, const ConfigFile& right) { return left.config_lines_ == right.config_lines_; }
-bool operator!=(const ConfigFile& left, const ConfigFile& right) { return !(left == right); }
+bool operator==(const PropertiesFile::Line& left, const PropertiesFile::Line& right) { return left.getLine() == right.getLine(); }
+
+namespace encrypt_config {
+
+bool operator!=(const ConfigFile::Line& left, const ConfigFile::Line& right) { return !(left == right); }
+bool operator==(const  ConfigFile& left, const  ConfigFile& right) { return left.lines_ == right.lines_; }
+bool operator!=(const  ConfigFile& left, const  ConfigFile& right) { return !(left == right); }
 
 }  // namespace encrypt_config
 }  // namespace minifi

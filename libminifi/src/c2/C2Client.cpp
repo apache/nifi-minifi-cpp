@@ -118,10 +118,19 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
   loadC2ResponseConfiguration("nifi.c2.root.class.definitions");
 
   if (!initialized_) {
+    // C2Agent is initialized once, meaning that a C2-triggered flow/configuration update
+    // might not be equal to a fresh restart
     c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(controller, update_sink, configuration_, filesystem_));
     c2_agent_->start();
     initialized_ = true;
   }
+}
+
+utils::optional<std::string> C2Client::fetchFlow(const std::string& uri) const {
+  if (!c2_agent_) {
+    return {};
+  }
+  return c2_agent_->fetchFlow(uri);
 }
 
 void C2Client::initializeComponentMetrics() {

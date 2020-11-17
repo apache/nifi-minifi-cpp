@@ -35,6 +35,7 @@
 #include "Connection.h"
 #include "core/controller/ControllerServiceNode.h"
 #include "core/controller/ControllerServiceProvider.h"
+#include "core/controller/ForwardingControllerServiceProvider.h"
 #include "core/FlowConfiguration.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
@@ -68,7 +69,7 @@ namespace minifi {
  * Flow Controller class. Generally used by FlowController factory
  * as a singleton.
  */
-class FlowController : public core::controller::ControllerServiceProvider,  public state::StateMonitor, public c2::C2Client, public std::enable_shared_from_this<FlowController> {
+class FlowController : public core::controller::ForwardingControllerServiceProvider,  public state::StateMonitor, public c2::C2Client, public std::enable_shared_from_this<FlowController> {
  public:
   FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                  std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
@@ -182,119 +183,6 @@ class FlowController : public core::controller::ControllerServiceProvider,  publ
   }
 
   /**
-   * Creates a controller service through the controller service provider impl.
-   * @param type class name
-   * @param id service identifier
-   * @param firstTimeAdded first time this CS was added
-   */
-  std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &type, const std::string &fullType, const std::string &id, bool firstTimeAdded) override;
-
-  /**
-   * controller service provider
-   */
-  /**
-   * removes controller service
-   * @param serviceNode service node to be removed.
-   */
-
-  void removeControllerService(const std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
-
-  /**
-   * Enables the controller service services
-   * @param serviceNode service node which will be disabled, along with linked services.
-   */
-  std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
-
-  /**
-   * Enables controller services
-   * @param serviceNoden vector of service nodes which will be enabled, along with linked services.
-   */
-  void enableControllerServices(std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> serviceNodes) override;
-
-  /**
-   * Disables controller services
-   * @param serviceNode service node which will be disabled, along with linked services.
-   */
-  std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
-
-  /**
-   * Removes all controller services.
-   */
-  void clearControllerServices() override;
-
-  /**
-   * Gets all controller services.
-   */
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices() override;
-
-  std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier) override;
-
-  /**
-   * Gets controller service node specified by <code>id</code>
-   * @param id service identifier
-   * @return shared pointer to the controller service node or nullptr if it does not exist.
-   */
-  std::shared_ptr<core::controller::ControllerServiceNode> getControllerServiceNode(const std::string &id) const override;
-
-  void verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
-
-  /**
-   * Unschedules referencing components.
-   */
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> unscheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
-
-  /**
-   * Verify can disable referencing components
-   * @param serviceNode service node whose referenced components will be scheduled.
-   */
-  void verifyCanDisableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
-
-  /**
-   * Disables referencing components
-   * @param serviceNode service node whose referenced components will be scheduled.
-   */
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
-
-  /**
-   * Verify can enable referencing components
-   * @param serviceNode service node whose referenced components will be scheduled.
-   */
-  void verifyCanEnableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode>&) override;
-
-  /**
-   * Determines if the controller service specified by identifier is enabled.
-   */
-  bool isControllerServiceEnabled(const std::string &identifier) override;
-
-  /**
-   * Enables referencing components
-   * @param serviceNode service node whose referenced components will be scheduled.
-   */
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> enableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
-
-  /**
-   * Schedules referencing components
-   * @param serviceNode service node whose referenced components will be scheduled.
-   */
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> scheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override;
-
-  /**
-   * Returns controller service components referenced by serviceIdentifier from the embedded
-   * controller service provider;
-   */
-  std::shared_ptr<core::controller::ControllerService> getControllerServiceForComponent(const std::string &serviceIdentifier, const utils::Identifier &componentId) override;
-
-  /**
-   * Enables all controller services for the provider.
-   */
-  void enableAllControllerServices() override;
-
-  /**
-   * Disables all controller services for the provider.
-   */
-  void disableAllControllerServices() override;
-
-  /**
    * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
    * @return the agent manifest response node
    */
@@ -303,6 +191,14 @@ class FlowController : public core::controller::ControllerServiceProvider,  publ
   uint64_t getUptime() override;
 
   std::vector<BackTrace> getTraces() override;
+
+ private:
+  /**
+   * Loads the flow as specified in the flow config file or if not present
+   * tries to fetch it from the C2 server (if enabled).
+   * @return the built flow
+   */
+  std::unique_ptr<core::ProcessGroup> loadInitialFlow();
 
  protected:
   // function to load the flow file repo.
@@ -339,8 +235,6 @@ class FlowController : public core::controller::ControllerServiceProvider,  publ
   std::shared_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
   // FlowControl Protocol
   std::unique_ptr<FlowControlProtocol> protocol_;
-  std::shared_ptr<core::controller::ControllerServiceMap> controller_service_map_;
-  std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
   // metrics information
   std::chrono::steady_clock::time_point start_time_;
 

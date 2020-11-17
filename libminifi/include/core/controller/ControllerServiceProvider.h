@@ -225,7 +225,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
 
   virtual void disableAllControllerServices() = 0;
 
-  virtual bool supportsDynamicProperties() {
+  bool supportsDynamicProperties() final {
     return false;
   }
 

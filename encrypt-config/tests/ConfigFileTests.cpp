@@ -43,11 +43,10 @@ class ConfigFileTestAccessor {
 
 using org::apache::nifi::minifi::encrypt_config::ConfigFile;
 using org::apache::nifi::minifi::encrypt_config::ConfigFileTestAccessor;
-using org::apache::nifi::minifi::encrypt_config::ConfigLine;
 
 TEST_CASE("ConfigLine can be constructed from a line", "[encrypt-config][constructor]") {
   auto line_is_parsed_correctly = [](const std::string& line, const std::string& expected_key, const std::string& expected_value) {
-    ConfigLine config_line{line};
+    ConfigFile::Line config_line{line};
     return config_line.getKey() == expected_key && config_line.getValue() == expected_value;
   };
 
@@ -69,7 +68,7 @@ TEST_CASE("ConfigLine can be constructed from a line", "[encrypt-config][constru
 
 TEST_CASE("ConfigLine can be constructed from a key-value pair", "[encrypt-config][constructor]") {
   auto can_construct_from_kv = [](const std::string& key, const std::string& value, const std::string& expected_line) {
-    ConfigLine config_line{key, value};
+    ConfigFile::Line config_line{key, value};
     return config_line.getLine() == expected_line;
   };
 
@@ -79,7 +78,7 @@ TEST_CASE("ConfigLine can be constructed from a key-value pair", "[encrypt-confi
 
 TEST_CASE("ConfigLine can update the value", "[encrypt-config][updateValue]") {
   auto can_update_value = [](const std::string& original_line, const std::string& new_value, const std::string& expected_line) {
-    ConfigLine config_line{original_line};
+    ConfigFile::Line config_line{original_line};
     config_line.updateValue(new_value);
     return config_line.getLine() == expected_line;
   };

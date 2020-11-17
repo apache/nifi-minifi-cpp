@@ -19,22 +19,27 @@
 #undef NDEBUG
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
-#include "utils/gsl.h"
+#include "utils/IntegrationTestUtils.h"
+#include "utils/file/PathUtils.h"
 
 int main(int argc, char **argv) {
-  const cmd_args args = parse_cmdline_args(argc, argv, "update");
-  C2UpdateHandler handler(args.test_file);
-  VerifyC2UpdateAgent harness(10000);
+  TestController controller;
+  char format[] = "/var/tmp/c2.XXXXXX";
+  std::string minifi_home = controller.createTempDirectory(format);
+  const cmd_args args = parse_cmdline_args(argc, argv);
+  C2FlowProvider handler(args.test_file);
+  VerifyFlowFetched harness(10000);
   harness.setKeyDir(args.key_dir);
   harness.setUrl(args.url, &handler);
-  handler.setC2RestResponse(harness.getC2RestUrl(), "agent");
+  harness.setFlowUrl(harness.getC2RestUrl());
 
-  const auto start = std::chrono::system_clock::now();
+  std::string config_path = utils::file::PathUtils::concat_path(minifi_home, "config.yml");
 
-  harness.run(args.test_file);
+  harness.run(config_path);
 
-  const auto then = std::chrono::system_clock::now();
-  const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(then - start).count();
-  assert(handler.getCallCount() <= gsl::narrow<size_t>(seconds + 2));
+  // check existence of the config file
+  assert(std::ifstream{config_path});
+
   return 0;
 }
+
