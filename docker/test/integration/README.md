@@ -140,7 +140,7 @@ with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
 ```
 
 Note that a docker cluster must be created inside of a *with* structure to
-ensure that all resources are ccreated and destroyed cleanly.
+ensure that all resources are created and destroyed cleanly.
 
 ### Insertion of test input data
 
@@ -226,4 +226,3 @@ with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
   ...
   assert cluster.check_output()
 ```
-
