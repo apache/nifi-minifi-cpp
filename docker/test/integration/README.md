@@ -24,7 +24,7 @@ well as other systems which are available in docker, such as Apache NiFi.
 
 ## Test environment
 
-The test framework is written in python3 language and uses pip3 package manager to add required packages.
+The test framework is written in Python 3 and uses pip3 to add required packages.
 
 The tests use docker containers so docker engine should be installed on your system. Check the [get docker](https://docs.docker.com/get-docker/) page for further information.
 
