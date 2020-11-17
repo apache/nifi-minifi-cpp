@@ -54,6 +54,19 @@ core::Property PutFile::CreateDirs("Create Missing Directories", "If true, then 
 core::Property PutFile::MaxDestFiles(
     core::PropertyBuilder::createProperty("Maximum File Count")->withDescription("Specifies the maximum number of files that can exist in the output directory")->withDefaultValue<int>(-1)->build());
 
+#ifndef WIN32
+core::Property PutFile::Permissions(
+    core::PropertyBuilder::createProperty("Permissions")
+      ->withDescription("Sets the permissions on the output file to the value of this attribute. "
+                        "Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.")
+      ->build());
+core::Property PutFile::DirectoryPermissions(
+    core::PropertyBuilder::createProperty("Directory Permissions")
+      ->withDescription("Sets the permissions on the directories being created if 'Create Missing Directories' property is set. "
+                        "Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.")
+      ->build());
+#endif
+
 core::Relationship PutFile::Success("success", "All files are routed to success");
 core::Relationship PutFile::Failure("failure", "Failed files (conflict, write failure, etc.) are transferred to failure");
 
@@ -64,6 +77,10 @@ void PutFile::initialize() {
   properties.insert(ConflictResolution);
   properties.insert(CreateDirs);
   properties.insert(MaxDestFiles);
+#ifndef WIN32
+  properties.insert(Permissions);
+  properties.insert(DirectoryPermissions);
+#endif
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -84,6 +101,11 @@ void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
   if (context->getProperty(MaxDestFiles.getName(), value)) {
     core::Property::StringToInt(value, max_dest_files_);
   }
+
+#ifndef WIN32
+  getPermissions(context);
+  getDirectoryPermissions(context);
+#endif
 }
 
 void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
@@ -199,7 +221,15 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowF
 
       if (!dir_path_component.empty()) {
         logger_->log_debug("Attempting to create directory if it does not already exist: %s", dir_path);
-        utils::file::FileUtils::create_dir(dir_path);
+        if (!utils::file::FileUtils::exists(dir_path)) {
+          utils::file::FileUtils::create_dir(dir_path, false);
+#ifndef WIN32
+          if (directory_permissions_.valid()) {
+            utils::file::FileUtils::set_permissions(dir_path, directory_permissions_.getValue());
+          }
+#endif
+        }
+
         dir_path_stream << utils::file::FileUtils::get_separator();
       } else if (pos == 0) {
         // Support absolute paths
@@ -227,6 +257,12 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowF
     }
   }
 
+#ifndef WIN32
+  if (permissions_.valid()) {
+    utils::file::FileUtils::set_permissions(destFile, permissions_.getValue());
+  }
+#endif
+
   if (success) {
     session->transfer(flowFile, Success);
     return true;
@@ -235,6 +271,44 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowF
   }
   return false;
 }
+
+#ifndef WIN32
+void PutFile::getPermissions(core::ProcessContext *context) {
+  std::string permissions_str;
+  context->getProperty(Permissions.getName(), permissions_str);
+  if (permissions_str.empty()) {
+    return;
+  }
+
+  try {
+    permissions_.setValue(std::stoi(permissions_str, 0, 8));
+  } catch(const std::exception&) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Permissions property is invalid");
+  }
+
+  if (!permissions_.valid()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Permissions property is invalid: out of bounds");
+  }
+}
+
+void PutFile::getDirectoryPermissions(core::ProcessContext *context) {
+  std::string dir_permissions_str;
+  context->getProperty(DirectoryPermissions.getName(), dir_permissions_str);
+  if (dir_permissions_str.empty()) {
+    return;
+  }
+
+  try {
+    directory_permissions_.setValue(std::stoi(dir_permissions_str, 0, 8));
+  } catch(const std::exception&) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Directory Permissions property is invalid");
+  }
+
+  if (!directory_permissions_.valid()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Directory Permissions property is invalid: out of bounds");
+  }
+}
+#endif
 
 PutFile::ReadCallback::ReadCallback(const std::string &tmp_file, const std::string &dest_file)
     : tmp_file_(tmp_file),

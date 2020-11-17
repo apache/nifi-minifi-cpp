@@ -427,3 +427,44 @@ TEST_CASE("PutFileEmptyTest", "[EmptyFilePutTest]") {
   is.seekg(0, is.end);
   REQUIRE(is.tellg() == 0);
 }
+
+#ifndef WIN32
+TEST_CASE("TestPutFilePermissions", "[PutFilePermissions]") {
+  TestController testController;
+
+  LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
+  LogTestController::getInstance().setDebug<TestPlan>();
+  LogTestController::getInstance().setDebug<minifi::processors::PutFile>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+  char format2[] = "/tmp/ft.XXXXXX";
+  auto putfiledir = testController.createTempDirectory(format2) + utils::file::FileUtils::get_separator() + "test_dir";
+
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Permissions.getName(), "644");
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::DirectoryPermissions.getName(), "0777");
+
+  std::fstream file;
+  file.open(std::string(dir) + utils::file::FileUtils::get_separator() + "tstFile.ext", std::ios::out);
+  file << "tempFile";
+  file.close();
+
+  plan->runNextProcessor();  // Get
+  plan->runNextProcessor();  // Put
+
+  auto path = std::string(putfiledir) + utils::file::FileUtils::get_separator() + "tstFile.ext";
+  uint32_t perms = 0;
+  REQUIRE(utils::file::FileUtils::get_permissions(path, perms));
+  REQUIRE(perms == 0644);
+  REQUIRE(utils::file::FileUtils::get_permissions(putfiledir, perms));
+  REQUIRE(perms == 0777);
+}
+#endif

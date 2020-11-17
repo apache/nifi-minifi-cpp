@@ -552,13 +552,13 @@ class GenerateFlowFile(Processor):
 class PutFile(Processor):
     def __init__(self, output_dir, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         super(PutFile, self).__init__('PutFile',
-                                      properties={'Directory': output_dir},
+                                      properties={'Directory': output_dir, 'Directory Permissions': '777', 'Permissions': '777'},
                                       auto_terminate=['success', 'failure'],
                                       schedule=schedule)
 
     def nifi_property_key(self, key):
-        if key == 'Output Directory':
-            return 'Directory'
+        if key == 'Directory Permissions':
+            return None
         else:
             return key
 
@@ -914,6 +914,8 @@ def nifi_flow_xml(connectable, nifi_version=None, root=None, visited=None):
             proc_property = Element('property')
             proc_property_name = Element('name')
             proc_property_name.text = connectable.nifi_property_key(property_key)
+            if not proc_property_name.text:
+                continue
             proc_property.append(proc_property_name)
             proc_property_value = Element('value')
             proc_property_value.text = property_value

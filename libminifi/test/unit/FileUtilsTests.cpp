@@ -145,9 +145,29 @@ TEST_CASE("TestFileUtils::create_dir", "[TestCreateDir]") {
 
   std::string test_dir_path = std::string(dir) + FileUtils::get_separator() + "random_dir";
 
+  REQUIRE(FileUtils::create_dir(test_dir_path, false) == 0);  // Dir has to be created successfully
+  struct stat buffer;
+  REQUIRE(stat(test_dir_path.c_str(), &buffer) == 0);  // Check if directory exists
+  REQUIRE(FileUtils::create_dir(test_dir_path, false) == 0);  // Dir already exists, success should be returned
+  REQUIRE(FileUtils::delete_dir(test_dir_path, false) == 0);  // Delete should be successful as well
+  test_dir_path += "/random_dir2";
+  REQUIRE(FileUtils::create_dir(test_dir_path, false) != 0);  // Create dir should fail for multiple directories if recursive option is not set
+}
+
+TEST_CASE("TestFileUtils::create_dir recursively", "[TestCreateDir]") {
+  TestController testController;
+
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+
+  std::string test_dir_path = std::string(dir) + FileUtils::get_separator() + "random_dir" + FileUtils::get_separator() +
+    "random_dir2" + FileUtils::get_separator() + "random_dir3";
+
   REQUIRE(FileUtils::create_dir(test_dir_path) == 0);  // Dir has to be created successfully
+  struct stat buffer;
+  REQUIRE(stat(test_dir_path.c_str(), &buffer) == 0);  // Check if directory exists
   REQUIRE(FileUtils::create_dir(test_dir_path) == 0);  // Dir already exists, success should be returned
-  REQUIRE(FileUtils::delete_dir(test_dir_path) == 0);  // Delete should be successful as welll
+  REQUIRE(FileUtils::delete_dir(test_dir_path) == 0);  // Delete should be successful as well
 }
 
 TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
@@ -350,4 +370,33 @@ TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
   REQUIRE(FileUtils::computeChecksum(another_file, 4097) == CHECKSUM_OF_4097_BYTES);
   REQUIRE(FileUtils::computeChecksum(another_file, 8192) == CHECKSUM_OF_8192_BYTES);
   REQUIRE(FileUtils::computeChecksum(another_file, 9000) == CHECKSUM_OF_8192_BYTES);
+}
+
+#ifndef WIN32
+TEST_CASE("FileUtils::set_permissions", "[TestSetPermissions]") {
+  TestController testController;
+
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+  auto path = dir + FileUtils::get_separator() + "test_file.txt";
+  std::ofstream outfile(path, std::ios::out | std::ios::binary);
+
+  REQUIRE(FileUtils::set_permissions(path, 0644) == 0);
+  uint32_t perms;
+  REQUIRE(FileUtils::get_permissions(path, perms));
+  REQUIRE(perms == 0644);
+}
+#endif
+
+TEST_CASE("FileUtils::exists", "[TestExists]") {
+  TestController testController;
+
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+  auto path = dir + FileUtils::get_separator() + "test_file.txt";
+  std::ofstream outfile(path, std::ios::out | std::ios::binary);
+  auto invalid_path = dir + FileUtils::get_separator() + "test_file2.txt";
+
+  REQUIRE(FileUtils::exists(path));
+  REQUIRE(!FileUtils::exists(invalid_path));
 }

@@ -24,8 +24,10 @@
 #include <utility>
 #include <vector>
 
-#ifdef BOOST_VERSION
+#ifdef USE_BOOST
+#include <dirent.h>
 #include <boost/filesystem.hpp>
+#include <boost/system/error_code.hpp>
 
 #else
 #include <errno.h>
@@ -100,7 +102,7 @@ static inline int platform_create_dir(const std::string& path) {
 #ifdef WIN32
   return _mkdir(path.c_str());
 #else
-  return mkdir(path.c_str(), 0700);
+  return mkdir(path.c_str(), 0777);
 #endif
 }
 }  // namespace detail
@@ -141,7 +143,7 @@ inline std::string get_temp_directory() {
 }
 
 inline int64_t delete_dir(const std::string &path, bool delete_files_recursively = true) {
-#ifdef BOOST_VERSION
+#ifdef USE_BOOST
   try {
     if (boost::filesystem::exists(path)) {
       if (delete_files_recursively) {
@@ -228,8 +230,12 @@ inline int64_t delete_dir(const std::string &path, bool delete_files_recursively
 }
 
 inline uint64_t last_write_time(const std::string &path) {
-#ifdef BOOST_VERSION
-  return boost::filesystem::last_write_time(movedFile.str());
+#ifdef USE_BOOST
+  boost::system::error_code ec;
+  auto result = boost::filesystem::last_write_time(path, ec);
+  if (ec.value() == 0) {
+    return result;
+  }
 #else
 #ifdef WIN32
   struct _stat result;
@@ -266,7 +272,10 @@ inline uint64_t file_size(const std::string &path) {
 }
 
 inline bool set_last_write_time(const std::string &path, uint64_t write_time) {
-#ifdef WIN32
+#ifdef USE_BOOST
+  boost::filesystem::last_write_time(path, write_time);
+  return true;
+#elif defined(WIN32)
   struct __utimbuf64 utim;
   utim.actime = write_time;
   utim.modtime = write_time;
@@ -288,6 +297,16 @@ inline bool get_permissions(const std::string &path, uint32_t &permissions) {
   }
   return false;
 }
+
+inline int set_permissions(const std::string &path, const uint32_t permissions) {
+#ifdef USE_BOOST
+  boost::system::error_code ec;
+  boost::filesystem::permissions(path, static_cast<boost::filesystem::perms>(permissions), ec);
+  return ec.value();
+#else
+  return chmod(path.c_str(), permissions);
+#endif
+}
 #endif
 
 #ifndef WIN32
@@ -302,56 +321,75 @@ inline bool get_uid_gid(const std::string &path, uint64_t &uid, uint64_t &gid) {
 }
 #endif
 
-inline int is_directory(const char * path) {
-    struct stat dir_stat;
-    if (stat(path, &dir_stat) < 0) {
-        return 0;
-    }
-    return S_ISDIR(dir_stat.st_mode);
+inline bool is_directory(const char * path) {
+  struct stat dir_stat;
+  if (stat(path, &dir_stat) < 0) {
+      return false;
+  }
+  return S_ISDIR(dir_stat.st_mode) != 0;
+}
+
+inline bool exists(const std::string& path) {
+#ifdef USE_BOOST
+  return boost::filesystem::exists(path);
+#else
+#ifdef WIN32
+  struct _stat statbuf;
+  return _stat(path.c_str(), &statbuf) == 0;
+#else
+  struct stat statbuf;
+  return stat(path.c_str(), &statbuf) == 0;
+#endif
+#endif
 }
 
 inline int create_dir(const std::string& path, bool recursive = true) {
-#ifdef BOOST_VERSION
+#ifdef USE_BOOST
   boost::filesystem::path dir(path);
-  if (boost::filesystem::create_directory(dir)) {
-    return 0;
+  boost::system::error_code ec;
+  if (!recursive) {
+    boost::filesystem::create_directory(dir, ec);
   } else {
-    return -1;
+    boost::filesystem::create_directories(dir, ec);
   }
+  if (ec.value() == 0 || (ec.value() == EEXIST && is_directory(path.c_str()))) {
+    return 0;
+  }
+  return ec.value();
 #else
   if (!recursive) {
-      if (detail::platform_create_dir(path) != 0 && errno != EEXIST) {
-          return -1;
-      }
-      return 0;
+    if (detail::platform_create_dir(path) != 0 && errno != EEXIST) {
+      return -1;
+    }
+    return 0;
   }
   if (detail::platform_create_dir(path) == 0) {
-      return 0;
+    return 0;
   }
 
   switch (errno) {
   case ENOENT: {
-      size_t found = path.find_last_of(get_separator());
+    size_t found = path.find_last_of(get_separator());
 
-      if (found == std::string::npos) {
-          return -1;
-      }
+    if (found == std::string::npos) {
+      return -1;
+    }
 
-      const std::string dir = path.substr(0, found);
-      int res = create_dir(dir);
-      if (res < 0) {
-          return -1;
-      }
-      return detail::platform_create_dir(path);
+    const std::string dir = path.substr(0, found);
+    int res = create_dir(dir, recursive);
+    if (res < 0) {
+      return -1;
+    }
+    return detail::platform_create_dir(path);
   }
   case EEXIST: {
-      if (is_directory(path.c_str())) {
-          return 0;
-      }
-      return -1;
+    if (is_directory(path.c_str())) {
+      return 0;
+    }
+    return -1;
   }
   default:
-      return -1;
+    return -1;
   }
   return -1;
 #endif
