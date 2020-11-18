@@ -15,7 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "AWSLoader.h"
+
+#include "core/FlowConfiguration.h"
 
 bool AWSObjectFactory::added = core::FlowConfiguration::add_static_func("createAWSFactory");
 extern "C" {

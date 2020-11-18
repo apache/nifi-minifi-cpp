@@ -170,6 +170,12 @@ const core::Property PutS3Object::ProxyPassword(
     ->withDescription("Password to set when authenticating against proxy")
     ->supportsExpressionLanguage(true)
     ->build());
+const core::Property PutS3Object::UseDefaultCredentials(
+    core::PropertyBuilder::createProperty("Use Default Credentials")
+    ->withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.")
+    ->withDefaultValue<bool>(false)
+    ->isRequired(true)
+    ->build());
 
 const core::Relationship PutS3Object::Success("success", "FlowFiles are routed to success relationship");
 const core::Relationship PutS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
@@ -198,6 +204,7 @@ void PutS3Object::initialize() {
   properties.insert(ProxyPort);
   properties.insert(ProxyUsername);
   properties.insert(ProxyPassword);
+  properties.insert(UseDefaultCredentials);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -220,57 +227,29 @@ minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredential
   return minifi::utils::nullopt;
 }
 
-minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromProperties(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) const {
-  std::string access_key;
-  context->getProperty(AccessKey, access_key, flow_file);
-  std::string secret_key;
-  context->getProperty(SecretKey, secret_key, flow_file);
-  if (!access_key.empty() && !secret_key.empty()) {
-    Aws::Auth::AWSCredentials creds(access_key, secret_key);
-    return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(creds);
-  }
-  return minifi::utils::nullopt;
-}
-
-minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromFile(const std::shared_ptr<core::ProcessContext> &context) const {
-  std::string credential_file;
-  if (context->getProperty(CredentialsFile.getName(), credential_file) && !credential_file.empty()) {
-    auto properties = std::make_shared<minifi::Properties>();
-    properties->loadConfigureFile(credential_file.c_str());
-    std::string access_key;
-    std::string secret_key;
-    if (properties->getString("accessKey", access_key) && !access_key.empty() && properties->getString("secretKey", secret_key) && !secret_key.empty()) {
-      Aws::Auth::AWSCredentials creds(access_key, secret_key);
-      return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(creds);
-    }
-  }
-  return minifi::utils::nullopt;
-}
-
 minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentials(
     const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) const {
-  auto prop_cred = getAWSCredentialsFromProperties(context, flow_file);
-  if (prop_cred) {
-    logger_->log_info("AWS Credentials successfully set from properties");
-    return prop_cred.value();
-  }
-
-  auto file_cred = getAWSCredentialsFromFile(context);
-  if (file_cred) {
-    logger_->log_info("AWS Credentials successfully set from file");
-    return file_cred.value();
-  }
-
+    const std::shared_ptr<core::FlowFile> &flow_file) {
   auto service_cred = getAWSCredentialsFromControllerService(context);
   if (service_cred) {
     logger_->log_info("AWS Credentials successfully set from controller service");
     return service_cred.value();
   }
 
-  return minifi::utils::nullopt;
+  std::string access_key;
+  context->getProperty(AccessKey, access_key, flow_file);
+  aws_credentials_provider_.setAccessKey(access_key);
+  std::string secret_key;
+  context->getProperty(SecretKey, secret_key, flow_file);
+  aws_credentials_provider_.setSecretKey(secret_key);
+  std::string credential_file;
+  context->getProperty(CredentialsFile.getName(), credential_file);
+  aws_credentials_provider_.setCredentialsFile(credential_file);
+  bool use_default_credentials = false;
+  context->getProperty(UseDefaultCredentials.getName(), use_default_credentials);
+  aws_credentials_provider_.setUseDefaultCredentials(use_default_credentials);
+
+  return aws_credentials_provider_.getAWSCredentials();
 }
 
 void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context) {
