@@ -26,12 +26,6 @@
 #include <utility>
 #include "utils/OptionalUtils.h"
 
-#ifdef _MSC_VER
-#ifndef PATH_MAX
-#define PATH_MAX 260
-#endif
-#endif
-
 namespace org {
 namespace apache {
 namespace nifi {
