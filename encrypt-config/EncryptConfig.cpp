@@ -25,13 +25,11 @@
 #include "ConfigFileEncryptor.h"
 #include "utils/file/FileUtils.h"
 #include "utils/OptionalUtils.h"
+#include "Defaults.h"
 
 namespace {
 
-constexpr const char* CONF_DIRECTORY_NAME = "conf";
-constexpr const char* BOOTSTRAP_FILE_NAME = "bootstrap.conf";
-constexpr const char* MINIFI_PROPERTIES_FILE_NAME = "minifi.properties";
-constexpr const char* DECRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key.deprecated";
+constexpr const char* OLD_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key.old";
 constexpr const char* ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 
 }  // namespace
@@ -46,12 +44,13 @@ EncryptConfig::EncryptConfig(const std::string& minifi_home) : minifi_home_(mini
   if (sodium_init() < 0) {
     throw std::runtime_error{"Could not initialize the libsodium library!"};
   }
+  // encryption/decryption depends on the libsodium library which needs to be initialized
   keys_ = getEncryptionKeys();
 }
 
 EncryptConfig::EncryptionType EncryptConfig::encryptSensitiveProperties() const {
   encryptSensitiveProperties(keys_);
-  if (keys_.decryption_key) {
+  if (keys_.old_key) {
     return EncryptionType::RE_ENCRYPT;
   }
   return EncryptionType::ENCRYPT;
@@ -83,13 +82,13 @@ void EncryptConfig::encryptFlowConfig() const {
   } catch (const std::exception&) {}
 
   if (utils::crypto::isEncrypted(config_content)) {
-    if (!keys_.decryption_key) {
-      std::cerr << "Config file is encrypted, but no deprecated key is set.\n";
+    if (!keys_.old_key) {
+      std::cerr << "Config file is encrypted, but no old encryption key is set.\n";
       std::exit(1);
     }
-    std::cout << "Trying to decrypt flow config file using the deprecated key ...\n";
+    std::cout << "Trying to decrypt flow config file using the old key ...\n";
     try {
-      config_content = utils::crypto::decrypt(config_content, *keys_.decryption_key);
+      config_content = utils::crypto::decrypt(config_content, *keys_.old_key);
     } catch (const std::exception&) {
       std::cerr << "Flow config is encrypted, but couldn't be decrypted.\n";
       std::exit(1);
@@ -111,29 +110,23 @@ void EncryptConfig::encryptFlowConfig() const {
 }
 
 std::string EncryptConfig::bootstrapFilePath() const {
-  return utils::file::concat_path(
-      utils::file::concat_path(minifi_home_, CONF_DIRECTORY_NAME),
-      BOOTSTRAP_FILE_NAME);
+  return utils::file::concat_path(minifi_home_, DEFAULT_BOOTSTRAP_FILE);
 }
 
 std::string EncryptConfig::propertiesFilePath() const {
-  return utils::file::concat_path(
-      utils::file::concat_path(minifi_home_, CONF_DIRECTORY_NAME),
-      MINIFI_PROPERTIES_FILE_NAME);
+  return utils::file::concat_path(minifi_home_, DEFAULT_NIFI_PROPERTIES_FILE);
 }
 
-utils::crypto::EncryptionKeys EncryptConfig::getEncryptionKeys() const {
+EncryptionKeys EncryptConfig::getEncryptionKeys() const {
   encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
-  utils::optional<std::string> decryption_key_hex = bootstrap_file.getValue(DECRYPTION_KEY_PROPERTY_NAME);
+  utils::optional<std::string> decryption_key_hex = bootstrap_file.getValue(OLD_KEY_PROPERTY_NAME);
   utils::optional<std::string> encryption_key_hex = bootstrap_file.getValue(ENCRYPTION_KEY_PROPERTY_NAME);
 
-  utils::crypto::EncryptionKeys keys;
-  if (!decryption_key_hex || decryption_key_hex->empty()) {
-    std::cout << "No decryption key was provided\n";
-  } else {
-    std::string binary_key = hexDecodeAndValidateKey(*decryption_key_hex, DECRYPTION_KEY_PROPERTY_NAME);
-    std::cout << "Decryption key found in " << bootstrapFilePath() << "\n";
-    keys.decryption_key = utils::crypto::stringToBytes(binary_key);
+  EncryptionKeys keys;
+  if (decryption_key_hex && !decryption_key_hex->empty()) {
+    std::string binary_key = hexDecodeAndValidateKey(*decryption_key_hex, OLD_KEY_PROPERTY_NAME);
+    std::cout << "Old encryption key found in " << bootstrapFilePath() << "\n";
+    keys.old_key = utils::crypto::stringToBytes(binary_key);
   }
 
   if (encryption_key_hex && !encryption_key_hex->empty()) {
@@ -177,7 +170,7 @@ void EncryptConfig::writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes
   bootstrap_file.writeTo(bootstrapFilePath());
 }
 
-void EncryptConfig::encryptSensitiveProperties(const utils::crypto::EncryptionKeys& keys) const {
+void EncryptConfig::encryptSensitiveProperties(const EncryptionKeys& keys) const {
   encrypt_config::ConfigFile properties_file{std::ifstream{propertiesFilePath()}};
   if (properties_file.size() == 0) {
     throw std::runtime_error{"Properties file " + propertiesFilePath() + " not found!"};

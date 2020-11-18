@@ -110,6 +110,35 @@ class StringView {
     return rhs != lhs;
   }
 
+  bool startsWith(const char* prefix) const noexcept {
+    return startsWith(StringView{prefix});
+  }
+
+  bool endsWith(const char* suffix) const noexcept {
+    return endsWith(StringView{suffix});
+  }
+
+  bool startsWith(const std::string& prefix) const noexcept {
+    return startsWith(StringView{prefix});
+  }
+
+  bool endsWith(const std::string& suffix) const noexcept {
+    return endsWith(StringView{suffix});
+  }
+
+  bool startsWith(const StringView& prefix) const noexcept {
+    if (prefix.length() > length()) {
+      return false;
+    }
+    return std::equal(prefix.begin(), prefix.end(), begin());
+  }
+
+  bool endsWith(const StringView& suffix) const noexcept {
+    if (suffix.length() > length())
+      return false;
+    return std::equal(suffix.rbegin(), suffix.rend(), rbegin());
+  }
+
  private:
   const char* begin_;
   const char* end_;

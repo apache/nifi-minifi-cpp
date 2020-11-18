@@ -144,23 +144,6 @@ class StringUtils {
     return std::equal(endString.rbegin(), endString.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
   }
 
-  inline static bool endsWith(const std::string &value, const std::string & endString) {
-    if (endString.size() > value.size())
-      return false;
-    return std::equal(endString.rbegin(), endString.rend(), value.rbegin());
-  }
-
-  inline static bool startsWith(const std::string &value, const std::string & startString) {
-    if (startString.size() > value.size()) {
-      return false;
-    }
-    return std::equal(startString.begin(), startString.end(), value.begin());
-  }
-
-  inline static bool startsWith(const std::string& value, char ch) {
-    return value.size() != 0 && value[0] == ch;
-  }
-
   inline static std::string hex_ascii(const std::string& in) {
     int len = in.length();
     std::string newString;

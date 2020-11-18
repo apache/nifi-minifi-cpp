@@ -14,24 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#include "ConfigFile.h"
-#include "utils/EncryptionUtils.h"
-#include "Utils.h"
-
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace encrypt_config {
-
-uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes& encryption_key);
-
-uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const EncryptionKeys& keys);
-
-}  // namespace encrypt_config
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+#ifdef WIN32
+#define DEFAULT_NIFI_CONFIG_YML "\\conf\\config.yml"
+#define DEFAULT_NIFI_PROPERTIES_FILE "\\conf\\minifi.properties"
+#define DEFAULT_LOG_PROPERTIES_FILE "\\conf\\minifi-log.properties"
+#define DEFAULT_UID_PROPERTIES_FILE "\\conf\\minifi-uid.properties"
+#define DEFAULT_BOOTSTRAP_FILE "\\conf\\bootstrap.conf"
+#else
+#define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
+#define DEFAULT_NIFI_PROPERTIES_FILE "./conf/minifi.properties"
+#define DEFAULT_LOG_PROPERTIES_FILE "./conf/minifi-log.properties"
+#define DEFAULT_UID_PROPERTIES_FILE "./conf/minifi-uid.properties"
+#define DEFAULT_BOOTSTRAP_FILE "./conf/bootstrap.conf"
+#endif

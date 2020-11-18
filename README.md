@@ -32,6 +32,7 @@ MiNiFi is a child project effort of Apache NiFi.  This repository is for a nativ
   - [Running](#running)
   - [Deploying](#deploying)
   - [Extensions](#extensions)
+  - [Security](#security)
 - [Operations](#operations)
 - [Issue Tracking](#issue-tracking)
 - [Documentation](#documentation)
@@ -545,6 +546,10 @@ On Windows it is suggested that MSI be used for installation.
 ### Extensions
 
 Please see [Extensions.md](Extensions.md) on how to build and run conditionally built dependencies and extensions.
+
+### Security
+
+For securing a MiNiFi agent's configuration files it comes with a tool called `encrypt-config`. Its documentation is available [here](https://cwiki.apache.org/confluence/display/MINIFI/Encrypt+sensitive+configuration+properties).
 
 ### Recommended Antivirus Exclusions
 

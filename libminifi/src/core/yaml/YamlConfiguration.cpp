@@ -23,6 +23,8 @@
 
 #include "core/yaml/YamlConfiguration.h"
 #include "core/state/Value.h"
+#include "Defaults.h"
+
 #ifdef YAML_CONFIGURATION_USE_REGEX
 #include <regex>
 #endif  // YAML_CONFIGURATION_USE_REGEX
@@ -34,6 +36,15 @@ namespace minifi {
 namespace core {
 
 std::shared_ptr<utils::IdGenerator> YamlConfiguration::id_generator_ = utils::IdGenerator::getIdGenerator();
+
+YamlConfiguration::YamlConfiguration(const std::shared_ptr<core::Repository>& repo, const std::shared_ptr<core::Repository>& flow_file_repo,
+                                     const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<io::StreamFactory>& stream_factory,
+                                     const std::shared_ptr<Configure>& configuration, const utils::optional<std::string>& path,
+                                     const std::shared_ptr<utils::file::FileSystem>& filesystem)
+    : FlowConfiguration(repo, flow_file_repo, content_repo, stream_factory, configuration,
+                        path.value_or(DEFAULT_NIFI_CONFIG_YML), filesystem),
+      stream_factory_(stream_factory),
+      logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {}
 
 core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
   utils::Identifier uuid;

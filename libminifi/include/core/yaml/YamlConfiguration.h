@@ -40,7 +40,6 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-#define DEFAULT_FLOW_YAML_FILE_NAME "conf/config.yml"
 #define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
 #define CONFIG_YAML_PROCESSORS_KEY "Processors"
 #define CONFIG_YAML_CONNECTIONS_KEY "Connections"
@@ -61,11 +60,7 @@ class YamlConfiguration : public FlowConfiguration {
   explicit YamlConfiguration(const std::shared_ptr<core::Repository>& repo, const std::shared_ptr<core::Repository>& flow_file_repo,
                              const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<io::StreamFactory>& stream_factory,
                              const std::shared_ptr<Configure>& configuration, const utils::optional<std::string>& path = {},
-                             const std::shared_ptr<utils::file::FileSystem>& filesystem = std::make_shared<utils::file::FileSystem>())
-      : FlowConfiguration(repo, flow_file_repo, content_repo, stream_factory, configuration,
-                          path.value_or(DEFAULT_FLOW_YAML_FILE_NAME), filesystem),
-        stream_factory_(stream_factory),
-        logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {}
+                             const std::shared_ptr<utils::file::FileSystem>& filesystem = std::make_shared<utils::file::FileSystem>());
 
   ~YamlConfiguration() override = default;
 

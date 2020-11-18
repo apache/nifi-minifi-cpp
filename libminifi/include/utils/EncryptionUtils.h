@@ -46,11 +46,6 @@ struct EncryptionType {
   static std::string separator();
 };
 
-struct EncryptionKeys {
-  utils::optional<utils::crypto::Bytes> decryption_key;
-  utils::crypto::Bytes encryption_key;
-};
-
 struct EncryptedData {
   Bytes nonce;
   Bytes ciphertext_plus_mac;

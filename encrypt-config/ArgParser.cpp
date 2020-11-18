@@ -81,7 +81,7 @@ std::string Arguments::getHelp() {
 
 void Arguments::set(const std::string& key, const std::string& value) {
   if (get(key)) {
-    std::cerr << "Key is specified more that once \"" << key << "\"" << std::endl;
+    std::cerr << "Key is specified more than once \"" << key << "\"" << std::endl;
     std::cerr << getHelp();
     std::exit(1);
   }
@@ -90,7 +90,7 @@ void Arguments::set(const std::string& key, const std::string& value) {
 
 void Arguments::set(const std::string& flag) {
   if (isSet(flag)) {
-    std::cerr << "Flag is specified more that once \"" << flag << "\"" << std::endl;
+    std::cerr << "Flag is specified more than once \"" << flag << "\"" << std::endl;
     std::cerr << getHelp();
     std::exit(1);
   }
@@ -149,15 +149,10 @@ Arguments Arguments::parse(int argc, char* argv[]) {
   }
   for (const auto& simple_arg : simple_arguments_) {
     if (simple_arg.required) {
-      bool found = false;
-      for (const auto& name : simple_arg.names) {
-        if (args.get(name)) {
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        std::cerr << "Missing required option [" << utils::StringUtils::join("|", simple_arg.names) << "]" << std::endl;
+      if (std::none_of(simple_arg.names.begin(), simple_arg.names.end(), [&] (const std::string& name) {
+        return static_cast<bool>(args.get(name));
+      })) {
+        std::cerr << "Missing required option " << utils::StringUtils::join("|", simple_arg.names) << std::endl;
         std::cerr << getHelp();
         std::exit(1);
       }

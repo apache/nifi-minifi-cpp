@@ -16,10 +16,8 @@
  */
 #pragma once
 
-#include <string>
-
+#include "utils/EncryptionUtils.h"
 #include "utils/OptionalUtils.h"
-#include "Utils.h"
 
 namespace org {
 namespace apache {
@@ -27,30 +25,9 @@ namespace nifi {
 namespace minifi {
 namespace encrypt_config {
 
-class EncryptConfig {
- public:
-  enum class EncryptionType {
-    ENCRYPT,
-    RE_ENCRYPT
-  };
-
-  explicit EncryptConfig(const std::string& minifi_home);
-  EncryptionType encryptSensitiveProperties() const;
-
-  void encryptFlowConfig() const;
-
- private:
-  std::string bootstrapFilePath() const;
-  std::string propertiesFilePath() const;
-
-  EncryptionKeys getEncryptionKeys() const;
-  std::string hexDecodeAndValidateKey(const std::string& key, const std::string& key_name) const;
-  void writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes& encryption_key) const;
-
-  void encryptSensitiveProperties(const EncryptionKeys& encryption_key) const;
-
-  const std::string minifi_home_;
-  EncryptionKeys keys_;
+struct EncryptionKeys {
+  utils::optional<utils::crypto::Bytes> old_key;
+  utils::crypto::Bytes encryption_key;
 };
 
 }  // namespace encrypt_config

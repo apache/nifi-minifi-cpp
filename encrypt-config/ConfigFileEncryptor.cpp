@@ -33,10 +33,10 @@ bool isEncrypted(const utils::optional<std::string>& encryption_type) {
 }
 
 uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes & encryption_key) {
-  return encryptSensitivePropertiesInFile(config_file, utils::crypto::EncryptionKeys{{}, encryption_key});
+  return encryptSensitivePropertiesInFile(config_file, EncryptionKeys{{}, encryption_key});
 }
 
-uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::EncryptionKeys& keys) {
+uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const EncryptionKeys& keys) {
   int num_properties_encrypted = 0;
 
   for (const auto& property_key : config_file.getSensitiveProperties()) {
@@ -53,14 +53,14 @@ uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::
         std::cout << "Property \"" << property_key << "\" is already properly encrypted.\n";
         continue;
       } catch (const std::exception&) {}
-      if (!keys.decryption_key) {
-        std::cerr << "No deprecated key is provided to attempt decryption of property \"" << property_key << "\"\n";
+      if (!keys.old_key) {
+        std::cerr << "No old encryption key is provided to attempt decryption of property \"" << property_key << "\"\n";
         std::exit(1);
       }
       try {
-        raw_value = utils::crypto::decrypt(raw_value, *keys.decryption_key);
+        raw_value = utils::crypto::decrypt(raw_value, *keys.old_key);
       } catch (const std::exception&) {
-        std::cerr << "Couldn't decrypt property \"" << property_key << "\" using the deprecated key.\n";
+        std::cerr << "Couldn't decrypt property \"" << property_key << "\" using the old key.\n";
         throw;
       }
     }

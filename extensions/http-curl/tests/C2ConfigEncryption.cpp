@@ -30,8 +30,10 @@ int main(int argc, char **argv) {
   // copy config file to temporary location as it will get overridden
   char tmp_format[] = "/var/tmp/c2.XXXXXX";
   std::string home_path = controller.createTempDirectory(tmp_format);
-  std::string config_file = utils::file::FileUtils::concat_path(home_path, "config.yml");
-  utils::file::FileUtils::copy_file(args.test_file, config_file);
+  std::string live_config_file = utils::file::FileUtils::concat_path(home_path, "config.yml");
+  utils::file::FileUtils::copy_file(args.test_file, live_config_file);
+  // the C2 server will update the flow with the contents of args.test_file
+  // which will be encrypted and persisted to the temporary live_config_file
   C2UpdateHandler handler(args.test_file);
   VerifyC2Update harness(10000);
   harness.getConfiguration()->set(minifi::Configure::nifi_flow_configuration_encrypt, "true");
@@ -41,12 +43,12 @@ int main(int argc, char **argv) {
 
   const auto start = std::chrono::system_clock::now();
 
-  harness.run(config_file, args.key_dir);
+  harness.run(live_config_file, args.key_dir);
 
   auto encryptor = utils::crypto::EncryptionProvider::create(args.key_dir);
   assert(encryptor);
 
-  std::ifstream encrypted_file{config_file, std::ios::binary};
+  std::ifstream encrypted_file{live_config_file, std::ios::binary};
   std::string decrypted_config = encryptor->decrypt(std::string(std::istreambuf_iterator<char>(encrypted_file), {}));
 
   std::ifstream original_file{args.test_file, std::ios::binary};

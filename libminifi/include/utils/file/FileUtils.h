@@ -81,6 +81,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
 #include "utils/file/PathUtils.h"
+#include "utils/StringView.h"
 
 #ifndef S_ISDIR
 #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
@@ -397,7 +398,7 @@ inline void addFilesMatchingExtension(const std::shared_ptr<logging::Logger> &lo
             addFilesMatchingExtension(logger, path, extension, accruedFiles);
           }
         } else {
-          if (utils::StringUtils::endsWith(path, extension)) {
+          if (utils::StringView{path}.endsWith(extension)) {
             logger->log_info("Adding %s to paths", path);
             accruedFiles.push_back(path);
           }
@@ -406,7 +407,7 @@ inline void addFilesMatchingExtension(const std::shared_ptr<logging::Logger> &lo
       }
       closedir(d);
     } else if (s.st_mode & S_IFREG) {
-      if (utils::StringUtils::endsWith(originalPath, extension)) {
+      if (utils::StringView{originalPath}.endsWith(extension)) {
         logger->log_info("Adding %s to paths", originalPath);
         accruedFiles.push_back(originalPath);
       }
@@ -436,7 +437,7 @@ inline void addFilesMatchingExtension(const std::shared_ptr<logging::Logger> &lo
       if (S_ISDIR(statbuf.st_mode)) {
         addFilesMatchingExtension(logger, path, extension, accruedFiles);
       } else {
-        if (utils::StringUtils::endsWith(path, extension)) {
+        if (utils::StringView{path}.endsWith(extension)) {
           logger->log_info("Adding %s to paths", path);
           accruedFiles.push_back(path);
         }
