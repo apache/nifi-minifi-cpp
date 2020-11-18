@@ -16,7 +16,6 @@
  */
 
 #include <string>
-#include <iterator>
 #include <set>
 #include <iostream>
 #include <algorithm>
@@ -148,7 +147,6 @@ Arguments Arguments::parse(int argc, char* argv[]) {
     std::cout << getHelp();
     std::exit(0);
   }
-  std::iterator_traits<char*> t;
   for (const auto& simple_arg : simple_arguments_) {
     if (simple_arg.required) {
       if (std::none_of(simple_arg.names.begin(), simple_arg.names.end(), [&] (const std::string& name) {

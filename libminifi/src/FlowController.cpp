@@ -29,8 +29,13 @@
 
 #include "FlowController.h"
 #include "core/state/nodes/AgentInformation.h"
+#include "core/state/nodes/BuildInformation.h"
+#include "core/state/nodes/DeviceInformation.h"
 #include "core/state/nodes/FlowInformation.h"
+#include "core/state/nodes/ProcessMetrics.h"
 #include "core/state/nodes/QueueMetrics.h"
+#include "core/state/nodes/RepositoryMetrics.h"
+#include "core/state/nodes/SystemMetrics.h"
 #include "core/state/ProcessorController.h"
 #include "c2/C2Agent.h"
 #include "core/ProcessGroup.h"
