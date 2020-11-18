@@ -17,14 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "FlowController.h"
 #include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <vector>
-#include <queue>
 #include <map>
-#include <set>
 #include <chrono>
 #include <future>
 #include <thread>
@@ -32,39 +27,25 @@
 #include <memory>
 #include <string>
 
+#include "FlowController.h"
 #include "core/state/nodes/AgentInformation.h"
-#include "core/state/nodes/BuildInformation.h"
-#include "core/state/nodes/DeviceInformation.h"
 #include "core/state/nodes/FlowInformation.h"
-#include "core/state/nodes/ProcessMetrics.h"
 #include "core/state/nodes/QueueMetrics.h"
-#include "core/state/nodes/RepositoryMetrics.h"
-#include "core/state/nodes/SystemMetrics.h"
 #include "core/state/ProcessorController.h"
-#include "yaml-cpp/yaml.h"
 #include "c2/C2Agent.h"
-#include "core/ProcessContext.h"
 #include "core/ProcessGroup.h"
-#include "utils/StringUtils.h"
 #include "core/Core.h"
 #include "core/ClassLoader.h"
 #include "SchedulingAgent.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Connectable.h"
-#include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
 #include "utils/file/FileSystem.h"
 #include "utils/HTTPClient.h"
 #include "utils/GeneralUtils.h"
 #include "io/NetworkPrioritizer.h"
 #include "io/validation.h"
-
-#ifdef _MSC_VER
-#ifndef PATH_MAX
-#define PATH_MAX 260
-#endif
-#endif
 
 namespace org {
 namespace apache {
