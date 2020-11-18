@@ -91,6 +91,13 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
 class PutS3ObjectTestsFixture {
  public:
   PutS3ObjectTestsFixture() {
+    // Disable retrieving AWS metadata for tests
+    #ifdef WIN32
+    _putenv_s("AWS_EC2_METADATA_DISABLED", "true");
+    #else
+    setenv("AWS_EC2_METADATA_DISABLED", "true", 1);
+    #endif
+
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
@@ -190,6 +197,14 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
     plan->setProperty(put_s3_object, "Secret Key", "${s3.secretKey}");
   }
 
+
+  SECTION("Test credentials setting from AWS Credentials service") {
+    auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
+    plan->setProperty(aws_cred_service, "Access Key", "key");
+    plan->setProperty(aws_cred_service, "Secret Key", "secret");
+    plan->setProperty(put_s3_object, "AWS Credentials Provider service", "AWSCredentialsService");
+  }
+
   SECTION("Test credentials file setting") {
     char in_dir[] = "/tmp/gt.XXXXXX";
     auto temp_path = test_controller.createTempDirectory(in_dir);
@@ -202,10 +217,41 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
     plan->setProperty(put_s3_object, "Credentials File", aws_credentials_file);
   }
 
-  SECTION("Test credentials setting from AWS Credential service") {
+  SECTION("Test credentials file setting from AWS Credentials service") {
+    char in_dir[] = "/tmp/gt.XXXXXX";
+    auto temp_path = test_controller.createTempDirectory(in_dir);
+    REQUIRE(!temp_path.empty());
+    std::string aws_credentials_file(temp_path + utils::file::FileUtils::get_separator() + "aws_creds.conf");
+    std::ofstream aws_credentials_file_stream(aws_credentials_file);
+    aws_credentials_file_stream << "accessKey=key" << std::endl;
+    aws_credentials_file_stream << "secretKey=secret" << std::endl;
+    aws_credentials_file_stream.close();
     auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
-    plan->setProperty(aws_cred_service, "Access Key", "key");
-    plan->setProperty(aws_cred_service, "Secret Key", "secret");
+    plan->setProperty(aws_cred_service, "Credentials File", aws_credentials_file);
+    plan->setProperty(put_s3_object, "AWS Credentials Provider service", "AWSCredentialsService");
+  }
+
+  SECTION("Test credentials setting using default credential chain") {
+    #ifdef WIN32
+    _putenv_s("AWS_ACCESS_KEY_ID", "key");
+    _putenv_s("AWS_SECRET_ACCESS_KEY", "secret");
+    #else
+    setenv("AWS_ACCESS_KEY_ID", "key", 1);
+    setenv("AWS_SECRET_ACCESS_KEY", "secret", 1);
+    #endif
+    plan->setProperty(put_s3_object, "Use Default Credentials", "true");
+  }
+
+  SECTION("Test credentials setting from AWS Credentials service using default credential chain") {
+    auto aws_cred_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
+    plan->setProperty(aws_cred_service, "Use Default Credentials", "true");
+    #ifdef WIN32
+    _putenv_s("AWS_ACCESS_KEY_ID", "key");
+    _putenv_s("AWS_SECRET_ACCESS_KEY", "secret");
+    #else
+    setenv("AWS_ACCESS_KEY_ID", "key", 1);
+    setenv("AWS_SECRET_ACCESS_KEY", "secret", 1);
+    #endif
     plan->setProperty(put_s3_object, "AWS Credentials Provider service", "AWSCredentialsService");
   }
 

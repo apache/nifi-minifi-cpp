@@ -1,4 +1,6 @@
 /**
+ * @file AWSCredentialsProvider.h
+ * AWSCredentialsProvider class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -22,67 +24,39 @@
 #include <memory>
 
 #include "aws/core/auth/AWSCredentials.h"
-
 #include "utils/AWSInitializer.h"
-#include "core/Resource.h"
-#include "core/controller/ControllerService.h"
+#include "utils/OptionalUtils.h"
+#include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "AWSCredentialsProvider.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace aws {
-namespace controllers {
 
-class AWSCredentialsService : public core::controller::ControllerService {
+class AWSCredentialsProvider {
  public:
-  static const core::Property UseDefaultCredentials;
-  static const core::Property AccessKey;
-  static const core::Property SecretKey;
-  static const core::Property CredentialsFile;
-
-  explicit AWSCredentialsService(const std::string &name, const minifi::utils::Identifier& uuid = {})
-      : ControllerService(name, uuid) {
-  }
-
-  explicit AWSCredentialsService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : ControllerService(name) {
-  }
-
-  void initialize() override;
-
-  void yield() override {
-  };
-
-  bool isWorkAvailable() override {
-    return false;
-  };
-
-  bool isRunning() override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
-  }
-
-  void onEnable() override;
-
-  Aws::Auth::AWSCredentials getAWSCredentials() {
-    return aws_credentials_;
-  }
+  AWSCredentialsProvider(
+    bool use_default_credentials = false,
+    const std::string &access_key = "",
+    const std::string &secret_key = "",
+    const std::string &credentials_file = "");
+  void setUseDefaultCredentials(bool use_default_credentials);
+  void setAccessKey(const std::string &access_key);
+  void setSecretKey(const std::string &secret_key);
+  void setCredentialsFile(const std::string &credentials_file);
+  minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
 
  private:
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
+  bool use_default_credentials_;
   std::string access_key_;
   std::string secret_key_;
   std::string credentials_file_;
-  bool use_default_credentials_ = false;
-  Aws::Auth::AWSCredentials aws_credentials_;
-  AWSCredentialsProvider aws_credentials_provider_;
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AWSCredentialsProvider>::getLogger()};
 };
 
-REGISTER_RESOURCE(AWSCredentialsService, "AWS Credentials Management Service");
-
-}  // namespace controllers
 }  // namespace aws
 }  // namespace minifi
 }  // namespace nifi

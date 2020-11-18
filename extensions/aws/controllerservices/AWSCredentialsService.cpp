@@ -27,28 +27,53 @@ namespace minifi {
 namespace aws {
 namespace controllers {
 
-core::Property AWSCredentialsService::AccessKey(
-    core::PropertyBuilder::createProperty("Access Key")->withDescription("Specifies the AWS Access Key.")->isRequired(true)->supportsExpressionLanguage(true)->build());
+const core::Property AWSCredentialsService::UseDefaultCredentials(
+    core::PropertyBuilder::createProperty("Use Default Credentials")
+    ->withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.")
+    ->withDefaultValue<bool>(false)
+    ->isRequired(true)
+    ->build());
 
-core::Property AWSCredentialsService::SecretKey(
-    core::PropertyBuilder::createProperty("Secret Key")->withDescription("Specifies the AWS Secret Key.")->isRequired(true)->supportsExpressionLanguage(true)->build());
+const core::Property AWSCredentialsService::AccessKey(
+    core::PropertyBuilder::createProperty("Access Key")->withDescription("Specifies the AWS Access Key.")
+    ->supportsExpressionLanguage(true)
+    ->build());
+
+const core::Property AWSCredentialsService::SecretKey(
+    core::PropertyBuilder::createProperty("Secret Key")
+    ->withDescription("Specifies the AWS Secret Key.")
+    ->supportsExpressionLanguage(true)
+    ->build());
+
+const core::Property AWSCredentialsService::CredentialsFile(
+  core::PropertyBuilder::createProperty("Credentials File")
+    ->withDescription("Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey")
+    ->build());
 
 void AWSCredentialsService::initialize() {
   std::set<core::Property> supportedProperties;
   supportedProperties.insert(AccessKey);
   supportedProperties.insert(SecretKey);
+  supportedProperties.insert(UseDefaultCredentials);
+  supportedProperties.insert(CredentialsFile);
   setSupportedProperties(supportedProperties);
 }
 
 void AWSCredentialsService::onEnable() {
-  getProperty(AccessKey.getName(), s3Ack);
-  getProperty(SecretKey.getName(), s3Secret);
+  getProperty(AccessKey.getName(), access_key_);
+  getProperty(SecretKey.getName(), secret_key_);
+  getProperty(CredentialsFile.getName(), credentials_file_);
+  getProperty(UseDefaultCredentials.getName(), use_default_credentials_);
 
-  Aws::String awsS3Secret = s3Secret.c_str();
-  Aws::String awsS3Ack = s3Ack.c_str();
+  aws_credentials_provider_.setAccessKey(access_key_);
+  aws_credentials_provider_.setSecretKey(secret_key_);
+  aws_credentials_provider_.setCredentialsFile(credentials_file_);
+  aws_credentials_provider_.setUseDefaultCredentials(use_default_credentials_);
 
-  Aws::Auth::AWSCredentials creds(awsS3Ack, awsS3Secret);
-  awsCredentials = creds;
+  auto aws_credentials_result = aws_credentials_provider_.getAWSCredentials();
+  if (aws_credentials_result) {
+    aws_credentials_ = aws_credentials_result.value();
+  }
 }
 
 }  // namespace controllers
