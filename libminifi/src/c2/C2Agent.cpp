@@ -768,7 +768,18 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
   std::string file_uri;
   std::string configuration_str;
 
-  if (url == resp.operation_arguments.end()) {
+  if (url != resp.operation_arguments.end()) {
+    file_uri = url->second.to_string();
+    utils::optional<std::string> optional_configuration_str = fetchFlow(file_uri);
+    if (!optional_configuration_str) {
+      logger_->log_debug("Couldn't load new flow configuration from: \"%s\"", file_uri);
+      C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
+      response.setRawData("Error while applying flow. Couldn't load flow configuration.");
+      enqueue_c2_response(std::move(response));
+      return false;
+    }
+    configuration_str = optional_configuration_str.value();
+  } else {
     logger_->log_debug("Did not have location within %s", resp.ident);
     auto update_text = resp.operation_arguments.find("configuration_data");
     if (update_text == resp.operation_arguments.end()) {
@@ -780,17 +791,6 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
     }
     configuration_str = update_text->second.to_string();
   }
-
-  file_uri = url->second.to_string();
-  utils::optional<std::string> optional_configuration_str = fetchFlow(file_uri);
-  if (!optional_configuration_str) {
-    logger_->log_debug("Couldn't load new flow configuration from: \"%s\"", file_uri);
-    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
-    response.setRawData("Error while applying flow. Couldn't load flow configuration.");
-    enqueue_c2_response(std::move(response));
-    return false;
-  }
-  configuration_str = optional_configuration_str.value();
 
   bool should_persist = [&] {
     auto persist = resp.operation_arguments.find("persist");
