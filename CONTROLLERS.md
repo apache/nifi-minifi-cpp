@@ -23,8 +23,8 @@
 
 ### Description
 
-Manages the Amazon Web Services (AWS) ```Access Key``` and ```Secret Access Key``` for a AWS account. This allows for multiple 
-AWS credential services to be defined. This also allows for multiple AWS related processors to reference this single 
+Manages the Amazon Web Services (AWS) credentials for an AWS account. This allows for multiple
+AWS credential services to be defined. This also allows for multiple AWS related processors to reference this single
 controller service so that AWS credentials can be managed and controlled in a central location.
 
 ### Properties
@@ -35,5 +35,7 @@ default values, and whether a property supports the NiFi Expression Language.
 
 | Name | Default Value | Allowable Values | Expression Language Supported? | Description |
 | - | - | - | - | - |
-| **Access Key** | | | Yes | Specifies the AWS Access Key |
-| **Secret Key** | | | Yes | Specifies the AWS Secret Key |
+|**Use Default Credentials**|false||No|If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.|
+|Access Key|||Yes|Specifies the AWS Access Key|
+|Secret Key|||Yes|Specifies the AWS Secret Key|
+|Credentials File|||No|Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey|
