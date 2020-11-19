@@ -125,10 +125,7 @@ class ConsumeKafka : public core::Processor {
       Processor(name, uuid),
       logger_(logging::LoggerFactory<ConsumeKafka>::getLogger()) {}
 
-  // virtual ~ConsumeKafka() = default;
-  virtual ~ConsumeKafka() {
-    logger_->log_debug("\u001b[37;1mConsumeKafka destructor.\u001b[0m");
-  }
+  virtual ~ConsumeKafka() = default;
 
  public:
   bool supportsDynamicProperties() override {
@@ -160,6 +157,7 @@ class ConsumeKafka : public core::Processor {
   utils::KafkaEncoding message_header_encoding_attr_to_enum();
   std::string resolve_duplicate_headers(const std::vector<std::string>& matching_headers);
   std::vector<std::string> get_matching_headers(const rd_kafka_message_t* message, const std::string& header_name);
+  std::vector<std::pair<std::string, std::string>> get_flowfile_attributes_from_message_header(const rd_kafka_message_t* message);
 
  private:
   std::string kafka_brokers_;

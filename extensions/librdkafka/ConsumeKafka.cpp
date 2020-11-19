@@ -404,6 +404,17 @@ std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_messa
   return matching_headers;
 }
 
+std::vector<std::pair<std::string, std::string>> ConsumeKafka::get_flowfile_attributes_from_message_header(const rd_kafka_message_t* message) {
+  std::vector<std::pair<std::string, std::string>> attributes_from_headers;
+  for (const std::string& header_name : headers_to_add_as_attributes_) {
+    const std::vector<std::string> matching_headers = get_matching_headers(message, header_name);
+    if (matching_headers.size()) {
+      attributes_from_headers.emplace_back(header_name, utils::get_encoded_string(resolve_duplicate_headers(matching_headers), message_header_encoding_attr_to_enum()));
+    }
+  }
+  return attributes_from_headers;
+}
+
 class WriteCallback : public OutputStreamCallback {
  public:
   WriteCallback(char *data, uint64_t size) :
@@ -447,6 +458,7 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
       return;
     }
 
+    std::vector<std::pair<std::string, std::string>> attributes_from_headers = get_flowfile_attributes_from_message_header(message.get());
     std::vector<std::string> split_message;
     if (message_demarcator_.size()) {
       split_message = utils::StringUtils::split(message_content, message_demarcator_);
@@ -458,15 +470,11 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
       if (flow_file == nullptr) {
         return;
       }
-      // flowfile_content is consumed here
+      // flowfile content is consumed here
       WriteCallback stream_writer_callback(&flowfile_content[0], flowfile_content.size());
       session->write(flow_file, &stream_writer_callback);
-      // TODO(hunyadi): extract this into a function that creates a vector of attributes to add to flowfiles
-      for (const std::string& header_name : headers_to_add_as_attributes_) {
-        const auto matching_headers = get_matching_headers(message.get(), header_name);
-        if (matching_headers.size()) {
-          flow_file->setAttribute(header_name, utils::get_encoded_string(resolve_duplicate_headers(matching_headers), message_header_encoding_attr_to_enum()));
-        }
+      for (const auto& kv : attributes_from_headers) {
+        flow_file->setAttribute(kv.first, kv.second);
       }
       const utils::optional<std::string> message_key = utils::get_encoded_message_key(message.get(), key_attr_encoding_attr_to_enum());
       if (message_key) {
