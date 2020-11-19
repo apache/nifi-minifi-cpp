@@ -54,11 +54,8 @@ void C2Client::stopC2() {
 
 bool C2Client::isC2Enabled() const {
   std::string c2_enable_str;
-  bool c2_enabled = false;
-  if (configuration_->get(Configure::nifi_c2_enable, "c2.enable", c2_enable_str)) {
-    utils::StringUtils::StringToBool(c2_enable_str, c2_enabled);
-  }
-  return c2_enabled;
+  configuration_->get(Configure::nifi_c2_enable, "c2.enable", c2_enable_str);
+  return utils::StringUtils::toBool(c2_enable_str).value_or(false);
 }
 
 void C2Client::initialize(core::controller::ControllerServiceProvider *controller, const std::shared_ptr<state::StateMonitor> &update_sink) {

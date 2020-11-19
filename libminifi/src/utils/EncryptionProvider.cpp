@@ -33,10 +33,10 @@ namespace {
 #ifdef WIN32
 constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "\\conf\\bootstrap.conf";
 #else
-constexpr const char *DEFAULT_NIFI_BOOTSTRAP_FILE = "./conf/bootstrap.conf";
+constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "./conf/bootstrap.conf";
 #endif  // WIN32
 
-constexpr const char *CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
+constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 
 }  // namespace
 

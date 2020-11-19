@@ -28,10 +28,10 @@ namespace minifi {
 namespace utils {
 namespace file {
 
-FileSystem::FileSystem(bool should_encrypt, utils::optional<utils::crypto::EncryptionProvider> encryptor)
-    : should_encrypt_(should_encrypt),
+FileSystem::FileSystem(bool should_encrypt_on_write, utils::optional<utils::crypto::EncryptionProvider> encryptor)
+    : should_encrypt_on_write_(should_encrypt_on_write),
       encryptor_(std::move(encryptor)) {
-  if (should_encrypt_ && !encryptor) {
+  if (should_encrypt_on_write_ && !encryptor) {
     std::string err_message = "Requested file encryption but no encryption utility was provided";
     logger_->log_error(err_message.c_str());
     throw std::invalid_argument(err_message);
@@ -58,7 +58,7 @@ utils::optional<std::string> FileSystem::read(const std::string& file_name) {
 
 bool FileSystem::write(const std::string& file_name, const std::string& file_content) {
   std::ofstream output{file_name, std::ios::binary};
-  if (should_encrypt_) {
+  if (should_encrypt_on_write_) {
     // allow a possible exception to propagate upward
     // if we fail to encrypt the file DON'T just write
     // it as-is

@@ -44,7 +44,7 @@ class FileSystem {
   bool write(const std::string& file_name, const std::string& file_content);
 
  private:
-  bool should_encrypt_;
+  bool should_encrypt_on_write_;
   utils::optional<utils::crypto::EncryptionProvider> encryptor_;
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<FileSystem>::getLogger()};
 };
