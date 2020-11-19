@@ -129,7 +129,7 @@ core::Property ConsumeKafka::MaxPollRecords(core::PropertyBuilder::createPropert
 core::Property ConsumeKafka::MaxPollTime(core::PropertyBuilder::createProperty("Max Poll Time")
   ->withDescription("Specifies the maximum amount of time the consumer can use for polling data from the brokers. "
       "Polling is a blocking operation, so the upper limit of this value is specified in 4 seconds.")
-  ->withDefaultValue(DEFAULT_MAX_POLL_TIME, std::make_shared<core::ConsumeKafkaMaxPollTimeValidator>(std::string("ConsumeKafkaMaxPollTimeValidator")))  // TODO(hunyadi): add validator
+  ->withDefaultValue(DEFAULT_MAX_POLL_TIME, std::make_shared<core::ConsumeKafkaMaxPollTimeValidator>(std::string("ConsumeKafkaMaxPollTimeValidator")))
   ->isRequired(true)
   ->build());
 
@@ -141,7 +141,7 @@ core::Property ConsumeKafka::SessionTimeout(core::PropertyBuilder::createPropert
   ->withDefaultValue<core::TimePeriodValue>("60 seconds")
   ->build());
 
-const core::Relationship ConsumeKafka::Success("success", "Incoming kafka messages as flowfiles");
+const core::Relationship ConsumeKafka::Success("success", "Incoming kafka messages as flowfiles. Depending on the demarcation strategy, this can be one or multiple flowfiles per message.");
 
 void ConsumeKafka::initialize() {
   setSupportedProperties({
@@ -168,7 +168,7 @@ void ConsumeKafka::initialize() {
 
 void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /* sessionFactory */) {
   // Required properties
-  kafka_brokers_                = utils::listFromRequiredCommaSeparatedProperty(context, KafkaBrokers.getName());
+  kafka_brokers_                = utils::getRequiredPropertyOrThrow(context, KafkaBrokers.getName());
   security_protocol_            = utils::getRequiredPropertyOrThrow(context, SecurityProtocol.getName());
   topic_names_                  = utils::listFromRequiredCommaSeparatedProperty(context, TopicNames.getName());
   topic_name_format_            = utils::getRequiredPropertyOrThrow(context, TopicNameFormat.getName());
@@ -186,49 +186,35 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
 
   headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.getName());
   max_poll_records_ = gsl::narrow<std::size_t>(utils::getOptionalUintProperty(context, MaxPollRecords.getName()).value_or(DEFAULT_MAX_POLL_RECORDS));
-  // TODO(hunyadi): add dynamic property support for kafka configuration properties
-  // readDynamicPropertyKeys(context);
 
-  configureNewConnection(context);
+  configure_new_connection(context);
 }
 
-// TODO(hunyadi): maybe move this to the kafka utils?
-void print_topics_list(std::shared_ptr<logging::Logger> logger, rd_kafka_topic_partition_list_t* kf_topic_partition_list) {
-  for (std::size_t i = 0; i < kf_topic_partition_list->cnt; ++i) {
-    logger->log_debug("kf_topic_partition_list: \u001b[33m[topic: %s, partition: %d, offset:%lld] \u001b[0m",
-    kf_topic_partition_list->elems[i].topic, kf_topic_partition_list->elems[i].partition, kf_topic_partition_list->elems[i].offset);
-  }
-}
-
-// TODO(hunyadi): this is a test for trying to manually set new connections offsets to latest
-void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/) {
+void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/) {
   // Cooperative, incremental assignment is not supported in the current librdkafka version
   std::shared_ptr<logging::Logger> logger{logging::LoggerFactory<ConsumeKafka>::getLogger()};
   logger->log_debug("\u001b[37;1mRebalance triggered.\u001b[0m");
-  switch (err) {
+  rd_kafka_resp_err_t assign_error = RD_KAFKA_RESP_ERR_NO_ERROR;
+  switch (trigger) {
     case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-      // TODO(hunyadi): this lacks error handling for assign calls, check librdkafka examples directory
       logger->log_debug("assigned");
-      // FIXME(hunyadi): this might be an alternative for manual offset resets
-      // for (std::size_t i = 0; i < partitions->cnt; ++i) {
-      //   partitions->elems[i].offset = RD_KAFKA_OFFSET_END;
-      // }
-      print_topics_list(logger, partitions);
-      rd_kafka_assign(rk, partitions);  // TODO(hunyadi): check incremental assign
+      utils::print_topics_list(logger, partitions);
+      assign_error = rd_kafka_assign(rk, partitions);
       break;
 
     case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
       logger->log_debug("revoked:");
       rd_kafka_commit(rk, partitions, /* async = */ 0);  // Sync commit, maybe unneccessary
-      print_topics_list(logger, partitions);
-      rd_kafka_assign(rk, NULL);
+      utils::print_topics_list(logger, partitions);
+      assign_error = rd_kafka_assign(rk, NULL);
       break;
 
     default:
-      logger->log_debug("failed: %s", rd_kafka_err2str(err));
-      rd_kafka_assign(rk, NULL);
+      logger->log_debug("failed: %s", rd_kafka_err2str(trigger));
+      assign_error = rd_kafka_assign(rk, NULL);
       break;
   }
+  logger->log_debug("assign failure: %s", rd_kafka_err2str(assign_error));
 }
 
 void ConsumeKafka::createTopicPartitionList() {
@@ -239,10 +225,13 @@ void ConsumeKafka::createTopicPartitionList() {
     for (const std::string& topic : topic_names_) {
       const std::string regex_format = "^" + topic;
       rd_kafka_topic_partition_list_add(kf_topic_partition_list_.get(), regex_format.c_str(), RD_KAFKA_PARTITION_UA);
+      // TODO(hunyadi): check of getting a watermark on the offsets corrects this
+      // rd_kafka_topic_partition_list_set_offset(kf_topic_partition_list_.get(), regex_format.c_str(), RD_KAFKA_PARTITION_UA, RD_KAFKA_OFFSET_END);
     }
   } else {
     for (const std::string& topic : topic_names_) {
       rd_kafka_topic_partition_list_add(kf_topic_partition_list_.get(), topic.c_str(), RD_KAFKA_PARTITION_UA);
+      // rd_kafka_topic_partition_list_set_offset(kf_topic_partition_list_.get(), topic.c_str(), RD_KAFKA_PARTITION_UA, RD_KAFKA_OFFSET_END);
     }
   }
 
@@ -256,7 +245,23 @@ void ConsumeKafka::createTopicPartitionList() {
   }
 }
 
-void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
+void ConsumeKafka::extend_config_from_dynamic_properties(const core::ProcessContext* context) {
+  using utils::setKafkaConfigurationField;
+
+  const std::vector<std::string> dynamic_prop_keys = context->getDynamicPropertyKeys();
+  if (dynamic_prop_keys.empty()) {
+    return;
+  }
+  logger_->log_info("Loading %d extra kafka configuration fields from ConsumeKafka dynamic properties:", dynamic_prop_keys.size());
+  for (const std::string& key : dynamic_prop_keys) {
+    std::string value;
+    gsl_Expects(context->getDynamicProperty(key, value));
+    logger_->log_info("%s: %s", key.c_str(), value.c_str());
+    setKafkaConfigurationField(conf_.get(), key, value);
+  }
+}
+
+void ConsumeKafka::configure_new_connection(const core::ProcessContext* context) {
   using utils::setKafkaConfigurationField;
 
   conf_ = { rd_kafka_conf_new(), utils::rd_kafka_conf_deleter() };
@@ -270,16 +275,23 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
   // Registering a rebalance_cb turns off librdkafka's automatic partition assignment/revocation and instead delegates that responsibility to the application's rebalance_cb.
   rd_kafka_conf_set_rebalance_cb(conf_.get(), rebalance_cb);
 
+  // Uncomment this for librdkafka debug logs:
   // setKafkaConfigurationField(conf_.get(), "debug", "all");
-  setKafkaConfigurationField(conf_.get(), "bootstrap.servers", utils::getRequiredPropertyOrThrow(context, KafkaBrokers.getName()));  // TODO(hunyadi): replace this with kafka_brokers_
+
+  setKafkaConfigurationField(conf_.get(), "bootstrap.servers", kafka_brokers_);
   setKafkaConfigurationField(conf_.get(), "auto.offset.reset", "latest");
   setKafkaConfigurationField(conf_.get(), "enable.auto.commit", "false");
   setKafkaConfigurationField(conf_.get(), "enable.auto.offset.store", "false");
   setKafkaConfigurationField(conf_.get(), "isolation.level", honor_transactions_ ? "read_committed" : "read_uncommitted");
   setKafkaConfigurationField(conf_.get(), "group.id", group_id_);
-  setKafkaConfigurationField(conf_.get(), "compression.codec", "snappy");  // FIXME(hunyadi): this seems like a producer property
-  setKafkaConfigurationField(conf_.get(), "session.timeout.ms", std::to_string(session_timeout_milliseconds_.count()));  // FIXME(hunyadi): this seems like a producer property
-  // setKafkaConfigurationField(conf_.get(), "max.poll.interval.ms", "600000");  // Twice the default, arbitrarily chosen
+  setKafkaConfigurationField(conf_.get(), "session.timeout.ms", std::to_string(session_timeout_milliseconds_.count()));
+  setKafkaConfigurationField(conf_.get(), "max.poll.interval.ms", "600000");  // Twice the default, arbitrarily chosen
+
+  // This is a librdkafka option, but the communication timeout is also specified in each of the
+  // relevant API calls. Could be redundant, but it probably does not hurt to set this
+  setKafkaConfigurationField(conf_.get(), "metadata.request.timeout.ms", std::to_string(METADATA_COMMUNICATIONS_TIMEOUT_MS));
+
+  extend_config_from_dynamic_properties(context);
 
   std::array<char, 512U> errstr{};
   consumer_ = { rd_kafka_new(RD_KAFKA_CONSUMER, conf_.release(), errstr.data(), errstr.size()), utils::rd_kafka_consumer_deleter() };
@@ -290,14 +302,26 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
 
   createTopicPartitionList();
 
+  // Changing the partition list should happen only as part as the initialization of offsets
+  // a function like `rd_kafka_position()` might have unexpected effects
+  // for instance when a consumer gets assigned a partition it used to
+  // consume at an earlier rebalance.
+  //
+  // As far as I understand, instead of rd_kafka_position() an rd_kafka_committed() call if preferred here,
+  // as it properly fetches offsets from the broker
+  if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_committed(consumer_.get(), kf_topic_partition_list_.get(), METADATA_COMMUNICATIONS_TIMEOUT_MS)) {
+    logger_ -> log_error("\u001b[31mRetrieving committed offsets for topics+partitions failed.\u001b[0m");
+  }
+
   rd_kafka_resp_err_t poll_set_consumer_response = rd_kafka_poll_set_consumer(consumer_.get());
   if (RD_KAFKA_RESP_ERR_NO_ERROR != poll_set_consumer_response) {
     logger_->log_error("\u001b[31mrd_kafka_poll_set_consumer error %d: %s\u001b[0m", poll_set_consumer_response, rd_kafka_err2str(poll_set_consumer_response));
   }
 
-  // rd_kafka_seek(kf_topic_partition_list_.get(), RD_KAFKA_PARTITION_UA, RD_KAFKA_OFFSET_END, communications_timeout_milliseconds_.count());
-
-
+  // There is no rd_kafka_seek alternative for rd_kafka_topic_partition_list_t, only rd_kafka_topic_t
+  // rd_kafka_topic_partition_list_set_offset should reset the offsets to the latest (or whatever is set in the config),
+  // Also, rd_kafka_committed should also fetch and set latest the latest offset
+  // In reality, neither of them seem to work (not even with calling rd_kafka_position())
   logger_->log_info("Resetting offset manually.");
   while (true) {
     std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
@@ -308,9 +332,8 @@ void ConsumeKafka::configureNewConnection(const core::ProcessContext* context) {
     }
     utils::print_kafka_message(message_wrapper.get(), logger_);
     // Commit offsets on broker for the provided list of partitions
-    const int async = 0;
     logger_->log_info("\u001b[33mCommitting offset: %" PRId64 ".\u001b[0m", message_wrapper->offset);
-    rd_kafka_commit_message(consumer_.get(), message_wrapper.get(), async);  // TODO(hunyadi): check this for potential rollback requirements
+    rd_kafka_commit_message(consumer_.get(), message_wrapper.get(), /* async = */ 0);
   }
   logger_->log_info("Done resetting offset manually.");
 }
@@ -319,7 +342,6 @@ std::string ConsumeKafka::extract_message(const rd_kafka_message_t* rkmessage) {
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rkmessage->err) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "ConsumeKafka: received error message from broker.");
   }
-  // utils::print_kafka_message(rkmessage, logger_);
   return { reinterpret_cast<char*>(rkmessage->payload), rkmessage->len };
 }
 
@@ -406,7 +428,6 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
   auto elapsed = std::chrono::high_resolution_clock::now() - start;
   while (messages.size() < max_poll_records_ && elapsed < max_poll_time_milliseconds_) {
     logger_-> log_debug("Polling for new messages for %d milliseconds...", max_poll_time_milliseconds_.count());
-    // TODO(hunyadi): rd_kafka_position() call might be needed
     rd_kafka_message_t* message = rd_kafka_consumer_poll(consumer_.get(), std::chrono::duration_cast<std::chrono::milliseconds>(max_poll_time_milliseconds_ - elapsed).count());
     if (!message || RD_KAFKA_RESP_ERR_NO_ERROR != message->err) {
       break;
@@ -425,20 +446,6 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
       logger_->log_debug("\u001b[31mError: message received contains no data.\u001b[0m");
       return;
     }
-
-    // Commit offsets on broker for the provided list of partitions
-    const int async = 0;
-    // TODO(hunyadi): check commit queue requirements
-    if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_commit_message(consumer_.get(), message.get(), async)) {
-      logger_ -> log_error("\u001b[31mCommitting offsets failed.\u001b[0m");
-    }  // TODO(hunyadi): check this for potential rollback requirements
-    if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_position(consumer_.get(), kf_topic_partition_list_.get())) {
-      logger_ -> log_error("\u001b[31mRetrieving current offsets for topics+partitions failed.\u001b[0m");
-    }
-    if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_committed(consumer_.get(), kf_topic_partition_list_.get(), METADATA_COMMUNICATIONS_TIMEOUT_MS)) {
-      logger_ -> log_error("\u001b[31mRetrieving committed offsets for topics+partitions failed.\u001b[0m");
-    }
-    // print_topics_list(logger_, kf_topic_partition_list_.get());
 
     std::vector<std::string> split_message;
     if (message_demarcator_.size()) {
@@ -467,6 +474,11 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
       }
       session->transfer(flow_file, Success);
     }
+  }
+  session->commit();
+  // Commit the offset from the latest message only
+  if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_commit_message(consumer_.get(), messages.back().get(), /* async = */ 0)) {
+    logger_ -> log_error("\u001b[31mCommitting offsets failed.\u001b[0m");
   }
 }
 

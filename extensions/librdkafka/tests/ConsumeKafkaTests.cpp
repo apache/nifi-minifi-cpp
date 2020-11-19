@@ -343,6 +343,8 @@ class ConsumeKafkaTest {
 
     std::shared_ptr<core::Processor> consume_kafka = plan_->addProcessor("ConsumeKafka", "consume_kafka", {success}, false);
 
+    plan_->setProperty(consume_kafka, "allow.auto.create.topics", "true", true);  // Seems like the topic tests work without this
+
     plan_->setProperty(consume_kafka, ConsumeKafka::KafkaBrokers.getName(), kafka_brokers);
     plan_->setProperty(consume_kafka, ConsumeKafka::TopicNames.getName(), PRODUCER_TOPIC);
     optional_set_property(consume_kafka, ConsumeKafka::GroupID.getName(), group_id);

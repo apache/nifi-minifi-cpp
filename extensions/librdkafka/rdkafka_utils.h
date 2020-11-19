@@ -99,6 +99,7 @@ void kafka_headers_for_each(const rd_kafka_headers_t* headers, T&& key_value_han
 }
 
 void setKafkaConfigurationField(rd_kafka_conf_t* configuration, const std::string& field_name, const std::string& value);
+void print_topics_list(std::shared_ptr<logging::Logger> logger, rd_kafka_topic_partition_list_t* kf_topic_partition_list);
 void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_ptr<logging::Logger>& logger);
 std::string get_encoded_string(const std::string& input, KafkaEncoding encoding);
 optional<std::string> get_encoded_message_key(const rd_kafka_message_t* message, KafkaEncoding encoding);

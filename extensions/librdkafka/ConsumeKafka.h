@@ -152,10 +152,9 @@ class ConsumeKafka : public core::Processor {
   void initialize() override;
 
  private:
-  // void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/);
-
   void createTopicPartitionList();
-  void configureNewConnection(const core::ProcessContext* context);
+  void extend_config_from_dynamic_properties(const core::ProcessContext* context);
+  void configure_new_connection(const core::ProcessContext* context);
   std::string extract_message(const rd_kafka_message_t* rkmessage);
   utils::KafkaEncoding key_attr_encoding_attr_to_enum();
   utils::KafkaEncoding message_header_encoding_attr_to_enum();
@@ -163,17 +162,17 @@ class ConsumeKafka : public core::Processor {
   std::vector<std::string> get_matching_headers(const rd_kafka_message_t* message, const std::string& header_name);
 
  private:
-  std::vector<std::string> kafka_brokers_;
+  std::string kafka_brokers_;
   std::string security_protocol_;
   std::vector<std::string> topic_names_;
-  std::string topic_name_format_;  // Easier handled as string than enum
+  std::string topic_name_format_;
   bool honor_transactions_;
   std::string group_id_;
-  std::string offset_reset_;  // Easier handled as string than enum
-  std::string key_attribute_encoding_;  // Easier handled as string than enum
+  std::string offset_reset_;
+  std::string key_attribute_encoding_;
   std::string message_demarcator_;
   std::string message_header_encoding_;
-  std::string duplicate_header_handling_;  // Easier handled as string than enum
+  std::string duplicate_header_handling_;
   std::vector<std::string> headers_to_add_as_attributes_;
   std::size_t max_poll_records_;
   std::chrono::milliseconds max_poll_time_milliseconds_;

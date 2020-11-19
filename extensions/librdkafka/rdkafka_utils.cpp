@@ -41,6 +41,13 @@ void setKafkaConfigurationField(rd_kafka_conf_t* configuration, const std::strin
   }
 }
 
+void print_topics_list(std::shared_ptr<logging::Logger> logger, rd_kafka_topic_partition_list_t* kf_topic_partition_list) {
+  for (std::size_t i = 0; i < kf_topic_partition_list->cnt; ++i) {
+    logger->log_debug("kf_topic_partition_list: \u001b[33m[topic: %s, partition: %d, offset:%lld] \u001b[0m",
+    kf_topic_partition_list->elems[i].topic, kf_topic_partition_list->elems[i].partition, kf_topic_partition_list->elems[i].offset);
+  }
+}
+
 void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_ptr<logging::Logger>& logger) {
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rkmessage->err) {
     const std::string error_msg = "ConsumeKafka: received error message from broker. Librdkafka error msg: " + std::string(rd_kafka_err2str(rkmessage->err));
