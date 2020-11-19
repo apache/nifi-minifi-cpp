@@ -70,11 +70,11 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       controller_service_map_(std::make_shared<core::controller::ControllerServiceMap>()),
       thread_pool_(2, false, nullptr, "Flowcontroller threadpool"),
       logger_(logging::LoggerFactory<FlowController>::getLogger()) {
-  if (IsNullOrEmpty(provenance_repo_))
+  if (provenance_repo_ == nullptr)
     throw std::runtime_error("Provenance Repo should not be null");
-  if (IsNullOrEmpty(flow_file_repo_))
+  if (flow_file_repo_ == nullptr)
     throw std::runtime_error("Flow Repo should not be null");
-  if (IsNullOrEmpty(configuration_)) {
+  if (configuration_ == nullptr) {
     throw std::runtime_error("Must supply a configuration.");
   }
   running_ = false;
