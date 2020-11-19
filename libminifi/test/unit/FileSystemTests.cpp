@@ -28,8 +28,8 @@ using utils::file::FileSystem;
 utils::crypto::Bytes encryption_key = utils::crypto::stringToBytes(utils::StringUtils::from_hex(
     "4024b327fdc987ce3eb43dd1f690b9987e4072e0020e3edf4349ce1ad91a4e38"));
 
-struct FSTest : TestController {
-  FSTest() {
+struct FileSystemTest : TestController {
+  FileSystemTest() {
     char format[] = "/var/tmp/fs.XXXXXX";
     dir = createTempDirectory(format);
     encrypted_file = utils::file::FileUtils::concat_path(dir, "encrypted.txt");
@@ -47,13 +47,13 @@ struct FSTest : TestController {
   std::string dir;
 };
 
-TEST_CASE_METHOD(FSTest, "Can read encrypted or non-encrypted file", "[fs]") {
+TEST_CASE_METHOD(FileSystemTest, "Can read encrypted or non-encrypted file", "[file_system]") {
   FileSystem fs{true, crypto};
   REQUIRE(fs.read(encrypted_file) == "banana");
   REQUIRE(fs.read(raw_file) == "banana");
 }
 
-TEST_CASE_METHOD(FSTest, "Write encrypted file", "[fs]") {
+TEST_CASE_METHOD(FileSystemTest, "Write encrypted file", "[file_system]") {
   FileSystem fs{true, crypto};
 
   fs.write(new_file, "red lorry, yellow lorry");
@@ -63,7 +63,7 @@ TEST_CASE_METHOD(FSTest, "Write encrypted file", "[fs]") {
   REQUIRE(crypto.decrypt(file_content) == "red lorry, yellow lorry");
 }
 
-TEST_CASE_METHOD(FSTest, "Can read encrypted but writes non-encrypted", "[fs]") {
+TEST_CASE_METHOD(FileSystemTest, "Can read encrypted but writes non-encrypted", "[file_system]") {
   FileSystem fs{false, crypto};
   REQUIRE(fs.read(encrypted_file) == "banana");
 
@@ -74,10 +74,13 @@ TEST_CASE_METHOD(FSTest, "Can read encrypted but writes non-encrypted", "[fs]") 
   REQUIRE(file_content == "red lorry, yellow lorry");
 }
 
-TEST_CASE_METHOD(FSTest, "Can't read/write encrypted", "[fs]") {
+TEST_CASE_METHOD(FileSystemTest, "Can't read encrypted file without encryption provider", "[file_system]") {
   FileSystem fs{false, utils::nullopt};
   REQUIRE(fs.read(encrypted_file) != "banana");
+}
 
+TEST_CASE_METHOD(FileSystemTest, "Can read and write unencrypted", "[file_system]") {
+  FileSystem fs{false, utils::nullopt};
   fs.write(new_file, "red lorry, yellow lorry");
 
   std::ifstream file{new_file, std::ios::binary};
@@ -85,6 +88,6 @@ TEST_CASE_METHOD(FSTest, "Can't read/write encrypted", "[fs]") {
   REQUIRE(file_content == "red lorry, yellow lorry");
 }
 
-TEST_CASE_METHOD(FSTest, "Required to encrypt but no key was provided", "[fs]") {
+TEST_CASE_METHOD(FileSystemTest, "Required to encrypt but no key was provided", "[file_system]") {
   REQUIRE_THROWS((FileSystem{true, utils::nullopt}));
 }

@@ -40,10 +40,11 @@ FileSystem::FileSystem(bool should_encrypt_on_write, utils::optional<utils::cryp
 
 utils::optional<std::string> FileSystem::read(const std::string& file_name) {
   std::ifstream input{file_name, std::ios::binary};
-  std::string content{std::istreambuf_iterator<char>(input), {}};
   if (!input) {
     return {};
   }
+  input.exceptions(std::ios::failbit | std::ios::badbit);
+  std::string content{std::istreambuf_iterator<char>(input), {}};
   if (encryptor_) {
     try {
       logger_->log_debug("Trying to decrypt file %s", file_name);

@@ -26,7 +26,7 @@
 using utils::StringView;
 using utils::StringViewUtils;
 
-TEST_CASE("Comparision") {
+TEST_CASE("Comparison") {
   std::string a = "a";
   std::string b = "b";
 
@@ -39,6 +39,13 @@ TEST_CASE("Comparision") {
   REQUIRE(StringView(a) == StringView(a));
   REQUIRE(StringView(a) != StringView(b));
   REQUIRE(!(StringView(a) == StringView(b)));
+
+  REQUIRE("a" == StringView(a));
+  REQUIRE("b" != StringView(a));
+  REQUIRE("a" == StringView("a"));
+  REQUIRE("a" != StringView("abcd"));
+  REQUIRE(a == StringView(a));
+  REQUIRE(b != StringView(a));
 }
 
 TEST_CASE("trimLeft") {
@@ -48,7 +55,9 @@ TEST_CASE("trimLeft") {
       {" abc", "abc"},
       {"  abc", "abc"},
       {" ", ""},
-      {"abc ", "abc "}
+      {"abc ", "abc "},
+      {"\t \r \nabc\r\v", "abc\r\v"},
+      {"\t\r\n\v", ""}
   };
   for (const auto& test_case : cases) {
     REQUIRE(StringViewUtils::trimLeft(StringView(test_case.first)) == StringView(test_case.second));
@@ -62,7 +71,9 @@ TEST_CASE("trimRight") {
       {"abc ", "abc"},
       {"abc  ", "abc"},
       {" ", ""},
-      {" abc", " abc"}
+      {" abc", " abc"},
+      {"\tabc\t \r \n", "\tabc"},
+      {"\t\r\v\n", ""}
   };
   for (const auto& test_case : cases) {
     REQUIRE(StringViewUtils::trimRight(StringView(test_case.first)) == StringView(test_case.second));
@@ -76,7 +87,9 @@ TEST_CASE("trim") {
       {"abc ", "abc"},
       {" abc  ", "abc"},
       {" ", ""},
-      {" abc", "abc"}
+      {" abc", "abc"},
+      {"\n\tabc\t \r \n", "abc"},
+      {"\v\t\r\n", ""}
   };
   for (const auto& test_case : cases) {
     REQUIRE(StringViewUtils::trim(StringView(test_case.first)) == StringView(test_case.second));
@@ -105,7 +118,7 @@ TEST_CASE("toBool") {
       {"true", true},
       {"false", false},
       {" TrUe   ", true},
-      {"   FaLsE ", false},
+      {"\n \r FaLsE \t", false},
       {"not false", {}}
   };
   for (const auto& test_case : cases) {
