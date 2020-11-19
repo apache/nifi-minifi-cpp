@@ -345,6 +345,24 @@ std::string ConsumeKafka::extract_message(const rd_kafka_message_t* rkmessage) {
   return { reinterpret_cast<char*>(rkmessage->payload), rkmessage->len };
 }
 
+std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>> ConsumeKafka::poll_kafka_messages() {
+  std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>> messages;
+  messages.reserve(max_poll_records_);
+  const auto start = std::chrono::high_resolution_clock::now();
+  auto elapsed = std::chrono::high_resolution_clock::now() - start;
+  while (messages.size() < max_poll_records_ && elapsed < max_poll_time_milliseconds_) {
+    logger_-> log_debug("Polling for new messages for %d milliseconds...", max_poll_time_milliseconds_.count());
+    rd_kafka_message_t* message = rd_kafka_consumer_poll(consumer_.get(), std::chrono::duration_cast<std::chrono::milliseconds>(max_poll_time_milliseconds_ - elapsed).count());
+    if (!message || RD_KAFKA_RESP_ERR_NO_ERROR != message->err) {
+      break;
+    }
+    utils::print_kafka_message(message, logger_);
+    messages.emplace_back(std::move(message), utils::rd_kafka_message_deleter());
+    elapsed = std::chrono::high_resolution_clock::now() - start;
+  }
+  return messages;
+}
+
 utils::KafkaEncoding ConsumeKafka::key_attr_encoding_attr_to_enum() {
   if (utils::StringUtils::equalsIgnoreCase(key_attribute_encoding_, KEY_ATTR_ENCODING_UTF_8)) {
     return utils::KafkaEncoding::UTF8;
@@ -430,32 +448,14 @@ class WriteCallback : public OutputStreamCallback {
   }
 };
 
-void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
-  logger_->log_debug("ConsumeKafka onTrigger");
-
-  std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>> messages;
-  messages.reserve(max_poll_records_);
-  const auto start = std::chrono::high_resolution_clock::now();
-  auto elapsed = std::chrono::high_resolution_clock::now() - start;
-  while (messages.size() < max_poll_records_ && elapsed < max_poll_time_milliseconds_) {
-    logger_-> log_debug("Polling for new messages for %d milliseconds...", max_poll_time_milliseconds_.count());
-    rd_kafka_message_t* message = rd_kafka_consumer_poll(consumer_.get(), std::chrono::duration_cast<std::chrono::milliseconds>(max_poll_time_milliseconds_ - elapsed).count());
-    if (!message || RD_KAFKA_RESP_ERR_NO_ERROR != message->err) {
-      break;
-    }
-    utils::print_kafka_message(message, logger_);
-    messages.emplace_back(std::move(message), utils::rd_kafka_message_deleter());
-    elapsed = std::chrono::high_resolution_clock::now() - start;
-  }
-
-  if (messages.empty()) {
-    return;
-  }
+std::vector<std::shared_ptr<FlowFileRecord>> ConsumeKafka::transform_messages_into_flowfiles(
+    const std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>>& messages, core::ProcessSession* session) {
+  std::vector<std::shared_ptr<FlowFileRecord>> flow_files_created;
   for (const auto& message : messages) {
     std::string message_content = extract_message(message.get());
     if (message_content.empty()) {
       logger_->log_debug("\u001b[31mError: message received contains no data.\u001b[0m");
-      return;
+      return {};
     }
 
     std::vector<std::pair<std::string, std::string>> attributes_from_headers = get_flowfile_attributes_from_message_header(message.get());
@@ -468,7 +468,7 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
     for (auto& flowfile_content : split_message) {
       std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
       if (flow_file == nullptr) {
-        return;
+        return {};
       }
       // flowfile content is consumed here
       WriteCallback stream_writer_callback(&flowfile_content[0], flowfile_content.size());
@@ -480,8 +480,23 @@ void ConsumeKafka::onTrigger(core::ProcessContext* context, core::ProcessSession
       if (message_key) {
         flow_file->setAttribute(KAFKA_MESSAGE_KEY_ATTR, message_key.value());
       }
-      session->transfer(flow_file, Success);
+      flow_files_created.emplace_back(std::move(flow_file));
     }
+  }
+  return flow_files_created;
+}
+
+void ConsumeKafka::onTrigger(core::ProcessContext* /* context */, core::ProcessSession* session) {
+  logger_->log_debug("ConsumeKafka onTrigger");
+
+  std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>> messages = poll_kafka_messages();
+
+  std::vector<std::shared_ptr<FlowFileRecord>> flow_files_created = transform_messages_into_flowfiles(messages, session);
+  if (flow_files_created.empty()) {
+    return;
+  }
+  for (const auto& flow_file : flow_files_created) {
+    session->transfer(flow_file, Success);
   }
   session->commit();
   // Commit the offset from the latest message only
