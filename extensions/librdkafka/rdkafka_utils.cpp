@@ -22,8 +22,6 @@
 #include "Exception.h"
 #include "utils/StringUtils.h"
 
-// TODO(hunyadi): check if these would be useful in PublishKafka
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -34,7 +32,6 @@ void setKafkaConfigurationField(rd_kafka_conf_t* configuration, const std::strin
   static std::array<char, 512U> errstr{};
   rd_kafka_conf_res_t result;
   result = rd_kafka_conf_set(configuration, field_name.c_str(), value.c_str(), errstr.data(), errstr.size());
-  // logger_->log_debug("Setting kafka configuration field bootstrap.servers:= %s", value);
   if (RD_KAFKA_CONF_OK != result) {
     const std::string error_msg { errstr.begin(), errstr.end() };
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "rd_kafka configuration error" + error_msg);
@@ -43,7 +40,7 @@ void setKafkaConfigurationField(rd_kafka_conf_t* configuration, const std::strin
 
 void print_topics_list(std::shared_ptr<logging::Logger> logger, rd_kafka_topic_partition_list_t* kf_topic_partition_list) {
   for (std::size_t i = 0; i < kf_topic_partition_list->cnt; ++i) {
-    logger->log_debug("kf_topic_partition_list: \u001b[33m[topic: %s, partition: %d, offset:%lld] \u001b[0m",
+    logger->log_debug("kf_topic_partition_list: topic: %s, partition: %d, offset:%lld]",
     kf_topic_partition_list->elems[i].topic, kf_topic_partition_list->elems[i].partition, kf_topic_partition_list->elems[i].offset);
   }
 }
@@ -88,15 +85,10 @@ void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_
   message_as_string += "[Message Length](" + std::to_string(rkmessage->len) + "), ";
   message_as_string += "[Timestamp](" + std::string(tsname) + " " + std::to_string(timestamp) + " (" + std::to_string(seconds_since_timestamp) + " s ago)), ";
   message_as_string += "[Headers](";
-  message_as_string += "\u001b[33m" + headers_as_string + "\u001b[0m)\n";
-  message_as_string += "[Payload](\u001b[32m" + message + "\u001b[0m)";
+  message_as_string += headers_as_string + "\n";
+  message_as_string += "[Payload](" + message + ")";
 
   logger -> log_debug("Message: %s", message_as_string.c_str());
-
-  // logger->log_debug("Message: \u001b[33m%s\u001b[0m", message.c_str());
-  // logger->log_debug("Topic: %s, Key: %.*s,\n\u001b[32mOffset: %" PRId64 ", (%zd bytes)\nMessage timestamp: %s %" PRId64 " \u001b[33m(%ds ago)\u001b[0m", topicName.c_str(),
-  //     key != nullptr ? key_len : 6, ((key != nullptr ? key : "[None]")), rkmessage->offset, rkmessage->len, tsname,
-  //     timestamp, !timestamp ? 0 : static_cast<int>(time(NULL)) - static_cast<int>(timestamp / 1000));
 }
 
 std::string get_encoded_string(const std::string& input, KafkaEncoding encoding) {

@@ -48,24 +48,19 @@ struct rd_kafka_conf_deleter {
 
 struct rd_kafka_producer_deleter {
   void operator()(rd_kafka_t* ptr) const noexcept {
-    std::cerr << "\u001b[37;1mproducer_deleter\u001b[0m" << std::endl;
-    rd_kafka_resp_err_t flush_ret = rd_kafka_flush(ptr, 10000 /* ms */);
-    if (RD_KAFKA_RESP_ERR__TIMED_OUT == flush_ret) {
-      std::cerr << "Deleting producer failed: time-out while trying to flush" << std::endl;
-    }
+    rd_kafka_resp_err_t flush_ret = rd_kafka_flush(ptr, 10000 /* ms */);  // Matching the wait time of KafkaConnection.cpp
+    // If concerned, we could log potential errors here:
+    // if (RD_KAFKA_RESP_ERR__TIMED_OUT == flush_ret) {
+    //   std::cerr << "Deleting producer failed: time-out while trying to flush" << std::endl;
+    // }
     rd_kafka_destroy(ptr);
-    std::cerr << "\u001b[37;1mproducer_deleter done\u001b[0m" << std::endl;
   }
 };
 
 struct rd_kafka_consumer_deleter {
   void operator()(rd_kafka_t* ptr) const noexcept {
-    std::cerr << "\u001b[37;1mconsumer_deleter\u001b[0m" << std::endl;
-    // rd_kafka_unsubscribe(ptr);
     rd_kafka_consumer_close(ptr);
-    std::cerr << "\u001b[37;1m***\u001b[0m" << std::endl;
     rd_kafka_destroy(ptr);
-    std::cerr << "\u001b[37;1mconsumer_deleter done\u001b[0m" << std::endl;
   }
 };
 
@@ -77,7 +72,7 @@ struct rd_kafka_topic_conf_deleter {
   void operator()(rd_kafka_topic_conf_t* ptr) const noexcept { rd_kafka_topic_conf_destroy(ptr); }
 };
 struct rd_kafka_topic_deleter {
-  void operator()(rd_kafka_topic_t* ptr) const noexcept { std::cerr << "\u001b[37;1mtopic_deleter\u001b[0m" << std::endl; rd_kafka_topic_destroy(ptr); }
+  void operator()(rd_kafka_topic_t* ptr) const noexcept { rd_kafka_topic_destroy(ptr); }
 };
 
 struct rd_kafka_message_deleter {

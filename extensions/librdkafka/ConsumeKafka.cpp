@@ -188,15 +188,15 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
   max_poll_records_ = gsl::narrow<std::size_t>(utils::getOptionalUintProperty(context, MaxPollRecords.getName()).value_or(DEFAULT_MAX_POLL_RECORDS));
 
   // For now security protocols are not yet supported
-  if (SECURITY_PROTOCOL_PLAINTEXT != security_protocol_) {
+  if (!utils::StringUtils::equalsIgnoreCase(SECURITY_PROTOCOL_PLAINTEXT, security_protocol_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Security protocols are not supported yet.");
   }
 
-  if (KEY_ATTR_ENCODING_UTF_8 != key_attribute_encoding_ &&  KEY_ATTR_ENCODING_HEX != key_attribute_encoding_) {
+  if (!utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_UTF_8, key_attribute_encoding_) && !utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_HEX, key_attribute_encoding_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported key attribute encoding: " + key_attribute_encoding_);
   }
 
-  if (MSG_HEADER_ENCODING_UTF_8 != message_header_encoding_ &&  MSG_HEADER_ENCODING_HEX != message_header_encoding_) {
+  if (!utils::StringUtils::equalsIgnoreCase(MSG_HEADER_ENCODING_UTF_8, message_header_encoding_) && !utils::StringUtils::equalsIgnoreCase(MSG_HEADER_ENCODING_HEX, message_header_encoding_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported message header encoding: " + key_attribute_encoding_);
   }
 
@@ -206,7 +206,7 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
 void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/) {
   // Cooperative, incremental assignment is not supported in the current librdkafka version
   std::shared_ptr<logging::Logger> logger{logging::LoggerFactory<ConsumeKafka>::getLogger()};
-  logger->log_debug("\u001b[37;1mRebalance triggered.\u001b[0m");
+  logger->log_debug("Rebalance triggered.");
   rd_kafka_resp_err_t assign_error = RD_KAFKA_RESP_ERR_NO_ERROR;
   switch (trigger) {
     case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
@@ -254,7 +254,7 @@ void ConsumeKafka::createTopicPartitionList() {
   // This might happen until the cross-overship between processors and connections are settled
   rd_kafka_resp_err_t subscribe_response = rd_kafka_subscribe(consumer_.get(), kf_topic_partition_list_.get());
   if (RD_KAFKA_RESP_ERR_NO_ERROR != subscribe_response) {
-    logger_->log_error("\u001b[31mrd_kafka_subscribe error %d: %s\u001b[0m", subscribe_response, rd_kafka_err2str(subscribe_response));
+    logger_->log_error("rd_kafka_subscribe error %d: %s", subscribe_response, rd_kafka_err2str(subscribe_response));
   }
 }
 
@@ -323,12 +323,12 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext* context)
   // As far as I understand, instead of rd_kafka_position() an rd_kafka_committed() call if preferred here,
   // as it properly fetches offsets from the broker
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_committed(consumer_.get(), kf_topic_partition_list_.get(), METADATA_COMMUNICATIONS_TIMEOUT_MS)) {
-    logger_ -> log_error("\u001b[31mRetrieving committed offsets for topics+partitions failed.\u001b[0m");
+    logger_ -> log_error("Retrieving committed offsets for topics+partitions failed.");
   }
 
   rd_kafka_resp_err_t poll_set_consumer_response = rd_kafka_poll_set_consumer(consumer_.get());
   if (RD_KAFKA_RESP_ERR_NO_ERROR != poll_set_consumer_response) {
-    logger_->log_error("\u001b[31mrd_kafka_poll_set_consumer error %d: %s\u001b[0m", poll_set_consumer_response, rd_kafka_err2str(poll_set_consumer_response));
+    logger_->log_error("rd_kafka_poll_set_consumer error %d: %s", poll_set_consumer_response, rd_kafka_err2str(poll_set_consumer_response));
   }
 
   // There is no rd_kafka_seek alternative for rd_kafka_topic_partition_list_t, only rd_kafka_topic_t
@@ -345,7 +345,7 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext* context)
     }
     utils::print_kafka_message(message_wrapper.get(), logger_);
     // Commit offsets on broker for the provided list of partitions
-    logger_->log_info("\u001b[33mCommitting offset: %" PRId64 ".\u001b[0m", message_wrapper->offset);
+    logger_->log_info("Committing offset: %" PRId64 ".", message_wrapper->offset);
     rd_kafka_commit_message(consumer_.get(), message_wrapper.get(), /* async = */ 0);
   }
   logger_->log_info("Done resetting offset manually.");
@@ -467,7 +467,7 @@ std::vector<std::shared_ptr<FlowFileRecord>> ConsumeKafka::transform_messages_in
   for (const auto& message : messages) {
     std::string message_content = extract_message(message.get());
     if (message_content.empty()) {
-      logger_->log_debug("\u001b[31mError: message received contains no data.\u001b[0m");
+      logger_->log_debug("Error: message received contains no data.");
       return {};
     }
 
@@ -514,7 +514,7 @@ void ConsumeKafka::onTrigger(core::ProcessContext* /* context */, core::ProcessS
   session->commit();
   // Commit the offset from the latest message only
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_commit_message(consumer_.get(), messages.back().get(), /* async = */ 0)) {
-    logger_ -> log_error("\u001b[31mCommitting offsets failed.\u001b[0m");
+    logger_ -> log_error("Committing offsets failed.");
   }
 }
 

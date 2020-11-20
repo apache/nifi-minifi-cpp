@@ -369,8 +369,8 @@ class ConsumeKafkaPropertiesTest : public ConsumeKafkaTest {
     for (int i = 0; i < sorted_split_messages.size(); ++i) {
       actual += flow_files_produced[i]->getAttribute(ATTRIBUTE_FOR_CAPTURING_CONTENT).value().get() + ", ";
     }
-    logger_->log_debug("\u001b[33m%s\u001b[0m", expected.c_str());
-    logger_->log_debug("\u001b[33m%s\u001b[0m", actual.c_str());
+    logger_->log_debug("%s", expected.c_str());
+    logger_->log_debug("%s", actual.c_str());
     logger_->log_debug("************");
 
     INFO("The messages received by ConsumeKafka do not match those published");
@@ -588,7 +588,8 @@ TEST_CASE_METHOD(ConsumeKafkaContinuousPublishingTest, "ConsumeKafka can spend n
   // while a rebalance is triggered causes this error, and a blocked poll when new
   // messages are produced:
   //     Group "test_group_id" heartbeat error response in state up (join state wait-revoke-rebalance_cb, 1 partition(s) assigned): Broker: Group rebalance in progress
-  // I tried adding a wait time for more than "session.timeout.ms" inbetween tests, but it was not sufficiend
+  //
+  //  I tried adding a wait time for more than "session.timeout.ms" inbetween tests, but it was not sufficiend
 }
 
 }  // namespace
