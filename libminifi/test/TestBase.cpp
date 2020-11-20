@@ -232,12 +232,27 @@ std::vector<std::shared_ptr<core::Processor>>::iterator TestPlan::getProcessorIt
   return processor_found_at;
 }
 
+std::shared_ptr<core::ProcessContext> TestPlan::getProcessContextForProcessor(const std::shared_ptr<core::Processor>& processor) {
+  const auto contextMatchesProcessor = [&processor] (const std::shared_ptr<core::ProcessContext>& context) {
+    return context->getProcessorNode()->getUUIDStr() ==  processor->getUUIDStr();
+  };
+  const auto context_found_at = std::find_if(processor_contexts_.begin(), processor_contexts_.end(), contextMatchesProcessor);
+  if (context_found_at == processor_contexts_.end()) {
+    throw std::runtime_error("Context not found in test plan.");
+  }
+  return *context_found_at;
+}
+
 void TestPlan::schedule_processors() {
   for(std::size_t target_location = 0; target_location < processor_queue_.size(); ++target_location) {
     std::shared_ptr<core::Processor> processor = processor_queue_.at(target_location);
     std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(target_location);
     schedule_processor(processor, context);
   }
+}
+
+void TestPlan::schedule_processor(const std::shared_ptr<core::Processor>& processor) {
+  schedule_processor(processor, getProcessContextForProcessor(processor));
 }
 
 void TestPlan::schedule_processor(const std::shared_ptr<core::Processor>& processor, const std::shared_ptr<core::ProcessContext>& context) {

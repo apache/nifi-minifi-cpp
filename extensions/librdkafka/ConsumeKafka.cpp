@@ -41,8 +41,8 @@ core::Property ConsumeKafka::KafkaBrokers(core::PropertyBuilder::createProperty(
   ->build());
 
 core::Property ConsumeKafka::SecurityProtocol(core::PropertyBuilder::createProperty("Security Protocol")
-  ->withDescription("Protocol used to communicate with brokers. Corresponds to Kafka's 'security.protocol' property.")
-  ->withAllowableValues<std::string>({SECURITY_PROTOCOL_PLAINTEXT, SECURITY_PROTOCOL_SSL, SECURITY_PROTOCOL_SASL_PLAINTEXT, SECURITY_PROTOCOL_SASL_SSL})
+  ->withDescription("This property is currently not supported. Protocol used to communicate with brokers. Corresponds to Kafka's 'security.protocol' property.")
+  ->withAllowableValues<std::string>({SECURITY_PROTOCOL_PLAINTEXT/*, SECURITY_PROTOCOL_SSL, SECURITY_PROTOCOL_SASL_PLAINTEXT, SECURITY_PROTOCOL_SASL_SSL*/ })
   ->withDefaultValue(SECURITY_PROTOCOL_PLAINTEXT)
   ->isRequired(true)
   ->build());
@@ -186,6 +186,19 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
 
   headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.getName());
   max_poll_records_ = gsl::narrow<std::size_t>(utils::getOptionalUintProperty(context, MaxPollRecords.getName()).value_or(DEFAULT_MAX_POLL_RECORDS));
+
+  // For now security protocols are not yet supported
+  if (SECURITY_PROTOCOL_PLAINTEXT != security_protocol_) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Security protocols are not supported yet.");
+  }
+
+  if (KEY_ATTR_ENCODING_UTF_8 != key_attribute_encoding_ &&  KEY_ATTR_ENCODING_HEX != key_attribute_encoding_) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported key attribute encoding: " + key_attribute_encoding_);
+  }
+
+  if (MSG_HEADER_ENCODING_UTF_8 != message_header_encoding_ &&  MSG_HEADER_ENCODING_HEX != message_header_encoding_) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported message header encoding: " + key_attribute_encoding_);
+  }
 
   configure_new_connection(context);
 }
