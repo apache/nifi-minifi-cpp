@@ -125,7 +125,7 @@ class PutFile : public core::Processor {
     uint32_t permissions_ = MINIMUM_INVALID_PERMISSIONS_VALUE;
   };
   FilePermissions permissions_;
-  void getPermissions(core::ProcessContext *context, const std::shared_ptr<core::FlowFile> &flow_file);
+  void getPermissions(core::ProcessContext *context);
 #endif
 };
 

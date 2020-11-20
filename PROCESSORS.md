@@ -899,6 +899,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |**Create Missing Directories**|true||If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.|
 |Directory|.||The output directory to which to put files<br/>**Supports Expression Language: true**|
 |Maximum File Count|-1||Specifies the maximum number of files that can exist in the output directory|
+|Permissions|||Sets the permissions on the output file to the value of this attribute. Format must be in octal number (e.g. 644 or 0755). Not supported on Windows systems.|
 ### Relationships
 
 | Name | Description |

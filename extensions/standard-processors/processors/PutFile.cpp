@@ -57,9 +57,7 @@ core::Property PutFile::MaxDestFiles(
 #ifndef WIN32
 core::Property PutFile::Permissions(
     core::PropertyBuilder::createProperty("Permissions")
-      ->withDescription("Sets the permissions on the output file to the value of this attribute. Format must be either UNIX rwxrwxrwx "
-                        "with a - in place of denied permissions (e.g. rw-r--r--) or an octal number (e.g. 644).")
-      ->supportsExpressionLanguage(true)
+      ->withDescription("Sets the permissions on the output file to the value of this attribute. Format must be format octal number (e.g. 644 or 0755). Not supported on Windows systems.")
       ->build());
 #endif
 
@@ -96,27 +94,11 @@ void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
   if (context->getProperty(MaxDestFiles.getName(), value)) {
     core::Property::StringToInt(value, max_dest_files_);
   }
-}
 
 #ifndef WIN32
-void PutFile::getPermissions(core::ProcessContext *context, const std::shared_ptr<core::FlowFile> &flow_file) {
-  std::string permissions_str;
-  context->getProperty(Permissions, permissions_str, flow_file);
-  if (permissions_str.empty()) {
-    return;
-  }
-
-  try {
-    permissions_.setValue(std::stoi(permissions_str, 0, 8));
-  } catch(const std::exception&) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Permissions property is invalid");
-  }
-
-  if (!permissions_.valid()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Permissions property is invalid: out of bounds");
-  }
-}
+  getPermissions(context);
 #endif
+}
 
 void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   if (IsNullOrEmpty(conflict_resolution_)) {
@@ -145,10 +127,6 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     session->transfer(flowFile, Failure);
     return;
   }
-
-#ifndef WIN32
-  getPermissions(context, flowFile);
-#endif
 
   std::string filename;
   flowFile->getAttribute(core::SpecialFlowAttribute::FILENAME, filename);
@@ -282,6 +260,26 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowF
   }
   return false;
 }
+
+#ifndef WIN32
+void PutFile::getPermissions(core::ProcessContext *context) {
+  std::string permissions_str;
+  context->getProperty(Permissions.getName(), permissions_str);
+  if (permissions_str.empty()) {
+    return;
+  }
+
+  try {
+    permissions_.setValue(std::stoi(permissions_str, 0, 8));
+  } catch(const std::exception&) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Permissions property is invalid");
+  }
+
+  if (!permissions_.valid()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Permissions property is invalid: out of bounds");
+  }
+}
+#endif
 
 PutFile::ReadCallback::ReadCallback(const std::string &tmp_file, const std::string &dest_file)
     : tmp_file_(tmp_file),
