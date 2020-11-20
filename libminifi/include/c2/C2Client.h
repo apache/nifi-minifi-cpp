@@ -61,7 +61,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
 
  private:
   void loadC2ResponseConfiguration(const std::string &prefix);
-  std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode>);
+  std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node);
 
  protected:
   std::shared_ptr<Configure> configuration_;
@@ -72,9 +72,8 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   std::atomic_bool initialized_{false};
   std::shared_ptr<logging::Logger> logger_;
 
-  mutable std::recursive_mutex metrics_mutex_;
+  mutable std::mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
-  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> device_information_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> component_metrics_;
 
  protected:
