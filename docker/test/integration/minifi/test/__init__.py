@@ -305,8 +305,6 @@ class SingleFileOutputValidator(FileOutputValidator):
         self.valid = False
         full_dir = os.path.join(self.output_dir, self.subdir)
         logging.info("Output folder: %s", full_dir)
-        if "GITHUB_WORKSPACE" in os.environ:
-            subprocess.call(['sudo', 'chmod', '-R', '0777', full_dir])
 
         if not os.path.isdir(full_dir):
             return self.valid
@@ -345,9 +343,6 @@ class EmptyFilesOutPutValidator(FileOutputValidator):
 
         full_dir = self.output_dir + dir
         logging.info("Output folder: %s", full_dir)
-        if "GITHUB_WORKSPACE" in os.environ:
-            subprocess.call(['sudo', 'chmod', '-R', '0777', full_dir])
-
         listing = listdir(full_dir)
         if listing:
             self.valid = all(os.path.getsize(os.path.join(full_dir,x)) == 0 for x in listing)
@@ -368,9 +363,6 @@ class NoFileOutPutValidator(FileOutputValidator):
 
         full_dir = self.output_dir + dir
         logging.info("Output folder: %s", full_dir)
-        if "GITHUB_WORKSPACE" in os.environ:
-            subprocess.call(['sudo', 'chmod', '-R', '0777', full_dir])
-
         listing = listdir(full_dir)
 
         self.valid = not bool(listing)
