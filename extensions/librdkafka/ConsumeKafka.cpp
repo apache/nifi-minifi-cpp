@@ -459,12 +459,7 @@ std::vector<std::shared_ptr<FlowFileRecord>> ConsumeKafka::transform_messages_in
     }
 
     std::vector<std::pair<std::string, std::string>> attributes_from_headers = get_flowfile_attributes_from_message_header(message.get());
-    std::vector<std::string> split_message;
-    if (message_demarcator_.size()) {
-      split_message = utils::StringUtils::split(message_content, message_demarcator_);
-    } else {
-      split_message.push_back(message_content);
-    }
+    std::vector<std::string> split_message{ utils::StringUtils::split(message_content, message_demarcator_) };
     for (auto& flowfile_content : split_message) {
       std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
       if (flow_file == nullptr) {
@@ -476,10 +471,15 @@ std::vector<std::shared_ptr<FlowFileRecord>> ConsumeKafka::transform_messages_in
       for (const auto& kv : attributes_from_headers) {
         flow_file->setAttribute(kv.first, kv.second);
       }
+      // We do not currently support batching messages into a single flowfile
+      flow_file->setAttribute(KAFKA_COUNT_ATTR, "1");
       const utils::optional<std::string> message_key = utils::get_encoded_message_key(message.get(), key_attr_encoding_attr_to_enum());
       if (message_key) {
         flow_file->setAttribute(KAFKA_MESSAGE_KEY_ATTR, message_key.value());
       }
+      flow_file->setAttribute(KAFKA_OFFSET_ATTR, std::to_string(message->offset));
+      flow_file->setAttribute(KAFKA_PARTITION_ATTR, std::to_string(message->partition));
+      flow_file->setAttribute(KAFKA_TOPIC_ATTR, rd_kafka_topic_name(message->rkt));
       flow_files_created.emplace_back(std::move(flow_file));
     }
   }

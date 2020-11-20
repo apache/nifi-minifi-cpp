@@ -28,7 +28,6 @@
 #include "../ConsumeKafka.h"
 #include "../rdkafka_utils.h"
 #include "../../standard-processors/processors/ExtractText.h"
-#include "../../standard-processors/processors/LogAttribute.h"
 #include "utils/file/FileUtils.h"
 #include "utils/OptionalUtils.h"
 #include "utils/RegexUtils.h"
@@ -148,7 +147,6 @@ class ConsumeKafkaTest {
   using Processor = org::apache::nifi::minifi::core::Processor;
   using ConsumeKafka = org::apache::nifi::minifi::processors::ConsumeKafka;
   using ExtractText = org::apache::nifi::minifi::processors::ExtractText;
-  using LogAttribute = org::apache::nifi::minifi::processors::LogAttribute;
 
   const KafkaTestProducer::PublishEvent PUBLISH            = KafkaTestProducer::PublishEvent::PUBLISH;
   const KafkaTestProducer::PublishEvent TRANSACTION_START  = KafkaTestProducer::PublishEvent::TRANSACTION_START;
@@ -211,14 +209,10 @@ class ConsumeKafkaTest {
     // Consumer chain
     std::shared_ptr<core::Processor> consume_kafka = plan_->addProcessor("ConsumeKafka", "consume_kafka", {success}, false);
     std::shared_ptr<core::Processor> extract_text  = plan_->addProcessor("ExtractText", "extract_text", {success}, false);
-    std::shared_ptr<core::Processor> log_attribute = plan_->addProcessor("LogAttribute", "log_attribute", {success}, false);
 
     // Set up connections
     plan_->addConnection(consume_kafka, success, extract_text);
-    plan_->addConnection(extract_text, success, log_attribute);
-
-    // Auto-terminated relationships
-    log_attribute->setAutoTerminatedRelationships({success});
+    extract_text->setAutoTerminatedRelationships({success});
 
     const auto bool_to_string = [] (const bool b) -> std::string { return b ? "true" : "false"; };
 
@@ -242,7 +236,6 @@ class ConsumeKafkaTest {
 
     plan_->setProperty(extract_text, ExtractText::Attribute.getName(), ATTRIBUTE_FOR_CAPTURING_CONTENT);
 
-    plan_->setProperty(log_attribute, LogAttribute::LogPayload.getName(), "true");
     plan_->schedule_processors();
 
     std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf_;
@@ -277,10 +270,6 @@ class ConsumeKafkaTest {
       plan_->increment_location();
       for (std::size_t times_extract_text_run = 0; times_extract_text_run < num_flow_files_produced; ++times_extract_text_run) {
         plan_->runCurrentProcessor();  // ExtractText
-      }
-      plan_->increment_location();
-      for (std::size_t times_extract_log_attr_run = 0; times_extract_log_attr_run < num_flow_files_produced; ++times_extract_log_attr_run) {
-        plan_->runCurrentProcessor();  // LogAttribute
         std::shared_ptr<core::FlowFile> flow_file = plan_->getFlowFileProducedByCurrentProcessor();
         for (const auto& exp_header : expect_header_attributes) {
           SCOPED_INFO("ConsumeKafka did not produce the expected flowfile attribute from message header: " << exp_header.first << ".");
@@ -291,6 +280,10 @@ class ConsumeKafkaTest {
         {
           SCOPED_INFO("Message key is missing or incorrect (potential encoding mismatch).");
           REQUIRE(TEST_MESSAGE_KEY == decode_key(flow_file->getAttribute(ConsumeKafka::KAFKA_MESSAGE_KEY_ATTR).value().get(), key_attribute_encoding));
+          REQUIRE("1" == flow_file->getAttribute(ConsumeKafka::KAFKA_COUNT_ATTR).value().get());
+          REQUIRE(flow_file->getAttribute(ConsumeKafka::KAFKA_OFFSET_ATTR));
+          REQUIRE(flow_file->getAttribute(ConsumeKafka::KAFKA_PARTITION_ATTR));
+          REQUIRE(PRODUCER_TOPIC == flow_file->getAttribute(ConsumeKafka::KAFKA_TOPIC_ATTR).value().get());
         }
         flow_files_produced.emplace_back(std::move(flow_file));
       }
@@ -408,7 +401,6 @@ class ConsumeKafkaTest {
     logTestController_.setTrace<ConsumeKafkaTest>();
     logTestController_.setTrace<KafkaTestProducer>();
     logTestController_.setDebug<ExtractText>();
-    logTestController_.setError<LogAttribute>();
     // logTestController_.setDebug<core::ProcessSession>();
     logTestController_.setDebug<core::ProcessContext>();
     // logTestController_.setDebug<core::Connectable>();

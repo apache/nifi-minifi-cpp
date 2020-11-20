@@ -50,6 +50,16 @@ TEST_CASE("TestStringUtils::split4", "[test split classname]") {
   REQUIRE(expected == StringUtils::split(org::apache::nifi::minifi::core::getClassName<org::apache::nifi::minifi::utils::StringUtils>(), "::"));
 }
 
+TEST_CASE("TestStringUtils::split5", "[test split delimiter not specified]") {
+  std::vector<std::string> expected{ "hello world" };
+  REQUIRE(expected == StringUtils::split("hello world", ""));
+}
+
+TEST_CASE("TestStringUtils::splitTrasformed", "[test split with trim]") {
+  std::vector<std::string> expected{ "hello", "world peace" };
+  REQUIRE(expected == StringUtils::splitAndTrim("hello, world peace", ","));
+}
+
 TEST_CASE("StringUtils::replaceEnvironmentVariables works correctly", "[replaceEnvironmentVariables]") {
   utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer", 0);
 
