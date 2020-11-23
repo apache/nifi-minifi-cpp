@@ -327,6 +327,20 @@ inline int is_directory(const char * path) {
   return S_ISDIR(dir_stat.st_mode);
 }
 
+inline int exists(const std::string& path) {
+#ifdef USE_BOOST
+  return boost::filesystem::exists(path) ? 0 : -1;
+#else
+#ifdef WIN32
+  struct _stat statbuf;
+  return _stat(path.c_str(), &statbuf);
+#else
+  struct stat statbuf;
+  return stat(path.c_str(), &statbuf);
+#endif
+#endif
+}
+
 inline int create_dir(const std::string& path, bool recursive = true) {
 #ifdef USE_BOOST
   boost::filesystem::path dir(path);

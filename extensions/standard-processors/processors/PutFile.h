@@ -63,6 +63,7 @@ class PutFile : public core::Processor {
   static core::Property MaxDestFiles;
 #ifndef WIN32
   static core::Property Permissions;
+  static core::Property DirectoryPermissions;
 #endif
   // Supported Relationships
   static core::Relationship Success;
@@ -125,7 +126,9 @@ class PutFile : public core::Processor {
     uint32_t permissions_ = MINIMUM_INVALID_PERMISSIONS_VALUE;
   };
   FilePermissions permissions_;
+  FilePermissions directory_permissions_;
   void getPermissions(core::ProcessContext *context);
+  void getDirectoryPermissions(core::ProcessContext *context);
 #endif
 };
 

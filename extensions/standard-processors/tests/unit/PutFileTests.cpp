@@ -445,11 +445,12 @@ TEST_CASE("TestPutFilePermissions", "[PutFilePermissions]") {
   char format[] = "/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
   char format2[] = "/tmp/ft.XXXXXX";
-  auto putfiledir = testController.createTempDirectory(format2);
+  auto putfiledir = testController.createTempDirectory(format2) + utils::file::FileUtils::get_separator() + "test_dir";
 
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Permissions.getName(), "644");
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::DirectoryPermissions.getName(), "0777");
 
   std::fstream file;
   file.open(std::string(dir) + utils::file::FileUtils::get_separator() + "tstFile.ext", std::ios::out);
@@ -463,5 +464,7 @@ TEST_CASE("TestPutFilePermissions", "[PutFilePermissions]") {
   uint32_t perms = 0;
   REQUIRE(utils::file::FileUtils::get_permissions(path, perms));
   REQUIRE(perms == 0644);
+  REQUIRE(utils::file::FileUtils::get_permissions(putfiledir, perms));
+  REQUIRE(perms == 0777);
 }
 #endif

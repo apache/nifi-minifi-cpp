@@ -387,3 +387,16 @@ TEST_CASE("FileUtils::set_permissions", "[TestSetPermissions]") {
   REQUIRE(perms == 0644);
 }
 #endif
+
+TEST_CASE("FileUtils::exists", "[TestExists]") {
+  TestController testController;
+
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+  auto path = dir + FileUtils::get_separator() + "test_file.txt";
+  std::ofstream outfile(path, std::ios::out | std::ios::binary);
+  auto invalid_path = dir + FileUtils::get_separator() + "test_file2.txt";
+
+  REQUIRE(FileUtils::exists(path) == 0);
+  REQUIRE(FileUtils::exists(invalid_path) < 0);
+}
