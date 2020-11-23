@@ -109,7 +109,8 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
       else{
         outfile << defaultValue;
       }
-      outfile << "|" << s.str() << "|" << prop.second.getDescription();
+      std::string description = prop.second.getDescription();
+      outfile << "|" << s.str() << "|" << utils::StringUtils::replaceAll(description, "\n", "<br/>");
       if (supportsEl){
         outfile << "<br/>**Supports Expression Language: true**";
       }
@@ -118,7 +119,8 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
     outfile << "### Properties " << std::endl << std::endl;
     outfile << "| Name | Description |" << std::endl << "| - | - |" << std::endl;
     for (const auto &rel : processor.second.class_relationships_) {
-      outfile << "|" << rel.getName() << "|" << rel.getDescription() << "|" << std::endl;
+      std::string description = rel.getDescription();
+      outfile << "|" << rel.getName() << "|" << utils::StringUtils::replaceAll(description, "\n", "<br/>") << "|" << std::endl;
     }
 
     outfile << std::endl;
