@@ -57,11 +57,13 @@ core::Property PutFile::MaxDestFiles(
 #ifndef WIN32
 core::Property PutFile::Permissions(
     core::PropertyBuilder::createProperty("Permissions")
-      ->withDescription("Sets the permissions on the output file to the value of this attribute. Format must be format octal number (e.g. 644 or 0755). Not supported on Windows systems.")
+      ->withDescription("Sets the permissions on the output file to the value of this attribute. "
+                        "Format must be format octal number (e.g. 644 or 0755). Not supported on Windows systems.")
       ->build());
 core::Property PutFile::DirectoryPermissions(
     core::PropertyBuilder::createProperty("Directory Permissions")
-      ->withDescription("Sets the permissions on the directories being created if 'Create Missing Directories' property is set. Format must be format octal number (e.g. 644 or 0755). Not supported on Windows systems.")
+      ->withDescription("Sets the permissions on the directories being created if 'Create Missing Directories' property is set. "
+                        "Format must be format octal number (e.g. 644 or 0755). Not supported on Windows systems.")
       ->build());
 #endif
 
