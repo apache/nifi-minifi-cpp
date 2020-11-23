@@ -59,6 +59,7 @@ uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const Encrypt
       }
       try {
         raw_value = utils::crypto::decrypt(raw_value, *keys.old_key);
+        std::cout << "Successfully decrypted property \"" << property_key << "\" using old key.\n";
       } catch (const std::exception&) {
         std::cerr << "Couldn't decrypt property \"" << property_key << "\" using the old key.\n";
         throw;
