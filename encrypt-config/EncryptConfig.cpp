@@ -72,8 +72,7 @@ void EncryptConfig::encryptFlowConfig() const {
     config_file.exceptions(std::ios::failbit | std::ios::badbit);
     config_content = std::string{std::istreambuf_iterator<char>(config_file), {}};
   } catch (...) {
-    std::cerr << "Error while reading flow configuration file \"" << *config_path << "\"\n";
-    throw;
+    throw std::runtime_error("Error while reading flow configuration file \"" + *config_path + "\"");
   }
   try {
     utils::crypto::decrypt(config_content, keys_.encryption_key);
@@ -83,15 +82,13 @@ void EncryptConfig::encryptFlowConfig() const {
 
   if (utils::crypto::isEncrypted(config_content)) {
     if (!keys_.old_key) {
-      std::cerr << "Config file is encrypted, but no old encryption key is set.\n";
-      std::exit(1);
+      throw std::runtime_error("Config file is encrypted, but no old encryption key is set.");
     }
     std::cout << "Trying to decrypt flow config file using the old key ...\n";
     try {
       config_content = utils::crypto::decrypt(config_content, *keys_.old_key);
     } catch (const std::exception&) {
-      std::cerr << "Flow config is encrypted, but couldn't be decrypted.\n";
-      std::exit(1);
+      throw std::runtime_error("Flow config is encrypted, but couldn't be decrypted.");
     }
   } else {
     std::cout << "Flow config file is not encrypted, using as-is.\n";
@@ -103,8 +100,7 @@ void EncryptConfig::encryptFlowConfig() const {
     encrypted_file.exceptions(std::ios::failbit | std::ios::badbit);
     encrypted_file << encrypted_content;
   } catch (...) {
-    std::cerr << "Error while writing encrypted flow configuration file \"" << *config_path << "\"\n";
-    throw;
+    throw std::runtime_error("Error while writing encrypted flow configuration file \"" + *config_path + "\"");
   }
   std::cout << "Successfully encrypted flow configuration file: \"" << *config_path << "\"\n";
 }

@@ -20,9 +20,9 @@
 
 #include "EncryptConfig.h"
 #include "ArgParser.h"
+#include "CommandException.h"
 
-using org::apache::nifi::minifi::encrypt_config::Arguments;
-using org::apache::nifi::minifi::encrypt_config::EncryptConfig;
+using namespace org::apache::nifi::minifi::encrypt_config;
 
 int main(int argc, char* argv[]) try {
   Arguments args = Arguments::parse(argc, argv);
@@ -36,10 +36,14 @@ int main(int argc, char* argv[]) try {
               << "you won't be able to recover the flow config.\n";
   }
   return 0;
+} catch (const CommandException& c_ex) {
+  std::cerr << c_ex.what() << "\n";
+  std::cerr << Arguments::getHelp() << std::endl;
+  return 1;
 } catch (const std::exception& ex) {
   std::cerr << ex.what() << "\n(" << typeid(ex).name() << ")\n";
-  return 1;
+  return 2;
 } catch (...) {
   std::cerr << "Unknown error\n";
-  return 2;
+  return 3;
 }

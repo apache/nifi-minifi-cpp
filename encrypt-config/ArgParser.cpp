@@ -22,6 +22,7 @@
 #include "ArgParser.h"
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
+#include "CommandException.h"
 
 namespace org {
 namespace apache {
@@ -81,18 +82,14 @@ std::string Arguments::getHelp() {
 
 void Arguments::set(const std::string& key, const std::string& value) {
   if (get(key)) {
-    std::cerr << "Key is specified more than once \"" << key << "\"" << std::endl;
-    std::cerr << getHelp();
-    std::exit(1);
+    throw CommandException("Key is specified more than once \"" + key + "\"");
   }
   simple_args_[key] = value;
 }
 
 void Arguments::set(const std::string& flag) {
   if (isSet(flag)) {
-    std::cerr << "Flag is specified more than once \"" << flag << "\"" << std::endl;
-    std::cerr << getHelp();
-    std::exit(1);
+    throw CommandException("Flag is specified more than once \"" + flag + "\"");
   }
   flag_args_.insert(flag);
 }
@@ -130,14 +127,10 @@ Arguments Arguments::parse(int argc, char* argv[]) {
       continue;
     }
     if (!getSimpleArg(key)) {
-      std::cerr << "Unrecognized option: \"" << key << "\"" << std::endl;
-      std::cerr << getHelp();
-      std::exit(1);
+      throw CommandException("Unrecognized option: \"" + key + "\"");
     }
     if (argIdx == argc - 1) {
-      std::cerr << "No value specified for key \"" << key << "\"" << std::endl;
-      std::cerr << getHelp();
-      std::exit(1);
+      throw CommandException("No value specified for key \"" + key + "\"");
     }
     ++argIdx;
     std::string value{argv[argIdx]};
@@ -152,9 +145,7 @@ Arguments Arguments::parse(int argc, char* argv[]) {
       if (std::none_of(simple_arg.names.begin(), simple_arg.names.end(), [&] (const std::string& name) {
         return static_cast<bool>(args.get(name));
       })) {
-        std::cerr << "Missing required option " << utils::StringUtils::join("|", simple_arg.names) << std::endl;
-        std::cerr << getHelp();
-        std::exit(1);
+        throw CommandException("Missing required option " + utils::StringUtils::join("|", simple_arg.names));
       }
     }
   }
