@@ -549,7 +549,7 @@ Please see [Extensions.md](Extensions.md) on how to build and run conditionally 
 
 ### Security
 
-For securing a MiNiFi agent's configuration files it comes with a tool called `encrypt-config`. Its documentation is available [here](https://cwiki.apache.org/confluence/display/MINIFI/Encrypt+sensitive+configuration+properties).
+For securing a MiNiFi agent's configuration files it comes with a tool called `encrypt-config`. Its documentation is available [here](https://cwiki.apache.org/confluence/display/MINIFI/Securing+MiNiFi+configuration+files).
 
 ### Recommended Antivirus Exclusions
 
