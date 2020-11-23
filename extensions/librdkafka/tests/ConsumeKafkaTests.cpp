@@ -294,7 +294,6 @@ class ConsumeKafkaPropertiesTest : public ConsumeKafkaTest {
     plan_->setProperty(extract_text, ExtractText::Attribute.getName(), ATTRIBUTE_FOR_CAPTURING_CONTENT);
 
     if (!expect_config_valid) {
-      // TODO(hunyadi): Add function to the TestPlan that checks if scheduling ConsumeKafka succeeds
       const auto& message = messages_on_topic.front();
       REQUIRE_THROWS(plan_->schedule_processor(consume_kafka));
       return;

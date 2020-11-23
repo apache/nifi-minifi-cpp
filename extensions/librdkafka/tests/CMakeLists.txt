@@ -29,7 +29,7 @@ FOREACH(testfile ${KAFKA_TESTS})
     createTests("${testfilename}")
     MATH(EXPR KAFKA_TEST_COUNT "${KAFKA_TEST_COUNT}+1")
     # The line below handles integration test
-	target_include_directories(${testfilename} BEFORE PRIVATE "../../standard-processors/processors") # TODO(hunyadi): add this and rebuild the whole project
+	target_include_directories(${testfilename} BEFORE PRIVATE "../../standard-processors/processors")
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/catch")
     target_wholearchive_library(${testfilename} minifi-standard-processors)
     target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})

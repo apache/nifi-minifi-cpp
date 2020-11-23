@@ -238,13 +238,10 @@ void ConsumeKafka::createTopicPartitionList() {
     for (const std::string& topic : topic_names_) {
       const std::string regex_format = "^" + topic;
       rd_kafka_topic_partition_list_add(kf_topic_partition_list_.get(), regex_format.c_str(), RD_KAFKA_PARTITION_UA);
-      // TODO(hunyadi): check of getting a watermark on the offsets corrects this
-      // rd_kafka_topic_partition_list_set_offset(kf_topic_partition_list_.get(), regex_format.c_str(), RD_KAFKA_PARTITION_UA, RD_KAFKA_OFFSET_END);
     }
   } else {
     for (const std::string& topic : topic_names_) {
       rd_kafka_topic_partition_list_add(kf_topic_partition_list_.get(), topic.c_str(), RD_KAFKA_PARTITION_UA);
-      // rd_kafka_topic_partition_list_set_offset(kf_topic_partition_list_.get(), topic.c_str(), RD_KAFKA_PARTITION_UA, RD_KAFKA_OFFSET_END);
     }
   }
 

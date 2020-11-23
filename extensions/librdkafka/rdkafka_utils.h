@@ -29,8 +29,6 @@
 #include "utils/OptionalUtils.h"
 #include "rdkafka.h"
 
-// TODO(hunyadi): check if these would be useful in PublishKafka
-
 namespace org {
 namespace apache {
 namespace nifi {
