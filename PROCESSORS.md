@@ -9,6 +9,7 @@
 - [CapturePacket](#capturepacket)
 - [CaptureRTSPFrame](#capturertspframe)
 - [CompressContent](#compresscontent)
+- [ConsumeKafka](#consumekafka)
 - [ConsumeMQTT](#consumemqtt)
 - [DeleteS3Object](#deletes3object)
 - [ExecuteProcess](#executeprocess)
@@ -180,6 +181,37 @@ In the list below, the names of required properties appear in bold. Any other pr
 |failure|FlowFiles will be transferred to the failure relationship if they fail to compress/decompress|
 |success|FlowFiles will be transferred to the success relationship after successfully being compressed or decompressed|
 
+## ConsumeKafka
+
+### Description
+
+Consumes messages from Apache Kafka and transform them into MiNiFi FlowFiles. The application should make sure that the processor is triggered at regular intervals, even if no messages are expected, to serve any queued callbacks waiting to be called. Rebalancing can also only happen on trigger.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|Duplicate Header Handling|Keep Latest|Comma-separated Merge<br>Keep First<br>Keep Latest<br>|For headers to be added as attributes, this option specifies how to handle cases where multiple headers are present with the same key. For example in case of receiving these two headers: "Accept: text/html" and "Accept: application/xml" and we want to attach the value of "Accept" as a FlowFile attribute:<br/> - "Keep First" attaches: "Accept -> text/html"<br/> - "Keep Latest" attaches: "Accept -> application/xml"<br/> - "Comma-separated Merge" attaches: "Accept -> text/html, application/xml"|
+|Group ID|||A Group ID is used to identify consumers that are within the same consumer group. Corresponds to Kafka's 'group.id' property.<br/>**Supports Expression Language: true**|
+|Headers To Add As Attributes|||A Regular Expression that is matched against all message headers. Any message header whose name matches the regex will be added to the FlowFile as an Attribute. If not specified, no Header values will be added as FlowFile attributes. If two messages have a different value for the same header and that header is selected by the provided regex, then those two messages must be added to different FlowFiles. As a result, users should be cautious about using a regex like ".*" if messages are expected to have header values that are unique per message, such as an identifier or timestamp, because it will prevent MiNiFi from bundling the messages together efficiently.|
+|**Honor Transactions**|true||Specifies whether or not NiFi should honor transactional guarantees when communicating with Kafka. If false, the Processor will use an "isolation level" of read_uncomitted. This means that messages will be received as soon as they are written to Kafka but will be pulled, even if the producer cancels the transactions. If this value is true, NiFi will not receive any messages for which the producer's transaction was canceled, but this can result in some latency since the consumer must wait for the producer to finish its entire transaction instead of pulling as the messages become available.|
+|**Kafka Brokers**|localhost:9092||A comma-separated list of known Kafka Brokers in the format <host>:<port>.<br/>**Supports Expression Language: true**|
+|**Key Attribute Encoding**|UTF-8|Hex<br>UTF-8<br>|FlowFiles that are emitted have an attribute named 'kafka.key'. This property dictates how the value of the attribute should be encoded.|
+|Max Poll Records|10000||Specifies the maximum number of records Kafka should return when polling each time the processor is triggered.|
+|**Max Poll Time**|4 seconds||Specifies the maximum amount of time the consumer can use for polling data from the brokers. Polling is a blocking operation, so the upper limit of this value is specified in 4 seconds.|
+|Message Demarcator|||Since KafkaConsumer receives messages in batches, you have an option to output FlowFiles which contains all Kafka messages in a single batch for a given topic and partition and this property allows you to provide a string (interpreted as UTF-8) to use for demarcating apart multiple Kafka messages. This is an optional property and if not provided each Kafka message received will result in a single FlowFile which time it is triggered. <br/>**Supports Expression Language: true**|
+|Message Header Encoding|UTF-8|Hex<br>UTF-8<br>|Any message header that is found on a Kafka message will be added to the outbound FlowFile as an attribute. This property indicates the Character Encoding to use for deserializing the headers.|
+|**Offset Reset**|latest|earliest<br>latest<br>none<br>|Allows you to manage the condition when there is no initial offset in Kafka or if the current offset does not exist any more on the server (e.g. because that data has been deleted). Corresponds to Kafka's 'auto.offset.reset' property.|
+|**Security Protocol**|PLAINTEXT|PLAINTEXT<br>|This property is currently not supported. Protocol used to communicate with brokers. Corresponds to Kafka's 'security.protocol' property.|
+|Session Timeout|60 seconds||Client group session and failure detection timeout. The consumer sends periodic heartbeats to indicate its liveness to the broker. If no hearts are received by the broker for a group member within the session timeout, the broker will remove the consumer from the group and trigger a rebalance. The allowed range is configured with the broker configuration properties group.min.session.timeout.ms and group.max.session.timeout.ms.|
+|Topic Name Format|Names|Names<br>Patterns<br>|Specifies whether the Topic(s) provided are a comma separated list of names or a single regular expression.|
+|Topic Names|||The name of the Kafka Topic(s) to pull from. More than one can be supplied if comma separated.<br/>**Supports Expression Language: true**|
+### Properties
+
+| Name | Description |
+| - | - |
+|success|Incoming kafka messages as flowfiles. Depending on the demarcation strategy, this can be one or multiple flowfiles per message.|
 
 ## ConsumeMQTT
 
@@ -921,7 +953,6 @@ Supports Expression Language: true (will be evaluated using flow file attributes
 | - | - |
 |failure|Any FlowFile that cannot be sent to Kafka will be routed to this Relationship|
 |success|Any FlowFile that is successfully sent to Kafka will be routed to this Relationship|
-
 
 ## PublishMQTT
 
