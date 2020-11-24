@@ -106,7 +106,8 @@ class KafkaTestProducer {
   }
 
  private:
-  void publish_message(const std::string& message, const std::string& message_key, const std::vector<std::pair<std::string, std::string>>& message_headers, const optional<std::string>& message_header_encoding) {
+  void publish_message(
+      const std::string& message, const std::string& message_key, const std::vector<std::pair<std::string, std::string>>& message_headers, const optional<std::string>& message_header_encoding) {
     logger_->log_debug("Producing: %s", message.c_str());
     std::unique_ptr<rd_kafka_headers_t, utils::rd_kafka_headers_deleter> headers(rd_kafka_headers_new(message_headers.size()), utils::rd_kafka_headers_deleter());
     if (!headers) {

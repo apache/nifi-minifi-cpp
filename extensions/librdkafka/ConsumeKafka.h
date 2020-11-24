@@ -110,7 +110,7 @@ class ConsumeKafka : public core::Processor {
   static constexpr char const* MSG_HEADER_COMMA_SEPARATED_MERGE = "Comma-separated Merge";
 
   // Flowfile attributes written
-  static constexpr char const* KAFKA_COUNT_ATTR = "kafka.count"; // Always 1 until we start supporting merging from batches
+  static constexpr char const* KAFKA_COUNT_ATTR = "kafka.count";  // Always 1 until we start supporting merging from batches
   static constexpr char const* KAFKA_MESSAGE_KEY_ATTR = "kafka.key";
   static constexpr char const* KAFKA_OFFSET_ATTR = "kafka.offset";
   static constexpr char const* KAFKA_PARTITION_ATTR = "kafka.partition";
