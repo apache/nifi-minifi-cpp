@@ -22,7 +22,9 @@
 #include "ArgParser.h"
 #include "CommandException.h"
 
-using namespace org::apache::nifi::minifi::encrypt_config;
+using org::apache::nifi::minifi::encrypt_config::Arguments;
+using org::apache::nifi::minifi::encrypt_config::EncryptConfig;
+using org::apache::nifi::minifi::encrypt_config::CommandException;
 
 int main(int argc, char* argv[]) try {
   Arguments args = Arguments::parse(argc, argv);
