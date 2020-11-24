@@ -43,7 +43,7 @@
 #include "utils/Environment.h"
 #include "utils/Monitors.h"
 #include "utils/OptionalUtils.h"
-#include "utils/StringView.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -719,7 +719,7 @@ utils::TaskRescheduleInfo C2Agent::consume() {
 }
 
 utils::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
-  if (!utils::StringView{uri}.startsWith("http") || protocol_.load() == nullptr) {
+  if (!utils::StringUtils::startsWith(uri, "http") || protocol_.load() == nullptr) {
     // try to open the file
     utils::optional<std::string> content = filesystem_->read(uri);
     if (content) {
@@ -732,12 +732,12 @@ utils::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
   }
 
   std::string resolved_url = uri;
-  if (!utils::StringView{uri}.startsWith("http")) {
+  if (!utils::StringUtils::startsWith(uri, "http")) {
     std::stringstream adjusted_url;
     std::string base;
     if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
       adjusted_url << base;
-      if (!utils::StringView{base}.endsWith("/")) {
+      if (!utils::StringUtils::endsWith(base, "/")) {
         adjusted_url << "/";
       }
       adjusted_url << uri;

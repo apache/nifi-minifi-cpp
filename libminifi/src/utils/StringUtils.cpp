@@ -16,7 +16,7 @@
  */
 
 #include "utils/StringUtils.h"
-#include "utils/StringViewUtils.h"
+
 #include "utils/Environment.h"
 
 namespace org {
@@ -32,11 +32,18 @@ bool StringUtils::StringToBool(std::string input, bool &output) {
 }
 
 utils::optional<bool> StringUtils::toBool(const std::string& str) {
-  return StringViewUtils::toBool(StringView(str));
+  std::string trimmed = trim(str);
+  if (equalsIgnoreCase(trimmed, "true")) {
+    return true;
+  }
+  if (equalsIgnoreCase(trimmed, "false")) {
+    return false;
+  }
+  return {};
 }
 
-std::string StringUtils::trim(std::string s) {
-  return trimRight(trimLeft(std::move(s)));
+std::string StringUtils::trim(const std::string& s) {
+  return trimRight(trimLeft(s));
 }
 
 std::vector<std::string> StringUtils::split(const std::string &str, const std::string &delimiter) {
@@ -160,7 +167,7 @@ std::string StringUtils::replaceMap(std::string source_string, const std::map<st
   }
 
   std::sort(replacements.begin(), replacements.end(), [](const std::pair<size_t, std::pair<size_t, std::string>> a,
-      const std::pair<size_t, std::pair<size_t, std::string>> &b) {
+                                                         const std::pair<size_t, std::pair<size_t, std::string>> &b) {
     return a.first > b.first;
   });
 
