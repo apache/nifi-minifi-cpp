@@ -35,21 +35,21 @@ struct Argument {
   std::string description;
 };
 
-struct FlagArgument {
+struct Flag {
   std::set<std::string> names;
   std::string description;
 };
 
 class Arguments {
-  static const std::vector<Argument> simple_arguments_;
-  static const std::vector<FlagArgument> flag_arguments_;
+  static const std::vector<Argument> registered_args_;
+  static const std::vector<Flag> registered_flags_;
 
   void set(const std::string& key, const std::string& value);
 
   void set(const std::string& bool_key);
 
-  static utils::optional<Argument> getSimpleArg(const std::string& key);
-  static utils::optional<FlagArgument> getFlag(const std::string& flag);
+  static utils::optional<Argument> getArg(const std::string& key);
+  static utils::optional<Flag> getFlag(const std::string& flag);
 
  public:
   static Arguments parse(int argc, char* argv[]);
@@ -63,8 +63,8 @@ class Arguments {
  private:
   utils::optional<std::string> get(const Argument& key) const;
 
-  std::map<std::string, std::string> simple_args_;
-  std::set<std::string> flag_args_;
+  std::map<std::string, std::string> args_;
+  std::set<std::string> flags_;
 };
 
 }  // namespace encrypt_config

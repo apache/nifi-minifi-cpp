@@ -180,7 +180,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
           // instantiate the object
           auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
           if (nullptr == ptr) {
-            bool found_metric = [&] {
+            const bool found_metric = [&] {
               std::lock_guard<std::mutex> guard{metrics_mutex_};
               auto metric = component_metrics_.find(clazz);
               if (metric != component_metrics_.end()) {
@@ -243,7 +243,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
             // instantiate the object
             auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
             if (nullptr == ptr) {
-              bool found_metric = [&] {
+              const bool found_metric = [&] {
                 std::lock_guard<std::mutex> guard{metrics_mutex_};
                 auto metric = component_metrics_.find(clazz);
                 if (metric != component_metrics_.end()) {

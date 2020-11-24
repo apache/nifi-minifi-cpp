@@ -30,14 +30,14 @@ namespace nifi {
 namespace minifi {
 namespace encrypt_config {
 
-const std::vector<Argument> Arguments::simple_arguments_{
+const std::vector<Argument> Arguments::registered_args_{
     {std::set<std::string>{"--minifi-home", "-m"},
      true,
      "minifi home",
      "Specifies the home directory used by the minifi agent"}
 };
 
-const std::vector<FlagArgument> Arguments::flag_arguments_{
+const std::vector<Flag> Arguments::registered_flags_{
     {std::set<std::string>{"--help", "-h"},
      "Prints this help message"},
     {std::set<std::string>{"--encrypt-flow-config"},
@@ -53,33 +53,33 @@ bool haveCommonItem(const std::set<std::string>& a, const std::set<std::string>&
 std::string Arguments::getHelp() {
   std::stringstream ss;
   ss << "Usage: " << "encrypt-config";
-  for (const auto& simple_arg : simple_arguments_) {
+  for (const auto& arg : registered_args_) {
     ss << " ";
-    if (!simple_arg.required) {
+    if (!arg.required) {
       ss << "[";
     }
-    ss << utils::StringUtils::join("|", simple_arg.names)
-        << " <" << simple_arg.value_name << ">";
-    if (!simple_arg.required) {
+    ss << utils::StringUtils::join("|", arg.names)
+       << " <" << arg.value_name << ">";
+    if (!arg.required) {
       ss << "]";
     }
   }
-  for (const auto& flag : flag_arguments_) {
+  for (const auto& flag : registered_flags_) {
     ss << " [" << utils::StringUtils::join("|", flag.names) << "]";
   }
   ss << "\n";
-  for (const auto& simple_arg : simple_arguments_) {
+  for (const auto& arg : registered_args_) {
     ss << "\t";
-    ss << utils::StringUtils::join("|", simple_arg.names) << " : ";
-    if (simple_arg.required) {
+    ss << utils::StringUtils::join("|", arg.names) << " : ";
+    if (arg.required) {
       ss << "(required)";
     } else {
       ss << "(optional)";
     }
-    ss << " " << simple_arg.description;
+    ss << " " << arg.description;
     ss << "\n";
   }
-  for (const auto& flag : flag_arguments_) {
+  for (const auto& flag : registered_flags_) {
     ss << "\t" << utils::StringUtils::join("|", flag.names) << " : "
         << flag.description << "\n";
   }
@@ -90,24 +90,24 @@ void Arguments::set(const std::string& key, const std::string& value) {
   if (get(key)) {
     throw CommandException("Key is specified more than once \"" + key + "\"");
   }
-  simple_args_[key] = value;
+  args_[key] = value;
 }
 
 void Arguments::set(const std::string& flag) {
   if (isSet(flag)) {
     throw CommandException("Flag is specified more than once \"" + flag + "\"");
   }
-  flag_args_.insert(flag);
+  flags_.insert(flag);
 }
 
 utils::optional<std::string> Arguments::get(const std::string &key) const {
-  return getSimpleArg(key) | utils::flatMap([&] (const Argument& arg) {return get(arg);});
+  return getArg(key) | utils::flatMap([&] (const Argument& arg) {return get(arg);});
 }
 
 utils::optional<std::string> Arguments::get(const Argument& arg) const {
   for (const auto& name : arg.names) {
-    auto it = simple_args_.find(name);
-    if (it != simple_args_.end()) {
+    auto it = args_.find(name);
+    if (it != args_.end()) {
       return it->second;
     }
   }
@@ -115,11 +115,11 @@ utils::optional<std::string> Arguments::get(const Argument& arg) const {
 }
 
 bool Arguments::isSet(const std::string &flag) const {
-  utils::optional<FlagArgument> opt_flag = getFlag(flag);
+  utils::optional<Flag> opt_flag = getFlag(flag);
   if (!opt_flag) {
     return false;
   }
-  return haveCommonItem(opt_flag->names, flag_args_);
+  return haveCommonItem(opt_flag->names, flags_);
 }
 
 Arguments Arguments::parse(int argc, char* argv[]) {
@@ -130,7 +130,7 @@ Arguments Arguments::parse(int argc, char* argv[]) {
       args.set(key);
       continue;
     }
-    if (!getSimpleArg(key)) {
+    if (!getArg(key)) {
       throw CommandException("Unrecognized option: \"" + key + "\"");
     }
     if (argIdx == argc - 1) {
@@ -144,16 +144,16 @@ Arguments Arguments::parse(int argc, char* argv[]) {
     std::cout << getHelp();
     std::exit(0);
   }
-  for (const auto& simple_arg : simple_arguments_) {
-    if (simple_arg.required && !args.get(simple_arg)) {
-      throw CommandException("Missing required option " + utils::StringUtils::join("|", simple_arg.names));
+  for (const auto& arg : registered_args_) {
+    if (arg.required && !args.get(arg)) {
+      throw CommandException("Missing required option " + utils::StringUtils::join("|", arg.names));
     }
   }
   return args;
 }
 
-utils::optional<FlagArgument> Arguments::getFlag(const std::string &name) {
-  for (const auto& flag : flag_arguments_) {
+utils::optional<Flag> Arguments::getFlag(const std::string &name) {
+  for (const auto& flag : registered_flags_) {
     if (flag.names.count(name) > 0) {
       return flag;
     }
@@ -161,8 +161,8 @@ utils::optional<FlagArgument> Arguments::getFlag(const std::string &name) {
   return {};
 }
 
-utils::optional<Argument> Arguments::getSimpleArg(const std::string &key) {
-  for (const auto& arg : simple_arguments_) {
+utils::optional<Argument> Arguments::getArg(const std::string &key) {
+  for (const auto& arg : registered_args_) {
     if (arg.names.count(key) > 0) {
       return arg;
     }
