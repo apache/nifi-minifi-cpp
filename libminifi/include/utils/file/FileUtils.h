@@ -25,7 +25,6 @@
 #include <vector>
 
 #ifdef USE_BOOST
-#include <utime.h>
 #include <dirent.h>
 #include <boost/filesystem.hpp>
 #include <boost/system/error_code.hpp>
@@ -273,7 +272,10 @@ inline uint64_t file_size(const std::string &path) {
 }
 
 inline bool set_last_write_time(const std::string &path, uint64_t write_time) {
-#ifdef WIN32
+#ifdef USE_BOOST
+  boost::filesystem::last_write_time(path, write_time);
+  return true;
+#elif defined(WIN32)
   struct __utimbuf64 utim;
   utim.actime = write_time;
   utim.modtime = write_time;
