@@ -25,16 +25,8 @@ namespace nifi {
 namespace minifi {
 namespace encrypt_config {
 
-struct CommandException : std::exception {
-  CommandException(const std::string& err) : error_(err) {}
-  CommandException(const char* err) : error_(err) {}
-
-  const char* what() const noexcept override {
-    return error_.c_str();
-  }
-
- private:
-  std::string error_;
+struct CommandException : std::logic_error {
+  using std::logic_error::logic_error;
 };
 
 }  // namespace encrypt_config

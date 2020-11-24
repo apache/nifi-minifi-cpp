@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) try {
   return 0;
 } catch (const CommandException& c_ex) {
   std::cerr << c_ex.what() << "\n";
-  std::cerr << Arguments::getHelp() << std::endl;
+  std::cerr << Arguments::getHelp() << "\n";
   return 1;
 } catch (const std::exception& ex) {
   std::cerr << ex.what() << "\n(" << typeid(ex).name() << ")\n";

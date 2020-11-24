@@ -67,7 +67,7 @@ std::string Arguments::getHelp() {
   for (const auto& flag : flag_arguments_) {
     ss << " [" << utils::StringUtils::join("|", flag.names) << "]";
   }
-  ss << std::endl;
+  ss << "\n";
   for (const auto& simple_arg : simple_arguments_) {
     ss << "\t";
     ss << utils::StringUtils::join("|", simple_arg.names) << " : ";
@@ -77,11 +77,11 @@ std::string Arguments::getHelp() {
       ss << "(optional)";
     }
     ss << " " << simple_arg.description;
-    ss << std::endl;
+    ss << "\n";
   }
   for (const auto& flag : flag_arguments_) {
     ss << "\t" << utils::StringUtils::join("|", flag.names) << " : "
-        << flag.description << std::endl;
+        << flag.description << "\n";
   }
   return ss.str();
 }
