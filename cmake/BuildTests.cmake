@@ -34,7 +34,7 @@ set(NANOFI_TEST_DIR "${CMAKE_SOURCE_DIR}/nanofi/tests/")
 if(NOT EXCLUDE_BOOST)
   find_package(Boost COMPONENTS system filesystem)
   if(Boost_FOUND)
-    add_compile_definitions(USE_BOOST)
+    add_definitions(-DUSE_BOOST)
   endif()
 endif()
 
