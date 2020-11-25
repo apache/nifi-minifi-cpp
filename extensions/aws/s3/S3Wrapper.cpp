@@ -35,7 +35,7 @@ minifi::utils::optional<Aws::S3::Model::PutObjectResult> S3Wrapper::sendPutObjec
   Aws::S3::Model::PutObjectOutcome outcome = s3_client.PutObject(request);
 
   if (outcome.IsSuccess()) {
-      logger_->log_info("Added S3 object %s to bucket %s", request.GetKey(), request.GetBucket());
+      logger_->log_info("Added S3 object '%s' to bucket '%s'", request.GetKey(), request.GetBucket());
       return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("PutS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
@@ -48,10 +48,10 @@ bool S3Wrapper::sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectReques
   Aws::S3::Model::DeleteObjectOutcome outcome = s3_client.DeleteObject(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_info("Deleted S3 object %s from bucket %s", request.GetKey(), request.GetBucket());
+    logger_->log_info("Deleted S3 object '%s' from bucket '%s'", request.GetKey(), request.GetBucket());
     return true;
   } else if (outcome.GetError().GetErrorType() == Aws::S3::S3Errors::NO_SUCH_KEY) {
-    logger_->log_info("S3 object %s was not found in bucket %s", request.GetKey(), request.GetBucket());
+    logger_->log_info("S3 object '%s' was not found in bucket '%s'", request.GetKey(), request.GetBucket());
     return true;
   } else {
     logger_->log_error("DeleteS3Object failed with the following: '%s'", outcome.GetError().GetMessage());

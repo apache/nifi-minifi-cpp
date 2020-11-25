@@ -255,11 +255,11 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
   PutS3Object::ReadCallback callback(flow_file->getSize(), put_s3_request_params_, s3_wrapper_.get());
   session->read(flow_file, &callback);
   if (callback.result_ == minifi::utils::nullopt) {
-    logger_->log_error("Failed to upload S3 object to bucket %s", put_s3_request_params_.bucket);
+    logger_->log_error("Failed to upload S3 object to bucket '%s'", put_s3_request_params_.bucket);
     session->transfer(flow_file, Failure);
   } else {
     setAttributes(session, flow_file, callback.result_.value());
-    logger_->log_debug("Successfully uploaded S3 object %s to bucket %s", put_s3_request_params_.object_key, put_s3_request_params_.bucket);
+    logger_->log_debug("Successfully uploaded S3 object '%s' to bucket '%s'", put_s3_request_params_.object_key, put_s3_request_params_.bucket);
     session->transfer(flow_file, Success);
   }
 }

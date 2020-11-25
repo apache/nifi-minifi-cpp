@@ -74,10 +74,10 @@ void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   }
 
   if (s3_wrapper_->deleteObject(bucket_, object_key_, version_)) {
-    logger_->log_debug("Successfully deleted S3 object %s from bucket %s", object_key_, bucket_);
+    logger_->log_debug("Successfully deleted S3 object '%s' from bucket '%s'", object_key_, bucket_);
     session->transfer(flow_file, Success);
   } else {
-    logger_->log_error("Failed to delete S3 object %s from bucket %s", object_key_, bucket_);
+    logger_->log_error("Failed to delete S3 object '%s' from bucket '%s'", object_key_, bucket_);
     session->transfer(flow_file, Failure);
   }
 }

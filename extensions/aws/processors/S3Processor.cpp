@@ -230,7 +230,7 @@ bool S3Processor::getExpressionLanguageSupportedProperties(
   logger_->log_debug("S3Processor: Object Key [%s]", object_key_);
 
   if (!context->getProperty(Bucket, bucket_, flow_file) || bucket_.empty()) {
-    logger_->log_error("Bucket is invalid or empty!", bucket_);
+    logger_->log_error("Bucket '%s' is invalid or empty!", bucket_);
     return false;
   }
   logger_->log_debug("S3Processor: Bucket [%s]", bucket_);
