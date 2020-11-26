@@ -124,16 +124,16 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
       logger_->log_error("Failed to create flowfile!");
       return;
     }
-    if (fileSize_ > 0) {
-      if (uniqueFlowFile_) {
-        std::vector<char> data(gsl::narrow<size_t>(fileSize_));
+    if (uniqueFlowFile_) {
+      std::vector<char> data(gsl::narrow<size_t>(fileSize_));
+      if (fileSize_ > 0) {
         generateData(data, textData_);
-        GenerateFlowFile::WriteCallback callback(std::move(data));
-        session->write(flowFile, &callback);
-      } else {
-        GenerateFlowFile::WriteCallback callback(data_);
-        session->write(flowFile, &callback);
       }
+      GenerateFlowFile::WriteCallback callback(std::move(data));
+      session->write(flowFile, &callback);
+    } else {
+      GenerateFlowFile::WriteCallback callback(data_);
+      session->write(flowFile, &callback);
     }
     session->transfer(flowFile, Success);
   }

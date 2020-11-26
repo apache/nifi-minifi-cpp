@@ -170,6 +170,10 @@ class ProcessSession : public ReferenceContainer {
   void persistFlowFilesBeforeTransfer(
       std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap,
       const std::map<utils::Identifier, FlowFileUpdate>& modifiedFlowFiles);
+
+  void ensureNonNullResourceClaim(
+      const std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap);
+
   // Clone the flow file during transfer to multiple connections for a relationship
   std::shared_ptr<core::FlowFile> cloneDuringTransfer(const std::shared_ptr<core::FlowFile> &parent);
   // ProcessContext

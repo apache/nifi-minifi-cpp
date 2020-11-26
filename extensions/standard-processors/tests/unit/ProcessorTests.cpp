@@ -41,6 +41,7 @@
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "utils/PropertyErrors.h"
+#include "utils/IntegrationTestUtils.h"
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   TestController testController;
@@ -235,6 +236,7 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   TestController testController;
   LogTestController::getInstance().setDebug<minifi::processors::GenerateFlowFile>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  content_repo->initialize(std::make_shared<minifi::Configure>());
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GenerateFlowFile>("GFF");
   processor->initialize();
   processor->setProperty(processors::GenerateFlowFile::BatchSize, "10");
@@ -539,7 +541,7 @@ TEST_CASE("TestEmptyContent", "[emptyContent]") {
 
   plan->runNextProcessor();
 
-  // segfault
+  REQUIRE(utils::verifyLogLinePresenceInPollTime(std::chrono::seconds{0}, "did not create a ResourceClaim"));
 
   LogTestController::getInstance().reset();
 }
