@@ -36,6 +36,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <stdexcept>
 #include "io/BaseStream.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
@@ -240,7 +241,7 @@ class Socket : public BaseStream {
       static WSADATA s_wsaData;
       const int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);
       if (0 != iWinSockInitResult) {
-        throw std::exception("Cannot start client");
+        throw std::runtime_error("Cannot start client");
       }
     }
     ~SocketInitializer() noexcept {

@@ -16,29 +16,22 @@
  * limitations under the License.
  */
 #include "GetTCP.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <stdio.h>
 
-#include <limits.h>
 #ifndef WIN32
 #include <dirent.h>
-#include <unistd.h>
-#include <regex.h>
 #endif
-#include <vector>
-#include <queue>
-#include <map>
-#include <memory>
-#include <utility>
-#include <set>
-#include <sstream>
-#include <string>
-#include <iostream>
 #include <cinttypes>
+#include <future>
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <utility>
+#include <vector>
+#include <set>
+#include <string>
 
 #include "io/ClientSocket.h"
+#include "utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
@@ -260,7 +253,7 @@ void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     }
 
     auto portStr = hostAndPort.at(1);
-    auto endpoint = realizedHost + ":" + portStr;
+    auto endpoint = utils::StringUtils::join_pack(realizedHost, ":", portStr);
 
     auto endPointFuture = live_clients_.find(endpoint);
     // does not exist
@@ -285,7 +278,7 @@ void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
       } else {
         logger_->log_error("Could not create socket for %s", endpoint);
       }
-      std::future<int> *future = new std::future<int>();
+      auto* future = new std::future<int>();
       std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new SocketAfterExecute(running_, endpoint, &live_clients_, &mutex_));
       utils::Worker<int> functor(f_ex, "workers", std::move(after_execute));
       if (client_thread_pool_.execute(std::move(functor), *future)) {
@@ -294,7 +287,7 @@ void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     } else {
       if (!endPointFuture->second->valid()) {
         delete endPointFuture->second;
-        std::future<int> *future = new std::future<int>();
+        auto* future = new std::future<int>();
         std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new SocketAfterExecute(running_, endpoint, &live_clients_, &mutex_));
         utils::Worker<int> functor(f_ex, "workers", std::move(after_execute));
         if (client_thread_pool_.execute(std::move(functor), *future)) {
