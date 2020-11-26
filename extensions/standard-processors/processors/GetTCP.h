@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <atomic>
 
@@ -43,19 +44,19 @@ namespace processors {
 
 class SocketAfterExecute : public utils::AfterExecute<int> {
  public:
-  explicit SocketAfterExecute(std::atomic<bool> &running, const std::string &endpoint, std::map<std::string, std::future<int>*> *list, std::mutex *mutex)
+  explicit SocketAfterExecute(std::atomic<bool> &running, std::string endpoint, std::map<std::string, std::future<int>*> *list, std::mutex *mutex)
       : running_(running.load()),
-        endpoint_(endpoint),
+        endpoint_(std::move(endpoint)),
         mutex_(mutex),
         list_(list) {
   }
 
-  explicit SocketAfterExecute(SocketAfterExecute && other) {
-  }
+  SocketAfterExecute(const SocketAfterExecute&&) = delete;
+  SocketAfterExecute& operator=(const SocketAfterExecute&) = delete;
 
-  ~SocketAfterExecute() = default;
+  ~SocketAfterExecute() override = default;
 
-  virtual bool isFinished(const int &result) {
+  bool isFinished(const int &result) override {
     if (result == -1 || result == 0 || !running_) {
       std::lock_guard<std::mutex> lock(*mutex_);
       list_->erase(endpoint_);
@@ -64,14 +65,14 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
       return false;
     }
   }
-  virtual bool isCancelled(const int &result) {
+  bool isCancelled(const int &result) override {
     if (!running_)
       return true;
     else
       return false;
   }
 
-  virtual std::chrono::milliseconds wait_time() {
+  std::chrono::milliseconds wait_time() override {
     // wait 500ms
     return std::chrono::milliseconds(500);
   }
@@ -90,9 +91,9 @@ class DataHandlerCallback : public OutputStreamCallback {
         size_(size) {
   }
 
-  virtual ~DataHandlerCallback() = default;
+  ~DataHandlerCallback() override = default;
 
-  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     return stream->write(message_, size_);
   }
 
@@ -104,7 +105,7 @@ class DataHandlerCallback : public OutputStreamCallback {
 class DataHandler {
  public:
   DataHandler(std::shared_ptr<core::ProcessSessionFactory> sessionFactory) // NOLINT
-      : sessionFactory_(sessionFactory) {
+      : sessionFactory_(std::move(sessionFactory)) {
   }
   static const char *SOURCE_ENDPOINT_ATTRIBUTE;
 
@@ -118,23 +119,17 @@ class GetTCPMetrics : public state::response::ResponseNode {
  public:
   GetTCPMetrics()
       : state::response::ResponseNode("GetTCPMetrics") {
-    iterations_ = 0;
-    accepted_files_ = 0;
-    input_bytes_ = 0;
   }
 
-  GetTCPMetrics(std::string name, utils::Identifier &uuid)
+  GetTCPMetrics(const std::string& name, utils::Identifier &uuid)
       : state::response::ResponseNode(name, uuid) {
-    iterations_ = 0;
-    accepted_files_ = 0;
-    input_bytes_ = 0;
   }
-  virtual ~GetTCPMetrics() = default;
-  virtual std::string getName() const {
+  ~GetTCPMetrics() override = default;
+  std::string getName() const override {
     return core::Connectable::getName();
   }
 
-  virtual std::vector<state::response::SerializedResponseNode> serialize() {
+  std::vector<state::response::SerializedResponseNode> serialize() override {
     std::vector<state::response::SerializedResponseNode> resp;
 
     state::response::SerializedResponseNode iter;
@@ -161,9 +156,9 @@ class GetTCPMetrics : public state::response::ResponseNode {
  protected:
   friend class GetTCP;
 
-  std::atomic<size_t> iterations_;
-  std::atomic<size_t> accepted_files_;
-  std::atomic<size_t> input_bytes_;
+  std::atomic<size_t> iterations_{0};
+  std::atomic<size_t> accepted_files_{0};
+  std::atomic<size_t> input_bytes_{0};
 };
 
 // GetTCP Class
@@ -173,7 +168,7 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
   /*!
    * Create a new processor
    */
-  explicit GetTCP(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit GetTCP(const std::string& name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         running_(false),
         stay_connected_(true),
@@ -187,7 +182,7 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
     metrics_ = std::make_shared<GetTCPMetrics>();
   }
 // Destructor
-  virtual ~GetTCP() = default;
+  ~GetTCP() override = default;
 // Processor Name
   static constexpr char const* ProcessorName = "GetTCP";
 
@@ -212,29 +207,29 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
-  void onSchedule(core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory) {
-    throw std::exception();
+  void onSchedule(core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory) override {
+    throw std::logic_error{"GetTCP::onSchedule(ProcessContext*, ProcessSessionFactory*) is unimplemented"};
   }
   /**
    * Execution trigger for the GetTCP Processor
    * @param context processor context
    * @param session processor session reference.
    */
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-    throw std::exception();
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
+    throw std::logic_error{"GetTCP::onTrigger(ProcessContext*, ProcessSession*) is unimplemented"};
   }
 
   // Initialize, over write by NiFi GetTCP
-  virtual void initialize(void);
+  void initialize() override;
 
-  int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector);
+  int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) override;
 
  protected:
-  virtual void notifyStop();
+  void notifyStop() override;
 
  private:
   std::function<int()> f_ex;

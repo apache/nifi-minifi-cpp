@@ -247,11 +247,12 @@ void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessio
     onTrigger(context, session.get());
     session->commit();
   } catch (std::exception &exception) {
-    logger_->log_warn("Caught Exception %s during Processor::onTrigger of processor: %s (%s)", exception.what(), getUUIDStr(), getName());
+    logger_->log_warn("Caught \"%s\" (%s) during Processor::onTrigger of processor: %s (%s)",
+        exception.what(), typeid(exception).name(), getUUIDStr(), getName());
     session->rollback();
     throw;
   } catch (...) {
-    logger_->log_warn("Caught Exception during Processor::onTrigger of processor: %s (%s)", getUUIDStr(), getName());
+    logger_->log_warn("Caught unknown exception during Processor::onTrigger of processor: %s (%s)", getUUIDStr(), getName());
     session->rollback();
     throw;
   }
@@ -265,11 +266,12 @@ void Processor::onTrigger(const std::shared_ptr<ProcessContext> &context, const 
     onTrigger(context, session);
     session->commit();
   } catch (std::exception &exception) {
-    logger_->log_warn("Caught Exception %s during Processor::onTrigger of processor: %s (%s)", exception.what(), getUUIDStr(), getName());
+    logger_->log_warn("Caught \"%s\" (%s) during Processor::onTrigger of processor: %s (%s)",
+        exception.what(), typeid(exception).name(), getUUIDStr(), getName());
     session->rollback();
     throw;
   } catch (...) {
-    logger_->log_warn("Caught Exception during Processor::onTrigger of processor: %s (%s)", getUUIDStr(), getName());
+    logger_->log_warn("Caught unknown exception during Processor::onTrigger of processor: %s (%s)", getUUIDStr(), getName());
     session->rollback();
     throw;
   }

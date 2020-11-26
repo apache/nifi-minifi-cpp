@@ -102,7 +102,7 @@ CapturePacketMechanism *CapturePacket::create_new_capture(const std::string &bas
   CapturePacketMechanism *new_capture = new CapturePacketMechanism(base_path, generate_new_pcap(base_path), max_size);
   new_capture->writer_ = new pcpp::PcapFileWriterDevice(new_capture->getFile().c_str());
   if (!new_capture->writer_->open())
-    throw std::exception();
+    throw std::runtime_error{utils::StringUtils::join_pack("Failed to open PcapFileWriterDevice with file ", new_capture->getFile())};
 
   return new_capture;
 }
@@ -207,7 +207,7 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
 
   if (IsNullOrEmpty(devList)) {
     logger_->log_error("Could not open any devices");
-    throw std::exception();
+    throw std::runtime_error{"Pcap: could not open any devices"};
   }
 }
 

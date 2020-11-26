@@ -140,7 +140,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
 
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
   if (nullptr == ptr) {
-    throw std::exception();
+    throw std::runtime_error{fmt::format("Failed to instantiate processor name: {0} uuid: {1}", processor_name, uuid.to_string().c_str())};
   }
   std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);
 

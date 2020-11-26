@@ -77,8 +77,9 @@ class PeersEntity {
               } else if (utils::StringUtils::equalsIgnoreCase(secureStr, "false")) {
                 secure = false;
               } else {
-                  logger->log_error("could not parse secure string %s", secureStr);
-                  throw std::exception();
+                const auto err = utils::StringUtils::join_pack("could not parse secure string ", secureStr);
+                logger->log_error("%s", err);
+                throw std::logic_error{err};
               }
             } else {
               logger->log_warn("Invalid value type for secure, assuming false (rapidjson type id %i)",
