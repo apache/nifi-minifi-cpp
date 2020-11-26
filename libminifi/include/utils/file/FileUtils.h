@@ -436,7 +436,7 @@ inline void addFilesMatchingExtension(const std::shared_ptr<logging::Logger> &lo
       if (S_ISDIR(statbuf.st_mode)) {
         addFilesMatchingExtension(logger, path, extension, accruedFiles);
       } else {
-        if (utils::StringView{path}.endsWith(extension)) {
+        if (utils::StringUtils::endsWith(path, extension)) {
           logger->log_info("Adding %s to paths", path);
           accruedFiles.push_back(path);
         }
