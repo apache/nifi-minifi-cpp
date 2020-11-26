@@ -744,6 +744,19 @@ void ProcessSession::commit() {
         }
     }
 
+    for (auto& cq : connectionQueues) {
+      for (auto& flowFile : cq.second) {
+        auto claim = flowFile->getResourceClaim();
+        if (!claim) {
+          logger_->log_debug("Processor %s (%s) did not create a ResourceClaim, creating an empty one",
+                             process_context_->getProcessorNode()->getUUIDStr(),
+                             process_context_->getProcessorNode()->getName());
+          OutputStreamPipe emptyStreamCallback(std::make_shared<io::BufferStream>());
+          write(flowFile, &emptyStreamCallback);
+        }
+      }
+    }
+
     content_session_->commit();
 
     persistFlowFilesBeforeTransfer(connectionQueues, _updatedFlowFiles);
