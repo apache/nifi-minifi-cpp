@@ -18,9 +18,6 @@
 function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     message("Using bundled RocksDB")
 
-    # Define patch step
-    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/rocksdb/rocksdb-BUILD.patch" && "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/rocksdb/channel-mutex-mutable.patch")
-
     # Define byproducts
     if (WIN32)
         set(BYPRODUCT "lib/rocksdb.lib")
@@ -36,6 +33,7 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
             -DWITH_TOOLS=ON
             -DWITH_GFLAGS=OFF
             -DUSE_RTTI=1
+            -DROCKSDB_BUILD_SHARED=OFF
             -DFAIL_ON_WARNINGS=OFF)
     if(PORTABLE)
         list(APPEND ROCKSDB_CMAKE_ARGS -DPORTABLE=ON)
@@ -47,11 +45,10 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             rocksdb-external
-            URL "https://github.com/facebook/rocksdb/archive/v5.18.3.tar.gz"
-            URL_HASH "SHA256=7fb6738263d3f2b360d7468cf2ebe333f3109f3ba1ff80115abd145d75287254"
+            URL "https://github.com/facebook/rocksdb/archive/v6.14.5.tar.gz"
+            URL_HASH "SHA256=885399c11e303d3fa46e75d75e97a97a7eeaa71304e7f5c069590161dbbcff0d"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/rocksdb-src"
             CMAKE_ARGS ${ROCKSDB_CMAKE_ARGS}
-            PATCH_COMMAND ${PC}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/rocksdb-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
     )

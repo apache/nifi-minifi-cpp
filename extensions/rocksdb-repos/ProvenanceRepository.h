@@ -99,12 +99,12 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     options.compaction_style = rocksdb::CompactionStyle::kCompactionStyleFIFO;
     options.compaction_options_fifo = rocksdb::CompactionOptionsFIFO(max_partition_bytes_, false);
     if(max_partition_millis_ > 0) {
-      options.compaction_options_fifo.ttl = max_partition_millis_ / 1000;
+      options.ttl = max_partition_millis_ / 1000;
     }
 
     logger_->log_info("Write buffer: %llu", options.write_buffer_size);
     logger_->log_info("Max partition bytes: %llu", max_partition_bytes_);
-    logger_->log_info("Ttl: %llu", options.compaction_options_fifo.ttl);
+    logger_->log_info("Ttl: %llu", options.ttl);
 
     rocksdb::DB* db;
     rocksdb::Status status = rocksdb::DB::Open(options, directory_, &db);

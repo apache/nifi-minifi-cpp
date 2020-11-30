@@ -90,17 +90,17 @@ set_property(CACHE STRICT_GSL_CHECKS PROPERTY STRINGS ${STRICT_GSL_CHECKS_Values
 # Use ccache if present
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-    message("-- Found ccache: ${CCACHE_FOUND}")
+	set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+	set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+	message("-- Found ccache: ${CCACHE_FOUND}")
 endif(CCACHE_FOUND)
 
 # Use gold linker if instructed
 if (UNIX AND USE_GOLD_LINKER AND NOT APPLE )
   execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE ld_version)
   if ("${ld_version}" MATCHES "GNU gold")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
   endif()
 endif()
 
@@ -114,21 +114,21 @@ endif()
 # Enable usage of the VERSION specifier
 include(CheckCXXCompilerFlag)
 if (WIN32)
-    add_compile_definitions(WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)
-    add_compile_options(/W3 /utf-8)
+	add_compile_definitions(WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)
+	add_compile_options(/W3 /utf-8)
   if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
-    CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
-    if (_cpp_latest_flag_supported)
-        add_compile_options("/std:c++14")
-    endif()
+	CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
+	if (_cpp_latest_flag_supported)
+		add_compile_options("/std:c++14")
+	endif()
   endif()
 else()
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 else()
  message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
@@ -328,7 +328,7 @@ include(Extensions)
 
 if(BOOTSTRAP)
 	# display an error message for those using the bootstrap
-    message(FATAL_ERROR "Bootstrapping is no longer needed within the agent")
+	message(FATAL_ERROR "Bootstrapping is no longer needed within the agent")
 endif()
 
 add_subdirectory(libminifi)
@@ -342,7 +342,7 @@ endif()
 
 option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
 if (NOT DISABLE_EXPRESSION_LANGUAGE)
-    createExtension(EXPRESSION-LANGUAGE-EXTENSIONS "EXPRESSION LANGUAGE EXTENSIONS" "This enables NiFi expression language" "extensions/expression-language" "extensions/expression-language/tests")
+	createExtension(EXPRESSION-LANGUAGE-EXTENSIONS "EXPRESSION LANGUAGE EXTENSIONS" "This enables NiFi expression language" "extensions/expression-language" "extensions/expression-language/tests")
 
 	message("minifi-expression-language-extensions will depend on curl-external")
 endif()
@@ -427,7 +427,7 @@ option(ENABLE_MQTT "Enables the mqtt extension." OFF)
 if(ENABLE_ALL OR ENABLE_MQTT)
 		include(BundledPahoMqttC)
 		use_bundled_pahomqttc(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-        createExtension(MQTT-EXTENSIONS "MQTT EXTENSIONS" "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "extensions/mqtt" "${TEST_DIR}/mqtt-tests")
+		createExtension(MQTT-EXTENSIONS "MQTT EXTENSIONS" "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "extensions/mqtt" "${TEST_DIR}/mqtt-tests")
 endif()
 
 # Create JNI Extension
@@ -455,7 +455,7 @@ if (NOT DISABLE_SCRIPTING)
 	# sol
 	add_library(sol INTERFACE)
 	target_include_directories(sol INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/sol2-2.20.0")
-    createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
+	createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
 endif()
 
 # Sensors extensions
@@ -471,7 +471,7 @@ option(ENABLE_SQLITE "Disables the scripting extensions." OFF)
 if (ENABLE_SQLITE)
 	include(BundledSQLite)
 	use_bundled_sqlite(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-    createExtension(SQLITE-EXTENSIONS "SQLITE EXTENSIONS" "This enables sqlite" "extensions/sqlite" "${TEST_DIR}/sqlite-tests")
+	createExtension(SQLITE-EXTENSIONS "SQLITE EXTENSIONS" "This enables sqlite" "extensions/sqlite" "${TEST_DIR}/sqlite-tests")
 endif()
 
 if (ENABLE_SQL AND ENABLE_SQLITE)
@@ -483,14 +483,14 @@ option(ENABLE_USB_CAMERA "Enables USB camera support." OFF)
 if (ENABLE_ALL OR ENABLE_USB_CAMERA)
 	include(BundledLibUvc)
 	use_bundled_libuvc(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-    createExtension(USB-CAMERA-EXTENSIONS "USB CAMERA EXTENSIONS" "This enables USB camera support" "extensions/usb-camera" "${TEST_DIR}/usb-camera-tests")
+	createExtension(USB-CAMERA-EXTENSIONS "USB CAMERA EXTENSIONS" "This enables USB camera support" "extensions/usb-camera" "${TEST_DIR}/usb-camera-tests")
 endif()
 
 ## TensorFlow extensions
 ## Disabled by default because TF can be complex/environment-specific to build
 option(ENABLE_TENSORFLOW "Disables the TensorFlow extensions." OFF)
 if (ENABLE_TENSORFLOW)
-    createExtension(TENSORFLOW-EXTENSIONS "TENSORFLOW EXTENSIONS" "This enables TensorFlow support" "extensions/tensorflow" "${TEST_DIR}/tensorflow-tests")
+	createExtension(TENSORFLOW-EXTENSIONS "TENSORFLOW EXTENSIONS" "This enables TensorFlow support" "extensions/tensorflow" "${TEST_DIR}/tensorflow-tests")
 endif()
 
 ## AWS Extentions
@@ -513,7 +513,7 @@ option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
 if (ENABLE_BUSTACHE)
 	include(BundledBustache)
 	use_bundled_bustache(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-    createExtension(BUSTACHE-EXTENSIONS "BUSTACHE EXTENSIONS" "This enables bustache functionality including ApplyTemplate." "extensions/bustache" "${TEST_DIR}/bustache-tests")
+	createExtension(BUSTACHE-EXTENSIONS "BUSTACHE EXTENSIONS" "This enables bustache functionality including ApplyTemplate." "extensions/bustache" "${TEST_DIR}/bustache-tests")
 endif()
 
 ## OPC Extentions
@@ -535,7 +535,7 @@ if ((ENABLE_ALL OR ENABLE_SFTP) AND NOT DISABLE_CURL)
 	use_bundled_libssh2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libssh2/dummy")
 
-    createExtension(SFTP "SFTP EXTENSIONS" "This enables SFTP support" "extensions/sftp" "extensions/sftp/tests")
+	createExtension(SFTP "SFTP EXTENSIONS" "This enables SFTP support" "extensions/sftp" "extensions/sftp/tests")
 endif()
 
 ## Openwsman Extesions
@@ -548,7 +548,7 @@ if (ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL)
 	include(BundledOpenWSMAN)
 	use_bundled_openwsman(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
-    createExtension(OPENWSMAN-EXTENSIONS "OPENWSMAN EXTENSIONS" "This enables Openwsman support" "extensions/openwsman")
+	createExtension(OPENWSMAN-EXTENSIONS "OPENWSMAN EXTENSIONS" "This enables Openwsman support" "extensions/openwsman")
 endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
@@ -578,8 +578,8 @@ get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 
 # Generate the build identifier if one is not provided
 if (NOT BUILD_IDENTIFIER)
-     string(RANDOM LENGTH 24 BUILD_IDENTIFIER)
-     set(BUILD_IDENTIFIER "${BUILD_IDENTIFIER}" CACHE STRING "Build identifier" FORCE)
+	 string(RANDOM LENGTH 24 BUILD_IDENTIFIER)
+	 set(BUILD_IDENTIFIER "${BUILD_IDENTIFIER}" CACHE STRING "Build identifier" FORCE)
 endif()
 
 message("BUILD_IDENTIFIER is ${BUILD_IDENTIFIER}")
@@ -637,8 +637,8 @@ if(WIN32)
 		set(VCRUNTIME_REDIST_DIR $ENV{VCToolsRedistDir})
 	else()
 		# Try to fall back to a redist dir relative to the MSVC compiler
-		string(REGEX REPLACE "/VC/Tools/.*" "/VC/Redist/MSVC/" VCRUNTIME_REDIST_BASE_DIR ${CMAKE_C_COMPILER})
-		file(GLOB VCRUNTIME_REDIST_VERSIONS "${VCRUNTIME_REDIST_BASE_DIR}/*")
+		string(REGEX REPLACE "/VC/Tools/MSVC/([0-9]+\\.[0-9]+).*" "/VC/Redist/MSVC/\\1" VCRUNTIME_REDIST_BASE_DIR ${CMAKE_C_COMPILER})
+		file(GLOB VCRUNTIME_REDIST_VERSIONS "${VCRUNTIME_REDIST_BASE_DIR}*")
 		if (NOT VCRUNTIME_REDIST_VERSIONS)
 			message(FATAL_ERROR "Could not find the VC Redistributable Merge Modules. Please set VCRUNTIME_X86_MERGEMODULE_PATH and VCRUNTIME_X64_MERGEMODULE_PATH manually!")
 		endif()
@@ -646,6 +646,7 @@ if(WIN32)
 		list(SORT VCRUNTIME_REDIST_VERSIONS)
 		list(REVERSE VCRUNTIME_REDIST_VERSIONS)
 		list(GET VCRUNTIME_REDIST_VERSIONS 0 VCRUNTIME_REDIST_DIR)
+		message("Using redist directory: ${VCRUNTIME_REDIST_DIR}")
 	endif()
 
 	set(UCRT_DIR_NAT "$ENV{WindowsSdkDir}Redist\\ucrt\\DLLs\\$ENV{Platform}")
@@ -655,58 +656,63 @@ if(WIN32)
 	file(COPY ${UCRT_DLLS} DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
 
 	if (INSTALLER_MERGE_MODULES)
-        message("Creating installer with merge modules")
-        file(GLOB VCRUNTIME_X86_MERGEMODULES "${VCRUNTIME_REDIST_DIR}/MergeModules/Microsoft_VC*_CRT_x86.msm")
-        file(GLOB VCRUNTIME_X64_MERGEMODULES "${VCRUNTIME_REDIST_DIR}/MergeModules/Microsoft_VC*_CRT_x64.msm")
-        if (NOT VCRUNTIME_X86_MERGEMODULES OR NOT VCRUNTIME_X64_MERGEMODULES)
-            message(FATAL_ERROR "Could not find the VC Redistributable Merge Modules. Please set VCRUNTIME_X86_MERGEMODULE_PATH and VCRUNTIME_X64_MERGEMODULE_PATH manually!")
-        else()
-            list(GET VCRUNTIME_X86_MERGEMODULES 0 VCRUNTIME_X86_MERGEMODULE_PATH)
-            list(GET VCRUNTIME_X64_MERGEMODULES 0 VCRUNTIME_X64_MERGEMODULE_PATH)
-        endif()
+		message("Creating installer with merge modules")
+		file(GLOB VCRUNTIME_X86_MERGEMODULES "${VCRUNTIME_REDIST_DIR}/MergeModules/Microsoft_VC*_CRT_x86.msm")
+		file(GLOB VCRUNTIME_X64_MERGEMODULES "${VCRUNTIME_REDIST_DIR}/MergeModules/Microsoft_VC*_CRT_x64.msm")
+		if (NOT VCRUNTIME_X86_MERGEMODULES OR NOT VCRUNTIME_X64_MERGEMODULES)
+			message(FATAL_ERROR "Could not find the VC Redistributable Merge Modules. Please set VCRUNTIME_X86_MERGEMODULE_PATH and VCRUNTIME_X64_MERGEMODULE_PATH manually!")
+		else()
+			list(GET VCRUNTIME_X86_MERGEMODULES 0 VCRUNTIME_X86_MERGEMODULE_PATH)
+			list(GET VCRUNTIME_X64_MERGEMODULES 0 VCRUNTIME_X64_MERGEMODULE_PATH)
+		endif()
 
-        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-            message("Using ${VCRUNTIME_X64_MERGEMODULE_PATH} VC Redistributable Merge Module")
-            configure_file("msi/x64.wsi" "msi/x64.wsi" @ONLY)
-            set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/msi/x64.wsi")
-        elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-            message("Using ${VCRUNTIME_X86_MERGEMODULE_PATH} VC Redistributable Merge Module")
-            configure_file("msi/x86.wsi" "msi/x86.wsi" @ONLY)
-            set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/msi/x86.wsi")
-        else()
-            message(FATAL_ERROR "Could not determine architecture, CMAKE_SIZEOF_VOID_P is unexpected: ${CMAKE_SIZEOF_VOID_P}")
-        endif()
-        set(CPACK_WIX_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/msi/WixWinMergeModules.wsi")
-    else()
-        message("Creating installer with redistributables")
-        file(GLOB VCRUNTIME_X86_REDIST_CRT_DIR "${VCRUNTIME_REDIST_DIR}/x86/Microsoft.VC141.CRT")
-        file(GLOB VCRUNTIME_X64_REDIST_CRT_DIR "${VCRUNTIME_REDIST_DIR}/x64/Microsoft.VC141.CRT")
+		if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+			message("Using ${VCRUNTIME_X64_MERGEMODULE_PATH} VC Redistributable Merge Module")
+			configure_file("msi/x64.wsi" "msi/x64.wsi" @ONLY)
+			set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/msi/x64.wsi")
+		elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+			message("Using ${VCRUNTIME_X86_MERGEMODULE_PATH} VC Redistributable Merge Module")
+			configure_file("msi/x86.wsi" "msi/x86.wsi" @ONLY)
+			set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/msi/x86.wsi")
+		else()
+			message(FATAL_ERROR "Could not determine architecture, CMAKE_SIZEOF_VOID_P is unexpected: ${CMAKE_SIZEOF_VOID_P}")
+		endif()
+		set(CPACK_WIX_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/msi/WixWinMergeModules.wsi")
+	else()
+		message("Creating installer with redistributables")
+		if(CMAKE_VS_PLATFORM_TOOLSET STREQUAL "v141")
+			file(GLOB VCRUNTIME_X86_REDIST_CRT_DIR "${VCRUNTIME_REDIST_DIR}/x86/Microsoft.VC141.CRT")
+			file(GLOB VCRUNTIME_X64_REDIST_CRT_DIR "${VCRUNTIME_REDIST_DIR}/x64/Microsoft.VC141.CRT")
+		elseif(CMAKE_VS_PLATFORM_TOOLSET STREQUAL "v142")
+			file(GLOB VCRUNTIME_X86_REDIST_CRT_DIR "${VCRUNTIME_REDIST_DIR}/x86/Microsoft.VC142.CRT")
+			file(GLOB VCRUNTIME_X64_REDIST_CRT_DIR "${VCRUNTIME_REDIST_DIR}/x64/Microsoft.VC142.CRT")
+		endif()
 
-        if (NOT VCRUNTIME_X86_REDIST_CRT_DIR OR NOT VCRUNTIME_X64_REDIST_CRT_DIR)
-            message(FATAL_ERROR "Could not find the VC Redistributable. Please set VCRUNTIME_X86_REDIST_CRT_DIR and VCRUNTIME_X64_REDIST_CRT_DIR manually!")
-        endif()
+		if (NOT VCRUNTIME_X86_REDIST_CRT_DIR OR NOT VCRUNTIME_X64_REDIST_CRT_DIR)
+			message(FATAL_ERROR "Could not find the VC Redistributable. Please set VCRUNTIME_X86_REDIST_CRT_DIR and VCRUNTIME_X64_REDIST_CRT_DIR manually!")
+		endif()
 
-        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-            message("Using ${VCRUNTIME_X64_REDIST_CRT_DIR} VC Redistributables")
-            file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/concrt140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-            file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/msvcp140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-            file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/msvcp140_1.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-            file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/msvcp140_2.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-            file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/vccorlib140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-            file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/vcruntime140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-        elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-            message("Using ${VCRUNTIME_X86_REDIST_CRT_DIR} VC Redistributables")
-            file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/concrt140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-            file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/msvcp140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-            file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/msvcp140_1.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-            file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/msvcp140_2.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-            file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/vccorlib140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-            file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/vcruntime140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
-        else()
-            message(FATAL_ERROR "Could not determine architecture, CMAKE_SIZEOF_VOID_P is unexpected: ${CMAKE_SIZEOF_VOID_P}")
-        endif()
-        set(CPACK_WIX_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/msi/WixWin.wsi")
-    endif()
+		if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+			message("Using ${VCRUNTIME_X64_REDIST_CRT_DIR} VC Redistributables")
+			file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/concrt140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+			file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/msvcp140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+			file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/msvcp140_1.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+			file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/msvcp140_2.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+			file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/vccorlib140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+			file(COPY "${VCRUNTIME_X64_REDIST_CRT_DIR}/vcruntime140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+		elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+			message("Using ${VCRUNTIME_X86_REDIST_CRT_DIR} VC Redistributables")
+			file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/concrt140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+			file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/msvcp140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+			file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/msvcp140_1.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+			file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/msvcp140_2.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+			file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/vccorlib140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+			file(COPY "${VCRUNTIME_X86_REDIST_CRT_DIR}/vcruntime140.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/redist")
+		else()
+			message(FATAL_ERROR "Could not determine architecture, CMAKE_SIZEOF_VOID_P is unexpected: ${CMAKE_SIZEOF_VOID_P}")
+		endif()
+		set(CPACK_WIX_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/msi/WixWin.wsi")
+	endif()
 else()
 	set(CPACK_SOURCE_GENERATOR "TGZ")
 endif(WIN32)
@@ -729,8 +735,8 @@ if (NOT WIN32)
 endif()
 
 install(FILES LICENSE README.md NOTICE
-        DESTINATION .
-        COMPONENT bin)
+		DESTINATION .
+		COMPONENT bin)
 
 if(WIN32)
 	#preference is to use the exe type so that we have a solution that works well for cross compilation
@@ -803,22 +809,22 @@ if(NOT WIN32)
 # Create a custom build target that will run the linter.
 get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
 add_custom_target(linter
-    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
-            ${CMAKE_SOURCE_DIR}/libminifi/include/ --
-            ${CMAKE_SOURCE_DIR}/libminifi/src/
-    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
-            ${CMAKE_SOURCE_DIR}/libminifi/include/ --
-            ${CMAKE_SOURCE_DIR}/libminifi/test/
-    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
-            ${CMAKE_SOURCE_DIR}/encrypt-config/ --
-            ${CMAKE_SOURCE_DIR}/encrypt-config/
-    DEPENDS ${extensions})
+	COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+			${CMAKE_SOURCE_DIR}/libminifi/include/ --
+			${CMAKE_SOURCE_DIR}/libminifi/src/
+	COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+			${CMAKE_SOURCE_DIR}/libminifi/include/ --
+			${CMAKE_SOURCE_DIR}/libminifi/test/
+	COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+			${CMAKE_SOURCE_DIR}/encrypt-config/ --
+			${CMAKE_SOURCE_DIR}/encrypt-config/
+	DEPENDS ${extensions})
 endif(NOT WIN32)
 
 # Custom target to download and run Apache Release Audit Tool (RAT)
 add_custom_target(
-        apache-rat
-        ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/RunApacheRAT.cmake
-        COMMAND java -jar ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat/apache-rat-0.13/apache-rat-0.13.jar -E ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat/.rat-excludes -d ${CMAKE_SOURCE_DIR} | grep -B 1 -A 15 Summary )
+		apache-rat
+		${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/RunApacheRAT.cmake
+		COMMAND java -jar ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat/apache-rat-0.13/apache-rat-0.13.jar -E ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat/.rat-excludes -d ${CMAKE_SOURCE_DIR} | grep -B 1 -A 15 Summary )
 
 feature_summary(WHAT ALL FILENAME ${CMAKE_BINARY_DIR}/all.log)
