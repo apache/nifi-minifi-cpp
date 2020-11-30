@@ -30,7 +30,8 @@ namespace storage {
 
 AzureBlobStorage::AzureBlobStorage(const std::string &connection_string, const std::string &container_name)
   : BlobStorage(connection_string, container_name)
-  , container_client_(minifi::utils::make_unique<Azure::Storage::Blobs::BlobContainerClient>(Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string, container_name))) {
+  , container_client_(minifi::utils::make_unique<Azure::Storage::Blobs::BlobContainerClient>(
+      Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string, container_name))) {
 }
 
 void AzureBlobStorage::resetClientIfNeeded(const std::string &connection_string, const std::string &container_name) {

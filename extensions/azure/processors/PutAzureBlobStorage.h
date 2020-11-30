@@ -20,6 +20,11 @@
 
 #pragma once
 
+#include <utility>
+#include <vector>
+#include <string>
+#include <memory>
+
 #include "core/Property.h"
 #include "core/Processor.h"
 #include "core/logging/Logger.h"

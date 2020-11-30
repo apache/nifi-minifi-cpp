@@ -18,6 +18,8 @@
 
 #include "AzureCredentialsService.h"
 
+#include <set>
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -26,7 +28,10 @@ namespace azure {
 namespace controllers {
 
 core::Property AzureCredentialsService::ConnectionString(
-    core::PropertyBuilder::createProperty("Connection String")->withDescription("Connection string for authenticating with Azure storage service.")->isRequired(true)->supportsExpressionLanguage(true)->build());
+    core::PropertyBuilder::createProperty("Connection String")
+      ->withDescription("Connection string for authenticating with Azure storage service.")
+      ->isRequired(true)
+      ->build());
 
 void AzureCredentialsService::initialize() {
   std::set<core::Property> supportedProperties;

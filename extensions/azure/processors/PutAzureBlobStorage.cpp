@@ -20,6 +20,9 @@
 
 #include "PutAzureBlobStorage.h"
 
+#include <memory>
+#include <string>
+
 #include "storage/AzureBlobStorage.h"
 #include "controllerservices/AzureCredentialsService.h"
 
@@ -53,7 +56,9 @@ const core::Property PutAzureBlobStorage::Blob(
     ->build());
 const core::Property PutAzureBlobStorage::CreateContainer(
   core::PropertyBuilder::createProperty("Create Container")
-    ->withDescription("Specifies whether to check if the container exists and to automatically create it if it does not. Permission to list containers is required. If false, this check is not made, but the Put operation will fail if the container does not exist.")
+    ->withDescription("Specifies whether to check if the container exists and to automatically create it if it does not. "
+                      "Permission to list containers is required. If false, this check is not made, but the Put operation will "
+                      "fail if the container does not exist.")
     ->isRequired(true)
     ->withDefaultValue<bool>(false)
     ->build());
