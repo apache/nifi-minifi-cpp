@@ -24,7 +24,7 @@
 #include <memory>
 
 #include "BlobStorage.h"
-#include "azure/storage/blobs/blob.hpp"
+#include "azure/storage/blobs.hpp"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 

@@ -119,6 +119,12 @@ class DockerTestCluster(SingleNodeDockerCluster):
         return server_metadata["contentType"] == content_type and metadata == server_metadata["userMetadata"]
 
     @retry_check()
+    def check_azure_storage_server_data(self):
+        data_file = subprocess.check_output(["docker", "exec", "azure-storage-server", "find", "/data/__blobstorage__", "-type", "f"]).decode(sys.stdout.encoding).strip()
+        file_data = subprocess.check_output(["docker", "exec", "azure-storage-server", "cat", data_file]).decode(sys.stdout.encoding)
+        return self.test_data in file_data
+
+    @retry_check()
     def is_s3_bucket_empty(self):
         s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(self.get_stdout_encoding()).strip()
         ls_result = subprocess.check_output(["docker", "exec", "s3-server", "ls", s3_mock_dir + "/test_bucket/"]).decode(self.get_stdout_encoding())

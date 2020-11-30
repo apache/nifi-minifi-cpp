@@ -566,6 +566,10 @@ endif()
 ## AWS Extentions
 option(ENABLE_AZURE "Enables Azure support." OFF)
 if (ENABLE_AZURE)
+	include(BundledLibXml2)
+	use_bundled_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
+
 	include(BundledAzureSdkCpp)
 	use_bundled_libazure(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	createExtension(AZURE-EXTENSIONS "AZURE EXTENSIONS" "This enables Azure support" "extensions/azure" "${TEST_DIR}/azure-tests")

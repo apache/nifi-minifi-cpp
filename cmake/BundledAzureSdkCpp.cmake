@@ -34,7 +34,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     ExternalProject_Add(
             azure-sdk-cpp-external
             GIT_REPOSITORY "https://github.com/Azure/azure-sdk-for-cpp.git"
-            GIT_TAG "azure-storage-blobs_1.0.0-beta.4"
+            GIT_TAG "85fb3e35306ace5218e93ceeed8fda59828fa9bc"
             BUILD_IN_SOURCE true
             SOURCE_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src"
             BUILD_BYPRODUCTS "${AZURESDK_LIBRARIES_LIST}"
@@ -43,7 +43,6 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     )
 
     # Set dependencies
-    include(FindLibXml2)
     add_dependencies(azure-sdk-cpp-external CURL::libcurl OpenSSL::Crypto OpenSSL::SSL LibXml2::LibXml2)
 
     # Set variables
@@ -96,4 +95,5 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     if (APPLE)
         set_property(TARGET AZURE::azure-storage-blobs APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-framework CoreFoundation")
     endif()
+    add_definitions("-DBUILD_CURL_HTTP_TRANSPORT_ADAPTER")
 endfunction(use_bundled_libazure)

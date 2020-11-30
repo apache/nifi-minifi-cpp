@@ -64,7 +64,7 @@ utils::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const std::string
 
     UploadBlobResult result;
     result.length = buffer_size;
-    result.primary_uri = container_client_->GetUri();
+    result.primary_uri = container_client_->GetUrl();
     result.etag = response->ETag;
     result.timestamp = response->LastModified;
     return result;

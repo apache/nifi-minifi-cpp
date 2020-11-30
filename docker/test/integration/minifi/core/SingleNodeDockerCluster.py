@@ -112,6 +112,8 @@ class SingleNodeDockerCluster(Cluster):
             self.deploy_http_proxy()
         elif self.engine == 's3-server':
             self.deploy_s3_server()
+        elif engine == 'azure-storage-server':
+            self.deploy_azure_storage_server()
         else:
             raise Exception('invalid flow engine: \'%s\'' % self.engine)
 
@@ -273,7 +275,7 @@ class SingleNodeDockerCluster(Cluster):
         self.containers[consumer.name] = consumer
 
     def deploy_s3_server(self):
-        consumer = self.client.containers.run(
+        server = self.client.containers.run(
                     "adobe/s3mock:2.1.28",
                     detach=True,
                     name='s3-server',
@@ -281,7 +283,17 @@ class SingleNodeDockerCluster(Cluster):
                     ports={'9090/tcp': 9090, '9191/tcp': 9191},
                     environment=["initialBuckets=test_bucket"],
                     )
-        self.containers[consumer.name] = consumer
+        self.containers[server.name] = server
+
+    def deploy_azure_storage_server(self):
+        server = self.client.containers.run(
+                    "mcr.microsoft.com/azure-storage/azurite",
+                    detach=True,
+                    name='azure-storage-server',
+                    network=self.network.name,
+                    ports={'10000/tcp': 10000, '10001/tcp': 10001},
+                    )
+        self.containers[server.name] = server
 
     def build_image(self, dockerfile, context_files):
         conf_dockerfile_buffer = BytesIO()
