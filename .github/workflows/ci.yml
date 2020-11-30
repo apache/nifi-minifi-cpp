@@ -31,32 +31,29 @@ jobs:
           sudo xcode-select -switch /Applications/Xcode_12.app
       - id: build
         run: ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_LUA_SCRIPTING=1 -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
-  windows:
-    name: "windows"
+  windows_VS2017:
+    name: "windows-vs2017"
     runs-on: windows-2016
     timeout-minutes: 90
     steps:
       - id: checkout
         uses: actions/checkout@v2
+      - name: Setup PATH
+        uses: microsoft/setup-msbuild@v1.0.2
       - id: build
-        run: |
-          PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\Tools\;%path%
-          PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\;%path%
-          PATH=C:\Windows\Microsoft.NET\Framework\v4.0.30319;%path%
-          PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin;%path%
-          PATH=C:\Program Files (x86)\Windows Kits\10\bin\x86;%path%
-          PATH=C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86;%path%
-          PATH=C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6.1 Tools\;%path%
-          PATH=C:\Program Files (x86)\Microsoft Visual Studio\Shared\Common\VSPerfCollectionTools\;%path%
-          PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Team Tools\Performance Tools;%path%
-          PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\bin\Roslyn;%path%
-          PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer;%path%
-          PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TestWindow;%path%
-          PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\VC\VCPackages;%path%
-          PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\HostX86\x86;%path%
-          PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;%path%
-          PATH=C:\Windows\System32\;%path%
-          win_build_vs.bat build /CI
+        run: win_build_vs.bat build /CI
+        shell: cmd
+  windows_VS2019:
+    name: "windows-vs2019"
+    runs-on: windows-2019
+    timeout-minutes: 90
+    steps:
+      - id: checkout
+        uses: actions/checkout@v2
+      - name: Setup PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+      - id: build
+        run: win_build_vs.bat build /2019 /64 /CI
         shell: cmd
   ubuntu_16_04:
     name: "ubuntu-16.04"
