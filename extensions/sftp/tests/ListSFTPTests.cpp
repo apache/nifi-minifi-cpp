@@ -57,7 +57,7 @@
 
 class ListSFTPTestsFixture {
  public:
-  ListSFTPTestsFixture()
+  ListSFTPTestsFixture(const std::shared_ptr<minifi::Configure>& configuration = nullptr)
   : src_dir(strdup("/var/tmp/sftps.XXXXXX")) {
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
@@ -80,7 +80,7 @@ class ListSFTPTestsFixture {
     REQUIRE(true == sftp_server->start());
 
     // Build MiNiFi processing graph
-    createPlan();
+    createPlan(nullptr, configuration);
   }
 
   virtual ~ListSFTPTestsFixture() {
@@ -88,14 +88,14 @@ class ListSFTPTestsFixture {
     LogTestController::getInstance().reset();
   }
 
-  void createPlan(utils::Identifier* list_sftp_uuid = nullptr) {
+  void createPlan(utils::Identifier* list_sftp_uuid = nullptr, const std::shared_ptr<minifi::Configure>& configuration = nullptr) {
     const std::string state_dir = plan == nullptr ? "" : plan->getStateDir();
 
     log_attribute.reset();
     list_sftp.reset();
     plan.reset();
 
-    plan = testController.createPlan(nullptr /*config*/, state_dir.empty() ? nullptr : state_dir.c_str());
+    plan = testController.createPlan(configuration, state_dir.empty() ? nullptr : state_dir.c_str());
     if (list_sftp_uuid == nullptr) {
       list_sftp = plan->addProcessor(
           "ListSFTP",
@@ -169,6 +169,13 @@ class ListSFTPTestsFixture {
   std::shared_ptr<TestPlan> plan;
   std::shared_ptr<core::Processor> list_sftp;
   std::shared_ptr<core::Processor> log_attribute;
+};
+
+class PersistentListSFTPTestsFixture : public ListSFTPTestsFixture {
+public:
+  PersistentListSFTPTestsFixture() :
+    ListSFTPTestsFixture(std::make_shared<minifi::Configure>()) {
+  }
 };
 
 TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file", "[ListSFTP][basic]") {
@@ -544,7 +551,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps one file ti
   REQUIRE(LogTestController::getInstance().contains("and all files for that timestamp has been processed. Yielding."));
 }
 
-TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps restore state", "[ListSFTP][tracking-timestamps]") {
+TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Timestamps restore state", "[ListSFTP][tracking-timestamps]") {
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Timestamps");
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
@@ -566,7 +573,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps restore sta
 
   utils::Identifier list_sftp_uuid = list_sftp->getUUID();
   REQUIRE(list_sftp_uuid);
-  createPlan(&list_sftp_uuid);
+  createPlan(&list_sftp_uuid, std::make_shared<minifi::Configure>());
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Timestamps");
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
@@ -589,7 +596,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps restore sta
   REQUIRE(!LogTestController::getInstance().contains("key:filename value:file1.ext", std::chrono::seconds(0)));
 }
 
-TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps restore state changed configuration", "[ListSFTP][tracking-timestamps]") {
+TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Timestamps restore state changed configuration", "[ListSFTP][tracking-timestamps]") {
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Timestamps");
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
@@ -608,7 +615,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps restore sta
 
   utils::Identifier list_sftp_uuid = list_sftp->getUUID();
   REQUIRE(list_sftp_uuid);
-  createPlan(&list_sftp_uuid);
+  createPlan(&list_sftp_uuid, std::make_shared<minifi::Configure>());
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Timestamps");
   plan->setProperty(list_sftp, "Remote Path", "/nifi_test");
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
@@ -838,7 +845,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities one file size
   REQUIRE(LogTestController::getInstance().contains("Skipping file \"nifi_test/file1.ext\" because it has not changed"));
 }
 
-TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities restore state", "[ListSFTP][tracking-entities]") {
+TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Entities restore state", "[ListSFTP][tracking-entities]") {
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
@@ -850,7 +857,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities restore state
 
   utils::Identifier list_sftp_uuid = list_sftp->getUUID();
   REQUIRE(list_sftp_uuid);
-  createPlan(&list_sftp_uuid);
+  createPlan(&list_sftp_uuid, std::make_shared<minifi::Configure>());
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
@@ -891,7 +898,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities restore state
   REQUIRE(!LogTestController::getInstance().contains("key:filename value:file1.ext", std::chrono::seconds(0)));
 }
 
-TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities restore state changed configuration", "[ListSFTP][tracking-entities]") {
+TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Entities restore state changed configuration", "[ListSFTP][tracking-entities]") {
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
@@ -910,7 +917,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities restore state
 
   utils::Identifier list_sftp_uuid = list_sftp->getUUID();
   REQUIRE(list_sftp_uuid);
-  createPlan(&list_sftp_uuid);
+  createPlan(&list_sftp_uuid, std::make_shared<minifi::Configure>());
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
   plan->setProperty(list_sftp, "Remote Path", "/nifi_test");
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
