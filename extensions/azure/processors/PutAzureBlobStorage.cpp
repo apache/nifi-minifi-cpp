@@ -129,6 +129,11 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
   }
 
   auto connection_string = getConnectionString(context, flow_file);
+  if (connection_string.empty()) {
+    logger_->log_error("Connection string is empty!");
+    context->yield();
+    return;
+  }
 
   std::string container_name;
   if (!context->getProperty(ContainerName, container_name, flow_file) || container_name.empty()) {

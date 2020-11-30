@@ -144,7 +144,28 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test required parameters", "[
     plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
   }
 
+  SECTION("No connection string is set") {
+    plan->setProperty(update_attribute, "test.container", CONTAINER_NAME, true);
+    plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
+    plan->setProperty(update_attribute, "test.blob", BLOB_NAME, true);
+    plan->setProperty(put_azure_blob_storage, "Blob", "${test.blob}");
+  }
+
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test connection string settings from credentials service", "[azureCredentials]") {
+  plan->setProperty(update_attribute, "test.container", CONTAINER_NAME, true);
+  plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
+  plan->setProperty(update_attribute, "test.blob", BLOB_NAME, true);
+  plan->setProperty(put_azure_blob_storage, "Blob", "${test.blob}");
+
+  auto aws_cred_service = plan->addController("AzureCredentialsService", "AzureCredentialsService");
+  plan->setProperty(aws_cred_service, "Connection String", CONNECTION_STRING);
+  plan->setProperty(put_azure_blob_storage, "Azure Credentials Service", "AzureCredentialsService");
+  test_controller.runSession(plan, true);
+
+  REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
 }
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[azureBlobStorageUpload]") {
@@ -163,6 +184,8 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[az
   REQUIRE(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
   REQUIRE(mock_blob_storage_ptr->input_data == TEST_DATA);
   REQUIRE(mock_blob_storage_ptr->getContainerCreated() == false);
+  REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
+  REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
 }
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with container creation", "[azureBlobStorageUpload]") {
@@ -182,6 +205,8 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with c
   REQUIRE(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
   REQUIRE(mock_blob_storage_ptr->input_data == TEST_DATA);
   REQUIRE(mock_blob_storage_ptr->getContainerCreated() == true);
+  REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
+  REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
 }
 
 }  // namespace
