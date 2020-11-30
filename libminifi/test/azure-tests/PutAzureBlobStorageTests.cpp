@@ -135,7 +135,19 @@ class PutAzureBlobStorageTestsFixture {
   std::shared_ptr<core::Processor> update_attribute;
 };
 
-TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[azureBlobStorageTest]") {
+TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test required parameters", "[azureStorageParameters]") {
+  SECTION("Container name not set") {
+  }
+
+  SECTION("Blob name not set") {
+    plan->setProperty(update_attribute, "test.container", CONTAINER_NAME, true);
+    plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
+  }
+
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[azureBlobStorageUpload]") {
   plan->setProperty(update_attribute, "test.container", CONTAINER_NAME, true);
   plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
   plan->setProperty(update_attribute, "test.connectionstring", CONNECTION_STRING, true);
@@ -150,6 +162,26 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[az
   REQUIRE(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
   REQUIRE(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
   REQUIRE(mock_blob_storage_ptr->input_data == TEST_DATA);
+  REQUIRE(mock_blob_storage_ptr->getContainerCreated() == false);
+}
+
+TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with container creation", "[azureBlobStorageUpload]") {
+  plan->setProperty(update_attribute, "test.container", CONTAINER_NAME, true);
+  plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
+  plan->setProperty(update_attribute, "test.connectionstring", CONNECTION_STRING, true);
+  plan->setProperty(put_azure_blob_storage, "Connection String", "${test.connectionstring}");
+  plan->setProperty(update_attribute, "test.blob", BLOB_NAME, true);
+  plan->setProperty(put_azure_blob_storage, "Blob", "${test.blob}");
+  plan->setProperty(put_azure_blob_storage, "Create Container", "true");
+  test_controller.runSession(plan, true);
+  REQUIRE(LogTestController::getInstance().contains("key:azure.container value:" + CONTAINER_NAME));
+  REQUIRE(LogTestController::getInstance().contains("key:azure.blobname value:" + BLOB_NAME));
+  REQUIRE(LogTestController::getInstance().contains("key:azure.primaryUri value:" + mock_blob_storage_ptr->PRIMARY_URI));
+  REQUIRE(LogTestController::getInstance().contains("key:azure.etag value:" + mock_blob_storage_ptr->ETAG));
+  REQUIRE(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
+  REQUIRE(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
+  REQUIRE(mock_blob_storage_ptr->input_data == TEST_DATA);
+  REQUIRE(mock_blob_storage_ptr->getContainerCreated() == true);
 }
 
 }  // namespace
