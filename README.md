@@ -76,6 +76,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | ------------- |:-------------| :-----|
 | Archive Extensions    | [ApplyTemplate](PROCESSORS.md#applytemplate)<br/>[CompressContent](PROCESSORS.md#compresscontent)<br/>[ManipulateArchive](PROCESSORS.md#manipulatearchive)<br/>[MergeContent](PROCESSORS.md#mergecontent)<br/>[FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)<br/>[UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)      |   -DBUILD_LIBARCHIVE=ON |
 | AWS | [AWSCredentialsService](CONTROLLERS.md#awscredentialsservice)<br/>[PutS3Object](PROCESSORS.md#puts3object)<br/>[DeleteS3Object](PROCESSORS.md#deletes3object)<br/>[FetchS3Object](PROCESSORS.md#fetchs3object)<br/>[ListS3](PROCESSORS.md#lists3) | -DENABLE_AWS=ON  |
+| Azure | [AzureCredentialsService](CONTROLLERS.md#azureCredentialsService)<br/>[PutAzureBlobStorage](PROCESSORS.md#putAzureBlobStorage) | -DENABLE_AZURE=ON  |
 | CivetWeb | [ListenHTTP](PROCESSORS.md#listenhttp)  | -DDISABLE_CIVET=ON |
 | CURL | [InvokeHTTP](PROCESSORS.md#invokehttp)      |    -DDISABLE_CURL=ON  |
 | GPS | GetGPS      |    -DENABLE_GPS=ON  |
@@ -363,6 +364,7 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
     U. OPC-UA Support ..............Disabled
     W. SQL Support .................Disabled
     X. Openwsman Support ...........Disabled
+    Y. Azure Support ...............Disabled
     ****************************************
                 Build Options.
     ****************************************

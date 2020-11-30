@@ -17,6 +17,7 @@
 
 ## Table of Contents
 
+- [AzureCredentialsService](#azureCredentialsService)
 - [AWSCredentialsService](#awsCredentialsService)
 
 ## AWSCredentialsService
@@ -39,3 +40,20 @@ default values, and whether a property supports the NiFi Expression Language.
 |Access Key|||Yes|Specifies the AWS Access Key|
 |Secret Key|||Yes|Specifies the AWS Secret Key|
 |Credentials File|||No|Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey|
+
+## AzureCredentialsService
+
+### Description
+
+Manages the credentials for an Azure Storage account. This allows for multiple Azure related processors to reference this single
+controller service so that Azure storage credentials can be managed and controlled in a central location.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Expression Language Supported? | Description |
+| - | - | - | - | - |
+|**Connection String**|||Yes|Connection string for authenticating with Azure storage service.|

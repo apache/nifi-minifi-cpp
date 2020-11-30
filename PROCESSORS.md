@@ -38,6 +38,7 @@
 - [MotionDetector](#motiondetector)
 - [PublishKafka](#publishkafka)
 - [PublishMQTT](#publishmqtt)
+- [PutAzureBlobStorage](#putAzureBlobStorage)
 - [PutFile](#putfile)
 - [PutOPCProcessor](#putopcprocessor)
 - [PutS3Object](#puts3object)
@@ -1020,6 +1021,31 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |failure|FlowFiles that failed to send to the destination are transferred to this relationship|
 |success|FlowFiles that are sent successfully to the destination are transferred to this relationship|
+
+
+## PutAzureBlobStorage
+
+### Description
+
+Puts content into an Azure Storage Blob
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Container Name**|||Name of the Azure storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.<br/>**Supports Expression Language: true**|
+|Connection String|||Connection string used to connect to Azure Storage service.<br/>**Supports Expression Language: true**|
+|Azure Credentials Service|||Name of the Azure Credentials Service used to retrieve the connection string from.|
+|**Blob**|||The filename of the blob.<br/>**Supports Expression Language: true**|
+|**Create Container**|false||Specifies whether to check if the container exists and to automatically create it if it does not. Permission to list containers is required. If false, this check is not made, but the Put operation will fail if the container does not exist.|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+|failure|Unsuccessful operations will be transferred to the failure relationship|
+|success|All successfully processed FlowFiles are routed to this relationship|
 
 
 ## PutFile

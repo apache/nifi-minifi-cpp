@@ -50,7 +50,7 @@ const core::Property PutAzureBlobStorage::AzureCredentialsService(
     ->build());
 const core::Property PutAzureBlobStorage::Blob(
   core::PropertyBuilder::createProperty("Blob")
-    ->withDescription("Name of the Azure Credentials Service used to retrieve the connection string from.")
+    ->withDescription("The filename of the blob.")
     ->supportsExpressionLanguage(true)
     ->isRequired(true)
     ->build());
@@ -64,7 +64,7 @@ const core::Property PutAzureBlobStorage::CreateContainer(
     ->build());
 
 const core::Relationship PutAzureBlobStorage::Success("success", "All successfully processed FlowFiles are routed to this relationship");
-const core::Relationship PutAzureBlobStorage::Failure("failure", "Unsuccessful operations will be transferred to the failure relationship.");
+const core::Relationship PutAzureBlobStorage::Failure("failure", "Unsuccessful operations will be transferred to the failure relationship");
 
 void PutAzureBlobStorage::initialize() {
   // Set the supported properties
