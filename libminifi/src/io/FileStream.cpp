@@ -20,32 +20,66 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <Exception.h>
 #include "io/validation.h"
 #include "io/FileStream.h"
 #include "io/InputStream.h"
-#include "io/OutputStream.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace io {
 
+// from https://codereview.stackexchange.com/a/58112
+#if WIN32 || (defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION >= 1000))
+#define HAS_IOS_BASE_FAILURE_DERIVED_FROM_SYSTEM_ERROR 1
+#else
+#define HAS_IOS_BASE_FAILURE_DERIVED_FROM_SYSTEM_ERROR 0
+#endif
+
+namespace {
+std::error_code ios_exception_to_errcode(const std::ios_base::failure& exception) {
+#if (HAS_IOS_BASE_FAILURE_DERIVED_FROM_SYSTEM_ERROR)
+  return exception.code();
+#endif
+  return {errno, std::generic_category()};
+}
+
+[[noreturn]] void handle_file_error(const std::ios_base::failure& exception, logging::Logger& logger) {
+  const auto ec = ios_exception_to_errcode(exception);
+  logger.log_error("%s", ec.message());
+#if (HAS_IOS_BASE_FAILURE_DERIVED_FROM_SYSTEM_ERROR)
+  throw;
+#else
+  throw std::system_error{ec};
+#endif
+}
+}  // namespace
+
 FileStream::FileStream(const std::string &path, bool append)
     : logger_(logging::LoggerFactory<FileStream>::getLogger()),
       path_(path),
       offset_(0) {
   file_stream_ = std::unique_ptr<std::fstream>(new std::fstream());
-  if (append) {
-    file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
-    file_stream_->seekg(0, file_stream_->end);
-    file_stream_->seekp(0, file_stream_->end);
-    std::streamoff len = file_stream_->tellg();
-    length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
-    seek(offset_);
-  } else {
-    file_stream_->open(path.c_str(), std::fstream::out | std::fstream::binary);
-    length_ = 0;
+  // from https://codereview.stackexchange.com/a/58112
+  file_stream_->exceptions(std::ios::badbit | std::ios::failbit);
+  errno = 0;
+  try {
+    if (append) {
+      file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
+      file_stream_->seekg(0, file_stream_->end);
+      file_stream_->seekp(0, file_stream_->end);
+      std::streamoff len = file_stream_->tellg();
+      length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
+      seek(offset_);
+    } else {
+      file_stream_->open(path.c_str(), std::fstream::out | std::fstream::binary);
+      length_ = 0;
+    }
+  } catch(const std::ios_base::failure& e) {
+    handle_file_error(e, *logger_);
   }
 }
 
@@ -54,20 +88,27 @@ FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enab
       path_(path),
       offset_(offset) {
   file_stream_ = std::unique_ptr<std::fstream>(new std::fstream());
-  if (write_enable) {
-    file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::binary);
-  } else {
-    file_stream_->open(path.c_str(), std::fstream::in | std::fstream::binary);
+  // from https://codereview.stackexchange.com/a/58112
+  file_stream_->exceptions(std::ios::badbit | std::ios::failbit);
+  errno = 0;
+  try {
+    if (write_enable) {
+      file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::binary);
+    } else {
+      file_stream_->open(path.c_str(), std::fstream::in | std::fstream::binary);
+    }
+    file_stream_->seekg(0, file_stream_->end);
+    file_stream_->seekp(0, file_stream_->end);
+    std::streamoff len = file_stream_->tellg();
+    if (len > 0) {
+      length_ = gsl::narrow<size_t>(len);
+    } else {
+      length_ = 0;
+    }
+    seek(offset);
+  } catch(const std::ios_base::failure& e) {
+    handle_file_error(e, *logger_);
   }
-  file_stream_->seekg(0, file_stream_->end);
-  file_stream_->seekp(0, file_stream_->end);
-  std::streamoff len = file_stream_->tellg();
-  if (len > 0) {
-    length_ = gsl::narrow<size_t>(len);
-  } else {
-    length_ = 0;
-  }
-  seek(offset);
 }
 
 void FileStream::close() {
@@ -89,18 +130,23 @@ int FileStream::write(const uint8_t *value, int size) {
     return 0;
   }
   if (!IsNullOrEmpty(value)) {
+    errno = 0;
     std::lock_guard<std::mutex> lock(file_lock_);
-    if (file_stream_->write(reinterpret_cast<const char*>(value), size)) {
-      offset_ += size;
-      if (offset_ > length_) {
-        length_ = offset_;
-      }
-      if (!file_stream_->flush()) {
+    try {
+      if (file_stream_->write(reinterpret_cast<const char*>(value), size)) {
+        offset_ += size;
+        if (offset_ > length_) {
+          length_ = offset_;
+        }
+        if (!file_stream_->flush()) {
+          return -1;
+        }
+        return size;
+      } else {
         return -1;
       }
-      return size;
-    } else {
-      return -1;
+    } catch(const std::ios_base::failure& e) {
+      handle_file_error(e, *logger_);
     }
   } else {
     return -1;
@@ -117,28 +163,32 @@ int FileStream::read(uint8_t *buf, int buflen) {
     if (!file_stream_) {
       return -1;
     }
-    file_stream_->read(reinterpret_cast<char*>(buf), buflen);
-    if ((file_stream_->rdstate() & (file_stream_->eofbit | file_stream_->failbit)) != 0) {
-      file_stream_->clear();
-      file_stream_->seekg(0, file_stream_->end);
-      file_stream_->seekp(0, file_stream_->end);
-      auto tellg_result = file_stream_->tellg();
-      if (tellg_result < 0) {
-        logging::LOG_ERROR(logger_) << "Tellg call on file stream failed.";
-        return -1;
+    errno = 0;
+    try {
+      file_stream_->read(reinterpret_cast<char*>(buf), buflen);
+      if ((file_stream_->rdstate() & (file_stream_->eofbit | file_stream_->failbit)) != 0) {
+        file_stream_->clear();
+        file_stream_->seekg(0, file_stream_->end);
+        file_stream_->seekp(0, file_stream_->end);
+        const auto tellg_result = file_stream_->tellg();
+        if (tellg_result == std::fstream::pos_type{-1}) {
+          logger_->log_error("Tellg call on file stream failed.");
+          return -1;
+        }
+        const auto len = gsl::narrow<size_t>(tellg_result);
+        size_t ret = len - offset_;
+        offset_ = len;
+        length_ = len;
+        logging::LOG_DEBUG(logger_) << path_ << " eof bit, ended at " << offset_;
+        return gsl::narrow<int>(ret);
+      } else {
+        offset_ += buflen;
+        file_stream_->seekp(offset_);
+        return buflen;
       }
-      size_t len = gsl::narrow<size_t>(tellg_result);
-      size_t ret = len - offset_;
-      offset_ = len;
-      length_ = len;
-      logging::LOG_DEBUG(logger_) << path_ << " eof bit, ended at " << offset_;
-      return gsl::narrow<int>(ret);
-    } else {
-      offset_ += buflen;
-      file_stream_->seekp(offset_);
-      return buflen;
+    } catch(const std::ios_base::failure& e) {
+      handle_file_error(e, *logger_);
     }
-
   } else {
     return -1;
   }
