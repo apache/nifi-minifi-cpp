@@ -321,24 +321,24 @@ inline bool get_uid_gid(const std::string &path, uint64_t &uid, uint64_t &gid) {
 }
 #endif
 
-inline int is_directory(const char * path) {
+inline bool is_directory(const char * path) {
   struct stat dir_stat;
   if (stat(path, &dir_stat) < 0) {
-      return 0;
+      return false;
   }
-  return S_ISDIR(dir_stat.st_mode);
+  return S_ISDIR(dir_stat.st_mode) != 0;
 }
 
-inline int exists(const std::string& path) {
+inline bool exists(const std::string& path) {
 #ifdef USE_BOOST
-  return boost::filesystem::exists(path) ? 0 : -1;
+  return boost::filesystem::exists(path);
 #else
 #ifdef WIN32
   struct _stat statbuf;
-  return _stat(path.c_str(), &statbuf);
+  return _stat(path.c_str(), &statbuf) == 0;
 #else
   struct stat statbuf;
-  return stat(path.c_str(), &statbuf);
+  return stat(path.c_str(), &statbuf) == 0;
 #endif
 #endif
 }

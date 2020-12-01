@@ -397,6 +397,6 @@ TEST_CASE("FileUtils::exists", "[TestExists]") {
   std::ofstream outfile(path, std::ios::out | std::ios::binary);
   auto invalid_path = dir + FileUtils::get_separator() + "test_file2.txt";
 
-  REQUIRE(FileUtils::exists(path) == 0);
-  REQUIRE(FileUtils::exists(invalid_path) < 0);
+  REQUIRE(FileUtils::exists(path));
+  REQUIRE(!FileUtils::exists(invalid_path));
 }

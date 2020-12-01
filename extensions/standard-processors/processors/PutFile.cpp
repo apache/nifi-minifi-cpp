@@ -58,12 +58,12 @@ core::Property PutFile::MaxDestFiles(
 core::Property PutFile::Permissions(
     core::PropertyBuilder::createProperty("Permissions")
       ->withDescription("Sets the permissions on the output file to the value of this attribute. "
-                        "Format must be format octal number (e.g. 644 or 0755). Not supported on Windows systems.")
+                        "Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.")
       ->build());
 core::Property PutFile::DirectoryPermissions(
     core::PropertyBuilder::createProperty("Directory Permissions")
       ->withDescription("Sets the permissions on the directories being created if 'Create Missing Directories' property is set. "
-                        "Format must be format octal number (e.g. 644 or 0755). Not supported on Windows systems.")
+                        "Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.")
       ->build());
 #endif
 
@@ -221,7 +221,7 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowF
 
       if (!dir_path_component.empty()) {
         logger_->log_debug("Attempting to create directory if it does not already exist: %s", dir_path);
-        if (utils::file::FileUtils::exists(dir_path) != 0) {
+        if (!utils::file::FileUtils::exists(dir_path)) {
           utils::file::FileUtils::create_dir(dir_path, false);
 #ifndef WIN32
           if (directory_permissions_.valid()) {

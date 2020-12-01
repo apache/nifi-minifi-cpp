@@ -358,7 +358,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory is required for multiple tail mode.");
     }
 
-    if (utils::file::FileUtils::is_directory(base_dir_.c_str()) == 0) {
+    if (!utils::file::FileUtils::is_directory(base_dir_.c_str())) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory does not exist or is not a directory");
     }
 
