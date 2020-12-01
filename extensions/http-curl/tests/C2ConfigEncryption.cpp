@@ -41,8 +41,6 @@ int main(int argc, char **argv) {
   harness.setUrl(args.url, &handler);
   handler.setC2RestResponse(harness.getC2RestUrl(), "configuration", "true");
 
-  const auto start = std::chrono::system_clock::now();
-
   harness.run(live_config_file, args.key_dir);
 
   auto encryptor = utils::crypto::EncryptionProvider::create(args.key_dir);

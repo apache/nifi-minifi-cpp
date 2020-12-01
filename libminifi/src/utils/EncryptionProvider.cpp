@@ -45,9 +45,9 @@ utils::optional<EncryptionProvider> EncryptionProvider::create(const std::string
   bootstrap_conf.setHome(home_path);
   bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
   return bootstrap_conf.getString(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME)
-         | utils::map([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); })
-         | utils::map(&utils::crypto::stringToBytes)
-         | utils::map([](const utils::crypto::Bytes &encryption_key_bytes) { return EncryptionProvider{encryption_key_bytes}; });
+    | utils::map([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); })
+    | utils::map(&utils::crypto::stringToBytes)
+    | utils::map([](const utils::crypto::Bytes &encryption_key_bytes) { return EncryptionProvider{encryption_key_bytes}; });
 }
 
 }  // namespace crypto
