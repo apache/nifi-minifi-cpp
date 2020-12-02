@@ -83,11 +83,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     return;
   }
 
-  {
-    std::lock_guard<std::mutex> guard(metrics_mutex_);
-    component_metrics_.clear();
-    // root_response_nodes_ was not cleared before, it is unclear if that was intentional
-  }
+  // root_response_nodes_ was not cleared before, it is unclear if that was intentional
 
   std::map<std::string, std::shared_ptr<Connection>> connections;
   if (root_ != nullptr) {
@@ -128,23 +124,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     }
   }
 
-  // get all component metrics
-  if (root_ != nullptr) {
-    std::vector<std::shared_ptr<core::Processor>> processors;
-    root_->getAllProcessors(processors);
-    for (const auto &processor : processors) {
-      auto rep = std::dynamic_pointer_cast<state::response::ResponseNodeSource>(processor);
-      // we have a metrics source.
-      if (nullptr != rep) {
-        std::vector<std::shared_ptr<state::response::ResponseNode>> metric_vector;
-        rep->getResponseNodes(metric_vector);
-        std::lock_guard<std::mutex> guard(metrics_mutex_);
-        for (auto& metric : metric_vector) {
-          component_metrics_[metric->getName()] = metric;
-        }
-      }
-    }
-  }
+  initializeComponentMetrics();
 
   loadC2ResponseConfiguration("nifi.c2.root.class.definitions");
 
@@ -152,6 +132,32 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(controller, update_sink, configuration_, filesystem_));
     c2_agent_->start();
     initialized_ = true;
+  }
+}
+
+void C2Client::initializeComponentMetrics() {
+  {
+    std::lock_guard<std::mutex> guard(metrics_mutex_);
+    component_metrics_.clear();
+  }
+
+  if (root_ == nullptr) {
+    return;
+  }
+  std::vector<std::shared_ptr<core::Processor>> processors;
+  root_->getAllProcessors(processors);
+  for (const auto &processor : processors) {
+    auto rep = std::dynamic_pointer_cast<state::response::ResponseNodeSource>(processor);
+    if (rep == nullptr) {
+      continue;
+    }
+    // we have a metrics source.
+    std::vector<std::shared_ptr<state::response::ResponseNode>> metric_vector;
+    rep->getResponseNodes(metric_vector);
+    std::lock_guard<std::mutex> guard(metrics_mutex_);
+    for (auto& metric : metric_vector) {
+      component_metrics_[metric->getName()] = metric;
+    }
   }
 }
 

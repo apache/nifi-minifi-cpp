@@ -60,6 +60,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   bool isC2Enabled() const;
 
  private:
+  void initializeComponentMetrics();
   void loadC2ResponseConfiguration(const std::string &prefix);
   std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node);
 
