@@ -39,7 +39,7 @@ X509_unique_ptr convertWindowsCertificate(const PCCERT_CONTEXT certificate) {
   return X509_unique_ptr{d2i_X509(nullptr, &certificate_binary, certificate_length)};
 }
 
-// from Shane Powell's answer at https://stackoverflow.com/questions/60180688
+// from Shane Powell's answer at https://stackoverflow.com/questions/60180688, used with permission
 EVP_PKEY_unique_ptr extractPrivateKey(const PCCERT_CONTEXT certificate) {
   HCRYPTPROV_OR_NCRYPT_KEY_HANDLE key_handle;
   DWORD key_spec = 0;
