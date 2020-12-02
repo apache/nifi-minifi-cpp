@@ -23,37 +23,29 @@
 #include "../TestBase.h"
 
 TEST_CASE("TestHaveCommonItem", "[haveCommonItem]") {
-  using Vals = std::initializer_list<std::string>;
-  struct TestCase {
-    Vals lhs;
-    Vals rhs;
-    bool result;
-  };
-  std::vector<TestCase> cases{
-    {Vals{"a"}, Vals{"a"}, true},
-    {Vals{"a"}, Vals{"a", "b"}, true},
-    {Vals{"a"}, Vals{}, false},
-    {Vals{}, Vals{"a"}, false},
-    {Vals{"a"}, Vals{"b"}, false},
-    {Vals{}, Vals{}, false}
+  auto verify = [](std::initializer_list<std::string> a, std::initializer_list<std::string> b, bool result) {
+    std::vector<std::string> v1{a};
+    std::set<std::string> s1{a};
+    std::vector<std::string> v2{b};
+    std::set<std::string> s2{b};
+    REQUIRE(utils::haveCommonItem(v1, v2) == result);
+    REQUIRE(utils::haveCommonItem(v1, s2) == result);
+    REQUIRE(utils::haveCommonItem(s1, v2) == result);
+    REQUIRE(utils::haveCommonItem(s1, s2) == result);
   };
 
-  for (const auto& test_case : cases) {
-    std::vector<std::string> v1{test_case.lhs};
-    std::set<std::string> s1{test_case.lhs};
-    std::vector<std::string> v2{test_case.rhs};
-    std::set<std::string> s2{test_case.rhs};
-    REQUIRE(utils::haveCommonItem(v1, v2) == test_case.result);
-    REQUIRE(utils::haveCommonItem(v1, s2) == test_case.result);
-    REQUIRE(utils::haveCommonItem(s1, v2) == test_case.result);
-    REQUIRE(utils::haveCommonItem(s1, s2) == test_case.result);
-  }
+  verify({"a"}, {"a"}, true);
+  verify({"a"}, {"a", "b"}, true);
+  verify({"a"}, {}, false);
+  verify({}, {"a"}, false);
+  verify({"a"}, {"b"}, false);
+  verify({}, {}, false);
 }
 
 template<typename T>
 struct MockSet : std::set<T> {
   using std::set<T>::set;
-  auto find(const T& item) const -> decltype(std::set<T>::find(item)) {
+  auto find(const T& item) const -> decltype(this->std::set<T>::find(item)) {
     on_find_();
     return std::set<T>::find(item);
   }

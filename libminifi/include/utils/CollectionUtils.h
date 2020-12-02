@@ -20,8 +20,7 @@
 #include <set>
 #include <string>
 #include <algorithm>
-
-#include "GeneralUtils.h"
+#include <utility>
 
 namespace org {
 namespace apache {
@@ -39,7 +38,7 @@ struct find_in_range {
 };
 
 template<typename T, typename Arg>
-struct find_in_range<T, Arg, void_t<decltype(std::declval<const T&>().find(std::declval<const Arg&>()))>> {
+struct find_in_range<T, Arg, decltype(std::declval<const T&>().find(std::declval<const Arg&>()), void())> {
   static auto call(const T& range, const Arg& arg) -> decltype(range.find(arg)) {
     return range.find(arg);
   }
