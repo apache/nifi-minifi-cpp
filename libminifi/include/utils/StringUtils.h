@@ -23,7 +23,7 @@
 #include <cstring>
 #include <functional>
 #ifdef WIN32
-#include <cwctype>
+  #include <cwctype>
   #include <cctype>
 #endif
 #include <algorithm>
@@ -146,16 +146,16 @@ class StringUtils {
     return std::equal(endString.rbegin(), endString.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
   }
 
-  inline static bool startsWith(const std::string &value, const std::string & startString) {
-    if (startString.size() > value.size())
+  inline static bool startsWith(const std::string& value, const std::string& start_string) {
+    if (start_string.size() > value.size())
       return false;
-    return std::equal(startString.begin(), startString.end(), value.begin());
+    return std::equal(start_string.begin(), start_string.end(), value.begin());
   }
 
-  inline static bool endsWith(const std::string &value, const std::string & endString) {
-    if (endString.size() > value.size())
+  inline static bool endsWith(const std::string& value, const std::string& end_string) {
+    if (end_string.size() > value.size())
       return false;
-    return std::equal(endString.rbegin(), endString.rend(), value.rbegin());
+    return std::equal(end_string.rbegin(), end_string.rend(), value.rbegin());
   }
 
   inline static std::string hex_ascii(const std::string& in) {

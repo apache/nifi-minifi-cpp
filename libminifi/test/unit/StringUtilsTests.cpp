@@ -176,6 +176,20 @@ TEST_CASE("TestStringUtils::endsWith", "[test endsWith]") {
   REQUIRE(!StringUtils::endsWith("abcd", "a"));
 }
 
+TEST_CASE("TestStringUtils::toBool", "[test toBool]") {
+  std::vector<std::pair<std::string, utils::optional<bool>>> cases{
+      {"", {}},
+      {"true", true},
+      {"false", false},
+      {" TrUe   ", true},
+      {"\n \r FaLsE \t", false},
+      {"not false", {}}
+  };
+  for (const auto& test_case : cases) {
+    REQUIRE(StringUtils::toBool(test_case.first) == test_case.second);
+  }
+}
+
 TEST_CASE("TestStringUtils::testHexEncode", "[test hex encode]") {
   REQUIRE("" == StringUtils::to_hex(""));
   REQUIRE("6f" == StringUtils::to_hex("o"));
