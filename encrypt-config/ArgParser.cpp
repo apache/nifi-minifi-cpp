@@ -22,6 +22,7 @@
 #include "ArgParser.h"
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
+#include "utils/CollectionUtils.h"
 #include "CommandException.h"
 
 namespace org {
@@ -43,12 +44,6 @@ const std::vector<Flag> Arguments::registered_flags_{
     {std::set<std::string>{"--encrypt-flow-config"},
      "If set, the flow configuration file (as specified in minifi.properties) is also encrypted."}
 };
-
-bool haveCommonItem(const std::set<std::string>& a, const std::set<std::string>& b) {
-  return std::any_of(a.begin(), a.end(), [&] (const std::string& item) {
-    return b.count(item) > 0;
-  });
-}
 
 std::string Arguments::getHelp() {
   std::stringstream ss;
@@ -119,7 +114,7 @@ bool Arguments::isSet(const std::string &flag) const {
   if (!opt_flag) {
     return false;
   }
-  return haveCommonItem(opt_flag->names, flags_);
+  return utils::haveCommonItem(opt_flag->names, flags_);
 }
 
 Arguments Arguments::parse(int argc, char* argv[]) {
