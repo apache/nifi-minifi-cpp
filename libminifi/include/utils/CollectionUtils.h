@@ -21,15 +21,37 @@
 #include <string>
 #include <algorithm>
 
+#include "GeneralUtils.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
 
-bool haveCommonItem(const std::set<std::string>& a, const std::set<std::string>& b) {
-  return std::any_of(a.begin(), a.end(), [&] (const std::string& item) {
-    return b.count(item) > 0;
+namespace internal {
+
+template<typename T, typename Arg, typename = void>
+struct find_in_range {
+  static auto call(const T& range, const Arg& arg) -> decltype(std::find(range.begin(), range.end(), arg)) {
+    return std::find(range.begin(), range.end(), arg);
+  }
+};
+
+template<typename T, typename Arg>
+struct find_in_range<T, Arg, void_t<decltype(std::declval<const T&>().find(std::declval<const Arg&>()))>> {
+  static auto call(const T& range, const Arg& arg) -> decltype(range.find(arg)) {
+    return range.find(arg);
+  }
+};
+
+}  // namespace internal
+
+template<typename T, typename U>
+bool haveCommonItem(const T& a, const U& b) {
+  using Item = typename T::value_type;
+  return std::any_of(a.begin(), a.end(), [&] (const Item& item) {
+    return internal::find_in_range<U, Item>::call(b, item) != b.end();
   });
 }
 
