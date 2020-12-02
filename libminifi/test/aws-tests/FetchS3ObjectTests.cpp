@@ -41,14 +41,29 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test AWS credential setting", "[aws
   setBucket();
 
   SECTION("Test property credentials") {
-    setBasicCredentials();
+    setAccesKeyCredentialsInProcessor();
+  }
+
+  SECTION("Test credentials setting from AWS Credentials service") {
+    setAccessKeyCredentialsInController();
+    setCredentialsService();
   }
 
   SECTION("Test credentials file setting") {
-    setCredentialFile();
+    setCredentialFile(s3_processor);
   }
 
-  SECTION("Test credentials setting from AWS Credential service") {
+  SECTION("Test credentials file setting from AWS Credentials service") {
+    setCredentialFile(aws_credentials_service);
+    setCredentialsService();
+  }
+
+  SECTION("Test credentials setting using default credential chain") {
+    setUseDefaultCredentialsChain(s3_processor);
+  }
+
+  SECTION("Test credentials setting from AWS Credentials service using default credential chain") {
+    setUseDefaultCredentialsChain(aws_credentials_service);
     setCredentialsService();
   }
 
@@ -62,7 +77,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test required property not set", "[
   }
 
   SECTION("Test no bucket is set") {
-    setBasicCredentials();
+    setAccesKeyCredentialsInProcessor();
   }
 
   SECTION("Test no object key is set") {
