@@ -48,7 +48,7 @@ core::Property ConsumeKafka::SecurityProtocol(core::PropertyBuilder::createPrope
   ->build());
 
 core::Property ConsumeKafka::TopicNames(core::PropertyBuilder::createProperty("Topic Names")
-  ->withDescription("The name of the Kafka Topic(s) to pull from. More than one can be supplied if comma separated.")
+  ->withDescription("The name of the Kafka Topic(s) to pull from. Multiple topic names are supported as a comma separated list.")
   ->supportsExpressionLanguage(true)
   ->build());
 
@@ -60,9 +60,9 @@ core::Property ConsumeKafka::TopicNameFormat(core::PropertyBuilder::createProper
 
 core::Property ConsumeKafka::HonorTransactions(core::PropertyBuilder::createProperty("Honor Transactions")
   ->withDescription(
-      "Specifies whether or not NiFi should honor transactional guarantees when communicating with Kafka. If false, the Processor will use an \"isolation level\" of "
+      "Specifies whether or not MiNiFi should honor transactional guarantees when communicating with Kafka. If false, the Processor will use an \"isolation level\" of "
       "read_uncomitted. This means that messages will be received as soon as they are written to Kafka but will be pulled, even if the producer cancels the transactions. "
-      "If this value is true, NiFi will not receive any messages for which the producer's transaction was canceled, but this can result in some latency since the consumer "
+      "If this value is true, MiNiFi will not receive any messages for which the producer's transaction was canceled, but this can result in some latency since the consumer "
       "must wait for the producer to finish its entire transaction instead of pulling as the messages become available.")
   ->withDefaultValue<bool>(true)
   ->isRequired(true)
