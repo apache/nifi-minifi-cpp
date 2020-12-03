@@ -45,10 +45,10 @@ using X509_unique_ptr = std::unique_ptr<X509, X509_deleter>;
 
 #ifdef WIN32
 // Returns nullptr on errors
-X509_unique_ptr convertWindowsCertificate(const PCCERT_CONTEXT certificate);
+X509_unique_ptr convertWindowsCertificate(PCCERT_CONTEXT certificate);
 
 // Returns nullptr if the certificate has no associated private key, or the private key could not be extracted
-EVP_PKEY_unique_ptr extractPrivateKey(const PCCERT_CONTEXT certificate);
+EVP_PKEY_unique_ptr extractPrivateKey(PCCERT_CONTEXT certificate);
 #endif  // WIN32
 
 }  // namespace tls
