@@ -34,4 +34,4 @@ def test_filter_zero_file():
     with DockerTestCluster(NoFileOutPutValidator()) as cluster:
         cluster.deploy_flow(recv_flow, name='nifi', engine='nifi')
         cluster.deploy_flow(send_flow)
-        assert cluster.check_output(60)
+        assert cluster.check_output(120)

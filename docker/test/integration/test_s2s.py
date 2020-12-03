@@ -37,4 +37,4 @@ def test_minifi_to_nifi():
         cluster.deploy_flow(recv_flow, name='nifi', engine='nifi')
         cluster.deploy_flow(send_flow)
 
-        assert cluster.check_output(60)
+        assert cluster.check_output(120)
