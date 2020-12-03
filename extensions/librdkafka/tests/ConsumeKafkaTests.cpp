@@ -23,8 +23,7 @@
 #include <string>
 #include <set>
 
-// #include "TestBase.h"
-#include "../../../libminifi/test/TestBase.h"
+#include "TestBase.h"
 
 #include "../ConsumeKafka.h"
 #include "../rdkafka_utils.h"
@@ -55,7 +54,6 @@ class KafkaTestProducer {
     std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf = { rd_kafka_conf_new(), utils::rd_kafka_conf_deleter() };
 
     setKafkaConfigurationField(conf.get(), "bootstrap.servers", kafka_brokers);
-    // setKafkaConfigurationField(conf.get(), "client.id", PRODUCER_CLIENT_NAME);
     setKafkaConfigurationField(conf.get(), "compression.codec", "snappy");
     setKafkaConfigurationField(conf.get(), "batch.num.messages", "1");
 
