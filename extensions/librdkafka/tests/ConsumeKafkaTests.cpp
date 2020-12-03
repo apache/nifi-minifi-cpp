@@ -463,10 +463,10 @@ TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "ConsumeKafka parses and uses kafka
     single_consumer_with_plain_text_test(true, false, {}, messages_on_topic, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", "PLAINTEXT", topic_names, topic_name_format, {}, "test_group_id", {}, {}, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
   };
   run_tests({ "Ulysses",              "James Joyce"         }, "ConsumeKafkaTest",         {});
-  run_tests({ "The Great Gatsby",     "F. Scott Fitzgerald" }, "ConsumeKafkaTest",         "names");
-  run_tests({ "War and Peace",        "Lev Tolstoy"         }, "a,b,c,ConsumeKafkaTest,d", "names");
-  run_tests({ "Nineteen Eighty Four", "George Orwell"       }, "ConsumeKafkaTest",         "pattern");
-  run_tests({ "Hamlet",               "William Shakespeare" }, "Cons[emu]*KafkaTest",      "pattern");
+  run_tests({ "The Great Gatsby",     "F. Scott Fitzgerald" }, "ConsumeKafkaTest",         ConsumeKafka::TOPIC_FORMAT_NAMES);
+  run_tests({ "War and Peace",        "Lev Tolstoy"         }, "a,b,c,ConsumeKafkaTest,d", ConsumeKafka::TOPIC_FORMAT_NAMES);
+  run_tests({ "Nineteen Eighty Four", "George Orwell"       }, "ConsumeKafkaTest",         ConsumeKafka::TOPIC_FORMAT_PATTERNS);
+  run_tests({ "Hamlet",               "William Shakespeare" }, "Cons[emu]*KafkaTest",      ConsumeKafka::TOPIC_FORMAT_PATTERNS);
 }
 
 TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Offsets are reset to the latest when a consumer starts with non-processed messages.", "[ConsumeKafka][Kafka][OffsetReset]") {

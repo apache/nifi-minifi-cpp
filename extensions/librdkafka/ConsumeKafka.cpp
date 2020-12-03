@@ -33,6 +33,9 @@ namespace processors {
 constexpr const std::size_t ConsumeKafka::DEFAULT_MAX_POLL_RECORDS;
 constexpr char const* ConsumeKafka::DEFAULT_MAX_POLL_TIME;
 
+constexpr char const* ConsumeKafka::TOPIC_FORMAT_NAMES;
+constexpr char const* ConsumeKafka::TOPIC_FORMAT_PATTERNS;
+
 core::Property ConsumeKafka::KafkaBrokers(core::PropertyBuilder::createProperty("Kafka Brokers")
   ->withDescription("A comma-separated list of known Kafka Brokers in the format <host>:<port>.")
   ->withDefaultValue("localhost:9092", core::StandardValidators::get().NON_BLANK_VALIDATOR)
@@ -234,7 +237,7 @@ void ConsumeKafka::createTopicPartitionList() {
   kf_topic_partition_list_ = { rd_kafka_topic_partition_list_new(topic_names_.size()), utils::rd_kafka_topic_partition_list_deleter() };
 
   // On subscriptions any topics prefixed with ^ will be regex matched
-  if (topic_name_format_ == "pattern") {
+  if (utils::StringUtils::equalsIgnoreCase(TOPIC_FORMAT_PATTERNS, topic_name_format_)) {
     for (const std::string& topic : topic_names_) {
       const std::string regex_format = "^" + topic;
       rd_kafka_topic_partition_list_add(kf_topic_partition_list_.get(), regex_format.c_str(), RD_KAFKA_PARTITION_UA);
