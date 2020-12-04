@@ -18,6 +18,9 @@
 function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     message("Using bundled civetweb")
 
+    # Define patch step
+    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/civetweb/civetweb.patch")
+
     # Define byproducts
     if (WIN32)
         set(SUFFIX "lib")
@@ -61,6 +64,7 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
             SOURCE_DIR "${BINARY_DIR}/thirdparty/civetweb-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${CIVETWEB_CMAKE_ARGS}
+            PATCH_COMMAND ${PC}
             BUILD_BYPRODUCTS "${CIVETWEB_LIBRARIES_LIST}"
             EXCLUDE_FROM_ALL TRUE
     )
