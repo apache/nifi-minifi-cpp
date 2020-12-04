@@ -82,8 +82,8 @@ ExtendedKeyUsage::ExtendedKeyUsage(const std::string& key_usage_str) : ExtendedK
   }
 }
 
-bool operator<=(const ExtendedKeyUsage& left, const ExtendedKeyUsage& right) {
-  return (left.bits_ & right.bits_) == left.bits_;
+bool ExtendedKeyUsage::isSubsetOf(const ExtendedKeyUsage& other) const {
+  return (bits_ & other.bits_) == bits_;
 }
 
 bool operator==(const ExtendedKeyUsage& left, const ExtendedKeyUsage& right) {

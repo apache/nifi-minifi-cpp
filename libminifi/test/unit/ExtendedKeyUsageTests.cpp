@@ -62,46 +62,46 @@ utils::tls::EXTENDED_KEY_USAGE_unique_ptr createExtendedKeyUsage(const std::vect
   return key_usage;
 }
 
-void testLessThanOrEqual(
+void testIsSubsetOf(
     const utils::tls::ExtendedKeyUsage key_usage_empty,
     const utils::tls::ExtendedKeyUsage key_usage_clientauth,
     const utils::tls::ExtendedKeyUsage key_usage_clientauth_serverauth,
     const utils::tls::ExtendedKeyUsage key_usage_clientauth_serverauth_codesigning,
     const utils::tls::ExtendedKeyUsage key_usage_clientauth_serverauth_timestamping) {
-  REQUIRE(key_usage_empty <= key_usage_empty);
-  REQUIRE(key_usage_empty <= key_usage_clientauth);
-  REQUIRE(key_usage_empty <= key_usage_clientauth_serverauth);
-  REQUIRE(key_usage_empty <= key_usage_clientauth_serverauth_codesigning);
-  REQUIRE(key_usage_empty <= key_usage_clientauth_serverauth_timestamping);
+  REQUIRE(key_usage_empty.isSubsetOf(key_usage_empty));
+  REQUIRE(key_usage_empty.isSubsetOf(key_usage_clientauth));
+  REQUIRE(key_usage_empty.isSubsetOf(key_usage_clientauth_serverauth));
+  REQUIRE(key_usage_empty.isSubsetOf(key_usage_clientauth_serverauth_codesigning));
+  REQUIRE(key_usage_empty.isSubsetOf(key_usage_clientauth_serverauth_timestamping));
 
-  REQUIRE_FALSE(key_usage_clientauth <= key_usage_empty);
-  REQUIRE(key_usage_clientauth <= key_usage_clientauth);
-  REQUIRE(key_usage_clientauth <= key_usage_clientauth_serverauth);
-  REQUIRE(key_usage_clientauth <= key_usage_clientauth_serverauth_codesigning);
-  REQUIRE(key_usage_clientauth <= key_usage_clientauth_serverauth_timestamping);
+  REQUIRE_FALSE(key_usage_clientauth.isSubsetOf(key_usage_empty));
+  REQUIRE(key_usage_clientauth.isSubsetOf(key_usage_clientauth));
+  REQUIRE(key_usage_clientauth.isSubsetOf(key_usage_clientauth_serverauth));
+  REQUIRE(key_usage_clientauth.isSubsetOf(key_usage_clientauth_serverauth_codesigning));
+  REQUIRE(key_usage_clientauth.isSubsetOf(key_usage_clientauth_serverauth_timestamping));
 
-  REQUIRE_FALSE(key_usage_clientauth_serverauth <= key_usage_empty);
-  REQUIRE_FALSE(key_usage_clientauth_serverauth <= key_usage_clientauth);
-  REQUIRE(key_usage_clientauth_serverauth <= key_usage_clientauth_serverauth);
-  REQUIRE(key_usage_clientauth_serverauth <= key_usage_clientauth_serverauth_codesigning);
-  REQUIRE(key_usage_clientauth_serverauth <= key_usage_clientauth_serverauth_timestamping);
+  REQUIRE_FALSE(key_usage_clientauth_serverauth.isSubsetOf(key_usage_empty));
+  REQUIRE_FALSE(key_usage_clientauth_serverauth.isSubsetOf(key_usage_clientauth));
+  REQUIRE(key_usage_clientauth_serverauth.isSubsetOf(key_usage_clientauth_serverauth));
+  REQUIRE(key_usage_clientauth_serverauth.isSubsetOf(key_usage_clientauth_serverauth_codesigning));
+  REQUIRE(key_usage_clientauth_serverauth.isSubsetOf(key_usage_clientauth_serverauth_timestamping));
 
-  REQUIRE_FALSE(key_usage_clientauth_serverauth_codesigning <= key_usage_empty);
-  REQUIRE_FALSE(key_usage_clientauth_serverauth_codesigning <= key_usage_clientauth);
-  REQUIRE_FALSE(key_usage_clientauth_serverauth_codesigning <= key_usage_clientauth_serverauth);
-  REQUIRE(key_usage_clientauth_serverauth_codesigning <= key_usage_clientauth_serverauth_codesigning);
-  REQUIRE_FALSE(key_usage_clientauth_serverauth_codesigning <= key_usage_clientauth_serverauth_timestamping);
+  REQUIRE_FALSE(key_usage_clientauth_serverauth_codesigning.isSubsetOf(key_usage_empty));
+  REQUIRE_FALSE(key_usage_clientauth_serverauth_codesigning.isSubsetOf(key_usage_clientauth));
+  REQUIRE_FALSE(key_usage_clientauth_serverauth_codesigning.isSubsetOf(key_usage_clientauth_serverauth));
+  REQUIRE(key_usage_clientauth_serverauth_codesigning.isSubsetOf(key_usage_clientauth_serverauth_codesigning));
+  REQUIRE_FALSE(key_usage_clientauth_serverauth_codesigning.isSubsetOf(key_usage_clientauth_serverauth_timestamping));
 
-  REQUIRE_FALSE(key_usage_clientauth_serverauth_timestamping <= key_usage_empty);
-  REQUIRE_FALSE(key_usage_clientauth_serverauth_timestamping <= key_usage_clientauth);
-  REQUIRE_FALSE(key_usage_clientauth_serverauth_timestamping <= key_usage_clientauth_serverauth);
-  REQUIRE_FALSE(key_usage_clientauth_serverauth_timestamping <= key_usage_clientauth_serverauth_codesigning);
-  REQUIRE(key_usage_clientauth_serverauth_timestamping <= key_usage_clientauth_serverauth_timestamping);
+  REQUIRE_FALSE(key_usage_clientauth_serverauth_timestamping.isSubsetOf(key_usage_empty));
+  REQUIRE_FALSE(key_usage_clientauth_serverauth_timestamping.isSubsetOf(key_usage_clientauth));
+  REQUIRE_FALSE(key_usage_clientauth_serverauth_timestamping.isSubsetOf(key_usage_clientauth_serverauth));
+  REQUIRE_FALSE(key_usage_clientauth_serverauth_timestamping.isSubsetOf(key_usage_clientauth_serverauth_codesigning));
+  REQUIRE(key_usage_clientauth_serverauth_timestamping.isSubsetOf(key_usage_clientauth_serverauth_timestamping));
 }
 
 }  // namespace
 
-TEST_CASE("ExtendedKeyUsage can be created from an ASN.1 structure", "[constructor][less_than_or_equal]") {
+TEST_CASE("ExtendedKeyUsage can be created from an ASN.1 structure", "[constructor][isSubsetOf]") {
   utils::tls::EXTENDED_KEY_USAGE_unique_ptr key_usage_ptr_empty = createExtendedKeyUsage({});
   utils::tls::EXTENDED_KEY_USAGE_unique_ptr key_usage_ptr_clientauth = createExtendedKeyUsage({2});
   utils::tls::EXTENDED_KEY_USAGE_unique_ptr key_usage_ptr_clientauth_serverauth = createExtendedKeyUsage({2, 1});
@@ -114,14 +114,14 @@ TEST_CASE("ExtendedKeyUsage can be created from an ASN.1 structure", "[construct
   utils::tls::ExtendedKeyUsage key_usage_clientauth_serverauth_codesigning{*key_usage_ptr_clientauth_serverauth_codesigning};
   utils::tls::ExtendedKeyUsage key_usage_clientauth_serverauth_timestamping{*key_usage_ptr_clientauth_serverauth_timestamping};
 
-  testLessThanOrEqual(key_usage_empty,
-                      key_usage_clientauth,
-                      key_usage_clientauth_serverauth,
-                      key_usage_clientauth_serverauth_codesigning,
-                      key_usage_clientauth_serverauth_timestamping);
+  testIsSubsetOf(key_usage_empty,
+                 key_usage_clientauth,
+                 key_usage_clientauth_serverauth,
+                 key_usage_clientauth_serverauth_codesigning,
+                 key_usage_clientauth_serverauth_timestamping);
 }
 
-TEST_CASE("ExtendedKeyUsage can be created from list of usage strings", "[constructor][less_than_or_equal]") {
+TEST_CASE("ExtendedKeyUsage can be created from list of usage strings", "[constructor][isSubsetOf]") {
   constexpr const char* key_usage_str_empty = "";
   constexpr const char* key_usage_str_clientauth = "Client Authentication";
   constexpr const char* key_usage_str_clientauth_serverauth = "Client Authentication, Server Authentication";
@@ -134,11 +134,11 @@ TEST_CASE("ExtendedKeyUsage can be created from list of usage strings", "[constr
   utils::tls::ExtendedKeyUsage key_usage_clientauth_serverauth_codesigning{key_usage_str_clientauth_serverauth_codesigning};
   utils::tls::ExtendedKeyUsage key_usage_clientauth_serverauth_timestamping{key_usage_str_clientauth_serverauth_timestamping};
 
-  testLessThanOrEqual(key_usage_empty,
-                      key_usage_clientauth,
-                      key_usage_clientauth_serverauth,
-                      key_usage_clientauth_serverauth_codesigning,
-                      key_usage_clientauth_serverauth_timestamping);
+  testIsSubsetOf(key_usage_empty,
+                 key_usage_clientauth,
+                 key_usage_clientauth_serverauth,
+                 key_usage_clientauth_serverauth_codesigning,
+                 key_usage_clientauth_serverauth_timestamping);
 }
 
 TEST_CASE("ExtendedKeyUsage created from ASN.1 and string are identical", "[constructor][equal]") {

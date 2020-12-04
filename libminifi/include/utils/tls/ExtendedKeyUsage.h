@@ -44,7 +44,8 @@ class ExtendedKeyUsage {
   explicit ExtendedKeyUsage(const EXTENDED_KEY_USAGE& key_usage_asn1);
   explicit ExtendedKeyUsage(const std::string& key_usage_str);
 
-  friend bool operator<=(const ExtendedKeyUsage& left, const ExtendedKeyUsage& right);
+  bool isSubsetOf(const ExtendedKeyUsage& other) const;
+
   friend bool operator==(const ExtendedKeyUsage& left, const ExtendedKeyUsage& right);
   friend bool operator!=(const ExtendedKeyUsage& left, const ExtendedKeyUsage& right);
 
