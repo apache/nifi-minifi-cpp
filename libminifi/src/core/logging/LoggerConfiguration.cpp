@@ -33,6 +33,7 @@
 #include "utils/ClassUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
+#include "core/logging/CompressedLogSink.h"
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
@@ -60,6 +61,25 @@ namespace logging {
 
 const char* LoggerConfiguration::spdlog_default_pattern = "[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v";
 
+utils::optional<spdlog::level::level_enum> parse_log_level(const std::string& level_name) {
+  if (utils::StringUtils::equalsIgnoreCase(level_name, "trace")) {
+    return spdlog::level::trace;
+  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "debug")) {
+    return spdlog::level::debug;
+  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "info")) {
+    return spdlog::level::info;
+  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "warn")) {
+    return spdlog::level::warn;
+  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "error")) {
+    return spdlog::level::err;
+  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "critical")) {
+    return spdlog::level::critical;
+  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "off")) {
+    return spdlog::level::off;
+  }
+  return {};
+}
+
 std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &type) {
   std::vector<std::string> appenders;
   std::string prefix = type + ".";
@@ -85,6 +105,9 @@ LoggerConfiguration::LoggerConfiguration()
 void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &logger_properties) {
   std::lock_guard<std::mutex> lock(mutex);
   root_namespace_ = initialize_namespaces(logger_properties);
+  auto compressed_sink = std::make_shared<internal::CompressedLogSink>(8 * 1024);
+  root_namespace_->sinks.push_back(compressed_sink);
+  compressed_sink_ = compressed_sink;
   std::string spdlog_pattern;
   if (!logger_properties->getString("spdlog.pattern", spdlog_pattern)) {
     spdlog_pattern = spdlog_default_pattern;
@@ -207,19 +230,9 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       std::string level_name = utils::StringUtils::trim(segment);
       if (first) {
         first = false;
-        std::transform(level_name.begin(), level_name.end(), level_name.begin(), ::tolower);
-        if ("trace" == level_name) {
-          level = spdlog::level::trace;
-        } else if ("debug" == level_name) {
-          level = spdlog::level::debug;
-        } else if ("warn" == level_name) {
-          level = spdlog::level::warn;
-        } else if ("critical" == level_name) {
-          level = spdlog::level::critical;
-        } else if ("error" == level_name) {
-          level = spdlog::level::err;
-        } else if ("off" == level_name) {
-          level = spdlog::level::off;
+        auto opt_level = parse_log_level(level_name);
+        if (opt_level) {
+          level = *opt_level;
         }
       } else {
         sinks.push_back(sink_map[level_name]);

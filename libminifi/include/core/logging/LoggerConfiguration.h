@@ -35,8 +35,11 @@
 #include "spdlog/pattern_formatter.h"
 
 #include "core/Core.h"
+#include "io/InputStream.h"
 #include "core/logging/Logger.h"
 #include "properties/Properties.h"
+#include "internal/CompressedLogSink.h"
+#include "utils/AtomicSharedPtr.h"
 
 namespace org {
 namespace apache {
@@ -116,6 +119,11 @@ class LoggerConfiguration {
   bool shortenClassNames() const {
     return shorten_names_;
   }
+
+  std::unique_ptr<io::InputStream> getCompressedContent() const {
+    auto compressed_sink = compressed_sink_.load();
+    return compressed_sink->getContent();
+  }
   /**
    * (Re)initializes the logging configuation with the given logger properties.
    */
@@ -154,6 +162,7 @@ class LoggerConfiguration {
   };
 
   LoggerConfiguration();
+  utils::AtomicSharedPtr<internal::CompressedLogSink> compressed_sink_;
   std::shared_ptr<internal::LoggerNamespace> root_namespace_;
   std::vector<std::shared_ptr<LoggerImpl>> loggers;
   std::shared_ptr<spdlog::formatter> formatter_;

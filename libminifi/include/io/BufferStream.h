@@ -43,6 +43,10 @@ class BufferStream : public BaseStream {
     write(reinterpret_cast<const uint8_t*>(data.c_str()), gsl::narrow<int>(data.length()));
   }
 
+  void reserve(size_t byte_count) {
+    buffer_.reserve(byte_count);
+  }
+
   using BaseStream::read;
   using BaseStream::write;
 
