@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,11 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "properties/Decryptor.h"
 
+#include <string>
+#include "utils/EncryptionProvider.h"
 #include "properties/Properties.h"
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace utils {
+namespace crypto {
 
 namespace {
 
@@ -33,22 +40,19 @@ constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sens
 
 }  // namespace
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-
-utils::optional<minifi::Decryptor> Decryptor::create(const std::string& minifi_home) {
+utils::optional<EncryptionProvider> EncryptionProvider::create(const std::string& home_path) {
   minifi::Properties bootstrap_conf;
-  bootstrap_conf.setHome(minifi_home);
+  bootstrap_conf.setHome(home_path);
   bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
   return bootstrap_conf.getString(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME)
-      | utils::map([](const std::string& encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); })
-      | utils::map(&utils::crypto::stringToBytes)
-      | utils::map([](const utils::crypto::Bytes& encryption_key_bytes) { return minifi::Decryptor{encryption_key_bytes}; });
+    | utils::map([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); })
+    | utils::map(&utils::crypto::stringToBytes)
+    | utils::map([](const utils::crypto::Bytes &encryption_key_bytes) { return EncryptionProvider{encryption_key_bytes}; });
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace crypto
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

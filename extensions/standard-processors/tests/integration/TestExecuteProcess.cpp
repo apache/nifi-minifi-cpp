@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::shared_ptr<TestRepository> repo =
       std::static_pointer_cast<TestRepository>(test_repo);
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<
-      TestFlowController>(test_repo, test_repo, content_repo);
+  std::shared_ptr<minifi::FlowController> controller =
+      std::make_shared<TestFlowController>(test_repo, test_repo, content_repo);
 
   utils::Identifier processoruuid = processor->getUUID();
   assert(processoruuid);

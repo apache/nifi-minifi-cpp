@@ -17,39 +17,57 @@
 #pragma once
 
 #include <string>
-#include <utility>
-
-#include "utils/EncryptionUtils.h"
+#include <set>
+#include <vector>
+#include <map>
 #include "utils/OptionalUtils.h"
-#include "utils/EncryptionProvider.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace encrypt_config {
 
-class Decryptor {
- public:
-  explicit Decryptor(utils::crypto::EncryptionProvider provider)
-      : provider_(std::move(provider)) {}
-
-  static bool isValidEncryptionMarker(const utils::optional<std::string>& encryption_marker) {
-    return encryption_marker && *encryption_marker == utils::crypto::EncryptionType::name();
-  }
-
-  std::string decrypt(const std::string& encrypted_text) const {
-    return provider_.decrypt(encrypted_text);
-  }
-
-  static utils::optional<Decryptor> create(const std::string& minifi_home) {
-    return utils::crypto::EncryptionProvider::create(minifi_home)
-        | utils::map([](const utils::crypto::EncryptionProvider& provider) {return Decryptor{provider};});
-  }
-
- private:
-  const utils::crypto::EncryptionProvider provider_;
+struct Argument {
+  std::set<std::string> names;
+  bool required;
+  std::string value_name;
+  std::string description;
 };
 
+struct Flag {
+  std::set<std::string> names;
+  std::string description;
+};
+
+class Arguments {
+  static const std::vector<Argument> registered_args_;
+  static const std::vector<Flag> registered_flags_;
+
+  void set(const std::string& key, const std::string& value);
+
+  void set(const std::string& bool_key);
+
+  static utils::optional<Argument> getArg(const std::string& key);
+  static utils::optional<Flag> getFlag(const std::string& flag);
+
+ public:
+  static Arguments parse(int argc, char* argv[]);
+
+  static std::string getHelp();
+
+  utils::optional<std::string> get(const std::string& key) const;
+
+  bool isSet(const std::string& flag) const;
+
+ private:
+  utils::optional<std::string> get(const Argument& key) const;
+
+  std::map<std::string, std::string> args_;
+  std::set<std::string> flags_;
+};
+
+}  // namespace encrypt_config
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

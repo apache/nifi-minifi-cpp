@@ -150,6 +150,46 @@ TEST_CASE("TestStringUtils::trim", "[test trim]") {
   REQUIRE("foobar\n\t " == StringUtils::trimLeft(" \n\tfoobar\n\t "));
 }
 
+TEST_CASE("TestStringUtils::startsWith", "[test startsWith]") {
+  REQUIRE(StringUtils::startsWith("abcd", ""));
+  REQUIRE(StringUtils::startsWith("abcd", "a"));
+  REQUIRE(StringUtils::startsWith("abcd", "abcd"));
+  REQUIRE(StringUtils::startsWith("abcd", "abc"));
+  REQUIRE(!StringUtils::startsWith("abcd", "abcde"));
+
+  REQUIRE(StringUtils::startsWith("", ""));
+  REQUIRE(!StringUtils::startsWith("", "abcd"));
+  REQUIRE(!StringUtils::startsWith("abcd", "b"));
+  REQUIRE(!StringUtils::startsWith("abcd", "d"));
+}
+
+TEST_CASE("TestStringUtils::endsWith", "[test endsWith]") {
+  REQUIRE(StringUtils::endsWith("abcd", ""));
+  REQUIRE(StringUtils::endsWith("abcd", "d"));
+  REQUIRE(StringUtils::endsWith("abcd", "abcd"));
+  REQUIRE(StringUtils::endsWith("abcd", "bcd"));
+  REQUIRE(!StringUtils::endsWith("abcd", "1abcd"));
+
+  REQUIRE(StringUtils::endsWith("", ""));
+  REQUIRE(!StringUtils::endsWith("", "abcd"));
+  REQUIRE(!StringUtils::endsWith("abcd", "c"));
+  REQUIRE(!StringUtils::endsWith("abcd", "a"));
+}
+
+TEST_CASE("TestStringUtils::toBool", "[test toBool]") {
+  std::vector<std::pair<std::string, utils::optional<bool>>> cases{
+      {"", {}},
+      {"true", true},
+      {"false", false},
+      {" TrUe   ", true},
+      {"\n \r FaLsE \t", false},
+      {"not false", {}}
+  };
+  for (const auto& test_case : cases) {
+    REQUIRE(StringUtils::toBool(test_case.first) == test_case.second);
+  }
+}
+
 TEST_CASE("TestStringUtils::testHexEncode", "[test hex encode]") {
   REQUIRE("" == StringUtils::to_hex(""));
   REQUIRE("6f" == StringUtils::to_hex("o"));

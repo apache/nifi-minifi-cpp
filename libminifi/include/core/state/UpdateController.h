@@ -206,7 +206,7 @@ class StateMonitor : public StateController {
    * < 0 is an error code
    * 0 is success
    */
-  virtual int16_t applyUpdate(const std::string & source, const std::string &configuration) = 0;
+  virtual int16_t applyUpdate(const std::string & source, const std::string &configuration, bool persist = false) = 0;
 
   /**
    * Apply an update that the agent must decode. This is useful for certain operations

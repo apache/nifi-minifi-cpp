@@ -31,6 +31,7 @@
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
 #include "HTTPUtils.h"
+#include "utils/OptionalUtils.h"
 
 class IntegrationBase {
  public:
@@ -38,7 +39,7 @@ class IntegrationBase {
 
   virtual ~IntegrationBase() = default;
 
-  virtual void run(std::string test_file_location);
+  virtual void run(const std::string& test_file_location, const utils::optional<std::string>& bootstrap_file = {});
 
   void setKeyDir(const std::string key_dir) {
     this->key_dir = key_dir;
@@ -49,6 +50,10 @@ class IntegrationBase {
 
   virtual void shutdownBeforeFlowController() {
 
+  }
+
+  const std::shared_ptr<minifi::Configure>& getConfiguration() const {
+    return configuration;
   }
 
   virtual void cleanup() = 0;
@@ -96,7 +101,7 @@ void IntegrationBase::configureSecurity() {
   }
 }
 
-void IntegrationBase::run(std::string test_file_location) {
+void IntegrationBase::run(const std::string& test_file_location, const utils::optional<std::string>& home_path) {
   testSetup();
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -110,23 +115,33 @@ void IntegrationBase::run(std::string test_file_location) {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
-  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
+  bool should_encrypt_flow_config = (configuration->get(minifi::Configure::nifi_flow_configuration_encrypt)
+                                     | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
 
-  auto controller_service_provider = yaml_ptr->getControllerServiceProvider();
+  std::shared_ptr<utils::file::FileSystem> filesystem;
+  if (home_path) {
+    filesystem = std::make_shared<utils::file::FileSystem>(
+        should_encrypt_flow_config,
+        utils::crypto::EncryptionProvider::create(*home_path));
+  } else {
+    filesystem = std::make_shared<utils::file::FileSystem>();
+  }
+
+  std::unique_ptr<core::FlowConfiguration> flow_config = std::unique_ptr<core::YamlConfiguration>(
+      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location, filesystem));
+
+  auto controller_service_provider = flow_config->getControllerServiceProvider();
   char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";
   state_dir = utils::file::FileUtils::create_temp_directory(state_dir_name_template);
   core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_service_provider.get(), configuration, state_dir.c_str());
 
-  std::shared_ptr<core::ProcessGroup> pg(yaml_config.getRoot(test_file_location));
+  std::shared_ptr<core::ProcessGroup> pg(flow_config->getRoot());
   queryRootProcessGroup(pg);
 
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
-  flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
-                                                                                                true);
+  flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(flow_config), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
   flowController_->load();
   updateProperties(flowController_);
   flowController_->start();

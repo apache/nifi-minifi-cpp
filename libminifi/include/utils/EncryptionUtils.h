@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include "utils/OptionalUtils.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -42,6 +44,11 @@ struct EncryptionType {
   static size_t nonceLength();
   static size_t macLength();
   static std::string separator();
+};
+
+struct EncryptedData {
+  Bytes nonce;
+  Bytes ciphertext_plus_mac;
 };
 
 /**
@@ -100,6 +107,14 @@ Bytes decryptRaw(const Bytes& input, const Bytes& key, const Bytes& nonce);
  * * returns the decrypted plaintext.
  */
 std::string decrypt(const std::string& input, const Bytes& key);
+
+/**
+ * Checks if the input of the form nonce + EncryptionType::separator() + ciphertext_plus_MAC,
+ * indicating that it is most likely encrypted.
+ */
+bool isEncrypted(const std::string& input);
+
+EncryptedData parseEncrypted(const std::string& input);
 
 }  // namespace crypto
 }  // namespace utils

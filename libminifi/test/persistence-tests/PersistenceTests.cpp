@@ -166,7 +166,8 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   content_repo->initialize(config);
 
   auto flowConfig = std::unique_ptr<core::FlowConfiguration>{new core::FlowConfiguration(prov_repo, ff_repository, content_repo, nullptr, config, "")};
-  auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", true);
+  auto flowController = std::make_shared<minifi::FlowController>(
+      prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", true);
 
   {
     TestFlow flow(ff_repository, content_repo, prov_repo, setupMergeProcessor, MergeContent::Merge);
@@ -279,7 +280,8 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   content_repo->initialize(config);
 
   auto flowConfig = std::unique_ptr<core::FlowConfiguration>{new core::FlowConfiguration(prov_repo, ff_repository, content_repo, nullptr, config, "")};
-  auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", true);
+  auto flowController = std::make_shared<minifi::FlowController>(
+      prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", true);
 
   {
     TestFlow flow(ff_repository, content_repo, prov_repo, setupContentUpdaterProcessor, {"success", "d"});

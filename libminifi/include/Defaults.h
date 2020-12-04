@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,21 +15,18 @@
  * limitations under the License.
  */
 
-#include <memory>
+#pragma once
 
-#include "core/ConfigurationFactory.h"
-#include "core/Core.h"
-#include "core/RepositoryFactory.h"
-
-TEST_CASE("NoYamlSupport1", "[NoYamlSupport1]") {
-  std::shared_ptr<core::Repository> prov_repo = core::createRepository(
-      "provenancerepository", true);
-  REQUIRE(nullptr != prov_repo);
-  std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(
-      core::createFlowConfiguration(
-          prov_repo, prov_repo, std::make_shared<minifi::Configure>(), std::make_shared<minifi::io::StreamFactory>(false),
-          "yamlconfiguration"));
-
-  REQUIRE(nullptr != flow_configuration);
-}
-
+#ifdef WIN32
+#define DEFAULT_NIFI_CONFIG_YML "\\conf\\config.yml"
+#define DEFAULT_NIFI_PROPERTIES_FILE "\\conf\\minifi.properties"
+#define DEFAULT_LOG_PROPERTIES_FILE "\\conf\\minifi-log.properties"
+#define DEFAULT_UID_PROPERTIES_FILE "\\conf\\minifi-uid.properties"
+#define DEFAULT_BOOTSTRAP_FILE "\\conf\\bootstrap.conf"
+#else
+#define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
+#define DEFAULT_NIFI_PROPERTIES_FILE "./conf/minifi.properties"
+#define DEFAULT_LOG_PROPERTIES_FILE "./conf/minifi-log.properties"
+#define DEFAULT_UID_PROPERTIES_FILE "./conf/minifi-uid.properties"
+#define DEFAULT_BOOTSTRAP_FILE "./conf/bootstrap.conf"
+#endif

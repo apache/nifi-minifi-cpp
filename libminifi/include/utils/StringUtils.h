@@ -33,6 +33,7 @@
 #include <type_traits>
 #include "utils/FailurePolicy.h"
 #include "utils/GeneralUtils.h"
+#include "utils/OptionalUtils.h"
 
 #if defined(WIN32) || (__cplusplus >= 201103L && (!defined(__GLIBCXX__) || (__cplusplus >= 201402L) ||  (defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE > 4)))
 #define HAVE_REGEX_CPP 1
@@ -80,6 +81,8 @@ class StringUtils {
    */
   static bool StringToBool(std::string input, bool &output);
 
+  static utils::optional<bool> toBool(const std::string& input);
+
   // Trim String utils
 
   /**
@@ -87,7 +90,7 @@ class StringUtils {
    * @param s incoming string
    * @returns modified string
    */
-  static std::string trim(std::string s);
+  static std::string trim(const std::string& s);
 
   /**
    * Trims left most part of a string
@@ -143,10 +146,16 @@ class StringUtils {
     return std::equal(endString.rbegin(), endString.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
   }
 
-  inline static bool endsWith(const std::string &value, const std::string & endString) {
-    if (endString.size() > value.size())
+  inline static bool startsWith(const std::string& value, const std::string& start_string) {
+    if (start_string.size() > value.size())
       return false;
-    return std::equal(endString.rbegin(), endString.rend(), value.rbegin());
+    return std::equal(start_string.begin(), start_string.end(), value.begin());
+  }
+
+  inline static bool endsWith(const std::string& value, const std::string& end_string) {
+    if (end_string.size() > value.size())
+      return false;
+    return std::equal(end_string.rbegin(), end_string.rend(), value.rbegin());
   }
 
   inline static std::string hex_ascii(const std::string& in) {
@@ -173,68 +182,68 @@ class StringUtils {
   static size_t size(const CharT* str) noexcept { return std::char_traits<CharT>::length(str); }
 
   struct detail {
-  // add all args
-  template<typename... SizeT>
-  static size_t sum(SizeT... ns) {
-    size_t result = 0;
-    (void)(std::initializer_list<size_t>{( result += ns )...});
-    return result;  // (ns + ...)
-  }
+    // add all args
+    template<typename... SizeT>
+    static size_t sum(SizeT... ns) {
+      size_t result = 0;
+      (void)(std::initializer_list<size_t>{( result += ns )...});
+      return result;  // (ns + ...)
+    }
 
-  #ifndef _MSC_VER
+#ifndef _MSC_VER
 
-  // partial detection idiom impl, from cppreference.com
-  struct nonesuch{};
+    // partial detection idiom impl, from cppreference.com
+    struct nonesuch{};
 
-  template<typename Default, typename Void, template<class...> class Op, typename... Args>
-  struct detector {
-    using value_t = std::false_type;
-    using type = Default;
-  };
+    template<typename Default, typename Void, template<class...> class Op, typename... Args>
+    struct detector {
+      using value_t = std::false_type;
+      using type = Default;
+    };
 
-  template<typename Default, template<class...> class Op, typename... Args>
-  struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
-    using value_t = std::true_type;
-    using type = Op<Args...>;
-  };
+    template<typename Default, template<class...> class Op, typename... Args>
+    struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
+      using value_t = std::true_type;
+      using type = Op<Args...>;
+    };
 
-  template<template<class...> class Op, typename... Args>
-  using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
+    template<template<class...> class Op, typename... Args>
+    using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
 
-  // and operation for boolean template argument packs
-  template<bool...>
-  struct and_;
+    // and operation for boolean template argument packs
+    template<bool...>
+    struct and_;
 
-  template<bool Head, bool... Tail>
-  struct and_<Head, Tail...> : std::integral_constant<bool, Head && and_<Tail...>::value>
-  {};
+    template<bool Head, bool... Tail>
+    struct and_<Head, Tail...> : std::integral_constant<bool, Head && and_<Tail...>::value>
+    {};
 
-  template<bool B>
-  struct and_<B> : std::integral_constant<bool, B>
-  {};
+    template<bool B>
+    struct and_<B> : std::integral_constant<bool, B>
+    {};
 
-  // implementation detail of join_pack
-  template<typename CharT>
-  struct str_detector {
-    template<typename Str>
-    using valid_string_t = decltype(std::declval<std::basic_string<CharT>>().append(std::declval<Str>()));
-  };
+    // implementation detail of join_pack
+    template<typename CharT>
+    struct str_detector {
+      template<typename Str>
+      using valid_string_t = decltype(std::declval<std::basic_string<CharT>>().append(std::declval<Str>()));
+    };
 
-  template<typename ResultT, typename CharT, typename... Strs>
-  using valid_string_pack_t = typename std::enable_if<and_<is_detected<str_detector<CharT>::template valid_string_t, Strs>::value...>::value, ResultT>::type;
-  #else
-  // MSVC is broken without /permissive-
+    template<typename ResultT, typename CharT, typename... Strs>
+    using valid_string_pack_t = typename std::enable_if<and_<is_detected<str_detector<CharT>::template valid_string_t, Strs>::value...>::value, ResultT>::type;
+#else
+    // MSVC is broken without /permissive-
   template<typename ResultT, typename...>
   using valid_string_pack_t = ResultT;
-  #endif
+#endif
 
-  template<typename CharT, typename... Strs, valid_string_pack_t<void, CharT, Strs...>* = nullptr>
-  static std::basic_string<CharT> join_pack(const Strs&... strs) {
-    std::basic_string<CharT> result;
-    result.reserve(sum(size(strs)...));
-    (void)(std::initializer_list<int>{( result.append(strs) , 0)...});
-    return result;
-  }
+    template<typename CharT, typename... Strs, valid_string_pack_t<void, CharT, Strs...>* = nullptr>
+    static std::basic_string<CharT> join_pack(const Strs&... strs) {
+      std::basic_string<CharT> result;
+      result.reserve(sum(size(strs)...));
+      (void)(std::initializer_list<int>{( result.append(strs) , 0)...});
+      return result;
+    }
   }; /* struct detail */
 
   /**

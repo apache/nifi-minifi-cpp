@@ -14,42 +14,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#include <string>
+#include <algorithm>
 #include <utility>
-
-#include "utils/EncryptionUtils.h"
-#include "utils/OptionalUtils.h"
-#include "utils/EncryptionProvider.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace utils {
 
-class Decryptor {
- public:
-  explicit Decryptor(utils::crypto::EncryptionProvider provider)
-      : provider_(std::move(provider)) {}
+namespace internal {
 
-  static bool isValidEncryptionMarker(const utils::optional<std::string>& encryption_marker) {
-    return encryption_marker && *encryption_marker == utils::crypto::EncryptionType::name();
+template<typename T, typename Arg, typename = void>
+struct find_in_range {
+  static auto call(const T& range, const Arg& arg) -> decltype(std::find(range.begin(), range.end(), arg)) {
+    return std::find(range.begin(), range.end(), arg);
   }
-
-  std::string decrypt(const std::string& encrypted_text) const {
-    return provider_.decrypt(encrypted_text);
-  }
-
-  static utils::optional<Decryptor> create(const std::string& minifi_home) {
-    return utils::crypto::EncryptionProvider::create(minifi_home)
-        | utils::map([](const utils::crypto::EncryptionProvider& provider) {return Decryptor{provider};});
-  }
-
- private:
-  const utils::crypto::EncryptionProvider provider_;
 };
 
+template<typename T, typename Arg>
+struct find_in_range<T, Arg, decltype(std::declval<const T&>().find(std::declval<const Arg&>()), void())> {
+  static auto call(const T& range, const Arg& arg) -> decltype(range.find(arg)) {
+    return range.find(arg);
+  }
+};
+
+}  // namespace internal
+
+template<typename T, typename U>
+bool haveCommonItem(const T& a, const U& b) {
+  using Item = typename T::value_type;
+  return std::any_of(a.begin(), a.end(), [&] (const Item& item) {
+    return internal::find_in_range<U, Item>::call(b, item) != b.end();
+  });
+}
+
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

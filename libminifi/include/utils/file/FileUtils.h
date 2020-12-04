@@ -82,6 +82,7 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
+#include "utils/file/PathUtils.h"
 
 #ifndef S_ISDIR
 #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
@@ -736,6 +737,13 @@ inline std::string get_executable_path() {
 #else
     return "";
 #endif
+}
+
+inline std::string resolve(const std::string& base, const std::string& path) {
+  if (utils::file::isAbsolutePath(path.c_str())) {
+    return path;
+  }
+  return concat_path(base, path);
 }
 
 /*

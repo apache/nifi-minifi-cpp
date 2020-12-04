@@ -31,7 +31,18 @@ bool StringUtils::StringToBool(std::string input, bool &output) {
   return output;
 }
 
-std::string StringUtils::trim(std::string s) {
+utils::optional<bool> StringUtils::toBool(const std::string& str) {
+  std::string trimmed = trim(str);
+  if (equalsIgnoreCase(trimmed, "true")) {
+    return true;
+  }
+  if (equalsIgnoreCase(trimmed, "false")) {
+    return false;
+  }
+  return {};
+}
+
+std::string StringUtils::trim(const std::string& s) {
   return trimRight(trimLeft(s));
 }
 
@@ -156,7 +167,7 @@ std::string StringUtils::replaceMap(std::string source_string, const std::map<st
   }
 
   std::sort(replacements.begin(), replacements.end(), [](const std::pair<size_t, std::pair<size_t, std::string>> a,
-      const std::pair<size_t, std::pair<size_t, std::string>> &b) {
+                                                         const std::pair<size_t, std::pair<size_t, std::string>> &b) {
     return a.first > b.first;
   });
 

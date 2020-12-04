@@ -17,14 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "FlowController.h"
 #include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <vector>
-#include <queue>
 #include <map>
-#include <set>
 #include <chrono>
 #include <future>
 #include <thread>
@@ -32,6 +27,7 @@
 #include <memory>
 #include <string>
 
+#include "FlowController.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "core/state/nodes/BuildInformation.h"
 #include "core/state/nodes/DeviceInformation.h"
@@ -41,89 +37,53 @@
 #include "core/state/nodes/RepositoryMetrics.h"
 #include "core/state/nodes/SystemMetrics.h"
 #include "core/state/ProcessorController.h"
-#include "yaml-cpp/yaml.h"
 #include "c2/C2Agent.h"
-#include "core/ProcessContext.h"
 #include "core/ProcessGroup.h"
-#include "utils/StringUtils.h"
 #include "core/Core.h"
 #include "core/ClassLoader.h"
 #include "SchedulingAgent.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Connectable.h"
-#include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
+#include "utils/file/FileSystem.h"
 #include "utils/HTTPClient.h"
 #include "utils/GeneralUtils.h"
 #include "io/NetworkPrioritizer.h"
 #include "io/validation.h"
-
-#ifdef _MSC_VER
-#ifndef PATH_MAX
-#define PATH_MAX 260
-#endif
-#endif
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
-#define DEFAULT_CONFIG_NAME "conf/config.yml"
-
-FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                               std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode)
+FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
+                               std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
+                               std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode,
+                               std::shared_ptr<utils::file::FileSystem> filesystem)
     : core::controller::ControllerServiceProvider(core::getClassName<FlowController>()),
-      root_(nullptr),
+      c2::C2Client(std::move(configure), std::move(provenance_repo), std::move(flow_file_repo),
+                   std::move(content_repo), std::move(flow_configuration), std::move(filesystem)),
       running_(false),
       updating_(false),
-      c2_enabled_(true),
       initialized_(false),
-      provenance_repo_(provenance_repo),
-      flow_file_repo_(flow_file_repo),
       controller_service_map_(std::make_shared<core::controller::ControllerServiceMap>()),
       thread_pool_(2, false, nullptr, "Flowcontroller threadpool"),
-      flow_configuration_(std::move(flow_configuration)),
-      configuration_(std::move(configure)),
-      content_repo_(content_repo),
       logger_(logging::LoggerFactory<FlowController>::getLogger()) {
-  if (provenance_repo == nullptr)
+  if (provenance_repo_ == nullptr)
     throw std::runtime_error("Provenance Repo should not be null");
-  if (flow_file_repo == nullptr)
+  if (flow_file_repo_ == nullptr)
     throw std::runtime_error("Flow Repo should not be null");
-  if (IsNullOrEmpty(configuration_)) {
+  if (configuration_ == nullptr) {
     throw std::runtime_error("Must supply a configuration.");
-  }
-  flow_update_ = false;
-  // Setup the default values
-  if (flow_configuration_ != nullptr) {
-    configuration_filename_ = flow_configuration_->getConfigurationPath();
   }
   running_ = false;
   initialized_ = false;
-  c2_initialized_ = false;
-  root_ = nullptr;
 
   protocol_ = utils::make_unique<FlowControlProtocol>(this, configuration_);
 
   if (!headless_mode) {
-    std::string rawConfigFileString;
-    configuration_->get(Configure::nifi_flow_configuration_file, rawConfigFileString);
-
-    if (!rawConfigFileString.empty()) {
-      configuration_filename_ = rawConfigFileString;
-    }
-
-    const auto adjustedFilename = [&]() -> std::string {
-      if (configuration_filename_.empty()) { return {}; }
-      if (utils::file::isAbsolutePath(configuration_filename_.c_str())) {
-        return configuration_filename_;
-      }
-      return utils::file::FileUtils::concat_path(configuration_->getHome(), configuration_filename_);
-    }();
     initializeExternalComponents();
-    initializePaths(adjustedFilename);
   }
 }
 
@@ -141,23 +101,6 @@ void FlowController::initializeExternalComponents() {
   }
 }
 
-void FlowController::initializePaths(const std::string &adjustedFilename) {
-  const char *path = nullptr;
-#ifndef WIN32
-  char full_path[PATH_MAX];
-  path = realpath(adjustedFilename.c_str(), full_path);
-#else
-  path = adjustedFilename.c_str();
-#endif
-
-  if (path == nullptr) {
-    throw std::runtime_error("Path is not specified. Either manually set MINIFI_HOME or ensure ../conf exists");
-  }
-  std::string pathString(path);
-  configuration_filename_ = pathString;
-  logger_->log_info("FlowController NiFi Configuration file %s", pathString);
-}
-
 utils::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFromConfiguration() {
   std::string shutdown_timeout_str;
   if (configuration_->get(minifi::Configure::nifi_flowcontroller_drain_timeout, shutdown_timeout_str)) {
@@ -173,14 +116,10 @@ FlowController::~FlowController() {
   stop();
   stopC2();
   unload();
+  // TODO(adebreceni): are these here on purpose, so they are destroyed first?
   protocol_ = nullptr;
   flow_file_repo_ = nullptr;
   provenance_repo_ = nullptr;
-}
-
-void FlowController::stopC2() {
-  if (c2_agent_)
-    c2_agent_->stop();
 }
 
 bool FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload) {
@@ -320,17 +259,18 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
     stop();
   }
   if (!initialized_) {
-    if (root) {
-      logger_->log_info("Load Flow Controller from provided root");
-    } else {
-      logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
-    }
-
     if (reload) {
       io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
     }
 
-    this->root_ = root == nullptr ? std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_)) : root;
+    if (root) {
+      logger_->log_info("Load Flow Controller from provided root");
+      this->root_ = root;
+    } else {
+      logger_->log_info("Instantiating new flow");
+      this->root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot());
+    }
+
     logger_->log_info("Loaded root processor Group");
     logger_->log_info("Initializing timers");
     controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
@@ -408,7 +348,7 @@ int16_t FlowController::start() {
         // as the thread_pool_ is started in load()
         this->root_->startProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
       }
-      initializeC2();
+      C2Client::initialize(this, shared_from_this());
       running_ = true;
       this->protocol_->start();
       this->provenance_repo_->start();
@@ -418,310 +358,6 @@ int16_t FlowController::start() {
     }
     return 0;
   }
-}
-
-void FlowController::initializeC2() {
-  if (!c2_enabled_) {
-    return;
-  }
-
-  std::string c2_enable_str;
-  std::string class_str;
-
-  // don't need to worry about the return code, only whether class_str is defined.
-  configuration_->get("nifi.c2.agent.class", "c2.agent.class", class_str);
-  configuration_->setAgentClass(class_str);
-
-  if (configuration_->get(Configure::nifi_c2_enable, "c2.enable", c2_enable_str)) {
-    bool enable_c2 = true;
-    utils::StringUtils::StringToBool(c2_enable_str, enable_c2);
-    c2_enabled_ = enable_c2;
-    if (c2_enabled_ && class_str.empty()) {
-      logger_->log_error("Class name must be defined when C2 is enabled");
-      std::cerr << "Class name must be defined when C2 is enabled" << std::endl;
-      stop();
-      exit(1);
-    }
-  } else {
-    /**
-     * To require a C2 agent class we will disable C2 by default. If a registration process
-     * is implemented we can re-enable. The reason for always enabling C2 is because this allows the controller
-     * mechanism that can be used for local config/access to be used. Without this agent information cannot be
-     * gathered even if a remote C2 server is enabled.
-     *
-     * The ticket that impacts this, MINIFICPP-664, should be reversed in the event that agent registration
-     * can be performed and agent classes needn't be defined a priori.
-     */
-    c2_enabled_ = false;
-  }
-
-  if (!c2_enabled_) {
-    return;
-  }
-
-  std::string identifier_str;
-  if (!configuration_->get("nifi.c2.agent.identifier", "c2.agent.identifier", identifier_str) || identifier_str.empty()) {
-    // set to the flow controller's identifier
-    identifier_str = getUUIDStr();
-  }
-  configuration_->setAgentIdentifier(identifier_str);
-
-  if (c2_initialized_ && !flow_update_) {
-    return;
-  }
-
-  device_information_.clear();
-  component_metrics_.clear();
-  component_metrics_by_id_.clear();
-
-  std::string class_csv;
-  if (root_ != nullptr) {
-    std::shared_ptr<state::response::QueueMetrics> queueMetrics = std::make_shared<state::response::QueueMetrics>();
-    std::map<std::string, std::shared_ptr<Connection>> connections;
-    root_->getConnections(connections);
-    for (auto con : connections) {
-      queueMetrics->addConnection(con.second);
-    }
-    device_information_[queueMetrics->getName()] = queueMetrics;
-    std::shared_ptr<state::response::RepositoryMetrics> repoMetrics = std::make_shared<state::response::RepositoryMetrics>();
-    repoMetrics->addRepository(provenance_repo_);
-    repoMetrics->addRepository(flow_file_repo_);
-    device_information_[repoMetrics->getName()] = repoMetrics;
-  }
-
-  if (configuration_->get("nifi.c2.root.classes", class_csv)) {
-    std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
-
-    for (std::string clazz : classes) {
-      auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-      if (nullptr == ptr) {
-        logger_->log_error("No metric defined for %s", clazz);
-        continue;
-      }
-      std::shared_ptr<state::response::ResponseNode> processor = std::static_pointer_cast<state::response::ResponseNode>(ptr);
-      auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(processor);
-      if (identifier != nullptr) {
-        identifier->setIdentifier(identifier_str);
-        identifier->setAgentClass(class_str);
-      }
-      auto monitor = std::dynamic_pointer_cast<state::response::AgentMonitor>(processor);
-      if (monitor != nullptr) {
-        monitor->addRepository(provenance_repo_);
-        monitor->addRepository(flow_file_repo_);
-        monitor->setStateMonitor(shared_from_this());
-      }
-      auto flowMonitor = std::dynamic_pointer_cast<state::response::FlowMonitor>(processor);
-      std::map<std::string, std::shared_ptr<Connection>> connections;
-      root_->getConnections(connections);
-      if (flowMonitor != nullptr) {
-        for (auto con : connections) {
-          flowMonitor->addConnection(con.second);
-        }
-        flowMonitor->setStateMonitor(shared_from_this());
-        flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
-      }
-      std::lock_guard<std::mutex> lock(metrics_mutex_);
-      root_response_nodes_[processor->getName()] = processor;
-    }
-  }
-
-  if (configuration_->get("nifi.flow.metrics.classes", class_csv)) {
-    std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
-    for (std::string clazz : classes) {
-      auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-      if (nullptr == ptr) {
-        logger_->log_error("No metric defined for %s", clazz);
-        continue;
-      }
-      std::shared_ptr<state::response::ResponseNode> processor = std::static_pointer_cast<state::response::ResponseNode>(ptr);
-      std::lock_guard<std::mutex> lock(metrics_mutex_);
-      device_information_[processor->getName()] = processor;
-    }
-  }
-
-  // first we should get all component metrics, then
-  // we will build the mapping
-  std::vector<std::shared_ptr<core::Processor>> processors;
-  if (root_ != nullptr) {
-    root_->getAllProcessors(processors);
-    for (const auto &processor : processors) {
-      auto rep = std::dynamic_pointer_cast<state::response::ResponseNodeSource>(processor);
-      // we have a metrics source.
-      if (nullptr != rep) {
-        std::vector<std::shared_ptr<state::response::ResponseNode>> metric_vector;
-        rep->getResponseNodes(metric_vector);
-        for (auto metric : metric_vector) {
-          component_metrics_[metric->getName()] = metric;
-        }
-      }
-    }
-  }
-
-  std::string class_definitions;
-  if (configuration_->get("nifi.flow.metrics.class.definitions", class_definitions)) {
-    std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-
-    for (std::string metricsClass : classes) {
-      try {
-        int id = std::stoi(metricsClass);
-        std::stringstream option;
-        option << "nifi.flow.metrics.class.definitions." << metricsClass;
-        if (configuration_->get(option.str(), class_definitions)) {
-          std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-
-          for (std::string clazz : classes) {
-            std::lock_guard<std::mutex> lock(metrics_mutex_);
-            auto ret = component_metrics_[clazz];
-            if (nullptr == ret) {
-              ret = device_information_[clazz];
-            }
-            if (nullptr == ret) {
-              logger_->log_error("No metric defined for %s", clazz);
-              continue;
-            }
-            component_metrics_by_id_[id].push_back(ret);
-          }
-        }
-      } catch (...) {
-        logger_->log_error("Could not create metrics class %s", metricsClass);
-      }
-    }
-  }
-
-  loadC2ResponseConfiguration();
-
-  if (!c2_initialized_) {
-    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(this,
-                                                             std::dynamic_pointer_cast<FlowController>(shared_from_this()),
-                                                             configuration_));
-    c2_agent_->start();
-    c2_initialized_ = true;
-  }
-}
-
-void FlowController::loadC2ResponseConfiguration(const std::string &prefix) {
-  std::string class_definitions;
-
-  if (configuration_->get(prefix, class_definitions)) {
-    std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-
-    for (std::string metricsClass : classes) {
-      try {
-        std::stringstream option;
-        option << prefix << "." << metricsClass;
-
-        std::stringstream classOption;
-        classOption << option.str() << ".classes";
-
-        std::stringstream nameOption;
-        nameOption << option.str() << ".name";
-        std::string name;
-
-        if (configuration_->get(nameOption.str(), name)) {
-          std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
-          if (configuration_->get(classOption.str(), class_definitions)) {
-            std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-            for (std::string clazz : classes) {
-              std::lock_guard<std::mutex> lock(metrics_mutex_);
-
-              // instantiate the object
-              auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-              if (nullptr == ptr) {
-                auto metric = component_metrics_.find(clazz);
-                if (metric != component_metrics_.end()) {
-                  ptr = metric->second;
-                } else {
-                  logger_->log_error("No metric defined for %s", clazz);
-                  continue;
-                }
-              }
-              auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
-              std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
-            }
-
-          } else {
-            std::stringstream optionName;
-            optionName << option.str() << "." << name;
-            auto node = loadC2ResponseConfiguration(optionName.str(), new_node);
-          }
-
-          root_response_nodes_[name] = new_node;
-        }
-      } catch (...) {
-        logger_->log_error("Could not create metrics class %s", metricsClass);
-      }
-    }
-  }
-}
-
-std::shared_ptr<state::response::ResponseNode> FlowController::loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node) {
-  std::string class_definitions;
-  if (configuration_->get(prefix, class_definitions)) {
-    std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-
-    for (std::string metricsClass : classes) {
-      try {
-        std::stringstream option;
-        option << prefix << "." << metricsClass;
-
-        std::stringstream classOption;
-        classOption << option.str() << ".classes";
-
-        std::stringstream nameOption;
-        nameOption << option.str() << ".name";
-        std::string name;
-
-        if (configuration_->get(nameOption.str(), name)) {
-          std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
-          if (name.find(",") != std::string::npos) {
-            std::vector<std::string> sub_classes = utils::StringUtils::split(name, ",");
-            for (std::string subClassStr : classes) {
-              auto node = loadC2ResponseConfiguration(subClassStr, prev_node);
-              if (node != nullptr)
-                std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(node);
-            }
-
-          } else {
-            if (configuration_->get(classOption.str(), class_definitions)) {
-              std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-              for (std::string clazz : classes) {
-                std::lock_guard<std::mutex> lock(metrics_mutex_);
-                // instantiate the object
-                auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-                if (nullptr == ptr) {
-                  auto metric = component_metrics_.find(clazz);
-                  if (metric != component_metrics_.end()) {
-                    ptr = metric->second;
-                  } else {
-                    logger_->log_error("No metric defined for %s", clazz);
-                    continue;
-                  }
-                }
-
-                auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
-                std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
-              }
-              if (!new_node->isEmpty())
-                std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(new_node);
-
-            } else {
-              std::stringstream optionName;
-              optionName << option.str() << "." << name;
-              auto sub_node = loadC2ResponseConfiguration(optionName.str(), new_node);
-              std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(sub_node);
-            }
-          }
-        }
-      } catch (...) {
-        logger_->log_error("Could not create metrics class %s", metricsClass);
-      }
-    }
-  }
-  return prev_node;
-}
-
-void FlowController::loadC2ResponseConfiguration() {
-  loadC2ResponseConfiguration("nifi.c2.root.class.definitions");
 }
 
 /**
@@ -884,11 +520,14 @@ void FlowController::disableAllControllerServices() {
   controller_service_provider_->disableAllControllerServices();
 }
 
-int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration) {
+int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration, bool persist) {
   if (applyConfiguration(source, configuration)) {
-    return 1;
-  } else {
+    if (persist) {
+      flow_configuration_->persist(configuration);
+    }
     return 0;
+  } else {
+    return -1;
   }
 }
 
@@ -904,38 +543,6 @@ int16_t FlowController::clearConnection(const std::string &connection) {
     }
   }
   return -1;
-}
-
-std::shared_ptr<state::response::ResponseNode> FlowController::getMetricsNode(const std::string& metricsClass) const {
-  std::lock_guard<std::mutex> lock(metrics_mutex_);
-  if (!metricsClass.empty()) {
-    const auto citer = component_metrics_.find(metricsClass);
-    if (citer != component_metrics_.end()) {
-      return citer->second;
-    }
-  } else {
-    const auto iter = root_response_nodes_.find("metrics");
-    if (iter != root_response_nodes_.end()) {
-      return iter->second;
-    }
-  }
-  return nullptr;
-}
-
-std::vector<std::shared_ptr<state::response::ResponseNode>> FlowController::getHeartbeatNodes(bool includeManifest) const {
-  std::string fullHb{"true"};
-  configuration_->get("nifi.c2.full.heartbeat", fullHb);
-  const bool include = includeManifest ? true : (fullHb == "true");
-
-  std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
-  for (const auto& entry : root_response_nodes_) {
-    auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(entry.second);
-    if (identifier) {
-      identifier->includeAgentManifest(include);
-    }
-    nodes.push_back(entry.second);
-  }
-  return nodes;
 }
 
 std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest() const {

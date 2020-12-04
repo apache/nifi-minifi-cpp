@@ -17,12 +17,14 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
 
+#include <climits>
 #include <cctype>
 #include <cinttypes>
 #include <memory>
 #include <string>
 #include <system_error>
 #include <utility>
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -60,6 +62,21 @@ inline bool isAbsolutePath(const char* const path) noexcept {
 #else
   return path && path[0] == '/';
 #endif
+}
+
+inline utils::optional<std::string> canonicalize(const std::string &path) {
+  const char *resolved = nullptr;
+#ifndef WIN32
+  char full_path[PATH_MAX];
+  resolved = realpath(path.c_str(), full_path);
+#else
+  resolved = path.c_str();
+#endif
+
+  if (resolved == nullptr) {
+    return utils::nullopt;
+  }
+  return std::string(path);
 }
 
 

@@ -125,9 +125,6 @@ class C2Payload : public state::Update {
    */
   bool validate() override { return true; }
 
-  /**
-   * Get content responses from this payload.
-   */
   const std::vector<C2ContentResponse> &getContent() const noexcept { return content_; }
 
   /**
@@ -164,10 +161,9 @@ class C2Payload : public state::Update {
   bool isContainer() const noexcept { return is_container_; }
   void setContainer(bool is_container) noexcept { is_container_ = is_container; }
 
-  /**
-   * Get nested payloads.
-   */
-  const std::vector<C2Payload> &getNestedPayloads() const noexcept { return payloads_; }
+  const std::vector<C2Payload> &getNestedPayloads() const & noexcept { return payloads_; }
+
+  std::vector<C2Payload>&& getNestedPayloads() && noexcept {return std::move(payloads_);}
 
   void reservePayloads(size_t new_capacity) { payloads_.reserve(new_capacity); }
 

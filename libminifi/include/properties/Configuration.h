@@ -52,6 +52,7 @@ class Configuration : public Properties {
   // nifi.flow.configuration.file
   static constexpr const char *nifi_default_directory = "nifi.default.directory";
   static constexpr const char *nifi_flow_configuration_file = "nifi.flow.configuration.file";
+  static constexpr const char *nifi_flow_configuration_encrypt = "nifi.flow.configuration.encrypt";
   static constexpr const char *nifi_flow_configuration_file_exit_failure = "nifi.flow.configuration.file.exit.onfailure";
   static constexpr const char *nifi_flow_configuration_file_backup_update = "nifi.flow.configuration.backup.on.update";
   static constexpr const char *nifi_flow_engine_threads = "nifi.flow.engine.threads";

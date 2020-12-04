@@ -30,6 +30,8 @@
 #include "sitetosite/SiteToSite.h"
 #include "utils/Id.h"
 #include "utils/StringUtils.h"
+#include "utils/file/FileSystem.h"
+#include "utils/OptionalUtils.h"
 #include "yaml-cpp/yaml.h"
 
 namespace org {
@@ -38,7 +40,6 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-#define DEFAULT_FLOW_YAML_FILE_NAME "conf/config.yml"
 #define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
 #define CONFIG_YAML_PROCESSORS_KEY "Processors"
 #define CONFIG_YAML_CONNECTIONS_KEY "Connections"
@@ -56,31 +57,36 @@ namespace core {
 
 class YamlConfiguration : public FlowConfiguration {
  public:
-  explicit YamlConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
-                             std::shared_ptr<io::StreamFactory> stream_factory, std::shared_ptr<Configure> configuration, const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
-      : FlowConfiguration(repo, flow_file_repo, content_repo, stream_factory, configuration, path),
-        logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {
-    stream_factory_ = stream_factory;
-    if (IsNullOrEmpty(config_path_)) {
-      config_path_ = DEFAULT_FLOW_YAML_FILE_NAME;
-    }
-  }
+  explicit YamlConfiguration(const std::shared_ptr<core::Repository>& repo, const std::shared_ptr<core::Repository>& flow_file_repo,
+                             const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<io::StreamFactory>& stream_factory,
+                             const std::shared_ptr<Configure>& configuration, const utils::optional<std::string>& path = {},
+                             const std::shared_ptr<utils::file::FileSystem>& filesystem = std::make_shared<utils::file::FileSystem>());
 
-  virtual ~YamlConfiguration() = default;
+  ~YamlConfiguration() override = default;
 
   /**
    * Returns a shared pointer to a ProcessGroup object containing the
-   * flow configuration. The yamlConfigFile argument is the location
-   * of a YAML file containing the flow configuration.
+   * flow configuration.
    *
-   * @param yamlConfigFile a string holding the location of the YAML file
-   *                        to be loaded into a flow configuration tree
    * @return               the root ProcessGroup node of the flow
    *                        configuration tree
    */
-  virtual std::unique_ptr<core::ProcessGroup> getRoot(const std::string &yamlConfigFile) {
-    YAML::Node rootYamlNode = YAML::LoadFile(yamlConfigFile);
-    return getYamlRoot(&rootYamlNode);
+  std::unique_ptr<core::ProcessGroup> getRoot() override {
+    if (!config_path_) {
+      logger_->log_error("Cannot instantiate flow, no config file is set.");
+      throw Exception(ExceptionType::FLOW_EXCEPTION, "No config file specified");
+    }
+    utils::optional<std::string> configuration = filesystem_->read(config_path_.value());
+    if (!configuration) {
+      return nullptr;
+    }
+    try {
+      YAML::Node rootYamlNode = YAML::Load(configuration.value());
+      return getYamlRoot(&rootYamlNode);
+    } catch(...) {
+      logger_->log_error("Invalid yaml configuration file");
+      throw;
+    }
   }
 
   /**
@@ -116,7 +122,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @return                 the root ProcessGroup node of the flow
    *                           configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) {
+  std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) override {
     try {
       YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
       return getYamlRoot(&rootYamlNode);

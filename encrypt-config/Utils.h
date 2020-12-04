@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,22 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#include <memory>
+#include "utils/EncryptionUtils.h"
+#include "utils/OptionalUtils.h"
 
-#include "core/ConfigurationFactory.h"
-#include "core/Core.h"
-#include "core/RepositoryFactory.h"
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace encrypt_config {
 
-TEST_CASE("NoYamlSupport1", "[NoYamlSupport1]") {
-  std::shared_ptr<core::Repository> prov_repo = core::createRepository(
-      "provenancerepository", true);
-  REQUIRE(nullptr != prov_repo);
-  std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(
-      core::createFlowConfiguration(
-          prov_repo, prov_repo, std::make_shared<minifi::Configure>(), std::make_shared<minifi::io::StreamFactory>(false),
-          "yamlconfiguration"));
+struct EncryptionKeys {
+  utils::optional<utils::crypto::Bytes> old_key;
+  utils::crypto::Bytes encryption_key;
+};
 
-  REQUIRE(nullptr != flow_configuration);
-}
-
+}  // namespace encrypt_config
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

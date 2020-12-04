@@ -99,7 +99,7 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   std::unique_ptr<utils::HTTPUploadCallback> callback = nullptr;
 
   // Callback for transfer. Declared in order to destruct in proper order - take care!
-  std::unique_ptr<utils::FileOutputCallback> file_callback = nullptr;
+  std::unique_ptr<utils::ByteOutputCallback> file_callback = nullptr;
   utils::HTTPReadCallback read;
 
   // Client declared last to make sure calbacks are still available when client is destructed
@@ -129,9 +129,7 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   }
 
   if (payload.getOperation() == TRANSFER) {
-    utils::file::FileManager file_man;
-    auto file = file_man.unique_file(true);
-    file_callback = std::unique_ptr<utils::FileOutputCallback>(new utils::FileOutputCallback(file));
+    file_callback = std::unique_ptr<utils::ByteOutputCallback>(new utils::ByteOutputCallback(std::numeric_limits<size_t>::max()));
     read.pos = 0;
     read.ptr = file_callback.get();
     client.setReadCallback(&read);

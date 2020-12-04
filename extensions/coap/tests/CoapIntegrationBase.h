@@ -44,7 +44,7 @@ class CoapIntegrationBase : public IntegrationBase {
     server.reset();
   }
 
-  virtual void run(std::string test_file_location) override {
+  void run(const std::string& test_file_location, const utils::optional<std::string>& bootstrap_file = {}) override {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -61,7 +61,7 @@ class CoapIntegrationBase : public IntegrationBase {
 
     core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
-    std::shared_ptr<core::ProcessGroup> pg{ yaml_config.getRoot(test_file_location).release() };
+    std::shared_ptr<core::ProcessGroup> pg{ yaml_config.getRoot().release() };
 
     queryRootProcessGroup(pg);
 

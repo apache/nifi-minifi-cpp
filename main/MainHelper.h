@@ -18,10 +18,11 @@
 #ifndef MAIN_MAINHELPER_H_
 #define MAIN_MAINHELPER_H_
 
+#include <string>
+
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
-
-#include <string>
+#include "Defaults.h"
 
 #ifdef WIN32
 extern "C" {
@@ -40,18 +41,6 @@ extern "C" {
 //! Main thread stop wait time
 #define STOP_WAIT_TIME_MS 30*1000
 //! Default YAML location
-
-#ifdef WIN32
-#define DEFAULT_NIFI_CONFIG_YML "\\conf\\config.yml"
-#define DEFAULT_NIFI_PROPERTIES_FILE "\\conf\\minifi.properties"
-#define DEFAULT_LOG_PROPERTIES_FILE "\\conf\\minifi-log.properties"
-#define DEFAULT_UID_PROPERTIES_FILE "\\conf\\minifi-uid.properties"
-#else
-#define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
-#define DEFAULT_NIFI_PROPERTIES_FILE "./conf/minifi.properties"
-#define DEFAULT_LOG_PROPERTIES_FILE "./conf/minifi-log.properties"
-#define DEFAULT_UID_PROPERTIES_FILE "./conf/minifi-uid.properties"
-#endif
 
 //! Define home environment variable
 #define MINIFI_HOME_ENV_KEY "MINIFI_HOME"

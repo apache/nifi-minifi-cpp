@@ -297,9 +297,19 @@ int main(int argc, char **argv) {
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configure);
 
-  std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(prov_repo, flow_repo, content_repo, configure, stream_factory, nifi_configuration_class_name);
+  bool should_encrypt_flow_config = (configure->get(minifi::Configure::nifi_flow_configuration_encrypt)
+      | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
 
-  const auto controller = std::make_shared<minifi::FlowController>(prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo);
+  auto filesystem = std::make_shared<utils::file::FileSystem>(
+      should_encrypt_flow_config,
+      utils::crypto::EncryptionProvider::create(minifiHome));
+
+  std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(
+      prov_repo, flow_repo, content_repo, configure, stream_factory, nifi_configuration_class_name,
+      configure->get(minifi::Configure::nifi_flow_configuration_file), filesystem);
+
+  const auto controller = std::make_shared<minifi::FlowController>(
+      prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, filesystem);
 
   const bool disk_space_watchdog_enable = (configure->get(minifi::Configure::minifi_disk_space_watchdog_enable) | utils::map([](const std::string& v){ return v == "true"; })).value_or(true);
   std::unique_ptr<utils::CallBackTimer> disk_space_watchdog;

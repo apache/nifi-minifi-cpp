@@ -26,6 +26,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <cinttypes>
 
 #include "c2/ControllerSocketProtocol.h"
 #include "core/ProcessContext.h"
@@ -36,10 +37,13 @@
 #include "utils/file/DiffUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
+#include "utils/file/FileSystem.h"
 #include "utils/GeneralUtils.h"
 #include "utils/HTTPClient.h"
 #include "utils/Environment.h"
 #include "utils/Monitors.h"
+#include "utils/OptionalUtils.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -49,13 +53,15 @@ namespace c2 {
 
 C2Agent::C2Agent(core::controller::ControllerServiceProvider* controller,
                  const std::shared_ptr<state::StateMonitor> &updateSink,
-                 const std::shared_ptr<Configure> &configuration)
+                 const std::shared_ptr<Configure> &configuration,
+                 const std::shared_ptr<utils::file::FileSystem>& filesystem)
     : heart_beat_period_(3000),
       max_c2_responses(5),
       update_sink_(updateSink),
       update_service_(nullptr),
       controller_(controller),
       configuration_(configuration),
+      filesystem_(filesystem),
       protocol_(nullptr),
       logger_(logging::LoggerFactory<C2Agent>::getLogger()),
       thread_pool_(2, false, nullptr, "C2 threadpool") {
@@ -68,7 +74,7 @@ C2Agent::C2Agent(core::controller::ControllerServiceProvider* controller,
   last_run_ = std::chrono::steady_clock::now();
 
   if (nullptr != controller_) {
-    update_service_ = std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(C2_AGENT_UPDATE_NAME));
+    update_service_ = std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(UPDATE_NAME));
   }
 
   if (update_service_ == nullptr) {
@@ -77,62 +83,8 @@ C2Agent::C2Agent(core::controller::ControllerServiceProvider* controller,
 
   configure(configuration, false);
 
-  c2_producer_ = [&]() {
-    // place priority on messages to send to the c2 server
-    if (protocol_.load() != nullptr) {
-      std::vector<C2Payload> payload_batch;
-      payload_batch.reserve(max_c2_responses);
-      auto getRequestPayload = [&payload_batch] (C2Payload&& payload) { payload_batch.emplace_back(std::move(payload)); };
-      for (std::size_t attempt_num = 0; attempt_num < max_c2_responses; ++attempt_num) {
-        if (!requests.consume(getRequestPayload)) {
-          break;
-        }
-      }
-      std::for_each(
-        std::make_move_iterator(payload_batch.begin()),
-        std::make_move_iterator(payload_batch.end()),
-        [&] (C2Payload&& payload) {
-          try {
-            C2Payload && response = protocol_.load()->consumePayload(std::move(payload));
-            enqueue_c2_server_response(std::move(response));
-          }
-          catch(const std::exception &e) {
-            logger_->log_error("Exception occurred while consuming payload. error: %s", e.what());
-          }
-          catch(...) {
-            logger_->log_error("Unknonwn exception occurred while consuming payload.");
-          }
-      });
-
-      try {
-        performHeartBeat();
-      }
-      catch (const std::exception &e) {
-        logger_->log_error("Exception occurred while performing heartbeat. error: %s", e.what());
-      }
-      catch (...) {
-        logger_->log_error("Unknonwn exception occurred while performing heartbeat.");
-      }
-    }
-
-    checkTriggers();
-
-    return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(heart_beat_period_));
-  };
-
-  functions_.push_back(c2_producer_);
-
-  c2_consumer_ = [&] {
-    if (false == responses.empty()) {
-      const auto call_extractPayload = [this](C2Payload&& payload) { extractPayload(std::move(payload)); };
-      const auto consume_success = responses.consume(call_extractPayload);
-      if (!consume_success) {
-        extractPayload(C2Payload{ Operation::HEARTBEAT });
-      }
-    }
-    return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
-  };
-  functions_.push_back(c2_consumer_);
+  functions_.emplace_back([this] {return produce();});
+  functions_.emplace_back([this] {return consume();});
 }
 
 void C2Agent::start() {
@@ -255,7 +207,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       }
     }
 
-    // if not defined we won't beable to update
+    // if not defined we won't be able to update
     configure->get("nifi.c2.agent.bin.location", "c2.agent.bin.location", bin_location_);
   }
   std::string heartbeat_reporters;
@@ -358,12 +310,10 @@ void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &nam
   }
 }
 
-void C2Agent::extractPayload(const C2Payload &&resp) {
+void C2Agent::extractPayload(const C2Payload &resp) {
   if (resp.getStatus().getState() == state::UpdateState::NESTED) {
-    const std::vector<C2Payload> &payloads = resp.getNestedPayloads();
-
-    for (const auto &payload : payloads) {
-      extractPayload(std::move(payload));
+    for (const C2Payload& payload : resp.getNestedPayloads()) {
+      extractPayload(payload);
     }
     return;
   }
@@ -374,7 +324,7 @@ void C2Agent::extractPayload(const C2Payload &&resp) {
     case state::UpdateState::READ_COMPLETE:
       logger_->log_trace("Received Ack from Server");
       // we have a heartbeat response.
-      for (const auto &server_response : resp.getContent()) {
+      for (const C2ContentResponse &server_response : resp.getContent()) {
         handle_c2_server_response(server_response);
       }
       break;
@@ -401,31 +351,12 @@ void C2Agent::extractPayload(const C2Payload &&resp) {
   }
 }
 
-void C2Agent::extractPayload(const C2Payload &resp) {
-  if (resp.getStatus().getState() == state::UpdateState::NESTED) {
-    const std::vector<C2Payload> &payloads = resp.getNestedPayloads();
-    for (const auto &payload : payloads) {
-      extractPayload(payload);
-    }
-  }
-  switch (resp.getStatus().getState()) {
-    case state::UpdateState::READ_COMPLETE:
-      // we have a heartbeat response.
-      for (const auto &server_response : resp.getContent()) {
-        handle_c2_server_response(server_response);
-      }
-      break;
-    default:
-      break;
-  }
-}
-
 void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
   switch (resp.op) {
     case Operation::CLEAR:
       // we've been told to clear something
       if (resp.name == "connection") {
-        for (auto connection : resp.operation_arguments) {
+        for (const auto& connection : resp.operation_arguments) {
           logger_->log_debug("Clearing connection %s", connection.second.to_string());
           update_sink_->clearConnection(connection.second.to_string());
         }
@@ -462,11 +393,9 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       }
 
       break;
-    case Operation::UPDATE: {
+    case Operation::UPDATE:
       handle_update(resp);
-    }
       break;
-
     case Operation::DESCRIBE:
       handle_describe(resp);
       break;
@@ -624,144 +553,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
 void C2Agent::handle_update(const C2ContentResponse &resp) {
   // we've been told to update something
   if (resp.name == "configuration") {
-    auto url = resp.operation_arguments.find("location");
-
-    auto persist = resp.operation_arguments.find("persist");
-
-    if (url != resp.operation_arguments.end()) {
-      // just get the raw data.
-      C2Payload payload(Operation::TRANSFER, false, true);
-
-      auto urlStr = url->second.to_string();
-
-      std::string file_path = urlStr;
-      bool containsHttp = file_path.find("http") != std::string::npos;
-      if (!containsHttp) {
-        std::ifstream new_conf(file_path);
-        if (!new_conf.good()) {
-          containsHttp = true;
-        }
-      }
-      if (nullptr != protocol_.load() && containsHttp) {
-        std::stringstream newUrl;
-        if (urlStr.find("http") == std::string::npos) {
-          std::string base;
-          if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
-            newUrl << base;
-            if (!utils::StringUtils::endsWith(base, "/")) {
-              newUrl << "/";
-            }
-            newUrl << urlStr;
-            urlStr = newUrl.str();
-          } else if (configuration_->get("c2.rest.url", base)) {
-            std::string host, protocol;
-            int port = -1;
-            utils::parse_url(&base, &host, &port, &protocol);
-            newUrl << protocol << host;
-            if (port > 0) {
-              newUrl << ":" << port;
-            }
-            newUrl << "/c2/api/" << urlStr;
-            urlStr = newUrl.str();
-          }
-        }
-
-        C2Payload &&response = protocol_.load()->consumePayload(urlStr, payload, RECEIVE, false);
-
-        auto raw_data = response.getRawData();
-        file_path = std::string(raw_data.data(), raw_data.size());
-      }
-
-      std::ifstream new_conf(file_path);
-      std::string raw_data_str((std::istreambuf_iterator<char>(new_conf)), std::istreambuf_iterator<char>());
-      std::remove(file_path.c_str());
-      // if we can apply the update, we will acknowledge it and then backup the configuration file.
-      if (update_sink_->applyUpdate(urlStr, raw_data_str)) {
-        C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
-        enqueue_c2_response(std::move(response));
-
-        if (persist != resp.operation_arguments.end() && utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true")) {
-          // update nifi.flow.configuration.file=./conf/config.yml
-          std::string config_file;
-
-          configuration_->get(minifi::Configure::nifi_flow_configuration_file, config_file);
-          std::string adjustedFilename;
-          if (config_file[0] != '/') {
-            adjustedFilename = adjustedFilename + configuration_->getHome() + "/" + config_file;
-          } else {
-            adjustedFilename += config_file;
-          }
-
-          config_file = adjustedFilename;
-
-          std::stringstream config_file_backup;
-          config_file_backup << config_file << ".bak";
-          // we must be able to successfully copy the file.
-          bool persist_config = true;
-          bool backup_file = false;
-          std::string backup_config;
-
-          if (configuration_->get(minifi::Configure::nifi_flow_configuration_file_backup_update, backup_config) && utils::StringUtils::StringToBool(backup_config, backup_file)) {
-            if (utils::file::FileUtils::copy_file(config_file, config_file_backup.str()) != 0) {
-              logger_->log_debug("Cannot copy %s to %s", config_file, config_file_backup.str());
-              persist_config = false;
-            }
-          }
-          logger_->log_debug("Copy %s to %s %d", config_file, config_file_backup.str(), persist_config);
-          if (persist_config) {
-            std::ofstream writer(config_file);
-            if (writer.is_open()) {
-              writer.write(raw_data_str.data(), raw_data_str.size());
-            }
-            writer.close();
-
-            // update the flow id
-            configuration_->persistProperties();
-          }
-        }
-      } else {
-        logger_->log_debug("update failed.");
-        C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
-        response.setRawData("Error while applying flow. Likely missing processors");
-        enqueue_c2_response(std::move(response));
-      }
-      // send
-    } else {
-      logger_->log_debug("Did not have location within %s", resp.ident);
-      auto update_text = resp.operation_arguments.find("configuration_data");
-      if (update_text != resp.operation_arguments.end()) {
-        if (update_sink_->applyUpdate(url->second.to_string(), update_text->second.to_string()) != 0 && persist != resp.operation_arguments.end()
-            && utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true")) {
-          C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
-          enqueue_c2_response(std::move(response));
-          // update nifi.flow.configuration.file=./conf/config.yml
-          std::string config_file;
-          std::stringstream config_file_backup;
-          config_file_backup << config_file << ".bak";
-
-          bool persist_config = true;
-          bool backup_file = false;
-          std::string backup_config;
-
-          if (configuration_->get(minifi::Configure::nifi_flow_configuration_file_backup_update, backup_config) && utils::StringUtils::StringToBool(backup_config, backup_file)) {
-            if (utils::file::FileUtils::copy_file(config_file, config_file_backup.str()) != 0) {
-              persist_config = false;
-            }
-          }
-          if (persist_config) {
-            std::ofstream writer(config_file);
-            if (writer.is_open()) {
-              auto output = update_text->second.to_string();
-              writer.write(output.c_str(), output.size());
-            }
-            writer.close();
-          }
-        } else {
-          C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
-          enqueue_c2_response(std::move(response));
-        }
-      }
-    }
+    handleConfigurationUpdate(resp);
   } else if (resp.name == "properties") {
     bool update_occurred = false;
     for (auto entry : resp.operation_arguments) {
@@ -871,6 +663,161 @@ void C2Agent::update_agent() {
   if (!system(update_command_.c_str())) {
     logger_->log_warn("May not have command processor");
   }
+}
+
+utils::TaskRescheduleInfo C2Agent::produce() {
+  // place priority on messages to send to the c2 server
+  if (protocol_.load() != nullptr) {
+    std::vector<C2Payload> payload_batch;
+    payload_batch.reserve(max_c2_responses);
+    auto getRequestPayload = [&payload_batch] (C2Payload&& payload) { payload_batch.emplace_back(std::move(payload)); };
+    for (std::size_t attempt_num = 0; attempt_num < max_c2_responses; ++attempt_num) {
+      if (!requests.consume(getRequestPayload)) {
+        break;
+      }
+    }
+    std::for_each(
+        std::make_move_iterator(payload_batch.begin()),
+        std::make_move_iterator(payload_batch.end()),
+        [&] (C2Payload&& payload) {
+          try {
+            C2Payload && response = protocol_.load()->consumePayload(std::move(payload));
+            enqueue_c2_server_response(std::move(response));
+          }
+          catch(const std::exception &e) {
+            logger_->log_error("Exception occurred while consuming payload. error: %s", e.what());
+          }
+          catch(...) {
+            logger_->log_error("Unknown exception occurred while consuming payload.");
+          }
+        });
+
+    try {
+      performHeartBeat();
+    }
+    catch (const std::exception &e) {
+      logger_->log_error("Exception occurred while performing heartbeat. error: %s", e.what());
+    }
+    catch (...) {
+      logger_->log_error("Unknonwn exception occurred while performing heartbeat.");
+    }
+  }
+
+  checkTriggers();
+
+  return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(heart_beat_period_));
+}
+
+utils::TaskRescheduleInfo C2Agent::consume() {
+  const auto consume_success = responses.consume([this] (C2Payload&& payload) {
+    extractPayload(std::move(payload));
+  });
+  if (!consume_success) {
+    extractPayload(C2Payload{ Operation::HEARTBEAT });
+  }
+  return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
+}
+
+utils::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
+  if (!utils::StringUtils::startsWith(uri, "http") || protocol_.load() == nullptr) {
+    // try to open the file
+    utils::optional<std::string> content = filesystem_->read(uri);
+    if (content) {
+      return content;
+    }
+  }
+  // couldn't open as file and we have no protocol to request the file from
+  if (protocol_.load() == nullptr) {
+    return {};
+  }
+
+  std::string resolved_url = uri;
+  if (!utils::StringUtils::startsWith(uri, "http")) {
+    std::stringstream adjusted_url;
+    std::string base;
+    if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
+      adjusted_url << base;
+      if (!utils::StringUtils::endsWith(base, "/")) {
+        adjusted_url << "/";
+      }
+      adjusted_url << uri;
+      resolved_url = adjusted_url.str();
+    } else if (configuration_->get("c2.rest.url", base)) {
+      std::string host, protocol;
+      int port = -1;
+      utils::parse_url(&base, &host, &port, &protocol);
+      adjusted_url << protocol << host;
+      if (port > 0) {
+        adjusted_url << ":" << port;
+      }
+      adjusted_url << "/c2/api/" << uri;
+      resolved_url = adjusted_url.str();
+    }
+  }
+
+  C2Payload payload(Operation::TRANSFER, false, true);
+  C2Payload &&response = protocol_.load()->consumePayload(resolved_url, payload, RECEIVE, false);
+
+  auto raw_data = response.getRawData();
+  return std::string(raw_data.data(), raw_data.size());
+}
+
+bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
+  auto url = resp.operation_arguments.find("location");
+
+  std::string file_uri;
+  std::string configuration_str;
+
+  if (url != resp.operation_arguments.end()) {
+    file_uri = url->second.to_string();
+    utils::optional<std::string> optional_configuration_str = fetchFlow(file_uri);
+    if (!optional_configuration_str) {
+      logger_->log_debug("Couldn't load new flow configuration from: \"%s\"", file_uri);
+      C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
+      response.setRawData("Error while applying flow. Couldn't load flow configuration.");
+      enqueue_c2_response(std::move(response));
+      return false;
+    }
+    configuration_str = optional_configuration_str.value();
+  } else {
+    logger_->log_debug("Did not have location within %s", resp.ident);
+    auto update_text = resp.operation_arguments.find("configuration_data");
+    if (update_text == resp.operation_arguments.end()) {
+      logger_->log_debug("Neither the config file location nor the data is provided");
+      C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
+      response.setRawData("Error while applying flow. Neither the config file location nor the data is provided.");
+      enqueue_c2_response(std::move(response));
+      return false;
+    }
+    configuration_str = update_text->second.to_string();
+  }
+
+  bool should_persist = [&] {
+    auto persist = resp.operation_arguments.find("persist");
+    if (persist == resp.operation_arguments.end()) {
+      return false;
+    }
+    return utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true");
+  }();
+
+  int16_t err = {update_sink_->applyUpdate(file_uri, configuration_str, should_persist)};
+  if (err != 0) {
+    logger_->log_debug("Flow configuration update failed with error code %" PRIi16, err);
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
+    response.setRawData("Error while applying flow. Likely missing processors");
+    enqueue_c2_response(std::move(response));
+    return false;
+  }
+
+  C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
+  enqueue_c2_response(std::move(response));
+
+  if (should_persist) {
+    // update the flow id
+    configuration_->persistProperties();
+  }
+
+  return true;
 }
 
 }  // namespace c2

@@ -107,6 +107,12 @@ Bytes decryptRaw(const Bytes& input, const Bytes& key, const Bytes& nonce) {
 }
 
 std::string decrypt(const std::string& input, const Bytes& key) {
+  auto data = parseEncrypted(input);
+  Bytes plaintext = decryptRaw(data.ciphertext_plus_mac, key, data.nonce);
+  return bytesToString(plaintext);
+}
+
+EncryptedData parseEncrypted(const std::string& input) {
   std::vector<std::string> nonce_and_rest = utils::StringUtils::split(input, EncryptionType::separator());
   if (nonce_and_rest.size() != 2) {
     throw std::invalid_argument{"Incorrect input; expected '<nonce>" + EncryptionType::separator() + "<ciphertext_plus_mac>'"};
@@ -115,8 +121,16 @@ std::string decrypt(const std::string& input, const Bytes& key) {
   Bytes nonce = utils::StringUtils::from_base64(nonce_and_rest[0].data(), nonce_and_rest[0].size());
   Bytes ciphertext_plus_mac = utils::StringUtils::from_base64(nonce_and_rest[1].data(), nonce_and_rest[1].size());
 
-  Bytes plaintext = decryptRaw(ciphertext_plus_mac, key, nonce);
-  return bytesToString(plaintext);
+  return EncryptedData{nonce, ciphertext_plus_mac};
+}
+
+bool isEncrypted(const std::string& input) {
+  try {
+    parseEncrypted(input);
+    return true;
+  } catch (...) {
+    return false;
+  }
 }
 
 }  // namespace crypto

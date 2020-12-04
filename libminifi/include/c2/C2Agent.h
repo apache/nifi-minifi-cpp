@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_C2AGENT_H_
-#define LIBMINIFI_INCLUDE_C2_C2AGENT_H_
+
+#pragma once
 
 #include <map>
 #include <string>
@@ -40,6 +40,7 @@
 #include "utils/Id.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/ThreadPool.h"
+#include "utils/file/FileSystem.h"
 
 namespace org {
 namespace apache {
@@ -48,7 +49,6 @@ namespace minifi {
 
 namespace c2 {
 
-#define C2_AGENT_UPDATE_NAME "C2UpdatePolicy"
 /**
  * Purpose and Justification: C2 agent will be the mechanism that will abstract the protocol to do the work.
  *
@@ -62,9 +62,12 @@ namespace c2 {
  */
 class C2Agent : public state::UpdateController {
  public:
+  static constexpr const char* UPDATE_NAME = "C2UpdatePolicy";
+
   C2Agent(core::controller::ControllerServiceProvider* controller,
           const std::shared_ptr<state::StateMonitor> &updateSink,
-          const std::shared_ptr<Configure> &configure);
+          const std::shared_ptr<Configure> &configure,
+          const std::shared_ptr<utils::file::FileSystem>& filesystem = std::make_shared<utils::file::FileSystem>());
   virtual ~C2Agent() noexcept {
     delete protocol_.load();
   }
@@ -85,14 +88,8 @@ class C2Agent : public state::UpdateController {
   }
 
  protected:
-  /**
-   * Restarts this agent.
-   */
   void restart_agent();
 
-  /**
-   * Update agent per the provided C2 update from c2 server or triggers
-   */
   void update_agent();
 
   /**
@@ -101,9 +98,6 @@ class C2Agent : public state::UpdateController {
    */
   void checkTriggers();
 
-  /**
-   * Configure the C2 agent
-   */
   void configure(const std::shared_ptr<Configure> &configure, bool reconfigure = true);
 
   /**
@@ -117,12 +111,6 @@ class C2Agent : public state::UpdateController {
   /**
    * Extract the payload
    * @param resp payload to be moved into the function.
-   */
-  void extractPayload(const C2Payload &&resp);
-
-  /**
-   * Extract the payload
-   * @param payload reference.
    */
   void extractPayload(const C2Payload &resp);
 
@@ -167,6 +155,15 @@ class C2Agent : public state::UpdateController {
    */
   C2Payload prepareConfigurationOptions(const C2ContentResponse &resp) const;
 
+ private:
+  utils::TaskRescheduleInfo produce();
+  utils::TaskRescheduleInfo consume();
+
+  bool handleConfigurationUpdate(const C2ContentResponse &resp);
+
+  utils::optional<std::string> fetchFlow(const std::string& uri) const;
+
+ protected:
   std::timed_mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> metrics_map_;
 
@@ -198,9 +195,6 @@ class C2Agent : public state::UpdateController {
   // function that performs the heartbeat
   std::function<utils::TaskRescheduleInfo()> c2_producer_;
 
-  // function that acts upon the
-  std::function<utils::TaskRescheduleInfo()> c2_consumer_;
-
   // reference to the update sink, against which we will execute updates.
   std::shared_ptr<state::StateMonitor> update_sink_;
 
@@ -214,6 +208,8 @@ class C2Agent : public state::UpdateController {
 
   // shared pointer to the configuration of this agent
   std::shared_ptr<Configure> configuration_;
+
+  std::shared_ptr<utils::file::FileSystem> filesystem_;
 
   // shared pointer to the running c2 configuration.
   std::shared_ptr<Configure> running_c2_configuration;
@@ -251,4 +247,3 @@ class C2Agent : public state::UpdateController {
 }  // namespace apache
 }  // namespace org
 
-#endif  // LIBMINIFI_INCLUDE_C2_C2AGENT_H_

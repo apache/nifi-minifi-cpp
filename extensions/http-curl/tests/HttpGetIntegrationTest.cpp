@@ -92,14 +92,12 @@ int main(int argc, char **argv) {
       new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file));
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr),
-                                                                                                content_repo,
-                                                                                                DEFAULT_ROOT_GROUP_NAME,
-                                                                                                true);
+  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(
+      test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
 
-  std::shared_ptr<core::Processor> proc = yaml_config.getRoot(args.test_file)->findProcessorByName("invoke");
+  std::shared_ptr<core::Processor> proc = yaml_config.getRoot()->findProcessorByName("invoke");
   assert(proc != nullptr);
 
   const auto inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);

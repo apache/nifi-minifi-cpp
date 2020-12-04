@@ -19,15 +19,33 @@
 #include <typeinfo>
 
 #include "EncryptConfig.h"
+#include "ArgParser.h"
+#include "CommandException.h"
+
+using org::apache::nifi::minifi::encrypt_config::Arguments;
+using org::apache::nifi::minifi::encrypt_config::EncryptConfig;
+using org::apache::nifi::minifi::encrypt_config::CommandException;
 
 int main(int argc, char* argv[]) try {
-  org::apache::nifi::minifi::encrypt_config::EncryptConfig encrypt_config{argc, argv};
-  encrypt_config.encryptSensitiveProperties();
+  Arguments args = Arguments::parse(argc, argv);
+  EncryptConfig encrypt_config{args.get("-m").value()};
+  EncryptConfig::EncryptionType type = encrypt_config.encryptSensitiveProperties();
+  if (args.isSet("--encrypt-flow-config")) {
+    encrypt_config.encryptFlowConfig();
+  } else if (type == EncryptConfig::EncryptionType::RE_ENCRYPT) {
+    std::cout << "WARNING: you did not request the flow config to be updated, "
+              << "if it is currently encrypted and the old key is removed, "
+              << "you won't be able to recover the flow config.\n";
+  }
   return 0;
+} catch (const CommandException& c_ex) {
+  std::cerr << c_ex.what() << "\n";
+  std::cerr << Arguments::getHelp() << "\n";
+  return 1;
 } catch (const std::exception& ex) {
   std::cerr << ex.what() << "\n(" << typeid(ex).name() << ")\n";
-  return 1;
+  return 2;
 } catch (...) {
   std::cerr << "Unknown error\n";
-  return 2;
+  return 3;
 }

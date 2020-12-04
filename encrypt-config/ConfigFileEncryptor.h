@@ -18,6 +18,7 @@
 
 #include "ConfigFile.h"
 #include "utils/EncryptionUtils.h"
+#include "Utils.h"
 
 namespace org {
 namespace apache {
@@ -26,6 +27,8 @@ namespace minifi {
 namespace encrypt_config {
 
 uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes& encryption_key);
+
+uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const EncryptionKeys& keys);
 
 }  // namespace encrypt_config
 }  // namespace minifi
