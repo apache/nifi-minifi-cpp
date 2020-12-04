@@ -67,6 +67,7 @@ std::string WindowsCertStoreLocation::defaultLocation() {
   return DEFAULT_LOCATION;
 }
 
+// Returns a set because the return value is used as the parameter of PropertyBuilder::withAllowableValues()
 std::set<std::string> WindowsCertStoreLocation::allowedLocations() {
   std::set<std::string> allowed_locations;
   for (const auto& kv : SYSTEM_STORE_LOCATIONS) {
