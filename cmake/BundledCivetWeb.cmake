@@ -18,9 +18,6 @@
 function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     message("Using bundled civetweb")
 
-    # Define patch step
-    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/civetweb/civetweb.patch")
-
     # Define byproducts
     if (WIN32)
         set(SUFFIX "lib")
@@ -44,11 +41,12 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     set(CIVETWEB_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${CIVETWEB_BIN_DIR}"
             -DCIVETWEB_ENABLE_SSL_DYNAMIC_LOADING=OFF
+            -DCIVETWEB_BUILD_TESTING=OFF
+            -DCIVETWEB_ENABLE_DUKTAPE=OFF
+            -DCIVETWEB_ENABLE_LUA=OFF
             -DCIVETWEB_ENABLE_CXX=ON
-            -DBUILD_TESTING=OFF
             -DCIVETWEB_ALLOW_WARNINGS=ON
-            -DCIVETWEB_ENABLE_ASAN=OFF # TODO
-            )
+            -DCIVETWEB_ENABLE_ASAN=OFF)
     if (OPENSSL_OFF)
         list(APPEND CIVETWEB_CMAKE_ARGS -DCIVETWEB_ENABLE_SSL=OFF)
     endif()
@@ -58,12 +56,11 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             civetweb-external
-            URL "https://github.com/civetweb/civetweb/archive/v1.10.tar.gz"
-            URL_HASH "SHA256=e6958f005aa01b02645bd3ff9760dd085e83d30530cdd97b584632419195bea5"
+            URL "https://github.com/civetweb/civetweb/archive/v1.13.tar.gz"
+            URL_HASH "SHA256=a7ccc76c2f1b5f4e8d855eb328ed542f8fe3b882a6da868781799a98f4acdedc"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/civetweb-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${CIVETWEB_CMAKE_ARGS}
-            PATCH_COMMAND ${PC}
             BUILD_BYPRODUCTS "${CIVETWEB_LIBRARIES_LIST}"
             EXCLUDE_FROM_ALL TRUE
     )
