@@ -21,17 +21,21 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     # Define patch step
     set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/civetweb/civetweb.patch")
 
+    set(LIBDIR "lib")
     # Define byproducts
     if (WIN32)
         set(SUFFIX "lib")
     else()
 		set(PREFIX "lib")
-        set(SUFFIX "a")
+      include(GNUInstallDirs)
+      set(LIBDIR "${CMAKE_INSTALL_LIBDIR}")
+      set(SUFFIX "a")
+
     endif()
 
     set(BYPRODUCTS
-            "lib/${PREFIX}civetweb.${SUFFIX}"
-            "lib/${PREFIX}civetweb-cpp.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}civetweb.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}civetweb-cpp.${SUFFIX}"
             )
 
     set(CIVETWEB_BIN_DIR "${BINARY_DIR}/thirdparty/civetweb-install/" CACHE STRING "" FORCE)
@@ -44,11 +48,12 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     set(CIVETWEB_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${CIVETWEB_BIN_DIR}"
             -DCIVETWEB_ENABLE_SSL_DYNAMIC_LOADING=OFF
+            -DCIVETWEB_BUILD_TESTING=OFF
+            -DCIVETWEB_ENABLE_DUKTAPE=OFF
+            -DCIVETWEB_ENABLE_LUA=OFF
             -DCIVETWEB_ENABLE_CXX=ON
-            -DBUILD_TESTING=OFF
             -DCIVETWEB_ALLOW_WARNINGS=ON
-            -DCIVETWEB_ENABLE_ASAN=OFF # TODO
-            )
+            -DCIVETWEB_ENABLE_ASAN=OFF)
     if (OPENSSL_OFF)
         list(APPEND CIVETWEB_CMAKE_ARGS -DCIVETWEB_ENABLE_SSL=OFF)
     endif()
@@ -58,8 +63,8 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             civetweb-external
-            URL "https://github.com/civetweb/civetweb/archive/v1.10.tar.gz"
-            URL_HASH "SHA256=e6958f005aa01b02645bd3ff9760dd085e83d30530cdd97b584632419195bea5"
+            URL "https://github.com/civetweb/civetweb/archive/v1.12.tar.gz"
+            URL_HASH "SHA256=8cab1e2ad8fb3e2e81fed0b2321a5afbd7269a644c44ed4c3607e0a212c6d9e1"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/civetweb-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${CIVETWEB_CMAKE_ARGS}
@@ -76,7 +81,7 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     # Set variables
     set(CIVETWEB_FOUND "YES" CACHE STRING "" FORCE)
     set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_BIN_DIR}/include" CACHE STRING "" FORCE)
-    set(CIVETWEB_LIBRARIES "${CIVETWEB_BIN_DIR}/lib/${PREFIX}civetweb.${SUFFIX}" "${CIVETWEB_BIN_DIR}/lib/${PREFIX}civetweb-cpp.${SUFFIX}" CACHE STRING "" FORCE)
+    set(CIVETWEB_LIBRARIES "${CIVETWEB_BIN_DIR}/${LIBDIR}/${PREFIX}civetweb.${SUFFIX}" "${CIVETWEB_BIN_DIR}/${LIBDIR}/${PREFIX}civetweb-cpp.${SUFFIX}" CACHE STRING "" FORCE)
 
     # Set exported variables for FindPackage.cmake
     set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_CIVETWEB_INCLUDE_DIR=${CIVETWEB_INCLUDE_DIR}" CACHE STRING "" FORCE)
@@ -86,7 +91,7 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     file(MAKE_DIRECTORY ${CIVETWEB_INCLUDE_DIR})
 
     add_library(CIVETWEB::c-library STATIC IMPORTED)
-    set_target_properties(CIVETWEB::c-library PROPERTIES IMPORTED_LOCATION "${CIVETWEB_BIN_DIR}/lib/${PREFIX}civetweb.${SUFFIX}")
+    set_target_properties(CIVETWEB::c-library PROPERTIES IMPORTED_LOCATION "${CIVETWEB_BIN_DIR}/${LIBDIR}/${PREFIX}civetweb.${SUFFIX}")
     set_property(TARGET CIVETWEB::c-library APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CIVETWEB_INCLUDE_DIR})
     add_dependencies(CIVETWEB::c-library civetweb-external)
     if (NOT OPENSSL_OFF)
@@ -94,7 +99,7 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     endif()
 
     add_library(CIVETWEB::civetweb-cpp STATIC IMPORTED)
-    set_target_properties(CIVETWEB::civetweb-cpp PROPERTIES IMPORTED_LOCATION "${CIVETWEB_BIN_DIR}/lib/${PREFIX}civetweb-cpp.${SUFFIX}")
+    set_target_properties(CIVETWEB::civetweb-cpp PROPERTIES IMPORTED_LOCATION "${CIVETWEB_BIN_DIR}/${LIBDIR}/${PREFIX}civetweb-cpp.${SUFFIX}")
     set_property(TARGET CIVETWEB::civetweb-cpp APPEND PROPERTY INTERFACE_LINK_LIBRARIES CIVETWEB::c-library)
     add_dependencies(CIVETWEB::civetweb-cpp civetweb-external)
 endfunction(use_bundled_civetweb)
