@@ -211,7 +211,7 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
       logging::LOG_ERROR(logger_) << "Failed to set additional certificate from " << certificate_ << ", " << getLatestOpenSSLErrorString();
       return false;
     }
-    cacert.release();
+    cacert.release();  // a successful SSL_CTX_add_extra_chain_cert() takes ownership of cacert
   }
   if (SSL_CTX_use_PrivateKey(ctx, pkey) != 1) {
     logging::LOG_ERROR(logger_) << "Failed to set private key from " << certificate_ << ", " << getLatestOpenSSLErrorString();
