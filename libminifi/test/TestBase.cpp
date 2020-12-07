@@ -243,25 +243,25 @@ std::shared_ptr<core::ProcessContext> TestPlan::getProcessContextForProcessor(co
   return *context_found_at;
 }
 
-void TestPlan::schedule_processors() {
-  for(std::size_t target_location = 0; target_location < processor_queue_.size(); ++target_location) {
-    std::shared_ptr<core::Processor> processor = processor_queue_.at(target_location);
-    std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(target_location);
-    schedule_processor(processor, context);
-  }
-}
-
-void TestPlan::schedule_processor(const std::shared_ptr<core::Processor>& processor) {
-  schedule_processor(processor, getProcessContextForProcessor(processor));
-}
-
-void TestPlan::schedule_processor(const std::shared_ptr<core::Processor>& processor, const std::shared_ptr<core::ProcessContext>& context) {
+void TestPlan::scheduleProcessor(const std::shared_ptr<core::Processor>& processor, const std::shared_ptr<core::ProcessContext>& context) {
   if (std::find(configured_processors_.begin(), configured_processors_.end(), processor) == configured_processors_.end()) {
     // Ordering on factories and list of configured processors do not matter
     std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
     factories_.push_back(factory);
     processor->onSchedule(context, factory);
     configured_processors_.push_back(processor);
+  }
+}
+
+void TestPlan::scheduleProcessor(const std::shared_ptr<core::Processor>& processor) {
+  scheduleProcessor(processor, getProcessContextForProcessor(processor));
+}
+
+void TestPlan::scheduleProcessors() {
+  for(std::size_t target_location = 0; target_location < processor_queue_.size(); ++target_location) {
+    std::shared_ptr<core::Processor> processor = processor_queue_.at(target_location);
+    std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(target_location);
+    scheduleProcessor(processor, context);
   }
 }
 
@@ -279,7 +279,7 @@ bool TestPlan::runProcessor(int target_location, std::function<void(const std::s
 
   std::shared_ptr<core::Processor> processor = processor_queue_.at(target_location);
   std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(target_location);
-  schedule_processor(processor, context);
+  scheduleProcessor(processor, context);
   std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
   process_sessions_.push_back(current_session);
   current_flowfile_ = nullptr;

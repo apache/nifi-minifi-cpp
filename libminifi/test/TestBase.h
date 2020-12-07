@@ -254,9 +254,9 @@ class TestPlan {
   std::vector<std::shared_ptr<core::Processor>>::iterator getProcessorItByUuid(const std::string& uuid);
   std::shared_ptr<core::ProcessContext> getProcessContextForProcessor(const std::shared_ptr<core::Processor>& processor);
 
-  void schedule_processor(const std::shared_ptr<core::Processor>& processor, const std::shared_ptr<core::ProcessContext>& context);
-  void schedule_processor(const std::shared_ptr<core::Processor>& processor);
-  void schedule_processors();
+  void scheduleProcessor(const std::shared_ptr<core::Processor>& processor, const std::shared_ptr<core::ProcessContext>& context);
+  void scheduleProcessor(const std::shared_ptr<core::Processor>& processor);
+  void scheduleProcessors();
 
   // Note: all this verify logic is only used in TensorFlow tests as a replacement for UpdateAttribute
   // It should probably not be the part of the standard way of running processors

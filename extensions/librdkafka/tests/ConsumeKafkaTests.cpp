@@ -294,10 +294,10 @@ class ConsumeKafkaPropertiesTest : public ConsumeKafkaTest {
 
     if (!expect_config_valid) {
       const auto& message = messages_on_topic.front();
-      REQUIRE_THROWS(plan_->schedule_processor(consume_kafka));
+      REQUIRE_THROWS(plan_->scheduleProcessor(consume_kafka));
       return;
     } else {
-      plan_->schedule_processors();
+      plan_->scheduleProcessors();
     }
 
     std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf_;
@@ -420,7 +420,7 @@ class ConsumeKafkaContinuousPublishingTest : public ConsumeKafkaTest {
       return num_messages_sent;
     };
 
-    plan_->schedule_processors();
+    plan_->scheduleProcessors();
 
     const auto get_time_property_ms = [] (const std::string& property_string) {
       int64_t value;
