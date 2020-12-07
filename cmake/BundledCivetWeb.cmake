@@ -63,8 +63,8 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             civetweb-external
-            URL "https://github.com/civetweb/civetweb/archive/v1.13.tar.gz"
-            URL_HASH "SHA256=a7ccc76c2f1b5f4e8d855eb328ed542f8fe3b882a6da868781799a98f4acdedc"
+            URL "https://github.com/civetweb/civetweb/archive/v1.12.tar.gz"
+            URL_HASH "SHA256=8cab1e2ad8fb3e2e81fed0b2321a5afbd7269a644c44ed4c3607e0a212c6d9e1"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/civetweb-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${CIVETWEB_CMAKE_ARGS}
