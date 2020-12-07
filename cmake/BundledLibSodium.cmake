@@ -40,13 +40,15 @@ function(use_bundled_libsodium SOURCE_DIR BINARY_DIR)
     endif()
 
     # Build project
-    set(LIBSODIUM_URL https://download.libsodium.org/libsodium/releases/libsodium-1.0.18.tar.gz)
+    set(LIBSODIUM_OFFICIAL_MIRROR_URL https://download.libsodium.org/libsodium/releases/libsodium-1.0.18.tar.gz)
+    set(LIBSODIUM_GITHUB_MIRROR_URL https://github.com/jedisct1/libsodium/releases/download/1.0.18-RELEASE/libsodium-1.0.18.tar.gz)
+    set(LIBSODIUM_GENTOO_MIRROR_URL https://gentoo.osuosl.org/distfiles/libsodium-1.0.18.tar.gz)
     set(LIBSODIUM_URL_HASH "SHA256=6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1")
 
     if (WIN32)
         ExternalProject_Add(
                 libsodium-external
-                URL ${LIBSODIUM_URL}
+                URL "${LIBSODIUM_OFFICIAL_MIRROR_URL} ${LIBSODIUM_GITHUB_MIRROR_URL} ${LIBSODIUM_GENTOO_MIRROR_URL}"
                 URL_HASH ${LIBSODIUM_URL_HASH}
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/libsodium-src"
                 LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
@@ -60,7 +62,7 @@ function(use_bundled_libsodium SOURCE_DIR BINARY_DIR)
 
         ExternalProject_Add(
                 libsodium-external
-                URL ${LIBSODIUM_URL}
+                URL "${LIBSODIUM_OFFICIAL_MIRROR_URL} ${LIBSODIUM_GITHUB_MIRROR_URL} ${LIBSODIUM_GENTOO_MIRROR_URL}"
                 URL_HASH ${LIBSODIUM_URL_HASH}
                 BUILD_IN_SOURCE true
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/libsodium-src"
