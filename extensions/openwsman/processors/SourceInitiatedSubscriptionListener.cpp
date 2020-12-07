@@ -50,10 +50,10 @@ extern "C" {
 #include "io/BufferStream.h"
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
+#include "utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-
-#include "utils/gsl.h"
+#include "utils/tls/CertificateUtils.h"
 
 #define XML_NS_CUSTOM_SUBSCRIPTION "http://schemas.microsoft.com/wbem/wsman/1/subscription"
 #define XML_NS_CUSTOM_AUTHENTICATION "http://schemas.microsoft.com/wbem/wsman/1/authentication"
@@ -870,9 +870,10 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
   if (ca == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION,"Failed to parse file specified by SSL Certificate Authority attribute");
   }
+  utils::tls::X509_unique_ptr ca_ptr{ca};
+
   std::array<uint8_t, 20U> hash_buf;
   int ret = X509_digest(ca, EVP_sha1(), hash_buf.data(), nullptr);
-  X509_free(ca);
   if (ret != 1) {
     throw Exception(PROCESSOR_EXCEPTION,"Failed to get fingerprint for CA specified by SSL Certificate Authority attribute");
   }
