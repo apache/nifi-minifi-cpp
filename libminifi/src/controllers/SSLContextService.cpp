@@ -189,6 +189,7 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
     logging::LOG_ERROR(logger_) << "Failed to DER decode certificate file " << certificate_ << ", " << getLatestOpenSSLErrorString();
     return false;
   }
+
   EVP_PKEY* pkey = nullptr;
   X509* cert = nullptr;
   STACK_OF(X509)* ca = nullptr;
@@ -196,11 +197,10 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
     logging::LOG_ERROR(logger_) << "Failed to parse certificate file " << certificate_ << " as PKCS#12, " << getLatestOpenSSLErrorString();
     return false;
   }
-  const auto certs_guard = gsl::finally([pkey, cert, ca]() {
-    EVP_PKEY_free(pkey);
-    X509_free(cert);
-    sk_X509_pop_free(ca, X509_free);
-  });
+  utils::tls::EVP_PKEY_unique_ptr pkey_ptr{pkey};
+  utils::tls::X509_unique_ptr cert_ptr{cert};
+  const auto ca_deleter = gsl::finally([ca] { sk_X509_pop_free(ca, X509_free); });
+
   if (SSL_CTX_use_certificate(ctx, cert) != 1) {
     logging::LOG_ERROR(logger_) << "Failed to set certificate from " << certificate_ << ", " << getLatestOpenSSLErrorString();
     return false;
