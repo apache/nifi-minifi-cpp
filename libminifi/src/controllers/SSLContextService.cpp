@@ -369,6 +369,8 @@ void SSLContextService::addServerCertificateToSSLStore(X509_STORE* ssl_store, PC
   int success = X509_STORE_add_cert(ssl_store, x509_cert.get());
   if (success == 1) {
     logger_->log_debug("Added server certificate %s from the system store to the SSL store", x509_cert->name);
+  } else if (ERR_peek_last_error() == X509_R_CERT_ALREADY_IN_HASH_TABLE) {
+    logger_->log_debug("Ignoring duplicate server certificate %s", x509_cert->name);
   } else {
     logger_->log_error("Failed to add server certificate %s to the SSL store; error: %s", x509_cert->name, getLatestOpenSSLErrorString());
   }
