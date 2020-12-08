@@ -36,16 +36,16 @@ struct default_allocator {
 };
 }  // namespace internal
 
-template<typename ActiveItem, typename Item = typename ActiveItem::Item, typename Allocator = internal::default_allocator<ActiveItem>>
+template<typename ActiveItem, typename Allocator = internal::default_allocator<ActiveItem>>
 class StagingQueue {
+  using Item = typename std::decay<decltype(std::declval<ActiveItem&>().commit())>::type;
+
   static_assert(std::is_same<decltype(std::declval<const Allocator&>()(std::declval<size_t>())), ActiveItem>::value,
       "Allocator::operator(size_t) must return an ActiveItem");
   static_assert(std::is_same<decltype(std::declval<const Item&>().size()), size_t>::value,
       "Item::size must return size_t");
   static_assert(std::is_same<decltype(std::declval<const ActiveItem&>().size()), size_t>::value,
       "ActiveItem::size must return size_t");
-  static_assert(std::is_same<decltype(std::declval<ActiveItem&>().commit()), Item>::value,
-      "ActiveItem::commit must return an Item");
 
  public:
   StagingQueue(size_t max_size, size_t max_item_size, Allocator allocator = {})

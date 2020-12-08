@@ -129,7 +129,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
   }
 
 
-// Convert String to Integer
+  // Convert String to Integer
   template<typename T, typename std::enable_if<
       std::is_integral<T>::value>::type* = nullptr>
   static bool StringToInt(const std::string &input, T &output) {
@@ -147,13 +147,16 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
       return false;
     }
 
-    std::transform(unit_str.begin(), unit_str.end(), unit_str.end(), ::toupper);
-    auto multiplierIt = unit_map.find(unit_str);
-    if (multiplierIt == unit_map.end()) {
-      return false;
+    if (!unit_str.empty()) {
+      std::transform(unit_str.begin(), unit_str.end(), unit_str.begin(), ::toupper);
+      auto multiplierIt = unit_map.find(unit_str);
+      if (multiplierIt == unit_map.end()) {
+        return false;
+      }
+      value *= multiplierIt->second;
     }
 
-    output = gsl::narrow<T>(value * multiplierIt->second);
+    output = gsl::narrow<T>(value);
     return true;
   }
 };

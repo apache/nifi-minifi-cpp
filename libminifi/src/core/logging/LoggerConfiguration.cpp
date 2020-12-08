@@ -27,6 +27,7 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <atomic>
 
 #include "core/Core.h"
 #include "utils/StringUtils.h"
@@ -282,8 +283,8 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
     if (child_pair == current_namespace->children.end()) {
       break;
     }
-    current_namespace = child_pair->second;
     std::copy(current_namespace->exported_sinks.begin(), current_namespace->exported_sinks.end(), std::back_inserter(inherited_sinks));
+    current_namespace = child_pair->second;
     if (current_namespace->sinks.size() > 0) {
       sinks = current_namespace->sinks;
       sink_namespace_str = current_namespace_str;
@@ -354,11 +355,11 @@ void LoggerConfiguration::initializeCompression(std::unique_lock<std::mutex>& lo
   auto compressed_sink = std::make_shared<internal::CompressedLogSink>(cached_log_max_size, compressed_log_max_size, std::move(compression_sink_logger));
   root_namespace_->sinks.push_back(compressed_sink);
   root_namespace_->exported_sinks.push_back(compressed_sink);
-  compressed_sink_ = compressed_sink;
+  std::atomic_store(&compressed_sink_, compressed_sink);
 }
 
 std::unique_ptr<io::InputStream> LoggerConfiguration::getCompressedLog(bool flush) {
-  std::shared_ptr<internal::CompressedLogSink> compressor = getConfiguration().compressed_sink_;
+  std::shared_ptr<internal::CompressedLogSink> compressor = std::atomic_load(&getConfiguration().compressed_sink_);
   if (compressor) {
     return compressor->getContent(flush);
   }

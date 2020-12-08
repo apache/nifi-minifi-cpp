@@ -39,7 +39,6 @@
 #include "core/logging/Logger.h"
 #include "properties/Properties.h"
 #include "internal/CompressedLogSink.h"
-#include "utils/AtomicSharedPtr.h"
 
 namespace org {
 namespace apache {
@@ -163,7 +162,7 @@ class LoggerConfiguration {
   };
 
   LoggerConfiguration();
-  utils::AtomicSharedPtr<internal::CompressedLogSink> compressed_sink_;
+  std::shared_ptr<internal::CompressedLogSink> compressed_sink_;
   std::shared_ptr<internal::LoggerNamespace> root_namespace_;
   std::vector<std::shared_ptr<LoggerImpl>> loggers;
   std::shared_ptr<spdlog::formatter> formatter_;

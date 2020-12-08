@@ -32,8 +32,6 @@ namespace internal {
 
 class ActiveCompressor {
  public:
-  using Item = LogBuffer;
-
   class Allocator {
    public:
     explicit Allocator(std::shared_ptr<logging::Logger> logger) : logger_{std::move(logger)} {}

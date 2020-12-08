@@ -33,8 +33,6 @@ namespace internal {
 
 class LogBuffer {
  public:
-  using Item = LogBuffer;
-
   LogBuffer() = default;
   explicit LogBuffer(std::unique_ptr<io::BufferStream> buffer): buffer_{std::move(buffer)} {}
 

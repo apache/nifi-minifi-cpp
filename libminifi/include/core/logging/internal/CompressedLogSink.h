@@ -70,7 +70,7 @@ class CompressedLogSink : public spdlog::sinks::base_sink<spdlog::details::null_
   static constexpr size_t compressed_segment_size_ = 1_MiB;
 
   utils::StagingQueue<LogBuffer> cached_logs_;
-  utils::StagingQueue<ActiveCompressor, LogBuffer, ActiveCompressor::Allocator> compressed_logs_;
+  utils::StagingQueue<ActiveCompressor, ActiveCompressor::Allocator> compressed_logs_;
 };
 
 }  // namespace internal

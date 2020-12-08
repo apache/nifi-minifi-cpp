@@ -142,7 +142,8 @@ class TestClass4 {};
 TEST_CASE("Test Compression Sink is inherited", "[ttl7]") {
   auto& log_config = logging::LoggerConfiguration::getConfiguration();
   auto properties = std::make_shared<logging::LoggerProperties>();
-  properties->set("logger.TestClass4", "INFO");
+  properties->set("appender.null", "null");
+  properties->set("logger.TestClass4", "INFO,null");
   log_config.initialize(properties);
   auto logger = logging::LoggerFactory<TestClass4>::getLogger();
   logger->log_error("Hi there TestClass4");
