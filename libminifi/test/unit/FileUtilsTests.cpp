@@ -20,6 +20,7 @@
 #include <vector>
 #include <cstdlib>
 #include <iostream>
+#include <thread>
 #include "../TestBase.h"
 #include "core/Core.h"
 #include "utils/file/FileUtils.h"
@@ -215,6 +216,7 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
   REQUIRE(FileUtils::last_write_time(test_file) == 0);
   REQUIRE(FileUtils::last_write_time_point(test_file) == (time_point<system_clock, seconds>{}));
 
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
   std::ofstream test_file_stream(test_file);
   test_file_stream << "foo\n";
   test_file_stream.flush();
@@ -230,6 +232,7 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
   REQUIRE(first_mtime_time_point >= time_point_before_write);
   REQUIRE(first_mtime_time_point <= time_point_after_first_write);
 
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
   test_file_stream << "bar\n";
   test_file_stream.flush();
 
