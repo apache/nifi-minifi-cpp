@@ -20,6 +20,7 @@
 #include <vector>
 #include <cstdlib>
 #include <iostream>
+#include <thread>
 #include "../TestBase.h"
 #include "core/Core.h"
 #include "utils/file/FileUtils.h"
@@ -215,6 +216,7 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
   REQUIRE(FileUtils::last_write_time(test_file) == 0);
   REQUIRE(FileUtils::last_write_time_point(test_file) == (time_point<system_clock, seconds>{}));
 
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
   std::ofstream test_file_stream(test_file);
   test_file_stream << "foo\n";
   test_file_stream.flush();
@@ -230,6 +232,7 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
   REQUIRE(first_mtime_time_point >= time_point_before_write);
   REQUIRE(first_mtime_time_point <= time_point_after_first_write);
 
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
   test_file_stream << "bar\n";
   test_file_stream.flush();
 
@@ -247,11 +250,15 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
   REQUIRE(second_mtime_time_point <= time_point_after_second_write);
 
   test_file_stream.close();
+
+  // On Windows it would rarely occur that the last_write_time is off by 1 from the previous check
+#ifndef WIN32
   uint64_t third_mtime = FileUtils::last_write_time(test_file);
   REQUIRE(third_mtime == second_mtime);
 
   time_point<system_clock, seconds> third_mtime_time_point = FileUtils::last_write_time_point(test_file);
   REQUIRE(third_mtime_time_point == second_mtime_time_point);
+#endif
 }
 
 TEST_CASE("FileUtils::file_size works", "[file_size]") {
