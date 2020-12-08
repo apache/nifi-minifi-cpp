@@ -39,6 +39,14 @@
 using Connection = minifi::Connection;
 using MergeContent = minifi::processors::MergeContent;
 
+namespace {
+
+#ifdef WIN32
+const std::string PERSISTENCETEST_FLOWFILE_CHECKPOINT_DIR = ".\\persistencetest_flowfile_checkpoint";
+#else
+const std::string PERSISTENCETEST_FLOWFILE_CHECKPOINT_DIR = "./persistencetest_flowfile_checkpoint";
+#endif
+
 struct TestFlow{
   TestFlow(const std::shared_ptr<core::Repository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<core::Repository>& prov_repo,
         const std::function<std::shared_ptr<core::Processor>(utils::Identifier&)>& processorGenerator, const core::Relationship& relationshipToOutput)
@@ -160,7 +168,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
 
   std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
-  std::shared_ptr<core::repository::FlowFileRepository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
+  std::shared_ptr<core::repository::FlowFileRepository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository", PERSISTENCETEST_FLOWFILE_CHECKPOINT_DIR);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
   ff_repository->initialize(config);
   content_repo->initialize(config);
@@ -262,7 +270,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
 
   std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
-  std::shared_ptr<core::Repository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
+  std::shared_ptr<core::Repository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository", PERSISTENCETEST_FLOWFILE_CHECKPOINT_DIR);
   std::shared_ptr<core::ContentRepository> content_repo;
   SECTION("VolatileContentRepository") {
     testController.getLogger()->log_info("Using VolatileContentRepository");
@@ -326,10 +334,12 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
     ff_repository->start();
     // wait for FlowFileRepository to start and notify the owners of
     // the resurrected FlowFiles
-    std::this_thread::sleep_for(std::chrono::milliseconds{100});
-
     std::set<std::shared_ptr<core::FlowFile>> expired;
-    auto file = flow.output->poll(expired);
+    std::shared_ptr<org::apache::nifi::minifi::core::FlowFile> file = nullptr;
+    for (auto i = 0; i < 20 && !file; ++i) {
+      std::this_thread::sleep_for(std::chrono::milliseconds{10});
+      file = flow.output->poll(expired);
+    }
     REQUIRE(file);
     REQUIRE(expired.empty());
 
@@ -342,3 +352,5 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
     flowController->unload();
   }
 }
+
+}  // namespace
