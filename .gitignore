@@ -45,7 +45,7 @@ CTestTestfile.cmake
 cmake-build-debug
 
 # Generated files
-flowfile_checkpoint
+*flowfile_checkpoint
 build
 bt_state
 bin
