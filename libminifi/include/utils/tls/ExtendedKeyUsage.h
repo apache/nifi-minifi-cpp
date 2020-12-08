@@ -17,6 +17,7 @@
 #pragma once
 #ifdef OPENSSL_SUPPORT
 
+#include <bitset>
 #include <cinttypes>
 #include <memory>
 #include <string>
@@ -50,7 +51,7 @@ class ExtendedKeyUsage {
   friend bool operator!=(const ExtendedKeyUsage& left, const ExtendedKeyUsage& right);
 
  private:
-  uint16_t bits_ = 0;
+  std::bitset<16> bits_;
   std::shared_ptr<core::logging::Logger> logger_;
 };
 

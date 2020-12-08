@@ -22,7 +22,6 @@
 
 #include <array>
 #include <cassert>
-#include <climits>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
@@ -40,6 +39,8 @@ struct KeyValuePair {
   const char* key;
   uint8_t value;
 };
+// see https://tools.ietf.org/html/rfc5280#section-4.2.1.12
+// note that the chosen bit position is the last byte of the OID
 constexpr std::array<KeyValuePair, 6> EXT_KEY_USAGE_NAME_TO_BIT_POS{{
     KeyValuePair{"Server Authentication", 1},
     KeyValuePair{"Client Authentication", 2},
@@ -60,9 +61,9 @@ ExtendedKeyUsage::ExtendedKeyUsage(const EXTENDED_KEY_USAGE& key_usage_asn1) : E
   for (int i = 0; i < num_oids; ++i) {
     const ASN1_OBJECT* const oid = sk_ASN1_OBJECT_value(&key_usage_asn1, i);
     assert(oid && oid->length > 0);
-    const unsigned char bit_pos = oid->data[oid->length - 1];
-    if (bit_pos < CHAR_BIT * sizeof(bits_)) {
-      bits_ |= (1 << bit_pos);
+    const unsigned char last_byte_of_oid = oid->data[oid->length - 1];
+    if (last_byte_of_oid < bits_.size()) {
+      bits_.set(last_byte_of_oid);
     }
   }
 }
@@ -75,7 +76,7 @@ ExtendedKeyUsage::ExtendedKeyUsage(const std::string& key_usage_str) : ExtendedK
                                  [key_usage_trimmed](const KeyValuePair& kv){ return kv.key == key_usage_trimmed; });
     if (it != EXT_KEY_USAGE_NAME_TO_BIT_POS.end()) {
       const uint8_t bit_pos = it->value;
-      bits_ |= (1 << bit_pos);
+      bits_.set(bit_pos);
     } else {
       logger_->log_error("Ignoring unrecognized extended key usage type %s", key_usage_trimmed);
     }
