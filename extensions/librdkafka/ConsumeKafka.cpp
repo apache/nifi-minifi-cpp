@@ -461,6 +461,18 @@ class WriteCallback : public OutputStreamCallback {
   }
 };
 
+void ConsumeKafka::add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileRecord>& flow_file, const rd_kafka_message_t* message) {
+  // We do not currently support batching messages into a single flowfile
+  flow_file->setAttribute(KAFKA_COUNT_ATTR, "1");
+  const utils::optional<std::string> message_key = utils::get_encoded_message_key(message, key_attr_encoding_attr_to_enum());
+  if (message_key) {
+    flow_file->setAttribute(KAFKA_MESSAGE_KEY_ATTR, message_key.value());
+  }
+  flow_file->setAttribute(KAFKA_OFFSET_ATTR, std::to_string(message->offset));
+  flow_file->setAttribute(KAFKA_PARTITION_ATTR, std::to_string(message->partition));
+  flow_file->setAttribute(KAFKA_TOPIC_ATTR, rd_kafka_topic_name(message->rkt));
+}
+
 std::vector<std::shared_ptr<FlowFileRecord>> ConsumeKafka::transform_messages_into_flowfiles(
     const std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>>& messages, core::ProcessSession* session) {
   std::vector<std::shared_ptr<FlowFileRecord>> flow_files_created;
@@ -484,15 +496,7 @@ std::vector<std::shared_ptr<FlowFileRecord>> ConsumeKafka::transform_messages_in
       for (const auto& kv : attributes_from_headers) {
         flow_file->setAttribute(kv.first, kv.second);
       }
-      // We do not currently support batching messages into a single flowfile
-      flow_file->setAttribute(KAFKA_COUNT_ATTR, "1");
-      const utils::optional<std::string> message_key = utils::get_encoded_message_key(message.get(), key_attr_encoding_attr_to_enum());
-      if (message_key) {
-        flow_file->setAttribute(KAFKA_MESSAGE_KEY_ATTR, message_key.value());
-      }
-      flow_file->setAttribute(KAFKA_OFFSET_ATTR, std::to_string(message->offset));
-      flow_file->setAttribute(KAFKA_PARTITION_ATTR, std::to_string(message->partition));
-      flow_file->setAttribute(KAFKA_TOPIC_ATTR, rd_kafka_topic_name(message->rkt));
+      add_kafka_attributes_to_flowfile(flow_file, message.get());
       flow_files_created.emplace_back(std::move(flow_file));
     }
   }

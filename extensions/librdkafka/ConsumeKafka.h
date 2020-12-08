@@ -158,6 +158,7 @@ class ConsumeKafka : public core::Processor {
   std::string resolve_duplicate_headers(const std::vector<std::string>& matching_headers);
   std::vector<std::string> get_matching_headers(const rd_kafka_message_t* message, const std::string& header_name);
   std::vector<std::pair<std::string, std::string>> get_flowfile_attributes_from_message_header(const rd_kafka_message_t* message);
+  void add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileRecord>& flow_file, const rd_kafka_message_t* message);
   std::vector<std::shared_ptr<FlowFileRecord>> transform_messages_into_flowfiles(
       const std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>>& messages, core::ProcessSession* session);
 
