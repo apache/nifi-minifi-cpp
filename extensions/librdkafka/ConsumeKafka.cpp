@@ -351,7 +351,7 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext* context)
   logger_->log_info("Done resetting offset manually.");
 }
 
-std::string ConsumeKafka::extract_message(const rd_kafka_message_t* rkmessage) {
+std::string ConsumeKafka::extract_message(const rd_kafka_message_t* rkmessage) const {
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rkmessage->err) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "ConsumeKafka: received error message from broker.");
   }
@@ -376,7 +376,7 @@ std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
   return messages;
 }
 
-utils::KafkaEncoding ConsumeKafka::key_attr_encoding_attr_to_enum() {
+utils::KafkaEncoding ConsumeKafka::key_attr_encoding_attr_to_enum() const {
   if (utils::StringUtils::equalsIgnoreCase(key_attribute_encoding_, KEY_ATTR_ENCODING_UTF_8)) {
     return utils::KafkaEncoding::UTF8;
   }
@@ -386,7 +386,7 @@ utils::KafkaEncoding ConsumeKafka::key_attr_encoding_attr_to_enum() {
   throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "\"Key Attribute Encoding\" property not recognized.");
 }
 
-utils::KafkaEncoding ConsumeKafka::message_header_encoding_attr_to_enum() {
+utils::KafkaEncoding ConsumeKafka::message_header_encoding_attr_to_enum() const {
   if (utils::StringUtils::equalsIgnoreCase(message_header_encoding_, MSG_HEADER_ENCODING_UTF_8)) {
     return utils::KafkaEncoding::UTF8;
   }
@@ -396,7 +396,7 @@ utils::KafkaEncoding ConsumeKafka::message_header_encoding_attr_to_enum() {
   throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Key Attribute Encoding property not recognized.");
 }
 
-std::string ConsumeKafka::resolve_duplicate_headers(const std::vector<std::string>& matching_headers) {
+std::string ConsumeKafka::resolve_duplicate_headers(const std::vector<std::string>& matching_headers) const {
   if (MSG_HEADER_KEEP_FIRST == duplicate_header_handling_) {
     return matching_headers.front();
   }
@@ -409,7 +409,7 @@ std::string ConsumeKafka::resolve_duplicate_headers(const std::vector<std::strin
   throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "\"Duplicate Header Handling\" property not recognized.");
 }
 
-std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_message_t* message, const std::string& header_name) {
+std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_message_t* message, const std::string& header_name) const {
   // Headers fetched this way are freed when rd_kafka_message_destroy is called
   // Detaching them using rd_kafka_message_detach_headers does not seem to work
   rd_kafka_headers_t* headers_raw;
@@ -435,7 +435,7 @@ std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_messa
   return matching_headers;
 }
 
-std::vector<std::pair<std::string, std::string>> ConsumeKafka::get_flowfile_attributes_from_message_header(const rd_kafka_message_t* message) {
+std::vector<std::pair<std::string, std::string>> ConsumeKafka::get_flowfile_attributes_from_message_header(const rd_kafka_message_t* message) const {
   std::vector<std::pair<std::string, std::string>> attributes_from_headers;
   for (const std::string& header_name : headers_to_add_as_attributes_) {
     const std::vector<std::string> matching_headers = get_matching_headers(message, header_name);
@@ -461,7 +461,7 @@ class WriteCallback : public OutputStreamCallback {
   }
 };
 
-void ConsumeKafka::add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileRecord>& flow_file, const rd_kafka_message_t* message) {
+void ConsumeKafka::add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileRecord>& flow_file, const rd_kafka_message_t* message) const {
   // We do not currently support batching messages into a single flowfile
   flow_file->setAttribute(KAFKA_COUNT_ATTR, "1");
   const utils::optional<std::string> message_key = utils::get_encoded_message_key(message, key_attr_encoding_attr_to_enum());
@@ -474,7 +474,7 @@ void ConsumeKafka::add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileReco
 }
 
 std::vector<std::shared_ptr<FlowFileRecord>> ConsumeKafka::transform_messages_into_flowfiles(
-    const std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>>& messages, core::ProcessSession* session) {
+    const std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>>& messages, core::ProcessSession* session) const {
   std::vector<std::shared_ptr<FlowFileRecord>> flow_files_created;
   for (const auto& message : messages) {
     std::string message_content = extract_message(message.get());

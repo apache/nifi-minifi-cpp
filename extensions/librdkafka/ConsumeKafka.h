@@ -151,16 +151,16 @@ class ConsumeKafka : public core::Processor {
   void create_topic_partition_list();
   void extend_config_from_dynamic_properties(const core::ProcessContext* context);
   void configure_new_connection(const core::ProcessContext* context);
-  std::string extract_message(const rd_kafka_message_t* rkmessage);
+  std::string extract_message(const rd_kafka_message_t* rkmessage) const;
   std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>> poll_kafka_messages();
-  utils::KafkaEncoding key_attr_encoding_attr_to_enum();
-  utils::KafkaEncoding message_header_encoding_attr_to_enum();
-  std::string resolve_duplicate_headers(const std::vector<std::string>& matching_headers);
-  std::vector<std::string> get_matching_headers(const rd_kafka_message_t* message, const std::string& header_name);
-  std::vector<std::pair<std::string, std::string>> get_flowfile_attributes_from_message_header(const rd_kafka_message_t* message);
-  void add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileRecord>& flow_file, const rd_kafka_message_t* message);
+  utils::KafkaEncoding key_attr_encoding_attr_to_enum() const;
+  utils::KafkaEncoding message_header_encoding_attr_to_enum() const;
+  std::string resolve_duplicate_headers(const std::vector<std::string>& matching_headers) const;
+  std::vector<std::string> get_matching_headers(const rd_kafka_message_t* message, const std::string& header_name) const;
+  std::vector<std::pair<std::string, std::string>> get_flowfile_attributes_from_message_header(const rd_kafka_message_t* message) const;
+  void add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileRecord>& flow_file, const rd_kafka_message_t* message) const;
   std::vector<std::shared_ptr<FlowFileRecord>> transform_messages_into_flowfiles(
-      const std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>>& messages, core::ProcessSession* session);
+      const std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>>& messages, core::ProcessSession* session) const;
 
  private:
   std::string kafka_brokers_;
