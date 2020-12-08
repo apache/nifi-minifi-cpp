@@ -26,8 +26,10 @@
 class VerifyC2DescribeJstack : public VerifyC2Describe {
  public:
   void runAssertions() override {
-    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "SchedulingAgent"));
+    // This check was previously only confirming the presence of log sinks.
+    // See: https://issues.apache.org/jira/browse/MINIFICPP-1421
+    // using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    // assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "SchedulingAgent"));
   }
 };
 
