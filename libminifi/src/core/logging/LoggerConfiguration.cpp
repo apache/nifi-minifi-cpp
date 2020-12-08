@@ -33,7 +33,9 @@
 #include "utils/ClassUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
-#include "core/logging/CompressedLogSink.h"
+#include "core/logging/internal/CompressedLogSink.h"
+#include "utils/Literals.h"
+#include "core/TypedValues.h"
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
@@ -103,11 +105,9 @@ LoggerConfiguration::LoggerConfiguration()
 }
 
 void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &logger_properties) {
-  std::lock_guard<std::mutex> lock(mutex);
+  std::unique_lock<std::mutex> lock(mutex);
   root_namespace_ = initialize_namespaces(logger_properties);
-  auto compressed_sink = std::make_shared<internal::CompressedLogSink>(8 * 1024);
-  root_namespace_->sinks.push_back(compressed_sink);
-  compressed_sink_ = compressed_sink;
+  initializeCompression(lock, logger_properties);
   std::string spdlog_pattern;
   if (!logger_properties->getString("spdlog.pattern", spdlog_pattern)) {
     spdlog_pattern = spdlog_default_pattern;
@@ -271,6 +271,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
   }
   std::shared_ptr<internal::LoggerNamespace> current_namespace = root_namespace;
   std::vector<std::shared_ptr<spdlog::sinks::sink>> sinks = root_namespace->sinks;
+  std::vector<std::shared_ptr<spdlog::sinks::sink>> inherited_sinks;
   spdlog::level::level_enum level = root_namespace->level;
   std::string current_namespace_str = "";
   std::string sink_namespace_str = "root";
@@ -282,6 +283,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
       break;
     }
     current_namespace = child_pair->second;
+    std::copy(current_namespace->exported_sinks.begin(), current_namespace->exported_sinks.end(), std::back_inserter(inherited_sinks));
     if (current_namespace->sinks.size() > 0) {
       sinks = current_namespace->sinks;
       sink_namespace_str = current_namespace_str;
@@ -296,6 +298,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
     const auto levelView(spdlog::level::to_string_view(level));
     logger->log_debug("%s logger got sinks from namespace %s and level %s from namespace %s", name, sink_namespace_str, std::string(levelView.begin(), levelView.end()), level_namespace_str);
   }
+  std::copy(inherited_sinks.begin(), inherited_sinks.end(), std::back_inserter(sinks));
   spdlogger = std::make_shared<spdlog::logger>(name, begin(sinks), end(sinks));
   spdlogger->set_level(level);
   spdlogger->set_formatter(formatter -> clone());
@@ -329,6 +332,37 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::create_default_r
   result->sinks = { std::make_shared<spdlog::sinks::stderr_sink_mt>() };
   result->level = spdlog::level::info;
   return result;
+}
+
+void LoggerConfiguration::initializeCompression(std::unique_lock<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties) {
+  auto get_size = [&] (const char* const property_name) -> utils::optional<size_t> {
+    auto size_str = properties->getString(property_name);
+    if (!size_str) return {};
+    size_t value;
+    if (DataSizeValue::StringToInt(*size_str, value)) {
+      return value;
+    }
+    if (logger_) {
+      logger_->log_error("Invalid format for %s", property_name);
+    }
+    return {};
+  };
+  auto cached_log_max_size = get_size(LoggerProperties::compression_cached_log_max_size_).value_or(8_MiB);
+  auto compressed_log_max_size = get_size(LoggerProperties::compression_compressed_log_max_size_).value_or(8_MiB);
+  auto compression_sink_logger = std::shared_ptr<LoggerImpl>(
+      new LoggerImpl(core::getClassName<LoggerConfiguration>(), controller_, get_logger(logger_, root_namespace_, core::getClassName<internal::CompressedLogSink>(), formatter_)));
+  auto compressed_sink = std::make_shared<internal::CompressedLogSink>(cached_log_max_size, compressed_log_max_size, std::move(compression_sink_logger));
+  root_namespace_->sinks.push_back(compressed_sink);
+  root_namespace_->exported_sinks.push_back(compressed_sink);
+  compressed_sink_ = compressed_sink;
+}
+
+std::unique_ptr<io::InputStream> LoggerConfiguration::getCompressedLog(bool flush) {
+  std::shared_ptr<internal::CompressedLogSink> compressor = getConfiguration().compressed_sink_;
+  if (compressor) {
+    return compressor->getContent(flush);
+  }
+  return nullptr;
 }
 
 } /* namespace logging */

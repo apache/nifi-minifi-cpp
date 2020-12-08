@@ -30,8 +30,10 @@
 #include "spdlog/sinks/base_sink.h"
 #include "io/BufferStream.h"
 #include "io/ZlibStream.h"
-#include "utils/MinifiConcurrentQueue.h"
-#include "LogCompressor.h"
+#include "ActiveCompressor.h"
+#include "LogBuffer.h"
+#include "utils/StagingQueue.h"
+#include "utils/Literals.h"
 
 namespace org {
 namespace apache {
@@ -47,41 +49,28 @@ class CompressedLogSink : public spdlog::sinks::base_sink<spdlog::details::null_
   void _flush() override;
 
  public:
-  explicit CompressedLogSink(size_t max_buffer_size, size_t max_compressed_size, std::shared_ptr<logging::Logger> logger);
+  explicit CompressedLogSink(size_t max_cache_size, size_t max_compressed_size, std::shared_ptr<logging::Logger> logger);
   ~CompressedLogSink() override;
 
-  std::unique_ptr<io::InputStream> getContent(bool flush);
+  std::unique_ptr<io::InputStream> getContent(bool flush = false);
 
  private:
-  void rotateLogCache(std::unique_lock<std::mutex>& lock);
+  enum class CompressionResult {
+    Success,
+    NothingToCompress
+  };
+
+  CompressionResult compress(bool force_rotation = false);
   void run();
-  void discardLogCacheOverflow();
-  void discardCompressedOverflow();
 
   std::atomic<bool> running_{true};
-  std::thread compression_thread_{&CompressedLogSink::run, this};
+  std::thread compression_thread_;
 
-  static constexpr size_t cache_segment_size_ = 1 * 1024 * 1024;
-  static constexpr size_t compressed_segment_size = 1 * 1024 * 1024;
+  static constexpr size_t cache_segment_size_ = 1_MiB;
+  static constexpr size_t compressed_segment_size_ = 1_MiB;
 
-  std::mutex log_cache_mutex_;
-  const size_t max_cache_size_;
-  // the cumulative number of bytes in the active and archived caches
-  std::atomic<size_t> total_cache_size_{0};
-  std::unique_ptr<io::BufferStream> active_log_cache_;
-  utils::ConcurrentQueue<std::unique_ptr<io::BufferStream>> log_caches_;
-
-  const size_t max_compressed_size_;
-  // the cumulative number of bytes in the active and archived compressed
-  std::atomic<size_t> total_compressed_size_{0};
-  std::unique_ptr<io::BufferStream> active_compressed_content_;
-  utils::ConcurrentQueue<std::unique_ptr<io::BufferStream>> compressed_contents_;
-
-  std::function<void(std::unique_ptr<io::InputStream>)> content_listener_;
-
-  std::unique_ptr<LogCompressor> compressor_;
-
-  std::shared_ptr<logging::Logger> logger_;
+  utils::StagingQueue<LogBuffer> cached_logs_;
+  utils::StagingQueue<ActiveCompressor, LogBuffer, ActiveCompressor::Allocator> compressed_logs_;
 };
 
 }  // namespace internal

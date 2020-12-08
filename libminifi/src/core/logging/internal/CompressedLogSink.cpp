@@ -21,7 +21,6 @@
 
 #include "core/logging/internal/CompressedLogSink.h"
 #include "spdlog/details/log_msg.h"
-#include "core/logging/internal/LogCompressor.h"
 
 namespace org {
 namespace apache {
@@ -32,14 +31,9 @@ namespace logging {
 namespace internal {
 
 CompressedLogSink::CompressedLogSink(size_t max_cache_size, size_t max_compressed_size, std::shared_ptr<logging::Logger> logger)
-  : max_cache_size_{max_cache_size},
-    active_log_cache_{new io::BufferStream()},
-    max_compressed_size_{max_compressed_size},
-    active_compressed_content_{new io::BufferStream()},
-    compressor_{new LogCompressor(gsl::make_not_null(active_compressed_content_.get()), logger)},
-    logger_{std::move(logger)} {
-  active_log_cache_->reserve(max_cache_size_);
-  active_compressed_content_->reserve(max_compressed_size_);
+  : cached_logs_(max_cache_size, cache_segment_size_),
+    compressed_logs_(max_compressed_size, compressed_segment_size_, ActiveCompressor::Allocator{std::move(logger)}) {
+  compression_thread_ = std::thread{&CompressedLogSink::run, this};
 }
 
 CompressedLogSink::~CompressedLogSink() {
@@ -48,71 +42,46 @@ CompressedLogSink::~CompressedLogSink() {
 }
 
 void CompressedLogSink::_sink_it(const spdlog::details::log_msg &msg) {
-  std::unique_lock<std::mutex> lock{log_cache_mutex_};
-  active_log_cache_->write(reinterpret_cast<const uint8_t*>(msg.formatted.data()), msg.formatted.size());
-  total_cache_size_ += msg.formatted.size();
-  if (active_log_cache_->size() <= cache_segment_size_) {
-    return;
-  }
-  rotateLogCache(lock);
+  cached_logs_.modify([&] (LogBuffer& active) {
+    active.buffer_->write(reinterpret_cast<const uint8_t*>(msg.formatted.data()), msg.formatted.size());
+    return false;
+  });
 }
 
 void CompressedLogSink::run() {
   while (running_) {
-    discardLogCacheOverflow();
-    discardCompressedOverflow();
-    std::unique_ptr<io::BufferStream> log_cache;
-    if (!log_caches_.tryDequeue(log_cache)) {
+    cached_logs_.discardOverflow();
+    compressed_logs_.discardOverflow();
+    if (compress() == CompressionResult::NothingToCompress) {
       std::this_thread::sleep_for(std::chrono::milliseconds{100});
-      continue;
     }
-    total_cache_size_ -= log_cache->size();
-    compressor_->write(log_cache->getBuffer(), log_cache->size());
-    compressor_->flush();
-    if (active_compressed_content_->size() <= max_compressed_size_) {
-      continue;
-    }
-    // rotate compressed
-    compressor_->close();
-    compressed_contents_.enqueue(std::move(active_compressed_content_));
-    active_compressed_content_.reset(new io::BufferStream());
-    active_compressed_content_->reserve(max_compressed_size_);
-    compressor_.reset(new LogCompressor(gsl::make_not_null(active_compressed_content_.get()), logger_));
   }
 }
 
-void CompressedLogSink::discardLogCacheOverflow() {
-  while (total_cache_size_ > max_cache_size_) {
-    // discard the oldest committed caches
-    std::unique_ptr<io::BufferStream> log_cache;
-    if (!log_caches_.tryDequeue(log_cache)) {
-      break;
+CompressedLogSink::CompressionResult CompressedLogSink::compress(bool force_rotation) {
+  LogBuffer log_cache;
+  if (!cached_logs_.tryDequeue(log_cache)) {
+    if (force_rotation) {
+      compressed_logs_.commit();
     }
-    total_cache_size_ -= log_cache->size();
+    return CompressionResult::NothingToCompress;
   }
-}
-
-void CompressedLogSink::discardCompressedOverflow() {
-  while (total_compressed_size_ > max_compressed_size_) {
-    // discard the oldest committed compressed
-    std::unique_ptr<io::BufferStream> compressed;
-    if (!compressed_contents_.tryDequeue(compressed)) {
-      break;
-    }
-    total_compressed_size_ -= compressed->size();
-  }
-}
-
-void CompressedLogSink::rotateLogCache(std::unique_lock<std::mutex> &lock) {
-  log_caches_.enqueue(std::move(active_log_cache_));
-  active_log_cache_.reset(new io::BufferStream());
-  active_log_cache_->reserve(cache_segment_size_);
+  compressed_logs_.modify([&] (ActiveCompressor& compressor) {
+    compressor.compressor_->write(log_cache.buffer_->getBuffer(), log_cache.buffer_->size());
+    compressor.compressor_->flush();
+    return force_rotation;
+  });
+  return CompressionResult::Success;
 }
 
 std::unique_ptr<io::InputStream> CompressedLogSink::getContent(bool flush) {
-  std::unique_ptr<io::BufferStream> content;
-  compressed_contents_.tryDequeue(content);
-  return content;
+  if (flush) {
+    cached_logs_.commit();
+    compress(true);
+  }
+  LogBuffer compressed;
+  compressed_logs_.tryDequeue(compressed);
+  return std::move(compressed.buffer_);
 }
 
 void CompressedLogSink::_flush() {}

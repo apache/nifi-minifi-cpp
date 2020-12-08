@@ -126,6 +126,10 @@ class ValueParser {
     }
   }
 
+  std::string rest() const noexcept {
+    return {str.c_str() + offset};
+  }
+
  private:
   /**
    *

@@ -53,6 +53,8 @@ struct LoggerNamespace {
   spdlog::level::level_enum level;
   bool has_level;
   std::vector<std::shared_ptr<spdlog::sinks::sink>> sinks;
+  // sinks made available to all descendants
+  std::vector<std::shared_ptr<spdlog::sinks::sink>> exported_sinks;
   std::map<std::string, std::shared_ptr<LoggerNamespace>> children;
 
   LoggerNamespace()
@@ -87,8 +89,8 @@ class LoggerProperties : public Properties {
     return sinks_;
   }
 
-  static const char* appender_prefix;
-  static const char* logger_prefix;
+  static constexpr const char* compression_cached_log_max_size_ = "compression.cached.log.max.size";
+  static constexpr const char* compression_compressed_log_max_size_ = "compression.compressed.log.max.size";
 
  private:
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sinks_;
@@ -119,15 +121,12 @@ class LoggerConfiguration {
   bool shortenClassNames() const {
     return shorten_names_;
   }
-
-  std::unique_ptr<io::InputStream> getCompressedContent() const {
-    auto compressed_sink = compressed_sink_.load();
-    return compressed_sink->getContent();
-  }
   /**
    * (Re)initializes the logging configuation with the given logger properties.
    */
   void initialize(const std::shared_ptr<LoggerProperties> &logger_properties);
+
+  static std::unique_ptr<io::InputStream> getCompressedLog(bool flush = false);
 
   /**
    * Can be used to get arbitrarily named Logger, LoggerFactory should be preferred within a class.
@@ -142,6 +141,8 @@ class LoggerConfiguration {
                                                     std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
 
  private:
+  void initializeCompression(std::unique_lock<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties);
+
   static spdlog::sink_ptr create_syslog_sink();
   static spdlog::sink_ptr create_fallback_sink();
 
