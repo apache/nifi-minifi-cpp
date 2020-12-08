@@ -19,6 +19,7 @@
 
 #include <mutex>
 #include <atomic>
+#include <utility>
 #include "MinifiConcurrentQueue.h"
 
 namespace org {

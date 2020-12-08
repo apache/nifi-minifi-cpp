@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <memory>
+#include <utility>
 #include "LogBuffer.h"
 #include "LogCompressor.h"
 #include "core/logging/Logger.h"

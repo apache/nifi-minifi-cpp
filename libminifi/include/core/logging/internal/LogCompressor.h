@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <memory>
 #include "io/ZlibStream.h"
 #include "io/OutputStream.h"
 
@@ -34,12 +35,11 @@ class LogCompressor : public io::ZlibCompressStream {
   LogCompressor(gsl::not_null<OutputStream *> output, std::shared_ptr<logging::Logger> logger);
 
   enum class FlushResult {
-    SUCCESS,
-    ERROR
+    SUCCESS = 0,
+    ERROR = 1
   };
 
   FlushResult flush();
-
 };
 
 }  // namespace internal
