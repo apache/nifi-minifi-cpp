@@ -233,7 +233,7 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_pa
   logger->log_debug("assign failure: %s", rd_kafka_err2str(assign_error));
 }
 
-void ConsumeKafka::createTopicPartitionList() {
+void ConsumeKafka::create_topic_partition_list() {
   kf_topic_partition_list_ = { rd_kafka_topic_partition_list_new(topic_names_.size()), utils::rd_kafka_topic_partition_list_deleter() };
 
   // On subscriptions any topics prefixed with ^ will be regex matched
@@ -313,7 +313,7 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext* context)
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to create Kafka consumer %s" + error_msg);
   }
 
-  createTopicPartitionList();
+  create_topic_partition_list();
 
   // Changing the partition list should happen only as part as the initialization of offsets
   // a function like `rd_kafka_position()` might have unexpected effects

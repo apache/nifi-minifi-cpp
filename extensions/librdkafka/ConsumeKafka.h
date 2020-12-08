@@ -148,7 +148,7 @@ class ConsumeKafka : public core::Processor {
   void initialize() override;
 
  private:
-  void createTopicPartitionList();
+  void create_topic_partition_list();
   void extend_config_from_dynamic_properties(const core::ProcessContext* context);
   void configure_new_connection(const core::ProcessContext* context);
   std::string extract_message(const rd_kafka_message_t* rkmessage);
