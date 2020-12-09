@@ -1143,6 +1143,8 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
 
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
   appendTempFile(log_dir, "test.log", "line seven\n");
   renameTempFile(log_dir, "test.1", "test.2");
   renameTempFile(log_dir, "test.log", "test.1");
