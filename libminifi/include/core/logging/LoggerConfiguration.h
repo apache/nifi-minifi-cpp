@@ -32,6 +32,7 @@
 #include "spdlog/sinks/sink.h"
 #include "spdlog/logger.h"
 #include "spdlog/formatter.h"
+#include "spdlog/pattern_formatter.h"
 
 #include "core/Core.h"
 #include "core/logging/Logger.h"
