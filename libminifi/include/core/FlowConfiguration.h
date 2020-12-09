@@ -139,7 +139,7 @@ class FlowConfiguration : public CoreComponent {
     return nullptr;
   }
 
-  std::unique_ptr<core::ProcessGroup> updateFromPayload(const std::string &source, const std::string &yamlConfigPayload);
+  std::unique_ptr<core::ProcessGroup> updateFromPayload(const std::string& url, const std::string& yamlConfigPayload);
 
   virtual std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) {
     return nullptr;
