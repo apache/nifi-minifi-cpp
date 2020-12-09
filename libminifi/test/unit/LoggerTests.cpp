@@ -24,6 +24,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "io/ZlibStream.h"
 #include "StreamPipe.h"
+#include "utils/IntegrationTestUtils.h"
 
 TEST_CASE("Test log Levels", "[ttl1]") {
   LogTestController::getInstance().setTrace<logging::Logger>();
@@ -112,44 +113,68 @@ TEST_CASE("Test ShortenNames", "[ttl6]") {
 
 using namespace minifi::io;
 
-std::unique_ptr<BufferStream> decompress(const std::shared_ptr<InputStream>& input) {
+std::string decompress(const std::shared_ptr<InputStream>& input) {
   auto output = utils::make_unique<BufferStream>();
   auto decompressor = std::make_shared<ZlibDecompressStream>(gsl::make_not_null(output.get()));
   minifi::internal::pipe(input, decompressor);
   decompressor->close();
-  return output;
+  return std::string{reinterpret_cast<const char*>(output->getBuffer()), output->size()};
 }
-
-class TestClass3 {};
 
 TEST_CASE("Test Compression", "[ttl7]") {
   auto& log_config = logging::LoggerConfiguration::getConfiguration();
   auto properties = std::make_shared<logging::LoggerProperties>();
-  // by default the root logger is OFF
-  properties->set("logger.root", "INFO");
+  std::string className;
+  SECTION("Using root logger") {
+    className = "CompressionTestClassUsingRoot";
+    // by default the root logger is OFF
+    properties->set("logger.root", "INFO");
+  }
+  SECTION("Inherit compression sink") {
+    className = "CompressionTestClassInheriting";
+    properties->set("appender.null", "null");
+    properties->set("logger." + className, "INFO,null");
+  }
   log_config.initialize(properties);
-  auto logger = logging::LoggerFactory<TestClass3>::getLogger();
+  auto logger = log_config.getLogger(className);
   logger->log_error("Hi there");
   std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
   REQUIRE(compressed_log);
-  auto log_buffer = decompress(compressed_log);
-  std::string logs{reinterpret_cast<const char*>(log_buffer->getBuffer()), log_buffer->size()};
+  auto logs = decompress(compressed_log);
   REQUIRE(logs.find("Hi there") != std::string::npos);
 }
 
-class TestClass4 {};
+class LoggerTestAccessor {
+ public:
+  static void setCompressionCacheSegmentSize(logging::LoggerConfiguration& log_config, size_t value) {
+    log_config.compression_manager_.cache_segment_size = value;
+  }
+  static void setCompressionCompressedSegmentSize(logging::LoggerConfiguration& log_config, size_t value) {
+    log_config.compression_manager_.compressed_segment_size = value;
+  }
+  static size_t getUncompressedSize(logging::LoggerConfiguration& log_config) {
+    return log_config.compression_manager_.getSink()->cached_logs_.size();
+  }
+  static size_t getCompressedSize(logging::LoggerConfiguration& log_config) {
+    return log_config.compression_manager_.getSink()->compressed_logs_.size();
+  }
+};
 
-TEST_CASE("Test Compression Sink is inherited", "[ttl7]") {
+TEST_CASE("Test Compression cache overflow is discarded intermittently", "[ttl8]") {
   auto& log_config = logging::LoggerConfiguration::getConfiguration();
   auto properties = std::make_shared<logging::LoggerProperties>();
-  properties->set("appender.null", "null");
-  properties->set("logger.TestClass4", "INFO,null");
+  properties->set(logging::internal::CompressionManager::compression_cached_log_max_size_, "10 KB");
+  LoggerTestAccessor::setCompressionCacheSegmentSize(log_config, 1_KiB);
+  std::string className = "CompressionTestCacheCleaned";
+  // by default the root logger is OFF
+  properties->set("logger.root", "INFO");
   log_config.initialize(properties);
-  auto logger = logging::LoggerFactory<TestClass4>::getLogger();
-  logger->log_error("Hi there TestClass4");
-  std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
-  REQUIRE(compressed_log);
-  auto log_buffer = decompress(compressed_log);
-  std::string logs{reinterpret_cast<const char*>(log_buffer->getBuffer()), log_buffer->size()};
-  REQUIRE(logs.find("Hi there TestClass4") != std::string::npos);
+  auto logger = log_config.getLogger(className);
+  for (size_t idx = 0; idx < 10000; ++idx) {
+    logger->log_error("Hi there");
+  }
+  bool cache_shrunk = utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, [&] {
+    return LoggerTestAccessor::getUncompressedSize(log_config) <= 10_KiB;
+  });
+  REQUIRE(cache_shrunk);
 }

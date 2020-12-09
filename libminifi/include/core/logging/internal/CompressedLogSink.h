@@ -35,6 +35,8 @@
 #include "utils/StagingQueue.h"
 #include "utils/Literals.h"
 
+class LoggerTestAccessor;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -43,16 +45,32 @@ namespace core {
 namespace logging {
 namespace internal {
 
+struct LogQueueSize {
+  size_t max_total_size;
+  size_t max_segment_size;
+};
+
 class CompressedLogSink : public spdlog::sinks::base_sink<spdlog::details::null_mutex> {
+  friend class ::LoggerTestAccessor;
+
  private:
   void _sink_it(const spdlog::details::log_msg& msg) override;
   void _flush() override;
 
  public:
-  explicit CompressedLogSink(size_t max_cache_size, size_t max_compressed_size, std::shared_ptr<logging::Logger> logger);
+  explicit CompressedLogSink(LogQueueSize cache_size, LogQueueSize compressed_size, std::shared_ptr<logging::Logger> logger);
   ~CompressedLogSink() override;
 
-  std::unique_ptr<io::InputStream> getContent(bool flush = false);
+  template<class Rep, class Period>
+  std::unique_ptr<io::InputStream> getContent(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
+    if (flush) {
+      cached_logs_.commit();
+      compress(true);
+    }
+    LogBuffer compressed;
+    compressed_logs_.tryDequeue(compressed, time);
+    return std::move(compressed.buffer_);
+  }
 
  private:
   enum class CompressionResult {
@@ -65,9 +83,6 @@ class CompressedLogSink : public spdlog::sinks::base_sink<spdlog::details::null_
 
   std::atomic<bool> running_{true};
   std::thread compression_thread_;
-
-  static constexpr size_t cache_segment_size_ = 1_MiB;
-  static constexpr size_t compressed_segment_size_ = 1_MiB;
 
   utils::StagingQueue<LogBuffer> cached_logs_;
   utils::StagingQueue<ActiveCompressor, ActiveCompressor::Allocator> compressed_logs_;

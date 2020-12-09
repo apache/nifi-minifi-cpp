@@ -139,7 +139,11 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
 }
 
 std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name) {
-  std::lock_guard<std::mutex> lock(mutex);
+  std::unique_lock<std::mutex> lock(mutex);
+  return getLogger(name, lock);
+}
+
+std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name, std::unique_lock<std::mutex>& lock) {
   std::string adjusted_name = name;
   const std::string clazz = "class ";
   auto haz_clazz = name.find(clazz);
@@ -336,44 +340,9 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::create_default_r
 }
 
 void LoggerConfiguration::initializeCompression(std::unique_lock<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties) {
-  auto get_size = [&] (const char* const property_name) -> utils::optional<size_t> {
-    auto size_str = properties->getString(property_name);
-    if (!size_str) return {};
-    size_t value;
-    if (DataSizeValue::StringToInt(*size_str, value)) {
-      return value;
-    }
-    if (logger_) {
-      logger_->log_error("Invalid format for %s", property_name);
-    }
-    return {};
-  };
-  auto cached_log_max_size = get_size(LoggerProperties::compression_cached_log_max_size_).value_or(8_MiB);
-  auto compressed_log_max_size = get_size(LoggerProperties::compression_compressed_log_max_size_).value_or(8_MiB);
-  auto compression_sink_logger = std::shared_ptr<LoggerImpl>(
-      new LoggerImpl(core::getClassName<LoggerConfiguration>(), controller_, get_logger(logger_, root_namespace_, core::getClassName<internal::CompressedLogSink>(), formatter_)));
-  auto compressed_sink = std::make_shared<internal::CompressedLogSink>(cached_log_max_size, compressed_log_max_size, std::move(compression_sink_logger));
-  root_namespace_->sinks.push_back(compressed_sink);
-  root_namespace_->exported_sinks.push_back(compressed_sink);
-  {
-    // gcc4.8 bug => cannot use std::atomic_store
-    std::lock_guard<std::mutex> compressed_sink_lock(compressed_sink_mutex_);
-    compressed_sink_ = compressed_sink;
-  }
-}
-
-std::unique_ptr<io::InputStream> LoggerConfiguration::getCompressedLog(bool flush) {
-  std::shared_ptr<internal::CompressedLogSink> compressor;
-  {
-    // gcc4.8 bug => cannot use std::atomic_load
-    auto& config = getConfiguration();
-    std::lock_guard<std::mutex> lock(config.compressed_sink_mutex_);
-    compressor = config.compressed_sink_;
-  }
-  if (compressor) {
-    return compressor->getContent(flush);
-  }
-  return nullptr;
+  auto compression_sink = compression_manager_.initialize(properties, logger_, [&] (const std::string& name) {return getLogger(name, lock);});
+  root_namespace_->sinks.push_back(compression_sink);
+  root_namespace_->exported_sinks.push_back(compression_sink);
 }
 
 } /* namespace logging */

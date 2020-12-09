@@ -48,6 +48,24 @@ class StagingQueue {
   static_assert(std::is_same<decltype(std::declval<const ActiveItem&>().size()), size_t>::value,
       "ActiveItem::size must return size_t");
 
+  template<typename Functor, typename Arg, typename = void>
+  struct FunctorCallHelper;
+
+  template<typename Functor, typename Arg>
+  struct FunctorCallHelper<Functor, Arg, typename std::enable_if<std::is_same<decltype(std::declval<Functor>()(std::declval<Arg>())), bool>::value>::type> {
+    static bool call(Functor&& fn, Arg&& arg) {
+      return std::forward<Functor>(fn)(std::forward<Arg>(arg));
+    }
+  };
+
+  template<typename Functor, typename Arg>
+  struct FunctorCallHelper<Functor, Arg, typename std::enable_if<std::is_same<decltype(std::declval<Functor>()(std::declval<Arg>())), void>::value>::type> {
+    static bool call(Functor&& fn, Arg&& arg) {
+      std::forward<Functor>(fn)(std::forward<Arg>(arg));
+      return false;
+    }
+  };
+
  public:
   StagingQueue(size_t max_size, size_t max_item_size, Allocator allocator = {})
     : max_size_(max_size),
@@ -74,12 +92,24 @@ class StagingQueue {
   void modify(Functor&& fn) {
     std::unique_lock<std::mutex> lock{active_item_mutex_};
     size_t original_size = active_item_.size();
-    bool should_commit = std::forward<Functor>(fn)(active_item_);
+    bool should_commit = FunctorCallHelper<Functor, ActiveItem&>::call(std::forward<Functor>(fn), active_item_);
     size_t new_size = active_item_.size();
     total_size_ += new_size - original_size;
     if (should_commit || new_size > max_item_size_) {
       commit(lock);
     }
+  }
+
+  template<class Rep, class Period>
+  bool tryDequeue(Item& out, const std::chrono::duration<Rep, Period>& time) {
+    if (time == std::chrono::duration<Rep, Period>{0}) {
+      return tryDequeue(out);
+    }
+    if (queue_.dequeueWaitFor(out, time)) {
+      total_size_ -= out.size();
+      return true;
+    }
+    return false;
   }
 
   bool tryDequeue(Item& out) {
@@ -100,6 +130,10 @@ class StagingQueue {
     }
   }
 
+  size_t size() const {
+    return total_size_;
+  }
+
  private:
   void commit(std::unique_lock<std::mutex>& lock) {
     queue_.enqueue(active_item_.commit());
@@ -115,7 +149,7 @@ class StagingQueue {
 
   const Allocator allocator_;
 
-  ConcurrentQueue<Item> queue_;
+  ConditionConcurrentQueue<Item> queue_;
 };
 
 }  // namespace utils

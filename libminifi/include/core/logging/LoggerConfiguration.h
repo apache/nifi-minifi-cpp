@@ -35,10 +35,11 @@
 #include "spdlog/pattern_formatter.h"
 
 #include "core/Core.h"
-#include "io/InputStream.h"
 #include "core/logging/Logger.h"
-#include "properties/Properties.h"
-#include "internal/CompressedLogSink.h"
+#include "LoggerProperties.h"
+#include "internal/CompressionManager.h"
+
+class LoggerTestAccessor;
 
 namespace org {
 namespace apache {
@@ -65,37 +66,9 @@ struct LoggerNamespace {
 };
 }  // namespace internal
 
-class LoggerProperties : public Properties {
- public:
-  LoggerProperties()
-      : Properties("Logger properties") {
-  }
-  /**
-   * Gets all keys that start with the given prefix and do not have a "." after the prefix and "." separator.
-   *
-   * Ex: with type argument "appender"
-   * you would get back a property of "appender.rolling" but not "appender.rolling.file_name"
-   */
-  std::vector<std::string> get_keys_of_type(const std::string &type);
-
-  /**
-   * Registers a sink witht the given name. This allows for programmatic definition of sinks.
-   */
-  void add_sink(const std::string &name, std::shared_ptr<spdlog::sinks::sink> sink) {
-    sinks_[name] = sink;
-  }
-  std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> initial_sinks() {
-    return sinks_;
-  }
-
-  static constexpr const char* compression_cached_log_max_size_ = "compression.cached.log.max.size";
-  static constexpr const char* compression_compressed_log_max_size_ = "compression.compressed.log.max.size";
-
- private:
-  std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sinks_;
-};
-
 class LoggerConfiguration {
+  friend class ::LoggerTestAccessor;
+
  public:
   /**
    * Gets the current log configuration
@@ -125,7 +98,14 @@ class LoggerConfiguration {
    */
   void initialize(const std::shared_ptr<LoggerProperties> &logger_properties);
 
-  static std::unique_ptr<io::InputStream> getCompressedLog(bool flush = false);
+  static std::unique_ptr<io::InputStream> getCompressedLog(bool flush = false) {
+    return getCompressedLog(std::chrono::milliseconds{0}, flush);
+  }
+
+  template<class Rep, class Period>
+  static std::unique_ptr<io::InputStream> getCompressedLog(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
+    return getConfiguration().compression_manager_.getCompressedLog(time, flush);
+  }
 
   /**
    * Can be used to get arbitrarily named Logger, LoggerFactory should be preferred within a class.
@@ -140,6 +120,8 @@ class LoggerConfiguration {
                                                     std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
 
  private:
+  std::shared_ptr<Logger> getLogger(const std::string& name, std::unique_lock<std::mutex>& lock);
+
   void initializeCompression(std::unique_lock<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties);
 
   static spdlog::sink_ptr create_syslog_sink();
@@ -162,8 +144,7 @@ class LoggerConfiguration {
   };
 
   LoggerConfiguration();
-  std::mutex compressed_sink_mutex_;
-  std::shared_ptr<internal::CompressedLogSink> compressed_sink_;
+  internal::CompressionManager compression_manager_;
   std::shared_ptr<internal::LoggerNamespace> root_namespace_;
   std::vector<std::shared_ptr<LoggerImpl>> loggers;
   std::shared_ptr<spdlog::formatter> formatter_;
