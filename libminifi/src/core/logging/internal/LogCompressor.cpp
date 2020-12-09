@@ -32,9 +32,9 @@ LogCompressor::LogCompressor(gsl::not_null<OutputStream *> output, std::shared_p
 
 LogCompressor::FlushResult LogCompressor::flush() {
   if (write(nullptr, 0, Z_SYNC_FLUSH) == 0) {
-    return FlushResult::SUCCESS;
+    return FlushResult::Success;
   }
-  return FlushResult::ERROR;
+  return FlushResult::Error;
 }
 
 }  // namespace internal

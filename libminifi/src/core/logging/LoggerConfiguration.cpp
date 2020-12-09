@@ -355,11 +355,21 @@ void LoggerConfiguration::initializeCompression(std::unique_lock<std::mutex>& lo
   auto compressed_sink = std::make_shared<internal::CompressedLogSink>(cached_log_max_size, compressed_log_max_size, std::move(compression_sink_logger));
   root_namespace_->sinks.push_back(compressed_sink);
   root_namespace_->exported_sinks.push_back(compressed_sink);
-  std::atomic_store(&compressed_sink_, compressed_sink);
+  {
+    // gcc4.8 bug => cannot use std::atomic_store
+    std::lock_guard<std::mutex> compressed_sink_lock(compressed_sink_mutex_);
+    compressed_sink_ = compressed_sink;
+  }
 }
 
 std::unique_ptr<io::InputStream> LoggerConfiguration::getCompressedLog(bool flush) {
-  std::shared_ptr<internal::CompressedLogSink> compressor = std::atomic_load(&getConfiguration().compressed_sink_);
+  std::shared_ptr<internal::CompressedLogSink> compressor;
+  {
+    // gcc4.8 bug => cannot use std::atomic_load
+    auto& config = getConfiguration();
+    std::lock_guard<std::mutex> lock(config.compressed_sink_mutex_);
+    compressor = config.compressed_sink_;
+  }
   if (compressor) {
     return compressor->getContent(flush);
   }

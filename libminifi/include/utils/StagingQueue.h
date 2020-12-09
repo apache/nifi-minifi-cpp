@@ -50,10 +50,10 @@ class StagingQueue {
 
  public:
   StagingQueue(size_t max_size, size_t max_item_size, Allocator allocator = {})
-    : max_size_{max_size},
-      max_item_size_{max_item_size},
-      active_item_{allocator(max_item_size)},
-      allocator_{allocator} {}
+    : max_size_(max_size),
+      max_item_size_(max_item_size),
+      active_item_(allocator(max_item_size)),
+      allocator_(allocator) {}
 
   void commit() {
     std::unique_lock<std::mutex> lock{active_item_mutex_};

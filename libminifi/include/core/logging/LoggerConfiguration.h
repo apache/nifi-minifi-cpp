@@ -162,6 +162,7 @@ class LoggerConfiguration {
   };
 
   LoggerConfiguration();
+  std::mutex compressed_sink_mutex_;
   std::shared_ptr<internal::CompressedLogSink> compressed_sink_;
   std::shared_ptr<internal::LoggerNamespace> root_namespace_;
   std::vector<std::shared_ptr<LoggerImpl>> loggers;

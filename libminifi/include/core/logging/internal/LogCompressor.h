@@ -35,8 +35,8 @@ class LogCompressor : public io::ZlibCompressStream {
   LogCompressor(gsl::not_null<OutputStream *> output, std::shared_ptr<logging::Logger> logger);
 
   enum class FlushResult {
-    SUCCESS = 0,
-    ERROR = 1
+    Success,
+    Error
   };
 
   FlushResult flush();
