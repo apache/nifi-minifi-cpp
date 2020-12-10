@@ -77,6 +77,16 @@ Connections:
     max work queue data size: 1 MB
     flowfile expiration: 60 sec
 Remote Processing Groups:
+
+Controller Services:
+  - name: defaultstatemanagerprovider
+    id: 2438e3c8-015a-1000-79ca-83af40ec1995
+    class: UnorderedMapPersistableKeyValueStoreService
+    Properties:
+      Auto Persistence Interval:
+          - value: 0 sec
+      File:
+          - value: flowcontrollertests_state.txt
 )";
 
 template<typename Fn>
