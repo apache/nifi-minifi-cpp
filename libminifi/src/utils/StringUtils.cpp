@@ -47,7 +47,7 @@ std::string StringUtils::trim(const std::string& s) {
 }
 
 template<typename Fun>
-std::vector<std::string> split_transformed(const std::string& str, const std::string& delimiter, Fun&& transformation) {
+std::vector<std::string> split_transformed(const std::string& str, const std::string& delimiter, Fun transformation) {
   std::vector<std::string> result;
   if (delimiter.empty()) {
     std::transform(str.begin(), str.end(), std::back_inserter(result), [] (const char c) { return std::string{c}; });
