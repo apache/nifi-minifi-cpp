@@ -87,6 +87,8 @@ class C2Agent : public state::UpdateController {
     return heart_beat_period_;
   }
 
+  utils::optional<std::string> fetchFlow(const std::string& uri) const;
+
  protected:
   void restart_agent();
 
@@ -160,8 +162,6 @@ class C2Agent : public state::UpdateController {
   utils::TaskRescheduleInfo consume();
 
   bool handleConfigurationUpdate(const C2ContentResponse &resp);
-
-  utils::optional<std::string> fetchFlow(const std::string& uri) const;
 
  protected:
   std::timed_mutex metrics_mutex_;

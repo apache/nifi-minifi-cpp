@@ -269,6 +269,16 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
     } else {
       logger_->log_info("Instantiating new flow");
       this->root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot());
+      if (!this->root_) {
+        auto opt_flow_url = configuration_->get(Configure::nifi_c2_flow_url);
+        if (opt_flow_url) {
+          C2Client::initialize(this, shared_from_this());
+          auto opt_source = fetchFlow(*opt_flow_url);
+          if (opt_source) {
+            this->root_ = flow_configuration_->updateFromPayload(*opt_flow_url, *opt_source);
+          }
+        }
+      }
     }
 
     logger_->log_info("Loaded root processor Group");
