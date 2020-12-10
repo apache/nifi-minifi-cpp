@@ -103,8 +103,6 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
 
   provisionRepo(provdb, keyCount / 2, 102400);
 
-  REQUIRE(provdb.getKeyCount() == 250);
-
   /**
    * Magic: TTL-based DB cleanup only triggers when writeBuffers are serialized to storage
    * To achieve this 250 entries are put to DB with a total size that ensures at least one buffer is serialized
