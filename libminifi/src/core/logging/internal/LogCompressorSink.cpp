@@ -19,7 +19,7 @@
 #include <vector>
 #include <mutex>
 
-#include "core/logging/internal/CompressedLogSink.h"
+#include "core/logging/internal/LogCompressorSink.h"
 #include "spdlog/details/log_msg.h"
 
 namespace org {
@@ -30,24 +30,24 @@ namespace core {
 namespace logging {
 namespace internal {
 
-CompressedLogSink::CompressedLogSink(LogQueueSize cache_size, LogQueueSize compressed_size, std::shared_ptr<logging::Logger> logger)
+LogCompressorSink::LogCompressorSink(LogQueueSize cache_size, LogQueueSize compressed_size, std::shared_ptr<logging::Logger> logger)
   : cached_logs_(cache_size.max_total_size, cache_size.max_segment_size),
     compressed_logs_(compressed_size.max_total_size, compressed_size.max_segment_size, ActiveCompressor::Allocator{std::move(logger)}) {
-  compression_thread_ = std::thread{&CompressedLogSink::run, this};
+  compression_thread_ = std::thread{&LogCompressorSink::run, this};
 }
 
-CompressedLogSink::~CompressedLogSink() {
+LogCompressorSink::~LogCompressorSink() {
   running_ = false;
   compression_thread_.join();
 }
 
-void CompressedLogSink::_sink_it(const spdlog::details::log_msg &msg) {
+void LogCompressorSink::_sink_it(const spdlog::details::log_msg &msg) {
   cached_logs_.modify([&] (LogBuffer& active) {
     active.buffer_->write(reinterpret_cast<const uint8_t*>(msg.formatted.data()), msg.formatted.size());
   });
 }
 
-void CompressedLogSink::run() {
+void LogCompressorSink::run() {
   while (running_) {
     cached_logs_.discardOverflow();
     compressed_logs_.discardOverflow();
@@ -57,7 +57,7 @@ void CompressedLogSink::run() {
   }
 }
 
-CompressedLogSink::CompressionResult CompressedLogSink::compress(bool force_rotation) {
+LogCompressorSink::CompressionResult LogCompressorSink::compress(bool force_rotation) {
   LogBuffer log_cache;
   if (!cached_logs_.tryDequeue(log_cache)) {
     if (force_rotation) {
@@ -73,7 +73,7 @@ CompressedLogSink::CompressionResult CompressedLogSink::compress(bool force_rota
   return CompressionResult::Success;
 }
 
-void CompressedLogSink::_flush() {}
+void LogCompressorSink::_flush() {}
 
 }  // namespace internal
 }  // namespace logging

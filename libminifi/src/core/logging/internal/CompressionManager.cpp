@@ -23,7 +23,7 @@
 #include <functional>
 
 #include "core/logging/internal/CompressionManager.h"
-#include "core/logging/internal/CompressedLogSink.h"
+#include "core/logging/internal/LogCompressorSink.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerProperties.h"
 #include "io/InputStream.h"
@@ -38,7 +38,8 @@ namespace core {
 namespace logging {
 namespace internal {
 
-std::shared_ptr<CompressedLogSink> CompressionManager::initialize(const std::shared_ptr<LoggerProperties>& properties, const std::shared_ptr<Logger>& error_logger, const std::function<std::shared_ptr<Logger>(const std::string&)>& logger_builder) {
+std::shared_ptr<LogCompressorSink> CompressionManager::initialize(
+    const std::shared_ptr<LoggerProperties>& properties, const std::shared_ptr<Logger>& error_logger, const LoggerFactory& logger_factory) {
   auto get_size = [&] (const char* const property_name) -> utils::optional<size_t> {
     auto size_str = properties->getString(property_name);
     if (!size_str) return {};
@@ -53,10 +54,10 @@ std::shared_ptr<CompressedLogSink> CompressionManager::initialize(const std::sha
   };
   auto cached_log_max_size = get_size(compression_cached_log_max_size_).value_or(8_MiB);
   auto compressed_log_max_size = get_size(compression_compressed_log_max_size_).value_or(8_MiB);
-  auto sink = std::make_shared<internal::CompressedLogSink>(
+  auto sink = std::make_shared<internal::LogCompressorSink>(
       LogQueueSize{cached_log_max_size, cache_segment_size},
       LogQueueSize{compressed_log_max_size, compressed_segment_size},
-      logger_builder(getClassName<CompressedLogSink>()));
+      logger_factory(getClassName<LogCompressorSink>()));
   {
     // gcc4.8 bug => cannot use std::atomic_store
     std::lock_guard<std::mutex> lock(mtx_);

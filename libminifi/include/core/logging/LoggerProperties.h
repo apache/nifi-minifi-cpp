@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <vector>
 
 #include "spdlog/sinks/sink.h"
 

@@ -22,9 +22,11 @@
 #include <mutex>
 #include <atomic>
 #include <functional>
+#include <utility>
+#include <string>
 
 #include "core/logging/Logger.h"
-#include "CompressedLogSink.h"
+#include "LogCompressorSink.h"
 #include "core/logging/LoggerProperties.h"
 #include "io/InputStream.h"
 #include "utils/Literals.h"
@@ -42,12 +44,14 @@ namespace internal {
 class CompressionManager {
   friend class ::LoggerTestAccessor;
 
+  using LoggerFactory = std::function<std::shared_ptr<Logger>(const std::string&)>;
+
  public:
-  std::shared_ptr<CompressedLogSink> initialize(const std::shared_ptr<LoggerProperties>& properties, const std::shared_ptr<Logger>& error_logger, const std::function<std::shared_ptr<Logger>(const std::string&)>& logger_builder);
+  std::shared_ptr<LogCompressorSink> initialize(const std::shared_ptr<LoggerProperties>& properties, const std::shared_ptr<Logger>& error_logger, const LoggerFactory& logger_factory);
 
   template<class Rep, class Period>
   std::unique_ptr<io::InputStream> getCompressedLog(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
-    std::shared_ptr<internal::CompressedLogSink> sink = getSink();
+    std::shared_ptr<internal::LogCompressorSink> sink = getSink();
     if (sink) {
       return sink->getContent(time, flush);
     }
@@ -58,7 +62,7 @@ class CompressionManager {
   static constexpr const char* compression_compressed_log_max_size_ = "compression.compressed.log.max.size";
 
  private:
-  std::shared_ptr<internal::CompressedLogSink> getSink() const {
+  std::shared_ptr<internal::LogCompressorSink> getSink() const {
     // gcc4.8 bug => cannot use std::atomic_load
     std::lock_guard<std::mutex> lock(mtx_);
     return sink_;
@@ -68,7 +72,7 @@ class CompressionManager {
   std::atomic<size_t> compressed_segment_size{1_MiB};
 
   mutable std::mutex mtx_;
-  std::shared_ptr<CompressedLogSink> sink_;
+  std::shared_ptr<LogCompressorSink> sink_;
 };
 
 }  // namespace internal

@@ -34,7 +34,7 @@
 #include "utils/ClassUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
-#include "core/logging/internal/CompressedLogSink.h"
+#include "core/logging/internal/LogCompressorSink.h"
 #include "utils/Literals.h"
 #include "core/TypedValues.h"
 

@@ -23,6 +23,7 @@
 #include <mutex>
 #include <atomic>
 #include <functional>
+#include <utility>
 
 #include "spdlog/common.h"
 #include "spdlog/details/log_msg.h"
@@ -50,7 +51,7 @@ struct LogQueueSize {
   size_t max_segment_size;
 };
 
-class CompressedLogSink : public spdlog::sinks::base_sink<spdlog::details::null_mutex> {
+class LogCompressorSink : public spdlog::sinks::base_sink<spdlog::details::null_mutex> {
   friend class ::LoggerTestAccessor;
 
  private:
@@ -58,8 +59,8 @@ class CompressedLogSink : public spdlog::sinks::base_sink<spdlog::details::null_
   void _flush() override;
 
  public:
-  explicit CompressedLogSink(LogQueueSize cache_size, LogQueueSize compressed_size, std::shared_ptr<logging::Logger> logger);
-  ~CompressedLogSink() override;
+  explicit LogCompressorSink(LogQueueSize cache_size, LogQueueSize compressed_size, std::shared_ptr<logging::Logger> logger);
+  ~LogCompressorSink() override;
 
   template<class Rep, class Period>
   std::unique_ptr<io::InputStream> getContent(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
