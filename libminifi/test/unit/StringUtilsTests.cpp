@@ -51,7 +51,7 @@ TEST_CASE("TestStringUtils::split4", "[test split classname]") {
 }
 
 TEST_CASE("TestStringUtils::split5", "[test split delimiter not specified]") {
-  std::vector<std::string> expected{ "hello world" };
+  std::vector<std::string> expected{ "h", "e", "l", "l", "o", " ", "w", "o", "r", "l", "d" };
   REQUIRE(expected == StringUtils::split("hello world", ""));
 }
 
