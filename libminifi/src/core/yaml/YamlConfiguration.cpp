@@ -781,12 +781,12 @@ void YamlConfiguration::parsePropertyValueSequence(const std::string& propertyNa
       logger_->log_debug("Found %s=%s", propertyName, rawValueString);
       if (!processor->updateProperty(propertyName, rawValueString)) {
         std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
-        if (proc != 0) {
+        if (proc) {
           logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", propertyName, rawValueString, proc->getName());
           if (!processor->setDynamicProperty(propertyName, rawValueString)) {
-            logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName.c_str(), rawValueString.c_str());
+            logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName, rawValueString);
           } else {
-            logger_->log_warn("Dynamic property %s with value %s set", propertyName.c_str(), rawValueString.c_str());
+            logger_->log_warn("Dynamic property %s with value %s set", propertyName, rawValueString);
           }
         }
       }
@@ -838,16 +838,16 @@ void YamlConfiguration::parseSingleProperty(const std::string& propertyName, con
   const std::string rawValueString = propertyValueNode.as<std::string>();
   if (!processor->setProperty(myProp, coercedValue)) {
     std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
-    if (proc != 0) {
+    if (proc) {
       logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", propertyName, rawValueString, proc->getName());
       if (!processor->setDynamicProperty(propertyName, rawValueString)) {
-        logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName.c_str(), rawValueString.c_str());
+        logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName, rawValueString);
       } else {
-        logger_->log_warn("Dynamic property %s with value %s set", propertyName.c_str(), rawValueString.c_str());
+        logger_->log_warn("Dynamic property %s with value %s set", propertyName, rawValueString);
       }
     }
   } else {
-    logger_->log_debug("Property %s with value %s set", propertyName.c_str(), rawValueString.c_str());
+    logger_->log_debug("Property %s with value %s set", propertyName, rawValueString);
   }
 }
 
