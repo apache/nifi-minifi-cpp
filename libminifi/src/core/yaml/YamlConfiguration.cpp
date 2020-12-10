@@ -794,10 +794,26 @@ void YamlConfiguration::parsePropertyValueSequence(const std::string& propertyNa
   }
 }
 
+namespace {
+  void handleExceptionOnValidatedProcessorPropertyRead(const core::Property& propertyFromProcessor, const YAML::Node& propertyValueNode,
+      const std::shared_ptr<Configure>& config, const std::type_index& defaultType, std::shared_ptr<logging::Logger>& logger) {
+    std::string eof;
+    bool exit_on_failure = false;
+    if (config->get(Configure::nifi_flow_configuration_file_exit_failure, eof)) {
+      utils::StringUtils::StringToBool(eof, exit_on_failure);
+    }
+    logger->log_error("Invalid conversion for field %s. Value %s", propertyFromProcessor.getName(), propertyValueNode.as<std::string>());
+    if (exit_on_failure) {
+      // We do not exit here even if exit_on_failure is set. Maybe we should?
+      logger->log_error("Invalid conversion for %s to %s.", propertyFromProcessor.getName(), defaultType.name());
+    }
+  }
+}  // namespace
+
 PropertyValue YamlConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& propertyFromProcessor, const YAML::Node& propertyValueNode) {
   PropertyValue defaultValue;
   defaultValue = propertyFromProcessor.getDefaultValue();
-  auto defaultType = defaultValue.getTypeInfo();
+  const std::type_index defaultType = defaultValue.getTypeInfo();
   try {
     PropertyValue coercedValue = defaultValue;
     if (defaultType == typeid(int64_t)) {
@@ -810,17 +826,11 @@ PropertyValue YamlConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo
       coercedValue = propertyValueNode.as<std::string>();
     }
     return coercedValue;
-  } catch (...) {
-    std::string eof;
-    bool exit_on_failure = false;
-    if (configuration_->get(Configure::nifi_flow_configuration_file_exit_failure, eof)) {
-      utils::StringUtils::StringToBool(eof, exit_on_failure);
-    }
-    logger_->log_error("Invalid conversion for field %s. Value %s", propertyFromProcessor.getName(), propertyValueNode.as<std::string>());
-    if (exit_on_failure) {
-      // We do not exit here even if exit_on_failure is set. Maybe we should?
-      std::cerr << "Invalid conversion for " << propertyFromProcessor.getName() << " to " << defaultType.name() << std::endl;
-    }
+  } catch (const std::exception& e) {
+    logger_->log_error("Fetching property failed with an exception of %s", e.what());
+    handleExceptionOnValidatedProcessorPropertyRead(propertyFromProcessor, propertyValueNode, configuration_, defaultType, logger_);
+  }  catch (...) {
+    handleExceptionOnValidatedProcessorPropertyRead(propertyFromProcessor, propertyValueNode, configuration_, defaultType, logger_);
   }
   return defaultValue;
 }
