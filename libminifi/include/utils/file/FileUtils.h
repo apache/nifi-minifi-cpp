@@ -28,7 +28,9 @@
 #include <dirent.h>
 #include <boost/filesystem.hpp>
 #include <boost/system/error_code.hpp>
-
+#ifndef WIN32
+#include <sys/stat.h>
+#endif
 #else
 #include <errno.h>
 
@@ -45,7 +47,7 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 #else
-#include <dirent.h>
+#include <dirent.h> // NOLINT
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <utime.h>
