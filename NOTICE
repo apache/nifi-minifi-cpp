@@ -44,8 +44,10 @@ Amazon Technologies, Inc (http://www.amazon.com/).
 THIRD PARTY COMPONENTS
 **********************
 This software includes third party software subject to the following copyrights:
-- XML parsing and utility functions from TinyXml2 - Lee Thomason.
-- JSON parsing and utility functions from JsonCpp - Copyright (c) 2007-2010 Baptiste Lepilleur.
+- Very fast, header-only/compiled, C++ logging library from spdlog - Copyright (c) 2016 Gabi Melman
+- An open-source formatting library for C++ from fmt - Copyright (c) 2012 - present, Victor Zverovich
+- XML parsing and utility functions from TinyXml2 - Lee Thomason
+- JSON parsing and utility functions from JsonCpp - Copyright (c) 2007-2010 Baptiste Lepilleur
 - OpenSSL build files for cmake used for Android Builds - Copyright (C) 2007-2012 LuaDist and Copyright (C) 2013 Brian Sidebotham
 - Android tool chain cmake build files - Copyright (c) 2010-2011, Ethan Rublee and Copyright (c) 2011-2014, Andrey Kamaev
 - gsl-lite - Copyright (c) 2015 Martin Moene and Copyright (c) 2015 Microsoft Corporation. All rights reserved.

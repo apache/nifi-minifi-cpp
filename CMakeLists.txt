@@ -114,8 +114,10 @@ endif()
 # Enable usage of the VERSION specifier
 include(CheckCXXCompilerFlag)
 if (WIN32)
-	add_compile_definitions(WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)
-	add_compile_options(/W3 /utf-8)
+    add_compile_definitions(WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)
+    add_compile_options(/W3 /utf-8)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNOMINMAX")
   if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
 	CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
 	if (_cpp_latest_flag_supported)
@@ -274,11 +276,8 @@ else()
 endif()
 
 # spdlog
-add_library(spdlog INTERFACE)
-target_include_directories(spdlog INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/spdlog-20170710/include")
-if (NOT WIN32)
-	set_property(TARGET spdlog APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS "SPDLOG_ENABLE_SYSLOG")
-endif()
+include(BundledSpdlog)
+use_bundled_spdlog(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 # yaml-cpp
 include(BundledYamlCpp)

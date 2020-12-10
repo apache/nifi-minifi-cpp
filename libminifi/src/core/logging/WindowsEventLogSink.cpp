@@ -52,8 +52,8 @@ WORD windowseventlog_sink::type_from_level(const spdlog::details::log_msg& msg) 
   }
 }
 
-void windowseventlog_sink::_sink_it(const spdlog::details::log_msg& msg) {
-  const char* formatted_msg = msg.formatted.c_str();
+void windowseventlog_sink::sink_it_(const spdlog::details::log_msg& msg) {
+  const char* formatted_msg = msg.payload.data();
   ReportEventA(event_source_,
                type_from_level(msg) /*wType*/,
                0U /*wCategory*/,
@@ -65,7 +65,7 @@ void windowseventlog_sink::_sink_it(const spdlog::details::log_msg& msg) {
                nullptr /*lpRawData*/);
 }
 
-void windowseventlog_sink::_flush() {
+void windowseventlog_sink::flush_() {
 }
 
 windowseventlog_sink::windowseventlog_sink(const std::string& source_name /*= "ApacheNiFiMiNiFi"*/)

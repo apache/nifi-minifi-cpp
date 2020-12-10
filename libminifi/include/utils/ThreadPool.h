@@ -17,6 +17,7 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_
 #define LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -102,7 +103,7 @@ class Worker {
       promise->set_value(result);
       return false;
     }
-    next_exec_time_ = (std::max)(next_exec_time_ + run_determinant_->wait_time(), std::chrono::steady_clock::now());
+    next_exec_time_ = std::max(next_exec_time_ + run_determinant_->wait_time(), std::chrono::steady_clock::now());
     return true;
   }
 

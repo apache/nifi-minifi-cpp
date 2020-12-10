@@ -44,6 +44,10 @@
 #include "core/TraceableResource.h"
 #include "utils/BackTrace.h"
 
+#ifndef WIN32
+#include <sys/stat.h>
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {

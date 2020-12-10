@@ -47,7 +47,7 @@ class ValueParser {
     if (len == 0) {
       throw ParseException("Couldn't parse int");
     }
-    if (result < (std::numeric_limits<int>::min)() || result > (std::numeric_limits<int>::max)()) {
+    if (result < std::numeric_limits<int>::min() || result > std::numeric_limits<int>::max()) {
       throw ParseException("Cannot convert long to int");
     }
     offset += len;
@@ -61,7 +61,7 @@ class ValueParser {
     if (len == 0) {
       throw ParseException("Couldn't parse long long");
     }
-    if (result < (std::numeric_limits<int64_t>::min)() || result > (std::numeric_limits<int64_t>::max)()) {
+    if (result < std::numeric_limits<int64_t>::min() || result > std::numeric_limits<int64_t>::max()) {
       throw ParseException("Cannot convert long long to int64_t");
     }
     offset += len;
@@ -79,7 +79,7 @@ class ValueParser {
     if (len == 0) {
       throw ParseException("Couldn't parse uint32_t");
     }
-    if (result > (std::numeric_limits<uint32_t>::max)()) {
+    if (result > std::numeric_limits<uint32_t>::max()) {
       throw ParseException("Cannot convert unsigned long to uint32_t");
     }
     offset += len;
@@ -97,7 +97,7 @@ class ValueParser {
     if (len == 0) {
       throw ParseException("Couldn't parse unsigned long long");
     }
-    if (result > (std::numeric_limits<uint64_t>::max)()) {
+    if (result > std::numeric_limits<uint64_t>::max()) {
       throw ParseException("Cannot convert unsigned long long to uint64_t");
     }
     offset += len;

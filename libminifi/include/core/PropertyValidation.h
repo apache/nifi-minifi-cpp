@@ -202,7 +202,7 @@ class UnsignedIntValidator : public PropertyValidator {
 
 class LongValidator : public PropertyValidator {
  public:
-  explicit LongValidator(const std::string &name, int64_t min = (std::numeric_limits<int64_t>::min)(), int64_t max = (std::numeric_limits<int64_t>::max)())
+  explicit LongValidator(const std::string &name, int64_t min = std::numeric_limits<int64_t>::min(), int64_t max = std::numeric_limits<int64_t>::max())
       : PropertyValidator(name),
         min_(min),
         max_(max) {

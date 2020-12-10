@@ -26,10 +26,13 @@
 #include <map>
 #include <mutex>
 #include <string>
+
 #include "spdlog/common.h"
+#include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/sink.h"
 #include "spdlog/logger.h"
 #include "spdlog/formatter.h"
+#include "spdlog/pattern_formatter.h"
 
 #include "core/Core.h"
 #include "core/logging/Logger.h"
@@ -131,8 +134,8 @@ class LoggerConfiguration {
                                                     std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
 
  private:
-  static std::shared_ptr<spdlog::sinks::sink> create_syslog_sink();
-  static std::shared_ptr<spdlog::sinks::sink> create_fallback_sink();
+  static spdlog::sink_ptr create_syslog_sink();
+  static spdlog::sink_ptr create_fallback_sink();
 
   static std::shared_ptr<internal::LoggerNamespace> create_default_root();
 

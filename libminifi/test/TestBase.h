@@ -33,7 +33,9 @@
 #include "properties/Properties.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
+
 #include "spdlog/common.h"
+#include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/ostream_sink.h"
 #include "spdlog/sinks/dist_sink.h"
 #include "unit/ProvenanceTestHelper.h"
@@ -203,7 +205,7 @@ class LogTestController {
     my_properties_->set("logger." + core::getClassName<logging::LoggerConfiguration>(), "DEBUG");
     std::shared_ptr<spdlog::sinks::dist_sink_mt> dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
     dist_sink->add_sink(std::make_shared<spdlog::sinks::ostream_sink_mt>(log_output, true));
-    dist_sink->add_sink(spdlog::sinks::stderr_sink_mt::instance());
+    dist_sink->add_sink(std::make_shared<spdlog::sinks::stderr_sink_mt>());
     my_properties_->add_sink("ostream", dist_sink);
     if (initMain) {
       logging::LoggerConfiguration::getConfiguration().initialize(my_properties_);

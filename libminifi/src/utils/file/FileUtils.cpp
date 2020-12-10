@@ -39,8 +39,7 @@ uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position) 
   uint64_t remaining_bytes_to_be_read = up_to_position;
 
   while (stream && remaining_bytes_to_be_read > 0) {
-    // () around std::min are needed because Windows.h defines min (and max) as a macro
-    stream.read(buffer.data(), (std::min)(BUFFER_SIZE, remaining_bytes_to_be_read));
+    stream.read(buffer.data(), std::min(BUFFER_SIZE, remaining_bytes_to_be_read));
     uInt bytes_read = gsl::narrow<uInt>(stream.gcount());
     checksum = crc32(checksum, reinterpret_cast<unsigned char*>(buffer.data()), bytes_read);
     remaining_bytes_to_be_read -= bytes_read;
