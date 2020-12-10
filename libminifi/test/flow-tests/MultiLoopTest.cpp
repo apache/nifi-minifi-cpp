@@ -81,6 +81,16 @@ Connections:
     flowfile expiration: 0
 
 Remote Processing Groups:
+
+Controller Services:
+  - name: defaultstatemanagerprovider
+    id: 2438e3c8-015a-1000-79ca-83af40ec1997
+    class: UnorderedMapPersistableKeyValueStoreService
+    Properties:
+      Auto Persistence Interval:
+          - value: 0 sec
+      File:
+          - value: multilooptest_state.txt
 )";
 
 TEST_CASE("Flow with two loops", "[MultiLoopFlow]") {
