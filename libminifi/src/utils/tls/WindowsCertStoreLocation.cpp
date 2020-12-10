@@ -22,6 +22,7 @@
 
 #include <array>
 #include <utility>
+#include <stdexcept>
 
 #pragma comment(lib, "crypt32.lib")
 #pragma comment(lib, "Ws2_32.lib")
