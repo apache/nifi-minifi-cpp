@@ -74,7 +74,7 @@ class UnorderedMapKeyValueStoreServiceTestFixture {
     configuration->set(minifi::Configure::nifi_flow_configuration_file, config_yaml);
     content_repo->initialize(configuration);
 
-    process_group = yaml_config->getRoot(config_yaml);
+    process_group = yaml_config->getRoot();
     key_value_store_service_node = process_group->findControllerService("testcontroller");
     REQUIRE(key_value_store_service_node != nullptr);
     key_value_store_service_node->enable();
