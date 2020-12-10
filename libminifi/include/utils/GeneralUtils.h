@@ -49,6 +49,9 @@ constexpr T intdiv_ceil(T numerator, T denominator) {
       : numerator / denominator + (numerator % denominator != 0));
 }
 
+#if __cplusplus > 201703L
+using std::identity;
+#else
 // from https://stackoverflow.com/questions/15202474
 struct identity {
     template<typename U>
@@ -56,6 +59,7 @@ struct identity {
         return std::forward<U>(v);
     }
 };
+#endif /* < C++20 */
 
 using gsl::owner;
 
