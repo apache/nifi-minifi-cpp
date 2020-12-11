@@ -821,6 +821,12 @@ PropertyValue YamlConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo
     PropertyValue coercedValue = defaultValue;
     if (defaultType == typeid(int64_t)) {
       coercedValue = propertyValueNode.as<int64_t>();
+    } else if (defaultType == typeid(uint64_t)) {
+      try {
+        coercedValue = propertyValueNode.as<uint64_t>();
+      } catch (...) {
+        coercedValue = propertyValueNode.as<std::string>();
+      }
     } else if (defaultType == typeid(int)) {
       coercedValue = propertyValueNode.as<int>();
     } else if (defaultType == typeid(bool)) {
