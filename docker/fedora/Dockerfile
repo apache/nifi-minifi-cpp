@@ -27,7 +27,11 @@ ARG MINIFI_VERSION
 ENV MINIFI_BASE_DIR /opt/minifi
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 
-RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel flex bison make patch sudo git which maven libtool autoconf automake
+RUN echo "fastestmirror=True" | tee -a /etc/dnf/dnf.conf
+RUN for iter in {1..10}; do yum update -y && \
+    yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel flex bison make patch sudo git which maven libtool autoconf automake && \
+    yum clean all && exit_code=0 && break || exit_code=$? && echo "yum error: retry $iter in 10s" && sleep 10; done; \
+    (exit $exit_code)
 
 RUN mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}
