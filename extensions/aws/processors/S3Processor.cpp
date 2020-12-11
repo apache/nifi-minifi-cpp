@@ -123,17 +123,16 @@ S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const
   : core::Processor(std::move(name), uuid)
   , logger_(logger)
   , s3_wrapper_(minifi::utils::make_unique<aws::s3::S3Wrapper>()) {
+  setSupportedProperties({ObjectKey, Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
+                          EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials});
 }
 
 S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
   : core::Processor(std::move(name), uuid)
   , logger_(logger)
   , s3_wrapper_(std::move(s3_wrapper)) {
-}
-
-const std::set<core::Property> S3Processor::getSupportedProperties() {
-  return {ObjectKey, Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
-    EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials};
+  setSupportedProperties({ObjectKey, Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
+                          EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials});
 }
 
 minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {

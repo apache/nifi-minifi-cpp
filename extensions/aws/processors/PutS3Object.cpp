@@ -100,17 +100,9 @@ const core::Relationship PutS3Object::Success("success", "FlowFiles are routed t
 const core::Relationship PutS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
 
 void PutS3Object::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties(S3Processor::getSupportedProperties());
-  properties.insert(ContentType);
-  properties.insert(StorageClass);
-  properties.insert(FullControlUserList);
-  properties.insert(ReadPermissionUserList);
-  properties.insert(ReadACLUserList);
-  properties.insert(WriteACLUserList);
-  properties.insert(CannedACL);
-  properties.insert(ServerSideEncryption);
-  setSupportedProperties(properties);
+  // Add new supported properties
+  updateSupportedProperties({ContentType, StorageClass, FullControlUserList, ReadPermissionUserList,
+    ReadACLUserList, WriteACLUserList, CannedACL, ServerSideEncryption});
   // Set the supported relationships
   setSupportedRelationships({Failure, Success});
 }

@@ -40,10 +40,8 @@ const core::Relationship DeleteS3Object::Success("success", "FlowFiles are route
 const core::Relationship DeleteS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
 
 void DeleteS3Object::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties(S3Processor::getSupportedProperties());
-  properties.insert(Version);
-  setSupportedProperties(properties);
+  // Add new supported properties
+  updateSupportedProperties({Version});
   // Set the supported relationships
   setSupportedRelationships({Failure, Success});
 }
