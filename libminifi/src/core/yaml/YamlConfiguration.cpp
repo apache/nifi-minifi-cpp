@@ -810,6 +810,9 @@ namespace {
   }
 }  // namespace
 
+// coerce the types. upon failure we will either exit or use the default value.
+// we do this here ( in addition to the PropertyValue class ) to get the earliest
+// possible YAML failure.
 PropertyValue YamlConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& propertyFromProcessor, const YAML::Node& propertyValueNode) {
   PropertyValue defaultValue;
   defaultValue = propertyFromProcessor.getDefaultValue();
@@ -838,13 +841,7 @@ PropertyValue YamlConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo
 void YamlConfiguration::parseSingleProperty(const std::string& propertyName, const YAML::Node& propertyValueNode, std::shared_ptr<core::ConfigurableComponent> processor) {
   core::Property myProp(propertyName, "", "");
   processor->getProperty(propertyName, myProp);
-  PropertyValue coercedValue;
-
-  // coerce the types. upon failure we will either exit or use the default value.
-  // we do this here ( in addition to the PropertyValue class ) to get the earliest
-  // possible YAML failure.
-  coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, propertyValueNode);
-
+  const PropertyValue coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, propertyValueNode);
   const std::string rawValueString = propertyValueNode.as<std::string>();
   if (!processor->setProperty(myProp, coercedValue)) {
     std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
