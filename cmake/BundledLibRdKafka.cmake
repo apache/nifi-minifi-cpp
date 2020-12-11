@@ -16,9 +16,6 @@
 # under the License.
 
 function(use_bundled_librdkafka SOURCE_DIR BINARY_DIR)
-    # Define patch step
-    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/librdkafka/librdkafka-libressl.patch" && "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/librdkafka/librdkafka-macos-timespec.patch")
-
     # Define byproducts
     if(WIN32)
         set(BYPRODUCT "lib/rdkafka.lib")
@@ -44,11 +41,10 @@ function(use_bundled_librdkafka SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             kafka-external
-            URL "https://github.com/edenhill/librdkafka/archive/v1.0.1.tar.gz"
-            URL_HASH "SHA256=b2a2defa77c0ef8c508739022a197886e0644bd7bf6179de1b68bdffb02b3550"
+            URL "https://github.com/edenhill/librdkafka/archive/v1.5.0.tar.gz"
+            URL_HASH "SHA256=f7fee59fdbf1286ec23ef0b35b2dfb41031c8727c90ced6435b8cf576f23a656"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${LIBRDKAFKA_CMAKE_ARGS}
-            PATCH_COMMAND ${PC}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/librdkafka-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
     )
