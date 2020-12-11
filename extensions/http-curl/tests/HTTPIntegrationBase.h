@@ -189,6 +189,38 @@ public:
   }
 };
 
+class VerifyFlowFetched : public HTTPIntegrationBase {
+ public:
+  using HTTPIntegrationBase::HTTPIntegrationBase;
+
+  void testSetup() override {
+    LogTestController::getInstance().setInfo<minifi::FlowController>();
+    LogTestController::getInstance().setDebug<minifi::utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
+    LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
+  }
+
+  void configureC2() override {
+    configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
+    configuration->set("nifi.c2.enable", "true");
+    configuration->set("nifi.c2.agent.class", "test");
+    configuration->set("nifi.c2.agent.heartbeat.period", "1000");
+  }
+
+  void setFlowUrl(const std::string& url) {
+    configuration->set(minifi::Configure::nifi_c2_flow_url, url);
+  }
+
+  void cleanup() override {
+    LogTestController::getInstance().reset();
+  }
+
+  void runAssertions() override {
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(10), "Successfully fetched valid flow configuration"));
+  }
+};
+
 class VerifyC2UpdateAgent : public VerifyC2Update {
  public:
   explicit VerifyC2UpdateAgent(uint64_t waitTime)

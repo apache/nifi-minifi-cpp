@@ -24,6 +24,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <utility>
 
 #include "core/logging/Logger.h"
 #include "utils/OptionalUtils.h"
@@ -38,6 +39,7 @@ class Properties {
     std::string value;
     bool changed;
   };
+
  public:
   Properties(const std::string& name = ""); // NOLINT
 

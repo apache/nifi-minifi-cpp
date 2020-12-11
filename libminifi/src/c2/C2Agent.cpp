@@ -707,7 +707,7 @@ utils::TaskRescheduleInfo C2Agent::produce() {
       logger_->log_error("Exception occurred while performing heartbeat. error: %s", e.what());
     }
     catch (...) {
-      logger_->log_error("Unknonwn exception occurred while performing heartbeat.");
+      logger_->log_error("Unknown exception occurred while performing heartbeat.");
     }
   }
 

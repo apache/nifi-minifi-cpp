@@ -448,11 +448,34 @@ class HeartbeatHandler : public ServerAwareHandler {
   }
 };
 
-class C2UpdateHandler : public ServerAwareHandler {
+class C2FlowProvider : public ServerAwareHandler {
  public:
-  explicit C2UpdateHandler(const std::string& test_file_location)
-    : test_file_location_(test_file_location) {
+  explicit C2FlowProvider(const std::string& test_file_location)
+      : test_file_location_(test_file_location) {
   }
+
+  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
+    std::ifstream myfile(test_file_location_.c_str(), std::ios::in | std::ios::binary);
+    if (myfile.good()) {
+      std::string str((std::istreambuf_iterator<char>(myfile)), (std::istreambuf_iterator<char>()));
+      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+                      "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+                str.length());
+      mg_printf(conn, "%s", str.c_str());
+    } else {
+      mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n");
+    }
+
+    return true;
+  }
+
+ private:
+  std::string test_file_location_;
+};
+
+class C2UpdateHandler : public C2FlowProvider {
+ public:
+  using C2FlowProvider::C2FlowProvider;
 
   bool handlePost(CivetServer* /*server*/, struct mg_connection *conn) override {
     calls_++;
@@ -462,21 +485,6 @@ class C2UpdateHandler : public ServerAwareHandler {
                 response_.length());
       mg_printf(conn, "%s", response_.c_str());
       response_.clear();
-    } else {
-      mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n");
-    }
-
-    return true;
-  }
-
-  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
-    std::ifstream myfile(test_file_location_.c_str(), std::ios::in | std::ios::binary);
-    if (myfile.good()) {
-      std::string str((std::istreambuf_iterator<char>(myfile)), (std::istreambuf_iterator<char>()));
-      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-                str.length());
-      mg_printf(conn, "%s", str.c_str());
     } else {
       mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n");
     }
@@ -500,8 +508,8 @@ class C2UpdateHandler : public ServerAwareHandler {
   }
 
   std::atomic<size_t> calls_{0};
+
  private:
-  std::string test_file_location_;
   std::string response_;
 };
 
