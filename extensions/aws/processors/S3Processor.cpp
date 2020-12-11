@@ -82,7 +82,7 @@ const core::Property S3Processor::CommunicationsTimeout(
   core::PropertyBuilder::createProperty("Communications Timeout")
     ->isRequired(true)
     ->withDefaultValue<core::TimePeriodValue>("30 sec")
-    ->withDescription("")
+    ->withDescription("Sets the timeout of the communication between the AWS server and the client")
     ->build());
 const core::Property S3Processor::EndpointOverrideURL(
   core::PropertyBuilder::createProperty("Endpoint Override URL")
