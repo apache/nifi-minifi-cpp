@@ -248,7 +248,7 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
   }
 
   if (!getExpressionLanguageSupportedProperties(context, flow_file)) {
-    context->yield();
+    session->transfer(flow_file, Failure);
     return;
   }
 

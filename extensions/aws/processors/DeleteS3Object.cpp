@@ -69,7 +69,7 @@ void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   }
 
   if (!getExpressionLanguageSupportedProperties(context, flow_file)) {
-    context->yield();
+    session->transfer(flow_file, Failure);
     return;
   }
 
