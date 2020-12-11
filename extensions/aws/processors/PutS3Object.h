@@ -31,6 +31,9 @@
 #include "S3Processor.h"
 #include "utils/GeneralUtils.h"
 
+template<typename T>
+class S3TestsFixture;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -62,10 +65,6 @@ class PutS3Object : public S3Processor {
 
   explicit PutS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
     : S3Processor(std::move(name), uuid, logging::LoggerFactory<PutS3Object>::getLogger()) {
-  }
-
-  explicit PutS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
-    : S3Processor(std::move(name), uuid, logging::LoggerFactory<PutS3Object>::getLogger(), std::move(s3_wrapper)) {
   }
 
   ~PutS3Object() override = default;
@@ -121,6 +120,12 @@ class PutS3Object : public S3Processor {
   bool getExpressionLanguageSupportedProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) override;
 
  private:
+  friend class ::S3TestsFixture<PutS3Object>;
+
+  explicit PutS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
+    : S3Processor(std::move(name), uuid, logging::LoggerFactory<PutS3Object>::getLogger(), std::move(s3_wrapper)) {
+  }
+
   void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);
   std::string parseAccessControlList(const std::string &comma_separated_list) const;
   bool setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);

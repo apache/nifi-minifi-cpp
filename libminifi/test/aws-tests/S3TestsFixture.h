@@ -55,7 +55,7 @@ class S3TestsFixture {
     plan = test_controller.createPlan();
     mock_s3_wrapper_ptr = new MockS3Wrapper();
     std::unique_ptr<minifi::aws::s3::S3WrapperBase> mock_s3_wrapper(mock_s3_wrapper_ptr);
-    s3_processor = std::make_shared<T>("S3Processor", utils::Identifier(), std::move(mock_s3_wrapper));
+    s3_processor = std::shared_ptr<T>(new T("S3Processor", utils::Identifier(), std::move(mock_s3_wrapper)));
 
     char input_dir_mask[] = "/tmp/gt.XXXXXX";
     auto input_dir = test_controller.createTempDirectory(input_dir_mask);

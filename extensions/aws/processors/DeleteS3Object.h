@@ -28,6 +28,9 @@
 #include "S3Processor.h"
 #include "utils/GeneralUtils.h"
 
+template<typename T>
+class S3TestsFixture;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -50,10 +53,6 @@ class DeleteS3Object : public S3Processor {
     : S3Processor(std::move(name), uuid, logging::LoggerFactory<DeleteS3Object>::getLogger()) {
   }
 
-  explicit DeleteS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
-    : S3Processor(std::move(name), uuid, logging::LoggerFactory<DeleteS3Object>::getLogger(), std::move(s3_wrapper)) {
-  }
-
   ~DeleteS3Object() override = default;
 
   void initialize() override;
@@ -63,6 +62,12 @@ class DeleteS3Object : public S3Processor {
   bool getExpressionLanguageSupportedProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) override;
 
  private:
+  friend class ::S3TestsFixture<DeleteS3Object>;
+
+  explicit DeleteS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
+    : S3Processor(std::move(name), uuid, logging::LoggerFactory<DeleteS3Object>::getLogger(), std::move(s3_wrapper)) {
+  }
+
   std::string version_;
 };
 
