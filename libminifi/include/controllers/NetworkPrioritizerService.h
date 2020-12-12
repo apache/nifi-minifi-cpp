@@ -18,11 +18,14 @@
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_NETWORKPRIORITIZERSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_NETWORKPRIORITIZERSERVICE_H_
 
+#include <chrono>
+#include <functional>
+#include <iostream>
+#include <limits>
+#include <memory>
 #include <string>
 #include <vector>
-#include <iostream>
-#include <memory>
-#include <limits>
+
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "io/validation.h"
@@ -53,6 +56,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
         timestamp_(0),
         bytes_per_token_(0),
         verify_interfaces_(true),
+        milliseconds_since_epoch_{[]{ return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()); }},
         logger_(logging::LoggerFactory<NetworkPrioritizerService>::getLogger()) {
   }
 
@@ -121,6 +125,9 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
   bool verify_interfaces_;
 
  private:
+  friend class NetworkPrioritizerServiceTestAccessor;
+
+  std::function<std::chrono::milliseconds()> milliseconds_since_epoch_;
   std::shared_ptr<logging::Logger> logger_;
 };
 
