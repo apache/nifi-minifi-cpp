@@ -18,11 +18,13 @@
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_NETWORKPRIORITIZERSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_NETWORKPRIORITIZERSERVICE_H_
 
-#include <string>
-#include <vector>
 #include <iostream>
-#include <memory>
 #include <limits>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "io/validation.h"
@@ -43,7 +45,9 @@ namespace controllers {
  */
 class NetworkPrioritizerService : public core::controller::ControllerService, public minifi::io::NetworkPrioritizer, public std::enable_shared_from_this<NetworkPrioritizerService> {
  public:
-  explicit NetworkPrioritizerService(const std::string &name, const utils::Identifier& uuid = {})
+  explicit NetworkPrioritizerService(const std::string& name,
+                                     const utils::Identifier& uuid = {},
+                                     std::shared_ptr<utils::timeutils::Clock> clock = std::make_shared<utils::timeutils::SteadyClock>())
       : ControllerService(name, uuid),
         enabled_(false),
         max_throughput_(std::numeric_limits<uint64_t>::max()),
@@ -53,6 +57,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
         timestamp_(0),
         bytes_per_token_(0),
         verify_interfaces_(true),
+        clock_(std::move(clock)),
         logger_(logging::LoggerFactory<NetworkPrioritizerService>::getLogger()) {
   }
 
@@ -121,6 +126,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
   bool verify_interfaces_;
 
  private:
+  std::shared_ptr<utils::timeutils::Clock> clock_;
   std::shared_ptr<logging::Logger> logger_;
 };
 

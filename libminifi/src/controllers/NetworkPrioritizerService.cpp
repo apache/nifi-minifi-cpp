@@ -84,7 +84,7 @@ io::NetworkInterface NetworkPrioritizerService::getInterface(uint32_t size = 0) 
   std::vector<std::string> controllers;
   std::string ifc = "";
   if (!network_controllers_.empty()) {
-    if (sufficient_tokens(size) && size < max_payload_) {
+    if (sufficient_tokens(size) && size <= max_payload_) {
       controllers.insert(std::end(controllers), std::begin(network_controllers_), std::end(network_controllers_));
     }
   }
@@ -147,7 +147,7 @@ bool NetworkPrioritizerService::interface_online(const std::string &ifc) {
 std::vector<std::string> NetworkPrioritizerService::getInterfaces(uint32_t size = 0) {
   std::vector<std::string> interfaces;
   if (!network_controllers_.empty()) {
-    if (sufficient_tokens(size) && size < max_payload_) {
+    if (sufficient_tokens(size) && size <= max_payload_) {
       return network_controllers_;
     }
   }
@@ -156,7 +156,7 @@ std::vector<std::string> NetworkPrioritizerService::getInterfaces(uint32_t size 
 
 bool NetworkPrioritizerService::sufficient_tokens(uint32_t size) {
   std::lock_guard<std::mutex> lock(token_mutex_);
-  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+  auto ms = clock_->timeSinceEpoch().count();
   auto diff = ms - timestamp_;
   timestamp_ = ms;
   if (diff > 0) {
@@ -189,8 +189,7 @@ bool NetworkPrioritizerService::isWorkAvailable() {
 }
 
 void NetworkPrioritizerService::onEnable() {
-  std::string controllers, max_throughput, max_payload_, df_prioritizer, intersect, verify_interfaces, roundrobin_interfaces;
-// if we have defined controller services or we have linked services
+  std::string controllers;
   if (getProperty(NetworkControllers.getName(), controllers) || !linked_services_.empty()) {
     // if this controller service is defined, it will be an intersection of this config with linked services.
     if (getProperty(MaxThroughput.getName(), max_throughput_)) {
@@ -220,7 +219,7 @@ void NetworkPrioritizerService::onEnable() {
       }
     }
     getProperty(VerifyInterfaces.getName(), verify_interfaces_);
-    timestamp_ = std::chrono::system_clock::now().time_since_epoch() / std::chrono::milliseconds(1);
+    timestamp_ = clock_->timeSinceEpoch().count();
     enabled_ = true;
     logger_->log_trace("Enabled");
   } else {

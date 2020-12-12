@@ -21,16 +21,22 @@
 #include <string>
 #include "../TestBase.h"
 #include "io/ClientSocket.h"
-#include "core/Processor.h"
-#include "../../controller/Controller.h"
 #include "core/controller/ControllerService.h"
-#include "c2/ControllerSocketProtocol.h"
 #include "controllers/NetworkPrioritizerService.h"
-#include "state/UpdateController.h"
+#include "utils/TestUtils.h"
+
+namespace {
+
+std::shared_ptr<minifi::controllers::NetworkPrioritizerService> createNetworkPrioritizerService(
+    const std::string& name,
+    const std::shared_ptr<utils::timeutils::Clock>& clock = std::make_shared<utils::ManualClock>()) {
+  return std::make_shared<minifi::controllers::NetworkPrioritizerService>(name, utils::Identifier{}, clock);
+}
+
+}  // namespace
 
 TEST_CASE("TestPrioritizerOneInterface", "[test1]") {
-  auto controller = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService");
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  auto controller = createNetworkPrioritizerService("TestService");
   controller->initialize();
   controller->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth0,eth1");
   controller->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
@@ -41,129 +47,105 @@ TEST_CASE("TestPrioritizerOneInterface", "[test1]") {
 }
 
 TEST_CASE("TestPrioritizerOneInterfaceMaxPayload", "[test2]") {
-  auto controller = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService");
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  auto controller = createNetworkPrioritizerService("TestService");
   controller->initialize();
   controller->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth0,eth1");
   controller->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
-  controller->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "1 B");
-  controller->setProperty(minifi::controllers::NetworkPrioritizerService::MaxPayload, "1 B");
+  controller->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "1 kB");
+  controller->setProperty(minifi::controllers::NetworkPrioritizerService::MaxPayload, "10 B");
   controller->onEnable();
-  // can't because we've triggered the max payload
-  REQUIRE("" == controller->getInterface(5).getInterface());
+
+  REQUIRE("eth0" == controller->getInterface(5).getInterface());
+  REQUIRE("" == controller->getInterface(20).getInterface());  // larger than max payload
+  REQUIRE("eth0" == controller->getInterface(5).getInterface());
 }
 
 TEST_CASE("TestPrioritizerOneInterfaceMaxThroughput", "[test3]") {
-  auto controller = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService");
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  auto clock = std::make_shared<utils::ManualClock>();
+  auto controller = createNetworkPrioritizerService("TestService", clock);
   controller->initialize();
   controller->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth0,eth1");
   controller->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
   controller->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "10 B");
   controller->onEnable();
-  // can't because we've triggered the max payload
   REQUIRE("eth0" == controller->getInterface(5).getInterface());
   REQUIRE("eth0" == controller->getInterface(5).getInterface());
-  REQUIRE("" == controller->getInterface(5).getInterface());
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  REQUIRE("eth0" == controller->getInterface(5).getInterface());
+  REQUIRE("" == controller->getInterface(5).getInterface());  // max throughput reached
+  clock->advance(std::chrono::milliseconds{10});   // wait for more tokens to be generated
+  REQUIRE("eth0" == controller->getInterface(5).getInterface());  // now we can send again
 }
 
 TEST_CASE("TestPriorotizerMultipleInterfaces", "[test4]") {
-  LogTestController::getInstance().setTrace<minifi::controllers::NetworkPrioritizerService>();
-
-  auto controller = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService");
-  auto controller2 = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService2");
-  auto controller3 = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService3");
+  auto clock = std::make_shared<utils::ManualClock>();
+  auto parent_controller = createNetworkPrioritizerService("TestService", clock);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  controller->initialize();
-  controller->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
+  parent_controller->initialize();
+  parent_controller->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
 
-  controller3->initialize();
-  controller3->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth0");
-  controller3->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
-  controller3->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "10 B");
-  controller3->onEnable();
+  auto controller0 = createNetworkPrioritizerService("TestService_eth0", clock);
+  controller0->initialize();
+  controller0->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth0");
+  controller0->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
+  controller0->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "10 B");
+  controller0->onEnable();
 
-  controller2->initialize();
-  controller2->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth1");
-  controller2->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
-  controller2->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "10 B");
-  controller2->onEnable();
+  auto controller1 = createNetworkPrioritizerService("TestService_eth1", clock);
+  controller1->initialize();
+  controller1->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth1");
+  controller1->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
+  controller1->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "10 B");
+  controller1->onEnable();
+
   std::vector<std::shared_ptr<core::controller::ControllerService> > services;
-  services.push_back(controller2);
-  services.push_back(controller3);
-  controller->setLinkedControllerServices(services);
-  controller->onEnable();
-  // can't because we've triggered the max payload
-  REQUIRE("eth1" == controller->getInterface(5).getInterface());
-  REQUIRE("eth1" == controller->getInterface(5).getInterface());
-  REQUIRE("eth0" == controller->getInterface(5).getInterface());
-  REQUIRE("eth0" == controller->getInterface(5).getInterface());
-}
+  services.push_back(controller0);
+  services.push_back(controller1);
+  parent_controller->setLinkedControllerServices(services);
+  parent_controller->onEnable();
 
-TEST_CASE("TestPriorotizerMultipleInterfacesNeverSwitch", "[test5]") {
-  auto controller = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService");
-  auto controller2 = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService2");
-  auto controller3 = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService3");
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  controller->initialize();
-  controller->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
+  SECTION("Switch to second interface when the first is saturated") {
+    REQUIRE("eth0" == parent_controller->getInterface(5).getInterface());
+    REQUIRE("eth0" == parent_controller->getInterface(5).getInterface());
+    // triggered the max throughput on eth0, switching to eth1
+    REQUIRE("eth1" == parent_controller->getInterface(5).getInterface());
+    REQUIRE("eth1" == parent_controller->getInterface(5).getInterface());
+  }
 
-  controller3->initialize();
-  controller3->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth0");
-  controller3->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
-  controller3->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "1 kB");
-  controller3->onEnable();
-
-  controller2->initialize();
-  controller2->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth1");
-  controller2->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
-  controller2->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "10 B");
-  controller2->onEnable();
-  std::vector<std::shared_ptr<core::controller::ControllerService> > services;
-  services.push_back(controller3);
-  services.push_back(controller2);
-  controller->setLinkedControllerServices(services);
-  controller->onEnable();
-  // can't because we've triggered the max payload
-  for (int i = 0; i < 50; i++) {
-    REQUIRE("eth0" == controller->getInterface(5).getInterface());
-    REQUIRE("eth0" == controller->getInterface(5).getInterface());
-    REQUIRE("eth0" == controller->getInterface(5).getInterface());
-    REQUIRE("eth0" == controller->getInterface(5).getInterface());
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  SECTION("Can keep sending on eth0 if we wait between packets") {
+    for (int i = 0; i < 100; i++) {
+      REQUIRE("eth0" == parent_controller->getInterface(10).getInterface());
+      clock->advance(std::chrono::milliseconds{5});
+    }
   }
 }
 
+TEST_CASE("TestPriorotizerMultipleInterfacesMaxPayload", "[test5]") {
+  auto parent_controller = createNetworkPrioritizerService("TestService");
+  parent_controller->initialize();
+  parent_controller->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
 
-TEST_CASE("TestPriorotizerMultipleInterfacesMaxPayload", "[test4]") {
-  auto controller = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService");
-  auto controller2 = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService2");
-  auto controller3 = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService3");
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  controller->initialize();
-  controller->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
+  auto controller0 = createNetworkPrioritizerService("TestService_eth0");
+  controller0->initialize();
+  controller0->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth0");
+  controller0->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
+  controller0->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "1 kB");
+  controller0->setProperty(minifi::controllers::NetworkPrioritizerService::MaxPayload, "10 B");
+  controller0->onEnable();
 
-  controller3->initialize();
-  controller3->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth0");
-  controller3->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
-  controller3->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "1 kB");
+  auto controller1 = createNetworkPrioritizerService("TestService_eth1");
+  controller1->initialize();
+  controller1->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth1");
+  controller1->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
+  controller1->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "1 kB");
+  controller1->onEnable();
 
-  controller3->onEnable();
-
-  controller2->initialize();
-  controller2->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth1");
-  controller2->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
-  controller2->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput, "10 B");
-  controller3->setProperty(minifi::controllers::NetworkPrioritizerService::MaxPayload, "10 B");
-  controller2->onEnable();
   std::vector<std::shared_ptr<core::controller::ControllerService> > services;
-  services.push_back(controller2);
-  services.push_back(controller3);
-  controller->setLinkedControllerServices(services);
-  controller->onEnable();
-  // can't because we've triggered the max payload
-  REQUIRE("eth0" == controller->getInterface(50).getInterface());
-  REQUIRE("eth0" == controller->getInterface(50).getInterface());
+  services.push_back(controller0);
+  services.push_back(controller1);
+  parent_controller->setLinkedControllerServices(services);
+  parent_controller->onEnable();
+
+  REQUIRE("eth0" == parent_controller->getInterface(10).getInterface());
+  REQUIRE("eth0" == parent_controller->getInterface(10).getInterface());
+  REQUIRE("eth1" == parent_controller->getInterface(50).getInterface());  // larger than max payload
+  REQUIRE("eth0" == parent_controller->getInterface(10).getInterface());
 }
