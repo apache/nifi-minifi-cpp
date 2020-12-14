@@ -31,6 +31,7 @@
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
+#include "utils/IntegrationTestUtils.h"
 
 namespace {
 
@@ -332,12 +333,13 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   // check if the @input Connection's FlowFile was restored
   // upon the FlowFileRepository's startup
   std::shared_ptr<org::apache::nifi::minifi::core::FlowFile> newFlow = nullptr;
-  for (auto i = 0; i < 200 && !newFlow; ++i) {
-    std::this_thread::sleep_for(std::chrono::milliseconds{50});
+  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  const auto flowFileArrivedInOutput = [&newFlow, &expiredFiles, &input] {
     newFlow = input->poll(expiredFiles);
-  }
-
-  REQUIRE(newFlow);
+    return newFlow != nullptr;
+  };
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));  // Need to wait for flowfile repository to start
+  assert(verifyEventHappenedInPollTime(std::chrono::seconds(10), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
   REQUIRE(expiredFiles.empty());
 
   LogTestController::getInstance().reset();
@@ -419,13 +421,9 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
     REQUIRE(ff_repository->initialize(config));
     ff_repository->loadComponent(content_repo);
     ff_repository->start();
-    for (auto i = 0; i < 20; ++i) {
-      std::this_thread::sleep_for(std::chrono::milliseconds{50});
-      if (connection->getQueueSize() == 50) {
-        break;
-      }
-    }
-    REQUIRE(connection->getQueueSize() == 50);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));  // Need to wait for flowfile repository to start
+    using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+    assert(verifyEventHappenedInPollTime(std::chrono::seconds(1), [&connection]{ return connection->getQueueSize() == 50; }, std::chrono::milliseconds(50)));
   }
 }
 

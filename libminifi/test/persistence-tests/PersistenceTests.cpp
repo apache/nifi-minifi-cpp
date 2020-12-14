@@ -35,6 +35,7 @@
 #include "../test/BufferReader.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
+#include "utils/IntegrationTestUtils.h"
 
 using Connection = minifi::Connection;
 using MergeContent = minifi::processors::MergeContent;
@@ -334,13 +335,15 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
     ff_repository->start();
     // wait for FlowFileRepository to start and notify the owners of
     // the resurrected FlowFiles
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     std::set<std::shared_ptr<core::FlowFile>> expired;
     std::shared_ptr<org::apache::nifi::minifi::core::FlowFile> file = nullptr;
-    for (auto i = 0; i < 20 && !file; ++i) {
-      std::this_thread::sleep_for(std::chrono::milliseconds{50});
+    using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+    const auto flowFileArrivedInOutput = [&file, &expired, &flow] {
       file = flow.output->poll(expired);
-    }
-    REQUIRE(file);
+      return file != nullptr;
+    };
+    assert(verifyEventHappenedInPollTime(std::chrono::seconds(1), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
     REQUIRE(expired.empty());
 
     auto content = flow.read(file);
