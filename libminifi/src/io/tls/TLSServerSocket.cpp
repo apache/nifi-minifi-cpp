@@ -93,7 +93,7 @@ void TLSServerSocket::registerCallback(std::function<bool()> accept_function, st
     std::vector<int> fds;
     int size;
     while (accept_function()) {
-      int fd = select_descriptor(timeout.count());
+      int fd = select_descriptor(gsl::narrow<uint16_t>(timeout.count()));
       if (fd > 0) {
         int fd_remove = 0;
         std::vector<uint8_t> data;
