@@ -193,7 +193,12 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::vector<BackTrace> getTraces() override;
 
  private:
-  std::unique_ptr<core::ProcessGroup> instantiateNetwork();
+  /**
+   * Loads the flow as specified in the flow config file or if not present
+   * tries to fetch it from the C2 server (if enabled).
+   * @return the built flow
+   */
+  std::unique_ptr<core::ProcessGroup> loadInitialFlow();
 
  protected:
   // function to load the flow file repo.

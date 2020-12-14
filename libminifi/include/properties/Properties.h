@@ -51,18 +51,18 @@ class Properties {
 
   // Clear the load config
   void clear() {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     properties_.clear();
   }
   // Set the config value
   void set(const std::string &key, const std::string &value) {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     properties_[key] = PropertyValue{value, true};
     dirty_ = true;
   }
   // Check whether the config value existed
   bool has(const std::string& key) const {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     return properties_.find(key) != properties_.end();
   }
   /**
@@ -124,7 +124,7 @@ class Properties {
   std::string properties_file_;
 
   // Mutex for protection
-  mutable std::recursive_mutex mutex_;
+  mutable std::mutex mutex_;
   // Logger
   std::shared_ptr<minifi::core::logging::Logger> logger_;
   // Home location for this executable

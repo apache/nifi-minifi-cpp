@@ -38,7 +38,7 @@ Properties::Properties(const std::string& name)
 
 // Get the config value
 bool Properties::getString(const std::string &key, std::string &value) const {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 
   if (it != properties_.end()) {
@@ -60,7 +60,7 @@ utils::optional<std::string> Properties::getString(const std::string& key) const
 }
 
 int Properties::getInt(const std::string &key, int default_value) const {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 
   return it != properties_.end() ? std::stoi(it->second.value) : default_value;
@@ -68,7 +68,7 @@ int Properties::getInt(const std::string &key, int default_value) const {
 
 // Load Configure File
 void Properties::loadConfigureFile(const char *fileName) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   if (fileName == nullptr) {
     logger_->log_error("Configuration file path for %s is a nullptr!", getName().c_str());
     return;
@@ -92,7 +92,7 @@ void Properties::loadConfigureFile(const char *fileName) {
 }
 
 bool Properties::persistProperties() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   if (!dirty_) {
     logger_->log_info("Attempt to persist, but properties are not updated");
     return true;
@@ -136,7 +136,7 @@ bool Properties::persistProperties() {
 }
 
 std::map<std::string, std::string> Properties::getProperties() const {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   std::map<std::string, std::string> properties;
   for (const auto& prop : properties_) {
     properties[prop.first] = prop.second.value;

@@ -253,7 +253,7 @@ void FlowController::unload() {
   }
 }
 
-std::unique_ptr<core::ProcessGroup> FlowController::instantiateNetwork() {
+std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
   std::unique_ptr<core::ProcessGroup> root = flow_configuration_->getRoot();
   if (root) {
     return root;
@@ -299,7 +299,7 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
       this->root_ = root;
     } else {
       logger_->log_info("Instantiating new flow");
-      this->root_ = std::shared_ptr<core::ProcessGroup>(instantiateNetwork());
+      this->root_ = std::shared_ptr<core::ProcessGroup>(loadInitialFlow());
     }
 
     logger_->log_info("Loaded root processor Group");
