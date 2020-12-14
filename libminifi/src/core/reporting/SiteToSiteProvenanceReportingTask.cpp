@@ -17,6 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/prettywriter.h>
+
 #include <vector>
 #include <queue>
 #include <map>
@@ -27,6 +32,7 @@
 #include <functional>
 #include <iostream>
 #include <utility>
+
 #include "core/Repository.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "../include/io/StreamFactory.h"
@@ -36,12 +42,7 @@
 #include "core/ProcessSession.h"
 #include "provenance/Provenance.h"
 #include "FlowController.h"
-
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/prettywriter.h"
-
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -62,35 +63,35 @@ void setJsonStr(const std::string& key, const std::string& value, rapidjson::Val
   const char* c_key = key.c_str();
   const char* c_val = value.c_str();
 
-  keyVal.SetString(c_key, key.length(), alloc);
-  valueVal.SetString(c_val, value.length(), alloc);
+  keyVal.SetString(c_key, gsl::narrow<rapidjson::SizeType>(key.length()), alloc);
+  valueVal.SetString(c_val, gsl::narrow<rapidjson::SizeType>(value.length()), alloc);
 
   parent.AddMember(keyVal, valueVal, alloc);
 }
 
 rapidjson::Value getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc) {
   rapidjson::Value Val;
-  Val.SetString(value.c_str(), value.length(), alloc);
+  Val.SetString(value.c_str(), gsl::narrow<rapidjson::SizeType>(value.length()), alloc);
   return Val;
 }
 
 template<size_t N>
 rapidjson::Value getStringValue(const utils::SmallString<N>& value, rapidjson::Document::AllocatorType& alloc) {
   rapidjson::Value Val;
-  Val.SetString(value.c_str(), value.length(), alloc);
+  Val.SetString(value.c_str(), gsl::narrow<rapidjson::SizeType>(value.length()), alloc);
   return Val;
 }
 
 void appendJsonStr(const std::string& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {
   rapidjson::Value valueVal;
-  valueVal.SetString(value.c_str(), value.length(), alloc);
+  valueVal.SetString(value.c_str(), gsl::narrow<rapidjson::SizeType>(value.length()), alloc);
   parent.PushBack(valueVal, alloc);
 }
 
 template<size_t N>
 void appendJsonStr(const utils::SmallString<N>& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {
   rapidjson::Value valueVal;
-  valueVal.SetString(value.c_str(), value.length(), alloc);
+  valueVal.SetString(value.c_str(), gsl::narrow<rapidjson::SizeType>(value.length()), alloc);
   parent.PushBack(valueVal, alloc);
 }
 
@@ -144,7 +145,7 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(const std::shared_ptr<core
     recordJson.AddMember("childIds", childUuidJson, alloc);
 
     rapidjson::Value applicationVal;
-    applicationVal.SetString(ProvenanceAppStr, std::strlen(ProvenanceAppStr));
+    applicationVal.SetString(ProvenanceAppStr, gsl::narrow<rapidjson::SizeType>(std::strlen(ProvenanceAppStr)));
     recordJson.AddMember("application", applicationVal, alloc);
 
     array.PushBack(recordJson, alloc);

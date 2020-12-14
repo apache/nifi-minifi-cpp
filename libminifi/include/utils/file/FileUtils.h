@@ -85,6 +85,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
 #include "utils/file/PathUtils.h"
+#include "utils/gsl.h"
 
 #ifndef S_ISDIR
 #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
@@ -729,7 +730,7 @@ inline std::string get_executable_path() {
     }
     std::vector<char> buf(1024U);
     while (true) {
-      size_t ret = GetModuleFileNameA(hModule, buf.data(), buf.size());
+      size_t ret = GetModuleFileNameA(hModule, buf.data(), gsl::narrow<DWORD>(buf.size()));
       if (ret == 0U) {
         return "";
       }

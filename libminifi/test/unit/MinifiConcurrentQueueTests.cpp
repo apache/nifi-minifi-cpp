@@ -24,6 +24,7 @@
 #include <set>
 
 #include "../TestBase.h"
+#include "utils/gsl.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/StringUtils.h"
 #include "utils/IntegrationTestUtils.h"
@@ -121,7 +122,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
       while (queue.dequeueWait(s)) {
         if (!std::count(results.begin(), results.end(), s)) {
           results.push_back(s);
-          results_size = results.size();
+          results_size = gsl::narrow<int>(results.size());
         }
         // The consumer is busy enqueing so noone is waiting for this ;(
         queue.enqueue(std::move(s));

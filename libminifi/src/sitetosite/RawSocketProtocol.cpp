@@ -31,6 +31,7 @@
 #include "sitetosite/RawSocketProtocol.h"
 #include "io/CRCStream.h"
 #include "sitetosite/Peer.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -262,7 +263,7 @@ bool RawSiteToSiteClient::handShake() {
     }
   }
 
-  uint32_t size = properties.size();
+  uint32_t size = gsl::narrow<uint32_t>(properties.size());
   ret = peer_->write(size);
   if (ret <= 0) {
     return false;

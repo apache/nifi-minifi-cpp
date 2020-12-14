@@ -24,6 +24,7 @@
 #include "serialization/PayloadSerializer.h"
 #include "core/FlowFile.h"
 #include "../TestBase.h"
+#include "utils/gsl.h"
 
 std::shared_ptr<minifi::FlowFileRecord> createEmptyFlowFile() {
   auto flowFile = std::make_shared<minifi::FlowFileRecord>();
@@ -34,7 +35,7 @@ std::shared_ptr<minifi::FlowFileRecord> createEmptyFlowFile() {
 TEST_CASE("Payload Serializer", "[testPayload]") {
   std::string content = "flowFileContent";
   auto contentStream = std::make_shared<minifi::io::BufferStream>();
-  contentStream->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(content.data())), content.length());
+  contentStream->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(content.data())), gsl::narrow<int>(content.length()));
 
   auto result = std::make_shared<minifi::io::BufferStream>();
 
@@ -44,7 +45,7 @@ TEST_CASE("Payload Serializer", "[testPayload]") {
   flowFile->addAttribute("second", "two");
 
   minifi::PayloadSerializer serializer([&] (const std::shared_ptr<core::FlowFile>&, minifi::InputStreamCallback* cb) {
-    return cb->process(contentStream);
+    return gsl::narrow<int>(cb->process(contentStream));
   });
   serializer.serialize(flowFile, result);
 
@@ -56,7 +57,7 @@ TEST_CASE("Payload Serializer", "[testPayload]") {
 TEST_CASE("FFv3 Serializer", "[testFFv3]") {
   std::string content = "flowFileContent";
   auto contentStream = std::make_shared<minifi::io::BufferStream>();
-  contentStream->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(content.data())), content.length());
+  contentStream->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(content.data())), gsl::narrow<int>(content.length()));
 
   auto result = std::make_shared<minifi::io::BufferStream>();
 
@@ -66,7 +67,7 @@ TEST_CASE("FFv3 Serializer", "[testFFv3]") {
   flowFile->addAttribute("second", "two");
 
   minifi::FlowFileV3Serializer serializer([&] (const std::shared_ptr<core::FlowFile>&, minifi::InputStreamCallback* cb) {
-    return cb->process(contentStream);
+    return gsl::narrow<int>(cb->process(contentStream));
   });
   serializer.serialize(flowFile, result);
 

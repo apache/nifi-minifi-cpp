@@ -64,7 +64,7 @@ std::string getFullPath(const std::string& path) {
   std::vector<char> buffer(MAX_PATH);
   uint32_t len = 0U;
   while (true) {
-    len = GetFullPathNameA(path.c_str(), buffer.size(), buffer.data(), nullptr /*lpFilePart*/);
+    len = GetFullPathNameA(path.c_str(), gsl::narrow<DWORD>(buffer.size()), buffer.data(), nullptr /*lpFilePart*/);
     if (len < buffer.size()) {
       break;
     }

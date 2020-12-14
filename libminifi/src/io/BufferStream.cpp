@@ -18,7 +18,9 @@
 #include <cstdint>
 #include <algorithm>
 #include <cstring>
+
 #include "io/BufferStream.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -36,7 +38,8 @@ int BufferStream::write(const uint8_t *value, int size) {
 
 int BufferStream::read(uint8_t *buf, int len) {
   gsl_Expects(len >= 0);
-  len = (std::min<uint64_t>)(len, buffer_.size() - readOffset_);
+  int bytes_available_in_buffer = gsl::narrow<int>(buffer_.size() - readOffset_);
+  len = std::min(len, bytes_available_in_buffer);
   auto begin = buffer_.begin() + readOffset_;
   std::copy(begin, begin + len, buf);
 

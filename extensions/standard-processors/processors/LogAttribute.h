@@ -31,6 +31,7 @@
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -106,7 +107,7 @@ class LogAttribute : public core::Processor {
       if (buffer_.size() == 0U) {
         return 0U;
       }
-      int ret = stream->read(buffer_.data(), buffer_.size());
+      int ret = stream->read(buffer_.data(), gsl::narrow<int>(buffer_.size()));
       if (ret != buffer_.size()) {
         logger_->log_error("%zu bytes were requested from the stream but %d bytes were read. Rolling back.", buffer_.size(), ret);
         throw Exception(PROCESSOR_EXCEPTION, "Failed to read the entire FlowFile.");

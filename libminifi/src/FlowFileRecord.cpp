@@ -31,6 +31,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Relationship.h"
 #include "core/Repository.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -55,7 +56,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& k
     logger_->log_error("NiFi FlowFile Store event %s can not found", key);
     return nullptr;
   }
-  io::BufferStream stream((const uint8_t*) value.data(), value.length());
+  io::BufferStream stream((const uint8_t*) value.data(), gsl::narrow<int>(value.length()));
 
   auto record = DeSerialize(stream, content_repo, container);
 
@@ -100,7 +101,7 @@ bool FlowFileRecord::Serialize(io::OutputStream &outStream) {
     return false;
   }
   // write flow attributes
-  uint32_t numAttributes = attributes_.size();
+  uint32_t numAttributes = gsl::narrow<uint32_t>(attributes_.size());
   ret = outStream.write(numAttributes);
   if (ret != 4) {
     return false;

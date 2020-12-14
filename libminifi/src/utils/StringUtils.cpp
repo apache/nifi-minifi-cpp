@@ -94,37 +94,36 @@ bool StringUtils::StringToFloat(std::string input, float &output, FailurePolicy 
   return true;
 }
 
-std::string StringUtils::replaceEnvironmentVariables(std::string& original_string) {
-  int32_t beg_seq = 0;
-  int32_t end_seq = 0;
-  std::string source_string = original_string;
+std::string StringUtils::replaceEnvironmentVariables(std::string source_string) {
+  std::string::size_type beg_seq = 0;
+  std::string::size_type end_seq = 0;
   do {
     beg_seq = source_string.find("${", beg_seq);
+    if (beg_seq == std::string::npos) {
+      break;
+    }
     if (beg_seq > 0 && source_string.at(beg_seq - 1) == '\\') {
       beg_seq += 2;
       continue;
     }
-    if (beg_seq < 0)
-      break;
     end_seq = source_string.find("}", beg_seq + 2);
-    if (end_seq < 0)
+    if (end_seq == std::string::npos) {
       break;
-    if (end_seq - (beg_seq + 2) < 0) {
+    }
+    if (end_seq <= beg_seq + 2) {
       beg_seq += 2;
       continue;
     }
-    const std::string env_field = source_string.substr(beg_seq + 2, end_seq - (beg_seq + 2));
-    const std::string env_field_wrapped = source_string.substr(beg_seq, end_seq + 1);
-    if (env_field.empty()) {
-      continue;
-    }
+    auto env_var_length = end_seq - (beg_seq + 2);
+    const std::string env_var = source_string.substr(beg_seq + 2, env_var_length);
+    const std::string env_var_wrapped = source_string.substr(beg_seq, env_var_length + 3);
 
     std::string env_value;
-    std::tie(std::ignore, env_value) = utils::Environment::getEnvironmentVariable(env_field.c_str());
+    std::tie(std::ignore, env_value) = utils::Environment::getEnvironmentVariable(env_var.c_str());
 
-    source_string = replaceAll(source_string, env_field_wrapped, env_value);
+    source_string = replaceAll(source_string, env_var_wrapped, env_value);
     beg_seq = 0;  // restart
-  } while (beg_seq >= 0);
+  } while (beg_seq < source_string.size());
 
   source_string = replaceAll(source_string, "\\$", "$");
 

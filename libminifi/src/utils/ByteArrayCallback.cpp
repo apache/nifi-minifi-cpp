@@ -16,10 +16,14 @@
  * limitations under the License.
  */
 #include "utils/ByteArrayCallback.h"
+
 #include <vector>
 #include <utility>
 #include <string>
 #include <memory>
+
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -31,7 +35,7 @@ int64_t ByteOutputCallback::process(const std::shared_ptr<io::BaseStream>& strea
   if (stream->size() > 0) {
     std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[stream->size()]);
     readFully(buffer.get(), stream->size());
-    stream->read(reinterpret_cast<uint8_t*>(buffer.get()), stream->size());
+    stream->read(reinterpret_cast<uint8_t*>(buffer.get()), gsl::narrow<int>(stream->size()));
     return stream->size();
   }
   return size_.load();
@@ -41,7 +45,7 @@ int64_t StreamOutputCallback::process(const std::shared_ptr<io::BaseStream>& str
   stream->seek(0);
   std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[size_.load()]);
   auto written = readFully(buffer.get(), size_);
-  stream->write(reinterpret_cast<uint8_t*>(buffer.get()), written);
+  stream->write(reinterpret_cast<uint8_t*>(buffer.get()), gsl::narrow<int>(written));
   return stream->size();
 }
 

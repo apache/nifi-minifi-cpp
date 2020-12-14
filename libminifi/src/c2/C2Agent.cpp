@@ -660,12 +660,16 @@ void C2Agent::restart_agent() {
   }
 
   std::string command = cwd + "/bin/minifi.sh restart";
-  system(command.c_str());
+  if (system(command.c_str()) != 0) {
+    logger_->log_warn("System command '%s' failed", command);
+  }
 }
 
 void C2Agent::update_agent() {
-  if (!system(update_command_.c_str())) {
-    logger_->log_warn("May not have command processor");
+  if (system(update_command_.c_str()) == 0) {
+    logger_->log_info("Executed update command '%s'", update_command_);
+  } else {
+    logger_->log_warn("Update command %s failed; may not have command processor", update_command_);
   }
 }
 

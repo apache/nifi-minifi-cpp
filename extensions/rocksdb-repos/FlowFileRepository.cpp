@@ -15,12 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "FlowFileRecord.h"
 #include "FlowFileRepository.h"
-
-#include "rocksdb/options.h"
-#include "rocksdb/write_batch.h"
-#include "rocksdb/slice.h"
 
 #include <chrono>
 #include <memory>
@@ -28,6 +23,12 @@
 #include <utility>
 #include <vector>
 #include <list>
+
+#include "rocksdb/options.h"
+#include "rocksdb/write_batch.h"
+#include "rocksdb/slice.h"
+#include "FlowFileRecord.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -68,7 +69,7 @@ void FlowFileRepository::flush() {
     }
 
     utils::Identifier containerId;
-    auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), values[i].size(), content_repo_, containerId);
+    auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), gsl::narrow<int>(values[i].size()), content_repo_, containerId);
     if (eventRead) {
       purgeList.push_back(eventRead);
     }
@@ -152,7 +153,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     utils::Identifier containerId;
-    auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size(), content_repo_, containerId);
+    auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), gsl::narrow<int>(it->value().size()), content_repo_, containerId);
     std::string key = it->key().ToString();
     if (eventRead) {
       // on behalf of the just resurrected persisted instance

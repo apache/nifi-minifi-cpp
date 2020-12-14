@@ -127,7 +127,7 @@ class BuildDescription {
         auto lastOfIdx = clazz.find_last_of("::");
         if (lastOfIdx != std::string::npos) {
           lastOfIdx++;  // if a value is found, increment to move beyond the .
-          int nameLength = clazz.length() - lastOfIdx;
+          size_t nameLength = clazz.length() - lastOfIdx;
           class_name = clazz.substr(lastOfIdx, nameLength);
         }
         auto obj = core::ClassLoader::getDefaultClassLoader().instantiate(class_name, class_name);

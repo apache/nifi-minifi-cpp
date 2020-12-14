@@ -31,6 +31,7 @@
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
+#include "utils/gsl.h"
 #include "utils/IntegrationTestUtils.h"
 
 namespace {
@@ -292,7 +293,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
       prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", true);
 
   std::string data = "banana";
-  minifi::io::BufferStream content(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
+  minifi::io::BufferStream content(reinterpret_cast<const uint8_t*>(data.c_str()), gsl::narrow<int>(data.length()));
 
   /**
    * Currently it is the Connection's responsibility to persist the incoming

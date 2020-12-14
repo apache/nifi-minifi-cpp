@@ -25,6 +25,7 @@
 #include "DatabaseContentRepository.h"
 #include "FlowFileRecord.h"
 #include "../TestBase.h"
+#include "utils/gsl.h"
 
 template<typename ContentRepositoryClass>
 class ContentSessionController : public TestController {
@@ -46,7 +47,8 @@ class ContentSessionController : public TestController {
 };
 
 const std::shared_ptr<minifi::io::BaseStream>& operator<<(const std::shared_ptr<minifi::io::BaseStream>& stream, const std::string& str) {
-  REQUIRE(stream->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), str.length()) == str.length());
+  int length = gsl::narrow<int>(str.length());
+  REQUIRE(stream->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), length) == length);
   return stream;
 }
 

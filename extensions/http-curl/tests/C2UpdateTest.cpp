@@ -19,6 +19,7 @@
 #undef NDEBUG
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
+#include "utils/gsl.h"
 #include "utils/IntegrationTestUtils.h"
 
 int main(int argc, char **argv) {
@@ -35,6 +36,6 @@ int main(int argc, char **argv) {
 
   const auto then = std::chrono::system_clock::now();
   const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(then - start).count();
-  assert(handler.calls_ <= seconds + 1);
+  assert(handler.calls_ <= gsl::narrow<size_t>(seconds + 1));
   return 0;
 }

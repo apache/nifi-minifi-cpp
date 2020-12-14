@@ -29,6 +29,7 @@
 #include <iostream>
 
 #include "utils/file/FileManager.h"
+#include "utils/gsl.h"
 #include "Exception.h"
 
 using org::apache::nifi::minifi::Exception;
@@ -38,7 +39,7 @@ rapidjson::Value ArchiveEntryMetadata::toJson(rapidjson::Document::AllocatorType
     rapidjson::Value entryVal(rapidjson::kObjectType);
 
     rapidjson::Value entryNameVal;
-    entryNameVal.SetString(entryName.c_str(), entryName.length());
+    entryNameVal.SetString(entryName.c_str(), gsl::narrow<rapidjson::SizeType>(entryName.length()));
     entryVal.AddMember("entry_name", entryNameVal, alloc);
 
     entryVal.AddMember("entry_type", entryType, alloc);
@@ -51,7 +52,7 @@ rapidjson::Value ArchiveEntryMetadata::toJson(rapidjson::Document::AllocatorType
 
     if (entryType == AE_IFREG) {
         rapidjson::Value stashKeyVal;
-        stashKeyVal.SetString(stashKey.c_str(), stashKey.length());
+        stashKeyVal.SetString(stashKey.c_str(), gsl::narrow<rapidjson::SizeType>(stashKey.length()));
         entryVal.AddMember("stash_key", stashKeyVal, alloc);
     }
 
@@ -107,7 +108,7 @@ rapidjson::Value ArchiveMetadata::toJson(rapidjson::Document::AllocatorType &all
     rapidjson::Value lensVal(rapidjson::kObjectType);
 
     rapidjson::Value archiveFormatNameVal;
-    archiveFormatNameVal.SetString(archiveFormatName.c_str(), archiveFormatName.length());
+    archiveFormatNameVal.SetString(archiveFormatName.c_str(), gsl::narrow<rapidjson::SizeType>(archiveFormatName.length()));
     lensVal.AddMember("archive_format_name", archiveFormatNameVal, alloc);
 
     lensVal.AddMember("archive_format", archiveFormat, alloc);
@@ -115,12 +116,12 @@ rapidjson::Value ArchiveMetadata::toJson(rapidjson::Document::AllocatorType &all
 
     if (!archiveName.empty()) {
         rapidjson::Value archiveNameVal;
-        archiveNameVal.SetString(archiveName.c_str(), archiveName.length());
+        archiveNameVal.SetString(archiveName.c_str(), gsl::narrow<rapidjson::SizeType>(archiveName.length()));
         lensVal.AddMember("archive_name", archiveNameVal, alloc);
     }
 
    rapidjson::Value focusedEntryVal;
-    focusedEntryVal.SetString(focusedEntry.c_str(), focusedEntry.length());
+    focusedEntryVal.SetString(focusedEntry.c_str(), gsl::narrow<rapidjson::SizeType>(focusedEntry.length()));
     lensVal.AddMember("focused_entry", focusedEntryVal, alloc);
 
     return lensVal;

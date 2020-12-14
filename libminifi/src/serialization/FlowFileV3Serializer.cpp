@@ -18,6 +18,7 @@
 
 #include "serialization/FlowFileV3Serializer.h"
 #include "core/ProcessSession.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -53,11 +54,11 @@ int FlowFileV3Serializer::writeString(const std::string &str, const std::shared_
     return ret;
   }
   sum += ret;
-  ret = out->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), str.length());
+  ret = out->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), gsl::narrow<int>(str.length()));
   if (ret < 0) {
     return ret;
   }
-  if (ret != str.length()) {
+  if (gsl::narrow<size_t>(ret) != str.length()) {
     return -1;
   }
   sum += ret;

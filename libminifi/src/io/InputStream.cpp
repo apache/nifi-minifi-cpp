@@ -21,6 +21,7 @@
 #include <string>
 #include <algorithm>
 #include "io/InputStream.h"
+#include "utils/gsl.h"
 #include "utils/OptionalUtils.h"
 
 namespace org {
@@ -30,7 +31,7 @@ namespace minifi {
 namespace io {
 
 int InputStream::read(std::vector<uint8_t>& buffer, int len) {
-  if (buffer.size() < len) {
+  if (buffer.size() < gsl::narrow<size_t>(len)) {
     buffer.resize(len);
   }
   int ret = read(buffer.data(), len);
@@ -83,7 +84,8 @@ int InputStream::read(std::string &str, bool widen) {
   }
 
   std::vector<uint8_t> buffer(len);
-  if (read(buffer.data(), len) != len) {
+  uint32_t bytes_read = gsl::narrow<uint32_t>(read(buffer.data(), len));
+  if (bytes_read != len) {
     return -1;
   }
 

@@ -28,6 +28,8 @@
 #include <vector>
 #include <iostream>
 
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -52,7 +54,7 @@ std::pair<bool, std::string> Environment::getEnvironmentVariable(const char* nam
     // GetEnvironmentVariableA does not set last error to 0 on success, so an error from a pervious API call would influence the GetLastError() later,
     // so we set the last error to 0 before calling
     SetLastError(ERROR_SUCCESS);
-    uint32_t ret = GetEnvironmentVariableA(name, buffer.data(), buffer.size());
+    uint32_t ret = GetEnvironmentVariableA(name, buffer.data(), gsl::narrow<DWORD>(buffer.size()));
     if (ret > 0U) {
       exists = true;
       value = std::string(buffer.data(), ret);
@@ -118,7 +120,7 @@ std::string Environment::getCurrentWorkingDirectory() {
     // the return value specifies the required size of the buffer,
     // in characters, including the null-terminating character."
     while (true) {
-      len = GetCurrentDirectoryA(buffer.size(), buffer.data());
+      len = GetCurrentDirectoryA(gsl::narrow<DWORD>(buffer.size()), buffer.data());
       if (len < buffer.size()) {
         break;
       }

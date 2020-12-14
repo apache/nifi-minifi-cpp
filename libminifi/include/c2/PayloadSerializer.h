@@ -27,6 +27,8 @@
 #include "core/state/Value.h"
 #include "c2/C2Protocol.h"
 #include "io/BaseStream.h"
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -74,7 +76,7 @@ class PayloadSerializer {
   }
   static void serialize(uint16_t op, const C2Payload &payload, std::shared_ptr<io::BaseStream> stream) {
     uint8_t st;
-    uint32_t size = payload.getNestedPayloads().size();
+    uint32_t size = gsl::narrow<uint32_t>(payload.getNestedPayloads().size());
     stream->write(size);
     for (auto nested_payload : payload.getNestedPayloads()) {
       op = opToInt(nested_payload.getOperation());
@@ -83,11 +85,11 @@ class PayloadSerializer {
       stream->write(nested_payload.getLabel());
       stream->write(nested_payload.getIdentifier());
       const std::vector<C2ContentResponse> &content = nested_payload.getContent();
-      size = content.size();
+      size = gsl::narrow<uint32_t>(content.size());
       stream->write(size);
       for (const auto &payload_content : content) {
         stream->write(payload_content.name);
-        size = payload_content.operation_arguments.size();
+        size = gsl::narrow<uint32_t>(payload_content.operation_arguments.size());
         stream->write(size);
         for (auto content : payload_content.operation_arguments) {
           stream->write(content.first);
@@ -152,11 +154,11 @@ class PayloadSerializer {
 
     stream->write(payload.getIdentifier());
     const std::vector<C2ContentResponse> &content = payload.getContent();
-    uint32_t size = content.size();
+    uint32_t size = gsl::narrow<uint32_t>(content.size());
     stream->write(size);
     for (const auto &payload_content : content) {
       stream->write(payload_content.name);
-      size = payload_content.operation_arguments.size();
+      size = gsl::narrow<uint32_t>(payload_content.operation_arguments.size());
       stream->write(size);
       for (auto content : payload_content.operation_arguments) {
         stream->write(content.first);
@@ -247,7 +249,7 @@ class PayloadSerializer {
     return true;
   }
   static bool deserialize(std::vector<uint8_t> data, C2Payload &payload) {
-    io::BufferStream stream(data.data(), data.size());
+    io::BufferStream stream(data.data(), gsl::narrow<unsigned int>(data.size()));
 
     uint8_t op, st = 0;
     uint16_t version = 0;

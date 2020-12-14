@@ -35,6 +35,7 @@
 #include "utils/ThreadPool.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "controllers/SSLContextService.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -94,7 +95,7 @@ class DataHandlerCallback : public OutputStreamCallback {
   ~DataHandlerCallback() override = default;
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    return stream->write(message_, size_);
+    return stream->write(message_, gsl::narrow<int>(size_));
   }
 
  private:

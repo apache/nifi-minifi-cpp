@@ -20,6 +20,8 @@
  */
 #include "ListenHTTP.h"
 
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -504,7 +506,7 @@ ListenHTTP::WriteCallback::WriteCallback(std::unique_ptr<io::BufferStream> reque
 }
 
 int64_t ListenHTTP::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  return stream->write(const_cast<uint8_t*>(request_content_->getBuffer()), request_content_->size());
+  return stream->write(const_cast<uint8_t*>(request_content_->getBuffer()), gsl::narrow<int>(request_content_->size()));
 }
 
 bool ListenHTTP::isSecure() const {

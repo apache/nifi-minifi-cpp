@@ -207,7 +207,7 @@ class VerifyC2UpdateAgent : public VerifyC2Update {
 
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(10), "removing file", "May not have command processor"));
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(10), "removing file", "Executed update command"));
   }
 };
 

@@ -301,11 +301,11 @@ int ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStrea
 
     stream->seek(flow->getOffset());
 
-    int ret = callback->process(stream);
+    auto ret = callback->process(stream);
     if (ret < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
-    return ret;
+    return gsl::narrow<int>(ret);
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
@@ -326,7 +326,7 @@ void ProcessSession::importFrom(io::InputStream&& stream, const std::shared_ptr<
  */
 void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<core::FlowFile> &flow) {
   std::shared_ptr<ResourceClaim> claim = content_session_->create();
-  size_t max_read = getpagesize();
+  int max_read = getpagesize();
   std::vector<uint8_t> charBuffer(max_read);
 
   try {
@@ -336,10 +336,10 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
     if (nullptr == content_stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Could not obtain claim for " + claim->getContentFullPath());
     }
-    size_t position = 0;
-    const size_t max_size = stream.size();
+    int position = 0;
+    const int max_size = gsl::narrow<int>(stream.size());
     while (position < max_size) {
-      const size_t read_size = std::min(max_read, max_size - position);
+      const int read_size = std::min(max_read, max_size - position);
       stream.read(charBuffer, read_size);
 
       content_stream->write(charBuffer.data(), read_size);
@@ -395,7 +395,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<FlowFile> 
       while (input.good()) {
         input.read(reinterpret_cast<char*>(charBuffer.data()), size);
         if (input) {
-          if (stream->write(charBuffer.data(), size) < 0) {
+          if (stream->write(charBuffer.data(), gsl::narrow<int>(size)) < 0) {
             invalidWrite = true;
             break;
           }

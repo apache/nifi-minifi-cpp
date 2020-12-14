@@ -19,6 +19,7 @@
 #undef NDEBUG
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
+#include "utils/gsl.h"
 
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "update");
@@ -34,6 +35,6 @@ int main(int argc, char **argv) {
 
   const auto then = std::chrono::system_clock::now();
   const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(then - start).count();
-  assert(handler.calls_ <= (seconds) + 2);
+  assert(handler.calls_ <= gsl::narrow<size_t>(seconds + 2));
   return 0;
 }

@@ -18,12 +18,13 @@
 #ifndef LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_
 #define LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_
 
-#include <memory>
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <thread>
@@ -37,6 +38,7 @@
 #include "FlowFileRecord.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "ResourceClaim.h"
+#include "utils/gsl.h"
 #include "utils/Id.h"
 #include "utils/TimeUtil.h"
 
@@ -360,8 +362,8 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &repo);
 
   uint64_t getEventTime(const uint8_t *buffer, const size_t bufferSize) {
-    int size = bufferSize > 72 ? 72 : bufferSize;
-    org::apache::nifi::minifi::io::BufferStream outStream(buffer, size);
+    const auto size = std::min<size_t>(72, bufferSize);
+    org::apache::nifi::minifi::io::BufferStream outStream(buffer, gsl::narrow<int>(size));
 
     std::string uuid;
     int ret = outStream.read(uuid);

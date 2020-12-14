@@ -19,15 +19,16 @@
  */
 #include "ArchiveTests.h"
 
+#include <archive.h>
+#include <archive_entry.h>
+
 #include <algorithm>
 #include <set>
 #include <string>
 #include <utility>
 
-#include <archive.h> // NOLINT
-#include <archive_entry.h> // NOLINT
-
 #include "../../TestBase.h"
+#include "utils/gsl.h"
 
 TAE_MAP_T build_test_archive_map(int NUM_FILES, const char** FILE_NAMES, const char** FILE_CONTENT) {
   TAE_MAP_T test_entries;
@@ -138,13 +139,12 @@ bool check_archive_contents(std::string path, TAE_MAP_T entries, bool check_attr
       REQUIRE(size == test_entry.size);
 
       if (size > 0) {
-        int rlen, nlen = 0;
+        size_t nlen = 0;
         std::vector<char> buf(size);
         bool read_ok = true;
 
         for (;;) {
-          rlen = archive_read_data(a, buf.data(), size);
-          nlen += rlen;
+          const auto rlen = archive_read_data(a, buf.data(), size);
           if (rlen == 0)
             break;
           if (rlen < 0) {
@@ -152,6 +152,7 @@ bool check_archive_contents(std::string path, TAE_MAP_T entries, bool check_attr
             read_ok = false;
             break;
           }
+          nlen += rlen;
         }
 
         if (read_ok) {

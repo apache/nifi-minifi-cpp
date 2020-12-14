@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "utils/gsl.h"
 #include "utils/StringUtils.h"
 
 namespace org {
@@ -179,7 +180,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
             io::BufferStream resp;
             resp.write(&head, 1);
             resp.write(response.str());
-            stream->write(const_cast<uint8_t*>(resp.getBuffer()), resp.size());
+            stream->write(const_cast<uint8_t*>(resp.getBuffer()), gsl::narrow<int>(resp.size()));
           } else if (what == "components") {
             io::BufferStream resp;
             resp.write(&head, 1);
@@ -189,7 +190,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
               resp.write(component->getComponentName());
               resp.write(component->isRunning() ? "true" : "false");
             }
-            stream->write(const_cast<uint8_t*>(resp.getBuffer()), resp.size());
+            stream->write(const_cast<uint8_t*>(resp.getBuffer()), gsl::narrow<int>(resp.size()));
           } else if (what == "jstack") {
             io::BufferStream resp;
             resp.write(&head, 1);
@@ -205,7 +206,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
                 resp.write(line);
               }
             }
-            stream->write(const_cast<uint8_t*>(resp.getBuffer()), resp.size());
+            stream->write(const_cast<uint8_t*>(resp.getBuffer()), gsl::narrow<int>(resp.size()));
           } else if (what == "connections") {
             io::BufferStream resp;
             resp.write(&head, 1);
@@ -214,7 +215,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
             for (const auto &connection : queue_full_) {
               resp.write(connection.first, false);
             }
-            stream->write(const_cast<uint8_t*>(resp.getBuffer()), resp.size());
+            stream->write(const_cast<uint8_t*>(resp.getBuffer()), gsl::narrow<int>(resp.size()));
           } else if (what == "getfull") {
             std::vector<std::string> full_connections;
             {
@@ -232,7 +233,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
             for (auto conn : full_connections) {
               resp.write(conn);
             }
-            stream->write(const_cast<uint8_t*>(resp.getBuffer()), resp.size());
+            stream->write(const_cast<uint8_t*>(resp.getBuffer()), gsl::narrow<int>(resp.size()));
           }
         }
         break;

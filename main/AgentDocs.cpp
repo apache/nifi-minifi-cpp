@@ -44,15 +44,11 @@ namespace minifi {
 namespace docs {
 
 std::string AgentDocs::extractClassName(const std::string &processor) const {
-  auto lastOfIdx = processor.find_last_of(".");
-  if (lastOfIdx != std::string::npos) {
-    lastOfIdx++;  // if a value is found, increment to move beyond the .
-    int nameLength = processor.length() - lastOfIdx;
-    std::string processorName = processor.substr(lastOfIdx, nameLength);
-    return processorName;
+  auto positionOfLastDot = processor.find_last_of(".");
+  if (positionOfLastDot != std::string::npos) {
+    return processor.substr(positionOfLastDot + 1);
   }
   return processor;
-
 }
 
 void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {

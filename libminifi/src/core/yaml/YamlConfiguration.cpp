@@ -134,8 +134,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         auto lastOfIdx = procCfg.javaClass.find_last_of(".");
         if (lastOfIdx != std::string::npos) {
           lastOfIdx++;  // if a value is found, increment to move beyond the .
-          int nameLength = procCfg.javaClass.length() - lastOfIdx;
-          std::string processorName = procCfg.javaClass.substr(lastOfIdx, nameLength);
+          std::string processorName = procCfg.javaClass.substr(lastOfIdx);
           processor = this->createProcessor(processorName, procCfg.javaClass, uuid);
         } else {
           // Allow unqualified class names for core processors
@@ -498,8 +497,7 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
           auto lastOfIdx = type.find_last_of(".");
           if (lastOfIdx != std::string::npos) {
             lastOfIdx++;  // if a value is found, increment to move beyond the .
-            int nameLength = type.length() - lastOfIdx;
-            type = type.substr(lastOfIdx, nameLength);
+            type = type.substr(lastOfIdx);
           }
 
           auto name = controllerServiceNode["name"].as<std::string>();

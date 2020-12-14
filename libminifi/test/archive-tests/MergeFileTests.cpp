@@ -39,6 +39,7 @@
 #include "serialization/FlowFileV3Serializer.h"
 #include "serialization/PayloadSerializer.h"
 #include "../Utils.h"
+#include "utils/gsl.h"
 
 std::string FLOW_FILE;
 std::string EXPECT_MERGE_CONTENT_FIRST;
@@ -87,7 +88,7 @@ class FixedBuffer : public minifi::InputStreamCallback {
     REQUIRE(size_ + len <= capacity_);
     int total_read = 0;
     do {
-      auto ret = input.read(end(), len);
+      auto ret = input.read(end(), gsl::narrow<int>(len));
       if (ret == 0) break;
       if (ret < 0) return ret;
       size_ += ret;
@@ -111,7 +112,7 @@ std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
    public:
     explicit ArchiveEntryReader(archive* arch) : arch(arch) {}
     int read(uint8_t* out, std::size_t len) {
-      return archive_read_data(arch, out, len);
+      return gsl::narrow<int>(archive_read_data(arch, out, len));
     }
    private:
     archive* arch;
@@ -677,7 +678,7 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping All Un
 }
 
 void writeString(const std::string& str, const std::shared_ptr<minifi::io::BaseStream>& out) {
-  out->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), str.length());
+  out->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), gsl::narrow<int>(str.length()));
 }
 
 TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {

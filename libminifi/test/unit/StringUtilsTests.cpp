@@ -50,54 +50,24 @@ TEST_CASE("TestStringUtils::split4", "[test split classname]") {
   REQUIRE(expected == StringUtils::split(org::apache::nifi::minifi::core::getClassName<org::apache::nifi::minifi::utils::StringUtils>(), "::"));
 }
 
-TEST_CASE("TestStringUtils::testEnv1", "[test split classname]") {
-  std::string test_string = "hello world ${blahblahnamenamenotexist}";
-
-
+TEST_CASE("StringUtils::replaceEnvironmentVariables works correctly", "[replaceEnvironmentVariables]") {
   utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer", 0);
 
-  std::string expected = "hello world computer";
+  REQUIRE("hello world computer" == StringUtils::replaceEnvironmentVariables("hello world ${blahblahnamenamenotexist}"));
+  REQUIRE("hello world ${blahblahnamenamenotexist" == StringUtils::replaceEnvironmentVariables("hello world ${blahblahnamenamenotexist"));
+  REQUIRE("hello world $computer" == StringUtils::replaceEnvironmentVariables("hello world $${blahblahnamenamenotexist}"));
+  REQUIRE("hello world ${blahblahnamenamenotexist}" == StringUtils::replaceEnvironmentVariables("hello world \\${blahblahnamenamenotexist}"));
+  REQUIRE("the computer costs $123" == StringUtils::replaceEnvironmentVariables("the ${blahblahnamenamenotexist} costs \\$123"));
+  REQUIRE("computer bug" == StringUtils::replaceEnvironmentVariables("${blahblahnamenamenotexist} bug"));
+  REQUIRE("O computer! My computer!" == StringUtils::replaceEnvironmentVariables("O ${blahblahnamenamenotexist}! My ${blahblahnamenamenotexist}!"));
 
-  REQUIRE(expected == StringUtils::replaceEnvironmentVariables(test_string));
-}
+  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist_2", "no", 0);
+  REQUIRE("computer says 'no'" == StringUtils::replaceEnvironmentVariables("${blahblahnamenamenotexist} says '${blahblahnamenamenotexist_2}'"));
+  REQUIRE("no computer can say no to computer nougats" == StringUtils::replaceEnvironmentVariables(
+      "${blahblahnamenamenotexist_2} ${blahblahnamenamenotexist} can say ${blahblahnamenamenotexist_2} to ${blahblahnamenamenotexist} ${blahblahnamenamenotexist_2}ugats"));
 
-TEST_CASE("TestStringUtils::testEnv2", "[test split classname]") {
-  std::string test_string = "hello world ${blahblahnamenamenotexist";
-
-  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer");
-
-  std::string expected = "hello world ${blahblahnamenamenotexist";
-
-  REQUIRE(expected == StringUtils::replaceEnvironmentVariables(test_string));
-}
-
-TEST_CASE("TestStringUtils::testEnv3", "[test split classname]") {
-  std::string test_string = "hello world $${blahblahnamenamenotexist}";
-
-  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer");
-
-  std::string expected = "hello world $computer";
-
-  REQUIRE(expected == StringUtils::replaceEnvironmentVariables(test_string));
-}
-
-TEST_CASE("TestStringUtils::testEnv4", "[test split classname]") {
-  std::string test_string = "hello world \\${blahblahnamenamenotexist}";
-
-  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer");
-
-  std::string expected = "hello world ${blahblahnamenamenotexist}";
-
-  REQUIRE(expected == StringUtils::replaceEnvironmentVariables(test_string));
-}
-
-TEST_CASE("TestStringUtils::testEnv5", "[test split classname]") {
-  // can't use blahblahnamenamenotexist because the utils::Environment::setEnvironmentVariable in other functions may have already set it
-  std::string test_string = "hello world ${blahblahnamenamenotexist2}";
-
-  std::string expected = "hello world ";
-
-  REQUIRE(expected == StringUtils::replaceEnvironmentVariables(test_string));
+  REQUIRE("hello world ${}" == StringUtils::replaceEnvironmentVariables("hello world ${}"));
+  REQUIRE("hello world " == StringUtils::replaceEnvironmentVariables("hello world ${blahblahnamenamenotexist_reallydoesnotexist}"));
 }
 
 TEST_CASE("TestStringUtils::testJoin", "[test string join]") {

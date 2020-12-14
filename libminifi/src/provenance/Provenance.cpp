@@ -17,16 +17,19 @@
  */
 
 #include "provenance/Provenance.h"
+
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
 #include <list>
+
 #include "core/Repository.h"
 #include "io/BufferStream.h"
 #include "core/logging/Logger.h"
 #include "core/Relationship.h"
 #include "FlowController.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -71,7 +74,7 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
     logger_->log_debug("NiFi Provenance Read event %s", getUUIDStr());
   }
 
-  org::apache::nifi::minifi::io::BufferStream stream((const uint8_t*) value.data(), value.length());
+  org::apache::nifi::minifi::io::BufferStream stream((const uint8_t*) value.data(), gsl::narrow<int>(value.length()));
 
   ret = DeSerialize(stream);
 
@@ -139,7 +142,7 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStrea
   }
 
   // write flow attributes
-  uint32_t numAttributes = this->_attributes.size();
+  uint32_t numAttributes = gsl::narrow<uint32_t>(this->_attributes.size());
   ret = outStream.write(numAttributes);
   if (ret != 4) {
     return false;
@@ -178,8 +181,8 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStrea
 
   if (this->_eventType == ProvenanceEventRecord::FORK || this->_eventType == ProvenanceEventRecord::CLONE || this->_eventType == ProvenanceEventRecord::JOIN) {
     // write UUIDs
-    uint32_t number = this->_parentUuids.size();
-    ret = outStream.write(number);
+    uint32_t parent_uuids_count = gsl::narrow<uint32_t>(this->_parentUuids.size());
+    ret = outStream.write(parent_uuids_count);
     if (ret != 4) {
       return false;
     }
@@ -189,8 +192,8 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStrea
         return false;
       }
     }
-    number = this->_childrenUuids.size();
-    ret = outStream.write(number);
+    uint32_t children_uuids_count = gsl::narrow<uint32_t>(this->_childrenUuids.size());
+    ret = outStream.write(children_uuids_count);
     if (ret != 4) {
       return false;
     }
@@ -234,7 +237,7 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableCo
 bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t bufferSize) {
   int ret;
 
-  org::apache::nifi::minifi::io::BufferStream outStream(buffer, bufferSize);
+  org::apache::nifi::minifi::io::BufferStream outStream(buffer, gsl::narrow<unsigned int>(bufferSize));
 
   ret = outStream.read(uuid_);
   if (ret <= 0) {

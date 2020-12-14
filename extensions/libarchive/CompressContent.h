@@ -34,6 +34,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "io/ZlibStream.h"
 #include "utils/Enum.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -183,7 +184,7 @@ public:
 
     static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
       WriteCallback *callback = (WriteCallback *) context;
-      la_ssize_t ret = callback->stream_->write(reinterpret_cast<uint8_t*>(const_cast<void*>(buff)), size);
+      la_ssize_t ret = callback->stream_->write(reinterpret_cast<uint8_t*>(const_cast<void*>(buff)), gsl::narrow<int>(size));
       if (ret > 0)
         callback->size_ += (int64_t) ret;
       return ret;
@@ -332,16 +333,16 @@ public:
         size_ = 0;
         while (size_ < entry_size) {
           char buffer[8192];
-          int ret = archive_read_data(arch, buffer, sizeof(buffer));
-          if (ret < 0) {
+          const auto read_result = archive_read_data(arch, buffer, sizeof(buffer));
+          if (read_result < 0) {
             archive_read_log_error_cleanup(arch);
             return -1;
           }
-          if (ret == 0)
+          if (read_result == 0)
             break;
-          size_ += ret;
-          ret = stream_->write(reinterpret_cast<uint8_t*>(buffer), ret);
-          if (ret < 0) {
+          size_ += read_result;
+          const auto write_result = stream_->write(reinterpret_cast<uint8_t*>(buffer), gsl::narrow<int>(read_result));
+          if (write_result < 0) {
             archive_read_log_error_cleanup(arch);
             return -1;
           }
@@ -382,7 +383,7 @@ public:
           std::vector<uint8_t> buffer(16 * 1024U);
           int64_t read_size = 0;
           while (read_size < gsl::narrow<int64_t>(writer_.flow_->getSize())) {
-            int ret = inputStream->read(buffer.data(), buffer.size());
+            int ret = inputStream->read(buffer.data(), gsl::narrow<int>(buffer.size()));
             if (ret < 0) {
               return -1;
             } else if (ret == 0) {

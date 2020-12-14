@@ -73,7 +73,7 @@ TEST_CASE("EncryptionUtils can encrypt and decrypt strings using the simplified 
   utils::crypto::Bytes key = utils::crypto::generateKey();
   std::string plaintext = "my social security number is 914-52-5373";
 
-  const auto base64_length = [](int raw_length) { return (raw_length + 2) / 3 * 4; };
+  const auto base64_length = [](size_t raw_length) { return (raw_length + 2) / 3 * 4; };
 
   std::string encrypted_text = utils::crypto::encrypt(plaintext, key);
   REQUIRE(encrypted_text.size() ==

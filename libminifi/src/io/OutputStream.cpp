@@ -22,6 +22,7 @@
 #include <string>
 #include <algorithm>
 #include "io/OutputStream.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -30,7 +31,7 @@ namespace minifi {
 namespace io {
 
 int OutputStream::write(const std::vector<uint8_t>& buffer, int len) {
-  if (buffer.size() < len) {
+  if (buffer.size() < gsl::narrow<size_t>(len)) {
     return -1;
   }
   return write(buffer.data(), len);
@@ -46,11 +47,11 @@ int OutputStream::write(const utils::Identifier &value) {
 }
 
 int OutputStream::write(const std::string& str, bool widen) {
-  return write_str(str.c_str(), str.length(), widen);
+  return write_str(str.c_str(), gsl::narrow<uint32_t>(str.length()), widen);
 }
 
 int OutputStream::write(const char* str, bool widen) {
-  return write_str(str, std::strlen(str), widen);
+  return write_str(str, gsl::narrow<uint32_t>(std::strlen(str)), widen);
 }
 
 int OutputStream::write_str(const char* str, uint32_t len, bool widen) {

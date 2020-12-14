@@ -41,6 +41,7 @@ TEST_CASE("TestLoggerProperties::get_keys_of_type", "[test get_keys_of_type]") {
   REQUIRE(expected == actual);
 }
 
+#ifndef WIN32
 class TestLoggerConfiguration : public logging::LoggerConfiguration {
  public:
   static std::shared_ptr<logging::internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<logging::LoggerProperties> &logger_properties) {
@@ -50,7 +51,7 @@ class TestLoggerConfiguration : public logging::LoggerConfiguration {
     return logging::LoggerConfiguration::get_logger(LogTestController::getInstance().logger_, root_namespace, name, formatter);
   }
 };
-#ifndef WIN32
+
 TEST_CASE("TestLoggerConfiguration::initialize_namespaces", "[test initialize_namespaces]") {
   TestController test_controller;
   LogTestController &logTestController = LogTestController::getInstance();
