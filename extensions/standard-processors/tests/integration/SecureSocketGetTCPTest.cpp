@@ -127,7 +127,7 @@ class SecureSocketTest : public IntegrationBase {
       *size = 20;
       return *size;
     };
-    server_socket_->registerCallback(check, handler, 50);
+    server_socket_->registerCallback(check, handler, std::chrono::milliseconds(50));
   }
 
  protected:

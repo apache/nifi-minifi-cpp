@@ -87,13 +87,13 @@ void TLSServerSocket::registerCallback(std::function<bool()> accept_function, st
  * Initializes the socket
  * @return result of the creation operation.
  */
-void TLSServerSocket::registerCallback(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler, uint16_t timeout) {
-  fx = [this](std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler, uint16_t timeout) {
+void TLSServerSocket::registerCallback(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler, std::chrono::milliseconds timeout) {
+  fx = [this](std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler, std::chrono::milliseconds timeout) {
     int ret = 0;
     std::vector<int> fds;
     int size;
     while (accept_function()) {
-      int fd = select_descriptor(timeout);
+      int fd = select_descriptor(timeout.count());
       if (fd > 0) {
         int fd_remove = 0;
         std::vector<uint8_t> data;
