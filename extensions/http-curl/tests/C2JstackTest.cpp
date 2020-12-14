@@ -26,38 +26,36 @@
 
 class VerifyC2DescribeJstack : public VerifyC2Describe {
  public:
-  explicit VerifyC2DescribeJstack(const std::atomic_bool& acknowledgement_checked) : VerifyC2Describe(), acknowledgement_checked_(acknowledgement_checked) {}
+  explicit VerifyC2DescribeJstack(const std::atomic_bool& acknowledgement_received) : VerifyC2Describe(), acknowledgement_received_(acknowledgement_received) {}
   void runAssertions() override {
-    // This check was previously only confirming the presence of log sinks.
-    // See: https://issues.apache.org/jira/browse/MINIFICPP-1421
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-    assert(verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] { return acknowledgement_checked_.load(); }));
+    assert(verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] { return acknowledgement_received_.load(); }));
   }
  protected:
-  const std::atomic_bool& acknowledgement_checked_;
+  const std::atomic_bool& acknowledgement_received_;
 };
 
 class DescribeJstackHandler : public HeartbeatHandler {
  public:
-  explicit DescribeJstackHandler(std::atomic_bool& acknowledgement_checked) : HeartbeatHandler(), acknowledgement_checked_(acknowledgement_checked) {}
+  explicit DescribeJstackHandler(std::atomic_bool& acknowledgement_received) : HeartbeatHandler(), acknowledgement_received_(acknowledgement_received) {}
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
     sendHeartbeatResponse("DESCRIBE", "jstack", "889398", conn);
   }
 
   void handleAcknowledge(const rapidjson::Document& root) override {
     assert(root.HasMember("Flowcontroller threadpool #0"));
-    acknowledgement_checked_.store(true);
+    acknowledgement_received_.store(true);
   }
  protected:
-  std::atomic_bool& acknowledgement_checked_;
+  std::atomic_bool& acknowledgement_received_;
 };
 
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "heartbeat");
-  std::atomic_bool acknowledgement_checked{ false };
-  VerifyC2DescribeJstack harness{ acknowledgement_checked };
+  std::atomic_bool acknowledgement_received{ false };
+  VerifyC2DescribeJstack harness{ acknowledgement_received };
   harness.setKeyDir(args.key_dir);
-  DescribeJstackHandler responder{ acknowledgement_checked };
+  DescribeJstackHandler responder{ acknowledgement_received };
   harness.setUrl(args.url, &responder);
   harness.run(args.test_file);
   return 0;
