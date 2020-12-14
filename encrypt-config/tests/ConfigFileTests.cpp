@@ -31,7 +31,7 @@ namespace encrypt_config {
 class ConfigFileTestAccessor {
  public:
   static std::vector<std::string> mergeProperties(std::vector<std::string> left, const std::vector<std::string>& right) {
-    return  ConfigFile::mergeProperties(left, right);
+    return ConfigFile::mergeProperties(left, right);
   }
 };
 
