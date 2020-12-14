@@ -84,7 +84,7 @@ void Properties::loadConfigureFile(const char *fileName) {
     logger_->log_error("load configure file failed %s", properties_file_);
     return;
   }
-  this->clear();
+  properties_.clear();
   for (const auto& line : PropertiesFile{file}) {
     properties_[line.getKey()] = {utils::StringUtils::replaceEnvironmentVariables(line.getValue()), false};
   }
