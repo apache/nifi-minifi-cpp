@@ -95,21 +95,23 @@ bool StringUtils::StringToFloat(std::string input, float &output, FailurePolicy 
 }
 
 std::string StringUtils::replaceEnvironmentVariables(std::string& original_string) {
-  int32_t beg_seq = 0;
-  int32_t end_seq = 0;
+  size_t beg_seq = 0;
+  size_t end_seq = 0;
   std::string source_string = original_string;
   do {
     beg_seq = source_string.find("${", beg_seq);
+    if (beg_seq == std::string::npos) {
+      break;
+    }
     if (beg_seq > 0 && source_string.at(beg_seq - 1) == '\\') {
       beg_seq += 2;
       continue;
     }
-    if (beg_seq < 0)
-      break;
     end_seq = source_string.find("}", beg_seq + 2);
-    if (end_seq < 0)
+    if (end_seq == std::string::npos) {
       break;
-    if (end_seq - (beg_seq + 2) < 0) {
+    }
+    if (end_seq < beg_seq + 2) {
       beg_seq += 2;
       continue;
     }
@@ -124,7 +126,7 @@ std::string StringUtils::replaceEnvironmentVariables(std::string& original_strin
 
     source_string = replaceAll(source_string, env_field_wrapped, env_value);
     beg_seq = 0;  // restart
-  } while (beg_seq >= 0);
+  } while (beg_seq < source_string.size());
 
   source_string = replaceAll(source_string, "\\$", "$");
 

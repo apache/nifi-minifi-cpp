@@ -20,6 +20,7 @@
 #define NIFI_MINIFI_CPP_BUFFERREADER_H
 
 #include "FlowFileRecord.h"
+#include "utils/gsl.h"
 
 class BufferReader : public org::apache::nifi::minifi::InputStreamCallback {
  public:
@@ -30,7 +31,7 @@ class BufferReader : public org::apache::nifi::minifi::InputStreamCallback {
     std::size_t remaining_len = len;
     int total_read = 0;
     while (remaining_len > 0) {
-      auto ret = input.read(tmpBuffer, std::min(remaining_len, sizeof(tmpBuffer)));
+      auto ret = input.read(tmpBuffer, gsl::narrow<int>(std::min(remaining_len, sizeof(tmpBuffer))));
       if (ret == 0) break;
       if (ret < 0) return ret;
       remaining_len -= ret;

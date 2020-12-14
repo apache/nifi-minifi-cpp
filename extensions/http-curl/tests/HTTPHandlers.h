@@ -29,6 +29,7 @@
 #include "rapidjson/document.h"
 #include "HTTPUtils.h"
 #include "ServerAwareHandler.h"
+#include "utils/gsl.h"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
@@ -280,7 +281,7 @@ class FlowFileResponder : public ServerAwareHandler {
       minifi::io::BufferStream serializer;
       minifi::io::CRCStream < minifi::io::BaseStream > stream(gsl::make_not_null(&serializer));
       for (const auto& flow : flows) {
-        uint32_t num_attributes = flow->attributes.size();
+        uint32_t num_attributes = gsl::narrow<uint32_t>(flow->attributes.size());
         stream.write(num_attributes);
         for (const auto& entry : flow->attributes) {
           stream.write(entry.first);

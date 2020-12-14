@@ -27,6 +27,7 @@
 #include <set>
 #include <vector>
 
+#include "utils/gsl.h"
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "utils/GeneralUtils.h"
@@ -407,7 +408,7 @@ class ReadCallback : public InputStreamCallback {
     }
 
     for (size_t segment_num = 0; read_size_ < flow_size_; ++segment_num) {
-      const int readRet = stream->read(buffer.data(), buffer.size());
+      const int readRet = stream->read(buffer.data(), gsl::narrow<int>(buffer.size()));
       if (readRet < 0) {
         status_ = -1;
         error_ = "Failed to read from stream";

@@ -274,7 +274,7 @@ class ComponentManifest : public DeviceInformation {
         std::string processorName = group.class_name_;
         if (lastOfIdx != std::string::npos) {
           lastOfIdx++;  // if a value is found, increment to move beyond the .
-          int nameLength = group.class_name_.length() - lastOfIdx;
+          size_t nameLength = group.class_name_.length() - lastOfIdx;
           processorName = group.class_name_.substr(lastOfIdx, nameLength);
         }
         std::string description;

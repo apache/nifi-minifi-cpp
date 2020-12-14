@@ -56,7 +56,7 @@ std::wstring bookmarkHandleAsXml(EVT_HANDLE event) {
   std::array<wchar_t, BUFFER_SIZE> buffer = {};
   DWORD buffer_used;
   DWORD property_count;
-  if (!EvtRender(nullptr, event, EvtRenderBookmark, buffer.size(), buffer.data(), &buffer_used, &property_count)) {
+  if (!EvtRender(nullptr, event, EvtRenderBookmark, gsl::narrow<DWORD>(buffer.size()), buffer.data(), &buffer_used, &property_count)) {
     FAIL("EvtRender() failed; error code: " << GetLastError());
   }
   return std::wstring{buffer.data()};

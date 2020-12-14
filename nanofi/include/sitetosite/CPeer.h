@@ -79,7 +79,7 @@ static void setHostName(struct SiteToSiteCPeer * peer, const char * hostname) {
   peer->_host[host_len] = '\0';
   peer->_url[host_len + 7] = ':';
   if(peer->_port != 0) {
-    snprintf(peer->_url + host_len + 8, 5, "%d", peer->_port);
+    snprintf(peer->_url + host_len + 8, 6, "%d", peer->_port);
   }
   return;
 }
@@ -87,7 +87,7 @@ static void setHostName(struct SiteToSiteCPeer * peer, const char * hostname) {
 static void setPort(struct SiteToSiteCPeer * peer, uint16_t port) {
   peer->_port = port;
   if(peer->_url != NULL) {
-    int i;
+    size_t i;
     for(i = strlen(peer->_url) -1; i >= 0; --i) {  // look for the last ':' in the string
       if(peer->_url[i] == ':'){
         memset(peer->_url + i + 1, 0, 6);  // zero the port area  - the new port can be shorter

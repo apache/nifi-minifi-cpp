@@ -31,6 +31,7 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -155,7 +156,7 @@ typedef struct {
 la_ssize_t UnfocusArchiveEntry::WriteCallback::write_cb(struct archive *, void *d, const void *buffer, size_t length) {
   auto data = static_cast<UnfocusArchiveEntryWriteData *>(d);
   const uint8_t *ui_buffer = static_cast<const uint8_t*>(buffer);
-  return data->stream->write(const_cast<uint8_t*>(ui_buffer), length);
+  return data->stream->write(const_cast<uint8_t*>(ui_buffer), gsl::narrow<int>(length));
 }
 
 int64_t UnfocusArchiveEntry::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {

@@ -35,6 +35,7 @@
 #include "ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
 #include "core/Deprecated.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -278,7 +279,7 @@ class HTTPRequestResponse {
       size_to_read = data.size();
     }
     memcpy(buf, data.data(), size_to_read);
-    return size_to_read;
+    return gsl::narrow<int>(size_to_read);
   }
 
   size_t write_content(char* ptr, size_t size, size_t nmemb) {

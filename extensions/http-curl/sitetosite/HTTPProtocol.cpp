@@ -41,12 +41,12 @@ namespace sitetosite {
 std::shared_ptr<utils::IdGenerator> HttpSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 utils::optional<utils::Identifier> HttpSiteToSiteClient::parseTransactionId(const std::string &uri) {
-  int i = 0;
-  for (i = uri.length() - 1; i >= 0; i--) {
-    if (uri.at(i) == '/')
-      break;
+  const size_t last_slash_pos = uri.find_last_of('/');
+  size_t id_start_pos = 0;
+  if (last_slash_pos != std::string::npos) {
+    id_start_pos = last_slash_pos + 1;
   }
-  return utils::Identifier::parse(uri.substr(i + 1, uri.length() - (i + 1)));
+  return utils::Identifier::parse(uri.substr(id_start_pos));
 }
 
 std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(TransferDirection direction) {

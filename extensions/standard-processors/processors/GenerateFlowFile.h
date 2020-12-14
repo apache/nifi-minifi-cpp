@@ -30,6 +30,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -73,7 +74,7 @@ class GenerateFlowFile : public core::Processor {
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       int64_t ret = 0;
       if (data_.size() > 0)
-        ret = stream->write(reinterpret_cast<uint8_t*>(&data_[0]), data_.size());
+        ret = stream->write(reinterpret_cast<uint8_t*>(&data_[0]), gsl::narrow<int>(data_.size()));
       return ret;
     }
   };

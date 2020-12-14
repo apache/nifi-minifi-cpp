@@ -22,6 +22,8 @@
 #include "io/BufferStream.h"
 #include "io/EndianCheck.h"
 #include "core/Core.h"
+#include "utils/gsl.h"
+
 /**
  * Test repository
  */
@@ -37,7 +39,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
   }
 
   void push_response(const std::string& resp) {
-    server_responses_.write(reinterpret_cast<const uint8_t*>(resp.data()), resp.length());
+    server_responses_.write(reinterpret_cast<const uint8_t*>(resp.data()), gsl::narrow<int>(resp.length()));
   }
 
   int write(const uint8_t *value, int size) override {

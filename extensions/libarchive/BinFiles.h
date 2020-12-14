@@ -30,6 +30,7 @@
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/gsl.h"
 #include "utils/Id.h"
 
 namespace org {
@@ -113,7 +114,7 @@ class Bin {
     return creation_dated_;
   }
   int getSize() {
-    return queue_.size();
+    return gsl::narrow<int>(queue_.size());
   }
 
   utils::SmallString<36> getUUIDStr() {

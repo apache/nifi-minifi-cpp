@@ -18,6 +18,8 @@
 
 #include "io/ZlibStream.h"
 #include "Exception.h"
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -81,7 +83,7 @@ int ZlibCompressStream::write(const uint8_t* value, int size) {
     logger_->log_trace("writeData has %u B of input data left", strm_.avail_in);
 
     strm_.next_out = outputBuffer_.data();
-    strm_.avail_out = outputBuffer_.size();
+    strm_.avail_out = gsl::narrow<uInt>(outputBuffer_.size());
 
     int flush = value == nullptr ? Z_FINISH : Z_NO_FLUSH;
     logger_->log_trace("calling deflate with flush %d", flush);
@@ -92,7 +94,7 @@ int ZlibCompressStream::write(const uint8_t* value, int size) {
       state_ = ZlibStreamState::ERRORED;
       return -1;
     }
-    int output_size = outputBuffer_.size() - strm_.avail_out;
+    int output_size = gsl::narrow<int>(outputBuffer_.size() - strm_.avail_out);
     logger_->log_trace("deflate produced %d B of output data", output_size);
     if (output_->write(outputBuffer_.data(), output_size) != output_size) {
       logger_->log_error("Failed to write to underlying stream");
@@ -149,7 +151,7 @@ int ZlibDecompressStream::write(const uint8_t* value, int size) {
     logger_->log_trace("writeData has %u B of input data left", strm_.avail_in);
 
     strm_.next_out = outputBuffer_.data();
-    strm_.avail_out = outputBuffer_.size();
+    strm_.avail_out = gsl::narrow<uInt>(outputBuffer_.size());
 
     ret = inflate(&strm_, Z_NO_FLUSH);
     if (ret == Z_STREAM_ERROR ||
@@ -160,7 +162,7 @@ int ZlibDecompressStream::write(const uint8_t* value, int size) {
       state_ = ZlibStreamState::ERRORED;
       return -1;
     }
-    int output_size = outputBuffer_.size() - strm_.avail_out;
+    int output_size = gsl::narrow<int>(outputBuffer_.size() - strm_.avail_out);
     logger_->log_trace("deflate produced %d B of output data", output_size);
     if (output_->write(outputBuffer_.data(), output_size) != output_size) {
       logger_->log_error("Failed to write to underlying stream");

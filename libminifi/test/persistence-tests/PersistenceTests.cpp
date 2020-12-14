@@ -34,6 +34,7 @@
 #include "../test/BufferReader.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
+#include "utils/gsl.h"
 #include "utils/IntegrationTestUtils.h"
 
 using Connection = minifi::Connection;
@@ -95,7 +96,7 @@ struct TestFlow{
     processor->onSchedule(processorContext.get(), new core::ProcessSessionFactory(processorContext));
   }
   std::shared_ptr<core::FlowFile> write(const std::string& data) {
-    minifi::io::BufferStream stream(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
+    minifi::io::BufferStream stream(reinterpret_cast<const uint8_t*>(data.c_str()), gsl::narrow<int>(data.length()));
     core::ProcessSession sessionGenFlowFile(inputContext);
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     sessionGenFlowFile.importFrom(stream, flow);
@@ -246,7 +247,7 @@ class ContentUpdaterProcessor : public core::Processor{
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
     auto ff = session->get();
     std::string data = "<override>";
-    minifi::io::BufferStream stream(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
+    minifi::io::BufferStream stream(reinterpret_cast<const uint8_t*>(data.c_str()), gsl::narrow<int>(data.length()));
     session->importFrom(stream, ff);
     session->transfer(ff, {"success", "d"});
   }

@@ -36,6 +36,7 @@
 #include "core/Property.h"
 #include "properties/Configure.h"
 #include "utils/file/FileUtils.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -244,8 +245,8 @@ class FlowControlProtocol {
   // encode std::string
   uint8_t *encode(uint8_t *buf, const std::string& value) {
     // add the \0 for size
-    buf = encode(buf, value.size() + 1);
-    buf = encode(buf, const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(value.c_str())), value.size() + 1);
+    buf = encode(buf, gsl::narrow<uint32_t>(value.size() + 1));
+    buf = encode(buf, const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(value.c_str())), gsl::narrow<int>(value.size() + 1));
     return buf;
   }
 

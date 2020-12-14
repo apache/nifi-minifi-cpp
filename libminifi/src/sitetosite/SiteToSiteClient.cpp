@@ -16,9 +16,13 @@
  * limitations under the License.
  */
 #include "sitetosite/SiteToSiteClient.h"
+
 #include <map>
 #include <string>
 #include <memory>
+
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -60,7 +64,7 @@ int SiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &transacti
     if (ret <= 0)
       return -1;
   }
-  return 3 + message.size();
+  return gsl::narrow<int>(3 + message.size());
 }
 
 void SiteToSiteClient::deleteTransaction(const utils::Identifier& transactionID) {
@@ -441,7 +445,7 @@ int16_t SiteToSiteClient::send(const utils::Identifier& transactionID, DataPacke
     }
   }
   // start to read the packet
-  uint32_t numAttributes = packet->_attributes.size();
+  uint32_t numAttributes = gsl::narrow<uint32_t>(packet->_attributes.size());
   ret = transaction->getStream().write(numAttributes);
   if (ret != 4) {
     return -1;

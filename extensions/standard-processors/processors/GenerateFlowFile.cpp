@@ -34,6 +34,7 @@
 #include <utility>
 #include <vector>
 
+#include "utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -62,7 +63,7 @@ core::Property GenerateFlowFile::UniqueFlowFiles(
 
 core::Relationship GenerateFlowFile::Success("success", "success operational on the flow record");
 
-static const char * TEXT_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+/?.,';:\"?<>\n\t ";
+constexpr const char * TEXT_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+/?.,';:\"?<>\n\t ";
 
 void GenerateFlowFile::initialize() {
   // Set the supported properties
@@ -82,7 +83,8 @@ void generateData(std::vector<char>& data, bool textData = false) {
   std::random_device rd;
   std::mt19937 eng(rd());
   if (textData) {
-    std::uniform_int_distribution<> distr(0, strlen(TEXT_CHARS) - 1);
+    const int index_of_last_char = gsl::narrow<int>(strlen(TEXT_CHARS)) - 1;
+    std::uniform_int_distribution<> distr(0, index_of_last_char);
     auto rand = std::bind(distr, eng);
     std::generate_n(data.begin(), data.size(), rand);
     std::for_each(data.begin(), data.end(), [](char & c) { c = TEXT_CHARS[c];});

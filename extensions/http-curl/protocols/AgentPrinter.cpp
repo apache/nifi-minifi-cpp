@@ -17,6 +17,7 @@
  */
 
 #include "AgentPrinter.h"
+
 #include <algorithm>
 #include <memory>
 #include <utility>
@@ -24,6 +25,8 @@
 #include <list>
 #include <string>
 #include <vector>
+
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -51,7 +54,7 @@ std::string AgentPrinter::serializeJsonRootPayload(const C2Payload& payload) {
 
   rapidjson::Value opReqStrVal;
   std::string operation_request_str = getOperation(payload);
-  opReqStrVal.SetString(operation_request_str.c_str(), operation_request_str.length(), alloc);
+  opReqStrVal.SetString(operation_request_str.c_str(), gsl::narrow<rapidjson::SizeType>(operation_request_str.length()), alloc);
   json_payload.AddMember("operation", opReqStrVal, alloc);
 
   std::string operationid = payload.getIdentifier();

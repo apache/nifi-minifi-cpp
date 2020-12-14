@@ -23,6 +23,7 @@
 #include <vector>
 #include <string>
 #include "BaseStream.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -39,7 +40,7 @@ class BufferStream : public BaseStream {
   }
 
   explicit BufferStream(const std::string& data) {
-    write(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
+    write(reinterpret_cast<const uint8_t*>(data.c_str()), gsl::narrow<int>(data.length()));
   }
 
   using BaseStream::read;

@@ -27,6 +27,8 @@
 
 #include "HTTPCallback.h"
 #include "io/validation.h"
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -95,7 +97,7 @@ int HttpStream::read(uint8_t *buf, int buflen) {
         started_ = true;
       }
     }
-    return http_read_callback_.readFully((char*) buf, buflen);
+    return gsl::narrow<int>(http_read_callback_.readFully((char*) buf, buflen));
 
   } else {
     return -1;

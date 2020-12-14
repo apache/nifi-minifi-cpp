@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "core/TypedValues.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -150,13 +151,13 @@ void setJsonStr(const std::string& key, const state::response::ValueNode& value,
   rapidjson::Value valueVal;
   const char* c_key = key.c_str();
   auto base_type = value.getValue();
-  keyVal.SetString(c_key, key.length(), alloc);
+  keyVal.SetString(c_key, gsl::narrow<rapidjson::SizeType>(key.length()), alloc);
 
   auto type_index = base_type->getTypeIndex();
   if (auto sub_type = std::dynamic_pointer_cast<core::TransformableValue>(base_type)) {
     auto str = base_type->getStringValue();
     const char* c_val = str.c_str();
-    valueVal.SetString(c_val, str.length(), alloc);
+    valueVal.SetString(c_val, gsl::narrow<rapidjson::SizeType>(str.length()), alloc);
   } else {
     if (type_index == state::response::Value::BOOL_TYPE) {
       bool value = false;
@@ -181,7 +182,7 @@ void setJsonStr(const std::string& key, const state::response::ValueNode& value,
     } else {
       auto str = base_type->getStringValue();
       const char* c_val = str.c_str();
-      valueVal.SetString(c_val, str.length(), alloc);
+      valueVal.SetString(c_val, gsl::narrow<rapidjson::SizeType>(str.length()), alloc);
     }
   }
   parent.AddMember(keyVal, valueVal, alloc);
@@ -189,7 +190,7 @@ void setJsonStr(const std::string& key, const state::response::ValueNode& value,
 
 rapidjson::Value RESTProtocol::getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc) {  // NOLINT
   rapidjson::Value Val;
-  Val.SetString(value.c_str(), value.length(), alloc);
+  Val.SetString(value.c_str(), gsl::narrow<rapidjson::SizeType>(value.length()), alloc);
   return Val;
 }
 
@@ -218,7 +219,7 @@ void RESTProtocol::mergePayloadContent(rapidjson::Value &target, const C2Payload
     for (const auto &payload_content : content) {
       for (const auto& op_arg : payload_content.operation_arguments) {
         rapidjson::Value keyVal;
-        keyVal.SetString(op_arg.first.c_str(), op_arg.first.length(), alloc);
+        keyVal.SetString(op_arg.first.c_str(), gsl::narrow<rapidjson::SizeType>(op_arg.first.length()), alloc);
         if (is_parent_array) {
           target.PushBack(keyVal, alloc);
         } else {
@@ -256,7 +257,7 @@ std::string RESTProtocol::serializeJsonRootPayload(const C2Payload& payload) {
 
   rapidjson::Value opReqStrVal;
   std::string operation_request_str = getOperation(payload);
-  opReqStrVal.SetString(operation_request_str.c_str(), operation_request_str.length(), alloc);
+  opReqStrVal.SetString(operation_request_str.c_str(), gsl::narrow<rapidjson::SizeType>(operation_request_str.length()), alloc);
   json_payload.AddMember("operation", opReqStrVal, alloc);
 
   std::string operationid = payload.getIdentifier();

@@ -138,7 +138,8 @@ public:
   }
 
   ~TestControllerWithTemporaryWorkingDirectory() {
-    chdir(old_cwd_);
+    int success = chdir(old_cwd_);
+    (void) success;
     free(old_cwd_);
   }
 

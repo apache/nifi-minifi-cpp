@@ -20,6 +20,7 @@
 #include <cstring>
 #include <string>
 
+#include "utils/gsl.h"
 #include "utils/StringUtils.h"
 
 namespace org {
@@ -45,7 +46,7 @@ int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
     // a null terminator. Per their documentation:
     // "The actual length of the password must be returned to the calling function. "
     memset(buf, 0x00, size);
-    return pass.copy(buf, size);
+    return gsl::narrow<int>(pass.copy(buf, size));
   }
   return -1;
 }

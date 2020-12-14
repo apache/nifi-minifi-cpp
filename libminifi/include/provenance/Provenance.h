@@ -37,6 +37,7 @@
 #include "FlowFileRecord.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "ResourceClaim.h"
+#include "utils/gsl.h"
 #include "utils/Id.h"
 #include "utils/TimeUtil.h"
 
@@ -360,7 +361,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &repo);
 
   uint64_t getEventTime(const uint8_t *buffer, const size_t bufferSize) {
-    int size = bufferSize > 72 ? 72 : bufferSize;
+    int size = gsl::narrow<int>(bufferSize > 72 ? 72 : bufferSize);
     org::apache::nifi::minifi::io::BufferStream outStream(buffer, size);
 
     std::string uuid;
