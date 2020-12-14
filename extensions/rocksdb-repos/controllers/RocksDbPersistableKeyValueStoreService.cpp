@@ -182,7 +182,7 @@ bool RocksDbPersistableKeyValueStoreService::clear() {
   return true;
 }
 
-bool RocksDbPersistableKeyValueStoreService::update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) {
+bool RocksDbPersistableKeyValueStoreService::update(const std::string& /*key*/, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& /*update_func*/) {
   if (!db_) {
     return false;
   }

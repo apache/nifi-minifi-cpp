@@ -60,7 +60,7 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
   logger_->log_debug("Submitting to %s", rest_uri_);
 }
 
-C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) {
+C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool /*async*/) {
   std::string outputConfig;
 
   if (direction == Direction::TRANSMIT) {

@@ -351,7 +351,7 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
   return -1;
 }
 
-int TLSSocket::read(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
+int TLSSocket::read(uint8_t *buf, int buflen, bool /*retrieve_all_bytes*/) {
   gsl_Expects(buflen >= 0);
   int total_read = 0;
   int status = 0;

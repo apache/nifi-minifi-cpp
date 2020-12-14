@@ -69,7 +69,7 @@ void wait_until(std::atomic<bool>& b) {
 
 TEST_CASE("TestSetPortId", "[S2S1]") {
   SiteToSiteCPeer peer;
-  initPeer(&peer, "fake_host", 65433, "");
+  initPeer(&peer, "fake_host", 65433);
   CRawSiteToSiteClient * protocol = (CRawSiteToSiteClient*)malloc(sizeof(CRawSiteToSiteClient));
 
   initRawClient(protocol, &peer);
@@ -185,7 +185,7 @@ TEST_CASE("TestSiteToBootStrap", "[S2S3]") {
 
     auto c_client_thread = [&transfer_state, &c_handshake_ok, &c_transfer_ok, port]() {
       SiteToSiteCPeer cpeer;
-      initPeer(&cpeer, "localhost", port, "");
+      initPeer(&cpeer, "localhost", port);
 
       CRawSiteToSiteClient cprotocol;
 

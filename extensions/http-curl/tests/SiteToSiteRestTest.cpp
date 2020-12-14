@@ -38,7 +38,7 @@ class Responder : public ServerAwareHandler {
   explicit Responder(bool isSecure)
       : isSecure(isSecure) {
   }
-  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
+  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
     std::string site2site_rest_resp = "{"
         "\"revision\": {"
         "\"clientId\": \"483d53eb-53ec-4e93-b4d4-1fc3d23dae6f\""

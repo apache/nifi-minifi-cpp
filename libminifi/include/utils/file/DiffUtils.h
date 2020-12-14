@@ -39,7 +39,7 @@ extern "C" {
 
 }
 #else
-int apply_bsdiff_patch(const char *oldfile, const char *newfile, const char *patch) {
+int apply_bsdiff_patch(const char* /*oldfile*/, const char* /*newfile*/, const char* /*patch*/) {
   return -1;
 }
 
@@ -64,7 +64,7 @@ class DiffUtils {
     return apply_bsdiff_patch(file_original, file_new, result_file);
   }
 
-  static int binary_diff(const char *file_original, const char *file_other, const char *patchfile) {
+  static int binary_diff(const char* /*file_original*/, const char* /*file_other*/, const char* /*patchfile*/) {
     return -1;
   }
 };

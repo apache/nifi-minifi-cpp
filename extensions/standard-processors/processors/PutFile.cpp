@@ -89,7 +89,7 @@ void PutFile::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   if (!context->getProperty(ConflictResolution.getName(), conflict_resolution_)) {
     logger_->log_error("Conflict Resolution Strategy attribute is missing or invalid");
   }

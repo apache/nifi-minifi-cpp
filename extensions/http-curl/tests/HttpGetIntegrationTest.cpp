@@ -39,7 +39,7 @@
 #include "integration/IntegrationBase.h"
 #include "utils/IntegrationTestUtils.h"
 
-int log_message(const struct mg_connection *conn, const char *message) {
+int log_message(const struct mg_connection* /*conn*/, const char *message) {
   puts(message);
   return 1;
 }
@@ -52,7 +52,7 @@ int ssl_enable(void* /*ssl_context*/, void* /*user_data*/) {
 class HttpResponder : public CivetHandler {
  private:
  public:
-  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
+  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
     puts("handle get");
     static const std::string site2site_rest_resp = "hi this is a get test";
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "

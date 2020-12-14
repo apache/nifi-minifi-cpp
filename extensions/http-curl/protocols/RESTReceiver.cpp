@@ -30,12 +30,12 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-int log_message(const struct mg_connection *conn, const char *message) {
+int log_message(const struct mg_connection* /*conn*/, const char *message) {
   puts(message);
   return 1;
 }
 
-int ssl_protocol_en(void *ssl_context, void *user_data) {
+int ssl_protocol_en(void* /*ssl_context*/, void* /*user_data*/) {
   return 0;
 }
 

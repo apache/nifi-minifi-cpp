@@ -154,13 +154,13 @@ class ConfigurableComponent {
   /**
    * Invoked anytime a static property is modified
    */
-  virtual void onPropertyModified(const Property &old_property, const Property &new_property) {
+  virtual void onPropertyModified(const Property& /*old_property*/, const Property& /*new_property*/) {
   }
 
   /**
    * Invoked anytime a dynamic property is modified.
    */
-  virtual void onDynamicPropertyModified(const Property &old_property, const Property &new_property) {
+  virtual void onDynamicPropertyModified(const Property& /*old_property*/, const Property& /*new_property*/) {
   }
 
   /**

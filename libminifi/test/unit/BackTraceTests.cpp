@@ -47,7 +47,7 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
       return true;
     }
   }
-  bool isCancelled(const int &result) override {
+  bool isCancelled(const int& /*result*/) override {
     return false;
   }
 

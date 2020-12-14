@@ -497,7 +497,7 @@ void PublishKafka::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   interrupted_ = false;
 
   // Try to get a KafkaConnection

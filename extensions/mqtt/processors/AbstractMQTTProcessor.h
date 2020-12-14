@@ -101,7 +101,7 @@ class AbstractMQTTProcessor : public core::Processor {
     AbstractMQTTProcessor *processor = (AbstractMQTTProcessor *) context;
     processor->delivered_token_ = dt;
   }
-  static int msgReceived(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
+  static int msgReceived(void *context, char *topicName, int /*topicLen*/, MQTTClient_message *message) {
     AbstractMQTTProcessor *processor = (AbstractMQTTProcessor *) context;
     if (processor->isSubscriber_) {
       if (!processor->enqueueReceiveMQTTMsg(message))
@@ -112,13 +112,13 @@ class AbstractMQTTProcessor : public core::Processor {
     MQTTClient_free(topicName);
     return 1;
   }
-  static void connectionLost(void *context, char *cause) {
+  static void connectionLost(void *context, char* /*cause*/) {
     AbstractMQTTProcessor *processor = (AbstractMQTTProcessor *) context;
     processor->reconnect();
   }
   bool reconnect();
   // enqueue receive MQTT message
-  virtual bool enqueueReceiveMQTTMsg(MQTTClient_message *message) {
+  virtual bool enqueueReceiveMQTTMsg(MQTTClient_message* /*message*/) {
     return false;
   }
 

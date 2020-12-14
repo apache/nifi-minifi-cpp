@@ -59,7 +59,7 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
   static const char *volatile_repo_max_bytes;
   // Constructor
 
-  explicit VolatileRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
+  explicit VolatileRepository(std::string repo_name = "", std::string /*dir*/ = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
   MAX_REPOSITORY_STORAGE_SIZE,
                               uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
@@ -192,7 +192,7 @@ template<typename T>
 const char *VolatileRepository<T>::volatile_repo_max_bytes = "max.bytes";
 
 template<typename T>
-void VolatileRepository<T>::loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
+void VolatileRepository<T>::loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) {
 }
 
 // Destructor

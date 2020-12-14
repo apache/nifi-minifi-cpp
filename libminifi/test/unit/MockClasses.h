@@ -93,7 +93,7 @@ class MockProcessor : public core::Processor {
   }
 
   // OnTrigger method, implemented by NiFi Processor Designer
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession* /*session*/) {
 
     std::string linked_service = "";
     getProperty("linkedService", linked_service);

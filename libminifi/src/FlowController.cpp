@@ -59,7 +59,7 @@ namespace minifi {
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                                std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                               std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode,
+                               std::shared_ptr<core::ContentRepository> content_repo, const std::string /*name*/, bool headless_mode,
                                std::shared_ptr<utils::file::FileSystem> filesystem)
     : core::controller::ControllerServiceProvider(core::getClassName<FlowController>()),
       c2::C2Client(std::move(configure), std::move(provenance_repo), std::move(flow_file_repo),
@@ -399,7 +399,7 @@ std::future<utils::TaskRescheduleInfo> FlowController::enableControllerService(s
  * Enables controller services
  * @param serviceNoden vector of service nodes which will be enabled, along with linked services.
  */
-void FlowController::enableControllerServices(std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> serviceNodes) {
+void FlowController::enableControllerServices(std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> /*serviceNodes*/) {
 }
 
 /**
@@ -441,7 +441,7 @@ std::shared_ptr<core::controller::ControllerServiceNode> FlowController::getCont
   return controller_service_provider_->getControllerServiceNode(id);
 }
 
-void FlowController::verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+void FlowController::verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode>& /*serviceNode*/) {
 }
 
 /**

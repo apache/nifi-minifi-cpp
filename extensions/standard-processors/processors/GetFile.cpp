@@ -115,7 +115,7 @@ void GetFile::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   std::string value;
   if (context->getProperty(BatchSize.getName(), value)) {
     core::Property::StringToInt(value, request_.batchSize);
@@ -156,7 +156,7 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
   request_.inputDirectory = value;
 }
 
-void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) {
   // Perform directory list
 
   metrics_->iterations_++;

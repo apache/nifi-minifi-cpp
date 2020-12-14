@@ -56,7 +56,7 @@ void HashContent::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   std::string value;
 
   attrKey_ = (context->getProperty(HashAttribute.getName(), value)) ? value : "Checksum";

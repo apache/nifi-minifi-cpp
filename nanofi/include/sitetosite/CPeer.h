@@ -98,7 +98,7 @@ static void setPort(struct SiteToSiteCPeer * peer, uint16_t port) {
   }
 }
 
-static void initPeer(struct SiteToSiteCPeer * peer, const char * host, uint16_t port, const char * ifc) {
+static void initPeer(struct SiteToSiteCPeer * peer, const char * host, uint16_t port) {
   peer->_stream = NULL;
   peer->_host = NULL;
   peer->_url = NULL;

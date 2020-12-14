@@ -57,7 +57,7 @@ ServerSocket::~ServerSocket() {
  * @return result of the creation operation.
  */
 void ServerSocket::registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler) {
-  auto fx = [this](std::function<bool()> accept_function, std::function<void(io::BaseStream *stream)> handler) {
+  auto fx = [this](std::function<bool()> /*accept_function*/, std::function<void(io::BaseStream *stream)> handler) {
     while (running_) {
       int fd = select_descriptor(1000);
       if (fd >= 0) {

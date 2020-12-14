@@ -144,7 +144,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * Disables referencing components for <code>serviceNode</code> can be disabled.
    * @param serviceNode shared pointer to a controller service node.
    */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode>& /*serviceNode*/) {
     return std::vector<std::shared_ptr<core::controller::ControllerServiceNode>>();
   }
 
@@ -175,7 +175,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * Returns a controller service for the service identifier and componentID
    * @param service Identifier service identifier.
    */
-  virtual std::shared_ptr<ControllerService> getControllerServiceForComponent(const std::string &serviceIdentifier, const utils::Identifier &componentId) {
+  virtual std::shared_ptr<ControllerService> getControllerServiceForComponent(const std::string &serviceIdentifier, const utils::Identifier& /*componentId*/) {
     std::shared_ptr<ControllerService> node = getControllerService(serviceIdentifier);
     return node;
   }

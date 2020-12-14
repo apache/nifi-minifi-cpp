@@ -50,7 +50,7 @@ void ConvertBase::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void ConvertBase::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void ConvertBase::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string controller_service_name = "";
   if (context->getProperty(MQTTControllerService.getName(), controller_service_name) && !controller_service_name.empty()) {
     auto service = context->getControllerService(controller_service_name);

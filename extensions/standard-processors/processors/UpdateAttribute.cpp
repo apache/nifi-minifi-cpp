@@ -43,7 +43,7 @@ void UpdateAttribute::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void UpdateAttribute::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void UpdateAttribute::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   attributes_.clear();
   const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
   logger_->log_info("UpdateAttribute registering %d keys", dynamic_prop_keys.size());

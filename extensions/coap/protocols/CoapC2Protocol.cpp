@@ -51,7 +51,7 @@ void CoapProtocol::initialize(core::controller::ControllerServiceProvider* contr
   }
 }
 
-minifi::c2::C2Payload CoapProtocol::consumePayload(const std::string &url, const minifi::c2::C2Payload &payload, minifi::c2::Direction direction, bool async) {
+minifi::c2::C2Payload CoapProtocol::consumePayload(const std::string &url, const minifi::c2::C2Payload &payload, minifi::c2::Direction direction, bool /*async*/) {
   return RESTSender::consumePayload(url, payload, direction, false);
 }
 

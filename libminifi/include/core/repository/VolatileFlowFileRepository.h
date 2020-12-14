@@ -39,7 +39,7 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
   using utils::EnableSharedFromThis<VolatileFlowFileRepository>::sharedFromThis;
 
  public:
-  explicit VolatileFlowFileRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
+  explicit VolatileFlowFileRepository(std::string repo_name = "", std::string /*dir*/ = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
   MAX_REPOSITORY_STORAGE_SIZE,
                                       uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),

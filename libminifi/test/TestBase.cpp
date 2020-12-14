@@ -65,7 +65,7 @@ TestPlan::~TestPlan() {
   controller_services_provider_->clearControllerServices();
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
+std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string& /*name*/, const std::initializer_list<core::Relationship>& relationships,
                                                         bool linkToPrevious) {
   if (finalized) {
     return nullptr;

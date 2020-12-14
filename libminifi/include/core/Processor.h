@@ -236,7 +236,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSession> &session) {
     onTrigger(context.get(), session.get());
   }
-  virtual void onTrigger(ProcessContext *context, ProcessSession *session) {
+  virtual void onTrigger(ProcessContext* /*context*/, ProcessSession* /*session*/) {
   }
   // Initialize, overridden by NiFi Process Designer
   void initialize() override {
@@ -245,7 +245,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   virtual void onSchedule(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory) {
     onSchedule(context.get(), sessionFactory.get());
   }
-  virtual void onSchedule(ProcessContext *context, ProcessSessionFactory *sessionFactory) {
+  virtual void onSchedule(ProcessContext* /*context*/, ProcessSessionFactory* /*sessionFactory*/) {
   }
 
   // Hook executed when onSchedule fails (throws). Configuration should be reset in this

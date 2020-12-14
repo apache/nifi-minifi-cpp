@@ -56,7 +56,7 @@ core::Property LinuxPowerManagerService::LowBatteryThreshold(
     core::PropertyBuilder::createProperty("Low Battery Threshold")->withDescription("Battery threshold before which we will aggressively reduce. Should be a number from 1-100")->isRequired(true)
         ->withDefaultValue<int>(50)->build());
 
-bool LinuxPowerManagerService::isAboveMax(int new_tasks) {
+bool LinuxPowerManagerService::isAboveMax(int /*new_tasks*/) {
   return false;
 }
 

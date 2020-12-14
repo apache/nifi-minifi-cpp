@@ -230,7 +230,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
 class ContentUpdaterProcessor : public core::Processor{
  public:
   ContentUpdaterProcessor(const std::string& name, utils::Identifier& id) : Processor(name, id) {}
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
+  void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) override {
     auto ff = session->get();
     std::string data = "<override>";
     minifi::io::BufferStream stream(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());

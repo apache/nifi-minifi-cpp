@@ -43,7 +43,7 @@
 #include "core/ProcessorNode.h"
 #include "TestBase.h"
 
-int main(int argc, char **argv) {
+int main(int /*argc*/, char ** /*argv*/) {
 #ifndef WIN32
   TestController testController;
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ExecuteProcess>("executeProcess");

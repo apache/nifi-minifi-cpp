@@ -166,7 +166,7 @@ std::shared_ptr<Connectable> Connectable::getNextIncomingConnection() {
   return getNextIncomingConnectionImpl(lock);
 }
 
-std::shared_ptr<Connectable> Connectable::getNextIncomingConnectionImpl(const std::lock_guard<std::mutex>& relatioship_mutex_lock) {
+std::shared_ptr<Connectable> Connectable::getNextIncomingConnectionImpl(const std::lock_guard<std::mutex>& /*relatioship_mutex_lock*/) {
   if (_incomingConnections.size() == 0)
     return nullptr;
 

@@ -258,7 +258,7 @@ class MQTTControllerService : public core::controller::ControllerService {
     MQTTClient_free(topicName);
     return 1;
   }
-  static void reconnectCallback(void *context, char *cause) {
+  static void reconnectCallback(void *context, char* /*cause*/) {
     MQTTControllerService *service = (MQTTControllerService *) context;
     service->reconnect();
   }

@@ -330,7 +330,7 @@ void TailFile::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::lock_guard<std::mutex> tail_lock(tail_file_mutex_);
 
   tail_states_.clear();

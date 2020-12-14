@@ -100,7 +100,7 @@ class Instance {
     return rpgInitialized_;
   }
 
-  void enableAsyncC2(C2_Server *server, c2_stop_callback *c1, c2_start_callback *c2, c2_update_callback *c3) {
+  void enableAsyncC2(C2_Server *server, c2_stop_callback *c1, c2_start_callback* /*c2*/, c2_update_callback* /*c3*/) {
     running_ = true;
     if (server->type != C2_Server_Type::MQTT) {
       configure_->set("c2.rest.url", server->url);
@@ -148,7 +148,7 @@ class Instance {
 
  protected:
 
-  bool registerUpdateListener(const std::shared_ptr<state::UpdateController> &updateController, const int64_t &delay) {
+  bool registerUpdateListener(const std::shared_ptr<state::UpdateController> &updateController, const int64_t& /*delay*/) {
     auto functions = updateController->getFunctions();
     // run all functions independently
 

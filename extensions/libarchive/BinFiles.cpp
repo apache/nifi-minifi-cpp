@@ -96,7 +96,7 @@ void BinFiles::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   uint32_t val32;
   uint64_t val64;
   if (context->getProperty(MinSize.getName(), val64)) {
@@ -131,7 +131,7 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
   }
 }
 
-void BinFiles::preprocessFlowFile(core::ProcessContext *context, core::ProcessSession *session, std::shared_ptr<core::FlowFile> flow) {
+void BinFiles::preprocessFlowFile(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/, std::shared_ptr<core::FlowFile> flow) {
   // handle backward compatibility with old segment attributes
   std::string value;
   if (!flow->getAttribute(BinFiles::FRAGMENT_COUNT_ATTRIBUTE, value) && flow->getAttribute(BinFiles::SEGMENT_COUNT_ATTRIBUTE, value)) {
@@ -330,7 +330,7 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   }
 }
 
-void BinFiles::transferFlowsToFail(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin) {
+void BinFiles::transferFlowsToFail(core::ProcessContext* /*context*/, core::ProcessSession *session, std::unique_ptr<Bin> &bin) {
   std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
   for (auto flow : flows) {
     session->transfer(flow, Failure);
@@ -338,7 +338,7 @@ void BinFiles::transferFlowsToFail(core::ProcessContext *context, core::ProcessS
   flows.clear();
 }
 
-void BinFiles::addFlowsToSession(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin) {
+void BinFiles::addFlowsToSession(core::ProcessContext* /*context*/, core::ProcessSession *session, std::unique_ptr<Bin> &bin) {
   std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
   for (auto flow : flows) {
     session->add(flow);

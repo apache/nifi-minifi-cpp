@@ -77,7 +77,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
         controller(controller),
         update_calls(0) {
   }
-  std::vector<std::shared_ptr<StateController>> getComponents(const std::string &name) override {
+  std::vector<std::shared_ptr<StateController>> getComponents(const std::string& /*name*/) override {
     std::vector<std::shared_ptr<StateController>> vec;
     vec.push_back(controller);
     return vec;
@@ -138,7 +138,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
   /**
    * Clear connection for the agent.
    */
-  int16_t clearConnection(const std::string &connection) override {
+  int16_t clearConnection(const std::string& /*connection*/) override {
     clear_calls++;
     return 0;
   }
@@ -149,7 +149,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
    * < 0 is an error code
    * 0 is success
    */
-  int16_t applyUpdate(const std::string &source, const std::string &configuration, bool persist = false) override {
+  int16_t applyUpdate(const std::string& /*source*/, const std::string& /*configuration*/, bool /*persist*/ = false) override {
     update_calls++;
     return 0;
   }
@@ -158,7 +158,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
    * Apply an update that the agent must decode. This is useful for certain operations
    * that can't be encapsulated within these definitions.
    */
-  int16_t applyUpdate(const std::string &source, const std::shared_ptr<minifi::state::Update> &updateController) override {
+  int16_t applyUpdate(const std::string& /*source*/, const std::shared_ptr<minifi::state::Update>& /*updateController*/) override {
     return 0;
   }
 

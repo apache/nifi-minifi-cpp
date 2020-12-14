@@ -27,7 +27,7 @@
 #include "utils/IntegrationTestUtils.h"
 #include "TestServer.h"
 
-int log_message(const struct mg_connection *conn, const char *message) {
+int log_message(const struct mg_connection* /*conn*/, const char *message) {
   puts(message);
   return 1;
 }

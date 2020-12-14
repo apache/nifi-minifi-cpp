@@ -350,7 +350,7 @@ BinaryConcatenationMerge::BinaryConcatenationMerge(const std::string &header, co
     footer_(footer),
     demarcator_(demarcator) {}
 
-void BinaryConcatenationMerge::merge(core::ProcessContext *context, core::ProcessSession *session,
+void BinaryConcatenationMerge::merge(core::ProcessContext* /*context*/, core::ProcessSession *session,
     std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) {
   BinaryConcatenationMerge::WriteCallback callback(header_, footer_, demarcator_, flows, serializer);
   session->write(merge_flow, &callback);
@@ -364,7 +364,7 @@ void BinaryConcatenationMerge::merge(core::ProcessContext *context, core::Proces
     session->putAttribute(merge_flow, core::SpecialFlowAttribute::FILENAME, fileName);
 }
 
-void TarMerge::merge(core::ProcessContext *context, core::ProcessSession *session,
+void TarMerge::merge(core::ProcessContext* /*context*/, core::ProcessSession *session,
     std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) {
   ArchiveMerge::WriteCallback callback(std::string(merge_content_options::MERGE_FORMAT_TAR_VALUE), flows, serializer);
   session->write(merge_flow, &callback);
@@ -381,7 +381,7 @@ void TarMerge::merge(core::ProcessContext *context, core::ProcessSession *sessio
   }
 }
 
-void ZipMerge::merge(core::ProcessContext *context, core::ProcessSession *session,
+void ZipMerge::merge(core::ProcessContext* /*context*/, core::ProcessSession *session,
     std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) {
   ArchiveMerge::WriteCallback callback(std::string(merge_content_options::MERGE_FORMAT_ZIP_VALUE), flows, serializer);
   session->write(merge_flow, &callback);

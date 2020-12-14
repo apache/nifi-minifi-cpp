@@ -47,7 +47,7 @@ void big_failure_counter(flow_file_record * fr) {
   free_flowfile(fr);
 }
 
-void custom_onschedule_logic(processor_context* ctx) {
+void custom_onschedule_logic(processor_context* /*ctx*/) {
   custom_onschedule_count++;
 }
 

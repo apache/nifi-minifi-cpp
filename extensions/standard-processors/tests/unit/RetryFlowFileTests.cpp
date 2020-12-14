@@ -73,8 +73,8 @@ class RetryFlowFileTest {
   }
 
   void retryRoutingTest(
-      optional<std::string> exp_retry_prop_name,
-      optional<int> exp_retry_prop_val,
+      optional<std::string> /*exp_retry_prop_name*/,
+      optional<int> /*exp_retry_prop_val*/,
       core::Relationship exp_outbound_relationship,
       bool exp_penalty_on_flowfile,
       optional<std::string> retry_attr_name_on_flowfile,

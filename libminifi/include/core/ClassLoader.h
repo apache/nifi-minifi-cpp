@@ -96,28 +96,28 @@ class ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<CoreComponent> create(const std::string &name) {
+  virtual std::shared_ptr<CoreComponent> create(const std::string& /*name*/) {
     return nullptr;
   }
 
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual CoreComponent *createRaw(const std::string &name) {
+  virtual CoreComponent *createRaw(const std::string& /*name*/) {
     return nullptr;
   }
 
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<CoreComponent> create(const std::string &name, const utils::Identifier & uuid) {
+  virtual std::shared_ptr<CoreComponent> create(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
     return nullptr;
   }
 
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual CoreComponent* createRaw(const std::string &name, const utils::Identifier & uuid) {
+  virtual CoreComponent* createRaw(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
     return nullptr;
   }
 
@@ -224,7 +224,7 @@ class DefautObjectFactory : public ObjectFactory {
     return container;
   }
 
-  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
+  virtual std::unique_ptr<ObjectFactory> assign(const std::string& /*class_name*/) {
     return nullptr;
   }
 

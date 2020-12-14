@@ -115,7 +115,7 @@ static inline int platform_create_dir(const std::string& path) {
  * @param force_posix returns the posix path separator ('/'), even when not on posix. Useful when dealing with remote posix paths.
  * @return the path separator character
  */
-inline char get_separator(bool force_posix = false) {
+inline char get_separator(bool /*force_posix*/ = false) {
 #ifdef WIN32
   if (!force_posix) {
     return '\\';

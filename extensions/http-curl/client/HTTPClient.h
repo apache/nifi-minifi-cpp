@@ -206,7 +206,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
    * Block until work is available on any input connection, or the given duration elapses
    * @param timeoutMs timeout in milliseconds
    */
-  void waitForWork(uint64_t timeoutMs) {
+  void waitForWork(uint64_t /*timeoutMs*/) {
   }
 
   void yield() override {
@@ -252,7 +252,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
  protected:
   inline bool matches(const std::string &value, const std::string &sregex) override;
 
-  static CURLcode configure_ssl_context(CURL *curl, void *ctx, void *param) {
+  static CURLcode configure_ssl_context(CURL* /*curl*/, void *ctx, void *param) {
 #ifdef OPENSSL_SUPPORT
     minifi::controllers::SSLContextService *ssl_context_service = static_cast<minifi::controllers::SSLContextService*>(param);
     if (!ssl_context_service->configure_ssl_context(static_cast<SSL_CTX*>(ctx))) {

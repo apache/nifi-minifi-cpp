@@ -195,7 +195,7 @@ class CoreComponent {
     return uuid_.to_string();
   }
 
-  virtual void configure(const std::shared_ptr<Configure> &configuration) {
+  virtual void configure(const std::shared_ptr<Configure>& /*configuration*/) {
   }
 
   void loadComponent() {

@@ -54,7 +54,7 @@ class TestHarness : public IntegrationBase {
     assert(false == verifyLogLinePresenceInPollTime(std::chrono::milliseconds(200), "ProcessSession rollback"));  // No rollback happened
   }
 
-  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
+  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> /*pg*/) override {
     // inject the variable into the context.
     configuration->set("nifi.variable.test", "replacement_value");
   }

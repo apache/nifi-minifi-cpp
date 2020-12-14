@@ -61,7 +61,7 @@ void MQTTC2Protocol::initialize(core::controller::ControllerServiceProvider* con
   }
 }
 
-C2Payload MQTTC2Protocol::consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) {
+C2Payload MQTTC2Protocol::consumePayload(const std::string &url, const C2Payload &payload, Direction /*direction*/, bool /*async*/) {
   // we are getting an update.
   std::lock_guard<std::mutex> lock(input_mutex_);
   io::BufferStream stream;

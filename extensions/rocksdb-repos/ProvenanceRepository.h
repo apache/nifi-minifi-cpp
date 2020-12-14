@@ -37,7 +37,7 @@ namespace provenance {
 
 class ProvenanceRepository : public core::Repository, public std::enable_shared_from_this<ProvenanceRepository> {
  public:
-  ProvenanceRepository(std::string name, utils::Identifier uuid)
+  ProvenanceRepository(std::string name, utils::Identifier /*uuid*/)
       : ProvenanceRepository(name){
 
   }
@@ -137,7 +137,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   }
 
   // Delete
-  virtual bool Delete(std::string key) {
+  virtual bool Delete(std::string /*key*/) {
     // The repo is cleaned up by itself, there is no need to delete items.
     return true;
   }

@@ -158,7 +158,7 @@ bool DatabaseContentRepository::remove(const minifi::ResourceClaim &claim) {
   }
 }
 
-std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::ResourceClaim& claim, bool append, rocksdb::WriteBatch* batch) {
+std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::ResourceClaim& claim, bool /*append*/, rocksdb::WriteBatch* batch) {
   // the traditional approach with these has been to return -1 from the stream; however, since we have the ability here
   // we can simply return a nullptr, which is also valid from the API when this stream is not valid.
   if (!is_valid_ || !db_)

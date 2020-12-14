@@ -123,7 +123,7 @@ class FlowController : public core::controller::ControllerServiceProvider,  publ
 
   int16_t clearConnection(const std::string &connection) override;
 
-  int16_t applyUpdate(const std::string &source, const std::shared_ptr<state::Update>&) override { return -1; }
+  int16_t applyUpdate(const std::string& /*source*/, const std::shared_ptr<state::Update>&) override { return -1; }
   // Asynchronous function trigger unloading and wait for a period of time
   virtual void waitUnload(uint64_t timeToWaitMs);
   // Unload the current flow xml, clean the root process group and all its children

@@ -188,7 +188,7 @@ class UInt32Value : public Value {
     return true;
   }
 
-  virtual bool getValue(bool &ref) {
+  virtual bool getValue(bool& /*ref*/) {
     return false;
   }
 
@@ -233,7 +233,7 @@ class IntValue : public Value {
     return true;
   }
 
-  virtual bool getValue(bool &ref) {
+  virtual bool getValue(bool& /*ref*/) {
     return false;
   }
 
@@ -311,11 +311,11 @@ class UInt64Value : public Value {
   }
 
  protected:
-  virtual bool getValue(int &ref) {
+  virtual bool getValue(int& /*ref*/) {
     return false;
   }
 
-  virtual bool getValue(uint32_t &ref) {
+  virtual bool getValue(uint32_t& /*ref*/) {
     return false;
   }
 
@@ -332,7 +332,7 @@ class UInt64Value : public Value {
     return true;
   }
 
-  virtual bool getValue(bool &ref) {
+  virtual bool getValue(bool& /*ref*/) {
     return false;
   }
 
@@ -357,11 +357,11 @@ class Int64Value : public Value {
   }
 
  protected:
-  virtual bool getValue(int &ref) {
+  virtual bool getValue(int& /*ref*/) {
     return false;
   }
 
-  virtual bool getValue(uint32_t &ref) {
+  virtual bool getValue(uint32_t& /*ref*/) {
     return false;
   }
 
@@ -376,7 +376,7 @@ class Int64Value : public Value {
     return true;
   }
 
-  virtual bool getValue(bool &ref) {
+  virtual bool getValue(bool& /*ref*/) {
     return false;
   }
 

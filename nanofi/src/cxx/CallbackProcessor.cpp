@@ -33,7 +33,7 @@ void CallbackProcessor::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void CallbackProcessor::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory){
+void CallbackProcessor::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/){
   if(onschedule_callback_ != nullptr) {
     onschedule_callback_(context);
   }

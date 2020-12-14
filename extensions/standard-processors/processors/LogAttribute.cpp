@@ -87,7 +87,7 @@ void LogAttribute::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void LogAttribute::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
+void LogAttribute::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
   context->getProperty(FlowFilesToLog.getName(), flowfiles_to_log_);
   logger_->log_debug("FlowFiles To Log: %llu", flowfiles_to_log_);
 

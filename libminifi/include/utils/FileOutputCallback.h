@@ -42,7 +42,7 @@ class FileOutputCallback : public ByteOutputCallback {
  public:
   FileOutputCallback() = delete;
 
-  explicit FileOutputCallback(std::string file, bool wait_on_read = false)
+  explicit FileOutputCallback(std::string file, bool /*wait_on_read*/ = false)
       : ByteOutputCallback(INT_MAX), file_(file), file_stream_(file),
         logger_(logging::LoggerFactory<FileOutputCallback>::getLogger()) {
   }

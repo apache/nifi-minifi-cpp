@@ -140,7 +140,7 @@ class SecureSocketTest : public IntegrationBase {
   std::shared_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket_;
 };
 
-static void sigpipe_handle(int x) {
+static void sigpipe_handle(int /*x*/) {
 }
 
 int main(int argc, char **argv) {

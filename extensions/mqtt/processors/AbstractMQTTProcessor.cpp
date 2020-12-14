@@ -53,7 +53,7 @@ const std::set<core::Property> AbstractMQTTProcessor::getSupportedProperties() {
   return {BrokerURL, CleanSession, ClientID, UserName, PassWord, KeepLiveInterval, ConnectionTimeOut, QOS, Topic};
 }
 
-void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
+void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
   sslEnabled_ = false;
   sslopts_ = MQTTClient_SSLOptions_initializer;
 

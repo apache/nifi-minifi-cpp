@@ -42,7 +42,7 @@ void RouteOnAttribute::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void RouteOnAttribute::onDynamicPropertyModified(const core::Property &orig_property, const core::Property &new_property) {
+void RouteOnAttribute::onDynamicPropertyModified(const core::Property& /*orig_property*/, const core::Property &new_property) {
   // Update the routing table when routes are added via dynamic properties.
   route_properties_[new_property.getName()] = new_property;
 

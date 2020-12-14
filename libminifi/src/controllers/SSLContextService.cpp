@@ -244,7 +244,7 @@ bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
   return true;
 }
 
-bool SSLContextService::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* ctx) const {
+bool SSLContextService::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* /*ctx*/) const {
 #ifdef WIN32
   utils::tls::WindowsCertStoreLocation store_location{cert_store_location_};
   HCERTSTORE hCertStore = CertOpenStore(CERT_STORE_PROV_SYSTEM_A, 0, NULL,
