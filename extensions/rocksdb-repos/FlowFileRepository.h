@@ -61,11 +61,11 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       : FlowFileRepository(name) {
   }
 
-  FlowFileRepository(const std::string repo_name = "", std::string checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY, std::string directory = FLOWFILE_REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
+  FlowFileRepository(const std::string repo_name = "", const std::string& checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY, std::string directory = FLOWFILE_REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                      int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, uint64_t purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
         Repository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
-        checkpoint_dir_(std::move(checkpoint_dir)),
+        checkpoint_dir_(checkpoint_dir),
         content_repo_(nullptr),
         checkpoint_(nullptr),
         logger_(logging::LoggerFactory<FlowFileRepository>::getLogger()) {

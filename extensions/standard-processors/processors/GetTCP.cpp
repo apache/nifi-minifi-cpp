@@ -152,9 +152,9 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   std::string reconnect_interval_str;
   if (context->getProperty(ReconnectInterval.getName(), reconnect_interval_str) &&
       core::Property::getTimeMSFromString(reconnect_interval_str, reconnect_interval_)) {
-    logger_->log_debug("Reconnect interval is %d ms", reconnect_interval_);
+    logger_->log_debug("Reconnect interval is %llu ms", reconnect_interval_);
   } else {
-    logger_->log_debug("Reconnect interval using default value of %d ms", reconnect_interval_);
+    logger_->log_debug("Reconnect interval using default value of %llu ms", reconnect_interval_);
   }
 
   handler_ = std::unique_ptr<DataHandler>(new DataHandler(sessionFactory));
