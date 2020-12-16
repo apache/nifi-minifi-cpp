@@ -40,3 +40,4 @@ add_test(NAME UnorderedMapPersistableKeyValueStoreServiceTest COMMAND Persistabl
 if (NOT DISABLE_ROCKSDB)
     add_test(NAME RocksdDbPersistableKeyValueStoreServiceTest COMMAND PersistableKeyValueStoreServiceTest --config-yaml "${TEST_RESOURCES}/RocksDbPersistableKeyValueStoreServiceTest.yml")
 endif()
+add_test(NAME UnorderedMapKeyValueStoreServiceTest COMMAND UnorderedMapKeyValueStoreServiceTest --config-yaml "${TEST_RESOURCES}/UnorderedMapKeyValueStoreServiceTest.yml")

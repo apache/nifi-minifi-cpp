@@ -24,12 +24,12 @@ namespace minifi {
 namespace controllers {
 
 UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(const std::string& name, utils::Identifier uuid /*= utils::Identifier()*/)
-    : KeyValueStoreService(name, uuid)
+    : PersistableKeyValueStoreService(name, uuid)
     , logger_(logging::LoggerFactory<UnorderedMapKeyValueStoreService>::getLogger()) {
 }
 
 UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure> &configuration)
-    : KeyValueStoreService(name)
+    : PersistableKeyValueStoreService(name)
     , logger_(logging::LoggerFactory<UnorderedMapKeyValueStoreService>::getLogger())  {
   setConfiguration(configuration);
   initialize();

@@ -43,12 +43,14 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
   explicit UnorderedMapPersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
   explicit UnorderedMapPersistableKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure>& configuration);
 
-  virtual ~UnorderedMapPersistableKeyValueStoreService();
+  ~UnorderedMapPersistableKeyValueStoreService() override;
 
   static core::Property File;
 
   void onEnable() override;
-  void initialize() override;
+  void initialize() override {
+    initializeNonVirtual();
+  }
   void notifyStop() override;
 
   bool set(const std::string& key, const std::string& value) override;
@@ -59,9 +61,17 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
 
   bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
 
-  bool persist() override;
+  bool persist() override {
+    return persistNonVirtual();
+  }
 
  protected:
+  using AbstractAutoPersistingKeyValueStoreService::getImpl;
+  using AbstractAutoPersistingKeyValueStoreService::setImpl;
+  using AbstractAutoPersistingKeyValueStoreService::persistImpl;
+  using AbstractAutoPersistingKeyValueStoreService::removeImpl;
+
+
   static constexpr const char* FORMAT_VERSION_KEY = "__UnorderedMapPersistableKeyValueStoreService_FormatVersion";
   static constexpr int FORMAT_VERSION = 1;
 
@@ -69,14 +79,17 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
 
   bool load();
 
-  std::string escape(const std::string& str);
   bool parseLine(const std::string& line, std::string& key, std::string& value);
 
  private:
+  void initializeNonVirtual();
+  bool persistNonVirtual();
+
   std::shared_ptr<logging::Logger> logger_;
 };
 
 REGISTER_RESOURCE(UnorderedMapPersistableKeyValueStoreService, "A persistable key-value service implemented by a locked std::unordered_map<std::string, std::string> and persisted into a file");
+static_assert(std::is_convertible<UnorderedMapKeyValueStoreService*, PersistableKeyValueStoreService*>::value, "UnorderedMapKeyValueStoreService is a PersistableKeyValueStoreService");
 
 }  // namespace controllers
 }  // namespace minifi

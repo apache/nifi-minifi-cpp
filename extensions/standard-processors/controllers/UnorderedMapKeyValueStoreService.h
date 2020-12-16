@@ -29,6 +29,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Resource.h"
+#include "controllers/keyvalue/PersistableKeyValueStoreService.h"
 
 namespace org {
 namespace apache {
@@ -36,12 +37,13 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-class UnorderedMapKeyValueStoreService : virtual public KeyValueStoreService {
+/// Key-value store serice purely in RAM without disk usage
+class UnorderedMapKeyValueStoreService : virtual public PersistableKeyValueStoreService {
  public:
   explicit UnorderedMapKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
   explicit UnorderedMapKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure>& configuration);
 
-  virtual ~UnorderedMapKeyValueStoreService();
+  ~UnorderedMapKeyValueStoreService() override;
 
   bool set(const std::string& key, const std::string& value) override;
 
@@ -54,6 +56,10 @@ class UnorderedMapKeyValueStoreService : virtual public KeyValueStoreService {
   bool clear() override;
 
   bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
+
+  bool persist() override {
+    return true;
+  }
 
  protected:
   std::unordered_map<std::string, std::string> map_;

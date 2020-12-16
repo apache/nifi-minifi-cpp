@@ -34,19 +34,13 @@ namespace controllers {
 class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from_this<AbstractCoreComponentStateManagerProvider>,
                                                    public core::CoreComponentStateManagerProvider {
  public:
-  virtual ~AbstractCoreComponentStateManagerProvider();
+  ~AbstractCoreComponentStateManagerProvider() override;
 
   std::shared_ptr<core::CoreComponentStateManager> getCoreComponentStateManager(const utils::Identifier& uuid) override;
 
   std::map<utils::Identifier, std::unordered_map<std::string, std::string>> getAllCoreComponentStates() override;
 
   class AbstractCoreComponentStateManager : public core::CoreComponentStateManager{
-   private:
-    std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider_;
-    utils::Identifier id_;
-    bool state_valid_;
-    core::CoreComponentState state_;
-
    public:
     AbstractCoreComponentStateManager(std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider, const utils::Identifier& id);
 
@@ -57,6 +51,12 @@ class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from
     bool clear() override;
 
     bool persist() override;
+
+   private:
+    std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider_;
+    utils::Identifier id_;
+    bool state_valid_;
+    core::CoreComponentState state_;
   };
 
  protected:

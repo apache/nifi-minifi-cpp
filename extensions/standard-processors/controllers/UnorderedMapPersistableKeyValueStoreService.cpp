@@ -23,6 +23,29 @@
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
 
+namespace {
+  std::string escape(const std::string& str) {
+    std::stringstream escaped;
+    for (const auto c : str) {
+      switch (c) {
+        case '\\':
+          escaped << "\\\\";
+          break;
+        case '\n':
+          escaped << "\\n";
+          break;
+        case '=':
+          escaped << "\\=";
+          break;
+        default:
+          escaped << c;
+          break;
+      }
+    }
+    return escaped.str();
+  }
+}  // namespace
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -36,44 +59,23 @@ core::Property UnorderedMapPersistableKeyValueStoreService::File(
         ->isRequired(true)->build());
 
 UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid /*= utils::Identifier()*/)
-    : KeyValueStoreService(name, uuid)
-    , AbstractAutoPersistingKeyValueStoreService(name, uuid)
+    : AbstractAutoPersistingKeyValueStoreService(name, uuid)
     , UnorderedMapKeyValueStoreService(name, uuid)
+    , PersistableKeyValueStoreService(name, uuid)
     , logger_(logging::LoggerFactory<UnorderedMapPersistableKeyValueStoreService>::getLogger()) {
 }
 
 UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure> &configuration)
-    : KeyValueStoreService(name)
-    , AbstractAutoPersistingKeyValueStoreService(name)
+    : AbstractAutoPersistingKeyValueStoreService(name)
     , UnorderedMapKeyValueStoreService(name)
+    , PersistableKeyValueStoreService(name)
     , logger_(logging::LoggerFactory<UnorderedMapPersistableKeyValueStoreService>::getLogger())  {
   setConfiguration(configuration);
-  initialize();
+  initializeNonVirtual();
 }
 
 UnorderedMapPersistableKeyValueStoreService::~UnorderedMapPersistableKeyValueStoreService() {
-  persist();
-}
-
-std::string UnorderedMapPersistableKeyValueStoreService::escape(const std::string& str) {
-  std::stringstream escaped;
-  for (const auto c : str) {
-    switch (c) {
-      case '\\':
-        escaped << "\\\\";
-        break;
-      case '\n':
-        escaped << "\\n";
-        break;
-      case '=':
-        escaped << "\\=";
-        break;
-      default:
-        escaped << c;
-        break;
-    }
-  }
-  return escaped.str();
+  persistNonVirtual();
 }
 
 bool UnorderedMapPersistableKeyValueStoreService::parseLine(const std::string& line, std::string& key, std::string& value) {
@@ -131,7 +133,7 @@ bool UnorderedMapPersistableKeyValueStoreService::parseLine(const std::string& l
   return true;
 }
 
-void UnorderedMapPersistableKeyValueStoreService::initialize() {
+void UnorderedMapPersistableKeyValueStoreService::initializeNonVirtual() {
   AbstractAutoPersistingKeyValueStoreService::initialize();
   std::set<core::Property> supportedProperties;
   supportedProperties.insert(File);
@@ -198,7 +200,7 @@ bool UnorderedMapPersistableKeyValueStoreService::update(const std::string& key,
   return res;
 }
 
-bool UnorderedMapPersistableKeyValueStoreService::persist() {
+bool UnorderedMapPersistableKeyValueStoreService::persistNonVirtual() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::ofstream ofs(file_);
   if (!ofs.is_open()) {

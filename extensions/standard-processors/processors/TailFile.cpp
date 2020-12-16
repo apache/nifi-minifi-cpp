@@ -497,11 +497,8 @@ bool TailFile::recoverState(const std::shared_ptr<core::ProcessContext>& context
 bool TailFile::getStateFromStateManager(std::map<std::string, TailState> &new_tail_states) const {
   std::unordered_map<std::string, std::string> state_map;
   if (state_manager_->get(state_map)) {
-    for (size_t i = 0U;; i++) {
-      std::string name;
-      try {
-        name = state_map.at("file." + std::to_string(i) + ".name");
-      } catch (...) {
+    for (size_t i = 0U;; ++i) {
+      if (state_map.find("file." + std::to_string(i) + ".name") == state_map.end()) {
         break;
       }
       try {

@@ -183,12 +183,6 @@ class LogTestController {
 
   std::shared_ptr<logging::Logger> logger_;
  protected:
-  class TestBootstrapLogger : public logging::Logger {
-   public:
-    TestBootstrapLogger(std::shared_ptr<spdlog::logger> logger)
-        : Logger(logger) {
-    }
-  };
   LogTestController()
       : LogTestController(nullptr) {
   }
@@ -219,8 +213,6 @@ class LogTestController {
     }
 
   }
-  LogTestController(LogTestController const&);
-  LogTestController& operator=(LogTestController const&);
 
   void setLevel(const std::string name, spdlog::level::level_enum level);
 
@@ -284,15 +276,11 @@ class TestPlan {
     return prov_repo_;
   }
 
-  std::shared_ptr<core::ContentRepository> getContentRepo() {
-    return content_repo_;
-  }
-
   std::shared_ptr<logging::Logger> getLogger() const {
     return logger_;
   }
 
-  std::string getStateDir() {
+  std::string getStateDir() const {
     return state_dir_;
   }
 
@@ -362,6 +350,7 @@ class TestController {
   std::shared_ptr<TestPlan> createPlan(std::shared_ptr<minifi::Configure> configuration = nullptr, const char* state_dir = nullptr) {
     if (configuration == nullptr) {
       configuration = std::make_shared<minifi::Configure>();
+      configuration->set(minifi::Configure::nifi_state_management_provider_local_class_name, "UnorderedMapKeyValueStoreService");
     }
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
@@ -385,7 +374,7 @@ class TestController {
   }
 
   ~TestController() {
-    for (auto dir : directories) {
+    for (const auto& dir : directories) {
       utils::file::FileUtils::delete_dir(dir, true);
     }
   }
@@ -400,11 +389,7 @@ class TestController {
   }
 
  protected:
-
   std::shared_ptr<minifi::state::response::FlowVersion> flow_version_;
-
-  std::mutex test_mutex;
-
   LogTestController &log;
   std::vector<std::string> directories;
 

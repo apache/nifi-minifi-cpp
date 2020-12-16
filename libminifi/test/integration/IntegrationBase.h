@@ -108,6 +108,7 @@ void IntegrationBase::run(const std::string& test_file_location, const utils::op
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
   configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
+  configuration->set(minifi::Configure::nifi_state_management_provider_local_class_name, "UnorderedMapKeyValueStoreService");
 
   configureC2();
   configureFullHeartbeat();

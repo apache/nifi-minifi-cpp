@@ -227,8 +227,8 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
 
   static std::shared_ptr<core::CoreComponentStateManagerProvider> getOrCreateDefaultStateManagerProvider(
       controller::ControllerServiceProvider* controller_service_provider,
-      std::shared_ptr<minifi::Configure> configuration,
-      const char *base_path = "") {
+      const std::shared_ptr<minifi::Configure>& configuration,
+      const char* base_path = "") {
     static std::mutex mutex;
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -247,7 +247,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     auto create_provider = [&](
         const std::string& type,
         const std::string& longType,
-        const std::unordered_map<std::string, std::string>& extraProperties) -> std::shared_ptr<core::CoreComponentStateManagerProvider> {
+        const std::unordered_map<std::string, std::string>& extraProperties = {}) -> std::shared_ptr<core::CoreComponentStateManagerProvider> {
       node = controller_service_provider->createControllerService(type, longType, DefaultStateManagerProviderName, true /*firstTimeAdded*/);
       if (node == nullptr) {
         return nullptr;
@@ -276,20 +276,37 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
       return std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(provider);
     };
 
+    std::string preferredType;
+    configuration->get(minifi::Configure::nifi_state_management_provider_local_class_name, preferredType);
+
     /* Try to create a RocksDB-backed provider */
-    auto provider = create_provider("RocksDbPersistableKeyValueStoreService",
-        "org.apache.nifi.minifi.controllers.RocksDbPersistableKeyValueStoreService",
-        {{"Directory", utils::file::FileUtils::concat_path(base_path, "corecomponentstate")}});
-    if (provider != nullptr) {
-      return provider;
+    if (preferredType.empty() || preferredType == "RocksDbPersistableKeyValueStoreService") {
+      auto provider = create_provider("RocksDbPersistableKeyValueStoreService",
+                                      "org.apache.nifi.minifi.controllers.RocksDbPersistableKeyValueStoreService",
+                                      {{"Directory", utils::file::FileUtils::concat_path(base_path,
+                                                                                         "corecomponentstate")}});
+      if (provider != nullptr) {
+        return provider;
+      }
     }
 
     /* Fall back to a locked unordered map-backed provider */
-    provider = create_provider("UnorderedMapPersistableKeyValueStoreService",
-        "org.apache.nifi.minifi.controllers.UnorderedMapPersistableKeyValueStoreService",
-        {{"File", utils::file::FileUtils::concat_path(base_path, "corecomponentstate.txt")}});
-    if (provider != nullptr) {
-      return provider;
+    if (preferredType.empty() || preferredType == "UnorderedMapPersistableKeyValueStoreService") {
+      auto provider = create_provider("UnorderedMapPersistableKeyValueStoreService",
+                                 "org.apache.nifi.minifi.controllers.UnorderedMapPersistableKeyValueStoreService",
+                                 {{"File", utils::file::FileUtils::concat_path(base_path, "corecomponentstate.txt")}});
+      if (provider != nullptr) {
+        return provider;
+      }
+    }
+
+    /* Fall back to volatile memory-backed provider */
+    if (preferredType.empty() || preferredType == "UnorderedMapKeyValueStoreService") {
+      auto provider = create_provider("UnorderedMapKeyValueStoreService",
+                                      "org.apache.nifi.minifi.controllers.UnorderedMapKeyValueStoreService");
+      if (provider != nullptr) {
+        return provider;
+      }
     }
 
     /* Give up */
@@ -297,21 +314,20 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   }
 
   static std::shared_ptr<core::CoreComponentStateManagerProvider> getStateManagerProvider(
-      std::shared_ptr<logging::Logger> logger,
-      controller::ControllerServiceProvider* controller_service_provider,
-      std::shared_ptr<minifi::Configure> configuration) {
+      const std::shared_ptr<logging::Logger>& logger,
+      controller::ControllerServiceProvider* const controller_service_provider,
+      const std::shared_ptr<minifi::Configure>& configuration) {
     if (controller_service_provider == nullptr) {
       return nullptr;
     }
-    std::string id;
-    if (configuration != nullptr && configuration->get(minifi::Configure::nifi_state_management_provider_local, id)) {
-      auto node = controller_service_provider->getControllerServiceNode(id);
+    std::string requestedStateManagerName;
+    if (configuration != nullptr && configuration->get(minifi::Configure::nifi_state_management_provider_local, requestedStateManagerName)) {
+      auto node = controller_service_provider->getControllerServiceNode(requestedStateManagerName);
       if (node == nullptr) {
-        logger->log_error("Failed to find the CoreComponentStateManagerProvider %s defined by %s", id, minifi::Configure::nifi_state_management_provider_local);
+        logger->log_error("Failed to find the CoreComponentStateManagerProvider %s defined by %s", requestedStateManagerName, minifi::Configure::nifi_state_management_provider_local);
         return nullptr;
-      } else {
-        return std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(node->getControllerServiceImplementation());
       }
+      return std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(node->getControllerServiceImplementation());
     } else {
       auto state_manager_provider = getOrCreateDefaultStateManagerProvider(controller_service_provider, configuration);
       if (state_manager_provider == nullptr) {

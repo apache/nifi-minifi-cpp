@@ -37,7 +37,7 @@ class KeyValueStoreService : public core::controller::ControllerService {
  public:
   explicit KeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
 
-  virtual ~KeyValueStoreService();
+  ~KeyValueStoreService() override;
 
   void yield() override;
   bool isRunning() override;
