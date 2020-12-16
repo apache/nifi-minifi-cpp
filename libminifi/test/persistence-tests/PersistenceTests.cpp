@@ -160,6 +160,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setTrace<minifi::ResourceClaim>();
   LogTestController::getInstance().setTrace<minifi::FlowFileRecord>();
+  LogTestController::getInstance().setTrace<core::repository::FlowFileRepository>();
 
   char format[] = "/var/tmp/test.XXXXXX";
   auto dir = testController.createTempDirectory(format);
@@ -213,7 +214,8 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
     ff_repository->start();
     // wait for FlowFileRepository to start and notify the owners of
     // the resurrected FlowFiles
-    std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+    assert(verifyEventHappenedInPollTime(std::chrono::seconds(1), []{ return LogTestController::getInstance().countOccurrences("Found connection for") == 2; }, std::chrono::milliseconds(100)));
 
     // write the third file into the input
     flow.write("three");
@@ -221,7 +223,6 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
     flow.trigger();
     ff_repository->stop();
     flowController->unload();
-    using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
     std::shared_ptr<org::apache::nifi::minifi::core::FlowFile> file = nullptr;
     std::set<std::shared_ptr<core::FlowFile>> expired;
     const auto flowFileArrivedInOutput = [&file, &expired, &flow] {
@@ -339,7 +340,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
     ff_repository->start();
     // wait for FlowFileRepository to start and notify the owners of
     // the resurrected FlowFiles
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    LogTestController::getInstance().contains("Found connection for");
     std::set<std::shared_ptr<core::FlowFile>> expired;
     std::shared_ptr<org::apache::nifi::minifi::core::FlowFile> file = nullptr;
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;

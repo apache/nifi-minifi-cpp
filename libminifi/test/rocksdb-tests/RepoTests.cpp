@@ -265,6 +265,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setTrace<minifi::ResourceClaim>();
   LogTestController::getInstance().setTrace<minifi::FlowFileRecord>();
+  LogTestController::getInstance().setTrace<minifi::core::repository::FlowFileRepository>();
 
   char format[] = "/var/tmp/testRepo.XXXXXX";
   auto dir = testController.createTempDirectory(format);
@@ -329,6 +330,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   // this will first check the persisted repo and restore all FlowFiles
   // that still has an owner Connectable
   ff_repository->start();
+  LogTestController::getInstance().contains("Found connection for");
 
   // check if the @input Connection's FlowFile was restored
   // upon the FlowFileRepository's startup
@@ -338,7 +340,6 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
     newFlow = input->poll(expiredFiles);
     return newFlow != nullptr;
   };
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));  // Need to wait for flowfile repository to start
   assert(verifyEventHappenedInPollTime(std::chrono::seconds(10), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
   REQUIRE(expiredFiles.empty());
 
@@ -421,7 +422,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
     REQUIRE(ff_repository->initialize(config));
     ff_repository->loadComponent(content_repo);
     ff_repository->start();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));  // Need to wait for flowfile repository to start
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
     assert(verifyEventHappenedInPollTime(std::chrono::seconds(1), [&connection]{ return connection->getQueueSize() == 50; }, std::chrono::milliseconds(50)));
   }
