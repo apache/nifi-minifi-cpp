@@ -770,105 +770,121 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *
   }
 }
 
-void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std::shared_ptr<core::ConfigurableComponent> processor, const std::string &component_name,
-                                                const std::string &yaml_section) {
-  // Treat generically as a YAML node so we can perform inspection on entries to ensure they are populated
-  logger_->log_trace("Entered %s", component_name);
-  for (YAML::const_iterator propsIter = propertiesNode->begin(); propsIter != propertiesNode->end(); ++propsIter) {
-    std::string propertyName = propsIter->first.as<std::string>();
-    YAML::Node propertyValueNode = propsIter->second;
-    logger_->log_trace("Encountered %s", propertyName);
-    if (!propertyValueNode.IsNull() && propertyValueNode.IsDefined()) {
-      if (propertyValueNode.IsSequence()) {
-        for (auto iter : propertyValueNode) {
-          if (iter.IsDefined()) {
-            YAML::Node nodeVal = iter.as<YAML::Node>();
-            YAML::Node propertiesNode = nodeVal["value"];
-            // must insert the sequence in differently.
-            std::string rawValueString = propertiesNode.as<std::string>();
-            logger_->log_debug("Found %s=%s", propertyName, rawValueString);
-            if (!processor->updateProperty(propertyName, rawValueString)) {
-              std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
-              if (proc != 0) {
-                logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. "
-                                  "Attempting to add as dynamic property.",
-                                  propertyName, rawValueString, proc->getName());
-                if (!processor->setDynamicProperty(propertyName, rawValueString)) {
-                  logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName.c_str(), rawValueString.c_str());
-                } else {
-                  logger_->log_warn("Dynamic property %s with value %s set", propertyName.c_str(), rawValueString.c_str());
-                }
-              }
-            }
-          }
-        }
-      } else {
-        core::Property myProp(propertyName, "", "");
-        processor->getProperty(propertyName, myProp);
-        PropertyValue defaultValue;
-        defaultValue = myProp.getDefaultValue();
-        auto defaultType = defaultValue.getTypeInfo();
-        PropertyValue coercedValue = defaultValue;
-
-        // coerce the types. upon failure we will either exit or use the default value.
-        // we do this here ( in addition to the PropertyValue class ) to get the earliest
-        // possible YAML failure.
-        try {
-          if (defaultType == typeid(std::string)) {
-            auto typedValue = propertyValueNode.as<std::string>();
-            coercedValue = typedValue;
-          } else if (defaultType == typeid(int64_t)) {
-            auto typedValue = propertyValueNode.as<int64_t>();
-            coercedValue = typedValue;
-          } else if (defaultType == typeid(uint64_t)) {
-            try {
-              auto typedValue = propertyValueNode.as<uint64_t>();
-              coercedValue = typedValue;
-            } catch (...) {
-              auto typedValue = propertyValueNode.as<std::string>();
-              coercedValue = typedValue;
-            }
-          } else if (defaultType == typeid(int)) {
-            auto typedValue = propertyValueNode.as<int>();
-            coercedValue = typedValue;
-          } else if (defaultType == typeid(bool)) {
-            auto typedValue = propertyValueNode.as<bool>();
-            coercedValue = typedValue;
+void YamlConfiguration::parsePropertyValueSequence(const std::string& propertyName, const YAML::Node& propertyValueNode, std::shared_ptr<core::ConfigurableComponent> processor,
+    const std::string &yaml_section) {
+  for (auto iter : propertyValueNode) {
+    if (iter.IsDefined()) {
+      YAML::Node nodeVal = iter.as<YAML::Node>();
+      YAML::Node propertiesNode = nodeVal["value"];
+      // must insert the sequence in differently.
+      std::string rawValueString = propertiesNode.as<std::string>();
+      logger_->log_debug("Found %s=%s", propertyName, rawValueString);
+      if (!processor->updateProperty(propertyName, rawValueString)) {
+        std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
+        if (proc) {
+          logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", propertyName, rawValueString, proc->getName());
+          if (!processor->setDynamicProperty(propertyName, rawValueString)) {
+            logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName, rawValueString);
           } else {
-            auto typedValue = propertyValueNode.as<std::string>();
-            coercedValue = typedValue;
+            logger_->log_warn("Dynamic property %s with value %s set", propertyName, rawValueString);
           }
-        } catch (...) {
-          std::string eof;
-          bool exit_on_failure = false;
-          if (configuration_->get(Configure::nifi_flow_configuration_file_exit_failure, eof)) {
-            utils::StringUtils::StringToBool(eof, exit_on_failure);
-          }
-          logger_->log_error("Invalid conversion for field %s. Value %s", myProp.getName(), propertyValueNode.as<std::string>());
-          if (exit_on_failure) {
-            std::cerr << "Invalid conversion for " << myProp.getName() << " to " << defaultType.name() << std::endl;
-          } else {
-            coercedValue = defaultValue;
-          }
-        }
-        std::string rawValueString = propertyValueNode.as<std::string>();
-        if (!processor->setProperty(myProp, coercedValue)) {
-          std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
-          if (proc != 0) {
-            logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. "
-                              "Attempting to add as dynamic property.",
-                              propertyName, rawValueString, proc->getName());
-            if (!processor->setDynamicProperty(propertyName, rawValueString)) {
-              logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName.c_str(), rawValueString.c_str());
-            } else {
-              logger_->log_warn("Dynamic property %s with value %s set", propertyName.c_str(), rawValueString.c_str());
-            }
-          }
-        } else {
-          logger_->log_debug("Property %s with value %s set", propertyName.c_str(), rawValueString.c_str());
         }
       }
     }
+  }
+}
+
+namespace {
+  void handleExceptionOnValidatedProcessorPropertyRead(const core::Property& propertyFromProcessor, const YAML::Node& propertyValueNode,
+      const std::shared_ptr<Configure>& config, const std::type_index& defaultType, std::shared_ptr<logging::Logger>& logger) {
+    std::string eof;
+    bool exit_on_failure = false;
+    if (config->get(Configure::nifi_flow_configuration_file_exit_failure, eof)) {
+      utils::StringUtils::StringToBool(eof, exit_on_failure);
+    }
+    logger->log_error("Invalid conversion for field %s. Value %s", propertyFromProcessor.getName(), propertyValueNode.as<std::string>());
+    if (exit_on_failure) {
+      // We do not exit here even if exit_on_failure is set. Maybe we should?
+      logger->log_error("Invalid conversion for %s to %s.", propertyFromProcessor.getName(), defaultType.name());
+    }
+  }
+}  // namespace
+
+// coerce the types. upon failure we will either exit or use the default value.
+// we do this here ( in addition to the PropertyValue class ) to get the earliest
+// possible YAML failure.
+PropertyValue YamlConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& propertyFromProcessor, const YAML::Node& propertyValueNode) {
+  PropertyValue defaultValue;
+  defaultValue = propertyFromProcessor.getDefaultValue();
+  const std::type_index defaultType = defaultValue.getTypeInfo();
+  try {
+    PropertyValue coercedValue = defaultValue;
+    if (defaultType == typeid(int64_t)) {
+      coercedValue = propertyValueNode.as<int64_t>();
+    } else if (defaultType == typeid(uint64_t)) {
+      try {
+        coercedValue = propertyValueNode.as<uint64_t>();
+      } catch (...) {
+        coercedValue = propertyValueNode.as<std::string>();
+      }
+    } else if (defaultType == typeid(int)) {
+      coercedValue = propertyValueNode.as<int>();
+    } else if (defaultType == typeid(bool)) {
+      coercedValue = propertyValueNode.as<bool>();
+    } else {
+      coercedValue = propertyValueNode.as<std::string>();
+    }
+    return coercedValue;
+  } catch (const std::exception& e) {
+    logger_->log_error("Fetching property failed with an exception of %s", e.what());
+    handleExceptionOnValidatedProcessorPropertyRead(propertyFromProcessor, propertyValueNode, configuration_, defaultType, logger_);
+  }  catch (...) {
+    handleExceptionOnValidatedProcessorPropertyRead(propertyFromProcessor, propertyValueNode, configuration_, defaultType, logger_);
+  }
+  return defaultValue;
+}
+
+void YamlConfiguration::parseSingleProperty(const std::string& propertyName, const YAML::Node& propertyValueNode, std::shared_ptr<core::ConfigurableComponent> processor) {
+  core::Property myProp(propertyName, "", "");
+  processor->getProperty(propertyName, myProp);
+  const PropertyValue coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, propertyValueNode);
+  const std::string rawValueString = propertyValueNode.as<std::string>();
+  if (!processor->setProperty(myProp, coercedValue)) {
+    std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
+    if (proc) {
+      logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", propertyName, rawValueString, proc->getName());
+      if (!processor->setDynamicProperty(propertyName, rawValueString)) {
+        logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName, rawValueString);
+      } else {
+        logger_->log_warn("Dynamic property %s with value %s set", propertyName, rawValueString);
+      }
+    }
+  } else {
+    logger_->log_debug("Property %s with value %s set", propertyName, rawValueString);
+  }
+}
+
+void YamlConfiguration::parsePropertyNodeElement(const std::string& propertyName, const YAML::Node& propertyValueNode, std::shared_ptr<core::ConfigurableComponent> processor,
+    const std::string &yaml_section) {
+  logger_->log_trace("Encountered %s", propertyName);
+  if (propertyValueNode.IsNull() || !propertyValueNode.IsDefined()) {
+    return;
+  }
+  if (propertyValueNode.IsSequence()) {
+    parsePropertyValueSequence(propertyName, propertyValueNode, processor, yaml_section);
+  } else {
+    parseSingleProperty(propertyName, propertyValueNode, processor);
+  }
+}
+
+void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std::shared_ptr<core::ConfigurableComponent> processor, const std::string &component_name,
+    const std::string &yaml_section) {
+  // Treat generically as a YAML node so we can perform inspection on entries to ensure they are populated
+  logger_->log_trace("Entered %s", component_name);
+  for (const auto propertyElem : *propertiesNode) {
+    const std::string propertyName = propertyElem.first.as<std::string>();
+    const YAML::Node propertyValueNode = propertyElem.second;
+    parsePropertyNodeElement(propertyName, propertyValueNode, processor, yaml_section);
   }
 
   validateComponentProperties(processor, component_name, yaml_section);
