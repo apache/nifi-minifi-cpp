@@ -221,10 +221,14 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
     flow.trigger();
     ff_repository->stop();
     flowController->unload();
-
+    using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+    std::shared_ptr<org::apache::nifi::minifi::core::FlowFile> file = nullptr;
     std::set<std::shared_ptr<core::FlowFile>> expired;
-    auto file = flow.output->poll(expired);
-    REQUIRE(file);
+    const auto flowFileArrivedInOutput = [&file, &expired, &flow] {
+      file = flow.output->poll(expired);
+      return file != nullptr;
+    };
+    assert(verifyEventHappenedInPollTime(std::chrono::seconds(1), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
     REQUIRE(expired.empty());
 
     auto content = flow.read(file);
