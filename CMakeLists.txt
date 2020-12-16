@@ -453,7 +453,7 @@ option(DISABLE_SCRIPTING "Disables the scripting extensions." OFF)
 if (NOT DISABLE_SCRIPTING)
 	# sol
 	add_library(sol INTERFACE)
-	target_include_directories(sol INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/sol2-2.20.0")
+	target_include_directories(sol INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/sol2-2.20.6")
 	createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
 endif()
 
