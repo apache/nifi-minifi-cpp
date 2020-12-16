@@ -77,6 +77,16 @@ Connections:
     max work queue data size: 1 MB
     flowfile expiration: 60 sec
 Remote Processing Groups:
+
+Controller Services:
+  - name: defaultstatemanagerprovider
+    id: 2438e3c8-015a-1000-79ca-83af40ec1995
+    class: UnorderedMapPersistableKeyValueStoreService
+    Properties:
+      Auto Persistence Interval:
+          - value: 0 sec
+      File:
+          - value: flowcontrollertests_state.txt
 )";
 
 template<typename Fn>
@@ -145,7 +155,7 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
 
   // wait for the source processor to enqueue its flowFiles
   auto flowFilesEnqueued = [&] {return root->getTotalFlowFileCount() == 3;};
-  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{50}, flowFilesEnqueued));
+  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{200}, flowFilesEnqueued));
 
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
@@ -182,7 +192,7 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
 
   // wait for the source processor to enqueue its flowFiles
   auto flowFilesEnqueued = [&] {return root->getTotalFlowFileCount() == 3;};
-  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{50}, flowFilesEnqueued));
+  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{200}, flowFilesEnqueued));
 
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
@@ -221,7 +231,7 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
 
   // wait for the source processor to enqueue its flowFiles
   auto flowFilesEnqueued = [&] {return root->getTotalFlowFileCount() == 3;};
-  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{50}, flowFilesEnqueued));
+  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{200}, flowFilesEnqueued));
 
   REQUIRE(sourceProc->trigger_count.load() == 1);
 
@@ -234,7 +244,7 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   auto shutdownDuration = [&] {return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - shutdownInitiated);};
 
   std::this_thread::sleep_for(std::chrono::milliseconds{500});
-  while (shutdownDuration() < std::chrono::milliseconds(2500) && controller->isRunning()) {
+  while (shutdownDuration() < std::chrono::milliseconds(5000) && controller->isRunning()) {
     timeout_ms += 500;
     testController.getLogger()->log_info("Controller still running after %u ms, extending the waiting period to %u ms, ff count: %u",
         static_cast<unsigned int>(shutdownDuration().count()), timeout_ms, static_cast<unsigned int>(root->getTotalFlowFileCount()));

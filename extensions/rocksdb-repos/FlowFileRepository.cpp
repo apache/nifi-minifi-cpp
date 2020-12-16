@@ -133,7 +133,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
   options.create_if_missing = true;
   options.use_direct_io_for_flush_and_compaction = true;
   options.use_direct_reads = true;
-  minifi::internal::RocksDatabase checkpointDB(options, FLOWFILE_CHECKPOINT_DIRECTORY, minifi::internal::RocksDatabase::Mode::ReadOnly);
+  minifi::internal::RocksDatabase checkpointDB(options, checkpoint_dir_, minifi::internal::RocksDatabase::Mode::ReadOnly);
   utils::optional<minifi::internal::OpenRocksDB> opendb;
   if (nullptr != checkpoint_) {
     opendb = checkpointDB.open();
@@ -220,8 +220,8 @@ void FlowFileRepository::initialize_repository() {
   }
   rocksdb::Checkpoint *checkpoint;
   // delete any previous copy
-  if (utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY) >= 0 && opendb->NewCheckpoint(&checkpoint).ok()) {
-    if (checkpoint->CreateCheckpoint(FLOWFILE_CHECKPOINT_DIRECTORY).ok()) {
+  if (utils::file::FileUtils::delete_dir(checkpoint_dir_) >= 0 && opendb->NewCheckpoint(&checkpoint).ok()) {
+    if (checkpoint->CreateCheckpoint(checkpoint_dir_).ok()) {
       checkpoint_ = std::unique_ptr<rocksdb::Checkpoint>(checkpoint);
       logger_->log_trace("Created checkpoint directory");
     } else {

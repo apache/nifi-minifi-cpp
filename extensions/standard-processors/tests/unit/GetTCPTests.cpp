@@ -98,7 +98,8 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
     std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
     std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
-  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "200 msec");
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ConnectionAttemptLimit, "10");
   auto session = std::make_shared<core::ProcessSession>(context);
     auto session2 = std::make_shared<core::ProcessSession>(context2);
 
@@ -140,6 +141,7 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
 
   records = reporter->getEvents();
 
+  REQUIRE(true == LogTestController::getInstance().contains("Reconnect interval is 200 ms"));
   REQUIRE(true == LogTestController::getInstance().contains("Size:45 Offset:0"));
 
   LogTestController::getInstance().reset();
@@ -208,7 +210,8 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
     std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
     std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
-  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "200 msec");
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ConnectionAttemptLimit, "10");
   // we're using new lines above
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte, "10");
   auto session = std::make_shared<core::ProcessSession>(context);
@@ -259,6 +262,7 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
 
   records = reporter->getEvents();
 
+  REQUIRE(true == LogTestController::getInstance().contains("Reconnect interval is 200 ms"));
   REQUIRE(true == LogTestController::getInstance().contains("Size:11 Offset:0"));
   REQUIRE(true == LogTestController::getInstance().contains("Size:12 Offset:0"));
   REQUIRE(true == LogTestController::getInstance().contains("Size:22 Offset:0"));
@@ -330,7 +334,8 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
     std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
     std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
-  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "200 msec");
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ConnectionAttemptLimit, "10");
   // we're using new lines above
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte, "10");
   auto session = std::make_shared<core::ProcessSession>(context);
@@ -381,6 +386,7 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
 
   records = reporter->getEvents();
 
+  REQUIRE(true == LogTestController::getInstance().contains("Reconnect interval is 200 ms"));
   REQUIRE(true == LogTestController::getInstance().contains("Size:2 Offset:0"));
   LogTestController::getInstance().reset();
 }
@@ -397,7 +403,8 @@ TEST_CASE("GetTCPEmptyNoConnect", "[GetTCP3]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::EndpointList.getName(), org::apache::nifi::minifi::io::Socket::getMyHostName() + ":9182");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval.getName(), "100 msec");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval.getName(), "200 msec");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::ConnectionAttemptLimit.getName(), "10");
   // we're using new lines above
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte.getName(), "10");
 
@@ -407,11 +414,7 @@ TEST_CASE("GetTCPEmptyNoConnect", "[GetTCP3]") {
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
 
+  REQUIRE(true == LogTestController::getInstance().contains("Reconnect interval is 200 ms"));
   REQUIRE(true == LogTestController::getInstance().contains("Could not create socket during initialization for " + org::apache::nifi::minifi::io::Socket::getMyHostName()  + ":9182"));
   LogTestController::getInstance().reset();
 }
-
-
-
-
-

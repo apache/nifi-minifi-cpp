@@ -599,15 +599,17 @@ TEST_CASE("TailFile can handle input files getting removed", "[multiple_file]") 
 }
 
 TEST_CASE("TailFile processes a very long line correctly", "[simple]") {
-  std::string line1("foo\n");
+  std::string line1("012\n");
   std::string line2(8050, 0);
   std::mt19937 gen(std::random_device{}());  // NOLINT (linter wants a space before '{')
   std::generate_n(line2.begin(), line2.size() - 1, [&]() -> char {
-    return 32 + gen() % (127 - 32);
+    // Make sure to only generate from characters that don't intersect with line1 and 3-4
+    // Starting generation from 64 ensures that no numeric digit characters are added
+    return 64 + gen() % (127 - 64);
   });
   line2.back() = '\n';
-  std::string line3("bar\n");
-  std::string line4("buzz");
+  std::string line3("345\n");
+  std::string line4("6789");
 
   TestController testController;
   LogTestController::getInstance().setTrace<TestPlan>();
@@ -678,11 +680,13 @@ TEST_CASE("TailFile processes a long line followed by multiple newlines correctl
   std::string line1(4098, '\n');
   std::mt19937 gen(std::random_device { }());
   std::generate_n(line1.begin(), 4095, [&]() -> char {
-  return 32 + gen() % (127 - 32);
+    // Make sure to only generate from characters that don't intersect with line2-4
+    // Starting generation from 64 ensures that no numeric digit characters are added
+    return 64 + gen() % (127 - 64);
   });
-  std::string line2("foo\n");
-  std::string line3("bar\n");
-  std::string line4("buzz");
+  std::string line2("012\n");
+  std::string line3("345\n");
+  std::string line4("6789");
 
   // Create and write to the test file
 
@@ -962,7 +966,7 @@ TEST_CASE("TailFile ignores old rotated files", "[rotation]") {
 
   testController.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
-  REQUIRE(!LogTestController::getInstance().contains("key:filename value:test.2019-08-20"));
+  REQUIRE(false == LogTestController::getInstance().contains("key:filename value:test.2019-08-20", std::chrono::seconds(0)));
 
   std::string rotated_log_file_name = dir + utils::file::FileUtils::get_separator() + "test.2020-05-18";
   REQUIRE(rename(log_file_name.c_str(), rotated_log_file_name.c_str()) == 0);
@@ -973,7 +977,8 @@ TEST_CASE("TailFile ignores old rotated files", "[rotation]") {
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
   testController.runSession(plan, true);
-  REQUIRE(!LogTestController::getInstance().contains("key:filename value:test.2019-08-20"));
+  REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
+  REQUIRE(false == LogTestController::getInstance().contains("key:filename value:test.2019-08-20", std::chrono::seconds(0)));
 
   LogTestController::getInstance().reset();
 }
@@ -1145,6 +1150,8 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
   }
 
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   appendTempFile(log_dir, "test.log", "line seven\n");
   renameTempFile(log_dir, "test.1", "test.2");
@@ -1526,8 +1533,8 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   }
 
-  SECTION("Lookup frequency set to 100 ms => new files are only picked up after 100 ms") {
-    plan->setProperty(tail_file, processors::TailFile::LookupFrequency.getName(), "100 ms");
+  SECTION("Lookup frequency set to 500 ms => new files are only picked up after 500 ms") {
+    plan->setProperty(tail_file, processors::TailFile::LookupFrequency.getName(), "500 ms");
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
 
@@ -1543,7 +1550,7 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
     plan->reset();
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(110));
+    std::this_thread::sleep_for(std::chrono::milliseconds(550));
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   }

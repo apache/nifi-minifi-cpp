@@ -21,6 +21,14 @@
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
 #include "../../extensions/rocksdb-repos/FlowFileRepository.h"
 
+namespace {
+
+#ifdef WIN32
+const std::string SESSIONTEST_FLOWFILE_CHECKPOINT_DIR = ".\\sessiontest_flowfile_checkpoint";
+#else
+const std::string SESSIONTEST_FLOWFILE_CHECKPOINT_DIR = "./sessiontest_flowfile_checkpoint";
+#endif
+
 TEST_CASE("Import null data") {
   TestController testController;
   LogTestController::getInstance().setDebug<core::ContentRepository>();
@@ -40,7 +48,7 @@ TEST_CASE("Import null data") {
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
 
   auto prov_repo = std::make_shared<core::Repository>();
-  std::shared_ptr<core::Repository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
+  std::shared_ptr<core::Repository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository", SESSIONTEST_FLOWFILE_CHECKPOINT_DIR);
   std::shared_ptr<core::ContentRepository> content_repo;
   SECTION("VolatileContentRepository") {
     testController.getLogger()->log_info("Using VolatileContentRepository");
@@ -74,3 +82,4 @@ TEST_CASE("Import null data") {
   session.commit();
 }
 
+}  // namespace

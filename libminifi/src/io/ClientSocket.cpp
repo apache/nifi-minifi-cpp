@@ -541,11 +541,21 @@ int Socket::read(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
       if (bytes_read == 0) {
         logger_->log_debug("Other side hung up on %d", fd);
       } else {
+#ifdef WIN32
+        int err = WSAGetLastError();
+        if (err == WSAEWOULDBLOCK) {
+          // continue
+          return -2;
+        }
+        logger_->log_error("Could not recv on %d (port %d), error code: %d", fd, port_, err);
+#else
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
           // continue
           return -2;
         }
-        logger_->log_error("Could not recv on %d ( port %d), error: %s", fd, port_, strerror(errno));
+        logger_->log_error("Could not recv on %d (port %d), error: %s", fd, port_, strerror(errno));
+
+#endif  // WIN32
       }
       return -1;
     }
