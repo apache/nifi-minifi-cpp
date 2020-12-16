@@ -48,7 +48,7 @@ namespace {
 std::shared_ptr<minifi::controllers::NetworkPrioritizerService> createNetworkPrioritizerService(
     const std::string& name,
     std::function<std::chrono::milliseconds()> mock_clock = []{ return std::chrono::milliseconds{0}; }) {
-  auto controller = std::make_shared<minifi::controllers::NetworkPrioritizerService>("TestService");
+  auto controller = std::make_shared<minifi::controllers::NetworkPrioritizerService>(name);
   minifi::controllers::NetworkPrioritizerServiceTestAccessor::setMockClock(*controller, mock_clock);
   return controller;
 }
