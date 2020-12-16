@@ -547,8 +547,7 @@ int16_t FlowController::clearConnection(const std::string &connection) {
 
 std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest() const {
   auto agentInfo = std::make_shared<state::response::AgentInformation>("agentInfo");
-  agentInfo->setIdentifier(configuration_->getAgentIdentifier());
-  agentInfo->setAgentClass(configuration_->getAgentClass());
+  agentInfo->setAgentConfiguration(configuration_);
   agentInfo->includeAgentStatus(false);
   return agentInfo;
 }

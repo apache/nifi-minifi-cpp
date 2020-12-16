@@ -56,6 +56,21 @@ enum Direction {
   RECEIVE
 };
 
+struct AnnotatedValue : state::response::ValueNode {
+  using state::response::ValueNode::ValueNode;
+  using state::response::ValueNode::operator=;
+
+  utils::optional<std::reference_wrapper<const AnnotatedValue>> operator[](const std::string& name) const {
+    auto it = annotations.find(name);
+    if (it == annotations.end()) {
+      return {};
+    }
+    return std::cref(it->second);
+  }
+
+  std::map<std::string, AnnotatedValue> annotations;
+};
+
 struct C2ContentResponse {
   explicit C2ContentResponse(Operation op)
       :op{ op }
@@ -85,7 +100,7 @@ struct C2ContentResponse {
   // name applied to commands
   std::string name;
   // commands that correspond with the operation.
-  std::map<std::string, state::response::ValueNode> operation_arguments;
+  std::map<std::string, AnnotatedValue> operation_arguments;
 };
 
 /**

@@ -38,6 +38,25 @@ namespace c2 {
 #pragma push_macro("GetObject")
 #undef GetObject
 #endif
+
+AnnotatedValue parseAnnotatedValue(const rapidjson::Value& jsonValue) {
+  AnnotatedValue result;
+  if (jsonValue.IsObject() && jsonValue.HasMember("value")) {
+    result = jsonValue["value"].GetString();
+    for (const auto& annotation : jsonValue.GetObject()) {
+      if (annotation.name.GetString() == std::string("value")) {
+        continue;
+      }
+      result.annotations[annotation.name.GetString()] = parseAnnotatedValue(annotation.value);
+    }
+  } else if (jsonValue.IsBool()) {
+    result = jsonValue.GetBool();
+  } else {
+    result = jsonValue.GetString();
+  }
+  return result;
+}
+
 const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const std::vector<char> &response) {
   rapidjson::Document root;
 
@@ -115,21 +134,13 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
           new_command.name = request["operand"].GetString();
         }
 
-        if (request.HasMember("content") && request["content"].MemberCount() > 0) {
-          if (request["content"].IsArray()) {
-            for (const auto &member : request["content"].GetArray())
-              new_command.operation_arguments[member.GetString()] = member.GetString();
-          } else {
-            for (const auto &member : request["content"].GetObject())
-              new_command.operation_arguments[member.name.GetString()] = member.value.GetString();
+        if (request.HasMember("content") && request["content"].IsObject()) {
+          for (const auto &member : request["content"].GetObject()) {
+            new_command.operation_arguments[member.name.GetString()] = parseAnnotatedValue(member.value);
           }
-        } else if (request.HasMember("args") && request["args"].MemberCount() > 0) {
-          if (request["args"].IsArray()) {
-            for (const auto &member : request["args"].GetArray())
-              new_command.operation_arguments[member.GetString()] = member.GetString();
-          } else {
-            for (const auto &member : request["args"].GetObject())
-              new_command.operation_arguments[member.name.GetString()] = member.value.GetString();
+        } else if (request.HasMember("args") && request["args"].IsObject()) {
+          for (const auto &member : request["args"].GetObject()) {
+            new_command.operation_arguments[member.name.GetString()] = parseAnnotatedValue(member.value);
           }
         }
         nested_payload.addContent(std::move(new_command));
@@ -335,7 +346,7 @@ rapidjson::Value RESTProtocol::serializeConnectionQueues(const C2Payload &payloa
   updatedContent.name = uuid;
   adjusted.setLabel(uuid);
   adjusted.setIdentifier(uuid);
-  state::response::ValueNode nd;
+  c2::AnnotatedValue nd;
   // name should be what was previously the TLN ( top level node )
   nd = name;
   updatedContent.operation_arguments.insert(std::make_pair("name", nd));

@@ -37,10 +37,16 @@ class Configure : public Configuration {
   bool get(const std::string& key, const std::string& alternate_key, std::string& value) const;
   utils::optional<std::string> get(const std::string& key) const;
 
+  utils::optional<std::string> getAgentClass() const;
+  std::string getAgentIdentifier() const;
+  void setFallbackAgentIdentifier(const std::string& id);
+
  private:
   bool isEncrypted(const std::string& key) const;
 
   utils::optional<Decryptor> decryptor_;
+  mutable std::mutex fallback_identifier_mutex_;
+  std::string fallback_identifier_;
 };
 
 }  // namespace minifi

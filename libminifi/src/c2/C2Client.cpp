@@ -59,25 +59,15 @@ bool C2Client::isC2Enabled() const {
 }
 
 void C2Client::initialize(core::controller::ControllerServiceProvider *controller, const std::shared_ptr<state::StateMonitor> &update_sink) {
-  std::string class_str;
-  configuration_->get("nifi.c2.agent.class", "c2.agent.class", class_str);
-  configuration_->setAgentClass(class_str);
-
   if (!isC2Enabled()) {
     return;
   }
 
-  if (class_str.empty()) {
-    logger_->log_error("Class name must be defined when C2 is enabled");
-    throw std::runtime_error("Class name must be defined when C2 is enabled");
+  if (!configuration_->getAgentClass()) {
+    logger_->log_info("Agent class is not predefined");
   }
 
-  std::string identifier_str;
-  if (!configuration_->get("nifi.c2.agent.identifier", "c2.agent.identifier", identifier_str) || identifier_str.empty()) {
-    // set to the flow controller's identifier
-    identifier_str = getControllerUUID().to_string();
-  }
-  configuration_->setAgentIdentifier(identifier_str);
+  configuration_->setFallbackAgentIdentifier(getControllerUUID().to_string());
 
   if (initialized_ && !flow_update_) {
     return;
@@ -102,8 +92,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
       }
       auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(processor);
       if (identifier != nullptr) {
-        identifier->setIdentifier(identifier_str);
-        identifier->setAgentClass(class_str);
+        identifier->setAgentConfiguration(configuration_);
       }
       auto monitor = std::dynamic_pointer_cast<state::response::AgentMonitor>(processor);
       if (monitor != nullptr) {
