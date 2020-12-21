@@ -50,8 +50,6 @@ namespace processors {
 #define DELIVERY_BEST_EFFORT "0"
 #define SECURITY_PROTOCOL_PLAINTEXT "plaintext"
 #define SECURITY_PROTOCOL_SSL "ssl"
-#define SECURITY_PROTOCOL_SASL_PLAINTEXT "sasl_plaintext"
-#define SECURITY_PROTOCOL_SASL_SSL "sasl_ssl"
 #define KAFKA_KEY_ATTRIBUTE "kafka.key"
 
 const core::Property PublishKafka::SeedBrokers(
@@ -129,7 +127,9 @@ const core::Property PublishKafka::MaxFlowSegSize(
 const core::Property PublishKafka::SecurityProtocol(
         core::PropertyBuilder::createProperty("Security Protocol")
         ->withDescription("Protocol used to communicate with brokers")
-        ->withAllowableValues<std::string>({SECURITY_PROTOCOL_PLAINTEXT, SECURITY_PROTOCOL_SSL, SECURITY_PROTOCOL_SASL_PLAINTEXT, SECURITY_PROTOCOL_SASL_SSL})
+        ->withDefaultValue<std::string>(SECURITY_PROTOCOL_PLAINTEXT)
+        ->withAllowableValues<std::string>({SECURITY_PROTOCOL_PLAINTEXT, SECURITY_PROTOCOL_SSL})
+        ->isRequired(true)
         ->build());
 const core::Property PublishKafka::SecurityCA("Security CA", "File or directory path to CA certificate(s) for verifying the broker's key", "");
 const core::Property PublishKafka::SecurityCert("Security Cert", "Path to client's public key (PEM) used for authentication", "");
@@ -731,6 +731,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
           throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
         }
       }
+    } else if (value == SECURITY_PROTOCOL_PLAINTEXT) {
+      // Do nothing
     } else {
       auto error_msg = utils::StringUtils::join_pack("PublishKafka: unknown Security Protocol: ", value);
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
