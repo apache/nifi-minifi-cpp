@@ -662,7 +662,10 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     auto flowFile = session.create();
     logger_->log_trace("Writing rendered XML to a flow file");
 
-    session.write(flowFile, &WriteCallback(eventRender.text_));
+    {
+      WriteCallback wc{ eventRender.text_ };
+      session.write(flowFile, &wc);
+    }
     for (const auto &fieldMapping : eventRender.matched_fields_) {
       if (!fieldMapping.second.empty()) {
         session.putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
@@ -679,7 +682,10 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     auto flowFile = session.create();
     logger_->log_trace("Writing rendered plain text to a flow file");
 
-    session.write(flowFile, &WriteCallback(eventRender.rendered_text_));
+    {
+      WriteCallback wc{ eventRender.rendered_text_ };
+      session.write(flowFile, &wc);
+    }
     session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "text/plain");
     session.putAttribute(flowFile, "Timezone name", timezone_name_);
     session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
