@@ -647,7 +647,10 @@ int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::Pro
   while (renderedXMLs_.try_dequeue(xml)) {
     auto flowFile = session->create();
 
-    session->write(flowFile, &WriteCallback(xml));
+    {
+      WriteCallback wc{ xml };
+      session->write(flowFile, &wc);
+    }
     session->putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
     session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session->transfer(flowFile, s_success);
