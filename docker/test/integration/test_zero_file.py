@@ -14,7 +14,6 @@
 # limitations under the License.
 
 from minifi import *
-from minifi.test import *
 
 def test_zero_file():
     """

@@ -18,8 +18,6 @@ import time
 from M2Crypto import X509, EVP, RSA, ASN1
 
 from minifi import *
-from minifi.test import *
-
 
 def callback():
     pass
