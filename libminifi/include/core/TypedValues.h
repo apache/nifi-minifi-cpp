@@ -134,6 +134,9 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
   template<typename T, typename std::enable_if<
       std::is_integral<T>::value>::type* = nullptr>
   static bool StringToInt(const std::string &input, T &output) {
+    // TODO(adebreceni): this mapping is to preserve backwards compatibility,
+    //  we should entertain the idea of moving to standardized units in
+    //  the configuration (i.e. K = 1000, Ki = 1024)
     static std::map<std::string, int64_t> unit_map{
       {"B", 1},
       {"K", 1_KB}, {"M", 1_MB}, {"G", 1_GB}, {"T", 1_TB}, {"P", 1_PB},
