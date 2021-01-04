@@ -16,17 +16,13 @@
  * limitations under the License.
  */
 
-#pragma once
-
 #include <memory>
 #include <mutex>
-#include <functional>
 
 #include "core/logging/internal/CompressionManager.h"
 #include "core/logging/internal/LogCompressorSink.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerProperties.h"
-#include "io/InputStream.h"
 #include "core/TypedValues.h"
 #include "core/Core.h"
 

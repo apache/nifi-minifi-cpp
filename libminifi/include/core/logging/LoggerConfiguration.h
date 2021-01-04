@@ -120,9 +120,9 @@ class LoggerConfiguration {
                                                     std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
 
  private:
-  std::shared_ptr<Logger> getLogger(const std::string& name, std::unique_lock<std::mutex>& lock);
+  std::shared_ptr<Logger> getLogger(const std::string& name, const std::lock_guard<std::mutex>& lock);
 
-  void initializeCompression(std::unique_lock<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties);
+  void initializeCompression(const std::lock_guard<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties);
 
   static spdlog::sink_ptr create_syslog_sink();
   static spdlog::sink_ptr create_fallback_sink();

@@ -106,7 +106,7 @@ LoggerConfiguration::LoggerConfiguration()
 }
 
 void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &logger_properties) {
-  std::unique_lock<std::mutex> lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   root_namespace_ = initialize_namespaces(logger_properties);
   initializeCompression(lock, logger_properties);
   std::string spdlog_pattern;
@@ -139,11 +139,11 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
 }
 
 std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name) {
-  std::unique_lock<std::mutex> lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   return getLogger(name, lock);
 }
 
-std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name, std::unique_lock<std::mutex>& lock) {
+std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name, const std::lock_guard<std::mutex>& lock) {
   std::string adjusted_name = name;
   const std::string clazz = "class ";
   auto haz_clazz = name.find(clazz);
@@ -339,7 +339,7 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::create_default_r
   return result;
 }
 
-void LoggerConfiguration::initializeCompression(std::unique_lock<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties) {
+void LoggerConfiguration::initializeCompression(const std::lock_guard<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties) {
   auto compression_sink = compression_manager_.initialize(properties, logger_, [&] (const std::string& name) {return getLogger(name, lock);});
   root_namespace_->sinks.push_back(compression_sink);
   root_namespace_->exported_sinks.push_back(compression_sink);

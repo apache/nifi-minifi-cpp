@@ -19,22 +19,16 @@
 #pragma once
 
 #include <memory>
-#include <vector>
-#include <mutex>
 #include <atomic>
-#include <functional>
 #include <utility>
 
 #include "spdlog/common.h"
 #include "spdlog/details/log_msg.h"
 #include "spdlog/details/null_mutex.h"
 #include "spdlog/sinks/base_sink.h"
-#include "io/BufferStream.h"
-#include "io/ZlibStream.h"
 #include "ActiveCompressor.h"
 #include "LogBuffer.h"
 #include "utils/StagingQueue.h"
-#include "utils/Literals.h"
 
 class LoggerTestAccessor;
 
@@ -55,8 +49,8 @@ class LogCompressorSink : public spdlog::sinks::base_sink<spdlog::details::null_
   friend class ::LoggerTestAccessor;
 
  private:
-  void _sink_it(const spdlog::details::log_msg& msg) override;
-  void _flush() override;
+  void sink_it_(const spdlog::details::log_msg& msg) override;
+  void flush_() override;
 
  public:
   explicit LogCompressorSink(LogQueueSize cache_size, LogQueueSize compressed_size, std::shared_ptr<logging::Logger> logger);

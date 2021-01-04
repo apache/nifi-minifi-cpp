@@ -16,9 +16,6 @@
  * limitations under the License.
  */
 
-#include <vector>
-#include <mutex>
-
 #include "core/logging/internal/LogCompressorSink.h"
 #include "spdlog/details/log_msg.h"
 
@@ -41,9 +38,9 @@ LogCompressorSink::~LogCompressorSink() {
   compression_thread_.join();
 }
 
-void LogCompressorSink::_sink_it(const spdlog::details::log_msg &msg) {
+void LogCompressorSink::sink_it_(const spdlog::details::log_msg &msg) {
   cached_logs_.modify([&] (LogBuffer& active) {
-    active.buffer_->write(reinterpret_cast<const uint8_t*>(msg.formatted.data()), msg.formatted.size());
+    active.buffer_->write(reinterpret_cast<const uint8_t*>(msg.payload.data()), msg.payload.size());
   });
 }
 
@@ -73,7 +70,7 @@ LogCompressorSink::CompressionResult LogCompressorSink::compress(bool force_rota
   return CompressionResult::Success;
 }
 
-void LogCompressorSink::_flush() {}
+void LogCompressorSink::flush_() {}
 
 }  // namespace internal
 }  // namespace logging
