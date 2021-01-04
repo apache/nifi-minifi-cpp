@@ -50,7 +50,7 @@ namespace minifi {
 // NOTE(fgerlits): these ==/!= operators are in the test file on purpose, and should not be part of production code,
 // as they take a varying amount of time depending on which character in the line differs, so they would open up
 // our code to timing attacks.  If you need == in production code, make sure to compare all pairs of chars/lines.
-bool operator==(const ConfigFile::Line& left, const ConfigFile::Line& right) { return left.getLine() == right.getLine(); }
+bool operator==(const PropertiesFile::Line& left, const PropertiesFile::Line& right) { return left.getLine() == right.getLine(); }
 
 namespace encrypt_config {
 
