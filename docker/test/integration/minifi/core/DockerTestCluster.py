@@ -1,45 +1,20 @@
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the \"License\"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an \"AS IS\" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+import json
 import logging
+import os
 import shutil
-import uuid
-import tarfile
 import subprocess
 import sys
 import time
-import subprocess
-import json
-from io import BytesIO
-from threading import Event
+import uuid
 
-import os
-from os import listdir
 from os.path import join
+from threading import Event
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from minifi import SingleNodeDockerCluster
-
-logging.basicConfig(level=logging.DEBUG)
-
-def put_file_contents(contents, file_abs_path):
-    logging.info('Writing %d bytes of content to file: %s', len(contents), file_abs_path)
-    with open(file_abs_path, 'wb') as test_input_file:
-        test_input_file.write(contents)
-
+from .OutputEventHandler import OutputEventHandler
+from .SingleNodeDockerCluster import SingleNodeDockerCluster
+from ..validators.FileOutputValidator import FileOutputValidator
 
 class DockerTestCluster(SingleNodeDockerCluster):
     def __init__(self, output_validator):
@@ -134,7 +109,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
         self.test_data = contents
         file_name = str(uuid.uuid4())
         file_abs_path = join(self.tmp_test_input_dir, file_name)
-        put_file_contents(contents.encode('utf-8'), file_abs_path)
+        self.put_file_contents(contents.encode('utf-8'), file_abs_path)
 
     def put_test_resource(self, file_name, contents):
         """
@@ -143,7 +118,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
         """
 
         file_abs_path = join(self.tmp_test_resources_dir, file_name)
-        put_file_contents(contents, file_abs_path)
+        self.put_file_contents(contents, file_abs_path)
 
     def restart_observer_if_needed(self):
         if self.observer.is_alive():
@@ -238,6 +213,12 @@ class DockerTestCluster(SingleNodeDockerCluster):
                 check_count += 1
                 time.sleep(1)
         return False
+    
+    def put_file_contents(self, contents, file_abs_path):
+        logging.info('Writing %d bytes of content to file: %s', len(contents), file_abs_path)
+        with open(file_abs_path, 'wb') as test_input_file:
+            test_input_file.write(contents)
+
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
@@ -252,132 +233,3 @@ class DockerTestCluster(SingleNodeDockerCluster):
         shutil.rmtree(self.tmp_test_resources_dir)
 
         super(DockerTestCluster, self).__exit__(exc_type, exc_val, exc_tb)
-
-
-class OutputEventHandler(FileSystemEventHandler):
-    def __init__(self, validator, done_event):
-        self.validator = validator
-        self.done_event = done_event
-
-    def on_created(self, event):
-        logging.info('Output file created: ' + event.src_path)
-        self.check(event)
-
-    def on_modified(self, event):
-        logging.info('Output file modified: ' + event.src_path)
-        self.check(event)
-
-    def check(self, event):
-        if self.validator.validate():
-            logging.info('Output file is valid')
-            self.done_event.set()
-        else:
-            logging.info('Output file is invalid')
-
-
-class OutputValidator(object):
-    """
-    Base output validator class. Validators must implement
-    method validate, which returns a boolean.
-    """
-
-    def validate(self):
-        """
-        Return True if output is valid; False otherwise.
-        """
-        raise NotImplementedError("validate function needs to be implemented for validators")
-
-
-
-class FileOutputValidator(OutputValidator):
-    def set_output_dir(self, output_dir):
-        self.output_dir = output_dir
-
-    def validate(self, dir=''):
-        pass
-
-class SingleFileOutputValidator(FileOutputValidator):
-    """
-    Validates the content of a single file in the given directory.
-    """
-
-    def __init__(self, expected_content, subdir=''):
-        self.valid = False
-        self.expected_content = expected_content
-        self.subdir = subdir
-
-    def validate(self):
-        self.valid = False
-        full_dir = os.path.join(self.output_dir, self.subdir)
-        logging.info("Output folder: %s", full_dir)
-
-        if not os.path.isdir(full_dir):
-            return self.valid
-
-        listing = listdir(full_dir)
-        if listing:
-            for l in listing:
-                logging.info("name:: %s", l)
-            out_file_name = listing[0]
-            full_path = join(full_dir, out_file_name)
-            if not os.path.isfile(full_path):
-                return self.valid
-
-            with open(full_path, 'r') as out_file:
-                contents = out_file.read()
-                logging.info("dir %s -- name %s", full_dir, out_file_name)
-                logging.info("expected %s -- content %s", self.expected_content, contents)
-
-                if self.expected_content in contents:
-                    self.valid = True
-
-        return self.valid
-
-
-class EmptyFilesOutPutValidator(FileOutputValidator):
-    """
-    Validates if all the files in the target directory are empty and at least one exists
-    """
-    def __init__(self):
-        self.valid = False
-
-    def validate(self, dir=''):
-
-        if self.valid:
-            return True
-
-        full_dir = self.output_dir + dir
-        logging.info("Output folder: %s", full_dir)
-        listing = listdir(full_dir)
-        if listing:
-            self.valid = all(os.path.getsize(os.path.join(full_dir,x)) == 0 for x in listing)
-
-        return self.valid
-
-class NoFileOutPutValidator(FileOutputValidator):
-    """
-    Validates if no flowfiles were transferred
-    """
-    def __init__(self):
-        self.valid = False
-
-    def validate(self, dir=''):
-
-        if self.valid:
-            return True
-
-        full_dir = self.output_dir + dir
-        logging.info("Output folder: %s", full_dir)
-        listing = listdir(full_dir)
-
-        self.valid = not bool(listing)
-
-        return self.valid
-
-
-class SegfaultValidator(OutputValidator):
-    """
-    Validate that a file was received.
-    """
-    def validate(self):
-        return True

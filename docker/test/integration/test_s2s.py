@@ -14,8 +14,6 @@
 # limitations under the License.
 
 from minifi import *
-from minifi.test import *
-
 
 def test_minifi_to_nifi():
     """

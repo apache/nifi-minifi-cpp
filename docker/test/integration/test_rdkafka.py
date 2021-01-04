@@ -14,8 +14,6 @@
 # limitations under the License.
 
 from minifi import *
-from minifi.test import *
-
 
 def test_publish_kafka():
     """
