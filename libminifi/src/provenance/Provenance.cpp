@@ -181,8 +181,8 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStrea
 
   if (this->_eventType == ProvenanceEventRecord::FORK || this->_eventType == ProvenanceEventRecord::CLONE || this->_eventType == ProvenanceEventRecord::JOIN) {
     // write UUIDs
-    uint32_t parent_uuids_size = gsl::narrow<uint32_t>(this->_parentUuids.size());
-    ret = outStream.write(parent_uuids_size);
+    uint32_t parent_uuids_count = gsl::narrow<uint32_t>(this->_parentUuids.size());
+    ret = outStream.write(parent_uuids_count);
     if (ret != 4) {
       return false;
     }
@@ -192,8 +192,8 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStrea
         return false;
       }
     }
-    uint32_t chldren_uuids_size = gsl::narrow<uint32_t>(this->_childrenUuids.size());
-    ret = outStream.write(chldren_uuids_size);
+    uint32_t children_uuids_count = gsl::narrow<uint32_t>(this->_childrenUuids.size());
+    ret = outStream.write(children_uuids_count);
     if (ret != 4) {
       return false;
     }

@@ -107,7 +107,7 @@ TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
       std::generate(buf.begin(), buf.end(), [&](){return dist(gen);});
       original += std::string(reinterpret_cast<const char*>(buf.data()), buf.size());
       int buffer_size = gsl::narrow<int>(buf.size());
-      REQUIRE(buffer_size == compressStream.write(buf.data(), gsl::narrow<int>(buffer_size)));
+      REQUIRE(buffer_size == compressStream.write(buf.data(), buffer_size));
     }
   }
 
