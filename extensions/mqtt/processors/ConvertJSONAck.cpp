@@ -74,7 +74,7 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   std::string topic;
   {
     // expect JSON response from InvokeHTTP and thus we expect a heartbeat and then the output from the HTTP
-    c2::C2Payload response_payload(c2::Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true, true);
+    c2::C2Payload response_payload(c2::Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true);
     ReadCallback callback;
     session->read(flow, &callback);
 
@@ -93,7 +93,7 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     ReadCallback callback;
     session->read(flow, &callback);
 
-    c2::C2Payload response_payload(c2::Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true, true);
+    c2::C2Payload response_payload(c2::Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true);
 
     std::string str(callback.buffer_.data(),callback.buffer_.size());
     auto payload = parseJsonResponse(response_payload, callback.buffer_);

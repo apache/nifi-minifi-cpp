@@ -27,31 +27,28 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-C2Payload::C2Payload(Operation op, std::string identifier, bool resp, bool isRaw)
-    : C2Payload(op, state::UpdateState::FULLY_APPLIED, std::move(identifier), resp, isRaw) {
+C2Payload::C2Payload(Operation op, std::string identifier, bool isRaw)
+    : C2Payload(op, state::UpdateState::FULLY_APPLIED, std::move(identifier), isRaw) {
 }
 
-C2Payload::C2Payload(Operation op, state::UpdateState state, std::string identifier, bool resp, bool isRaw)
+C2Payload::C2Payload(Operation op, state::UpdateState state, std::string identifier, bool isRaw)
     : state::Update(state::UpdateStatus(state, 0)),
       op_(op),
       raw_(isRaw),
-      ident_(std::move(identifier)),
-      isResponse(resp) {
+      ident_(std::move(identifier)) {
 }
 
 
-C2Payload::C2Payload(Operation op, bool resp, bool isRaw)
+C2Payload::C2Payload(Operation op, bool isRaw)
     : state::Update(state::UpdateStatus(state::UpdateState::INITIATE, 0)),
       op_(op),
-      raw_(isRaw),
-      isResponse(resp) {
+      raw_(isRaw) {
 }
 
-C2Payload::C2Payload(Operation op, state::UpdateState state, bool resp, bool isRaw)
+C2Payload::C2Payload(Operation op, state::UpdateState state, bool isRaw)
     : state::Update(state::UpdateStatus(state, 0)),
       op_(op),
-      raw_(isRaw),
-      isResponse(resp) {
+      raw_(isRaw) {
 }
 
 void C2Payload::addContent(C2ContentResponse &&content, bool collapsible) {

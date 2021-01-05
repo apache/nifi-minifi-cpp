@@ -50,12 +50,12 @@ namespace c2 {
 
 #define REQUIRE_VALID(x) \
   if (-1 == x){ \
-    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true); \
+    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR); \
   }
 
 #define REQUIRE_SIZE_IF(y,x) \
   if (y != x){ \
-    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true); \
+    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR); \
   }
 
 /**

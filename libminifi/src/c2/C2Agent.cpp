@@ -360,11 +360,11 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
           logger_->log_debug("Clearing connection %s", connection.second.to_string());
           update_sink_->clearConnection(connection.second.to_string());
         }
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
         enqueue_c2_response(std::move(response));
       } else if (resp.name == "repositories") {
         update_sink_->drainRepositories();
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
         enqueue_c2_response(std::move(response));
       } else if (resp.name == "corecomponentstate") {
         // TODO(bakaid): untested
@@ -386,7 +386,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
         } else {
           logger_->log_error("Failed to get StateManagerProvider");
         }
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
         enqueue_c2_response(std::move(response));
       } else {
         logger_->log_debug("Clearing unknown %s", resp.name);
@@ -401,7 +401,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       break;
     case Operation::RESTART: {
       update_sink_->stop();
-      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
       protocol_.load()->consumePayload(std::move(response));
       restart_agent();
     }
@@ -423,7 +423,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       }
 
       if (resp.ident.length() > 0) {
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
         enqueue_c2_response(std::move(response));
       }
     }
@@ -441,7 +441,7 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
     std::copy_if(unsanitized_keys.begin(), unsanitized_keys.end(), std::back_inserter(keys),
             [](std::string key) {return key.find("pass") == std::string::npos;});
 
-    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
     C2Payload options(Operation::ACKNOWLEDGE);
     options.setLabel("configuration_options");
     std::string value;
@@ -464,7 +464,7 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
 void C2Agent::handle_describe(const C2ContentResponse &resp) {
   auto reporter = std::dynamic_pointer_cast<state::response::NodeReporter>(update_sink_);
   if (resp.name == "metrics") {
-    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
     if (reporter != nullptr) {
       auto iter = resp.operation_arguments.find("metricsClass");
       std::string metricsClass;
@@ -488,7 +488,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
   } else if (resp.name == "manifest") {
     C2Payload response(prepareConfigurationOptions(resp));
     if (reporter != nullptr) {
-      C2Payload agentInfo(Operation::ACKNOWLEDGE, resp.ident, false, true);
+      C2Payload agentInfo(Operation::ACKNOWLEDGE, resp.ident, true);
       agentInfo.setLabel("agentInfo");
 
       const auto manifest = reporter->getAgentManifest();
@@ -506,9 +506,9 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
         }
       }
       auto keys = configuration_->getConfiguredKeys();
-      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
       for (const auto &trace : traces) {
-        C2Payload options(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        C2Payload options(Operation::ACKNOWLEDGE, resp.ident, true);
         options.setLabel(trace.getName());
         std::string value;
         for (const auto &line : trace.getTraces()) {
@@ -523,15 +523,15 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       return;
     }
   } else if (resp.name == "corecomponentstate") {
-    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
     response.setLabel("corecomponentstate");
-    C2Payload states(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    C2Payload states(Operation::ACKNOWLEDGE, resp.ident, true);
     states.setLabel("corecomponentstate");
     auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
     if (state_manager_provider != nullptr) {
       auto core_component_states = state_manager_provider->getAllCoreComponentStates();
       for (const auto& core_component_state : core_component_states) {
-        C2Payload state(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        C2Payload state(Operation::ACKNOWLEDGE, resp.ident, true);
         state.setLabel(core_component_state.first.to_string());
         for (const auto& kv : core_component_state.second) {
           C2ContentResponse entry(Operation::ACKNOWLEDGE);
@@ -546,7 +546,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
     enqueue_c2_response(std::move(response));
     return;
   }
-  C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+  C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
   enqueue_c2_response(std::move(response));
 }
 
@@ -580,7 +580,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
     if (resp.operation_arguments.size() > 0)
       configure(running_c2_configuration);
-    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, true);
     enqueue_c2_response(std::move(response));
   } else if (resp.name == "agent") {
     // we are upgrading the agent. therefore we must be given a location
@@ -594,7 +594,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
     if (location != resp.operation_arguments.end()) {
       logger_->log_trace("Update agent with location %s", location->second.to_string());
       // we will not have a raw payload
-      C2Payload payload(Operation::TRANSFER, false, true);
+      C2Payload payload(Operation::TRANSFER, true);
 
       C2Payload &&response = protocol_.load()->consumePayload(location->second.to_string(), payload, RECEIVE, false);
 
@@ -606,7 +606,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
       // acknowledge the transfer. For a transfer, the response identifier should be the checksum of the
       // file transferred.
-      C2Payload transfer_response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, response.getIdentifier(), false, true);
+      C2Payload transfer_response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, response.getIdentifier(), true);
 
       protocol_.load()->consumePayload(std::move(transfer_response));
 
@@ -629,7 +629,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       logger_->log_trace("No location present");
     }
   } else {
-    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NOT_APPLIED, resp.ident, false, true);
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NOT_APPLIED, resp.ident, true);
     enqueue_c2_response(std::move(response));
   }
 }
@@ -755,7 +755,7 @@ utils::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
     }
   }
 
-  C2Payload payload(Operation::TRANSFER, false, true);
+  C2Payload payload(Operation::TRANSFER, true);
   C2Payload &&response = protocol_.load()->consumePayload(resolved_url, payload, RECEIVE, false);
 
   auto raw_data = response.getRawData();
@@ -773,7 +773,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
     utils::optional<std::string> optional_configuration_str = fetchFlow(file_uri);
     if (!optional_configuration_str) {
       logger_->log_debug("Couldn't load new flow configuration from: \"%s\"", file_uri);
-      C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
+      C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
       response.setRawData("Error while applying flow. Couldn't load flow configuration.");
       enqueue_c2_response(std::move(response));
       return false;
@@ -784,7 +784,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
     auto update_text = resp.operation_arguments.find("configuration_data");
     if (update_text == resp.operation_arguments.end()) {
       logger_->log_debug("Neither the config file location nor the data is provided");
-      C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
+      C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
       response.setRawData("Error while applying flow. Neither the config file location nor the data is provided.");
       enqueue_c2_response(std::move(response));
       return false;
@@ -803,13 +803,13 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
   int16_t err = {update_sink_->applyUpdate(file_uri, configuration_str, should_persist)};
   if (err != 0) {
     logger_->log_debug("Flow configuration update failed with error code %" PRIi16, err);
-    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
     response.setRawData("Error while applying flow. Likely missing processors");
     enqueue_c2_response(std::move(response));
     return false;
   }
 
-  C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
+  C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, true);
   enqueue_c2_response(std::move(response));
 
   if (should_persist) {
