@@ -44,13 +44,15 @@ class CoapIntegrationBase : public IntegrationBase {
     server.reset();
   }
 
-  void run(const std::string& test_file_location, const utils::optional<std::string>& bootstrap_file = {}) override {
+  void run(const utils::optional<std::string>& test_file_location = {}, const utils::optional<std::string>& bootstrap_file = {}) override {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
     std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
-    configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
+    if (test_file_location) {
+      configuration->set(minifi::Configure::nifi_flow_configuration_file, *test_file_location);
+    }
     configuration->set("c2.agent.heartbeat.period", "200");
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -87,7 +89,7 @@ class CoapIntegrationBase : public IntegrationBase {
 };
 
 void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
-
+  std::string path;
   parse_http_components(url, port, scheme, path);
   CivetCallbacks callback{};
   if (url.find("localhost") != std::string::npos) {
