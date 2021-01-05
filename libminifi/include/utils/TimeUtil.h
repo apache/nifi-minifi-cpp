@@ -54,6 +54,29 @@ inline uint64_t getTimeNano() {
 }
 
 /**
+ * Mockable clock classes
+ */
+class Clock {
+ public:
+  virtual ~Clock() = default;
+  virtual std::chrono::milliseconds timeSinceEpoch() const = 0;
+};
+
+class SystemClock : public Clock {
+ public:
+  std::chrono::milliseconds timeSinceEpoch() const override {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+  }
+};
+
+class SteadyClock : public Clock {
+ public:
+  std::chrono::milliseconds timeSinceEpoch() const override {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch());
+  }
+};
+
+/**
  * Returns a string based on TIME_FORMAT, converting
  * the parameter to a string
  * @param msec milliseconds since epoch

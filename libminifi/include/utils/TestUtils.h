@@ -23,6 +23,7 @@
 #include "../../test/TestBase.h"
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
+#include "utils/TimeUtil.h"
 
 namespace org {
 namespace apache {
@@ -59,6 +60,15 @@ std::string getFileContent(const std::string& file_name) {
   const std::string file_content{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>()) };
   return file_content;
 }
+
+class ManualClock : public timeutils::Clock {
+ public:
+  std::chrono::milliseconds timeSinceEpoch() const override { return time_; }
+  void advance(std::chrono::milliseconds elapsed_time) { time_ += elapsed_time; }
+
+ private:
+  std::chrono::milliseconds time_{0};
+};
 
 }  // namespace utils
 }  // namespace minifi
