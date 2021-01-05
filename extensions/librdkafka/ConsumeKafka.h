@@ -34,26 +34,6 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-// The upper limit for Max Poll Time is 4 seconds. This is because Watchdog would potentially start
-// reporting issues with the processor health otherwise
-class ConsumeKafkaMaxPollTimeValidator : public TimePeriodValidator {
- public:
-  ConsumeKafkaMaxPollTimeValidator(const std::string &name) // NOLINT
-      : TimePeriodValidator(name) {
-  }
-  ~ConsumeKafkaMaxPollTimeValidator() override = default;
-
-  ValidationResult validate(const std::string& subject, const std::string& input) const override {
-    uint64_t value;
-    TimeUnit timeUnit;
-    uint64_t value_as_ms;
-    return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(
-        core::TimePeriodValue::StringToTime(input, value, timeUnit) &&
-        org::apache::nifi::minifi::core::Property::ConvertTimeUnitToMS(value, timeUnit, value_as_ms) &&
-        0 < value_as_ms && value_as_ms <= 4000).build();
-  }
-};
-
 }  // namespace core
 namespace processors {
 
