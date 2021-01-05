@@ -63,7 +63,7 @@ class Properties {
   // Check whether the config value existed
   bool has(const std::string& key) const {
     std::lock_guard<std::mutex> lock(mutex_);
-    return properties_.find(key) != properties_.end();
+    return properties_.count(key) > 0;
   }
   /**
    * Returns the config value by placing it into the referenced param value

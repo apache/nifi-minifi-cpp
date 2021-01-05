@@ -450,8 +450,8 @@ class HeartbeatHandler : public ServerAwareHandler {
 
 class C2FlowProvider : public ServerAwareHandler {
  public:
-  explicit C2FlowProvider(const std::string& test_file_location)
-      : test_file_location_(test_file_location) {
+  explicit C2FlowProvider(std::string test_file_location)
+      : test_file_location_(std::move(test_file_location)) {
   }
 
   bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
@@ -470,7 +470,7 @@ class C2FlowProvider : public ServerAwareHandler {
   }
 
  private:
-  std::string test_file_location_;
+  const std::string test_file_location_;
 };
 
 class C2UpdateHandler : public C2FlowProvider {
@@ -507,6 +507,11 @@ class C2UpdateHandler : public C2FlowProvider {
             "\"content\": " + content + "}]}";
   }
 
+  size_t getCallCount() const {
+    return calls_;
+  }
+
+ protected:
   std::atomic<size_t> calls_{0};
 
  private:
