@@ -34,7 +34,7 @@ if (ENABLE_LUA_SCRIPTING)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 set (OTHER_SOURCES "")
 if (NOT DISABLE_PYTHON_SCRIPTING)
@@ -69,7 +69,12 @@ if (NOT DISABLE_PYTHON_SCRIPTING)
 endif()
 
 if (ENABLE_LUA_SCRIPTING)
-    find_package(Lua REQUIRED)
+    SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
+    SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION ASC)
+    find_package(Lua 5.1 REQUIRED)
+    if ("${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}" VERSION_GREATER_EQUAL "5.4")
+        message(FATAL_ERROR "No supported LUA version was found. Supported versions: 5.1, 5.2, 5.3")
+    endif()
 
     include_directories(${LUA_INCLUDE_DIR})
 
