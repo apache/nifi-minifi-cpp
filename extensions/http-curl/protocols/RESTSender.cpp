@@ -91,7 +91,7 @@ void RESTSender::setSecurityContext(utils::HTTPClient &client, const std::string
 
 const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig) {
   if (url.empty()) {
-    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
   }
 
   // Callback for transmit. Declared in order to destruct in proper order - take care!
@@ -142,13 +142,13 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   auto rs = client.getResponseBody();
   if (isOkay && respCode) {
     if (payload.isRaw()) {
-      C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true, true);
+      C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
       response_payload.setRawData(client.getResponseBody());
       return response_payload;
     }
     return parseJsonResponse(payload, client.getResponseBody());
   } else {
-    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
   }
 }
 

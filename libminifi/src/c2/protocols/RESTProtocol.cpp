@@ -66,9 +66,9 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
 
       // neither must be there. We don't want assign array yet and cause an assertion error
       if (size == 0)
-        return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
+        return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
 
-      C2Payload new_payload(payload.getOperation(), state::UpdateState::NESTED, true);
+      C2Payload new_payload(payload.getOperation(), state::UpdateState::NESTED);
       if (!identifier.empty())
         new_payload.setIdentifier(identifier);
 
@@ -76,7 +76,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
 
       for (const rapidjson::Value& request : array) {
         Operation newOp = stringToOperation(request["operation"].GetString());
-        C2Payload nested_payload(newOp, state::UpdateState::READ_COMPLETE, true);
+        C2Payload nested_payload(newOp, state::UpdateState::READ_COMPLETE);
         C2ContentResponse new_command(newOp);
         new_command.delay = 0;
         new_command.required = true;
@@ -142,7 +142,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
     }
   } catch (...) {
   }
-  return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
+  return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
 }
 
 void setJsonStr(const std::string& key, const state::response::ValueNode& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {  // NOLINT
@@ -319,7 +319,7 @@ bool RESTProtocol::containsPayload(const C2Payload &o) {
 rapidjson::Value RESTProtocol::serializeConnectionQueues(const C2Payload &payload, std::string &label, rapidjson::Document::AllocatorType &alloc) {
   rapidjson::Value json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
 
-  C2Payload adjusted(payload.getOperation(), payload.getIdentifier(), false, payload.isRaw());
+  C2Payload adjusted(payload.getOperation(), payload.getIdentifier(), payload.isRaw());
 
   auto name = payload.getLabel();
   std::string uuid;

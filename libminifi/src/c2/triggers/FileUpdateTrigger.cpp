@@ -29,7 +29,7 @@ namespace c2 {
  */
 C2Payload FileUpdateTrigger::getAction() {
   if (update_) {
-    C2Payload response_payload(Operation::UPDATE, state::UpdateState::READ_COMPLETE, true, true);
+    C2Payload response_payload(Operation::UPDATE, state::UpdateState::READ_COMPLETE, true);
     C2ContentResponse resp(Operation::UPDATE);
     resp.ident = "triggered";
     resp.name = "configuration";
@@ -39,7 +39,7 @@ C2Payload FileUpdateTrigger::getAction() {
     update_ = false;
     return response_payload;
   }
-  C2Payload response_payload(Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true, true);
+  C2Payload response_payload(Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true);
   return response_payload;
 }
 } /* namespace c2 */

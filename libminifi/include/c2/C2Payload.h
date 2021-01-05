@@ -97,10 +97,10 @@ struct C2ContentResponse {
  */
 class C2Payload : public state::Update {
  public:
-  C2Payload(Operation op, std::string identifier, bool resp = false, bool isRaw = false);
-  C2Payload(Operation op, state::UpdateState state, std::string identifier, bool resp = false, bool isRaw = false);
-  explicit C2Payload(Operation op, bool resp = false, bool isRaw = false);
-  C2Payload(Operation op, state::UpdateState state, bool resp = false, bool isRaw = false);
+  C2Payload(Operation op, std::string identifier, bool isRaw = false);
+  C2Payload(Operation op, state::UpdateState state, std::string identifier, bool isRaw = false);
+  explicit C2Payload(Operation op, bool isRaw = false);
+  C2Payload(Operation op, state::UpdateState state, bool isRaw = false);
 
   C2Payload(const C2Payload&) = default;
   C2Payload(C2Payload&&) = default;
@@ -182,7 +182,6 @@ class C2Payload : public state::Update {
   Operation op_;
   bool raw_{ false };
   std::vector<char> raw_data_;
-  bool isResponse{ false };
   bool is_container_{ false };
   bool is_collapsible_{ true };
 };

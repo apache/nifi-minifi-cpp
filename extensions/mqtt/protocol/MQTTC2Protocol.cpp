@@ -70,17 +70,17 @@ C2Payload MQTTC2Protocol::consumePayload(const std::string &url, const C2Payload
   std::vector<uint8_t> response;
   auto transmit_id = mqtt_service_->send(update_topic_, stream.getBuffer(), stream.size());
   if (transmit_id > 0 && mqtt_service_->awaitResponse(5000, transmit_id, in_topic_, response)) {
-    C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true, true);
+    C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
     response_payload.setRawData(response);
     return response_payload;
   } else {
-    return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
+    return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
   }
 }
 
 C2Payload MQTTC2Protocol::serialize(const C2Payload &payload) {
   if (mqtt_service_ == nullptr || !mqtt_service_->isRunning()) {
-    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
   }
 
   std::lock_guard<std::mutex> lock(input_mutex_);
@@ -92,7 +92,7 @@ C2Payload MQTTC2Protocol::serialize(const C2Payload &payload) {
   if (transmit_id > 0 && mqtt_service_->awaitResponse(5000, transmit_id, in_topic_, response)) {
     return c2::PayloadSerializer::deserialize(response);
   }
-  return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+  return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
 }
 
 } /* namespace c2 */

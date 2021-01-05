@@ -190,7 +190,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
   if (nullptr == coap_service_) {
     // return an error if we don't have a coap service
     logger_->log_error("CoAP service requested without any configured hostname or port");
-    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
   }
 
   if (require_registration_) {
@@ -198,13 +198,13 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
     auto response = minifi::c2::RESTSender::consumePayload(rest_uri_, payload, minifi::c2::TRANSMIT, false);
     if (response.getStatus().getState() == state::UpdateState::READ_ERROR) {
       logger_->log_trace("Could not register");
-      return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
+      return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
     } else {
       logger_->log_trace("Registered agent.");
     }
     require_registration_ = false;
 
-    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
+    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
 
   }
 
@@ -222,7 +222,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       payload_type = 0;
       stream.write(&payload_type, 1);
       if (writeAcknowledgement(&stream, payload) != 0) {
-        return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+        return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
       }
       break;
     case minifi::c2::HEARTBEAT:
@@ -230,12 +230,12 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       stream.write(&payload_type, 1);
       if (writeHeartbeat(&stream, payload) != 0) {
         logger_->log_error("Could not write heartbeat");
-        return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+        return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
       }
       break;
     default:
       logger_->log_error("Could not identify operation");
-      return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+      return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
   };
 
   size_t bsize = stream.size();
@@ -253,7 +253,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
     responseStream.read(version);
     responseStream.read(size);
     logger_->log_trace("Received ack. version %d. number of operations %d", version, size);
-    minifi::c2::C2Payload new_payload(payload.getOperation(), state::UpdateState::NESTED, true);
+    minifi::c2::C2Payload new_payload(payload.getOperation(), state::UpdateState::NESTED);
     for (int i = 0; i < size; i++) {
 
       uint8_t operationType;
@@ -265,7 +265,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
 
       logger_->log_trace("Received op %d, with id %s and operand %s", operationType, id, operand);
       auto newOp = getOperation(operationType);
-      minifi::c2::C2Payload nested_payload(newOp, state::UpdateState::READ_COMPLETE, true);
+      minifi::c2::C2Payload nested_payload(newOp, state::UpdateState::READ_COMPLETE);
       nested_payload.setIdentifier(id);
       minifi::c2::C2ContentResponse new_command(newOp);
       new_command.delay = 0;
@@ -287,7 +287,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
     return new_payload;
   }
 
-  return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+  return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
 }
 
 } /* namespace c2 */
