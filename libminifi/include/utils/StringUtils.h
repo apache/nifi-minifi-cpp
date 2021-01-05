@@ -135,7 +135,7 @@ class StringUtils {
    */
   static bool StringToFloat(std::string input, float &output, FailurePolicy cp = RETURN);
 
-  static std::string replaceEnvironmentVariables(std::string& original_string);
+  static std::string replaceEnvironmentVariables(std::string source_string);
 
   static std::string replaceOne(const std::string &input, const std::string &from, const std::string &to);
 
