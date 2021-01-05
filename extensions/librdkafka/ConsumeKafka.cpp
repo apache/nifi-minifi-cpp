@@ -505,7 +505,10 @@ std::vector<std::shared_ptr<FlowFileRecord>> ConsumeKafka::transform_messages_in
     }
 
     std::vector<std::pair<std::string, std::string>> attributes_from_headers = get_flowfile_attributes_from_message_header(message.get());
-    std::vector<std::string> split_message{ utils::StringUtils::split(message_content, message_demarcator_) };
+    std::vector<std::string> split_message { message_content };
+    if (message_demarcator_.size()) {
+      split_message = utils::StringUtils::split(message_content, message_demarcator_);
+    }
     for (auto& flowfile_content : split_message) {
       std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
       if (flow_file == nullptr) {

@@ -32,9 +32,6 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace core {
-
-}  // namespace core
 namespace processors {
 
 class ConsumeKafka : public core::Processor {
