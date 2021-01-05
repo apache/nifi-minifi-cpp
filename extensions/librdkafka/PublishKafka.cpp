@@ -50,8 +50,6 @@ namespace processors {
 #define DELIVERY_BEST_EFFORT "0"
 #define SECURITY_PROTOCOL_PLAINTEXT "plaintext"
 #define SECURITY_PROTOCOL_SSL "ssl"
-#define SECURITY_PROTOCOL_SASL_PLAINTEXT "sasl_plaintext"
-#define SECURITY_PROTOCOL_SASL_SSL "sasl_ssl"
 #define KAFKA_KEY_ATTRIBUTE "kafka.key"
 
 const core::Property PublishKafka::SeedBrokers(
@@ -126,7 +124,13 @@ const core::Property PublishKafka::CompressCodec(
 const core::Property PublishKafka::MaxFlowSegSize(
     core::PropertyBuilder::createProperty("Max Flow Segment Size")->withDescription("Maximum flow content payload segment size for the kafka record. 0 B means unlimited.")
         ->isRequired(false)->withDefaultValue<core::DataSizeValue>("0 B")->build());
-const core::Property PublishKafka::SecurityProtocol("Security Protocol", "Protocol used to communicate with brokers", "");
+const core::Property PublishKafka::SecurityProtocol(
+        core::PropertyBuilder::createProperty("Security Protocol")
+        ->withDescription("Protocol used to communicate with brokers")
+        ->withDefaultValue<std::string>(SECURITY_PROTOCOL_PLAINTEXT)
+        ->withAllowableValues<std::string>({SECURITY_PROTOCOL_PLAINTEXT, SECURITY_PROTOCOL_SSL})
+        ->isRequired(true)
+        ->build());
 const core::Property PublishKafka::SecurityCA("Security CA", "File or directory path to CA certificate(s) for verifying the broker's key", "");
 const core::Property PublishKafka::SecurityCert("Security Cert", "Path to client's public key (PEM) used for authentication", "");
 const core::Property PublishKafka::SecurityPrivateKey("Security Private Key", "Path to client's private key (PEM) used for authentication", "");
@@ -727,6 +731,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
           throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
         }
       }
+    } else if (value == SECURITY_PROTOCOL_PLAINTEXT) {
+      // Do nothing
     } else {
       auto error_msg = utils::StringUtils::join_pack("PublishKafka: unknown Security Protocol: ", value);
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
