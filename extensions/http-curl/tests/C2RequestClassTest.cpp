@@ -27,8 +27,6 @@
 #include "StreamPipe.h"
 #include "OptionalUtils.h"
 
-using namespace org::apache::nifi::minifi;
-
 class C2AcknowledgeHandler : public ServerAwareHandler {
  public:
   bool handlePost(CivetServer *server, struct mg_connection *conn) override {
