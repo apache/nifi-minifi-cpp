@@ -49,7 +49,11 @@ std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::Proc
 bool parseBooleanPropertyOrThrow(core::ProcessContext* context, const std::string& property_name) {
   bool value;
   std::string value_str = getRequiredPropertyOrThrow(context, property_name);
-  return utils::StringUtils::StringToBool(value_str, value);
+  utils::optional<bool> maybe_value = utils::StringUtils::toBool(value_str);
+  if (!maybe_value) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + " property is invalid: value is " + value_str);
+  }
+  return maybe_value.value();
 }
 
 std::chrono::milliseconds parseTimePropertyMSOrThrow(core::ProcessContext* context, const std::string& property_name) {
