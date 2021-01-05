@@ -64,7 +64,7 @@ bool Configure::isEncrypted(const std::string& key) const {
 
 utils::optional<std::string> Configure::getAgentClass() const {
   std::string agent_class;
-  if (get("nifi.c2.agent.class", "c2.agent.class", agent_class)) {
+  if (get("nifi.c2.agent.class", "c2.agent.class", agent_class) && !agent_class.empty()) {
     return agent_class;
   }
   return {};

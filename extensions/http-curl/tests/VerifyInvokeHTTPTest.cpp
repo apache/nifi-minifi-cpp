@@ -44,18 +44,30 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
   void cleanup() override {
   }
 
+  void setUrl(const std::string &url, ServerAwareHandler *handler) override {
+    if (path_) {
+      throw std::logic_error("Url is already set");
+    }
+    std::string port, scheme, path;
+    parse_http_components(url, port, scheme, path);
+    path_ = path;
+    HTTPIntegrationBase::setUrl(url, handler);
+  }
+
   void setProperties(std::shared_ptr<core::Processor> proc) {
-    std::string url = scheme + "://localhost:" + getWebPort() + path;
+    std::string url = scheme + "://localhost:" + getWebPort() + *path_;
     proc->setProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
   }
 
-  void setupFlow(const std::string& flow_yml_path) {
+  void setupFlow(const utils::optional<std::string>& flow_yml_path) {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
     std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
-    configuration->set(minifi::Configure::nifi_flow_configuration_file, flow_yml_path);
+    if (flow_yml_path) {
+      configuration->set(minifi::Configure::nifi_flow_configuration_file, *flow_yml_path);
+    }
     configuration->set("c2.agent.heartbeat.period", "200");
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
@@ -76,7 +88,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     setProperties(processorController->getProcessor());
   }
 
-  void run(const std::string& flow_yml_path, const utils::optional<std::string>& bootstrap_file = {}) override {
+  void run(const utils::optional<std::string>& flow_yml_path = {}, const utils::optional<std::string>& bootstrap_file = {}) override {
     setupFlow(flow_yml_path);
     startFlowController();
 
@@ -96,6 +108,9 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
 
     cleanup();
   }
+
+ private:
+  utils::optional<std::string> path_;
 };
 
 class VerifyInvokeHTTPOKResponse : public VerifyInvokeHTTP {

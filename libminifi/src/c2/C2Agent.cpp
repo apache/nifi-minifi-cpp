@@ -557,13 +557,18 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
   } else if (resp.name == "properties") {
     bool update_occurred = false;
     for (auto entry : resp.operation_arguments) {
-      bool persist = (entry.second["persist"] | utils::map(&AnnotatedValue::to_string) | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
+      bool persist = (
+          entry.second.getAnnotation("persist")
+          | utils::map(&AnnotatedValue::to_string)
+          | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
       if (update_property(entry.first, entry.second.to_string(), persist))
         update_occurred = true;
     }
     if (update_occurred) {
       // enable updates to persist the configuration.
     }
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
+    enqueue_c2_response(std::move(response));
   } else if (resp.name == "c2") {
     // prior configuration options were already in place. thus
     // we clear the map so that we don't go through replacing

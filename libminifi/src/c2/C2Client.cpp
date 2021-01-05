@@ -92,7 +92,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
       }
       auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(processor);
       if (identifier != nullptr) {
-        identifier->setAgentConfiguration(configuration_);
+        identifier->setAgentIdentificationProvider(configuration_);
       }
       auto monitor = std::dynamic_pointer_cast<state::response::AgentMonitor>(processor);
       if (monitor != nullptr) {

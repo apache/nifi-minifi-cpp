@@ -66,21 +66,19 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
       std::string requested_operation = getOperation(payload);
 
       std::string identifier;
-
-      if (root.HasMember("operationid")) {
-        identifier = root["operationid"].GetString();
-      } else if (root.HasMember("operationId")) {
-        identifier = root["operationId"].GetString();
-      } else if (root.HasMember("identifier")) {
-        identifier = root["identifier"].GetString();
+      for(auto key : {"operationid", "operationId", "identifier"}) {
+        if (root.HasMember(key)) {
+          identifier = root[key].GetString();
+          break;
+        }
       }
 
       int size = 0;
-      if (root.HasMember("requested_operations")) {
-        size = root["requested_operations"].Size();
-      }
-      if (root.HasMember("requestedOperations")) {
-        size = root["requestedOperations"].Size();
+      for(auto key : {"requested_operations", "requestedOperations"}) {
+        if (root.HasMember(key)) {
+          size = root[key].Size();
+          break;
+        }
       }
 
       // neither must be there. We don't want assign array yet and cause an assertion error
@@ -102,30 +100,18 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
         new_command.ttl = -1;
 
         // set the identifier if one exists
-        if (request.HasMember("operationid")) {
-          if (request["operationid"].IsNumber())
-            new_command.ident = std::to_string(request["operationid"].GetInt64());
-          else if (request["operationid"].IsString())
-            new_command.ident = request["operationid"].GetString();
-          else
-            throw(Exception(SITE2SITE_EXCEPTION, "Invalid type for operationid"));
-          nested_payload.setIdentifier(new_command.ident);
-        } else if (request.HasMember("operationId")) {
-          if (request["operationId"].IsNumber())
-            new_command.ident = std::to_string(request["operationId"].GetInt64());
-          else if (request["operationId"].IsString())
-            new_command.ident = request["operationId"].GetString();
-          else
-            throw(Exception(SITE2SITE_EXCEPTION, "Invalid type for operationId"));
-          nested_payload.setIdentifier(new_command.ident);
-        } else if (request.HasMember("identifier")) {
-          if (request["identifier"].IsNumber())
-            new_command.ident = std::to_string(request["identifier"].GetInt64());
-          else if (request["identifier"].IsString())
-            new_command.ident = request["identifier"].GetString();
-          else
-            throw(Exception(SITE2SITE_EXCEPTION, "Invalid type for operationid"));
-          nested_payload.setIdentifier(new_command.ident);
+        for (auto key : {"operationid", "operationId", "identifier"}) {
+          if (request.HasMember(key)) {
+            if (request[key].IsNumber()) {
+              new_command.ident = std::to_string(request[key].GetInt64());
+            } else if (request[key].IsString()) {
+              new_command.ident = request[key].GetString();
+            } else {
+              throw Exception(SITE2SITE_EXCEPTION, "Invalid type for " + std::string{key});
+            }
+            nested_payload.setIdentifier(new_command.ident);
+            break;
+          }
         }
 
         if (request.HasMember("name")) {
@@ -134,15 +120,15 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
           new_command.name = request["operand"].GetString();
         }
 
-        if (request.HasMember("content") && request["content"].IsObject()) {
-          for (const auto &member : request["content"].GetObject()) {
-            new_command.operation_arguments[member.name.GetString()] = parseAnnotatedValue(member.value);
-          }
-        } else if (request.HasMember("args") && request["args"].IsObject()) {
-          for (const auto &member : request["args"].GetObject()) {
-            new_command.operation_arguments[member.name.GetString()] = parseAnnotatedValue(member.value);
+        for (auto key : {"content", "args"}) {
+          if (request.HasMember(key) && request[key].IsObject()) {
+            for (const auto &member : request[key].GetObject()) {
+              new_command.operation_arguments[member.name.GetString()] = parseAnnotatedValue(member.value);
+            }
+            break;
           }
         }
+
         nested_payload.addContent(std::move(new_command));
         new_payload.addPayload(std::move(nested_payload));
       }

@@ -61,6 +61,7 @@
 #include "io/ClientSocket.h"
 #include "SchedulingNodes.h"
 #include "utils/OptionalUtils.h"
+#include "core/AgentIdentificationProvider.h"
 
 namespace org {
 namespace apache {
@@ -503,8 +504,8 @@ class AgentIdentifier {
      : include_agent_manifest_(true) {
   }
 
-  void setAgentConfiguration(std::shared_ptr<Configure> configuration) {
-    configuration_ = std::move(configuration);
+  void setAgentIdentificationProvider(std::shared_ptr<core::AgentIdentificationProvider> provider) {
+    provider_ = std::move(provider);
   }
 
   void includeAgentManifest(bool include) {
@@ -512,7 +513,7 @@ class AgentIdentifier {
   }
 
  protected:
-  std::shared_ptr<Configure> configuration_;
+  std::shared_ptr<core::AgentIdentificationProvider> provider_;
   bool include_agent_manifest_;
 };
 
@@ -640,10 +641,10 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
     SerializedResponseNode ident;
 
     ident.name = "identifier";
-    ident.value = configuration_->getAgentIdentifier();
+    ident.value = provider_->getAgentIdentifier();
     serialized.push_back(ident);
 
-    utils::optional<std::string> agent_class = configuration_->getAgentClass();
+    utils::optional<std::string> agent_class = provider_->getAgentClass();
     if (agent_class) {
       SerializedResponseNode agentClass;
       agentClass.name = "agentClass";
