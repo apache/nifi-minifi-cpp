@@ -47,16 +47,10 @@ const core::Relationship FetchS3Object::Success("success", "FlowFiles are routed
 const core::Relationship FetchS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
 
 void FetchS3Object::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties(S3Processor::getSupportedProperties());
-  properties.insert(Version);
-  properties.insert(RequesterPays);
-  setSupportedProperties(properties);
+  // Add new supported properties
+  updateSupportedProperties({Version, RequesterPays});
   // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Failure);
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedRelationships({Failure, Success});
 }
 
 void FetchS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
