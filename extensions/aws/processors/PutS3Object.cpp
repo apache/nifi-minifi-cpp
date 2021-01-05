@@ -23,7 +23,7 @@
 #include <string>
 #include <set>
 #include <memory>
-#include <map>
+#include <utility>
 
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"
@@ -41,25 +41,9 @@ const uint64_t PutS3Object::ReadCallback::MAX_SIZE = 5UL * 1024UL * 1024UL * 102
 const uint64_t PutS3Object::ReadCallback::BUFFER_SIZE = 4096;
 
 const std::set<std::string> PutS3Object::CANNED_ACLS(minifi::utils::MapUtils::getKeys(minifi::aws::s3::CANNED_ACL_MAP));
-const std::set<std::string> PutS3Object::REGIONS({region::AF_SOUTH_1, region::AP_EAST_1, region::AP_NORTHEAST_1,
-  region::AP_NORTHEAST_2, region::AP_NORTHEAST_3, region::AP_SOUTH_1, region::AP_SOUTHEAST_1, region::AP_SOUTHEAST_2,
-  region::CA_CENTRAL_1, region::CN_NORTH_1, region::CN_NORTHWEST_1, region::EU_CENTRAL_1, region::EU_NORTH_1,
-  region::EU_SOUTH_1, region::EU_WEST_1, region::EU_WEST_2, region::EU_WEST_3, region::ME_SOUTH_1, region::SA_EAST_1,
-  region::US_EAST_1, region::US_EAST_2, region::US_GOV_EAST_1, region::US_GOV_WEST_1, region::US_WEST_1, region::US_WEST_2});
 const std::set<std::string> PutS3Object::STORAGE_CLASSES(minifi::utils::MapUtils::getKeys(minifi::aws::s3::STORAGE_CLASS_MAP));
 const std::set<std::string> PutS3Object::SERVER_SIDE_ENCRYPTIONS(minifi::utils::MapUtils::getKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP));
 
-const core::Property PutS3Object::ObjectKey(
-  core::PropertyBuilder::createProperty("Object Key")
-    ->withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::Bucket(
-  core::PropertyBuilder::createProperty("Bucket")
-    ->withDescription("The S3 bucket")
-    ->isRequired(true)
-    ->supportsExpressionLanguage(true)
-    ->build());
 const core::Property PutS3Object::ContentType(
   core::PropertyBuilder::createProperty("Content Type")
     ->withDescription("Sets the Content-Type HTTP header indicating the type of content stored in "
@@ -69,43 +53,12 @@ const core::Property PutS3Object::ContentType(
     ->supportsExpressionLanguage(true)
     ->withDefaultValue<std::string>("application/octet-stream")
     ->build());
-const core::Property PutS3Object::AccessKey(
-  core::PropertyBuilder::createProperty("Access Key")
-    ->withDescription("AWS account access key")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::SecretKey(
-  core::PropertyBuilder::createProperty("Secret Key")
-    ->withDescription("AWS account secret key")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::CredentialsFile(
-  core::PropertyBuilder::createProperty("Credentials File")
-    ->withDescription("Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey")
-    ->build());
-const core::Property PutS3Object::AWSCredentialsProviderService(
-  core::PropertyBuilder::createProperty("AWS Credentials Provider service")
-    ->withDescription("The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.")
-    ->build());
 const core::Property PutS3Object::StorageClass(
   core::PropertyBuilder::createProperty("Storage Class")
     ->isRequired(true)
     ->withDefaultValue<std::string>("Standard")
     ->withAllowableValues<std::string>(PutS3Object::STORAGE_CLASSES)
     ->withDescription("AWS S3 Storage Class")
-    ->build());
-const core::Property PutS3Object::Region(
-  core::PropertyBuilder::createProperty("Region")
-    ->isRequired(true)
-    ->withDefaultValue<std::string>(region::US_WEST_2)
-    ->withAllowableValues<std::string>(PutS3Object::REGIONS)
-    ->withDescription("AWS Region")
-    ->build());
-const core::Property PutS3Object::CommunicationsTimeout(
-  core::PropertyBuilder::createProperty("Communications Timeout")
-    ->isRequired(true)
-    ->withDefaultValue<core::TimePeriodValue>("30 sec")
-    ->withDescription("")
     ->build());
 const core::Property PutS3Object::FullControlUserList(
   core::PropertyBuilder::createProperty("FullControl User List")
@@ -135,14 +88,6 @@ const core::Property PutS3Object::CannedACL(
                       "PublicReadWrite, PublicRead, Private, AwsExecRead; will be ignored if any other ACL/permission property is specified.")
     ->supportsExpressionLanguage(true)
     ->build());
-const core::Property PutS3Object::EndpointOverrideURL(
-  core::PropertyBuilder::createProperty("Endpoint Override URL")
-    ->withDescription("Endpoint URL to use instead of the AWS default including scheme, host, "
-                      "port, and path. The AWS libraries select an endpoint URL based on the AWS "
-                      "region, but this property overrides the selected endpoint URL, allowing use "
-                      "with other S3-compatible endpoints.")
-    ->supportsExpressionLanguage(true)
-    ->build());
 const core::Property PutS3Object::ServerSideEncryption(
   core::PropertyBuilder::createProperty("Server Side Encryption")
     ->isRequired(true)
@@ -150,106 +95,16 @@ const core::Property PutS3Object::ServerSideEncryption(
     ->withAllowableValues<std::string>(PutS3Object::SERVER_SIDE_ENCRYPTIONS)
     ->withDescription("Specifies the algorithm used for server side encryption.")
     ->build());
-const core::Property PutS3Object::ProxyHost(
-  core::PropertyBuilder::createProperty("Proxy Host")
-    ->withDescription("Proxy host name or IP")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::ProxyPort(
-  core::PropertyBuilder::createProperty("Proxy Port")
-    ->withDescription("The port number of the proxy host")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::ProxyUsername(
-    core::PropertyBuilder::createProperty("Proxy Username")
-    ->withDescription("Username to set when authenticating against proxy")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::ProxyPassword(
-  core::PropertyBuilder::createProperty("Proxy Password")
-    ->withDescription("Password to set when authenticating against proxy")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::UseDefaultCredentials(
-    core::PropertyBuilder::createProperty("Use Default Credentials")
-    ->withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.")
-    ->withDefaultValue<bool>(false)
-    ->isRequired(true)
-    ->build());
 
 const core::Relationship PutS3Object::Success("success", "FlowFiles are routed to success relationship");
 const core::Relationship PutS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
 
 void PutS3Object::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(ObjectKey);
-  properties.insert(Bucket);
-  properties.insert(ContentType);
-  properties.insert(AccessKey);
-  properties.insert(SecretKey);
-  properties.insert(CredentialsFile);
-  properties.insert(AWSCredentialsProviderService);
-  properties.insert(StorageClass);
-  properties.insert(Region);
-  properties.insert(CommunicationsTimeout);
-  properties.insert(FullControlUserList);
-  properties.insert(ReadPermissionUserList);
-  properties.insert(ReadACLUserList);
-  properties.insert(WriteACLUserList);
-  properties.insert(CannedACL);
-  properties.insert(EndpointOverrideURL);
-  properties.insert(ServerSideEncryption);
-  properties.insert(ProxyHost);
-  properties.insert(ProxyPort);
-  properties.insert(ProxyUsername);
-  properties.insert(ProxyPassword);
-  properties.insert(UseDefaultCredentials);
-  setSupportedProperties(properties);
+  // Add new supported properties
+  updateSupportedProperties({ContentType, StorageClass, FullControlUserList, ReadPermissionUserList,
+    ReadACLUserList, WriteACLUserList, CannedACL, ServerSideEncryption});
   // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Failure);
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
-}
-
-minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
-  std::string service_name;
-  if (context->getProperty(AWSCredentialsProviderService.getName(), service_name) && !service_name.empty()) {
-    std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
-    if (nullptr != service) {
-      auto aws_credentials_service = std::dynamic_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(service);
-      if (aws_credentials_service) {
-        return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(aws_credentials_service->getAWSCredentials());
-      }
-    }
-  }
-  return minifi::utils::nullopt;
-}
-
-minifi::utils::optional<Aws::Auth::AWSCredentials> PutS3Object::getAWSCredentials(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) {
-  auto service_cred = getAWSCredentialsFromControllerService(context);
-  if (service_cred) {
-    logger_->log_info("AWS Credentials successfully set from controller service");
-    return service_cred.value();
-  }
-
-  std::string access_key;
-  context->getProperty(AccessKey, access_key, flow_file);
-  aws_credentials_provider_.setAccessKey(access_key);
-  std::string secret_key;
-  context->getProperty(SecretKey, secret_key, flow_file);
-  aws_credentials_provider_.setSecretKey(secret_key);
-  std::string credential_file;
-  context->getProperty(CredentialsFile.getName(), credential_file);
-  aws_credentials_provider_.setCredentialsFile(credential_file);
-  bool use_default_credentials = false;
-  context->getProperty(UseDefaultCredentials.getName(), use_default_credentials);
-  aws_credentials_provider_.setUseDefaultCredentials(use_default_credentials);
-
-  return aws_credentials_provider_.getAWSCredentials();
+  setSupportedRelationships({Failure, Success});
 }
 
 void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context) {
@@ -271,28 +126,8 @@ void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &
   logger_->log_debug("PutS3Object: User metadata [%s]", user_metadata_);
 }
 
-bool PutS3Object::setProxy(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {
-  aws::s3::ProxyOptions proxy;
-  context->getProperty(ProxyHost, proxy.host, flow_file);
-  std::string port_str;
-  if (context->getProperty(ProxyPort, port_str, flow_file) && !port_str.empty() && !core::Property::StringToInt(port_str, proxy.port)) {
-    logger_->log_error("Proxy port invalid");
-    return false;
-  }
-  context->getProperty(ProxyUsername, proxy.username, flow_file);
-  context->getProperty(ProxyPassword, proxy.password, flow_file);
-  if (!proxy.host.empty()) {
-    s3_wrapper_->setProxy(proxy);
-    logger_->log_info("Proxy for PutS3Object was set.");
-  }
-  return true;
-}
-
 void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  if (!context->getProperty(Bucket.getName(), put_s3_request_params_.bucket) || put_s3_request_params_.bucket.empty()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");
-  }
-  logger_->log_debug("PutS3Object: Bucket [%s]", put_s3_request_params_.bucket);
+  S3Processor::onSchedule(context, sessionFactory);
 
   if (!context->getProperty(StorageClass.getName(), put_s3_request_params_.storage_class)
       || put_s3_request_params_.storage_class.empty()
@@ -300,21 +135,6 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Class property missing or invalid");
   }
   logger_->log_debug("PutS3Object: Storage Class [%s]", put_s3_request_params_.storage_class);
-
-  std::string value;
-  if (!context->getProperty(Region.getName(), value) || value.empty() || REGIONS.count(value) == 0) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Region property missing or invalid");
-  }
-  s3_wrapper_->setRegion(value);
-  logger_->log_debug("PutS3Object: Region [%s]", value);
-
-  uint64_t timeout_val;
-  if (context->getProperty(CommunicationsTimeout.getName(), value) && !value.empty() && core::Property::getTimeMSFromString(value, timeout_val)) {
-    s3_wrapper_->setTimeout(timeout_val);
-    logger_->log_debug("PutS3Object: Communications Timeout [%d]", timeout_val);
-  } else {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
-  }
 
   if (!context->getProperty(ServerSideEncryption.getName(), put_s3_request_params_.server_side_encryption)
       || put_s3_request_params_.server_side_encryption.empty()
@@ -374,40 +194,14 @@ bool PutS3Object::setAccessControl(const std::shared_ptr<core::ProcessContext> &
 bool PutS3Object::getExpressionLanguageSupportedProperties(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
-  context->getProperty(ObjectKey, put_s3_request_params_.object_key, flow_file);
-  if (put_s3_request_params_.object_key.empty()) {
-    if (!flow_file->getAttribute("filename", put_s3_request_params_.object_key) || put_s3_request_params_.object_key.empty()) {
-      logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
-      return false;
-    }
-  }
-  logger_->log_debug("PutS3Object: Object Key [%s]", put_s3_request_params_.object_key);
-  if (!context->getProperty(Bucket, put_s3_request_params_.bucket, flow_file) || put_s3_request_params_.bucket.empty()) {
-    logger_->log_error("Bucket is invalid or empty!", put_s3_request_params_.bucket);
+  if (!S3Processor::getExpressionLanguageSupportedProperties(context, flow_file)) {
     return false;
   }
-  logger_->log_debug("PutS3Object: Bucket [%s]", put_s3_request_params_.bucket);
+  put_s3_request_params_.object_key = std::move(object_key_);
+  put_s3_request_params_.bucket = std::move(bucket_);
 
   context->getProperty(ContentType, put_s3_request_params_.content_type, flow_file);
   logger_->log_debug("PutS3Object: Content Type [%s]", put_s3_request_params_.content_type);
-
-  auto credentials = getAWSCredentials(context, flow_file);
-  if (!credentials) {
-    logger_->log_error("AWS Credentials have not been set!");
-    return false;
-  }
-  s3_wrapper_->setCredentials(credentials.value());
-
-  if (!setProxy(context, flow_file)) {
-    context->yield();
-    return false;
-  }
-
-  std::string value;
-  if (context->getProperty(EndpointOverrideURL, value, flow_file) && !value.empty()) {
-    s3_wrapper_->setEndpointOverrideUrl(value);
-    logger_->log_debug("PutS3Object: Endpoint Override URL [%d]", value);
-  }
 
   return setAccessControl(context, flow_file);
 }
@@ -441,22 +235,23 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
   logger_->log_debug("PutS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
+    context->yield();
     return;
   }
 
   if (!getExpressionLanguageSupportedProperties(context, flow_file)) {
-    context->yield();
+    session->transfer(flow_file, Failure);
     return;
   }
 
   PutS3Object::ReadCallback callback(flow_file->getSize(), put_s3_request_params_, s3_wrapper_.get());
   session->read(flow_file, &callback);
   if (callback.result_ == minifi::utils::nullopt) {
-    logger_->log_error("Failed to upload S3 object to bucket %s", put_s3_request_params_.bucket);
+    logger_->log_error("Failed to upload S3 object to bucket '%s'", put_s3_request_params_.bucket);
     session->transfer(flow_file, Failure);
   } else {
     setAttributes(session, flow_file, callback.result_.value());
-    logger_->log_debug("Successfully uploaded S3 object %s to bucket %s", put_s3_request_params_.object_key, put_s3_request_params_.bucket);
+    logger_->log_debug("Successfully uploaded S3 object '%s' to bucket '%s'", put_s3_request_params_.object_key, put_s3_request_params_.bucket);
     session->transfer(flow_file, Success);
   }
 }

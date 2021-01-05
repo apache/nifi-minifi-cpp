@@ -34,6 +34,7 @@ namespace s3 {
 class S3Wrapper : public S3WrapperBase {
  protected:
   minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3::Model::PutObjectRequest& request) override;
+  bool sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectRequest& request) override;
 };
 
 }  // namespace s3
