@@ -555,19 +555,17 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
   if (resp.name == "configuration") {
     handleConfigurationUpdate(resp);
   } else if (resp.name == "properties") {
-    bool update_occurred = false;
+    state::UpdateState result = state::UpdateState::FULLY_APPLIED;
     for (auto entry : resp.operation_arguments) {
       bool persist = (
           entry.second.getAnnotation("persist")
           | utils::map(&AnnotatedValue::to_string)
           | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
-      if (update_property(entry.first, entry.second.to_string(), persist))
-        update_occurred = true;
+      if (!update_property(entry.first, entry.second.to_string(), persist)) {
+        result = state::UpdateState::PARTIALLY_APPLIED;
+      }
     }
-    if (update_occurred) {
-      // enable updates to persist the configuration.
-    }
-    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
+    C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, false, true);
     enqueue_c2_response(std::move(response));
   } else if (resp.name == "c2") {
     // prior configuration options were already in place. thus
@@ -648,11 +646,10 @@ bool C2Agent::update_property(const std::string &property_name, const std::strin
     return false;
   }
   configuration_->set(property_name, property_value);
-  if (persist) {
-    configuration_->persistProperties();
+  if (!persist) {
     return true;
   }
-  return false;
+  return configuration_->persistProperties();
 }
 
 void C2Agent::restart_agent() {

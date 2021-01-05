@@ -66,7 +66,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
       std::string requested_operation = getOperation(payload);
 
       std::string identifier;
-      for(auto key : {"operationid", "operationId", "identifier"}) {
+      for (auto key : {"operationid", "operationId", "identifier"}) {
         if (root.HasMember(key)) {
           identifier = root[key].GetString();
           break;
@@ -74,7 +74,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
       }
 
       int size = 0;
-      for(auto key : {"requested_operations", "requestedOperations"}) {
+      for (auto key : {"requested_operations", "requestedOperations"}) {
         if (root.HasMember(key)) {
           size = root[key].Size();
           break;
