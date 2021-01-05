@@ -78,11 +78,12 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   logger_->log_debug("FetchS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
+    context->yield();
     return;
   }
 
   if (!getExpressionLanguageSupportedProperties(context, flow_file)) {
-    context->yield();
+    session->transfer(flow_file, Failure);
     return;
   }
 
@@ -108,7 +109,7 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     putAttributeIfNotEmpty("s3.version", callback.result_->version);
     session->transfer(flow_file, Success);
   } else {
-    logger_->log_debug("Failed to fetch S3 object %s from bucket %s", get_object_params_.object_key, get_object_params_.bucket);
+    logger_->log_error("Failed to fetch S3 object %s from bucket %s", get_object_params_.object_key, get_object_params_.bucket);
     session->transfer(flow_file, Failure);
   }
 }

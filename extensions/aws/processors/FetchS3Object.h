@@ -29,6 +29,9 @@
 #include "S3Processor.h"
 #include "utils/GeneralUtils.h"
 
+template<typename T>
+class S3TestsFixture;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -50,10 +53,6 @@ class FetchS3Object : public S3Processor {
 
   explicit FetchS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
     : S3Processor(name, uuid, logging::LoggerFactory<FetchS3Object>::getLogger()) {
-  }
-
-  explicit FetchS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
-    : S3Processor(std::move(name), uuid, logging::LoggerFactory<FetchS3Object>::getLogger(), std::move(s3_wrapper)) {
   }
 
   ~FetchS3Object() override = default;
@@ -92,6 +91,12 @@ class FetchS3Object : public S3Processor {
   bool getExpressionLanguageSupportedProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) override;
 
  private:
+  friend class ::S3TestsFixture<FetchS3Object>;
+
+  explicit FetchS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
+    : S3Processor(std::move(name), uuid, logging::LoggerFactory<FetchS3Object>::getLogger(), std::move(s3_wrapper)) {
+  }
+
   minifi::aws::s3::GetObjectRequestParameters get_object_params_;
 };
 
