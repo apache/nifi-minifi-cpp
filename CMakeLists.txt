@@ -120,23 +120,6 @@ include(CheckCXXCompilerFlag)
 if (WIN32)
     add_compile_definitions(WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS NOMINMAX)
     add_compile_options(/W3 /utf-8)
-  if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
-	CHECK_CXX_COMPILER_FLAG("/std:c++latest" _cpp_latest_flag_supported)
-	if (_cpp_latest_flag_supported)
-		add_compile_options("/std:c++latest")
-	endif()
-  endif()
-else()
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-else()
- message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif()
-
 endif()
 
 if (WIN32)
@@ -155,7 +138,12 @@ if (NOT PORTABLE)
 	endif()
 endif()
 
-set(CMAKE_CXX_STANDARD 11)
+if (WIN32)
+	set(CMAKE_CXX_STANDARD 14)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14")
+else()
+	set(CMAKE_CXX_STANDARD 11)
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # thread library - we must find this before we set ASAN flags, otherwise FindThreads.cmake sometimes thinks we don't
@@ -216,6 +204,8 @@ set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
 		-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}
 		-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
 		-DCOMPILE_DEFINITIONS=${COMPILE_DEFINITIONS}
+		-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+		-DCMAKE_CXX_STANDARD_REQUIRED=${CMAKE_CXX_STANDARD_REQUIRED}
 		-G${CMAKE_GENERATOR}
 		)
 

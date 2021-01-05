@@ -86,34 +86,7 @@ class Identifier {
   // 70ns more.
   SmallString<36> to_string() const;
 
-  static utils::optional<Identifier> parse(const std::string& str) {
-    Identifier id;
-    // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx is 36 long: 16 bytes * 2 hex digits / byte + 4 hyphens
-    if (str.length() != 36) return {};
-    int charIdx = 0;
-    int byteIdx = 0;
-    auto input = reinterpret_cast<const uint8_t*>(str.c_str());
-
-    // [xxxxxxxx]-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    while (byteIdx < 4) {
-      if (!parseByte(id.data_, input, charIdx, byteIdx)) return {};
-    }
-    // xxxxxxxx[-]xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    if (input[charIdx++] != '-') return {};
-
-    // xxxxxxxx-[xxxx-xxxx-xxxx-]xxxxxxxxxxxx - 3x 2 bytes and a hyphen
-    for (size_t idx = 0; idx < 3; ++idx) {
-      if (!parseByte(id.data_, input, charIdx, byteIdx)) return {};
-      if (!parseByte(id.data_, input, charIdx, byteIdx)) return {};
-      if (input[charIdx++] != '-') return {};
-    }
-
-    // xxxxxxxx-xxxx-xxxx-xxxx-[xxxxxxxxxxxx] - the rest, i.e. until byte 16
-    while (byteIdx < 16) {
-      if (!parseByte(id.data_, input, charIdx, byteIdx)) return {};
-    }
-    return id;
-  }
+  static utils::optional<Identifier> parse(const std::string& str);
 
  private:
   static bool parseByte(Data& data, const uint8_t* input, int& charIdx, int& byteIdx);
