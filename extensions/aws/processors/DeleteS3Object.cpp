@@ -46,18 +46,6 @@ void DeleteS3Object::initialize() {
   setSupportedRelationships({Failure, Success});
 }
 
-bool DeleteS3Object::getExpressionLanguageSupportedProperties(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) {
-  if (!S3Processor::getExpressionLanguageSupportedProperties(context, flow_file)) {
-    return false;
-  }
-
-  context->getProperty(Version, version_, flow_file);
-  logger_->log_debug("DeleteS3Object: Version [%s]", version_);
-  return true;
-}
-
 void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   logger_->log_debug("DeleteS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
@@ -66,16 +54,28 @@ void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     return;
   }
 
-  if (!getExpressionLanguageSupportedProperties(context, flow_file)) {
+  auto common_properties = getCommonELSupportedProperties(context, flow_file);
+  if (!common_properties) {
     session->transfer(flow_file, Failure);
     return;
   }
 
-  if (s3_wrapper_->deleteObject(bucket_, object_key_, version_)) {
-    logger_->log_debug("Successfully deleted S3 object '%s' from bucket '%s'", object_key_, bucket_);
+  std::string version;
+  context->getProperty(Version, version, flow_file);
+  logger_->log_debug("DeleteS3Object: Version [%s]", version);
+
+  bool delete_succeeded = false;
+  {
+    std::lock_guard<std::mutex> lock(s3_wrapper_mutex_);
+    configureS3Wrapper(common_properties.value());
+    delete_succeeded = s3_wrapper_->deleteObject(common_properties->bucket, common_properties->object_key, version);
+  }
+
+  if (delete_succeeded) {
+    logger_->log_debug("Successfully deleted S3 object '%s' from bucket '%s'", common_properties->object_key, common_properties->bucket);
     session->transfer(flow_file, Success);
   } else {
-    logger_->log_error("Failed to delete S3 object '%s' from bucket '%s'", object_key_, bucket_);
+    logger_->log_error("Failed to delete S3 object '%s' from bucket '%s'", common_properties->object_key, common_properties->bucket);
     session->transfer(flow_file, Failure);
   }
 }

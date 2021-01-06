@@ -56,22 +56,8 @@ void FetchS3Object::initialize() {
 void FetchS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   S3Processor::onSchedule(context, sessionFactory);
 
-  context->getProperty(RequesterPays.getName(), get_object_params_.requester_pays);
-  logger_->log_debug("FetchS3Object: RequesterPays [%s]", get_object_params_.requester_pays ? "true" : "false");
-}
-
-bool FetchS3Object::getExpressionLanguageSupportedProperties(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) {
-  if (!S3Processor::getExpressionLanguageSupportedProperties(context, flow_file)) {
-    return false;
-  }
-  get_object_params_.bucket = std::move(bucket_);
-  get_object_params_.object_key = std::move(object_key_);
-
-  context->getProperty(Version, get_object_params_.version, flow_file);
-  logger_->log_debug("FetchS3Object: Version [%s]", get_object_params_.version);
-  return true;
+  context->getProperty(RequesterPays.getName(), requester_pays_);
+  logger_->log_debug("FetchS3Object: RequesterPays [%s]", requester_pays_ ? "true" : "false");
 }
 
 void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -82,13 +68,27 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     return;
   }
 
-  if (!getExpressionLanguageSupportedProperties(context, flow_file)) {
+  auto common_properties = getCommonELSupportedProperties(context, flow_file);
+  if (!common_properties) {
     session->transfer(flow_file, Failure);
     return;
   }
 
-  WriteCallback callback(flow_file->getSize(), get_object_params_, s3_wrapper_.get());
-  session->write(flow_file, &callback);
+  minifi::aws::s3::GetObjectRequestParameters get_object_params;
+  get_object_params.bucket = common_properties->bucket;
+  get_object_params.object_key = common_properties->object_key;
+  get_object_params.requester_pays = requester_pays_;
+
+  context->getProperty(Version, get_object_params.version, flow_file);
+  logger_->log_debug("FetchS3Object: Version [%s]", get_object_params.version);
+
+  WriteCallback callback(flow_file->getSize(), get_object_params, s3_wrapper_.get());
+  {
+    std::lock_guard<std::mutex> lock(s3_wrapper_mutex_);
+    configureS3Wrapper(common_properties.value());
+    session->write(flow_file, &callback);
+  }
+
   if (callback.result_) {
     auto putAttributeIfNotEmpty = [&](const std::string& attribute, const std::string& value) {
       if (!value.empty()) {
@@ -96,8 +96,8 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
       }
     };
 
-    logger_->log_debug("Successfully fetched S3 object %s from bucket %s", get_object_params_.object_key, get_object_params_.bucket);
-    session->putAttribute(flow_file, "s3.bucket", get_object_params_.bucket);
+    logger_->log_debug("Successfully fetched S3 object %s from bucket %s", get_object_params.object_key, get_object_params.bucket);
+    session->putAttribute(flow_file, "s3.bucket", get_object_params.bucket);
     session->putAttribute(flow_file, core::SpecialFlowAttribute::PATH, callback.result_->path);
     session->putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, callback.result_->absolute_path);
     session->putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, callback.result_->filename);
@@ -109,7 +109,7 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     putAttributeIfNotEmpty("s3.version", callback.result_->version);
     session->transfer(flow_file, Success);
   } else {
-    logger_->log_error("Failed to fetch S3 object %s from bucket %s", get_object_params_.object_key, get_object_params_.bucket);
+    logger_->log_error("Failed to fetch S3 object %s from bucket %s", get_object_params.object_key, get_object_params.bucket);
     session->transfer(flow_file, Failure);
   }
 }

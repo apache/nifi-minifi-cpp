@@ -58,17 +58,12 @@ class DeleteS3Object : public S3Processor {
   void initialize() override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
- protected:
-  bool getExpressionLanguageSupportedProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) override;
-
  private:
   friend class ::S3TestsFixture<DeleteS3Object>;
 
   explicit DeleteS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
     : S3Processor(std::move(name), uuid, logging::LoggerFactory<DeleteS3Object>::getLogger(), std::move(s3_wrapper)) {
   }
-
-  std::string version_;
 };
 
 REGISTER_RESOURCE(DeleteS3Object, "This Processor deletes FlowFiles on an Amazon S3 Bucket.");

@@ -87,9 +87,6 @@ class FetchS3Object : public S3Processor {
     minifi::utils::optional<minifi::aws::s3::GetObjectResult> result_ = minifi::utils::nullopt;
   };
 
- protected:
-  bool getExpressionLanguageSupportedProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) override;
-
  private:
   friend class ::S3TestsFixture<FetchS3Object>;
 
@@ -97,7 +94,7 @@ class FetchS3Object : public S3Processor {
     : S3Processor(std::move(name), uuid, logging::LoggerFactory<FetchS3Object>::getLogger(), std::move(s3_wrapper)) {
   }
 
-  minifi::aws::s3::GetObjectRequestParameters get_object_params_;
+  bool requester_pays_ = false;
 };
 
 REGISTER_RESOURCE(FetchS3Object, "This Processor retrieves the contents of an S3 Object and writes it to the content of a FlowFile.");
