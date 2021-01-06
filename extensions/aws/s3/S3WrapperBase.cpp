@@ -20,12 +20,12 @@
 #include "S3WrapperBase.h"
 
 #include <memory>
-#include <regex>
 #include <utility>
 #include <vector>
 
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -76,12 +76,12 @@ void S3WrapperBase::setCannedAcl(Aws::S3::Model::PutObjectRequest& request, cons
 }
 
 std::pair<std::string, std::string> S3WrapperBase::getExpirationPair(const std::string& expiration) {
-  static const std::regex expr = std::regex("expiry-date=\"(.*)\", rule-id=\"(.*)\"");
-  std::smatch match;
-  std::regex_search(expiration, match, expr);
-  if (match.size() < 3)
+  minifi::utils::Regex expr("expiry-date=\"(.*)\", rule-id=\"(.*)\"");
+  const auto match = expr.match(expiration);
+  const auto& results = expr.getResult();
+  if (!match || results.size() < 3)
     return std::make_pair("", "");
-  return std::make_pair(match[1], match[2]);
+  return std::make_pair(results[1], results[2]);
 }
 
 std::string S3WrapperBase::getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption) {
