@@ -75,13 +75,13 @@ void S3WrapperBase::setCannedAcl(Aws::S3::Model::PutObjectRequest& request, cons
   request.SetACL(CANNED_ACL_MAP.at(canned_acl));
 }
 
-std::pair<std::string, std::string> S3WrapperBase::getExpirationPair(const std::string& expiration) {
+Expiration S3WrapperBase::getExpiration(const std::string& expiration) {
   minifi::utils::Regex expr("expiry-date=\"(.*)\", rule-id=\"(.*)\"");
   const auto match = expr.match(expiration);
   const auto& results = expr.getResult();
   if (!match || results.size() < 3)
-    return std::make_pair("", "");
-  return std::make_pair(results[1], results[2]);
+    return Expiration{};
+  return Expiration{results[1], results[2]};
 }
 
 std::string S3WrapperBase::getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption) {
@@ -126,7 +126,7 @@ minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjec
 
   // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format
   // s3.expiration only needs the date member of this pair
-  result.expiration = getExpirationPair(aws_result.value().GetExpiration()).first;
+  result.expiration_time = getExpiration(aws_result.value().GetExpiration()).expiration_time;
   result.ssealgorithm = getEncryptionString(aws_result.value().GetServerSideEncryption());
   return result;
 }
@@ -180,9 +180,7 @@ minifi::utils::optional<GetObjectResult> S3WrapperBase::getObject(const GetObjec
   result.setFilePaths(get_object_params.object_key);
   result.mime_type = aws_result->GetContentType();
   result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result->GetETag(), '"');
-  auto expiration = getExpirationPair(aws_result.value().GetExpiration());
-  result.expiration_time = expiration.first;
-  result.expiration_time_rule_id = expiration.second;
+  result.expiration = getExpiration(aws_result.value().GetExpiration());
   result.ssealgorithm = getEncryptionString(aws_result->GetServerSideEncryption());
   result.version = aws_result->GetVersionId();
   result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), out_body);

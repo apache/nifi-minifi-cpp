@@ -77,10 +77,15 @@ static const std::unordered_map<std::string, Aws::S3::Model::ObjectCannedACL> CA
   {"AwsExecRead", Aws::S3::Model::ObjectCannedACL::aws_exec_read},
 };
 
+struct Expiration {
+  std::string expiration_time;
+  std::string expiration_time_rule_id;
+};
+
 struct PutObjectResult {
   std::string version;
   std::string etag;
-  std::string expiration;
+  std::string expiration_time;
   std::string ssealgorithm;
 };
 
@@ -112,8 +117,7 @@ struct GetObjectResult {
   std::string filename;
   std::string mime_type;
   std::string etag;
-  std::string expiration_time;
-  std::string expiration_time_rule_id;
+  Expiration expiration;
   std::string ssealgorithm;
   std::string version;
   int64_t write_size = 0;
@@ -148,7 +152,7 @@ class S3WrapperBase {
   virtual minifi::utils::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request) = 0;
   void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
   int64_t writeFetchedBody(Aws::IOStream& source, const int64_t data_size, const std::shared_ptr<io::BaseStream>& output);
-  static std::pair<std::string, std::string> getExpirationPair(const std::string& expiration);
+  static Expiration getExpiration(const std::string& expiration);
   static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
 
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();

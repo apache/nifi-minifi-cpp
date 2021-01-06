@@ -103,8 +103,8 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     session->putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, callback.result_->filename);
     putAttributeIfNotEmpty(core::SpecialFlowAttribute::MIME_TYPE, callback.result_->mime_type);
     putAttributeIfNotEmpty("s3.etag", callback.result_->etag);
-    putAttributeIfNotEmpty("s3.expirationTime", callback.result_->expiration_time);
-    putAttributeIfNotEmpty("s3.expirationTimeRuleId", callback.result_->expiration_time_rule_id);
+    putAttributeIfNotEmpty("s3.expirationTime", callback.result_->expiration.expiration_time);
+    putAttributeIfNotEmpty("s3.expirationTimeRuleId", callback.result_->expiration.expiration_time_rule_id);
     putAttributeIfNotEmpty("s3.sseAlgorithm", callback.result_->ssealgorithm);
     putAttributeIfNotEmpty("s3.version", callback.result_->version);
     session->transfer(flow_file, Success);
