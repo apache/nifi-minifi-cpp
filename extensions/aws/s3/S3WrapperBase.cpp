@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "utils/StringUtils.h"
+#include "utils/file/FileUtils.h"
 
 namespace org {
 namespace apache {
@@ -34,14 +35,8 @@ namespace aws {
 namespace s3 {
 
 void GetObjectResult::setFilePaths(const std::string& key) {
-  const auto last_slash = key.find_last_of('/');
   absolute_path = key;
-  if (last_slash != std::string::npos) {
-    path = key.substr(0, last_slash);
-    filename = key.substr(last_slash + 1);
-  } else {
-    filename = key;
-  }
+  std::tie(path, filename) = minifi::utils::file::FileUtils::split_path(key, true /*force_posix*/);
 }
 
 void S3WrapperBase::setCredentials(const Aws::Auth::AWSCredentials& cred) {
