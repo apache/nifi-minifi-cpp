@@ -117,9 +117,6 @@ std::string StringUtils::replaceEnvironmentVariables(std::string source_string) 
     auto env_var_length = end_seq - (beg_seq + 2);
     const std::string env_var = source_string.substr(beg_seq + 2, env_var_length);
     const std::string env_var_wrapped = source_string.substr(beg_seq, env_var_length + 3);
-    if (env_var.empty()) {
-      continue;
-    }
 
     std::string env_value;
     std::tie(std::ignore, env_value) = utils::Environment::getEnvironmentVariable(env_var.c_str());
