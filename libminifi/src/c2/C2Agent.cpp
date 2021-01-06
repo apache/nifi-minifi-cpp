@@ -565,7 +565,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
         result = state::UpdateState::PARTIALLY_APPLIED;
       }
     }
-    C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, false, true);
+    C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
     enqueue_c2_response(std::move(response));
   } else if (resp.name == "c2") {
     // prior configuration options were already in place. thus
