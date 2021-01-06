@@ -42,13 +42,13 @@ class C2AcknowledgeHandler : public ServerAwareHandler {
     return true;
   }
 
-  bool isAcknowledged(const std::string& operation_id) {
+  bool isAcknowledged(const std::string& operation_id) const {
     std::lock_guard<std::mutex> guard(mtx_);
     return acknowledged_operations_.count(operation_id) > 0;
   }
 
  private:
-  std::mutex mtx_;
+  mutable std::mutex mtx_;
   std::set<std::string> acknowledged_operations_;
 };
 
