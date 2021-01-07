@@ -503,7 +503,7 @@ TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Transactional behaviour is support
   run_tests({               "Brexit"                     },            COMMIT_AND_CANCEL, false);
 }
 
-TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Headers on consumed Kafka messages are extracted into attributes if requested on ConsumeKafka.", "[ConsumeKafka][Kafka][Batching][Headers]") {
+TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Headers on consumed Kafka messages are extracted into attributes if requested on ConsumeKafka.", "[ConsumeKafka][Kafka][Headers]") {
   auto run_tests = [&] (
       const std::vector<std::string>& messages_on_topic,
       const std::vector<std::pair<std::string, std::string>>& expect_header_attributes,

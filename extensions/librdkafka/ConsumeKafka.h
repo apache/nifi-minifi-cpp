@@ -17,10 +17,10 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-#include <memory>
 
 #include "core/Processor.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -125,6 +125,7 @@ class ConsumeKafka : public core::Processor {
   void initialize() override;
 
  private:
+
   void create_topic_partition_list();
   void extend_config_from_dynamic_properties(const core::ProcessContext* context);
   void configure_new_connection(const core::ProcessContext* context);
@@ -136,8 +137,8 @@ class ConsumeKafka : public core::Processor {
   std::vector<std::string> get_matching_headers(const rd_kafka_message_t* message, const std::string& header_name) const;
   std::vector<std::pair<std::string, std::string>> get_flowfile_attributes_from_message_header(const rd_kafka_message_t* message) const;
   void add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileRecord>& flow_file, const rd_kafka_message_t* message) const;
-  std::vector<std::shared_ptr<FlowFileRecord>> transform_messages_into_flowfiles(
-      const std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>>& messages, core::ProcessSession* session) const;
+  utils::optional<std::vector<std::shared_ptr<FlowFileRecord>>> transform_pending_messages_into_flowfiles(core::ProcessSession* session) const;
+  void process_pending_messages(core::ProcessSession* session);
 
  private:
   std::string kafka_brokers_;
@@ -160,6 +161,12 @@ class ConsumeKafka : public core::Processor {
   std::unique_ptr<rd_kafka_t, utils::rd_kafka_consumer_deleter> consumer_;
   std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf_;
   std::unique_ptr<rd_kafka_topic_partition_list_t, utils::rd_kafka_topic_partition_list_deleter> kf_topic_partition_list_;
+
+  // Intermediate container type for messages that have been processed, but are
+  // not yet persisted (eg. in case of I/O error)
+  std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>> pending_messages_;
+
+  std::mutex do_not_call_on_trigger_concurrently_;
 
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ConsumeKafka>::getLogger()};
 };
