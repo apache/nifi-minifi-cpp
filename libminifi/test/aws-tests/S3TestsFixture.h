@@ -28,6 +28,9 @@
 #include "processors/UpdateAttribute.h"
 #include "utils/file/FileUtils.h"
 #include "MockS3Wrapper.h"
+#include "utils/TestUtils.h"
+
+using org::apache::nifi::minifi::utils::createTempDir;
 
 template<typename T>
 class S3TestsFixture {
@@ -58,8 +61,7 @@ class S3TestsFixture {
     std::unique_ptr<minifi::aws::s3::S3WrapperBase> mock_s3_wrapper(mock_s3_wrapper_ptr);
     s3_processor = std::shared_ptr<T>(new T("S3Processor", utils::Identifier(), std::move(mock_s3_wrapper)));
 
-    char input_dir_mask[] = "/tmp/gt.XXXXXX";
-    auto input_dir = test_controller.createTempDirectory(input_dir_mask);
+    auto input_dir = createTempDir(&test_controller);
     std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + INPUT_FILENAME);
     input_file_stream << INPUT_DATA;
     input_file_stream.close();

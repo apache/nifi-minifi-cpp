@@ -29,8 +29,7 @@ class FetchS3ObjectTestsFixture : public S3TestsFixture<minifi::aws::processors:
       "PutFile",
       core::Relationship("success", "d"),
       true);
-    char output_dir_mask[] = "/tmp/gt.XXXXXX";
-    output_dir = test_controller.createTempDirectory(output_dir_mask);
+    output_dir = createTempDir(&test_controller);
     plan->setProperty(putfile, "Directory", output_dir);
   }
 
