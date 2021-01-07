@@ -490,8 +490,9 @@ class WriteCallback : public OutputStreamCallback {
   uint64_t dataSize_;
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
     int64_t ret = 0;
-    if (data_ && dataSize_ > 0)
-      ret = stream->write(data_, dataSize_);
+    if (data_) {
+      ret = stream->write(data_,  gsl::narrow<int>(dataSize_));
+    }
     return ret;
   }
 };
