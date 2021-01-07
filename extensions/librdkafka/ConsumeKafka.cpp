@@ -395,7 +395,8 @@ std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
   auto elapsed = std::chrono::steady_clock::now() - start;
   while (messages.size() < max_poll_records_ && elapsed < max_poll_time_milliseconds_) {
     logger_-> log_debug("Polling for new messages for %d milliseconds...", max_poll_time_milliseconds_.count());
-    rd_kafka_message_t* message = rd_kafka_consumer_poll(consumer_.get(), std::chrono::duration_cast<std::chrono::milliseconds>(max_poll_time_milliseconds_ - elapsed).count());
+    std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
+      message { rd_kafka_consumer_poll(consumer_.get(), std::chrono::duration_cast<std::chrono::milliseconds>(max_poll_time_milliseconds_ - elapsed).count()), utils::rd_kafka_message_deleter() };
     if (!message) {
       break;
     }
@@ -403,8 +404,8 @@ std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
       logger_->log_error("Received message with error %d: %s", message->err, rd_kafka_err2str(message->err));
       break;
     }
-    utils::print_kafka_message(message, logger_);
-    messages.emplace_back(std::move(message), utils::rd_kafka_message_deleter());
+    utils::print_kafka_message(message.get(), logger_);
+    messages.emplace_back(std::move(message));
     elapsed = std::chrono::steady_clock::now() - start;
   }
   return messages;
