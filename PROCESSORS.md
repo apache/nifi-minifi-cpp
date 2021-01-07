@@ -219,7 +219,7 @@ Deletes FlowFiles on an Amazon S3 Bucket. If attempting to delete a file that do
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description |
+| Name | <div style="width:7em">Default Value</div> | <div style="width:8em">Allowable Values</div> | Description |
 | - | - | - | - |
 |Object Key|||The key of the S3 object. If none is given the filename attribute will be used by default.<br/>**Supports Expression Language: true**|
 |**Bucket**|||The S3 bucket<br/>**Supports Expression Language: true**|
@@ -399,7 +399,7 @@ Retrieves the contents of an S3 Object and writes it to the content of a FlowFil
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description |
+| Name | <div style="width:7em">Default Value</div> | <div style="width:8em">Allowable Values</div> | Description |
 | - | - | - | - |
 |Object Key|||The key of the S3 object. If none is given the filename attribute will be used by default.<br/>**Supports Expression Language: true**|
 |**Bucket**|||The S3 bucket<br/>**Supports Expression Language: true**|
@@ -1021,7 +1021,7 @@ Puts FlowFiles to an Amazon S3 Bucket. The upload uses either the PutS3Object me
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description |
+| Name | <div style="width:7em">Default Value</div> | <div style="width:8em">Allowable Values</div> | Description |
 | - | - | - | - |
 |Object Key|||The key of the S3 object. If none is given the filename attribute will be used by default.<br/>**Supports Expression Language: true**|
 |**Bucket**|||The S3 bucket<br/>**Supports Expression Language: true**|
