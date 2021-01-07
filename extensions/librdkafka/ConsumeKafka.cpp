@@ -74,12 +74,14 @@ core::Property ConsumeKafka::SecurityProtocol(core::PropertyBuilder::createPrope
 core::Property ConsumeKafka::TopicNames(core::PropertyBuilder::createProperty("Topic Names")
   ->withDescription("The name of the Kafka Topic(s) to pull from. Multiple topic names are supported as a comma separated list.")
   ->supportsExpressionLanguage(true)
+  ->isRequired(true)
   ->build());
 
 core::Property ConsumeKafka::TopicNameFormat(core::PropertyBuilder::createProperty("Topic Name Format")
   ->withDescription("Specifies whether the Topic(s) provided are a comma separated list of names or a single regular expression.")
   ->withAllowableValues<std::string>({TOPIC_FORMAT_NAMES, TOPIC_FORMAT_PATTERNS})
   ->withDefaultValue(TOPIC_FORMAT_NAMES)
+  ->isRequired(true)
   ->build());
 
 core::Property ConsumeKafka::HonorTransactions(core::PropertyBuilder::createProperty("Honor Transactions")
@@ -95,6 +97,7 @@ core::Property ConsumeKafka::HonorTransactions(core::PropertyBuilder::createProp
 core::Property ConsumeKafka::GroupID(core::PropertyBuilder::createProperty("Group ID")
   ->withDescription("A Group ID is used to identify consumers that are within the same consumer group. Corresponds to Kafka's 'group.id' property.")
   ->supportsExpressionLanguage(true)
+  ->isRequired(true)
   ->build());
 
 core::Property ConsumeKafka::OffsetReset(core::PropertyBuilder::createProperty("Offset Reset")
