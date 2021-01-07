@@ -383,7 +383,7 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext* context)
 
 std::string ConsumeKafka::extract_message(const rd_kafka_message_t* rkmessage) const {
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rkmessage->err) {
-      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "ConsumeKafka: received error message from broker.");
+    throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "ConsumeKafka: received error message from broker: " + std::to_string(rkmessage->err) + " " + rd_kafka_err2str(rkmessage->err));
   }
   return { reinterpret_cast<char*>(rkmessage->payload), rkmessage->len };
 }
@@ -396,7 +396,11 @@ std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
   while (messages.size() < max_poll_records_ && elapsed < max_poll_time_milliseconds_) {
     logger_-> log_debug("Polling for new messages for %d milliseconds...", max_poll_time_milliseconds_.count());
     rd_kafka_message_t* message = rd_kafka_consumer_poll(consumer_.get(), std::chrono::duration_cast<std::chrono::milliseconds>(max_poll_time_milliseconds_ - elapsed).count());
-    if (!message || RD_KAFKA_RESP_ERR_NO_ERROR != message->err) {
+    if (!message) {
+      break;
+    }
+    if (RD_KAFKA_RESP_ERR_NO_ERROR != message->err) {
+      logger_->log_error("Received message with error %d: %s", message->err, rd_kafka_err2str(message->err));
       break;
     }
     utils::print_kafka_message(message, logger_);
