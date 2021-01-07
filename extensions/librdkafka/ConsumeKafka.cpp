@@ -230,6 +230,7 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
   configure_new_connection(context);
 }
 
+namespace {
 void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/) {
   // Cooperative, incremental assignment is not supported in the current librdkafka version
   std::shared_ptr<logging::Logger> logger{logging::LoggerFactory<ConsumeKafka>::getLogger()};
@@ -256,6 +257,7 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_pa
   }
   logger->log_debug("assign failure: %s", rd_kafka_err2str(assign_error));
 }
+}  // namespace
 
 void ConsumeKafka::create_topic_partition_list() {
   kf_topic_partition_list_ = { rd_kafka_topic_partition_list_new(topic_names_.size()), utils::rd_kafka_topic_partition_list_deleter() };
