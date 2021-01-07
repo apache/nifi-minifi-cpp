@@ -207,4 +207,4 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3
   REQUIRE(mock_s3_wrapper_ptr->put_object_request.GetACL() == Aws::S3::Model::ObjectCannedACL::public_read_write);
 }
 
-}
+}  // namespace

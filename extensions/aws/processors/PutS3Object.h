@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <set>
+#include <map>
 #include <algorithm>
 
 #include "S3Processor.h"
