@@ -89,11 +89,12 @@ find_package(Patch)
 set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_CURRENT_SOURCE_DIR}/patch/soci.patch")
 
 # Define byproducts
-if(NOT APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-	include(GNUInstallDirs)
-	set(LIBDIR "${CMAKE_INSTALL_LIBDIR}")
-else()
+# This should be based on GNUInstallDirs, but it's done wrong in Soci:
+# https://github.com/SOCI/soci/blob/release/4.0/CMakeLists.txt#L140
+if(APPLE OR CMAKE_SIZEOF_VOID_P EQUAL 4)
 	set(LIBDIR "lib")
+else()
+	set(LIBDIR "lib64")
 endif()
 
 if (WIN32)
@@ -155,12 +156,12 @@ set(SOCI_LIBRARIES "${SOCI_LIBRARIES_LIST}" CACHE STRING "" FORCE)
 file(MAKE_DIRECTORY ${SOCI_INCLUDE_DIR})
 
 add_library(SOCI::libsoci_core STATIC IMPORTED)
-set_target_properties(SOCI::libsoci_core PROPERTIES IMPORTED_LOCATION "${SOCI_BYPRODUCT_DIR}/lib${LIBSUFFIX}/libsoci_core${BYPRODUCT_SUFFIX}")
+set_target_properties(SOCI::libsoci_core PROPERTIES IMPORTED_LOCATION "${SOCI_BYPRODUCT_DIR}/${LIBDIR}/libsoci_core${BYPRODUCT_SUFFIX}")
 set_target_properties(SOCI::libsoci_core PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${SOCI_INCLUDE_DIR}")
 add_dependencies(SOCI::libsoci_core soci-external)
 
 add_library(SOCI::libsoci_odbc STATIC IMPORTED)
-set_target_properties(SOCI::libsoci_odbc PROPERTIES IMPORTED_LOCATION "${SOCI_BYPRODUCT_DIR}/lib${LIBSUFFIX}/libsoci_odbc${BYPRODUCT_SUFFIX}")
+set_target_properties(SOCI::libsoci_odbc PROPERTIES IMPORTED_LOCATION "${SOCI_BYPRODUCT_DIR}/${LIBDIR}/libsoci_odbc${BYPRODUCT_SUFFIX}")
 set_target_properties(SOCI::libsoci_odbc PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${SOCI_INCLUDE_DIR}")
 add_dependencies(SOCI::libsoci_odbc soci-external)
 set_property(TARGET SOCI::libsoci_odbc APPEND PROPERTY INTERFACE_LINK_LIBRARIES SOCI::libsoci_core)
