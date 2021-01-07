@@ -18,8 +18,12 @@
 
 #include "S3TestsFixture.h"
 #include "processors/DeleteS3Object.h"
+#include "utils/IntegrationTestUtils.h"
+
+namespace {
 
 using DeleteS3ObjectTestsFixture = S3TestsFixture<minifi::aws::processors::DeleteS3Object>;
+using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test AWS credential setting", "[awsCredentials]") {
   setBucket();
@@ -90,7 +94,7 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test success case with default val
   REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetBucket() == "testBucket");
   REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetKey() == INPUT_FILENAME);
   REQUIRE(!mock_s3_wrapper_ptr->delete_object_request.VersionIdHasBeenSet());
-  REQUIRE(LogTestController::getInstance().contains("Successfully deleted S3 object"));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Successfully deleted S3 object"));
 }
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test version setting", "[awsS3DeleteWithVersion]") {
@@ -100,7 +104,7 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test version setting", "[awsS3Dele
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetVersionId() == "v1");
   REQUIRE(mock_s3_wrapper_ptr->delete_object_request.VersionIdHasBeenSet());
-  REQUIRE(LogTestController::getInstance().contains("Successfully deleted S3 object"));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Successfully deleted S3 object"));
 }
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test optional client configuration values", "[awsS3DeleteOptionalClientConfig]") {
@@ -129,5 +133,7 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test failure case", "[awsS3DeleteF
   REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetBucket() == "testBucket");
   REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetKey() == INPUT_FILENAME);
   REQUIRE(mock_s3_wrapper_ptr->delete_object_request.GetVersionId() == "v1");
-  REQUIRE(LogTestController::getInstance().contains("Failed to delete S3 object"));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Failed to delete S3 object"));
+}
+
 }

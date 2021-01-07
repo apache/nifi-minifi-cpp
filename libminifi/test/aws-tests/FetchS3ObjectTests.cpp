@@ -20,6 +20,11 @@
 
 #include "S3TestsFixture.h"
 #include "processors/FetchS3Object.h"
+#include "utils/IntegrationTestUtils.h"
+
+namespace {
+
+using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
 
 class FetchS3ObjectTestsFixture : public S3TestsFixture<minifi::aws::processors::FetchS3Object> {
  public:
@@ -102,16 +107,16 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]"
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test default properties", "[awsS3Config]") {
   setRequiredProperties();
   test_controller.runSession(plan, true);
-  REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:" + S3_BUCKET));
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:" + INPUT_FILENAME));
-  REQUIRE(LogTestController::getInstance().contains("key:path value:\n"));
-  REQUIRE(LogTestController::getInstance().contains("key:absolute.path value:" + INPUT_FILENAME));
-  REQUIRE(LogTestController::getInstance().contains("key:mime.type value:" + S3_CONTENT_TYPE));
-  REQUIRE(LogTestController::getInstance().contains("key:s3.etag value:" + S3_ETAG_UNQUOTED));
-  REQUIRE(LogTestController::getInstance().contains("key:s3.expirationTime value:" + S3_EXPIRATION_DATE));
-  REQUIRE(LogTestController::getInstance().contains("key:s3.expirationTimeRuleId value:" + S3_EXPIRATION_TIME_RULE_ID));
-  REQUIRE(LogTestController::getInstance().contains("key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
-  REQUIRE(LogTestController::getInstance().contains("key:s3.version value:" + S3_VERSION));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.bucket value:" + S3_BUCKET));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:filename value:" + INPUT_FILENAME));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:path value:\n"));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:absolute.path value:" + INPUT_FILENAME));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:mime.type value:" + S3_CONTENT_TYPE));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.etag value:" + S3_ETAG_UNQUOTED));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.expirationTime value:" + S3_EXPIRATION_DATE));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.expirationTimeRuleId value:" + S3_EXPIRATION_TIME_RULE_ID));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.version value:" + S3_VERSION));
   std::ifstream s3_file(output_dir + "/" + INPUT_FILENAME);
   std::string output((std::istreambuf_iterator<char>(s3_file)), std::istreambuf_iterator<char>());
   REQUIRE(output == S3_CONTENT);
@@ -124,10 +129,10 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test empty optional S3 results", "[
   setRequiredProperties();
   mock_s3_wrapper_ptr->returnEmptyS3Result();
   test_controller.runSession(plan, true);
-  REQUIRE(LogTestController::getInstance().contains("key:s3.bucket value:" + S3_BUCKET));
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:" + INPUT_FILENAME));
-  REQUIRE(LogTestController::getInstance().contains("key:path value:\n"));
-  REQUIRE(LogTestController::getInstance().contains("key:absolute.path value:" + INPUT_FILENAME));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.bucket value:" + S3_BUCKET));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:filename value:" + INPUT_FILENAME));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:path value:\n"));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:absolute.path value:" + INPUT_FILENAME));
   REQUIRE(!LogTestController::getInstance().contains("key:mime.type", std::chrono::seconds(0), std::chrono::milliseconds(0)));
   REQUIRE(!LogTestController::getInstance().contains("key:s3.etag", std::chrono::seconds(0), std::chrono::milliseconds(0)));
   REQUIRE(!LogTestController::getInstance().contains("key:s3.expirationTime", std::chrono::seconds(0), std::chrono::milliseconds(0)));
@@ -143,9 +148,9 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test subdirectories on AWS", "[awsS
   setRequiredProperties();
   plan->setProperty(s3_processor, "Object Key", "dir1/dir2/logs.txt");
   test_controller.runSession(plan, true);
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:logs.txt"));
-  REQUIRE(LogTestController::getInstance().contains("key:path value:dir1/dir2"));
-  REQUIRE(LogTestController::getInstance().contains("key:absolute.path value:dir1/dir2/logs.txt"));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:filename value:logs.txt"));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:path value:dir1/dir2"));
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:absolute.path value:dir1/dir2/logs.txt"));
   std::ifstream s3_file(output_dir + "/" + INPUT_FILENAME);
   std::string output((std::istreambuf_iterator<char>(s3_file)), std::istreambuf_iterator<char>());
   REQUIRE(output.empty());
@@ -170,4 +175,6 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test non-default client configurati
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().connectTimeoutMs == 10000);
   REQUIRE(mock_s3_wrapper_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
+}
+
 }
