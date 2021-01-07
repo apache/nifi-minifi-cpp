@@ -428,7 +428,7 @@ utils::KafkaEncoding ConsumeKafka::message_header_encoding_attr_to_enum() const 
   if (utils::StringUtils::equalsIgnoreCase(message_header_encoding_, MSG_HEADER_ENCODING_HEX)) {
     return utils::KafkaEncoding::HEX;
   }
-  throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Key Attribute Encoding property not recognized.");
+  throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "\"Message Header Encoding\" property not recognized.");
 }
 
 std::string ConsumeKafka::resolve_duplicate_headers(const std::vector<std::string>& matching_headers) const {
