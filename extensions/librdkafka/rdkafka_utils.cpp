@@ -33,7 +33,7 @@ void setKafkaConfigurationField(rd_kafka_conf_t* configuration, const std::strin
   rd_kafka_conf_res_t result;
   result = rd_kafka_conf_set(configuration, field_name.c_str(), value.c_str(), errstr.data(), errstr.size());
   if (RD_KAFKA_CONF_OK != result) {
-    const std::string error_msg { errstr.begin(), errstr.end() };
+    const std::string error_msg { errstr.data() };
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "rd_kafka configuration error" + error_msg);
   }
 }

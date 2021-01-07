@@ -339,8 +339,8 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext* context)
   std::array<char, 512U> errstr{};
   consumer_ = { rd_kafka_new(RD_KAFKA_CONSUMER, conf_.release(), errstr.data(), errstr.size()), utils::rd_kafka_consumer_deleter() };
   if (consumer_ == nullptr) {
-    const std::string error_msg { errstr.begin(), errstr.end() };
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to create Kafka consumer %s" + error_msg);
+    const std::string error_msg { errstr.data() };
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to create Kafka consumer " + error_msg);
   }
 
   create_topic_partition_list();

@@ -64,7 +64,7 @@ class KafkaTestProducer {
     static std::array<char, 512U> errstr{};
     producer_ = { rd_kafka_new(RD_KAFKA_PRODUCER, conf.release(), errstr.data(), errstr.size()), utils::rd_kafka_producer_deleter() };
     if (producer_ == nullptr) {
-      auto error_msg = "Failed to create Kafka producer" + std::string{ errstr.begin(), errstr.end() };
+      auto error_msg = "Failed to create Kafka producer" + std::string{ errstr.data() };
       throw std::runtime_error(error_msg);
     }
 
