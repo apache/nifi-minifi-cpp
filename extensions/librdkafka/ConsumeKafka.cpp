@@ -515,8 +515,8 @@ std::vector<std::shared_ptr<FlowFileRecord>> ConsumeKafka::transform_messages_in
   for (const auto& message : messages) {
     std::string message_content = extract_message(message.get());
     if (message_content.empty()) {
-      logger_->log_debug("Error: message received contains no data.");
-      return {};
+      logger_->log_debug("Message received contains no data.");
+      continue;
     }
 
     std::vector<std::pair<std::string, std::string>> attributes_from_headers = get_flowfile_attributes_from_message_header(message.get());
@@ -527,6 +527,7 @@ std::vector<std::shared_ptr<FlowFileRecord>> ConsumeKafka::transform_messages_in
     for (auto& flowfile_content : split_message) {
       std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
       if (flow_file == nullptr) {
+        logger_->log_error("Failed to create flowfile.");
         return {};
       }
       // flowfile content is consumed here
