@@ -21,10 +21,13 @@
 #include "S3TestsFixture.h"
 #include "processors/FetchS3Object.h"
 #include "utils/IntegrationTestUtils.h"
+#include "utils/file/FileUtils.h"
 
 namespace {
 
 using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+using org::apache::nifi::minifi::utils::file::get_file_content;
+using org::apache::nifi::minifi::utils::file::get_separator;
 
 class FetchS3ObjectTestsFixture : public S3TestsFixture<minifi::aws::processors::FetchS3Object> {
  public:
@@ -117,9 +120,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test default properties", "[awsS3Co
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.expirationTimeRuleId value:" + S3_EXPIRATION_TIME_RULE_ID));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.version value:" + S3_VERSION));
-  std::ifstream s3_file(output_dir + "/" + INPUT_FILENAME);
-  std::string output((std::istreambuf_iterator<char>(s3_file)), std::istreambuf_iterator<char>());
-  REQUIRE(output == S3_CONTENT);
+  REQUIRE(get_file_content(output_dir + get_separator() + INPUT_FILENAME) == S3_CONTENT);
   REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetVersionId().empty());
   REQUIRE(!mock_s3_wrapper_ptr->get_object_request.VersionIdHasBeenSet());
   REQUIRE(mock_s3_wrapper_ptr->get_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::NOT_SET);
@@ -139,9 +140,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test empty optional S3 results", "[
   REQUIRE(!LogTestController::getInstance().contains("key:s3.expirationTimeRuleId", std::chrono::seconds(0), std::chrono::milliseconds(0)));
   REQUIRE(!LogTestController::getInstance().contains("key:s3.sseAlgorithm", std::chrono::seconds(0), std::chrono::milliseconds(0)));
   REQUIRE(!LogTestController::getInstance().contains("key:s3.version", std::chrono::seconds(0), std::chrono::milliseconds(0)));
-  std::ifstream s3_file(output_dir + "/" + INPUT_FILENAME);
-  std::string output((std::istreambuf_iterator<char>(s3_file)), std::istreambuf_iterator<char>());
-  REQUIRE(output.empty());
+  REQUIRE(get_file_content(output_dir + get_separator() + INPUT_FILENAME).empty());
 }
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test subdirectories on AWS", "[awsS3Config]") {
@@ -151,9 +150,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test subdirectories on AWS", "[awsS
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:filename value:logs.txt"));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:path value:dir1/dir2"));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:absolute.path value:dir1/dir2/logs.txt"));
-  std::ifstream s3_file(output_dir + "/" + INPUT_FILENAME);
-  std::string output((std::istreambuf_iterator<char>(s3_file)), std::istreambuf_iterator<char>());
-  REQUIRE(output.empty());
+  REQUIRE(get_file_content(output_dir + get_separator() + INPUT_FILENAME).empty());
 }
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test optional values are set in request", "[awsS3Config]") {
