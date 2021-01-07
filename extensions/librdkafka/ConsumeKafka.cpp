@@ -239,14 +239,18 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_pa
   switch (trigger) {
     case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
       logger->log_debug("assigned");
-      utils::print_topics_list(logger, partitions);
+      if (logger -> should_log(core::logging::LOG_LEVEL::info)) {
+        utils::print_topics_list(logger, partitions);
+      }
       assign_error = rd_kafka_assign(rk, partitions);
       break;
 
     case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
       logger->log_debug("revoked:");
       rd_kafka_commit(rk, partitions, /* async = */ 0);  // Sync commit, maybe unneccessary
-      utils::print_topics_list(logger, partitions);
+      if (logger -> should_log(core::logging::LOG_LEVEL::info)) {
+        utils::print_topics_list(logger, partitions);
+      }
       assign_error = rd_kafka_assign(rk, NULL);
       break;
 
