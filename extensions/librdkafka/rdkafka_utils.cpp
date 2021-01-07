@@ -83,9 +83,11 @@ void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_
   message_as_string += "[Key](" + (key != nullptr ? std::string(key, key_len) : std::string("[None]")) + "), ";
   message_as_string += "[Offset](" +  std::to_string(rkmessage->offset) + "), ";
   message_as_string += "[Message Length](" + std::to_string(rkmessage->len) + "), ";
-  message_as_string += "[Timestamp](" + std::string(tsname) + " " + std::to_string(timestamp) + " (" + std::to_string(seconds_since_timestamp) + " s ago)), ";
+  if(timestamp != -1) {
+    message_as_string += "[Timestamp](" + std::string(tsname) + " " + std::to_string(timestamp) + " (" + std::to_string(seconds_since_timestamp) + " s ago)), ";
+  }
   message_as_string += "[Headers](";
-  message_as_string += headers_as_string + "\n";
+  message_as_string += headers_as_string + ")";
   message_as_string += "[Payload](" + message + ")";
 
   logger -> log_debug("Message: %s", message_as_string.c_str());
