@@ -19,6 +19,7 @@
 #pragma once
 
 #include <string>
+#include <sstream>
 
 #include "s3/S3WrapperBase.h"
 
@@ -27,8 +28,11 @@ const std::string S3_ETAG = "\"tag-123\"";
 const std::string S3_ETAG_UNQUOTED = "tag-123";
 const std::string S3_EXPIRATION = "expiry-date=\"Wed, 28 Oct 2020 00:00:00 GMT\", rule-id=\"my_expiration_rule\"";
 const std::string S3_EXPIRATION_DATE = "Wed, 28 Oct 2020 00:00:00 GMT";
+const std::string S3_EXPIRATION_TIME_RULE_ID = "my_expiration_rule";
 const Aws::S3::Model::ServerSideEncryption S3_SSEALGORITHM = Aws::S3::Model::ServerSideEncryption::aws_kms;
 const std::string S3_SSEALGORITHM_STR = "aws_kms";
+const std::string S3_CONTENT_TYPE = "application/octet-stream";
+const std::string S3_CONTENT = "INPUT_DATA";
 
 class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
  public:
@@ -48,6 +52,22 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
   bool sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectRequest& request) override {
     delete_object_request = request;
     return delete_object_result_;
+  }
+
+  minifi::utils::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request) override {
+    get_object_request = request;
+
+    Aws::S3::Model::GetObjectResult get_s3_result;
+    if (!return_empty_result_) {
+      get_s3_result.SetVersionId(S3_VERSION);
+      get_s3_result.SetETag(S3_ETAG);
+      get_s3_result.SetExpiration(S3_EXPIRATION);
+      get_s3_result.SetServerSideEncryption(S3_SSEALGORITHM);
+      get_s3_result.SetContentType(S3_CONTENT_TYPE);
+      get_s3_result.ReplaceBody(new std::stringstream(S3_CONTENT));
+      get_s3_result.SetContentLength(S3_CONTENT.size());
+    }
+    return minifi::utils::make_optional(std::move(get_s3_result));
   }
 
   Aws::Auth::AWSCredentials getCredentials() const {
@@ -73,6 +93,7 @@ class MockS3Wrapper : public minifi::aws::s3::S3WrapperBase {
 
   Aws::S3::Model::PutObjectRequest put_object_request;
   Aws::S3::Model::DeleteObjectRequest delete_object_request;
+  Aws::S3::Model::GetObjectRequest get_object_request;
 
  private:
   bool delete_object_result_ = true;

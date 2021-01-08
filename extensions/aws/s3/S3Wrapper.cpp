@@ -32,7 +32,7 @@ namespace s3 {
 
 minifi::utils::optional<Aws::S3::Model::PutObjectResult> S3Wrapper::sendPutObjectRequest(const Aws::S3::Model::PutObjectRequest& request) {
   Aws::S3::S3Client s3_client(credentials_, client_config_);
-  Aws::S3::Model::PutObjectOutcome outcome = s3_client.PutObject(request);
+  auto outcome = s3_client.PutObject(request);
 
   if (outcome.IsSuccess()) {
       logger_->log_info("Added S3 object '%s' to bucket '%s'", request.GetKey(), request.GetBucket());
@@ -56,6 +56,19 @@ bool S3Wrapper::sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectReques
   } else {
     logger_->log_error("DeleteS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
     return false;
+  }
+}
+
+minifi::utils::optional<Aws::S3::Model::GetObjectResult> S3Wrapper::sendGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request) {
+  Aws::S3::S3Client s3_client(credentials_, client_config_);
+  auto outcome = s3_client.GetObject(request);
+
+  if (outcome.IsSuccess()) {
+    logger_->log_info("Fetched S3 object %s from bucket %s", request.GetKey(), request.GetBucket());
+    return outcome.GetResultWithOwnership();
+  } else {
+    logger_->log_error("FetchS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
+    return minifi::utils::nullopt;
   }
 }
 

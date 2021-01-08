@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <set>
+#include <map>
 #include <algorithm>
 
 #include "S3Processor.h"
@@ -116,9 +117,6 @@ class PutS3Object : public S3Processor {
     minifi::utils::optional<minifi::aws::s3::PutObjectResult> result_ = minifi::utils::nullopt;
   };
 
- protected:
-  bool getExpressionLanguageSupportedProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) override;
-
  private:
   friend class ::S3TestsFixture<PutS3Object>;
 
@@ -128,12 +126,22 @@ class PutS3Object : public S3Processor {
 
   void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);
   std::string parseAccessControlList(const std::string &comma_separated_list) const;
-  bool setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
-  bool setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
-  void setAttributes(const std::shared_ptr<core::ProcessSession> &session,  const std::shared_ptr<core::FlowFile> &flow_file, const minifi::aws::s3::PutObjectResult &put_object_result);
+  bool setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params);
+  bool setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params);
+  void setAttributes(
+    const std::shared_ptr<core::ProcessSession> &session,
+    const std::shared_ptr<core::FlowFile> &flow_file,
+    const aws::s3::PutObjectRequestParameters &put_s3_request_params,
+    const minifi::aws::s3::PutObjectResult &put_object_result);
+  minifi::utils::optional<aws::s3::PutObjectRequestParameters> buildPutS3RequestParams(
+    const std::shared_ptr<core::ProcessContext> &context,
+    const std::shared_ptr<core::FlowFile> &flow_file,
+    const CommonProperties &common_properties);
 
-  aws::s3::PutObjectRequestParameters put_s3_request_params_;
   std::string user_metadata_;
+  std::map<std::string, std::string> user_metadata_map_;
+  std::string storage_class_;
+  std::string server_side_encryption_;
 };
 
 REGISTER_RESOURCE(PutS3Object, "This Processor puts FlowFiles to an Amazon S3 Bucket.");

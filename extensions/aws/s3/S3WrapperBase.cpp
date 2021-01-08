@@ -20,10 +20,12 @@
 #include "S3WrapperBase.h"
 
 #include <memory>
-#include <regex>
 #include <utility>
+#include <vector>
 
 #include "utils/StringUtils.h"
+#include "utils/file/FileUtils.h"
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -31,6 +33,11 @@ namespace nifi {
 namespace minifi {
 namespace aws {
 namespace s3 {
+
+void GetObjectResult::setFilePaths(const std::string& key) {
+  absolute_path = key;
+  std::tie(path, filename) = minifi::utils::file::FileUtils::split_path(key, true /*force_posix*/);
+}
 
 void S3WrapperBase::setCredentials(const Aws::Auth::AWSCredentials& cred) {
   logger_->log_debug("Setting new AWS credentials");
@@ -68,13 +75,13 @@ void S3WrapperBase::setCannedAcl(Aws::S3::Model::PutObjectRequest& request, cons
   request.SetACL(CANNED_ACL_MAP.at(canned_acl));
 }
 
-std::string S3WrapperBase::getExpiryDate(const std::string& expiration) {
-  static const std::regex expr = std::regex("expiry-date=\"(.*)\", rule-id=\"(.*)\"");
-  std::smatch match;
-  std::regex_search(expiration, match, expr);
-  if (match.size() < 2)
-    return "";
-  return match[1];
+Expiration S3WrapperBase::getExpiration(const std::string& expiration) {
+  minifi::utils::Regex expr("expiry-date=\"(.*)\", rule-id=\"(.*)\"");
+  const auto match = expr.match(expiration);
+  const auto& results = expr.getResult();
+  if (!match || results.size() < 3)
+    return Expiration{};
+  return Expiration{results[1], results[2]};
 }
 
 std::string S3WrapperBase::getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption) {
@@ -92,36 +99,36 @@ std::string S3WrapperBase::getEncryptionString(Aws::S3::Model::ServerSideEncrypt
   return "";
 }
 
-minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjectRequestParameters& params, std::shared_ptr<Aws::IOStream> data_stream) {
+minifi::utils::optional<PutObjectResult> S3WrapperBase::putObject(const PutObjectRequestParameters& put_object_params, std::shared_ptr<Aws::IOStream> data_stream) {
   Aws::S3::Model::PutObjectRequest request;
-  request.SetBucket(params.bucket);
-  request.SetKey(params.object_key);
-  request.SetStorageClass(STORAGE_CLASS_MAP.at(params.storage_class));
-  request.SetServerSideEncryption(SERVER_SIDE_ENCRYPTION_MAP.at(params.server_side_encryption));
-  request.SetContentType(params.content_type);
-  request.SetMetadata(params.user_metadata_map);
+  request.SetBucket(put_object_params.bucket);
+  request.SetKey(put_object_params.object_key);
+  request.SetStorageClass(STORAGE_CLASS_MAP.at(put_object_params.storage_class));
+  request.SetServerSideEncryption(SERVER_SIDE_ENCRYPTION_MAP.at(put_object_params.server_side_encryption));
+  request.SetContentType(put_object_params.content_type);
+  request.SetMetadata(put_object_params.user_metadata_map);
   request.SetBody(data_stream);
-  request.SetGrantFullControl(params.fullcontrol_user_list);
-  request.SetGrantRead(params.read_permission_user_list);
-  request.SetGrantReadACP(params.read_acl_user_list);
-  request.SetGrantWriteACP(params.write_acl_user_list);
-  setCannedAcl(request, params.canned_acl);
+  request.SetGrantFullControl(put_object_params.fullcontrol_user_list);
+  request.SetGrantRead(put_object_params.read_permission_user_list);
+  request.SetGrantReadACP(put_object_params.read_acl_user_list);
+  request.SetGrantWriteACP(put_object_params.write_acl_user_list);
+  setCannedAcl(request, put_object_params.canned_acl);
 
   auto aws_result = sendPutObjectRequest(request);
-  if (aws_result) {
-    PutObjectResult result;
-    // Etags are returned by AWS in quoted form that should be removed
-    result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result.value().GetETag(), '"');
-    result.version = aws_result.value().GetVersionId();
-
-    // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format
-    // s3.expiration only needs the date member of this pair
-    result.expiration = getExpiryDate(aws_result.value().GetExpiration());
-    result.ssealgorithm = getEncryptionString(aws_result.value().GetServerSideEncryption());
-    return result;
-  } else {
+  if (!aws_result) {
     return minifi::utils::nullopt;
   }
+
+  PutObjectResult result;
+  // Etags are returned by AWS in quoted form that should be removed
+  result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result.value().GetETag(), '"');
+  result.version = aws_result.value().GetVersionId();
+
+  // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format
+  // s3.expiration only needs the date member of this pair
+  result.expiration_time = getExpiration(aws_result.value().GetExpiration()).expiration_time;
+  result.ssealgorithm = getEncryptionString(aws_result.value().GetServerSideEncryption());
+  return result;
 }
 
 bool S3WrapperBase::deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version) {
@@ -132,6 +139,53 @@ bool S3WrapperBase::deleteObject(const std::string& bucket, const std::string& o
     request.SetVersionId(version);
   }
   return sendDeleteObjectRequest(request);
+}
+
+int64_t S3WrapperBase::writeFetchedBody(Aws::IOStream& source, const int64_t data_size, const std::shared_ptr<io::BaseStream>& output) {
+  static const uint64_t BUFFER_SIZE = 4096;
+  std::vector<uint8_t> buffer;
+  buffer.reserve(BUFFER_SIZE);
+
+  int64_t write_size = 0;
+  while (write_size < data_size) {
+    auto next_write_size = data_size - write_size < BUFFER_SIZE ? data_size - write_size : BUFFER_SIZE;
+    if (!source.read(reinterpret_cast<char*>(buffer.data()), next_write_size)) {
+      return -1;
+    }
+    auto ret = output->write(buffer.data(), next_write_size);
+    if (ret < 0) {
+      return ret;
+    }
+    write_size += next_write_size;
+  }
+  return write_size;
+}
+
+minifi::utils::optional<GetObjectResult> S3WrapperBase::getObject(const GetObjectRequestParameters& get_object_params, const std::shared_ptr<io::BaseStream>& out_body) {
+  Aws::S3::Model::GetObjectRequest request;
+  request.SetBucket(get_object_params.bucket);
+  request.SetKey(get_object_params.object_key);
+  if (!get_object_params.version.empty()) {
+    request.SetVersionId(get_object_params.version);
+  }
+  if (get_object_params.requester_pays) {
+    request.SetRequestPayer(Aws::S3::Model::RequestPayer::requester);
+  }
+  auto aws_result = sendGetObjectRequest(request);
+  if (!aws_result) {
+    return minifi::utils::nullopt;
+  }
+
+  GetObjectResult result;
+  result.setFilePaths(get_object_params.object_key);
+  result.mime_type = aws_result->GetContentType();
+  result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result->GetETag(), '"');
+  result.expiration = getExpiration(aws_result.value().GetExpiration());
+  result.ssealgorithm = getEncryptionString(aws_result->GetServerSideEncryption());
+  result.version = aws_result->GetVersionId();
+  result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), out_body);
+
+  return result;
 }
 
 }  // namespace s3

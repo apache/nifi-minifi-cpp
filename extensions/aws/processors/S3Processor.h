@@ -72,6 +72,14 @@ constexpr const char *US_WEST_2 = "us-west-2";
 
 }  // namespace region
 
+struct CommonProperties {
+  std::string bucket;
+  std::string object_key;
+  Aws::Auth::AWSCredentials credentials;
+  aws::s3::ProxyOptions proxy;
+  std::string endpoint_override_url;
+};
+
 class S3Processor : public core::Processor {
  public:
   static const std::set<std::string> REGIONS;
@@ -102,14 +110,13 @@ class S3Processor : public core::Processor {
 
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentials(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
-  bool setProxy(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
-  virtual bool getExpressionLanguageSupportedProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
+  minifi::utils::optional<aws::s3::ProxyOptions> getProxy(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
+  minifi::utils::optional<CommonProperties> getCommonELSupportedProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
+  void configureS3Wrapper(const CommonProperties &common_properties);
 
   std::shared_ptr<logging::Logger> logger_;
   std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper_;
-  std::string bucket_;
-  std::string object_key_;
-  aws::AWSCredentialsProvider aws_credentials_provider_;
+  std::mutex s3_wrapper_mutex_;
 };
 
 }  // namespace processors

@@ -114,7 +114,7 @@ void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &
     std::string prop_value = "";
     if (context->getDynamicProperty(prop_key, prop_value) && !prop_value.empty()) {
       logger_->log_debug("PutS3Object: DynamicProperty: [%s] -> [%s]", prop_key, prop_value);
-      put_s3_request_params_.user_metadata_map.emplace(prop_key, prop_value);
+      user_metadata_map_.emplace(prop_key, prop_value);
       if (first_property) {
         user_metadata_ = prop_key + "=" + prop_value;
         first_property = false;
@@ -129,19 +129,19 @@ void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &
 void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   S3Processor::onSchedule(context, sessionFactory);
 
-  if (!context->getProperty(StorageClass.getName(), put_s3_request_params_.storage_class)
-      || put_s3_request_params_.storage_class.empty()
-      || STORAGE_CLASSES.find(put_s3_request_params_.storage_class) == STORAGE_CLASSES.end()) {
+  if (!context->getProperty(StorageClass.getName(), storage_class_)
+      || storage_class_.empty()
+      || STORAGE_CLASSES.find(storage_class_) == STORAGE_CLASSES.end()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Class property missing or invalid");
   }
-  logger_->log_debug("PutS3Object: Storage Class [%s]", put_s3_request_params_.storage_class);
+  logger_->log_debug("PutS3Object: Storage Class [%s]", storage_class_);
 
-  if (!context->getProperty(ServerSideEncryption.getName(), put_s3_request_params_.server_side_encryption)
-      || put_s3_request_params_.server_side_encryption.empty()
-      || SERVER_SIDE_ENCRYPTIONS.find(put_s3_request_params_.server_side_encryption) == SERVER_SIDE_ENCRYPTIONS.end()) {
+  if (!context->getProperty(ServerSideEncryption.getName(), server_side_encryption_)
+      || server_side_encryption_.empty()
+      || SERVER_SIDE_ENCRYPTIONS.find(server_side_encryption_) == SERVER_SIDE_ENCRYPTIONS.end()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Server Side Encryption property missing or invalid");
   }
-  logger_->log_debug("PutS3Object: Server Side Encryption [%s]", put_s3_request_params_.server_side_encryption);
+  logger_->log_debug("PutS3Object: Server Side Encryption [%s]", server_side_encryption_);
 
   fillUserMetadata(context);
 }
@@ -159,60 +159,72 @@ std::string PutS3Object::parseAccessControlList(const std::string &comma_separat
   return minifi::utils::StringUtils::join(", ", users);
 }
 
-bool PutS3Object::setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {
-  context->getProperty(CannedACL, put_s3_request_params_.canned_acl, flow_file);
-  if (!put_s3_request_params_.canned_acl.empty() && CANNED_ACLS.find(put_s3_request_params_.canned_acl) == CANNED_ACLS.end()) {
+bool PutS3Object::setCannedAcl(
+    const std::shared_ptr<core::ProcessContext> &context,
+    const std::shared_ptr<core::FlowFile> &flow_file,
+    aws::s3::PutObjectRequestParameters &put_s3_request_params) {
+  context->getProperty(CannedACL, put_s3_request_params.canned_acl, flow_file);
+  if (!put_s3_request_params.canned_acl.empty() && CANNED_ACLS.find(put_s3_request_params.canned_acl) == CANNED_ACLS.end()) {
     logger_->log_error("Canned ACL is invalid!");
     return false;
   }
-  logger_->log_debug("PutS3Object: Canned ACL [%s]", put_s3_request_params_.canned_acl);
+  logger_->log_debug("PutS3Object: Canned ACL [%s]", put_s3_request_params.canned_acl);
   return true;
 }
 
-bool PutS3Object::setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {
+bool PutS3Object::setAccessControl(
+      const std::shared_ptr<core::ProcessContext> &context,
+      const std::shared_ptr<core::FlowFile> &flow_file,
+      aws::s3::PutObjectRequestParameters &put_s3_request_params) {
   std::string value;
   if (context->getProperty(FullControlUserList, value, flow_file) && !value.empty()) {
-    put_s3_request_params_.fullcontrol_user_list = parseAccessControlList(value);
+    put_s3_request_params.fullcontrol_user_list = parseAccessControlList(value);
     logger_->log_debug("PutS3Object: Full Control User List [%s]", value);
   }
   if (context->getProperty(ReadPermissionUserList, value, flow_file) && !value.empty()) {
-    put_s3_request_params_.read_permission_user_list = parseAccessControlList(value);
+    put_s3_request_params.read_permission_user_list = parseAccessControlList(value);
     logger_->log_debug("PutS3Object: Read Permission User List [%s]", value);
   }
   if (context->getProperty(ReadACLUserList, value, flow_file) && !value.empty()) {
-    put_s3_request_params_.read_acl_user_list = parseAccessControlList(value);
+    put_s3_request_params.read_acl_user_list = parseAccessControlList(value);
     logger_->log_debug("PutS3Object: Read ACL User List [%s]", value);
   }
   if (context->getProperty(WriteACLUserList, value, flow_file) && !value.empty()) {
-    put_s3_request_params_.write_acl_user_list = parseAccessControlList(value);
+    put_s3_request_params.write_acl_user_list = parseAccessControlList(value);
     logger_->log_debug("PutS3Object: Write ACL User List [%s]", value);
   }
 
-  return setCannedAcl(context, flow_file);
+  return setCannedAcl(context, flow_file, put_s3_request_params);
 }
 
-bool PutS3Object::getExpressionLanguageSupportedProperties(
+minifi::utils::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) {
-  if (!S3Processor::getExpressionLanguageSupportedProperties(context, flow_file)) {
-    return false;
+    const std::shared_ptr<core::FlowFile> &flow_file,
+    const CommonProperties &common_properties) {
+  aws::s3::PutObjectRequestParameters params;
+  params.object_key = common_properties.object_key;
+  params.bucket = common_properties.bucket;
+  params.user_metadata_map = user_metadata_map_;
+  params.server_side_encryption = server_side_encryption_;
+  params.storage_class = storage_class_;
+
+  context->getProperty(ContentType, params.content_type, flow_file);
+  logger_->log_debug("PutS3Object: Content Type [%s]", params.content_type);
+
+  if (!setAccessControl(context, flow_file, params)) {
+    return minifi::utils::nullopt;
   }
-  put_s3_request_params_.object_key = std::move(object_key_);
-  put_s3_request_params_.bucket = std::move(bucket_);
-
-  context->getProperty(ContentType, put_s3_request_params_.content_type, flow_file);
-  logger_->log_debug("PutS3Object: Content Type [%s]", put_s3_request_params_.content_type);
-
-  return setAccessControl(context, flow_file);
+  return params;
 }
 
 void PutS3Object::setAttributes(
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file,
+    const aws::s3::PutObjectRequestParameters &put_s3_request_params,
     const minifi::aws::s3::PutObjectResult &put_object_result) {
-  session->putAttribute(flow_file, "s3.bucket", put_s3_request_params_.bucket);
-  session->putAttribute(flow_file, "s3.key", put_s3_request_params_.object_key);
-  session->putAttribute(flow_file, "s3.contenttype", put_s3_request_params_.content_type);
+  session->putAttribute(flow_file, "s3.bucket", put_s3_request_params.bucket);
+  session->putAttribute(flow_file, "s3.key", put_s3_request_params.object_key);
+  session->putAttribute(flow_file, "s3.contenttype", put_s3_request_params.content_type);
 
   if (!user_metadata_.empty()) {
     session->putAttribute(flow_file, "s3.usermetadata", user_metadata_);
@@ -223,8 +235,8 @@ void PutS3Object::setAttributes(
   if (!put_object_result.etag.empty()) {
     session->putAttribute(flow_file, "s3.etag", put_object_result.etag);
   }
-  if (!put_object_result.expiration.empty()) {
-    session->putAttribute(flow_file, "s3.expiration", put_object_result.expiration);
+  if (!put_object_result.expiration_time.empty()) {
+    session->putAttribute(flow_file, "s3.expiration", put_object_result.expiration_time);
   }
   if (!put_object_result.ssealgorithm.empty()) {
     session->putAttribute(flow_file, "s3.sseAlgorithm", put_object_result.ssealgorithm);
@@ -239,19 +251,31 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     return;
   }
 
-  if (!getExpressionLanguageSupportedProperties(context, flow_file)) {
+  auto common_properties = getCommonELSupportedProperties(context, flow_file);
+  if (!common_properties) {
     session->transfer(flow_file, Failure);
     return;
   }
 
-  PutS3Object::ReadCallback callback(flow_file->getSize(), put_s3_request_params_, s3_wrapper_.get());
-  session->read(flow_file, &callback);
+  auto put_s3_request_params = buildPutS3RequestParams(context, flow_file, common_properties.value());
+  if (!put_s3_request_params) {
+    session->transfer(flow_file, Failure);
+    return;
+  }
+
+  PutS3Object::ReadCallback callback(flow_file->getSize(), put_s3_request_params.value(), s3_wrapper_.get());
+  {
+    std::lock_guard<std::mutex> lock(s3_wrapper_mutex_);
+    configureS3Wrapper(common_properties.value());
+    session->read(flow_file, &callback);
+  }
+
   if (callback.result_ == minifi::utils::nullopt) {
-    logger_->log_error("Failed to upload S3 object to bucket '%s'", put_s3_request_params_.bucket);
+    logger_->log_error("Failed to upload S3 object to bucket '%s'", put_s3_request_params->bucket);
     session->transfer(flow_file, Failure);
   } else {
-    setAttributes(session, flow_file, callback.result_.value());
-    logger_->log_debug("Successfully uploaded S3 object '%s' to bucket '%s'", put_s3_request_params_.object_key, put_s3_request_params_.bucket);
+    setAttributes(session, flow_file, put_s3_request_params.value(), callback.result_.value());
+    logger_->log_debug("Successfully uploaded S3 object '%s' to bucket '%s'", put_s3_request_params->object_key, put_s3_request_params->bucket);
     session->transfer(flow_file, Success);
   }
 }
