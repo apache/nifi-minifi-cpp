@@ -44,7 +44,9 @@ enum Operation {
   UPDATE,
   VALIDATE,
   CLEAR,
-  TRANSFER
+  TRANSFER,
+  PAUSE,
+  RESUME
 };
 
 #define PAYLOAD_NO_STATUS 0

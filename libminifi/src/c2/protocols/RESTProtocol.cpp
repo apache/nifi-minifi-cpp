@@ -431,6 +431,10 @@ std::string RESTProtocol::getOperation(const C2Payload &payload) {
       return "start";
     case Operation::UPDATE:
       return "update";
+    case Operation::PAUSE:
+      return "pause";
+    case Operation::RESUME:
+      return "resume";
     default:
       return "heartbeat";
   }
@@ -455,6 +459,10 @@ Operation RESTProtocol::stringToOperation(const std::string str) {
     return Operation::STOP;
   } else if (op == "start") {
     return Operation::START;
+  } else if (op == "pause") {
+    return Operation::PAUSE;
+  } else if (op == "resume") {
+    return Operation::RESUME;
   }
   return Operation::HEARTBEAT;
 }

@@ -48,7 +48,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
       std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
       std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<C2Client>::getLogger());
 
-  void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &update_sink);
+  void initialize(core::controller::ControllerServiceProvider *controller, state::PausableStateController *state_controller, const std::shared_ptr<state::StateMonitor> &update_sink);
 
   std::shared_ptr<state::response::ResponseNode> getMetricsNode(const std::string& metrics_class) const override;
 

@@ -51,15 +51,17 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-C2Agent::C2Agent(core::controller::ControllerServiceProvider* controller,
+C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
+                 state::PausableStateController *state_controller,
                  const std::shared_ptr<state::StateMonitor> &updateSink,
                  const std::shared_ptr<Configure> &configuration,
-                 const std::shared_ptr<utils::file::FileSystem>& filesystem)
+                 const std::shared_ptr<utils::file::FileSystem> &filesystem)
     : heart_beat_period_(3000),
       max_c2_responses(5),
       update_sink_(updateSink),
       update_service_(nullptr),
       controller_(controller),
+      state_controller_(state_controller),
       configuration_(configuration),
       filesystem_(filesystem),
       protocol_(nullptr),
@@ -428,6 +430,20 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       }
     }
       //
+      break;
+    case Operation::PAUSE:
+      if (state_controller_ != nullptr) {
+        state_controller_->pause();
+      } else {
+        logger_->log_warn("Pause functionality is not supported!");
+      }
+      break;
+    case Operation::RESUME:
+      if (state_controller_ != nullptr) {
+        state_controller_->resume();
+      } else {
+        logger_->log_warn("Resume functionality is not supported!");
+      }
       break;
     default:
       break;

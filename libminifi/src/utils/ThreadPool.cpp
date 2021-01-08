@@ -42,7 +42,10 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
     if (worker_queue_.dequeueWait(task)) {
       {
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-        if (!task_status_[task.getIdentifier()]) {
+        if (task_status_[task.getIdentifier()] == TaskState::STOPPED) {
+          continue;
+        } else if (task_status_[task.getIdentifier()] == TaskState::PAUSED) {
+          paused_tasks_.emplace(task.getIdentifier(), std::move(task));
           continue;
         }
       }
@@ -64,7 +67,8 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
         }
       }
     } else {
-      // This means that the threadpool is running, but the ConcurrentQueue is stopped -> shouldn't happen during normal conditions
+      // This should happen if all tasks are paused. If that is not the case it means that
+      // the threadpool is running, but the ConcurrentQueue is stopped -> shouldn't happen during normal conditions
       // Might happen during startup or shutdown for a very short time
       if (running_.load()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -101,7 +105,7 @@ template<typename T>
 bool ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
   {
     std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-    task_status_[task.getIdentifier()] = true;
+    task_status_[task.getIdentifier()] = TaskState::RUNNING;
   }
   future = std::move(task.getPromise()->get_future());
   worker_queue_.enqueue(std::move(task));
@@ -196,7 +200,24 @@ void ThreadPool<T>::start() {
 template<typename T>
 void ThreadPool<T>::stopTasks(const TaskId &identifier) {
   std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-  task_status_[identifier] = false;
+  task_status_[identifier] = TaskState::STOPPED;
+}
+
+template<typename T>
+void ThreadPool<T>::resumeTasks(const TaskId &identifier) {
+  std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+  task_status_[identifier] = TaskState::RUNNING;
+  if (paused_tasks_.find(identifier) == paused_tasks_.end()) {
+    return;
+  }
+  worker_queue_.enqueue(std::move(paused_tasks_[identifier]));
+  paused_tasks_.erase(identifier);
+}
+
+template<typename T>
+void ThreadPool<T>::pauseTasks(const TaskId &identifier) {
+  std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+  task_status_[identifier] = TaskState::PAUSED;
 }
 
 template<typename T>

@@ -130,6 +130,12 @@ class PayloadSerializer {
       case Operation::UPDATE:
         op = 7;
         break;
+      case Operation::PAUSE:
+        op = 8;
+        break;
+      case Operation::RESUME:
+        op = 9;
+        break;
       default:
         op = 2;
         break;
@@ -309,6 +315,10 @@ class PayloadSerializer {
         return Operation::START;
       case 7:
         return Operation::UPDATE;
+      case 8:
+        return Operation::PAUSE;
+      case 9:
+        return Operation::RESUME;
       default:
         return Operation::HEARTBEAT;
     }
