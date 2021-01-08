@@ -34,18 +34,18 @@ void setKafkaConfigurationField(rd_kafka_conf_t* configuration, const std::strin
   result = rd_kafka_conf_set(configuration, field_name.c_str(), value.c_str(), errstr.data(), errstr.size());
   if (RD_KAFKA_CONF_OK != result) {
     const std::string error_msg { errstr.data() };
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "rd_kafka configuration error" + error_msg);
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "rd_kafka configuration error: " + error_msg);
   }
 }
 
-void print_topics_list(std::shared_ptr<logging::Logger> logger, rd_kafka_topic_partition_list_t* kf_topic_partition_list) {
+void print_topics_list(logging::Logger& logger, rd_kafka_topic_partition_list_t* kf_topic_partition_list) {
   for (std::size_t i = 0; i < kf_topic_partition_list->cnt; ++i) {
-    logger->log_debug("kf_topic_partition_list: topic: %s, partition: %d, offset:%lld",
+    logger.log_debug("kf_topic_partition_list: topic: %s, partition: %d, offset:%lld",
     kf_topic_partition_list->elems[i].topic, kf_topic_partition_list->elems[i].partition, kf_topic_partition_list->elems[i].offset);
   }
 }
 
-void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_ptr<logging::Logger>& logger) {
+void print_kafka_message(const rd_kafka_message_t* rkmessage, logging::Logger& logger) {
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rkmessage->err) {
     const std::string error_msg = "ConsumeKafka: received error message from broker. Librdkafka error msg: " + std::string(rd_kafka_err2str(rkmessage->err));
     throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, error_msg);
@@ -75,7 +75,7 @@ void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_
     kafka_headers_for_each(hdrs, [&] (const std::string& key, const std::string& val) { header_list.emplace_back(key + ": " + val); });
     headers_as_string = StringUtils::join(", ", header_list);
   } else if (RD_KAFKA_RESP_ERR__NOENT != get_header_response) {
-    logger->log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
+    logger.log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
   }
 
   std::string message_as_string;
@@ -83,14 +83,14 @@ void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_
   message_as_string += "[Key](" + (key != nullptr ? std::string(key, key_len) : std::string("[None]")) + "), ";
   message_as_string += "[Offset](" +  std::to_string(rkmessage->offset) + "), ";
   message_as_string += "[Message Length](" + std::to_string(rkmessage->len) + "), ";
-  if(timestamp != -1) {
+  if (timestamp != -1) {
     message_as_string += "[Timestamp](" + std::string(tsname) + " " + std::to_string(timestamp) + " (" + std::to_string(seconds_since_timestamp) + " s ago)), ";
   }
   message_as_string += "[Headers](";
   message_as_string += headers_as_string + ")";
   message_as_string += "[Payload](" + message + ")";
 
-  logger->log_debug("Message: %s", message_as_string.c_str());
+  logger.log_debug("Message: %s", message_as_string.c_str());
 }
 
 std::string get_encoded_string(const std::string& input, KafkaEncoding encoding) {
@@ -100,7 +100,7 @@ std::string get_encoded_string(const std::string& input, KafkaEncoding encoding)
     case KafkaEncoding::HEX:
       return StringUtils::to_hex(input, /* uppercase = */ true);
   }
-  throw std::runtime_error("Invalid encoding selected for encoding.");
+  throw std::runtime_error("Invalid encoding selected: " + input);
 }
 
 optional<std::string> get_encoded_message_key(const rd_kafka_message_t* message, KafkaEncoding encoding) {

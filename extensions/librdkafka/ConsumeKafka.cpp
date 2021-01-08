@@ -240,7 +240,7 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_pa
     case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
       logger->log_debug("assigned");
       if (logger->should_log(core::logging::LOG_LEVEL::info)) {
-        utils::print_topics_list(logger, partitions);
+        utils::print_topics_list(*logger, partitions);
       }
       assign_error = rd_kafka_assign(rk, partitions);
       break;
@@ -249,7 +249,7 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_pa
       logger->log_debug("revoked:");
       rd_kafka_commit(rk, partitions, /* async = */ 0);  // Sync commit, maybe unneccessary
       if (logger->should_log(core::logging::LOG_LEVEL::info)) {
-        utils::print_topics_list(logger, partitions);
+        utils::print_topics_list(*logger, partitions);
       }
       assign_error = rd_kafka_assign(rk, NULL);
       break;
@@ -373,7 +373,7 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext* context)
     if (!message_wrapper || RD_KAFKA_RESP_ERR_NO_ERROR != message_wrapper->err) {
       break;
     }
-    utils::print_kafka_message(message_wrapper.get(), logger_);
+    utils::print_kafka_message(message_wrapper.get(), *logger_);
     // Commit offsets on broker for the provided list of partitions
     logger_->log_info("Committing offset: %" PRId64 ".", message_wrapper->offset);
     rd_kafka_commit_message(consumer_.get(), message_wrapper.get(), /* async = */ 0);
@@ -404,7 +404,7 @@ std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
       logger_->log_error("Received message with error %d: %s", message->err, rd_kafka_err2str(message->err));
       break;
     }
-    utils::print_kafka_message(message.get(), logger_);
+    utils::print_kafka_message(message.get(), *logger_);
     messages.emplace_back(std::move(message));
     elapsed = std::chrono::steady_clock::now() - start;
   }
