@@ -151,7 +151,7 @@ bool FlowFile::getAttribute(const std::string& key, std::string& value) const {
   return true;
 }
 
-utils::optional<std::reference_wrapper<const std::string>> FlowFile::getAttribute(const std::string& key) const {
+utils::optional<std::string> FlowFile::getAttribute(const std::string& key) const {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
     return it->second;

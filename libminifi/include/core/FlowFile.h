@@ -137,7 +137,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    */
   bool getAttribute(const std::string& key, std::string& value) const;
 
-  utils::optional<std::reference_wrapper<const std::string>> getAttribute(const std::string& key) const;
+  utils::optional<std::string> getAttribute(const std::string& key) const;
 
   /**
    * Updates the value in the attribute map that corresponds
