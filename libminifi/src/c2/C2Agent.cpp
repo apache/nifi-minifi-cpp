@@ -555,14 +555,18 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
   if (resp.name == "configuration") {
     handleConfigurationUpdate(resp);
   } else if (resp.name == "properties") {
-    bool update_occurred = false;
+    state::UpdateState result = state::UpdateState::FULLY_APPLIED;
     for (auto entry : resp.operation_arguments) {
-      if (update_property(entry.first, entry.second.to_string()))
-        update_occurred = true;
+      bool persist = (
+          entry.second.getAnnotation("persist")
+          | utils::map(&AnnotatedValue::to_string)
+          | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
+      if (!update_property(entry.first, entry.second.to_string(), persist)) {
+        result = state::UpdateState::PARTIALLY_APPLIED;
+      }
     }
-    if (update_occurred) {
-      // enable updates to persist the configuration.
-    }
+    C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
+    enqueue_c2_response(std::move(response));
   } else if (resp.name == "c2") {
     // prior configuration options were already in place. thus
     // we clear the map so that we don't go through replacing
@@ -638,14 +642,14 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
  * Updates a property
  */
 bool C2Agent::update_property(const std::string &property_name, const std::string &property_value, bool persist) {
-  if (update_service_->canUpdate(property_name)) {
-    configuration_->set(property_name, property_value);
-    if (persist) {
-      configuration_->persistProperties();
-      return true;
-    }
+  if (update_service_ && !update_service_->canUpdate(property_name)) {
+    return false;
   }
-  return false;
+  configuration_->set(property_name, property_value);
+  if (!persist) {
+    return true;
+  }
+  return configuration_->persistProperties();
 }
 
 void C2Agent::restart_agent() {

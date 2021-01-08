@@ -43,7 +43,9 @@ public:
         server(nullptr) {
   }
 
-  void setUrl(const std::string &url, ServerAwareHandler *handler);
+  virtual void setUrl(const std::string &url, ServerAwareHandler *handler);
+
+  void setC2Url(const std::string& heartbeat_path, const std::string& acknowledge_path);
 
   void shutdownBeforeFlowController() override {
     server.reset();
@@ -68,21 +70,31 @@ public:
 };
 
 void HTTPIntegrationBase::setUrl(const std::string &url, ServerAwareHandler *handler) {
-  parse_http_components(url, port, scheme, path);
-  CivetCallbacks callback{};
+  std::string url_port, url_scheme, url_path;
+  parse_http_components(url, url_port, url_scheme, url_path);
   if (server) {
-    server->addHandler(path, handler);
+    if (url_port != "0" && url_port != port) {
+      throw std::logic_error("Inconsistent port requirements");
+    }
+    if (url_scheme != scheme) {
+      throw std::logic_error("Inconsistent scheme requirements");
+    }
+    server->addHandler(url_path, handler);
     return;
   }
+  // initialize server
+  scheme = url_scheme;
+  port = url_port;
+  CivetCallbacks callback{};
   if (scheme == "https" && !key_dir.empty()) {
     std::string cert = key_dir + "nifi-cert.pem";
     memset(&callback, 0, sizeof(callback));
     callback.init_ssl = ssl_enable;
     port += "s";
     callback.log_message = log_message;
-    server = utils::make_unique<TestServer>(port, path, handler, &callback, cert, cert);
+    server = utils::make_unique<TestServer>(port, url_path, handler, &callback, cert, cert);
   } else {
-    server = utils::make_unique<TestServer>(port, path, handler);
+    server = utils::make_unique<TestServer>(port, url_path, handler);
   }
   bool secure{false};
   if (port == "0" || port == "0s") {
@@ -92,13 +104,23 @@ void HTTPIntegrationBase::setUrl(const std::string &url, ServerAwareHandler *han
       port += "s";
     }
   }
-  std::string c2_url = std::string("http") + (secure ? "s" : "") + "://localhost:" + getWebPort() + path;
+  std::string c2_url = std::string("http") + (secure ? "s" : "") + "://localhost:" + getWebPort() + url_path;
   configuration->set("nifi.c2.rest.url", c2_url);
   configuration->set("nifi.c2.rest.url.ack", c2_url);
 }
 
+void HTTPIntegrationBase::setC2Url(const std::string &heartbeat_path, const std::string &acknowledge_path) {
+  if (port.empty()) {
+    throw std::logic_error("Port is not yet initialized");
+  }
+  bool secure = port.back() == 's';
+  std::string base = std::string("http") + (secure ? "s" : "") + "://localhost:" + getWebPort();
+  configuration->set("nifi.c2.rest.url", base + heartbeat_path);
+  configuration->set("nifi.c2.rest.url.ack", base + acknowledge_path);
+}
+
 class VerifyC2Base : public HTTPIntegrationBase {
-public:
+ public:
   void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<LogTestController>();

@@ -60,6 +60,8 @@
 #include "core/state/nodes/StateMonitor.h"
 #include "io/ClientSocket.h"
 #include "SchedulingNodes.h"
+#include "utils/OptionalUtils.h"
+#include "core/AgentIdentificationProvider.h"
 
 namespace org {
 namespace apache {
@@ -502,12 +504,8 @@ class AgentIdentifier {
      : include_agent_manifest_(true) {
   }
 
-  void setIdentifier(const std::string &identifier) {
-    identifier_ = identifier;
-  }
-
-  void setAgentClass(const std::string &agentClass) {
-    agent_class_ = agentClass;
+  void setAgentIdentificationProvider(std::shared_ptr<core::AgentIdentificationProvider> provider) {
+    provider_ = std::move(provider);
   }
 
   void includeAgentManifest(bool include) {
@@ -515,8 +513,7 @@ class AgentIdentifier {
   }
 
  protected:
-  std::string identifier_;
-  std::string agent_class_;
+  std::shared_ptr<core::AgentIdentificationProvider> provider_;
   bool include_agent_manifest_;
 };
 
@@ -644,14 +641,16 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
     SerializedResponseNode ident;
 
     ident.name = "identifier";
-    ident.value = identifier_;
-
-    SerializedResponseNode agentClass;
-    agentClass.name = "agentClass";
-    agentClass.value = agent_class_;
-
+    ident.value = provider_->getAgentIdentifier();
     serialized.push_back(ident);
-    serialized.push_back(agentClass);
+
+    utils::optional<std::string> agent_class = provider_->getAgentClass();
+    if (agent_class) {
+      SerializedResponseNode agentClass;
+      agentClass.name = "agentClass";
+      agentClass.value = *agent_class;
+      serialized.push_back(agentClass);
+    }
 
     return serialized;
   }

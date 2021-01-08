@@ -20,34 +20,17 @@
 #include <string>
 #include <mutex>
 #include "properties/Properties.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
+// TODO(adebreceni): eliminate this class in a separate PR
 class Configuration : public Properties {
  public:
   Configuration() : Properties("MiNiFi configuration") {}
-
-  void setAgentIdentifier(const std::string &identifier) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    agent_identifier_ = identifier;
-  }
-  std::string getAgentIdentifier() const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return agent_identifier_;
-  }
-
-  void setAgentClass(const std::string& agentClass) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    agent_class_ = agentClass;
-  }
-
-  std::string getAgentClass() const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return agent_class_;
-  }
 
   // nifi.flow.configuration.file
   static constexpr const char *nifi_default_directory = "nifi.default.directory";
@@ -115,11 +98,6 @@ class Configuration : public Properties {
   static constexpr const char *minifi_disk_space_watchdog_interval = "minifi.disk.space.watchdog.interval";
   static constexpr const char *minifi_disk_space_watchdog_stop_threshold = "minifi.disk.space.watchdog.stop.threshold";
   static constexpr const char *minifi_disk_space_watchdog_restart_threshold = "minifi.disk.space.watchdog.restart.threshold";
-
- private:
-  std::string agent_identifier_;
-  std::string agent_class_;
-  mutable std::mutex mutex_;
 };
 
 }  // namespace minifi

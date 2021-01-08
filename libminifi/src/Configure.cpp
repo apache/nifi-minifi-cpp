@@ -62,6 +62,28 @@ bool Configure::isEncrypted(const std::string& key) const {
   return decryptor_->isValidEncryptionMarker(encryption_marker);
 }
 
+utils::optional<std::string> Configure::getAgentClass() const {
+  std::string agent_class;
+  if (get("nifi.c2.agent.class", "c2.agent.class", agent_class) && !agent_class.empty()) {
+    return agent_class;
+  }
+  return {};
+}
+
+std::string Configure::getAgentIdentifier() const {
+  std::string agent_id;
+  if (!get("nifi.c2.agent.identifier", "c2.agent.identifier", agent_id) || agent_id.empty()) {
+    std::lock_guard<std::mutex> guard(fallback_identifier_mutex_);
+    return fallback_identifier_;
+  }
+  return agent_id;
+}
+
+void Configure::setFallbackAgentIdentifier(const std::string& id) {
+  std::lock_guard<std::mutex> guard(fallback_identifier_mutex_);
+  fallback_identifier_ = id;
+}
+
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
