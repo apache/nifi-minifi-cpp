@@ -66,9 +66,9 @@ std::chrono::milliseconds parseTimePropertyMSOrThrow(core::ProcessContext* conte
   return std::chrono::milliseconds(time_value_ms);
 }
 
-utils::optional<uint64_t> getOptionalUintProperty(core::ProcessContext* context, const std::string& property_name) {
+utils::optional<uint64_t> getOptionalUintProperty(const core::ProcessContext& context, const std::string& property_name) {
   uint64_t value;
-  if (context->getProperty(property_name, value)) {
+  if (context.getProperty(property_name, value)) {
     return { value };
   }
   return utils::nullopt;
