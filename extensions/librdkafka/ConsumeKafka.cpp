@@ -462,8 +462,10 @@ std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_messa
     if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_header_get(headers_raw, header_idx, header_name.c_str(), (const void**)(&value), &size)) {
       break;
     }
-    if (size < std::numeric_limits<int>::max()) {
+    if (size < 200) {
       logger_->log_debug("%.*s", static_cast<int>(size), value);
+    } else {
+      logger_->log_debug("%.*s...", 200, value);
     }
     matching_headers.emplace_back(value, size);
   }
