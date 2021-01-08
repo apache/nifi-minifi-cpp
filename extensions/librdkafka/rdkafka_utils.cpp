@@ -90,7 +90,7 @@ void print_kafka_message(const rd_kafka_message_t* rkmessage, const std::shared_
   message_as_string += headers_as_string + ")";
   message_as_string += "[Payload](" + message + ")";
 
-  logger -> log_debug("Message: %s", message_as_string.c_str());
+  logger->log_debug("Message: %s", message_as_string.c_str());
 }
 
 std::string get_encoded_string(const std::string& input, KafkaEncoding encoding) {
