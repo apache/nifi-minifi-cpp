@@ -97,7 +97,7 @@ void CompressContent::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void CompressContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void CompressContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   context->getProperty(CompressLevel.getName(), compressLevel_);
   context->getProperty(CompressMode.getName(), compressMode_);
   context->getProperty(CompressFormat.getName(), compressFormat_);

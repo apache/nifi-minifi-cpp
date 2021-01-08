@@ -879,7 +879,7 @@ int initiateResourceNegotiation(struct CRawSiteToSiteClient* client) {
     return -1;
   }
 
-  int ret = writeUTF(getResourceName(client), strlen(getResourceName(client)), False, client->_peer->_stream);
+  int ret = writeUTF(getResourceName(), strlen(getResourceName()), False, client->_peer->_stream);
 
   if (ret <= 0) {
     return -1;
@@ -937,7 +937,7 @@ int initiateCodecResourceNegotiation(struct CRawSiteToSiteClient* client) {
     return -1;
   }
 
-  const char * coderresource = getCodecResourceName(client);
+  const char * coderresource = getCodecResourceName();
 
   int ret = writeUTF(coderresource, strlen(coderresource), False, client->_peer->_stream);
 

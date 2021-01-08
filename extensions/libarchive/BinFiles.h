@@ -244,7 +244,7 @@ class BinFiles : public core::Processor {
    */
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   // OnTrigger method, implemented by NiFi BinFiles
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
+  void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/) override {
   }
   // OnTrigger method, implemented by NiFi BinFiles
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
@@ -259,11 +259,11 @@ class BinFiles : public core::Processor {
   // Allows general pre-processing of a flow file before it is offered to a bin. This is called before getGroupId().
   virtual void preprocessFlowFile(core::ProcessContext *context, core::ProcessSession *session, std::shared_ptr<core::FlowFile> flow);
   // Returns a group ID representing a bin. This allows flow files to be binned into like groups
-  virtual std::string getGroupId(core::ProcessContext *context, std::shared_ptr<core::FlowFile> flow) {
+  virtual std::string getGroupId(core::ProcessContext* /*context*/, std::shared_ptr<core::FlowFile> /*flow*/) {
     return "";
   }
   // Processes a single bin.
-  virtual bool processBin(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin) {
+  virtual bool processBin(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/, std::unique_ptr<Bin>& /*bin*/) {
     return false;
   }
   // transfer flows to failure in bin

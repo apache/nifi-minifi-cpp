@@ -74,7 +74,7 @@ class SerializableComponent : public core::Connectable {
    * @param bufferSize length of buffer
    * @return status of serialization
    */
-  virtual bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) {
+  virtual bool Serialize(const std::string& /*key*/, const uint8_t* /*buffer*/, const size_t /*bufferSize*/) {
     return false;
   }
 

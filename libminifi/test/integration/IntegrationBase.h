@@ -65,7 +65,7 @@ class IntegrationBase {
   virtual void configureC2() {
   }
 
-  virtual void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+  virtual void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> /*pg*/) {
 
   }
 
@@ -73,7 +73,7 @@ class IntegrationBase {
 
   }
 
-  virtual void updateProperties(std::shared_ptr<minifi::FlowController> fc) {
+  virtual void updateProperties(std::shared_ptr<minifi::FlowController> /*fc*/) {
 
   }
 

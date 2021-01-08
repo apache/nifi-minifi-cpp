@@ -167,7 +167,7 @@ class ArchiveMerge {
     std::shared_ptr<logging::Logger> logger_;
     FlowFileSerializer& serializer_;
 
-    static la_ssize_t archive_write(struct archive *arch, void *context, const void *buff, size_t size) {
+    static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
       WriteCallback *callback = (WriteCallback *) context;
       uint8_t* data = reinterpret_cast<uint8_t*>(const_cast<void*>(buff));
       la_ssize_t totalWrote = 0;

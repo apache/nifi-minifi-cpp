@@ -25,7 +25,7 @@ namespace nifi {
 namespace minifi {
 namespace sitetosite {
 
-int SiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message) {
+int SiteToSiteClient::readResponse(const std::shared_ptr<Transaction>& /*transaction*/, RespondCode &code, std::string &message) {
   uint8_t firstByte;
 
   int ret = peer_->read(firstByte);
@@ -78,7 +78,7 @@ void SiteToSiteClient::deleteTransaction(const utils::Identifier& transactionID)
   known_transactions_.erase(transactionID);
 }
 
-int SiteToSiteClient::writeResponse(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message) {
+int SiteToSiteClient::writeResponse(const std::shared_ptr<Transaction>& /*transaction*/, RespondCode code, std::string message) {
   RespondCodeContext *resCode = this->getRespondCodeContext(code);
 
   if (resCode == NULL) {

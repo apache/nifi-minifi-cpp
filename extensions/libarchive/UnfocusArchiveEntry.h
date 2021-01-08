@@ -75,7 +75,7 @@ class UnfocusArchiveEntry : public core::Processor {
     //! Logger
     std::shared_ptr<Logger> logger_;
     ArchiveMetadata *_archiveMetadata;
-    static int ok_cb(struct archive *, void *d) { return ARCHIVE_OK; }
+    static int ok_cb(struct archive *, void* /*d*/) { return ARCHIVE_OK; }
     static la_ssize_t write_cb(struct archive *, void *d, const void *buffer, size_t length);
   };
 

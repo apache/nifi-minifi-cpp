@@ -37,11 +37,11 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-int FlowControlProtocol::connectServer(const char *host, uint16_t port) {
+int FlowControlProtocol::connectServer(const char* /*host*/, uint16_t /*port*/) {
   return 0;
 }
 
-int FlowControlProtocol::sendData(uint8_t *buf, int buflen) {
+int FlowControlProtocol::sendData(uint8_t* /*buf*/, int /*buflen*/) {
   return 0;
 }
 

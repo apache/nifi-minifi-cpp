@@ -50,7 +50,7 @@ class TestServer{
     }
   };
  public:
-  TestServer(std::string &port, std::string &rooturi, CivetHandler *handler, CivetCallbacks *callbacks, std::string &cert, std::string &ca_cert) {
+  TestServer(std::string &port, std::string &rooturi, CivetHandler *handler, CivetCallbacks *callbacks, std::string& /*cert*/, std::string &ca_cert) {
 
     if (!mg_check_feature(2)) {
       throw std::runtime_error("Error: Embedded example built with SSL support, "

@@ -52,7 +52,7 @@ class SiteToSiteLocationResponder : public ServerAwareHandler {
   explicit SiteToSiteLocationResponder(bool isSecure)
       : isSecure(isSecure) {
   }
-  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
+  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
     std::string site2site_rest_resp = "{"
         "\"revision\": {"
         "\"clientId\": \"483d53eb-53ec-4e93-b4d4-1fc3d23dae6f\""
@@ -82,7 +82,7 @@ class PeerResponder : public ServerAwareHandler {
     assert(parse_http_components(base_url, port, scheme, path));
   }
 
-  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
+  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
   
 #ifdef WIN32
     std::string hostname = org::apache::nifi::minifi::io::Socket::getMyHostName();
@@ -110,7 +110,7 @@ class SiteToSiteBaseResponder : public ServerAwareHandler {
       : base_url(std::move(base_url)) {
   }
 
-  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
+  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
     std::string site2site_rest_resp =
         "{\"controller\":{\"id\":\"96dab149-0162-1000-7924-ed3122d6ea2b\",\"name\":\"NiFi Flow\",\"comments\":\"\",\"runningCount\":3,\"stoppedCount\":6,\"invalidCount\":1,\"disabledCount\":0,\"inputPortCount\":1,\"outputPortCount\":1,\"remoteSiteListeningPort\":10443,\"siteToSiteSecure\":false,\"instanceId\":\"13881505-0167-1000-be72-aa29341a3e9a\",\"inputPorts\":[{\"id\":\"471deef6-2a6e-4a7d-912a-81cc17e3a204\",\"name\":\"RPGIN\",\"comments\":\"\",\"state\":\"RUNNING\"}],\"outputPorts\":[{\"id\":\"9cf15a63-0166-1000-1b29-027406d96013\",\"name\":\"ddsga\",\"comments\":\"\",\"state\":\"STOPPED\"}]}}";
     std::stringstream headers;
@@ -146,7 +146,7 @@ class TransactionResponder : public ServerAwareHandler {
     }
   }
 
-  bool handlePost(CivetServer *server, struct mg_connection *conn) override {
+  bool handlePost(CivetServer* /*server*/, struct mg_connection *conn) override {
     std::string site2site_rest_resp;
     std::stringstream headers;
     headers << "HTTP/1.1 201 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nX-Location-Uri-Intent: ";
@@ -204,7 +204,7 @@ class FlowFileResponder : public ServerAwareHandler {
     flow_files_feed_ = feed;
   }
 
-  bool handlePost(CivetServer *server, struct mg_connection *conn) override {
+  bool handlePost(CivetServer* /*server*/, struct mg_connection *conn) override {
     std::string site2site_rest_resp;
     std::stringstream headers;
 
@@ -260,7 +260,7 @@ class FlowFileResponder : public ServerAwareHandler {
     return true;
   }
 
-  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
+  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
 
     if (flow_files_feed_->size_approx() > 0) {
       std::shared_ptr<FlowObj> flowobj;
@@ -332,7 +332,7 @@ class DeleteTransactionResponder : public ServerAwareHandler {
         response_code(std::move(response_code)) {
   }
 
-  bool handleDelete(CivetServer *server, struct mg_connection *conn) override {
+  bool handleDelete(CivetServer* /*server*/, struct mg_connection *conn) override {
     std::string site2site_rest_resp;
     std::stringstream headers;
     std::string resp;
@@ -453,7 +453,7 @@ class C2UpdateHandler : public ServerAwareHandler {
     : test_file_location_(test_file_location) {
   }
 
-  bool handlePost(CivetServer *server, struct mg_connection *conn) override {
+  bool handlePost(CivetServer* /*server*/, struct mg_connection *conn) override {
     calls_++;
     if (!response_.empty()) {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
@@ -468,7 +468,7 @@ class C2UpdateHandler : public ServerAwareHandler {
     return true;
   }
 
-  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
+  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
     std::ifstream myfile(test_file_location_.c_str(), std::ios::in | std::ios::binary);
     if (myfile.good()) {
       std::string str((std::istreambuf_iterator<char>(myfile)), (std::istreambuf_iterator<char>()));

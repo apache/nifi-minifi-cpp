@@ -241,7 +241,7 @@ void GetTCP::notifyStop() {
     socket_ring_buffer_.try_dequeue(socket_ptr);
   }
 }
-void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>& /*session*/) {
   // Perform directory list
   metrics_->iterations_++;
   std::lock_guard<std::mutex> lock(mutex_);

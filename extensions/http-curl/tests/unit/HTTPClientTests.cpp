@@ -47,12 +47,12 @@ TEST_CASE("HTTPClientTestChunkedResponse", "[basic]") {
       mg_send_chunk(conn, nullptr, 0U);
     }
 
-    bool handleGet(CivetServer *server, struct mg_connection *conn) {
+    bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) {
       send_response(conn);
       return true;
     }
 
-    bool handlePost(CivetServer *server, struct mg_connection *conn) {
+    bool handlePost(CivetServer* /*server*/, struct mg_connection *conn) {
       mg_printf(conn, "HTTP/1.1 100 Continue\r\n\r\n");
 
       std::array<uint8_t, 16384U> buf;

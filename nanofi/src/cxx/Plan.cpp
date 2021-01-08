@@ -47,7 +47,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addSimpleCallback(void *obj, std
     return nullptr;
   }
 
-  auto simple_func_wrapper = [fp](core::ProcessSession *session, core::ProcessContext *context)->void { fp(session); };
+  auto simple_func_wrapper = [fp](core::ProcessSession *session, core::ProcessContext* /*context*/)->void { fp(session); };
 
   return addCallback(obj, simple_func_wrapper);
 }
@@ -84,7 +84,7 @@ bool ExecutionPlan::setProperty(const std::shared_ptr<core::Processor>& proc, co
   return processor_contexts_.at(i)->setProperty(prop, value);
 }
 
-std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, core::Relationship relationship, bool linkToPrevious) {
+std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string& /*name*/, core::Relationship relationship, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }

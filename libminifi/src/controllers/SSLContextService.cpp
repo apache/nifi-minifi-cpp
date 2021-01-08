@@ -244,8 +244,8 @@ bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
   return true;
 }
 
-bool SSLContextService::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* ctx) const {
 #ifdef WIN32
+bool SSLContextService::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* ctx) const {
   utils::tls::WindowsCertStoreLocation store_location{cert_store_location_};
   HCERTSTORE hCertStore = CertOpenStore(CERT_STORE_PROV_SYSTEM_A, 0, NULL,
                                         CERT_STORE_OPEN_EXISTING_FLAG | CERT_STORE_READONLY_FLAG | store_location.getBitfieldValue(),
@@ -269,11 +269,13 @@ bool SSLContextService::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX*
 
   logger_->log_error("Could not find any suitable client certificate in sytem store %s/%s", cert_store_location_, client_cert_store_);
   return false;
+}
 #else
+bool SSLContextService::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* /*ctx*/) const {
   logger_->log_error("Getting client certificate from the system store is only supported on Windows");
   return false;
-#endif  // WIN32
 }
+#endif  // WIN32
 
 #ifdef WIN32
 bool SSLContextService::useClientCertificate(SSL_CTX* ctx, PCCERT_CONTEXT certificate) const {

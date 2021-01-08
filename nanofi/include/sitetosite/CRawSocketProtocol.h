@@ -76,11 +76,11 @@ int16_t sendPacket(struct CRawSiteToSiteClient * client, const char * transactio
 
 CTransaction* createTransaction(struct CRawSiteToSiteClient * client, TransferDirection direction);
 
-static const char * getResourceName(const struct CRawSiteToSiteClient * c) {
+static const char * getResourceName() {
   return "SocketFlowFileProtocol";
 }
 
-static const char * getCodecResourceName(const struct CRawSiteToSiteClient * c) {
+static const char * getCodecResourceName() {
   return "StandardFlowFileCodec";
 }
 
@@ -193,7 +193,7 @@ static void initRawClient(struct CRawSiteToSiteClient *client, struct SiteToSite
 
 static struct CRawSiteToSiteClient* createClient(const char * host, uint16_t port, const char * nifi_port) {
   struct SiteToSiteCPeer * peer = (struct SiteToSiteCPeer *)malloc(sizeof(struct SiteToSiteCPeer));
-  initPeer(peer, host, port, "");
+  initPeer(peer, host, port);
   struct CRawSiteToSiteClient* client = (struct CRawSiteToSiteClient*)malloc(sizeof(struct CRawSiteToSiteClient));
   initRawClient(client, peer);
   client->_owns_resource = True;

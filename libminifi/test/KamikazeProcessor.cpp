@@ -51,7 +51,7 @@ void KamikazeProcessor::initialize() {
   setSupportedProperties({ThrowInOnSchedule, ThrowInOnTrigger});
 }
 
-void KamikazeProcessor::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void KamikazeProcessor::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   std::string value;
   bool bool_value;
 

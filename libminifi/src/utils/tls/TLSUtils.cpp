@@ -29,7 +29,7 @@ namespace minifi {
 namespace utils {
 namespace tls {
 
-int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
+int pemPassWordCb(char *buf, int size, int /*rwflag*/, void *userdata) {
   const std::string * const origPass = reinterpret_cast<std::string*>(userdata);
   // make copy the password, trimming it
   const auto pass = utils::StringUtils::trimRight(*origPass);

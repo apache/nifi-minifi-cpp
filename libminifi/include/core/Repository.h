@@ -91,20 +91,20 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   virtual void flush();
 
   // initialize
-  virtual bool initialize(const std::shared_ptr<Configure> &configure) {
+  virtual bool initialize(const std::shared_ptr<Configure>& /*configure*/) {
     return true;
   }
   // Put
-  virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
+  virtual bool Put(std::string /*key*/, const uint8_t* /*buf*/, size_t /*bufLen*/) {
     return true;
   }
 
-  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>>& data) {
+  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>>& /*data*/) {
     return true;
   }
 
   // Delete
-  virtual bool Delete(std::string key) {
+  virtual bool Delete(std::string /*key*/) {
     return true;
   }
 
@@ -124,7 +124,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     this->containers = containers;
   }
 
-  virtual bool Get(const std::string &key, std::string &value) {
+  virtual bool Get(const std::string& /*key*/, std::string& /*value*/) {
     return false;
   }
 
@@ -163,7 +163,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
    *
    * Base implementation returns true;
    */
-  virtual bool Serialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t max_size) {
+  virtual bool Serialize(std::vector<std::shared_ptr<core::SerializableComponent>>& /*store*/, size_t /*max_size*/) {
     return true;
   }
 
@@ -176,7 +176,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
    *
    * Base implementation returns true;
    */
-  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
+  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>>& /*store*/, size_t& /*max_size*/) {
     return true;
   }
 
@@ -191,28 +191,28 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
    *
    * Base implementation returns true;
    */
-  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambdaConstructor) {
+  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>>& /*store*/, size_t& /*max_size*/, std::function<std::shared_ptr<core::SerializableComponent>()> /*lambdaConstructor*/) { // NOLINT
     return true;
   }
 
   /**
    * Base implementation returns true;
    */
-  virtual bool Serialize(const std::shared_ptr<core::SerializableComponent> &store) {
+  virtual bool Serialize(const std::shared_ptr<core::SerializableComponent>& /*store*/) {
     return true;
   }
 
   /**
    * Base implementation returns true;
    */
-  virtual bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &store) {
+  virtual bool DeSerialize(const std::shared_ptr<core::SerializableComponent>& /*store*/) {
     return true;
   }
 
   /**
    * Base implementation returns true;
    */
-  virtual bool DeSerialize(const uint8_t *buffer, const size_t bufferSize) {
+  virtual bool DeSerialize(const uint8_t* /*buffer*/, const size_t /*bufferSize*/) {
     return true;
   }
 
@@ -220,11 +220,11 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     return Put(key, buffer, bufferSize);
   }
 
-  uint64_t incrementSize(const char *fpath, const struct stat *sb, int typeflag) {
+  uint64_t incrementSize(const char* /*fpath*/, const struct stat *sb, int /*typeflag*/) {
     return (repo_size_ += sb->st_size);
   }
 
-  virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
+  virtual void loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) {
   }
 
   virtual uint64_t getRepoSize();

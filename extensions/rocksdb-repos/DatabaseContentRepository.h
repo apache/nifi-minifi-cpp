@@ -40,7 +40,7 @@ class StringAppender : public rocksdb::AssociativeMergeOperator {
   // Constructor: specify delimiter
   explicit StringAppender() = default;
 
-  virtual bool Merge(const rocksdb::Slice& key, const rocksdb::Slice* existing_value, const rocksdb::Slice& value, std::string* new_value, rocksdb::Logger* logger) const {
+  virtual bool Merge(const rocksdb::Slice& /*key*/, const rocksdb::Slice* existing_value, const rocksdb::Slice& value, std::string* new_value, rocksdb::Logger* /*logger*/) const {
     // Clear the *new_value for writing.
     if (nullptr == new_value) {
       return false;

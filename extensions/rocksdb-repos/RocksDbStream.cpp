@@ -47,7 +47,7 @@ RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::R
 void RocksDbStream::close() {
 }
 
-void RocksDbStream::seek(uint64_t offset) {
+void RocksDbStream::seek(uint64_t /*offset*/) {
   // noop
 }
 

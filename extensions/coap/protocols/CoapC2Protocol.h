@@ -76,11 +76,11 @@ class CoapProtocol : public minifi::c2::RESTSender {
    */
   minifi::c2::C2Payload consumePayload(const std::string &url, const minifi::c2::C2Payload &payload, minifi::c2::Direction direction, bool async) override;
 
-  minifi::c2::C2Payload consumePayload(const minifi::c2::C2Payload &payload, minifi::c2::Direction direction, bool async) override {
+  minifi::c2::C2Payload consumePayload(const minifi::c2::C2Payload &payload, minifi::c2::Direction /*direction*/, bool /*async*/) override {
       return serialize(payload);
   }
 
-  void update(const std::shared_ptr<Configure> &configure) override {
+  void update(const std::shared_ptr<Configure>& /*configure*/) override {
     // no op.
   }
 

@@ -82,7 +82,7 @@ Expression make_dynamic(const std::function<Value(const Parameters &params, cons
 }
 
 Expression make_dynamic_attr(const std::string &attribute_id) {
-  return make_dynamic([attribute_id](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
+  return make_dynamic([attribute_id](const Parameters &params, const std::vector<Expression>& /*sub_exprs*/) -> Value {
 
     std::string result;
     const auto cur_flow_file = params.flow_file.lock();
@@ -145,7 +145,7 @@ Value expr_hostname(const std::vector<Value> &args) {
   return Value(std::string(hostname));
 }
 
-Value expr_ip(const std::vector<Value> &args) {
+Value expr_ip(const std::vector<Value>& /*args*/) {
   char hostname[1024];
   hostname[1023] = '\0';
   gethostname(hostname, 1023);
@@ -178,7 +178,7 @@ Value expr_ip(const std::vector<Value> &args) {
   return Value();
 }
 
-Value expr_uuid(const std::vector<Value> &args) {
+Value expr_uuid(const std::vector<Value>& /*args*/) {
   return Value(utils::IdGenerator::getIdGenerator()->generate().to_string());
 }
 
@@ -678,7 +678,7 @@ Value expr_toDate(const std::vector<Value>&) {
 
 #endif  // EXPRESSION_LANGUAGE_USE_DATE
 
-Value expr_now(const std::vector<Value> &args) {
+Value expr_now(const std::vector<Value>& /*args*/) {
   using namespace std::chrono;
   int64_t unix_time_ms{duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()};
   return Value(unix_time_ms);
@@ -934,7 +934,7 @@ Value expr_fromRadix(const std::vector<Value> &args) {
   return Value(std::to_string(std::stoll(args[0].asString(), nullptr, radix)));
 }
 
-Value expr_random(const std::vector<Value> &args) {
+Value expr_random(const std::vector<Value>& /*args*/) {
   std::random_device random_device;
   std::mt19937 generator(random_device());
   std::uniform_int_distribution<int64_t> distribution(0, LLONG_MAX);
@@ -962,7 +962,7 @@ Expression make_dynamic_function_incomplete(const std::string &function_name, co
     },
                                  multi_args);
   } else {
-    return make_dynamic([=](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
+    return make_dynamic([=](const Parameters &params, const std::vector<Expression>& /*sub_exprs*/) -> Value {
       std::vector<Value> evaluated_args;
 
       for (const auto &arg : args) {
@@ -1087,12 +1087,12 @@ Expression make_allAttributes(const std::string &function_name, const std::vecto
     return Value(all_true);
   });
 
-  result.make_multi([=](const Parameters &params) -> std::vector<Expression> {
+  result.make_multi([=](const Parameters& /*params*/) -> std::vector<Expression> {
     std::vector<Expression> out_exprs;
 
     for (const auto &arg : args) {
       out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
-                  const std::vector<Expression> &sub_exprs) -> Value {
+                  const std::vector<Expression>& /*sub_exprs*/) -> Value {
                 std::string attr_id;
                 attr_id = arg(params).asString();
                 std::string attr_val;
@@ -1132,12 +1132,12 @@ Expression make_anyAttribute(const std::string &function_name, const std::vector
     return Value(any_true);
   });
 
-  result.make_multi([=](const Parameters &params) -> std::vector<Expression> {
+  result.make_multi([=](const Parameters& /*params*/) -> std::vector<Expression> {
     std::vector<Expression> out_exprs;
 
     for (const auto &arg : args) {
       out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
-                  const std::vector<Expression> &sub_exprs) -> Value {
+                  const std::vector<Expression>& /*sub_exprs*/) -> Value {
                 std::string attr_id;
                 attr_id = arg(params).asString();
                 std::string attr_val;
@@ -1193,8 +1193,8 @@ Expression make_allMatchingAttributes(const std::string &function_name, const st
 
       for (const auto &attr : attrs) {
         if (std::regex_match(attr.first.begin(), attr.first.end(), attr_regex)) {
-          out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
-                      const std::vector<Expression> &sub_exprs) -> Value {
+          out_exprs.emplace_back(make_dynamic([=](const Parameters& /*params*/,
+                      const std::vector<Expression>& /*sub_exprs*/) -> Value {
                     std::string attr_val;
 
                     if (cur_flow_file && cur_flow_file->getAttribute(attr.first, attr_val)) {
@@ -1246,8 +1246,8 @@ Expression make_anyMatchingAttribute(const std::string &function_name, const std
 
       for (const auto &attr : attrs) {
         if (std::regex_match(attr.first.begin(), attr.first.end(), attr_regex)) {
-          out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
-                      const std::vector<Expression> &sub_exprs) -> Value {
+          out_exprs.emplace_back(make_dynamic([=](const Parameters& /*params*/,
+                      const std::vector<Expression>& /*sub_exprs*/) -> Value {
                     std::string attr_val;
 
                     if (cur_flow_file && cur_flow_file->getAttribute(attr.first, attr_val)) {
@@ -1583,7 +1583,7 @@ Expression Expression::operator+(const Expression &other_expr) const {
     other_val_fn,
     sub_expr_generator,
     other_sub_expr_generator](const Parameters &params,
-        const std::vector<Expression> &sub_exprs) -> Value {
+        const std::vector<Expression>& /*sub_exprs*/) -> Value {
       Value result = val_fn(params, sub_expr_generator(params));
       return Value(result.asString().append(other_val_fn(params, other_sub_expr_generator(params)).asString()));
     });
@@ -1594,7 +1594,7 @@ Expression Expression::operator+(const Expression &other_expr) const {
     return make_dynamic([val_fn,
     other_val,
     sub_expr_generator](const Parameters &params,
-        const std::vector<Expression> &sub_exprs) -> Value {
+        const std::vector<Expression>& /*sub_exprs*/) -> Value {
       Value result = val_fn(params, sub_expr_generator(params));
       return Value(result.asString().append(other_val.asString()));
     });
@@ -1605,7 +1605,7 @@ Expression Expression::operator+(const Expression &other_expr) const {
     return make_dynamic([val,
     other_val_fn,
     other_sub_expr_generator](const Parameters &params,
-        const std::vector<Expression> &sub_exprs) -> Value {
+        const std::vector<Expression>& /*sub_exprs*/) -> Value {
       Value result(val);
       return Value(result.asString().append(other_val_fn(params, other_sub_expr_generator(params)).asString()));
     });
@@ -1635,7 +1635,7 @@ Expression Expression::compose_multi(const std::function<Value(const std::vector
     std::vector<Expression> out_exprs {};
     for (const auto &sub_expr : sub_exprs) {
       out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
-                  const std::vector<Expression> &sub_exprs) {
+                  const std::vector<Expression>& /*sub_exprs*/) {
                 std::vector<Value> evaluated_args;
 
                 evaluated_args.emplace_back(sub_expr(params));
@@ -1659,7 +1659,7 @@ Expression Expression::make_aggregate(std::function<Value(const Parameters &para
   auto sub_expr_generator = sub_expr_generator_;
   return make_dynamic([sub_expr_generator,
   val_fn](const Parameters &params,
-      const std::vector<Expression> &sub_exprs) -> Value {
+      const std::vector<Expression>& /*sub_exprs*/) -> Value {
     return val_fn(params, sub_expr_generator(params));
   });
 }

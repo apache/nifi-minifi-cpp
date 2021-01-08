@@ -181,7 +181,7 @@ public:
     CompressContent::ReadCallbackDecompress readDecompressCb_;
     int status_;
 
-    static la_ssize_t archive_write(struct archive *arch, void *context, const void *buff, size_t size) {
+    static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
       WriteCallback *callback = (WriteCallback *) context;
       la_ssize_t ret = callback->stream_->write(reinterpret_cast<uint8_t*>(const_cast<void*>(buff)), size);
       if (ret > 0)
@@ -201,7 +201,7 @@ public:
       }
     }
 
-    static la_int64_t archive_skip(struct archive *a, void *client_data, la_int64_t request) {
+    static la_int64_t archive_skip(struct archive* /*a*/, void* /*client_data*/, la_int64_t /*request*/) {
       return 0;
     }
 
@@ -426,7 +426,7 @@ public:
    */
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
   // OnTrigger method, implemented by NiFi CompressContent
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  virtual void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/) {
   }
   // OnTrigger method, implemented by NiFi CompressContent
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);

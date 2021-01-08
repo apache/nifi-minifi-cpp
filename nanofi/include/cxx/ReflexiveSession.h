@@ -57,7 +57,7 @@ class ReflexiveSession : public ProcessSession{
    virtual void add(const std::shared_ptr<core::FlowFile> &flow){
      ff = flow;
    }
-   virtual void transfer(const std::shared_ptr<core::FlowFile> &flow, Relationship relationship){
+   virtual void transfer(const std::shared_ptr<core::FlowFile>& /*flow*/, Relationship /*relationship*/){
      // no op
    }
  protected:

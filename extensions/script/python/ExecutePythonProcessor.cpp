@@ -98,7 +98,7 @@ void ExecutePythonProcessor::initialize() {
   }
 }
 
-void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   if (!valid_init_) {
     throw std::runtime_error("Could not correctly initialize " + getName());
   }

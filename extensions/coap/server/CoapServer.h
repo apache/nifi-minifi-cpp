@@ -208,7 +208,7 @@ class CoapServer : public core::Connectable {
 
  protected:
 
-  static void handle_response_with_passthrough(coap_context_t *ctx, struct coap_resource_t *resource, coap_session_t *session, coap_pdu_t *request, coap_binary_t *token, coap_string_t *query,
+  static void handle_response_with_passthrough(coap_context_t* /*ctx*/, struct coap_resource_t *resource, coap_session_t *session, coap_pdu_t *request, coap_binary_t* /*token*/, coap_string_t* /*query*/,
                                                coap_pdu_t *response) {
 
     auto fx = functions_.find(resource);

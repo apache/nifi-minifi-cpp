@@ -81,7 +81,7 @@ class Connectable : public CoreComponent {
    */
   virtual std::set<std::shared_ptr<Connectable>> getOutGoingConnections(const std::string &relationship) const;
 
-  virtual void put(const std::shared_ptr<FlowFile>& flow) {
+  virtual void put(const std::shared_ptr<FlowFile>& /*flow*/) {
   }
 
   virtual void restore(const std::shared_ptr<FlowFile>& file) {

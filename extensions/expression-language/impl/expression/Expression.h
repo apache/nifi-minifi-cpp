@@ -79,7 +79,7 @@ class Expression {
         fn_args_(),
         is_multi_(false) {
     val_ = val;
-    sub_expr_generator_ = [](const Parameters &params) -> std::vector<Expression> {return {};};
+    sub_expr_generator_ = [](const Parameters& /*params*/) -> std::vector<Expression> {return {};};
   }
 
   /**

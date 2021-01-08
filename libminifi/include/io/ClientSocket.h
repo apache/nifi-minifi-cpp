@@ -78,7 +78,7 @@ bool valid_socket(SocketDescriptor) noexcept;
  */
 class SocketContext {
  public:
-  SocketContext(const std::shared_ptr<Configure> &configure) { // NOLINT
+  SocketContext(const std::shared_ptr<Configure>& /*configure*/) { // NOLINT
   }
 };
 /**

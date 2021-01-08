@@ -59,7 +59,7 @@ class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
    public:
     ListeningProtocol() = default;
 
-    bool handleGet(CivetServer *server, struct mg_connection *conn) {
+    bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) {
       std::string currentvalue;
       {
         std::lock_guard<std::mutex> lock(reponse_mutex_);

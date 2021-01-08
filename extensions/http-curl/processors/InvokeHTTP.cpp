@@ -166,7 +166,7 @@ bool getTimeMSFromString(const std::string& propertyName, uint64_t& valInt) {
       && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt);
 }
 
-void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   if (!context->getProperty(Method.getName(), method_)) {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", Method.getName(), Method.getValue());
     return;

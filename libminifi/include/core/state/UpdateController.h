@@ -134,7 +134,7 @@ class UpdateRunner : public utils::AfterExecute<Update> {
       return true;
     }
   }
-  virtual bool isCancelled(const Update &result) {
+  virtual bool isCancelled(const Update& /*result*/) {
     return !*running_;
   }
 

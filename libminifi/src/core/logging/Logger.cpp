@@ -46,7 +46,7 @@ void LoggerControl::setEnabled(bool status) {
 
 BaseLogger::~BaseLogger() = default;
 
-bool BaseLogger::should_log(const LOG_LEVEL &level) {
+bool BaseLogger::should_log(const LOG_LEVEL& /*level*/) {
   return true;
 }
 

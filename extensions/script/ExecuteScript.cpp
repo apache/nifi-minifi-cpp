@@ -69,7 +69,7 @@ void ExecuteScript::initialize() {
 #endif  // PYTHON_SUPPORT
 }
 
-void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   if (!context->getProperty(ScriptEngine.getName(), script_engine_)) {
     logger_->log_error("Script Engine attribute is missing or invalid");
   }

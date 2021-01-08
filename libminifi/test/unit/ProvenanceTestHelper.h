@@ -110,7 +110,7 @@ class TestRepository : public core::Repository {
     }
   }
 
-  bool Serialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t max_size) override {
+  bool Serialize(std::vector<std::shared_ptr<core::SerializableComponent>>& /*store*/, size_t /*max_size*/) override {
     return false;
   }
 
@@ -129,7 +129,7 @@ class TestRepository : public core::Repository {
     return true;
   }
 
-  bool Serialize(const std::shared_ptr<core::SerializableComponent> &store) override {
+  bool Serialize(const std::shared_ptr<core::SerializableComponent>& /*store*/) override {
     return false;
   }
 
@@ -140,7 +140,7 @@ class TestRepository : public core::Repository {
     return true;
   }
 
-  bool DeSerialize(const uint8_t *buffer, const size_t bufferSize) override {
+  bool DeSerialize(const uint8_t* /*buffer*/, const size_t /*bufferSize*/) override {
     return false;
   }
 
@@ -225,7 +225,7 @@ class TestFlowRepository : public core::Repository {
     }
   }
 
-  void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override {
+  void loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) override {
   }
 
   void run() override {
@@ -240,13 +240,13 @@ class TestFlowRepository : public core::Repository {
 class TestFlowController : public minifi::FlowController {
 
  public:
-  TestFlowController(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo)
+  TestFlowController(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> /*content_repo*/)
       : minifi::FlowController(repo, flow_file_repo, std::make_shared<minifi::Configure>(), nullptr, std::make_shared<core::repository::VolatileContentRepository>(), "", true) {
   }
 
   ~TestFlowController() override = default;
 
-  void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr, bool reload = false) override {
+  void load(const std::shared_ptr<core::ProcessGroup>& /*root*/ = nullptr, bool /*reload*/ = false) override {
   }
 
   int16_t start() override {
@@ -258,7 +258,7 @@ class TestFlowController : public minifi::FlowController {
     running_.store(false);
     return 0;
   }
-  void waitUnload(const uint64_t timeToWaitMs) override {
+  void waitUnload(const uint64_t /*timeToWaitMs*/) override {
     stop();
   }
 
@@ -274,19 +274,19 @@ class TestFlowController : public minifi::FlowController {
     return true;
   }
 
-  std::shared_ptr<core::Processor> createProcessor(std::string name, utils::Identifier &  uuid) {
+  std::shared_ptr<core::Processor> createProcessor(std::string /*name*/, utils::Identifier& /*uuid*/) {
     return 0;
   }
 
-  core::ProcessGroup *createRootProcessGroup(std::string name, utils::Identifier &  uuid) {
+  core::ProcessGroup *createRootProcessGroup(std::string /*name*/, utils::Identifier& /*uuid*/) {
     return 0;
   }
 
-  core::ProcessGroup *createRemoteProcessGroup(std::string name, utils::Identifier &  uuid) {
+  core::ProcessGroup *createRemoteProcessGroup(std::string /*name*/, utils::Identifier& /*uuid*/) {
     return 0;
   }
 
-  std::shared_ptr<minifi::Connection> createConnection(std::string name, utils::Identifier &  uuid) {
+  std::shared_ptr<minifi::Connection> createConnection(std::string /*name*/, utils::Identifier& /*uuid*/) {
     return 0;
   }
 };

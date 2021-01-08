@@ -71,7 +71,7 @@ void ManipulateArchive::initialize() {
     setSupportedRelationships(relationships);
 }
 
-void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
     context->getProperty(Operation.getName(), operation_);
     bool invalid = false;
     std::transform(operation_.begin(), operation_.end(), operation_.begin(), ::tolower);
@@ -114,7 +114,7 @@ void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessS
     }
 }
 
-void ManipulateArchive::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) {
     std::shared_ptr<core::FlowFile> flowFile = session->get();
 
     if (!flowFile) {
