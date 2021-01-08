@@ -31,7 +31,7 @@ namespace utils {
 std::string getRequiredPropertyOrThrow(const core::ProcessContext* context, const std::string& property_name) {
   std::string value;
   if (!context->getProperty(property_name, value)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + " property missing or invalid");
+    throw std::runtime_error(property_name + " property missing or invalid");
   }
   return value;
 }
@@ -51,7 +51,7 @@ bool parseBooleanPropertyOrThrow(core::ProcessContext* context, const std::strin
   const std::string value_str = getRequiredPropertyOrThrow(context, property_name);
   utils::optional<bool> maybe_value = utils::StringUtils::toBool(value_str);
   if (!maybe_value) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + " property is invalid: value is " + value_str);
+    throw std::runtime_error(property_name + " property is invalid: value is " + value_str);
   }
   return maybe_value.value();
 }
@@ -61,7 +61,7 @@ std::chrono::milliseconds parseTimePropertyMSOrThrow(core::ProcessContext* conte
   uint64_t time_value_ms;
   const std::string value_str = getRequiredPropertyOrThrow(context, property_name);
   if (!core::Property::StringToTime(value_str, time_value_ms, unit) || !core::Property::ConvertTimeUnitToMS(time_value_ms, unit, time_value_ms)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + " property is invalid: value is " + value_str);
+    throw std::runtime_error(property_name + " property is invalid: value is " + value_str);
   }
   return std::chrono::milliseconds(time_value_ms);
 }
