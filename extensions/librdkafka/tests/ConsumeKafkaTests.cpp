@@ -409,7 +409,7 @@ class ConsumeKafkaContinuousPublishingTest : public ConsumeKafkaTest {
 
     std::atomic_bool producer_loop_stop{ false };
     const auto producer_loop = [&] {
-      std::size_t num_messages_sent = 0;  // When on C++14 make this an initialized lambda capture
+      std::size_t num_messages_sent = 0;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
       while (!producer_loop_stop) {
         producer.publish_messages_to_topic({ "Message after " + std::to_string(msg_periodicity_ms * ++num_messages_sent) + " ms"}, TEST_MESSAGE_KEY, { PUBLISH }, {}, {});
