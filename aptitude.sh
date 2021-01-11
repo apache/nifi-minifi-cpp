@@ -30,7 +30,6 @@ bootstrap_cmake(){
       echo "Adding KitWare CMake apt repository..."
       sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg software-properties-common wget
       wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
-      echo "deb https://apt.kitware.com/ubuntu/ $(lsb_release -c --short) main"
       sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -c --short) main" && sudo apt-get update
     fi
     sudo apt-get -y install cmake
