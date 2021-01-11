@@ -78,20 +78,10 @@ const core::Property ListS3::RequesterPays(
 const core::Relationship ListS3::Success("success", "FlowFiles are routed to success relationship");
 
 void ListS3::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties(S3Processor::getSupportedProperties());
-  properties.insert(Delimiter);
-  properties.insert(Prefix);
-  properties.insert(UseVersions);
-  properties.insert(MinimumObjectAge);
-  properties.insert(WriteObjectTags);
-  properties.insert(WriteUserMetadata);
-  properties.insert(RequesterPays);
-  setSupportedProperties(properties);
+  // Add new supported properties
+  updateSupportedProperties({Delimiter, Prefix, UseVersions, MinimumObjectAge, WriteObjectTags, WriteUserMetadata, RequesterPays});
   // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedRelationships({Success});
 }
 
 void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -102,10 +92,12 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
-  if (!getExpressionLanguageSupportedProperties(context, nullptr)) {
+  auto common_properties = getCommonELSupportedProperties(context, nullptr);
+  if (!common_properties) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required property is not set or invalid");
   }
-  list_request_params_.bucket = std::move(bucket_);
+  configureS3Wrapper(common_properties.value());
+  list_request_params_.bucket = common_properties->bucket;
 
   context->getProperty(Delimiter.getName(), list_request_params_.delimiter);
   logger_->log_debug("ListS3: Delimiter [%s]", list_request_params_.delimiter);
