@@ -17,10 +17,6 @@
  */
 #include "FlowFileRepository.h"
 
-#include <rocksdb/options.h>
-#include <rocksdb/write_batch.h>
-#include <rocksdb/slice.h>
-
 #include <chrono>
 #include <memory>
 #include <string>
@@ -28,6 +24,9 @@
 #include <vector>
 #include <list>
 
+#include "rocksdb/options.h"
+#include "rocksdb/write_batch.h"
+#include "rocksdb/slice.h"
 #include "FlowFileRecord.h"
 #include "utils/gsl.h"
 
