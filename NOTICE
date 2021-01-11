@@ -53,6 +53,20 @@ This software includes third party software subject to the following copyrights:
 - gsl-lite - Copyright (c) 2015 Martin Moene and Copyright (c) 2015 Microsoft Corporation. All rights reserved.
 - optional-lite - Copyright (c) 2015-2018 Martin Moene under the Boost Software License
 - libsodium - Copyright (c) 2013 - 2018 Frank Denis under the ISC software license
+- IANA timezone database - public domain
+- date (HowardHinnant/date) - notices below
 
 The licenses for these third party components are included in LICENSE.txt
 
+Copyright notices of the date project:
+// Copyright (c) 2015, 2016, 2017 Howard Hinnant
+// Copyright (c) 2015 Ville Voutilainen
+// Copyright (c) 2016, 2017, 2019 Jiangang Zhuang
+// Copyright (c) 2016 Adrian Colomitchi
+// Copyright (c) 2016 Alexander Kormanovsky
+// Copyright (c) 2017 Aaron Bishop
+// Copyright (c) 2017 Florian Dang
+// Copyright (c) 2017 Nicolas Veloz Savino
+// Copyright (c) 2017 Paul Thompson
+// Copyright (c) 2017, 2018, 2019 Tomasz Kamiński
+// Copyright (c) 2019 Asad. Gharighi
