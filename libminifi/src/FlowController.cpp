@@ -398,7 +398,6 @@ int16_t FlowController::pause() {
     return 0;
   }
 
-  paused_ = true;
   logger_->log_info("Pausing Flow Controller");
   timer_scheduler_->pause();
   event_scheduler_->pause();
@@ -412,12 +411,10 @@ int16_t FlowController::resume() {
     logger_->log_warn("Can not resume flow controller tasks because the flow controller is not running");
     return 0;
   }
-  if (paused_) {
-    timer_scheduler_->resume();
-    event_scheduler_->resume();
-    cron_scheduler_->resume();
-    paused_ = false;
-  }
+
+  timer_scheduler_->resume();
+  event_scheduler_->resume();
+  cron_scheduler_->resume();
   return 0;
 }
 

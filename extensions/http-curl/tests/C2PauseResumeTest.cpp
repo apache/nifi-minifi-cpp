@@ -35,7 +35,7 @@ class VerifyC2PauseResume : public VerifyC2Base {
 
   void configureC2() override {
     VerifyC2Base::configureC2();
-    configuration->set("nifi.c2.agent.heartbeat.period", "150");
+    configuration->set("nifi.c2.agent.heartbeat.period", "200");
   }
 
   void runAssertions() override {
@@ -49,7 +49,7 @@ class VerifyC2PauseResume : public VerifyC2Base {
 
 class PauseResumeHandler: public HeartbeatHandler {
  public:
-  static const uint32_t PAUSE_SECONDS = 2;
+  static const uint32_t PAUSE_SECONDS = 3;
   static const uint32_t INITIAL_GET_INVOKE_COUNT = 2;
 
   explicit PauseResumeHandler(std::atomic_bool& flow_resumed_successfully) : HeartbeatHandler(), flow_resumed_successfully_(flow_resumed_successfully) {}
@@ -70,7 +70,7 @@ class PauseResumeHandler: public HeartbeatHandler {
       pause_start_time_ = std::chrono::system_clock::now();
       flow_state_ = FlowState::PAUSED;
       operation = "pause";
-    } if (get_invoke_count_ == INITIAL_GET_INVOKE_COUNT && flow_state_ == FlowState::STARTED) {
+    } else if (get_invoke_count_ == INITIAL_GET_INVOKE_COUNT && flow_state_ == FlowState::STARTED) {
       flow_state_ = FlowState::PAUSE_INITIATED;
       operation = "pause";
     } else if (flow_state_ == FlowState::PAUSED) {

@@ -241,7 +241,6 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::chrono::milliseconds shutdown_check_interval_{1000};
   std::shared_ptr<logging::Logger> logger_;
   std::string serial_number_;
-  bool paused_ = false;
 };
 
 }  // namespace minifi
