@@ -9,7 +9,7 @@ class Connectable(object):
         self.uuid = uuid.uuid4()
 
         if name is None:
-            self.name = str(self.uuid)
+            self.name = "node_of_" + str(self.uuid)
         else:
             self.name = name
 
@@ -37,41 +37,14 @@ class Connectable(object):
 
         return self
 
-    def __rshift__(self, other):
-        """
-        Right shift operator to support flow DSL, for example:
+    def get_name(self):
+        return self.name
 
-            GetFile('/input') >> LogAttribute() >> PutFile('/output')
+    def set_name(self, name):
+        self.name = name
 
-        """
+    def get_uuid(self):
+        return self.uuid
 
-        connected = copy(self)
-        connected.connections = copy(self.connections)
-
-        if self.out_proc is self:
-            connected.out_proc = connected
-        else:
-            connected.out_proc = copy(connected.out_proc)
-
-        if isinstance(other, tuple):
-            if isinstance(other[0], tuple):
-                for rel_tuple in other:
-                    rel = {rel_tuple[0]: rel_tuple[1]}
-                    connected.out_proc.connect(rel)
-            else:
-                rel = {other[0]: other[1]}
-                connected.out_proc.connect(rel)
-        else:
-            connected.out_proc.connect({'success': other})
-            connected.out_proc = other
-
-        return connected
-
-    def __invert__(self):
-        """
-        Invert operation to set empty file filtering on incoming connections
-        GetFile('/input') >> ~LogAttribute()
-        """
-        self.drop_empty_flowfiles = True
-
-        return self
+    def set_uuid(self, uuid):
+        self.uuid = uuid

@@ -1,5 +1,7 @@
 from .Connectable import Connectable
 
+import logging
+
 class Processor(Connectable):
     def __init__(self,
                  clazz,
@@ -36,6 +38,15 @@ class Processor(Connectable):
             'run duration nanos': 0
         }
         self.schedule.update(schedule)
+
+    def set_property(self, key, value):
+        if value.isdigit():
+            self.properties[key] = int(value)
+        else:
+            self.properties[key] = value
+
+    def set_scheduling_period(self, value):
+        self.schedule['scheduling period'] = value
 
     def nifi_property_key(self, key):
         """

@@ -3,6 +3,7 @@ import docker
 import logging
 import os
 import tarfile
+import time
 import uuid
 
 from collections import OrderedDict
@@ -22,8 +23,13 @@ class SingleNodeDockerCluster(Cluster):
     def __init__(self):
         self.minifi_version = os.environ['MINIFI_VERSION']
         self.nifi_version = '1.7.0'
+        self.engine = 'minifi-cpp'
+        self.flow = None
+        self.name = None
+        self.vols = {}
         self.minifi_root = '/opt/minifi/nifi-minifi-cpp-' + self.minifi_version
         self.nifi_root = '/opt/nifi/nifi-' + self.nifi_version
+        self.kafka_broker_root = '/opt/kafka'
         self.network = None
         self.containers = OrderedDict()
         self.images = []
@@ -32,44 +38,84 @@ class SingleNodeDockerCluster(Cluster):
         # Get docker client
         self.client = docker.from_env()
 
-    def deploy_flow(self,
-                    flow,
-                    name=None,
-                    vols=None,
-                    engine='minifi-cpp'):
+    def __del__(self):
+        """
+        Clean up ephemeral cluster resources
+        """
+
+        # Containers and networks are expected to be freed outside of this function
+
+        # Clean up images
+        for image in reversed(self.images):
+            logging.info('Cleaning up image: %s', image[0].id)
+            self.client.images.remove(image[0].id, force=True)
+
+        # Clean up tmp files
+        for tmp_file in self.tmp_files:
+            os.remove(tmp_file)
+
+    def set_name(self, name):
+        self.name = name
+
+    def get_name(self):
+        return self.name
+
+    def set_engine(self, engine):
+        self.engine = engine
+
+    def get_engine(self):
+        return self.engine
+
+    def get_flow(self):
+        return self.flow
+
+    def set_flow(self, flow):
+        self.flow = flow
+
+    def set_directory_bindings(self, bindings):
+        self.vols = bindings
+
+    @staticmethod
+    def create_docker_network():
+        net_name = 'minifi_integration_test_network-' + str(uuid.uuid4())
+        logging.info('Creating network: %s', net_name)
+        return docker.from_env().networks.create(net_name)
+
+    def set_network(self, network):
+        self.network = network
+
+    def deploy_flow(self):
         """
         Compiles the flow to a valid config file and overlays it into a new image.
         """
 
-        if vols is None:
-            vols = {}
+        if self.vols is None:
+            self.vols = {}
 
-        logging.info('Deploying %s flow...%s', engine,name)
+        if self.name is None:
+            self.name = self.engine + '-' + str(uuid.uuid4())
+            logging.info('Flow name was not provided; using generated name \'%s\'', self.name)
 
-        if name is None:
-            name = engine + '-' + str(uuid.uuid4())
-            logging.info('Flow name was not provided; using generated name \'%s\'', name)
+        logging.info('Deploying %s flow \"%s\"...', self.engine, self.name)
 
         # Create network if necessary
         if self.network is None:
-            net_name = 'nifi-' + str(uuid.uuid4())
-            logging.info('Creating network: %s', net_name)
-            self.network = self.client.networks.create(net_name)
+            self.set_network(self.create_docker_network())
 
-        if engine == 'nifi':
-            self.deploy_nifi_flow(flow, name, vols)
-        elif engine == 'minifi-cpp':
-            self.deploy_minifi_cpp_flow(flow, name, vols)
-        elif engine == 'kafka-broker':
-            self.deploy_kafka_broker(name)
-        elif engine == 'http-proxy':
+        if self.engine == 'nifi':
+            self.deploy_nifi_flow()
+        elif self.engine == 'minifi-cpp':
+            self.deploy_minifi_cpp_flow()
+        elif self.engine == 'kafka-broker':
+            self.deploy_kafka_broker()
+        elif self.engine == 'http-proxy':
             self.deploy_http_proxy()
-        elif engine == 's3-server':
+        elif self.engine == 's3-server':
             self.deploy_s3_server()
         else:
-            raise Exception('invalid flow engine: \'%s\'' % engine)
+            raise Exception('invalid flow engine: \'%s\'' % self.engine)
 
-    def deploy_minifi_cpp_flow(self, flow, name, vols):
+    def deploy_minifi_cpp_flow(self):
 
         # Build configured image
         dockerfile = dedent("""FROM {base_image}
@@ -77,12 +123,12 @@ class SingleNodeDockerCluster(Cluster):
                 ADD config.yml {minifi_root}/conf/config.yml
                 RUN chown minificpp:minificpp {minifi_root}/conf/config.yml
                 USER minificpp
-                """.format(name=name,hostname=name,
+                """.format(name=self.name,hostname=self.name,
                            base_image='apacheminificpp:' + self.minifi_version,
                            minifi_root=self.minifi_root))
 
         serializer = Minifi_flow_yaml_serializer()
-        test_flow_yaml = serializer.serialize(flow)
+        test_flow_yaml = serializer.serialize(self.flow)
         logging.info('Using generated flow config yml:\n%s', test_flow_yaml)
 
         conf_file_buffer = BytesIO()
@@ -105,20 +151,19 @@ class SingleNodeDockerCluster(Cluster):
         finally:
             conf_file_buffer.close()
 
-        logging.info('Creating and running docker container for flow...')
-
         container = self.client.containers.run(
                 configured_image[0],
                 detach=True,
-                name=name,
+                name=self.name,
                 network=self.network.name,
-                volumes=vols)
-
+                volumes=self.vols)
+        self.network.reload()
+        
         logging.info('Started container \'%s\'', container.name)
 
         self.containers[container.name] = container
 
-    def deploy_nifi_flow(self, flow, name, vols):
+    def deploy_nifi_flow(self):
         dockerfile = dedent(r"""FROM {base_image}
                 USER root
                 ADD flow.xml.gz {nifi_root}/conf/flow.xml.gz
@@ -126,12 +171,12 @@ class SingleNodeDockerCluster(Cluster):
                 RUN sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties
                 RUN sed -i -e 's/^\(nifi.remote.input.socket.port\)=.*/\1=5000/' {nifi_root}/conf/nifi.properties
                 USER nifi
-                """.format(name=name,
+                """.format(name=self.name,
                            base_image='apache/nifi:' + self.nifi_version,
                            nifi_root=self.nifi_root))
 
         serializer = Nifi_flow_xml_serializer()
-        test_flow_xml = serializer.serialize(flow, self.nifi_version)
+        test_flow_xml = serializer.serialize(self.flow, self.nifi_version)
         logging.info('Using generated flow config xml:\n%s', test_flow_xml)
 
         conf_file_buffer = BytesIO()
@@ -160,16 +205,16 @@ class SingleNodeDockerCluster(Cluster):
         container = self.client.containers.run(
                 configured_image[0],
                 detach=True,
-                name=name,
-                hostname=name,
+                name=self.name,
+                hostname=self.name,
                 network=self.network.name,
-                volumes=vols)
+                volumes=self.vols)
 
         logging.info('Started container \'%s\'', container.name)
 
         self.containers[container.name] = container
 
-    def deploy_kafka_broker(self, name):
+    def deploy_kafka_broker(self):
         logging.info('Creating and running docker containers for kafka broker...')
         zookeeper = self.client.containers.run(
                     self.client.images.pull("wurstmeister/zookeeper:latest"),
@@ -287,33 +332,3 @@ class SingleNodeDockerCluster(Cluster):
         except Exception as e:
             logging.info(e)
             raise
-
-    def __enter__(self):
-        """
-        Allocate ephemeral cluster resources.
-        """
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Clean up ephemeral cluster resources
-        """
-
-        # Clean up containers
-        for container in self.containers.values():
-            logging.info('Cleaning up container: %s', container.name)
-            container.remove(v=True, force=True)
-
-        # Clean up images
-        for image in reversed(self.images):
-            logging.info('Cleaning up image: %s', image[0].id)
-            self.client.images.remove(image[0].id, force=True)
-
-        # Clean up network
-        if self.network is not None:
-            logging.info('Cleaning up network network: %s', self.network.name)
-            self.network.remove()
-
-        # Clean up tmp files
-        for tmp_file in self.tmp_files:
-            os.remove(tmp_file)

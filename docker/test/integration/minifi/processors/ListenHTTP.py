@@ -1,8 +1,8 @@
 from ..core.Processor import Processor
 
 class ListenHTTP(Processor):
-    def __init__(self, port, cert=None, schedule=None):
-        properties = {'Listening Port': port}
+    def __init__(self, cert=None, schedule=None):
+        properties = {}
 
         if cert is not None:
             properties['SSL Certificate'] = cert
