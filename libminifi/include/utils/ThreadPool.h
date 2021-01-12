@@ -27,6 +27,7 @@
 #include <atomic>
 #include <mutex>
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <queue>
 #include <future>
@@ -370,7 +371,7 @@ class ThreadPool {
   // thread pool name
   std::string name_;
   // map of paused tasks moved from worker queue that should not run at the time
-  std::map<TaskId, Worker<T>> paused_tasks_;
+  std::unordered_map<TaskId, std::vector<Worker<T>>> paused_tasks_;
 
   /**
    * Call for the manager to start worker threads

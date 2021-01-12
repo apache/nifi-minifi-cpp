@@ -42,10 +42,18 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
     if (worker_queue_.dequeueWait(task)) {
       {
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-        if (task_status_[task.getIdentifier()] == TaskState::STOPPED) {
+        auto task_id = task.getIdentifier();
+        if (task_status_[task_id] == TaskState::STOPPED) {
           continue;
-        } else if (task_status_[task.getIdentifier()] == TaskState::PAUSED) {
-          paused_tasks_.emplace(task.getIdentifier(), std::move(task));
+        } else if (task_status_[task_id] == TaskState::PAUSED) {
+
+          if (paused_tasks_.find(task_id) == paused_tasks_.end()) {
+            std::vector<Worker<T>> tasks;
+            tasks.push_back(std::move(task));
+            paused_tasks_.emplace(task_id, std::move(tasks));
+          } else {
+            paused_tasks_[task_id].push_back(std::move(task));
+          }
           continue;
         }
       }
@@ -210,7 +218,10 @@ void ThreadPool<T>::resumeTasks(const TaskId &identifier) {
   if (paused_tasks_.find(identifier) == paused_tasks_.end()) {
     return;
   }
-  worker_queue_.enqueue(std::move(paused_tasks_[identifier]));
+
+  for (auto& task : paused_tasks_[identifier]) {
+    worker_queue_.enqueue(std::move(task));
+  }
   paused_tasks_.erase(identifier);
 }
 
