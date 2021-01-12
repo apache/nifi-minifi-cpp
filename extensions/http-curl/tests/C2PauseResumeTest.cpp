@@ -54,12 +54,9 @@ class PauseResumeHandler: public HeartbeatHandler {
 
   explicit PauseResumeHandler(std::atomic_bool& flow_resumed_successfully) : HeartbeatHandler(), flow_resumed_successfully_(flow_resumed_successfully) {}
   bool handleGet(CivetServer *server, struct mg_connection *conn) override {
-    assert(!flow_paused_);
+    assert(flow_state_ != FlowState::PAUSED);
     ++get_invoke_count_;
-    if (get_invoke_count_ == INITIAL_GET_INVOKE_COUNT) {
-      flow_paused_ = true;
-      pause_start_time_ = std::chrono::system_clock::now();
-    } else if (get_invoke_count_ > INITIAL_GET_INVOKE_COUNT) {
+    if (flow_state_ == FlowState::RESUMED) {
       flow_resumed_successfully_ = true;
     }
 
@@ -68,13 +65,24 @@ class PauseResumeHandler: public HeartbeatHandler {
   }
 
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
-    std::string operation = flow_paused_ ? "pause" : "resume";
+    std::string operation = "resume";
+    if (flow_state_ == FlowState::PAUSE_INITIATED) {
+      pause_start_time_ = std::chrono::system_clock::now();
+      flow_state_ = FlowState::PAUSED;
+      operation = "pause";
+    } if (get_invoke_count_ == INITIAL_GET_INVOKE_COUNT && flow_state_ == FlowState::STARTED) {
+      flow_state_ = FlowState::PAUSE_INITIATED;
+      operation = "pause";
+    } else if (flow_state_ == FlowState::PAUSED) {
+      operation = "pause";
+    }
+
     std::string heartbeat_response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
           "\"operation\" : \"" + operation + "\","
           "\"operationid\" : \"8675309\"}]}";
 
-    if (flow_paused_ && std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - pause_start_time_).count() > PAUSE_SECONDS) {
-      flow_paused_ = false;
+    if (flow_state_ == FlowState::PAUSED && std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - pause_start_time_).count() > PAUSE_SECONDS) {
+      flow_state_ = FlowState::RESUMED;
     }
 
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
@@ -84,9 +92,16 @@ class PauseResumeHandler: public HeartbeatHandler {
   }
 
  private:
-  uint32_t get_invoke_count_ = 0;
+  enum class FlowState {
+    STARTED,
+    PAUSE_INITIATED,
+    PAUSED,
+    RESUMED
+  };
+
+  std::atomic<uint32_t> get_invoke_count_{0};
   std::chrono::time_point<std::chrono::system_clock> pause_start_time_;
-  std::atomic_bool flow_paused_{false};
+  std::atomic<FlowState> flow_state_{FlowState::STARTED};
   std::atomic_bool& flow_resumed_successfully_;
 };
 
