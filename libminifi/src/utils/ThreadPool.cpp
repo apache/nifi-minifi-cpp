@@ -46,7 +46,6 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
         if (task_status_[task_id] == TaskState::STOPPED) {
           continue;
         } else if (task_status_[task_id] == TaskState::PAUSED) {
-
           if (paused_tasks_.find(task_id) == paused_tasks_.end()) {
             std::vector<Worker<T>> tasks;
             tasks.push_back(std::move(task));
