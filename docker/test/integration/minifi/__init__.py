@@ -63,7 +63,3 @@ from .validators.SegfaultValidator import SegfaultValidator
 from .validators.NoFileOutPutValidator import NoFileOutPutValidator
 from .validators.SingleFileOutputValidator import SingleFileOutputValidator
 from .validators.FileOutputValidator import FileOutputValidator
-
-logging.basicConfig(level=logging.DEBUG)
-
-

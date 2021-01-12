@@ -37,6 +37,9 @@ class Connectable(object):
 
         return self
 
+    def set_name(self, name):
+        self.name = name
+
     def __rshift__(self, other):
         """
         Right shift operator to support flow DSL, for example:
@@ -54,13 +57,15 @@ class Connectable(object):
             connected.out_proc = copy(connected.out_proc)
 
         if isinstance(other, tuple):
-            if isinstance(other[0], tuple):
-                for rel_tuple in other:
-                    rel = {rel_tuple[0]: rel_tuple[1]}
-                    connected.out_proc.connect(rel)
-            else:
-                rel = {other[0]: other[1]}
-                connected.out_proc.connect(rel)
+            # if isinstance(other[0], tuple):
+            #     for rel_tuple in other:
+            #         rel = {rel_tuple[0]: rel_tuple[1]}
+            #         connected.out_proc.connect(rel)
+            # else:
+            #     rel = {other[0]: other[1]}
+            #     connected.out_proc.connect(rel)
+            rel = {other[0]: other[1]}
+            connected.out_proc.connect(rel)
         else:
             connected.out_proc.connect({'success': other})
             connected.out_proc = other

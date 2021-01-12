@@ -37,6 +37,9 @@ class Processor(Connectable):
         }
         self.schedule.update(schedule)
 
+    def set_property(self, key, value):
+        self.properties[key] = value
+
     def nifi_property_key(self, key):
         """
         Returns the Apache NiFi-equivalent property key for the given key. This is often, but not always, the same as

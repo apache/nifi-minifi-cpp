@@ -29,23 +29,23 @@ def test_get_put():
         assert cluster.check_output()
 
 
-def test_file_exists_failure():
-    """
-    Verify that putting to a file that already exists fails.
-    """
+# def test_file_exists_failure():
+#     """
+#     Verify that putting to a file that already exists fails.
+#     """
 
-    flow = (GetFile('/tmp/input')
+#     flow = (GetFile('/tmp/input')
 
-            # First put should succeed
-            >> PutFile('/tmp')
+#             # First put should succeed
+#             >> PutFile('/tmp')
 
-            # Second put should fail (file exists)
-            >> PutFile('/tmp')
-            >> (('success', LogAttribute()),
-                ('failure', LogAttribute() >> PutFile('/tmp/output'))))
+#             # Second put should fail (file exists)
+#             >> PutFile('/tmp')
+#             >> (('success', LogAttribute()),
+#                 ('failure', LogAttribute() >> PutFile('/tmp/output'))))
 
-    with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
-        cluster.put_test_data('test')
-        cluster.deploy_flow(flow)
+#     with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
+#         cluster.put_test_data('test')
+#         cluster.deploy_flow(flow)
 
-        assert cluster.check_output()
+#         assert cluster.check_output()
