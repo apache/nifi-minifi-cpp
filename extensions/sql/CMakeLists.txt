@@ -36,12 +36,7 @@ else()
 	# Build iODBC
 
 	# Define byproducts
-	if(NOT APPLE)
-		include(GNUInstallDirs)
-		set(IODBC_BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/libiodbc.a")
-	else()
-		set(IODBC_BYPRODUCT "lib/libiodbc.a")
-	endif()
+	set(IODBC_BYPRODUCT "lib/libiodbc.a")
 
 	set(IODBC_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-install/")
 
