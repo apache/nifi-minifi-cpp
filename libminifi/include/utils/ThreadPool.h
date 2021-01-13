@@ -228,18 +228,14 @@ class ThreadPool {
   void stopTasks(const TaskId &identifier);
 
   /**
-   * attempts to resume tasks with the provided identifier.
-   * @param identifier for worker tasks. Note that these tasks won't
-   * immediately start.
+   * resumes work queue processing.
    */
-  void resumeTasks(const TaskId &identifier);
+  void resume();
 
   /**
-   * attempts to pause tasks with the provided identifier.
-   * @param identifier for worker tasks. Note that these tasks won't
-   * immediately pause.
+   * pauses work queue processing
    */
-  void pauseTasks(const TaskId &identifier);
+  void pause();
 
   /**
    * Returns true if a task is running.
@@ -249,7 +245,7 @@ class ThreadPool {
     const auto iter = task_status_.find(identifier);
     if (iter == task_status_.end())
       return false;
-    return iter->second == TaskState::RUNNING;
+    return iter->second;
   }
 
   bool isRunning() const {
@@ -309,12 +305,6 @@ class ThreadPool {
   }
 
  protected:
-  enum class TaskState {
-    STOPPED,
-    PAUSED,
-    RUNNING
-  };
-
   std::thread createThread(std::function<void()> &&functor) {
     return std::thread([ functor ]() mutable {
       functor();
@@ -365,13 +355,11 @@ class ThreadPool {
 // notification for new delayed tasks that's before the current ones
   std::condition_variable delayed_task_available_;
 // map to identify if a task should be
-  std::map<TaskId, TaskState> task_status_;
+  std::map<TaskId, bool> task_status_;
 // manager mutex
   std::recursive_mutex manager_mutex_;
   // thread pool name
   std::string name_;
-  // map of paused tasks moved from worker queue that should not run at the time
-  std::unordered_map<TaskId, std::vector<Worker<T>>> paused_tasks_;
 
   /**
    * Call for the manager to start worker threads
