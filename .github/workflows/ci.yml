@@ -47,7 +47,7 @@ jobs:
       - name: Setup PATH
         uses: microsoft/setup-msbuild@v1.0.2
       - id: build
-        run: win_build_vs.bat build /CI
+        run: win_build_vs.bat build /CI /S /A
         shell: cmd
   windows_VS2019:
     name: "windows-vs2019"
@@ -150,7 +150,7 @@ jobs:
           sudo apt install -y ccache openjdk-8-jdk maven
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
-        run: sudo mount tmpfs -t tmpfs /tmp && ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_MQTT=ON -DENABLE_COAP=ON -DENABLE_PYTHON=ON -DSTRICT_GSL_CHECKS=AUDIT .. &&  cmake --build . --parallel 4  && make test ARGS="--timeout 300 -j8 --output-on-failure"
+        run: sudo mount tmpfs -t tmpfs /tmp && ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_MQTT=ON -DENABLE_COAP=ON -DENABLE_PYTHON=ON -DENABLE_SQL=ON -DSTRICT_GSL_CHECKS=AUDIT .. &&  cmake --build . --parallel 4  && make test ARGS="--timeout 300 -j8 --output-on-failure"
   debian:
     name: "debian"
     runs-on: ubuntu-18.04
