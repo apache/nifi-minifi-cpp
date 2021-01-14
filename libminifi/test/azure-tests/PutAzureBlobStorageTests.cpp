@@ -25,8 +25,6 @@
 #include "storage/BlobStorage.h"
 #include "utils/file/FileUtils.h"
 
-namespace {
-
 const std::string CONTAINER_NAME = "test-container";
 const std::string CONNECTION_STRING = "test-connectionstring";
 const std::string AZURE_CREDENTIALS_SERVICE_NAME = "AzureCredentialsService";
@@ -39,8 +37,8 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorage {
   const std::string PRIMARY_URI = "test-uri";
   const std::string TEST_TIMESTAMP = "test-timestamp";
 
-  MockBlobStorage(const std::string &connection_string, const std::string &container_name)
-    : BlobStorage(connection_string, container_name) {
+  MockBlobStorage()
+    : BlobStorage("", "") {
   }
 
   void createContainer() override {
@@ -93,10 +91,10 @@ class PutAzureBlobStorageTestsFixture {
 
     // Build MiNiFi processing graph
     plan = test_controller.createPlan();
-    mock_blob_storage_ptr = new MockBlobStorage("", "");
+    mock_blob_storage_ptr = new MockBlobStorage();
     std::unique_ptr<minifi::azure::storage::BlobStorage> mock_blob_storage(mock_blob_storage_ptr);
-    put_azure_blob_storage = std::make_shared<minifi::azure::processors::PutAzureBlobStorage>("PutAzureBlobStorage", utils::Identifier(), std::move(mock_blob_storage));
-
+    put_azure_blob_storage = std::shared_ptr<minifi::azure::processors::PutAzureBlobStorage>(
+      new minifi::azure::processors::PutAzureBlobStorage("PutAzureBlobStorage", utils::Identifier(), std::move(mock_blob_storage)));
     char input_dir_mask[] = "/tmp/gt.XXXXXX";
     auto input_dir = test_controller.createTempDirectory(input_dir_mask);
     std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + "input_data.log");
@@ -208,5 +206,3 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with c
   REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
   REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
 }
-
-}  // namespace

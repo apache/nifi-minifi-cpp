@@ -32,6 +32,8 @@
 #include "storage/BlobStorage.h"
 #include "utils/OptionalUtils.h"
 
+class PutAzureBlobStorageTestsFixture;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -56,11 +58,6 @@ class PutAzureBlobStorage : public core::Processor {
 
   explicit PutAzureBlobStorage(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
     : PutAzureBlobStorage(name, uuid, nullptr) {
-  }
-
-  explicit PutAzureBlobStorage(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<storage::BlobStorage> blob_storage_wrapper)
-    : core::Processor(std::move(name), uuid)
-    , blob_storage_wrapper_(std::move(blob_storage_wrapper)) {
   }
 
   ~PutAzureBlobStorage() override = default;
@@ -105,6 +102,13 @@ class PutAzureBlobStorage : public core::Processor {
   };
 
  private:
+  friend class ::PutAzureBlobStorageTestsFixture;
+
+  explicit PutAzureBlobStorage(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<storage::BlobStorage> blob_storage_wrapper)
+    : core::Processor(std::move(name), uuid)
+    , blob_storage_wrapper_(std::move(blob_storage_wrapper)) {
+  }
+
   std::string getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
   std::string getAzureConnectionStringFromProperties(
     const std::shared_ptr<core::ProcessContext> &context,
