@@ -148,6 +148,11 @@ std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS f
       EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, NULL, flags, num_chars_in_buffer, buffer.get(), &num_chars_used);
     }
   }
+
+  if (num_chars_used == 0) {
+    return event_data;
+  }
+
   if (EvtFormatMessageKeyword == flags) {
     buffer.get()[num_chars_used - 1] = L'\0';
   }
