@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<instrumentationManifest xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/events eventman.xsd"
+    xmlns="http://schemas.microsoft.com/win/2004/08/events"
+    xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:trace="http://schemas.microsoft.com/win/2004/08/events/trace">
+  <instrumentation>
+    <events>
+      <provider name="minifi_unit_test_provider"
+          symbol="minifi_unit_test_provider"
+          guid="{ABCDEF01-8174-F1CA-87BE-DA129FF6001B}"
+          resourceFileName="D:\a\nifi-minifi-cpp\nifi-minifi-cpp\libminifi\test\resources\wel\unit-test-provider.dll"
+          messageFileName="D:\a\nifi-minifi-cpp\nifi-minifi-cpp\libminifi\test\resources\wel\unit-test-provider.dll">  
+        <events>
+          <event symbol="CustomEvent" value="10000" version="1" channel="minifi_unit_test_provider/Log" template="CustomTemplate" />
+        </events>
+        <levels/>
+        <tasks/>
+        <opcodes/>
+        <channels>
+          <channel name="minifi_unit_test_provider/Log" value="0x10" type="Operational" enabled="true" />
+        </channels>
+        <templates>
+          <template tid="CustomTemplate">
+            <data name="param1" inType="win:UnicodeString" outType="xs:string" />
+            <data name="param2" inType="win:UnicodeString" outType="xs:string" />
+            <data name="Channel" inType="win:UnicodeString" outType="xs:string" />
+            <binary />
+          </template>
+        </templates>
+      </provider>
+    </events>
+  </instrumentation>
+  <localization/>
+</instrumentationManifest>

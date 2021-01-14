@@ -79,7 +79,10 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
     metadata_["EventID"] = node.text().get();
   }
   else {
-    static std::map<std::string, EVT_FORMAT_MESSAGE_FLAGS> formatFlagMap = { {"Channel", EvtFormatMessageChannel}, {"Keywords", EvtFormatMessageKeyword}, {"Level", EvtFormatMessageLevel}, {"Opcode", EvtFormatMessageOpcode}, {"Task",EvtFormatMessageTask} };
+    static std::map<std::string, EVT_FORMAT_MESSAGE_FLAGS> formatFlagMap = {
+        {"Channel", EvtFormatMessageChannel}, {"Keywords", EvtFormatMessageKeyword}, {"Level", EvtFormatMessageLevel},
+        {"Opcode", EvtFormatMessageOpcode}, {"Task",EvtFormatMessageTask}
+    };
     auto it = formatFlagMap.find(node_name);
     if (it != formatFlagMap.end()) {
       std::function<std::string(const std::string &)> updateFunc = [&](const std::string &input) -> std::string {

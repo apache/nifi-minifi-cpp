@@ -46,6 +46,7 @@ struct EventRender {
   std::map<std::string, std::string> matched_fields_;
   std::string text_;
   std::string rendered_text_;
+  std::string json_;
 };
 
 class Bookmark;
@@ -107,9 +108,12 @@ protected:
   bool createEventRender(EVT_HANDLE eventHandle, EventRender& eventRender);
   void substituteXMLPercentageItems(pugi::xml_document& doc);
 
-  static constexpr const char * const XML = "XML";
-  static constexpr const char * const Both = "Both";
-  static constexpr const char * const Plaintext = "Plaintext";
+  static constexpr const char* XML = "XML";
+  static constexpr const char* Both = "Both";
+  static constexpr const char* Plaintext = "Plaintext";
+  static constexpr const char* JSONSimple = "JSON::Simple";
+  static constexpr const char* JSONFlattened = "JSON::Flattened";
+  static constexpr const char* JSONRaw = "JSON::Raw";
 
 private:
   struct TimeDiff {
@@ -133,17 +137,23 @@ private:
   std::wstring wstrQuery_;
   std::string regex_;
   bool resolve_as_attributes_;
-  bool apply_identifier_function_;
+  bool apply_identifier_function_{false};
   std::string provenanceUri_;
   std::string computerName_;
   uint64_t maxBufferSize_{};
   DWORD lastActivityTimestamp_{};
   std::mutex cache_mutex_;
   std::map<std::string, wel::WindowsEventLogHandler > providers_;
-  uint64_t batch_commit_size_;
+  uint64_t batch_commit_size_{};
 
-  bool writeXML_;
-  bool writePlainText_;
+  bool writeXML_{false};
+  bool writePlainText_{false};
+  enum class JSONFormat {
+    None,
+    Simple,
+    Flattened,
+    Raw
+  } jsonFormat_{JSONFormat::None};
   std::unique_ptr<Bookmark> bookmark_;
   std::mutex on_trigger_mutex_;
   std::unordered_map<std::string, std::string> xmlPercentageItemsResolutions_;
