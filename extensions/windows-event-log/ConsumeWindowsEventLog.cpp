@@ -251,27 +251,27 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   std::string mode;
   context->getProperty(OutputFormat.getName(), mode);
 
-  writeXML_ = false;
-  writePlainText_ = false;
-  jsonFormat_ = JSONFormat::None;
+  output_.reset();
   if (mode == XML) {
-    writeXML_ = true;
+    output_.xml = true;
   } else if (mode == Plaintext) {
-    writePlainText_ = true;
+    output_.plaintext = true;
   } else if (mode == Both) {
-    writeXML_ = true;
-    writePlainText_ = true;
+    output_.xml = true;
+    output_.plaintext = true;
   } else if (mode == JSONRaw) {
-    jsonFormat_ = JSONFormat::Raw;
+    output_.json.raw = true;
   } else if (mode == JSONSimple) {
-    jsonFormat_ = JSONFormat::Simple;
+    output_.json.simple = true;
   } else if (mode == JSONFlattened) {
-    jsonFormat_ = JSONFormat::Flattened;
+    output_.json.flattened = true;
   } else {
+    // in the future this might be considered an error, but for now due to backwards
+    // compatibility we just fall through and execute the processor outputing nothing
     // throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unrecognized output format: " + mode);
   }
 
-  if ((writeXML_ || jsonFormat_ != JSONFormat::None) && !hMsobjsDll_) {
+  if ((output_.xml || output_.json) && !hMsobjsDll_) {
     char systemDir[MAX_PATH];
     if (GetSystemDirectory(systemDir, sizeof(systemDir))) {
       hMsobjsDll_ = LoadLibrary((systemDir + std::string("\\msobjs.dll")).c_str());
@@ -579,7 +579,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
 
   logger_->log_debug("Finish doc traversing, performing writing...");
 
-  if (writePlainText_) {
+  if (output_.plaintext) {
     logger_->log_trace("Writing event in plain text");
 
     auto handler = getEventLogHandler(providerName);
@@ -598,44 +598,55 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
       // set the delimiter
       log_header.setDelimiter(header_delimiter_);
       // render the header.
-      eventRender.rendered_text_ = log_header.getEventHeader([&walker](wel::METADATA metadata) { return walker.getMetadata(metadata); });
-      eventRender.rendered_text_ += "Message" + header_delimiter_ + " ";
-      eventRender.rendered_text_ += message;
+      eventRender.plaintext = log_header.getEventHeader([&walker](wel::METADATA metadata) { return walker.getMetadata(metadata); });
+      eventRender.plaintext += "Message" + header_delimiter_ + " ";
+      eventRender.plaintext += message;
     }
     logger_->log_trace("Finish writing in plain text");
   }
 
-  if (writeXML_ || jsonFormat_ != JSONFormat::None) {
+  if (output_.xml || output_.json) {
     substituteXMLPercentageItems(doc);
     logger_->log_trace("Finish substituting %% in XML");
 
     if (resolve_as_attributes_) {
-      eventRender.matched_fields_ = walker.getFieldValues();
+      eventRender.matched_fields = walker.getFieldValues();
     }
   }
 
-  if (writeXML_) {
+  if (output_.xml) {
     logger_->log_trace("Writing event in XML");
 
     wel::XmlString writer;
     doc.print(writer, "", pugi::format_raw);  // no indentation or formatting
     xml = writer.xml_;
 
-    eventRender.text_ = std::move(xml);
+    eventRender.xml = std::move(xml);
     logger_->log_trace("Finish writing in XML");
   }
 
-  if (jsonFormat_ != JSONFormat::None) {
-    logger_->log_trace("Writing event in JSON");
+  if (output_.json.raw) {
+    logger_->log_trace("Writing event in raw JSON");
 
-    if (jsonFormat_ == JSONFormat::Raw) {
-      eventRender.json_ = wel::jsonToString(wel::toRawJSON(doc));
-    } else {
-      eventRender.json_ = wel::jsonToString(wel::toJSON(doc, jsonFormat_ == JSONFormat::Flattened));
-    }
+    eventRender.json.raw = wel::jsonToString(wel::toRawJSON(doc));
 
+    logger_->log_trace("Finish writing in raw JSON");
+  }
 
-    logger_->log_trace("Finish writing in JSON");
+  if (output_.json.simple) {
+    logger_->log_trace("Writing event in simple JSON");
+
+    eventRender.json.simple = wel::jsonToString(wel::toJSON(doc, false));
+
+    logger_->log_trace("Finish writing in simple JSON");
+  }
+
+  if (output_.json.flattened) {
+    logger_->log_trace("Writing event in flattened JSON");
+
+    eventRender.json.flattened = wel::jsonToString(wel::toJSON(doc, true));
+
+    logger_->log_trace("Finish writing in flattened JSON");
   }
 
   return true;
@@ -689,15 +700,15 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     const std::string& str_;
   };
 
-  if (writeXML_) {
+  if (output_.xml) {
     auto flowFile = session.create();
     logger_->log_trace("Writing rendered XML to a flow file");
 
     {
-      WriteCallback wc{ eventRender.text_ };
+      WriteCallback wc{ eventRender.xml };
       session.write(flowFile, &wc);
     }
-    for (const auto &fieldMapping : eventRender.matched_fields_) {
+    for (const auto &fieldMapping : eventRender.matched_fields) {
       if (!fieldMapping.second.empty()) {
         session.putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
       }
@@ -709,12 +720,12 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     session.transfer(flowFile, Success);
   }
 
-  if (writePlainText_) {
+  if (output_.plaintext) {
     auto flowFile = session.create();
     logger_->log_trace("Writing rendered plain text to a flow file");
 
     {
-      WriteCallback wc{ eventRender.rendered_text_ };
+      WriteCallback wc{ eventRender.plaintext };
       session.write(flowFile, &wc);
     }
     session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "text/plain");
@@ -724,11 +735,35 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     session.transfer(flowFile, Success);
   }
 
-  if (jsonFormat_ != JSONFormat::None) {
+  if (output_.json.raw) {
     auto flowFile = session.create();
-    logger_->log_trace("Writing rendered JSON to a flow file");
+    logger_->log_trace("Writing rendered raw JSON to a flow file");
 
-    session.write(flowFile, &WriteCallback(eventRender.json_));
+    session.write(flowFile, &WriteCallback(eventRender.json.raw));
+    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/json");
+    session.putAttribute(flowFile, "Timezone name", timezone_name_);
+    session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
+    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
+    session.transfer(flowFile, Success);
+  }
+
+  if (output_.json.simple) {
+    auto flowFile = session.create();
+    logger_->log_trace("Writing rendered simple JSON to a flow file");
+
+    session.write(flowFile, &WriteCallback(eventRender.json.simple));
+    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/json");
+    session.putAttribute(flowFile, "Timezone name", timezone_name_);
+    session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
+    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
+    session.transfer(flowFile, Success);
+  }
+
+  if (output_.json.flattened) {
+    auto flowFile = session.create();
+    logger_->log_trace("Writing rendered flattened JSON to a flow file");
+
+    session.write(flowFile, &WriteCallback(eventRender.json.flattened));
     session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/json");
     session.putAttribute(flowFile, "Timezone name", timezone_name_);
     session.putAttribute(flowFile, "Timezone offset", timezone_offset_);

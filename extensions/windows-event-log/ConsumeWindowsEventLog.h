@@ -43,10 +43,14 @@ namespace minifi {
 namespace processors {
 
 struct EventRender {
-  std::map<std::string, std::string> matched_fields_;
-  std::string text_;
-  std::string rendered_text_;
-  std::string json_;
+  std::map<std::string, std::string> matched_fields;
+  std::string xml;
+  std::string plaintext;
+  struct {
+    std::string raw;
+    std::string simple;
+    std::string flattened;
+  } json;
 };
 
 class Bookmark;
@@ -111,9 +115,9 @@ protected:
   static constexpr const char* XML = "XML";
   static constexpr const char* Both = "Both";
   static constexpr const char* Plaintext = "Plaintext";
+  static constexpr const char* JSONRaw = "JSON::Raw";
   static constexpr const char* JSONSimple = "JSON::Simple";
   static constexpr const char* JSONFlattened = "JSON::Flattened";
-  static constexpr const char* JSONRaw = "JSON::Raw";
 
 private:
   struct TimeDiff {
@@ -146,14 +150,24 @@ private:
   std::map<std::string, wel::WindowsEventLogHandler > providers_;
   uint64_t batch_commit_size_{};
 
-  bool writeXML_{false};
-  bool writePlainText_{false};
-  enum class JSONFormat {
-    None,
-    Simple,
-    Flattened,
-    Raw
-  } jsonFormat_{JSONFormat::None};
+  struct OutputFormat {
+    void reset() {
+      *this = OutputFormat{};
+    }
+
+    bool xml{false};
+    bool plaintext{false};
+    struct {
+      explicit operator bool() const noexcept {
+        return raw || simple || flattened;
+      }
+
+      bool raw{false};
+      bool simple{false};
+      bool flattened{false};
+    } json;
+  } output_;
+
   std::unique_ptr<Bookmark> bookmark_;
   std::mutex on_trigger_mutex_;
   std::unordered_map<std::string, std::string> xmlPercentageItemsResolutions_;
