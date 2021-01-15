@@ -34,7 +34,7 @@
 #include "wel/MetadataWalker.h"
 #include "wel/XMLString.h"
 #include "wel/UnicodeConversion.h"
-#include "wel/JSONConverter.h"
+#include "wel/JSONUtils.h"
 
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
@@ -636,7 +636,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
   if (output_.json.simple) {
     logger_->log_trace("Writing event in simple JSON");
 
-    eventRender.json.simple = wel::jsonToString(wel::toJSON(doc, false));
+    eventRender.json.simple = wel::jsonToString(wel::toSimpleJSON(doc));
 
     logger_->log_trace("Finish writing in simple JSON");
   }
@@ -644,7 +644,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
   if (output_.json.flattened) {
     logger_->log_trace("Writing event in flattened JSON");
 
-    eventRender.json.flattened = wel::jsonToString(wel::toJSON(doc, true));
+    eventRender.json.flattened = wel::jsonToString(wel::toFlattenedJSON(doc));
 
     logger_->log_trace("Finish writing in flattened JSON");
   }

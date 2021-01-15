@@ -15,10 +15,7 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#undef RAPIDJSON_ASSERT
-#define RAPIDJSON_ASSERT(x) if (!(x)) throw std::logic_error("rapidjson exception");  // NOLINT
+#include "JSONUtils.h"
 
 #include <vector>
 #include <string>
@@ -39,7 +36,7 @@ namespace nifi {
 namespace minifi {
 namespace wel {
 
-rapidjson::Value xmlElementToJSON(const pugi::xml_node& node, rapidjson::Document& doc) {
+static rapidjson::Value xmlElementToJSON(const pugi::xml_node& node, rapidjson::Document& doc) {
   gsl_Expects(node.type() == pugi::xml_node_type::node_element);
   rapidjson::Value object(rapidjson::kObjectType);
   object.AddMember("name", rapidjson::StringRef(node.name()), doc.GetAllocator());
@@ -57,7 +54,7 @@ rapidjson::Value xmlElementToJSON(const pugi::xml_node& node, rapidjson::Documen
   return object;
 }
 
-rapidjson::Value xmlDocumentToJSON(const pugi::xml_node& node, rapidjson::Document& doc) {
+static rapidjson::Value xmlDocumentToJSON(const pugi::xml_node& node, rapidjson::Document& doc) {
   gsl_Expects(node.type() == pugi::xml_node_type::node_document);
   rapidjson::Value children(rapidjson::kArrayType);
   for (const auto& child : node.children()) {
@@ -76,7 +73,7 @@ rapidjson::Document toRawJSON(const pugi::xml_node& root) {
   return doc;
 }
 
-rapidjson::Document toJSON(const pugi::xml_node& root, bool flatten) {
+static rapidjson::Document toJSONImpl(const pugi::xml_node& root, bool flatten) {
   rapidjson::Document doc{rapidjson::kObjectType};
 
   auto event_xml = root.child("Event");
@@ -145,6 +142,14 @@ rapidjson::Document toJSON(const pugi::xml_node& root, bool flatten) {
   }
 
   return doc;
+}
+
+rapidjson::Document toSimpleJSON(const pugi::xml_node& root) {
+  return toJSONImpl(root, false);
+}
+
+rapidjson::Document toFlattenedJSON(const pugi::xml_node& root) {
+  return toJSONImpl(root, true);
 }
 
 std::string jsonToString(rapidjson::Document& doc) {
