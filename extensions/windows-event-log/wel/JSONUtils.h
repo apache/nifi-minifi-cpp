@@ -22,6 +22,7 @@
 
 #include <pugixml.hpp>
 
+#include <stdexcept>  // for std::logic_error
 #include "rapidjson/document.h"
 
 namespace org {
