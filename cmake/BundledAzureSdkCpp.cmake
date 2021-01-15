@@ -30,16 +30,21 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
             "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-blobs/${PREFIX}azure-storage-blobs.${SUFFIX}"
             "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/identity/azure-identity/${PREFIX}azure-identity.${SUFFIX}")
 
+    set(AZURE_SDK_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+        -DCMAKE_MODULE_PATH=${PROJECT_SOURCE_DIR}/cmake/
+        -DNLOHMANN_JSON_DIR=${NLOHMANN_JSON_DIR})
+
     # Build project
     ExternalProject_Add(
             azure-sdk-cpp-external
             GIT_REPOSITORY "https://github.com/Azure/azure-sdk-for-cpp.git"
-            GIT_TAG "85fb3e35306ace5218e93ceeed8fda59828fa9bc"
+            GIT_TAG "azure-storage-blobs_12.0.0-beta.6"
             BUILD_IN_SOURCE true
             SOURCE_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src"
             BUILD_BYPRODUCTS "${AZURESDK_LIBRARIES_LIST}"
             EXCLUDE_FROM_ALL TRUE
             STEP_TARGETS build
+            CMAKE_ARGS ${AZURE_SDK_CMAKE_ARGS}
     )
 
     # Set dependencies
@@ -58,7 +63,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     # Create imported targets
     FOREACH(LIBAZURE_INCLUDE_DIR ${LIBAZURE_INCLUDE_DIRS})
         file(MAKE_DIRECTORY ${LIBAZURE_INCLUDE_DIR})
-    ENDFOREACH(BYPRODUCT)
+    ENDFOREACH(LIBAZURE_INCLUDE_DIR)
 
     add_library(AZURE::azure-core STATIC IMPORTED)
     set_target_properties(AZURE::azure-core PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/core/azure-core/${PREFIX}azure-core.${SUFFIX}")

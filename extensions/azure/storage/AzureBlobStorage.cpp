@@ -66,7 +66,7 @@ utils::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const std::string
     result.length = buffer_size;
     result.primary_uri = container_client_->GetUrl();
     result.etag = response->ETag;
-    result.timestamp = response->LastModified;
+    result.timestamp = response->LastModified.GetString(Azure::Core::DateTime::DateFormat::Rfc1123);
     return result;
   } catch (const std::runtime_error&) {
     return utils::nullopt;
