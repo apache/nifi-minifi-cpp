@@ -700,75 +700,49 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     const std::string& str_;
   };
 
+  auto commitFlowFile = [&] (const std::shared_ptr<core::FlowFile>& flowFile, const std::string& content, const std::string& mimeType) {
+    {
+      WriteCallback wc{ content };
+      session.write(flowFile, &wc);
+    }
+    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
+    session.putAttribute(flowFile, "Timezone name", timezone_name_);
+    session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
+    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
+    session.transfer(flowFile, Success);
+  };
+
   if (output_.xml) {
     auto flowFile = session.create();
     logger_->log_trace("Writing rendered XML to a flow file");
 
-    {
-      WriteCallback wc{ eventRender.xml };
-      session.write(flowFile, &wc);
-    }
     for (const auto &fieldMapping : eventRender.matched_fields) {
       if (!fieldMapping.second.empty()) {
         session.putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
       }
     }
-    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
-    session.putAttribute(flowFile, "Timezone name", timezone_name_);
-    session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
-    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
-    session.transfer(flowFile, Success);
+
+    commitFlowFile(flowFile, eventRender.xml, "application/xml");
   }
 
   if (output_.plaintext) {
-    auto flowFile = session.create();
     logger_->log_trace("Writing rendered plain text to a flow file");
-
-    {
-      WriteCallback wc{ eventRender.plaintext };
-      session.write(flowFile, &wc);
-    }
-    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "text/plain");
-    session.putAttribute(flowFile, "Timezone name", timezone_name_);
-    session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
-    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
-    session.transfer(flowFile, Success);
+    commitFlowFile(session.create(), eventRender.plaintext, "text/plain");
   }
 
   if (output_.json.raw) {
-    auto flowFile = session.create();
     logger_->log_trace("Writing rendered raw JSON to a flow file");
-
-    session.write(flowFile, &WriteCallback(eventRender.json.raw));
-    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/json");
-    session.putAttribute(flowFile, "Timezone name", timezone_name_);
-    session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
-    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
-    session.transfer(flowFile, Success);
+    commitFlowFile(session.create(), eventRender.json.raw, "application/json");
   }
 
   if (output_.json.simple) {
-    auto flowFile = session.create();
     logger_->log_trace("Writing rendered simple JSON to a flow file");
-
-    session.write(flowFile, &WriteCallback(eventRender.json.simple));
-    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/json");
-    session.putAttribute(flowFile, "Timezone name", timezone_name_);
-    session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
-    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
-    session.transfer(flowFile, Success);
+    commitFlowFile(session.create(), eventRender.json.simple, "application/json");
   }
 
   if (output_.json.flattened) {
-    auto flowFile = session.create();
     logger_->log_trace("Writing rendered flattened JSON to a flow file");
-
-    session.write(flowFile, &WriteCallback(eventRender.json.flattened));
-    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/json");
-    session.putAttribute(flowFile, "Timezone name", timezone_name_);
-    session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
-    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
-    session.transfer(flowFile, Success);
+    commitFlowFile(session.create(), eventRender.json.flattened, "application/json");
   }
 }
 

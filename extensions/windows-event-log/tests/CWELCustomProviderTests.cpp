@@ -60,8 +60,6 @@ bool dispatchCustomEvent(const CustomEventData& event) {
   return result == ERROR_SUCCESS;
 }
 
-}  // namespace
-
 class CustomProviderController : public OutputFormatTestController {
  public:
   CustomProviderController(std::string format) : OutputFormatTestController(CUSTOM_CHANNEL, "*", std::move(format)) {}
@@ -102,6 +100,8 @@ const std::string EVENT_DATA_JSON = R"(
     "Name": ""
   }]
 )";
+
+}  // namespace
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly custom provider", "[onTrigger]") {
   std::string event = CustomProviderController{"JSON::Simple"}.run();

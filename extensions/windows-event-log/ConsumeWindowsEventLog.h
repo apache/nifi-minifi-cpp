@@ -140,7 +140,7 @@ private:
   std::wstring wstrChannel_;
   std::wstring wstrQuery_;
   std::string regex_;
-  bool resolve_as_attributes_;
+  bool resolve_as_attributes_{false};
   bool apply_identifier_function_{false};
   std::string provenanceUri_;
   std::string computerName_;
