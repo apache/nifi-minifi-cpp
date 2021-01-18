@@ -17,7 +17,15 @@
 # under the License.
 #
 
-file(GLOB WEL_INTEGRATION_TESTS  "*.cpp")
+set(WEL_INTEGRATION_TESTS  "BookmarkTests.cpp" "ConsumeWindowsEventLogTests.cpp" "MetadataWalkerTests.cpp")
+if (TEST_CUSTOM_WEL_PROVIDER)
+	execute_process(COMMAND
+		"${CMAKE_CURRENT_LIST_DIR}/custom-provider/generate-and-register.bat"
+		"${CMAKE_CURRENT_LIST_DIR}/custom-provider"
+	)
+	list(APPEND WEL_INTEGRATION_TESTS "CWELCustomProviderTests.cpp")
+endif()
+
 SET(WEL_TEST_COUNT 0)
 FOREACH(testfile ${WEL_INTEGRATION_TESTS})
   	get_filename_component(testfilename "${testfile}" NAME_WE)
