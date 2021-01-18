@@ -10,8 +10,8 @@
       <provider name="minifi_unit_test_provider"
           symbol="minifi_unit_test_provider"
           guid="{ABCDEF01-8174-F1CA-87BE-DA129FF6001B}"
-          resourceFileName="D:\a\nifi-minifi-cpp\nifi-minifi-cpp\libminifi\test\resources\wel\unit-test-provider.dll"
-          messageFileName="D:\a\nifi-minifi-cpp\nifi-minifi-cpp\libminifi\test\resources\wel\unit-test-provider.dll">  
+          resourceFileName="D:\a\nifi-minifi-cpp\nifi-minifi-cpp\extensions\windows-event-log\tests\custom-provider\unit-test-provider.dll"
+          messageFileName="D:\a\nifi-minifi-cpp\nifi-minifi-cpp\extensions\windows-event-log\tests\custom-provider\unit-test-provider.dll">  
         <events>
           <event symbol="CustomEvent" value="10000" version="1" channel="minifi_unit_test_provider/Log" template="CustomTemplate" />
         </events>

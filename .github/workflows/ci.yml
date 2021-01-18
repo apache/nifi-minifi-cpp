@@ -48,7 +48,7 @@ jobs:
         uses: microsoft/setup-msbuild@v1.0.2
       - id: create-wel-provider
         run: |
-          cd libminifi\test\resources\wel
+          cd extensions\windows-event-log\tests\custom-provider
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x86
           PATH %PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\Roslyn
           mc -css Namespace unit-test-provider.man
@@ -70,7 +70,7 @@ jobs:
         uses: microsoft/setup-msbuild@v1.0.2
       - id: create-wel-provider
         run: |
-          cd libminifi\test\resources\wel
+          cd extensions\windows-event-log\tests\custom-provider
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64
           PATH %PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\Roslyn
           mc -css Namespace unit-test-provider.man

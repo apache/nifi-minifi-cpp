@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-#include <cstdlib>
-
 #include "ConsumeWindowsEventLog.h"
 
 #include "core/ConfigurableComponent.h"
@@ -26,6 +24,10 @@
 #include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
 #include "rapidjson/document.h"
+
+// generated from the manifest file "custom-provider/unit-test-provider.man"
+// using the command "mc -um unit-test-provider.man"
+#include "unit-test-provider.h"
 
 using ConsumeWindowsEventLog = org::apache::nifi::minifi::processors::ConsumeWindowsEventLog;
 using LogAttribute = org::apache::nifi::minifi::processors::LogAttribute;
@@ -48,27 +50,40 @@ void reportEvent(const std::string& channel, const char* message, WORD log_level
   ReportEventA(event_source, log_level, 0, CWEL_TESTS_OPCODE, nullptr, 1, 0, &message, nullptr);
 }
 
-struct CustomEvent {
-  std::string first;
-  std::string second;
-  std::string third;
+struct CustomEventData {
+  std::wstring first;
+  std::wstring second;
+  std::wstring third;
   int binary_length;
-  int binary_data;
+  const unsigned char* binary_data;
 };
 
 const std::string CUSTOM_PROVIDER_NAME = "minifi_unit_test_provider";
 const std::string CUSTOM_CHANNEL = CUSTOM_PROVIDER_NAME + "/Log";
 
-bool dispatchCustomEvent(const CustomEvent& event) {
-  std::string command = "powershell \"New-WinEvent -ProviderName " + CUSTOM_PROVIDER_NAME
-    + " -Id 10000 -Payload @('" + event.first + "','" + event.second + "', '" + event.third
-    + "', " + std::to_string(event.binary_length) + ", " + std::to_string(event.binary_data) + ")\"";
-  auto result = std::system(command.c_str());
-  return result == 0;
+bool initializeCustomProvider() {
+  static auto provider_initialized = [] {
+    return EventRegisterminifi_unit_test_provider();
+  }();
+
+  return provider_initialized == ERROR_SUCCESS;
+}
+
+bool dispatchCustomEvent(const CustomEventData& event) {
+  REQUIRE(initializeCustomProvider());
+
+  auto result = EventWriteCustomEvent(
+    event.first.c_str(),
+    event.second.c_str(),
+    event.third.c_str(),
+    event.binary_length,
+    event.binary_data
+  );
+  return result == ERROR_SUCCESS;
 }
 
 bool supportsCustomEvents() {
-  return dispatchCustomEvent({"First", "Second", "Third", 2, 5});
+  return initializeCustomProvider();
 }
 
 }  // namespace
@@ -527,16 +542,22 @@ class CustomProviderController : public OutputFormatTestController {
 
  protected:
   void dispatchBookmarkEvent() override {
-    REQUIRE(dispatchCustomEvent({"Bookmark", "Second", "Third", 3, 12}));
+    auto binary = reinterpret_cast<const unsigned char*>("\x0c\x10");
+    REQUIRE(dispatchCustomEvent({L"Bookmark", L"Second", L"Third", 2, binary}));
+    // even though we are using the API, we still have to wait for the event to appear
+    // for CWEL processor
     std::this_thread::sleep_for(std::chrono::seconds{1});
   }
   void dispatchCollectedEvent() override {
-    REQUIRE(dispatchCustomEvent({"Actual event", "Second", "Third", 1, 9}));
+    auto binary = reinterpret_cast<const unsigned char*>("\x09\x01");
+    REQUIRE(dispatchCustomEvent({L"Actual event", L"Second", L"Third", 2, binary}));
+    // even though we are using the API, we still have to wait for the event to appear
+    // for CWEL processor
     std::this_thread::sleep_for(std::chrono::seconds{1});
   }
 };
 
-const std::string event_data_json = R"(
+const std::string EVENT_DATA_JSON = R"(
   [{
     "Type": "Data",
     "Content": "Actual event",
@@ -551,7 +572,7 @@ const std::string event_data_json = R"(
     "Name": "Channel"
   }, {
     "Type": "Binary",
-    "Content": "09",
+    "Content": "0901",
     "Name": ""
   }]
 )";
@@ -569,7 +590,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly custom
         },
         "Channel": ")" + CUSTOM_CHANNEL + R"("
       },
-      "EventData": )" + event_data_json + R"(
+      "EventData": )" + EVENT_DATA_JSON + R"(
     }
   )");
 }
@@ -583,7 +604,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly cus
     {
       "Name": ")" + CUSTOM_PROVIDER_NAME + R"(",
       "Channel": ")" + CUSTOM_CHANNEL /* Channel is not overwritten by data named "Channel" */ + R"(",
-      "EventData": )" + event_data_json /* EventData is not discarded */ + R"(,
+      "EventData": )" + EVENT_DATA_JSON /* EventData is not discarded */ + R"(,
       "param1": "Actual event",
       "param2": "Second"
     }
