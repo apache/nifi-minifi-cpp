@@ -36,7 +36,9 @@ namespace nifi {
 namespace minifi {
 namespace wel {
 
-static rapidjson::Value xmlElementToJSON(const pugi::xml_node& node, rapidjson::Document& doc) {
+namespace {
+
+rapidjson::Value xmlElementToJSON(const pugi::xml_node& node, rapidjson::Document& doc) {
   gsl_Expects(node.type() == pugi::xml_node_type::node_element);
   rapidjson::Value object(rapidjson::kObjectType);
   object.AddMember("name", rapidjson::StringRef(node.name()), doc.GetAllocator());
@@ -54,7 +56,7 @@ static rapidjson::Value xmlElementToJSON(const pugi::xml_node& node, rapidjson::
   return object;
 }
 
-static rapidjson::Value xmlDocumentToJSON(const pugi::xml_node& node, rapidjson::Document& doc) {
+rapidjson::Value xmlDocumentToJSON(const pugi::xml_node& node, rapidjson::Document& doc) {
   gsl_Expects(node.type() == pugi::xml_node_type::node_document);
   rapidjson::Value children(rapidjson::kArrayType);
   for (const auto& child : node.children()) {
@@ -65,15 +67,7 @@ static rapidjson::Value xmlDocumentToJSON(const pugi::xml_node& node, rapidjson:
   return children;
 }
 
-rapidjson::Document toRawJSON(const pugi::xml_node& root) {
-  rapidjson::Document doc;
-  if (root.type() == pugi::xml_node_type::node_document) {
-    static_cast<rapidjson::Value&>(doc) = xmlDocumentToJSON(root, doc);
-  }
-  return doc;
-}
-
-static rapidjson::Document toJSONImpl(const pugi::xml_node& root, bool flatten) {
+rapidjson::Document toJSONImpl(const pugi::xml_node& root, bool flatten) {
   rapidjson::Document doc{rapidjson::kObjectType};
 
   auto event_xml = root.child("Event");
@@ -141,6 +135,16 @@ static rapidjson::Document toJSONImpl(const pugi::xml_node& root, bool flatten) 
     }
   }
 
+  return doc;
+}
+
+}  // namespace
+
+rapidjson::Document toRawJSON(const pugi::xml_node& root) {
+  rapidjson::Document doc;
+  if (root.type() == pugi::xml_node_type::node_document) {
+    static_cast<rapidjson::Value&>(doc) = xmlDocumentToJSON(root, doc);
+  }
   return doc;
 }
 

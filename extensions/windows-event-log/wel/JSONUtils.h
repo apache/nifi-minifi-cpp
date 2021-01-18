@@ -40,7 +40,10 @@ rapidjson::Document toRawJSON(const pugi::xml_node& root);
 
 /**
  * Retains some hierarchical structure of the original xml event,
- * e.g. {System: {Provider: {Name: String, Guid: String}}}
+ * e.g. transforms
+ *   <Event><System><Provider Name="Banana" Guid="{5}"/></System></Event>
+ * into
+ *   {System: {Provider: {Name: "Banana", Guid: "{5}"}}}
  */
 rapidjson::Document toSimpleJSON(const pugi::xml_node& root);
 

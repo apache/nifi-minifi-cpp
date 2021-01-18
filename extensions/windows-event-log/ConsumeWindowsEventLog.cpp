@@ -251,7 +251,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   std::string mode;
   context->getProperty(OutputFormat.getName(), mode);
 
-  output_.reset();
+  output_ = {};
   if (mode == XML) {
     output_.xml = true;
   } else if (mode == Plaintext) {

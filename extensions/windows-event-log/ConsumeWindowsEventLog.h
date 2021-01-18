@@ -151,10 +151,6 @@ private:
   uint64_t batch_commit_size_{};
 
   struct OutputFormat {
-    void reset() {
-      *this = OutputFormat{};
-    }
-
     bool xml{false};
     bool plaintext{false};
     struct {

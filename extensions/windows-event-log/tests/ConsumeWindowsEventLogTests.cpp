@@ -56,11 +56,11 @@ struct CustomEvent {
   int binary_data;
 };
 
-const std::string custom_provider_name = "minifi_unit_test_provider";
-const std::string custom_channel = custom_provider_name + "/Log";
+const std::string CUSTOM_PROVIDER_NAME = "minifi_unit_test_provider";
+const std::string CUSTOM_CHANNEL = CUSTOM_PROVIDER_NAME + "/Log";
 
 bool dispatchCustomEvent(const CustomEvent& event) {
-  std::string command = "powershell \"New-WinEvent -ProviderName " + custom_provider_name
+  std::string command = "powershell \"New-WinEvent -ProviderName " + CUSTOM_PROVIDER_NAME
     + " -Id 10000 -Payload @('" + event.first + "','" + event.second + "', '" + event.third
     + "', " + std::to_string(event.binary_length) + ", " + std::to_string(event.binary_data) + ")\"";
   auto result = std::system(command.c_str());
@@ -445,8 +445,8 @@ void matchJSON(const rapidjson::Value& json, const rapidjson::Value& expected) {
 
 void verifyJSON(const std::string& json_str, const std::string& expected_str) {
   rapidjson::Document json, expected;
-  REQUIRE(!json.Parse(json_str.c_str()).HasParseError());
-  REQUIRE(!expected.Parse(expected_str.c_str()).HasParseError());
+  REQUIRE_FALSE(json.Parse(json_str.c_str()).HasParseError());
+  REQUIRE_FALSE(expected.Parse(expected_str.c_str()).HasParseError());
 
   matchJSON(json, expected);
 }
@@ -485,6 +485,21 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly", "[on
   )json");
 }
 
+TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly", "[onTrigger]") {
+  std::string event = JSONOutputController{"JSON::Flattened"}.run();
+  verifyJSON(event, R"json(
+    {
+      "Name": "Application",
+      "Channel": "Application",
+      "EventData": [{
+          "Type": "Data",
+          "Content": "Event one",
+          "Name": ""
+      }]
+    }
+  )json");
+}
+
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Raw correctly", "[onTrigger]") {
   std::string event = JSONOutputController{"JSON::Raw"}.run();
   verifyJSON(event, R"json(
@@ -508,7 +523,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Raw correctly", "[onTri
 
 class CustomProviderController : public OutputFormatTestController {
  public:
-  CustomProviderController(std::string format) : OutputFormatTestController(custom_channel, "*", std::move(format)) {}
+  CustomProviderController(std::string format) : OutputFormatTestController(CUSTOM_CHANNEL, "*", std::move(format)) {}
 
  protected:
   void dispatchBookmarkEvent() override {
@@ -550,9 +565,9 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly custom
     {
       "System": {
         "Provider": {
-          "Name": ")" + custom_provider_name + R"("
+          "Name": ")" + CUSTOM_PROVIDER_NAME + R"("
         },
-        "Channel": ")" + custom_channel + R"("
+        "Channel": ")" + CUSTOM_CHANNEL + R"("
       },
       "EventData": )" + event_data_json + R"(
     }
@@ -566,8 +581,8 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly cus
   std::string event = CustomProviderController{"JSON::Flattened"}.run();
   verifyJSON(event, R"(
     {
-      "Name": ")" + custom_provider_name + R"(",
-      "Channel": ")" + custom_channel /* Channel is not overwritten by data named "Channel" */ + R"(",
+      "Name": ")" + CUSTOM_PROVIDER_NAME + R"(",
+      "Channel": ")" + CUSTOM_CHANNEL /* Channel is not overwritten by data named "Channel" */ + R"(",
       "EventData": )" + event_data_json /* EventData is not discarded */ + R"(,
       "param1": "Actual event",
       "param2": "Second"
