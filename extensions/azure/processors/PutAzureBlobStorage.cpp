@@ -24,7 +24,7 @@
 #include <string>
 
 #include "storage/AzureBlobStorage.h"
-#include "controllerservices/AzureCredentialsService.h"
+#include "controllerservices/AzureStorageCredentialsService.h"
 
 namespace org {
 namespace apache {
@@ -39,14 +39,36 @@ const core::Property PutAzureBlobStorage::ContainerName(
     ->supportsExpressionLanguage(true)
     ->isRequired(true)
     ->build());
+const core::Property PutAzureBlobStorage::AzureStorageCredentialsService(
+  core::PropertyBuilder::createProperty("Azure Storage Credentials Service")
+    ->withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
+    ->build());
+const core::Property PutAzureBlobStorage::StorageAccountName(
+    core::PropertyBuilder::createProperty("Storage Account Name")
+      ->withDescription("The storage account name.")
+      ->supportsExpressionLanguage(true)
+      ->build());
+const core::Property PutAzureBlobStorage::StorageAccountKey(
+    core::PropertyBuilder::createProperty("Storage Account Key")
+      ->withDescription("The storage account key. This is an admin-like password providing access to every container in this account. "
+                        "It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.")
+      ->supportsExpressionLanguage(true)
+      ->build());
+const core::Property PutAzureBlobStorage::SASToken(
+    core::PropertyBuilder::createProperty("SAS Token")
+      ->withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Account Key.")
+      ->supportsExpressionLanguage(true)
+      ->build());
+const core::Property PutAzureBlobStorage::CommonStorageAccountEndpointSuffix(
+    core::PropertyBuilder::createProperty("Common Storage Account Endpoint Suffix")
+      ->withDescription("Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a "
+                        "different suffix in certain circumstances (like Azure Stack or non-public Azure regions). ")
+      ->supportsExpressionLanguage(true)
+      ->build());
 const core::Property PutAzureBlobStorage::ConnectionString(
   core::PropertyBuilder::createProperty("Connection String")
-    ->withDescription("Connection string used to connect to Azure Storage service.")
+    ->withDescription("Connection string used to connect to Azure Storage service. This overrides all other set credential properties.")
     ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutAzureBlobStorage::AzureCredentialsService(
-  core::PropertyBuilder::createProperty("Azure Credentials Service")
-    ->withDescription("Name of the Azure Credentials Service used to retrieve the connection string from.")
     ->build());
 const core::Property PutAzureBlobStorage::Blob(
   core::PropertyBuilder::createProperty("Blob")
@@ -70,8 +92,12 @@ void PutAzureBlobStorage::initialize() {
   // Set the supported properties
   setSupportedProperties({
     ContainerName,
+    StorageAccountName,
+    StorageAccountKey,
+    SASToken,
+    CommonStorageAccountEndpointSuffix,
     ConnectionString,
-    AzureCredentialsService,
+    AzureStorageCredentialsService,
     Blob,
     CreateContainer
   });
@@ -88,7 +114,7 @@ void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>
 
 std::string PutAzureBlobStorage::getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
   std::string service_name;
-  if (!context->getProperty(AzureCredentialsService.getName(), service_name) || service_name.empty()) {
+  if (!context->getProperty(AzureStorageCredentialsService.getName(), service_name) || service_name.empty()) {
     return "";
   }
 
@@ -97,7 +123,7 @@ std::string PutAzureBlobStorage::getConnectionStringFromControllerService(const 
     return "";
   }
 
-  auto azure_credentials_service = std::dynamic_pointer_cast<minifi::azure::controllers::AzureCredentialsService>(service);
+  auto azure_credentials_service = std::dynamic_pointer_cast<minifi::azure::controllers::AzureStorageCredentialsService>(service);
   if (!azure_credentials_service) {
     return "";
   }
@@ -108,11 +134,21 @@ std::string PutAzureBlobStorage::getConnectionStringFromControllerService(const 
 std::string PutAzureBlobStorage::getAzureConnectionStringFromProperties(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const {
-  std::string connection_string;
-  if (context->getProperty(ConnectionString, connection_string, flow_file) && !connection_string.empty()) {
-    return connection_string;
+  azure::storage::AzureStorageCredentials credentials;
+  context->getProperty(StorageAccountName, credentials.storage_account_name, flow_file);
+  context->getProperty(StorageAccountKey, credentials.storage_account_key, flow_file);
+  context->getProperty(SASToken, credentials.sas_token, flow_file);
+  context->getProperty(CommonStorageAccountEndpointSuffix, credentials.endpoint_suffix, flow_file);
+  context->getProperty(ConnectionString, credentials.connection_string, flow_file);
+  return credentials.getConnectionString();
+}
+
+void PutAzureBlobStorage::createAzureStorageClient(const std::string &connection_string, const std::string &container_name) {
+  if (blob_storage_wrapper_ == nullptr) {
+    blob_storage_wrapper_ = minifi::utils::make_unique<storage::AzureBlobStorage>(connection_string, container_name);
+  } else {
+    blob_storage_wrapper_->resetClientIfNeeded(connection_string, container_name);
   }
-  return "";
 }
 
 std::string PutAzureBlobStorage::getConnectionString(
@@ -147,11 +183,7 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
     return;
   }
 
-  if (blob_storage_wrapper_ == nullptr) {
-    blob_storage_wrapper_ = minifi::utils::make_unique<storage::AzureBlobStorage>(connection_string, container_name);
-  } else {
-    blob_storage_wrapper_->resetClientIfNeeded(connection_string, container_name);
-  }
+  createAzureStorageClient(connection_string, container_name);
 
   if (create_container_) {
     blob_storage_wrapper_->createContainer();

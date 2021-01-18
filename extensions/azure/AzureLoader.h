@@ -25,7 +25,7 @@
 #include "core/ClassLoader.h"
 #include "utils/StringUtils.h"
 #include "utils/GeneralUtils.h"
-#include "controllerservices/AzureCredentialsService.h"
+#include "controllerservices/AzureStorageCredentialsService.h"
 
 class AzureObjectFactory : public core::ObjectFactory {
  public:
@@ -49,13 +49,13 @@ class AzureObjectFactory : public core::ObjectFactory {
    */
   std::vector<std::string> getClassNames() override {
     std::vector<std::string> class_names;
-    class_names.push_back("AzureCredentialsService");
+    class_names.push_back("AzureStorageCredentialsService");
     return class_names;
   }
 
   std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
-    if (utils::StringUtils::equalsIgnoreCase(class_name, "AzureCredentialsService")) {
-      return minifi::utils::make_unique<core::DefautObjectFactory<minifi::azure::controllers::AzureCredentialsService>>();
+    if (utils::StringUtils::equalsIgnoreCase(class_name, "AzureStorageCredentialsService")) {
+      return minifi::utils::make_unique<core::DefautObjectFactory<minifi::azure::controllers::AzureStorageCredentialsService>>();
     } else {
       return nullptr;
     }

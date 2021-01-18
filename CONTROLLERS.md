@@ -17,7 +17,7 @@
 
 ## Table of Contents
 
-- [AzureCredentialsService](#azureCredentialsService)
+- [AzureStorageCredentialsService](#azureStorageCredentialsService)
 - [AWSCredentialsService](#awsCredentialsService)
 
 ## AWSCredentialsService
@@ -41,7 +41,7 @@ default values, and whether a property supports the NiFi Expression Language.
 |Secret Key|||Yes|Specifies the AWS Secret Key|
 |Credentials File|||No|Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey|
 
-## AzureCredentialsService
+## AzureStorageCredentialsService
 
 ### Description
 
@@ -56,4 +56,8 @@ default values, and whether a property supports the NiFi Expression Language.
 
 | Name | Default Value | Allowable Values | Expression Language Supported? | Description |
 | - | - | - | - | - |
-|**Connection String**|||Yes|Connection string for authenticating with Azure storage service.|
+|Storage Account Name||||The storage account name.|
+|Storage Account Key||||The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.|
+|SAS Token||||Shared Access Signature token. Specify either SAS Token (recommended) or Account Key.|
+|Common Storage Account Endpoint Suffix||||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).|
+|Connection String||||Connection string used to connect to Azure Storage service. This overrides all other set credential properties.|

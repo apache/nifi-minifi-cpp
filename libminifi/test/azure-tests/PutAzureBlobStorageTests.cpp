@@ -26,8 +26,11 @@
 #include "utils/file/FileUtils.h"
 
 const std::string CONTAINER_NAME = "test-container";
+const std::string STORAGE_ACCOUNT_NAME = "test-account";
+const std::string STORAGE_ACCOUNT_KEY = "test-key";
+const std::string SAS_TOKEN = "test-sas-token";
+const std::string ENDPOINT_SUFFIX = "test.suffix.com";
 const std::string CONNECTION_STRING = "test-connectionstring";
-const std::string AZURE_CREDENTIALS_SERVICE_NAME = "AzureCredentialsService";
 const std::string BLOB_NAME = "test-blob.txt";
 const std::string TEST_DATA = "data";
 
@@ -120,6 +123,13 @@ class PutAzureBlobStorageTestsFixture {
       true);
   }
 
+  void setDefaultCredentials() {
+    plan->setProperty(update_attribute, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Name", "${test.account_name}");
+    plan->setProperty(update_attribute, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Key", "${test.account_key}");
+  }
+
   virtual ~PutAzureBlobStorageTestsFixture() {
     LogTestController::getInstance().reset();
   }
@@ -142,37 +152,110 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test required parameters", "[
     plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
   }
 
-  SECTION("No connection string is set") {
-    plan->setProperty(update_attribute, "test.container", CONTAINER_NAME, true);
-    plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
-    plan->setProperty(update_attribute, "test.blob", BLOB_NAME, true);
-    plan->setProperty(put_azure_blob_storage, "Blob", "${test.blob}");
-  }
-
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
 
-TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test connection string settings from credentials service", "[azureCredentials]") {
+TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "[azureStorageCredentials]") {
   plan->setProperty(update_attribute, "test.container", CONTAINER_NAME, true);
   plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
   plan->setProperty(update_attribute, "test.blob", BLOB_NAME, true);
   plan->setProperty(put_azure_blob_storage, "Blob", "${test.blob}");
 
-  auto aws_cred_service = plan->addController("AzureCredentialsService", "AzureCredentialsService");
-  plan->setProperty(aws_cred_service, "Connection String", CONNECTION_STRING);
-  plan->setProperty(put_azure_blob_storage, "Azure Credentials Service", "AzureCredentialsService");
-  test_controller.runSession(plan, true);
+  SECTION("No credentials are set") {
+    REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+  }
 
-  REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
+  SECTION("No account key or SAS is set") {
+    plan->setProperty(put_azure_blob_storage, "Storage Account Name", STORAGE_ACCOUNT_NAME);
+    REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+  }
+
+  SECTION("Credentials set in Azure Storage Credentials Service") {
+    auto aws_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
+    plan->setProperty(aws_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
+    plan->setProperty(aws_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
+    plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
+    test_controller.runSession(plan, true);
+    REQUIRE(mock_blob_storage_ptr->getConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
+  }
+
+  SECTION("Overriding credentials set in Azure Storage Credentials Service with connection string") {
+    auto aws_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
+    plan->setProperty(aws_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
+    plan->setProperty(aws_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
+    plan->setProperty(aws_cred_service, "Connection String", CONNECTION_STRING);
+    plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
+    test_controller.runSession(plan, true);
+    REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
+  }
+
+  SECTION("Account name and key set in properties") {
+    plan->setProperty(update_attribute, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Name", "${test.account_name}");
+    plan->setProperty(update_attribute, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Key", "${test.account_key}");
+    test_controller.runSession(plan, true);
+    REQUIRE(mock_blob_storage_ptr->getConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
+  }
+
+  SECTION("Account name and SAS token set in properties") {
+    plan->setProperty(update_attribute, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Name", "${test.account_name}");
+    plan->setProperty(update_attribute, "test.sas_token", SAS_TOKEN, true);
+    plan->setProperty(put_azure_blob_storage, "SAS Token", "${test.sas_token}");
+    test_controller.runSession(plan, true);
+    REQUIRE(mock_blob_storage_ptr->getConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";SharedAccessSignature=" + SAS_TOKEN);
+  }
+
+  SECTION("Account name and SAS token with question mark set in properties") {
+    plan->setProperty(update_attribute, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Name", "${test.account_name}");
+    plan->setProperty(update_attribute, "test.sas_token", "?" + SAS_TOKEN, true);
+    plan->setProperty(put_azure_blob_storage, "SAS Token", "${test.sas_token}");
+    test_controller.runSession(plan, true);
+    REQUIRE(mock_blob_storage_ptr->getConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";SharedAccessSignature=" + SAS_TOKEN);
+  }
+
+  SECTION("Endpoint suffix overriden") {
+    plan->setProperty(update_attribute, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Name", "${test.account_name}");
+    plan->setProperty(update_attribute, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Key", "${test.account_key}");
+    plan->setProperty(update_attribute, "test.endpoint_suffix", ENDPOINT_SUFFIX, true);
+    plan->setProperty(put_azure_blob_storage, "Common Storage Account Endpoint Suffix", "${test.endpoint_suffix}");
+    test_controller.runSession(plan, true);
+    REQUIRE(mock_blob_storage_ptr->getConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY + ";EndpointSuffix=" + ENDPOINT_SUFFIX);
+  }
+
+  SECTION("Use connection string") {
+    plan->setProperty(update_attribute, "test.connection_string", CONNECTION_STRING, true);
+    plan->setProperty(put_azure_blob_storage, "Connection String", "${test.connection_string}");
+    test_controller.runSession(plan, true);
+    REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
+  }
+
+  SECTION("Overriding credentials with connection string") {
+    auto aws_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
+    plan->setProperty(aws_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
+    plan->setProperty(aws_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
+    plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
+    plan->setProperty(update_attribute, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Name", "${test.account_name}");
+    plan->setProperty(update_attribute, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Key", "${test.account_key}");
+    plan->setProperty(update_attribute, "test.connection_string", CONNECTION_STRING, true);
+    plan->setProperty(put_azure_blob_storage, "Connection String", "${test.connection_string}");
+    test_controller.runSession(plan, true);
+    REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
+  }
 }
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[azureBlobStorageUpload]") {
   plan->setProperty(update_attribute, "test.container", CONTAINER_NAME, true);
   plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
-  plan->setProperty(update_attribute, "test.connectionstring", CONNECTION_STRING, true);
-  plan->setProperty(put_azure_blob_storage, "Connection String", "${test.connectionstring}");
   plan->setProperty(update_attribute, "test.blob", BLOB_NAME, true);
   plan->setProperty(put_azure_blob_storage, "Blob", "${test.blob}");
+  setDefaultCredentials();
   test_controller.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("key:azure.container value:" + CONTAINER_NAME));
   REQUIRE(LogTestController::getInstance().contains("key:azure.blobname value:" + BLOB_NAME));
@@ -182,18 +265,16 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[az
   REQUIRE(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
   REQUIRE(mock_blob_storage_ptr->input_data == TEST_DATA);
   REQUIRE(mock_blob_storage_ptr->getContainerCreated() == false);
-  REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
   REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
 }
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with container creation", "[azureBlobStorageUpload]") {
   plan->setProperty(update_attribute, "test.container", CONTAINER_NAME, true);
   plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
-  plan->setProperty(update_attribute, "test.connectionstring", CONNECTION_STRING, true);
-  plan->setProperty(put_azure_blob_storage, "Connection String", "${test.connectionstring}");
   plan->setProperty(update_attribute, "test.blob", BLOB_NAME, true);
   plan->setProperty(put_azure_blob_storage, "Blob", "${test.blob}");
   plan->setProperty(put_azure_blob_storage, "Create Container", "true");
+  setDefaultCredentials();
   test_controller.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("key:azure.container value:" + CONTAINER_NAME));
   REQUIRE(LogTestController::getInstance().contains("key:azure.blobname value:" + BLOB_NAME));
@@ -203,6 +284,5 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with c
   REQUIRE(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
   REQUIRE(mock_blob_storage_ptr->input_data == TEST_DATA);
   REQUIRE(mock_blob_storage_ptr->getContainerCreated() == true);
-  REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
   REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
 }

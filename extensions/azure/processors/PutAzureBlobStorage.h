@@ -47,8 +47,12 @@ class PutAzureBlobStorage : public core::Processor {
 
   // Supported Properties
   static const core::Property ContainerName;
+  static const core::Property AzureStorageCredentialsService;
+  static const core::Property StorageAccountName;
+  static const core::Property StorageAccountKey;
+  static const core::Property SASToken;
+  static const core::Property CommonStorageAccountEndpointSuffix;
   static const core::Property ConnectionString;
-  static const core::Property AzureCredentialsService;
   static const core::Property Blob;
   static const core::Property CreateContainer;
 
@@ -116,6 +120,7 @@ class PutAzureBlobStorage : public core::Processor {
   std::string getConnectionString(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const;
+  void createAzureStorageClient(const std::string &connection_string, const std::string &container_name);
 
   std::unique_ptr<storage::BlobStorage> blob_storage_wrapper_;
   bool create_container_ = false;

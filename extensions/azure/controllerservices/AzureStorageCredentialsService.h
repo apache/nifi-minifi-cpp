@@ -24,6 +24,7 @@
 #include "core/Resource.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "storage/AzureStorageCredentials.h"
 
 namespace org {
 namespace apache {
@@ -32,18 +33,22 @@ namespace minifi {
 namespace azure {
 namespace controllers {
 
-class AzureCredentialsService : public core::controller::ControllerService {
+class AzureStorageCredentialsService : public core::controller::ControllerService {
  public:
-  static core::Property ConnectionString;
+  static const core::Property StorageAccountName;
+  static const core::Property StorageAccountKey;
+  static const core::Property SASToken;
+  static const core::Property CommonStorageAccountEndpointSuffix;
+  static const core::Property ConnectionString;
 
-  explicit AzureCredentialsService(const std::string &name, const minifi::utils::Identifier& uuid = {})
+  explicit AzureStorageCredentialsService(const std::string &name, const minifi::utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
-        logger_(logging::LoggerFactory<AzureCredentialsService>::getLogger()) {
+        logger_(logging::LoggerFactory<AzureStorageCredentialsService>::getLogger()) {
   }
 
-  explicit AzureCredentialsService(const std::string &name, const std::shared_ptr<Configure> &configuration)
+  explicit AzureStorageCredentialsService(const std::string &name, const std::shared_ptr<Configure> &configuration)
       : ControllerService(name),
-        logger_(logging::LoggerFactory<AzureCredentialsService>::getLogger()) {
+        logger_(logging::LoggerFactory<AzureStorageCredentialsService>::getLogger()) {
   }
 
   void initialize() override;
@@ -61,16 +66,16 @@ class AzureCredentialsService : public core::controller::ControllerService {
 
   void onEnable() override;
 
-  std::string getConnectionString() {
-    return connection_string_;
+  std::string getConnectionString() const {
+    return credentials_.getConnectionString();
   }
 
  private:
-  std::string connection_string_;
+  storage::AzureStorageCredentials credentials_;
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(AzureCredentialsService, "Azure Credential Management Service");
+REGISTER_RESOURCE(AzureStorageCredentialsService, "Azure Storage Credentials Management Service");
 
 }  // namespace controllers
 }  // namespace azure
