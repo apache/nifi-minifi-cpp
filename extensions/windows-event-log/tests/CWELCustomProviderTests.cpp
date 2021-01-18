@@ -45,9 +45,7 @@ const std::string CUSTOM_PROVIDER_NAME = "minifi_unit_test_provider";
 const std::string CUSTOM_CHANNEL = CUSTOM_PROVIDER_NAME + "/Log";
 
 bool dispatchCustomEvent(const CustomEventData& event) {
-  static auto provider_initialized = [] {
-    return EventRegisterminifi_unit_test_provider();
-  }();
+  static auto provider_initialized = EventRegisterminifi_unit_test_provider();
   REQUIRE(provider_initialized == ERROR_SUCCESS);
 
   auto result = EventWriteCustomEvent(
