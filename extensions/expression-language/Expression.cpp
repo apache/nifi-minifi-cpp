@@ -30,7 +30,15 @@
 #include <utils/OsUtils.h>
 #include <expression/Expression.h>
 #include <regex>
+
 #ifndef DISABLE_CURL
+#ifdef WIN32
+#pragma comment(lib, "wldap32.lib" )
+#pragma comment(lib, "crypt32.lib" )
+#pragma comment(lib, "Ws2_32.lib")
+
+#define CURL_STATICLIB
+#endif
 #include <curl/curl.h>
 #endif
 
