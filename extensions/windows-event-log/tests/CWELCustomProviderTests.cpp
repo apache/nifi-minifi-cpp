@@ -68,14 +68,14 @@ class CustomProviderController : public OutputFormatTestController {
     REQUIRE(dispatchCustomEvent({L"Bookmark", L"Second", L"Third", 2, binary}));
     // even though we are using the API, we still have to wait for the event to appear
     // for CWEL processor
-    std::this_thread::sleep_for(std::chrono::seconds{1});
+    std::this_thread::sleep_for(std::chrono::seconds{2});
   }
   void dispatchCollectedEvent() override {
     auto binary = reinterpret_cast<const unsigned char*>("\x09\x01");
     REQUIRE(dispatchCustomEvent({L"Actual event", L"Second", L"Third", 2, binary}));
     // even though we are using the API, we still have to wait for the event to appear
     // for CWEL processor
-    std::this_thread::sleep_for(std::chrono::seconds{1});
+    std::this_thread::sleep_for(std::chrono::seconds{2});
   }
 };
 
