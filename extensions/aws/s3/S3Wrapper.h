@@ -186,8 +186,8 @@ class S3Wrapper {
 
   minifi::utils::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);
   minifi::utils::optional<std::vector<ListedObjectAttributes>> listObjects(const ListRequestParameters& params);
-  void addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
-  void addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
+  void addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
+  void addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
 
   template<typename ListRequest>
   ListRequest createListRequest(const ListRequestParameters& params) {
