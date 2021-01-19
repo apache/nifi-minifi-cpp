@@ -74,7 +74,7 @@ jobs:
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x86
           PATH %PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\Roslyn
-          win_build_vs.bat build /CI /S /A
+          win_build_vs.bat build /CI /S /A /Z
         shell: cmd
   windows_VS2019:
     name: "windows-vs2019"
