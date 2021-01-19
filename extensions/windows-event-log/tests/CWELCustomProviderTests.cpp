@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#undef NDEBUG
+
 #include "ConsumeWindowsEventLog.h"
 
 #include "core/ConfigurableComponent.h"
@@ -24,6 +26,8 @@
 #include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
 #include "rapidjson/document.h"
+#include "wel/UniqueEvtHandle.h"
+#include "IntegrationTestUtils.h"
 
 #include "CWELTestUtils.h"
 
@@ -58,25 +62,67 @@ bool dispatchCustomEvent(const CustomEventData& event) {
   return result == ERROR_SUCCESS;
 }
 
+using org::apache::nifi::minifi::wel::unique_evt_handle;
+
+bool advanceBookmark(const unique_evt_handle& hBookmark, const std::string& channel, const std::string& query, bool advance_to_last = false) {
+  const auto hEventResults = unique_evt_handle{ EvtQuery(0, std::wstring{channel.begin(), channel.end()}.c_str(), std::wstring{query.begin(), query.end()}.c_str(), EvtQueryChannelPath) };
+  if (!hEventResults) {
+    return false;
+  }
+
+  if (advance_to_last) {
+    if (!EvtSeek(hEventResults.get(), 0, 0, 0, EvtSeekRelativeToLast)) {
+      return false;
+    }
+  } else {
+    if (!EvtSeek(hEventResults.get(), 1, hBookmark.get(), 0, EvtSeekRelativeToBookmark)) {
+      return false;
+    }
+  }
+
+  const unique_evt_handle hEvent = [&hEventResults] {
+    DWORD dwReturned{};
+    EVT_HANDLE hEvent{ nullptr };
+    EvtNext(hEventResults.get(), 1, &hEvent, INFINITE, 0, &dwReturned);
+    return unique_evt_handle{ hEvent };
+  }();
+
+  if (!hEvent) {
+    return false;
+  }
+
+  REQUIRE(EvtUpdateBookmark(hBookmark.get(), hEvent.get()));
+
+  return true;
+}
+
 class CustomProviderController : public OutputFormatTestController {
  public:
-  CustomProviderController(std::string format, std::string json_format) : OutputFormatTestController(CUSTOM_CHANNEL, "*", std::move(format), std::move(json_format)) {}
+  CustomProviderController(std::string format, std::string json_format) : OutputFormatTestController(CUSTOM_CHANNEL, "*", std::move(format), std::move(json_format)) {
+    bookmark_.reset(EvtCreateBookmark(0));
+    advanceBookmark(bookmark_, channel_, query_, true);
+    REQUIRE(bookmark_);
+  }
 
  protected:
   void dispatchBookmarkEvent() override {
     auto binary = reinterpret_cast<const unsigned char*>("\x0c\x10");
     REQUIRE(dispatchCustomEvent({L"Bookmark", L"Second", L"Third", 2, binary}));
-    // even though we are using the API, we still have to wait for the event to appear
-    // for CWEL processor
-    std::this_thread::sleep_for(std::chrono::seconds{2});
+    REQUIRE(checkNewEventAvailable());
   }
   void dispatchCollectedEvent() override {
     auto binary = reinterpret_cast<const unsigned char*>("\x09\x01");
     REQUIRE(dispatchCustomEvent({L"Actual event", L"Second", L"Third", 2, binary}));
-    // even though we are using the API, we still have to wait for the event to appear
-    // for CWEL processor
-    std::this_thread::sleep_for(std::chrono::seconds{2});
+    REQUIRE(checkNewEventAvailable());
   }
+
+ private:
+  bool checkNewEventAvailable() {
+    return org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime(std::chrono::seconds{5}, [&] {
+      return advanceBookmark(bookmark_, channel_, query_);
+    });
+  }
+  unique_evt_handle bookmark_;
 };
 
 const std::string EVENT_DATA_JSON = R"(
