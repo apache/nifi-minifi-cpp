@@ -147,7 +147,6 @@ void ListS3::writeObjectTags(
 }
 
 void ListS3::writeUserMetadata(
-    const std::string &bucket,
     const aws::s3::ListedObjectAttributes &object_attributes,
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file) {
@@ -188,33 +187,33 @@ uint64_t ListS3::getLatestListedKeyTimestamp(const std::unordered_map<std::strin
   }
 
   int64_t stored_listed_key_timestamp = 0;
-  if (!stored_listed_key_timestamp_str.empty()) {
-    core::Property::StringToInt(stored_listed_key_timestamp_str, stored_listed_key_timestamp);
-  }
+  core::Property::StringToInt(stored_listed_key_timestamp_str, stored_listed_key_timestamp);
 
   return stored_listed_key_timestamp;
 }
 
-std::tuple<int64_t, std::vector<std::string>> ListS3::getCurrentState(const std::shared_ptr<core::ProcessContext> &context) {
+ListS3::ListingState ListS3::getCurrentState(const std::shared_ptr<core::ProcessContext> &context) {
+  ListS3::ListingState current_listing_state;
   std::unordered_map<std::string, std::string> state;
   if (!state_manager_->get(state)) {
     logger_->log_info("No stored state for listed objects was found");
-    return std::make_tuple(0, std::vector<std::string>());
+    return current_listing_state;
   }
 
-  auto stored_listed_key_timestamp = getLatestListedKeyTimestamp(state);
-  logger_->log_debug("Restored previous listed timestamp %lld", stored_listed_key_timestamp);
+  current_listing_state.listed_key_timestamp = getLatestListedKeyTimestamp(state);
+  logger_->log_debug("Restored previous listed timestamp %lld", current_listing_state.listed_key_timestamp);
 
-  return std::make_tuple(stored_listed_key_timestamp, getLatestListedKeys(state));
+  current_listing_state.listed_keys = getLatestListedKeys(state);
+  return current_listing_state;
 }
 
-void ListS3::storeState(const std::shared_ptr<core::ProcessContext> &context, const int64_t latest_listed_key_timestamp, const std::vector<std::string> &latest_listed_keys) {
+void ListS3::storeState(const std::shared_ptr<core::ProcessContext> &context, const ListS3::ListingState &latest_listing_state) {
   std::unordered_map<std::string, std::string> state;
-  state[LATEST_LISTED_KEY_TIMESTAMP] = std::to_string(latest_listed_key_timestamp);
-  for (std::size_t i = 0; i < latest_listed_keys.size(); ++i) {
-    state[LATEST_LISTED_KEY_PREFIX + std::to_string(i)] = latest_listed_keys[i];
+  state[LATEST_LISTED_KEY_TIMESTAMP] = std::to_string(latest_listing_state.listed_key_timestamp);
+  for (std::size_t i = 0; i < latest_listing_state.listed_keys.size(); ++i) {
+    state[LATEST_LISTED_KEY_PREFIX + std::to_string(i)] = latest_listing_state.listed_keys.at(i);
   }
-  logger_->log_debug("Stored new listed timestamp %lld", latest_listed_key_timestamp);
+  logger_->log_debug("Stored new listed timestamp %lld", latest_listing_state.listed_key_timestamp);
   state_manager_->set(state);
 }
 
@@ -233,7 +232,7 @@ void ListS3::createNewFlowFile(
     session->putAttribute(flow_file, "s3.version", object_attributes.version);
   }
   writeObjectTags(list_request_params_.bucket, object_attributes, session, flow_file);
-  writeUserMetadata(list_request_params_.bucket, object_attributes, session, flow_file);
+  writeUserMetadata(object_attributes, session, flow_file);
 
   session->transfer(flow_file, Success);
 }
@@ -253,39 +252,38 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     return;
   }
 
-  int64_t stored_listed_key_timestamp = 0;
-  std::vector<std::string> stored_listed_keys;
-  std::tie(stored_listed_key_timestamp, stored_listed_keys) = getCurrentState(context);
-
-  int64_t latest_listed_key_timestamp = stored_listed_key_timestamp;
-  std::vector<std::string> latest_listed_keys = stored_listed_keys;
+  auto stored_listing_state = getCurrentState(context);
+  auto latest_listing_state = stored_listing_state;
   std::size_t files_transferred = 0;
 
-  auto was_object_listed_already = [&](const aws::s3::ListedObjectAttributes &object_attributes) {
-    return stored_listed_key_timestamp > object_attributes.last_modified ||
-      (stored_listed_key_timestamp == object_attributes.last_modified &&
-        std::find(stored_listed_keys.begin(), stored_listed_keys.end(), object_attributes.filename) != stored_listed_keys.end());
-  };
-
   for (const auto& object_attributes : aws_results.value()) {
-    if (was_object_listed_already(object_attributes)) {
+    if (stored_listing_state.wasObjectListedAlready(object_attributes)) {
       continue;
     }
 
     createNewFlowFile(session, object_attributes);
     ++files_transferred;
-
-    if (latest_listed_key_timestamp < object_attributes.last_modified) {
-      latest_listed_key_timestamp = object_attributes.last_modified;
-      latest_listed_keys.clear();
-      latest_listed_keys.push_back(object_attributes.filename);
-    } else if (latest_listed_key_timestamp == object_attributes.last_modified) {
-      latest_listed_keys.push_back(object_attributes.filename);
-    }
+    latest_listing_state.updateState(object_attributes);
   }
 
   logger_->log_debug("ListS3 transferred %d flow files", files_transferred);
-  storeState(context, latest_listed_key_timestamp, latest_listed_keys);
+  storeState(context, latest_listing_state);
+}
+
+bool ListS3::ListingState::wasObjectListedAlready(const aws::s3::ListedObjectAttributes &object_attributes) const {
+  return listed_key_timestamp > object_attributes.last_modified ||
+      (listed_key_timestamp == object_attributes.last_modified &&
+        std::find(listed_keys.begin(), listed_keys.end(), object_attributes.filename) != listed_keys.end());
+}
+
+void ListS3::ListingState::updateState(const aws::s3::ListedObjectAttributes &object_attributes) {
+  if (listed_key_timestamp < object_attributes.last_modified) {
+    listed_key_timestamp = object_attributes.last_modified;
+    listed_keys.clear();
+    listed_keys.push_back(object_attributes.filename);
+  } else if (listed_key_timestamp == object_attributes.last_modified) {
+    listed_keys.push_back(object_attributes.filename);
+  }
 }
 
 }  // namespace processors

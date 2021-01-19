@@ -69,20 +69,27 @@ class ListS3 : public S3Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
+  struct ListingState {
+    int64_t listed_key_timestamp = 0;
+    std::vector<std::string> listed_keys;
+
+    bool wasObjectListedAlready(const aws::s3::ListedObjectAttributes &object_attributes) const;
+    void updateState(const aws::s3::ListedObjectAttributes &object_attributes);
+  };
+
   void writeObjectTags(
     const std::string &bucket,
     const aws::s3::ListedObjectAttributes &object_attributes,
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file);
   void writeUserMetadata(
-    const std::string &bucket,
     const aws::s3::ListedObjectAttributes &object_attributes,
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file);
   std::vector<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state);
   uint64_t getLatestListedKeyTimestamp(const std::unordered_map<std::string, std::string> &state);
-  std::tuple<int64_t, std::vector<std::string>> getCurrentState(const std::shared_ptr<core::ProcessContext> &context);
-  void storeState(const std::shared_ptr<core::ProcessContext> &context, const int64_t latest_listed_key_timestamp, const std::vector<std::string> &latest_listed_keys);
+  ListingState getCurrentState(const std::shared_ptr<core::ProcessContext> &context);
+  void storeState(const std::shared_ptr<core::ProcessContext> &context, const ListingState &latest_listing_state);
   void createNewFlowFile(
     const std::shared_ptr<core::ProcessSession> &session,
     const aws::s3::ListedObjectAttributes &object_attributes);

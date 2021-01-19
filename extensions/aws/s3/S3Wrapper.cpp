@@ -220,7 +220,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVers
       return minifi::utils::nullopt;
     }
     const auto& versions = aws_result->GetVersions();
-    logger_->log_debug("AWS S3 List operation returned %d versions. This result is truncated: %s", versions.size(), aws_result->GetIsTruncated() ? "true" : "false");
+    logger_->log_debug("AWS S3 List operation returned %zu versions. This result is truncated: %s", versions.size(), aws_result->GetIsTruncated() ? "true" : "false");
     addListResults(versions, params.min_object_age, attribute_list);
     if (aws_result->GetIsTruncated()) {
       request.SetKeyMarker(aws_result->GetNextKeyMarker());
