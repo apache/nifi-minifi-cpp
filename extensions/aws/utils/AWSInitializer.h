@@ -30,6 +30,10 @@
 #undef GetMessage
 #endif
 
+#if defined(WIN32) && defined(GetObject)
+#undef GetObject
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
