@@ -22,6 +22,7 @@
 #include "TestBase.h"
 #include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
+#include "utils/OptionalUtils.h"
 
 core::Relationship Success{"success", "Everything is fine"};
 
@@ -30,10 +31,11 @@ using PutFile = org::apache::nifi::minifi::processors::PutFile;
 
 class OutputFormatTestController : public TestController {
  public:
-  OutputFormatTestController(std::string channel, std::string query, std::string output_format)
+  OutputFormatTestController(std::string channel, std::string query, std::string output_format, utils::optional<std::string> json_format = {})
     : channel_(std::move(channel)),
       query_(std::move(query)),
-      output_format_(std::move(output_format)) {}
+      output_format_(std::move(output_format)),
+      json_format_(std::move(json_format)) {}
 
   std::string run() {
     LogTestController::getInstance().setDebug<ConsumeWindowsEventLog>();
@@ -44,6 +46,9 @@ class OutputFormatTestController : public TestController {
     test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), channel_);
     test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), query_);
     test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), output_format_);
+    if (json_format_) {
+      test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::JSONFormat.getName(), json_format_.value());
+    }
 
     auto dir = utils::createTempDir(this);
 
@@ -80,6 +85,7 @@ class OutputFormatTestController : public TestController {
   std::string channel_;
   std::string query_;
   std::string output_format_;
+  utils::optional<std::string> json_format_;
 };
 
 // carries out a loose match on objects, i.e. it doesn't matter if the

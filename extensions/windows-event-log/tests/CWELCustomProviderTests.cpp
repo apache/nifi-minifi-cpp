@@ -60,7 +60,7 @@ bool dispatchCustomEvent(const CustomEventData& event) {
 
 class CustomProviderController : public OutputFormatTestController {
  public:
-  CustomProviderController(std::string format) : OutputFormatTestController(CUSTOM_CHANNEL, "*", std::move(format)) {}
+  CustomProviderController(std::string format, std::string json_format) : OutputFormatTestController(CUSTOM_CHANNEL, "*", std::move(format), std::move(json_format)) {}
 
  protected:
   void dispatchBookmarkEvent() override {
@@ -102,7 +102,7 @@ const std::string EVENT_DATA_JSON = R"(
 }  // namespace
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly custom provider", "[onTrigger]") {
-  std::string event = CustomProviderController{"JSON::Simple"}.run();
+  std::string event = CustomProviderController{"JSON", "Simple"}.run();
   verifyJSON(event, R"(
     {
       "System": {
@@ -117,7 +117,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly custom
 }
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly custom provider", "[onTrigger]") {
-  std::string event = CustomProviderController{"JSON::Flattened"}.run();
+  std::string event = CustomProviderController{"JSON", "Flattened"}.run();
   verifyJSON(event, R"(
     {
       "Name": ")" + CUSTOM_PROVIDER_NAME + R"(",

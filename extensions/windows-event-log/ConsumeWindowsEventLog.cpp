@@ -135,8 +135,16 @@ core::Property ConsumeWindowsEventLog::OutputFormat(
   core::PropertyBuilder::createProperty("Output Format")->
   isRequired(true)->
   withDefaultValue(Both)->
-  withAllowableValues<std::string>({XML, Plaintext, Both, JSONSimple, JSONFlattened, JSONRaw})->
+  withAllowableValues<std::string>({XML, Plaintext, Both, JSON})->
   withDescription("Set the output format type. In case \'Both\' is selected the processor generates two flow files for every event captured in format XML and Plaintext")->
+  build());
+
+core::Property ConsumeWindowsEventLog::JSONFormat(
+  core::PropertyBuilder::createProperty("JSON Format")->
+  isRequired(true)->
+  withDefaultValue(JSONSimple)->
+  withAllowableValues<std::string>({JSONSimple, JSONFlattened, JSONRaw})->
+  withDescription("Set the json format type. Only applicable if Output Format is set to 'JSON'")->
   build());
 
 core::Property ConsumeWindowsEventLog::BatchCommitSize(
@@ -198,7 +206,7 @@ void ConsumeWindowsEventLog::initialize() {
   //! Set the supported properties
   setSupportedProperties({
      Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes,
-     EventHeaderDelimiter, EventHeader, OutputFormat, BatchCommitSize, BookmarkRootDirectory, ProcessOldEvents
+     EventHeaderDelimiter, EventHeader, OutputFormat, JSONFormat, BatchCommitSize, BookmarkRootDirectory, ProcessOldEvents
   });
 
   //! Set the supported relationships
@@ -259,12 +267,16 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   } else if (mode == Both) {
     output_.xml = true;
     output_.plaintext = true;
-  } else if (mode == JSONRaw) {
-    output_.json.raw = true;
-  } else if (mode == JSONSimple) {
-    output_.json.simple = true;
-  } else if (mode == JSONFlattened) {
-    output_.json.flattened = true;
+  } else if (mode == JSON) {
+    std::string json_format;
+    context->getProperty(JSONFormat.getName(), json_format);
+    if (json_format == JSONRaw) {
+      output_.json.type = JSONType::Raw;
+    } else if (json_format == JSONSimple) {
+      output_.json.type = JSONType::Simple;
+    } else if (json_format == JSONFlattened) {
+      output_.json.type = JSONType::Flattened;
+    }
   } else {
     // in the future this might be considered an error, but for now due to backwards
     // compatibility we just fall through and execute the processor outputing nothing
@@ -625,27 +637,17 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
     logger_->log_trace("Finish writing in XML");
   }
 
-  if (output_.json.raw) {
+  if (output_.json.type == JSONType::Raw) {
     logger_->log_trace("Writing event in raw JSON");
-
-    eventRender.json.raw = wel::jsonToString(wel::toRawJSON(doc));
-
+    eventRender.json = wel::jsonToString(wel::toRawJSON(doc));
     logger_->log_trace("Finish writing in raw JSON");
-  }
-
-  if (output_.json.simple) {
+  } else if (output_.json.type == JSONType::Simple) {
     logger_->log_trace("Writing event in simple JSON");
-
-    eventRender.json.simple = wel::jsonToString(wel::toSimpleJSON(doc));
-
+    eventRender.json = wel::jsonToString(wel::toSimpleJSON(doc));
     logger_->log_trace("Finish writing in simple JSON");
-  }
-
-  if (output_.json.flattened) {
+  } else if (output_.json.type == JSONType::Flattened) {
     logger_->log_trace("Writing event in flattened JSON");
-
-    eventRender.json.flattened = wel::jsonToString(wel::toFlattenedJSON(doc));
-
+    eventRender.json = wel::jsonToString(wel::toFlattenedJSON(doc));
     logger_->log_trace("Finish writing in flattened JSON");
   }
 
@@ -730,19 +732,15 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     commitFlowFile(session.create(), eventRender.plaintext, "text/plain");
   }
 
-  if (output_.json.raw) {
+  if (output_.json.type == JSONType::Raw) {
     logger_->log_trace("Writing rendered raw JSON to a flow file");
-    commitFlowFile(session.create(), eventRender.json.raw, "application/json");
-  }
-
-  if (output_.json.simple) {
+    commitFlowFile(session.create(), eventRender.json, "application/json");
+  } else if (output_.json.type == JSONType::Simple) {
     logger_->log_trace("Writing rendered simple JSON to a flow file");
-    commitFlowFile(session.create(), eventRender.json.simple, "application/json");
-  }
-
-  if (output_.json.flattened) {
+    commitFlowFile(session.create(), eventRender.json, "application/json");
+  } else if (output_.json.type == JSONType::Flattened) {
     logger_->log_trace("Writing rendered flattened JSON to a flow file");
-    commitFlowFile(session.create(), eventRender.json.flattened, "application/json");
+    commitFlowFile(session.create(), eventRender.json, "application/json");
   }
 }
 

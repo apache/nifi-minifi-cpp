@@ -46,11 +46,7 @@ struct EventRender {
   std::map<std::string, std::string> matched_fields;
   std::string xml;
   std::string plaintext;
-  struct {
-    std::string raw;
-    std::string simple;
-    std::string flattened;
-  } json;
+  std::string json;
 };
 
 class Bookmark;
@@ -82,6 +78,7 @@ public:
   static core::Property EventHeaderDelimiter;
   static core::Property EventHeader;
   static core::Property OutputFormat;
+  static core::Property JSONFormat;
   static core::Property BatchCommitSize;
   static core::Property BookmarkRootDirectory;
   static core::Property ProcessOldEvents;
@@ -115,9 +112,10 @@ protected:
   static constexpr const char* XML = "XML";
   static constexpr const char* Both = "Both";
   static constexpr const char* Plaintext = "Plaintext";
-  static constexpr const char* JSONRaw = "JSON::Raw";
-  static constexpr const char* JSONSimple = "JSON::Simple";
-  static constexpr const char* JSONFlattened = "JSON::Flattened";
+  static constexpr const char* JSON = "JSON";
+  static constexpr const char* JSONRaw = "Raw";
+  static constexpr const char* JSONSimple = "Simple";
+  static constexpr const char* JSONFlattened = "Flattened";
 
 private:
   struct TimeDiff {
@@ -150,17 +148,17 @@ private:
   std::map<std::string, wel::WindowsEventLogHandler > providers_;
   uint64_t batch_commit_size_{};
 
+  enum class JSONType {None, Raw, Simple, Flattened};
+
   struct OutputFormat {
     bool xml{false};
     bool plaintext{false};
-    struct {
-      explicit operator bool() const noexcept {
-        return raw || simple || flattened;
-      }
+    struct JSON {
+      JSONType type{JSONType::None};
 
-      bool raw{false};
-      bool simple{false};
-      bool flattened{false};
+      explicit operator bool() const noexcept {
+        return type != JSONType::None;
+      }
     } json;
   } output_;
 

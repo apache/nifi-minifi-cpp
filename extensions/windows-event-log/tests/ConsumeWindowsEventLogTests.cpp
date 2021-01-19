@@ -340,7 +340,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in XML correctly", "[onTrigger]"
 }
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly", "[onTrigger]") {
-  std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON::Simple"}.run();
+  std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON", "Simple"}.run();
   verifyJSON(event, R"json(
     {
       "System": {
@@ -359,7 +359,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly", "[on
 }
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly", "[onTrigger]") {
-  std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON::Flattened"}.run();
+  std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON", "Flattened"}.run();
   verifyJSON(event, R"json(
     {
       "Name": "Application",
@@ -374,7 +374,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly", "
 }
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Raw correctly", "[onTrigger]") {
-  std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON::Raw"}.run();
+  std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON", "Raw"}.run();
   verifyJSON(event, R"json(
     [
       {
