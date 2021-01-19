@@ -563,7 +563,7 @@ if (ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL)
 	createExtension(OPENWSMAN-EXTENSIONS "OPENWSMAN EXTENSIONS" "This enables Openwsman support" "extensions/openwsman")
 endif()
 
-## AWS Extentions
+## Azure Extentions
 option(ENABLE_AZURE "Enables Azure support." OFF)
 if (ENABLE_AZURE)
 	include(BundledLibXml2)
@@ -571,6 +571,8 @@ if (ENABLE_AZURE)
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
 
 	include(NlohmannJson)
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/nlohmann_json/dummy")
+
 	include(BundledAzureSdkCpp)
 	use_bundled_libazure(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	createExtension(AZURE-EXTENSIONS "AZURE EXTENSIONS" "This enables Azure support" "extensions/azure" "${TEST_DIR}/azure-tests")

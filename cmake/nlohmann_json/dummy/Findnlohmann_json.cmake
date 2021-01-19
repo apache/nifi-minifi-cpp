@@ -15,21 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-include(FetchContent)
-
-FetchContent_Declare(nlohmann_json
-    GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
-    GIT_TAG "v3.9.1")
-
-FetchContent_MakeAvailable(nlohmann_json)
-
-FetchContent_GetProperties(nlohmann_json)
-if(NOT nlohmann_json_POPULATED)
-    FetchContent_Populate(nlohmann_json)
-    add_subdirectory(${nlohmann_json_SOURCE_DIR} ${nlohmann_json_BINARY_DIR} EXCLUDE_FROM_ALL)
+if(NOT NLOHMANN_JSON_FOUND)
+    set(NLOHMANN_JSON_FOUND "YES" CACHE STRING "" FORCE)
+    set(NLOHMANN_JSON_INCLUDE_DIR "${EXPORTED_NLOHMANN_JSON_INCLUDE_DIR}" CACHE STRING "" FORCE)
+    set(NLOHMANN_JSON_INCLUDE_DIRS "${EXPORTED_NLOHMANN_JSON_INCLUDE_DIR}" CACHE STRING "" FORCE)
 endif()
 
-set(NLOHMANN_JSON_INCLUDE_DIR "${nlohmann_json_SOURCE_DIR}/include")
-
-# Set exported variables for FindPackage.cmake
-set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_NLOHMANN_JSON_INCLUDE_DIR=${NLOHMANN_JSON_INCLUDE_DIR}" CACHE STRING "" FORCE)
+if(NOT TARGET nlohmann_json::nlohmann_json)
+    add_library(nlohmann_json::nlohmann_json STATIC IMPORTED)
+    set_property(TARGET nlohmann_json::nlohmann_json APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NLOHMANN_JSON_INCLUDE_DIR}")
+endif()

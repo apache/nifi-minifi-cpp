@@ -43,7 +43,7 @@ const core::Property AzureStorageCredentialsService::SASToken(
 const core::Property AzureStorageCredentialsService::CommonStorageAccountEndpointSuffix(
     core::PropertyBuilder::createProperty("Common Storage Account Endpoint Suffix")
       ->withDescription("Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a "
-                        "different suffix in certain circumstances (like Azure Stack or non-public Azure regions). ")
+                        "different suffix in certain circumstances (like Azure Stack or non-public Azure regions).")
       ->build());
 const core::Property AzureStorageCredentialsService::ConnectionString(
   core::PropertyBuilder::createProperty("Connection String")

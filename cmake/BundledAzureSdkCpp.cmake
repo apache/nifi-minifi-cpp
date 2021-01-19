@@ -30,9 +30,8 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
             "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-blobs/${PREFIX}azure-storage-blobs.${SUFFIX}"
             "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/identity/azure-identity/${PREFIX}azure-identity.${SUFFIX}")
 
-    set(AZURE_SDK_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-        -DCMAKE_MODULE_PATH=${PROJECT_SOURCE_DIR}/cmake/
-        -DNLOHMANN_JSON_DIR=${NLOHMANN_JSON_DIR})
+    set(AZURE_SDK_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS})
+    append_third_party_passthrough_args(AZURE_SDK_CMAKE_ARGS "${AZURE_SDK_CMAKE_ARGS}")
 
     # Build project
     ExternalProject_Add(
@@ -45,10 +44,11 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
             EXCLUDE_FROM_ALL TRUE
             STEP_TARGETS build
             CMAKE_ARGS ${AZURE_SDK_CMAKE_ARGS}
+            LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
     )
 
     # Set dependencies
-    add_dependencies(azure-sdk-cpp-external CURL::libcurl OpenSSL::Crypto OpenSSL::SSL LibXml2::LibXml2)
+    add_dependencies(azure-sdk-cpp-external CURL::libcurl OpenSSL::Crypto OpenSSL::SSL LibXml2::LibXml2 nlohmann_json::nlohmann_json)
 
     # Set variables
     set(LIBAZURE_FOUND "YES" CACHE STRING "" FORCE)
@@ -69,7 +69,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     set_target_properties(AZURE::azure-core PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/core/azure-core/${PREFIX}azure-core.${SUFFIX}")
     add_dependencies(AZURE::azure-core azure-sdk-cpp-external-build)
     set_property(TARGET AZURE::azure-core APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBAZURE_INCLUDE_DIRS})
-    set_property(TARGET AZURE::azure-core APPEND PROPERTY INTERFACE_LINK_LIBRARIES CURL::libcurl OpenSSL::Crypto OpenSSL::SSL LibXml2::LibXml2 Threads::Threads)
+    set_property(TARGET AZURE::azure-core APPEND PROPERTY INTERFACE_LINK_LIBRARIES CURL::libcurl OpenSSL::Crypto OpenSSL::SSL LibXml2::LibXml2 Threads::Threads nlohmann_json::nlohmann_json)
     if (APPLE)
         set_property(TARGET AZURE::azure-core APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-framework CoreFoundation")
     endif()
@@ -78,7 +78,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     set_target_properties(AZURE::azure-identity PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/identity/azure-identity/${PREFIX}azure-identity.${SUFFIX}")
     add_dependencies(AZURE::azure-identity azure-sdk-cpp-external-build)
     set_property(TARGET AZURE::azure-identity APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBAZURE_INCLUDE_DIRS})
-    set_property(TARGET AZURE::azure-identity APPEND PROPERTY INTERFACE_LINK_LIBRARIES CURL::libcurl OpenSSL::Crypto OpenSSL::SSL LibXml2::LibXml2 Threads::Threads)
+    set_property(TARGET AZURE::azure-identity APPEND PROPERTY INTERFACE_LINK_LIBRARIES CURL::libcurl OpenSSL::Crypto OpenSSL::SSL LibXml2::LibXml2 Threads::Threads nlohmann_json::nlohmann_json)
     if (APPLE)
         set_property(TARGET AZURE::azure-identity APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-framework CoreFoundation")
     endif()
@@ -87,7 +87,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     set_target_properties(AZURE::azure-storage-common PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-common/${PREFIX}azure-storage-common.${SUFFIX}")
     add_dependencies(AZURE::azure-storage-common azure-sdk-cpp-external-build)
     set_property(TARGET AZURE::azure-storage-common APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBAZURE_INCLUDE_DIRS})
-    set_property(TARGET AZURE::azure-storage-common APPEND PROPERTY INTERFACE_LINK_LIBRARIES CURL::libcurl OpenSSL::Crypto OpenSSL::SSL LibXml2::LibXml2 Threads::Threads)
+    set_property(TARGET AZURE::azure-storage-common APPEND PROPERTY INTERFACE_LINK_LIBRARIES CURL::libcurl OpenSSL::Crypto OpenSSL::SSL LibXml2::LibXml2 Threads::Threads nlohmann_json::nlohmann_json)
     if (APPLE)
         set_property(TARGET AZURE::azure-storage-common APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-framework CoreFoundation")
     endif()
@@ -96,7 +96,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     set_target_properties(AZURE::azure-storage-blobs PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-blobs/${PREFIX}azure-storage-blobs.${SUFFIX}")
     add_dependencies(AZURE::azure-storage-blobs azure-sdk-cpp-external-build)
     set_property(TARGET AZURE::azure-storage-blobs APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBAZURE_INCLUDE_DIRS})
-    set_property(TARGET AZURE::azure-storage-blobs APPEND PROPERTY INTERFACE_LINK_LIBRARIES CURL::libcurl OpenSSL::Crypto OpenSSL::SSL LibXml2::LibXml2 Threads::Threads)
+    set_property(TARGET AZURE::azure-storage-blobs APPEND PROPERTY INTERFACE_LINK_LIBRARIES CURL::libcurl OpenSSL::Crypto OpenSSL::SSL LibXml2::LibXml2 Threads::Threads nlohmann_json::nlohmann_json)
     if (APPLE)
         set_property(TARGET AZURE::azure-storage-blobs APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-framework CoreFoundation")
     endif()
