@@ -37,8 +37,17 @@ class Connectable(object):
 
         return self
 
+    def get_name(self):
+        return self.name
+
     def set_name(self, name):
         self.name = name
+
+    def get_uuid(self):
+        return self.uuid
+
+    def set_uuid(self, uuid):
+        self.uuid = uuid
 
     def __rshift__(self, other):
         """

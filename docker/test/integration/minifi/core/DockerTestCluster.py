@@ -14,54 +14,21 @@ from .utils import retry_check
 from .FileSystemObserver import FileSystemObserver
 
 class DockerTestCluster(SingleNodeDockerCluster):
-    def __init__(self, output_validator):
-        # Create test input/output directories
-        test_cluster_id = str(uuid.uuid4())
-
+    def __init__(self, test_id, file_system_observer):
         self.segfault = False
 
-        self.tmp_test_output_dir = '/tmp/.nifi-test-output.' + test_cluster_id
-        self.tmp_test_input_dir = '/tmp/.nifi-test-input.' + test_cluster_id
-        self.tmp_test_resources_dir = '/tmp/.nifi-test-resources.' + test_cluster_id
-
-        logging.info('Creating tmp test input dir: %s', self.tmp_test_input_dir)
-        os.makedirs(self.tmp_test_input_dir)
-        logging.info('Creating tmp test output dir: %s', self.tmp_test_output_dir)
-        os.makedirs(self.tmp_test_output_dir)
-        logging.info('Creating tmp test resource dir: %s', self.tmp_test_resources_dir)
-        os.makedirs(self.tmp_test_resources_dir)
-        os.chmod(self.tmp_test_output_dir, 0o777)
-        os.chmod(self.tmp_test_input_dir, 0o777)
-        os.chmod(self.tmp_test_resources_dir, 0o777)
-
-        # Add resources
-        test_dir = os.environ['PYTHONPATH'].split(':')[-1] # Based on DockerVerify.sh
-        shutil.copytree(test_dir + "/resources/kafka_broker/conf/certs", self.tmp_test_resources_dir + "/certs")
-
-        self.file_system_observer = FileSystemObserver(self.tmp_test_output_dir, output_validator)
+        self.file_system_observer = file_system_observer
 
         super(DockerTestCluster, self).__init__()
 
     def deploy_flow(self,
                     flow,
-                    name=None,
-                    vols=None,
+                    vols,
                     engine='minifi-cpp'):
-        """
-        Performs a standard container flow deployment with the addition
-        of volumes supporting test input/output directories.
-        """
-
-        if vols is None:
-            vols = {}
-
-        vols[self.tmp_test_input_dir] = {'bind': '/tmp/input', 'mode': 'rw'}
-        vols[self.tmp_test_output_dir] = {'bind': '/tmp/output', 'mode': 'rw'}
-        vols[self.tmp_test_resources_dir] = {'bind': '/tmp/resources', 'mode': 'rw'}
 
         super(DockerTestCluster, self).deploy_flow(flow,
                                                    vols=vols,
-                                                   name=name,
+                                                   name=None,
                                                    engine=engine)
 
     def start_flow(self, name):
@@ -83,26 +50,6 @@ class DockerTestCluster(SingleNodeDockerCluster):
             container.stop(timeout=0)
             return True
         return False
-
-    def put_test_data(self, contents):
-        """
-        Creates a randomly-named file in the test input dir and writes
-        the given content to it.
-        """
-
-        self.test_data = contents
-        file_name = str(uuid.uuid4())
-        file_abs_path = join(self.tmp_test_input_dir, file_name)
-        self.put_file_contents(contents.encode('utf-8'), file_abs_path)
-
-    def put_test_resource(self, file_name, contents):
-        """
-        Creates a resource file in the test resource dir and writes
-        the given content to it.
-        """
-
-        file_abs_path = join(self.tmp_test_resources_dir, file_name)
-        self.put_file_contents(contents, file_abs_path)
 
     def log_nifi_output(self):
 
@@ -130,18 +77,6 @@ class DockerTestCluster(SingleNodeDockerCluster):
                              container.name)
             stats = container.stats(stream=False)
             logging.info('Container stats:\n%s', stats)
-
-    def check_output(self, timeout=10, subdir=''):
-        """
-        Wait for flow output, validate it, and log minifi output.
-        """
-        if subdir:
-            self.file_system_observer.set_output_validator_subdir(subdir)
-        self.file_system_observer.wait_for_output(timeout)
-        self.log_nifi_output()
-        if self.segfault:
-            return False
-        return self.file_system_observer.validate_output()
 
     def check_http_proxy_access(self, url):
         output = subprocess.check_output(["docker", "exec", "http-proxy", "cat", "/var/log/squid/access.log"]).decode(sys.stdout.encoding)
@@ -190,17 +125,8 @@ class DockerTestCluster(SingleNodeDockerCluster):
         with open(file_abs_path, 'wb') as test_input_file:
             test_input_file.write(contents)
 
+    def segfault_happened(self):
+        return self.segfault
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Clean up ephemeral test resources.
-        """
-
-        logging.info('Removing tmp test input dir: %s', self.tmp_test_input_dir)
-        shutil.rmtree(self.tmp_test_input_dir)
-        logging.info('Removing tmp test output dir: %s', self.tmp_test_output_dir)
-        shutil.rmtree(self.tmp_test_output_dir)
-        logging.info('Removing tmp test resources dir: %s', self.tmp_test_output_dir)
-        shutil.rmtree(self.tmp_test_resources_dir)
-
         super(DockerTestCluster, self).__exit__(exc_type, exc_val, exc_tb)
