@@ -47,7 +47,7 @@ class BufferStream : public BaseStream {
    * prepares the stream to accept and additional byte_count bytes
    * @param byte_count number of bytes we expect to write
    */
-  void reserve(size_t byte_count) {
+  void extend(size_t byte_count) {
     buffer_.reserve(buffer_.size() + byte_count);
   }
 

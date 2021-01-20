@@ -41,7 +41,7 @@ class ActiveCompressor {
     ActiveCompressor operator()(size_t max_size) const {
       ActiveCompressor instance;
       instance.output_.reset(new io::BufferStream());
-      instance.output_->reserve(max_size * 3 / 2);
+      instance.output_->extend(max_size);
       instance.compressor_.reset(new LogCompressor(gsl::make_not_null(instance.output_.get()), logger_));
       return instance;
     }

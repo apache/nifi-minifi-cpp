@@ -141,7 +141,7 @@ TEST_CASE("Test Compression", "[ttl7]") {
   std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
   REQUIRE(compressed_log);
   auto logs = decompress(compressed_log);
-  REQUIRE(logs.find("Hi there") != std::string::npos);
+  REQUIRE(logs == "Hi there");
 }
 
 class LoggerTestAccessor {

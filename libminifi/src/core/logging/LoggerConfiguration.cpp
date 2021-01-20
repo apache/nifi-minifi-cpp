@@ -341,8 +341,10 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::create_default_r
 
 void LoggerConfiguration::initializeCompression(const std::lock_guard<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties) {
   auto compression_sink = compression_manager_.initialize(properties, logger_, [&] (const std::string& name) {return getLogger(name, lock);});
-  root_namespace_->sinks.push_back(compression_sink);
-  root_namespace_->exported_sinks.push_back(compression_sink);
+  if (compression_sink) {
+    root_namespace_->sinks.push_back(compression_sink);
+    root_namespace_->exported_sinks.push_back(compression_sink);
+  }
 }
 
 } /* namespace logging */

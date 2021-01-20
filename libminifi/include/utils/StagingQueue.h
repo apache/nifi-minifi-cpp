@@ -66,11 +66,20 @@ class StagingQueue {
     }
   };
 
+  static ActiveItem allocateActiveItem(const Allocator& allocator, size_t max_item_size) {
+    // max_size is a soft limit, i.e. reaching max_size is an indicator
+    // that that item should be committed, we cannot guarantee that only
+    // max_size content is in the item, since max_size is the "trigger limit",
+    // presumable each item would contain (at the trigger point) a little
+    // more than max_size content, that is the reasoning behind "* 3 / 2"
+    return allocator(max_item_size * 3 / 2);
+  }
+
  public:
   StagingQueue(size_t max_size, size_t max_item_size, Allocator allocator = {})
     : max_size_(max_size),
       max_item_size_(max_item_size),
-      active_item_(allocator(max_item_size)),
+      active_item_(allocateActiveItem(allocator, max_item_size)),
       allocator_(allocator) {}
 
   void commit() {
@@ -137,7 +146,7 @@ class StagingQueue {
  private:
   void commit(std::unique_lock<std::mutex>& lock) {
     queue_.enqueue(active_item_.commit());
-    active_item_ = allocator_(max_item_size_);
+    active_item_ = allocateActiveItem(allocator_, max_item_size_);
   }
 
   const size_t max_size_;

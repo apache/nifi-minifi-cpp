@@ -38,7 +38,7 @@ class LogBuffer {
 
   static LogBuffer allocate(size_t max_size) {
     LogBuffer instance{utils::make_unique<io::BufferStream>()};
-    instance.buffer_->reserve(max_size * 3 / 2);
+    instance.buffer_->extend(max_size);
     return instance;
   }
 
