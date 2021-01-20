@@ -394,7 +394,7 @@ std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
   const auto start = std::chrono::steady_clock::now();
   auto elapsed = std::chrono::steady_clock::now() - start;
   while (messages.size() < max_poll_records_ && elapsed < max_poll_time_milliseconds_) {
-    logger_-> log_debug("Polling for new messages for %d milliseconds...", max_poll_time_milliseconds_.count());
+    logger_->log_debug("Polling for new messages for %d milliseconds...", max_poll_time_milliseconds_.count());
     std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
       message { rd_kafka_consumer_poll(consumer_.get(), std::chrono::duration_cast<std::chrono::milliseconds>(max_poll_time_milliseconds_ - elapsed).count()), utils::rd_kafka_message_deleter() };
     if (!message) {

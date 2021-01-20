@@ -45,6 +45,35 @@ void print_topics_list(logging::Logger& logger, rd_kafka_topic_partition_list_t*
   }
 }
 
+std::string get_human_readable_kafka_message_timestamp(const rd_kafka_message_t* rkmessage) {
+  rd_kafka_timestamp_type_t tstype;
+  int64_t timestamp;
+  timestamp = rd_kafka_message_timestamp(rkmessage, &tstype);
+  const char *tsname = "?";
+  if (tstype == RD_KAFKA_TIMESTAMP_CREATE_TIME) {
+    tsname = "create time";
+  } else if (tstype == RD_KAFKA_TIMESTAMP_LOG_APPEND_TIME) {
+    tsname = "log append time";
+  }
+  const int64_t seconds_since_timestamp = timestamp == -1 ? 0 : static_cast<int64_t>(time(NULL)) - static_cast<int64_t>(timestamp / 1000);
+  return {"[Timestamp](" + std::string(tsname) + " " + std::to_string(timestamp) + " (" + std::to_string(seconds_since_timestamp) + " s ago)"};
+}
+
+std::string get_human_readable_kafka_message_headers(const rd_kafka_message_t* rkmessage, logging::Logger& logger) {
+  rd_kafka_headers_t* hdrs;
+  const rd_kafka_resp_err_t get_header_response = rd_kafka_message_headers(rkmessage, &hdrs);
+  if (RD_KAFKA_RESP_ERR_NO_ERROR == get_header_response) {
+    std::vector<std::string> header_list;
+    kafka_headers_for_each(hdrs, [&] (const std::string& key, const std::string& val) { header_list.emplace_back(key + ": " + val); });
+    return StringUtils::join(", ", header_list);
+  }
+  if (RD_KAFKA_RESP_ERR__NOENT == get_header_response) {
+    return "[None]";
+  }
+  logger.log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
+  return "[Error]";
+}
+
 void print_kafka_message(const rd_kafka_message_t* rkmessage, logging::Logger& logger) {
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rkmessage->err) {
     const std::string error_msg = "ConsumeKafka: received error message from broker. Librdkafka error msg: " + std::string(rd_kafka_err2str(rkmessage->err));
@@ -54,40 +83,15 @@ void print_kafka_message(const rd_kafka_message_t* rkmessage, logging::Logger& l
   std::string message(reinterpret_cast<char*>(rkmessage->payload), rkmessage->len);
   const char* key = reinterpret_cast<const char*>(rkmessage->key);
   const std::size_t key_len = rkmessage->key_len;
-  rd_kafka_timestamp_type_t tstype;
-  int64_t timestamp;
-  timestamp = rd_kafka_message_timestamp(rkmessage, &tstype);
-  const char *tsname = "?";
-  if (tstype != RD_KAFKA_TIMESTAMP_NOT_AVAILABLE) {
-    if (tstype == RD_KAFKA_TIMESTAMP_CREATE_TIME) {
-      tsname = "create time";
-    } else if (tstype == RD_KAFKA_TIMESTAMP_LOG_APPEND_TIME) {
-      tsname = "log append time";
-    }
-  }
-  const int64_t seconds_since_timestamp = timestamp == -1 ? 0 : static_cast<int64_t>(time(NULL)) - static_cast<int64_t>(timestamp / 1000);
-
-  std::string headers_as_string;
-  rd_kafka_headers_t* hdrs;
-  const rd_kafka_resp_err_t get_header_response = rd_kafka_message_headers(rkmessage, &hdrs);
-  if (RD_KAFKA_RESP_ERR_NO_ERROR == get_header_response) {
-    std::vector<std::string> header_list;
-    kafka_headers_for_each(hdrs, [&] (const std::string& key, const std::string& val) { header_list.emplace_back(key + ": " + val); });
-    headers_as_string = StringUtils::join(", ", header_list);
-  } else if (RD_KAFKA_RESP_ERR__NOENT != get_header_response) {
-    logger.log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
-  }
 
   std::string message_as_string;
   message_as_string += "[Topic](" + topicName + "), ";
   message_as_string += "[Key](" + (key != nullptr ? std::string(key, key_len) : std::string("[None]")) + "), ";
   message_as_string += "[Offset](" +  std::to_string(rkmessage->offset) + "), ";
   message_as_string += "[Message Length](" + std::to_string(rkmessage->len) + "), ";
-  if (timestamp != -1) {
-    message_as_string += "[Timestamp](" + std::string(tsname) + " " + std::to_string(timestamp) + " (" + std::to_string(seconds_since_timestamp) + " s ago)), ";
-  }
+  message_as_string += get_human_readable_kafka_message_timestamp(rkmessage) + "), ";
   message_as_string += "[Headers](";
-  message_as_string += headers_as_string + ")";
+  message_as_string += get_human_readable_kafka_message_headers(rkmessage, logger) + ")";
   message_as_string += "[Payload](" + message + ")";
 
   logger.log_debug("Message: %s", message_as_string.c_str());
