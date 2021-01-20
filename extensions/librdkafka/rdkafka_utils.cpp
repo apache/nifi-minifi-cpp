@@ -40,7 +40,7 @@ void setKafkaConfigurationField(rd_kafka_conf_t* configuration, const std::strin
 
 void print_topics_list(logging::Logger& logger, rd_kafka_topic_partition_list_t* kf_topic_partition_list) {
   for (std::size_t i = 0; i < kf_topic_partition_list->cnt; ++i) {
-    logger.log_debug("kf_topic_partition_list: topic: %s, partition: %d, offset:%lld",
+    logger.log_debug("kf_topic_partition_list: topic: %s, partition: %d, offset: %" PRId64 ".",
     kf_topic_partition_list->elems[i].topic, kf_topic_partition_list->elems[i].partition, kf_topic_partition_list->elems[i].offset);
   }
 }

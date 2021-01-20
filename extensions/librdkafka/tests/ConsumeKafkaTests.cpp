@@ -584,7 +584,7 @@ TEST_CASE_METHOD(ConsumeKafkaContinuousPublishingTest, "ConsumeKafka can spend n
   // messages are produced:
   //     Group "test_group_id" heartbeat error response in state up (join state wait-revoke-rebalance_cb, 1 partition(s) assigned): Broker: Group rebalance in progress
   //
-  //  I tried adding a wait time for more than "session.timeout.ms" inbetween tests, but it was not sufficiend
+  //  I tried adding a wait time for more than "session.timeout.ms" inbetween tests, but it was not sufficient
 }
 
 }  // namespace
