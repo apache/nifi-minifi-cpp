@@ -399,9 +399,7 @@ int16_t FlowController::pause() {
   }
 
   logger_->log_info("Pausing Flow Controller");
-  timer_scheduler_->pause();
-  event_scheduler_->pause();
-  cron_scheduler_->pause();
+  thread_pool_.pause();
   return 0;
 }
 
@@ -412,9 +410,8 @@ int16_t FlowController::resume() {
     return 0;
   }
 
-  timer_scheduler_->resume();
-  event_scheduler_->resume();
-  cron_scheduler_->resume();
+  logger_->log_info("Resuming Flow Controller");
+  thread_pool_.resume();
   return 0;
 }
 

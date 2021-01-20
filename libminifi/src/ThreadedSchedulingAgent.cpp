@@ -122,16 +122,6 @@ void ThreadedSchedulingAgent::stop() {
   }
 }
 
-void ThreadedSchedulingAgent::pause() {
-  std::lock_guard<std::mutex> lock(mutex_);
-  thread_pool_.pause();
-}
-
-void ThreadedSchedulingAgent::resume() {
-  std::lock_guard<std::mutex> lock(mutex_);
-  thread_pool_.resume();
-}
-
 void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> processor) {
   std::lock_guard<std::mutex> lock(mutex_);
   logger_->log_debug("Shutting down threads for processor %s/%s", processor->getName(), processor->getUUIDStr());
