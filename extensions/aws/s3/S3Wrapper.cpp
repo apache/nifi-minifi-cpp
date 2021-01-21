@@ -143,13 +143,13 @@ bool S3Wrapper::deleteObject(const std::string& bucket, const std::string& objec
 }
 
 int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_size, const std::shared_ptr<io::BaseStream>& output) {
-  static const uint64_t BUFFER_SIZE = 4096;
+  static const int64_t BUFFER_SIZE = 4096;
   std::vector<uint8_t> buffer;
   buffer.reserve(BUFFER_SIZE);
 
   int64_t write_size = 0;
   while (write_size < data_size) {
-    auto next_write_size = data_size - write_size < BUFFER_SIZE ? data_size - write_size : BUFFER_SIZE;
+    auto next_write_size = (std::min)(data_size - write_size, BUFFER_SIZE);
     if (!source.read(reinterpret_cast<char*>(buffer.data()), next_write_size)) {
       return -1;
     }
@@ -241,7 +241,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObje
       return minifi::utils::nullopt;
     }
     const auto& objects = aws_result->GetContents();
-    logger_->log_debug("AWS S3 List operation returned %d objects. This result is truncated: %s", objects.size(), aws_result->GetIsTruncated() ? "true" : "false");
+    logger_->log_debug("AWS S3 List operation returned %zu objects. This result is truncated: %s", objects.size(), aws_result->GetIsTruncated() ? "true" : "false");
     addListResults(objects, params.min_object_age, attribute_list);
     if (aws_result->GetIsTruncated()) {
       request.SetContinuationToken(aws_result->GetNextContinuationToken());
