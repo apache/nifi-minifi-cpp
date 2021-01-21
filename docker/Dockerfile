@@ -22,8 +22,8 @@ FROM ${BASE_ALPINE_IMAGE} AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION
-ARG UID_ARG=1000
-ARG GID_ARG=1000
+ARG UID=1000
+ARG GID=1000
 
 # Install the system dependencies needed for a build
 RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
@@ -64,7 +64,7 @@ ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-${MINIFI_VERSION}
 ENV MINIFI_VERSION ${MINIFI_VERSION}
 
 # Setup minificpp user
-RUN addgroup -g ${GID_ARG} ${USER} && adduser -u ${UID_ARG} -D -G ${USER} -g "" ${USER}
+RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
 
 RUN install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR}
 COPY --chown=${USER}:${USER} . ${MINIFI_BASE_DIR}
@@ -136,8 +136,8 @@ RUN cd ${MINIFI_BASE_DIR} \
 # Edge required for rocksdb
 FROM ${BASE_ALPINE_IMAGE} AS common_runtime_deps
 
-ARG UID_ARG=1000
-ARG GID_ARG=1000
+ARG UID=1000
+ARG GID=1000
 ARG MINIFI_VERSION
 
 # Add testing repo for rocksdb
@@ -150,7 +150,7 @@ ENV MINIFI_VERSIONED_HOME ${MINIFI_BASE_DIR}/nifi-minifi-cpp-${MINIFI_VERSION}
 ENV JAVA_HOME /usr/lib/jvm/default-jvm
 ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
 
-RUN addgroup -g ${GID_ARG} ${USER} && adduser -u ${UID_ARG} -D -G ${USER} -g "" ${USER}
+RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
 RUN install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} \
   && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
 

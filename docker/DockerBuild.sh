@@ -61,8 +61,6 @@ DISABLE_SCRIPTING=${DISABLE_SCRIPTING:-}
 DISABLE_CONTROLLER=${DISABLE_CONTROLLER:-}
 DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE:-}
 
-#!/bin/bash
-
 function usage {
   echo "Usage: ./DockerBuild.sh [options]"
   echo "Options:"
@@ -77,58 +75,55 @@ function usage {
   exit 1
 }
 
-POSITIONAL=()
-while [[ $# -gt 0 ]]
-do
-key="$1"
-
-case $key in
-  -u|--uid)
-    UID_ARG="$2"
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+    -u|--uid)
+      UID_ARG="$2"
+      shift
+      shift
+      ;;
+    -g|--gid)
+      GID_ARG="$2"
+      shift
+      shift
+    ;;
+    -v|--minifi-version)
+    MINIFI_VERSION="$2"
     shift
     shift
     ;;
-  -g|--gid)
-    GID_ARG="$2"
-    shift
-    shift
-  ;;
-  -v|--minifi-version)
-  MINIFI_VERSION="$2"
-  shift
-  shift
-  ;;
-  -i|--image-type)
-    IMAGE_TYPE="$2"
-    shift
-    shift
-    ;;
-  -d|--distro-name)
-    DISTRO_NAME="$2"
-    shift
-    shift
-    ;;
-  -l|--dump-location)
-    DUMP_LOCATION="$2"
-    shift
-    shift
-    ;;
-  -c|--cmake-param)
-    IFS='=' read -ra ARR <<< "$2"
-    if [[ ${#ARR[@]} -gt 1 ]]; then
-      declare ${ARR[0]}="${ARR[1]}"
-    fi
-    shift
-    shift
-    ;;
-  -h|--help)
-    usage
-    ;;
-  *)  # unknown option
-    echo "Unknown argument passed $1"
-    usage
-    ;;
-esac
+    -i|--image-type)
+      IMAGE_TYPE="$2"
+      shift
+      shift
+      ;;
+    -d|--distro-name)
+      DISTRO_NAME="$2"
+      shift
+      shift
+      ;;
+    -l|--dump-location)
+      DUMP_LOCATION="$2"
+      shift
+      shift
+      ;;
+    -c|--cmake-param)
+      IFS='=' read -ra ARR <<< "$2"
+      if [[ ${#ARR[@]} -gt 1 ]]; then
+        declare "${ARR[0]}"="${ARR[1]}"
+      fi
+      shift
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      echo "Unknown argument passed: $1"
+      usage
+      ;;
+  esac
 done
 
 echo "NiFi-MiNiFi-CPP Version: ${MINIFI_VERSION}"
@@ -159,8 +154,8 @@ if [ -n "${BUILD_NUMBER}" ]; then
 fi
 
 DOCKER_COMMAND="docker build "
-BUILD_ARGS="--build-arg UID_ARG=${UID_ARG} \
-            --build-arg GID_ARG=${GID_ARG} \
+BUILD_ARGS="--build-arg UID=${UID_ARG} \
+            --build-arg GID=${GID_ARG} \
             --build-arg MINIFI_VERSION=${MINIFI_VERSION} \
             --build-arg IMAGE_TYPE=${IMAGE_TYPE} \
             --build-arg DUMP_LOCATION=${DUMP_LOCATION} \
