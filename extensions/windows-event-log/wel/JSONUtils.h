@@ -32,6 +32,8 @@ namespace minifi {
 namespace wel {
 
 /**
+ * !!WARNING!! the json document must not outlive the xml argument
+ *
  * Converts each xml element node to a json object of
  * the form {name: String, attributes: Object, children: Array, text: String}
  * Aims to preserve most of the input xml structure.
@@ -39,6 +41,8 @@ namespace wel {
 rapidjson::Document toRawJSON(const pugi::xml_node& root);
 
 /**
+ * !!WARNING!! the json document must not outlive the xml argument
+ *
  * Retains some hierarchical structure of the original xml event,
  * e.g. transforms
  *   <Event><System><Provider Name="Banana" Guid="{5}"/></System></Event>
@@ -48,6 +52,8 @@ rapidjson::Document toRawJSON(const pugi::xml_node& root);
 rapidjson::Document toSimpleJSON(const pugi::xml_node& root);
 
 /**
+ * !!WARNING!! the json document must not outlive the xml argument
+ *
  * Flattens most of the structure, i.e. removes intermediate
  * objects and lifts innermost string-valued keys to the root.
  * e.g. {System: {Provider: {Name: String}}} => {Name: String}
