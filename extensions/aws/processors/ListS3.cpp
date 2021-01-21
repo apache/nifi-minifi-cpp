@@ -266,7 +266,7 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     latest_listing_state.updateState(object_attributes);
   }
 
-  logger_->log_debug("ListS3 transferred %d flow files", files_transferred);
+  logger_->log_debug("ListS3 transferred %zu flow files", files_transferred);
   storeState(context, latest_listing_state);
 }
 

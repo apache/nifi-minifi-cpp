@@ -205,7 +205,7 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   uint64_t timeout_val;
   if (context->getProperty(CommunicationsTimeout.getName(), value) && !value.empty() && core::Property::getTimeMSFromString(value, timeout_val)) {
     s3_wrapper_.setTimeout(timeout_val);
-    logger_->log_debug("S3Processor: Communications Timeout [%d]", timeout_val);
+    logger_->log_debug("S3Processor: Communications Timeout [%llu]", timeout_val);
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }
@@ -236,7 +236,7 @@ minifi::utils::optional<CommonProperties> S3Processor::getCommonELSupportedPrope
 
   context->getProperty(EndpointOverrideURL, properties.endpoint_override_url, flow_file);
   if (!properties.endpoint_override_url.empty()) {
-    logger_->log_debug("S3Processor: Endpoint Override URL [%d]", properties.endpoint_override_url);
+    logger_->log_debug("S3Processor: Endpoint Override URL [%s]", properties.endpoint_override_url);
   }
 
   return properties;

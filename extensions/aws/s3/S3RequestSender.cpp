@@ -38,7 +38,7 @@ void S3RequestSender::setRegion(const Aws::String& region) {
 }
 
 void S3RequestSender::setTimeout(uint64_t timeout) {
-  logger_->log_debug("Setting AWS client connection timeout [%d]", timeout);
+  logger_->log_debug("Setting AWS client connection timeout [%llu]", timeout);
   client_config_.connectTimeoutMs = timeout;
 }
 
@@ -48,7 +48,7 @@ void S3RequestSender::setEndpointOverrideUrl(const Aws::String& url) {
 }
 
 void S3RequestSender::setProxy(const ProxyOptions& proxy) {
-  logger_->log_debug("Setting AWS client proxy host [%s] port [%d]", proxy.host, proxy.port);
+  logger_->log_debug("Setting AWS client proxy host [%s] port [%lu]", proxy.host, proxy.port);
   client_config_.proxyHost = proxy.host;
   client_config_.proxyPort = proxy.port;
   client_config_.proxyUserName = proxy.username;
