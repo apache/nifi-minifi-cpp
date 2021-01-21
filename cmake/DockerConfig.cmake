@@ -18,38 +18,117 @@
 # Create a custom build target called "docker" that will invoke DockerBuild.sh and create the NiFi-MiNiFi-CPP Docker image
 add_custom_target(
     docker
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} release ${ENABLE_JNI}
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
+        -u 1000
+        -g 1000
+        -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+        -c IMAGE_TYPE=release
+        -c ENABLE_ALL=${ENABLE_ALL}
+        -c ENABLE_PYTHON=${ENABLE_PYTHON}
+        -c ENABLE_OPS=${ENABLE_OPS}
+        -c ENABLE_JNI=${ENABLE_JNI}
+        -c ENABLE_OPENCV=${ENABLE_OPENCV}
+        -c ENABLE_OPC=${ENABLE_OPC}
+        -c ENABLE_GPS=${ENABLE_GPS}
+        -c ENABLE_COAP=${ENABLE_COAP}
+        -c ENABLE_WEL=${ENABLE_WEL}
+        -c ENABLE_SQL=${ENABLE_SQL}
+        -c ENABLE_MQTT=${ENABLE_MQTT}
+        -c ENABLE_PCAP=${ENABLE_PCAP}
+        -c ENABLE_LIBRDKAFKA=${ENABLE_LIBRDKAFKA}
+        -c ENABLE_SENSORS=${ENABLE_SENSORS}
+        -c ENABLE_SQLITE=${ENABLE_SQLITE}
+        -c ENABLE_USB_CAMERA=${ENABLE_USB_CAMERA}
+        -c ENABLE_TENSORFLOW=${ENABLE_TENSORFLOW}
+        -c ENABLE_AWS=${ENABLE_AWS}
+        -c ENABLE_BUSTACHE=${ENABLE_BUSTACHE}
+        -c ENABLE_SFTP=${ENABLE_SFTP}
+        -c ENABLE_OPENWSMAN=${ENABLE_OPENWSMAN}
+        -c DISABLE_CURL=${DISABLE_CURL}
+        -c DISABLE_JEMALLOC=${DISABLE_JEMALLOC}
+        -c DISABLE_CIVET=${DISABLE_CIVET}
+        -c DISABLE_EXPRESSION_LANGUAGE=${DISABLE_EXPRESSION_LANGUAGE}
+        -c DISABLE_ROCKSDB=${DISABLE_ROCKSDB}
+        -c DISABLE_LIBARCHIVE=${DISABLE_LIBARCHIVE}
+        -c DISABLE_LZMA=${DISABLE_LZMA}
+        -c DISABLE_BZIP2=${DISABLE_BZIP2}
+        -c DISABLE_SCRIPTING=${DISABLE_SCRIPTING}
+        -c DISABLE_CONTROLLER=${DISABLE_CONTROLLER}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 # Create minimal docker image
 add_custom_target(
     docker-minimal
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minimal
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
+        -u 1000
+        -g 1000
+        -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+        -i minimal
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
     centos
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} release ${ENABLE_JNI} ${CMAKE_BINARY_DIR} centos ${BUILD_NUMBER}
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
+        -u 1000
+        -g 1000
+        -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+        -i release
+        -c ENABLE_JNI=${ENABLE_JNI}
+        -l ${CMAKE_BINARY_DIR}
+        -d centos
+        -c BUILD_NUMBER=${BUILD_NUMBER}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
     debian
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} release ${ENABLE_JNI} ${CMAKE_BINARY_DIR} debian ${BUILD_NUMBER}
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
+        -u 1000
+        -g 1000
+        -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+        -i release
+        -c ENABLE_JNI=${ENABLE_JNI}
+        -l ${CMAKE_BINARY_DIR}
+        -d debian
+        -c BUILD_NUMBER=${BUILD_NUMBER}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
     fedora
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} release ${ENABLE_JNI} ${CMAKE_BINARY_DIR} fedora ${BUILD_NUMBER}
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
+        -u 1000
+        -g 1000
+        -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+        -i release
+        -c ENABLE_JNI=${ENABLE_JNI}
+        -l ${CMAKE_BINARY_DIR}
+        -d fedora
+        -c BUILD_NUMBER=${BUILD_NUMBER}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
     u18
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} release ${ENABLE_JNI} ${CMAKE_BINARY_DIR} bionic ${BUILD_NUMBER}
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
+        -u 1000
+        -g 1000
+        -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+        -i release
+        -c ENABLE_JNI=${ENABLE_JNI}
+        -l ${CMAKE_BINARY_DIR}
+        -d bionic
+        -c BUILD_NUMBER=${BUILD_NUMBER}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
     u16
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} release ${ENABLE_JNI} ${CMAKE_BINARY_DIR} xenial ${BUILD_NUMBER}
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
+        -u 1000
+        -g 1000
+        -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+        -i release
+        -c ENABLE_JNI=${ENABLE_JNI}
+        -l ${CMAKE_BINARY_DIR}
+        -d xenial
+        -c BUILD_NUMBER=${BUILD_NUMBER}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(

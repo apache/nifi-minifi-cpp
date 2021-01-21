@@ -21,14 +21,114 @@
 set -euo pipefail
 
 # Set env vars.
-UID_ARG=$1
-GID_ARG=$2
-MINIFI_VERSION=$3
-IMAGE_TYPE=${4:-release}
-ENABLE_JNI=${5:-}
-DUMP_LOCATION=${6:-}
-DISTRO_NAME=${7:-}
-BUILD_NUMBER=${8:-}
+UID_ARG=${UID_ARG:-1000}
+GID_ARG=${GID_ARG:-1000}
+MINIFI_VERSION=${MINIFI_VERSION:-}
+IMAGE_TYPE=${IMAGE_TYPE:-release}
+DUMP_LOCATION=${DUMP_LOCATION:-}
+DISTRO_NAME=${DISTRO_NAME:-}
+BUILD_NUMBER=${BUILD_NUMBER:-}
+ENABLE_ALL=${ENABLE_ALL:-}
+ENABLE_PYTHON=${ENABLE_PYTHON:-}
+ENABLE_OPS=${ENABLE_OPS:-ON}
+ENABLE_JNI=${ENABLE_JNI:-}
+ENABLE_OPENCV=${ENABLE_OPENCV:-}
+ENABLE_OPC=${ENABLE_OPC:-}
+ENABLE_GPS=${ENABLE_GPS:-}
+ENABLE_COAP=${ENABLE_COAP:-}
+ENABLE_WEL=${ENABLE_WEL:-}
+ENABLE_SQL=${ENABLE_SQL:-}
+ENABLE_MQTT=${ENABLE_MQTT:-}
+ENABLE_PCAP=${ENABLE_PCAP:-}
+ENABLE_LIBRDKAFKA=${ENABLE_LIBRDKAFKA:-}
+ENABLE_SENSORS=${ENABLE_SENSORS:-}
+ENABLE_SQLITE=${ENABLE_SQLITE:-}
+ENABLE_USB_CAMERA=${ENABLE_USB_CAMERA:-}
+ENABLE_TENSORFLOW=${ENABLE_TENSORFLOW:-}
+ENABLE_AWS=${ENABLE_AWS:-}
+ENABLE_BUSTACHE=${ENABLE_BUSTACHE:-}
+ENABLE_SFTP=${ENABLE_SFTP:-}
+ENABLE_OPENWSMAN=${ENABLE_OPENWSMAN:-}
+DISABLE_CURL=${DISABLE_CURL:-}
+DISABLE_JEMALLOC=${DISABLE_JEMALLOC:-ON}
+DISABLE_CIVET=${DISABLE_CIVET:-}
+DISABLE_EXPRESSION_LANGUAGE=${DISABLE_EXPRESSION_LANGUAGE:-}
+DISABLE_ROCKSDB=${DISABLE_ROCKSDB:-}
+DISABLE_LIBARCHIVE=${DISABLE_LIBARCHIVE:-}
+DISABLE_LZMA=${DISABLE_LZMA:-}
+DISABLE_BZIP2=${DISABLE_BZIP2:-}
+DISABLE_SCRIPTING=${DISABLE_SCRIPTING:-}
+DISABLE_CONTROLLER=${DISABLE_CONTROLLER:-}
+
+#!/bin/bash
+
+function usage {
+  echo "Usage: ./DockerBuild.sh [options]"
+  echo "Options:"
+  echo "-u, --uid             User id to be used in the Docker image (default: 1000)"
+  echo "-g, --gid             Group id to be used in the Docker image (default: 1000)"
+  echo "-v, --minifi-version  Minifi version number to be used"
+  echo "-i, --image-type      Can be release or minimal"
+  echo "-d, --distro-name     Linux distribution build to be used for alternative builds (xenial|bionic|fedora|debian|centos)"
+  echo "-l  --dump-location   Path where to the output dump to be put"
+  echo "-c  --cmake-param     CMake parameter passed in PARAM=value format"
+  echo "-h  --help            Show this help message"
+  exit 1
+}
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+  -u|--uid)
+    UID_ARG="$2"
+    shift
+    shift
+    ;;
+  -g|--gid)
+    GID_ARG="$2"
+    shift
+    shift
+  ;;
+  -v|--minifi-version)
+  MINIFI_VERSION="$2"
+  shift
+  shift
+  ;;
+  -i|--image-type)
+    IMAGE_TYPE="$2"
+    shift
+    shift
+    ;;
+  -d|--distro-name)
+    DISTRO_NAME="$2"
+    shift
+    shift
+    ;;
+  -l|--dump-location)
+    DUMP_LOCATION="$2"
+    shift
+    shift
+    ;;
+  -c|--cmake-param)
+    IFS='=' read -ra ARR <<< "$2"
+    if [[ ${#ARR[@]} -gt 1 ]]; then
+      declare ${ARR[0]}="${ARR[1]}"
+    fi
+    shift
+    shift
+    ;;
+  -h|--help)
+    usage
+    ;;
+  *)  # unknown option
+    echo "Unknown argument passed $1"
+    usage
+    ;;
+esac
+done
 
 echo "NiFi-MiNiFi-CPP Version: ${MINIFI_VERSION}"
 
@@ -57,10 +157,43 @@ if [ -n "${BUILD_NUMBER}" ]; then
   TARGZ_TAG="${TARGZ_TAG}-${BUILD_NUMBER}"
 fi
 
-DOCKER_COMMAND="docker build --build-arg UID=${UID_ARG} \
-                             --build-arg GID=${GID_ARG} \
+DOCKER_COMMAND="docker build --build-arg UID_ARG=${UID_ARG} \
+                             --build-arg GID_ARG=${GID_ARG} \
                              --build-arg MINIFI_VERSION=${MINIFI_VERSION} \
+                             --build-arg IMAGE_TYPE=${IMAGE_TYPE} \
+                             --build-arg DUMP_LOCATION=${DUMP_LOCATION} \
+                             --build-arg DISTRO_NAME=${DISTRO_NAME} \
+                             --build-arg ENABLE_ALL=${ENABLE_ALL} \
+                             --build-arg ENABLE_PYTHON=${ENABLE_PYTHON} \
+                             --build-arg ENABLE_OPS=${ENABLE_OPS} \
                              --build-arg ENABLE_JNI=${ENABLE_JNI} \
+                             --build-arg ENABLE_OPENCV=${ENABLE_OPENCV} \
+                             --build-arg ENABLE_OPC=${ENABLE_OPC} \
+                             --build-arg ENABLE_GPS=${ENABLE_GPS} \
+                             --build-arg ENABLE_COAP=${ENABLE_COAP} \
+                             --build-arg ENABLE_WEL=${ENABLE_WEL} \
+                             --build-arg ENABLE_SQL=${ENABLE_SQL} \
+                             --build-arg ENABLE_MQTT=${ENABLE_MQTT} \
+                             --build-arg ENABLE_PCAP=${ENABLE_PCAP} \
+                             --build-arg ENABLE_LIBRDKAFKA=${ENABLE_LIBRDKAFKA} \
+                             --build-arg ENABLE_SENSORS=${ENABLE_SENSORS} \
+                             --build-arg ENABLE_SQLITE=${ENABLE_SQLITE} \
+                             --build-arg ENABLE_USB_CAMERA=${ENABLE_USB_CAMERA} \
+                             --build-arg ENABLE_TENSORFLOW=${ENABLE_TENSORFLOW} \
+                             --build-arg ENABLE_AWS=${ENABLE_AWS} \
+                             --build-arg ENABLE_BUSTACHE=${ENABLE_BUSTACHE} \
+                             --build-arg ENABLE_SFTP=${ENABLE_SFTP} \
+                             --build-arg ENABLE_OPENWSMAN=${ENABLE_OPENWSMAN} \
+                             --build-arg DISABLE_CURL=${DISABLE_CURL} \
+                             --build-arg DISABLE_JEMALLOC=${DISABLE_JEMALLOC} \
+                             --build-arg DISABLE_CIVET=${DISABLE_CIVET} \
+                             --build-arg DISABLE_EXPRESSION_LANGUAGE=${DISABLE_EXPRESSION_LANGUAGE} \
+                             --build-arg DISABLE_ROCKSDB=${DISABLE_ROCKSDB} \
+                             --build-arg DISABLE_LIBARCHIVE=${DISABLE_LIBARCHIVE} \
+                             --build-arg DISABLE_LZMA=${DISABLE_LZMA} \
+                             --build-arg DISABLE_BZIP2=${DISABLE_BZIP2} \
+                             --build-arg DISABLE_SCRIPTING=${DISABLE_SCRIPTING} \
+                             --build-arg DISABLE_CONTROLLER=${DISABLE_CONTROLLER} \
                              --target ${IMAGE_TYPE} \
                              -f ${DOCKERFILE} \
                              -t \
