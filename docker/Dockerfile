@@ -17,7 +17,8 @@
 #
 
 # First stage: the common build environment dependencies
-FROM alpine:3.12 AS build_deps
+ARG BASE_ALPINE_IMAGE="alpine:3.12"
+FROM ${BASE_ALPINE_IMAGE} AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION
@@ -133,7 +134,7 @@ RUN cd ${MINIFI_BASE_DIR} \
 
 # Common runtime image dependencies
 # Edge required for rocksdb
-FROM alpine:3.12 AS common_runtime_deps
+FROM ${BASE_ALPINE_IMAGE} AS common_runtime_deps
 
 ARG UID_ARG=1000
 ARG GID_ARG=1000

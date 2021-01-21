@@ -54,6 +54,7 @@ add_custom_target(
         -c DISABLE_BZIP2=${DISABLE_BZIP2}
         -c DISABLE_SCRIPTING=${DISABLE_SCRIPTING}
         -c DISABLE_CONTROLLER=${DISABLE_CONTROLLER}
+        -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 # Create minimal docker image

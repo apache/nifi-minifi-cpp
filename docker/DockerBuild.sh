@@ -59,6 +59,7 @@ DISABLE_LZMA=${DISABLE_LZMA:-}
 DISABLE_BZIP2=${DISABLE_BZIP2:-}
 DISABLE_SCRIPTING=${DISABLE_SCRIPTING:-}
 DISABLE_CONTROLLER=${DISABLE_CONTROLLER:-}
+DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE:-}
 
 #!/bin/bash
 
@@ -157,47 +158,55 @@ if [ -n "${BUILD_NUMBER}" ]; then
   TARGZ_TAG="${TARGZ_TAG}-${BUILD_NUMBER}"
 fi
 
-DOCKER_COMMAND="docker build --build-arg UID_ARG=${UID_ARG} \
-                             --build-arg GID_ARG=${GID_ARG} \
-                             --build-arg MINIFI_VERSION=${MINIFI_VERSION} \
-                             --build-arg IMAGE_TYPE=${IMAGE_TYPE} \
-                             --build-arg DUMP_LOCATION=${DUMP_LOCATION} \
-                             --build-arg DISTRO_NAME=${DISTRO_NAME} \
-                             --build-arg ENABLE_ALL=${ENABLE_ALL} \
-                             --build-arg ENABLE_PYTHON=${ENABLE_PYTHON} \
-                             --build-arg ENABLE_OPS=${ENABLE_OPS} \
-                             --build-arg ENABLE_JNI=${ENABLE_JNI} \
-                             --build-arg ENABLE_OPENCV=${ENABLE_OPENCV} \
-                             --build-arg ENABLE_OPC=${ENABLE_OPC} \
-                             --build-arg ENABLE_GPS=${ENABLE_GPS} \
-                             --build-arg ENABLE_COAP=${ENABLE_COAP} \
-                             --build-arg ENABLE_WEL=${ENABLE_WEL} \
-                             --build-arg ENABLE_SQL=${ENABLE_SQL} \
-                             --build-arg ENABLE_MQTT=${ENABLE_MQTT} \
-                             --build-arg ENABLE_PCAP=${ENABLE_PCAP} \
-                             --build-arg ENABLE_LIBRDKAFKA=${ENABLE_LIBRDKAFKA} \
-                             --build-arg ENABLE_SENSORS=${ENABLE_SENSORS} \
-                             --build-arg ENABLE_SQLITE=${ENABLE_SQLITE} \
-                             --build-arg ENABLE_USB_CAMERA=${ENABLE_USB_CAMERA} \
-                             --build-arg ENABLE_TENSORFLOW=${ENABLE_TENSORFLOW} \
-                             --build-arg ENABLE_AWS=${ENABLE_AWS} \
-                             --build-arg ENABLE_BUSTACHE=${ENABLE_BUSTACHE} \
-                             --build-arg ENABLE_SFTP=${ENABLE_SFTP} \
-                             --build-arg ENABLE_OPENWSMAN=${ENABLE_OPENWSMAN} \
-                             --build-arg DISABLE_CURL=${DISABLE_CURL} \
-                             --build-arg DISABLE_JEMALLOC=${DISABLE_JEMALLOC} \
-                             --build-arg DISABLE_CIVET=${DISABLE_CIVET} \
-                             --build-arg DISABLE_EXPRESSION_LANGUAGE=${DISABLE_EXPRESSION_LANGUAGE} \
-                             --build-arg DISABLE_ROCKSDB=${DISABLE_ROCKSDB} \
-                             --build-arg DISABLE_LIBARCHIVE=${DISABLE_LIBARCHIVE} \
-                             --build-arg DISABLE_LZMA=${DISABLE_LZMA} \
-                             --build-arg DISABLE_BZIP2=${DISABLE_BZIP2} \
-                             --build-arg DISABLE_SCRIPTING=${DISABLE_SCRIPTING} \
-                             --build-arg DISABLE_CONTROLLER=${DISABLE_CONTROLLER} \
-                             --target ${IMAGE_TYPE} \
-                             -f ${DOCKERFILE} \
-                             -t \
-                             apacheminificpp:${TAG} .."
+DOCKER_COMMAND="docker build "
+BUILD_ARGS="--build-arg UID_ARG=${UID_ARG} \
+            --build-arg GID_ARG=${GID_ARG} \
+            --build-arg MINIFI_VERSION=${MINIFI_VERSION} \
+            --build-arg IMAGE_TYPE=${IMAGE_TYPE} \
+            --build-arg DUMP_LOCATION=${DUMP_LOCATION} \
+            --build-arg DISTRO_NAME=${DISTRO_NAME} \
+            --build-arg ENABLE_ALL=${ENABLE_ALL} \
+            --build-arg ENABLE_PYTHON=${ENABLE_PYTHON} \
+            --build-arg ENABLE_OPS=${ENABLE_OPS} \
+            --build-arg ENABLE_JNI=${ENABLE_JNI} \
+            --build-arg ENABLE_OPENCV=${ENABLE_OPENCV} \
+            --build-arg ENABLE_OPC=${ENABLE_OPC} \
+            --build-arg ENABLE_GPS=${ENABLE_GPS} \
+            --build-arg ENABLE_COAP=${ENABLE_COAP} \
+            --build-arg ENABLE_WEL=${ENABLE_WEL} \
+            --build-arg ENABLE_SQL=${ENABLE_SQL} \
+            --build-arg ENABLE_MQTT=${ENABLE_MQTT} \
+            --build-arg ENABLE_PCAP=${ENABLE_PCAP} \
+            --build-arg ENABLE_LIBRDKAFKA=${ENABLE_LIBRDKAFKA} \
+            --build-arg ENABLE_SENSORS=${ENABLE_SENSORS} \
+            --build-arg ENABLE_SQLITE=${ENABLE_SQLITE} \
+            --build-arg ENABLE_USB_CAMERA=${ENABLE_USB_CAMERA} \
+            --build-arg ENABLE_TENSORFLOW=${ENABLE_TENSORFLOW} \
+            --build-arg ENABLE_AWS=${ENABLE_AWS} \
+            --build-arg ENABLE_BUSTACHE=${ENABLE_BUSTACHE} \
+            --build-arg ENABLE_SFTP=${ENABLE_SFTP} \
+            --build-arg ENABLE_OPENWSMAN=${ENABLE_OPENWSMAN} \
+            --build-arg DISABLE_CURL=${DISABLE_CURL} \
+            --build-arg DISABLE_JEMALLOC=${DISABLE_JEMALLOC} \
+            --build-arg DISABLE_CIVET=${DISABLE_CIVET} \
+            --build-arg DISABLE_EXPRESSION_LANGUAGE=${DISABLE_EXPRESSION_LANGUAGE} \
+            --build-arg DISABLE_ROCKSDB=${DISABLE_ROCKSDB} \
+            --build-arg DISABLE_LIBARCHIVE=${DISABLE_LIBARCHIVE} \
+            --build-arg DISABLE_LZMA=${DISABLE_LZMA} \
+            --build-arg DISABLE_BZIP2=${DISABLE_BZIP2} \
+            --build-arg DISABLE_SCRIPTING=${DISABLE_SCRIPTING} \
+            --build-arg DISABLE_CONTROLLER=${DISABLE_CONTROLLER} "
+
+if [ -n "${DOCKER_BASE_IMAGE}" ]; then
+  BUILD_ARGS="${BUILD_ARGS} --build-arg BASE_ALPINE_IMAGE=${DOCKER_BASE_IMAGE}"
+fi
+
+DOCKER_COMMAND="${DOCKER_COMMAND} ${BUILD_ARGS} \
+                --target ${IMAGE_TYPE} \
+                -f ${DOCKERFILE} \
+                -t \
+                apacheminificpp:${TAG} .."
+
 echo "Docker Command: '$DOCKER_COMMAND'"
 DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}
 
