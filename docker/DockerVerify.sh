@@ -74,6 +74,6 @@ PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
 export PYTHONPATH
 
 # exec behave -f pretty "${docker_dir}/test/integration/features/processors.feature"
-cd "${docker_dir}/test/integration/features" && exec behave -f pretty --logging-level Warning "processors.feature"
+cd "${docker_dir}/test/integration/features" && exec behave -f pretty --logging-level Warning "file_system_operations.feature"
 # exec pytest --log-cli-level=10 --log-level=INFO -v "${docker_dir}"/test/integration/test_filesystem_ops.py
 # exec pytest --log-cli-level=10 --log-level=INFO -v "${docker_dir}"/test/integration/

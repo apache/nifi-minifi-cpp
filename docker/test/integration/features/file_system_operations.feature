@@ -1,4 +1,4 @@
-Feature: File system operations
+Feature: File system operations are handled by the GetFile and PutFile processors
 
 Scenario: Get and put operations run in a simple flow
   Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
