@@ -29,6 +29,9 @@ set(PROJECT_VERSION_PATCH 0)
 # Optional build number for linux distribution targets' tar.gz output
 set(BUILD_NUMBER "" CACHE STRING "Build number")
 
+# Base Alpine image to be used in the Docker build instead of the default Alpine image
+set(DOCKER_BASE_IMAGE "" CACHE STRING "Docker build Alpine base image")
+
 include(CMakeDependentOption)
 include(CheckIncludeFile)
 include(FeatureSummary)
