@@ -45,7 +45,7 @@ default values, and whether a property supports the NiFi Expression Language.
 
 ### Description
 
-Manages the credentials for an Azure Storage account. This allows for multiple Azure related processors to reference this single
+Manages the credentials for an Azure Storage account. This allows for multiple Azure Storage related processors to reference this single
 controller service so that Azure storage credentials can be managed and controlled in a central location.
 
 ### Properties

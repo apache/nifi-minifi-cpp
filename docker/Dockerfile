@@ -55,8 +55,7 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
   bzip2-dev \
   python3-dev \
   patch \
-  doxygen \
-  libxml2-dev
+  doxygen
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi

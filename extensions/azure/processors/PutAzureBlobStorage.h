@@ -122,6 +122,7 @@ class PutAzureBlobStorage : public core::Processor {
     const std::shared_ptr<core::FlowFile> &flow_file) const;
   void createAzureStorageClient(const std::string &connection_string, const std::string &container_name);
 
+  std::mutex azure_storage_mutex_;
   std::unique_ptr<storage::BlobStorage> blob_storage_wrapper_;
   bool create_container_ = false;
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutAzureBlobStorage>::getLogger()};

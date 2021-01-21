@@ -172,42 +172,46 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
   auto connection_string = getConnectionString(context, flow_file);
   if (connection_string.empty()) {
     logger_->log_error("Connection string is empty!");
-    context->yield();
+    session->transfer(flow_file, Failure);
     return;
   }
 
   std::string container_name;
   if (!context->getProperty(ContainerName, container_name, flow_file) || container_name.empty()) {
     logger_->log_error("Container Name is invalid or empty!");
-    context->yield();
+    session->transfer(flow_file, Failure);
     return;
-  }
-
-  createAzureStorageClient(connection_string, container_name);
-
-  if (create_container_) {
-    blob_storage_wrapper_->createContainer();
   }
 
   std::string blob_name;
   if (!context->getProperty(Blob, blob_name, flow_file) || blob_name.empty()) {
     logger_->log_error("Blob name is invalid or empty!");
-    context->yield();
+    session->transfer(flow_file, Failure);
     return;
   }
 
-  PutAzureBlobStorage::ReadCallback callback(flow_file->getSize(), *blob_storage_wrapper_, blob_name);
-  if (session->read(flow_file, &callback) < 0) {
+  utils::optional<azure::storage::UploadBlobResult> upload_result;
+  {
+    std::lock_guard<std::mutex> lock(azure_storage_mutex_);
+    createAzureStorageClient(connection_string, container_name);
+    if (create_container_) {
+      blob_storage_wrapper_->createContainer();
+    }
+    PutAzureBlobStorage::ReadCallback callback(flow_file->getSize(), *blob_storage_wrapper_, blob_name);
+    session->read(flow_file, &callback);
+    upload_result = callback.getResult();
+  }
+
+  if (!upload_result) {
     logger_->log_error("Failed to upload blob '%s' to Azure storage container '%s'", blob_name, container_name);
     session->transfer(flow_file, Failure);
   } else {
-    auto result = callback.getResult().value();
     session->putAttribute(flow_file, "azure.container", container_name);
     session->putAttribute(flow_file, "azure.blobname", blob_name);
-    session->putAttribute(flow_file, "azure.primaryUri", result.primary_uri);
-    session->putAttribute(flow_file, "azure.etag", result.etag);
-    session->putAttribute(flow_file, "azure.length", std::to_string(result.length));
-    session->putAttribute(flow_file, "azure.timestamp", result.timestamp);
+    session->putAttribute(flow_file, "azure.primaryUri", upload_result->primary_uri);
+    session->putAttribute(flow_file, "azure.etag", upload_result->etag);
+    session->putAttribute(flow_file, "azure.length", std::to_string(upload_result->length));
+    session->putAttribute(flow_file, "azure.timestamp", upload_result->timestamp);
     logger_->log_debug("Successfully uploaded blob '%s' to Azure storage container '%s'", blob_name, container_name);
     session->transfer(flow_file, Success);
   }

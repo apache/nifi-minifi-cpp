@@ -171,19 +171,19 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
   }
 
   SECTION("Credentials set in Azure Storage Credentials Service") {
-    auto aws_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
-    plan->setProperty(aws_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan->setProperty(aws_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
+    auto azure_storage_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
+    plan->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
+    plan->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
     plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller.runSession(plan, true);
     REQUIRE(mock_blob_storage_ptr->getConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
   }
 
   SECTION("Overriding credentials set in Azure Storage Credentials Service with connection string") {
-    auto aws_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
-    plan->setProperty(aws_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan->setProperty(aws_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
-    plan->setProperty(aws_cred_service, "Connection String", CONNECTION_STRING);
+    auto azure_storage_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
+    plan->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
+    plan->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
+    plan->setProperty(azure_storage_cred_service, "Connection String", CONNECTION_STRING);
     plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller.runSession(plan, true);
     REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
@@ -235,9 +235,9 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
   }
 
   SECTION("Overriding credentials with connection string") {
-    auto aws_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
-    plan->setProperty(aws_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan->setProperty(aws_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
+    auto azure_storage_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
+    plan->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
+    plan->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
     plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     plan->setProperty(update_attribute, "test.account_name", STORAGE_ACCOUNT_NAME, true);
     plan->setProperty(put_azure_blob_storage, "Storage Account Name", "${test.account_name}");
