@@ -32,7 +32,9 @@ namespace minifi {
 namespace wel {
 
 /**
- * !!WARNING!! the json document must not outlive the xml argument
+ * * !!WARNING!! The json document must not outlive the xml argument. For better performance,
+ * the created json document stores references to values in the xml node. Accessing the
+ * json document after the xml node has been changed or destroyed results in undefined behavior.
  *
  * Converts each xml element node to a json object of
  * the form {name: String, attributes: Object, children: Array, text: String}
@@ -41,7 +43,9 @@ namespace wel {
 rapidjson::Document toRawJSON(const pugi::xml_node& root);
 
 /**
- * !!WARNING!! the json document must not outlive the xml argument
+ * * !!WARNING!! The json document must not outlive the xml argument. For better performance,
+ * the created json document stores references to values in the xml node. Accessing the
+ * json document after the xml node has been changed or destroyed results in undefined behavior.
  *
  * Retains some hierarchical structure of the original xml event,
  * e.g. transforms
@@ -52,7 +56,9 @@ rapidjson::Document toRawJSON(const pugi::xml_node& root);
 rapidjson::Document toSimpleJSON(const pugi::xml_node& root);
 
 /**
- * !!WARNING!! the json document must not outlive the xml argument
+ * * !!WARNING!! The json document must not outlive the xml argument. For better performance,
+ * the created json document stores references to values in the xml node. Accessing the
+ * json document after the xml node has been changed or destroyed results in undefined behavior.
  *
  * Flattens most of the structure, i.e. removes intermediate
  * objects and lifts innermost string-valued keys to the root.
