@@ -43,9 +43,10 @@ namespace minifi {
 namespace processors {
 
 struct EventRender {
-  std::map<std::string, std::string> matched_fields_;
-  std::string text_;
-  std::string rendered_text_;
+  std::map<std::string, std::string> matched_fields;
+  std::string xml;
+  std::string plaintext;
+  std::string json;
 };
 
 class Bookmark;
@@ -77,6 +78,7 @@ public:
   static core::Property EventHeaderDelimiter;
   static core::Property EventHeader;
   static core::Property OutputFormat;
+  static core::Property JSONFormat;
   static core::Property BatchCommitSize;
   static core::Property BookmarkRootDirectory;
   static core::Property ProcessOldEvents;
@@ -107,9 +109,13 @@ protected:
   bool createEventRender(EVT_HANDLE eventHandle, EventRender& eventRender);
   void substituteXMLPercentageItems(pugi::xml_document& doc);
 
-  static constexpr const char * const XML = "XML";
-  static constexpr const char * const Both = "Both";
-  static constexpr const char * const Plaintext = "Plaintext";
+  static constexpr const char* XML = "XML";
+  static constexpr const char* Both = "Both";
+  static constexpr const char* Plaintext = "Plaintext";
+  static constexpr const char* JSON = "JSON";
+  static constexpr const char* JSONRaw = "Raw";
+  static constexpr const char* JSONSimple = "Simple";
+  static constexpr const char* JSONFlattened = "Flattened";
 
 private:
   struct TimeDiff {
@@ -132,18 +138,30 @@ private:
   std::wstring wstrChannel_;
   std::wstring wstrQuery_;
   std::string regex_;
-  bool resolve_as_attributes_;
-  bool apply_identifier_function_;
+  bool resolve_as_attributes_{false};
+  bool apply_identifier_function_{false};
   std::string provenanceUri_;
   std::string computerName_;
   uint64_t maxBufferSize_{};
   DWORD lastActivityTimestamp_{};
   std::mutex cache_mutex_;
   std::map<std::string, wel::WindowsEventLogHandler > providers_;
-  uint64_t batch_commit_size_;
+  uint64_t batch_commit_size_{};
 
-  bool writeXML_;
-  bool writePlainText_;
+  enum class JSONType {None, Raw, Simple, Flattened};
+
+  struct OutputFormat {
+    bool xml{false};
+    bool plaintext{false};
+    struct JSON {
+      JSONType type{JSONType::None};
+
+      explicit operator bool() const noexcept {
+        return type != JSONType::None;
+      }
+    } json;
+  } output_;
+
   std::unique_ptr<Bookmark> bookmark_;
   std::mutex on_trigger_mutex_;
   std::unordered_map<std::string, std::string> xmlPercentageItemsResolutions_;

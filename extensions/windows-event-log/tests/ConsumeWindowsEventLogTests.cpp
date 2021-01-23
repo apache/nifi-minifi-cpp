@@ -19,16 +19,21 @@
 
 #include "core/ConfigurableComponent.h"
 #include "processors/LogAttribute.h"
+#include "processors/PutFile.h"
 #include "TestBase.h"
+#include "utils/TestUtils.h"
+#include "utils/file/FileUtils.h"
+#include "rapidjson/document.h"
+
+#include "CWELTestUtils.h"
 
 using ConsumeWindowsEventLog = org::apache::nifi::minifi::processors::ConsumeWindowsEventLog;
 using LogAttribute = org::apache::nifi::minifi::processors::LogAttribute;
+using PutFile = org::apache::nifi::minifi::processors::PutFile;
 using ConfigurableComponent = org::apache::nifi::minifi::core::ConfigurableComponent;
 using IdGenerator = org::apache::nifi::minifi::utils::IdGenerator;
 
 namespace {
-
-core::Relationship Success{"success", "Everything is fine"};
 
 const std::string APPLICATION_CHANNEL = "Application";
 
@@ -40,6 +45,19 @@ void reportEvent(const std::string& channel, const char* message, WORD log_level
   auto deleter = gsl::finally([&event_source](){ DeregisterEventSource(event_source); });
   ReportEventA(event_source, log_level, 0, CWEL_TESTS_OPCODE, nullptr, 1, 0, &message, nullptr);
 }
+
+class SimpleFormatTestController : public OutputFormatTestController {
+ public:
+  using OutputFormatTestController::OutputFormatTestController;
+
+ protected:
+  void dispatchBookmarkEvent() {
+    reportEvent(APPLICATION_CHANNEL, "Event zero: this is in the past");
+  }
+  void OutputFormatTestController::dispatchCollectedEvent() {
+    reportEvent(APPLICATION_CHANNEL, "Event one");
+  }
+};
 
 }  // namespace
 
@@ -305,48 +323,75 @@ TEST_CASE("ConsumeWindowsEventLog output format can be set", "[create][output_fo
 // TEST_CASE("ConsumeWindowsEventLog prints events in plain text correctly", "[onTrigger]")
 
 TEST_CASE("ConsumeWindowsEventLog prints events in XML correctly", "[onTrigger]") {
-  TestController test_controller;
-  LogTestController::getInstance().setDebug<ConsumeWindowsEventLog>();
-  LogTestController::getInstance().setDebug<LogAttribute>();
-  std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
+  std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, QUERY, "XML"}.run();
 
-  auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), "XML");
+  REQUIRE(event.find(R"(<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event"><System><Provider Name="Application"/>)") != std::string::npos);
+  REQUIRE(event.find(R"(<EventID Qualifiers="0">14985</EventID>)") != std::string::npos);
+  REQUIRE(event.find(R"(<Level>4</Level>)") != std::string::npos);
+  REQUIRE(event.find(R"(<Task>0</Task>)") != std::string::npos);
+  REQUIRE(event.find(R"(<Keywords>0x80000000000000</Keywords><TimeCreated SystemTime=")") != std::string::npos);
+  // the timestamp (when the event was published) goes here
+  REQUIRE(event.find(R"("/><EventRecordID>)") != std::string::npos);
+  // the ID of the event goes here (a number)
+  REQUIRE(event.find(R"(</EventRecordID>)") != std::string::npos);
+  REQUIRE(event.find(R"(<Channel>Application</Channel><Computer>)") != std::string::npos);
+  // the computer name goes here
+  REQUIRE(event.find(R"(</Computer><Security/></System><EventData><Data>Event one</Data></EventData></Event>)") != std::string::npos);
+}
 
-  auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
-  test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog.getName(), "0");
-  test_plan->setProperty(logger_processor, LogAttribute::LogPayload.getName(), "true");
-  test_plan->setProperty(logger_processor, LogAttribute::MaxPayloadLineLength.getName(), "1024");
+TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly", "[onTrigger]") {
+  std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON", "Simple"}.run();
+  verifyJSON(event, R"json(
+    {
+      "System": {
+        "Provider": {
+          "Name": "Application"
+        },
+        "Channel": "Application"
+      },
+      "EventData": [{
+          "Type": "Data",
+          "Content": "Event one",
+          "Name": ""
+      }]
+    }
+  )json");
+}
 
-  {
-    reportEvent(APPLICATION_CHANNEL, "Event zero: this is in the past");
+TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly", "[onTrigger]") {
+  std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON", "Flattened"}.run();
+  verifyJSON(event, R"json(
+    {
+      "Name": "Application",
+      "Channel": "Application",
+      "EventData": [{
+          "Type": "Data",
+          "Content": "Event one",
+          "Name": ""
+      }]
+    }
+  )json");
+}
 
-    test_controller.runSession(test_plan);
-  }
-
-  test_plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
-
-  {
-    reportEvent(APPLICATION_CHANNEL, "Event one");
-
-    test_controller.runSession(test_plan);
-
-    REQUIRE(LogTestController::getInstance().contains(R"(<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event"><System><Provider Name="Application"/>)"));
-    REQUIRE(LogTestController::getInstance().contains(R"(<EventID Qualifiers="0">14985</EventID>)"));
-    REQUIRE(LogTestController::getInstance().contains(R"(<Level>4</Level>)"));
-    REQUIRE(LogTestController::getInstance().contains(R"(<Task>0</Task>)"));
-    REQUIRE(LogTestController::getInstance().contains(R"(<Keywords>0x80000000000000</Keywords><TimeCreated SystemTime=")"));
-    // the timestamp (when the event was published) goes here
-    REQUIRE(LogTestController::getInstance().contains(R"("/><EventRecordID>)"));
-    // the ID of the event goes here (a number)
-    REQUIRE(LogTestController::getInstance().contains(R"(</EventRecordID>)"));
-    REQUIRE(LogTestController::getInstance().contains(R"(<Channel>Application</Channel><Computer>)"));
-    // the computer name goes here
-    REQUIRE(LogTestController::getInstance().contains(R"(</Computer><Security/></System><EventData><Data>Event one</Data></EventData></Event>)"));
-  }
+TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Raw correctly", "[onTrigger]") {
+  std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON", "Raw"}.run();
+  verifyJSON(event, R"json(
+    [
+      {
+        "name": "Event",
+        "children": [
+          {"name": "System"},
+          {
+            "name": "EventData",
+            "children": [{
+              "name": "Data",
+              "text": "Event one"
+            }] 
+          }      
+        ]
+      }
+    ]
+  )json");
 }
 
 namespace {
