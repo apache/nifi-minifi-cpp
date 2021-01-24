@@ -208,6 +208,10 @@ else
     . "${script_directory}/centos.sh"
   elif [[ "$OS" = Fedora* ]]; then
     . "${script_directory}/fedora.sh"
+  elif [[ "$OS" = Manjaro* ]]; then
+    . "${script_directory}/arch.sh"
+  elif [[ "$OS" = Arch* ]]; then
+    . "${script_directory}/arch.sh"
   fi
 fi
 ### verify the cmake version
