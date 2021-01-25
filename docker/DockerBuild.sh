@@ -62,12 +62,12 @@ DISABLE_CONTROLLER=${DISABLE_CONTROLLER:-}
 DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE:-}
 
 function usage {
-  echo "Usage: ./DockerBuild.sh [options]"
+  echo "Usage: ./DockerBuild.sh -v <MINIFI_VERSION> [additional options]"
   echo "Options:"
+  echo "-v, --minifi-version  Minifi version number to be used (required)"
+  echo "-i, --image-type      Can be release or minimal (default: release)"
   echo "-u, --uid             User id to be used in the Docker image (default: 1000)"
   echo "-g, --gid             Group id to be used in the Docker image (default: 1000)"
-  echo "-v, --minifi-version  Minifi version number to be used"
-  echo "-i, --image-type      Can be release or minimal"
   echo "-d, --distro-name     Linux distribution build to be used for alternative builds (xenial|bionic|fedora|debian|centos)"
   echo "-l  --dump-location   Path where to the output dump to be put"
   echo "-c  --cmake-param     CMake parameter passed in PARAM=value format"
@@ -125,6 +125,10 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [ -z "${MINIFI_VERSION}" ]; then
+  usage
+fi
 
 echo "NiFi-MiNiFi-CPP Version: ${MINIFI_VERSION}"
 
