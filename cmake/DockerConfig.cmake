@@ -65,6 +65,7 @@ add_custom_target(
         -g 1000
         -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
         -i minimal
+        -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
