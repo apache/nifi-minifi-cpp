@@ -148,16 +148,16 @@ class UpdateRunner : public utils::AfterExecute<Update> {
   std::chrono::milliseconds delay_;
 };
 
-class PausableStateController {
+class Pausable {
  public:
-  virtual ~PausableStateController() = default;
+  virtual ~Pausable() = default;
 
   virtual int16_t pause() = 0;
 
   virtual int16_t resume() = 0;
 };
 
-class StateController : public PausableStateController {
+class StateController : public Pausable {
  public:
   virtual ~StateController() = default;
 

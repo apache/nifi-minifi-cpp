@@ -65,7 +65,7 @@ class C2Agent : public state::UpdateController {
   static constexpr const char* UPDATE_NAME = "C2UpdatePolicy";
 
   C2Agent(core::controller::ControllerServiceProvider *controller,
-          state::PausableStateController *state_controller,
+          state::Pausable *pause_handler,
           const std::shared_ptr<state::StateMonitor> &updateSink,
           const std::shared_ptr<Configure> &configure,
           const std::shared_ptr<utils::file::FileSystem> &filesystem = std::make_shared<utils::file::FileSystem>());
@@ -207,7 +207,7 @@ class C2Agent : public state::UpdateController {
   // controller service provider reference.
   core::controller::ControllerServiceProvider* controller_;
 
-  state::PausableStateController* state_controller_;
+  state::Pausable* pause_handler_;
 
   // shared pointer to the configuration of this agent
   std::shared_ptr<Configure> configuration_;

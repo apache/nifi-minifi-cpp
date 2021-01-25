@@ -52,7 +52,7 @@ namespace minifi {
 namespace c2 {
 
 C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
-                 state::PausableStateController *state_controller,
+                 state::Pausable *pause_handler,
                  const std::shared_ptr<state::StateMonitor> &updateSink,
                  const std::shared_ptr<Configure> &configuration,
                  const std::shared_ptr<utils::file::FileSystem> &filesystem)
@@ -61,7 +61,7 @@ C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
       update_sink_(updateSink),
       update_service_(nullptr),
       controller_(controller),
-      state_controller_(state_controller),
+      pause_handler_(pause_handler),
       configuration_(configuration),
       filesystem_(filesystem),
       protocol_(nullptr),
@@ -432,15 +432,15 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       //
       break;
     case Operation::PAUSE:
-      if (state_controller_ != nullptr) {
-        state_controller_->pause();
+      if (pause_handler_ != nullptr) {
+        pause_handler_->pause();
       } else {
         logger_->log_warn("Pause functionality is not supported!");
       }
       break;
     case Operation::RESUME:
-      if (state_controller_ != nullptr) {
-        state_controller_->resume();
+      if (pause_handler_ != nullptr) {
+        pause_handler_->resume();
       } else {
         logger_->log_warn("Resume functionality is not supported!");
       }
