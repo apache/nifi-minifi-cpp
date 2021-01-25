@@ -247,11 +247,6 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     return;
   }
 
-  if (aws_results->size() == 0) {
-    logger_->log_debug("No S3 object were found in bucket %s", list_request_params_.bucket);
-    return;
-  }
-
   auto stored_listing_state = getCurrentState(context);
   auto latest_listing_state = stored_listing_state;
   std::size_t files_transferred = 0;
@@ -268,6 +263,12 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
 
   logger_->log_debug("ListS3 transferred %zu flow files", files_transferred);
   storeState(context, latest_listing_state);
+
+  if (files_transferred == 0) {
+    logger_->log_debug("No new S3 objects were found in bucket %s to list", list_request_params_.bucket);
+    context->yield();
+    return;
+  }
 }
 
 bool ListS3::ListingState::wasObjectListedAlready(const aws::s3::ListedObjectAttributes &object_attributes) const {
