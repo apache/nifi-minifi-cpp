@@ -86,6 +86,9 @@ class FileStream : public io::BaseStream {
    */
   int write(const uint8_t *value, int size) override;
 
+ private:
+  void seekToEndOfFile(const char* caller_error_msg);
+
   std::mutex file_lock_;
   std::unique_ptr<std::fstream> file_stream_;
   size_t offset_;

@@ -31,6 +31,19 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
+constexpr const char *FILE_OPENING_ERROR_MSG = "Error opening file: ";
+constexpr const char *READ_ERROR_MSG = "Error reading from file: ";
+constexpr const char *WRITE_ERROR_MSG = "Error writing to file: ";
+constexpr const char *SEEK_ERROR_MSG = "Error seeking in file: ";
+constexpr const char *INVALID_FILE_STREAM_ERROR_MSG = "invalid file stream";
+constexpr const char *TELLG_CALL_ERROR_MSG = "tellg call on file stream failed";
+constexpr const char *INVALID_BUFFER_ERROR_MSG = "invalid buffer";
+constexpr const char *FLUSH_CALL_ERROR_MSG = "flush call on file stream failed";
+constexpr const char *WRITE_CALL_ERROR_MSG = "write call on file stream failed";
+constexpr const char *EMPTY_MESSAGE_ERROR_MSG = "empty message";
+constexpr const char *SEEKG_CALL_ERROR_MSG = "seekg call on file stream failed";
+constexpr const char *SEEKP_CALL_ERROR_MSG = "seekp call on file stream failed";
+
 FileStream::FileStream(const std::string &path, bool append)
     : logger_(logging::LoggerFactory<FileStream>::getLogger()),
       path_(path),
@@ -38,14 +51,22 @@ FileStream::FileStream(const std::string &path, bool append)
   file_stream_ = std::unique_ptr<std::fstream>(new std::fstream());
   if (append) {
     file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
-    file_stream_->seekg(0, file_stream_->end);
-    file_stream_->seekp(0, file_stream_->end);
-    std::streamoff len = file_stream_->tellg();
-    length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
-    seek(offset_);
+    if (file_stream_->is_open()) {
+      seekToEndOfFile(FILE_OPENING_ERROR_MSG);
+      auto len = file_stream_->tellg();
+      if (len == std::streampos(-1))
+        logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << TELLG_CALL_ERROR_MSG;
+      length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
+      seek(offset_);
+    } else {
+      logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << path << " " << strerror(errno);
+    }
   } else {
     file_stream_->open(path.c_str(), std::fstream::out | std::fstream::binary);
     length_ = 0;
+    if (!file_stream_->is_open()) {
+      logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << path << " " << strerror(errno);
+    }
   }
 }
 
@@ -59,15 +80,16 @@ FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enab
   } else {
     file_stream_->open(path.c_str(), std::fstream::in | std::fstream::binary);
   }
-  file_stream_->seekg(0, file_stream_->end);
-  file_stream_->seekp(0, file_stream_->end);
-  std::streamoff len = file_stream_->tellg();
-  if (len > 0) {
-    length_ = gsl::narrow<size_t>(len);
+  if (file_stream_->is_open()) {
+    seekToEndOfFile(FILE_OPENING_ERROR_MSG);
+    auto len = file_stream_->tellg();
+    if (len == std::streampos(-1))
+      logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << TELLG_CALL_ERROR_MSG;
+    length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
+    seek(offset_);
   } else {
-    length_ = 0;
+    logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << path << " " << strerror(errno);
   }
-  seek(offset);
 }
 
 void FileStream::close() {
@@ -77,10 +99,16 @@ void FileStream::close() {
 
 void FileStream::seek(uint64_t offset) {
   std::lock_guard<std::mutex> lock(file_lock_);
+  if (file_stream_ == nullptr || !file_stream_->is_open()) {
+    logging::LOG_ERROR(logger_) << SEEK_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
+    return;
+  }
   offset_ = gsl::narrow<size_t>(offset);
   file_stream_->clear();
-  file_stream_->seekg(offset_);
-  file_stream_->seekp(offset_);
+  if (!file_stream_->seekg(offset_))
+    logging::LOG_ERROR(logger_) << SEEK_ERROR_MSG << SEEKG_CALL_ERROR_MSG;
+  if (!file_stream_->seekp(offset_))
+    logging::LOG_ERROR(logger_) << SEEK_ERROR_MSG << SEEKP_CALL_ERROR_MSG;
 }
 
 int FileStream::write(const uint8_t *value, int size) {
@@ -90,19 +118,26 @@ int FileStream::write(const uint8_t *value, int size) {
   }
   if (!IsNullOrEmpty(value)) {
     std::lock_guard<std::mutex> lock(file_lock_);
+    if (file_stream_ == nullptr || !file_stream_->is_open()) {
+      logging::LOG_ERROR(logger_) << WRITE_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
+      return -1;
+    }
     if (file_stream_->write(reinterpret_cast<const char*>(value), size)) {
       offset_ += size;
       if (offset_ > length_) {
         length_ = offset_;
       }
       if (!file_stream_->flush()) {
+        logging::LOG_ERROR(logger_) << WRITE_ERROR_MSG << FLUSH_CALL_ERROR_MSG;
         return -1;
       }
       return size;
     } else {
+      logging::LOG_ERROR(logger_) << WRITE_ERROR_MSG << WRITE_CALL_ERROR_MSG;
       return -1;
     }
   } else {
+    logging::LOG_ERROR(logger_) << WRITE_ERROR_MSG << EMPTY_MESSAGE_ERROR_MSG;
     return -1;
   }
 }
@@ -114,17 +149,17 @@ int FileStream::read(uint8_t *buf, int buflen) {
   }
   if (!IsNullOrEmpty(buf)) {
     std::lock_guard<std::mutex> lock(file_lock_);
-    if (!file_stream_) {
+    if (file_stream_ == nullptr || !file_stream_->is_open()) {
+      logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
       return -1;
     }
     file_stream_->read(reinterpret_cast<char*>(buf), buflen);
-    if ((file_stream_->rdstate() & (file_stream_->eofbit | file_stream_->failbit)) != 0) {
+    if (file_stream_->eof() || file_stream_->fail()) {
       file_stream_->clear();
-      file_stream_->seekg(0, file_stream_->end);
-      file_stream_->seekp(0, file_stream_->end);
+      seekToEndOfFile(READ_ERROR_MSG);
       auto tellg_result = file_stream_->tellg();
-      if (tellg_result < 0) {
-        logging::LOG_ERROR(logger_) << "Tellg call on file stream failed.";
+      if (tellg_result == std::streampos(-1)) {
+        logging::LOG_ERROR(logger_) << READ_ERROR_MSG << TELLG_CALL_ERROR_MSG;
         return -1;
       }
       size_t len = gsl::narrow<size_t>(tellg_result);
@@ -140,10 +175,17 @@ int FileStream::read(uint8_t *buf, int buflen) {
     }
 
   } else {
+    logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_BUFFER_ERROR_MSG;
     return -1;
   }
 }
 
+void FileStream::seekToEndOfFile(const char *caller_error_msg) {
+  if (!file_stream_->seekg(0, file_stream_->end))
+    logging::LOG_ERROR(logger_) << caller_error_msg << SEEKG_CALL_ERROR_MSG;
+  if (!file_stream_->seekp(0, file_stream_->end))
+    logging::LOG_ERROR(logger_) << caller_error_msg << SEEKP_CALL_ERROR_MSG;
+}
 } /* namespace io */
 } /* namespace minifi */
 } /* namespace nifi */

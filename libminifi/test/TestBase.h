@@ -400,6 +400,10 @@ class TestController {
     return log.logger_;
   }
 
+  const LogTestController& getLog() const {
+    return log;
+  }
+
   ~TestController() {
     for (const auto& dir : directories) {
       utils::file::FileUtils::delete_dir(dir, true);

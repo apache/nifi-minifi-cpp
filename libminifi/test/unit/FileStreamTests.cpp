@@ -24,6 +24,11 @@
 #include "io/FileStream.h"
 #include "../TestBase.h"
 #include "utils/gsl.h"
+#include "utils/file/FileUtils.h"
+
+#ifdef USE_BOOST
+#include <boost/filesystem.hpp>
+#endif
 
 TEST_CASE("TestFileOverWrite", "[TestFiles]") {
   TestController testController;
@@ -262,4 +267,80 @@ TEST_CASE("Read zero bytes") {
   auto dir = testController.createTempDirectory(format);
   minifi::io::FileStream stream(utils::file::concat_path(dir, "test.txt"), 0, true);
   REQUIRE(stream.read(nullptr, 0) == 0);
+}
+
+TEST_CASE("Non-existing file read/write test") {
+  TestController test_controller;
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = test_controller.createTempDirectory(format);
+  minifi::io::FileStream stream(utils::file::concat_path(dir, "non_existing_file.txt"), 0, true);
+  REQUIRE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
+  REQUIRE(test_controller.getLog().getInstance().contains("No such file or directory", std::chrono::seconds(0)));
+  REQUIRE(stream.write("lorem ipsum", false) == -1);
+  REQUIRE(test_controller.getLog().getInstance().contains("Error writing to file: invalid file stream", std::chrono::seconds(0)));
+  std::vector<uint8_t> readBuffer;
+  stream.seek(0);
+  REQUIRE(stream.read(readBuffer, 1) == -1);
+  REQUIRE(test_controller.getLog().getInstance().contains("Error reading from file: invalid file stream", std::chrono::seconds(0)));
+}
+
+TEST_CASE("Existing file read/write test") {
+  TestController test_controller;
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = test_controller.createTempDirectory(format);
+  std::string path_to_existing_file(utils::file::concat_path(dir, "existing_file.txt"));
+  {
+    std::ofstream outfile(path_to_existing_file);
+    outfile << "lorem ipsum" << std::endl;
+    outfile.close();
+  }
+  minifi::io::FileStream stream(path_to_existing_file, 0, true);
+  REQUIRE_FALSE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
+  REQUIRE_FALSE(stream.write("dolor sit amet", false) == -1);
+  REQUIRE_FALSE(test_controller.getLog().getInstance().contains("Error writing to file", std::chrono::seconds(0)));
+  std::vector<uint8_t> readBuffer;
+  stream.seek(0);
+  REQUIRE_FALSE(stream.read(readBuffer, 11) == -1);
+  REQUIRE_FALSE(test_controller.getLog().getInstance().contains("Error reading from file", std::chrono::seconds(0)));
+  stream.seek(0);
+  REQUIRE(stream.read(nullptr, 11) == -1);
+  REQUIRE(test_controller.getLog().getInstance().contains("Error reading from file: invalid buffer", std::chrono::seconds(0)));
+}
+
+#if !defined(WIN32) || defined(USE_BOOST)
+// This could be simplified with C++17 std::filesystem
+TEST_CASE("Opening file without permission creates error logs") {
+  TestController test_controller;
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = test_controller.createTempDirectory(format);
+  std::string path_to_permissionless_file(utils::file::concat_path(dir, "permissionless_file.txt"));
+  {
+    std::ofstream outfile(path_to_permissionless_file);
+    outfile << "this file has been just created" << std::endl;
+    outfile.close();
+#ifndef WIN32
+    utils::file::FileUtils::set_permissions(path_to_permissionless_file, 0);
+#else
+    boost::filesystem::permissions(path_to_permissionless_file, boost::filesystem::no_perms);
+#endif
+  }
+  minifi::io::FileStream stream(path_to_permissionless_file, 0, false);
+  REQUIRE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
+  REQUIRE(test_controller.getLog().getInstance().contains("Permission denied", std::chrono::seconds(0)));
+}
+#endif
+
+TEST_CASE("Readonly filestream write test") {
+  TestController test_controller;
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = test_controller.createTempDirectory(format);
+  std::string path_to_file(utils::file::concat_path(dir, "file_to_seek_in.txt"));
+  {
+    std::ofstream outfile(path_to_file);
+    outfile << "lorem ipsum" << std::endl;
+    outfile.close();
+  }
+  minifi::io::FileStream stream(path_to_file, 0, false);
+  REQUIRE(stream.write("dolor sit amet", false) == -1);
+  REQUIRE(test_controller.getLog().getInstance().contains("Error writing to file: write call on file stream failed", std::chrono::seconds(0)));
 }
