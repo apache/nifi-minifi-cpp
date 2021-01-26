@@ -41,7 +41,7 @@ static constexpr SocketDescriptor INVALID_SOCKET = -1;
 
 class SimpleSSLTestClient  {
  public:
-  SimpleSSLTestClient(const SSL_METHOD* method, std::string host, std::string port) :
+  SimpleSSLTestClient(const SSL_METHOD* method, const std::string& host, const std::string& port) :
     host_(host),
     port_(port) {
       ctx_ = SSL_CTX_new(method);
@@ -64,8 +64,8 @@ class SimpleSSLTestClient  {
 
   bool canConnect() {
     const int status = SSL_connect(ssl_);
-    const bool successfulConnection = (status == 1);
-    return successfulConnection;
+    const bool successful_connection = (status == 1);
+    return successful_connection;
   }
 
  private:
@@ -75,17 +75,14 @@ class SimpleSSLTestClient  {
   std::string host_;
   std::string port_;
 
-  SocketDescriptor openConnection(const char *hostname, const char *port) {
+  static SocketDescriptor openConnection(const char *host_name, const char *port) {
     struct hostent *host;
-    if ((host = gethostbyname(hostname)) == nullptr) {
-        perror(hostname);
-        exit(EXIT_FAILURE);
-    }
+    assert((host = gethostbyname(host_name)) != nullptr);
     struct addrinfo hints = {0}, *addrs;
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
-    const int status = getaddrinfo(hostname, port, &hints, &addrs);
+    const int status = getaddrinfo(host_name, port, &hints, &addrs);
     assert(status == 0);
     SocketDescriptor sfd = INVALID_SOCKET;
     for (struct addrinfo *addr = addrs; addr != nullptr; addr = addr->ai_next) {
@@ -111,26 +108,29 @@ class SimpleSSLTestClient  {
 
 class SimpleSSLTestClientTLSv1  : public SimpleSSLTestClient {
  public:
-  SimpleSSLTestClientTLSv1(std::string host, std::string port) : SimpleSSLTestClient(TLSv1_client_method(), host, port) {
+  SimpleSSLTestClientTLSv1(const std::string& host, const std::string& port)
+      : SimpleSSLTestClient(TLSv1_client_method(), host, port) {
   }
 };
 
 class SimpleSSLTestClientTLSv1_1  : public SimpleSSLTestClient {
  public:
-  SimpleSSLTestClientTLSv1_1(std::string host, std::string port) : SimpleSSLTestClient(TLSv1_1_client_method(), host, port) {
+  SimpleSSLTestClientTLSv1_1(const std::string& host, const std::string& port)
+      : SimpleSSLTestClient(TLSv1_1_client_method(), host, port) {
   }
 };
 
 class SimpleSSLTestClientTLSv1_2  : public SimpleSSLTestClient {
  public:
-  SimpleSSLTestClientTLSv1_2(std::string host, std::string port) : SimpleSSLTestClient(TLSv1_2_client_method(), host, port) {
+  SimpleSSLTestClientTLSv1_2(const std::string& host, const std::string& port)
+      : SimpleSSLTestClient(TLSv1_2_client_method(), host, port) {
   }
 };
 
 class TLSServerSocketSupportedProtocolsTest {
  public:
-    TLSServerSocketSupportedProtocolsTest()
-        : isRunning_{ false }, configuration_(std::make_shared<minifi::Configure>()) {
+    explicit TLSServerSocketSupportedProtocolsTest(const std::string& key_dir)
+        : is_running_(false), key_dir_(key_dir), configuration_(std::make_shared<minifi::Configure>()) {
     }
 
     void run() {
@@ -138,24 +138,22 @@ class TLSServerSocketSupportedProtocolsTest {
 
       createServerSocket();
 
-      runAssertions();
-    }
+      verifyTLSServerSocketExclusiveCompatibilityWithTLSv1_2();
 
-    void setKeyDir(const std::string key_dir) {
-      this->key_dir = key_dir;
+      shutdownServerSocket();
     }
 
  protected:
     void configureSecurity() {
       host_ = org::apache::nifi::minifi::io::Socket::getMyHostName();
-      port_ = "38776";
-      if (!key_dir.empty()) {
+      port_ = "38778";
+      if (!key_dir_.empty()) {
         configuration_->set(minifi::Configure::nifi_remote_input_secure, "true");
-        configuration_->set(minifi::Configure::nifi_security_client_certificate, key_dir + "cn.crt.pem");
-        configuration_->set(minifi::Configure::nifi_security_client_private_key, key_dir + "cn.ckey.pem");
-        configuration_->set(minifi::Configure::nifi_security_client_pass_phrase, key_dir + "cn.pass");
-        configuration_->set(minifi::Configure::nifi_security_client_ca_certificate, key_dir + "nifi-cert.pem");
-        configuration_->set(minifi::Configure::nifi_default_directory, key_dir);
+        configuration_->set(minifi::Configure::nifi_security_client_certificate, key_dir_ + "cn.crt.pem");
+        configuration_->set(minifi::Configure::nifi_security_client_private_key, key_dir_ + "cn.ckey.pem");
+        configuration_->set(minifi::Configure::nifi_security_client_pass_phrase, key_dir_ + "cn.pass");
+        configuration_->set(minifi::Configure::nifi_security_client_ca_certificate, key_dir_ + "nifi-cert.pem");
+        configuration_->set(minifi::Configure::nifi_default_directory, key_dir_);
       }
     }
 
@@ -164,58 +162,72 @@ class TLSServerSocketSupportedProtocolsTest {
       server_socket_ = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host_, std::stoi(port_), 3);
       assert(0 == server_socket_->initialize());
 
-      isRunning_ = true;
-      check = [this]() -> bool {
-        return isRunning_;
+      is_running_ = true;
+      check_ = [this]() -> bool {
+        return is_running_;
       };
-      handler = [this](std::vector<uint8_t> *b, int *size) {
+      handler_ = [this](std::vector<uint8_t> *bytes_written, int *size) {
         std::cout << "oh write!" << std::endl;
-        b->reserve(20);
-        memset(b->data(), 0x00, 20);
-        memcpy(b->data(), "hello world", 11);
+        bytes_written->reserve(20);
+        memset(bytes_written->data(), 0x00, 20);
+        memcpy(bytes_written->data(), "hello world", 11);
         *size = 20;
         return *size;
       };
-      server_socket_->registerCallback(check, handler, std::chrono::milliseconds(50));
+      server_socket_->registerCallback(check_, handler_, std::chrono::milliseconds(50));
     }
 
-    void runAssertions() {
-      {
-        SimpleSSLTestClientTLSv1 client(host_, port_);
-        assert(!client.canConnect());
-      }
-      {
-        SimpleSSLTestClientTLSv1_1 client(host_, port_);
-        assert(!client.canConnect());
-      }
-      {
-        SimpleSSLTestClientTLSv1_2 client(host_, port_);
-        assert(client.canConnect());
-      }
-      isRunning_ = false;
+    void verifyTLSServerSocketExclusiveCompatibilityWithTLSv1_2() {
+      verifyTLSProtocolIncompatibility<SimpleSSLTestClientTLSv1>();
+      verifyTLSProtocolIncompatibility<SimpleSSLTestClientTLSv1_1>();
+      verifyTLSProtocolCompatibility<SimpleSSLTestClientTLSv1_2>();
     }
 
-    std::function<bool()> check;
-    std::function<int(std::vector<uint8_t>*b, int *size)> handler;
-    std::atomic<bool> isRunning_;
+    template <class TLSTestClient>
+    void verifyTLSProtocolIncompatibility() {
+      verifyTLSProtocolCompatibility<TLSTestClient>(false);
+    }
+
+    template <class TLSTestClient>
+    void verifyTLSProtocolCompatibility() {
+      verifyTLSProtocolCompatibility<TLSTestClient>(true);
+    }
+
+    template <class TLSTestClient>
+    void verifyTLSProtocolCompatibility(bool should_be_compatible) {
+      TLSTestClient client(host_, port_);
+      assert(client.canConnect() == should_be_compatible);
+    }
+
+    void shutdownServerSocket() {
+      is_running_ = false;
+    }
+
+    std::function<bool()> check_;
+    std::function<int(std::vector<uint8_t>*b, int *size)> handler_;
+    std::atomic<bool> is_running_;
     std::shared_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket_;
     std::string host_;
     std::string port_;
-    std::string key_dir;
+    std::string key_dir_;
     std::shared_ptr<minifi::Configure> configuration_;
 };
 
+static void sigpipe_handle(int) {
+}
+
 int main(int argc, char **argv) {
-  std::string key_dir, test_file_location;
+  std::string key_dir;
   if (argc > 1) {
     key_dir = argv[1];
   }
+#ifndef WIN32
+  signal(SIGPIPE, sigpipe_handle);
+#endif
 
-  TLSServerSocketSupportedProtocolsTest serverSocketSupportedProtocolsTest;
+  TLSServerSocketSupportedProtocolsTest server_socket_supported_protocols_verifier(key_dir);
 
-  serverSocketSupportedProtocolsTest.setKeyDir(key_dir);
-
-  serverSocketSupportedProtocolsTest.run();
+  server_socket_supported_protocols_verifier.run();
 
   return 0;
 }
