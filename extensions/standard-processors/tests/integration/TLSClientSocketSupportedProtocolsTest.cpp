@@ -164,12 +164,12 @@ class TLSClientSocketSupportedProtocolsTest {
 
   template <class TLSTestSever>
   void verifyTLSProtocolIncompatibility() {
-    verifyTLSProtocolCompatibility<TLSTestSever> (false);
+    verifyTLSProtocolCompatibility<TLSTestSever>(false);
   }
 
   template <class TLSTestSever>
   void verifyTLSProtocolCompatibility() {
-    verifyTLSProtocolCompatibility<TLSTestSever> (true);
+    verifyTLSProtocolCompatibility<TLSTestSever>(true);
   }
 
   template <class TLSTestSever>
