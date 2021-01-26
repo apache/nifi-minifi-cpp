@@ -182,6 +182,10 @@ minifi::c2::Operation CoapProtocol::getOperation(int type) const {
       return minifi::c2::UPDATE;
     case 7:
       return minifi::c2::STOP;
+    case 8:
+      return minifi::c2::PAUSE;
+    case 9:
+      return minifi::c2::RESUME;
   }
   return minifi::c2::ACKNOWLEDGE;
 }

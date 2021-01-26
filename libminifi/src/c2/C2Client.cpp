@@ -58,7 +58,7 @@ bool C2Client::isC2Enabled() const {
   return utils::StringUtils::toBool(c2_enable_str).value_or(false);
 }
 
-void C2Client::initialize(core::controller::ControllerServiceProvider *controller, const std::shared_ptr<state::StateMonitor> &update_sink) {
+void C2Client::initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, const std::shared_ptr<state::StateMonitor> &update_sink) {
   if (!isC2Enabled()) {
     return;
   }
@@ -120,7 +120,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
   if (!initialized_) {
     // C2Agent is initialized once, meaning that a C2-triggered flow/configuration update
     // might not be equal to a fresh restart
-    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(controller, update_sink, configuration_, filesystem_));
+    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(controller, pause_handler, update_sink, configuration_, filesystem_));
     c2_agent_->start();
     initialized_ = true;
   }

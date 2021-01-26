@@ -108,9 +108,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   }
   // Start to run the Flow Controller which internally start the root process group and all its children
   int16_t start() override;
-  int16_t pause() override {
-    return -1;
-  }
+  int16_t pause() override;
+  int16_t resume() override;
   // Unload the current flow YAML, clean the root process group and all its children
   int16_t stop() override;
   int16_t applyUpdate(const std::string &source, const std::string &configuration, bool persist) override;

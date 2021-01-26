@@ -42,11 +42,11 @@ class ProcessorController : public StateController {
 
   virtual ~ProcessorController();
 
-  virtual std::string getComponentName() const {
+  std::string getComponentName() const override {
     return processor_->getName();
   }
 
-  virtual utils::Identifier getComponentUUID() const {
+  utils::Identifier getComponentUUID() const override {
     return processor_->getUUID();
   }
 
@@ -56,15 +56,17 @@ class ProcessorController : public StateController {
   /**
    * Start the client
    */
-  virtual int16_t start();
+  int16_t start() override;
   /**
    * Stop the client
    */
-  virtual int16_t stop();
+  int16_t stop() override;
 
-  virtual bool isRunning();
+  bool isRunning() override;
 
-  virtual int16_t pause();
+  int16_t pause() override;
+
+  int16_t resume() override;
 
  protected:
   std::shared_ptr<core::Processor> processor_;

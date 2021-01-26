@@ -44,6 +44,9 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
         if (!task_status_[task.getIdentifier()]) {
           continue;
+        } else if (!worker_queue_.isRunning()) {
+          worker_queue_.enqueue(std::move(task));
+          continue;
         }
       }
       if (task.run()) {
@@ -64,7 +67,7 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
         }
       }
     } else {
-      // This means that the threadpool is running, but the ConcurrentQueue is stopped -> shouldn't happen during normal conditions
+      // The threadpool is running, but the ConcurrentQueue is stopped -> shouldn't happen during normal conditions
       // Might happen during startup or shutdown for a very short time
       if (running_.load()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -197,6 +200,20 @@ template<typename T>
 void ThreadPool<T>::stopTasks(const TaskId &identifier) {
   std::unique_lock<std::mutex> lock(worker_queue_mutex_);
   task_status_[identifier] = false;
+}
+
+template<typename T>
+void ThreadPool<T>::resume() {
+  if (!worker_queue_.isRunning()) {
+    worker_queue_.start();
+  }
+}
+
+template<typename T>
+void ThreadPool<T>::pause() {
+  if (worker_queue_.isRunning()) {
+    worker_queue_.stop();
+  }
 }
 
 template<typename T>

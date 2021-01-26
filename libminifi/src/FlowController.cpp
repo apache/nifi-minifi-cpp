@@ -268,7 +268,7 @@ std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
   // since we don't have access to the flow definition, the C2 communication
   // won't be able to use the services defined there, e.g. SSLContextService
   controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
-  C2Client::initialize(this, shared_from_this());
+  C2Client::initialize(this, this, shared_from_this());
   auto opt_source = fetchFlow(*opt_flow_url);
   if (!opt_source) {
     logger_->log_error("Couldn't fetch flow configuration from C2 server");
@@ -379,7 +379,7 @@ int16_t FlowController::start() {
         // as the thread_pool_ is started in load()
         this->root_->startProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
       }
-      C2Client::initialize(this, shared_from_this());
+      C2Client::initialize(this, this, shared_from_this());
       running_ = true;
       this->protocol_->start();
       this->provenance_repo_->start();
@@ -389,6 +389,30 @@ int16_t FlowController::start() {
     }
     return 0;
   }
+}
+
+int16_t FlowController::pause() {
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  if (!running_) {
+    logger_->log_warn("Can not pause flow controller that is not running");
+    return 0;
+  }
+
+  logger_->log_info("Pausing Flow Controller");
+  thread_pool_.pause();
+  return 0;
+}
+
+int16_t FlowController::resume() {
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  if (!running_) {
+    logger_->log_warn("Can not resume flow controller tasks because the flow controller is not running");
+    return 0;
+  }
+
+  logger_->log_info("Resuming Flow Controller");
+  thread_pool_.resume();
+  return 0;
 }
 
 int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration, bool persist) {

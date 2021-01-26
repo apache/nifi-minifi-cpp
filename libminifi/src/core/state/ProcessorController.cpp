@@ -52,8 +52,11 @@ bool ProcessorController::isRunning() {
 }
 
 int16_t ProcessorController::pause() {
-  scheduler_->unschedule(processor_);
-  return 0;
+  return stop();
+}
+
+int16_t ProcessorController::resume() {
+  return start();
 }
 
 } /* namespace state */

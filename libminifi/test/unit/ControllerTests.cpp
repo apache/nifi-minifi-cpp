@@ -66,6 +66,10 @@ class TestStateController : public minifi::state::StateController {
     return 0;
   }
 
+  virtual int16_t resume() {
+    return 0;
+  }
+
   std::atomic<bool> is_running;
 };
 
@@ -117,6 +121,10 @@ class TestUpdateSink : public minifi::state::StateMonitor {
   }
 
   int16_t pause() override {
+    return 0;
+  }
+
+  int16_t resume() override {
     return 0;
   }
   std::vector<BackTrace> getTraces() override {

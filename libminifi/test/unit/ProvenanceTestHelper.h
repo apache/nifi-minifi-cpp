@@ -266,6 +266,10 @@ class TestFlowController : public minifi::FlowController {
     return -1;
   }
 
+  int16_t resume() override {
+    return -1;
+  }
+
   void unload() override {
     stop();
   }

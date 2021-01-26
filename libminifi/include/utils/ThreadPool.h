@@ -27,6 +27,7 @@
 #include <atomic>
 #include <mutex>
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <queue>
 #include <future>
@@ -225,6 +226,16 @@ class ThreadPool {
    * immediately stop.
    */
   void stopTasks(const TaskId &identifier);
+
+  /**
+   * resumes work queue processing.
+   */
+  void resume();
+
+  /**
+   * pauses work queue processing
+   */
+  void pause();
 
   /**
    * Returns true if a task is running.
