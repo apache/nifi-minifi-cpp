@@ -86,18 +86,18 @@ class SimpleSSLTestClient  {
     assert(status == 0);
     SocketDescriptor sfd = INVALID_SOCKET;
     for (struct addrinfo *addr = addrs; addr != nullptr; addr = addr->ai_next) {
-        sfd = socket(addrs->ai_family, addrs->ai_socktype, addrs->ai_protocol);
-        if (sfd == INVALID_SOCKET) {
-            continue;
-        }
-        if (connect(sfd, addr->ai_addr, addr->ai_addrlen) == 0) {
-            break;
-        }
-        sfd = INVALID_SOCKET;
+      sfd = socket(addrs->ai_family, addrs->ai_socktype, addrs->ai_protocol);
+      if (sfd == INVALID_SOCKET) {
+          continue;
+      }
+      if (connect(sfd, addr->ai_addr, addr->ai_addrlen) == 0) {
+          break;
+      }
+      sfd = INVALID_SOCKET;
 #ifdef WIN32
-        closesocket(sfd);
+      closesocket(sfd);
 #else
-        close(sfd);
+      close(sfd);
 #endif
     }
     freeaddrinfo(addrs);
