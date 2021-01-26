@@ -24,9 +24,20 @@
 #include <utility>
 #include <memory>
 #include <string>
+#ifdef WIN32
+#include <ws2tcpip.h>
+#include <winsock2.h>
+#endif
 #include "properties/Configure.h"
 #include "io/tls/TLSSocket.h"
 #include "io/tls/TLSServerSocket.h"
+
+#ifdef WIN32
+using SocketDescriptor = SOCKET;
+#else
+using SocketDescriptor = int;
+static constexpr SocketDescriptor INVALID_SOCKET = -1;
+#endif /* WIN32 */
 
 class SimpleSSLTestClient  {
  public:
@@ -43,25 +54,28 @@ class SimpleSSLTestClient  {
 
   ~SimpleSSLTestClient() {
     SSL_free(ssl_);
+#ifdef WIN32
+    closesocket(sfd_);
+#else
     close(sfd_);
+#endif
     SSL_CTX_free(ctx_);
   }
 
   bool canConnect() {
     const int status = SSL_connect(ssl_);
-    bool successfulConnection = (status == 1);
+    const bool successfulConnection = (status == 1);
     return successfulConnection;
   }
 
  private:
   SSL_CTX *ctx_;
   SSL* ssl_;
-  int sfd_;
+  SocketDescriptor sfd_;
   std::string host_;
   std::string port_;
 
-  int openConnection(const char *hostname, const char *port) {
-    constexpr int ERROR_STATUS = -1;
+  SocketDescriptor openConnection(const char *hostname, const char *port) {
     struct hostent *host;
     if ((host = gethostbyname(hostname)) == nullptr) {
         perror(hostname);
@@ -72,29 +86,25 @@ class SimpleSSLTestClient  {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
     const int status = getaddrinfo(hostname, port, &hints, &addrs);
-    if (status != 0) {
-        fprintf(stderr, "%s: %s\n", hostname, gai_strerror(status));
-        exit(EXIT_FAILURE);
-    }
-    int sfd, err;
+    assert(status == 0);
+    SocketDescriptor sfd = INVALID_SOCKET;
     for (struct addrinfo *addr = addrs; addr != nullptr; addr = addr->ai_next) {
         sfd = socket(addrs->ai_family, addrs->ai_socktype, addrs->ai_protocol);
-        if (sfd == ERROR_STATUS) {
-            err = errno;
+        if (sfd == INVALID_SOCKET) {
             continue;
         }
         if (connect(sfd, addr->ai_addr, addr->ai_addrlen) == 0) {
             break;
         }
-        err = errno;
-        sfd = ERROR_STATUS;
+        sfd = INVALID_SOCKET;
+#ifdef WIN32
+        closesocket(sfd);
+#else
         close(sfd);
+#endif
     }
     freeaddrinfo(addrs);
-    if (sfd == ERROR_STATUS) {
-        fprintf(stderr, "%s: %s\n", hostname, strerror(err));
-        exit(EXIT_FAILURE);
-    }
+    assert(sfd != INVALID_SOCKET);
     return sfd;
   }
 };
@@ -138,7 +148,7 @@ class TLSServerSocketSupportedProtocolsTest {
  protected:
     void configureSecurity() {
       host_ = org::apache::nifi::minifi::io::Socket::getMyHostName();
-      port_ = "3684";
+      port_ = "38776";
       if (!key_dir.empty()) {
         configuration_->set(minifi::Configure::nifi_remote_input_secure, "true");
         configuration_->set(minifi::Configure::nifi_security_client_certificate, key_dir + "cn.crt.pem");
@@ -150,7 +160,7 @@ class TLSServerSocketSupportedProtocolsTest {
     }
 
     void createServerSocket() {
-      std::shared_ptr<org::apache::nifi::minifi::io::TLSContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration_);
+      const auto socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration_);
       server_socket_ = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host_, std::stoi(port_), 3);
       assert(0 == server_socket_->initialize());
 
@@ -195,18 +205,12 @@ class TLSServerSocketSupportedProtocolsTest {
     std::shared_ptr<minifi::Configure> configuration_;
 };
 
-static void sigpipe_handle(int /*x*/) {
-}
-
 int main(int argc, char **argv) {
   std::string key_dir, test_file_location;
   if (argc > 1) {
     key_dir = argv[1];
   }
 
-#ifndef WIN32
-  signal(SIGPIPE, sigpipe_handle);
-#endif
   TLSServerSocketSupportedProtocolsTest serverSocketSupportedProtocolsTest;
 
   serverSocketSupportedProtocolsTest.setKeyDir(key_dir);
