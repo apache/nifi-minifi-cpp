@@ -61,8 +61,6 @@ class PublishKafkaOnScheduleTests : public IntegrationBase {
       LogTestController::getInstance().setDebug<core::ProcessSession>();
       LogTestController::getInstance().setDebug<minifi::processors::PublishKafka>();
     }
-
-    virtual void cleanup() {}
 };
 
 int main(int argc, char **argv) {

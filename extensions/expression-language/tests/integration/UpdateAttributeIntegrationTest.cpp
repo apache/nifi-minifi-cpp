@@ -44,8 +44,6 @@ class TestHarness : public IntegrationBase {
     LogTestController::getInstance().setInfo<processors::LogAttribute>();
   }
 
-  void cleanup() override {}
-
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
     assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),

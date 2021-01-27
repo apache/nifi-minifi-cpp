@@ -56,7 +56,9 @@ class IntegrationBase {
     return configuration;
   }
 
-  virtual void cleanup() = 0;
+  virtual void cleanup() {
+    utils::file::delete_dir(state_dir);
+  }
 
   virtual void runAssertions() = 0;
 

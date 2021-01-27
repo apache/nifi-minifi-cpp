@@ -63,6 +63,7 @@ class HttpTestHarness : public IntegrationBase {
 
   void cleanup() override {
     std::remove(ss.str().c_str());
+    IntegrationBase::cleanup();
   }
 
   void runAssertions() override {

@@ -56,6 +56,7 @@ class TailFileTestHarness : public IntegrationBase {
   void cleanup() override {
     std::remove(ss.str().c_str());
     std::remove(statefile.c_str());
+    IntegrationBase::cleanup();
   }
 
   void runAssertions() override {

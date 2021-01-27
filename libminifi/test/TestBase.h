@@ -308,6 +308,7 @@ class TestPlan {
 
   std::shared_ptr<core::CoreComponentStateManagerProvider> state_manager_provider_;
 
+  bool is_state_dir_owner_;
   std::string state_dir_;
 
   std::recursive_mutex mutex;

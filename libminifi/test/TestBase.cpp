@@ -40,6 +40,7 @@ TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::s
       content_repo_(content_repo),
       flow_repo_(flow_repo),
       prov_repo_(prov_repo),
+      is_state_dir_owner_(state_dir == nullptr),
       finalized(false),
       location(-1),
       current_flowfile_(nullptr),
@@ -63,6 +64,9 @@ TestPlan::~TestPlan() {
     processor->setScheduledState(core::ScheduledState::STOPPED);
   }
   controller_services_provider_->clearControllerServices();
+  if (is_state_dir_owner_) {
+    utils::file::FileUtils::delete_dir(state_dir_, true);
+  }
 }
 
 std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string& /*name*/, const std::initializer_list<core::Relationship>& relationships,
