@@ -182,7 +182,7 @@ class TLSClientSocketSupportedProtocolsTest {
     const bool client_initialized_successfully = (client_socket_->initialize() == 0);
     assert(client_initialized_successfully == should_be_compatible);
     server.shutdownServer();
-    assert(server.hasConnection() == should_be_compatible);
+    assert(server.hadConnection() == should_be_compatible);
   }
 
  protected:
