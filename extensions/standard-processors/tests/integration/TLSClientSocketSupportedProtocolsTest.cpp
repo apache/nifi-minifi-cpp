@@ -38,7 +38,7 @@ static constexpr SocketDescriptor INVALID_SOCKET = -1;
 class SimpleSSLTestServer  {
  public:
   SimpleSSLTestServer(const SSL_METHOD* method, const std::string& port, const std::string& path)
-      : port_(port), has_connection_(false) {
+      : port_(port), had_connection_(false) {
     ctx_ = SSL_CTX_new(method);
     configureContext(path);
     socket_descriptor_ = createSocket(std::stoi(port_));
@@ -56,7 +56,7 @@ class SimpleSSLTestServer  {
         if (client != INVALID_SOCKET) {
             ssl_ = SSL_new(ctx_);
             SSL_set_fd(ssl_, client);
-            has_connection_ = (SSL_accept(ssl_) == 1);
+            had_connection_ = (SSL_accept(ssl_) == 1);
         }
     });
   }
@@ -72,8 +72,8 @@ class SimpleSSLTestServer  {
     server_read_thread_.join();
   }
 
-  bool hasConnection() const {
-    return has_connection_;
+  bool hadConnection() const {
+    return had_connection_;
   }
 
  private:
@@ -82,7 +82,7 @@ class SimpleSSLTestServer  {
   std::string port_;
   uint16_t listeners_;
   SocketDescriptor socket_descriptor_;
-  bool has_connection_;
+  bool had_connection_;
   std::thread server_read_thread_;
 
   void configureContext(const std::string& path) {
@@ -173,7 +173,7 @@ class TLSClientSocketSupportedProtocolsTest {
   }
 
   template <class TLSTestSever>
-  void verifyTLSProtocolCompatibility(bool should_be_compatible) {
+  void verifyTLSProtocolCompatibility(const bool should_be_compatible) {
     TLSTestSever server(port_, key_dir_);
     server.waitForConnection();
 
@@ -181,8 +181,8 @@ class TLSClientSocketSupportedProtocolsTest {
     client_socket_ = std::make_shared<org::apache::nifi::minifi::io::TLSSocket>(socket_context, host_, std::stoi(port_), 0);
     const bool client_initialized_successfully = (client_socket_->initialize() == 0);
     assert(client_initialized_successfully == should_be_compatible);
-    assert(server.hasConnection() == should_be_compatible);
     server.shutdownServer();
+    assert(server.hasConnection() == should_be_compatible);
   }
 
  protected:
