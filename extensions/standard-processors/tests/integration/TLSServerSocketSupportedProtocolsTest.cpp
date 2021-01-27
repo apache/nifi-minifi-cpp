@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <arpa/inet.h>
 #include <signal.h>
 #include <sys/stat.h>
 #include <chrono>
 #include <thread>
 #include <cerrno>
 #include <cinttypes>
-#include <arpa/inet.h>
 #undef NDEBUG
 #include <cassert>
 #include <utility>
@@ -44,7 +44,7 @@ static constexpr SocketDescriptor INVALID_SOCKET = -1;
 
 namespace {
 const char* str_family(int family) {
-  switch(family) {
+  switch (family) {
     case AF_INET: return "AF_INET";
     case AF_INET6: return "AF_INET6";
     default: return "(n/a)";
@@ -52,7 +52,7 @@ const char* str_family(int family) {
 }
 
 const char* str_socktype(int socktype) {
-  switch(socktype) {
+  switch (socktype) {
     case SOCK_STREAM: return "SOCK_STREAM";
     case SOCK_DGRAM: return "SOCK_DGRAM";
     default: return "(n/a)";
@@ -60,7 +60,7 @@ const char* str_socktype(int socktype) {
 }
 
 const char* str_proto(int protocol) {
-  switch(protocol) {
+  switch (protocol) {
     case IPPROTO_TCP: return "IPPROTO_TCP";
     case IPPROTO_UDP: return "IPPROTO_UDP";
     case IPPROTO_IP: return "IPPROTO_IP";
