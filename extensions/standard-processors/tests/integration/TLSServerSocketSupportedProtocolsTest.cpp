@@ -21,6 +21,7 @@
 #include <thread>
 #include <cerrno>
 #include <cinttypes>
+#include <arpa/inet.h>
 #undef NDEBUG
 #include <cassert>
 #include <utility>
