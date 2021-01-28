@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef WIN32
 #include <arpa/inet.h>
+#endif
 #include <signal.h>
 #include <sys/stat.h>
 #include <chrono>
@@ -75,7 +77,11 @@ std::string str_addr(const sockaddr* const sa) {
     case AF_INET: {
       sockaddr_in sin{};
       memcpy(&sin, sa, sizeof(sockaddr_in));
+#ifdef WIN32
+      const auto addr_str = InetNtop(AF_INET, &sin.sin_addr, buf, sizeof(buf));
+#else
       const auto addr_str = inet_ntop(AF_INET, &sin.sin_addr, buf, sizeof(buf));
+#endif
       if (!addr_str) {
         throw std::runtime_error{minifi::io::get_last_socket_error_message()};
       }
@@ -84,7 +90,11 @@ std::string str_addr(const sockaddr* const sa) {
     case AF_INET6: {
       sockaddr_in6 sin6{};
       memcpy(&sin6, sa, sizeof(sockaddr_in6));
-      const auto addr_str = inet_ntop(AF_INET6, &sin6.sin6_addr, buf, sizeof(buf));
+#ifdef WIN32
+      const auto addr_str = InetNtop(AF_INET, &sin6.sin6_addr, buf, sizeof(buf));
+#else
+      const auto addr_str = inet_ntop(AF_INET, &sin6.sin6_addr, buf, sizeof(buf));
+#endif
       if (!addr_str) {
         throw std::runtime_error{minifi::io::get_last_socket_error_message()};
       }
