@@ -114,7 +114,7 @@ class PeerStatus {
 
   PeerStatus& operator=(const PeerStatus &other) = default;
   PeerStatus& operator=(PeerStatus &&other) = default;
-  
+
   const std::shared_ptr<Peer> &getPeer() const {
     return peer_;
   }
