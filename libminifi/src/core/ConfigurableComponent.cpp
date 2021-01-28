@@ -37,7 +37,7 @@ ConfigurableComponent::ConfigurableComponent()
       logger_(logging::LoggerFactory<ConfigurableComponent>::getLogger()) {
 }
 
-ConfigurableComponent::ConfigurableComponent(const ConfigurableComponent &&other)
+ConfigurableComponent::ConfigurableComponent(ConfigurableComponent &&other)
     : accept_all_properties_(false),
       properties_(std::move(other.properties_)),
       dynamic_properties_(std::move(other.dynamic_properties_)),

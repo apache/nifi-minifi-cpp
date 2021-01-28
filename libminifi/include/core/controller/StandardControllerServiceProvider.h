@@ -62,7 +62,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
   }
 
-  explicit StandardControllerServiceProvider(const StandardControllerServiceProvider && other)
+  StandardControllerServiceProvider(StandardControllerServiceProvider && other)
       : ControllerServiceProvider(std::move(other)),
         agent_(std::move(other.agent_)),
         extension_loader_(other.extension_loader_),

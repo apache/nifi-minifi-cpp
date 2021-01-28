@@ -58,7 +58,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
         controller_map_(services) {
   }
 
-  explicit ControllerServiceProvider(const ControllerServiceProvider &&other)
+  ControllerServiceProvider(ControllerServiceProvider &&other)
       : CoreComponent(std::move(other)),
         ConfigurableComponent(std::move(other)),
         controller_map_(std::move(other.controller_map_)) {

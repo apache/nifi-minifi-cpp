@@ -37,7 +37,7 @@ ProcessorNode::ProcessorNode(const ProcessorNode &other)
   setUUID(processor_->getUUID());
 }
 
-ProcessorNode::ProcessorNode(const ProcessorNode &&other)
+ProcessorNode::ProcessorNode(ProcessorNode &&other)
     : Connectable(std::move(other)),
       processor_(std::move(other.processor_)) {
 }

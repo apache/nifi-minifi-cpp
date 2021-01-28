@@ -40,9 +40,9 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
  public:
   explicit ProcessorNode(const std::shared_ptr<Connectable> &processor);
 
-  explicit ProcessorNode(const ProcessorNode &other);
+  ProcessorNode(const ProcessorNode &other);
 
-  explicit ProcessorNode(const ProcessorNode &&other);
+  ProcessorNode(ProcessorNode &&other);
 
   /**
    * Get property using the provided name.

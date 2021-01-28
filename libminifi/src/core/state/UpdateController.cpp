@@ -33,11 +33,7 @@ UpdateStatus::UpdateStatus(UpdateState state, int16_t reason)
 
 UpdateStatus::UpdateStatus(const UpdateStatus &other) = default;
 
-UpdateStatus::UpdateStatus(const UpdateStatus &&other)
-    : error_(std::move(other.error_)),
-      reason_(std::move(other.reason_)),
-      state_(std::move(other.state_)) {
-}
+UpdateStatus::UpdateStatus(UpdateStatus &&other) = default;
 
 UpdateState UpdateStatus::getState() const {
   return state_;
@@ -51,12 +47,7 @@ int16_t UpdateStatus::getReadonCode() const {
   return reason_;
 }
 
-UpdateStatus &UpdateStatus::operator=(const UpdateStatus &&other) {
-  error_ = std::move(other.error_);
-  reason_ = std::move(other.reason_);
-  state_ = std::move(other.state_);
-  return *this;
-}
+UpdateStatus &UpdateStatus::operator=(UpdateStatus &&other) = default;
 
 UpdateStatus &UpdateStatus::operator=(const UpdateStatus &other) = default;
 

@@ -108,11 +108,8 @@ class PeerStatus {
         flow_file_count_(flow_file_count),
         query_for_peers_(query_for_peers) {
   }
-  PeerStatus(const PeerStatus &&other)
-      : peer_(std::move(other.peer_)),
-        flow_file_count_(std::move(other.flow_file_count_)),
-        query_for_peers_(std::move(other.query_for_peers_)) {
-  }
+  PeerStatus(PeerStatus &&other) = default;
+  
   const std::shared_ptr<Peer> &getPeer() const {
     return peer_;
   }

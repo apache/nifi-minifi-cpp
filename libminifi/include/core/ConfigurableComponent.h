@@ -50,7 +50,7 @@ class ConfigurableComponent {
  public:
   ConfigurableComponent();
 
-  explicit ConfigurableComponent(const ConfigurableComponent &&other);
+  ConfigurableComponent(ConfigurableComponent &&other);
 
   /**
    * Get property using the provided name.

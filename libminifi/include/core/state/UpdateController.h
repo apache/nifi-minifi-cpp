@@ -52,7 +52,7 @@ class UpdateStatus {
 
   UpdateStatus(const UpdateStatus &other);
 
-  UpdateStatus(const UpdateStatus &&other);
+  UpdateStatus(UpdateStatus &&other);
 
   UpdateState getState() const;
 
@@ -60,7 +60,7 @@ class UpdateStatus {
 
   int16_t getReadonCode() const;
 
-  UpdateStatus &operator=(const UpdateStatus &&other);
+  UpdateStatus &operator=(UpdateStatus &&other);
 
   UpdateStatus &operator=(const UpdateStatus &other);
  private:
@@ -81,9 +81,7 @@ class Update {
 
   Update(const Update &other) = default;
 
-  Update(const Update &&other)
-      : status_(std::move(other.status_)) {
-  }
+  Update(Update &&other) = default;
 
   virtual ~Update() = default;
 
@@ -95,10 +93,7 @@ class Update {
     return status_;
   }
 
-  Update &operator=(const Update &&other) {
-    status_ = std::move(other.status_);
-    return *this;
-  }
+  Update &operator=(Update &&other) = default;
 
   Update &operator=(const Update &other) = default;
 
@@ -120,10 +115,7 @@ class UpdateRunner : public utils::AfterExecute<Update> {
         delay_(delay) {
   }
 
-  explicit UpdateRunner(UpdateRunner && other)
-      : running_(std::move(other.running_)),
-        delay_(std::move(other.delay_)) {
-  }
+  UpdateRunner(UpdateRunner && other) = default;
 
   ~UpdateRunner() = default;
 
