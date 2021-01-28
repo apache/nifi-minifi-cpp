@@ -62,14 +62,11 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
   }
 
-  StandardControllerServiceProvider(StandardControllerServiceProvider && other)
-      : ControllerServiceProvider(std::move(other)),
-        agent_(std::move(other.agent_)),
-        extension_loader_(other.extension_loader_),
-        root_group_(std::move(other.root_group_)),
-        configuration_(other.configuration_),
-        logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
-  }
+  StandardControllerServiceProvider(const StandardControllerServiceProvider &other) = delete;
+  StandardControllerServiceProvider(StandardControllerServiceProvider &&other) = delete;
+
+  StandardControllerServiceProvider& operator=(const StandardControllerServiceProvider &other) = delete;
+  StandardControllerServiceProvider& operator=(StandardControllerServiceProvider &&other) = delete;
 
   void setRootGroup(std::shared_ptr<ProcessGroup> rg) {
     root_group_ = rg;

@@ -49,9 +49,13 @@ class Message {
       : topic_(topic),
         data_((uint8_t*) data, ((uint8_t*)data + dataLen)) {
   }
+
+  Message(const Message &other) = default;
   Message(Message &&other) = default;
+
   ~Message() = default;
 
+  Message &operator=(const Message &other) = default;
   Message &operator=(Message &&other) = default;
   
   std::string topic_;

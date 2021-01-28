@@ -52,8 +52,11 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
         list_(list) {
   }
 
+  SocketAfterExecute(const SocketAfterExecute&) = delete;
   SocketAfterExecute(SocketAfterExecute&&) = delete;
+
   SocketAfterExecute& operator=(const SocketAfterExecute&) = delete;
+  SocketAfterExecute& operator=(SocketAfterExecute&&) = delete;
 
   ~SocketAfterExecute() override = default;
 

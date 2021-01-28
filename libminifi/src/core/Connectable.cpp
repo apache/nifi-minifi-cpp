@@ -43,15 +43,6 @@ Connectable::Connectable(const std::string &name)
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }
 
-Connectable::Connectable(Connectable &&other)
-    : CoreComponent(std::move(other)),
-      max_concurrent_tasks_(std::move(other.max_concurrent_tasks_)),
-      connectable_version_(std::move(other.connectable_version_)),
-      logger_(std::move(other.logger_)) {
-  has_work_ = other.has_work_.load();
-  strategy_ = other.strategy_.load();
-}
-
 Connectable::~Connectable() = default;
 
 bool Connectable::setSupportedRelationships(const std::set<core::Relationship> &relationships) {

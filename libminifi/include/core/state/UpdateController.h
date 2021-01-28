@@ -50,9 +50,9 @@ class UpdateStatus {
  public:
   UpdateStatus(UpdateState state, int16_t reason = 0); // NOLINT
 
-  UpdateStatus(const UpdateStatus &other);
+  UpdateStatus(const UpdateStatus &other) = default;
 
-  UpdateStatus(UpdateStatus &&other);
+  UpdateStatus(UpdateStatus &&other) = default;
 
   UpdateState getState() const;
 
@@ -60,9 +60,9 @@ class UpdateStatus {
 
   int16_t getReadonCode() const;
 
-  UpdateStatus &operator=(UpdateStatus &&other);
+  UpdateStatus &operator=(UpdateStatus &&other) = default;
 
-  UpdateStatus &operator=(const UpdateStatus &other);
+  UpdateStatus &operator=(const UpdateStatus &other) = default;
  private:
   UpdateState state_;
   std::string error_;
@@ -72,11 +72,11 @@ class UpdateStatus {
 class Update {
  public:
   Update()
-      : status_(UpdateStatus(UpdateState::INITIATE, 0)) {
+      : status_(UpdateState::INITIATE, 0) {
   }
 
   Update(UpdateStatus status) // NOLINT
-      : status_(status) {
+      : status_(std::move(status)) {
   }
 
   Update(const Update &other) = default;
@@ -115,9 +115,13 @@ class UpdateRunner : public utils::AfterExecute<Update> {
         delay_(delay) {
   }
 
-  UpdateRunner(UpdateRunner && other) = default;
+  UpdateRunner(const UpdateRunner &other) = delete;
+  UpdateRunner(UpdateRunner &&other) = delete;
 
   ~UpdateRunner() = default;
+
+  UpdateRunner& operator=(const UpdateRunner &other) = delete;
+  UpdateRunner& operator=(UpdateRunner &&other) = delete;
 
   virtual bool isFinished(const Update &result) {
     if ((result.getStatus().getState() == UpdateState::FULLY_APPLIED || result.getStatus().getState() == UpdateState::READ_COMPLETE) && *running_) {
