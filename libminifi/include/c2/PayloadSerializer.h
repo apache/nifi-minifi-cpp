@@ -78,7 +78,7 @@ class PayloadSerializer {
     uint8_t st;
     uint32_t size = gsl::narrow<uint32_t>(payload.getNestedPayloads().size());
     stream->write(size);
-    for (auto nested_payload : payload.getNestedPayloads()) {
+    for (const auto &nested_payload : payload.getNestedPayloads()) {
       op = opToInt(nested_payload.getOperation());
       stream->write(op);
       stream->write(&st, 1);

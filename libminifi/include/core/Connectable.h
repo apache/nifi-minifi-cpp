@@ -51,7 +51,11 @@ class Connectable : public CoreComponent {
 
   explicit Connectable(const std::string &name, const utils::Identifier &uuid);
 
-  explicit Connectable(const Connectable &&other);
+  Connectable(const Connectable &other) = delete;
+  Connectable(Connectable &&other) = delete;
+
+  Connectable& operator=(const Connectable &other) = delete;
+  Connectable& operator=(Connectable&& other) = delete;
 
   bool setSupportedRelationships(const std::set<Relationship> &relationships);
 

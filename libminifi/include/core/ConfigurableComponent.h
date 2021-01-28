@@ -50,7 +50,11 @@ class ConfigurableComponent {
  public:
   ConfigurableComponent();
 
-  explicit ConfigurableComponent(const ConfigurableComponent &&other);
+  ConfigurableComponent(const ConfigurableComponent &other) = delete;
+  ConfigurableComponent(ConfigurableComponent &&other) = delete;
+
+  ConfigurableComponent& operator=(const ConfigurableComponent &other) = delete;
+  ConfigurableComponent& operator=(ConfigurableComponent &&other) = delete;
 
   /**
    * Get property using the provided name.

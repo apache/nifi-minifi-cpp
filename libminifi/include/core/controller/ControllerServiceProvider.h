@@ -58,11 +58,11 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
         controller_map_(services) {
   }
 
-  explicit ControllerServiceProvider(const ControllerServiceProvider &&other)
-      : CoreComponent(std::move(other)),
-        ConfigurableComponent(std::move(other)),
-        controller_map_(std::move(other.controller_map_)) {
-  }
+  ControllerServiceProvider(const ControllerServiceProvider &other) = delete;
+  ControllerServiceProvider(ControllerServiceProvider &&other) = delete;
+
+  ControllerServiceProvider& operator=(const ControllerServiceProvider &other) = delete;
+  ControllerServiceProvider& operator=(ControllerServiceProvider &&other) = delete;
 
   virtual ~ControllerServiceProvider() = default;
 

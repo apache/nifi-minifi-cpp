@@ -31,14 +31,6 @@ UpdateStatus::UpdateStatus(UpdateState state, int16_t reason)
       reason_(reason) {
 }
 
-UpdateStatus::UpdateStatus(const UpdateStatus &other) = default;
-
-UpdateStatus::UpdateStatus(const UpdateStatus &&other)
-    : error_(std::move(other.error_)),
-      reason_(std::move(other.reason_)),
-      state_(std::move(other.state_)) {
-}
-
 UpdateState UpdateStatus::getState() const {
   return state_;
 }
@@ -50,15 +42,6 @@ std::string UpdateStatus::getError() const {
 int16_t UpdateStatus::getReadonCode() const {
   return reason_;
 }
-
-UpdateStatus &UpdateStatus::operator=(const UpdateStatus &&other) {
-  error_ = std::move(other.error_);
-  reason_ = std::move(other.reason_);
-  state_ = std::move(other.state_);
-  return *this;
-}
-
-UpdateStatus &UpdateStatus::operator=(const UpdateStatus &other) = default;
 
 } /* namespace state */
 } /* namespace minifi */

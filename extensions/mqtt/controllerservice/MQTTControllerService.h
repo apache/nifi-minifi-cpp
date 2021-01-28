@@ -49,17 +49,15 @@ class Message {
       : topic_(topic),
         data_((uint8_t*) data, ((uint8_t*)data + dataLen)) {
   }
-  explicit Message(const Message &&other)
-      : topic_(std::move(other.topic_)),
-        data_(std::move(other.data_)) {
-  }
+
+  Message(const Message &other) = default;
+  Message(Message &&other) = default;
+
   ~Message() = default;
 
-  Message &operator=(const Message &&other) {
-    topic_ = std::move(other.topic_);
-    data_ = std::move(other.data_);
-    return *this;
-  }
+  Message &operator=(const Message &other) = default;
+  Message &operator=(Message &&other) = default;
+  
   std::string topic_;
   std::vector<uint8_t> data_;
 };
