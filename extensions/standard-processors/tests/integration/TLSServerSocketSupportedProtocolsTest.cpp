@@ -151,8 +151,6 @@ class SimpleSSLTestClient  {
   gsl::not_null<std::shared_ptr<logging::Logger>> logger_{gsl::make_not_null(logging::LoggerFactory<SimpleSSLTestClient>::getLogger())};
 
   static SocketDescriptor openConnection(const char *host_name, const char *port, logging::Logger& logger) {
-    struct hostent *host;
-    assert((host = gethostbyname(host_name)) != nullptr);
     struct addrinfo hints = {0}, *addrs;
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
