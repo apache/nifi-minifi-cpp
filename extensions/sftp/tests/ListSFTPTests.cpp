@@ -54,6 +54,7 @@
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"
 #include "tools/SFTPTestServer.h"
+#include "utils/TestUtils.h"
 
 class ListSFTPTestsFixture {
  public:
@@ -86,16 +87,27 @@ class ListSFTPTestsFixture {
   virtual ~ListSFTPTestsFixture() {
     free(src_dir);
     LogTestController::getInstance().reset();
+    if (!state_dir_.empty()) {
+      minifi::utils::file::delete_dir(state_dir_);
+    }
+  }
+
+  std::string createNewStateDir() {
+    if (!state_dir_.empty()) {
+      minifi::utils::file::delete_dir(state_dir_);
+    }
+    state_dir_ = minifi::utils::createTempDir(&testController);
+    return state_dir_;
   }
 
   void createPlan(utils::Identifier* list_sftp_uuid = nullptr, const std::shared_ptr<minifi::Configure>& configuration = nullptr) {
-    const std::string state_dir = plan == nullptr ? "" : plan->getStateDir();
+    const std::string state_dir = plan == nullptr ? createNewStateDir() : plan->getStateDir();
 
     log_attribute.reset();
     list_sftp.reset();
     plan.reset();
 
-    plan = testController.createPlan(configuration, state_dir.empty() ? nullptr : state_dir.c_str());
+    plan = testController.createPlan(configuration, state_dir.c_str());
     if (list_sftp_uuid == nullptr) {
       list_sftp = plan->addProcessor(
           "ListSFTP",
@@ -169,6 +181,7 @@ class ListSFTPTestsFixture {
   std::shared_ptr<TestPlan> plan;
   std::shared_ptr<core::Processor> list_sftp;
   std::shared_ptr<core::Processor> log_attribute;
+  std::string state_dir_;
 };
 
 class PersistentListSFTPTestsFixture : public ListSFTPTestsFixture {
