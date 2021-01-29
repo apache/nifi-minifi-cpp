@@ -143,8 +143,8 @@ class SimpleSSLTestClient  {
   }
 
  private:
-  SSL_CTX *ctx_;
-  SSL* ssl_;
+  SSL_CTX *ctx_ = nullptr;
+  SSL* ssl_ = nullptr;
   SocketDescriptor sfd_;
   std::string host_;
   std::string port_;
@@ -162,14 +162,14 @@ class SimpleSSLTestClient  {
       log_addrinfo(addr, logger);
       sfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
       if (sfd == INVALID_SOCKET) {
-        logger.log_info("socket: %s\n", minifi::io::get_last_socket_error_message());
+        logger.log_error("socket: %s\n", minifi::io::get_last_socket_error_message());
         continue;
       }
       const auto connect_result = connect(sfd, addr->ai_addr, addr->ai_addrlen);
       if (connect_result == 0) {
         break;
       } else {
-        logger.log_info("connect to %s: %s\n", str_addr(addr->ai_addr), minifi::io::get_last_socket_error_message());
+        logger.log_error("connect to %s: %s\n", str_addr(addr->ai_addr), minifi::io::get_last_socket_error_message());
       }
       sfd = INVALID_SOCKET;
 #ifdef WIN32
@@ -245,11 +245,10 @@ class TLSServerSocketSupportedProtocolsTest {
         return is_running_;
       };
       handler_ = [this](std::vector<uint8_t> *bytes_written, int *size) {
-        std::cout << "oh write!" << std::endl;
-        bytes_written->reserve(20);
-        memset(bytes_written->data(), 0x00, 20);
-        memcpy(bytes_written->data(), "hello world", 11);
-        *size = 20;
+        std::string contents = "hello world";
+        *bytes_written = {contents.begin(), contents.end()};
+        bytes_written->push_back(0);
+        *size = bytes_written->size();
         return *size;
       };
       server_socket_->registerCallback(check_, handler_, std::chrono::milliseconds(50));
@@ -282,7 +281,7 @@ class TLSServerSocketSupportedProtocolsTest {
     }
 
     std::function<bool()> check_;
-    std::function<int(std::vector<uint8_t>*b, int *size)> handler_;
+    std::function<int(std::vector<uint8_t> *bytes_written, int *size)> handler_;
     std::atomic<bool> is_running_;
     std::shared_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket_;
     std::string host_;

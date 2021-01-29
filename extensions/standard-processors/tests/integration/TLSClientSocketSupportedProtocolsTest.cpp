@@ -77,10 +77,9 @@ class SimpleSSLTestServer  {
   }
 
  private:
-  SSL_CTX *ctx_;
-  SSL* ssl_;
+  SSL_CTX *ctx_ = nullptr;
+  SSL* ssl_ = nullptr;
   std::string port_;
-  uint16_t listeners_;
   SocketDescriptor socket_descriptor_;
   bool had_connection_;
   std::thread server_read_thread_;
@@ -88,8 +87,8 @@ class SimpleSSLTestServer  {
   void configureContext(const std::string& path) {
     SSL_CTX_set_ecdh_auto(ctx_, 1);
     /* Set the key and cert */
-    assert(SSL_CTX_use_certificate_file(ctx_, (path + "cn.crt.pem").c_str(), SSL_FILETYPE_PEM) > 0);
-    assert(SSL_CTX_use_PrivateKey_file(ctx_, (path + "cn.ckey.pem").c_str(), SSL_FILETYPE_PEM) > 0);
+    assert(SSL_CTX_use_certificate_file(ctx_, (path + "cn.crt.pem").c_str(), SSL_FILETYPE_PEM) == 1);
+    assert(SSL_CTX_use_PrivateKey_file(ctx_, (path + "cn.ckey.pem").c_str(), SSL_FILETYPE_PEM) == 1);
   }
 
   static SocketDescriptor createSocket(int port) {
