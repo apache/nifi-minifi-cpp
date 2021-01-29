@@ -87,21 +87,11 @@ class ListSFTPTestsFixture {
   virtual ~ListSFTPTestsFixture() {
     free(src_dir);
     LogTestController::getInstance().reset();
-    if (!state_dir_.empty()) {
-      minifi::utils::file::delete_dir(state_dir_);
-    }
-  }
-
-  std::string createNewStateDir() {
-    if (!state_dir_.empty()) {
-      minifi::utils::file::delete_dir(state_dir_);
-    }
-    state_dir_ = minifi::utils::createTempDir(&testController);
-    return state_dir_;
   }
 
   void createPlan(utils::Identifier* list_sftp_uuid = nullptr, const std::shared_ptr<minifi::Configure>& configuration = nullptr) {
-    const std::string state_dir = plan == nullptr ? createNewStateDir() : plan->getStateDir();
+    char format[] = "/var/tmp/gt.XXXXXX";
+    const std::string state_dir = plan == nullptr ? minifi::utils::createTempDir(&testController, format) : plan->getStateDir();
 
     log_attribute.reset();
     list_sftp.reset();
@@ -181,7 +171,6 @@ class ListSFTPTestsFixture {
   std::shared_ptr<TestPlan> plan;
   std::shared_ptr<core::Processor> list_sftp;
   std::shared_ptr<core::Processor> log_attribute;
-  std::string state_dir_;
 };
 
 class PersistentListSFTPTestsFixture : public ListSFTPTestsFixture {

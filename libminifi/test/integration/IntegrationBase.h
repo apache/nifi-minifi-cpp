@@ -57,7 +57,9 @@ class IntegrationBase {
   }
 
   virtual void cleanup() {
-    utils::file::delete_dir(state_dir);
+    if (!state_dir.empty()) {
+      utils::file::delete_dir(state_dir);
+    }
   }
 
   virtual void runAssertions() = 0;

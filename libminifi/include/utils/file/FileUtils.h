@@ -151,6 +151,10 @@ inline std::string get_temp_directory() {
 }
 
 inline int64_t delete_dir(const std::string &path, bool delete_files_recursively = true) {
+  // Empty path is interpreted as the root of the current partition on Windows, which should not be allowed
+  if (path.empty()) {
+    return -1;
+  }
 #ifdef USE_BOOST
   try {
     if (boost::filesystem::exists(path)) {
