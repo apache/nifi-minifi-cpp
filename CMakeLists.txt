@@ -650,13 +650,21 @@ if(WIN32)
 	if (MSI_REDISTRIBUTE_UCRT_NONASL)
 		set(UCRT_DIR_NAT "$ENV{WindowsSdkDir}Redist\\ucrt\\DLLs\\$ENV{Platform}")
 		file(TO_CMAKE_PATH "${UCRT_DIR_NAT}" UCRT_DIR)
-		message("Using UCRT from ${UCRT_DIR}")
-		file(GLOB UCRT_DLLS "${UCRT_DIR}/*.dll")
-		file(COPY ${UCRT_DLLS} DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/ucrt")
-		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ucrt/"
-			DESTINATION bin
-			COMPONENT bin
-		)
+		if (NOT EXISTS "${UCRT_DIR}")
+			set(UCRT_DIR_NAT "$ENV{WindowsSdkDir}Redist\\$ENV{WindowsSDKVersion}ucrt\\DLLs\\$ENV{Platform}")
+			file(TO_CMAKE_PATH "${UCRT_DIR_NAT}" UCRT_DIR)
+		endif()
+		if (NOT EXISTS "${UCRT_DIR}")
+			message("ERROR: Couldn't find UCRT")
+		else()
+			message("Using UCRT from ${UCRT_DIR}")
+			file(GLOB UCRT_DLLS "${UCRT_DIR}/*.dll")
+			file(COPY ${UCRT_DLLS} DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/ucrt")
+			install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ucrt/"
+					DESTINATION bin
+					COMPONENT bin
+					)
+		endif()
 	endif()
 
 	if (INSTALLER_MERGE_MODULES)
