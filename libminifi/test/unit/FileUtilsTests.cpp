@@ -407,3 +407,9 @@ TEST_CASE("FileUtils::exists", "[TestExists]") {
   REQUIRE(FileUtils::exists(path));
   REQUIRE(!FileUtils::exists(invalid_path));
 }
+
+TEST_CASE("TestFileUtils::delete_dir should fail with empty path", "[TestEmptyDeleteDir]") {
+  TestController testController;
+  REQUIRE(FileUtils::delete_dir("") != 0);
+  REQUIRE(FileUtils::delete_dir("", false) != 0);
+}
