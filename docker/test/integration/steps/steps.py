@@ -132,11 +132,19 @@ def step_impl(context, cluster_name, relationship, source_name, destination_name
     if cluster.get_flow() is None:
         cluster.set_flow(source)
 
+# HTTP proxy setup
+
+@given("a http proxy server \"{cluster_name}\" is set up accordingly")
+def step_impl(context, cluster_name):
+    cluster = context.test.acquire_cluster(cluster_name)
+    cluster.set_name(cluster_name)
+    cluster.set_engine("http-proxy")
+    cluster.set_flow(None)
+
 @when("the MiNiFi instance starts up")
 @when("both instances start up")
 @when("all instances start up")
 def step_impl(context):
-    # context.test.add_cluster("primary_cluster", DockerTestCluster(context.test.get_test_id()))
     # TODO: extract addition of test data
     context.test.add_test_data("test")
     context.test.start()
@@ -144,3 +152,7 @@ def step_impl(context):
 @then("flowfiles are placed in the monitored directory in less than {duration}")
 def step_impl(context, duration):
     context.test.check_output(timeparse(duration))
+
+@then("no errors were generated on the \"{cluster_name}\" regarding \"{url}\"")
+def step_impl(context, cluster_name, url):
+    context.test.check_http_proxy_access(cluster_name, url)

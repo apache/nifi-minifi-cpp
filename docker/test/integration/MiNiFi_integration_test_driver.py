@@ -148,3 +148,6 @@ class MiNiFi_integration_test():
             cluster.log_nifi_output()
             assert not cluster.segfault_happened()
         assert self.file_system_observer.validate_output()
+
+    def check_http_proxy_access(self, cluster_name, url):
+        self.clusters[cluster_name].check_http_proxy_access(url)
