@@ -213,6 +213,7 @@ class TLSServerSocketSupportedProtocolsTest {
 
     ~TLSServerSocketSupportedProtocolsTest() {
       shutdownServerSocket();
+      server_socket_.reset();
     }
 
     void run() {
