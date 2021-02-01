@@ -5,7 +5,7 @@ class Cluster(object):
     Docker swarms, or cloud compute/container services.
     """
 
-    def deploy_flow(self, flow, name=None, vols=None):
+    def deploy_flow(self, name=None):
         """
         Deploys a flow to the cluster.
         """

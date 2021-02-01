@@ -17,8 +17,7 @@ from minifi import *
 
 def test_minifi_to_nifi():
     """
-    Verify sending data from a MiNiFi - C++ to NiFi using S2S protocol.
-    """
+    Verify sending data from a MiNiFi - C++ to NiFi using S2S protocol. """
 
     port = InputPort('from-minifi', RemoteProcessGroup('http://nifi:8080/nifi'))
 

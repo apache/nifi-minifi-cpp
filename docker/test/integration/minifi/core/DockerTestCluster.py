@@ -7,29 +7,19 @@ import sys
 import time
 import uuid
 
-from os.path import join
-
 from .SingleNodeDockerCluster import SingleNodeDockerCluster
 from .utils import retry_check
 from .FileSystemObserver import FileSystemObserver
 
 class DockerTestCluster(SingleNodeDockerCluster):
-    def __init__(self, test_id, file_system_observer):
+    def __init__(self):
         self.segfault = False
-
-        self.file_system_observer = file_system_observer
 
         super(DockerTestCluster, self).__init__()
 
-    def deploy_flow(self,
-                    flow,
-                    vols,
-                    engine='minifi-cpp'):
+    def deploy_flow(self):
 
-        super(DockerTestCluster, self).deploy_flow(flow,
-                                                   vols=vols,
-                                                   name=None,
-                                                   engine=engine)
+        super(DockerTestCluster, self).deploy_flow()
 
     def start_flow(self, name):
         container = self.containers[name]
@@ -119,11 +109,6 @@ class DockerTestCluster(SingleNodeDockerCluster):
                 check_count += 1
                 time.sleep(1)
         return False
-
-    def put_file_contents(self, contents, file_abs_path):
-        logging.info('Writing %d bytes of content to file: %s', len(contents), file_abs_path)
-        with open(file_abs_path, 'wb') as test_input_file:
-            test_input_file.write(contents)
 
     def segfault_happened(self):
         return self.segfault

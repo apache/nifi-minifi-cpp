@@ -1,5 +1,7 @@
 from .Connectable import Connectable
 
+import logging
+
 class Processor(Connectable):
     def __init__(self,
                  clazz,
@@ -38,7 +40,14 @@ class Processor(Connectable):
         self.schedule.update(schedule)
 
     def set_property(self, key, value):
-        self.properties[key] = value
+        # if value == "false":
+        #     self.properties[key] = False
+        # if value == "true":
+        #     self.properties[key] = True
+        if value.isdigit():
+            self.properties[key] = int(value)
+        else:
+            self.properties[key] = value
 
     def nifi_property_key(self, key):
         """

@@ -22,6 +22,19 @@ class DockerTestDirectoryBindings:
         test_dir = os.environ['PYTHONPATH'].split(':')[-1] # Based on DockerVerify.sh
         shutil.copytree(test_dir + "/resources/kafka_broker/conf/certs", self.data_directories[test_id]["resources_dir"] + "/certs")
 
+    def get_data_directories(self, test_id):
+        return self.data_directories[test_id]
+
+    def docker_path_to_local_path(self, test_id, docker_path):
+        # Docker paths are currently hard-coded
+        if docker_path == "/tmp/input":
+            return self.data_directories[test_id]["input_dir"]
+        if docker_path == "/tmp/output":
+            return self.data_directories[test_id]["output_dir"]
+        if docker_path == "/tmp/resources":
+            return self.data_directories[test_id]["resources_dir"]
+        raise Exception("Docker directory \"%s\" has no preset bindings." % docker_path)
+
     def get_directory_bindings(self, test_id):
         """
         Performs a standard container flow deployment with the addition
@@ -49,7 +62,7 @@ class DockerTestDirectoryBindings:
             [self.delete_directory for directory in directories.values()]
 
     @staticmethod
-    def put_file_contents(contents, file_abs_path):
+    def put_file_contents(file_abs_path, contents):
         logging.info('Writing %d bytes of content to file: %s', len(contents), file_abs_path)
         with open(file_abs_path, 'wb') as test_input_file:
             test_input_file.write(contents)
@@ -60,5 +73,9 @@ class DockerTestDirectoryBindings:
         the given content to it.
         """
 
-        file_abs_path = join(self.data_directories[test_id]["resources_dir"], file_name)
-        self.put_file_contents(contents, file_abs_path)
+        file_abs_path = os.path.join(self.data_directories[test_id]["resources_dir"], file_name)
+        self.put_file_contents(file_abs_path, contents)
+
+    def put_test_input(self, test_id, file_name, contents):
+        file_abs_path = os.path.join(self.data_directories[test_id]["input_dir"], file_name)
+        self.put_file_contents(file_abs_path, contents)

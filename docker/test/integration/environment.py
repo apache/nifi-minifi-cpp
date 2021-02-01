@@ -10,16 +10,18 @@ def raise_exception(exception):
     raise exception
 
 @fixture
-def setup_minifi_instance(context):
-    logging.info("Setup")
-    context.flow = None
+def test_driver_fixture(context):
+    logging.info("Integration test setup")
     context.test = MiNiFi_integration_test(context)
+    yield context.test
+    logging.info("Integration test teardown...")
+    del context.test
 
 def before_scenario(context, scenario):
-    use_fixture(setup_minifi_instance, context)
+    use_fixture(test_driver_fixture, context)
 
 def after_scenario(context, scenario):
-    context.test.cluster = None
+	pass
 
 # @fixture
 # def setup_minifi_instance(context):
@@ -27,10 +29,8 @@ def after_scenario(context, scenario):
 #     context.flow = None
 #     context.test = MiNiFi_integration_test(context)
 
-# def before_all(context):
-#     print("Setup all", end="\n\n")
-#     context.flow = None
-#     context.test = MiNiFi_integration_test(context)
+def before_all(context):
+    context.config.setup_logging()
 
 # def before_scenario(context, scenario):
 # 	use_fixture(setup_minifi_instance, context)

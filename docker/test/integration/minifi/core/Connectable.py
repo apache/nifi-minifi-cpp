@@ -9,7 +9,7 @@ class Connectable(object):
         self.uuid = uuid.uuid4()
 
         if name is None:
-            self.name = str(self.uuid)
+            self.name = "node_of_" + str(self.uuid)
         else:
             self.name = name
 
