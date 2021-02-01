@@ -57,7 +57,7 @@ static const std::unordered_map<std::string, Aws::S3::Model::StorageClass> STORA
   {"DeepArchive", Aws::S3::Model::StorageClass::DEEP_ARCHIVE}
 };
 
-static const std::unordered_map<Aws::S3::Model::ObjectStorageClass, std::string> OBJECT_STORAGE_CLASS_MAP {
+static const std::map<Aws::S3::Model::ObjectStorageClass, std::string> OBJECT_STORAGE_CLASS_MAP {
   {Aws::S3::Model::ObjectStorageClass::STANDARD, "Standard"},
   {Aws::S3::Model::ObjectStorageClass::REDUCED_REDUNDANCY, "ReducedRedundancy"},
   {Aws::S3::Model::ObjectStorageClass::STANDARD_IA, "StandardIA"},
@@ -67,7 +67,7 @@ static const std::unordered_map<Aws::S3::Model::ObjectStorageClass, std::string>
   {Aws::S3::Model::ObjectStorageClass::DEEP_ARCHIVE, "DeepArchive"}
 };
 
-static const std::unordered_map<Aws::S3::Model::ObjectVersionStorageClass, std::string> VERSION_STORAGE_CLASS_MAP {
+static const std::map<Aws::S3::Model::ObjectVersionStorageClass, std::string> VERSION_STORAGE_CLASS_MAP {
   {Aws::S3::Model::ObjectVersionStorageClass::STANDARD, "Standard"}
 };
 
