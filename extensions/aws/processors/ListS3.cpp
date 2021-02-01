@@ -36,7 +36,7 @@ namespace aws {
 namespace processors {
 
 const std::string ListS3::LATEST_LISTED_KEY_PREFIX = "listed_key.";
-const std::string ListS3::LATEST_LISTED_KEY_TIMESTAMP = "listed_key.timestamp";
+const std::string ListS3::LATEST_LISTED_KEY_TIMESTAMP = "listed_timestamp";
 
 const core::Property ListS3::Delimiter(
   core::PropertyBuilder::createProperty("Delimiter")
