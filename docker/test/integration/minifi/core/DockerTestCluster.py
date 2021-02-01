@@ -15,6 +15,8 @@ from watchdog.observers import Observer
 from .OutputEventHandler import OutputEventHandler
 from .SingleNodeDockerCluster import SingleNodeDockerCluster
 from ..validators.FileOutputValidator import FileOutputValidator
+from .utils import retry_check
+
 
 class DockerTestCluster(SingleNodeDockerCluster):
     def __init__(self, output_validator):
@@ -182,17 +184,20 @@ class DockerTestCluster(SingleNodeDockerCluster):
               output.count("TCP_MISS/200") == output.count("TCP_DENIED/407")) or \
              output.count("TCP_DENIED/407") == 0 and "TCP_MISS" in output)
 
+    @retry_check
     def check_s3_server_object_data(self):
         s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(sys.stdout.encoding).strip()
         file_data = subprocess.check_output(["docker", "exec", "s3-server", "cat", s3_mock_dir + "/test_bucket/test_object_key/fileData"]).decode(sys.stdout.encoding)
         return file_data == self.test_data
 
+    @retry_check
     def check_s3_server_object_metadata(self, content_type="application/octet-stream", metadata=dict()):
         s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(sys.stdout.encoding).strip()
         metadata_json = subprocess.check_output(["docker", "exec", "s3-server", "cat", s3_mock_dir + "/test_bucket/test_object_key/metadata"]).decode(sys.stdout.encoding)
         server_metadata = json.loads(metadata_json)
         return server_metadata["contentType"] == content_type and metadata == server_metadata["userMetadata"]
 
+    @retry_check
     def is_s3_bucket_empty(self):
         s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(sys.stdout.encoding).strip()
         ls_result = subprocess.check_output(["docker", "exec", "s3-server", "ls", s3_mock_dir + "/test_bucket/"]).decode(sys.stdout.encoding)
@@ -213,7 +218,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
                 check_count += 1
                 time.sleep(1)
         return False
-    
+
     def put_file_contents(self, contents, file_abs_path):
         logging.info('Writing %d bytes of content to file: %s', len(contents), file_abs_path)
         with open(file_abs_path, 'wb') as test_input_file:
