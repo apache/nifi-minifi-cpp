@@ -125,10 +125,9 @@ class ConsumeKafka : public core::Processor {
   void initialize() override;
 
  private:
-
   void create_topic_partition_list();
-  void extend_config_from_dynamic_properties(const core::ProcessContext* context);
-  void configure_new_connection(const core::ProcessContext* context);
+  void extend_config_from_dynamic_properties(const core::ProcessContext& context);
+  void configure_new_connection(const core::ProcessContext& context);
   std::string extract_message(const rd_kafka_message_t* rkmessage) const;
   std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>> poll_kafka_messages();
   utils::KafkaEncoding key_attr_encoding_attr_to_enum() const;

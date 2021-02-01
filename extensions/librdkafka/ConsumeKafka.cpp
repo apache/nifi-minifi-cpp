@@ -192,6 +192,7 @@ void ConsumeKafka::initialize() {
 }
 
 void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /* sessionFactory */) {
+  gsl_Expects(context);
   // Required properties
   kafka_brokers_                = utils::getRequiredPropertyOrThrow(context, KafkaBrokers.getName());
   security_protocol_            = utils::getRequiredPropertyOrThrow(context, SecurityProtocol.getName());
@@ -225,7 +226,7 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported message header encoding: " + key_attribute_encoding_);
   }
 
-  configure_new_connection(context);
+  configure_new_connection(*context);
 }
 
 namespace {
@@ -286,23 +287,23 @@ void ConsumeKafka::create_topic_partition_list() {
   }
 }
 
-void ConsumeKafka::extend_config_from_dynamic_properties(const core::ProcessContext* context) {
+void ConsumeKafka::extend_config_from_dynamic_properties(const core::ProcessContext& context) {
   using utils::setKafkaConfigurationField;
 
-  const std::vector<std::string> dynamic_prop_keys = context->getDynamicPropertyKeys();
+  const std::vector<std::string> dynamic_prop_keys = context.getDynamicPropertyKeys();
   if (dynamic_prop_keys.empty()) {
     return;
   }
   logger_->log_info("Loading %d extra kafka configuration fields from ConsumeKafka dynamic properties:", dynamic_prop_keys.size());
   for (const std::string& key : dynamic_prop_keys) {
     std::string value;
-    gsl_Expects(context->getDynamicProperty(key, value));
+    gsl_Expects(context.getDynamicProperty(key, value));
     logger_->log_info("%s: %s", key.c_str(), value.c_str());
     setKafkaConfigurationField(conf_.get(), key, value);
   }
 }
 
-void ConsumeKafka::configure_new_connection(const core::ProcessContext* context) {
+void ConsumeKafka::configure_new_connection(const core::ProcessContext& context) {
   using utils::setKafkaConfigurationField;
 
   conf_ = { rd_kafka_conf_new(), utils::rd_kafka_conf_deleter() };
