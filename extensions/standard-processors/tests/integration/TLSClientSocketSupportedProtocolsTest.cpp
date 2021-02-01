@@ -156,19 +156,9 @@ class TLSClientSocketSupportedProtocolsTest {
   }
 
   void verifyTLSClientSocketExclusiveCompatibilityWithTLSv1_2() {
-    verifyTLSProtocolIncompatibility<SimpleSSLTestServerTLSv1>();
-    verifyTLSProtocolIncompatibility<SimpleSSLTestServerTLSv1_1>();
-    verifyTLSProtocolCompatibility<SimpleSSLTestServerTLSv1_2>();
-  }
-
-  template <class TLSTestSever>
-  void verifyTLSProtocolIncompatibility() {
-    verifyTLSProtocolCompatibility<TLSTestSever>(false);
-  }
-
-  template <class TLSTestSever>
-  void verifyTLSProtocolCompatibility() {
-    verifyTLSProtocolCompatibility<TLSTestSever>(true);
+    verifyTLSProtocolCompatibility<SimpleSSLTestServerTLSv1>(false);
+    verifyTLSProtocolCompatibility<SimpleSSLTestServerTLSv1_1>(false);
+    verifyTLSProtocolCompatibility<SimpleSSLTestServerTLSv1_2>(true);
   }
 
   template <class TLSTestSever>
@@ -177,7 +167,7 @@ class TLSClientSocketSupportedProtocolsTest {
     server.waitForConnection();
 
     const auto socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration_);
-    client_socket_ = std::make_shared<org::apache::nifi::minifi::io::TLSSocket>(socket_context, host_, std::stoi(port_), 0);
+    client_socket_ = utils::make_unique<org::apache::nifi::minifi::io::TLSSocket>(socket_context, host_, std::stoi(port_), 0);
     const bool client_initialized_successfully = (client_socket_->initialize() == 0);
     assert(client_initialized_successfully == should_be_compatible);
     server.shutdownServer();
@@ -185,7 +175,7 @@ class TLSClientSocketSupportedProtocolsTest {
   }
 
  protected:
-    std::shared_ptr<org::apache::nifi::minifi::io::TLSSocket> client_socket_;
+    std::unique_ptr<org::apache::nifi::minifi::io::TLSSocket> client_socket_;
     std::string host_;
     std::string port_;
     std::string key_dir_;

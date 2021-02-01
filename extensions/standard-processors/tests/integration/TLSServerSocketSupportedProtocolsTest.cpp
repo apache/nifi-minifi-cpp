@@ -211,6 +211,10 @@ class TLSServerSocketSupportedProtocolsTest {
         : is_running_(false), key_dir_(key_dir), configuration_(std::make_shared<minifi::Configure>()) {
     }
 
+    ~TLSServerSocketSupportedProtocolsTest() {
+      shutdownServerSocket();
+    }
+
     void run() {
       configureSecurity();
 
@@ -237,37 +241,27 @@ class TLSServerSocketSupportedProtocolsTest {
 
     void createServerSocket() {
       const auto socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration_);
-      server_socket_ = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host_, std::stoi(port_), 3);
+      server_socket_ = utils::make_unique<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host_, std::stoi(port_), 3);
       assert(0 == server_socket_->initialize());
 
       is_running_ = true;
-      check_ = [this]() -> bool {
+      auto check = [this]() -> bool {
         return is_running_;
       };
-      handler_ = [this](std::vector<uint8_t> *bytes_written, int *size) {
+      auto handler = [this](std::vector<uint8_t> *bytes_written, int *size) {
         std::string contents = "hello world";
         *bytes_written = {contents.begin(), contents.end()};
         bytes_written->push_back(0);
         *size = bytes_written->size();
         return *size;
       };
-      server_socket_->registerCallback(check_, handler_, std::chrono::milliseconds(50));
+      server_socket_->registerCallback(check, handler, std::chrono::milliseconds(50));
     }
 
     void verifyTLSServerSocketExclusiveCompatibilityWithTLSv1_2() {
-      verifyTLSProtocolIncompatibility<SimpleSSLTestClientTLSv1>();
-      verifyTLSProtocolIncompatibility<SimpleSSLTestClientTLSv1_1>();
-      verifyTLSProtocolCompatibility<SimpleSSLTestClientTLSv1_2>();
-    }
-
-    template <class TLSTestClient>
-    void verifyTLSProtocolIncompatibility() {
-      verifyTLSProtocolCompatibility<TLSTestClient>(false);
-    }
-
-    template <class TLSTestClient>
-    void verifyTLSProtocolCompatibility() {
-      verifyTLSProtocolCompatibility<TLSTestClient>(true);
+      verifyTLSProtocolCompatibility<SimpleSSLTestClientTLSv1>(false);
+      verifyTLSProtocolCompatibility<SimpleSSLTestClientTLSv1_1>(false);
+      verifyTLSProtocolCompatibility<SimpleSSLTestClientTLSv1_2>(true);
     }
 
     template <class TLSTestClient>
@@ -280,10 +274,8 @@ class TLSServerSocketSupportedProtocolsTest {
       is_running_ = false;
     }
 
-    std::function<bool()> check_;
-    std::function<int(std::vector<uint8_t> *bytes_written, int *size)> handler_;
     std::atomic<bool> is_running_;
-    std::shared_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket_;
+    std::unique_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket_;
     std::string host_;
     std::string port_;
     std::string key_dir_;
