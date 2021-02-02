@@ -28,7 +28,7 @@ file(GLOB SOURCES "*.cpp" "storage/*.cpp" "controllerservices/*.cpp" "processors
 add_library(minifi-azure STATIC ${SOURCES})
 
 target_link_libraries(minifi-azure ${LIBMINIFI} Threads::Threads)
-
+target_link_libraries(minifi-azure CURL::libcurl LibXml2::LibXml2)
 target_link_libraries(minifi-azure AZURE::azure-storage-blobs AZURE::azure-storage-common AZURE::azure-core)
 
 SET (AZURE-EXTENSION minifi-azure PARENT_SCOPE)

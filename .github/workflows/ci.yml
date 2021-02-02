@@ -30,7 +30,7 @@ jobs:
         run: |
           export PATH="/usr/local/opt/lua@5.3/lib:/usr/local/opt/lua@5.3/include:/usr/local/opt/lua@5.3/bin:$PATH"
           export PKG_CONFIG_PATH="/usr/local/opt/lua@5.3/lib/pkgconfig"
-          ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_LUA_SCRIPTING=1 -DENABLE_AWS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
+          ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_LUA_SCRIPTING=1 -DENABLE_AWS=ON -DENABLE_AZURE=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
   macos_xcode_12_0:
     name: "macos-xcode12.0"
     runs-on: macos-10.15
@@ -60,7 +60,7 @@ jobs:
         run: |
           export PATH="/usr/local/opt/lua@5.3/lib:/usr/local/opt/lua@5.3/include:/usr/local/opt/lua@5.3/bin:$PATH"
           export PKG_CONFIG_PATH="/usr/local/opt/lua@5.3/lib/pkgconfig"
-          ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_LUA_SCRIPTING=1 -DENABLE_AWS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
+          ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_LUA_SCRIPTING=1 -DENABLE_AWS=ON -DENABLE_AZURE=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4 && make test ARGS="--timeout 300 -j4 --output-on-failure" && make linter
   windows_VS2017:
     name: "windows-vs2017"
     runs-on: windows-2016
@@ -204,7 +204,7 @@ jobs:
           sudo apt install -y ccache openjdk-8-jdk maven libusb-1.0-0-dev libpng12-dev libgps-dev
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
-        run: sudo mount tmpfs -t tmpfs /tmp && ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DENABLE_OPENWSMAN=ON -DENABLE_OPENCV=ON -DENABLE_MQTT=ON -DENABLE_GPS=ON -DENABLE_USB_CAMERA=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_MQTT=ON -DENABLE_COAP=ON -DENABLE_PYTHON=ON -DENABLE_SQL=ON -DENABLE_AWS=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. &&  cmake --build . --parallel 4  && make test ARGS="--timeout 300 -j8 --output-on-failure"
+        run: sudo mount tmpfs -t tmpfs /tmp && ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DENABLE_OPENWSMAN=ON -DENABLE_OPENCV=ON -DENABLE_MQTT=ON -DENABLE_GPS=ON -DENABLE_USB_CAMERA=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_MQTT=ON -DENABLE_COAP=ON -DENABLE_PYTHON=ON -DENABLE_SQL=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. &&  cmake --build . --parallel 4  && make test ARGS="--timeout 300 -j8 --output-on-failure"
   debian:
     name: "debian"
     runs-on: ubuntu-18.04

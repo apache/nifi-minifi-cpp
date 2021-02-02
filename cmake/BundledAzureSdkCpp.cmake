@@ -16,6 +16,8 @@
 # under the License.
 
 function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
+    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/azure-sdk-cpp-for-cpp/azure-sdk-for-cpp-old-compiler.patch")
+
     # Define byproducts
     if (WIN32)
         set(SUFFIX "lib")
@@ -39,7 +41,8 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
             "${AZURE_STORAGE_BLOBS_LIB}"
             "${AZURE_IDENTITY_LIB}")
 
-    set(AZURE_SDK_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS})
+    set(AZURE_SDK_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+        -DWARNINGS_AS_ERRORS=OFF)
     append_third_party_passthrough_args(AZURE_SDK_CMAKE_ARGS "${AZURE_SDK_CMAKE_ARGS}")
 
     # Build project
@@ -54,11 +57,11 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
             STEP_TARGETS build
             CMAKE_ARGS ${AZURE_SDK_CMAKE_ARGS}
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
-            DEPENDS libxml2-external
+            PATCH_COMMAND ${PC}
     )
 
     # Set dependencies
-    add_dependencies(azure-sdk-cpp-external LibXml2::LibXml2 CURL::libcurl OpenSSL::Crypto OpenSSL::SSL nlohmann_json::nlohmann_json)
+    add_dependencies(azure-sdk-cpp-external-build CURL::libcurl LibXml2::LibXml2 OpenSSL::Crypto OpenSSL::SSL nlohmann_json::nlohmann_json)
 
     # Set variables
     set(LIBAZURE_FOUND "YES" CACHE STRING "" FORCE)
