@@ -19,13 +19,16 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-include_directories(controllerservices processors storage ${CMAKE_SOURCE_DIR}/extensions/azure)
-
 file(GLOB SOURCES "*.cpp" "storage/*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
 
 add_library(minifi-azure STATIC ${SOURCES})
+
+target_compile_features(minifi-azure PUBLIC cxx_std_14)
+
+target_include_directories(minifi-azure BEFORE PRIVATE controllerservices)
+target_include_directories(minifi-azure BEFORE PRIVATE processors)
+target_include_directories(minifi-azure BEFORE PRIVATE storage)
+target_include_directories(minifi-azure BEFORE PRIVATE ${CMAKE_SOURCE_DIR}/extensions/azure)
 
 target_link_libraries(minifi-azure ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-azure CURL::libcurl LibXml2::LibXml2)
