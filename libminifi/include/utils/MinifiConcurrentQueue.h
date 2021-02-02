@@ -33,10 +33,14 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+template <typename T>
+class LockedConcurrentQueue;
+
 // Provides a queue API and guarantees no race conditions in case of multiple producers and consumers.
 // Guarantees elements to be dequeued in order of insertion
 template <typename T>
 class ConcurrentQueue {
+  friend class LockedConcurrentQueue<T>;
  public:
   ConcurrentQueue() = default;
 
@@ -87,6 +91,10 @@ class ConcurrentQueue {
     queue_.emplace_back(std::forward<Args>(args)...);
   }
 
+  LockedConcurrentQueue<T> lock() {
+    return LockedConcurrentQueue<T>(*this);
+  }
+
  private:
   ConcurrentQueue(ConcurrentQueue&& other, std::lock_guard<std::mutex>&)
     : queue_(std::move(other.queue_)) {}
@@ -135,6 +143,23 @@ class ConcurrentQueue {
   std::deque<T> queue_;
 };
 
+// Enables batched operations on a ConcurrentQueue by holding a reference to the queue and locking it's mutex
+// until it leaves the scope. Can help performance by avoiding multiple locking in loops, etc.
+template <typename T>
+class LockedConcurrentQueue {
+ public:
+  explicit LockedConcurrentQueue(ConcurrentQueue<T>& concurrentQueue)
+    : queue_(std::ref(concurrentQueue.queue_))
+    , lock(concurrentQueue.mtx_)
+    {
+    }
+
+  std::deque<T>* operator->() const { return &queue_.get(); }
+  std::deque<T>& operator*() const { return queue_; }
+ private:
+  std::unique_lock<std::mutex> lock;
+  std::reference_wrapper<std::deque<T>> queue_;
+};
 
 // A ConcurrentQueue extended with a condition variable to be able to block and wait for incoming data
 // Stopping interrupts all consumers without a chance to consume remaining elements in the queue although elements can still be enqueued

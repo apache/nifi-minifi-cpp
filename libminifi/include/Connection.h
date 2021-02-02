@@ -35,6 +35,7 @@
 #include "core/Relationship.h"
 #include "core/FlowFile.h"
 #include "core/Repository.h"
+#include "utils/MinifiConcurrentQueue.h"
 
 namespace org {
 namespace apache {
@@ -146,7 +147,6 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   bool isFull();
   // Get queue size
   uint64_t getQueueSize() {
-    std::lock_guard<std::mutex> lock(mutex_);
     return queue_.size();
   }
   // Get queue data size
@@ -198,12 +198,10 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
 
  private:
   bool drop_empty_;
-  // Mutex for protection
-  mutable std::mutex mutex_;
   // Queued data size
   std::atomic<uint64_t> queued_data_size_;
   // Queue for the Flow File
-  std::queue<std::shared_ptr<core::FlowFile>> queue_;
+  utils::ConcurrentQueue<std::shared_ptr<core::FlowFile>> queue_;
   // flow repository
   // Logger
   std::shared_ptr<logging::Logger> logger_;

@@ -111,15 +111,11 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
   logger_->log_debug("Connection %s created", name_);
 }
 
-bool Connection::isEmpty() const {
-  std::lock_guard<std::mutex> lock(mutex_);
-
+bool Connection::isEmpty() {
   return queue_.empty();
 }
 
 bool Connection::isFull() {
-  std::lock_guard<std::mutex> lock(mutex_);
-
   if (max_queue_size_ <= 0 && max_data_queue_size_ <= 0)
     // No back pressure setting
     return false;
@@ -138,15 +134,11 @@ void Connection::put(const std::shared_ptr<core::FlowFile>& flow) {
     logger_->log_info("Dropping empty flow file: %s", flow->getUUIDStr());
     return;
   }
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
+  queue_.enqueue(flow);
 
-    queue_.push(flow);
+  queued_data_size_ += flow->getSize();
 
-    queued_data_size_ += flow->getSize();
-
-    logger_->log_debug("Enqueue flow file UUID %s to connection %s", flow->getUUIDStr(), name_);
-  }
+  logger_->log_debug("Enqueue flow file UUID %s to connection %s", flow->getUUIDStr(), name_);
 
   // Notify receiving processor that work may be available
   if (dest_connectable_) {
@@ -157,7 +149,7 @@ void Connection::put(const std::shared_ptr<core::FlowFile>& flow) {
 
 void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    auto lockedQueue = queue_.lock();
 
     for (auto &ff : flows) {
       if (drop_empty_ && ff->getSize() == 0) {
@@ -165,7 +157,7 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
         continue;
       }
 
-      queue_.push(ff);
+      lockedQueue->push_back(ff);
       queued_data_size_ += ff->getSize();
 
       logger_->log_debug("Enqueue flow file UUID %s to connection %s", ff->getUUIDStr(), name_);
@@ -179,11 +171,11 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
 }
 
 std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords) {
-  std::lock_guard<std::mutex> lock(mutex_);
+  auto lockedQueue = queue_.lock();
 
   while (!queue_.empty()) {
-    std::shared_ptr<core::FlowFile> item = queue_.front();
-    queue_.pop();
+    std::shared_ptr<core::FlowFile> item = lockedQueue->front();
+    lockedQueue->pop_front();
     queued_data_size_ -= item->getSize();
 
     if (expired_duration_ > 0) {
@@ -196,7 +188,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
         // Flow record not expired
         if (item->isPenalized()) {
           // Flow record was penalized
-          queue_.push(item);
+          lockedQueue->push_back(item);
           queued_data_size_ += item->getSize();
           break;
         }
@@ -209,7 +201,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
       // Flow record not expired
       if (item->isPenalized()) {
         // Flow record was penalized
-        queue_.push(item);
+        lockedQueue->push_back(item);
         queued_data_size_ += item->getSize();
         break;
       }
@@ -224,11 +216,11 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
 }
 
 void Connection::drain(bool delete_permanently) {
-  std::lock_guard<std::mutex> lock(mutex_);
+  auto lockedQueue = queue_.lock();
 
   while (!queue_.empty()) {
-    std::shared_ptr<core::FlowFile> item = queue_.front();
-    queue_.pop();
+    std::shared_ptr<core::FlowFile> item = lockedQueue->front();
+    lockedQueue->pop_front();
     logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
     if (delete_permanently) {
       if (item->isStored() && flow_repository_->Delete(item->getUUIDStr())) {
