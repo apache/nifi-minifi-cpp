@@ -51,22 +51,24 @@ class ByteInputCallBack : public InputStreamCallback {
       stream->read(reinterpret_cast<uint8_t*>(vec.data()), gsl::narrow<int>(stream->size()));
     }
 
-    ptr = reinterpret_cast<char*>(&vec[0]);
+    ptr = vec.data();
 
     return vec.size();
   }
 
   virtual void seek(size_t pos) {
-    ptr = &vec[pos];
+    gsl_Expects(pos <= vec.size());
+    ptr = vec.data() + pos;
   }
 
   virtual void write(std::string content) {
     vec.assign(content.begin(), content.end());
-    ptr = &vec[0];
+    ptr = vec.data();
   }
 
   virtual char *getBuffer(size_t pos) {
-    return &vec[pos];
+    gsl_Expects(pos <= vec.size());
+    return vec.data() + pos;
   }
 
   virtual const size_t getRemaining(size_t pos) {
