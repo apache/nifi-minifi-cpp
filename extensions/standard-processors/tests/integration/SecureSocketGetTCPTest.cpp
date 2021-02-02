@@ -74,6 +74,7 @@ class SecureSocketTest : public IntegrationBase {
 
   void cleanup() override {
     LogTestController::getInstance().reset();
+    IntegrationBase::cleanup();
   }
 
   void runAssertions() override {

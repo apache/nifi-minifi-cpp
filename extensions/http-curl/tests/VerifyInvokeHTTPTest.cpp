@@ -41,9 +41,6 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
   }
 
-  void cleanup() override {
-  }
-
   void setUrl(const std::string &url, ServerAwareHandler *handler) override {
     if (path_) {
       throw std::logic_error("Url is already set");

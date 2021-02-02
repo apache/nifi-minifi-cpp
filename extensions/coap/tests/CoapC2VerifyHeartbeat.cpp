@@ -78,8 +78,9 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     file.close();
   }
 
-  void cleanup() {
+  void cleanup() override {
     unlink(ss.str().c_str());
+    CoapIntegrationBase::cleanup();
   }
 
   void runAssertions() {

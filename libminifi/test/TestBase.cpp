@@ -50,12 +50,11 @@ TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::s
   controller_services_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
   /* Inject the default state provider ahead of ProcessContext to make sure we have a unique state directory */
   if (state_dir == nullptr) {
-    char state_dir_name_template[] = "/var/tmp/teststate.XXXXXX";
-    state_dir_ = utils::file::FileUtils::create_temp_directory(state_dir_name_template);
+    state_dir_.reset(new StateDir());
   } else {
-    state_dir_ = state_dir;
+    state_dir_.reset(new StateDir(state_dir));
   }
-  state_manager_provider_ = core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_services_provider_.get(), configuration_, state_dir_.c_str());
+  state_manager_provider_ = core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_services_provider_.get(), configuration_, state_dir_->getPath().c_str());
 }
 
 TestPlan::~TestPlan() {

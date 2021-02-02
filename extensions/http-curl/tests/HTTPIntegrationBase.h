@@ -136,6 +136,7 @@ class VerifyC2Base : public HTTPIntegrationBase {
 
   void cleanup() override {
     LogTestController::getInstance().reset();
+    HTTPIntegrationBase::cleanup();
   }
 };
 
@@ -154,7 +155,7 @@ class VerifyC2Describe : public VerifyC2Base {
 
   void runAssertions() override {
     // This class is never used for running assertions, but we are forced to wait for DescribeManifestHandler to verifyJsonHasAgentManifest
-    // if we were to log something on finished verification, we could poll on finding it 
+    // if we were to log something on finished verification, we could poll on finding it
     std::this_thread::sleep_for(std::chrono::milliseconds(wait_time_));
   }
 };
@@ -181,6 +182,7 @@ public:
 
   void cleanup() override {
     LogTestController::getInstance().reset();
+    HTTPIntegrationBase::cleanup();
   }
 
   void runAssertions() override {
@@ -213,6 +215,7 @@ class VerifyFlowFetched : public HTTPIntegrationBase {
 
   void cleanup() override {
     LogTestController::getInstance().reset();
+    HTTPIntegrationBase::cleanup();
   }
 
   void runAssertions() override {

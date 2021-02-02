@@ -31,9 +31,14 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-std::string createTempDir(TestController* testController) {
-  char dirtemplate[] = "/tmp/gt.XXXXXX";
-  std::string temp_dir = testController->createTempDirectory(dirtemplate);
+std::string createTempDir(TestController* testController, char* format = nullptr) {
+  std::string temp_dir;
+  if (format == nullptr) {
+    char dirtemplate[] = "/tmp/gt.XXXXXX";
+    temp_dir = testController->createTempDirectory(dirtemplate);
+  } else {
+    temp_dir = testController->createTempDirectory(format);
+  }
   REQUIRE(!temp_dir.empty());
   REQUIRE(file::FileUtils::is_directory(temp_dir.c_str()));
   return temp_dir;

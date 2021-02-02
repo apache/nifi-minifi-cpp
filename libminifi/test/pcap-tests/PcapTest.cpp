@@ -62,8 +62,9 @@ class PcapTestHarness : public IntegrationBase {
     LogTestController::getInstance().setDebug<minifi::ThreadedSchedulingAgent>();
   }
 
-  void cleanup() {
+  void cleanup() override {
     LogTestController::getInstance().reset();
+    IntegrationBase::cleanup();
   }
 
   void runAssertions() {

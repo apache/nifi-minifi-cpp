@@ -54,6 +54,7 @@
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"
 #include "tools/SFTPTestServer.h"
+#include "utils/TestUtils.h"
 
 class ListSFTPTestsFixture {
  public:
@@ -89,13 +90,14 @@ class ListSFTPTestsFixture {
   }
 
   void createPlan(utils::Identifier* list_sftp_uuid = nullptr, const std::shared_ptr<minifi::Configure>& configuration = nullptr) {
-    const std::string state_dir = plan == nullptr ? "" : plan->getStateDir();
+    char format[] = "/var/tmp/gt.XXXXXX";
+    const std::string state_dir = plan == nullptr ? minifi::utils::createTempDir(&testController, format) : plan->getStateDir();
 
     log_attribute.reset();
     list_sftp.reset();
     plan.reset();
 
-    plan = testController.createPlan(configuration, state_dir.empty() ? nullptr : state_dir.c_str());
+    plan = testController.createPlan(configuration, state_dir.c_str());
     if (list_sftp_uuid == nullptr) {
       list_sftp = plan->addProcessor(
           "ListSFTP",

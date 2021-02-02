@@ -70,8 +70,6 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
     LogTestController::getInstance().setDebug<core::ProcessSession>();
     LogTestController::getInstance().setDebug<minifi::processors::KamikazeProcessor>();
   }
-
-  void cleanup() override {}
 };
 
 /*Verify that event driven processors without incoming connections are not scheduled*/
@@ -103,8 +101,6 @@ class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
   void testSetup() override {
     LogTestController::getInstance().setDebug<core::ProcessGroup>();
   }
-
-  void cleanup() override {}
 };
 
 int main(int argc, char **argv) {

@@ -281,7 +281,7 @@ class TestPlan {
   }
 
   std::string getStateDir() const {
-    return state_dir_;
+    return state_dir_->getPath();
   }
 
   std::shared_ptr<core::CoreComponentStateManagerProvider> getStateManagerProvider() {
@@ -291,6 +291,35 @@ class TestPlan {
   void finalize();
 
  protected:
+  class StateDir {
+   public:
+    StateDir() {
+      char state_dir_name_template[] = "/var/tmp/teststate.XXXXXX";
+      path_ = utils::file::FileUtils::create_temp_directory(state_dir_name_template);
+      is_owner_ = true;
+    }
+
+    StateDir(std::string path) : path_(std::move(path)), is_owner_(false) {}
+
+    StateDir(const StateDir&) = delete;
+    StateDir& operator=(const StateDir&) = delete;
+
+    ~StateDir() {
+      if (is_owner_) {
+        utils::file::FileUtils::delete_dir(path_, true);
+      }
+    }
+
+    std::string getPath() const {
+      return path_;
+    }
+
+   private:
+    std::string path_;
+    bool is_owner_;
+  };
+
+  std::unique_ptr<StateDir> state_dir_;
 
   std::shared_ptr<minifi::Connection> buildFinalConnection(std::shared_ptr<core::Processor> processor, bool setDest = false);
 
@@ -307,8 +336,6 @@ class TestPlan {
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider_;
 
   std::shared_ptr<core::CoreComponentStateManagerProvider> state_manager_provider_;
-
-  std::string state_dir_;
 
   std::recursive_mutex mutex;
 
