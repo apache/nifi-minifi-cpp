@@ -120,7 +120,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
     return ptr_ + relative_pos;
   }
 
-  const size_t getRemaining(size_t pos) override {
+  size_t getRemaining(size_t pos) override {
     logger_->log_trace("getRemaining(pos: %zu) called", pos);
 
     std::unique_lock<std::mutex> lock(mutex_);
@@ -128,7 +128,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
     return total_bytes_loaded_ - pos;
   }
 
-  const size_t getBufferSize() override {
+  size_t getBufferSize() override {
     logger_->log_trace("getBufferSize() called");
 
     std::unique_lock<std::mutex> lock(mutex_);

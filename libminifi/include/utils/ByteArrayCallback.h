@@ -36,13 +36,10 @@ namespace utils {
  */
 class ByteInputCallBack : public InputStreamCallback {
  public:
-  ByteInputCallBack()
-      : ptr(nullptr) {
-  }
+  ByteInputCallBack() = default;
+  ~ByteInputCallBack() override = default;
 
-  virtual ~ByteInputCallBack() = default;
-
-  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     stream->seek(0);
 
     if (stream->size() > 0) {
@@ -51,34 +48,29 @@ class ByteInputCallBack : public InputStreamCallback {
       stream->read(reinterpret_cast<uint8_t*>(vec.data()), gsl::narrow<int>(stream->size()));
     }
 
-    ptr = reinterpret_cast<char*>(&vec[0]);
-
     return vec.size();
   }
 
-  virtual void seek(size_t pos) {
-    ptr = &vec[pos];
-  }
+  virtual void seek(size_t) { }
 
   virtual void write(std::string content) {
     vec.assign(content.begin(), content.end());
-    ptr = &vec[0];
   }
 
   virtual char *getBuffer(size_t pos) {
-    return &vec[pos];
+    gsl_Expects(pos <= vec.size());
+    return vec.data() + pos;
   }
 
-  virtual const size_t getRemaining(size_t pos) {
+  virtual size_t getRemaining(size_t pos) {
     return getBufferSize() - pos;
   }
 
-  virtual const size_t getBufferSize() {
+  virtual size_t getBufferSize() {
     return vec.size();
   }
 
  private:
-  char *ptr;
   std::vector<char> vec;
 };
 
