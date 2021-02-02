@@ -150,8 +150,7 @@ class LockedConcurrentQueue {
  public:
   explicit LockedConcurrentQueue(ConcurrentQueue<T>& concurrentQueue)
       : queue_(std::ref(concurrentQueue.queue_))
-      , lock_(concurrentQueue.mtx_)
-  {
+      , lock_(concurrentQueue.mtx_) {
   }
 
   std::deque<T>* operator->() const { return &queue_.get(); }
