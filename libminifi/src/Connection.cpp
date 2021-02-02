@@ -173,7 +173,7 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
 std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords) {
   auto lockedQueue = queue_.lock();
 
-  while (!queue_.empty()) {
+  while (!lockedQueue->empty()) {
     std::shared_ptr<core::FlowFile> item = lockedQueue->front();
     lockedQueue->pop_front();
     queued_data_size_ -= item->getSize();
@@ -218,7 +218,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
 void Connection::drain(bool delete_permanently) {
   auto lockedQueue = queue_.lock();
 
-  while (!queue_.empty()) {
+  while (!lockedQueue->empty()) {
     std::shared_ptr<core::FlowFile> item = lockedQueue->front();
     lockedQueue->pop_front();
     logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);

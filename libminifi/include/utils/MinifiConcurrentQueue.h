@@ -149,16 +149,16 @@ template <typename T>
 class LockedConcurrentQueue {
  public:
   explicit LockedConcurrentQueue(ConcurrentQueue<T>& concurrentQueue)
-    : queue_(std::ref(concurrentQueue.queue_))
-    , lock(concurrentQueue.mtx_)
-    {
-    }
+      : queue_(std::ref(concurrentQueue.queue_))
+      , lock_(concurrentQueue.mtx_)
+  {
+  }
 
   std::deque<T>* operator->() const { return &queue_.get(); }
   std::deque<T>& operator*() const { return queue_; }
  private:
-  std::unique_lock<std::mutex> lock;
   std::reference_wrapper<std::deque<T>> queue_;
+  std::unique_lock<std::mutex> lock_;
 };
 
 // A ConcurrentQueue extended with a condition variable to be able to block and wait for incoming data
