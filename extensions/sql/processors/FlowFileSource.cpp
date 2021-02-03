@@ -1,7 +1,4 @@
 /**
- * @file ExecuteSQL.h
- * ExecuteSQL class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,18 +15,7 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include "core/Core.h"
-#include "FlowFileRecord.h"
-#include "concurrentqueue.h"
-#include "core/Processor.h"
-#include "core/ProcessSession.h"
-#include "services/DatabaseService.h"
-#include "SQLProcessor.h"
 #include "FlowFileSource.h"
-
-#include <sstream>
 
 namespace org {
 namespace apache {
@@ -37,27 +23,22 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-//! ExecuteSQL Class
-class ExecuteSQL : public SQLProcessor, public FlowFileSource {
- public:
-  explicit ExecuteSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
+const core::Property FlowFileSource::OutputFormat(
+  core::PropertyBuilder::createProperty("Output Format")
+  ->isRequired(true)
+  ->supportsExpressionLanguage(true)
+  ->withDefaultValue(toString(OutputType::JSONPretty))
+  ->withAllowableValues<std::string>(OutputType::values())
+  ->withDescription("Set the output format type.")->build());
 
-  //! Processor Name
-  static const std::string ProcessorName;
-
-  void processOnSchedule(core::ProcessContext& context) override;
-  void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
-
-  void initialize() override;
-
-  static const core::Property SQLSelectQuery;
-
-  static const core::Relationship Success;
-
-  static const std::string RESULT_ROW_COUNT;
-};
-
-REGISTER_RESOURCE(ExecuteSQL, "ExecuteSQL to execute SELECT statement via ODBC.");
+const core::Property FlowFileSource::MaxRowsPerFlowFile(
+  core::PropertyBuilder::createProperty("Max Rows Per Flow File")
+  ->isRequired(true)
+  ->supportsExpressionLanguage(true)
+  ->withDefaultValue<uint64_t>(0)
+  ->withDescription(
+      "The maximum number of result rows that will be included in a single FlowFile. This will allow you to break up very large result sets into multiple FlowFiles. "
+      "If the value specified is zero, then all rows are returned in a single FlowFile.")->build());
 
 }  // namespace processors
 }  // namespace minifi

@@ -30,7 +30,7 @@ struct SQLRowSubscriber {
   virtual ~SQLRowSubscriber() = default;
   virtual void beginProcessRow() = 0;
   virtual void endProcessRow() = 0;
-  virtual void processColumnName(const std::string& name) = 0;
+  virtual void processColumnNames(const std::vector<std::string>& names) = 0;
   virtual void processColumn(const std::string& name, const std::string& value) = 0;
   virtual void processColumn(const std::string& name, double value) = 0;
   virtual void processColumn(const std::string& name, int value) = 0;

@@ -32,25 +32,14 @@ namespace sql {
 
 class MaxCollector: public SQLRowSubscriber {
   void beginProcessRow() override {}
+  void endProcessRow() override {}
 
-  void endProcessRow() override {
-    if (columnsVerified_) {
-      return;
-    }
-
-    if (countColumns_ != mapState_.size())
-      throw minifi::Exception(PROCESSOR_EXCEPTION, "MaxCollector: Column(s) '" + maxValueColumnNames_ + "' are not found in the columns of '" + selectQuery_ + "' result.");
-
-    columnsVerified_ = true;
-  }
-
-  void processColumnName(const std::string& name) override {
-    if (columnsVerified_) {
-      return;
-    }
-
-    if (mapState_.count(name)) {
-      countColumns_++;
+  void processColumnNames(const std::vector<std::string>& names) override {
+    for (auto& expected : mapState_) {
+      if (std::find(names.begin(), names.end(), expected.first) == names.end()) {
+        throw minifi::Exception(PROCESSOR_EXCEPTION,
+          "Column '" + expected.first + "' is not found in the columns of '" + selectQuery_ + "' result.");
+      }
     }
   }
 
@@ -121,8 +110,8 @@ class MaxCollector: public SQLRowSubscriber {
   };
 
  public:
-  MaxCollector(const std::string& selectQuery, const std::string& maxValueColumnNames, std::unordered_map<std::string, std::string>& mapState)
-    :selectQuery_(selectQuery), maxValueColumnNames_(maxValueColumnNames), mapState_(mapState) {
+  MaxCollector(std::string selectQuery, std::unordered_map<std::string, std::string>& mapState)
+    :selectQuery_(std::move(selectQuery)), mapState_(mapState) {
   }
 
   template <typename T>
@@ -141,11 +130,8 @@ class MaxCollector: public SQLRowSubscriber {
 
  private:
   const std::string selectQuery_;
-  const std::string maxValueColumnNames_;
   std::unordered_map<std::string, std::string>& mapState_;
   MaxValues<std::string, double, int, long long, unsigned long long> maxValues_;
-  size_t countColumns_{};
-  bool columnsVerified_{false};
 };
 
 } /* namespace sql */

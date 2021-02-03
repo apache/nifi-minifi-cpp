@@ -31,14 +31,13 @@ namespace sql {
 class JSONSQLWriter: public SQLWriter {
  public:
   explicit JSONSQLWriter(bool pretty);
-  virtual ~JSONSQLWriter();
 
   std::string toString() override;
 
 private:
   void beginProcessRow() override;
   void endProcessRow() override;
-  void processColumnName(const std::string& name) override;
+  void processColumnNames(const std::vector<std::string>& name) override;
   void processColumn(const std::string& name, const std::string& value) override;
   void processColumn(const std::string& name, double value) override;
   void processColumn(const std::string& name, int value) override;

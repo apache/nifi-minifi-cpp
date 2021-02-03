@@ -33,8 +33,6 @@ JSONSQLWriter::JSONSQLWriter(bool pretty)
   : pretty_(pretty), jsonPayload_(rapidjson::kArrayType) {
 }
 
-JSONSQLWriter::~JSONSQLWriter() = default;
-
 void JSONSQLWriter::beginProcessRow() {
   jsonRow_ = rapidjson::kObjectType;
 }
@@ -43,26 +41,26 @@ void JSONSQLWriter::endProcessRow() {
   jsonPayload_.PushBack(jsonRow_, jsonPayload_.GetAllocator());
 }
 
-void JSONSQLWriter::processColumnName(const std::string& /*name*/) {}
+void JSONSQLWriter::processColumnNames(const std::vector<std::string>& name) {}
 
 void JSONSQLWriter::processColumn(const std::string& name, const std::string& value) {
   addToJSONRow(name, toJSONString(value));
 }
 
 void JSONSQLWriter::processColumn(const std::string& name, double value) {
-  addToJSONRow(name, std::move(rapidjson::Value().SetDouble(value)));
+  addToJSONRow(name, rapidjson::Value(value));
 }
 
 void JSONSQLWriter::processColumn(const std::string& name, int value) {
-  addToJSONRow(name, std::move(rapidjson::Value().SetInt(value)));
+  addToJSONRow(name, rapidjson::Value(value));
 }
 
 void JSONSQLWriter::processColumn(const std::string& name, long long value) {
-  addToJSONRow(name, std::move(rapidjson::Value().SetInt64(value)));
+  addToJSONRow(name, rapidjson::Value(gsl::narrow<int64_t>(value)));
 }
 
 void JSONSQLWriter::processColumn(const std::string& name, unsigned long long value) {
-  addToJSONRow(name, std::move(rapidjson::Value().SetUint64(value)));
+  addToJSONRow(name, rapidjson::Value(gsl::narrow<uint64_t>(value)));
 }
 
 void JSONSQLWriter::processColumn(const std::string& name, const char* value) {
@@ -91,17 +89,11 @@ std::string JSONSQLWriter::toString() {
     jsonPayload_.Accept(writer);
   }
 
-  std::stringstream outputStream;
-  outputStream << buffer.GetString();
-
-  jsonPayload_ = rapidjson::Document(rapidjson::kArrayType);
-
-  return outputStream.str();
+  return {buffer.GetString(), buffer.GetSize()};
 }
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace sql
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

@@ -32,9 +32,11 @@ namespace sql {
 
 class SQLRowsetProcessor {
  public:
-  SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, const std::vector<SQLRowSubscriber*>& rowSubscribers);
+  SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, std::vector<SQLRowSubscriber*> rowSubscribers);
 
   size_t process(size_t max);
+
+  size_t getTotalProcessed() const;
 
  private:
    void addRow(const soci::row& row, size_t rowCount);

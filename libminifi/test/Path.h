@@ -1,7 +1,4 @@
 /**
- * @file PutSQL.h
- * PutSQL class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -20,43 +17,49 @@
 
 #pragma once
 
-#include "core/Core.h"
-#include "FlowFileRecord.h"
-#include "concurrentqueue.h"
-#include "core/Processor.h"
-#include "core/ProcessSession.h"
-#include "services/DatabaseService.h"
-#include "SQLProcessor.h"
-
-#include <sstream>
+#include "utils/file/FileUtils.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace processors {
+namespace utils {
 
-//! PutSQL Class
-class PutSQL: public SQLProcessor {
+class Path {
  public:
-  explicit PutSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
+  Path() = default;
 
-  //! Processor Name
-  static const std::string ProcessorName;
+  Path(std::string value): value_(std::move(value)) {}
 
-  void processOnSchedule(core::ProcessContext& context) override;
-  void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
-  
-  void initialize() override;
+  Path& operator=(const std::string& new_value) {
+    value_ = new_value;
+    return *this;
+  }
 
-  static const core::Property SQLStatement;
+  template<typename T>
+  Path& operator/=(T&& suffix) {
+    value_ = file::concat_path(value_, std::string{std::forward<T>(suffix)});
+    return *this;
+  }
 
-  static const core::Relationship Success;
+  template<typename T>
+  Path operator/(T&& suffix) {
+    return Path{file::concat_path(value_, std::string{std::forward<T>(suffix)})};
+  }
+
+  std::string str() const {
+    return value_;
+  }
+
+  explicit operator std::string() const {
+    return value_;
+  }
+
+ private:
+  std::string value_;
 };
 
-REGISTER_RESOURCE(PutSQL, "PutSQL to execute SQL command via ODBC.");
-
-}  // namespace processors
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

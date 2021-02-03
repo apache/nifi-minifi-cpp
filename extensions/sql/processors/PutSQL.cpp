@@ -49,53 +49,70 @@ namespace processors {
 
 const std::string PutSQL::ProcessorName("PutSQL");
 
-const core::Property PutSQL::s_sqlStatements(
-  core::PropertyBuilder::createProperty("SQL statements")->isRequired(true)->withDefaultValue("System")->withDescription(
-    "A semicolon-delimited list of SQL statements to execute. The statement can be empty, a constant value, or built from attributes using Expression Language. "
-    "If this property is specified, it will be used regardless of the content of incoming flowfiles. "
-    "If this property is empty, the content of the incoming flow file is expected to contain a valid SQL statements, to be issued by the processor to the database.")
-    ->supportsExpressionLanguage(true)->build());
+const core::Property PutSQL::SQLStatement(
+  core::PropertyBuilder::createProperty("SQL Statement")
+  ->isRequired(false)
+  ->withDescription(
+      "The SQL statement to execute. The statement can be empty, a constant value, or built from attributes using Expression Language. "
+      "If this property is specified, it will be used regardless of the content of incoming flowfiles. If this property is empty, the content of "
+      "the incoming flow file is expected to contain a valid SQL statement, to be issued by the processor to the database.")
+  ->supportsExpressionLanguage(true)->build());
 
-const core::Relationship PutSQL::s_success("success", "Database is successfully updated.");
+const core::Relationship PutSQL::Success("success", "Database is successfully updated.");
 
 PutSQL::PutSQL(const std::string& name, utils::Identifier uuid)
-  : SQLProcessor(name, uuid) {
+  : SQLProcessor(name, uuid, logging::LoggerFactory<PutSQL>::getLogger()) {
 }
-
-PutSQL::~PutSQL() = default;
 
 void PutSQL::initialize() {
   //! Set the supported properties
-  setSupportedProperties({ dbControllerService(), s_sqlStatements });
+  setSupportedProperties({ DBControllerService, SQLStatement });
 
   //! Set the supported relationships
-  setSupportedRelationships({ s_success });
+  setSupportedRelationships({ Success });
 }
 
-void PutSQL::processOnSchedule(core::ProcessContext& context) {
-  std::string sqlStatements;
-  context.getProperty(s_sqlStatements.getName(), sqlStatements);
-  sqlStatements_ = utils::StringUtils::split(sqlStatements, ";");
-}
+void PutSQL::processOnSchedule(core::ProcessContext& context) {}
 
-void PutSQL::processOnTrigger(core::ProcessSession& /*session*/) {
-  const auto dbSession = connection_->getSession();
+void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flow_file = session.get();
+  if (!flow_file) {
+    context.yield();
+    return;
+  }
+  session.remove(flow_file);
 
   try {
-    dbSession->begin();
-    for (const auto& statement : sqlStatements_) {
-      dbSession->execute(statement);
+    std::string sql_statement;
+    if (!context.getProperty(SQLStatement, sql_statement, flow_file)) {
+      logger_->log_debug("Using the contents of the flow file as the SQL statement");
+      auto buffer = std::make_shared<io::BufferStream>();
+      InputStreamPipe read_callback{buffer};
+      session.read(flow_file, &read_callback);
+      sql_statement = std::string{reinterpret_cast<const char*>(buffer->getBuffer()), buffer->size()};
     }
-    dbSession->commit();
+    if (sql_statement.empty()) {
+      throw Exception(PROCESSOR_EXCEPTION, "Empty SQL statement");
+    }
+
+    std::vector<std::string> arguments;
+    for (size_t arg_idx{1};; ++arg_idx) {
+      std::string arg;
+      if (!flow_file->getAttribute("sql.args." + std::to_string(arg_idx) + ".value", arg)) {
+        break;
+      }
+      arguments.push_back(std::move(arg));
+    }
+
+    connection_->prepareStatement(sql_statement)->execute(arguments);
   } catch (std::exception& e) {
     logger_->log_error("SQL statement error: %s", e.what());
-    dbSession->rollback();
     throw;
   }
 }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

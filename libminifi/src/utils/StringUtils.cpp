@@ -44,6 +44,11 @@ utils::optional<bool> StringUtils::toBool(const std::string& str) {
   return {};
 }
 
+std::string StringUtils::toLower(std::string str) {
+  std::transform(str.begin(), str.end(), str.begin(), [] (unsigned char c) {return std::tolower(c);});
+  return str;
+}
+
 std::string StringUtils::trim(const std::string& s) {
   return trimRight(trimLeft(s));
 }

@@ -27,7 +27,7 @@
 #include "core/ProcessSession.h"
 #include "services/DatabaseService.h"
 #include "SQLProcessor.h"
-#include "OutputFormat.h"
+#include "FlowFileSource.h"
 
 #include <sstream>
 #include <unordered_map>
@@ -38,60 +38,53 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class State;
-
 //! QueryDatabaseTable Class
-class QueryDatabaseTable: public SQLProcessor<QueryDatabaseTable>, public OutputFormat {
+class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
  public:
   explicit QueryDatabaseTable(const std::string& name, utils::Identifier uuid = utils::Identifier());
-  virtual ~QueryDatabaseTable();
 
   //! Processor Name
   static const std::string ProcessorName;
 
-  static const core::Property s_tableName;
-  static const core::Property s_columnNames;
-  static const core::Property s_maxValueColumnNames;
-  static const core::Property s_whereClause;
-  static const core::Property s_sqlQuery;
-  static const core::Property s_maxRowsPerFlowFile;
-  static const core::Property s_stateDirectory;
+  static const core::Property TableName;
+  static const core::Property ColumnNames;
+  static const core::Property MaxValueColumnNames;
+  static const core::Property WhereClause;
 
-  static const std::string s_initialMaxValueDynamicPropertyPrefix;
+  static const std::string InitialMaxValueDynamicPropertyPrefix;
 
-  static const core::Relationship s_success;
+  static const core::Relationship Success;
 
   bool supportsDynamicProperties() override {
     return true;
   }
 
-  void processOnSchedule(core::ProcessContext& context);
-  void processOnTrigger(core::ProcessSession& session);
+  void processOnSchedule(core::ProcessContext& context) override;
+  void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   void initialize() override;
 
  private:
-  std::string getSelectQuery();
+  std::string buildSelectQuery();
+
+  void initializeMaxValues(core::ProcessContext& context);
+  void loadMaxValuesFromDynamicProperties(core::ProcessContext& context);
 
   bool saveState();
 
  private:
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
-  std::string tableName_;
-  std::string columnNames_;
-  std::string maxValueColumnNames_;
-  std::string whereClause_;
-  std::string sqlQuery_;
-  int maxRowsPerFlowFile_{};
-  std::vector<std::string> listMaxValueColumnName_;
-  std::unordered_map<std::string, std::string> mapState_;
-  std::unordered_map<std::string, soci::data_type> mapColumnType_;
+  std::string table_name_;
+  std::string return_columns_;
+  std::string extra_where_clause_;
+  std::vector<std::string> max_value_columns_;
+  std::unordered_map<std::string, std::string> max_values_;
 };
 
 REGISTER_RESOURCE(QueryDatabaseTable, "QueryDatabaseTable to execute SELECT statement via ODBC.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

@@ -27,9 +27,11 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-std::string toLower(const std::string& str);
 std::vector<std::string> inputStringToList(const std::string& str);
 
+std::string escape(std::string str);
+
+std::string unescape(std::string str);
 
 } /* namespace utils */
 } /* namespace minifi */

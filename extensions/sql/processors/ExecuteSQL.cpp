@@ -42,6 +42,7 @@
 #include "data/JSONSQLWriter.h"
 #include "data/SQLRowsetProcessor.h"
 #include "data/WriteCallback.h"
+#include "utils/ValueParser.h"
 
 namespace org {
 namespace apache {
@@ -51,72 +52,70 @@ namespace processors {
 
 const std::string ExecuteSQL::ProcessorName("ExecuteSQL");
 
-const core::Property ExecuteSQL::s_sqlSelectQuery(
-  core::PropertyBuilder::createProperty("SQL select query")->isRequired(true)->withDescription(
+const core::Property ExecuteSQL::SQLSelectQuery(
+  core::PropertyBuilder::createProperty("SQL select query")
+  ->isRequired(true)
+  ->withDescription(
     "The SQL select query to execute. The query can be empty, a constant value, or built from attributes using Expression Language. "
     "If this property is specified, it will be used regardless of the content of incoming flowfiles. "
     "If this property is empty, the content of the incoming flow file is expected to contain a valid SQL select query, to be issued by the processor to the database. "
-    "Note that Expression Language is not evaluated for flow file contents.")->supportsExpressionLanguage(true)->build());
+    "Note that Expression Language is not evaluated for flow file contents.")
+  ->supportsExpressionLanguage(true)->build());
 
-const core::Property ExecuteSQL::s_maxRowsPerFlowFile(
-  core::PropertyBuilder::createProperty("Max Rows Per Flow File")->isRequired(true)->withDefaultValue<int>(0)->withDescription(
-    "The maximum number of result rows that will be included intoi a flow file. If zero then all will be placed into the flow file")->supportsExpressionLanguage(true)->build());
+const core::Relationship ExecuteSQL::Success("success", "Successfully created FlowFile from SQL query result set.");
 
-const core::Relationship ExecuteSQL::s_success("success", "Successfully created FlowFile from SQL query result set.");
-
-static const std::string ResultRowCount = "executesql.row.count";
+const std::string ExecuteSQL::RESULT_ROW_COUNT = "executesql.row.count";
 
 ExecuteSQL::ExecuteSQL(const std::string& name, utils::Identifier uuid)
-  : SQLProcessor(name, uuid), max_rows_(0) {
+  : SQLProcessor(name, uuid, logging::LoggerFactory<ExecuteSQL>::getLogger()) {
 }
-
-ExecuteSQL::~ExecuteSQL() = default;
 
 void ExecuteSQL::initialize() {
   //! Set the supported properties
-  setSupportedProperties({ dbControllerService(), outputFormat(), s_sqlSelectQuery, s_maxRowsPerFlowFile});
+  setSupportedProperties({ DBControllerService, OutputFormat, SQLSelectQuery, MaxRowsPerFlowFile});
 
   //! Set the supported relationships
-  setSupportedRelationships({ s_success });
+  setSupportedRelationships({ Success });
 }
 
-void ExecuteSQL::processOnSchedule(core::ProcessContext &context) {
-  initOutputFormat(context);
+void ExecuteSQL::processOnSchedule(core::ProcessContext& context) {
+  context.getProperty(OutputFormat.getName(), output_format_);
 
-  context.getProperty(s_sqlSelectQuery.getName(), sqlSelectQuery_);
-  context.getProperty(s_maxRowsPerFlowFile.getName(), max_rows_);
+  max_rows_ = [&] {
+    uint64_t max_rows;
+    context.getProperty(MaxRowsPerFlowFile.getName(), max_rows);
+    return gsl::narrow<size_t>(max_rows);
+  }();
 }
 
-void ExecuteSQL::processOnTrigger(core::ProcessSession& session) {
-  auto statement = connection_->prepareStatement(sqlSelectQuery_);
+void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flow_file = session.get();
+  if (flow_file) {
+    session.remove(flow_file);
+  }
 
-  auto rowset = statement->execute();
+  std::string query;
+  context.getProperty(SQLSelectQuery, query, flow_file);
 
-  int count = 0;
-  size_t rowCount = 0;
-  sql::JSONSQLWriter sqlWriter(isJSONPretty());
-  sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, { &sqlWriter });
+  auto statement = connection_->prepareStatement(query);
+
+  auto row_set = statement->execute();
+
+  sql::JSONSQLWriter sqlWriter(output_format_ == OutputType::JSONPretty);
+  sql::SQLRowsetProcessor sqlRowsetProcessor(row_set, { &sqlWriter });
 
   // Process rowset.
-  do {
-    rowCount = sqlRowsetProcessor.process(max_rows_ == 0 ? std::numeric_limits<size_t>::max() : max_rows_);
-    count++;
-    if (rowCount == 0)
-      break;
-
-    const auto output = sqlWriter.toString();
-    if (!output.empty()) {
-      WriteCallback writer(output);
-      auto newflow = session.create();
-      newflow->addAttribute(ResultRowCount, std::to_string(rowCount));
-      session.write(newflow, &writer);
-      session.transfer(newflow, s_success);
-    }
-  } while (rowCount > 0);
+  while (size_t row_count = sqlRowsetProcessor.process(max_rows_)) {
+    WriteCallback writer(sqlWriter.toString());
+    auto new_flow = session.create();
+    new_flow->addAttribute(RESULT_ROW_COUNT, std::to_string(row_count));
+    session.write(new_flow, &writer);
+    session.transfer(new_flow, Success);
+  }
 }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

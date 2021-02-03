@@ -1,7 +1,4 @@
 /**
- * @file OutputFormat.h
- * OutputFormat class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -20,10 +17,8 @@
 
 #pragma once
 
-#include "core/Core.h"
-#include "core/Processor.h"
-
-#include <string>
+#include "core/Property.h"
+#include "utils/Enum.h"
 
 namespace org {
 namespace apache {
@@ -31,22 +26,23 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class OutputFormat {
+class FlowFileSource {
+ public:
+  static const core::Property OutputFormat;
+  static const core::Property MaxRowsPerFlowFile;
+
+  SMART_ENUM(OutputType,
+    (JSON, "JSON"),
+    (JSONPretty, "JSON-Pretty")
+  )
+
  protected:
-  static const core::Property& outputFormat();
-
-  bool isJSONFormat() const;
-
-  bool isJSONPretty() const;
-
-  void initOutputFormat(const core::ProcessContext& context);
-
- protected:
-   std::string outputFormat_;
+  OutputType output_format_;
+  size_t max_rows_{0};
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

@@ -50,6 +50,7 @@
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "core/state/nodes/FlowInformation.h"
 #include "utils/ClassUtils.h"
+#include "Path.h"
 
 class LogTestController {
  public:
@@ -279,6 +280,10 @@ class TestPlan {
     return flow_repo_;
   }
 
+  std::shared_ptr<core::ContentRepository> getContentRepo() {
+    return content_repo_;
+  }
+
   std::shared_ptr<core::Repository> getProvenanceRepo() {
     return prov_repo_;
   }
@@ -402,6 +407,15 @@ class TestController {
     }
   }
 
+  std::string getContent(const std::shared_ptr<TestPlan>& plan, const std::shared_ptr<core::FlowFile>& file) {
+    auto content_repo = plan->getContentRepo();
+    auto content_claim = file->getResourceClaim();
+    auto content_stream = content_repo->read(*content_claim.get());
+    auto output_stream = std::make_shared<minifi::io::BufferStream>();
+    minifi::InputStreamPipe{output_stream}.process(content_stream);
+    return {reinterpret_cast<const char*>(output_stream->getBuffer()), output_stream->size()};
+  }
+
   const std::shared_ptr<logging::Logger>& getLogger() const {
     return log.logger_;
   }
@@ -423,6 +437,13 @@ class TestController {
     const auto dir = utils::file::FileUtils::create_temp_directory(format);
     directories.push_back(dir);
     return dir;
+  }
+
+  template<size_t N>
+  utils::Path createTempDir(const char (&format)[N]) {
+    char copy[N];
+    std::copy(format, format + N, copy);
+    return createTempDirectory(copy);
   }
 
  protected:

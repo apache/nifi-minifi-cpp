@@ -29,8 +29,8 @@ namespace minifi {
 
 class WriteCallback : public OutputStreamCallback {
 public:
-  explicit WriteCallback(const std::string& data)
-    : data_(data) {
+  explicit WriteCallback(std::string data)
+    : data_(std::move(data)) {
   }
 
  int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
@@ -40,7 +40,7 @@ public:
     return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(data_.c_str())), data_.size());
   }
 
- const std::string& data_;
+ std::string data_;
 };
 
 } /* namespace minifi */

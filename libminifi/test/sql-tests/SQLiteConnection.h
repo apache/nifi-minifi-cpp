@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_SQLITECONNECTION_H
-#define NIFI_MINIFI_CPP_SQLITECONNECTION_H
+#pragma once
 
 #include <sqlite3.h>
 
@@ -72,7 +71,7 @@ class SQLiteStatement {
     }
   }
 
-  void bind_int64(int pos, uint64_t val) {
+  void bind_int64(int pos, int64_t val) {
     if (sqlite3_bind_int64(stmt_, pos, val)) {
       std::stringstream err_msg;
       err_msg << "Failed to bind int64 parameter"
@@ -155,7 +154,7 @@ class SQLiteStatement {
     return std::string(reinterpret_cast<const char *>(sqlite3_column_text(stmt_, col)));
   }
 
-  uint64_t  column_int64(int col) {
+  int64_t  column_int64(int col) {
     return sqlite3_column_int64(stmt_, col);
   }
 
@@ -261,10 +260,8 @@ class SQLiteConnection {
   sqlite3 *db_ = nullptr;
 };
 
-} /* namespace sqlite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_SQLITECONNECTION_H
+}  // namespace sqlite
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

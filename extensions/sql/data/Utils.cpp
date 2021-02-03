@@ -18,10 +18,13 @@
 
 #include "Utils.h"
 
+#include <vector>
 #include <algorithm>
 #include  <cctype>
 #include  <regex>
 #include  <sstream>
+
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -29,28 +32,26 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-std::string toLower(const std::string& str) {
-  std::string ret;
+std::vector<std::string> inputStringToList(const std::string& str) {
+  std::vector<std::string> fragments = StringUtils::split(str, ",");
+  for (auto& item : fragments) {
+    item = StringUtils::toLower(StringUtils::trim(item));
+  }
+  fragments.erase(std::remove(fragments.begin(), fragments.end(), ""), fragments.end());
 
-  // (int(*)(int))std::tolower - to avoid compilation error 'no matching overloaded function found'. 
-  // It is described in https://stackoverflow.com/questions/5539249/why-cant-transforms-begin-s-end-s-begin-tolower-be-complied-successfu.
-  std::transform(str.begin(), str.end(), std::back_inserter(ret), (int(*)(int))std::tolower);
-
-  return ret;
+  return fragments;
 }
 
-std::vector<std::string> inputStringToList(const std::string& str) {
-  std::vector<std::string> ret;
+std::string escape(std::string str) {
+  return StringUtils::replaceMap(std::move(str), {
+    {"&", "&amp;"}, {"=", "&equals;"}, {",", "&comma;"}
+  });
+}
 
-  std::string token;
-  // Convert to lower and remove white characters.
-  std::istringstream tokenStream(std::regex_replace(toLower(str), std::regex("\\s"), std::string("")));
-
-  while (std::getline(tokenStream, token, ',')) {
-    ret.push_back(token);
-  }
-
-  return ret;
+std::string unescape(std::string str) {
+  return StringUtils::replaceMap(std::move(str), {
+      {"&amp;", "&"}, {"&equals;", "="}, {"&comma;", ","}
+  });
 }
 
 } /* namespace utils */

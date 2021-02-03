@@ -84,6 +84,8 @@ class StringUtils {
 
   static utils::optional<bool> toBool(const std::string& input);
 
+  static std::string toLower(std::string str);
+
   // Trim String utils
 
   /**
@@ -297,7 +299,6 @@ class StringUtils {
   static std::basic_string<TChar> join(const TChar* separator, const U& container) {
     return join(std::basic_string<TChar>(separator), container);
   }
-
 
   /**
    * Concatenates string representation of integrals stored in an arbitrary container using the provided separator.
