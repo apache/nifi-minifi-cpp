@@ -29,10 +29,6 @@ namespace utils {
 
 std::vector<std::string> inputStringToList(const std::string& str);
 
-std::string escape(std::string str);
-
-std::string unescape(std::string str);
-
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -97,14 +97,11 @@ const std::string QueryDatabaseTable::InitialMaxValueDynamicPropertyPrefix("init
 
 const core::Relationship QueryDatabaseTable::Success("success", "Successfully created FlowFile from SQL query result set.");
 
-static const std::string RESULT_TABLE_NAME = "tablename";
-static const std::string RESULT_ROW_COUNT = "querydbtable.row.count";
-static const std::string FRAGMENT_IDENTIFIER = "fragment.identifier";
-static const std::string FRAGMENT_COUNT = "fragment.count";
-static const std::string FRAGMENT_INDEX = "fragment.index";
+const std::string QueryDatabaseTable::RESULT_TABLE_NAME = "tablename";
+const std::string QueryDatabaseTable::RESULT_ROW_COUNT = "querydbtable.row.count";
 
-static const std::string TABLENAME_KEY = "tablename";
-static const std::string MAXVALUE_KEY_PREFIX = "maxvalue.";
+const std::string QueryDatabaseTable::TABLENAME_KEY = "tablename";
+const std::string QueryDatabaseTable::MAXVALUE_KEY_PREFIX = "maxvalue.";
 
 // QueryDatabaseTable
 QueryDatabaseTable::QueryDatabaseTable(const std::string& name, utils::Identifier uuid)
@@ -135,11 +132,19 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
   }
 
   context.getProperty(TableName.getName(), table_name_);
-  context.getProperty(ColumnNames.getName(), return_columns_);
+  queried_columns_.clear();
+  std::string return_columns_str;
+  context.getProperty(ColumnNames.getName(), return_columns_str);
+  auto return_columns = utils::inputStringToList(return_columns_str);
+  std::set<std::string> queried_columns{return_columns.begin(), return_columns.end()};
   context.getProperty(WhereClause.getName(), extra_where_clause_);
-  std::string max_value_columns;
-  context.getProperty(MaxValueColumnNames.getName(), max_value_columns);
-  max_value_columns_ = utils::inputStringToList(max_value_columns);
+  std::string max_value_columns_str;
+  context.getProperty(MaxValueColumnNames.getName(), max_value_columns_str);
+  max_value_columns_ = utils::inputStringToList(max_value_columns_str);
+  if (!queried_columns.empty()) {
+    queried_columns.insert(max_value_columns_.begin(), max_value_columns_.end());
+  }
+  queried_columns_ = utils::StringUtils::join(", ", queried_columns);
 
   initializeMaxValues(context);
 }
@@ -153,30 +158,22 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& context, core::P
 
   auto rowset = statement->execute();
 
-  sql::MaxCollector maxCollector(selectQuery, max_values_);
-  sql::JSONSQLWriter sqlWriter(output_format_ == OutputType::JSONPretty);
-  sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, {&sqlWriter, &maxCollector});
+  sql::MaxCollector maxCollector{selectQuery, max_values_};
+  sql::JSONSQLWriter sqlWriter{output_format_ == OutputType::JSONPretty};
+  FlowFileGenerator flow_file_creator{session, sqlWriter};
+  sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, {sqlWriter, maxCollector, flow_file_creator});
 
-  std::string fragment_identifier = utils::IdGenerator::getIdGenerator()->generate().to_string();
-  // Process rowset.
-  std::vector<std::shared_ptr<core::FlowFile>> flow_files;
   while (size_t row_count = sqlRowsetProcessor.process(max_rows_)) {
-    WriteCallback writer(sqlWriter.toString());
-    auto new_flow = session.create();
-    new_flow->addAttribute(RESULT_ROW_COUNT, std::to_string(row_count));
-    new_flow->addAttribute(RESULT_TABLE_NAME, table_name_);
-    new_flow->addAttribute(FRAGMENT_INDEX, std::to_string(flow_files.size()));
-    new_flow->addAttribute(FRAGMENT_IDENTIFIER, fragment_identifier);
-    session.write(new_flow, &writer);
-    session.transfer(new_flow, Success);
-    flow_files.push_back(std::move(new_flow));
+    auto new_file = flow_file_creator.getLastFlowFile();
+    new_file->addAttribute(RESULT_ROW_COUNT, std::to_string(row_count));
+    new_file->addAttribute(RESULT_TABLE_NAME, table_name_);
   }
+
   // the updated max_values and the total number of flow_files is available from here
-  std::string fragment_count = std::to_string(flow_files.size());
-  for (auto& flow_file : flow_files) {
-    flow_file->addAttribute(FRAGMENT_COUNT, fragment_count);
+  for (auto& new_file : flow_file_creator.getFlowFiles()) {
+    session.transfer(new_file, Success);
     for (const auto& max_column : max_value_columns_) {
-      flow_file->addAttribute("maxvalue." + max_column, max_values_[max_column]);
+      new_file->addAttribute("maxvalue." + max_column, max_values_[max_column]);
     }
   }
 
@@ -205,10 +202,23 @@ void QueryDatabaseTable::initializeMaxValues(core::ProcessContext &context) {
     } else {
       for (auto &&elem : new_state) {
         if (utils::StringUtils::startsWith(elem.first, MAXVALUE_KEY_PREFIX)) {
-          max_values_.emplace(elem.first.substr(MAXVALUE_KEY_PREFIX.length()), std::move(elem.second));
+          std::string column_name = elem.first.substr(MAXVALUE_KEY_PREFIX.length());
+          // add only those columns that we care about
+          if (std::find(max_value_columns_.begin(), max_value_columns_.end(), column_name) != max_value_columns_.end()) {
+            max_values_.emplace(column_name, std::move(elem.second));
+          } else {
+            // the state contains a column we don't care about, resetting state
+            max_values_.clear();
+            break;
+          }
         }
       }
     }
+  }
+
+  for (const auto& column_name : max_value_columns_) {
+    // initialize column values
+    max_values_[column_name];
   }
 
   loadMaxValuesFromDynamicProperties(context);
@@ -241,7 +251,7 @@ void QueryDatabaseTable::loadMaxValuesFromDynamicProperties(core::ProcessContext
 }
 
 std::string QueryDatabaseTable::buildSelectQuery() {
-  std::string query = "select " + (return_columns_.empty() ? "*" : return_columns_) + " from " + table_name_;
+  std::string query = "select " + (queried_columns_.empty() ? "*" : queried_columns_) + " from " + table_name_;
 
   std::vector<std::string> where_clauses;
 

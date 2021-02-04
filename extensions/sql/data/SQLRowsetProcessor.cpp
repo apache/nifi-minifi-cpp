@@ -28,13 +28,17 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-SQLRowsetProcessor::SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, std::vector<SQLRowSubscriber*> rowSubscribers)
+SQLRowsetProcessor::SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> rowSubscribers)
   : rowset_(rowset), rowSubscribers_(std::move(rowSubscribers)) {
   iter_ = rowset_.begin();
 }
 
 size_t SQLRowsetProcessor::process(size_t max) {
   size_t count = 0;
+
+  for (const auto& pRowSubscriber : rowSubscribers_) {
+    pRowSubscriber.get().beginProcessBatch();
+  }
 
   for (; iter_ != rowset_.end(); ) {
     addRow(*iter_, count);
@@ -46,6 +50,10 @@ size_t SQLRowsetProcessor::process(size_t max) {
     }
   }
 
+  for (const auto& pRowSubscriber : rowSubscribers_) {
+    pRowSubscriber.get().endProcessBatch(count == 0 ? SQLRowSubscriber::State::DONE : SQLRowSubscriber::State::CONTINUE);
+  }
+
   return count;
 }
 
@@ -55,7 +63,7 @@ size_t SQLRowsetProcessor::getTotalProcessed() const {
 
 void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
   for (const auto& pRowSubscriber : rowSubscribers_) {
-    pRowSubscriber->beginProcessRow();
+    pRowSubscriber.get().beginProcessRow();
   }
 
   if (rowCount == 0) {
@@ -64,7 +72,7 @@ void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
       column_names.push_back(utils::StringUtils::toLower(row.get_properties(i).get_name()));
     }
     for (const auto& pRowSubscriber : rowSubscribers_) {
-      pRowSubscriber->processColumnNames(column_names);
+      pRowSubscriber.get().processColumnNames(column_names);
     }
   }
 
@@ -115,7 +123,7 @@ void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
   }
 
   for (const auto& pRowSubscriber : rowSubscribers_) {
-    pRowSubscriber->endProcessRow();
+    pRowSubscriber.get().endProcessRow();
   }
 }
 

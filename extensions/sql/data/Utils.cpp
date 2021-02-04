@@ -42,18 +42,6 @@ std::vector<std::string> inputStringToList(const std::string& str) {
   return fragments;
 }
 
-std::string escape(std::string str) {
-  return StringUtils::replaceMap(std::move(str), {
-    {"&", "&amp;"}, {"=", "&equals;"}, {",", "&comma;"}
-  });
-}
-
-std::string unescape(std::string str) {
-  return StringUtils::replaceMap(std::move(str), {
-      {"&amp;", "&"}, {"&equals;", "="}, {"&comma;", ","}
-  });
-}
-
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */

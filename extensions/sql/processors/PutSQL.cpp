@@ -82,33 +82,19 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
   }
   session.remove(flow_file);
 
-  try {
-    std::string sql_statement;
-    if (!context.getProperty(SQLStatement, sql_statement, flow_file)) {
-      logger_->log_debug("Using the contents of the flow file as the SQL statement");
-      auto buffer = std::make_shared<io::BufferStream>();
-      InputStreamPipe read_callback{buffer};
-      session.read(flow_file, &read_callback);
-      sql_statement = std::string{reinterpret_cast<const char*>(buffer->getBuffer()), buffer->size()};
-    }
-    if (sql_statement.empty()) {
-      throw Exception(PROCESSOR_EXCEPTION, "Empty SQL statement");
-    }
-
-    std::vector<std::string> arguments;
-    for (size_t arg_idx{1};; ++arg_idx) {
-      std::string arg;
-      if (!flow_file->getAttribute("sql.args." + std::to_string(arg_idx) + ".value", arg)) {
-        break;
-      }
-      arguments.push_back(std::move(arg));
-    }
-
-    connection_->prepareStatement(sql_statement)->execute(arguments);
-  } catch (std::exception& e) {
-    logger_->log_error("SQL statement error: %s", e.what());
-    throw;
+  std::string sql_statement;
+  if (!context.getProperty(SQLStatement, sql_statement, flow_file)) {
+    logger_->log_debug("Using the contents of the flow file as the SQL statement");
+    auto buffer = std::make_shared<io::BufferStream>();
+    InputStreamPipe read_callback{buffer};
+    session.read(flow_file, &read_callback);
+    sql_statement = std::string{reinterpret_cast<const char*>(buffer->getBuffer()), buffer->size()};
   }
+  if (sql_statement.empty()) {
+    throw Exception(PROCESSOR_EXCEPTION, "Empty SQL statement");
+  }
+
+  connection_->prepareStatement(sql_statement)->execute(collectArguments(flow_file));
 }
 
 }  // namespace processors

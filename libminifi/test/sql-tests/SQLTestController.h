@@ -28,6 +28,7 @@
 #include "processors/GetFile.h"
 #include "processors/ExecuteSQL.h"
 #include "processors/QueryDatabaseTable.h"
+#include "SQLTestPlan.h"
 
 struct TableRow {
   int64_t int_col;
@@ -57,11 +58,8 @@ class SQLTestController : public TestController {
     }
   }
 
-  void initSQLService(const std::shared_ptr<TestPlan>& plan) const {
-    auto service = plan->addController("ODBCService", "ODBCService");
-    plan->setProperty(service,
-        minifi::sql::controllers::DatabaseService::ConnectionString.getName(),
-        "Driver=libsqlite3odbc.so;Database=" + database_.str());
+  std::shared_ptr<SQLTestPlan> createSQLPlan(const std::string& sql_processor, std::initializer_list<core::Relationship> outputs) {
+    return std::make_shared<SQLTestPlan>(*this, database_, sql_processor, outputs);
   }
 
   void insertValues(std::initializer_list<TableRow> values) {
@@ -88,17 +86,6 @@ class SQLTestController : public TestController {
       rows.push_back(TableRow{stmt.column_int64(0), stmt.column_text(1)});
     }
     return rows;
-  }
-
-  std::vector<std::shared_ptr<core::FlowFile>> pollAll(const std::shared_ptr<minifi::Connection>& conn) {
-    std::vector<std::shared_ptr<core::FlowFile>> flow_files;
-    std::set<std::shared_ptr<core::FlowFile>> expired;
-    while (auto flow_file = conn->poll(expired)) {
-      REQUIRE(expired.empty());
-      flow_files.push_back(std::move(flow_file));
-    }
-    REQUIRE(expired.empty());
-    return flow_files;
   }
 
   utils::Path getDB() const {

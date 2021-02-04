@@ -38,45 +38,19 @@ TEST_CASE("Test Creation of PutSQL", "[PutSQLCreate]") {  // NOLINT
 TEST_CASE("Test Put", "[PutSQLPut]") {  // NOLINT
   SQLTestController testController;
 
-  auto plan = testController.createPlan();
-  testController.initSQLService(plan);
+  auto plan = testController.createSQLPlan("PutSQL", {{"success", "d"}});
+  auto sql_proc = plan->getSQLProcessor();
 
-  // Build MiNiFi processing graph
-  auto generate = plan->addProcessor(
-      "GenerateFlowFile",
-      "Generate");
-  auto update = plan->addProcessor(
-      "UpdateAttribute",
-      "Update",
-      core::Relationship("success", "description"),
-      true);
-  plan->setProperty(
-      update,
-      "sql.args.1.value",
-      "42",
-      true);
-  plan->setProperty(
-      update,
-      "sql.args.2.value",
-      "asdf",
-      true);
-  auto put = plan->addProcessor(
-      "PutSQL",
-      "PutSQL",
-      core::Relationship("success", "description"),
-      true);
-  plan->setProperty(
-      put,
-      "DB Controller Service",
-      "ODBCService");
-  plan->setProperty(
-      put,
+  auto input_file = plan->addInput({
+    {"sql.args.1.value", "42"},
+    {"sql.args.2.value", "asdf"}
+  });
+
+  sql_proc->setProperty(
       "SQL Statement",
       "INSERT INTO test_table (int_col, text_col) VALUES (?, ?)");
 
-  plan->runNextProcessor();  // Generate
-  plan->runNextProcessor();  // Update
-  plan->runNextProcessor();  // PutSQL
+  plan->run();
 
   // Verify output state
   auto rows = testController.fetchValues();
@@ -88,56 +62,13 @@ TEST_CASE("Test Put", "[PutSQLPut]") {  // NOLINT
 TEST_CASE("Test Put Content", "[PutSQLPutContent]") {  // NOLINT
   SQLTestController testController;
 
-  auto plan = testController.createPlan();
-  testController.initSQLService(plan);
+  auto plan = testController.createSQLPlan("PutSQL", {{"success", "d"}});
+  auto input_file = plan->addInput({
+    {"sql.args.1.value", "4242"},
+    {"sql.args.2.value", "fdsa"}
+  }, "INSERT INTO test_table VALUES(?, ?);");
 
-  // Define directory for test input file
-  utils::Path test_in_dir = testController.createTempDir("/var/tmp/gt.XXXXXX");
-
-  // Define test input file
-  utils::Path test_file = test_in_dir / "test.in";
-
-  // Write test SQL content
-  {
-    std::ofstream os(test_file.str());
-    os << "INSERT INTO test_table VALUES(?, ?);";
-  }
-
-  // Build MiNiFi processing graph
-  auto get_file = plan->addProcessor(
-      "GetFile",
-      "Get");
-  plan->setProperty(
-      get_file,
-      processors::GetFile::Directory.getName(), test_in_dir.str());
-  auto update = plan->addProcessor(
-      "UpdateAttribute",
-      "Update",
-      core::Relationship("success", "description"),
-      true);
-  plan->setProperty(
-      update,
-      "sql.args.1.value",
-      "4242",
-      true);
-  plan->setProperty(
-      update,
-      "sql.args.2.value",
-      "fdsa",
-      true);
-  auto put = plan->addProcessor(
-      "PutSQL",
-      "PutSQL",
-      core::Relationship("success", "description"),
-      true);
-  plan->setProperty(
-      put,
-      "DB Controller Service",
-      "ODBCService");
-
-  plan->runNextProcessor();  // Get
-  plan->runNextProcessor();  // Update
-  plan->runNextProcessor();  // PutSQL
+  plan->run();
 
   // Verify output state
   auto rows = testController.fetchValues();

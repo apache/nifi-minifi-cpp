@@ -54,7 +54,6 @@ const std::string ExecuteSQL::ProcessorName("ExecuteSQL");
 
 const core::Property ExecuteSQL::SQLSelectQuery(
   core::PropertyBuilder::createProperty("SQL select query")
-  ->isRequired(true)
   ->withDescription(
     "The SQL select query to execute. The query can be empty, a constant value, or built from attributes using Expression Language. "
     "If this property is specified, it will be used regardless of the content of incoming flowfiles. "
@@ -63,8 +62,10 @@ const core::Property ExecuteSQL::SQLSelectQuery(
   ->supportsExpressionLanguage(true)->build());
 
 const core::Relationship ExecuteSQL::Success("success", "Successfully created FlowFile from SQL query result set.");
+const core::Relationship ExecuteSQL::Failure("failure", "SQL query execution failed. Incoming FlowFile will be penalized and routed to this relationship.");
 
 const std::string ExecuteSQL::RESULT_ROW_COUNT = "executesql.row.count";
+const std::string ExecuteSQL::INPUT_FLOW_FILE_UUID = "input.flowfile.uuid";
 
 ExecuteSQL::ExecuteSQL(const std::string& name, utils::Identifier uuid)
   : SQLProcessor(name, uuid, logging::LoggerFactory<ExecuteSQL>::getLogger()) {
@@ -89,28 +90,53 @@ void ExecuteSQL::processOnSchedule(core::ProcessContext& context) {
 }
 
 void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  auto flow_file = session.get();
-  if (flow_file) {
-    session.remove(flow_file);
-  }
+  auto input_flow_file = session.get();
 
-  std::string query;
-  context.getProperty(SQLSelectQuery, query, flow_file);
+  try {
+    std::string query;
+    if (!context.getProperty(SQLSelectQuery, query, input_flow_file)) {
+      if (!input_flow_file) {
+        throw Exception(PROCESSOR_EXCEPTION,
+                        "No incoming FlowFile and the \"SQL select query\" processor property is not specified");
+      }
+      logger_->log_debug("Using the contents of the flow file as the SQL statement");
+      auto buffer = std::make_shared<io::BufferStream>();
+      InputStreamPipe content_reader{buffer};
+      session.read(input_flow_file, &content_reader);
+      query = std::string{reinterpret_cast<const char *>(buffer->getBuffer()), buffer->size()};
+    }
+    if (query.empty()) {
+      throw Exception(PROCESSOR_EXCEPTION, "Empty SQL statement");
+    }
 
-  auto statement = connection_->prepareStatement(query);
+    auto row_set = connection_->prepareStatement(query)->execute(collectArguments(input_flow_file));
 
-  auto row_set = statement->execute();
+    sql::JSONSQLWriter sqlWriter{output_format_ == OutputType::JSONPretty};
+    FlowFileGenerator flow_file_creator{session, sqlWriter};
+    sql::SQLRowsetProcessor sqlRowsetProcessor(row_set, {sqlWriter, flow_file_creator});
 
-  sql::JSONSQLWriter sqlWriter(output_format_ == OutputType::JSONPretty);
-  sql::SQLRowsetProcessor sqlRowsetProcessor(row_set, { &sqlWriter });
+    // Process rowset.
+    while (size_t row_count = sqlRowsetProcessor.process(max_rows_)) {
+      auto new_file = flow_file_creator.getLastFlowFile();
+      new_file->addAttribute(RESULT_ROW_COUNT, std::to_string(row_count));
+      if (input_flow_file) {
+        new_file->addAttribute(INPUT_FLOW_FILE_UUID, input_flow_file->getUUIDStr());
+      }
+    }
 
-  // Process rowset.
-  while (size_t row_count = sqlRowsetProcessor.process(max_rows_)) {
-    WriteCallback writer(sqlWriter.toString());
-    auto new_flow = session.create();
-    new_flow->addAttribute(RESULT_ROW_COUNT, std::to_string(row_count));
-    session.write(new_flow, &writer);
-    session.transfer(new_flow, Success);
+    // transfer flow files
+    if (input_flow_file) {
+      session.remove(input_flow_file);
+    }
+    for (const auto& new_file : flow_file_creator.getFlowFiles()) {
+      session.transfer(new_file, Success);
+    }
+  } catch (const std::exception&) {
+    // sql execution failed, transfer to failure
+    if (input_flow_file) {
+      session.transfer(input_flow_file, Failure);
+    }
+    throw;
   }
 }
 

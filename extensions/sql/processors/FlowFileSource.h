@@ -19,6 +19,9 @@
 
 #include "core/Property.h"
 #include "utils/Enum.h"
+#include "data/SQLRowsetProcessor.h"
+#include "ProcessSession.h"
+#include "data/JSONSQLWriter.h"
 
 namespace org {
 namespace apache {
@@ -28,6 +31,10 @@ namespace processors {
 
 class FlowFileSource {
  public:
+  static const std::string FRAGMENT_IDENTIFIER;
+  static const std::string FRAGMENT_COUNT;
+  static const std::string FRAGMENT_INDEX;
+
   static const core::Property OutputFormat;
   static const core::Property MaxRowsPerFlowFile;
 
@@ -37,6 +44,47 @@ class FlowFileSource {
   )
 
  protected:
+  class FlowFileGenerator : public sql::SQLRowSubscriber {
+   public:
+    FlowFileGenerator(core::ProcessSession& session, sql::JSONSQLWriter& json_writer)
+      : session_(session),
+        json_writer_(json_writer) {}
+
+    void beginProcessBatch() override {
+      current_batch_size_ = 0;
+    }
+    void endProcessBatch(State state) override;
+    void beginProcessRow() override {}
+    void endProcessRow() override {
+      ++current_batch_size_;
+    }
+    void processColumnNames(const std::vector<std::string>& names) override {}
+    void processColumn(const std::string& name, const std::string& value) override {}
+    void processColumn(const std::string& name, double value) override {}
+    void processColumn(const std::string& name, int value) override {}
+    void processColumn(const std::string& name, long long value) override {}
+    void processColumn(const std::string& name, unsigned long long value) override {}
+    void processColumn(const std::string& name, const char* value) override {}
+
+    std::shared_ptr<core::FlowFile> getLastFlowFile() {
+      if (!flow_files_.empty()) {
+        return flow_files_.back();
+      }
+      return {};
+    }
+
+    std::vector<std::shared_ptr<core::FlowFile>>& getFlowFiles() {
+      return flow_files_;
+    }
+
+   private:
+    core::ProcessSession& session_;
+    sql::JSONSQLWriter& json_writer_;
+    const utils::Identifier batch_id_{utils::IdGenerator::getIdGenerator()->generate()};
+    size_t current_batch_size_{0};
+    std::vector<std::shared_ptr<core::FlowFile>> flow_files_;
+  };
+
   OutputType output_format_;
   size_t max_rows_{0};
 };

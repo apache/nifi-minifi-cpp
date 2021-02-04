@@ -41,6 +41,12 @@ void JSONSQLWriter::endProcessRow() {
   jsonPayload_.PushBack(jsonRow_, jsonPayload_.GetAllocator());
 }
 
+void JSONSQLWriter::beginProcessBatch() {
+  jsonPayload_ = rapidjson::Document(rapidjson::kArrayType);
+}
+
+void JSONSQLWriter::endProcessBatch(State state) {}
+
 void JSONSQLWriter::processColumnNames(const std::vector<std::string>& name) {}
 
 void JSONSQLWriter::processColumn(const std::string& name, const std::string& value) {

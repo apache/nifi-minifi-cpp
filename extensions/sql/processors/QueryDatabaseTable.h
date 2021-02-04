@@ -43,6 +43,12 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
  public:
   explicit QueryDatabaseTable(const std::string& name, utils::Identifier uuid = utils::Identifier());
 
+  static const std::string RESULT_TABLE_NAME;
+  static const std::string RESULT_ROW_COUNT;
+
+  static const std::string TABLENAME_KEY;
+  static const std::string MAXVALUE_KEY_PREFIX;
+
   //! Processor Name
   static const std::string ProcessorName;
 
@@ -75,7 +81,7 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
  private:
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::string table_name_;
-  std::string return_columns_;
+  std::string queried_columns_;
   std::string extra_where_clause_;
   std::vector<std::string> max_value_columns_;
   std::unordered_map<std::string, std::string> max_values_;

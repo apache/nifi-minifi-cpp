@@ -44,6 +44,8 @@ class SQLProcessor: public core::Processor {
     : core::Processor(name, uuid), logger_(std::move(logger)) {
   }
 
+  static std::vector<std::string> collectArguments(const std::shared_ptr<core::FlowFile>& flow_file);
+
   virtual void processOnSchedule(core::ProcessContext& context) = 0;
   virtual void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) = 0;
 

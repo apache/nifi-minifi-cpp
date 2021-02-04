@@ -31,6 +31,8 @@ namespace minifi {
 namespace sql {
 
 class MaxCollector: public SQLRowSubscriber {
+  void beginProcessBatch() override {}
+  void endProcessBatch(State state) override {}
   void beginProcessRow() override {}
   void endProcessRow() override {}
 

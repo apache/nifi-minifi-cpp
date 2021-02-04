@@ -87,31 +87,3 @@ class OutputFormatTestController : public TestController {
   std::string output_format_;
   utils::optional<std::string> json_format_;
 };
-
-// carries out a loose match on objects, i.e. it doesn't matter if the
-// actual object has extra fields than expected
-void matchJSON(const rapidjson::Value& json, const rapidjson::Value& expected) {
-  if (expected.IsObject()) {
-    REQUIRE(json.IsObject());
-    for (const auto& expected_member : expected.GetObject()) {
-      REQUIRE(json.HasMember(expected_member.name));
-      matchJSON(json[expected_member.name], expected_member.value);
-    }
-  } else if (expected.IsArray()) {
-    REQUIRE(json.IsArray());
-    REQUIRE(json.Size() == expected.Size());
-    for (size_t idx{0}; idx < expected.Size(); ++idx) {
-      matchJSON(json[idx], expected[idx]);
-    }
-  } else {
-    REQUIRE(json == expected);
-  }
-}
-
-void verifyJSON(const std::string& json_str, const std::string& expected_str) {
-  rapidjson::Document json, expected;
-  REQUIRE_FALSE(json.Parse(json_str.c_str()).HasParseError());
-  REQUIRE_FALSE(expected.Parse(expected_str.c_str()).HasParseError());
-
-  matchJSON(json, expected);
-}

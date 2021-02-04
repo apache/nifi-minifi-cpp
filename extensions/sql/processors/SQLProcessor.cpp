@@ -62,6 +62,21 @@ void SQLProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
   }
 }
 
+std::vector<std::string> SQLProcessor::collectArguments(const std::shared_ptr<core::FlowFile> &flow_file) {
+  if (!flow_file) {
+    return {};
+  }
+  std::vector<std::string> arguments;
+  for (size_t arg_idx{1};; ++arg_idx) {
+    std::string arg;
+    if (!flow_file->getAttribute("sql.args." + std::to_string(arg_idx) + ".value", arg)) {
+      break;
+    }
+    arguments.push_back(std::move(arg));
+  }
+  return arguments;
+}
+
 }  // namespace processors
 }  // namespace minifi
 }  // namespace nifi

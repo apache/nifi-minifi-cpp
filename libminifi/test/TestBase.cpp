@@ -289,16 +289,12 @@ void TestPlan::scheduleProcessors() {
   }
 }
 
-bool TestPlan::runProcessor(const std::shared_ptr<core::Processor>& processor, std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+bool TestPlan::runProcessor(const std::shared_ptr<core::Processor>& processor, const PreTriggerVerifier& verify) {
   const std::size_t processor_location = std::distance(processor_queue_.begin(), getProcessorItByUuid(processor->getUUIDStr()));
   return runProcessor(gsl::narrow<int>(processor_location), verify);
 }
 
-bool TestPlan::runProcessor(int target_location, std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
-  if (!finalized) {
-    finalize();
-  }
-  logger_->log_info("Running next processor %d, processor_queue_.size %d, processor_contexts_.size %d", target_location, processor_queue_.size(), processor_contexts_.size());
+bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& verify) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
   std::shared_ptr<core::Processor> processor = processor_queue_.at(target_location);
@@ -319,13 +315,13 @@ bool TestPlan::runProcessor(int target_location, std::function<void(const std::s
   return gsl::narrow<size_t>(target_location + 1) < processor_queue_.size();
 }
 
-bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+bool TestPlan::runNextProcessor(const PreTriggerVerifier& verify) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   ++location;
   return runProcessor(location, verify);
 }
 
-bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> /*verify*/) {
+bool TestPlan::runCurrentProcessor(const PreTriggerVerifier& /*verify*/) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   return runProcessor(location);
 }

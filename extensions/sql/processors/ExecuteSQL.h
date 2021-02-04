@@ -53,8 +53,10 @@ class ExecuteSQL : public SQLProcessor, public FlowFileSource {
   static const core::Property SQLSelectQuery;
 
   static const core::Relationship Success;
+  static const core::Relationship Failure;
 
   static const std::string RESULT_ROW_COUNT;
+  static const std::string INPUT_FLOW_FILE_UUID;
 };
 
 REGISTER_RESOURCE(ExecuteSQL, "ExecuteSQL to execute SELECT statement via ODBC.");

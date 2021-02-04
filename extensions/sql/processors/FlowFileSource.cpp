@@ -17,6 +17,10 @@
 
 #include "FlowFileSource.h"
 
+#include "FlowFile.h"
+#include "data/WriteCallback.h"
+#include "data/JSONSQLWriter.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -39,6 +43,28 @@ const core::Property FlowFileSource::MaxRowsPerFlowFile(
   ->withDescription(
       "The maximum number of result rows that will be included in a single FlowFile. This will allow you to break up very large result sets into multiple FlowFiles. "
       "If the value specified is zero, then all rows are returned in a single FlowFile.")->build());
+
+const std::string FlowFileSource::FRAGMENT_IDENTIFIER = "fragment.identifier";
+const std::string FlowFileSource::FRAGMENT_COUNT = "fragment.count";
+const std::string FlowFileSource::FRAGMENT_INDEX = "fragment.index";
+
+void FlowFileSource::FlowFileGenerator::endProcessBatch(State state) {
+  if (state == State::DONE) {
+    // annotate the flow files with the fragment.count
+    std::string fragment_count = std::to_string(flow_files_.size());
+    for (const auto& flow_file : flow_files_) {
+      flow_file->addAttribute(FRAGMENT_COUNT, fragment_count);
+    }
+    return;
+  }
+
+  WriteCallback writer(json_writer_.toString());
+  auto new_flow = session_.create();
+  new_flow->addAttribute(FRAGMENT_INDEX, std::to_string(flow_files_.size()));
+  new_flow->addAttribute(FRAGMENT_IDENTIFIER, batch_id_.to_string());
+  session_.write(new_flow, &writer);
+  flow_files_.push_back(std::move(new_flow));
+}
 
 }  // namespace processors
 }  // namespace minifi

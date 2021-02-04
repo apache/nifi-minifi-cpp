@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include "rapidjson/document.h"
 
 #define FIELD_ACCESSOR(field) \
   template<typename T> \
@@ -29,3 +30,31 @@
   static auto call_##method(T&& instance, Args&& ...args) -> decltype((std::forward<T>(instance).method(std::forward<Args>(args)...))) { \
     return std::forward<T>(instance).method(std::forward<Args>(args)...); \
   }
+
+// carries out a loose match on objects, i.e. it doesn't matter if the
+// actual object has extra fields than expected
+void matchJSON(const rapidjson::Value& json, const rapidjson::Value& expected) {
+  if (expected.IsObject()) {
+    REQUIRE(json.IsObject());
+    for (const auto& expected_member : expected.GetObject()) {
+      REQUIRE(json.HasMember(expected_member.name));
+      matchJSON(json[expected_member.name], expected_member.value);
+    }
+  } else if (expected.IsArray()) {
+    REQUIRE(json.IsArray());
+    REQUIRE(json.Size() == expected.Size());
+    for (size_t idx{0}; idx < expected.Size(); ++idx) {
+      matchJSON(json[idx], expected[idx]);
+    }
+  } else {
+    REQUIRE(json == expected);
+  }
+}
+
+void verifyJSON(const std::string& json_str, const std::string& expected_str) {
+  rapidjson::Document json, expected;
+  REQUIRE_FALSE(json.Parse(json_str.c_str()).HasParseError());
+  REQUIRE_FALSE(expected.Parse(expected_str.c_str()).HasParseError());
+
+  matchJSON(json, expected);
+}
