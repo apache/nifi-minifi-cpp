@@ -24,6 +24,7 @@
 #include "io/FileStream.h"
 #include "../TestBase.h"
 #include "utils/gsl.h"
+#include "utils/file/FileUtils.h"
 
 #ifdef USE_BOOST
 #include <boost/filesystem.hpp>
@@ -306,7 +307,8 @@ TEST_CASE("Existing file read/write test") {
   REQUIRE(test_controller.getLog().getInstance().contains("Error reading from file: invalid buffer", std::chrono::seconds(0)));
 }
 
-#ifdef USE_BOOST
+#if !defined(WIN_32) || defined(USE_BOOST)
+// This could be simplified with C++17 std::filesystem
 TEST_CASE("Opening file without permission creates error logs") {
   TestController test_controller;
   char format[] = "/tmp/gt.XXXXXX";
@@ -316,8 +318,11 @@ TEST_CASE("Opening file without permission creates error logs") {
     std::ofstream outfile(path_to_permissionless_file);
     outfile << "this file has been just created" << std::endl;
     outfile.close();
-    // This could be done with C++17 std::filesystem
+#ifndef WIN_32
+    utils::file::FileUtils::set_permissions(path_to_permissionless_file, 0);
+#else
     boost::filesystem::permissions(path_to_permissionless_file, boost::filesystem::no_perms);
+#endif
   }
   minifi::io::FileStream stream(path_to_permissionless_file, 0, false);
   REQUIRE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
