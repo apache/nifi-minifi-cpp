@@ -69,7 +69,7 @@ ApplyTemplate::WriteCallback::WriteCallback(const std::string &path, const std::
   flow_file_ = flow_file;
 }
 
-int64_t ApplyTemplate::WriteCallback::process(const std::shared_ptr<io::BaseStream> stream) {
+int64_t ApplyTemplate::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   logger_->log_info("ApplyTemplate reading template file from %s", template_file_);
   boost::iostreams::mapped_file_source file(template_file_);
 

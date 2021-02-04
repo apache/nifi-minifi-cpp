@@ -55,7 +55,7 @@ const std::string GetGPS::ProcessorName("GetGPS");
 core::Relationship GetGPS::Success("success", "All files are routed to success");
 core::Property GetGPS::GPSDHost(core::PropertyBuilder::createProperty("GPSD Host")->withDescription("The host running the GPSD daemon")->withDefaultValue<std::string>("localhost")->build());
 core::Property GetGPS::GPSDPort(
-    core::PropertyBuilder::createProperty("GPSD Port")->withDescription("The GPSD daemon port")->withDefaultValue<int64_t>(2947, core::StandardValidators::PORT_VALIDATOR())->build());
+    core::PropertyBuilder::createProperty("GPSD Port")->withDescription("The GPSD daemon port")->withDefaultValue<int64_t>(2947, core::StandardValidators::get().PORT_VALIDATOR)->build());
 core::Property GetGPS::GPSDWaitTime(
     core::PropertyBuilder::createProperty("GPSD Wait Time")->withDescription("Timeout value for waiting for data from the GPSD instance")->withDefaultValue<uint64_t>(50000000)->build());
 void GetGPS::initialize() {

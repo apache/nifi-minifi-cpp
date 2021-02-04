@@ -54,9 +54,9 @@ class FrameReadCallback : public InputStreamCallback {
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       int64_t ret = 0;
-      image_buf_.resize(stream->getSize());
-      ret = stream->read(image_buf_.data(), static_cast<int>(stream->getSize()));
-      if (ret != stream->getSize()) {
+      image_buf_.resize(stream->size());
+      ret = stream->read(image_buf_.data(), static_cast<int>(stream->size()));
+      if (ret != stream->size()) {
         throw std::runtime_error("ImageReadCallback failed to fully read flow file input stream");
       }
       image_mat_ = cv::imdecode(image_buf_, -1);
