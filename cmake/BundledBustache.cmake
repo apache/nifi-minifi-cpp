@@ -33,15 +33,18 @@ function(use_bundled_bustache SOURCE_DIR BINARY_DIR)
             "-DCMAKE_INSTALL_PREFIX=${BUSTACHE_BYPRODUCT_DIR}"
             "-DBUSTACHE_ENABLE_TESTING=OFF")
 
+    append_third_party_passthrough_args(BUSTACHE_CMAKE_ARGS "${BUSTACHE_CMAKE_ARGS}")
+
     # Build project
     ExternalProject_Add(
             bustache-external
-            GIT "https://github.com/jamboree/bustache.git"
+            GIT_REPOSITORY "https://github.com/jamboree/bustache.git"
             GIT_TAG "42dee8ef9bbcae7e9a33500a116cfd9c314662d6"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/bustache-src"
             CMAKE_ARGS ${BUSTACHE_CMAKE_ARGS}
             BUILD_BYPRODUCTS "${BUSTACHE_BYPRODUCT_DIR}/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
+            LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
     )
 
     # Set variables
