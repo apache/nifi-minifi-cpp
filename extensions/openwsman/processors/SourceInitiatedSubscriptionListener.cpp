@@ -75,7 +75,7 @@ core::Property SourceInitiatedSubscriptionListener::ListenHostname(
         ->isRequired(true)->build());
 core::Property SourceInitiatedSubscriptionListener::ListenPort(
     core::PropertyBuilder::createProperty("Listen Port")->withDescription("The port to listen on.")
-        ->isRequired(true)->withDefaultValue<int64_t>(5986, core::StandardValidators::LISTEN_PORT_VALIDATOR())->build());
+        ->isRequired(true)->withDefaultValue<int64_t>(5986, core::StandardValidators::get().LISTEN_PORT_VALIDATOR)->build());
 core::Property SourceInitiatedSubscriptionListener::SubscriptionManagerPath(
     core::PropertyBuilder::createProperty("Subscription Manager Path")->withDescription("The URI path that will be used for the WEC Subscription Manager endpoint.")
         ->isRequired(true)->withDefaultValue("/wsman/SubscriptionManager/WEC")->build());
@@ -636,7 +636,7 @@ int SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback(WsXmlNo
     WriteCallback callback(text);
     session->write(flow_file, &callback);
 
-    session->putAttribute(flow_file, FlowAttributeKey(MIME_TYPE), "application/xml");
+    session->putAttribute(flow_file, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
     flow_file->addAttribute(ATTRIBUTE_WEF_REMOTE_MACHINEID, machine_id);
     flow_file->addAttribute(ATTRIBUTE_WEF_REMOTE_IP, remote_ip);
 
