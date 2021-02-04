@@ -33,6 +33,13 @@ class DockerTestDirectoryBindings:
             return self.data_directories[test_id]["output_dir"]
         if docker_path == "/tmp/resources":
             return self.data_directories[test_id]["resources_dir"]
+        # Might be worth reworking these
+        if docker_path == "/tmp/output/success":
+            self.create_directory(self.data_directories[test_id]["output_dir"] + "/success")
+            return self.data_directories[test_id]["output_dir"] + "/success"
+        if docker_path == "/tmp/output/failure":
+            self.create_directory(self.data_directories[test_id]["output_dir"] + "/failure")
+            return self.data_directories[test_id]["output_dir"] + "/failure"
         raise Exception("Docker directory \"%s\" has no preset bindings." % docker_path)
 
     def get_directory_bindings(self, test_id):
@@ -54,12 +61,16 @@ class DockerTestDirectoryBindings:
 
     @staticmethod
     def delete_directory(dir):
-        logging.info("Removing tmp dir: %s", dir)
-        shutil.rmtree(dir)
+        assert dir.startswith("/tmp/")
+        if not dir.endswith("/"):
+            dir = dir + "/"
+        # Sometimes rmtree does clean up as expected, setting ignore_errors does not help either
+        shutil.rmtree(dir, ignore_errors=True)
 
     def delete_data_directories(self):
         for directories in self.data_directories.values():
-            [self.delete_directory for directory in directories.values()]
+            for directory in directories.values():
+                self.delete_directory(directory)
 
     @staticmethod
     def put_file_contents(file_abs_path, contents):
@@ -79,3 +90,15 @@ class DockerTestDirectoryBindings:
     def put_test_input(self, test_id, file_name, contents):
         file_abs_path = os.path.join(self.data_directories[test_id]["input_dir"], file_name)
         self.put_file_contents(file_abs_path, contents)
+
+    def put_file_to_docker_path(self, test_id, path, file_name, contents):
+        file_abs_path = os.path.join(self.docker_path_to_local_path(test_id, path), file_name)
+        self.put_file_contents(file_abs_path, contents)
+
+    def get_out_subdir(self, test_id, dir):
+        return os.path.join(self.data_directories[test_id]["output_dir"], dir)
+
+    def rm_out_child(self, test_id, dir):
+        child = os.path.join(self.data_directories[test_id]["output_dir"], dir)
+        logging.info('Removing %s from output folder', child)
+        shutil.rmtree(child)

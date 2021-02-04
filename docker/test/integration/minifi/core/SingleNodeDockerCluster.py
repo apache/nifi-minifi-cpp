@@ -3,6 +3,7 @@ import docker
 import logging
 import os
 import tarfile
+import time
 import uuid
 
 from collections import OrderedDict
@@ -28,6 +29,7 @@ class SingleNodeDockerCluster(Cluster):
         self.vols = {}
         self.minifi_root = '/opt/minifi/nifi-minifi-cpp-' + self.minifi_version
         self.nifi_root = '/opt/nifi/nifi-' + self.nifi_version
+        self.kafka_broker_root = '/opt/kafka'
         self.network = None
         self.containers = OrderedDict()
         self.images = []
@@ -44,8 +46,7 @@ class SingleNodeDockerCluster(Cluster):
         # Clean up containers
         for container in self.containers.values():
             logging.info('Cleaning up container: %s', container.name)
-            container.remove(v=True, force=True)
-
+            
         # Clean up images
         for image in reversed(self.images):
             logging.info('Cleaning up image: %s', image[0].id)
@@ -60,6 +61,9 @@ class SingleNodeDockerCluster(Cluster):
 
     def set_engine(self, engine):
         self.engine = engine
+
+    def get_engine(self):
+        return self.engine
 
     def get_flow(self):
         return self.flow

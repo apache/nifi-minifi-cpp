@@ -8,10 +8,11 @@ Feature: File system operations are handled by the GetFile and PutFile processor
 
   Scenario: Get and put operations run in a simple flow
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PutFile
     When the MiNiFi instance starts up
-    Then flowfiles are placed in the monitored directory in less than 10 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 10 seconds
 
   Scenario: PutFile does not overwrite a file that already exists
     Given a set of processors:
@@ -34,5 +35,6 @@ Feature: File system operations are handled by the GetFile and PutFile processor
       | PutFile_1   | success           | PutFile_2        |
       | PutFile_2   | failuire          | PutFile_3        |
 
+    And a file with the content "test" is present in "/tmp/input"
     When the MiNiFi instance starts up
-    Then flowfiles are placed in the monitored directory in less than 10 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 10 seconds

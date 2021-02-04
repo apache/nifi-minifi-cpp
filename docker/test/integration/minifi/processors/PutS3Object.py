@@ -17,4 +17,4 @@ class PutS3Object(Processor):
                 'Proxy Port': proxy_port,
                 'Proxy Username': proxy_username,
                 'Proxy Password': proxy_password },
-            auto_terminate = ['success'])
+            auto_terminate = ["success", "failure"])
