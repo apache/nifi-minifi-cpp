@@ -307,7 +307,7 @@ TEST_CASE("Existing file read/write test") {
   REQUIRE(test_controller.getLog().getInstance().contains("Error reading from file: invalid buffer", std::chrono::seconds(0)));
 }
 
-#if !defined(WIN_32) || defined(USE_BOOST)
+#if !defined(WIN32) || defined(USE_BOOST)
 // This could be simplified with C++17 std::filesystem
 TEST_CASE("Opening file without permission creates error logs") {
   TestController test_controller;
@@ -318,7 +318,7 @@ TEST_CASE("Opening file without permission creates error logs") {
     std::ofstream outfile(path_to_permissionless_file);
     outfile << "this file has been just created" << std::endl;
     outfile.close();
-#ifndef WIN_32
+#ifndef WIN32
     utils::file::FileUtils::set_permissions(path_to_permissionless_file, 0);
 #else
     boost::filesystem::permissions(path_to_permissionless_file, boost::filesystem::no_perms);
