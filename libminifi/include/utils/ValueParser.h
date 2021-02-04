@@ -148,7 +148,7 @@ class ValueParser {
   }
 
   void skipWhitespace() {
-    while (offset < str.length() && std::isspace(str[offset])) {
+    while (offset < str.length() && std::isspace(static_cast<unsigned char>(str[offset]))) {
       ++offset;
     }
   }

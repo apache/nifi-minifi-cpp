@@ -99,7 +99,7 @@ class StringUtils {
    * @returns modified string
    */
   static inline std::string trimLeft(std::string s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](char c) -> bool { return !isspace(c); }));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char c) -> bool { return !isspace(c); }));
     return s;
   }
 
@@ -110,7 +110,7 @@ class StringUtils {
    */
 
   static inline std::string trimRight(std::string s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](char c) -> bool { return !isspace(c); }).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char c) -> bool { return !isspace(c); }).base(), s.end());
     return s;
   }
 
