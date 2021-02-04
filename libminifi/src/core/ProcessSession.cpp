@@ -791,6 +791,7 @@ void ProcessSession::rollback() {
       auto flowFile = it.second.modified;
       // restore flowFile to original state
       *flowFile = *it.second.snapshot;
+      penalize(flowFile);
       logger_->log_debug("ProcessSession rollback for %s, record %s, to connection %s",
           process_context_->getProcessorNode()->getName(),
           flowFile->getUUIDStr(),

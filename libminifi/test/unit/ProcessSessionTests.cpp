@@ -74,3 +74,31 @@ TEST_CASE("ProcessSession::existsFlowFileInRelationship works", "[existsFlowFile
   REQUIRE(process_session.existsFlowFileInRelationship(Failure));
   REQUIRE(process_session.existsFlowFileInRelationship(Success));
 }
+
+TEST_CASE("ProcessSession::rollback penalizes affected flowfiles", "[rollback]") {
+  Fixture fixture;
+  core::ProcessSession &process_session = fixture.processSession();
+
+  const auto flow_file_1 = process_session.create();
+  const auto flow_file_2 = process_session.create();
+  const auto flow_file_3 = process_session.create();
+  process_session.transfer(flow_file_1, Success);
+  process_session.transfer(flow_file_2, Success);
+  process_session.transfer(flow_file_3, Success);
+  process_session.commit();
+
+  auto next_flow_file_to_be_processed = process_session.get();
+  REQUIRE(next_flow_file_to_be_processed == flow_file_1);
+  next_flow_file_to_be_processed = process_session.get();
+  REQUIRE(next_flow_file_to_be_processed == flow_file_2);
+  REQUIRE_FALSE(flow_file_1->isPenalized());
+  REQUIRE_FALSE(flow_file_2->isPenalized());
+  REQUIRE_FALSE(flow_file_3->isPenalized());
+
+  process_session.rollback();
+  REQUIRE(flow_file_1->isPenalized());
+  REQUIRE(flow_file_2->isPenalized());
+  REQUIRE_FALSE(flow_file_3->isPenalized());
+  next_flow_file_to_be_processed = process_session.get();
+  REQUIRE(next_flow_file_to_be_processed == flow_file_3);
+}
