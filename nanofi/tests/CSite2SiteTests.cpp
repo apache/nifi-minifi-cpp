@@ -17,6 +17,9 @@
  */
 
 #include <stdlib.h>
+#ifndef WIN32
+#include <signal.h>
+#endif
 
 #include <algorithm>
 #include <chrono>
@@ -68,6 +71,9 @@ void wait_until(std::atomic<bool>& b) {
 }
 
 TEST_CASE("TestSetPortId", "[S2S1]") {
+#ifndef WIN32
+  signal(SIGPIPE, SIG_IGN);
+#endif
   SiteToSiteCPeer peer;
   initPeer(&peer, "fake_host", 65433);
   CRawSiteToSiteClient * protocol = (CRawSiteToSiteClient*)malloc(sizeof(CRawSiteToSiteClient));
@@ -167,7 +173,9 @@ void different_version_bootstrap(minifi::io::BaseStream* stream, TransferState& 
 }
 
 TEST_CASE("TestSiteToBootStrap", "[S2S3]") {
-
+#ifndef WIN32
+  signal(SIGPIPE, SIG_IGN);
+#endif
   std::array<std::function<void(minifi::io::BaseStream*, TransferState&, S2SReceivedData&)>, 2> bootstrap_functions =
       {sunny_path_bootstrap, different_version_bootstrap};
 
