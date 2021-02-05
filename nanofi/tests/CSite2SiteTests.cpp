@@ -17,7 +17,9 @@
  */
 
 #include <stdlib.h>
+#ifndef WIN32
 #include <signal.h>
+#endif
 
 #include <algorithm>
 #include <chrono>
@@ -170,9 +172,7 @@ void different_version_bootstrap(minifi::io::BaseStream* stream, TransferState& 
   sunny_path_bootstrap(stream, transfer_state, s2s_data);
 }
 
-
 TEST_CASE("TestSiteToBootStrap", "[S2S3]") {
-
 #ifndef WIN32
   signal(SIGPIPE, SIG_IGN);
 #endif
