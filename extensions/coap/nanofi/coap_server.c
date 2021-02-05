@@ -20,7 +20,7 @@
 /**
  * Create a new CoAPServer
  */
-CoapServerContext * const create_server(const char * const server_hostname, const char * const port) {
+CoapServerContext* create_server(const char * const server_hostname, const char * const port) {
   CoapServerContext *server = (CoapServerContext*) malloc(sizeof(CoapServerContext));
   memset(server, 0x00, sizeof(CoapServerContext));
   if (create_endpoint_context(&server->ctx, server_hostname, port)) {
@@ -30,7 +30,7 @@ CoapServerContext * const create_server(const char * const server_hostname, cons
   return server;
 }
 
-CoapEndpoint * const create_endpoint(CoapServerContext * const server, const char * const resource_path, uint8_t method, coap_method_handler_t handler) {
+CoapEndpoint* create_endpoint(CoapServerContext * const server, const char * const resource_path, uint8_t method, coap_method_handler_t handler) {
   CoapEndpoint *endpoint = (CoapEndpoint*) malloc(sizeof(CoapEndpoint));
   memset(endpoint, 0x00, sizeof(CoapEndpoint));
   endpoint->server = server;

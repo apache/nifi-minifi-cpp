@@ -14,6 +14,10 @@
 #include <signal.h>
 #include <sys/stat.h>
 
+#ifndef UNUSED
+#define UNUSED(x) (void)(x)
+#endif
+
 processor_params * procparams = NULL;
 volatile sig_atomic_t stopped = 0;
 
@@ -100,7 +104,7 @@ int validate_input_params(tailfile_input_params * params, uint64_t * intrvl, uin
 
 void setup_signal_action() {
     struct sigaction action;
-    memset(&action, 0, sizeof(sigaction));
+    memset(&action, 0, sizeof(action));
     action.sa_handler = signal_handler;
     sigaction(SIGTERM, &action, NULL);
     sigaction(SIGINT, &action, NULL);
@@ -241,7 +245,7 @@ void add_processor_properties(const char * uuid, struct proc_properties * const 
 }
 
 void on_trigger_tailfilechunk(processor_session * ps, processor_context * ctx) {
-
+    UNUSED(ps);
     char uuid_str[37];
     get_proc_uuid_from_context(ctx, uuid_str);
 
@@ -410,6 +414,7 @@ struct proc_properties * get_properties(const char * uuid, processor_context * c
 }
 
 void on_trigger_logaggregator(processor_session * ps, processor_context * ctx) {
+    UNUSED(ps);
     char uuid_str[37];
     get_proc_uuid_from_context(ctx, uuid_str);
 
@@ -468,6 +473,7 @@ flow_file_list * add_flow_file_to_proc_params(const char * uuid, flow_file_recor
 }
 
 void on_trigger_tailfiledelimited(processor_session * ps, processor_context * ctx) {
+    UNUSED(ps);
     char uuid_str[37];
     get_proc_uuid_from_context(ctx, uuid_str);
 

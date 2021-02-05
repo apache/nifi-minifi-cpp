@@ -307,8 +307,10 @@ bool StringUtils::from_base64(uint8_t* data, size_t* data_length, const char* ba
     case 1:
       return false;
     case 2:
-      digits[2] = 0x00;
     case 3: {
+      if (digit_counter == 2) {
+        digits[2] = 0x00;
+      }
       digits[3] = 0x00;
 
       uint8_t bytes_temp[3];

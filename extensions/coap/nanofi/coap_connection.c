@@ -37,9 +37,7 @@ CoapPDU *create_connection(uint8_t type, const char * const server, const char *
   uri.port = port;
   uri.scheme = COAP_URI_SCHEME_COAP;
 
-  fd_set readfds;
   coap_pdu_t* request;
-  unsigned char get_method = 1;
 
   int res = resolve_address(&uri.host, &pdu->dst_addr.addr.sa);
   if (res < 0) {
@@ -48,19 +46,16 @@ CoapPDU *create_connection(uint8_t type, const char * const server, const char *
   pdu->dst_addr.size = res;
   pdu->dst_addr.addr.sin.sin_port = htons(uri.port);
 
-  void *addrptr = NULL;
   char port_str[NI_MAXSERV] = "0";
 
   switch (pdu->dst_addr.addr.sa.sa_family) {
     case AF_INET:
-      addrptr = &pdu->dst_addr.addr.sin.sin_addr;
       if (!create_session(&pdu->ctx, &pdu->session, 0x00, port_str, &pdu->dst_addr)) {
         break;
       } else {
         return NULL;
       }
     case AF_INET6:
-      addrptr = &pdu->dst_addr.addr.sin6.sin6_addr;
       if (!create_session(&pdu->ctx, &pdu->session, 0x00, port_str, &pdu->dst_addr)) {
         break;
       } else {

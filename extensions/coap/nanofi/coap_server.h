@@ -51,12 +51,12 @@ typedef struct {
  * @param title title of base resource
  * @return CoAPServer structure.
  */
-CoapServerContext * const create_server(const char *const server_hostname, const char * const port);
+CoapServerContext* create_server(const char *const server_hostname, const char * const port);
 
 /**
  * Creates an endpoint for the provided service context
  */
-CoapEndpoint * const create_endpoint(CoapServerContext * const, const char * const resource_path, uint8_t method, coap_method_handler_t handler);
+CoapEndpoint* create_endpoint(CoapServerContext * const, const char * const resource_path, uint8_t method, coap_method_handler_t handler);
 
 /**
  * Adds an endpoint to the provided CoapEndpoint structure

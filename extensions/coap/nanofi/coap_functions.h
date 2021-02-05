@@ -48,10 +48,6 @@ typedef struct {
   void (*received_error)(void *receiver_context, struct coap_context_t *ctx, unsigned int code);
 } callback_pointers;
 
-// defines the context specific data for the data receiver
-static void *receiver;
-static callback_pointers global_ptrs;
-
 /**
  * Initialize the API access. Not thread safe.
  */

@@ -191,7 +191,7 @@ class ListenSyslog : public core::Processor {
   void pollEvent(std::queue<SysLogEvent> &list, int maxSize) {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    while (!_eventQueue.empty() && (maxSize == 0 || list.size() < maxSize)) {
+    while (!_eventQueue.empty() && (maxSize == 0 || list.size() < static_cast<uint32_t>(maxSize))) {
       SysLogEvent event = _eventQueue.front();
       _eventQueue.pop();
       _eventQueueByteSize -= event.len;

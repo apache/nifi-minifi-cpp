@@ -390,7 +390,7 @@ class ReadCallback : public InputStreamCallback {
     status_ = 0;
     called_ = true;
 
-    gsl_Expects(max_seg_size_ != 0 || flow_size_ == 0 && "max_seg_size_ == 0 implies flow_size_ == 0");
+    gsl_Expects(max_seg_size_ != 0 || (flow_size_ == 0 && "max_seg_size_ == 0 implies flow_size_ == 0"));
     // ^^ therefore checking max_seg_size_ == 0 handles both division by zero and flow_size_ == 0 cases
     const size_t reserved_msg_capacity = max_seg_size_ == 0 ? 1 : utils::intdiv_ceil(flow_size_, max_seg_size_);
     messages_->modifyResult(flow_file_index_, [reserved_msg_capacity](FlowFileResult& flow_file) {
@@ -407,7 +407,7 @@ class ReadCallback : public InputStreamCallback {
       return 0;
     }
 
-    for (size_t segment_num = 0; read_size_ < flow_size_; ++segment_num) {
+    for (size_t segment_num = 0; static_cast<uint32_t>(read_size_) < flow_size_; ++segment_num) {
       const int readRet = stream->read(buffer.data(), gsl::narrow<int>(buffer.size()));
       if (readRet < 0) {
         status_ = -1;

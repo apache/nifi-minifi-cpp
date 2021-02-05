@@ -247,7 +247,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     auto create_provider = [&](
         const std::string& type,
         const std::string& longType,
-        const std::unordered_map<std::string, std::string>& extraProperties = {}) -> std::shared_ptr<core::CoreComponentStateManagerProvider> {
+        const std::unordered_map<std::string, std::string>& extraProperties) -> std::shared_ptr<core::CoreComponentStateManagerProvider> {
       node = controller_service_provider->createControllerService(type, longType, DefaultStateManagerProviderName, true /*firstTimeAdded*/);
       if (node == nullptr) {
         return nullptr;
@@ -303,7 +303,8 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     /* Fall back to volatile memory-backed provider */
     if (preferredType.empty() || preferredType == "UnorderedMapKeyValueStoreService") {
       auto provider = create_provider("UnorderedMapKeyValueStoreService",
-                                      "org.apache.nifi.minifi.controllers.UnorderedMapKeyValueStoreService");
+                                      "org.apache.nifi.minifi.controllers.UnorderedMapKeyValueStoreService",
+                                      {});
       if (provider != nullptr) {
         return provider;
       }

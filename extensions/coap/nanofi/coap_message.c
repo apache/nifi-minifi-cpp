@@ -17,7 +17,7 @@
  */
 #include "coap_message.h"
 
-CoapMessage * const create_coap_message(const coap_pdu_t * const pdu) {
+CoapMessage* create_coap_message(const coap_pdu_t * const pdu) {
   CoapMessage *message = (CoapMessage*) malloc(sizeof(CoapMessage));
   coap_get_data(pdu, &message->size_, &message->data_);
   message->code_ = pdu->code;

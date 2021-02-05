@@ -74,8 +74,8 @@ static void setHostName(struct SiteToSiteCPeer * peer, const char * hostname) {
   peer->_url = (char*)malloc(host_len + 14);  // +1 for trailing zero, 1 for ':', at most 5 for port, 7 for "nifi://" suffix
   memset(peer->_url, 0, host_len + 14);  // make sure to have zero padding no matter the length of the port
   strncpy(peer->_host, hostname, host_len);
-  strncpy(peer->_url, "nifi://", 7);
-  strncpy(peer->_url + 7, hostname, host_len);
+  memcpy(peer->_url, "nifi://", 7);
+  memcpy(peer->_url + 7, hostname, host_len);
   peer->_host[host_len] = '\0';
   peer->_url[host_len + 7] = ':';
   if(peer->_port != 0) {

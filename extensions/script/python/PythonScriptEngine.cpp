@@ -33,7 +33,7 @@ Interpreter *getInterpreter() {
 }
 
 PythonScriptEngine::PythonScriptEngine() {
-  auto intepreter = getInterpreter();
+  getInterpreter();
   py::gil_scoped_acquire gil { };
   py::module::import("minifi_native");
   bindings_.reset(new py::dict());
@@ -63,7 +63,7 @@ void PythonScriptEngine::evalFile(const std::string &file_name) {
 }
 
 void PythonScriptEngine::initialize() {
-  auto intepreter = getInterpreter();
+  getInterpreter();
 }
 
 } /* namespace python */

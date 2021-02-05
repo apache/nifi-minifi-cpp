@@ -58,7 +58,7 @@ bool ConsumeMQTT::enqueueReceiveMQTTMsg(MQTTClient_message *message) {
     logger_->log_warn("MQTT queue full");
     return false;
   } else {
-    if (message->payloadlen > maxSegSize_)
+    if (static_cast<uint64_t>(message->payloadlen) > maxSegSize_)
       message->payloadlen = maxSegSize_;
     queue_.enqueue(message);
     logger_->log_debug("enqueue MQTT message length %d", message->payloadlen);

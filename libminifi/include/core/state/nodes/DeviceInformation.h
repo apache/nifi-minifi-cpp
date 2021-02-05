@@ -71,7 +71,7 @@ class Device {
     initialize();
   }
   void initialize() {
-    addrinfo hints = { sizeof(addrinfo) };
+    addrinfo hints;
     memset(&hints, 0, sizeof hints);  // make sure the struct is empty
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;

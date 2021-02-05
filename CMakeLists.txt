@@ -129,7 +129,8 @@ if (WIN32)
 	add_definitions(-DSERVICE_NAME="Apache NiFi MINiFi")
 endif()
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+add_compile_options(-Wall -Wextra -pedantic)
 
 if (NOT PORTABLE)
 	if(MSVC)
@@ -259,7 +260,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zlib/dummy")
 
 # uthash
 add_library(ut INTERFACE)
-target_include_directories(ut INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ut")
+target_include_directories(ut SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ut")
 
 # cURL
 if(NOT DISABLE_CURL)
@@ -281,23 +282,23 @@ use_bundled_yamlcpp(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 # concurrentqueue
 add_library(concurrentqueue INTERFACE)
-target_include_directories(concurrentqueue INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/concurrentqueue")
+target_include_directories(concurrentqueue SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/concurrentqueue")
 
 # RapidJSON
 add_library(RapidJSON INTERFACE)
-target_include_directories(RapidJSON INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rapidjson-1.1.0/include")
+target_include_directories(RapidJSON SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rapidjson-1.1.0/include")
 
 # Cron
 add_library(cron INTERFACE)
-target_include_directories(cron INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cron")
+target_include_directories(cron SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cron")
 
 # cxxopts
 add_library(cxxopts INTERFACE)
-target_include_directories(cxxopts INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cxxopts/include")
+target_include_directories(cxxopts SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cxxopts/include")
 
 # gsl-lite
 add_library(gsl-lite INTERFACE)
-target_include_directories(gsl-lite INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gsl-lite-0.37.0/include")
+target_include_directories(gsl-lite SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gsl-lite-0.37.0/include")
 
 # Add necessary definitions based on the value of STRICT_GSL_CHECKS, see gsl-lite README for more details
 list(APPEND GslDefinitions gsl_CONFIG_DEFAULTS_VERSION=1)
@@ -315,7 +316,7 @@ target_compile_definitions(gsl-lite INTERFACE ${GslDefinitions})
 
 # optional-lite
 add_library(optional-lite INTERFACE)
-target_include_directories(optional-lite INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/optional-lite-3.2.0/include")
+target_include_directories(optional-lite SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/optional-lite-3.2.0/include")
 
 # date
 include(Date)
@@ -452,7 +453,7 @@ option(DISABLE_SCRIPTING "Disables the scripting extensions." OFF)
 if (NOT DISABLE_SCRIPTING)
 	# sol
 	add_library(sol INTERFACE)
-	target_include_directories(sol INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/sol2-2.20.0")
+	target_include_directories(sol SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/sol2-2.20.0")
 	createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
 endif()
 

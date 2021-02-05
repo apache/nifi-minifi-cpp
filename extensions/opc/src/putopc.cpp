@@ -134,7 +134,7 @@ namespace processors {
 
     if(idType_ == opc::OPCNodeIDType::Int) {
       try {
-        int t = std::stoi(nodeID_);
+        std::stoi(nodeID_);
       } catch(...) {
         auto error_msg = utils::StringUtils::join_pack(nodeID_, " cannot be used as an int type node ID");
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);

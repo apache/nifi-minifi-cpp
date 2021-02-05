@@ -109,7 +109,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     uint64_t max_seg_size_;
     std::string key_;
     MQTTClient client_;
-    ;
+
     int status_;
     size_t read_size_;
     int qos_;

@@ -42,7 +42,7 @@ typedef struct {
 /**
  * Create a new CoAMessage, taking ownership of the aforementioned buffers
  */
-CoapMessage * const create_coap_message(const coap_pdu_t * const pdu);
+CoapMessage* create_coap_message(const coap_pdu_t * const pdu);
 /**
  * FRee the CoAP messages that are provided.
  */

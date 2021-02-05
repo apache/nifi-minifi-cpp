@@ -197,7 +197,7 @@ class ListSFTP : public SFTPProcessorBase {
 REGISTER_RESOURCE(ListSFTP, "Performs a listing of the files residing on an SFTP server. "
                             "For each file that is found on the remote server, a new FlowFile will be created with "
                             "the filename attribute set to the name of the file on the remote server. "
-                            "This can then be used in conjunction with FetchSFTP in order to fetch those files.")
+                            "This can then be used in conjunction with FetchSFTP in order to fetch those files.");
 
 } /* namespace processors */
 } /* namespace minifi */

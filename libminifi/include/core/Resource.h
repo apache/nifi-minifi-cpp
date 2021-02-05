@@ -55,11 +55,11 @@ class StaticClassType {
 
 #define REGISTER_RESOURCE(CLASSNAME, DESC) \
         static core::StaticClassType<CLASSNAME> \
-        CLASSNAME##_registrar(#CLASSNAME, DESC);
+        CLASSNAME##_registrar(#CLASSNAME, DESC)
 
 #define REGISTER_RESOURCE_AS(CLASSNAME, NAME) \
         static core::StaticClassType<CLASSNAME> \
-        CLASSNAME##_registrar(#NAME);
+        CLASSNAME##_registrar(#NAME)
 
 }  // namespace core
 }  // namespace minifi

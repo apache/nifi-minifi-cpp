@@ -46,10 +46,10 @@ class Flow {
   virtual utils::Identifier getControllerUUID() const = 0;
 
   std::shared_ptr<core::ProcessGroup> root_;
-  std::unique_ptr<core::FlowConfiguration> flow_configuration_;
   std::shared_ptr<core::Repository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_file_repo_;
   std::shared_ptr<core::ContentRepository> content_repo_;
+  std::unique_ptr<core::FlowConfiguration> flow_configuration_;
 };
 
 }  // namespace core

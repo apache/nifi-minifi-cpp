@@ -27,7 +27,7 @@ class DummyProcessor : public core::Processor {
   using core::Processor::Processor;
 };
 
-REGISTER_RESOURCE(DummyProcessor, "A processor that does nothing.")
+REGISTER_RESOURCE(DummyProcessor, "A processor that does nothing.");
 
 class Fixture {
  public:

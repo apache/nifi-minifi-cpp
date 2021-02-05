@@ -84,12 +84,12 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void notifyStop() override;
-  
+
   class Handler: public CivetHandler {
    public:
     explicit Handler(SourceInitiatedSubscriptionListener& processor);
     bool handlePost(CivetServer* server, struct mg_connection* conn);
-    
+
     class WriteCallback : public OutputStreamCallback {
      public:
       explicit WriteCallback(char* text);
@@ -101,16 +101,16 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
 
    private:
     SourceInitiatedSubscriptionListener& processor_;
-    
+
     bool handleSubscriptionManager(struct mg_connection* conn, const std::string& endpoint, WsXmlDocH request);
     bool handleSubscriptions(struct mg_connection* conn, const std::string& endpoint, WsXmlDocH request);
-    
+
     static int enumerateEventCallback(WsXmlNodeH node, void* data);
     std::string getSoapAction(WsXmlDocH doc);
     std::string getMachineId(WsXmlDocH doc);
     bool isAckRequested(WsXmlDocH doc);
     void sendResponse(struct mg_connection* conn, const std::string& machineId, const std::string& remoteIp, char* xml_buf, size_t xml_buf_size);
-    
+
     static std::string millisecondsToXsdDuration(int64_t milliseconds);
   };
 
@@ -137,7 +137,7 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
 
   std::unique_ptr<CivetServer> server_;
   std::unique_ptr<Handler> handler_;
-  
+
   struct SubscriberData {
       WsXmlDocH bookmark_;
       std::string subscription_version_;
@@ -162,7 +162,7 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
 };
 
 REGISTER_RESOURCE(SourceInitiatedSubscriptionListener, "This processor implements a Windows Event Forwarding Source Initiated Subscription server with the help of OpenWSMAN. "
-                                                       "Windows hosts can be set up to connect and forward Event Logs to this processor.")
+                                                       "Windows hosts can be set up to connect and forward Event Logs to this processor.");
 
 } /* namespace processors */
 } /* namespace minifi */

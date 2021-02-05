@@ -285,8 +285,11 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
                 }
               }
             }
+            break;
 
-          case UVC_VS_FORMAT_MJPEG:logger_->log_info("Skipping MJPEG frame formats");
+          case UVC_VS_FORMAT_MJPEG:
+            logger_->log_info("Skipping MJPEG frame formats");
+            break;
 
           default:logger_->log_warn("Found unknown format");
         }
@@ -377,7 +380,7 @@ void GetUSBCamera::cleanupUvc() {
   }
 }
 
-void GetUSBCamera::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+void GetUSBCamera::onTrigger(core::ProcessContext */*context*/, core::ProcessSession *session) {
   auto flowFile = session->get();
 
   if (flowFile) {
@@ -427,7 +430,7 @@ int64_t GetUSBCamera::PNGWriteCallback::process(const std::shared_ptr<io::BaseSt
                        auto this_callback = reinterpret_cast<PNGWriteCallback *>(png_get_io_ptr(out_png));
                        std::copy(out_data, out_data + num_bytes, std::back_inserter(this_callback->png_output_buf_));
                      },
-                     [](png_structp flush_png) {});
+                     [](png_structp /*flush_png*/) {});
 
     png_set_IHDR(png, info, width_, height_, 8,
                  PNG_COLOR_TYPE_RGB,
