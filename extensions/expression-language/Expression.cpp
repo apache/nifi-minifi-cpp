@@ -840,10 +840,7 @@ Value expr_find(const std::vector<Value> &args) {
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
 
 Value expr_trim(const std::vector<Value> &args) {
-  std::string result = args[0].asString();
-  auto ws_front = std::find_if_not(result.begin(), result.end(), [](int c) {return std::isspace(c);});
-  auto ws_back = std::find_if_not(result.rbegin(), result.rend(), [](int c) {return std::isspace(c);}).base();
-  return (ws_back <= ws_front ? Value(std::string()) : Value(std::string(ws_front, ws_back)));
+  return Value{utils::StringUtils::trim(args[0].asString())};
 }
 
 Value expr_append(const std::vector<Value> &args) {
