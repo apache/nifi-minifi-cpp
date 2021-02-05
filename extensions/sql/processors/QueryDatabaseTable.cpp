@@ -158,7 +158,8 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& context, core::P
 
   auto rowset = statement->execute();
 
-  sql::MaxCollector maxCollector{selectQuery, max_values_};
+  std::unordered_map<std::string, std::string> new_max_values = max_values_;
+  sql::MaxCollector maxCollector{selectQuery, new_max_values};
   sql::JSONSQLWriter sqlWriter{output_format_ == OutputType::JSONPretty};
   FlowFileGenerator flow_file_creator{session, sqlWriter};
   sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, {sqlWriter, maxCollector, flow_file_creator});
@@ -173,19 +174,18 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& context, core::P
   for (auto& new_file : flow_file_creator.getFlowFiles()) {
     session.transfer(new_file, Success);
     for (const auto& max_column : max_value_columns_) {
-      new_file->addAttribute("maxvalue." + max_column, max_values_[max_column]);
+      new_file->addAttribute("maxvalue." + max_column, new_max_values[max_column]);
     }
   }
 
-  const auto mapState = max_values_;
-  if (maxCollector.updateMapState()) {
+  if (new_max_values != max_values_) {
     try {
       session.commit();
     } catch (std::exception& e) {
-      max_values_ = mapState;
       throw;
     }
 
+    max_values_ = new_max_values;
     saveState();
   }
 }
@@ -196,10 +196,11 @@ void QueryDatabaseTable::initializeMaxValues(core::ProcessContext &context) {
   if (!state_manager_->get(new_state)) {
     logger_->log_info("Found no stored state");
   } else {
-    if (new_state[TABLENAME_KEY] != table_name_) {
-      // new table is being queried
-      state_manager_->clear();
-    } else {
+    const bool should_reset_state = [&] {
+      if (new_state[TABLENAME_KEY] != table_name_) {
+        logger_->log_info("Querying new table \"%s\", resetting state.", table_name_);
+        return true;
+      }
       for (auto &&elem : new_state) {
         if (utils::StringUtils::startsWith(elem.first, MAXVALUE_KEY_PREFIX)) {
           std::string column_name = elem.first.substr(MAXVALUE_KEY_PREFIX.length());
@@ -207,12 +208,22 @@ void QueryDatabaseTable::initializeMaxValues(core::ProcessContext &context) {
           if (std::find(max_value_columns_.begin(), max_value_columns_.end(), column_name) != max_value_columns_.end()) {
             max_values_.emplace(column_name, std::move(elem.second));
           } else {
-            // the state contains a column we don't care about, resetting state
-            max_values_.clear();
-            break;
+            logger_->log_info("State contains obsolete maximum-value column \"%s\", resetting state.", column_name);
+            return true;
           }
         }
       }
+      for (auto& column : max_value_columns_) {
+        if (max_values_.find(column) == max_values_.end()) {
+          logger_->log_info("New maximum-value column \"%s\" specified, resetting state.", column);
+          return true;
+        }
+      }
+      return false;
+    }();
+    if (should_reset_state) {
+      state_manager_->clear();
+      max_values_.clear();
     }
   }
 

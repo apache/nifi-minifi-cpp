@@ -65,7 +65,10 @@ class SQLTestPlan {
     return processor_;
   }
 
-  void run() {
+  void run(bool reschedule = false) {
+    if (reschedule) {
+      plan_->reset(reschedule);
+    }
     plan_->runProcessor(0);  // run the one and only sql processor
   }
 

@@ -19,10 +19,9 @@
 #undef NDEBUG
 
 #include "SQLTestController.h"
-
 #include "processors/ExecuteSQL.h"
-
 #include "Utils.h"
+#include "FlowFileMatcher.h"
 
 TEST_CASE("ExecuteSQL works without incoming flow file", "[ExecuteSQL1]") {
   SQLTestController controller;
@@ -159,53 +158,30 @@ TEST_CASE("ExecuteSQL honors Max Rows Per Flow File", "[ExecuteSQL5]") {
 
   plan->run();
 
-  struct FlowFileContent {
-    size_t row_count;
-    std::string content;
+  auto content_verifier = [&] (const std::shared_ptr<core::FlowFile>& actual, const std::string& expected) {
+    verifyJSON(plan->getContent(actual), expected);
   };
 
-  std::vector<FlowFileContent> expected_contents{
-    {2, R"([{"text_col": "apple"}, {"text_col": "banana"}])"},
-    {2, R"([{"text_col": "pear"}, {"text_col": "strawberry"}])"},
-    {1, R"([{"text_col": "pineapple"}])"}
-  };
+  FlowFileMatcher matcher{content_verifier, {
+      processors::ExecuteSQL::RESULT_ROW_COUNT,
+      processors::ExecuteSQL::FRAGMENT_COUNT,
+      processors::ExecuteSQL::FRAGMENT_INDEX,
+      processors::ExecuteSQL::FRAGMENT_IDENTIFIER
+  }};
 
   utils::optional<std::string> fragment_id;
 
   auto flow_files = plan->getOutputs({"success", "d"});
-  REQUIRE(flow_files.size() == expected_contents.size());
-  for (size_t idx = 0; idx < flow_files.size(); ++idx) {
-    auto& expected = expected_contents[idx];
-    auto& actual = flow_files[idx];
-
-    // check row_count
-    std::string actual_row_count;
-    actual->getAttribute(processors::ExecuteSQL::RESULT_ROW_COUNT, actual_row_count);
-    REQUIRE(actual_row_count == std::to_string(expected.row_count));
-
-    // check fragment_count
-    std::string fragment_count;
-    actual->getAttribute(processors::ExecuteSQL::FRAGMENT_COUNT, fragment_count);
-    REQUIRE(fragment_count == std::to_string(flow_files.size()));
-
-    // check fragment_index
-    std::string fragment_index;
-    actual->getAttribute(processors::ExecuteSQL::FRAGMENT_INDEX, fragment_index);
-    REQUIRE(fragment_index == std::to_string(idx));
-
-    // check fragment_id
-    std::string current_fragment_id;
-    actual->getAttribute(processors::ExecuteSQL::FRAGMENT_IDENTIFIER, current_fragment_id);
-    if (fragment_id) {
-      REQUIRE(current_fragment_id == *fragment_id);
-    } else {
-      fragment_id = current_fragment_id;
-    }
-
-    // check flowFile content
-    auto actual_content = plan->getContent(actual);
-    verifyJSON(actual_content, expected.content);
-  }
+  REQUIRE(flow_files.size() == 3);
+  matcher.verify(flow_files[0],
+    {"2", "3", "0", var("frag_id")},
+    R"([{"text_col": "apple"}, {"text_col": "banana"}])");
+  matcher.verify(flow_files[1],
+    {"2", "3", "1", var("frag_id")},
+    R"([{"text_col": "pear"}, {"text_col": "strawberry"}])");
+  matcher.verify(flow_files[2],
+    {"1", "3", "2", var("frag_id")},
+    R"([{"text_col": "pineapple"}])");
 }
 
 TEST_CASE("ExecuteSQL sql execution throws", "[ExecuteSQL6]") {

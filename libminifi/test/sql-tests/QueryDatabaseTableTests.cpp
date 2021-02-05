@@ -21,6 +21,7 @@
 #include "../TestBase.h"
 #include "SQLTestController.h"
 #include "Utils.h"
+#include "FlowFileMatcher.h"
 
 TEST_CASE("QueryDatabaseTable queries the table and returns specified columns", "[QueryDatabaseTable1]") {
   SQLTestController controller;
@@ -76,7 +77,8 @@ TEST_CASE("QueryDatabaseTable requerying the table returns only new rows", "[Que
     {105, "five"}
   });
 
-  plan->run();
+  SECTION("Without schedule") {plan->run();}
+  SECTION("With schedule") {plan->run(true);}
 
   auto second_flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(second_flow_files.size() == 1);
@@ -119,4 +121,128 @@ TEST_CASE("QueryDatabaseTable specifying initial max values", "[QueryDatabaseTab
   verifyJSON(content, R"(
     [{"text_col": "three"}, {"text_col": "four"}]
   )");
+}
+
+TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attributes", "[QueryDatabaseTable1]") {
+  SQLTestController controller;
+
+  auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
+  auto sql_proc = plan->getSQLProcessor();
+  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "test_table");
+  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
+  sql_proc->setProperty(processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
+  sql_proc->setProperty(processors::QueryDatabaseTable::MaxRowsPerFlowFile.getName(), "3");
+
+  controller.insertValues({
+    {101, "one"},
+    {102, "two"},
+    {103, "three"},
+    {104, "four"},
+    {105, "five"}
+  });
+
+  plan->run();
+
+  auto content_verifier = [&] (const std::shared_ptr<core::FlowFile>& actual, const std::string& expected) {
+    verifyJSON(plan->getContent(actual), expected);
+  };
+
+  FlowFileMatcher matcher(content_verifier, {
+      processors::QueryDatabaseTable::RESULT_TABLE_NAME,
+      processors::QueryDatabaseTable::RESULT_ROW_COUNT,
+      processors::QueryDatabaseTable::FRAGMENT_COUNT,
+      processors::QueryDatabaseTable::FRAGMENT_INDEX,
+      processors::QueryDatabaseTable::FRAGMENT_IDENTIFIER,
+      "maxvalue.int_col"
+  });
+
+  auto flow_files = plan->getOutputs({"success", "d"});
+  REQUIRE(flow_files.size() == 2);
+
+  matcher.verify(flow_files[0],
+    {"test_table", "3", "2", "0", var("frag_id"), "105"},
+    R"([{"text_col": "one"}, {"text_col": "two"}, {"text_col": "three"}])");
+  matcher.verify(flow_files[1],
+    {"test_table", "2", "2", "1", var("frag_id"), "105"},
+    R"([{"text_col": "four"}, {"text_col": "five"}])");
+}
+
+TEST_CASE("QueryDatabaseTable changing table name resets state", "[QueryDatabaseTable2]") {
+  SQLTestController controller;
+
+  auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
+  auto sql_proc = plan->getSQLProcessor();
+  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "test_table");
+  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
+  sql_proc->setProperty(processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
+
+  controller.insertValues({
+      {101, "one"},
+      {102, "two"},
+      {103, "three"}
+  });
+
+  // query "test_table"
+  plan->run();
+  auto flow_files = plan->getOutputs({"success", "d"});
+  REQUIRE(flow_files.size() == 1);
+  std::string row_count;
+  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  REQUIRE(row_count == "3");
+
+
+  // query "empty_test_table"
+  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "empty_test_table");
+  plan->run(true);
+  flow_files = plan->getOutputs({"success", "d"});
+  REQUIRE(flow_files.size() == 0);
+
+  // again query "test_table", by now the stored state is reset, so all rows are returned
+  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "test_table");
+  plan->run(true);
+  flow_files = plan->getOutputs({"success", "d"});
+  REQUIRE(flow_files.size() == 1);
+  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  REQUIRE(row_count == "3");
+}
+
+TEST_CASE("QueryDatabaseTable changing maximum value columns resets state", "[QueryDatabaseTable2]") {
+  SQLTestController controller;
+
+  auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
+  auto sql_proc = plan->getSQLProcessor();
+  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "test_table");
+  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
+  sql_proc->setProperty(processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
+
+  controller.insertValues({
+      {101, "one"},
+      {102, "two"},
+      {103, "three"}
+  });
+
+  // query using ["int_col"] as max value columns
+  plan->run();
+  auto flow_files = plan->getOutputs({"success", "d"});
+  REQUIRE(flow_files.size() == 1);
+  std::string row_count;
+  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  REQUIRE(row_count == "3");
+
+
+  // query using ["int_col", "text_col"] as max value columns
+  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col, text_col");
+  plan->run(true);
+  flow_files = plan->getOutputs({"success", "d"});
+  REQUIRE(flow_files.size() == 1);
+  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  REQUIRE(row_count == "3");
+
+  // query using ["int_col"] as max value columns again
+  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
+  plan->run(true);
+  flow_files = plan->getOutputs({"success", "d"});
+  REQUIRE(flow_files.size() == 1);
+  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  REQUIRE(row_count == "3");
 }

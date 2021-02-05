@@ -56,6 +56,12 @@ class SQLTestController : public TestController {
       stmt.step();
       REQUIRE(stmt.is_ok());
     }
+    {
+      minifi::sqlite::SQLiteConnection db(database_.str());
+      auto stmt = db.prepare("CREATE TABLE empty_test_table (int_col INTEGER, text_col TEXT);");
+      stmt.step();
+      REQUIRE(stmt.is_ok());
+    }
   }
 
   std::shared_ptr<SQLTestPlan> createSQLPlan(const std::string& sql_processor, std::initializer_list<core::Relationship> outputs) {

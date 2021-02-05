@@ -32,7 +32,11 @@ namespace sql {
 
 class MaxCollector: public SQLRowSubscriber {
   void beginProcessBatch() override {}
-  void endProcessBatch(State state) override {}
+  void endProcessBatch(State state) override {
+    if (state == State::DONE) {
+      updateMapState();
+    }
+  }
   void beginProcessRow() override {}
   void endProcessRow() override {}
 
@@ -91,9 +95,7 @@ class MaxCollector: public SQLRowSubscriber {
 
         const auto it = maxVal.mapColumnNameValue_.find(el.first);
         if (it != maxVal.mapColumnNameValue_.end()) {
-          std::stringstream ss;
-          ss << it->second;
-          el.second = ss.str();
+          el.second = (std::stringstream{} << it->second).str();
         }
       }
 
@@ -123,11 +125,8 @@ class MaxCollector: public SQLRowSubscriber {
     }
   }
 
-  bool updateMapState() {
-    auto mapState = mapState_;
+  void updateMapState() {
     UpdateMapState<decltype(maxValues_), decltype(maxValues_)::size - 1>(maxValues_, mapState_);
-
-    return mapState != mapState_;
   }
 
  private:
@@ -135,9 +134,9 @@ class MaxCollector: public SQLRowSubscriber {
   std::unordered_map<std::string, std::string>& mapState_;
   MaxValues<std::string, double, int, long long, unsigned long long> maxValues_;
 };
-
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+  
+}  // namespace sql
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
