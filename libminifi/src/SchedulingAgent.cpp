@@ -52,8 +52,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::enableControllerService(
   utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
-  std::future<utils::TaskRescheduleInfo> future;
-  thread_pool_.execute(std::move(functor), future);
+  auto future = thread_pool_.execute(std::move(functor));
   if (future.valid())
     future.wait();
   return future;
@@ -73,8 +72,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService
 
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
-  std::future<utils::TaskRescheduleInfo> future;
-  thread_pool_.execute(std::move(functor), future);
+  auto future = thread_pool_.execute(std::move(functor));
   if (future.valid())
     future.wait();
   return future;

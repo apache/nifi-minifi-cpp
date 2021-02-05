@@ -101,17 +101,16 @@ void ThreadPool<T>::manage_delayed_queue() {
 }
 
 template<typename T>
-bool ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
+std::future<T> ThreadPool<T>::execute(Worker<T> &&task) {
   {
     std::unique_lock<std::mutex> lock(worker_queue_mutex_);
     task_status_[task.getIdentifier()] = true;
   }
-  future = std::move(task.getPromise()->get_future());
+  auto future = task.getPromise()->get_future();
   worker_queue_.enqueue(std::move(task));
 
   task_count_++;
-
-  return true;
+  return future;
 }
 
 template<typename T>

@@ -89,16 +89,14 @@ TEST_CASE("BT2", "[TPT2]") {
     std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(5));
     utils::Worker<int> functor(f_ex, "id", std::move(after_execute));
 
-    std::future<int> fut;
-    REQUIRE(true == pool.execute(std::move(functor), fut));
+    pool.execute(std::move(functor));
   }
 
   std::function<int()> f_ex = counterFunction;
   std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(5));
   utils::Worker<int> functor(f_ex, "id", std::move(after_execute));
 
-  std::future<int> fut;
-  REQUIRE(true == pool.execute(std::move(functor), fut));
+  auto fut = pool.execute(std::move(functor));
 
   std::vector<BackTrace> traces = pool.getTraces();
   for (const auto &trace : traces) {

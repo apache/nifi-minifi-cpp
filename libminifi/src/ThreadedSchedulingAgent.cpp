@@ -106,8 +106,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, processor->getUUIDStr(), std::move(monitor));
     // move the functor into the thread pool. While a future is returned
     // we aren't terribly concerned with the result.
-    std::future<utils::TaskRescheduleInfo> future;
-    thread_pool_.execute(std::move(functor), future);
+    thread_pool_.execute(std::move(functor));
   }
   logger_->log_debug("Scheduled thread %d concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName());
   processors_running_.insert(processor->getUUID());

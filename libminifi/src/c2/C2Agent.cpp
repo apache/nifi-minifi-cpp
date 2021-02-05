@@ -99,8 +99,7 @@ void C2Agent::start() {
     task_ids_.push_back(uuid);
     auto monitor = utils::make_unique<utils::ComplexMonitor>();
     utils::Worker<utils::TaskRescheduleInfo> functor(function, uuid.to_string(), std::move(monitor));
-    std::future<utils::TaskRescheduleInfo> future;
-    thread_pool_.execute(std::move(functor), future);
+    thread_pool_.execute(std::move(functor));
   }
   controller_running_ = true;
   thread_pool_.start();

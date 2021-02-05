@@ -215,10 +215,9 @@ class ThreadPool {
    * a future
    * @param task this thread pool will subsume ownership of
    * the worker task
-   * @param future future to move new promise to
-   * @return true if future can be created and thread pool is in a running state.
+   * @return future of the created promise
    */
-  bool execute(Worker<T> &&task, std::future<T> &future);
+  std::future<T> execute(Worker<T> &&task);
 
   /**
    * attempts to stop tasks with the provided identifier.

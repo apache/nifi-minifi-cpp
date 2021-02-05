@@ -108,7 +108,7 @@ class Instance {
     }
     agent_ = std::make_shared<c2::C2CallbackAgent>(nullptr, nullptr, nullptr, configure_);
     listener_thread_pool_.start();
-    registerUpdateListener(agent_, 1000);
+    registerUpdateListener(agent_);
     agent_->setStopCallback(c1);
   }
 
@@ -148,19 +148,14 @@ class Instance {
 
  protected:
 
-  bool registerUpdateListener(const std::shared_ptr<state::UpdateController> &updateController, const int64_t& /*delay*/) {
+  void registerUpdateListener(const std::shared_ptr<state::UpdateController> &updateController) {
     auto functions = updateController->getFunctions();
     // run all functions independently
 
     for (auto function : functions) {
       utils::Worker<utils::TaskRescheduleInfo> functor(function, "listeners");
-      std::future<utils::TaskRescheduleInfo> future;
-      if (!listener_thread_pool_.execute(std::move(functor), future)) {
-        // denote failure
-        return false;
-      }
+      listener_thread_pool_.execute(std::move(functor));
     }
-    return true;
   }
 
   std::shared_ptr<c2::C2CallbackAgent> agent_;
