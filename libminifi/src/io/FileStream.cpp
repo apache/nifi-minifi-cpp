@@ -54,7 +54,7 @@ FileStream::FileStream(const std::string &path, bool append)
     if (file_stream_->is_open()) {
       seekToEndOfFile(FILE_OPENING_ERROR_MSG);
       auto len = file_stream_->tellg();
-      if (len < 0)
+      if (len == std::streampos(-1))
         logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << TELLG_CALL_ERROR_MSG;
       length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
       seek(offset_);
@@ -83,7 +83,7 @@ FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enab
   if (file_stream_->is_open()) {
     seekToEndOfFile(FILE_OPENING_ERROR_MSG);
     auto len = file_stream_->tellg();
-    if (len < 0)
+    if (len == std::streampos(-1))
       logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << TELLG_CALL_ERROR_MSG;
     length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
     seek(offset_);
@@ -158,7 +158,7 @@ int FileStream::read(uint8_t *buf, int buflen) {
       file_stream_->clear();
       seekToEndOfFile(READ_ERROR_MSG);
       auto tellg_result = file_stream_->tellg();
-      if (tellg_result < 0) {
+      if (tellg_result == std::streampos(-1)) {
         logging::LOG_ERROR(logger_) << READ_ERROR_MSG << TELLG_CALL_ERROR_MSG;
         return -1;
       }
