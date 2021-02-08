@@ -40,4 +40,5 @@ done
 
 HEADERS=`find $INCLUDE_DIRS -name '*.h' | sort | uniq | tr '\n' ' '`
 SOURCES=`find $SOURCE_DIRS -name  '*.cpp' | sort | uniq | tr '\n' ' '`
-python ${SCRIPT_DIR}/cpplint.py --linelength=200 ${HEADERS} ${SOURCES}
+REPOSITORY="$(realpath --physical "$(dirname "$0")/../..")"
+python ${SCRIPT_DIR}/cpplint.py --linelength=200 --repository="$REPOSITORY" ${HEADERS} ${SOURCES}
