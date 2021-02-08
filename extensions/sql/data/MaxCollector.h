@@ -75,10 +75,10 @@ class MaxCollector: public SQLRowSubscriber {
 
   template <typename T>
   struct MaxValue {
-    void updateMaxValue(const std::string& name, const T& value) {
-      const auto it = mapColumnNameValue_.find(name);
-      if (it == mapColumnNameValue_.end()) {
-        mapColumnNameValue_.insert({ name, value });
+    void updateMaxValue(const std::string& column, const T& value) {
+      const auto it = column_maxima.find(column);
+      if (it == column_maxima.end()) {
+        column_maxima.insert({ column, value });
       } else {
         if (value > it->second) {
           it->second = value;
@@ -86,35 +86,23 @@ class MaxCollector: public SQLRowSubscriber {
       }
     }
 
-    std::unordered_map<std::string, T> mapColumnNameValue_;
-  };
-
-  template <typename Tuple, int Index>
-  struct UpdateMapState {
-    UpdateMapState(const Tuple& tpl, std::unordered_map<std::string, std::string>& mapState) {
-      for (auto& el : mapState) {
-        const auto& maxVal = std::get<Index>(tpl);
-
-        const auto it = maxVal.mapColumnNameValue_.find(el.first);
-        if (it != maxVal.mapColumnNameValue_.end()) {
-          std::stringstream ss;
-          ss << it->second;
-          el.second = ss.str();
-        }
-      }
-
-      UpdateMapState<Tuple, Index - 1>(tpl, mapState);
-    }
-  };
-
-  template <typename Tuple>
-  struct UpdateMapState<Tuple, -1> {
-    UpdateMapState(const Tuple&, std::unordered_map<std::string, std::string>&) {}
+    std::unordered_map<std::string, T> column_maxima;
   };
 
   template <typename ...Ts>
-  struct MaxValues : public std::tuple<MaxValue<Ts>...> {
-    constexpr static size_t size = sizeof...(Ts);
+  struct MaxValues : public MaxValue<Ts>... {
+    void updateState(std::unordered_map<std::string, std::string>& state) const {
+      (void)(std::initializer_list<int>{([&] {
+        for (auto& curr_column_max : state) {
+          const auto it = MaxValue<Ts>::column_maxima.find(curr_column_max.first);
+          if (it != MaxValue<Ts>::column_maxima.end()) {
+            std::stringstream ss;
+            ss << it->second;
+            curr_column_max.second = ss.str();
+          }
+        }
+      }(), 0)...});
+    }
   };
 
  public:
@@ -125,12 +113,12 @@ class MaxCollector: public SQLRowSubscriber {
   template <typename T>
   void updateMaxValue(const std::string& columnName, const T& value) {
     if (mapState_.count(columnName)) {
-      std::get<MaxValue<T>>(maxValues_).updateMaxValue(columnName, value);
+      maxValues_.MaxValue<T>::updateMaxValue(columnName, value);
     }
   }
 
   void updateMapState() {
-    UpdateMapState<decltype(maxValues_), decltype(maxValues_)::size - 1>(maxValues_, mapState_);
+    maxValues_.updateState(mapState_);
   }
 
  private:
