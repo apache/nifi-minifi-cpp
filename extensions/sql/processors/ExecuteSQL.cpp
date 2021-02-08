@@ -20,29 +20,18 @@
 
 #include "ExecuteSQL.h"
 
-#include <vector>
-#include <queue>
-#include <map>
-#include <set>
-#include <sstream>
-#include <stdio.h>
 #include <string>
-#include <iostream>
 #include <memory>
-#include <codecvt>
 
 #include <soci/soci.h>
 
 #include "io/BufferStream.h"
+#include "io/StreamPipe.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Exception.h"
-#include "utils/OsUtils.h"
-#include "data/DatabaseConnectors.h"
 #include "data/JSONSQLWriter.h"
 #include "data/SQLRowsetProcessor.h"
-#include "data/WriteCallback.h"
-#include "utils/ValueParser.h"
 
 namespace org {
 namespace apache {

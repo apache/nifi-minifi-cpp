@@ -18,7 +18,6 @@
 #include "FlowFileSource.h"
 
 #include "FlowFile.h"
-#include "data/WriteCallback.h"
 #include "data/JSONSQLWriter.h"
 
 namespace org {
@@ -58,7 +57,7 @@ void FlowFileSource::FlowFileGenerator::endProcessBatch(State state) {
     return;
   }
 
-  WriteCallback writer(json_writer_.toString());
+  OutputStreamPipe writer{std::make_shared<io::BufferStream>(json_writer_.toString())};
   auto new_flow = session_.create();
   new_flow->addAttribute(FRAGMENT_INDEX, std::to_string(flow_files_.size()));
   new_flow->addAttribute(FRAGMENT_IDENTIFIER, batch_id_.to_string());

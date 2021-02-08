@@ -21,6 +21,8 @@
 #include <string>
 #include <unordered_map>
 #include <tuple>
+#include <vector>
+#include <sstream>
 
 #include "SQLRowSubscriber.h"
 

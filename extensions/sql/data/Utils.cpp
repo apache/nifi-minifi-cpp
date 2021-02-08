@@ -19,10 +19,7 @@
 #include "Utils.h"
 
 #include <vector>
-#include <algorithm>
-#include  <cctype>
-#include  <regex>
-#include  <sstream>
+#include <string>
 
 #include "utils/StringUtils.h"
 

@@ -21,8 +21,6 @@
 #pragma once
 
 #include "core/Core.h"
-#include "FlowFileRecord.h"
-#include "concurrentqueue.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "utils/Enum.h"

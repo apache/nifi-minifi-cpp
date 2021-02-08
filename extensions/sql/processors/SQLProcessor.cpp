@@ -17,6 +17,14 @@
 
 #include "SQLProcessor.h"
 
+#include <vector>
+#include <memory>
+
+#include "core/FlowFile.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
+#include "Exception.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -49,7 +57,7 @@ void SQLProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
       connection_ = dbService_->getConnection();
     }
     processOnTrigger(*context, *session);
-  } catch (std::exception& e) {
+  } catch (const std::exception& e) {
     logger_->log_error("SQLProcessor: '%s'", e.what());
     if (connection_) {
       std::string exp;

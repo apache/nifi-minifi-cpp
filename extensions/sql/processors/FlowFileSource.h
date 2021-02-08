@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+#include <memory>
+
 #include "core/Property.h"
 #include "utils/Enum.h"
 #include "data/SQLRowsetProcessor.h"

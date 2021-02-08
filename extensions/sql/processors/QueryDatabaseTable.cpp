@@ -21,17 +21,9 @@
 #include "QueryDatabaseTable.h"
 
 #include <vector>
-#include <queue>
-#include <map>
-#include <set>
-#include <sstream>
-#include <cstdio>
 #include <string>
-#include <iostream>
 #include <memory>
-#include <codecvt>
 #include <algorithm>
-#include <regex>
 
 #include <soci/soci.h>
 
@@ -39,14 +31,10 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Exception.h"
-#include "utils/OsUtils.h"
-#include "data/DatabaseConnectors.h"
 #include "data/JSONSQLWriter.h"
 #include "data/SQLRowsetProcessor.h"
-#include "data/WriteCallback.h"
 #include "data/MaxCollector.h"
 #include "data/Utils.h"
-#include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
 
 namespace org {

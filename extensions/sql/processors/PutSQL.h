@@ -20,15 +20,11 @@
 
 #pragma once
 
-#include "core/Core.h"
-#include "FlowFileRecord.h"
-#include "concurrentqueue.h"
-#include "core/Processor.h"
-#include "core/ProcessSession.h"
-#include "services/DatabaseService.h"
-#include "SQLProcessor.h"
+#include <string>
 
-#include <sstream>
+#include "core/Resource.h"
+#include "core/ProcessSession.h"
+#include "SQLProcessor.h"
 
 namespace org {
 namespace apache {
