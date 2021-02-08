@@ -22,6 +22,7 @@
 #include "processors/PutSQL.h"
 #include "processors/QueryDatabaseTable.h"
 #include "services/ODBCConnector.h"
+#include "utils/GeneralUtils.h"
 
 class SQLFactory : public core::ObjectFactory {
  public:
@@ -48,7 +49,7 @@ class SQLFactory : public core::ObjectFactory {
 
   template <typename T>
   static std::unique_ptr<ObjectFactory> getObjectFactory() {
-    return std::make_unique<core::DefautObjectFactory<T>>();
+    return utils::make_unique<core::DefautObjectFactory<T>>();
   }
 
   std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {

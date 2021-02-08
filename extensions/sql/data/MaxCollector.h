@@ -95,7 +95,9 @@ class MaxCollector: public SQLRowSubscriber {
 
         const auto it = maxVal.mapColumnNameValue_.find(el.first);
         if (it != maxVal.mapColumnNameValue_.end()) {
-          el.second = (std::stringstream{} << it->second).str();
+          std::stringstream ss;
+          ss << it->second;
+          el.second = ss.str();
         }
       }
 
