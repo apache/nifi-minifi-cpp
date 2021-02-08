@@ -76,14 +76,11 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
   if (!url.empty() && payload != nullptr) {
     std::string flow_id, bucket_id;
     auto path_split = utils::StringUtils::split(url, "/");
-    // Registry API docs: nifi.apache.org/docs/nifi-registry-docs/rest-api/index.html
-    // GET /buckets/{bucketId}/flows/{flowId}: Gets a flow
-    const auto bucket_token_found = std::find(path_split.cbegin(), path_split.cend(), "buckets");
-    if (bucket_token_found != path_split.cend() && std::next(bucket_token_found) != path_split.cend()) {
-      bucket_id = *std::next(bucket_token_found);
-      const auto flows_token_found = std::find(std::next(bucket_token_found, 2), path_split.cend(), "flows");
-      if (flows_token_found != path_split.cend() && std::next(flows_token_found) != path_split.cend()) {
-        flow_id = *std::next(flows_token_found);
+    for (auto it = path_split.cbegin(); it != path_split.cend(); ++it) {
+      if (*it == "flows" && std::next(it) != path_split.cend()) {
+        flow_id = *++it;
+      } else if (*it == "buckets" && std::next(it) != path_split.cend()) {
+        bucket_id = *++it;
       }
     }
     flow_version_->setFlowVersion(url, bucket_id, flow_id);
