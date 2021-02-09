@@ -55,6 +55,7 @@ add_custom_target(
         -c DISABLE_SCRIPTING=${DISABLE_SCRIPTING}
         -c DISABLE_CONTROLLER=${DISABLE_CONTROLLER}
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
+        -c BUILD_NUMBER=${BUILD_NUMBER}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 # Create minimal docker image
@@ -66,6 +67,7 @@ add_custom_target(
         -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
         -i minimal
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
+        -c BUILD_NUMBER=${BUILD_NUMBER}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
