@@ -895,13 +895,11 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
   for (const auto &prop_pair : component_properties) {
     if (prop_pair.second.getRequired()) {
       if (prop_pair.second.getValue().to_string().empty()) {
-        std::stringstream reason;
-        reason << "required property '" << prop_pair.second.getName() << "' is not set";
-        raiseComponentError(component_name, yaml_section, reason.str());
+        std::string reason = utils::StringUtils::join_pack("required property '", prop_pair.second.getName(), "' is not set");
+        raiseComponentError(component_name, yaml_section, reason);
       } else if (!prop_pair.second.getValue().validate(prop_pair.first).valid()) {
-        std::stringstream reason;
-        reason << "Property '" << prop_pair.second.getName() << "' is not valid";
-        raiseComponentError(component_name, yaml_section, reason.str());
+        std::string reason = utils::StringUtils::join_pack("the value '", prop_pair.first, "' is not valid for property '", prop_pair.second.getName(), "'");
+        raiseComponentError(component_name, yaml_section, reason);
       }
     }
   }
@@ -916,11 +914,8 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
 
     for (const auto &dep_prop_key : dep_props) {
       if (component_properties.at(dep_prop_key).getValue().to_string().empty()) {
-        std::string reason("property '");
-        reason.append(prop_pair.second.getName());
-        reason.append("' depends on property '");
-        reason.append(dep_prop_key);
-        reason.append("' which is not set");
+        std::string reason = utils::StringUtils::join_pack("property '", prop_pair.second.getName(),
+            "' depends on property '", dep_prop_key, "' which is not set");
         raiseComponentError(component_name, yaml_section, reason);
       }
     }
@@ -952,9 +947,8 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
     if (!prop_regex_str.empty()) {
       std::regex prop_regex(prop_regex_str);
       if (!std::regex_match(prop_pair.second.getValue().to_string(), prop_regex)) {
-        std::stringstream reason;
-        reason << "property '" << prop_pair.second.getName() << "' does not match validation pattern '" << prop_regex_str << "'";
-        raiseComponentError(component_name, yaml_section, reason.str());
+        std::string reason = utils::StringUtils::join_pack("property '", prop_pair.second.getName(), "' does not match validation pattern '", prop_regex_str, "'");
+        raiseComponentError(component_name, yaml_section, reason);
       }
     }
   }
