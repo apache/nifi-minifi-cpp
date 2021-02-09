@@ -184,7 +184,7 @@ TEST_CASE("ExecuteSQL honors Max Rows Per Flow File", "[ExecuteSQL5]") {
     R"([{"text_col": "pineapple"}])");
 }
 
-TEST_CASE("ExecuteSQL sql execution throws", "[ExecuteSQL6]") {
+TEST_CASE("ExecuteSQL incoming flow file is routed to failure on sql error", "[ExecuteSQL6]") {
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("ExecuteSQL", {{"success", "d"}, {"failure", "d"}});

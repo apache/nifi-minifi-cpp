@@ -86,22 +86,24 @@ class MaxCollector: public SQLRowSubscriber {
       }
     }
 
+    void updateStateImpl(std::unordered_map<std::string, std::string>& state) const {
+      for (auto& curr_column_max : state) {
+        const auto it = column_maxima.find(curr_column_max.first);
+        if (it != column_maxima.end()) {
+          std::stringstream ss;
+          ss << it->second;
+          curr_column_max.second = ss.str();
+        }
+      }
+    }
+
     std::unordered_map<std::string, T> column_maxima;
   };
 
   template <typename ...Ts>
   struct MaxValues : public MaxValue<Ts>... {
     void updateState(std::unordered_map<std::string, std::string>& state) const {
-      (void)(std::initializer_list<int>{([&] {
-        for (auto& curr_column_max : state) {
-          const auto it = MaxValue<Ts>::column_maxima.find(curr_column_max.first);
-          if (it != MaxValue<Ts>::column_maxima.end()) {
-            std::stringstream ss;
-            ss << it->second;
-            curr_column_max.second = ss.str();
-          }
-        }
-      }(), 0)...});
+      (void)(std::initializer_list<int>{(MaxValue<Ts>::updateStateImpl(state), 0)...});
     }
   };
 
