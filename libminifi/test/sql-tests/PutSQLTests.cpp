@@ -26,7 +26,6 @@
 #include "processors/UpdateAttribute.h"
 #include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
-#include "SQLiteConnection.h"
 
 TEST_CASE("Test Creation of PutSQL", "[PutSQLCreate]") {  // NOLINT
   TestController testController;

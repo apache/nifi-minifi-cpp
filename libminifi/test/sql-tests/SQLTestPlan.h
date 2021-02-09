@@ -19,7 +19,6 @@
 #pragma once
 
 #include "../TestBase.h"
-#include "SQLiteConnection.h"
 
 class SQLTestPlan {
  public:
