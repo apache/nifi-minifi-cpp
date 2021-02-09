@@ -43,10 +43,8 @@ class SingleNodeDockerCluster(Cluster):
         Clean up ephemeral cluster resources
         """
 
-        # Clean up containers
-        for container in self.containers.values():
-            logging.info('Cleaning up container: %s', container.name)
-            
+        # Containers and networks are expected to be freed outside of this function
+
         # Clean up images
         for image in reversed(self.images):
             logging.info('Cleaning up image: %s', image[0].id)

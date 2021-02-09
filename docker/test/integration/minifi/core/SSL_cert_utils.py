@@ -33,7 +33,7 @@ def gen_cert():
     return cert, key
 
 def rsa_gen_key_callback():
-        pass
+    pass
 
 def gen_req():
     """

@@ -40,10 +40,6 @@ class Processor(Connectable):
         self.schedule.update(schedule)
 
     def set_property(self, key, value):
-        # if value == "false":
-        #     self.properties[key] = False
-        # if value == "true":
-        #     self.properties[key] = True
         if value.isdigit():
             self.properties[key] = int(value)
         else:

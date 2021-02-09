@@ -23,14 +23,5 @@ def before_scenario(context, scenario):
 def after_scenario(context, scenario):
 	pass
 
-# @fixture
-# def setup_minifi_instance(context):
-#     print("Setup", end="\n\n")
-#     context.flow = None
-#     context.test = MiNiFi_integration_test(context)
-
 def before_all(context):
     context.config.setup_logging()
-
-# def before_scenario(context, scenario):
-# 	use_fixture(setup_minifi_instance, context)

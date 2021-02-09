@@ -59,7 +59,6 @@ fi
 
 pip install --upgrade \
             behave \
-            pytest \
             pytimeparse \
             docker \
             PyYAML \
@@ -73,20 +72,22 @@ export PATH
 PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
 export PYTHONPATH
 
+BEHAVE_OPTS="-f pretty --logging-level INFO --no-capture"
+
 cd "${docker_dir}/test/integration"
 exec 
-  behave -f pretty --logging-level INFO --no-capture "features/file_system_operations.feature" -n "Get and put operations run in a simple flow" &&
-  behave -f pretty --logging-level INFO --no-capture "features/file_system_operations.feature" -n "PutFile does not overwrite a file that already exists" &&
-  behave -f pretty --logging-level INFO --no-capture "features/s2s.feature" -n "A MiNiFi instance produces and transfers data to a NiFi instance via s2s" &&
-  behave -f pretty --logging-level INFO --no-capture "features/s2s.feature" -n "Zero length files are transfered between via s2s if the \"drop empty\" connection property is false" &&
-  behave -f pretty --logging-level INFO --no-capture "features/s2s.feature" -n "Zero length files are not transfered between via s2s if the \"drop empty\" connection property is true" &&
-  behave -f pretty --logging-level INFO --no-capture "features/http.feature" -n "A MiNiFi instance transfers data to another MiNiFi instance" &&
-  behave -f pretty --logging-level INFO --no-capture "features/http.feature" -n "A MiNiFi instance sends data through a HTTP proxy and another one listens" &&
-  behave -f pretty --logging-level INFO --no-capture "features/http.feature" -n "A MiNiFi instance and transfers hashed data to another MiNiFi instance" &&
-  behave -f pretty --logging-level INFO --no-capture "features/kafka.feature" -n "A MiNiFi instance transfers data to a kafka broker" &&
-  behave -f pretty --logging-level INFO --no-capture "features/kafka.feature" -n "PublishKafka sends flowfiles to failure when the broker is not available" &&
-  behave -f pretty --logging-level INFO --no-capture "features/kafka.feature" -n "PublishKafka sends can use SSL connect" &&
-  behave -f pretty --logging-level INFO --no-capture "features/s3.feature" -n "A MiNiFi instance transfers encoded data to s3" &&
-  behave -f pretty --logging-level INFO --no-capture "features/s3.feature" -n "A MiNiFi instance transfers encoded data through a http proxy to s3" &&
-  behave -f pretty --logging-level INFO --no-capture "features/s3.feature" -n "A MiNiFi instance can remove s3 bucket objects" &&
-  behave -f pretty --logging-level INFO --no-capture "features/s3.feature" -n "Deletion of a s3 object through a proxy-server succeeds"
+  behave $BEHAVE_OPTS "features/file_system_operations.feature" -n "Get and put operations run in a simple flow" &&
+  behave $BEHAVE_OPTS "features/file_system_operations.feature" -n "PutFile does not overwrite a file that already exists" &&
+  behave $BEHAVE_OPTS "features/s2s.feature" -n "A MiNiFi instance produces and transfers data to a NiFi instance via s2s" &&
+  behave $BEHAVE_OPTS "features/s2s.feature" -n "Zero length files are transfered between via s2s if the \"drop empty\" connection property is false" &&
+  behave $BEHAVE_OPTS "features/s2s.feature" -n "Zero length files are not transfered between via s2s if the \"drop empty\" connection property is true" &&
+  behave $BEHAVE_OPTS "features/http.feature" -n "A MiNiFi instance transfers data to another MiNiFi instance" &&
+  behave $BEHAVE_OPTS "features/http.feature" -n "A MiNiFi instance sends data through a HTTP proxy and another one listens" &&
+  behave $BEHAVE_OPTS "features/http.feature" -n "A MiNiFi instance and transfers hashed data to another MiNiFi instance" &&
+  behave $BEHAVE_OPTS "features/kafka.feature" -n "A MiNiFi instance transfers data to a kafka broker" &&
+  behave $BEHAVE_OPTS "features/kafka.feature" -n "PublishKafka sends flowfiles to failure when the broker is not available" &&
+  behave $BEHAVE_OPTS "features/kafka.feature" -n "PublishKafka sends can use SSL connect" &&
+  behave $BEHAVE_OPTS "features/s3.feature" -n "A MiNiFi instance transfers encoded data to s3" &&
+  behave $BEHAVE_OPTS "features/s3.feature" -n "A MiNiFi instance transfers encoded data through a http proxy to s3" &&
+  behave $BEHAVE_OPTS "features/s3.feature" -n "A MiNiFi instance can remove s3 bucket objects" &&
+  behave $BEHAVE_OPTS "features/s3.feature" -n "Deletion of a s3 object through a proxy-server succeeds"

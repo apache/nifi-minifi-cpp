@@ -54,18 +54,20 @@ class MiNiFi_integration_test():
                 container_ids.append(container.id)
             del cluster
 
-        # Backup for cleaning up containers as the cluster deleter is not reliable
+        # The cluster deleter is not reliable for cleaning up
         docker_client = docker.from_env()
         for container_id in container_ids:    
             wait_start_time = time.perf_counter()
+            # There is no clean way to check for container existence
+            try:
+                container = docker_client.containers.get(container_id)
+                container.remove(v=True, force=True)
+            except docker.errors.NotFound:
+                logging.error("Contaner is already cleaned up before.")
             while (time.perf_counter() - wait_start_time) < 35:
-                # There is no clean way to check for container existence
                 try:
-                    container = docker_client.containers.get(container_id)
+                    docker_client.containers.get(container_id)
                     logging.error("Failure when trying to clean up containers. Attempting secondary cleanup.")
-                    container.kill()
-                    time.sleep(5)
-                    container.remove(v=True, force=True)
                     time.sleep(5)
                 except docker.errors.NotFound:
                     break
@@ -74,7 +76,6 @@ class MiNiFi_integration_test():
                 logging.error("All attempts to clean up docker containers were unsuccessful.")
             except docker.errors.NotFound:
                 logging.info("Docker container secondary cleanup successful.")
-                pass
 
         del self.docker_directory_bindings
 
@@ -119,7 +120,7 @@ class MiNiFi_integration_test():
 
     def get_or_create_node_by_name(self, node_name):
         node = self.get_node_by_name(node_name) 
-        if node == None:
+        if node is None:
             if node_name == "RemoteProcessGroup":
                 raise Exception("Trying to register RemoteProcessGroup without an input port or address.")
             node = locate("minifi.processors." + node_name + "." + node_name)()

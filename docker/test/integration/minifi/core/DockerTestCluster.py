@@ -129,6 +129,3 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
     def segfault_happened(self):
         return self.segfault
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        super(DockerTestCluster, self).__exit__(exc_type, exc_val, exc_tb)

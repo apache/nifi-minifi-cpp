@@ -60,17 +60,17 @@ class DockerTestDirectoryBindings:
         os.chmod(dir, 0o777)
 
     @staticmethod
-    def delete_directory(dir):
+    def delete_tmp_directory(dir):
         assert dir.startswith("/tmp/")
         if not dir.endswith("/"):
             dir = dir + "/"
-        # Sometimes rmtree does clean up as expected, setting ignore_errors does not help either
+        # Sometimes rmtree does clean not up as expected, setting ignore_errors does not help either
         shutil.rmtree(dir, ignore_errors=True)
 
     def delete_data_directories(self):
         for directories in self.data_directories.values():
             for directory in directories.values():
-                self.delete_directory(directory)
+                self.delete_tmp_directory(directory)
 
     @staticmethod
     def put_file_contents(file_abs_path, contents):
