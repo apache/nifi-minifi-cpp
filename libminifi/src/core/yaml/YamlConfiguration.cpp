@@ -938,13 +938,8 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
     for (const auto &excl_pair : excl_props) {
       std::regex excl_expr(excl_pair.second);
       if (std::regex_match(component_properties.at(excl_pair.first).getValue().to_string(), excl_expr)) {
-        std::string reason("property '");
-        reason.append(prop_pair.second.getName());
-        reason.append("' is exclusive of property '");
-        reason.append(excl_pair.first);
-        reason.append("' values matching '");
-        reason.append(excl_pair.second);
-        reason.append("'");
+        std::string reason = utils::StringUtils::join_pack("property '", prop_pair.second.getName(),
+            "' must not be set when the value of property '", excl_pair.first, "' matches '", excl_pair.second, "'");
         raiseComponentError(component_name, yaml_section, reason);
       }
     }

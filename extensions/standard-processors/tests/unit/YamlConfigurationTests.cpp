@@ -709,7 +709,7 @@ TEST_CASE("Test Exclusive Property 2", "[YamlConfigurationExclusiveProperty2]") 
   } catch (const std::exception &e) {
     config_failed = true;
     REQUIRE("Unable to parse configuration file for component named 'component A' because "
-        "property 'Prop B' is exclusive of property 'Prop A' values matching '^val.*$' "
+        "property 'Prop B' must not be set when the value of property 'Prop A' matches '^val.*$' "
         "[in 'section A' section of configuration file]" == std::string(e.what()));
   }
   REQUIRE(config_failed);
