@@ -27,3 +27,16 @@ diff -rupN orig/sdk/core/azure-core/src/http/policy.cpp patched/sdk/core/azure-c
 +constexpr Azure::Core::Logging::LogClassification const
      Azure::Core::Http::LogClassification::HttpTransportAdapter;
  #endif
+
+diff -rupN orig/sdk/keyvault/azure-security-keyvault-keys/src/key_client.cpp patched/sdk/keyvault/azure-security-keyvault-keys/src/key_client.cpp
+--- orig/sdk/keyvault/azure-security-keyvault-keys/src/key_client.cpp	2021-02-10 10:35:03.305252930 +0100
++++ patched/sdk/keyvault/azure-security-keyvault-keys/src/key_client.cpp	2021-02-10 16:11:25.139169400 +0100
+@@ -16,7 +16,7 @@ using namespace Azure::Core::Http;
+
+ KeyClient::KeyClient(
+     std::string const& vaultUrl,
+-    std::shared_ptr<Core::TokenCredential const> credential,
++    std::shared_ptr<Azure::Core::TokenCredential const> credential,
+     KeyClientOptions options)
+ {
+   auto apiVersion = options.GetVersionString();
