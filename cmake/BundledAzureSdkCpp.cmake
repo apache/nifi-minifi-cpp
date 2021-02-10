@@ -49,7 +49,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     ExternalProject_Add(
             azure-sdk-cpp-external
             GIT_REPOSITORY "https://github.com/Azure/azure-sdk-for-cpp.git"
-            GIT_TAG "azure-storage-blobs_12.0.0-beta.6"
+            GIT_TAG "azure-storage-blobs_12.0.0-beta.7"
             BUILD_IN_SOURCE true
             SOURCE_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src"
             BUILD_BYPRODUCTS "${AZURESDK_LIBRARIES_LIST}"
