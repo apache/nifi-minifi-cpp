@@ -22,7 +22,7 @@
 
 class SQLTestPlan {
  public:
-  SQLTestPlan(TestController& controller, const utils::Path& database, const std::string& sql_processor, std::initializer_list<core::Relationship> output_rels) {
+  SQLTestPlan(TestController& controller, const std::string& connection_str, const std::string& sql_processor, std::initializer_list<core::Relationship> output_rels) {
     plan_ = controller.createPlan();
     processor_ = plan_->addProcessor(sql_processor, sql_processor);
     plan_->setProperty(processor_, "DB Controller Service", "ODBCService");
@@ -33,9 +33,7 @@ class SQLTestPlan {
 
     // initialize database service
     auto service = plan_->addController("ODBCService", "ODBCService");
-    plan_->setProperty(service,
-         minifi::sql::controllers::DatabaseService::ConnectionString.getName(),
-         "Driver=libsqlite3odbc.so;Database=" + database.str());
+    plan_->setProperty(service, minifi::sql::controllers::DatabaseService::ConnectionString.getName(), connection_str);
   }
 
   std::string getContent(const std::shared_ptr<core::FlowFile>& flow_file) {

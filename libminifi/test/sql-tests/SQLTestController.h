@@ -36,6 +36,12 @@ struct TableRow {
   std::string text_col;
 };
 
+#ifdef WIN32
+const std::string DRIVER = "{SQLite3 ODBC Driver}";
+#else
+const std::string DRIVER = "libsqlite3odbc.so";
+#endif
+
 class SQLTestController : public TestController {
  public:
   SQLTestController() {
@@ -49,7 +55,7 @@ class SQLTestController : public TestController {
 
     test_dir_ = createTempDir("/var/tmp/gt.XXXXXX");
     database_ = test_dir_ / "test.db";
-    connection_str_ = "Driver=libsqlite3odbc.so;Database=" + database_.str();
+    connection_str_ = "Driver=" + DRIVER + ";Database=" + database_.str();
 
     // Create test dbs
     minifi::sql::controllers::ODBCConnection{connection_str_}.prepareStatement("CREATE TABLE test_table (int_col INTEGER, text_col TEXT);")->execute();
@@ -57,7 +63,7 @@ class SQLTestController : public TestController {
   }
 
   std::shared_ptr<SQLTestPlan> createSQLPlan(const std::string& sql_processor, std::initializer_list<core::Relationship> outputs) {
-    return std::make_shared<SQLTestPlan>(*this, database_, sql_processor, outputs);
+    return std::make_shared<SQLTestPlan>(*this, connection_str_, sql_processor, outputs);
   }
 
   void insertValues(std::initializer_list<TableRow> values) {
