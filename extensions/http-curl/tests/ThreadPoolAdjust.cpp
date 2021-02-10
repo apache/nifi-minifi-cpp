@@ -31,9 +31,11 @@
 #include "processors/LogAttribute.h"
 #include "utils/IntegrationTestUtils.h"
 
+constexpr uint64_t INCREASED_WAITTIME_MSECS = DEFAULT_WAITTIME_MSECS * 1.5;
+
 class HttpTestHarness : public IntegrationBase {
  public:
-  HttpTestHarness() {
+  HttpTestHarness() : IntegrationBase(INCREASED_WAITTIME_MSECS) {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }
