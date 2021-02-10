@@ -133,6 +133,9 @@ jobs:
           sudo apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
           sudo apt update
           sudo apt install -y gcc-4.8 g++-4.8 bison flex uuid-dev openssl libcurl4-openssl-dev ccache libpython3-dev liblua5.1-0-dev libssh2-1-dev libsqliteodbc
+          ls -l /usr/lib
+          ls -l /usr/lib/x86_64-linux-gnu
+          ls -l /usr/lib/x86_64-linux-gnu/odbc
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
           sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
@@ -157,6 +160,9 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev libsqliteodbc
+          ls -l /usr/lib
+          ls -l /usr/lib/x86_64-linux-gnu
+          ls -l /usr/lib/x86_64-linux-gnu/odbc
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
         run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DENABLE_BUSTACHE=ON -DENABLE_SQL=ON -DENABLE_PCAP=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && make -j4 VERBOSE=1  && make test ARGS="--timeout 300 -j2 --output-on-failure"

@@ -431,9 +431,6 @@ endif(WIN32)
 
 option(ENABLE_SQL "Enables the SQL Suite of Tools." OFF)
 if (ENABLE_ALL OR ENABLE_SQL)
-	# build sqlite for testing
-	include(BundledSQLite)
-	use_bundled_sqlite(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	createExtension(SQL-EXTENSIONS "SQL EXTENSIONS" "Enables the SQL Suite of Tools" "extensions/sql" "${TEST_DIR}/sql-tests")
 endif()
 
