@@ -71,10 +71,10 @@ jobs:
       - name: Setup PATH
         uses: microsoft/setup-msbuild@v1.0.2
       - id: install-sqliteodbc-driver
-          run: |
-            Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc.exe" -OutFile "sqliteodbc.exe"
-            ./sqliteodbc.exe /S
-          shell: powershell
+        run: |
+          Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc.exe" -OutFile "sqliteodbc.exe"
+          ./sqliteodbc.exe /S
+        shell: powershell
       - id: build
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x86
