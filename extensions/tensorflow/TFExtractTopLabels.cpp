@@ -133,11 +133,11 @@ int64_t TFExtractTopLabels::LabelsReadCallback::process(const std::shared_ptr<io
   uint64_t buf_size = 8096;
   buf.resize(buf_size);
 
-  while (total_read < stream->getSize()) {
+  while (total_read < stream->size()) {
     auto read = stream->read(reinterpret_cast<uint8_t *>(&buf[0]), static_cast<int>(buf_size));
 
     for (auto i = 0; i < read; i++) {
-      if (buf[i] == '\n' || total_read + i == stream->getSize()) {
+      if (buf[i] == '\n' || total_read + i == stream->size()) {
         labels_->emplace_back(label.substr(0, label_size));
         label_size = 0;
       } else {
