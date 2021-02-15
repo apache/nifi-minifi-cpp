@@ -137,11 +137,13 @@ minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredential
 
   std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
   if (!service) {
+    logger_->log_error("AWS credentials service with name: '%s' could not be found", service_name.c_str());
     return minifi::utils::nullopt;
   }
 
   auto aws_credentials_service = std::dynamic_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(service);
   if (!aws_credentials_service) {
+    logger_->log_error("Controller service with name: '%s' is not an AWS credentials service", service_name.c_str());
     return minifi::utils::nullopt;
   }
 

@@ -70,7 +70,8 @@ utils::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const std::string
     }
     result.timestamp = response->LastModified.GetString(Azure::Core::DateTime::DateFormat::Rfc1123);
     return result;
-  } catch (const std::runtime_error&) {
+  } catch (const std::runtime_error& err) {
+    logger_->log_error("A runtime error occurred while uploading blob: %s", err.what());
     return utils::nullopt;
   }
 }

@@ -81,8 +81,7 @@ class PutAzureBlobStorage : public core::Processor {
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       std::vector<uint8_t> buffer;
-      buffer.reserve(flow_size_);
-      int read_ret = stream->read(buffer.data(), flow_size_);
+      int read_ret = stream->read(buffer, flow_size_);
       if (read_ret < 0) {
         return -1;
       }

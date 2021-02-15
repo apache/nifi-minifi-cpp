@@ -92,11 +92,10 @@ class PutS3Object : public S3Processor {
       }
       std::vector<uint8_t> buffer;
       auto data_stream = std::make_shared<std::stringstream>();
-      buffer.reserve(BUFFER_SIZE);
       read_size_ = 0;
       while (read_size_ < flow_size_) {
         auto next_read_size = (std::min)(flow_size_ - read_size_, BUFFER_SIZE);
-        int read_ret = stream->read(buffer.data(), next_read_size);
+        int read_ret = stream->read(buffer, next_read_size);
         if (read_ret < 0) {
           return -1;
         }

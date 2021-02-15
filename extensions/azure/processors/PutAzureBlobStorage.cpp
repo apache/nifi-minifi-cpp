@@ -120,11 +120,13 @@ std::string PutAzureBlobStorage::getConnectionStringFromControllerService(const 
 
   std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
   if (nullptr == service) {
+    logger_->log_error("Azure storage credentials service with name: '%s' could not be found", service_name.c_str());
     return "";
   }
 
   auto azure_credentials_service = std::dynamic_pointer_cast<minifi::azure::controllers::AzureStorageCredentialsService>(service);
   if (!azure_credentials_service) {
+    logger_->log_error("Controller service with name: '%s' is not an Azure storage credentials service", service_name.c_str());
     return "";
   }
 
@@ -144,6 +146,8 @@ std::string PutAzureBlobStorage::getAzureConnectionStringFromProperties(
 }
 
 void PutAzureBlobStorage::createAzureStorageClient(const std::string &connection_string, const std::string &container_name) {
+  // When used in multithreaded environment make sure to use the azure_storage_mutex_ to lock the wrapper so the
+  // client is not reset with different configuration while another thread is using it.
   if (blob_storage_wrapper_ == nullptr) {
     blob_storage_wrapper_ = minifi::utils::make_unique<storage::AzureBlobStorage>(connection_string, container_name);
   } else {

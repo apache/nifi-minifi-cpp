@@ -79,7 +79,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
       if (flow_size_ < max_seg_size_)
         max_seg_size_ = flow_size_;
       std::vector<unsigned char> buffer;
-      buffer.reserve(max_seg_size_);
+      buffer.resize(max_seg_size_);
       read_size_ = 0;
       status_ = 0;
       while (read_size_ < flow_size_) {

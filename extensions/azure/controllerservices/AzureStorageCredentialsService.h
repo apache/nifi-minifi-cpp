@@ -54,11 +54,11 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   void initialize() override;
 
   void yield() override {
-  };
+  }
 
   bool isWorkAvailable() override {
     return false;
-  };
+  }
 
   bool isRunning() override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
