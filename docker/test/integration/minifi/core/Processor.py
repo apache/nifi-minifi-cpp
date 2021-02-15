@@ -45,6 +45,9 @@ class Processor(Connectable):
         else:
             self.properties[key] = value
 
+    def set_scheduling_period(self, value):
+        self.schedule['scheduling period'] = value
+
     def nifi_property_key(self, key):
         """
         Returns the Apache NiFi-equivalent property key for the given key. This is often, but not always, the same as

@@ -97,13 +97,13 @@ class MiNiFi_integration_test():
         logging.info("MiNiFi_integration_test start")
         self.set_up_cluster_network()
         for cluster in self.clusters.values():
+            logging.info("Starting cluster %s with an engine of %s", cluster.get_name(), cluster.get_engine())
             cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id))
             cluster.deploy_flow()
         for cluster_name, cluster in self.clusters.items():
             startup_success = True
             logging.info("Engine: %s", cluster.get_engine())
             if cluster.get_engine() == "minifi-cpp":
-                logging.info("Engine is minifi-cpp")
                 startup_success = cluster.wait_for_app_logs("Starting Flow Controller", 120)
             elif cluster.get_engine() == "nifi":
                 startup_success = cluster.wait_for_app_logs("Starting Flow Controller...", 120)

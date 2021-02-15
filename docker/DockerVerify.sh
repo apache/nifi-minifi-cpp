@@ -90,4 +90,6 @@ exec
   behave $BEHAVE_OPTS "features/s3.feature" -n "A MiNiFi instance transfers encoded data to s3" &&
   behave $BEHAVE_OPTS "features/s3.feature" -n "A MiNiFi instance transfers encoded data through a http proxy to s3" &&
   behave $BEHAVE_OPTS "features/s3.feature" -n "A MiNiFi instance can remove s3 bucket objects" &&
-  behave $BEHAVE_OPTS "features/s3.feature" -n "Deletion of a s3 object through a proxy-server succeeds"
+  behave $BEHAVE_OPTS "features/s3.feature" -n "Deletion of a s3 object through a proxy-server succeeds" &&
+  behave $BEHAVE_OPTS "features/s3.feature" -n "A MiNiFi instance can download s3 bucket objects directly" &&
+  behave $BEHAVE_OPTS "features/s3.feature" -n "A MiNiFi instance can download s3 bucket objects via a http-proxy"

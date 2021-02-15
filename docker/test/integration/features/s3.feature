@@ -105,3 +105,51 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     Then a flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
     And the object bucket on the "s3" s3 server is empty
     And no errors were generated on the "http-proxy" regarding "http://s3-server:9090/test_bucket/test_object_key"
+
+  Scenario: A MiNiFi instance can download s3 bucket objects directly
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
+    And a PutS3Object processor set up to communicate with an s3 server
+    And the "success" relationship of the GetFile processor is connected to the PutS3Object
+
+    Given a GenerateFlowFile processor with the "File Size" property set to "1 kB" in a "secondary" flow
+    And a FetchS3Object processor set up to communicate with the same s3 server
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the processors are connected up as described here:
+      | source name      | relationship name | destination name |
+      | GenerateFlowFile | success           | FetchS3Object    |
+      | FetchS3Object    | success           | PutFile          |
+
+    And a s3 server "s3" is set up in correspondence with the PutS3Object
+
+    When all instances start up
+
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+
+  Scenario: A MiNiFi instance can download s3 bucket objects via a http-proxy
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
+    And a PutS3Object processor set up to communicate with an s3 server
+    And the "success" relationship of the GetFile processor is connected to the PutS3Object
+
+    Given a GenerateFlowFile processor with the "File Size" property set to "1 kB" in a "secondary" flow
+    And a FetchS3Object processor set up to communicate with the same s3 server
+    And these processor properties are set to match the http proxy:
+      | processor name | property name  | property value |
+      | FetchS3Object  | Proxy Host     | http-proxy     |
+      | FetchS3Object  | Proxy Port     | 3128           |
+      | FetchS3Object  | Proxy Username | admin          |
+      | FetchS3Object  | Proxy Password | test101        |
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the processors are connected up as described here:
+      | source name      | relationship name | destination name |
+      | GenerateFlowFile | success           | FetchS3Object    |
+      | FetchS3Object    | success           | PutFile          |
+
+    And a s3 server "s3" is set up in correspondence with the PutS3Object
+    And a http proxy server "http-proxy" is set up accordingly 
+
+    When all instances start up
+
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+    And no errors were generated on the "http-proxy" regarding "http://s3-server:9090/test_bucket/test_object_key"

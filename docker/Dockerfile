@@ -36,6 +36,7 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
   openjdk8-jre-base \
   openjdk8 \
   autoconf \
+  automake \
   libtool \
   wget \
   gdb \

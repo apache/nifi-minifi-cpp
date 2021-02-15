@@ -10,6 +10,7 @@ from minifi.core.SSL_cert_utils import gen_cert, gen_req, rsa_gen_key_callback
 from minifi.processors.PublishKafka import PublishKafka
 from minifi.processors.PutS3Object import PutS3Object
 from minifi.processors.DeleteS3Object import DeleteS3Object
+from minifi.processors.FetchS3Object import FetchS3Object
 
 
 from behave import given, then, when
@@ -88,10 +89,16 @@ def step_impl(context):
 @given("a DeleteS3Object processor set up to communicate with the same s3 server")
 @given("a DeleteS3Object processor set up to communicate with an s3 server")
 def step_impl(context):
-    # PublishKafka is never the first node of a flow potential cluster-flow setup is omitted
     delete_s3 = DeleteS3Object()
     delete_s3.set_name("DeleteS3Object")
     context.test.add_node(delete_s3)
+
+@given("a FetchS3Object processor set up to communicate with the same s3 server")
+@given("a FetchS3Object processor set up to communicate with an s3 server")
+def step_impl(context):
+    fetch_s3 = FetchS3Object()
+    fetch_s3.set_name("FetchS3Object")
+    context.test.add_node(fetch_s3)
 
 @given("a PublishKafka processor set up to communicate with a kafka broker instance")
 def step_impl(context):
@@ -104,6 +111,12 @@ def step_impl(context):
 def step_impl(context, property_name, processor_name, property_value):
     processor = context.test.get_node_by_name(processor_name)
     processor.set_property(property_name, property_value)
+
+
+@given("the scheduling period of the {processor_name} processor is set to \"{sceduling_period}\"")
+def step_impl(context, processor_name, sceduling_period):
+    processor = context.test.get_node_by_name(processor_name)
+    processor.set_scheduling_period(sceduling_period)
 
 @given("these processor properties are set")
 @given("these processor properties are set to match the http proxy")

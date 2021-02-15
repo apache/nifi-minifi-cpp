@@ -44,7 +44,6 @@ class DockerTestCluster(SingleNodeDockerCluster):
     def get_app_log(self):
         for container in self.containers.values():
             container = self.client.containers.get(container.id)
-            logging.info('Container logs for container \'%s\':\n%s', container.name, container.logs().decode("utf-8"))
             if b'Segmentation fault' in container.logs():
                 logging.warn('Container segfaulted: %s', container.name)
                 self.segfault=True
@@ -71,7 +70,10 @@ class DockerTestCluster(SingleNodeDockerCluster):
                 logs = self.get_app_log()
                 if logs is not None and count <= logs.decode("utf-8").count(log):
                     return True
-                time.sleep(0.2)
+                if logs is not None:
+                    for line in logs.decode("utf-8").splitlines():
+                        logging.info("App-log: %s", line)
+                time.sleep(1)
         return False
 
     def log_nifi_output(self):
@@ -84,7 +86,6 @@ class DockerTestCluster(SingleNodeDockerCluster):
     def check_minifi_container_started(self):
         for container in self.containers.values():
             container = self.client.containers.get(container.id)
-            logging.info('Container logs for container \'%s\':\n%s', container.name, container.logs().decode("utf-8"))
             if b'Segmentation fault' in container.logs():
                 logging.warn('Container segfaulted: %s', container.name)
                 raise Exception("Container failed to start up.")
