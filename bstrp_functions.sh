@@ -438,7 +438,7 @@ read_feature_options(){
       fi
       ;;
     q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-X or 1-6...${NO_COLOR}" && sleep 2
+    *) echo -e "${RED}Please enter an option A-Y or 1-6...${NO_COLOR}" && sleep 2
   esac
 }
 
