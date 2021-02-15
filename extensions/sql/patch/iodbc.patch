@@ -1,0 +1,12 @@
+diff -rupN orig/configure.ac patched/configure.ac
+--- orig/configure.ac	2019-07-23 13:37:26.000000000 +0200
++++ patched/configure.ac	2021-02-15 12:43:35.000000000 +0100
+@@ -398,7 +398,7 @@ if test x"$libltdl_cv_uscore" = xyes; th
+ #include <dlfcn.h>
+ #endif
+ 
+-#include <stdio.h>
++#include <stdlib.h>
+ 
+ #ifdef RTLD_GLOBAL
+ # define LTDL_GLOBAL	RTLD_GLOBAL

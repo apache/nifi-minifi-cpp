@@ -30,6 +30,9 @@ file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
 add_library(minifi-sql STATIC ${SOURCES})
 set_property(TARGET minifi-sql PROPERTY POSITION_INDEPENDENT_CODE ON)
 
+# Find patch executable
+find_package(Patch)
+
 if(WIN32)
 	find_package(ODBC REQUIRED)
 else()
@@ -39,6 +42,9 @@ else()
 	set(IODBC_BYPRODUCT "lib/libiodbc.a")
 
 	set(IODBC_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-install/")
+
+	# Define patch step
+	set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_CURRENT_SOURCE_DIR}/patch/iodbc.patch")
 
 	# Build project
 	ExternalProject_Add(
@@ -51,8 +57,8 @@ else()
 			CMAKE_COMMAND ""
 			UPDATE_COMMAND ""
 			INSTALL_COMMAND make install
-			CONFIGURE_COMMAND ""
-			PATCH_COMMAND ./autogen.sh && ./configure --prefix=${IODBC_BYPRODUCT_DIR}
+			CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=${IODBC_BYPRODUCT_DIR}
+			PATCH_COMMAND ${PC}
 			STEP_TARGETS build
 			BUILD_BYPRODUCTS "${IODBC_BYPRODUCT_DIR}/${IODBC_BYPRODUCT}"
 			EXCLUDE_FROM_ALL TRUE
@@ -76,9 +82,6 @@ else()
 endif()
 
 # Build SOCI
-
-# Find patch executable
-find_package(Patch)
 
 # Define patch step
 set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_CURRENT_SOURCE_DIR}/patch/soci.patch")
