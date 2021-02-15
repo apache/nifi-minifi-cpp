@@ -4,14 +4,26 @@ jobs:
   macos_xcode_11_2_1:
     name: "macos-xcode11.2.1"
     runs-on: macos-10.15
-    timeout-minutes: 60
+    timeout-minutes: 90
+    env:
+      CCACHE_BASEDIR: ${{ GITHUB.WORKSPACE }}
+      CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
     steps:
       - id: checkout
         uses: actions/checkout@v2
+      - id: cache
+        uses: actions/cache@v2
+        with:
+          path:  ${{ env.CCACHE_DIR }}
+          key: macos-xcode11.2.1-ccache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            macos-xcode11.2.1-ccache-${{github.ref}}-
+            macos-xcode11.2.1-ccache-refs/heads/main-
       - id: install_dependencies
-        run: brew install ossp-uuid boost flex openssl python lua@5.3 xz libssh2
+        run: brew install ossp-uuid boost flex openssl python lua@5.3 xz libssh2 ccache
       - id: setup_env
         run: |
+          echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
           sudo xcode-select -switch /Applications/Xcode_11.2.1.app
       - id: build
@@ -22,14 +34,26 @@ jobs:
   macos_xcode_12_0:
     name: "macos-xcode12.0"
     runs-on: macos-10.15
-    timeout-minutes: 60
+    timeout-minutes: 90
+    env:
+      CCACHE_BASEDIR: ${{ GITHUB.WORKSPACE }}
+      CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
     steps:
       - id: checkout
         uses: actions/checkout@v2
+      - id: cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: macos-xcode12.0-ccache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            macos-xcode12.0-ccache-${{github.ref}}-
+            macos-xcode12.0-ccache-refs/heads/main-
       - id: install_dependencies
-        run: brew install ossp-uuid boost flex openssl python lua@5.3 xz libssh2
+        run: brew install ossp-uuid boost flex openssl python lua@5.3 xz libssh2 ccache
       - id: setup_env
         run: |
+          echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
           sudo xcode-select -switch /Applications/Xcode_12.app
       - id: build
