@@ -57,27 +57,28 @@ class MiNiFi_integration_test():
         # The cluster deleter is not reliable for cleaning up
         docker_client = docker.from_env()
         for container_id in container_ids:    
-            wait_start_time = time.perf_counter()
-            # There is no clean way to check for container existence
-            try:
-                container = docker_client.containers.get(container_id)
-                container.remove(v=True, force=True)
-            except docker.errors.NotFound:
-                logging.error("Contaner is already cleaned up before.")
-            while (time.perf_counter() - wait_start_time) < 35:
-                try:
-                    docker_client.containers.get(container_id)
-                    logging.error("Failure when trying to clean up containers. Attempting secondary cleanup.")
-                    time.sleep(5)
-                except docker.errors.NotFound:
-                    break
-            try:
-                container = docker_client.containers.get(container_id)
-                logging.error("All attempts to clean up docker containers were unsuccessful.")
-            except docker.errors.NotFound:
-                logging.info("Docker container secondary cleanup successful.")
+            self.delete_docker_container_by_id(container_id)
 
         del self.docker_directory_bindings
+
+    def delete_docker_container_by_id(self, container_id):
+        docker_client = docker.from_env()
+        try:
+            container = docker_client.containers.get(container_id)
+            container.remove(v=True, force=True)
+        except docker.errors.NotFound:
+            logging.warn("Contaner '%s' is already cleaned up before.", container_id)
+            return
+        wait_start_time = time.perf_counter()
+        while (time.perf_counter() - wait_start_time) < 35:
+            try:
+                docker_client.containers.get(container_id)
+                logging.error("Docker container '%s' still exists after removal attempt. Waiting for docker daemon to update...", container_id)
+                time.sleep(5)
+            except docker.errors.NotFound:
+                logging.info("Docker container cleanup successful for '%s'.", container_id)
+                return
+        logging.error("Failed to clean up docker container '%s'.", container_id)
 
     def docker_path_to_local_path(self, docker_path):
         return self.docker_directory_bindings.docker_path_to_local_path(self.test_id, docker_path)
