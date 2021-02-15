@@ -64,7 +64,7 @@ std::string get_human_readable_kafka_message_headers(const rd_kafka_message_t* r
   const rd_kafka_resp_err_t get_header_response = rd_kafka_message_headers(rkmessage, &hdrs);
   if (RD_KAFKA_RESP_ERR_NO_ERROR == get_header_response) {
     std::vector<std::string> header_list;
-    kafka_headers_for_each(hdrs, [&] (const std::string& key, const std::string& val) { header_list.emplace_back(key + ": " + val); });
+    kafka_headers_for_each(hdrs, [&] (const std::string& key, gsl::span<const char> val) { header_list.emplace_back(key + ": " + std::string{ val.data(), val.size() }); });
     return StringUtils::join(", ", header_list);
   }
   if (RD_KAFKA_RESP_ERR__NOENT == get_header_response) {

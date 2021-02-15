@@ -27,6 +27,7 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/OptionalUtils.h"
+#include "utils/gsl.h"
 #include "rdkafka.h"
 
 namespace org {
@@ -87,7 +88,7 @@ void kafka_headers_for_each(const rd_kafka_headers_t* headers, T key_value_handl
   const void *value;
   std::size_t size;
   for (std::size_t i = 0; RD_KAFKA_RESP_ERR_NO_ERROR == rd_kafka_header_get_all(headers, i, &key, &value, &size); ++i) {
-    key_value_handle(std::string(key), std::string(static_cast<const char*>(value), size));
+    key_value_handle(std::string(key), gsl::span<const char>(static_cast<const char*>(value), size));
   }
 }
 
