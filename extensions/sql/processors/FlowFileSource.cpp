@@ -47,8 +47,8 @@ const std::string FlowFileSource::FRAGMENT_IDENTIFIER = "fragment.identifier";
 const std::string FlowFileSource::FRAGMENT_COUNT = "fragment.count";
 const std::string FlowFileSource::FRAGMENT_INDEX = "fragment.index";
 
-void FlowFileSource::FlowFileGenerator::endProcessBatch(State state) {
-  if (state == State::DONE) {
+void FlowFileSource::FlowFileGenerator::endProcessBatch(Progress progress) {
+  if (progress == Progress::DONE) {
     // annotate the flow files with the fragment.count
     std::string fragment_count = std::to_string(flow_files_.size());
     for (const auto& flow_file : flow_files_) {

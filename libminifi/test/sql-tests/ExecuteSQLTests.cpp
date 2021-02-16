@@ -184,15 +184,12 @@ TEST_CASE("ExecuteSQL honors Max Rows Per Flow File", "[ExecuteSQL5]") {
     R"([{"text_col": "pineapple"}])");
 }
 
-TEST_CASE("ExecuteSQL incoming flow file is routed to failure on sql error", "[ExecuteSQL6]") {
+TEST_CASE("ExecuteSQL incoming flow file is malformed", "[ExecuteSQL6]") {
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("ExecuteSQL", {{"success", "d"}, {"failure", "d"}});
 
   auto input_file = plan->addInput({}, "not a valid sql statement");
 
-  plan->run();
-
-  auto flow_files = plan->getOutputs({"failure", "d"});
-  REQUIRE(flow_files.size() == 1);
+  REQUIRE_THROWS(plan->run());
 }

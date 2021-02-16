@@ -57,9 +57,9 @@ class SQLProcessor: public core::Processor {
 
  protected:
    std::shared_ptr<logging::Logger> logger_;
-   std::shared_ptr<sql::controllers::DatabaseService> dbService_;
+   std::shared_ptr<sql::controllers::DatabaseService> db_service_;
    std::unique_ptr<sql::Connection> connection_;
-   std::mutex onTriggerMutex_;
+   std::mutex on_trigger_mutex_;
 };
 
 }  // namespace processors

@@ -25,6 +25,8 @@
 #include "core/ProcessSession.h"
 #include "Exception.h"
 
+#include <soci/error.h>
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -41,8 +43,8 @@ void SQLProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
   std::string controllerService;
   context->getProperty(DBControllerService.getName(), controllerService);
 
-  dbService_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(controllerService));
-  if (!dbService_) {
+  db_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(controllerService));
+  if (!db_service_) {
     throw minifi::Exception(PROCESSOR_EXCEPTION, "'DB Controller Service' must be defined");
   }
 
@@ -50,23 +52,24 @@ void SQLProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
 }
 
 void SQLProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  std::lock_guard<std::mutex> guard(onTriggerMutex_);
+  std::lock_guard<std::mutex> guard(on_trigger_mutex_);
 
   try {
     if (!connection_) {
-      connection_ = dbService_->getConnection();
+      connection_ = db_service_->getConnection();
     }
     processOnTrigger(*context, *session);
-  } catch (const std::exception& e) {
+  } catch (const soci::soci_error& e) {
     logger_->log_error("SQLProcessor: '%s'", e.what());
     if (connection_) {
       std::string exp;
       if (!connection_->connected(exp)) {
-        logger_->log_error("SQLProcessor: Connection exception: %s", exp.c_str());
+        logger_->log_error("SQLProcessor: Connection exception: %s", exp);
+        // try to reconnect next time
         connection_.reset();
       }
     }
-    context->yield();
+    throw;
   }
 }
 

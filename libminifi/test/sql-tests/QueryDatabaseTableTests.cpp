@@ -92,7 +92,7 @@ TEST_CASE("QueryDatabaseTable requerying the table returns only new rows", "[Que
   )");
 }
 
-TEST_CASE("QueryDatabaseTable specifying initial max values", "[QueryDatabaseTable2]") {
+TEST_CASE("QueryDatabaseTable specifying initial max values", "[QueryDatabaseTable3]") {
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
@@ -123,7 +123,7 @@ TEST_CASE("QueryDatabaseTable specifying initial max values", "[QueryDatabaseTab
   )");
 }
 
-TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attributes", "[QueryDatabaseTable1]") {
+TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attributes", "[QueryDatabaseTable4]") {
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
@@ -167,7 +167,7 @@ TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attr
     R"([{"text_col": "four"}, {"text_col": "five"}])");
 }
 
-TEST_CASE("QueryDatabaseTable changing table name resets state", "[QueryDatabaseTable2]") {
+TEST_CASE("QueryDatabaseTable changing table name resets state", "[QueryDatabaseTable5]") {
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
@@ -206,7 +206,7 @@ TEST_CASE("QueryDatabaseTable changing table name resets state", "[QueryDatabase
   REQUIRE(row_count == "3");
 }
 
-TEST_CASE("QueryDatabaseTable changing maximum value columns resets state", "[QueryDatabaseTable2]") {
+TEST_CASE("QueryDatabaseTable changing maximum value columns resets state", "[QueryDatabaseTable6]") {
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});

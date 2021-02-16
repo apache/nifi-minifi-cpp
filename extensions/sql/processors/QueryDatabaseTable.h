@@ -79,6 +79,7 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
  private:
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::string table_name_;
+  std::vector<std::string> return_columns_;
   std::string queried_columns_;
   std::string extra_where_clause_;
   std::vector<std::string> max_value_columns_;

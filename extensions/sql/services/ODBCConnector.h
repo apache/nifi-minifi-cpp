@@ -42,12 +42,10 @@ namespace controllers {
 
 class ODBCConnection : public sql::Connection {
  public:
-  explicit ODBCConnection(const std::string& connectionString)
-    : connection_string_(connectionString) {
+  explicit ODBCConnection(std::string connectionString)
+    : connection_string_(std::move(connectionString)) {
       session_ = utils::make_unique<soci::session>(getSessionParameters());
   }
-
-  virtual ~ODBCConnection() = default;
 
   bool connected(std::string& exception) const override {
     try {
@@ -56,7 +54,7 @@ class ODBCConnection : public sql::Connection {
       // 'select 1' works for: H2, MySQL, Microsoft SQL Server, PostgreSQL, SQLite. For Oracle 'SELECT 1 FROM DUAL' works.
       prepareStatement("select 1")->execute();
       return true;
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
       exception = e.what();
       return false;
     }

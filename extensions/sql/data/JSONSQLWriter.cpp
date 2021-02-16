@@ -29,23 +29,23 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-JSONSQLWriter::JSONSQLWriter(bool pretty)
-  : pretty_(pretty), jsonPayload_(rapidjson::kArrayType) {
+JSONSQLWriter::JSONSQLWriter(bool pretty, const ColumnFilter& column_filter)
+  : pretty_(pretty), current_batch_(rapidjson::kArrayType), column_filter_(column_filter) {
 }
 
 void JSONSQLWriter::beginProcessRow() {
-  jsonRow_ = rapidjson::kObjectType;
+  current_row_ = rapidjson::kObjectType;
 }
 
 void JSONSQLWriter::endProcessRow() {
-  jsonPayload_.PushBack(jsonRow_, jsonPayload_.GetAllocator());
+  current_batch_.PushBack(current_row_, current_batch_.GetAllocator());
 }
 
 void JSONSQLWriter::beginProcessBatch() {
-  jsonPayload_ = rapidjson::Document(rapidjson::kArrayType);
+  current_batch_ = rapidjson::Document(rapidjson::kArrayType);
 }
 
-void JSONSQLWriter::endProcessBatch(State state) {}
+void JSONSQLWriter::endProcessBatch(Progress progress) {}
 
 void JSONSQLWriter::processColumnNames(const std::vector<std::string>& name) {}
 
@@ -73,13 +73,16 @@ void JSONSQLWriter::processColumn(const std::string& name, const char* value) {
   addToJSONRow(name, toJSONString(value));
 }
 
-void JSONSQLWriter::addToJSONRow(const std::string& columnName, rapidjson::Value&& jsonValue) {
-  jsonRow_.AddMember(toJSONString(columnName), std::move(jsonValue), jsonPayload_.GetAllocator());
+void JSONSQLWriter::addToJSONRow(const std::string& column_name, rapidjson::Value&& json_value) {
+  if (!column_filter_(column_name)) {
+    return;
+  }
+  current_row_.AddMember(toJSONString(column_name), std::move(json_value), current_batch_.GetAllocator());
 }
 
 rapidjson::Value JSONSQLWriter::toJSONString(const std::string& s) {
   rapidjson::Value jsonValue;
-  jsonValue.SetString(s.c_str(), s.size(), jsonPayload_.GetAllocator());
+  jsonValue.SetString(s.c_str(), s.size(), current_batch_.GetAllocator());
 
   return jsonValue;
 }
@@ -89,10 +92,10 @@ std::string JSONSQLWriter::toString() {
 
   if (pretty_) {
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-    jsonPayload_.Accept(writer);
+    current_batch_.Accept(writer);
   } else {
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    jsonPayload_.Accept(writer);
+    current_batch_.Accept(writer);
   }
 
   return {buffer.GetString(), buffer.GetSize()};

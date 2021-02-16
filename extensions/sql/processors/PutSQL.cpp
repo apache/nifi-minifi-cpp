@@ -73,7 +73,7 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
     context.yield();
     return;
   }
-  session.remove(flow_file);
+  session.transfer(flow_file, Success);
 
   std::string sql_statement;
   if (!context.getProperty(SQLStatement, sql_statement, flow_file)) {

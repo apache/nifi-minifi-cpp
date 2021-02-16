@@ -28,42 +28,37 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-SQLRowsetProcessor::SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> rowSubscribers)
-  : rowset_(rowset), rowSubscribers_(std::move(rowSubscribers)) {
+SQLRowsetProcessor::SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> row_subscribers)
+  : rowset_(rowset), row_subscribers_(std::move(row_subscribers)) {
   iter_ = rowset_.begin();
 }
 
 size_t SQLRowsetProcessor::process(size_t max) {
   size_t count = 0;
 
-  for (const auto& pRowSubscriber : rowSubscribers_) {
-    pRowSubscriber.get().beginProcessBatch();
+  for (const auto& subscriber : row_subscribers_) {
+    subscriber.get().beginProcessBatch();
   }
 
   for (; iter_ != rowset_.end(); ) {
     addRow(*iter_, count);
     iter_++;
     count++;
-    totalCount_++;
     if (max > 0 && count >= max) {
       break;
     }
   }
 
-  for (const auto& pRowSubscriber : rowSubscribers_) {
-    pRowSubscriber.get().endProcessBatch(count == 0 ? SQLRowSubscriber::State::DONE : SQLRowSubscriber::State::CONTINUE);
+  for (const auto& subscriber : row_subscribers_) {
+    subscriber.get().endProcessBatch(count == 0 ? SQLRowSubscriber::Progress::DONE : SQLRowSubscriber::Progress::CONTINUE);
   }
 
   return count;
 }
 
-size_t SQLRowsetProcessor::getTotalProcessed() const {
-  return totalCount_;
-}
-
 void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
-  for (const auto& pRowSubscriber : rowSubscribers_) {
-    pRowSubscriber.get().beginProcessRow();
+  for (const auto& subscriber : row_subscribers_) {
+    subscriber.get().beginProcessRow();
   }
 
   if (rowCount == 0) {
@@ -71,8 +66,8 @@ void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
     for (std::size_t i = 0; i != row.size(); ++i) {
       column_names.push_back(utils::StringUtils::toLower(row.get_properties(i).get_name()));
     }
-    for (const auto& pRowSubscriber : rowSubscribers_) {
-      pRowSubscriber.get().processColumnNames(column_names);
+    for (const auto& subscriber : row_subscribers_) {
+      subscriber.get().processColumnNames(column_names);
     }
   }
 
@@ -122,8 +117,8 @@ void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
     }
   }
 
-  for (const auto& pRowSubscriber : rowSubscribers_) {
-    pRowSubscriber.get().endProcessRow();
+  for (const auto& subscriber : row_subscribers_) {
+    subscriber.get().endProcessRow();
   }
 }
 

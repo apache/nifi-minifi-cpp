@@ -120,19 +120,22 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
   }
 
   context.getProperty(TableName.getName(), table_name_);
-  queried_columns_.clear();
-  std::string return_columns_str;
-  context.getProperty(ColumnNames.getName(), return_columns_str);
-  auto return_columns = utils::inputStringToList(return_columns_str);
-  std::set<std::string> queried_columns{return_columns.begin(), return_columns.end()};
   context.getProperty(WhereClause.getName(), extra_where_clause_);
-  std::string max_value_columns_str;
-  context.getProperty(MaxValueColumnNames.getName(), max_value_columns_str);
-  max_value_columns_ = utils::inputStringToList(max_value_columns_str);
-  if (!queried_columns.empty()) {
-    queried_columns.insert(max_value_columns_.begin(), max_value_columns_.end());
+  max_value_columns_ = [&] {
+    std::string max_value_columns_str;
+    context.getProperty(MaxValueColumnNames.getName(), max_value_columns_str);
+    return utils::inputStringToList(max_value_columns_str);
+  }();
+  return_columns_ = [&] {
+    std::string return_columns_str;
+    context.getProperty(ColumnNames.getName(), return_columns_str);
+    return utils::inputStringToList(return_columns_str);
+  }();
+  queried_columns_ = utils::StringUtils::join(", ", return_columns_);
+  if (!queried_columns_.empty() && !max_value_columns_.empty()) {
+    // columns will be explicitly enumerated, we need to add the max value columns
+    queried_columns_ = queried_columns_ + ", " + utils::StringUtils::join(", ", max_value_columns_);
   }
-  queried_columns_ = utils::StringUtils::join(", ", queried_columns);
 
   initializeMaxValues(context);
 }
@@ -148,7 +151,11 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& context, core::P
 
   std::unordered_map<std::string, std::string> new_max_values = max_values_;
   sql::MaxCollector maxCollector{selectQuery, new_max_values};
-  sql::JSONSQLWriter sqlWriter{output_format_ == OutputType::JSONPretty};
+  auto column_filter = [&] (const std::string& column_name) {
+    return return_columns_.empty()
+      || std::find(return_columns_.begin(), return_columns_.end(), column_name) != return_columns_.end();
+  };
+  sql::JSONSQLWriter sqlWriter{output_format_ == OutputType::JSONPretty, column_filter};
   FlowFileGenerator flow_file_creator{session, sqlWriter};
   sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, {sqlWriter, maxCollector, flow_file_creator});
 

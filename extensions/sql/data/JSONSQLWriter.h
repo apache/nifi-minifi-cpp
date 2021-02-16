@@ -30,13 +30,15 @@ namespace sql {
 
 class JSONSQLWriter: public SQLWriter {
  public:
-  explicit JSONSQLWriter(bool pretty);
+  using ColumnFilter = std::function<bool(const std::string&)>;
+
+  explicit JSONSQLWriter(bool pretty, const ColumnFilter& column_filter = [] (const std::string&) {return true;});
 
   std::string toString() override;
 
 private:
   void beginProcessBatch() override;
-  void endProcessBatch(State state) override;
+  void endProcessBatch(Progress progress) override;
   void beginProcessRow() override;
   void endProcessRow() override;
   void processColumnNames(const std::vector<std::string>& name) override;
@@ -53,8 +55,9 @@ private:
 
  private:
   bool pretty_;
-  rapidjson::Document jsonPayload_;
-  rapidjson::Value jsonRow_;
+  rapidjson::Document current_batch_;
+  rapidjson::Value current_row_;
+  const ColumnFilter& column_filter_;
 };
 
 } /* namespace sql */
