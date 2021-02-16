@@ -290,9 +290,6 @@ add_dependency COAP_ENABLED "automake"
 add_dependency COAP_ENABLED "autoconf"
 add_dependency COAP_ENABLED "libtool"
 
-add_disabled_option JNI_ENABLED ${FALSE} "ENABLE_JNI"
-add_dependency JNI_ENABLED "jnibuild"
-
 add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
 
 add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
@@ -318,13 +315,15 @@ add_dependency TENSORFLOW_ENABLED "tensorflow"
 add_disabled_option OPC_ENABLED ${FALSE} "ENABLE_OPC"
 add_dependency OPC_ENABLED "mbedtls"
 
+JNI_ENABLED=${FALSE}
+add_dependency JNI_ENABLED "jnibuild"
+
 USE_SHARED_LIBS=${TRUE}
 TESTS_DISABLED=${FALSE}
+ASAN_ENABLED=${FALSE}
 
 ## name, default, values
 add_multi_option BUILD_PROFILE "RelWithDebInfo" "RelWithDebInfo" "Debug" "MinSizeRel" "Release"
-
-add_disabled_option ASAN_ENABLED ${FALSE} "ASAN_BUILD"
 
 if [ "$GUIDED_INSTALL" == "${TRUE}" ]; then
   EnableAllFeatures
@@ -446,6 +445,13 @@ build_cmake_command(){
       fi
     fi
   done
+
+  if [ "${JNI_ENABLED}" = "${TRUE}" ]; then
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DENABLE_JNI=ON "
+  else
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DENABLE_JNI=OFF"
+  fi
+
   if [ "${DEBUG_SYMBOLS}" = "${TRUE}" ]; then
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_BUILD_TYPE=RelWithDebInfo"
   fi
@@ -455,6 +461,12 @@ build_cmake_command(){
   else
     # user may have disabled tests previously, so let's force them to be re-enabled
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DSKIP_TESTS= "
+  fi
+
+  if [ "${ASAN_ENABLED}" = "${TRUE}" ]; then
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DASAN_BUILD=ON "
+  else
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DASAN_BUILD=OFF"
   fi
   
   if [ "${USE_SHARED_LIBS}" = "${TRUE}" ]; then
