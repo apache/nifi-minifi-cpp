@@ -33,28 +33,33 @@
 
 // carries out a loose match on objects, i.e. it doesn't matter if the
 // actual object has extra fields than expected
-void matchJSON(const rapidjson::Value& json, const rapidjson::Value& expected) {
+void matchJSON(const rapidjson::Value& actual, const rapidjson::Value& expected) {
   if (expected.IsObject()) {
-    REQUIRE(json.IsObject());
+    REQUIRE(actual.IsObject());
     for (const auto& expected_member : expected.GetObject()) {
-      REQUIRE(json.HasMember(expected_member.name));
-      matchJSON(json[expected_member.name], expected_member.value);
+      REQUIRE(actual.HasMember(expected_member.name));
+      matchJSON(actual[expected_member.name], expected_member.value);
     }
   } else if (expected.IsArray()) {
-    REQUIRE(json.IsArray());
-    REQUIRE(json.Size() == expected.Size());
+    REQUIRE(actual.IsArray());
+    REQUIRE(actual.Size() == expected.Size());
     for (size_t idx{0}; idx < expected.Size(); ++idx) {
-      matchJSON(json[idx], expected[idx]);
+      matchJSON(actual[idx], expected[idx]);
     }
   } else {
-    REQUIRE(json == expected);
+    REQUIRE(actual == expected);
   }
 }
 
-void verifyJSON(const std::string& json_str, const std::string& expected_str) {
-  rapidjson::Document json, expected;
-  REQUIRE_FALSE(json.Parse(json_str.c_str()).HasParseError());
+void verifyJSON(const std::string& actual_str, const std::string& expected_str, bool strict = false) {
+  rapidjson::Document actual, expected;
+  REQUIRE_FALSE(actual.Parse(actual_str.c_str()).HasParseError());
   REQUIRE_FALSE(expected.Parse(expected_str.c_str()).HasParseError());
 
-  matchJSON(json, expected);
+  if (strict) {
+    REQUIRE(actual == expected);
+  } else {
+    matchJSON(actual, expected);
+  }
+
 }

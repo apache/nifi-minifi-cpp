@@ -49,7 +49,7 @@ TEST_CASE("QueryDatabaseTable queries the table and returns specified columns", 
   auto content = plan->getContent(flow_files[0]);
   verifyJSON(content, R"(
     [{"text_col": "one"}, {"text_col": "two"}, {"text_col": "three"}]
-  )");
+  )", true);
 }
 
 TEST_CASE("QueryDatabaseTable requerying the table returns only new rows", "[QueryDatabaseTable2]") {
@@ -89,7 +89,7 @@ TEST_CASE("QueryDatabaseTable requerying the table returns only new rows", "[Que
   auto content = plan->getContent(second_flow_files[0]);
   verifyJSON(content, R"(
     [{"text_col": "four"}, {"text_col": "five"}]
-  )");
+  )", true);
 }
 
 TEST_CASE("QueryDatabaseTable specifying initial max values", "[QueryDatabaseTable3]") {
@@ -120,7 +120,7 @@ TEST_CASE("QueryDatabaseTable specifying initial max values", "[QueryDatabaseTab
   auto content = plan->getContent(flow_files[0]);
   verifyJSON(content, R"(
     [{"text_col": "three"}, {"text_col": "four"}]
-  )");
+  )", true);
 }
 
 TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attributes", "[QueryDatabaseTable4]") {
@@ -144,7 +144,7 @@ TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attr
   plan->run();
 
   auto content_verifier = [&] (const std::shared_ptr<core::FlowFile>& actual, const std::string& expected) {
-    verifyJSON(plan->getContent(actual), expected);
+    verifyJSON(plan->getContent(actual), expected, true);
   };
 
   FlowFileMatcher matcher(content_verifier, {

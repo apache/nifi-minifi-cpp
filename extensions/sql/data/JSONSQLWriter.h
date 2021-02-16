@@ -34,7 +34,7 @@ class JSONSQLWriter: public SQLWriter {
  public:
   using ColumnFilter = std::function<bool(const std::string&)>;
 
-  explicit JSONSQLWriter(bool pretty, const ColumnFilter& column_filter = [] (const std::string&) {return true;});
+  explicit JSONSQLWriter(bool pretty, ColumnFilter column_filter = [] (const std::string&) {return true;});
 
   std::string toString() override;
 
@@ -59,7 +59,7 @@ private:
   bool pretty_;
   rapidjson::Document current_batch_;
   rapidjson::Value current_row_;
-  const ColumnFilter& column_filter_;
+  ColumnFilter column_filter_;
 };
 
 } /* namespace sql */

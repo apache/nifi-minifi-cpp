@@ -29,8 +29,8 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-JSONSQLWriter::JSONSQLWriter(bool pretty, const ColumnFilter& column_filter)
-  : pretty_(pretty), current_batch_(rapidjson::kArrayType), column_filter_(column_filter) {
+JSONSQLWriter::JSONSQLWriter(bool pretty, ColumnFilter column_filter)
+  : pretty_(pretty), current_batch_(rapidjson::kArrayType), column_filter_(std::move(column_filter)) {
 }
 
 void JSONSQLWriter::beginProcessRow() {
