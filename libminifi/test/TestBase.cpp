@@ -90,9 +90,24 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
       last = processor;
       termination_ = *(relationships.begin());
     }
+    std::stringstream connection_name;
+    connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
+    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
+
     for (const auto& relationship : relationships) {
-      addConnection(last, relationship, processor);
+      connection->addRelationship(relationship);
     }
+    // link the connections so that we can test results at the end for this
+    connection->setSource(last);
+    connection->setDestination(processor);
+
+    connection->setSourceUUID(last->getUUID());
+    connection->setDestinationUUID(processor->getUUID());
+    last->addConnection(connection);
+    if (last != processor) {
+      processor->addConnection(connection);
+    }
+    relationships_.push_back(connection);
   }
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
   processor_nodes_.push_back(node);
