@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "rapidjson/document.h"
 
 #include "SQLWriter.h"
