@@ -341,6 +341,8 @@ TEST_CASE("ConsumeWindowsEventLog prints events in XML correctly", "[onTrigger]"
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly", "[onTrigger]") {
   std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON", "Simple"}.run();
+  // the json must be single-line
+  REQUIRE(event.find('\n') == std::string::npos);
   verifyJSON(event, R"json(
     {
       "System": {
