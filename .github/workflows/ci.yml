@@ -69,9 +69,19 @@ jobs:
     name: "windows-vs2017"
     runs-on: windows-2016
     timeout-minutes: 120
+    env:
+      CLCACHE_DIR: ${{ GITHUB.WORKSPACE }}\clcache
     steps:
       - id: checkout
         uses: actions/checkout@v2
+      - id: cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.CLCACHE_DIR }}
+          key: windows-vs2017-clcache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            windows-vs2017-clcache-${{github.ref}}-
+            windows-vs2017-clcache-refs/heads/main-
       - name: Setup PATH
         uses: microsoft/setup-msbuild@v1.0.2
       - id: install-sqliteodbc-driver
@@ -79,6 +89,15 @@ jobs:
           Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc.exe" -OutFile "sqliteodbc.exe"
           ./sqliteodbc.exe /S
         shell: powershell
+      - name: Setup clcache
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile('https://github.com/frerich/clcache/releases/download/v4.2.0/clcache-4.2.0.zip', "$pwd\clcache.zip")
+          $cl_exe_dir = Split-Path -parent $(vswhere -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find VC\Tools\MSVC\**\bin\Hostx86\x86\cl.exe | select-object -last 1)
+          Expand-Archive -Force -Path clcache.zip -DestinationPath "$cl_exe_dir";
+          move "$cl_exe_dir\cl.exe" "$cl_exe_dir\cl_original.exe"
+          move "$cl_exe_dir\cl.exe.config" "$cl_exe_dir\cl_original.exe.config"
+          move "$cl_exe_dir\clcache.exe" "$cl_exe_dir\cl.exe"
+          echo "CLCACHE_CL=$cl_exe_dir\cl_original.exe" >> $env:GITHUB_ENV
       - id: build
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x86
@@ -88,10 +107,20 @@ jobs:
   windows_VS2019:
     name: "windows-vs2019"
     runs-on: windows-2019
-    timeout-minutes: 90
+    timeout-minutes: 120
+    env:
+      CLCACHE_DIR: ${{ GITHUB.WORKSPACE }}\clcache
     steps:
       - id: checkout
         uses: actions/checkout@v2
+      - id: cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.CLCACHE_DIR }}
+          key: windows-vs2019-clcache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            windows-vs2019-clcache-${{github.ref}}-
+            windows-vs2019-clcache-refs/heads/main-
       - name: Setup PATH
         uses: microsoft/setup-msbuild@v1.0.2
       - id: install-sqliteodbc-driver
@@ -99,6 +128,15 @@ jobs:
           Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "sqliteodbc_w64.exe"
           ./sqliteodbc_w64.exe /S
         shell: powershell
+      - name: Setup clcache
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile('https://github.com/frerich/clcache/releases/download/v4.2.0/clcache-4.2.0.zip', "$pwd\clcache.zip")
+          $cl_exe_dir = Split-Path -parent $(vswhere -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find VC\Tools\MSVC\**\bin\Hostx64\x64\cl.exe | select-object -last 1)
+          Expand-Archive -Force -Path clcache.zip -DestinationPath "$cl_exe_dir";
+          move "$cl_exe_dir\cl.exe" "$cl_exe_dir\cl_original.exe"
+          move "$cl_exe_dir\cl.exe.config" "$cl_exe_dir\cl_original.exe.config"
+          move "$cl_exe_dir\clcache.exe" "$cl_exe_dir\cl.exe"
+          echo "CLCACHE_CL=$cl_exe_dir\cl_original.exe" >> $env:GITHUB_ENV
       - id: build
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64
