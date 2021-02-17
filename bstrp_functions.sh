@@ -166,7 +166,7 @@ save_state(){
   echo "VERSION=1" > ${script_directory}/bt_state
   echo_state_variable BUILD_IDENTIFIER
   echo_state_variable BUILD_DIR
-  echo_state_variable TESTS_DISABLED
+  echo_state_variable TESTS_ENABLED
   echo_state_variable BUILD_PROFILE
   echo_state_variable USE_SHARED_LIBS
   echo_state_variable ASAN_ENABLED
@@ -358,20 +358,19 @@ show_supported_features() {
   echo "J. TensorFlow Support ..........$(print_feature_status TENSORFLOW_ENABLED)"
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
   echo "L. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
-  echo "M. SQLite Support ..............$(print_feature_status SQLITE_ENABLED)"
-  echo "N. Python Support ..............$(print_feature_status PYTHON_ENABLED)"
-  echo "O. COAP Support ................$(print_feature_status COAP_ENABLED)"
-  echo "S. SFTP Support ................$(print_feature_status SFTP_ENABLED)"
-  echo "V. AWS Support .................$(print_feature_status AWS_ENABLED)"
+  echo "M. Python Support ..............$(print_feature_status PYTHON_ENABLED)"
+  echo "N. COAP Support ................$(print_feature_status COAP_ENABLED)"
+  echo "O. SFTP Support ................$(print_feature_status SFTP_ENABLED)"
+  echo "S. AWS Support .................$(print_feature_status AWS_ENABLED)"
   echo "T. OpenCV Support ..............$(print_feature_status OPENCV_ENABLED)"
   echo "U. OPC-UA Support...............$(print_feature_status OPC_ENABLED)"
-  echo "W. SQL Support..................$(print_feature_status SQL_ENABLED)"
-  echo "X. Openwsman Support ...........$(print_feature_status OPENWSMAN_ENABLED)"
-  echo "Y. Azure Support ...............$(print_feature_status AZURE_ENABLED)"
+  echo "V. SQL Support..................$(print_feature_status SQL_ENABLED)"
+  echo "W. Openwsman Support ...........$(print_feature_status OPENWSMAN_ENABLED)"
+  echo "X. Azure Support ...............$(print_feature_status AZURE_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
-  echo "1. Disable Tests ...............$(print_feature_status TESTS_DISABLED)"
+  echo "1. Enable Tests ................$(print_feature_status TESTS_ENABLED)"
   echo "2. Enable all extensions"
   echo "3. Enable JNI Support ..........$(print_feature_status JNI_ENABLED)"
   echo "4. Use Shared Dependency Links .$(print_feature_status USE_SHARED_LIBS)"
@@ -405,22 +404,21 @@ read_feature_options(){
     j) ToggleFeature TENSORFLOW_ENABLED ;;
     k) ToggleFeature BUSTACHE_ENABLED ;;
     l) ToggleFeature MQTT_ENABLED ;;
-    m) ToggleFeature SQLITE_ENABLED ;;
-    v) ToggleFeature AWS_ENABLED ;;
-    n) if [ "$USE_SHARED_LIBS" = "${TRUE}" ]; then
+    m) if [ "$USE_SHARED_LIBS" = "${TRUE}" ]; then
          ToggleFeature PYTHON_ENABLED
        else
          echo -e "${RED}Please ensure static linking is enabled for Python Support...${NO_COLOR}" && sleep 2
    	   fi
    	   ;;
-    o) ToggleFeature COAP_ENABLED ;;
-	s) ToggleFeature SFTP_ENABLED ;;
+    n) ToggleFeature COAP_ENABLED ;;
+    o) ToggleFeature SFTP_ENABLED ;;
+    s) ToggleFeature AWS_ENABLED ;;
     t) ToggleFeature OPENCV_ENABLED ;;
     u) ToggleFeature OPC_ENABLED ;;
-    w) ToggleFeature SQL_ENABLED ;;
-    x) ToggleFeature OPENWSMAN_ENABLED ;;
-    y) ToggleFeature AZURE_ENABLED ;;
-    1) ToggleFeature TESTS_DISABLED ;;
+    v) ToggleFeature SQL_ENABLED ;;
+    w) ToggleFeature OPENWSMAN_ENABLED ;;
+    x) ToggleFeature AZURE_ENABLED ;;
+    1) ToggleFeature TESTS_ENABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
     4) if [ "$PYTHON_ENABLED" = "${FALSE}" ]; then
@@ -438,7 +436,7 @@ read_feature_options(){
       fi
       ;;
     q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-Y or 1-6...${NO_COLOR}" && sleep 2
+    *) echo -e "${RED}Please enter an option A-X or 1-7...${NO_COLOR}" && sleep 2
   esac
 }
 
