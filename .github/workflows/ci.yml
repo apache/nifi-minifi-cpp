@@ -65,9 +65,20 @@ jobs:
     name: "windows-vs2017"
     runs-on: windows-2016
     timeout-minutes: 120
+    env:
+      CLCACHE_DIR: ${{ GITHUB.WORKSPACE }}\clcache
+      CLCACHE_CL: C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl_original.exe
     steps:
       - id: checkout
         uses: actions/checkout@v2
+      - id: cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.CLCACHE_DIR }}
+          key: windows-vs2017-clcache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            windows-vs2017-clcache-${{github.ref}}-
+            windows-vs2017-clcache-refs/heads/main-
       - name: Setup PATH
         uses: microsoft/setup-msbuild@v1.0.2
       - id: install-sqliteodbc-driver
@@ -75,19 +86,38 @@ jobs:
           Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc.exe" -OutFile "sqliteodbc.exe"
           ./sqliteodbc.exe /S
         shell: powershell
+      - name: Setup clcache
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile('https://github.com/frerich/clcache/releases/download/v4.2.0/clcache-4.2.0.zip', "$pwd\clcache.zip")
+          Expand-Archive -Force -Path clcache.zip -DestinationPath "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86";
+          move "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl.exe" "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl_original.exe"
+          move "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl.exe.config" "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl_original.exe.config"
+          move "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\clcache.exe" "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl.exe"
       - id: build
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x86
           PATH %PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\Roslyn
+          set "CLCACHE_CL=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl_original.exe"
           win_build_vs.bat build /CI /S /A /Z
         shell: cmd
   windows_VS2019:
     name: "windows-vs2019"
     runs-on: windows-2019
-    timeout-minutes: 90
+    timeout-minutes: 120
+    env:
+      CLCACHE_DIR: ${{ GITHUB.WORKSPACE }}\clcache
+      CLCACHE_CL: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl_original.exe
     steps:
       - id: checkout
         uses: actions/checkout@v2
+      - id: cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.CLCACHE_DIR }}
+          key: windows-vs2019-clcache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            windows-vs2019-clcache-${{github.ref}}-
+            windows-vs2019-clcache-refs/heads/main-
       - name: Setup PATH
         uses: microsoft/setup-msbuild@v1.0.2
       - id: install-sqliteodbc-driver
@@ -95,6 +125,13 @@ jobs:
           Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "sqliteodbc_w64.exe"
           ./sqliteodbc_w64.exe /S
         shell: powershell
+      - name: Setup clcache
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile('https://github.com/frerich/clcache/releases/download/v4.2.0/clcache-4.2.0.zip', "$pwd\clcache.zip")
+          Expand-Archive -Force -Path clcache.zip -DestinationPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64";
+          move "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl.exe" "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl_original.exe"
+          move "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl.exe.config" "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl_original.exe.config"
+          move "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\clcache.exe" "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl.exe"
       - id: build
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64
