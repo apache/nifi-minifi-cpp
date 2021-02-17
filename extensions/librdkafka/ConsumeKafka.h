@@ -97,7 +97,7 @@ class ConsumeKafka : public core::Processor {
   static constexpr char const* DEFAULT_MAX_POLL_TIME = "4 seconds";
   static constexpr const std::size_t METADATA_COMMUNICATIONS_TIMEOUT_MS{ 60000 };
 
-  explicit ConsumeKafka(std::string name, utils::Identifier uuid = utils::Identifier()) :
+  explicit ConsumeKafka(const std::string& name, const utils::Identifier& uuid = utils::Identifier()) :
       Processor(name, uuid),
       logger_(logging::LoggerFactory<ConsumeKafka>::getLogger()) {}
 
