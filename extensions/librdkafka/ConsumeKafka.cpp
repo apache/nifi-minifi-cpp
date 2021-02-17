@@ -494,7 +494,7 @@ void ConsumeKafka::add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileReco
   flow_file->setAttribute(KAFKA_TOPIC_ATTR, rd_kafka_topic_name(message->rkt));
 }
 
-utils::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::transform_pending_messages_into_flowfiles(core::ProcessSession* session) const {
+utils::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::transform_pending_messages_into_flowfiles(core::ProcessSession& session) const {
   std::vector<std::shared_ptr<FlowFileRecord>> flow_files_created;
   for (const auto& message : pending_messages_) {
     std::string message_content = extract_message(message.get());
@@ -503,7 +503,7 @@ utils::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::tran
       utils::StringUtils::split(message_content, message_demarcator_) :
       std::vector<std::string>{ message_content }};
     for (auto& flowfile_content : split_message) {
-      std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session->create());
+      std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session.create());
       if (flow_file == nullptr) {
         logger_->log_error("Failed to create flowfile.");
         // Either transform all flowfiles or none
@@ -511,7 +511,7 @@ utils::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::tran
       }
       // flowfile content is consumed here
       WriteCallback stream_writer_callback(&flowfile_content[0], flowfile_content.size());
-      session->write(flow_file, &stream_writer_callback);
+      session.write(flow_file, &stream_writer_callback);
       for (const auto& kv : attributes_from_headers) {
         flow_file->setAttribute(kv.first, kv.second);
       }
@@ -523,15 +523,15 @@ utils::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::tran
 }
 
 
-void ConsumeKafka::process_pending_messages(core::ProcessSession* session) {
+void ConsumeKafka::process_pending_messages(core::ProcessSession& session) {
   utils::optional<std::vector<std::shared_ptr<FlowFileRecord>>> flow_files_created = transform_pending_messages_into_flowfiles(session);
   if (!flow_files_created) {
     return;
   }
   for (const auto& flow_file : flow_files_created.value()) {
-    session->transfer(flow_file, Success);
+    session.transfer(flow_file, Success);
   }
-  session->commit();
+  session.commit();
   // Commit the offset from the latest message only
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_commit_message(consumer_.get(), pending_messages_.back().get(), /* async = */ 0)) {
     logger_->log_error("Committing offset failed.");
@@ -544,7 +544,7 @@ void ConsumeKafka::onTrigger(core::ProcessContext* /* context */, core::ProcessS
   logger_->log_debug("ConsumeKafka onTrigger");
 
   if (pending_messages_.size()) {
-    process_pending_messages(session);
+    process_pending_messages(*session);
     return;
   }
 
@@ -552,7 +552,7 @@ void ConsumeKafka::onTrigger(core::ProcessContext* /* context */, core::ProcessS
   if (pending_messages_.empty()) {
     return;
   }
-  process_pending_messages(session);
+  process_pending_messages(*session);
 }
 
 int64_t ConsumeKafka::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
