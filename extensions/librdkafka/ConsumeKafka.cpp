@@ -237,7 +237,7 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_pa
   rd_kafka_resp_err_t assign_error = RD_KAFKA_RESP_ERR_NO_ERROR;
   switch (trigger) {
     case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-      logger->log_debug("assigned");
+      logger->log_debug("assigned:");
       if (logger->should_log(core::logging::LOG_LEVEL::debug)) {
         utils::print_topics_list(*logger, partitions);
       }
@@ -482,22 +482,6 @@ std::vector<std::pair<std::string, std::string>> ConsumeKafka::get_flowfile_attr
   return attributes_from_headers;
 }
 
-class WriteCallback : public OutputStreamCallback {
- public:
-  WriteCallback(char *data, uint64_t size) :
-      data_(reinterpret_cast<uint8_t*>(data)),
-      dataSize_(size) {}
-  uint8_t* data_;
-  uint64_t dataSize_;
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-    int64_t ret = 0;
-    if (data_) {
-      ret = stream->write(data_,  gsl::narrow<int>(dataSize_));
-    }
-    return ret;
-  }
-};
-
 void ConsumeKafka::add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileRecord>& flow_file, const rd_kafka_message_t* message) const {
   // We do not currently support batching messages into a single flowfile
   flow_file->setAttribute(KAFKA_COUNT_ATTR, "1");
@@ -569,6 +553,14 @@ void ConsumeKafka::onTrigger(core::ProcessContext* /* context */, core::ProcessS
     return;
   }
   process_pending_messages(session);
+}
+
+int64_t ConsumeKafka::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+  int64_t ret = 0;
+  if (data_) {
+    ret = stream->write(data_, gsl::narrow<int>(dataSize_));
+  }
+  return ret;
 }
 
 }  // namespace processors

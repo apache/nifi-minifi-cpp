@@ -124,6 +124,17 @@ class ConsumeKafka : public core::Processor {
   // Initialize, overwrite by NiFi RetryFlowFile
   void initialize() override;
 
+  class WriteCallback : public OutputStreamCallback {
+   public:
+    WriteCallback(char *data, uint64_t size) :
+        data_(reinterpret_cast<uint8_t*>(data)),
+        dataSize_(size) {}
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream);
+   private:
+    uint8_t* data_;
+    uint64_t dataSize_;
+  };
+
  private:
   void create_topic_partition_list();
   void extend_config_from_dynamic_properties(const core::ProcessContext& context);

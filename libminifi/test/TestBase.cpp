@@ -93,6 +93,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
     std::stringstream connection_name;
     connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
+    logger_->log_info("Creating %s connection for proc %d", connection_name.str(), processor_queue_.size() + 1);
 
     for (const auto& relationship : relationships) {
       connection->addRelationship(relationship);
