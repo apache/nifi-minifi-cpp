@@ -50,7 +50,7 @@ TEST_CASE("TestStringUtils::split4", "[test split classname]") {
   REQUIRE(expected == StringUtils::split(org::apache::nifi::minifi::core::getClassName<org::apache::nifi::minifi::utils::StringUtils>(), "::"));
 }
 
-TEST_CASE("TestStringUtils::split5", "[test split delimiter not specified]") {
+TEST_CASE("TestStringUtils::split5", "[test split with delimiter set to empty string]") {
   std::vector<std::string> expected{ "h", "e", "l", "l", "o", " ", "w", "o", "r", "l", "d" };
   REQUIRE(expected == StringUtils::split("hello world", ""));
 }
