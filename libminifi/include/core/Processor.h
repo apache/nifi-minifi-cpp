@@ -64,15 +64,8 @@ namespace core {
 // Processor Class
 class Processor : public Connectable, public ConfigurableComponent, public std::enable_shared_from_this<Processor> {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
-
   Processor(const std::string& name, const utils::Identifier &uuid);
-
-  Processor(const std::string& name); // NOLINT
-  // Destructor
+  explicit Processor(const std::string& name);
   virtual ~Processor() {
     notifyStop();
   }
@@ -81,7 +74,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // Set Processor Scheduled State
   void setScheduledState(ScheduledState state);
   // Get Processor Scheduled State
-  ScheduledState getScheduledState(void) {
+  ScheduledState getScheduledState() const {
     return state_;
   }
   // Set Processor Scheduling Strategy
@@ -89,7 +82,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     strategy_ = strategy;
   }
   // Get Processor Scheduling Strategy
-  SchedulingStrategy getSchedulingStrategy(void) {
+  SchedulingStrategy getSchedulingStrategy() const {
     return strategy_;
   }
   // Set Processor Loss Tolerant
@@ -97,7 +90,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     loss_tolerant_ = lossTolerant;
   }
   // Get Processor Loss Tolerant
-  bool getlossTolerant(void) {
+  bool getlossTolerant() const {
     return loss_tolerant_;
   }
   // Set Processor Scheduling Period in Nano Second
@@ -108,10 +101,9 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   scheduling_period_nano_ = period > minPeriod ? period : minPeriod;
   }
   // Get Processor Scheduling Period in Nano Second
-  uint64_t getSchedulingPeriodNano(void) {
+  uint64_t getSchedulingPeriodNano() const {
     return scheduling_period_nano_;
   }
-
 
   /**
    * Sets the cron period
@@ -129,13 +121,12 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     return cron_period_;
   }
 
-
   // Set Processor Run Duration in Nano Second
   void setRunDurationNano(uint64_t period) {
     run_duration_nano_ = period;
   }
   // Get Processor Run Duration in Nano Second
-  uint64_t getRunDurationNano(void) {
+  uint64_t getRunDurationNano() const {
     return (run_duration_nano_);
   }
   // Set Processor yield period in MilliSecond
@@ -143,7 +134,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     yield_period_msec_ = period;
   }
   // Get Processor yield period in MilliSecond
-  uint64_t getYieldPeriodMsec(void) {
+  uint64_t getYieldPeriodMsec() const {
     return (yield_period_msec_);
   }
   // Set Processor penalization period in MilliSecond
@@ -156,7 +147,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     max_concurrent_tasks_ = tasks;
   }
   // Get Processor Maximum Concurrent Tasks
-  uint8_t getMaxConcurrentTasks(void) {
+  uint8_t getMaxConcurrentTasks() const {
     return (max_concurrent_tasks_);
   }
   // Set Trigger when empty
@@ -164,23 +155,23 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     _triggerWhenEmpty = value;
   }
   // Get Trigger when empty
-  bool getTriggerWhenEmpty(void) {
+  bool getTriggerWhenEmpty() const {
     return (_triggerWhenEmpty);
   }
   // Get Active Task Counts
-  uint8_t getActiveTasks(void) {
+  uint8_t getActiveTasks() const {
     return (active_tasks_);
   }
   // Increment Active Task Counts
-  void incrementActiveTasks(void) {
+  void incrementActiveTasks() {
     active_tasks_++;
   }
   // decrement Active Task Counts
-  void decrementActiveTask(void) {
+  void decrementActiveTask() {
     if (active_tasks_ > 0)
       active_tasks_--;
   }
-  void clearActiveTask(void) {
+  void clearActiveTask() {
     active_tasks_ = 0;
   }
   // Yield based on the yield period
@@ -192,7 +183,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     yield_expiration_ = (utils::timeutils::getTimeMillis() + time);
   }
   // whether need be to yield
-  bool isYield() {
+  virtual bool isYield() {
     if (yield_expiration_ > 0)
       return (yield_expiration_ >= utils::timeutils::getTimeMillis());
     else
@@ -203,7 +194,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     yield_expiration_ = 0;
   }
   // get yield time
-  uint64_t getYieldTime() {
+  uint64_t getYieldTime() const {
     uint64_t curTime = utils::timeutils::getTimeMillis();
     if (yield_expiration_ > curTime)
       return (yield_expiration_ - curTime);
@@ -211,20 +202,14 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
       return 0;
   }
   // Whether flow file queued in incoming connection
-  bool flowFilesQueued();
+  bool flowFilesQueued() const;
   // Whether flow file queue full in any of the outgoin connection
-  bool flowFilesOutGoingFull();
+  bool flowFilesOutGoingFull() const;
 
-  // Add connection
   bool addConnection(std::shared_ptr<Connectable> connection);
-  // Remove connection
   void removeConnection(std::shared_ptr<Connectable> connection);
-  // Get the Next RoundRobin incoming connection
-  std::shared_ptr<Connection> getNextIncomingConnection();
-  // On Trigger
 
   virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory);
-
   void onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory);
 
   bool canEdit() override {
@@ -295,7 +280,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 
  private:
   // Mutex for protection
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
   // Yield Expiration
   std::atomic<uint64_t> yield_expiration_;
 

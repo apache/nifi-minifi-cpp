@@ -208,7 +208,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
   }
 }
 
-bool Processor::flowFilesQueued() {
+bool Processor::flowFilesQueued() const {
   std::lock_guard<std::mutex> lock(mutex_);
 
   if (_incomingConnections.size() == 0)
@@ -223,7 +223,7 @@ bool Processor::flowFilesQueued() {
   return false;
 }
 
-bool Processor::flowFilesOutGoingFull() {
+bool Processor::flowFilesOutGoingFull() const {
   std::lock_guard<std::mutex> lock(mutex_);
 
   for (const auto& connection_pair : out_going_connections_) {
