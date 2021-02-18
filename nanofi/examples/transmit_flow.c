@@ -33,8 +33,6 @@ int is_dir(const char *path) {
 }
 
 void transfer_file_or_directory(nifi_instance *instance, char *file_or_dir) {
-  int size = 1;
-
   if (is_dir(file_or_dir)) {
     DIR *d;
 

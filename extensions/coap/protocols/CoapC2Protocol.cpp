@@ -214,7 +214,6 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
 
   uint16_t version = 0;
   uint8_t payload_type = 0;
-  uint64_t payload_u64 = 0;
   uint16_t size = 0;
   io::BufferStream stream;
 
