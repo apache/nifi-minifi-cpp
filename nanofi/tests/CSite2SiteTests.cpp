@@ -221,6 +221,7 @@ TEST_CASE("TestSiteToBootStrap", "[S2S3]") {
       transfer_state.transer_completed = true;
 
       destroyClient(&cprotocol);
+      freePeer(&cpeer);
     };
 
     std::thread c_thread(c_client_thread);

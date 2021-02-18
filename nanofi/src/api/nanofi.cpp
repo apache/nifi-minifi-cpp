@@ -131,20 +131,25 @@ nifi_instance *create_instance_repo(const char *url, nifi_port *port, const char
   return instance;
 }
 
+nifi_instance * acquire_standalone_instance () {
+  if (standalone_instance == nullptr) {
+    auto port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
+    nifi_port port{const_cast<char *>(port_str.c_str())};
+    standalone_instance = create_instance("internal_standalone", &port);
+  }
+  return standalone_instance;
+}
+
 standalone_processor * create_processor(const char *name, nifi_instance * instance) {
   NULL_CHECK(nullptr, name);
   auto ptr = ExecutionPlan::createProcessor(name, name);
   if (!ptr) {
     return nullptr;
   }
-  if (instance == NULL) {
-    nifi_port port;
-    auto port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
-    port.port_id = const_cast<char*>(port_str.c_str());
-    instance = create_instance("internal_standalone", &port);
-  }
+  if (instance == nullptr)
+    instance = acquire_standalone_instance();
   auto flow = create_new_flow(instance);
-  std::shared_ptr<ExecutionPlan> plan(flow);
+  std::shared_ptr<ExecutionPlan> plan(flow, free_flow);
   plan->addProcessor(ptr, name);
   ExecutionPlan::addProcessorWithPlan(ptr->getUUID(), plan);
   return static_cast<standalone_processor*>(ptr.get());

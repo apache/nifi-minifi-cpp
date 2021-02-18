@@ -135,7 +135,7 @@ void ExecutionPlan::reset() {
   process_sessions_.clear();
   factories_.clear();
   location = -1;
-  for (auto proc : processor_queue_) {
+  for (auto& proc : processor_queue_) {
     while (proc->getActiveTasks() > 0) {
       proc->decrementActiveTask();
     }
