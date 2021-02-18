@@ -39,7 +39,7 @@ class SQLProcessor: public core::Processor {
     : core::Processor(name, uuid), logger_(logging::LoggerFactory<T>::getLogger()) {
   }
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override {
+  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) override {
     std::string controllerService;
     context->getProperty(dbControllerService().getName(), controllerService);
 
@@ -82,7 +82,7 @@ class SQLProcessor: public core::Processor {
 
  protected:
    static const core::Property& dbControllerService() {
-     static const core::Property s_dbControllerService = 
+     static const core::Property s_dbControllerService =
        core::PropertyBuilder::createProperty("DB Controller Service")->
        isRequired(true)->
        withDescription("Database Controller Service.")->

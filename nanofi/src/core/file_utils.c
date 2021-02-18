@@ -48,6 +48,7 @@ const char * get_separator(int force_posix) {
         return "\\";
     }
 #endif
+    (void)force_posix;
     return "/";
 }
 

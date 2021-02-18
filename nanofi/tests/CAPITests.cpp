@@ -25,7 +25,7 @@
 const std::string test_file_content = "C API raNdOMcaSe test d4t4 th1s is!";
 const std::string test_file_name = "tstFile.ext";
 
-static nifi_instance *create_instance_obj(const char *name = "random_instance") {
+static nifi_instance *create_instance_obj() {
   nifi_port port;
   auto port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
   port.port_id = const_cast<char*>(port_str.c_str());

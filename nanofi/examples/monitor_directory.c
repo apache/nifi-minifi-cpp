@@ -41,6 +41,7 @@ pthread_cond_t condition;
 int stopped;
 
 int stop_callback(char *c) {
+  (void)c;
   pthread_mutex_lock(&mutex);
   stopped = 1;
   pthread_cond_signal(&condition);
@@ -49,6 +50,7 @@ int stop_callback(char *c) {
 }
 
 int is_stopped(void *ptr) {
+  (void)ptr;
   int is_stop = 0;
   pthread_mutex_lock(&mutex);
   is_stop = stopped;

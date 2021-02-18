@@ -45,6 +45,7 @@ class CoapIntegrationBase : public IntegrationBase {
   }
 
   void run(const utils::optional<std::string>& test_file_location = {}, const utils::optional<std::string>& bootstrap_file = {}) override {
+    (void)bootstrap_file;
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();

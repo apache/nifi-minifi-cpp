@@ -53,7 +53,7 @@ class PauseResumeHandler: public HeartbeatHandler {
   static const uint32_t INITIAL_GET_INVOKE_COUNT = 2;
 
   explicit PauseResumeHandler(std::atomic_bool& flow_resumed_successfully) : HeartbeatHandler(), flow_resumed_successfully_(flow_resumed_successfully) {}
-  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
+  bool handleGet(CivetServer* /*server*/, struct mg_connection* conn) override {
     assert(flow_state_ != FlowState::PAUSED);
     ++get_invoke_count_;
     if (flow_state_ == FlowState::RESUMED) {

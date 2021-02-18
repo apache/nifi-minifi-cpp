@@ -29,7 +29,7 @@
 
 class C2AcknowledgeHandler : public ServerAwareHandler {
  public:
-  bool handlePost(CivetServer *server, struct mg_connection *conn) override {
+  bool handlePost(CivetServer* /*server*/, struct mg_connection* conn) override {
     std::string req = readPayload(conn);
     rapidjson::Document root;
     root.Parse(req.data(), req.size());
@@ -56,7 +56,7 @@ class C2HeartbeatHandler : public ServerAwareHandler {
  public:
   explicit C2HeartbeatHandler(std::string response) : response_(std::move(response)) {}
 
-  bool handlePost(CivetServer *server, struct mg_connection *conn) override {
+  bool handlePost(CivetServer* /*server*/, struct mg_connection* conn) override {
     std::string req = readPayload(conn);
     rapidjson::Document root;
     root.Parse(req.data(), req.size());

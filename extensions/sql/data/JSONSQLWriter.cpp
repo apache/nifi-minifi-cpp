@@ -43,7 +43,7 @@ void JSONSQLWriter::endProcessRow() {
   jsonPayload_.PushBack(jsonRow_, jsonPayload_.GetAllocator());
 }
 
-void JSONSQLWriter::processColumnName(const std::string& name) {}
+void JSONSQLWriter::processColumnName(const std::string& /*name*/) {}
 
 void JSONSQLWriter::processColumn(const std::string& name, const std::string& value) {
   addToJSONRow(name, std::move(toJSONString(value)));
