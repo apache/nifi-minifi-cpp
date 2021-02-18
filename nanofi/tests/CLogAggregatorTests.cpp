@@ -31,7 +31,7 @@
 
 #include "CTestsBase.h"
 
-void test_lists_equal(token_list * tknlist, const std::vector<std::string>& sv) {
+void test_lists_equal(const token_list * tknlist, const std::vector<std::string>& sv) {
     REQUIRE(tknlist != NULL);
     if (sv.empty()) {
         REQUIRE(tknlist->head == NULL);
@@ -39,10 +39,11 @@ void test_lists_equal(token_list * tknlist, const std::vector<std::string>& sv) 
         return;
     }
     REQUIRE(tknlist->size == sv.size());
+    token_node *node = tknlist->head;
     for (const auto& s : sv) {
-        if (tknlist->head) {
-            REQUIRE(strcmp(s.c_str(), tknlist->head->data) == 0);
-            tknlist->head = tknlist->head->next;
+        if (node) {
+            REQUIRE(strcmp(s.c_str(), node->data) == 0);
+            node = node->next;
         }
     }
 }
@@ -83,6 +84,7 @@ TEST_CASE("Test string tokenizer normal delimited string", "[stringTokenizerDeli
     REQUIRE(tokens.size == 4);
     REQUIRE(validate_list(&tokens) == 1);
     test_lists_equal(&tokens, slist);
+    free_all_tokens(&tokens);
 }
 
 TEST_CASE("Test string tokenizer delimiter started string", "[stringTokenizerDelimiterStartedString]") {
@@ -94,6 +96,7 @@ TEST_CASE("Test string tokenizer delimiter started string", "[stringTokenizerDel
     REQUIRE(validate_list(&tokens) == 1);
     slist.erase(std::remove(slist.begin(), slist.end(), ""), slist.end());
     test_lists_equal(&tokens, slist);
+    free_all_tokens(&tokens);
 }
 
 TEST_CASE("Test string tokenizer only delimiter character string", "[stringTokenizerDelimiterOnlyString]") {
@@ -101,6 +104,7 @@ TEST_CASE("Test string tokenizer only delimiter character string", "[stringToken
     char delim = '-';
     struct token_list tokens = tokenize_string(delimitedString.c_str(), delim);
     REQUIRE(tokens.size == 0);
+    free_all_tokens(&tokens);
 }
 
 /****
@@ -121,6 +125,7 @@ TEST_CASE("Test string tokenizer for a delimited string less than 4096 bytes", "
     REQUIRE(validate_list(&tokens) == 1);
     slist.pop_back();
     test_lists_equal(&tokens, slist);
+    free_all_tokens(&tokens);
 }
 
 TEST_CASE("Test string tokenizer for a non-delimited string less than 4096 bytes", "[testNonDelimitedStringTokenizer]") {
@@ -130,6 +135,7 @@ TEST_CASE("Test string tokenizer for a non-delimited string less than 4096 bytes
     REQUIRE(tokens.has_non_delimited_token == 0);
     REQUIRE(tokens.size == 0);
     test_lists_equal(&tokens, {});
+    free_all_tokens(&tokens);
 }
 
 TEST_CASE("Test string tokenizer for empty string", "[testEmptyStringTokenizer]") {
@@ -139,6 +145,7 @@ TEST_CASE("Test string tokenizer for empty string", "[testEmptyStringTokenizer]"
     REQUIRE(tokens.has_non_delimited_token == 0);
     REQUIRE(tokens.size == 0);
     test_lists_equal(&tokens, {});
+    free_all_tokens(&tokens);
 }
 
 TEST_CASE("Test string tokenizer for string containing only delimited characters", "[testDelimiterCharOnlyStringTokenizer]") {
@@ -148,6 +155,7 @@ TEST_CASE("Test string tokenizer for string containing only delimited characters
     REQUIRE(tokens.has_non_delimited_token == 0);
     REQUIRE(tokens.size == 0);
     test_lists_equal(&tokens, {});
+    free_all_tokens(&tokens);
 }
 
 TEST_CASE("Test string tokenizer for string starting with delimited characters", "[testDelimitedStartingStringTokenizer]") {
@@ -157,6 +165,7 @@ TEST_CASE("Test string tokenizer for string starting with delimited characters",
     REQUIRE(tokens.has_non_delimited_token == 0);
     REQUIRE(tokens.size == 0);
     test_lists_equal(&tokens, {});
+    free_all_tokens(&tokens);
 }
 
 TEST_CASE("Test string tokenizer for string starting and ending with delimited characters", "[testDelimitedStartingEndingStringTokenizer]") {
@@ -166,6 +175,7 @@ TEST_CASE("Test string tokenizer for string starting and ending with delimited c
     REQUIRE(tokens.has_non_delimited_token == 0);
     REQUIRE(tokens.size == 2);
     test_lists_equal(&tokens, std::vector<std::string>{"token1", "token2"});
+    free_all_tokens(&tokens);
 }
 
 /****
