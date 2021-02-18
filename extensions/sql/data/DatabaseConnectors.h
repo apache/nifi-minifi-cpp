@@ -50,8 +50,8 @@ class Statement {
   }
 
  protected:
-  std::string query_;
   soci::session& session_;
+  std::string query_;
 };
 
 class Session {
