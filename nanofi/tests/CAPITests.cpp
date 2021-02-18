@@ -238,7 +238,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
 
   bool test_attr_found = false;
   bool updated_attr_found = false;
-  for (int i = 0; i < attr_set.size; ++i) {
+  for (size_t i = 0; i < attr_set.size; ++i) {
     if (strcmp(attr_set.attributes[i].key, test_attr.key) == 0) {
       test_attr_found = true;
       REQUIRE(std::string(static_cast<char*>(attr_set.attributes[i].value), attr_set.attributes[i].value_size) == new_testattr_value);

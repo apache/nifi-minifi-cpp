@@ -84,7 +84,7 @@ class PeerResponder : public ServerAwareHandler {
   }
 
   bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
-  
+
 #ifdef WIN32
     std::string hostname = org::apache::nifi::minifi::io::Socket::getMyHostName();
 #else
@@ -242,7 +242,7 @@ class FlowFileResponder : public ServerAwareHandler {
 
       read = stream.read(flow->data.data(), gsl::narrow<int>(length));
       if(!isServerRunning())return false;
-      assert(read == length);
+      assert(static_cast<uint64_t>(read) == length);
 
       if (!invalid_checksum) {
         site2site_rest_resp = std::to_string(stream.getCRC());

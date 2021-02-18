@@ -360,10 +360,10 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP Batch tests", "[batch]") {
   std::size_t expected_processed_request_count = 0;
   std::vector<HttpResponseExpectations> requests;
   auto create_requests = [&](std::size_t successful, std::size_t failed) {
-    for (auto i = 0; i < successful; ++i) {
+    for (std::size_t i = 0; i < successful; ++i) {
       requests.push_back(HttpResponseExpectations{true,200});
     }
-    for (auto i = 0; i < failed; ++i) {
+    for (std::size_t i = 0; i < failed; ++i) {
       requests.push_back(HttpResponseExpectations{true,503});
     }
   };

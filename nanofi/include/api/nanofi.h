@@ -43,7 +43,7 @@ extern "C" {
 #define NULL_CHECK(ret_val, ...)                        \
   do {                                                  \
     const void *_p[] = { __VA_ARGS__ };                 \
-    int _i;                                             \
+    unsigned int _i;                                    \
     for (_i = 0; _i < sizeof(_p)/sizeof(*_p); _i++) {   \
       if (_p[_i] == NULL) {                             \
         return ret_val;                                 \

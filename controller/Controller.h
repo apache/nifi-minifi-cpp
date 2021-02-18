@@ -36,7 +36,7 @@ bool sendSingleCommand(std::unique_ptr<minifi::io::Socket> socket, uint8_t op, c
   minifi::io::BufferStream stream;
   stream.write(&op, 1);
   stream.write(value);
-  return socket->write(const_cast<uint8_t*>(stream.getBuffer()), gsl::narrow<int>(stream.size())) == stream.size();
+  return static_cast<size_t>(socket->write(const_cast<uint8_t*>(stream.getBuffer()), gsl::narrow<int>(stream.size()))) == stream.size();
 }
 
 /**
@@ -144,12 +144,12 @@ int getJstacks(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
     uint64_t size = 0;
     socket->read(size);
 
-    for (int i = 0; i < size; i++) {
+    for (uint64_t i = 0; i < size; i++) {
       std::string name;
       uint64_t lines;
       socket->read(name);
       socket->read(lines);
-      for (int j = 0; j < lines; j++) {
+      for (uint64_t j = 0; j < lines; j++) {
         std::string line;
         socket->read(line);
         out << name << " -- " << line << std::endl;
