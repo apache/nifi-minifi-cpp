@@ -53,12 +53,12 @@ class KafkaTestProducer {
 
     std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf = { rd_kafka_conf_new(), utils::rd_kafka_conf_deleter() };
 
-    setKafkaConfigurationField(conf.get(), "bootstrap.servers", kafka_brokers);
-    setKafkaConfigurationField(conf.get(), "compression.codec", "snappy");
-    setKafkaConfigurationField(conf.get(), "batch.num.messages", "1");
+    setKafkaConfigurationField(*conf, "bootstrap.servers", kafka_brokers);
+    setKafkaConfigurationField(*conf, "compression.codec", "snappy");
+    setKafkaConfigurationField(*conf, "batch.num.messages", "1");
 
     if (transactional) {
-      setKafkaConfigurationField(conf.get(), "transactional.id", "ConsumeKafkaTest_transaction_id");
+      setKafkaConfigurationField(*conf, "transactional.id", "ConsumeKafkaTest_transaction_id");
     }
 
     static std::array<char, 512U> errstr{};
