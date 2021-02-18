@@ -614,3 +614,66 @@ TEST_CASE("TestRPGWithoutHostInvalidPort", "[TestRPG5]") {
 TEST_CASE("TestRPGValid", "[TestRPG6]") {
   testRPGBypass("", "8080", "8080", false);
 }
+
+TEST_CASE("A Processor detects correctly if it has incoming flow files it can process", "[isWorkAvailable]") {
+  LogTestController::getInstance().setDebug<core::Processor>();
+
+  const auto repo = std::make_shared<TestRepository>();
+  const auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  content_repo->initialize(std::make_shared<minifi::Configure>());
+
+  const std::shared_ptr<core::Processor> processor = std::make_shared<processors::LogAttribute>("test_processor");
+  const auto incoming_connection = std::make_shared<minifi::Connection>(repo, content_repo, "incoming_connection");
+  incoming_connection->addRelationship(core::Relationship{"success", ""});
+  incoming_connection->setDestinationUUID(processor->getUUID());
+  processor->addConnection(incoming_connection);
+  processor->initialize();
+
+  const auto processor_node = std::make_shared<core::ProcessorNode>(processor);
+  const auto context = std::make_shared<core::ProcessContext>(processor_node, nullptr, repo, repo, content_repo);
+  const auto session_factory = std::make_shared<core::ProcessSessionFactory>(context);
+  const auto session = session_factory->createSession();
+
+  SECTION("Initially, the queue is empty, so there is no work available") {
+    REQUIRE_FALSE(processor->isWorkAvailable());
+  }
+
+  SECTION("When a non-penalized flow file is queued, there is work available") {
+    const auto flow_file = session->create();
+    incoming_connection->put(flow_file);
+
+    REQUIRE(processor->isWorkAvailable());
+  }
+
+  SECTION("When a penalized flow file is queued, there is no work available (until the penalty expires)") {
+    const auto flow_file = session->create();
+    session->penalize(flow_file);
+    incoming_connection->put(flow_file);
+
+    REQUIRE_FALSE(processor->isWorkAvailable());
+  }
+
+  SECTION("If there is both a penalized and a non-penalized flow file queued, there is work available") {
+    const auto normal_flow_file = session->create();
+    incoming_connection->put(normal_flow_file);
+
+    const auto penalized_flow_file = session->create();
+    session->penalize(penalized_flow_file);
+    incoming_connection->put(penalized_flow_file);
+
+    REQUIRE(processor->isWorkAvailable());
+  }
+
+  SECTION("When a penalized flow file is queued, there is work available after the penalty expires") {
+    processor->setPenalizationPeriodMsec(10);
+
+    const auto flow_file = session->create();
+    session->penalize(flow_file);
+    incoming_connection->put(flow_file);
+
+    REQUIRE_FALSE(processor->isWorkAvailable());
+    const auto penalty_has_expired = [flow_file] { return !flow_file->isPenalized(); };
+    REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, penalty_has_expired, std::chrono::milliseconds{10}));
+    REQUIRE(processor->isWorkAvailable());
+  }
+}

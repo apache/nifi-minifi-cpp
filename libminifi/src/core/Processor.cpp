@@ -208,22 +208,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
   }
 }
 
-bool Processor::flowFilesQueued() {
-  std::lock_guard<std::mutex> lock(mutex_);
-
-  if (_incomingConnections.size() == 0)
-    return false;
-
-  for (auto &&conn : _incomingConnections) {
-    std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
-    if (connection->getQueueSize() > 0)
-      return true;
-  }
-
-  return false;
-}
-
-bool Processor::flowFilesOutGoingFull() {
+bool Processor::flowFilesOutGoingFull() const {
   std::lock_guard<std::mutex> lock(mutex_);
 
   for (const auto& connection_pair : out_going_connections_) {
@@ -285,7 +270,7 @@ bool Processor::isWorkAvailable() {
   try {
     for (const auto &conn : _incomingConnections) {
       std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
-      if (connection->getQueueSize() > 0) {
+      if (connection->isWorkAvailable()) {
         hasWork = true;
         break;
       }

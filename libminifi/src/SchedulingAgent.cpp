@@ -33,7 +33,7 @@ namespace minifi {
 
 bool SchedulingAgent::hasWorkToDo(const std::shared_ptr<core::Processor>& processor) {
   // Whether it has work to do
-  if (processor->getTriggerWhenEmpty() || !processor->hasIncomingConnections() || processor->flowFilesQueued())
+  if (processor->getTriggerWhenEmpty() || !processor->hasIncomingConnections() || processor->isWorkAvailable())
     return true;
   else
     return false;

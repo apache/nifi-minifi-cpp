@@ -115,7 +115,7 @@ class MockProcessor : public core::Processor {
     }
   }
 
-  bool isYield() {
+  bool isYield() override {
     return false;
   }
 
