@@ -21,10 +21,12 @@
 #include <memory>
 #include <string>
 #ifndef DISABLE_CURL
+#ifdef WIN32
 #pragma comment(lib, "libcurl.lib")
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 #pragma comment(lib, "crypt32.lib")
+#endif
 #include <curl/curl.h>
 #endif
 #include "impl/expression/Expression.h"
