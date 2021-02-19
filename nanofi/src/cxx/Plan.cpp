@@ -89,8 +89,6 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_p
     return nullptr;
   }
 
-  utils::Identifier uuid = id_generator_->generate();
-
   processor->setStreamFactory(stream_factory);
   // initialize the processor
   processor->initialize();

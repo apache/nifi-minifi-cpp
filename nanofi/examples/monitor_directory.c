@@ -77,11 +77,11 @@ int main(int argc, char **argv) {
 
   port.port_id = portStr;
 
-  C2_Server server;
-  server.url = argv[4];
-  server.ack_url = argv[5];
-  server.identifier = "monitor_directory";
-  server.type = REST;
+  // C2_Server server;
+  // server.url = argv[4];
+  // server.ack_url = argv[5];
+  // server.identifier = "monitor_directory";
+  // server.type = REST;
 
   nifi_instance *instance = create_instance(instance_str, &port);
 

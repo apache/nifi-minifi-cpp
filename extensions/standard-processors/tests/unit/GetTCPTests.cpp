@@ -37,8 +37,6 @@
 #include "utils/gsl.h"
 
 TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
-  utils::Identifier ident = utils::Identifier();
-
   TestController testController;
   std::vector<uint8_t> buffer;
   for (auto c : "Hello World\nHello Warld\nGoodByte Cruel world") {
