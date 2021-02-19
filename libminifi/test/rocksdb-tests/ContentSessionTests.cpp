@@ -56,12 +56,12 @@ const std::shared_ptr<minifi::io::BaseStream>& operator>>(const std::shared_ptr<
   str = "";
   uint8_t buffer[4096]{};
   while (true) {
-    size_t ret = stream->read(buffer, sizeof(buffer));
+    auto ret = stream->read(buffer, sizeof(buffer));
     REQUIRE(ret >= 0);
     if (ret == 0) {
       break;
     }
-    str += std::string{reinterpret_cast<char*>(buffer), ret};
+    str += std::string{reinterpret_cast<char*>(buffer), static_cast<std::size_t>(ret)};
   }
   return stream;
 }
