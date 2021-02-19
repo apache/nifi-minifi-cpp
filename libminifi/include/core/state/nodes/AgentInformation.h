@@ -61,6 +61,8 @@
 #include "io/ClientSocket.h"
 #include "SchedulingNodes.h"
 #include "utils/OptionalUtils.h"
+#include "utils/OsUtils.h"
+#include "utils/ProcessCPUUsageTracker.h"
 #include "core/AgentIdentificationProvider.h"
 
 namespace org {
@@ -425,7 +427,52 @@ class AgentStatus : public StateMonitorNode {
 
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
+    if (!repositories_.empty()) {
+      serialized.push_back(serializeRepositories());
+    }
+    serialized.push_back(serializeUptime());
 
+    if (nullptr != monitor_) {
+      serialized.push_back(serializeComponents());
+    }
+
+    serialized.push_back(serializeResourceConsumption());
+
+    return serialized;
+  }
+
+ protected:
+  SerializedResponseNode serializeRepositories() {
+    SerializedResponseNode repositories;
+
+    repositories.name = "repositories";
+
+    for (auto &repo : repositories_) {
+      SerializedResponseNode repoNode;
+      repoNode.collapsible = false;
+      repoNode.name = repo.first;
+
+      SerializedResponseNode queuesize;
+      queuesize.name = "size";
+      queuesize.value = repo.second->getRepoSize();
+
+      SerializedResponseNode isRunning;
+      isRunning.name = "running";
+      isRunning.value = repo.second->isRunning();
+
+      SerializedResponseNode isFull;
+      isFull.name = "full";
+      isFull.value = repo.second->isFull();
+
+      repoNode.children.push_back(queuesize);
+      repoNode.children.push_back(isRunning);
+      repoNode.children.push_back(isFull);
+      repositories.children.push_back(repoNode);
+    }
+    return repositories;
+  }
+
+  SerializedResponseNode serializeUptime() {
     SerializedResponseNode uptime;
 
     uptime.name = "uptime";
@@ -435,67 +482,66 @@ class AgentStatus : public StateMonitorNode {
       uptime.value = "0";
     }
 
-    if (!repositories_.empty()) {
-      SerializedResponseNode repositories;
+    return uptime;
+  }
 
-      repositories.name = "repositories";
-
-      for (auto &repo : repositories_) {
-        SerializedResponseNode repoNode;
-        repoNode.collapsible = false;
-        repoNode.name = repo.first;
-
-        SerializedResponseNode queuesize;
-        queuesize.name = "size";
-        queuesize.value = repo.second->getRepoSize();
-
-        SerializedResponseNode isRunning;
-        isRunning.name = "running";
-        isRunning.value = repo.second->isRunning();
-
-        SerializedResponseNode isFull;
-        isFull.name = "full";
-        isFull.value = repo.second->isFull();
-
-        repoNode.children.push_back(queuesize);
-        repoNode.children.push_back(isRunning);
-        repoNode.children.push_back(isFull);
-        repositories.children.push_back(repoNode);
-      }
-      serialized.push_back(repositories);
-    }
-
-    serialized.push_back(uptime);
-
-    if (nullptr != monitor_) {
+  SerializedResponseNode serializeComponents() {
+    SerializedResponseNode components_node(false);
+    components_node.name = "components";
+    if (monitor_ != nullptr) {
       auto components = monitor_->getAllComponents();
-      SerializedResponseNode componentsNode(false);
-      componentsNode.name = "components";
 
       for (auto component : components) {
-        SerializedResponseNode componentNode(false);
-        componentNode.name = component->getComponentName();
+        SerializedResponseNode component_node(false);
+        component_node.name = component->getComponentName();
 
         SerializedResponseNode uuidNode;
         uuidNode.name = "uuid";
         uuidNode.value = std::string{component->getComponentUUID().to_string()};
 
-        SerializedResponseNode componentStatusNode;
-        componentStatusNode.name = "running";
-        componentStatusNode.value = component->isRunning();
+        SerializedResponseNode component_status_node;
+        component_status_node.name = "running";
+        component_status_node.value = component->isRunning();
 
-        componentNode.children.push_back(componentStatusNode);
-        componentNode.children.push_back(uuidNode);
-        componentsNode.children.push_back(componentNode);
+        component_node.children.push_back(component_status_node);
+        component_node.children.push_back(uuidNode);
+        components_node.children.push_back(component_node);
       }
-      serialized.push_back(componentsNode);
     }
-
-    return serialized;
+    return components_node;
   }
 
- protected:
+  SerializedResponseNode serializeAgentMemoryUsage() {
+    SerializedResponseNode used_physical_memory;
+    used_physical_memory.name = "memoryUtilization";
+    used_physical_memory.value = (uint64_t)utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
+    return used_physical_memory;
+  }
+
+  SerializedResponseNode serializeAgentCPUUsage() {
+    double system_cpu_usage = -1.0;
+    {
+      std::lock_guard<std::mutex> guard(cpu_load_tracker_mutex_);
+      system_cpu_usage = cpu_load_tracker_.getCPUUsageAndRestartCollection();
+    }
+    SerializedResponseNode cpu_usage;
+    cpu_usage.name = "cpuUtilization";
+    cpu_usage.value = system_cpu_usage;
+    return cpu_usage;
+  }
+
+  SerializedResponseNode serializeResourceConsumption() {
+    SerializedResponseNode resource_consumption;
+    resource_consumption.name = "resourceConsumption";
+    resource_consumption.children.push_back(serializeAgentMemoryUsage());
+    resource_consumption.children.push_back(serializeAgentCPUUsage());
+    return resource_consumption;
+  }
+
   std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
+
+  static utils::ProcessCPUUsageTracker cpu_load_tracker_;
+  static std::mutex cpu_load_tracker_mutex_;
 };
 
 class AgentIdentifier {

@@ -74,6 +74,7 @@ class Value {
   static const std::type_index UINT32_TYPE;
   static const std::type_index INT_TYPE;
   static const std::type_index BOOL_TYPE;
+  static const std::type_index DOUBLE_TYPE;
   static const std::type_index STRING_TYPE;
 
  protected:
@@ -142,6 +143,17 @@ class Value {
     return true;
   }
 
+  virtual bool getValue(double &ref) {
+    try {
+      double value;
+      utils::internal::ValueParser(string_value).parse(value).parseEnd();
+      ref = value;
+    } catch(const ParseException&) {
+      return false;
+    }
+    return true;
+  }
+
   std::string string_value;
   std::type_index type_id;
 };
@@ -192,6 +204,10 @@ class UInt32Value : public Value {
     return false;
   }
 
+  virtual bool getValue(double& /*ref*/) {
+    return false;
+  }
+
   uint32_t value;
 };
 
@@ -218,7 +234,8 @@ class IntValue : public Value {
   }
 
   virtual bool getValue(uint32_t &ref) {
-    if (value < 0) return false;
+    if (value < 0)
+      return false;
     ref = value;
     return true;
   }
@@ -229,11 +246,17 @@ class IntValue : public Value {
   }
 
   virtual bool getValue(uint64_t &ref) {
+    if (value < 0)
+      return false;
     ref = value;
     return true;
   }
 
   virtual bool getValue(bool& /*ref*/) {
+    return false;
+  }
+
+  virtual bool getValue(double& /*ref*/) {
     return false;
   }
 
@@ -271,6 +294,10 @@ class BoolValue : public Value {
   }
 
   virtual bool getValue(uint64_t &ref) {
+    return PreventSwearingInFutureRefactor(ref);
+  }
+
+  virtual bool getValue(double &ref) {
     return PreventSwearingInFutureRefactor(ref);
   }
 
@@ -320,7 +347,7 @@ class UInt64Value : public Value {
   }
 
   virtual bool getValue(int64_t &ref) {
-    if (value <= static_cast<uint32_t>(std::numeric_limits<int64_t>::max())) {
+    if (value <= static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
       ref = value;
       return true;
     }
@@ -333,6 +360,10 @@ class UInt64Value : public Value {
   }
 
   virtual bool getValue(bool& /*ref*/) {
+    return false;
+  }
+
+  virtual bool getValue(double& /*ref*/) {
     return false;
   }
 
@@ -380,7 +411,57 @@ class Int64Value : public Value {
     return false;
   }
 
+  virtual bool getValue(double& /*ref*/) {
+    return false;
+  }
+
   int64_t value;
+};
+
+class DoubleValue : public Value {
+ public:
+  explicit DoubleValue(double value)
+      : Value(std::to_string(value)),
+      value(value) {
+    setTypeId<double>();
+  }
+  explicit DoubleValue(const std::string &strvalue)
+      : Value(strvalue) {
+    utils::internal::ValueParser(strvalue).parse(value).parseEnd();
+    setTypeId<double>();
+  }
+
+  double getValue() {
+    return value;
+  }
+
+ protected:
+  virtual bool getValue(int&) {
+    return false;
+  }
+
+  virtual bool getValue(uint32_t&) {
+    return false;
+  }
+
+  virtual bool getValue(int64_t&) {
+    return false;
+  }
+
+  virtual bool getValue(uint64_t&) {
+    return false;
+  }
+
+  virtual bool getValue(bool&) {
+    return false;
+  }
+
+  virtual bool getValue(double& ref) {
+    ref = value;
+    return true;
+  }
+
+  double value;
 };
 
 static inline std::shared_ptr<Value> createValue(const bool &object) {
@@ -419,6 +500,10 @@ static inline std::shared_ptr<Value> createValue(const int &object) {
   return std::make_shared<IntValue>(object);
 }
 
+static inline std::shared_ptr<Value> createValue(const double &object) {
+  return std::make_shared<DoubleValue>(object);
+}
+
 /**
  * Purpose: ValueNode is the AST container for a value
  */
@@ -444,6 +529,7 @@ class ValueNode {
   std::is_same<T, bool >::value ||
   std::is_same<T, char* >::value ||
   std::is_same<T, const char* >::value ||
+  std::is_same<T, double>::value ||
   std::is_same<T, std::string>::value, ValueNode&>::type {
     value_ = createValue(ref);
     return *this;

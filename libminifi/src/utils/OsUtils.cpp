@@ -24,7 +24,9 @@
 #include "utils/gsl.h"
 
 #ifdef __linux__
+#include <sys/sysinfo.h>
 #include <sstream>
+#include "utils/OptionalUtils.h"
 #endif
 
 #ifdef _WIN32
@@ -38,6 +40,7 @@
 #include <algorithm>
 #pragma comment(lib, "Ws2_32.lib")
 #else
+#include <sys/utsname.h>
 #include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -47,6 +50,7 @@
 
 #ifdef __APPLE__
 #include <mach/mach.h>
+#include <sys/sysctl.h>
 #endif
 
 namespace org {
@@ -164,19 +168,18 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
   return name;
 }
 
-uint64_t OsUtils::getMemoryUsage() {
+uint64_t OsUtils::getCurrentProcessPhysicalMemoryUsage() {
 #ifdef __linux__
-  static const std::string linePrefix = "VmRSS:";
-  std::ifstream statusFile("/proc/self/status");
+  static const std::string resident_set_size_prefix = "VmRSS:";
+  std::ifstream status_file("/proc/self/status");
   std::string line;
 
-  while (std::getline(statusFile, line)) {
-    // if line begins with "VmRSS:"
-    if (line.rfind(linePrefix, 0) == 0) {
-      std::istringstream valuableLine(line.substr(linePrefix.length()));
-      uint64_t kByteValue;
-      valuableLine >> kByteValue;
-      return kByteValue * 1024;
+  while (std::getline(status_file, line)) {
+    if (line.rfind(resident_set_size_prefix, 0) == 0) {
+      std::istringstream resident_set_size_value(line.substr(resident_set_size_prefix.length()));
+      uint64_t memory_usage_in_kBytes;
+      resident_set_size_value >> memory_usage_in_kBytes;
+      return memory_usage_in_kBytes * 1024;
     }
   }
 
@@ -197,10 +200,117 @@ uint64_t OsUtils::getMemoryUsage() {
     throw std::runtime_error("Could not get memory info for current process");
   return pmc.WorkingSetSize;
 #endif
-
-  throw std::runtime_error("getMemoryUsage() is not implemented for this platform");
+  throw std::runtime_error("getCurrentProcessPhysicalMemoryUsage() is not implemented for this platform");
 }
 
+uint64_t OsUtils::getSystemPhysicalMemoryUsage() {
+#ifdef __linux__
+  const std::string available_memory_prefix = "MemAvailable:";
+  const std::string total_memory_prefix = "MemTotal:";
+  std::ifstream meminfo_file("/proc/meminfo");
+  std::string line;
+
+  minifi::utils::optional<uint64_t> total_memory_kByte;
+  minifi::utils::optional<uint64_t> available_memory_kByte;
+  while ((!total_memory_kByte.has_value() || !available_memory_kByte.has_value()) && std::getline(meminfo_file, line)) {
+    if (line.rfind(total_memory_prefix, 0) == 0) {
+      std::istringstream total_memory_line(line.substr(total_memory_prefix.length()));
+      total_memory_kByte.emplace(0);
+      total_memory_line >> total_memory_kByte.value();
+    } else if (line.rfind(available_memory_prefix, 0) == 0) {
+      std::istringstream available_memory_line(line.substr(available_memory_prefix.length()));
+      available_memory_kByte.emplace(0);
+      available_memory_line >> available_memory_kByte.value();
+    }
+  }
+  if (total_memory_kByte.has_value() && available_memory_kByte.has_value())
+    return (total_memory_kByte.value() - available_memory_kByte.value()) * 1024;
+
+  throw std::runtime_error("Could not get memory info");
+#endif
+
+#ifdef __APPLE__
+  vm_size_t page_size;
+  mach_port_t mach_port = mach_host_self();
+  vm_statistics64_data_t vm_stats;
+  mach_msg_type_number_t count = sizeof(vm_stats) / sizeof(natural_t);
+  if (KERN_SUCCESS == host_page_size(mach_port, &page_size) &&
+      KERN_SUCCESS == host_statistics64(mach_port, HOST_VM_INFO,
+                                      (host_info64_t)&vm_stats, &count)) {
+      uint64_t physical_memory_used = ((int64_t)vm_stats.active_count +
+                               (int64_t)vm_stats.wire_count) *  (int64_t)page_size;
+      return physical_memory_used;
+  }
+  throw std::runtime_error("Could not get memory info");
+#endif
+
+#ifdef _WIN32
+  MEMORYSTATUSEX memory_info;
+  memory_info.dwLength = sizeof(MEMORYSTATUSEX);
+  GlobalMemoryStatusEx(&memory_info);
+  DWORDLONG physical_memory_used = memory_info.ullTotalPhys - memory_info.ullAvailPhys;
+  return physical_memory_used;
+#endif
+  throw std::runtime_error("getSystemPhysicalMemoryUsage() is not implemented for this platform");
+}
+
+uint64_t OsUtils::getSystemTotalPhysicalMemory() {
+#ifdef __linux__
+  struct sysinfo memory_info;
+  sysinfo(&memory_info);
+  uint64_t total_physical_memory = memory_info.totalram;
+  total_physical_memory *= memory_info.mem_unit;
+  return total_physical_memory;
+#endif
+
+#ifdef __APPLE__
+  int mib[2];
+  int64_t total_physical_memory = 0;
+  mib[0] = CTL_HW;
+  mib[1] = HW_MEMSIZE;
+  size_t length = sizeof(int64_t);
+  sysctl(mib, 2, &total_physical_memory, &length, NULL, 0);
+  return total_physical_memory;
+#endif
+
+#ifdef _WIN32
+  MEMORYSTATUSEX memory_info;
+  memory_info.dwLength = sizeof(MEMORYSTATUSEX);
+  GlobalMemoryStatusEx(&memory_info);
+  DWORDLONG total_physical_memory = memory_info.ullTotalPhys;
+  return total_physical_memory;
+#endif
+  throw std::runtime_error("getSystemTotalPhysicalMemory() is not implemented for this platform");
+}
+
+std::string OsUtils::getMachineArchitecture() {
+#if defined(__linux__) || defined(__APPLE__)
+  utsname buf;
+  if (uname(&buf) == -1)
+    return "unknown";
+  else
+    return buf.machine;
+#endif
+#if defined(WIN32)
+  SYSTEM_INFO system_information;
+  GetNativeSystemInfo(&system_information);
+  switch (system_information.wProcessorArchitecture) {
+    case PROCESSOR_ARCHITECTURE_INTEL:
+      return "x32";
+    case PROCESSOR_ARCHITECTURE_AMD64:
+      return "x64";
+    case PROCESSOR_ARCHITECTURE_ARM:
+      return "arm32";
+    case PROCESSOR_ARCHITECTURE_ARM64:
+      return "arm64";
+    case PROCESSOR_ARCHITECTURE_IA64:
+      return "x64";
+    default:
+      return "unknown";
+  }
+#endif
+  throw std::runtime_error("getMachineArchitecture() is not implemented for this platform");
+}
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi

@@ -52,6 +52,8 @@ static inline std::shared_ptr<state::response::Value> convert(const std::shared_
     return std::make_shared<state::response::IntValue>(ref);
   } else if (prior->getTypeIndex() == state::response::Value::BOOL_TYPE) {
     return std::make_shared<state::response::BoolValue>(ref);
+  } else if (prior->getTypeIndex() == state::response::Value::DOUBLE_TYPE) {
+    return std::make_shared<state::response::DoubleValue>(ref);
   } else {
     return std::make_shared<state::response::Value>(ref);
   }

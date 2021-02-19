@@ -119,6 +119,17 @@ class ValueParser {
     return *this;
   }
 
+  ValueParser& parse(double& out) {
+    double result;  // NOLINT
+    auto len = safeCallConverter(std::strtod, result);
+    if (len == 0) {
+      throw ParseException("Couldn't parse double");
+    }
+    offset += len;
+    out = result;
+    return *this;
+  }
+
   void parseEnd() {
     skipWhitespace();
     if (offset < str.length()) {
@@ -140,6 +151,26 @@ class ValueParser {
     char* end;
     errno = 0;
     T result = converter(begin, &end, 10);
+    if (end == begin || errno == ERANGE) {
+      return 0;
+    }
+    out = result;
+    return end - begin;
+  }
+
+  /**
+ *
+ * @tparam T
+ * @param converter
+ * @param out
+ * @return the number of characters used during conversion, 0 for error
+ */
+  template<typename T>
+  std::size_t safeCallConverter(T (*converter)(const char* begin, char** end), T& out) {
+    const char* const begin = str.c_str() + offset;
+    char* end;
+    errno = 0;
+    T result = converter(begin, &end);
     if (end == begin || errno == ERANGE) {
       return 0;
     }

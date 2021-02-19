@@ -1,0 +1,125 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef LIBMINIFI_INCLUDE_UTILS_SYSTEMCPUUSAGETRACKER_H_
+#define LIBMINIFI_INCLUDE_UTILS_SYSTEMCPUUSAGETRACKER_H_
+#ifdef __linux__
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <string>
+#endif
+
+#ifdef WIN32
+#include "TCHAR.h"
+#include "pdh.h"
+#endif
+
+#ifdef __APPLE__
+#include <mach/mach_init.h>
+#include <mach/mach_error.h>
+#include <mach/mach_host.h>
+#include <mach/vm_map.h>
+#endif
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace utils {
+
+class SystemCPUUsageTrackerBase {
+ public:
+  SystemCPUUsageTrackerBase() = default;
+  virtual ~SystemCPUUsageTrackerBase() = default;
+  virtual double getCPUUsageAndRestartCollection() = 0;
+};
+
+#ifdef __linux__
+
+class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
+ public:
+  SystemCPUUsageTracker();
+  ~SystemCPUUsageTracker() = default;
+  double getCPUUsageAndRestartCollection() override;
+
+ protected:
+  void queryCPUTimes();
+  bool isCurrentQuerySameAsPrevious();
+  bool isCurrentQueryOlderThanPrevious();
+  double getCPUUsageBetweenLastTwoQueries();
+
+ private:
+  uint64_t total_user_;
+  uint64_t total_user_low_;
+  uint64_t total_sys_;
+  uint64_t total_idle_;
+
+  uint64_t previous_total_user_;
+  uint64_t previous_total_user_low_;
+  uint64_t previous_total_sys_;
+  uint64_t previous_total_idle_;
+};
+
+#endif  // linux
+
+#ifdef WIN32
+class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
+ public:
+  SystemCPUUsageTracker();
+  ~SystemCPUUsageTracker();
+  double getCPUUsageAndRestartCollection() override;
+
+ protected:
+  void openQuery();
+  double getValueFromOpenQuery();
+
+ private:
+  PDH_HQUERY cpu_query_;
+  PDH_HCOUNTER cpu_total_;
+  bool is_query_open_;
+};
+#endif  // windows
+
+#ifdef __APPLE__
+class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
+ public:
+  SystemCPUUsageTracker();
+  ~SystemCPUUsageTracker() = default;
+  double getCPUUsageAndRestartCollection() override;
+
+ protected:
+  void queryCPUTicks();
+  bool isCurrentQueryOlderThanPrevious();
+  bool isCurrentQuerySameAsPrevious();
+  double getCPUUsageBetweenLastTwoQueries();
+
+ private:
+  uint64_t total_ticks_;
+  uint64_t idle_ticks_;
+
+  uint64_t previous_total_ticks_;
+  uint64_t previous_idle_ticks_;
+};
+#endif  // macOS
+
+} /* namespace utils */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
+
+#endif  // LIBMINIFI_INCLUDE_UTILS_SYSTEMCPUUSAGETRACKER_H_

@@ -21,8 +21,29 @@
 #include "../TestBase.h"
 
 TEST_CASE("Test memory usage", "[testmemoryusage]") {
+  constexpr bool cout_enabled = true;
   std::vector<char> v(30000000);
-  const auto memoryUsage = utils::OsUtils::getMemoryUsage();
-  REQUIRE(memoryUsage > v.size());
-  REQUIRE(memoryUsage < 2 * v.size());
+  const auto RAMUsagebyProcess = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
+  const auto RAMUsagebySystem = utils::OsUtils::getSystemPhysicalMemoryUsage();
+  const auto RAMTotal = utils::OsUtils::getSystemTotalPhysicalMemory();
+
+  if (cout_enabled) {
+    std::cout << "Physical Memory used by this process: " << RAMUsagebyProcess  << " bytes" << std::endl;
+    std::cout << "Physical Memory used by the system: " << RAMUsagebySystem << " bytes" << std::endl;
+    std::cout << "Total Physical Memory in the system: " << RAMTotal << " bytes" << std::endl;
+  }
+  REQUIRE(RAMUsagebyProcess >= v.size());
+  REQUIRE(v.size()*2 >= RAMUsagebyProcess);
+  REQUIRE(RAMUsagebySystem >= RAMUsagebyProcess);
+  REQUIRE(RAMTotal >= RAMUsagebySystem);
 }
+
+#ifndef WIN32
+size_t GetTotalMemoryLegacy() {
+  return (size_t) sysconf(_SC_PHYS_PAGES) * (size_t) sysconf(_SC_PAGESIZE);
+}
+
+TEST_CASE("Test new and legacy total system memory query equivalency") {
+  REQUIRE(GetTotalMemoryLegacy() == utils::OsUtils::getSystemTotalPhysicalMemory());
+}
+#endif

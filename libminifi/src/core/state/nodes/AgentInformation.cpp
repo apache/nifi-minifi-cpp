@@ -15,10 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "core/state/Value.h"
-#include <utility>
-#include <string>
+#include "core/state/nodes/AgentInformation.h"
 
 namespace org {
 namespace apache {
@@ -27,13 +24,8 @@ namespace minifi {
 namespace state {
 namespace response {
 
-const std::type_index Value::UINT64_TYPE = std::type_index(typeid(uint64_t));
-const std::type_index Value::INT64_TYPE = std::type_index(typeid(int64_t));
-const std::type_index Value::UINT32_TYPE = std::type_index(typeid(uint32_t));
-const std::type_index Value::INT_TYPE = std::type_index(typeid(int));
-const std::type_index Value::BOOL_TYPE = std::type_index(typeid(bool));
-const std::type_index Value::DOUBLE_TYPE = std::type_index(typeid(double));
-const std::type_index Value::STRING_TYPE = std::type_index(typeid(std::string));
+utils::ProcessCPUUsageTracker AgentStatus::cpu_load_tracker_;
+std::mutex AgentStatus::cpu_load_tracker_mutex_;
 
 } /* namespace response */
 } /* namespace state */
@@ -41,4 +33,3 @@ const std::type_index Value::STRING_TYPE = std::type_index(typeid(std::string));
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-

@@ -23,6 +23,10 @@
 #include <string>
 #include <vector>
 #include "core/expect.h"
+#include "core/Property.h"
+#include "core/Relationship.h"
+#include "core/Processor.h"
+#include "io/validation.h"
 
 namespace org {
 namespace apache {

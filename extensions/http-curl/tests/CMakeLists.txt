@@ -91,6 +91,7 @@ add_test(NAME HttpPostIntegrationTestChunked COMMAND HttpPostIntegrationTest "${
 endif()
 add_test(NAME C2VerifyServeResults COMMAND C2VerifyServeResults "${TEST_RESOURCES}/C2VerifyServeResults.yml" "${TEST_RESOURCES}/")
 add_test(NAME C2VerifyHeartbeatAndStop COMMAND C2VerifyHeartbeatAndStop "${TEST_RESOURCES}/C2VerifyHeartbeatAndStop.yml" )
+add_test(NAME C2VerifyResourceConsumptionInHeartbeat COMMAND C2VerifyResourceConsumptionInHeartbeat "${TEST_RESOURCES}/C2VerifyHeartbeatAndStop.yml")
 add_test(NAME HTTPSiteToSiteTests COMMAND HTTPSiteToSiteTests "${TEST_RESOURCES}/TestHTTPSiteToSite.yml" "${TEST_RESOURCES}/" "http://localhost:8099/nifi-api")
 add_test(NAME TimeoutHTTPSiteToSiteTests COMMAND TimeoutHTTPSiteToSiteTests "${TEST_RESOURCES}/TestTimeoutHTTPSiteToSite.yml" "${TEST_RESOURCES}/" "http://localhost:8098/nifi-api")
 add_test(NAME SiteToSiteRestTest COMMAND SiteToSiteRestTest "${TEST_RESOURCES}/TestSite2SiteRest.yml" "${TEST_RESOURCES}/" "http://localhost:8077/nifi-api/site-to-site")
