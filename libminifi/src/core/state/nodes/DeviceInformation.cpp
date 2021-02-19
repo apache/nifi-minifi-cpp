@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,42 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
-
-#include <string>
+#include "core/state/nodes/DeviceInformation.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace utils {
-namespace OsUtils {
+namespace state {
+namespace response {
 
-/// Resolves a user ID to a username
-extern std::string userIdToUsername(const std::string &uid);
+utils::SystemCPUUsageTracker DeviceInfoNode::cpu_load_tracker_;
+std::mutex DeviceInfoNode::cpu_load_tracker_mutex_;
 
-/// Returns physical memory usage by the current process in bytes
-int64_t getCurrentProcessPhysicalMemoryUsage();
-
-/// Returns physical memory usage by the system in bytes
-int64_t getSystemPhysicalMemoryUsage();
-
-/// Returns the total physical memory in the system in bytes
-int64_t getSystemTotalPhysicalMemory();
-
-/// Returns the host architecture (e.g. x32, arm64)
-std::string getMachineArchitecture();
-
-#ifdef WIN32
-/// Resolves common identifiers
-extern std::string resolve_common_identifiers(const std::string &id);
-#endif
-} /* namespace OsUtils */
-} /* namespace utils */
+} /* namespace response */
+} /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_

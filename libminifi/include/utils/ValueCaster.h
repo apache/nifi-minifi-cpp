@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -6,7 +7,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenseas/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,42 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
 
-#include <string>
+#pragma once
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
-namespace OsUtils {
+namespace internal {
 
-/// Resolves a user ID to a username
-extern std::string userIdToUsername(const std::string &uid);
+template<class T, class U>
+bool cast_if_in_range(T in, U& out) {
+  U result = static_cast<U>(in);
+  T result_back = static_cast<T>(result);
+  constexpr const bool is_different_signedness = (std::is_signed<T>::value != std::is_signed<U>::value);
+  if (result_back != in || (is_different_signedness && ((in < T{}) != (result < U{})))) {
+    return false;
+  }
+  out = result;
+  return true;
+}
 
-/// Returns physical memory usage by the current process in bytes
-int64_t getCurrentProcessPhysicalMemoryUsage();
-
-/// Returns physical memory usage by the system in bytes
-int64_t getSystemPhysicalMemoryUsage();
-
-/// Returns the total physical memory in the system in bytes
-int64_t getSystemTotalPhysicalMemory();
-
-/// Returns the host architecture (e.g. x32, arm64)
-std::string getMachineArchitecture();
-
-#ifdef WIN32
-/// Resolves common identifiers
-extern std::string resolve_common_identifiers(const std::string &id);
-#endif
-} /* namespace OsUtils */
+} /* namespace internal */
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
