@@ -104,7 +104,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[aw
     plan->setProperty(s3_processor, "Server Side Encryption", "");
   }
 
-  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception&);
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", "[awsS3ClientConfig]") {

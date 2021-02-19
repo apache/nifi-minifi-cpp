@@ -98,5 +98,5 @@ TEST_CASE("GetFile: Directory", "[getFileDir]") {
   LogTestController::getInstance().setTrace<processors::GetFile>();
   auto plan = testController.createPlan();
   auto get_file = plan->addProcessor("GetFile", "Get");
-  REQUIRE_THROWS_AS(plan->runNextProcessor(), minifi::Exception);
+  REQUIRE_THROWS_AS(plan->runNextProcessor(), minifi::Exception&);
 }
