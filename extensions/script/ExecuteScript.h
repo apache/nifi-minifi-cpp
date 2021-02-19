@@ -76,7 +76,7 @@ class ExecuteScript : public core::Processor {
     engine->bind("REL_SUCCESS", Success);
     engine->bind("REL_FAILURE", Failure);
 
-    return std::move(engine);
+    return engine;
   }
 
   template<typename T>
