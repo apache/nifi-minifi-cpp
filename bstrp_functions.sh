@@ -169,6 +169,7 @@ save_state(){
   echo_state_variable TESTS_DISABLED
   echo_state_variable BUILD_PROFILE
   echo_state_variable USE_SHARED_LIBS
+  echo_state_variable ASAN_ENABLED
   for option in "${OPTIONS[@]}" ; do
     echo_state_variable $option
   done
