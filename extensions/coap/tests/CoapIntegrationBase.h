@@ -101,7 +101,6 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
     if (scheme == "https" && !key_dir.empty()) {
       std::string cert = "";
       cert = key_dir + "nifi-cert.pem";
-      memset(&callback, 0, sizeof(callback));
       callback.init_ssl = ssl_enable;
       port += "s";
       callback.log_message = log_message;

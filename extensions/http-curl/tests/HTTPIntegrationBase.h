@@ -88,7 +88,6 @@ void HTTPIntegrationBase::setUrl(const std::string &url, ServerAwareHandler *han
   CivetCallbacks callback{};
   if (scheme == "https" && !key_dir.empty()) {
     std::string cert = key_dir + "nifi-cert.pem";
-    memset(&callback, 0, sizeof(callback));
     callback.init_ssl = ssl_enable;
     port += "s";
     callback.log_message = log_message;
