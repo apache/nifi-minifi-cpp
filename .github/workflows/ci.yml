@@ -67,7 +67,6 @@ jobs:
     timeout-minutes: 120
     env:
       CLCACHE_DIR: ${{ GITHUB.WORKSPACE }}\clcache
-      CLCACHE_CL: C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl_original.exe
     steps:
       - id: checkout
         uses: actions/checkout@v2
@@ -89,15 +88,16 @@ jobs:
       - name: Setup clcache
         run: |
           (New-Object System.Net.WebClient).DownloadFile('https://github.com/frerich/clcache/releases/download/v4.2.0/clcache-4.2.0.zip', "$pwd\clcache.zip")
-          Expand-Archive -Force -Path clcache.zip -DestinationPath "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86";
-          move "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl.exe" "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl_original.exe"
-          move "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl.exe.config" "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl_original.exe.config"
-          move "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\clcache.exe" "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl.exe"
+          $cl_exe_dir = Split-Path -parent $(vswhere -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find VC\Tools\MSVC\**\bin\Hostx86\x86\cl.exe | select-object -last 1)
+          Expand-Archive -Force -Path clcache.zip -DestinationPath "$cl_exe_dir";
+          move "$cl_exe_dir\cl.exe" "$cl_exe_dir\cl_original.exe"
+          move "$cl_exe_dir\cl.exe.config" "$cl_exe_dir\cl_original.exe.config"
+          move "$cl_exe_dir\clcache.exe" "$cl_exe_dir\cl.exe"
+          echo "CLCACHE_CL=$cl_exe_dir\cl_original.exe" >> $env:GITHUB_ENV
       - id: build
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x86
           PATH %PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\Roslyn
-          set "CLCACHE_CL=C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl_original.exe"
           win_build_vs.bat build /CI /S /A /Z
         shell: cmd
   windows_VS2019:
@@ -106,7 +106,6 @@ jobs:
     timeout-minutes: 120
     env:
       CLCACHE_DIR: ${{ GITHUB.WORKSPACE }}\clcache
-      CLCACHE_CL: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl_original.exe
     steps:
       - id: checkout
         uses: actions/checkout@v2
@@ -128,10 +127,12 @@ jobs:
       - name: Setup clcache
         run: |
           (New-Object System.Net.WebClient).DownloadFile('https://github.com/frerich/clcache/releases/download/v4.2.0/clcache-4.2.0.zip', "$pwd\clcache.zip")
-          Expand-Archive -Force -Path clcache.zip -DestinationPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64";
-          move "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl.exe" "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl_original.exe"
-          move "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl.exe.config" "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl_original.exe.config"
-          move "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\clcache.exe" "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\bin\Hostx64\x64\cl.exe"
+          $cl_exe_dir = Split-Path -parent $(vswhere -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find VC\Tools\MSVC\**\bin\Hostx64\x64\cl.exe | select-object -last 1)
+          Expand-Archive -Force -Path clcache.zip -DestinationPath "$cl_exe_dir";
+          move "$cl_exe_dir\cl.exe" "$cl_exe_dir\cl_original.exe"
+          move "$cl_exe_dir\cl.exe.config" "$cl_exe_dir\cl_original.exe.config"
+          move "$cl_exe_dir\clcache.exe" "$cl_exe_dir\cl.exe"
+          echo "CLCACHE_CL=$cl_exe_dir\cl_original.exe" >> $env:GITHUB_ENV
       - id: build
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64
