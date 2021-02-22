@@ -138,8 +138,8 @@ Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string&
     memcpy(keyByteString.data, keyBuffer.data(), keyByteString.length);
 
     // Trusted certificates
-    const auto LIST_SIZE = trustBuffers.size();
-    UA_STACKARRAY(UA_ByteString, trustList, LIST_SIZE);
+    std::vector<UA_ByteString> trustList;
+    trustList.resize(trustBuffers.size());
     for (size_t i = 0; i < trustBuffers.size(); i++) {
       trustList[i] = UA_STRING_NULL;
       trustList[i].length = trustBuffers[i].size();
@@ -147,7 +147,7 @@ Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string&
       memcpy(trustList[i].data, trustBuffers[i].data(), trustList[i].length);
     }
     UA_StatusCode sc = UA_ClientConfig_setDefaultEncryption(cc, certByteString, keyByteString,
-                                                            trustList, trustBuffers.size(),
+                                                            trustList.data(), trustBuffers.size(),
                                                             nullptr, 0);
     UA_ByteString_clear(&certByteString);
     UA_ByteString_clear(&keyByteString);

@@ -20,6 +20,7 @@
 #include <png.h>
 
 #include <utility>
+#include <vector>
 
 #include "GetUSBCamera.h"
 
@@ -439,7 +440,8 @@ int64_t GetUSBCamera::PNGWriteCallback::process(const std::shared_ptr<io::BaseSt
                  PNG_FILTER_TYPE_DEFAULT);
     png_write_info(png, info);
 
-    png_bytep row_pointers[height_];
+    std::vector<png_bytep> row_pointers;
+    row_pointers.resize(height_);
 
     for (uint32_t y = 0; y < height_; y++) {
       row_pointers[y] = reinterpret_cast<png_byte *>(frame_->data) + width_ * y * 3;
