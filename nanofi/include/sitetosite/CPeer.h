@@ -53,11 +53,11 @@ struct SiteToSiteCPeer {
   enum Bool _owns_resource;
 };
 
-static const char * getURL(const struct SiteToSiteCPeer * peer) {
+static inline const char * getURL(const struct SiteToSiteCPeer * peer) {
   return peer->_url;
 }
 
-static void setHostName(struct SiteToSiteCPeer * peer, const char * hostname) {
+static inline void setHostName(struct SiteToSiteCPeer * peer, const char * hostname) {
   if(peer->_host) {
     free(peer->_host);
   }
@@ -84,7 +84,7 @@ static void setHostName(struct SiteToSiteCPeer * peer, const char * hostname) {
   return;
 }
 
-static void setPort(struct SiteToSiteCPeer * peer, uint16_t port) {
+static inline void setPort(struct SiteToSiteCPeer * peer, uint16_t port) {
   peer->_port = port;
   if(peer->_url != NULL) {
     int i;
@@ -98,7 +98,7 @@ static void setPort(struct SiteToSiteCPeer * peer, uint16_t port) {
   }
 }
 
-static void initPeer(struct SiteToSiteCPeer * peer, const char * host, uint16_t port) {
+static inline void initPeer(struct SiteToSiteCPeer * peer, const char * host, uint16_t port) {
   peer->_stream = NULL;
   peer->_host = NULL;
   peer->_url = NULL;
@@ -107,7 +107,7 @@ static void initPeer(struct SiteToSiteCPeer * peer, const char * host, uint16_t 
   setPort(peer, port);
 }
 
-static void freePeer(struct SiteToSiteCPeer * peer) {
+static inline void freePeer(struct SiteToSiteCPeer * peer) {
   closePeer(peer);
   setHostName(peer, NULL);
 

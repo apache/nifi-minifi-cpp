@@ -53,7 +53,7 @@ struct Interpreter {
   py::gil_scoped_release gil_release_;
 };
 
-static Interpreter *getInterpreter();
+Interpreter *getInterpreter();
 
 class PythonScriptEngine : public script::ScriptEngine {
  public:
