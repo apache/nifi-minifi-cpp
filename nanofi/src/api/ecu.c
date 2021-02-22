@@ -116,7 +116,7 @@ nifi_proc_params setup_nifi_processor(tailfile_input_params * input_params, cons
     port.port_id = input_params->nifi_port_uuid;
 
     nifi_instance * instance = create_instance(input_params->instance, &port);
-    add_custom_processor(processor_name, callback);
+    add_custom_processor(processor_name, callback, NULL);
     standalone_processor * proc = create_processor(processor_name, instance);
     params.instance = instance;
     params.processor = proc;
