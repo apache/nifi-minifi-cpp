@@ -16,6 +16,8 @@
 # under the License.
 
 function(use_bundled_librdkafka SOURCE_DIR BINARY_DIR)
+    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/librdkafka/high-cpu.patch")
+
     # Define byproducts
     if(WIN32)
         set(BYPRODUCT "lib/rdkafka.lib")
@@ -41,10 +43,11 @@ function(use_bundled_librdkafka SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             kafka-external
-            URL "https://github.com/edenhill/librdkafka/archive/v1.5.0.tar.gz"
-            URL_HASH "SHA256=f7fee59fdbf1286ec23ef0b35b2dfb41031c8727c90ced6435b8cf576f23a656"
+            URL "https://github.com/edenhill/librdkafka/archive/v1.6.0.tar.gz"
+            URL_HASH "SHA256=3130cbd391ef683dc9acf9f83fe82ff93b8730a1a34d0518e93c250929be9f6b"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${LIBRDKAFKA_CMAKE_ARGS}
+            PATCH_COMMAND ${PC}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/librdkafka-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
     )
