@@ -27,8 +27,8 @@ namespace minifi {
 namespace io {
 
 ZlibBaseStream::ZlibBaseStream(gsl::not_null<OutputStream*> output)
-    : output_{output},
-      outputBuffer_(16384U) {
+    : outputBuffer_(16384U),
+      output_{output} {
   strm_.zalloc = Z_NULL;
   strm_.zfree = Z_NULL;
   strm_.opaque = Z_NULL;

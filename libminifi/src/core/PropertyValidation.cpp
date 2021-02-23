@@ -31,9 +31,9 @@ StandardValidators::StandardValidators()
     // name is used by java nifi validators, so we should keep this LONG and not change to reflect
     // its internal use
     UNSIGNED_LONG_VALIDATOR(std::make_shared<UnsignedLongValidator>("LONG_VALIDATOR")),
+    BOOLEAN_VALIDATOR(std::make_shared<BooleanValidator>("BOOLEAN_VALIDATOR")),
     DATA_SIZE_VALIDATOR(std::make_shared<DataSizeValidator>("DATA_SIZE_VALIDATOR")),
     TIME_PERIOD_VALIDATOR(std::make_shared<TimePeriodValidator>("TIME_PERIOD_VALIDATOR")),
-    BOOLEAN_VALIDATOR(std::make_shared<BooleanValidator>("BOOLEAN_VALIDATOR")),
     NON_BLANK_VALIDATOR(std::make_shared<NonBlankValidator>("NON_BLANK_VALIDATOR")),
     VALID_VALIDATOR(std::make_shared<AlwaysValid>(true, "VALID")),
     PORT_VALIDATOR(std::make_shared<PortValidator>("PORT_VALIDATOR")),

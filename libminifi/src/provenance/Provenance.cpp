@@ -45,9 +45,9 @@ const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREAT
 
 ProvenanceEventRecord::ProvenanceEventRecord(ProvenanceEventRecord::ProvenanceEventType event, std::string componentId, std::string componentType)
     : core::SerializableComponent(core::getClassName<ProvenanceEventRecord>()),
-      _eventDuration(0),
       _entryDate(0),
-      _lineageStartDate(0) {
+      _lineageStartDate(0),
+      _eventDuration(0) {
   _eventType = event;
   _componentId = componentId;
   _componentType = componentType;

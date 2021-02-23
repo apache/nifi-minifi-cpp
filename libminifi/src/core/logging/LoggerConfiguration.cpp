@@ -74,8 +74,8 @@ std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &t
 LoggerConfiguration::LoggerConfiguration()
     : root_namespace_(create_default_root()),
       loggers(std::vector<std::shared_ptr<LoggerImpl>>()),
-      shorten_names_(false),
-      formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)) {
+      formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)),
+      shorten_names_(false) {
   controller_ = std::make_shared<LoggerControl>();
   logger_ = std::shared_ptr<LoggerImpl>(
       new LoggerImpl(core::getClassName<LoggerConfiguration>(), controller_, get_logger(nullptr, root_namespace_, core::getClassName<LoggerConfiguration>(), formatter_)));

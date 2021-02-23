@@ -34,10 +34,10 @@ namespace core {
 ProcessSessionReadCallback::ProcessSessionReadCallback(const std::string &tmpFile,
                                                        const std::string &destFile,
                                                        std::shared_ptr<logging::Logger> logger)
-    : _tmpFile(tmpFile),
+    : logger_(logger),
     _tmpFileOs(tmpFile, std::ios::binary),
-    _destFile(destFile),
-    logger_(logger) {
+    _tmpFile(tmpFile),
+    _destFile(destFile) {
 }
 
 // Copy the entire file contents to the temporary file

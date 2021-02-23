@@ -38,14 +38,17 @@ std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<Flow
 
 FlowFile::FlowFile()
     : CoreComponent("FlowFile"),
-      size_(0),
       stored(false),
-      offset_(0),
-      last_queue_date_(0),
-      to_be_processed_after_(std::chrono::steady_clock::now()),
+      marked_delete_(false),
+      entry_date_(0),
       event_time_(0),
-      claim_(nullptr),
-      marked_delete_(false) {
+      lineage_start_date_(0),
+      last_queue_date_(0),
+      size_(0),
+      id_(0),
+      offset_(0),
+      to_be_processed_after_(std::chrono::steady_clock::now()),
+      claim_(nullptr) {
   id_ = numeric_id_generator_->generateId();
   entry_date_ = utils::timeutils::getTimeMillis();
   event_time_ = entry_date_;
