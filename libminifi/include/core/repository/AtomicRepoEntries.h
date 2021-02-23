@@ -342,7 +342,7 @@ class AtomicEntry {
    * this atomic entry.
    * @param freedValue informs the caller if an item was freed.
    */
-  T testAndFree(std::function<bool(T)> releaseTest, bool &freedValue) {
+  T testAndFree(std::function<bool(T)> releaseTest, bool& /*freedValue*/) {
     try_lock();
     T ref;
     if (!has_value_) {

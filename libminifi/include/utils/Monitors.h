@@ -41,7 +41,7 @@ class AfterExecute {
 
   AfterExecute() = default;
 
-  explicit AfterExecute(AfterExecute &&other) {
+  explicit AfterExecute(AfterExecute&& /*other*/) {
   }
   virtual bool isFinished(const T &result) = 0;
   virtual bool isCancelled(const T &result) = 0;

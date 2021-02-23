@@ -55,7 +55,7 @@ class convert_if_base {
 
 template<typename T>
 struct convert_if {
-  explicit convert_if(const std::shared_ptr<state::response::Value> &node) {
+  explicit convert_if(const std::shared_ptr<state::response::Value>& /*node*/) {
   }
 
 
