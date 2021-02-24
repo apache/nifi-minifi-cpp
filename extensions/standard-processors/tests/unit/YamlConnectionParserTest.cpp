@@ -29,7 +29,7 @@ using org::apache::nifi::minifi::core::yaml::YamlConnectionParser;
 using org::apache::nifi::minifi::core::YamlConfiguration;
 using RetryFlowFile = org::apache::nifi::minifi::processors::TailFile;
 
-TEST_CASE("Connections components are parsed from yaml.", "[YamlConfiguration]") {
+TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") {
   const std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<YamlConfiguration>::getLogger();
   core::ProcessGroup parent(core::ProcessGroupType::ROOT_PROCESS_GROUP, "root");
   gsl::not_null<core::ProcessGroup*> parent_ptr{ &parent };
@@ -37,10 +37,10 @@ TEST_CASE("Connections components are parsed from yaml.", "[YamlConfiguration]")
   SECTION("Source relationships are read") {
     const auto connection = std::make_shared<minifi::Connection>(nullptr, nullptr, "name");
     std::string serialized_yaml;
-    std::vector<std::string> expectations;
+    std::set<org::apache::nifi::minifi::core::Relationship> expectations;
     SECTION("Single relationship name") {
       serialized_yaml = std::string { "source relationship name: success\n" };
-      expectations = { "success" };
+      expectations = { { "success", "" } };
     }
     SECTION("List of relationship names") {
       serialized_yaml = std::string {
@@ -48,18 +48,13 @@ TEST_CASE("Connections components are parsed from yaml.", "[YamlConfiguration]")
           "- success\n"
           "- failure\n"
           "- something_else\n" };
-      expectations = { "success", "failure", "something_else" };
+      expectations = { { "success", "" }, { "failure", "" }, { "something_else", "" } };
     }
     YAML::Node connection_node = YAML::Load(serialized_yaml);
     YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
     yaml_connection_parser.configureConnectionSourceRelationshipsFromYaml(connection);
     const std::set<core::Relationship>& relationships = connection->getRelationships();
-    REQUIRE(expectations.size() == relationships.size());
-    for (const auto& expected_relationship_name : expectations) {
-      const auto relationship_name_matches = [&] (const core::Relationship& relationship) { return expected_relationship_name == relationship.getName(); };
-      const std::size_t relationship_count = std::count_if(relationships.cbegin(), relationships.cend(), relationship_name_matches);
-      REQUIRE(1 == relationship_count);
-    }
+    REQUIRE(expectations == relationships);
   }
   SECTION("Queue size limits are read") {
     YAML::Node connection_node = YAML::Load(std::string {
@@ -80,7 +75,7 @@ TEST_CASE("Connections components are parsed from yaml.", "[YamlConfiguration]")
           "source id: " + expected_source_id.to_string() + "\n"
           "destination id: " + expected_destination_id.to_string() + "\n" };
     }
-    SECTION("Using UUID as remote port id") {
+    SECTION("Using UUID as remote processing group id") {
       serialized_yaml = std::string {
           "source name: " + expected_source_id.to_string() + "\n"
           "destination name: " + expected_destination_id.to_string() + "\n" };
@@ -161,16 +156,18 @@ TEST_CASE("Connections components are parsed from yaml.", "[YamlConfiguration]")
         CHECK_THROWS(yaml_connection_parser.getSourceUUIDFromYaml());
         CHECK_THROWS(yaml_connection_parser.getDestinationUUIDFromYaml());
       }
-      YAML::Node connection_node = YAML::Load(std::string {
-          "max work queue size: \n"
-          "max work queue data size: \n"
-          "flowfile expiration: \n"
-          "drop empty: \n"});
-      YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
-      CHECK_THROWS(yaml_connection_parser.getWorkQueueSizeFromYaml());
-      CHECK_THROWS(yaml_connection_parser.getWorkQueueDataSizeFromYaml());
-      CHECK_THROWS(yaml_connection_parser.getFlowFileExpirationFromYaml());
-      CHECK_THROWS(yaml_connection_parser.getDropEmptyFromYaml());
+      SECTION("Queue limits and configuration") {
+        YAML::Node connection_node = YAML::Load(std::string {
+            "max work queue size: \n"
+            "max work queue data size: \n"
+            "flowfile expiration: \n"
+            "drop empty: \n"});
+        YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
+        CHECK_THROWS(yaml_connection_parser.getWorkQueueSizeFromYaml());
+        CHECK_THROWS(yaml_connection_parser.getWorkQueueDataSizeFromYaml());
+        CHECK_THROWS(yaml_connection_parser.getFlowFileExpirationFromYaml());
+        CHECK_THROWS(yaml_connection_parser.getDropEmptyFromYaml());
+      }
     }
     SECTION("With a configuration that has values of incorrect format") {
       YAML::Node connection_node = YAML::Load(std::string {
@@ -179,6 +176,7 @@ TEST_CASE("Connections components are parsed from yaml.", "[YamlConfiguration]")
           "flowfile expiration: 12\n"
           "drop empty: sup\n"});
       YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
+      // This seems incorrect, but we do not want to ruin backward compatibility
       CHECK_NOTHROW(yaml_connection_parser.getWorkQueueSizeFromYaml());
       CHECK_NOTHROW(yaml_connection_parser.getWorkQueueDataSizeFromYaml());
       CHECK_NOTHROW(yaml_connection_parser.getFlowFileExpirationFromYaml());
