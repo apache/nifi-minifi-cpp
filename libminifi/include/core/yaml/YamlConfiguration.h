@@ -192,7 +192,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param rootNode
    * @return
    */
-  core::ProcessGroup *parseRootProcessGroupYaml(YAML::Node rootNode);
+  std::unique_ptr<core::ProcessGroup> parseRootProcessGroupYaml(YAML::Node rootNode);
 
   // Process Property YAML
   void parseProcessorPropertyYaml(YAML::Node *doc, YAML::Node *node, std::shared_ptr<core::Processor> processor);

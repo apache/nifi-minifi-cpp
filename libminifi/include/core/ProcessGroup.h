@@ -206,7 +206,7 @@ class ProcessGroup : public CoreComponent {
    * @param nodeId node identifier
    * @param node controller service node.
    */
-  void addControllerService(const std::string &nodeId, std::shared_ptr<core::controller::ControllerServiceNode> &node);
+  void addControllerService(const std::string &nodeId, const std::shared_ptr<core::controller::ControllerServiceNode> &node);
 
   /**
    * Find controllerservice node will search child groups until the nodeId is found.

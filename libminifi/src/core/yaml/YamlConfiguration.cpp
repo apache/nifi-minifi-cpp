@@ -48,7 +48,7 @@ YamlConfiguration::YamlConfiguration(const std::shared_ptr<core::Repository>& re
       stream_factory_(stream_factory),
       logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {}
 
-core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
+std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
   utils::Identifier uuid;
   int version = 0;
 
@@ -90,7 +90,7 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node root
     }
   }
 
-  return group.release();
+  return group;
 }
 
 std::unique_ptr<core::ProcessGroup> YamlConfiguration::getYamlRoot(YAML::Node *rootYamlNode) {
@@ -109,19 +109,19 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::getYamlRoot(YAML::Node *r
 
     parseControllerServices(&controllerServiceNode);
     // Create the root process group
-    core::ProcessGroup *root = parseRootProcessGroupYaml(flowControllerNode);
-    parseProcessorNodeYaml(processorsNode, root);
-    parseRemoteProcessGroupYaml(&remoteProcessingGroupsNode, root);
-    parseConnectionYaml(&connectionsNode, root);
-    parseProvenanceReportingYaml(&provenanceReportNode, root);
+    std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroupYaml(flowControllerNode);
+    parseProcessorNodeYaml(processorsNode, root.get());
+    parseRemoteProcessGroupYaml(&remoteProcessingGroupsNode, root.get());
+    parseConnectionYaml(&connectionsNode, root.get());
+    parseProvenanceReportingYaml(&provenanceReportNode, root.get());
 
     // set the controller services into the root group.
-    for (auto controller_service : controller_services_->getAllControllerServices()) {
+    for (const auto& controller_service : controller_services_->getAllControllerServices()) {
       root->addControllerService(controller_service->getName(), controller_service);
       root->addControllerService(controller_service->getUUIDStr(), controller_service);
     }
 
-    return std::unique_ptr<core::ProcessGroup>(root);
+    return root;
   }
 
 void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::ProcessGroup *parentGroup) {
@@ -586,13 +586,10 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node* connectionsNode, core::P
     const utils::optional<utils::Identifier> uuid = utils::Identifier::parse(id);
     if (!uuid) {
       logger_->log_debug("Incorrect connection UUID format.");
-      return;
+      throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect connection UUID format.");
     }
 
     connection = createConnection(name, uuid.value());
-    if (!connection) {
-      return;
-    }
     logger_->log_debug("Created connection with UUID %s and name %s", id, name);
     const yaml::YamlConnectionParser connectionParser(connectionNode, name, gsl::not_null<core::ProcessGroup*>{ parent }, logger_);
     connectionParser.configureConnectionSourceRelationshipsFromYaml(connection);

@@ -55,7 +55,7 @@ class YamlConnectionParser {
   const YAML::Node& connectionNode_;
   const std::string& name_;
   gsl::not_null<core::ProcessGroup*> parent_;
-  const std::shared_ptr<logging::Logger>& logger_;
+  const std::shared_ptr<logging::Logger> logger_;
 };
 
 }  // namespace yaml

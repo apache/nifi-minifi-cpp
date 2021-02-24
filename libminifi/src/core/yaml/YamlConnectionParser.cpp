@@ -56,9 +56,10 @@ uint64_t YamlConnectionParser::getWorkQueueSizeFromYaml() const {
     auto max_work_queue_str = max_work_queue_data_size_node.as<std::string>();
     uint64_t max_work_queue_size;
     if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
-      logger_->log_debug("Setting %u as the max queue size.", max_work_queue_size);
+      logger_->log_debug("Setting %" PRIu64 " as the max queue size.", max_work_queue_size);
       return max_work_queue_size;
     }
+    logger_->log_info("Invalid max queue size value: %s.", max_work_queue_str);
   }
   return 0;
 }
@@ -69,9 +70,10 @@ uint64_t YamlConnectionParser::getWorkQueueDataSizeFromYaml() const {
     auto max_work_queue_str = max_work_queue_data_size_node.as<std::string>();
     uint64_t max_work_queue_data_size = 0;
     if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
+      logger_->log_debug("Setting %" PRIu64 "as the max as the max queue data size.", max_work_queue_data_size);
       return max_work_queue_data_size;
-      logger_->log_debug("Setting %u as the max as the max queue data size.", max_work_queue_data_size);
     }
+    logger_->log_info("Invalid max queue data size value: %s.", max_work_queue_str);
   }
   return 0;
 }
@@ -84,6 +86,8 @@ utils::Identifier YamlConnectionParser::getSourceUUIDFromYaml() const {
       logger_->log_debug("Using 'source id' to match source with same id for connection '%s': source id => [%s]", name_, srcUUID.value().to_string());
       return srcUUID.value();
     }
+    logger_->log_error("Invalid source id value: %s.", source_id_node.as<std::string>());
+    throw std::invalid_argument("Invalid source id");
   }
   // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
   checkRequiredField(&connectionNode_, "source name", logger_, CONFIG_YAML_CONNECTIONS_KEY);
@@ -114,6 +118,8 @@ utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
       logger_->log_debug("Using 'destination id' to match destination with same id for connection '%s': destination id => [%s]", name_, destUUID.value().to_string());
       return destUUID.value();
     }
+    logger_->log_error("Invalid destination id value: %s.", destination_id_node.as<std::string>());
+    throw std::invalid_argument("Invalid destination id");
   }
   // we use the same logic as above for resolving the source processor
   // for looking up the destination processor in absence of a processor id
@@ -140,6 +146,7 @@ utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
 uint64_t YamlConnectionParser::getFlowFileExpirationFromYaml() const {
   const YAML::Node expiration_node = connectionNode_["flowfile expiration"];
   if (!expiration_node) {
+    logger_->log_debug("parseConnection: flowfile expiration is not set, assuming 0 (never expire)");
     return 0;
   }
   uint64_t expirationDuration = 0;
@@ -152,8 +159,9 @@ uint64_t YamlConnectionParser::getFlowFileExpirationFromYaml() const {
     // We cannot correct this, because there is no API contract for the config, we need to support
     // all already-supported configuration files.
     // This has the side-effect of allowing values like "20 minuites" and silently defaulting to 0.
-    logger_->log_debug("parseConnection: flowfile expiration => [%d]", expirationDuration);
+    logger_->log_debug("Parsing failure for flowfile expiration duration");
   }
+  logger_->log_debug("parseConnection: flowfile expiration => [%d]", expirationDuration);
   return expirationDuration;
 }
 

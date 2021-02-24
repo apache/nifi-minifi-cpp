@@ -272,7 +272,7 @@ std::shared_ptr<Processor> ProcessGroup::findProcessorByName(const std::string &
   return findProcessor(name_matches);
 }
 
-void ProcessGroup::addControllerService(const std::string &nodeId, std::shared_ptr<core::controller::ControllerServiceNode> &node) {
+void ProcessGroup::addControllerService(const std::string &nodeId, const std::shared_ptr<core::controller::ControllerServiceNode> &node) {
   controller_service_map_.put(nodeId, node);
 }
 
