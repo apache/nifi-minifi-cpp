@@ -200,15 +200,19 @@ class MiNiFi_integration_test():
 
     def check_s3_server_object_data(self, cluster_name, object_data):
         cluster = self.acquire_cluster(cluster_name)
-        cluster.check_s3_server_object_data(object_data)
+        assert cluster.check_s3_server_object_data(object_data)
 
     def check_s3_server_object_metadata(self, cluster_name, content_type):
         cluster = self.acquire_cluster(cluster_name)
-        cluster.check_s3_server_object_metadata(content_type)
+        assert cluster.check_s3_server_object_metadata(content_type)
 
     def check_empty_s3_bucket(self, cluster_name):
         cluster = self.acquire_cluster(cluster_name)
         assert cluster.is_s3_bucket_empty()
 
     def check_http_proxy_access(self, cluster_name, url):
-        self.clusters[cluster_name].check_http_proxy_access(url)
+        assert self.clusters[cluster_name].check_http_proxy_access(url)
+
+    def check_azure_storage_server_data(self, cluster_name, object_data):
+        cluster = self.acquire_cluster(cluster_name)
+        assert cluster.check_azure_storage_server_data(object_data)

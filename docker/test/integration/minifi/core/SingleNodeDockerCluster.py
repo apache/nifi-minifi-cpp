@@ -112,7 +112,7 @@ class SingleNodeDockerCluster(Cluster):
             self.deploy_http_proxy()
         elif self.engine == 's3-server':
             self.deploy_s3_server()
-        elif engine == 'azure-storage-server':
+        elif self.engine == 'azure-storage-server':
             self.deploy_azure_storage_server()
         else:
             raise Exception('invalid flow engine: \'%s\'' % self.engine)

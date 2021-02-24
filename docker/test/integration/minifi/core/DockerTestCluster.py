@@ -54,7 +54,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
             container = self.client.containers.get(container.id)
             if b'Segmentation fault' in container.logs():
                 logging.warn('Container segfaulted: %s', container.name)
-                self.segfault=True
+                self.segfault = True
             if container.status == 'running':
                 apps = [("MiNiFi", self.minifi_root + '/logs/minifi-app.log'), ("NiFi", self.nifi_root + '/logs/nifi-app.log'), ("Kafka", self.kafka_broker_root + '/logs/server.log')]
                 for app in apps:
@@ -102,7 +102,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
         output = subprocess.check_output(["docker", "exec", "http-proxy", "cat", "/var/log/squid/access.log"]).decode(self.get_stdout_encoding())
         return url in output and \
             ((output.count("TCP_DENIED/407") != 0 and \
-              output.count("TCP_MISS/200") == output.count("TCP_DENIED/407")) or \
+              output.count("TCP_MISS") == output.count("TCP_DENIED/407")) or \
              output.count("TCP_DENIED/407") == 0 and "TCP_MISS" in output)
 
     @retry_check()
@@ -119,10 +119,10 @@ class DockerTestCluster(SingleNodeDockerCluster):
         return server_metadata["contentType"] == content_type and metadata == server_metadata["userMetadata"]
 
     @retry_check()
-    def check_azure_storage_server_data(self):
+    def check_azure_storage_server_data(self, test_data):
         data_file = subprocess.check_output(["docker", "exec", "azure-storage-server", "find", "/data/__blobstorage__", "-type", "f"]).decode(sys.stdout.encoding).strip()
         file_data = subprocess.check_output(["docker", "exec", "azure-storage-server", "cat", data_file]).decode(sys.stdout.encoding)
-        return self.test_data in file_data
+        return test_data in file_data
 
     @retry_check()
     def is_s3_bucket_empty(self):
