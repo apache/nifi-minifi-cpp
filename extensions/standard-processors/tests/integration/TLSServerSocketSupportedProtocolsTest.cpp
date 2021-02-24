@@ -251,7 +251,7 @@ class TLSServerSocketSupportedProtocolsTest {
       auto check = [this]() -> bool {
         return is_running_;
       };
-      auto handler = [this](std::vector<uint8_t> *bytes_written, int *size) {
+      auto handler = [](std::vector<uint8_t> *bytes_written, int *size) {
         std::string contents = "hello world";
         *bytes_written = {contents.begin(), contents.end()};
         bytes_written->push_back(0);
