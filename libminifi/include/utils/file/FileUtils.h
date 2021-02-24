@@ -248,10 +248,9 @@ inline uint64_t last_write_time(const std::string &path) {
   if (ec.value() == 0) {
     return result;
   }
-#else
-#ifdef WIN32
-  struct _stat result;
-  if (_stat(path.c_str(), &result) == 0) {
+#elif defined(WIN32)
+  struct _stat64 result;
+  if (_stat64(path.c_str(), &result) == 0) {
     return result.st_mtime;
   }
 #else
@@ -259,7 +258,6 @@ inline uint64_t last_write_time(const std::string &path) {
   if (stat(path.c_str(), &result) == 0) {
     return result.st_mtime;
   }
-#endif
 #endif
   return 0;
 }
@@ -270,8 +268,8 @@ inline std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> 
 
 inline uint64_t file_size(const std::string &path) {
 #ifdef WIN32
-  struct _stat result;
-  if (_stat(path.c_str(), &result) == 0) {
+  struct _stat64 result;
+  if (_stat64(path.c_str(), &result) == 0) {
     return result.st_size;
   }
 #else
@@ -334,24 +332,30 @@ inline bool get_uid_gid(const std::string &path, uint64_t &uid, uint64_t &gid) {
 #endif
 
 inline bool is_directory(const char * path) {
+#ifndef WIN32
   struct stat dir_stat;
-  if (stat(path, &dir_stat) < 0) {
+  if (stat(path, &dir_stat) != 0) {
       return false;
   }
   return S_ISDIR(dir_stat.st_mode) != 0;
+#else
+  struct _stat64 dir_stat;
+  if (_stat64(path, &dir_stat) != 0) {
+      return false;
+  }
+  return S_ISDIR(dir_stat.st_mode) != 0;
+#endif
 }
 
 inline bool exists(const std::string& path) {
 #ifdef USE_BOOST
   return boost::filesystem::exists(path);
-#else
-#ifdef WIN32
-  struct _stat statbuf;
-  return _stat(path.c_str(), &statbuf) == 0;
+#elif defined(WIN32)
+  struct _stat64 statbuf;
+  return _stat64(path.c_str(), &statbuf) == 0;
 #else
   struct stat statbuf;
   return stat(path.c_str(), &statbuf) == 0;
-#endif
 #endif
 }
 
@@ -473,11 +477,11 @@ inline void addFilesMatchingExtension(const std::shared_ptr<logging::Logger> &lo
   std::string pathToSearch = originalPath + "\\*" + extension;
   if ((hFind = FindFirstFileA(pathToSearch.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
     do {
-      struct _stat statbuf {};
+      struct _stat64 statbuf {};
 
       std::string path = originalPath + "\\" + FindFileData.cFileName;
       logger->log_info("Adding %s to paths", path);
-      if (_stat(path.c_str(), &statbuf) != 0) {
+      if (_stat64(path.c_str(), &statbuf) != 0) {
         logger->log_warn("Failed to stat %s", path);
         break;
       }
@@ -547,10 +551,10 @@ inline void list_dir(const std::string& dir, std::function<bool(const std::strin
   }
 
   do {
-    struct _stat statbuf {};
+    struct _stat64 statbuf {};
     if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0) {
       std::string path = dir + get_separator() + FindFileData.cFileName;
-      if (_stat(path.c_str(), &statbuf) != 0) {
+      if (_stat64(path.c_str(), &statbuf) != 0) {
         logger->log_warn("Failed to stat %s", path);
         continue;
       }

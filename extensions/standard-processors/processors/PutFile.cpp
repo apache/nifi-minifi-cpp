@@ -19,7 +19,6 @@
  */
 
 #include "PutFile.h"
-#include <sys/stat.h>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
@@ -149,9 +148,6 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
   logger_->log_debug("PutFile writing file %s into directory %s", filename, directory);
 
-  // If file exists, apply conflict resolution strategy
-  struct stat statResult;
-
   if ((max_dest_files_ != -1) && utils::file::FileUtils::is_directory(directory.c_str())) {
     int64_t count = 0;
 
@@ -171,7 +167,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     }
   }
 
-  if (stat(destFile.c_str(), &statResult) == 0) {
+  if (utils::file::exists(destFile)) {
     logger_->log_warn("Destination file %s exists; applying Conflict Resolution Strategy: %s", destFile, conflict_resolution_);
 
     if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_REPLACE) {
@@ -204,9 +200,7 @@ std::string PutFile::tmpWritePath(const std::string &filename, const std::string
 }
 
 bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowFile> flowFile, const std::string &tmpFile, const std::string &destFile, const std::string &destDir) {
-  struct stat dir_stat;
-
-  if (stat(destDir.c_str(), &dir_stat) && try_mkdirs_) {
+  if (!utils::file::exists(destDir) && try_mkdirs_) {
     // Attempt to create directories in file's path
     std::stringstream dir_path_stream;
 
