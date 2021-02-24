@@ -49,47 +49,48 @@ class DockerTestCluster(SingleNodeDockerCluster):
             encoding = "utf8"
         return encoding
 
-    def get_app_log(self):
-        for container in self.containers.values():
-            container = self.client.containers.get(container.id)
-            if b'Segmentation fault' in container.logs():
-                logging.warn('Container segfaulted: %s', container.name)
-                self.segfault = True
-            if container.status == 'running':
-                apps = [("MiNiFi", self.minifi_root + '/logs/minifi-app.log'), ("NiFi", self.nifi_root + '/logs/nifi-app.log'), ("Kafka", self.kafka_broker_root + '/logs/server.log')]
-                for app in apps:
-                    app_log_status, app_log = container.exec_run('/bin/sh -c \'cat ' + app[1] + '\'')
-                    if app_log_status == 0:
-                        logging.info('%s app logs for container \'%s\':\n', app[0], container.name)
-                        return app_log
-                        break
-                else:
-                    logging.warning("The container is running, but none of %s logs were found", " or ".join([x[0] for x in apps]))
+    def get_app_log(self, container_id):
+        container = self.client.containers.get(container_id)
+        if b'Segmentation fault' in container.logs():
+            logging.warn('Container segfaulted: %s', container.name)
+            self.segfault = True
+        if container.status == 'running':
+            apps = [("MiNiFi", self.minifi_root + '/logs/minifi-app.log'), ("NiFi", self.nifi_root + '/logs/nifi-app.log'), ("Kafka", self.kafka_broker_root + '/logs/server.log')]
+            for app in apps:
+                app_log_status, app_log = container.exec_run('/bin/sh -c \'cat ' + app[1] + '\'')
+                if app_log_status == 0:
+                    logging.info('%s app logs for container \'%s\':\n', app[0], container.name)
+                    return app_log
             else:
-                logging.info(container.status)
-                logging.info('Could not cat app logs for container \'%s\' because it is not running', container.name)
+                logging.warning("The container is running, but none of %s logs were found, presuming application logs to stdout, returning docker logs",
+                                " or ".join([x[0] for x in apps]))
+                logging.info('Docker logs for container \'%s\':\n', container.name)
+                return container.logs()
+        else:
+            logging.info(container.status)
+            logging.info('Could not cat app logs for container \'%s\' because it is not running', container.name)
         return None
 
     def wait_for_app_logs(self, log, timeout_seconds, count=1):
         wait_start_time = time.perf_counter()
-        for container_name, container in self.containers.items():
-            logging.info('Waiting for app-logs `%s` in container `%s`', log, container_name)
-            while (time.perf_counter() - wait_start_time) < timeout_seconds:
-                logs = self.get_app_log()
+        while (time.perf_counter() - wait_start_time) < timeout_seconds:
+            for container_name, container in self.containers.items():
+                logging.info('Waiting for app-logs `%s` in container `%s`', log, container_name)
+                logs = self.get_app_log(container.id)
                 if logs is not None and count <= logs.decode("utf-8").count(log):
                     return True
-                if logs is not None:
-                    for line in logs.decode("utf-8").splitlines():
-                        logging.info("App-log: %s", line)
-                time.sleep(1)
+            time.sleep(1)
+
+        logging.error('Waiting for app-log failed. Current logs:')
+        self.log_nifi_output()
         return False
 
     def log_nifi_output(self):
-        app_log = self.get_app_log()
-        if app_log is None:
-            return
-        for line in app_log.decode("utf-8").splitlines():
-            logging.info(line)
+        for container_name, container in self.containers.items():
+            logs = self.get_app_log(container.id)
+            if logs is not None:
+                for line in logs.decode("utf-8").splitlines():
+                    logging.info(line)
 
     def check_minifi_container_started(self):
         for container in self.containers.values():

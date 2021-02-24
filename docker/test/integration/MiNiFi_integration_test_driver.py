@@ -110,6 +110,12 @@ class MiNiFi_integration_test():
                 startup_success = cluster.wait_for_app_logs("Starting Flow Controller...", 120)
             elif cluster.get_engine() == "kafka-broker":
                 startup_success = cluster.wait_for_app_logs("Startup complete.", 120)
+            elif cluster.get_engine() == "http-proxy":
+                startup_success = cluster.wait_for_app_logs("Accepting HTTP Socket connections at", 120)
+            elif cluster.get_engine() == "s3-server":
+                startup_success = cluster.wait_for_app_logs("Started S3MockApplication", 120)
+            elif cluster.get_engine() == "azure-storage-server":
+                startup_success = cluster.wait_for_app_logs("Azurite Queue service is successfully listening at", 120)
             if not startup_success:
                 cluster.log_nifi_output()
             assert startup_success
