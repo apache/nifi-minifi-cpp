@@ -46,7 +46,8 @@ TEST_CASE("Converting invalid PropertyValue") {
       ->withDefaultValue<int>(0)
       ->build();
   REQUIRE_THROWS_AS(prop.setValue("not int"), ParseException&);
-  REQUIRE_THROWS_AS(static_cast<int>(prop.getValue()), InvalidValueException&);
+  auto cast_check = [&]{ return static_cast<int>(prop.getValue()) == 0; };  // To avoid unused-value warning
+  REQUIRE_THROWS_AS(cast_check(), InvalidValueException&);
 }
 
 TEST_CASE("Parsing int has baggage after") {
