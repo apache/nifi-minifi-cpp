@@ -100,19 +100,19 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
   uint32_t val32;
   uint64_t val64;
   if (context->getProperty(MinSize.getName(), val64)) {
-    this->binManager_.setMinSize({val64});
+    this->binManager_.setMinSize(val64);
     logger_->log_debug("BinFiles: MinSize [%" PRId64 "]", val64);
   }
   if (context->getProperty(MaxSize.getName(), val64)) {
-    this->binManager_.setMaxSize({val64});
+    this->binManager_.setMaxSize(val64);
     logger_->log_debug("BinFiles: MaxSize [%" PRId64 "]", val64);
   }
   if (context->getProperty(MinEntries.getName(), val32)) {
-    this->binManager_.setMinEntries({val32});
+    this->binManager_.setMinEntries(val32);
     logger_->log_debug("BinFiles: MinEntries [%" PRIu32 "]", val32);
   }
   if (context->getProperty(MaxEntries.getName(), val32)) {
-    this->binManager_.setMaxEntries({val32});
+    this->binManager_.setMaxEntries(val32);
     logger_->log_debug("BinFiles: MaxEntries [%" PRIu32 "]", val32);
   }
   if (context->getProperty(MaxBinCount.getName(), maxBinCount_)) {
@@ -122,7 +122,7 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
   if (context->getProperty(MaxBinAge.getName(), maxBinAgeStr)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(maxBinAgeStr, val64, unit) && core::Property::ConvertTimeUnitToMS(val64, unit, val64)) {
-      this->binManager_.setBinAge({val64});
+      this->binManager_.setBinAge(val64);
       logger_->log_debug("BinFiles: MaxBinAge [%" PRIu64 "]", val64);
     }
   }
