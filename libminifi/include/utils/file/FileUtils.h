@@ -101,10 +101,6 @@ namespace file {
 
 namespace FileUtils = ::org::apache::nifi::minifi::utils::file;
 
-struct FileStat {
-
-};
-
 namespace detail {
 static inline int platform_create_dir(const std::string& path) {
 #ifdef WIN32
