@@ -64,7 +64,7 @@ jobs:
   windows_VS2017:
     name: "windows-vs2017"
     runs-on: windows-2016
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - id: checkout
         uses: actions/checkout@v2
