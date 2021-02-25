@@ -60,6 +60,7 @@ option(DISABLE_CURL "Disables libCurl Properties." OFF)
 
 option(USE_GOLD_LINKER "Use Gold Linker" OFF)
 option(INSTALLER_MERGE_MODULES "Creates installer with merge modules" OFF)
+option(WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
 # This is needed for ninja:
 # By default, neither Clang or GCC will add ANSI-formatted colors to your output if they detect
 # the output medium is not a terminal. This means no coloring when using a generator
@@ -129,8 +130,18 @@ if (WIN32)
 	add_definitions(-DSERVICE_NAME="Apache NiFi MINiFi")
 endif()
 
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-add_compile_options(-Wall -Wextra -Werror)
+# Setup warning flags
+if(MSVC)
+  if(WARNINGS_AS_ERRORS)
+		add_compile_options(/WX)
+  endif()
+else()
+  if(WARNINGS_AS_ERRORS)
+    set(WARNINGS_AS_ERRORS_FLAG "-Werror")
+  endif()
+
+  add_compile_options(-Wall -Wextra ${WARNINGS_AS_ERRORS_FLAG})
+endif()
 
 if (NOT PORTABLE)
 	if(MSVC)
