@@ -78,7 +78,7 @@ print_multi_option_status(){
   feature="$1"
   feature_status=${!1}
   declare -a VAR_OPTS=()
-  
+
   declare VAR_OPTS=$1_OPTIONS[@]
   VAR_OPTS=$1_OPTIONS[@]
 
@@ -95,7 +95,7 @@ ToggleMultiOption(){
   feature="$1"
   feature_status=${!1}
   declare -a VAR_OPTS=()
-  
+
   declare VAR_OPTS=$1_OPTIONS[@]
   #echo -e "${RED}${feature_status}${NO_COLOR} (${VAR_OPTS_VAL})"
   VAR_OPTS=$1_OPTIONS[@]
@@ -170,6 +170,7 @@ save_state(){
   echo_state_variable BUILD_PROFILE
   echo_state_variable USE_SHARED_LIBS
   echo_state_variable ASAN_ENABLED
+  echo_state_variable FAIL_ON_WARNINGS
   for option in "${OPTIONS[@]}" ; do
     echo_state_variable $option
   done
@@ -375,6 +376,7 @@ show_supported_features() {
   echo "4. Use Shared Dependency Links .$(print_feature_status USE_SHARED_LIBS)"
   echo "5. Build Profile ...............$(print_multi_option_status BUILD_PROFILE)"
   echo "6. Create ASAN build ...........$(print_feature_status ASAN_ENABLED)"
+  echo "7. Treat warnings as errors.....$(print_feature_status FAIL_ON_WARNINGS)"
   echo "P. Continue with these options"
   if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
     echo "R. Return to Main Menu"
@@ -427,6 +429,7 @@ read_feature_options(){
        ;;
     5) ToggleMultiOption BUILD_PROFILE;;
     6) ToggleFeature ASAN_ENABLED;;
+    7) ToggleFeature FAIL_ON_WARNINGS;;
     p) FEATURES_SELECTED="true" ;;
     r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
         MENU="main"

@@ -22,7 +22,7 @@ verify_enable_platform(){
   verify_gcc_enable $feature
 }
 add_os_flags() {
-  CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DFAIL_ON_WARNINGS= "
+  CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND}"
 }
 bootstrap_cmake(){
   sudo apt-get -y install cmake
@@ -85,7 +85,7 @@ build_deps(){
 
     fi
   done
-  
+
   INSTALLED+=("autoconf")
 
   for option in "${INSTALLED[@]}" ; do
