@@ -67,7 +67,7 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
     ArchiveStack archiveStack;
     {
       std::string existingLensStack;
-    
+
       if (flowFile->getAttribute("lens.archive.stack", existingLensStack)) {
         logger_->log_info("FocusArchiveEntry loading existing lens context");
 
@@ -173,7 +173,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(const std::shared_ptr<io::Ba
   // Iterate entries & write from tmp file to archive
   char buf[8192];
   struct stat st;
-  struct archive_entry* entry;
+  struct archive_entry* entry = nullptr;
 
   for (const auto &entryMetadata : _archiveMetadata->entryMetadata) {
     entry = archive_entry_new();
