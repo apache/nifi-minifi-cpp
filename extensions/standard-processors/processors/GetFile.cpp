@@ -239,14 +239,15 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
     return false;
   }
 #endif
+  uint64_t file_size = gsl::narrow<uint64_t>(statbuf.st_size);
+  uint64_t modifiedTime = gsl::narrow<uint64_t>(statbuf.st_mtime) * 1000;
 
-  if (request.minSize > 0 && statbuf.st_size < request.minSize)
+  if (request.minSize > 0 && file_size < request.minSize)
     return false;
 
-  if (request.maxSize > 0 && statbuf.st_size > request.maxSize)
+  if (request.maxSize > 0 && file_size > request.maxSize)
     return false;
 
-  uint64_t modifiedTime = ((uint64_t) (statbuf.st_mtime) * 1000);
   uint64_t fileAge = utils::timeutils::getTimeMillis() - modifiedTime;
   if (request.minAge > 0 && fileAge < request.minAge)
     return false;
@@ -267,7 +268,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
     return false;
   }
 
-  metrics_->input_bytes_ += statbuf.st_size;
+  metrics_->input_bytes_ += file_size;
   metrics_->accepted_files_++;
   return true;
 }

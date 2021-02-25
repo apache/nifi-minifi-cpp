@@ -248,7 +248,7 @@ inline uint64_t last_write_time(const std::string &path) {
   if (ec.value() == 0) {
     return result;
   }
-#elif WIN32
+#elif defined(WIN32)
   struct _stat64 result;
   if (_stat64(path.c_str(), &result) == 0) {
     return result.st_mtime;
@@ -350,14 +350,12 @@ inline bool is_directory(const char * path) {
 inline bool exists(const std::string& path) {
 #ifdef USE_BOOST
   return boost::filesystem::exists(path);
-#else
-#ifdef WIN32
+#elif defined(WIN32)
   struct _stat64 statbuf;
   return _stat64(path.c_str(), &statbuf) == 0;
 #else
   struct stat statbuf;
   return stat(path.c_str(), &statbuf) == 0;
-#endif
 #endif
 }
 
