@@ -202,7 +202,6 @@ PutSFTP::ReadCallback::ReadCallback(const std::string& target_path,
                                     utils::SFTPClient& client,
                                     const std::string& conflict_resolution)
     : logger_(logging::LoggerFactory<PutSFTP::ReadCallback>::getLogger())
-    , write_succeeded_(false)
     , target_path_(target_path)
     , client_(client)
     , conflict_resolution_(conflict_resolution) {

@@ -102,7 +102,6 @@ namespace processors {
 
    private:
     std::shared_ptr<logging::Logger> logger_;
-    bool write_succeeded_;
     const std::string target_path_;
     utils::SFTPClient& client_;
     const std::string conflict_resolution_;

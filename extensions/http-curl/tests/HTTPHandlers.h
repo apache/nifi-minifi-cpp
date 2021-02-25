@@ -79,6 +79,7 @@ class PeerResponder : public ServerAwareHandler {
  public:
 
   explicit PeerResponder(std::string base_url) {
+    (void)base_url;  // unused in release builds
     std::string scheme;
     assert(parse_http_components(base_url, port, scheme, path));
   }
