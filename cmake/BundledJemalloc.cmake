@@ -35,7 +35,7 @@ function(use_bundled_jemalloc SOURCE_DIR BINARY_DIR)
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/jemalloc-src/${BYPRODUCT}"
             INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Skipping install step."
             CONFIGURE_COMMAND ""
-            PATCH_COMMAND ./autogen.sh && ./configure "CFLAGS=${CMAKE_C_FLAGS}" "CXXFLAGS=${CMAKE_CXX_FLAGS}"
+            PATCH_COMMAND ./autogen.sh && ./configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS}"
             STEP_TARGETS build
             EXCLUDE_FROM_ALL TRUE
     )

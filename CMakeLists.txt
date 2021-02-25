@@ -130,19 +130,6 @@ if (WIN32)
 	add_definitions(-DSERVICE_NAME="Apache NiFi MINiFi")
 endif()
 
-# Setup warning flags
-if(MSVC)
-  if(FAIL_ON_WARNINGS)
-		add_compile_options(/WX)
-  endif()
-else()
-  if(FAIL_ON_WARNINGS)
-    set(FAIL_ON_WARNINGS_FLAG "-Werror")
-  endif()
-
-  add_compile_options(-Wall -Wextra ${FAIL_ON_WARNINGS_FLAG})
-endif()
-
 if (NOT PORTABLE)
 	if(MSVC)
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /arch:AVX2")
@@ -197,7 +184,6 @@ endfunction()
 # Find patch executable
 find_package(Patch REQUIRED)
 
-# Setup passthrough args
 set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
 		-DANDROID_PLATFORM=${ANDROID_PLATFORM}
 		-DANDROID_STL=${ANDROID_STL}
@@ -331,6 +317,23 @@ target_include_directories(optional-lite SYSTEM INTERFACE "${CMAKE_CURRENT_SOURC
 
 # date
 include(Date)
+
+# Setup passthrough args used by third parties
+set(PASSTHROUGH_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+set(PASSTHROUGH_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+
+# Setup warning flags
+if(MSVC)
+  if(FAIL_ON_WARNINGS)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX")
+  endif()
+else()
+  if(FAIL_ON_WARNINGS)
+    set(FAIL_ON_WARNINGS_FLAG "-Werror")
+  endif()
+
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra ${FAIL_ON_WARNINGS_FLAG}")
+endif()
 
 #### Extensions ####
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
