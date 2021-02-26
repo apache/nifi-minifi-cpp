@@ -54,11 +54,11 @@ std::string LuaBaseStream::read(size_t len) {
   // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3337.pdf
   auto read = stream_->read(reinterpret_cast<uint8_t *>(&buffer[0]), static_cast<int>(len));
 
-  if (read != len) {
-    buffer.resize(static_cast<size_t >(read));
+  if (static_cast<size_t>(read) != len) {
+    buffer.resize(static_cast<size_t>(read));
   }
 
-  return std::move(buffer);
+  return buffer;
 }
 
 size_t LuaBaseStream::write(std::string buf) {
