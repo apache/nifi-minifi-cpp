@@ -41,6 +41,15 @@ class DockerTestCluster(SingleNodeDockerCluster):
             return True
         return False
 
+    @staticmethod
+    def get_stdout_encoding():
+        # Use UTF-8 both when sys.stdout present but set to None (explicitly piped output
+        # and also some CI such as GitHub Actions).
+        encoding = getattr(sys.stdout, "encoding", None)
+        if encoding is None:
+            encoding = "utf8"
+        return encoding
+
     def get_app_log(self):
         for container in self.containers.values():
             container = self.client.containers.get(container.id)
@@ -91,7 +100,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
                 raise Exception("Container failed to start up.")
 
     def check_http_proxy_access(self, url):
-        output = subprocess.check_output(["docker", "exec", "http-proxy", "cat", "/var/log/squid/access.log"]).decode(sys.stdout.encoding)
+        output = subprocess.check_output(["docker", "exec", "http-proxy", "cat", "/var/log/squid/access.log"]).decode(self.get_stdout_encoding())
         return url in output and \
             ((output.count("TCP_DENIED/407") != 0 and \
               output.count("TCP_MISS/200") == output.count("TCP_DENIED/407")) or \
@@ -99,21 +108,21 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
     @retry_check()
     def check_s3_server_object_data(self, test_data):
-        s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(sys.stdout.encoding).strip()
-        file_data = subprocess.check_output(["docker", "exec", "s3-server", "cat", s3_mock_dir + "/test_bucket/test_object_key/fileData"]).decode(sys.stdout.encoding)
+        s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(self.get_stdout_encoding()).strip()
+        file_data = subprocess.check_output(["docker", "exec", "s3-server", "cat", s3_mock_dir + "/test_bucket/test_object_key/fileData"]).decode(self.get_stdout_encoding())
         return file_data == test_data
 
     @retry_check()
     def check_s3_server_object_metadata(self, content_type="application/octet-stream", metadata=dict()):
-        s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(sys.stdout.encoding).strip()
-        metadata_json = subprocess.check_output(["docker", "exec", "s3-server", "cat", s3_mock_dir + "/test_bucket/test_object_key/metadata"]).decode(sys.stdout.encoding)
+        s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(self.get_stdout_encoding()).strip()
+        metadata_json = subprocess.check_output(["docker", "exec", "s3-server", "cat", s3_mock_dir + "/test_bucket/test_object_key/metadata"]).decode(self.get_stdout_encoding())
         server_metadata = json.loads(metadata_json)
         return server_metadata["contentType"] == content_type and metadata == server_metadata["userMetadata"]
 
     @retry_check()
     def is_s3_bucket_empty(self):
-        s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(sys.stdout.encoding).strip()
-        ls_result = subprocess.check_output(["docker", "exec", "s3-server", "ls", s3_mock_dir + "/test_bucket/"]).decode(sys.stdout.encoding)
+        s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(self.get_stdout_encoding()).strip()
+        ls_result = subprocess.check_output(["docker", "exec", "s3-server", "ls", s3_mock_dir + "/test_bucket/"]).decode(self.get_stdout_encoding())
         return not ls_result
 
     def wait_for_container_logs(self, container_name, log, timeout, count=1):

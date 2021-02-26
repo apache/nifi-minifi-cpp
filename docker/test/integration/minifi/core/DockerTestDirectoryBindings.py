@@ -55,7 +55,6 @@ class DockerTestDirectoryBindings:
 
     @staticmethod
     def create_directory(dir):
-        logging.info("Creating tmp dir: %s", dir)
         os.makedirs(dir)
         os.chmod(dir, 0o777)
 

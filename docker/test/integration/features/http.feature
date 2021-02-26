@@ -40,7 +40,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "success" relationship of the ListenHTTP processor is connected to the PutFile
 
     When all instances start up
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
     And no errors were generated on the "http-proxy" regarding "http://minifi-listen:8080/contentListener"
 
   Scenario: A MiNiFi instance and transfers hashed data to another MiNiFi instance

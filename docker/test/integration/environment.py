@@ -11,7 +11,6 @@ def raise_exception(exception):
 
 @fixture
 def test_driver_fixture(context):
-    logging.info("Integration test setup")
     context.test = MiNiFi_integration_test(context)
     yield context.test
     logging.info("Integration test teardown...")

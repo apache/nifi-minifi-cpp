@@ -40,7 +40,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the http proxy server "http-proxy" is set up 
     When all instances start up
 
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 150 seconds
     And the object on the "s3" s3 server is "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{"
     And the object content type on the "s3" s3 server is "application/octet-stream" and the object metadata matches use metadata
     And no errors were generated on the "http-proxy" regarding "http://s3-server:9090/test_bucket/test_object_key"
@@ -102,7 +102,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 150 seconds
     And the object bucket on the "s3" s3 server is empty
     And no errors were generated on the "http-proxy" regarding "http://s3-server:9090/test_bucket/test_object_key"
 
@@ -151,5 +151,5 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 150 seconds
     And no errors were generated on the "http-proxy" regarding "http://s3-server:9090/test_bucket/test_object_key"
