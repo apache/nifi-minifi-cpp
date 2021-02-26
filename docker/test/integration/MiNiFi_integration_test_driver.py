@@ -22,7 +22,6 @@ from minifi.validators.SingleFileOutputValidator import SingleFileOutputValidato
 
 class MiNiFi_integration_test():
     def __init__(self, context):
-        logging.info("MiNiFi_integration_test init")
         self.test_id = str(uuid.uuid4())
         self.clusters = {}
 

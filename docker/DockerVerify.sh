@@ -72,7 +72,7 @@ export PATH
 PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
 export PYTHONPATH
 
-BEHAVE_OPTS="-f pretty --logging-level INFO --no-capture"
+BEHAVE_OPTS="-f pretty --logging-level INFO --logging-clear-handlers"
 
 cd "${docker_dir}/test/integration"
 exec 
