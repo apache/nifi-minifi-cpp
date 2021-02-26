@@ -38,3 +38,19 @@ Feature: File system operations are handled by the GetFile and PutFile processor
     And a file with the content "test" is present in "/tmp/input"
     When the MiNiFi instance starts up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 10 seconds
+
+  Scenario Outline: MiNiFi is capable of manipulating flowfiles of different sizes
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with <file size> of content is present in "/tmp/input"
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the GetFile processor is connected to the PutFile
+    When the MiNiFi instance starts up
+    Then a flowfile with matching content is placed in the monitored directory in less than 20 seconds
+
+  Examples: File size
+    | file size |
+    | 10 B      |
+    | 1.5 KiB   |
+    | 10 MiB    |
+    | 1.0 GiB   |
+    | 2.1 GiB   |

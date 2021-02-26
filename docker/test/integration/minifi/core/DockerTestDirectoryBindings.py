@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 
+from .HashUtils import md5
 
 class DockerTestDirectoryBindings:
     def __init__(self):
@@ -100,6 +101,27 @@ class DockerTestDirectoryBindings:
     def put_file_to_docker_path(self, test_id, path, file_name, contents):
         file_abs_path = os.path.join(self.docker_path_to_local_path(test_id, path), file_name)
         self.put_file_contents(file_abs_path, contents)
+
+    def generate_file_to_docker_path_and_calc_md5_checksum(self, test_id, path, file_name, data_size):
+        units = {"B": 1, "KiB": 1024, "MiB": 1024**2, "GiB": 1024**3, "TiB": 1024**3}
+        number, unit = [padded_size.strip() for padded_size in data_size.split()]
+
+        file_abs_path = os.path.join(self.docker_path_to_local_path(test_id, path), file_name)
+        chunk_size = 1024**2
+        chunk = os.urandom(chunk_size)
+        with open(file_abs_path, 'wb') as file:
+            bytes_to_write = int(float(number) * units[unit])
+            while 0 < bytes_to_write:
+                if chunk_size < bytes_to_write:
+                    file.write(chunk)
+                    bytes_to_write -= chunk_size
+                else:
+                    file.write(os.urandom(bytes_to_write))
+                    bytes_to_write = 0
+        return md5(file_abs_path)
+
+    def get_out_subdir(self, test_id, dir):
+        return os.path.join(self.data_directories[test_id]["output_dir"], dir)
 
     def rm_out_child(self, test_id, dir):
         child = os.path.join(self.data_directories[test_id]["output_dir"], dir)
