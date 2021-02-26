@@ -55,7 +55,7 @@ FetchContent_Declare(date_src
 FetchContent_GetProperties(date_src)
 if (NOT date_src_POPULATED)
     FetchContent_Populate(date_src)
-    set(DATE_INCLUDE_DIR 
+    set(DATE_INCLUDE_DIR
         $<BUILD_INTERFACE:${date_src_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
     )
@@ -69,6 +69,7 @@ if (NOT date_src_POPULATED)
     add_library(date::tz ALIAS date-tz)
     target_include_directories(date-tz PUBLIC ${DATE_INCLUDE_DIR})
     target_compile_features(date-tz PUBLIC cxx_std_11)
+    target_compile_options(date-tz PRIVATE "-Wno-error")
     target_compile_definitions(date-tz PRIVATE AUTO_DOWNLOAD=0 HAS_REMOTE_API=0)
     if (WIN32)
         target_compile_definitions(date-tz PRIVATE INSTALL=. PUBLIC USE_OS_TZDB=0)
