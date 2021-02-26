@@ -45,13 +45,6 @@ extern "C" {
 //! Define home environment variable
 #define MINIFI_HOME_ENV_KEY "MINIFI_HOME"
 
-/* Define Parser Values for Configuration YAML sections */
-#define CONFIG_YAML_PROCESSORS_KEY "Processors"
-#define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
-#define CONFIG_YAML_CONNECTIONS_KEY "Connections"
-#define CONFIG_YAML_REMOTE_PROCESSING_GROUPS_KEY "Remote Processing Groups"
-
-
 #ifdef _MSC_VER
 #ifndef PATH_MAX
 #define PATH_MAX 260

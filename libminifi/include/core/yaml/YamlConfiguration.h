@@ -34,6 +34,8 @@
 #include "utils/OptionalUtils.h"
 #include "yaml-cpp/yaml.h"
 
+class YamlConfigurationTestAccessor;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -42,7 +44,6 @@ namespace core {
 
 #define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
 #define CONFIG_YAML_PROCESSORS_KEY "Processors"
-#define CONFIG_YAML_CONNECTIONS_KEY "Connections"
 #define CONFIG_YAML_CONTROLLER_SERVICES_KEY "Controller Services"
 #define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY "Remote Processing Groups"
 #define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3 "Remote Process Groups"
@@ -155,36 +156,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @return             the root ProcessGroup node of the flow
    *                       configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getYamlRoot(YAML::Node *rootYamlNode) {
-    YAML::Node rootYaml = *rootYamlNode;
-    YAML::Node flowControllerNode = rootYaml[CONFIG_YAML_FLOW_CONTROLLER_KEY];
-    YAML::Node processorsNode = rootYaml[CONFIG_YAML_PROCESSORS_KEY];
-    YAML::Node connectionsNode = rootYaml[CONFIG_YAML_CONNECTIONS_KEY];
-    YAML::Node controllerServiceNode = rootYaml[CONFIG_YAML_CONTROLLER_SERVICES_KEY];
-    YAML::Node remoteProcessingGroupsNode = rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY];
-
-    if (!remoteProcessingGroupsNode) {
-      remoteProcessingGroupsNode = rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3];
-    }
-
-    YAML::Node provenanceReportNode = rootYaml[CONFIG_YAML_PROVENANCE_REPORT_KEY];
-
-    parseControllerServices(&controllerServiceNode);
-    // Create the root process group
-    core::ProcessGroup *root = parseRootProcessGroupYaml(flowControllerNode);
-    parseProcessorNodeYaml(processorsNode, root);
-    parseRemoteProcessGroupYaml(&remoteProcessingGroupsNode, root);
-    parseConnectionYaml(&connectionsNode, root);
-    parseProvenanceReportingYaml(&provenanceReportNode, root);
-
-    // set the controller services into the root group.
-    for (auto controller_service : controller_services_->getAllControllerServices()) {
-      root->addControllerService(controller_service->getName(), controller_service);
-      root->addControllerService(controller_service->getUUIDStr(), controller_service);
-    }
-
-    return std::unique_ptr<core::ProcessGroup>(root);
-  }
+  std::unique_ptr<core::ProcessGroup> getYamlRoot(YAML::Node *rootYamlNode);
 
   /**
    * Parses a processor from its corresponding YAML config node and adds
@@ -220,7 +192,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param rootNode
    * @return
    */
-  core::ProcessGroup *parseRootProcessGroupYaml(YAML::Node rootNode);
+  std::unique_ptr<core::ProcessGroup> parseRootProcessGroupYaml(YAML::Node rootNode);
 
   // Process Property YAML
   void parseProcessorPropertyYaml(YAML::Node *doc, YAML::Node *node, std::shared_ptr<core::Processor> processor);
@@ -230,7 +202,6 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parent parent process group.
    */
   void parseControllerServices(YAML::Node *controllerServicesNode);
-  // Process connection YAML
 
   /**
    * Parses the Connections section of a configuration YAML.
@@ -291,26 +262,6 @@ class YamlConfiguration : public FlowConfiguration {
    * @return         the parsed or generated UUID string
    */
   std::string getOrGenerateId(YAML::Node *yamlNode, const std::string &idField = "id");
-
-  /**
-   * This is a helper function for verifying the existence of a required
-   * field in a YAML::Node object. If the field is not present, an error
-   * message will be logged and a std::invalid_argument exception will be
-   * thrown indicating the absence of the required field in the YAML node.
-   *
-   * @param yamlNode     the YAML node to check
-   * @param fieldName    the required field key
-   * @param yamlSection  [optional] the top level section of the YAML config
-   *                       for the yamlNode. This is used fpr generating a
-   *                       useful error message for troubleshooting.
-   * @param errorMessage [optional] the error message string to use if
-   *                       the required field is missing. If not provided,
-   *                       a default error message will be generated.
-   *
-   * @throws std::invalid_argument if the required field 'fieldName' is
-   *                               not present in 'yamlNode'
-   */
-  void checkRequiredField(YAML::Node *yamlNode, const std::string &fieldName, const std::string &yamlSection = "", const std::string &errorMessage = "");
 
   /**
    * This is a helper function for getting an optional value, if it exists.
