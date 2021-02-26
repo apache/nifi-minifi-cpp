@@ -46,8 +46,13 @@ std::string StringUtils::trim(const std::string& s) {
   return trimRight(trimLeft(s));
 }
 
-std::vector<std::string> StringUtils::split(const std::string &str, const std::string &delimiter) {
+template<typename Fun>
+std::vector<std::string> split_transformed(const std::string& str, const std::string& delimiter, Fun transformation) {
   std::vector<std::string> result;
+  if (delimiter.empty()) {
+    std::transform(str.begin(), str.end(), std::back_inserter(result), [&] (const char c) { return transformation(std::string{c}); });
+    return result;
+  }
   auto curr = str.begin();
   auto end = str.end();
   auto is_func = [delimiter](int s) {
@@ -59,11 +64,19 @@ std::vector<std::string> StringUtils::split(const std::string &str, const std::s
       break;
     }
     auto next = std::find_if(curr, end, is_func);
-    result.push_back(std::string(curr, next));
+    result.push_back(transformation(std::string(curr, next)));
     curr = next;
   }
 
   return result;
+}
+
+std::vector<std::string> StringUtils::split(const std::string& str, const std::string& delimiter) {
+  return split_transformed(str, delimiter, identity{});
+}
+
+std::vector<std::string> StringUtils::splitAndTrim(const std::string& str, const std::string& delimiter) {
+  return split_transformed(str, delimiter, trim);
 }
 
 bool StringUtils::StringToFloat(std::string input, float &output, FailurePolicy cp /*= RETURN*/) {

@@ -141,7 +141,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   }
 
   // Check whether the queue is empty
-  bool isEmpty();
+  bool isEmpty() const;
   // Check whether the queue is full to apply back pressure
   bool isFull();
   // Get queue size
@@ -199,7 +199,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
  private:
   bool drop_empty_;
   // Mutex for protection
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
   // Queued data size
   std::atomic<uint64_t> queued_data_size_;
   // Queue for the Flow File
