@@ -42,9 +42,11 @@
 #include "core/ProcessSession.h"
 #include "core/TypedValues.h"
 
+#ifndef R_OK
 #define R_OK    4       /* Test for read permission.  */
 #define W_OK    2       /* Test for write permission.  */
 #define F_OK    0       /* Test for existence.  */
+#endif
 
 namespace org {
 namespace apache {
