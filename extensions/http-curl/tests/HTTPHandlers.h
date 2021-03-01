@@ -243,7 +243,7 @@ class FlowFileResponder : public ServerAwareHandler {
 
       read = stream.read(flow->data.data(), gsl::narrow<int>(length));
       if(!isServerRunning())return false;
-      assert(static_cast<uint64_t>(read) == length);
+      assert(read == gsl::narrow<int>(length));
 
       if (!invalid_checksum) {
         site2site_rest_resp = std::to_string(stream.getCRC());

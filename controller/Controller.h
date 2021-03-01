@@ -36,7 +36,7 @@ bool sendSingleCommand(std::unique_ptr<minifi::io::Socket> socket, uint8_t op, c
   minifi::io::BufferStream stream;
   stream.write(&op, 1);
   stream.write(value);
-  return static_cast<size_t>(socket->write(const_cast<uint8_t*>(stream.getBuffer()), gsl::narrow<int>(stream.size()))) == stream.size();
+  return gsl::narrow<size_t>(socket->write(const_cast<uint8_t*>(stream.getBuffer()), gsl::narrow<int>(stream.size()))) == stream.size();
 }
 
 /**

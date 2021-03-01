@@ -168,7 +168,7 @@ PutSFTP::PutSFTP(std::string name, utils::Identifier uuid /*= utils::Identifier(
 
 PutSFTP::~PutSFTP() = default;
 
-void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &/*sessionFactory*/) {
+void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   parseCommonPropertiesOnSchedule(context);
 
   std::string value;

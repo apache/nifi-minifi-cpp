@@ -326,7 +326,7 @@ void Client::traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb,
 
 bool Client::exists(UA_NodeId nodeId) {
   bool retval = false;
-  auto callback = [&retval](Client& /*client*/, const UA_ReferenceDescription */*ref*/, const std::string& /*pat*/) -> bool {
+  auto callback = [&retval](Client& /*client*/, const UA_ReferenceDescription* /*ref*/, const std::string& /*pat*/) -> bool {
     retval = true;
     return false;  // If any node is found, the given node exists, so traverse can be stopped
   };

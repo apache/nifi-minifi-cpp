@@ -301,7 +301,7 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   // migrate bin to ready bin
   this->binManager_.gatherReadyBins();
-  if (static_cast<uint32_t>(this->binManager_.getBinCount()) > maxBinCount_) {
+  if (gsl::narrow<uint32_t>(this->binManager_.getBinCount()) > maxBinCount_) {
     // bin count reach max allowed
     context->yield();
     logger_->log_debug("BinFiles reach max bin count %d", this->binManager_.getBinCount());

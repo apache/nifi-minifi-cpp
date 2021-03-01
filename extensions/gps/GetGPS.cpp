@@ -71,7 +71,7 @@ void GetGPS::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void GetGPS::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &/*sessionFactory*/) {
+void GetGPS::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string value;
 
   if (context->getProperty(GPSDHost.getName(), value)) {
@@ -86,7 +86,7 @@ void GetGPS::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   logger_->log_trace("GPSD client scheduled");
 }
 
-void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext> &/*context*/, const std::shared_ptr<core::ProcessSession> &session) {
+void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {
   try {
     gpsmm gps_rec(gpsdHost_.c_str(), gpsdPort_.c_str());
 

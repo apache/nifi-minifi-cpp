@@ -193,7 +193,7 @@ ListSFTP::ListSFTP(std::string name, utils::Identifier uuid /*= utils::Identifie
 
 ListSFTP::~ListSFTP() = default;
 
-void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &/*sessionFactory*/) {
+void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   parseCommonPropertiesOnSchedule(context);
 
   state_manager_ = context->getStateManager();
@@ -424,12 +424,12 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
     const std::string& username,
     const ListSFTP::Child& child) {
   /* Convert mtime to string */
-  if (child.attrs.mtime > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
+  if (child.attrs.mtime > gsl::narrow<uint64_t>(std::numeric_limits<int64_t>::max())) {
     logger_->log_error("Modification date %lu of \"%s/%s\" larger than int64_t max", child.attrs.mtime, child.parent_path.c_str(), child.filename.c_str());
     return true;
   }
   std::string mtime_str;
-  if (!utils::timeutils::getDateTimeStr(static_cast<int64_t>(child.attrs.mtime), mtime_str)) {
+  if (!utils::timeutils::getDateTimeStr(gsl::narrow<int64_t>(child.attrs.mtime), mtime_str)) {
     logger_->log_error("Failed to convert modification date %lu of \"%s/%s\" to string", child.attrs.mtime, child.parent_path.c_str(), child.filename.c_str());
     return true;
   }

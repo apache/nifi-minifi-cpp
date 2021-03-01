@@ -407,7 +407,7 @@ class ReadCallback : public InputStreamCallback {
       return 0;
     }
 
-    for (size_t segment_num = 0; static_cast<uint32_t>(read_size_) < flow_size_; ++segment_num) {
+    for (size_t segment_num = 0; gsl::narrow<uint32_t>(read_size_) < flow_size_; ++segment_num) {
       const int readRet = stream->read(buffer.data(), gsl::narrow<int>(buffer.size()));
       if (readRet < 0) {
         status_ = -1;

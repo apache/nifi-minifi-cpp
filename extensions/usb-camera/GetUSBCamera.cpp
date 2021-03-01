@@ -381,7 +381,7 @@ void GetUSBCamera::cleanupUvc() {
   }
 }
 
-void GetUSBCamera::onTrigger(core::ProcessContext */*context*/, core::ProcessSession *session) {
+void GetUSBCamera::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) {
   auto flowFile = session->get();
 
   if (flowFile) {
