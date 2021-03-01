@@ -47,7 +47,6 @@ std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::Proc
 }
 
 bool parseBooleanPropertyOrThrow(core::ProcessContext* context, const std::string& property_name) {
-  bool value;
   const std::string value_str = getRequiredPropertyOrThrow(context, property_name);
   utils::optional<bool> maybe_value = utils::StringUtils::toBool(value_str);
   if (!maybe_value) {

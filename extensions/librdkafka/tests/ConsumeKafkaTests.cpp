@@ -79,13 +79,13 @@ class KafkaTestProducer {
   // Uses all the headers for every published message
   void publish_messages_to_topic(
       const std::vector<std::string>& messages_on_topic, const std::string& message_key, std::vector<PublishEvent> events,
-      const std::vector<std::pair<std::string, std::string>>& message_headers, const optional<std::string>& message_header_encoding) {
+      const std::vector<std::pair<std::string, std::string>>& message_headers) {
     auto next_message = messages_on_topic.cbegin();
     for (const PublishEvent event : events) {
       switch (event) {
         case PublishEvent::PUBLISH:
           REQUIRE(messages_on_topic.cend() != next_message);
-          publish_message(*next_message, message_key, message_headers, message_header_encoding);
+          publish_message(*next_message, message_key, message_headers);
           std::advance(next_message, 1);
           break;
         case PublishEvent::TRANSACTION_START:
@@ -105,7 +105,7 @@ class KafkaTestProducer {
 
  private:
   void publish_message(
-      const std::string& message, const std::string& message_key, const std::vector<std::pair<std::string, std::string>>& message_headers, const optional<std::string>& message_header_encoding) {
+      const std::string& message, const std::string& message_key, const std::vector<std::pair<std::string, std::string>>& message_headers) {
     logger_->log_debug("Producing: %s", message.c_str());
     std::unique_ptr<rd_kafka_headers_t, utils::rd_kafka_headers_deleter> headers(rd_kafka_headers_new(message_headers.size()), utils::rd_kafka_headers_deleter());
     if (!headers) {
@@ -241,7 +241,6 @@ class ConsumeKafkaPropertiesTest : public ConsumeKafkaTest {
 
   void single_consumer_with_plain_text_test(
       bool expect_config_valid,
-      bool expect_fixed_message_order,
       const std::vector<std::pair<std::string, std::string>>& expect_header_attributes,
       const std::vector<std::string>& messages_on_topic,
       const std::vector<KafkaTestProducer::PublishEvent>& transaction_events,
@@ -306,7 +305,7 @@ class ConsumeKafkaPropertiesTest : public ConsumeKafkaTest {
     const bool transactions_committed = transaction_events.back() == KafkaTestProducer::PublishEvent::TRANSACTION_COMMIT;
 
     KafkaTestProducer producer(kafka_brokers, PRODUCER_TOPIC, is_transactional);
-    producer.publish_messages_to_topic(messages_on_topic, TEST_MESSAGE_KEY, transaction_events, message_headers, message_header_encoding);
+    producer.publish_messages_to_topic(messages_on_topic, TEST_MESSAGE_KEY, transaction_events, message_headers);
 
 
     std::vector<std::shared_ptr<core::FlowFile>> flow_files_produced;
@@ -359,11 +358,11 @@ class ConsumeKafkaPropertiesTest : public ConsumeKafkaTest {
 
     logger_->log_debug("************");
     std::string expected = "Expected: ";
-    for (int i = 0; i < sorted_split_messages.size(); ++i) {
+    for (std::size_t i = 0; i < sorted_split_messages.size(); ++i) {
       expected += sorted_split_messages[i] + ", ";
     }
     std::string   actual = "  Actual: ";
-    for (int i = 0; i < sorted_split_messages.size(); ++i) {
+    for (std::size_t i = 0; i < sorted_split_messages.size(); ++i) {
       actual += flow_files_produced[i]->getAttribute(ATTRIBUTE_FOR_CAPTURING_CONTENT).value() + ", ";
     }
     logger_->log_debug("%s", expected.c_str());
@@ -412,7 +411,7 @@ class ConsumeKafkaContinuousPublishingTest : public ConsumeKafkaTest {
       std::size_t num_messages_sent = 0;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
       while (!producer_loop_stop) {
-        producer.publish_messages_to_topic({ "Message after " + std::to_string(msg_periodicity_ms * ++num_messages_sent) + " ms"}, TEST_MESSAGE_KEY, { PUBLISH }, {}, {});
+        producer.publish_messages_to_topic({ "Message after " + std::to_string(msg_periodicity_ms * ++num_messages_sent) + " ms"}, TEST_MESSAGE_KEY, { PUBLISH }, {});
         std::this_thread::sleep_for(std::chrono::milliseconds(msg_periodicity_ms));
       }
     };
@@ -455,7 +454,7 @@ const std::chrono::seconds ConsumeKafkaTest::MAX_CONSUMEKAFKA_POLL_TIME_SECONDS{
 
 TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "ConsumeKafka parses and uses kafka topics.", "[ConsumeKafka][Kafka][Topic]") {
   auto run_tests = [&] (const std::vector<std::string>& messages_on_topic, const std::string& topic_names, const optional<std::string>& topic_name_format) {
-    single_consumer_with_plain_text_test(true, false, {}, messages_on_topic, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", "PLAINTEXT", topic_names, topic_name_format, {}, "test_group_id", {}, {}, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
+    single_consumer_with_plain_text_test(true, {}, messages_on_topic, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", "PLAINTEXT", topic_names, topic_name_format, {}, "test_group_id", {}, {}, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
   };
   run_tests({ "Ulysses",              "James Joyce"         }, "ConsumeKafkaTest",         {});
   run_tests({ "The Great Gatsby",     "F. Scott Fitzgerald" }, "ConsumeKafkaTest",         ConsumeKafka::TOPIC_FORMAT_NAMES);
@@ -468,18 +467,18 @@ TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Offsets are reset to the latest wh
   auto run_tests = [&] (
       const std::vector<std::string>& messages_on_topic,
       const std::vector<KafkaTestProducer::PublishEvent>& transaction_events) {
-    single_consumer_with_plain_text_test(true, false, {}, messages_on_topic, transaction_events, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
+    single_consumer_with_plain_text_test(true, {}, messages_on_topic, transaction_events, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
   };
   KafkaTestProducer producer("localhost:9092", PRODUCER_TOPIC, false);
-  producer.publish_messages_to_topic({"Dummy messages", "that should be ignored", "due to offset reset on ConsumeKafka startup"}, TEST_MESSAGE_KEY, {PUBLISH, PUBLISH, PUBLISH}, {}, {});
+  producer.publish_messages_to_topic({"Dummy messages", "that should be ignored", "due to offset reset on ConsumeKafka startup"}, TEST_MESSAGE_KEY, {PUBLISH, PUBLISH, PUBLISH}, {});
   run_tests({"Brave New World",  "Aldous Huxley"}, NON_TRANSACTIONAL_MESSAGES);
-  producer.publish_messages_to_topic({"Dummy messages", "that should be ignored", "due to offset reset on ConsumeKafka startup"}, TEST_MESSAGE_KEY, {PUBLISH, PUBLISH, PUBLISH}, {}, {});
+  producer.publish_messages_to_topic({"Dummy messages", "that should be ignored", "due to offset reset on ConsumeKafka startup"}, TEST_MESSAGE_KEY, {PUBLISH, PUBLISH, PUBLISH}, {});
   run_tests({"Call of the Wild", "Jack London"}, NON_TRANSACTIONAL_MESSAGES);
 }
 
 TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Key attribute is encoded according to the \"Key Attribute Encoding\" property.", "[ConsumeKafka][Kafka][KeyAttributeEncoding]") {
   auto run_tests = [&] (const std::vector<std::string>& messages_on_topic, const optional<std::string>& key_attribute_encoding) {
-    single_consumer_with_plain_text_test(true, false, {}, messages_on_topic, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, key_attribute_encoding, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
+    single_consumer_with_plain_text_test(true, {}, messages_on_topic, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, key_attribute_encoding, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
   };
 
   run_tests({ "The Odyssey",          "Ὅμηρος"                        }, {});
@@ -490,7 +489,7 @@ TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Key attribute is encoded according
 
 TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Transactional behaviour is supported.", "[ConsumeKafka][Kafka][Transaction]") {
   auto run_tests = [&] (const std::vector<std::string>& messages_on_topic, const std::vector<KafkaTestProducer::PublishEvent>& transaction_events, const optional<bool>& honor_transactions) {
-    single_consumer_with_plain_text_test(true, false, {}, messages_on_topic, transaction_events, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
+    single_consumer_with_plain_text_test(true, {}, messages_on_topic, transaction_events, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, honor_transactions, "test_group_id", {}, {}, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
   };
   run_tests({  "Pride and Prejudice", "Jane Austen"      }, SINGLE_COMMITTED_TRANSACTION, {});
   run_tests({                 "Dune", "Frank Herbert"    },    TWO_SEPARATE_TRANSACTIONS, {});
@@ -507,7 +506,7 @@ TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Headers on consumed Kafka messages
       const std::vector<std::pair<std::string, std::string>>& message_headers,
       const optional<std::string>& headers_to_add_as_attributes,
       const optional<std::string>& duplicate_header_handling) {
-    single_consumer_with_plain_text_test(true, false, expect_header_attributes, messages_on_topic, NON_TRANSACTIONAL_MESSAGES, message_headers, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, {}, {}, headers_to_add_as_attributes, duplicate_header_handling, "1", "2 sec", "60 sec"); // NOLINT
+    single_consumer_with_plain_text_test(true, expect_header_attributes, messages_on_topic, NON_TRANSACTIONAL_MESSAGES, message_headers, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, {}, {}, headers_to_add_as_attributes, duplicate_header_handling, "1", "2 sec", "60 sec"); // NOLINT
   };
   run_tests({             "Homeland",   "R. A. Salvatore"},                                      {},             {{{"Contains dark elves"}, {"Yes"}}},         {},                    {});
   run_tests({             "Magician",  "Raymond E. Feist"},               {{{"Rating"}, {"10/10"}}},                        {{{"Rating"}, {"10/10"}}}, {"Rating"},                    {});
@@ -521,7 +520,7 @@ TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Messages are separated into multip
   auto run_tests = [&] (
       const std::vector<std::string>& messages_on_topic,
       const optional<std::string>& message_demarcator) {
-    single_consumer_with_plain_text_test(true, false, {}, messages_on_topic, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, message_demarcator, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
+    single_consumer_with_plain_text_test(true, {}, messages_on_topic, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, message_demarcator, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
   };
   run_tests({"Barbapapa", "Anette Tison and Talus Taylor"}, "a");
 }
@@ -531,7 +530,7 @@ TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "The maximum poll records allows Co
       const std::vector<std::string>& messages_on_topic,
       const std::vector<KafkaTestProducer::PublishEvent>& transaction_events,
       const optional<std::string>& max_poll_records) {
-    single_consumer_with_plain_text_test(true, false, {}, messages_on_topic, transaction_events, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, {}, {}, {}, {}, max_poll_records, "2 sec", "60 sec"); // NOLINT
+    single_consumer_with_plain_text_test(true, {}, messages_on_topic, transaction_events, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, {}, {}, {}, {}, max_poll_records, "2 sec", "60 sec"); // NOLINT
   };
   run_tests({"The Count of Monte Cristo", "Alexandre Dumas"}, NON_TRANSACTIONAL_MESSAGES, "2");
 
@@ -561,12 +560,12 @@ TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "The maximum poll records allows Co
 }
 
 TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Non-plain text security context throws scheduling exceptions.", "[ConsumeKafka][Kafka][SecurityProtocol]") {
-  single_consumer_with_plain_text_test(false, false, {}, { "Miyamoto Musashi", "Eiji Yoshikawa" }, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", ConsumeKafka::SECURITY_PROTOCOL_SSL, "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
+  single_consumer_with_plain_text_test(false, {}, { "Miyamoto Musashi", "Eiji Yoshikawa" }, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", ConsumeKafka::SECURITY_PROTOCOL_SSL, "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
 }
 
 TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "Acceptable values for message header and key attribute encoding are \"UTF-8\" and \"hex\".", "[ConsumeKafka][Kafka][InvalidEncoding]") {
-  single_consumer_with_plain_text_test(false, false, {}, {                           "Shogun", "James Clavell" }, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, "UTF-32", {},       {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
-  single_consumer_with_plain_text_test(false, false, {}, { "Alice's Adventures in Wonderland", "Lewis Carroll" }, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {},       {}, {}, "UTF-32", {}, {}, "1", "2 sec", "60 sec"); // NOLINT
+  single_consumer_with_plain_text_test(false, {}, {                           "Shogun", "James Clavell" }, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {}, "UTF-32", {},       {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
+  single_consumer_with_plain_text_test(false, {}, { "Alice's Adventures in Wonderland", "Lewis Carroll" }, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9092", "PLAINTEXT", "ConsumeKafkaTest", {}, {}, "test_group_id", {},       {}, {}, "UTF-32", {}, {}, "1", "2 sec", "60 sec"); // NOLINT
 }
 
 TEST_CASE_METHOD(ConsumeKafkaContinuousPublishingTest, "ConsumeKafka can spend no more time polling than allowed in the maximum poll time property.", "[ConsumeKafka][Kafka][Batching][MaxPollTime]") {

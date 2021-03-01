@@ -47,7 +47,7 @@ struct rd_kafka_conf_deleter {
 
 struct rd_kafka_producer_deleter {
   void operator()(rd_kafka_t* ptr) const noexcept {
-    rd_kafka_resp_err_t flush_ret = rd_kafka_flush(ptr, 10000 /* ms */);  // Matching the wait time of KafkaConnection.cpp
+    // rd_kafka_resp_err_t flush_ret = rd_kafka_flush(ptr, 10000 /* ms */);  // Matching the wait time of KafkaConnection.cpp
     // If concerned, we could log potential errors here:
     // if (RD_KAFKA_RESP_ERR__TIMED_OUT == flush_ret) {
     //   std::cerr << "Deleting producer failed: time-out while trying to flush" << std::endl;

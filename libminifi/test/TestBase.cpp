@@ -316,7 +316,7 @@ bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::P
   return runProcessor(location, verify);
 }
 
-bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> /*verify*/) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   return runProcessor(location);
 }
