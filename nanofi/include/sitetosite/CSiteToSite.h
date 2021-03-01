@@ -220,36 +220,6 @@ typedef struct {
   const char *description; int hasDescription;
 } RespondCodeContext;
 
-
-
-// Request Type Str
-static const char *RequestTypeStr[MAX_REQUEST_TYPE] = { "NEGOTIATE_FLOWFILE_CODEC", "REQUEST_PEER_LIST", "SEND_FLOWFILES", "RECEIVE_FLOWFILES", "SHUTDOWN" };
-static RespondCodeContext respondCodeContext[21] = { //NOLINT
-  { RESERVED, "Reserved for Future Use", 0 },  //NOLINT
-  { PROPERTIES_OK, "Properties OK", 0 },  //NOLINT
-  { UNKNOWN_PROPERTY_NAME, "Unknown Property Name", 1 },  //NOLINT
-  { ILLEGAL_PROPERTY_VALUE, "Illegal Property Value", 1 },  //NOLINT
-  { MISSING_PROPERTY, "Missing Property", 1 },  //NOLINT
-  { CONTINUE_TRANSACTION, "Continue Transaction", 0 },  //NOLINT
-  { FINISH_TRANSACTION, "Finish Transaction", 0 },  //NOLINT
-  { CONFIRM_TRANSACTION, "Confirm Transaction", 1 },  //NOLINT
-  { TRANSACTION_FINISHED, "Transaction Finished", 0 },  //NOLINT
-  { TRANSACTION_FINISHED_BUT_DESTINATION_FULL, "Transaction Finished But Destination is Full", 0 },  //NOLINT
-  { CANCEL_TRANSACTION, "Cancel Transaction", 1 },  //NOLINT
-  { BAD_CHECKSUM, "Bad Checksum", 0 },  //NOLINT
-  { MORE_DATA, "More Data Exists", 0 },  //NOLINT
-  { NO_MORE_DATA, "No More Data Exists", 0 },  //NOLINT
-  { UNKNOWN_PORT, "Unknown Port", 0 },  //NOLINT
-  { PORT_NOT_IN_VALID_STATE, "Port Not in a Valid State", 1 },  //NOLINT
-  { PORTS_DESTINATION_FULL, "Port's Destination is Full", 0 },  //NOLINT
-  { UNAUTHORIZED, "User Not Authorized", 1 },  //NOLINT
-  { ABORT, "Abort", 1 },  //NOLINT
-  { UNRECOGNIZED_RESPONSE_CODE, "Unrecognized Response Code", 0 },  //NOLINT
-  { END_OF_STREAM, "End of Stream", 0 }
-};
-
-
-
 // Transaction Class
 typedef struct {
 

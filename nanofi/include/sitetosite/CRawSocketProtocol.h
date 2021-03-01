@@ -84,15 +84,7 @@ static inline const char * getCodecResourceName() {
   return "StandardFlowFileCodec";
 }
 
-static inline RespondCodeContext *getRespondCodeContext(RespondCode code) {
-  unsigned int i;
-  for (i = 0; i < sizeof(respondCodeContext) / sizeof(RespondCodeContext); i++) {
-    if (respondCodeContext[i].code == code) {
-      return &respondCodeContext[i];
-    }
-  }
-  return NULL;
-}
+RespondCodeContext *getRespondCodeContext(RespondCode code);
 
 // RawSiteToSiteClient Class
 struct CRawSiteToSiteClient {
