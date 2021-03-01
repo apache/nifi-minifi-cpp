@@ -201,8 +201,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     else
       return 0;
   }
-  // Whether flow file queued in incoming connection
-  bool flowFilesQueued() const;
   // Whether flow file queue full in any of the outgoin connection
   bool flowFilesOutGoingFull() const;
 

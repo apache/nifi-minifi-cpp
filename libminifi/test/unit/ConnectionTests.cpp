@@ -69,7 +69,7 @@ TEST_CASE("Connection::poll() works correctly", "[poll]") {
     REQUIRE(std::set<std::shared_ptr<core::FlowFile>>{flow_file} == expired_flow_files);
   }
 
-  SECTION("when there is a non-penalized flow file followed by a penalized flow file, the first poll() returns nullptr") {
+  SECTION("when there is a non-penalized flow file followed by a penalized flow file, poll() returns the non-penalized flow file") {
     SECTION("without expiration duration") {}
     SECTION("with expiration duration") { connection->setFlowExpirationDuration(1000); }
 
@@ -82,8 +82,7 @@ TEST_CASE("Connection::poll() works correctly", "[poll]") {
     const auto flow_file = std::make_shared<core::FlowFile>();
     connection->put(flow_file);
 
-    REQUIRE(nullptr == connection->poll(expired_flow_files));     // first find penalized flow file, put it at end of queue, return null
-    REQUIRE(flow_file == connection->poll(expired_flow_files));   // next, find non-penalized flow file
-    REQUIRE(nullptr == connection->poll(expired_flow_files));     // now only penalized flow file left, don't return it
+    REQUIRE(flow_file == connection->poll(expired_flow_files));
+    REQUIRE(nullptr == connection->poll(expired_flow_files));
   }
 }
