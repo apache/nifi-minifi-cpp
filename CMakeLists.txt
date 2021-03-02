@@ -328,11 +328,10 @@ if(MSVC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX")
   endif()
 else()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
   if(FAIL_ON_WARNINGS)
-    set(FAIL_ON_WARNINGS_FLAG "-Werror")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
   endif()
-
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra ${FAIL_ON_WARNINGS_FLAG}")
 endif()
 
 #### Extensions ####

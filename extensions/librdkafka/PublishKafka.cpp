@@ -407,7 +407,7 @@ class ReadCallback : public InputStreamCallback {
       return 0;
     }
 
-    for (size_t segment_num = 0; gsl::narrow<uint32_t>(read_size_) < flow_size_; ++segment_num) {
+    for (size_t segment_num = 0; read_size_ < flow_size_; ++segment_num) {
       const int readRet = stream->read(buffer.data(), gsl::narrow<int>(buffer.size()));
       if (readRet < 0) {
         status_ = -1;
@@ -443,7 +443,7 @@ class ReadCallback : public InputStreamCallback {
   const size_t flow_file_index_;
   int status_ = 0;
   std::string error_;
-  int read_size_ = 0;
+  uint32_t read_size_ = 0;
   bool called_ = false;
   const bool fail_empty_flow_files_ = true;
   const std::shared_ptr<logging::Logger> logger_;
