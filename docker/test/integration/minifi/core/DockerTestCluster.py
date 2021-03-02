@@ -121,8 +121,8 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
     @retry_check()
     def check_azure_storage_server_data(self, test_data):
-        data_file = subprocess.check_output(["docker", "exec", "azure-storage-server", "find", "/data/__blobstorage__", "-type", "f"]).decode(sys.stdout.encoding).strip()
-        file_data = subprocess.check_output(["docker", "exec", "azure-storage-server", "cat", data_file]).decode(sys.stdout.encoding)
+        data_file = subprocess.check_output(["docker", "exec", "azure-storage-server", "find", "/data/__blobstorage__", "-type", "f"]).decode(self.get_stdout_encoding()).strip()
+        file_data = subprocess.check_output(["docker", "exec", "azure-storage-server", "cat", data_file]).decode(self.get_stdout_encoding())
         return test_data in file_data
 
     @retry_check()

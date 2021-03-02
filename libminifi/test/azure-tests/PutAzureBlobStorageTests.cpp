@@ -106,21 +106,9 @@ class PutAzureBlobStorageTestsFixture {
     get_file = plan->addProcessor("GetFile", "GetFile");
     plan->setProperty(get_file, processors::GetFile::Directory.getName(), input_dir);
     plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "false");
-    update_attribute = plan->addProcessor(
-      "UpdateAttribute",
-      "UpdateAttribute",
-      core::Relationship("success", "d"),
-      true);
-    plan->addProcessor(
-      put_azure_blob_storage,
-      "PutAzureBlobStorage",
-      core::Relationship("success", "d"),
-      true);
-    plan->addProcessor(
-      "LogAttribute",
-      "LogAttribute",
-      core::Relationship("success", "d"),
-      true);
+    update_attribute = plan->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
+    plan->addProcessor(put_azure_blob_storage, "PutAzureBlobStorage", { {"success", "d"} }, true);
+    plan->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
   }
 
   void setDefaultCredentials() {

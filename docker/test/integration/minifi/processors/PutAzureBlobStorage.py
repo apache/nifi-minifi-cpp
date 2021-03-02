@@ -10,4 +10,4 @@ class PutAzureBlobStorage(Processor):
                                                       'Blob': 'test_blob',
                                                       'Create Container': 'true',
                                                   },
-                                                  auto_terminate=['success'])
+                                                  auto_terminate=['success', 'failure'])

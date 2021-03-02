@@ -35,7 +35,7 @@ namespace processors {
 
 const core::Property PutAzureBlobStorage::ContainerName(
   core::PropertyBuilder::createProperty("Container Name")
-    ->withDescription("Name of the Azure storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.")
+    ->withDescription("Name of the Azure Storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.")
     ->supportsExpressionLanguage(true)
     ->isRequired(true)
     ->build());
@@ -103,13 +103,47 @@ void PutAzureBlobStorage::initialize() {
   });
   // Set the supported relationships
   setSupportedRelationships({
-    Failure,
-    Success
+    Success,
+    Failure
   });
 }
 
 void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   context->getProperty(CreateContainer.getName(), create_container_);
+
+  std::string value;
+  if (!context->getProperty(ContainerName.getName(), value) || value.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Container Name property missing or invalid");
+  }
+
+  if (!context->getProperty(Blob.getName(), value) || value.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Blob property missing or invalid");
+  }
+
+  if (context->getProperty(AzureStorageCredentialsService.getName(), value) && !value.empty()) {
+    logger_->log_info("Getting Azure Storage credentials from controller service with name: '%s'", value);
+    return;
+  }
+
+  if (context->getProperty(ConnectionString.getName(), value) && !value.empty()) {
+    logger_->log_info("Using connectionstring directly for Azure Storage authentication");
+    return;
+  }
+
+  if (!context->getProperty(StorageAccountName.getName(), value) || value.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Account Name property missing or invalid");
+  }
+
+  if (context->getProperty(StorageAccountKey.getName(), value) && !value.empty()) {
+    logger_->log_info("Using storage account name and key for authentication");
+    return;
+  }
+
+  if (!context->getProperty(SASToken.getName(), value) || value.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Neither Storage Account Key nor SAS Token property was set.");
+  }
+
+  logger_->log_info("Using storage account name and SAS token for authentication");
 }
 
 std::string PutAzureBlobStorage::getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
@@ -120,13 +154,13 @@ std::string PutAzureBlobStorage::getConnectionStringFromControllerService(const 
 
   std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
   if (nullptr == service) {
-    logger_->log_error("Azure storage credentials service with name: '%s' could not be found", service_name.c_str());
+    logger_->log_error("Azure Storage credentials service with name: '%s' could not be found", service_name.c_str());
     return "";
   }
 
   auto azure_credentials_service = std::dynamic_pointer_cast<minifi::azure::controllers::AzureStorageCredentialsService>(service);
   if (!azure_credentials_service) {
-    logger_->log_error("Controller service with name: '%s' is not an Azure storage credentials service", service_name.c_str());
+    logger_->log_error("Controller service with name: '%s' is not an Azure Storage credentials service", service_name.c_str());
     return "";
   }
 
@@ -150,9 +184,10 @@ void PutAzureBlobStorage::createAzureStorageClient(const std::string &connection
   // client is not reset with different configuration while another thread is using it.
   if (blob_storage_wrapper_ == nullptr) {
     blob_storage_wrapper_ = minifi::utils::make_unique<storage::AzureBlobStorage>(connection_string, container_name);
-  } else {
-    blob_storage_wrapper_->resetClientIfNeeded(connection_string, container_name);
+    return;
   }
+
+  blob_storage_wrapper_->resetClientIfNeeded(connection_string, container_name);
 }
 
 std::string PutAzureBlobStorage::getConnectionString(
@@ -207,18 +242,19 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
   }
 
   if (!upload_result) {
-    logger_->log_error("Failed to upload blob '%s' to Azure storage container '%s'", blob_name, container_name);
+    logger_->log_error("Failed to upload blob '%s' to Azure Storage container '%s'", blob_name, container_name);
     session->transfer(flow_file, Failure);
-  } else {
-    session->putAttribute(flow_file, "azure.container", container_name);
-    session->putAttribute(flow_file, "azure.blobname", blob_name);
-    session->putAttribute(flow_file, "azure.primaryUri", upload_result->primary_uri);
-    session->putAttribute(flow_file, "azure.etag", upload_result->etag);
-    session->putAttribute(flow_file, "azure.length", std::to_string(upload_result->length));
-    session->putAttribute(flow_file, "azure.timestamp", upload_result->timestamp);
-    logger_->log_debug("Successfully uploaded blob '%s' to Azure storage container '%s'", blob_name, container_name);
-    session->transfer(flow_file, Success);
+    return;
   }
+
+  session->putAttribute(flow_file, "azure.container", container_name);
+  session->putAttribute(flow_file, "azure.blobname", blob_name);
+  session->putAttribute(flow_file, "azure.primaryUri", upload_result->primary_uri);
+  session->putAttribute(flow_file, "azure.etag", upload_result->etag);
+  session->putAttribute(flow_file, "azure.length", std::to_string(upload_result->length));
+  session->putAttribute(flow_file, "azure.timestamp", upload_result->timestamp);
+  logger_->log_debug("Successfully uploaded blob '%s' to Azure Storage container '%s'", blob_name, container_name);
+  session->transfer(flow_file, Success);
 }
 
 }  // namespace processors

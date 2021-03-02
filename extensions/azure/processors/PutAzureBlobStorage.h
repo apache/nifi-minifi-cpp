@@ -60,13 +60,12 @@ class PutAzureBlobStorage : public core::Processor {
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
-  explicit PutAzureBlobStorage(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
+  explicit PutAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : PutAzureBlobStorage(name, uuid, nullptr) {
   }
 
   ~PutAzureBlobStorage() override = default;
 
-  bool supportsDynamicProperties() override { return true; }
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
@@ -107,8 +106,8 @@ class PutAzureBlobStorage : public core::Processor {
  private:
   friend class ::PutAzureBlobStorageTestsFixture;
 
-  explicit PutAzureBlobStorage(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<storage::BlobStorage> blob_storage_wrapper)
-    : core::Processor(std::move(name), uuid)
+  explicit PutAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorage> blob_storage_wrapper)
+    : core::Processor(name, uuid)
     , blob_storage_wrapper_(std::move(blob_storage_wrapper)) {
   }
 
