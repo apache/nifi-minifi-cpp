@@ -152,7 +152,7 @@ class SimpleSSLTestClient  {
 
   static SocketDescriptor openConnection(const char *host_name, const char *port, logging::Logger& logger) {
     struct addrinfo hints;
-    hints.ai_flags = 0;
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
