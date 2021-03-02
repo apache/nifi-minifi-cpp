@@ -94,8 +94,8 @@ class PutAzureBlobStorageTestsFixture {
 
     // Build MiNiFi processing graph
     plan = test_controller.createPlan();
-    mock_blob_storage_ptr = new MockBlobStorage();
-    std::unique_ptr<minifi::azure::storage::BlobStorage> mock_blob_storage(mock_blob_storage_ptr);
+    auto mock_blob_storage = utils::make_unique<MockBlobStorage>();
+    mock_blob_storage_ptr = mock_blob_storage.get();
     put_azure_blob_storage = std::shared_ptr<minifi::azure::processors::PutAzureBlobStorage>(
       new minifi::azure::processors::PutAzureBlobStorage("PutAzureBlobStorage", utils::Identifier(), std::move(mock_blob_storage)));
     char input_dir_mask[] = "/tmp/gt.XXXXXX";
