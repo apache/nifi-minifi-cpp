@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include <limits>
+
 #include "utils/StringUtils.h"
 
 #include "utils/Environment.h"
