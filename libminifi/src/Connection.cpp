@@ -111,7 +111,7 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
   logger_->log_debug("Connection %s created", name_);
 }
 
-bool Connection::isEmpty() {
+bool Connection::isEmpty() const {
   return queue_.empty();
 }
 
@@ -157,7 +157,7 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
         continue;
       }
 
-      lockedQueue->push_back(ff);
+      lockedQueue.push(ff);
       queued_data_size_ += ff->getSize();
 
       logger_->log_debug("Enqueue flow file UUID %s to connection %s", ff->getUUIDStr(), name_);
@@ -173,54 +173,42 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
 std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords) {
   auto lockedQueue = queue_.lock();
 
-  while (!lockedQueue->empty()) {
-    std::shared_ptr<core::FlowFile> item = lockedQueue->front();
-    lockedQueue->pop_front();
-    queued_data_size_ -= item->getSize();
+  while (!lockedQueue.empty()) {
+    std::shared_ptr<core::FlowFile> item = lockedQueue.front();
 
-    if (expired_duration_ > 0) {
-      // We need to check for flow expiration
-      if (utils::timeutils::getTimeMillis() > (item->getEntryDate() + expired_duration_)) {
-        // Flow record expired
-        expiredFlowRecords.insert(item);
-        logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
-      } else {
-        // Flow record not expired
-        if (item->isPenalized()) {
-          // Flow record was penalized
-          lockedQueue->push_back(item);
-          queued_data_size_ += item->getSize();
-          break;
-        }
-        std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
-        item->setConnection(connectable);
-        logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
-        return item;
-      }
-    } else {
-      // Flow record not expired
-      if (item->isPenalized()) {
-        // Flow record was penalized
-        lockedQueue->push_back(item);
-        queued_data_size_ += item->getSize();
-        break;
-      }
-      std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
-      item->setConnection(connectable);
-      logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
-      return item;
+    // We need to check for flow expiration
+    if (expired_duration_ > 0 && utils::timeutils::getTimeMillis() > (item->getEntryDate() + expired_duration_)) {
+      // Flow record expired
+      lockedQueue.pop();
+      queued_data_size_ -= item->getSize();
+      expiredFlowRecords.insert(item);
+      logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
+      continue;
     }
+
+    // Flow record not expired
+    if (item->isPenalized()) {
+      // Flow record was penalized
+      break;
+    }
+
+    lockedQueue.pop();
+    queued_data_size_ -= item->getSize();
+    std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
+    item->setConnection(connectable);
+    logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
+    return item;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 void Connection::drain(bool delete_permanently) {
   auto lockedQueue = queue_.lock();
 
-  while (!lockedQueue->empty()) {
-    std::shared_ptr<core::FlowFile> item = lockedQueue->front();
-    lockedQueue->pop_front();
+  while (!lockedQueue.empty()) {
+    std::shared_ptr<core::FlowFile> item = lockedQueue.front();
+    lockedQueue.pop();
     logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
     if (delete_permanently) {
       if (item->isStored() && flow_repository_->Delete(item->getUUIDStr())) {

@@ -148,13 +148,38 @@ class ConcurrentQueue {
 template <typename T>
 class LockedConcurrentQueue {
  public:
+  using reference = typename std::deque<T>::reference;
+  using const_reference = typename std::deque<T>::const_reference;
+
   explicit LockedConcurrentQueue(ConcurrentQueue<T>& concurrentQueue)
       : queue_(std::ref(concurrentQueue.queue_))
       , lock_(concurrentQueue.mtx_) {
   }
 
-  std::deque<T>* operator->() const { return &queue_.get(); }
-  std::deque<T>& operator*() const { return queue_; }
+  void push(const T& value) {
+    queue_.get().push_back(value);
+  }
+
+  void push(T&& value) {
+    queue_.get().push_back(std::move(value));
+  }
+
+  bool empty() const {
+    return queue_.get().empty();
+  }
+
+  reference front() {
+    return queue_.get().front();
+  }
+
+  const_reference front() const {
+    return queue_.get().front();
+  }
+
+  void pop() {
+    queue_.get().pop_front();
+  }
+
  private:
   std::reference_wrapper<std::deque<T>> queue_;
   std::unique_lock<std::mutex> lock_;
