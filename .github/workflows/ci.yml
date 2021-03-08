@@ -108,6 +108,7 @@ jobs:
             ubuntu-16.04-ccache-refs/heads/main-
       - id: install_deps
         run: |
+          sudo apt update
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -154,6 +155,7 @@ jobs:
             ubuntu-20.04-ccache-refs/heads/main-
       - id: install_deps
         run: |
+          sudo apt update
           sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -198,6 +200,7 @@ jobs:
             debian-ccache-refs/heads/main-
       - id: install_deps
         run: |
+          sudo apt update
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -219,6 +222,7 @@ jobs:
             centos-ccache-refs/heads/main-
       - id: install_deps
         run: |
+          sudo apt update
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -240,6 +244,7 @@ jobs:
             fedora-ccache-refs/heads/main-
       - id: install_deps
         run: |
+          sudo apt update
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -261,6 +266,7 @@ jobs:
             ubuntu-18.04-ccache-refs/heads/main
       - id: install_deps
         run: |
+          sudo apt update
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -282,6 +288,7 @@ jobs:
             ubuntu-16.04-shared-ccache-refs/heads/main-
       - id: install_deps
         run: |
+          sudo apt update
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
@@ -296,6 +303,8 @@ jobs:
       - id: build
         run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DENABLE_JNI=OFF -DDISABLE_JEMALLOC=ON -DENABLE_AWS=ON -DENABLE_LIBRDKAFKA=ON .. && make docker
       - id: install_deps
-        run: sudo apt install -y python3-virtualenv
+        run: |
+          sudo apt update
+          sudo apt install -y python3-virtualenv
       - id: test
         run: cd build && make docker-verify
