@@ -22,31 +22,29 @@ CMAKE_GLOBAL_MIN_VERSION_MAJOR=3
 CMAKE_GLOBAL_MIN_VERSION_MINOR=7
 CMAKE_GLOBAL_MIN_VERSION_REVISION=0
 
-#RED='\033[0;41;30m'
-RED='\033[0;101m'
-NO_COLOR='\033[0;0;39m'
+export RED='\033[0;101m'
+export NO_COLOR='\033[0;0;39m'
+export TRUE="Enabled"
+export FALSE="Disabled"
+export DEPLOY="false"
+export NO_PROMPT="false"
+export FEATURES_SELECTED="false"
+export ALL_FEATURES_ENABLED=${FALSE}
+export BUILD_DIR="build"
+export BUILD_IDENTIFIER=""
+export OPTIONS=()
+export CMAKE_OPTIONS_ENABLED=()
+export CMAKE_OPTIONS_DISABLED=()
+export CMAKE_MIN_VERSION=()
+export INCOMPATIBLE_WITH=()
+export DEPLOY_LIMITS=()
+export DEPENDENCIES=()
+
 CORES=1
 BUILD="false"
 PACKAGE="false"
-BUILD_IDENTIFIER=""
-TRUE="Enabled"
-FALSE="Disabled"
-FEATURES_SELECTED="false"
-AUTO_REMOVE_EXTENSIONS="true"
-export NO_PROMPT="false"
-ALL_FEATURES_ENABLED=${FALSE}
-BUILD_DIR="build"
-
-DEPLOY="false"
-OPTIONS=()
-CMAKE_OPTIONS_ENABLED=()
-CMAKE_OPTIONS_DISABLED=()
-CMAKE_MIN_VERSION=()
-INCOMPATIBLE_WITH=()
-DEPLOY_LIMITS=()
 USER_DISABLE_TESTS="${FALSE}"
 USE_NINJA="false"
-DEPENDENCIES=()
 
 . "${script_directory}/bstrp_functions.sh"
 SKIP_CMAKE=${FALSE}
@@ -69,7 +67,7 @@ while :; do
       EnableAllFeatures
       ;;
     -c|--clear)
-      rm ${script_directory}/bt_state > /dev/null 2>&1
+      rm "${script_directory}/bt_state" > /dev/null 2>&1
       ;;
     -d|--deploy)
       NO_PROMPT="true"
@@ -109,11 +107,11 @@ while :; do
 done
 
 if [ -x "$(command -v hostname)" ]; then
-  HOSTNAME=`hostname`
-  PING_RESULT=`ping -c 1 ${HOSTNAME} 2>&1`
+  HOSTNAME=$(hostname)
+  PING_RESULT=$(ping -c 1 "${HOSTNAME}" 2>&1)
   if [[ "$PING_RESULT" = *unknown* ]]; then
     cntinu="N"
-    read -p "Cannot resolve your host name -- ${HOSTNAME} -- tests may fail, Continue?  [ Y/N ] " cntinu
+    read -r -p "Cannot resolve your host name -- ${HOSTNAME} -- tests may fail, Continue?  [ Y/N ] " cntinu
     if [ "$cntinu" = "Y" ] || [ "$cntinu" = "y" ]; then
       echo "Continuing..."
     else
@@ -124,7 +122,6 @@ fi
 
 
 if [ "$NO_PROMPT" = "true" ]; then
-  agree="N"
   echo "****************************************"
   echo "Welcome, this bootstrap script will update your system to install MiNiFi C++"
   echo "You have opted to skip prompts. "
@@ -147,11 +144,11 @@ elif [ -f /etc/debian_version ]; then
   OS=Debian
   VER=$(cat /etc/debian_version)
 elif [ -f /etc/SUSE-brand ]; then
-  VER=`cat /etc/SUSE-brand | tr '\n' ' ' | sed s/.*=\ //`
-  OS=`cat /etc/SUSE-brand | tr '\n' ' ' | sed s/VERSION.*//`
+  VER=$(tr '\n' ' ' < /etc/SUSE-brand | sed s/.*=\ //)
+  OS=$(tr '\n' ' ' < /etc/SUSE-brand | sed s/VERSION.*//)
 elif [ -f /etc/SUSE-release ]; then
-  VER=`cat /etc/SUSE-release | tr '\n' ' ' | sed s/.*=\ //`
-  OS=`cat /etc/SUSE-release | tr '\n' ' ' | sed s/VERSION.*//`
+  VER=$(tr '\n' ' ' < /etc/SUSE-release | sed s/.*=\ //)
+  OS=$(tr '\n' ' ' < /etc/SUSE-release | sed s/VERSION.*//)
 elif [ -f /etc/redhat-release ]; then
   # Older Red Hat, CentOS, etc.
   ...
@@ -159,9 +156,12 @@ else
   OS=$(uname -s)
   VER=$(uname -r)
 fi
-OS_MAJOR=`echo $VER | cut -d. -f1`
-OS_MINOR=`echo $VER | cut -d. -f2`
-OS_REVISION=`echo $EVR	 | cut -d. -f3`
+OS_MAJOR=$(echo "$VER" | cut -d. -f1)
+export OS_MAJOR
+OS_MINOR=$(echo "$VER" | cut -d. -f2)
+export OS_MINOR
+OS_REVISION=$(echo "$EVR"	 | cut -d. -f3)
+export OS_REVISION
 
 ### Verify the compiler version
 
@@ -171,12 +171,15 @@ COMPILER_COMMAND=""
 
 if [ -x "$(command -v g++)" ]; then
   COMPILER_COMMAND="g++"
-  COMPILER_VERSION=`${COMPILER_COMMAND} -dumpversion`
+  COMPILER_VERSION=$(${COMPILER_COMMAND} -dumpversion)
 fi
 
-COMPILER_MAJOR=`echo $COMPILER_VERSION | cut -d. -f1`
-COMPILER_MINOR=`echo $COMPILER_VERSION | cut -d. -f2`
-COMPILER_REVISION=`echo $COMPILER_VERSION | cut -d. -f3`
+COMPILER_MAJOR=$(echo "$COMPILER_VERSION" | cut -d. -f1)
+export COMPILER_MAJOR
+COMPILER_MINOR=$(echo "$COMPILER_VERSION" | cut -d. -f2)
+export COMPILER_MINOR
+COMPILER_REVISION=$(echo "$COMPILER_VERSION" | cut -d. -f3)
+export COMPILER_REVISION
 
 
 if [[ "$OS" = "Darwin" ]]; then
@@ -349,32 +352,32 @@ if [ "${OVERRIDE_BUILD_IDENTIFIER}" != "${BUILD_IDENTIFIER}" ]; then
 fi
 
 if [ "$BUILD_DIR_D" != "build" ] && [ "$BUILD_DIR_D" != "$BUILD_DIR" ]; then
-  read -p "Build dir will override stored state, $BUILD_DIR. Press any key to continue " overwrite
+  read -r -p "Build dir will override stored state, $BUILD_DIR. Press any key to continue " overwrite
   BUILD_DIR=$BUILD_DIR_D
 
 fi
 
 if [ ! -d "${BUILD_DIR}" ]; then
-  mkdir ${BUILD_DIR}/
+  mkdir "${BUILD_DIR}/"
 else
 
   overwrite="Y"
   if [ "$NO_PROMPT" = "false" ] && [ "$FEATURES_SELECTED" = "false" ]; then
     echo "CMAKE Build dir (${BUILD_DIR}) exists, should we overwrite your build directory before we begin?"
-    read -p "If you have already bootstrapped, bootstrapping again isn't necessary to run make [ Y/N ] " overwrite
+    read -r -p "If you have already bootstrapped, bootstrapping again isn't necessary to run make [ Y/N ] " overwrite
   fi
   if [ "$overwrite" = "N" ] || [ "$overwrite" = "n" ]; then
     echo "Exiting ...."
     exit
   else
-    rm ${BUILD_DIR}/CMakeCache.txt > /dev/null 2>&1
+    rm "${BUILD_DIR}/CMakeCache.txt" > /dev/null 2>&1
   fi
 fi
 
 ## change to the directory
 
 
-pushd ${BUILD_DIR}
+pushd "${BUILD_DIR}" || exit
 
 while [ ! "$FEATURES_SELECTED" == "true" ]
 do
@@ -398,11 +401,11 @@ build_deps
 
 ## just in case
 
-CMAKE_VERSION=`${CMAKE_COMMAND} --version | head -n 1 | awk '{print $3}'`
+CMAKE_VERSION=$(${CMAKE_COMMAND} --version | head -n 1 | awk '{print $3}')
 
-CMAKE_MAJOR=`echo $CMAKE_VERSION | cut -d. -f1`
-CMAKE_MINOR=`echo $CMAKE_VERSION | cut -d. -f2`
-CMAKE_REVISION=`echo $CMAKE_VERSION | cut -d. -f3`
+CMAKE_MAJOR=$(echo "$CMAKE_VERSION" | cut -d. -f1)
+CMAKE_MINOR=$(echo "$CMAKE_VERSION" | cut -d. -f2)
+CMAKE_REVISION=$(echo "$CMAKE_VERSION" | cut -d. -f3)
 
 
 CMAKE_BUILD_COMMAND="${CMAKE_COMMAND} "
@@ -503,7 +506,7 @@ build_cmake_command(){
 
   continue_with_plan="Y"
   if [ ! "$NO_PROMPT" = "true" ]; then
-    read -p "Command will be '${CMAKE_BUILD_COMMAND}', run this? [ Y/N ] " continue_with_plan
+    read -r -p "Command will be '${CMAKE_BUILD_COMMAND}', run this? [ Y/N ] " continue_with_plan
   fi
   if [ "$continue_with_plan" = "N" ] || [ "$continue_with_plan" = "n" ]; then
     echo "Exiting ...."
@@ -522,7 +525,7 @@ else
 fi
 
 if [ "$BUILD" = "true" ]; then
-  make -j${CORES}
+  make -j"${CORES}"
 fi
 
 if [ "$PACKAGE" = "true" ]; then
@@ -530,5 +533,4 @@ if [ "$PACKAGE" = "true" ]; then
 fi
 
 
-popd
-
+popd || exit
