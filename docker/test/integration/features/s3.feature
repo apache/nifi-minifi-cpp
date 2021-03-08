@@ -171,7 +171,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     When all instances start up
     And content "test_data2%" is added to file "test_file.log" present in directory "/tmp/input" 5 seconds later
 
-    Then 2 flowfiles are placed in the monitored directory in less than 60 seconds
+    Then 2 flowfiles are placed in the monitored directory in 60 seconds
 
   Scenario: A MiNiFi instance can list an S3 bucket objects via a http-proxy
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -194,5 +194,5 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then 1 flowfile is placed in the monitored directory in less than 120 seconds
+    Then 1 flowfile is placed in the monitored directory in 120 seconds
     And no errors were generated on the "http-proxy" regarding "http://s3-server:9090/test_bucket/test_object_key"

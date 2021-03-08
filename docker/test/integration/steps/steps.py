@@ -247,8 +247,8 @@ def step_impl(context, content, file_name, path, seconds):
 def step_impl(context, content, duration):
     context.test.check_for_file_with_content_generated(content, timeparse(duration))
 
-@then("{number_of_files:d} flowfiles are placed in the monitored directory in less than {duration}")
-@then("{number_of_files:d} flowfile is placed in the monitored directory in less than {duration}")
+@then("{number_of_files:d} flowfiles are placed in the monitored directory in {duration}")
+@then("{number_of_files:d} flowfile is placed in the monitored directory in {duration}")
 def step_impl(context, number_of_files, duration):
     context.test.check_for_multiple_files_generated(number_of_files, timeparse(duration))
 
