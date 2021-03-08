@@ -19,11 +19,11 @@
 script_directory="$(cd "$(dirname "$0")" && pwd)"
 
 get_cmake_version(){
-  CMAKE_VERSION=`${CMAKE_COMMAND} --version | head -n 1 | awk '{print $3}'`
+  CMAKE_VERSION=$(${CMAKE_COMMAND} --version | head -n 1 | awk '{print $3}')
 
-  CMAKE_MAJOR=`echo $CMAKE_VERSION | cut -d. -f1`
-  CMAKE_MINOR=`echo $CMAKE_VERSION | cut -d. -f2`
-  CMAKE_REVISION=`echo $CMAKE_VERSION | cut -d. -f3`
+  CMAKE_MAJOR=$(echo "$CMAKE_VERSION" | cut -d. -f1)
+  CMAKE_MINOR=$(echo "$CMAKE_VERSION" | cut -d. -f2)
+  CMAKE_REVISION=$(echo "$CMAKE_VERSION" | cut -d. -f3)
 }
 
 add_option(){
@@ -46,11 +46,11 @@ add_disabled_option(){
   eval "$1=$2"
   OPTIONS+=("$1")
   CMAKE_OPTIONS_ENABLED+=("$1:$3")
-  if [ ! -z "$4" ]; then
+  if [ -n "$4" ]; then
     CMAKE_MIN_VERSION+=("$1:$4")
   fi
 
-  if [ ! -z "$5" ]; then
+  if [ -n "$5" ]; then
     if [ "$5" = "true" ]; then
       DEPLOY_LIMITS+=("$1")
     fi
@@ -62,9 +62,9 @@ add_multi_option(){
   ARRAY=()
   eval "export $1_OPTIONS=()"
   for i in "${@:3}"; do
-    ARRAY+=($i)
+    ARRAY+=("$i")
   done
-  for i in ${!ARRAY[@]}; do
+  for i in "${!ARRAY[@]}"; do
     eval "$1_OPTIONS[$i]=${ARRAY[$i]}"
 	done
 }
@@ -75,30 +75,31 @@ set_incompatible_with(){
 }
 
 print_multi_option_status(){
-  feature="$1"
   feature_status=${!1}
   declare -a VAR_OPTS=()
 
-  declare VAR_OPTS=$1_OPTIONS[@]
-  VAR_OPTS=$1_OPTIONS[@]
+  declare VAR_OPTS=("$1_OPTIONS[@]")
+  VAR_OPTS=("$1_OPTIONS[@]")
 
   for option in "${!VAR_OPTS}" ; do
     if [ "${option}" = "$feature_status" ]; then
+      # shellcheck disable=SC2059
     	printf "${RED}"
     fi
+    # shellcheck disable=SC2059
     printf "${option}"
+    # shellcheck disable=SC2059
     printf "${NO_COLOR} "
   done
 }
 
 ToggleMultiOption(){
-  feature="$1"
   feature_status=${!1}
   declare -a VAR_OPTS=()
 
-  declare VAR_OPTS=$1_OPTIONS[@]
+  declare VAR_OPTS=("$1_OPTIONS[@]")
   #echo -e "${RED}${feature_status}${NO_COLOR} (${VAR_OPTS_VAL})"
-  VAR_OPTS=$1_OPTIONS[@]
+  VAR_OPTS=("$1_OPTIONS[@]")
   invariant=""
   first=""
   # the alternative is to loop through an array but since we're an indirected
@@ -134,20 +135,20 @@ EnableAllFeatures(){
   for option in "${OPTIONS[@]}" ; do
     feature_status=${!option}
     if [ "$feature_status" = "${FALSE}" ]; then
-      ToggleFeature $option
+      ToggleFeature "${option}"
     fi
     #	eval "$option=${TRUE}"
   done
 }
 
 pause(){
-  read -p "Press [Enter] key to continue..." fackEnterKey
+  read -r -p "Press [Enter] key to continue..."
 }
 
 
 load_state(){
-  if [ -f ${script_directory}/bt_state ]; then
-    . ${script_directory}/bt_state
+  if [ -f "${script_directory}/bt_state" ]; then
+    . "${script_directory}/bt_state"
     for option in "${OPTIONS[@]}" ; do
       option_value="${!option}"
       if [ "${option_value}" = "${FALSE}" ]; then
@@ -159,11 +160,11 @@ load_state(){
 
 echo_state_variable(){
   VARIABLE_VALUE=${!1}
-  echo "$1=\"${VARIABLE_VALUE}\"" >> ${script_directory}/bt_state
+  echo "$1=\"${VARIABLE_VALUE}\"" >> "${script_directory}/bt_state"
 }
 
 save_state(){
-  echo "VERSION=1" > ${script_directory}/bt_state
+  echo "VERSION=1" > "${script_directory}/bt_state"
   echo_state_variable BUILD_IDENTIFIER
   echo_state_variable BUILD_DIR
   echo_state_variable TESTS_ENABLED
@@ -172,7 +173,7 @@ save_state(){
   echo_state_variable ASAN_ENABLED
   echo_state_variable FAIL_ON_WARNINGS
   for option in "${OPTIONS[@]}" ; do
-    echo_state_variable $option
+    echo_state_variable "${option}"
   done
 }
 
@@ -182,7 +183,7 @@ check_compatibility(){
     if [ "$OPT" = "$1" ]; then
       OTHER_FEATURE=${option#*:}
       OTHER_FEATURE_VALUE=${!OTHER_FEATURE}
-      if [ $OTHER_FEATURE_VALUE = "Enabled" ]; then
+      if [ "${OTHER_FEATURE_VALUE}" = "Enabled" ]; then
         echo "false"
         return
       fi
@@ -192,9 +193,9 @@ check_compatibility(){
 }
 
 verify_enable(){
-  COMPATIBLE=$(check_compatibility $1)
+  COMPATIBLE=$(check_compatibility "$1")
   if [ "$COMPATIBLE" = "true" ]; then
-    verify_enable_platform $1
+    verify_enable_platform "$1"
   else
     echo "false"
   fi
@@ -213,16 +214,16 @@ can_deploy(){
 ToggleFeature(){
   VARIABLE_VALUE=${!1}
   ALL_FEATURES_ENABLED="Disabled"
-  if [ $VARIABLE_VALUE = "Enabled" ]; then
+  if [ "${VARIABLE_VALUE}" = "Enabled" ]; then
     eval "$1=${FALSE}"
   else
     for option in "${CMAKE_MIN_VERSION[@]}" ; do
       OPT=${option%%:*}
       if [ "$OPT" = "$1" ]; then
         NEEDED_VER=${option#*:}
-        NEEDED_MAJOR=`echo $NEEDED_VER | cut -d. -f1`
-        NEEDED_MINOR=`echo $NEEDED_VER | cut -d. -f2`
-        NEEDED_REVISION=`echo $NEEDED_VERSION | cut -d. -f3`
+        NEEDED_MAJOR=$(echo "$NEEDED_VER" | cut -d. -f1)
+        NEEDED_MINOR=$(echo "$NEEDED_VER" | cut -d. -f2)
+        NEEDED_REVISION=$(echo "$NEEDED_VERSION" | cut -d. -f3)
         if (( NEEDED_MAJOR > CMAKE_MAJOR )); then
           return 1
         fi
@@ -236,8 +237,8 @@ ToggleFeature(){
         fi
       fi
     done
-    CAN_ENABLE=$(verify_enable $1)
-    CAN_DEPLOY=$(can_deploy $1)
+    CAN_ENABLE=$(verify_enable "$1")
+    CAN_DEPLOY=$(can_deploy "$1")
     if [ "$CAN_ENABLE" = "true" ]; then
       if [[ "$DEPLOY" = "true" &&  "$CAN_DEPLOY" = "true" ]] || [[ "$DEPLOY" = "false" ]]; then
         eval "$1=${TRUE}"
@@ -248,7 +249,6 @@ ToggleFeature(){
 
 
 print_feature_status(){
-  feature="$1"
   feature_status=${!1}
   if [ "$feature_status" = "Enabled" ]; then
     echo "Enabled"
@@ -257,9 +257,9 @@ print_feature_status(){
       OPT=${option%%:*}
       if [ "${OPT}" = "$1" ]; then
         NEEDED_VER=${option#*:}
-        NEEDED_MAJOR=`echo $NEEDED_VER | cut -d. -f1`
-        NEEDED_MINOR=`echo $NEEDED_VER | cut -d. -f2`
-        NEEDED_REVISION=`echo $NEEDED_VERSION | cut -d. -f3`
+        NEEDED_MAJOR=$(echo "$NEEDED_VER" | cut -d. -f1)
+        NEEDED_MINOR=$(echo "$NEEDED_VER" | cut -d. -f2)
+        NEEDED_REVISION=$(echo "$NEEDED_VERSION" | cut -d. -f3)
         if (( NEEDED_MAJOR > CMAKE_MAJOR )); then
           echo -e "${RED}Disabled*${NO_COLOR}"
           return 1
@@ -276,7 +276,7 @@ print_feature_status(){
         fi
       fi
     done
-    CAN_ENABLE=$(verify_enable $1)
+    CAN_ENABLE=$(verify_enable "$1")
     if [ "$CAN_ENABLE" = "true" ]; then
       echo -e "${RED}Disabled${NO_COLOR}"
     else
@@ -304,8 +304,8 @@ show_main_menu() {
 
 read_main_menu_options(){
   local choice
-  read -p "Enter choice [ A-C ] " choice
-  choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
+  read -r -p "Enter choice [ A-C ] " choice
+  choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) MENU="features" ;;
     b) MENU="advanced" ;;
@@ -328,8 +328,8 @@ show_advanced_features_menu() {
 
 read_advanced_menu_options(){
   local choice
-  read -p "Enter choice [ A-C ] " choice
-  choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
+  read -r -p "Enter choice [ A-C ] " choice
+  choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) ToggleFeature PORTABLE_BUILD ;;
     b) ToggleFeature DEBUG_SYMBOLS ;;
@@ -389,8 +389,8 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  read -p "Enter choice [ A - X or 1-7 ] " choice
-  choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
+  read -r -p "Enter choice [ A - X or 1-7 ] " choice
+  choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) ToggleFeature ROCKSDB_ENABLED ;;
     b) ToggleFeature HTTP_CURL_ENABLED ;;
@@ -430,9 +430,9 @@ read_feature_options(){
     5) ToggleMultiOption BUILD_PROFILE;;
     6) ToggleFeature ASAN_ENABLED;;
     7) ToggleFeature FAIL_ON_WARNINGS;;
-    p) FEATURES_SELECTED="true" ;;
+    p) export FEATURES_SELECTED="true" ;;
     r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
-        MENU="main"
+        export MENU="main"
       fi
       ;;
     q) exit 0;;
