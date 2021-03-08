@@ -286,6 +286,44 @@ minifi::utils::optional<HeadObjectResult> S3Wrapper::headObject(const HeadObject
   return fillFetchObjectResult<Aws::S3::Model::HeadObjectResult, HeadObjectResult>(head_object_params, aws_result.value());
 }
 
+template<typename ListRequest>
+ListRequest S3Wrapper::createListRequest(const ListRequestParameters& params) {
+  ListRequest request;
+  request.SetBucket(params.bucket);
+  request.SetDelimiter(params.delimiter);
+  request.SetPrefix(params.prefix);
+  return request;
+}
+
+template<typename FetchObjectRequest>
+FetchObjectRequest S3Wrapper::createFetchObjectRequest(const GetObjectRequestParameters& get_object_params) {
+  FetchObjectRequest request;
+  request.SetBucket(get_object_params.bucket);
+  request.SetKey(get_object_params.object_key);
+  if (!get_object_params.version.empty()) {
+    request.SetVersionId(get_object_params.version);
+  }
+  if (get_object_params.requester_pays) {
+    request.SetRequestPayer(Aws::S3::Model::RequestPayer::requester);
+  }
+  return request;
+}
+
+template<typename AwsResult, typename FetchObjectResult>
+FetchObjectResult S3Wrapper::fillFetchObjectResult(const GetObjectRequestParameters& get_object_params, const AwsResult& fetch_object_result) {
+  FetchObjectResult result;
+  result.setFilePaths(get_object_params.object_key);
+  result.mime_type = fetch_object_result.GetContentType();
+  result.etag = minifi::utils::StringUtils::removeFramingCharacters(fetch_object_result.GetETag(), '"');
+  result.expiration = getExpiration(fetch_object_result.GetExpiration());
+  result.ssealgorithm = getEncryptionString(fetch_object_result.GetServerSideEncryption());
+  result.version = fetch_object_result.GetVersionId();
+  for (const auto& metadata : fetch_object_result.GetMetadata()) {
+    result.user_metadata_map.emplace(metadata.first, metadata.second);
+  }
+  return result;
+}
+
 }  // namespace s3
 }  // namespace aws
 }  // namespace minifi

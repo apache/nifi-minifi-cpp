@@ -178,7 +178,7 @@ class S3Wrapper {
 
   virtual ~S3Wrapper() = default;
 
- protected:
+ private:
   static Expiration getExpiration(const std::string& expiration);
 
   void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
@@ -191,42 +191,13 @@ class S3Wrapper {
   void addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
 
   template<typename ListRequest>
-  ListRequest createListRequest(const ListRequestParameters& params) {
-    ListRequest request;
-    request.SetBucket(params.bucket);
-    request.SetDelimiter(params.delimiter);
-    request.SetPrefix(params.prefix);
-    return request;
-  }
+  ListRequest createListRequest(const ListRequestParameters& params);
 
   template<typename FetchObjectRequest>
-  FetchObjectRequest createFetchObjectRequest(const GetObjectRequestParameters& get_object_params) {
-    FetchObjectRequest request;
-    request.SetBucket(get_object_params.bucket);
-    request.SetKey(get_object_params.object_key);
-    if (!get_object_params.version.empty()) {
-      request.SetVersionId(get_object_params.version);
-    }
-    if (get_object_params.requester_pays) {
-      request.SetRequestPayer(Aws::S3::Model::RequestPayer::requester);
-    }
-    return request;
-  }
+  FetchObjectRequest createFetchObjectRequest(const GetObjectRequestParameters& get_object_params);
 
   template<typename AwsResult, typename FetchObjectResult>
-  FetchObjectResult fillFetchObjectResult(const GetObjectRequestParameters& get_object_params, const AwsResult& fetch_object_result) {
-    FetchObjectResult result;
-    result.setFilePaths(get_object_params.object_key);
-    result.mime_type = fetch_object_result.GetContentType();
-    result.etag = minifi::utils::StringUtils::removeFramingCharacters(fetch_object_result.GetETag(), '"');
-    result.expiration = getExpiration(fetch_object_result.GetExpiration());
-    result.ssealgorithm = getEncryptionString(fetch_object_result.GetServerSideEncryption());
-    result.version = fetch_object_result.GetVersionId();
-    for (const auto& metadata : fetch_object_result.GetMetadata()) {
-      result.user_metadata_map.emplace(metadata.first, metadata.second);
-    }
-    return result;
-  }
+  FetchObjectResult fillFetchObjectResult(const GetObjectRequestParameters& get_object_params, const AwsResult& fetch_object_result);
 
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3Wrapper>::getLogger()};
