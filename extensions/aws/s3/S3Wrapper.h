@@ -151,7 +151,7 @@ struct ListedObjectAttributes {
   std::string etag;
   bool is_latest = false;
   int64_t last_modified = 0;
-  int length = 0;
+  long long length = 0;
   std::string store_class;
   std::string version;
 };
@@ -182,7 +182,7 @@ class S3Wrapper {
   static Expiration getExpiration(const std::string& expiration);
 
   void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
-  int64_t writeFetchedBody(Aws::IOStream& source, const int64_t data_size, const std::shared_ptr<io::BaseStream>& output);
+  static int64_t writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::BaseStream& output);
   static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
 
   minifi::utils::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);

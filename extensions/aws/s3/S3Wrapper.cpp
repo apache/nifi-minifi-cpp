@@ -142,10 +142,10 @@ bool S3Wrapper::deleteObject(const std::string& bucket, const std::string& objec
   return request_sender_->sendDeleteObjectRequest(request);
 }
 
-int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_size, const std::shared_ptr<io::BaseStream>& output) {
+int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::BaseStream& output) {
   static const int64_t BUFFER_SIZE = 4096;
   std::vector<uint8_t> buffer;
-  buffer.reserve(BUFFER_SIZE);
+  buffer.resize(BUFFER_SIZE);
 
   int64_t write_size = 0;
   while (write_size < data_size) {
@@ -153,7 +153,7 @@ int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_si
     if (!source.read(reinterpret_cast<char*>(buffer.data()), next_write_size)) {
       return -1;
     }
-    auto ret = output->write(buffer.data(), next_write_size);
+    auto ret = output.write(buffer.data(), next_write_size);
     if (ret < 0) {
       return ret;
     }
@@ -169,7 +169,7 @@ minifi::utils::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectReq
     return minifi::utils::nullopt;
   }
   auto result = fillFetchObjectResult<Aws::S3::Model::GetObjectResult, GetObjectResult>(get_object_params, aws_result.value());
-  result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), out_body);
+  result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), *out_body);
   return result;
 }
 
@@ -220,7 +220,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVers
       return minifi::utils::nullopt;
     }
     const auto& versions = aws_result->GetVersions();
-    logger_->log_debug("AWS S3 List operation returned %zu versions. This result is truncated: %s", versions.size(), aws_result->GetIsTruncated() ? "true" : "false");
+    logger_->log_debug("AWS S3 List operation returned %zu versions. This result is%s truncated.", versions.size(), aws_result->GetIsTruncated() ? "" : " not");
     addListResults(versions, params.min_object_age, attribute_list);
     if (aws_result->GetIsTruncated()) {
       request.SetKeyMarker(aws_result->GetNextKeyMarker());
