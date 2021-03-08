@@ -6,8 +6,7 @@ from os.path import join
 
 from .FileOutputValidator import FileOutputValidator
 
-
-class SingleFileOutputValidator(FileOutputValidator):
+class SingleOrMoreFileOutputValidator(FileOutputValidator):
     """
     Validates the content of a single file in the given directory.
     """
@@ -25,5 +24,5 @@ class SingleFileOutputValidator(FileOutputValidator):
         if not os.path.isdir(full_dir):
             return self.valid
 
-        self.valid = self.num_files_matching_content_in_dir(full_dir, self.expected_content) == 1
+        self.valid = 0 < self.num_files_matching_content_in_dir(full_dir, self.expected_content)
         return self.valid

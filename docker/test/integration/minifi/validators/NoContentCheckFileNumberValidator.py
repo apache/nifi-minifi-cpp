@@ -6,15 +6,14 @@ from os.path import join
 
 from .FileOutputValidator import FileOutputValidator
 
-
-class SingleFileOutputValidator(FileOutputValidator):
+class NoContentCheckFileNumberValidator(FileOutputValidator):
     """
     Validates the content of a single file in the given directory.
     """
 
-    def __init__(self, expected_content, subdir=''):
+    def __init__(self, num_files_expected, subdir=''):
         self.valid = False
-        self.expected_content = expected_content
+        self.num_files_expected = num_files_expected
         self.subdir = subdir
 
     def validate(self):
@@ -25,5 +24,5 @@ class SingleFileOutputValidator(FileOutputValidator):
         if not os.path.isdir(full_dir):
             return self.valid
 
-        self.valid = self.num_files_matching_content_in_dir(full_dir, self.expected_content) == 1
+        self.valid = self.num_files_expected == self.get_num_files(full_dir)
         return self.valid
