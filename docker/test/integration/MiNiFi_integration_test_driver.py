@@ -2,6 +2,7 @@ import docker
 import logging
 import time
 import uuid
+import datetime
 
 from pydoc import locate
 
@@ -15,6 +16,9 @@ from minifi.validators.EmptyFilesOutPutValidator import EmptyFilesOutPutValidato
 from minifi.validators.NoFileOutPutValidator import NoFileOutPutValidator
 from minifi.validators.SingleFileOutputValidator import SingleFileOutputValidator
 from minifi.validators.MultiFileOutputValidator import MultiFileOutputValidator
+from minifi.validators.SingleOrMoreFileOutputValidator import SingleOrMoreFileOutputValidator
+from minifi.validators.NoContentCheckFileNumberValidator import NoContentCheckFileNumberValidator
+from minifi.validators.NumFileRangeValidator import NumFileRangeValidator
 
 
 class MiNiFi_integration_test():
@@ -28,33 +32,42 @@ class MiNiFi_integration_test():
         self.file_system_observer = None
 
         self.docker_network = None
+        self.cleanup_lock = threading.Lock()
 
         self.docker_directory_bindings = DockerTestDirectoryBindings()
         self.docker_directory_bindings.create_new_data_directories(self.test_id)
 
     def __del__(self):
-        logging.info("MiNiFi_integration_test cleanup")
+        self.cleanup()
 
-        # Clean up network, for some reason only this order of events work for cleanup
-        if self.docker_network is not None:
-            logging.info('Cleaning up network network: %s', self.docker_network.name)
-            while len(self.docker_network.containers) != 0:
-                for container in self.docker_network.containers:
-                    self.docker_network.disconnect(container, force=True)
-                self.docker_network.reload()
-            self.docker_network.remove()
+    def cleanup(self):
+        with self.cleanup_lock:
+            logging.info("MiNiFi_integration_test cleanup")
+            # Clean up network, for some reason only this order of events work for cleanup
+            if self.docker_network is not None:
+                logging.info('Cleaning up network network: %s', self.docker_network.name)
+                while len(self.docker_network.containers) != 0:
+                    for container in self.docker_network.containers:
+                        self.docker_network.disconnect(container, force=True)
+                    self.docker_network.reload()
+                self.docker_network.remove()
+                self.docker_network = None
 
-        container_ids = []
-        for cluster in self.clusters.values():
-            for container in cluster.containers.values():
-                container_ids.append(container.id)
-            del cluster
+            container_ids = []
+            for cluster in self.clusters.values():
+                for container in cluster.containers.values():
+                    container_ids.append(container.id)
+                del cluster
 
-        # The cluster deleter is not reliable for cleaning up
-        for container_id in container_ids:
-            self.delete_docker_container_by_id(container_id)
+            # The cluster deleter is not reliable for cleaning up
+            logging.info("%d containers left for integration tests.", len(container_ids))
+            docker_client = docker.from_env()
+            for container_id in container_ids:
+                self.delete_docker_container_by_id(container_id)
 
-        del self.docker_directory_bindings
+            if self.docker_directory_bindings is not None:
+                del self.docker_directory_bindings
+                self.docker_directory_bindings = None
 
     def delete_docker_container_by_id(self, container_id):
         docker_client = docker.from_env()
@@ -85,35 +98,56 @@ class MiNiFi_integration_test():
         return self.clusters.setdefault(name, DockerTestCluster())
 
     def set_up_cluster_network(self):
-        self.docker_network = SingleNodeDockerCluster.create_docker_network()
-        for cluster in self.clusters.values():
-            cluster.set_network(self.docker_network)
+        if self.docker_network is None:
+            logging.info("Setting up new network.")
+            self.docker_network = SingleNodeDockerCluster.create_docker_network()
+            for cluster in self.clusters.values():
+                cluster.set_network(self.docker_network)
+        else:
+            logging.info("Network is already set.")
+
+    def wait_for_cluster_startup_finish(self, cluster):
+        startup_success = True
+        logging.info("Engine: %s", cluster.get_engine())
+        if cluster.get_engine() == "minifi-cpp":
+            startup_success = cluster.wait_for_app_logs("Starting Flow Controller", 120)
+        elif cluster.get_engine() == "nifi":
+            startup_success = cluster.wait_for_app_logs("Starting Flow Controller...", 120)
+        elif cluster.get_engine() == "kafka-broker":
+            startup_success = cluster.wait_for_app_logs("Startup complete.", 120)
+        elif cluster.get_engine() == "http-proxy":
+            startup_success = cluster.wait_for_app_logs("Accepting HTTP Socket connections at", 120)
+        elif cluster.get_engine() == "s3-server":
+            startup_success = cluster.wait_for_app_logs("Started S3MockApplication", 120)
+        elif cluster.get_engine() == "azure-storage-server":
+            startup_success = cluster.wait_for_app_logs("Azurite Queue service is successfully listening at", 120)
+        if not startup_success:
+            cluster.log_nifi_output()
+        return startup_success
+
+    def start_single_cluster(self, cluster_name):
+        self.set_up_cluster_network()
+        cluster = self.clusters[cluster_name]
+        cluster.deploy_flow()
+        assert self.wait_for_cluster_startup_finish(cluster)
+        time.sleep(10)
 
     def start(self):
         logging.info("MiNiFi_integration_test start")
         self.set_up_cluster_network()
         for cluster in self.clusters.values():
-            logging.info("Starting cluster %s with an engine of %s", cluster.get_name(), cluster.get_engine())
-            cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id))
-            cluster.deploy_flow()
-        for cluster_name, cluster in self.clusters.items():
-            startup_success = True
-            logging.info("Engine: %s", cluster.get_engine())
-            if cluster.get_engine() == "minifi-cpp":
-                startup_success = cluster.wait_for_app_logs("Starting Flow Controller", 120)
-            elif cluster.get_engine() == "nifi":
-                startup_success = cluster.wait_for_app_logs("Starting Flow Controller...", 120)
-            elif cluster.get_engine() == "kafka-broker":
-                startup_success = cluster.wait_for_app_logs("Startup complete.", 120)
-            elif cluster.get_engine() == "http-proxy":
-                startup_success = cluster.wait_for_app_logs("Accepting HTTP Socket connections at", 120)
-            elif cluster.get_engine() == "s3-server":
-                startup_success = cluster.wait_for_app_logs("Started S3MockApplication", 120)
-            elif cluster.get_engine() == "azure-storage-server":
-                startup_success = cluster.wait_for_app_logs("Azurite Queue service is successfully listening at", 120)
-            if not startup_success:
-                cluster.log_nifi_output()
-            assert startup_success
+            if len(cluster.containers) == 0:
+                logging.info("Starting cluster %s with an engine of %s", cluster.get_name(), cluster.get_engine())
+                cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id))
+                cluster.deploy_flow()
+            else:
+                logging.info("Container %s is already started with an engine of %s", cluster.get_name(), cluster.get_engine())
+        for cluster in self.clusters.values():
+            assert self.wait_for_cluster_startup_finish(cluster)
+        # Seems like some extra time needed for consumers to negotiate with the broker
+        for cluster in self.clusters.values():
+            if cluster.get_engine() == "kafka-broker":
+                time.sleep(10)
 
     def add_node(self, processor):
         if processor.get_name() in (elem.get_name() for elem in self.connectable_nodes):
@@ -174,7 +208,7 @@ class MiNiFi_integration_test():
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, 1, subdir)
 
-    def check_for_file_with_content_generated(self, content, timeout_seconds, subdir=''):
+    def check_for_single_file_with_content_generated(self, content, timeout_seconds, subdir=''):
         output_validator = SingleFileOutputValidator(content)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, 1, subdir)
@@ -183,21 +217,52 @@ class MiNiFi_integration_test():
         output_validator = MultiFileOutputValidator(file_count, subdir)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, file_count, subdir)
+    def check_for_at_least_one_file_with_content_generated(self, content, timeout_seconds, subdir=''):
+        output_validator = SingleOrMoreFileOutputValidator(content)
+        output_validator.set_output_dir(self.file_system_observer.get_output_dir())
+        self.check_output(timeout_seconds, output_validator, 1, subdir)
+
+    def check_for_num_files_generated(self, num_flowfiles, timeout_seconds, subdir=''):
+        output_validator = NoContentCheckFileNumberValidator(num_flowfiles)
+        output_validator.set_output_dir(self.file_system_observer.get_output_dir())
+        self.check_output(timeout_seconds, output_validator, max(1, num_flowfiles), subdir)
+
+    def check_for_num_file_range_generated(self, min_files, max_files, timeout_seconds, subdir=''):
+        output_validator = NumFileRangeValidator(min_files, max_files)
+        output_validator.set_output_dir(self.file_system_observer.get_output_dir())
+        self.check_output_force_wait(timeout_seconds, output_validator, subdir)
 
     def check_for_multiple_empty_files_generated(self, timeout_seconds, subdir=''):
         output_validator = EmptyFilesOutPutValidator()
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, 2, subdir)
 
+    def wait_for_multiple_output_files(self, timeout_seconds, max_files):
+        self.file_system_observer.wait_for_output(timeout_seconds, max_files)
+
+    def check_output_force_wait(self, timeout_seconds, output_validator, subdir):
+        if subdir:
+            output_validator.subdir = subdir
+        time.sleep(timeout_seconds)
+        self.validate(output_validator)
+
     def check_output(self, timeout_seconds, output_validator, max_files, subdir):
         if subdir:
             output_validator.subdir = subdir
-        self.file_system_observer.wait_for_output(timeout_seconds, output_validator, max_files)
+        # Other interfaces only call this with a single file,
+        # call wait_for_multiple_output_files manually if multiple
+        # output files with different content are expected in the same directory
+        self.file_system_observer.wait_for_output(timeout_seconds, max_files)
+        self.validate(output_validator)
+
+    def validate(self, validator):
         for cluster in self.clusters.values():
             # Logs for both nifi and minifi, but not other engines
-            cluster.log_nifi_output()
+            if cluster.get_engine() != "kafka-broker":
+                cluster.log_nifi_output()
+            # cluster.log_nifi_output()
             assert not cluster.segfault_happened()
-        assert output_validator.validate()
+        assert validator.validate()
 
     def check_s3_server_object_data(self, cluster_name, object_data):
         cluster = self.acquire_cluster(cluster_name)

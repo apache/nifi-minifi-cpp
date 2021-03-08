@@ -162,6 +162,7 @@ class SingleNodeDockerCluster(Cluster):
 
         logging.info('Started container \'%s\'', container.name)
 
+        logging.info('Adding container \'%s\'', container.name)
         self.containers[container.name] = container
 
     def deploy_nifi_flow(self):
@@ -213,6 +214,7 @@ class SingleNodeDockerCluster(Cluster):
 
         logging.info('Started container \'%s\'', container.name)
 
+        logging.info('Adding container \'%s\'', container.name)
         self.containers[container.name] = container
 
     def deploy_kafka_broker(self):
@@ -223,6 +225,7 @@ class SingleNodeDockerCluster(Cluster):
             name='zookeeper',
             network=self.network.name,
             ports={'2181/tcp': 2181})
+        logging.info('Adding container \'%s\'', zookeeper.name)
         self.containers[zookeeper.name] = zookeeper
 
         test_dir = os.environ['PYTHONPATH'].split(':')[-1]  # Based on DockerVerify.sh
@@ -232,20 +235,29 @@ class SingleNodeDockerCluster(Cluster):
             detach=True,
             name='kafka-broker',
             network=self.network.name,
-            ports={'9092/tcp': 9092},
-            environment=["KAFKA_LISTENERS=PLAINTEXT://kafka-broker:9092,SSL://kafka-broker:9093", "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181"])
+            ports={'9092/tcp': 9092, '29092/tcp' : 29092},
+            # environment=["KAFKA_LISTENERS=PLAINTEXT://kafka-broker:9092,SSL://kafka-broker:9093", "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181"],
+            environment=[
+                "KAFKA_BROKER_ID=1",
+                'ALLOW_PLAINTEXT_LISTENER: "yes"',
+                "KAFKA_LISTENERS=PLAINTEXT://kafka-broker:9092,SSL://kafka-broker:9093,PLAINTEXT_HOST://0.0.0.0:29092",
+                "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,SSL:SSL",
+                "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka-broker:9092,SSL://kafka-broker:9093,PLAINTEXT_HOST://localhost:29092",
+                "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181"])
+        logging.info('Adding container \'%s\'', broker.name)
         self.containers[broker.name] = broker
 
         dockerfile = dedent("""FROM {base_image}
                 USER root
                 CMD $KAFKA_HOME/bin/kafka-console-consumer.sh --bootstrap-server kafka-broker:9092 --topic test > heaven_signal.txt
-                """.format(base_image='wurstmeister/kafka:2.12-2.5.0'))
+                """.format(base_image='wurstmeister/kafka:2.13-2.7.0'))
         configured_image = self.build_image(dockerfile, [])
         consumer = self.client.containers.run(
             configured_image[0],
             detach=True,
             name='kafka-consumer',
             network=self.network.name)
+        logging.info('Adding container \'%s\'', consumer.name)
         self.containers[consumer.name] = consumer
 
     def deploy_http_proxy(self):

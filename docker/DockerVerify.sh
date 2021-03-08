@@ -61,6 +61,9 @@ pip install --upgrade \
             behave \
             pytimeparse \
             docker \
+            pykafka \
+            kafka-python \
+            confluent-kafka \
             PyYAML \
             m2crypto \
             watchdog
@@ -88,6 +91,15 @@ exec
   behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "A MiNiFi instance transfers data to a kafka broker" &&
   behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "PublishKafka sends flowfiles to failure when the broker is not available" &&
   behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "PublishKafka sends can use SSL connect" &&
+  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "MiNiFi consumes data from a kafka topic" &&
+  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "ConsumeKafka parses and uses kafka topics and topic name formats" &&
+  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "ConsumeKafka key attribute is encoded according to the \"Key Attribute Encoding\" property" &&
+  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "Headers on consumed kafka messages are extracted into attributes if requested on ConsumeKafka" &&
+  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "ConsumeKafka transactional behaviour is supported" &&
+  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "Key attribute is encoded according to the \"Key Attribute Encoding\" property" &&
+  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "Messages are separated into multiple flowfiles if the message demarcator is present in the message" &&
+  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "The ConsumeKafka \"Maximum Poll Records\" property sets a limit on the messages processed in a single batch" &&
+  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "Unsupported encoding attributes for ConsumeKafka throw scheduling errors" &&
   behave "${BEHAVE_OPTS[@]}" "features/s3.feature" -n "A MiNiFi instance transfers encoded data to s3" &&
   behave "${BEHAVE_OPTS[@]}" "features/s3.feature" -n "A MiNiFi instance transfers encoded data through a http proxy to s3" &&
   behave "${BEHAVE_OPTS[@]}" "features/s3.feature" -n "A MiNiFi instance can remove s3 bucket objects" &&

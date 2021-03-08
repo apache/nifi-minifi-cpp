@@ -78,7 +78,8 @@ core::Property ConsumeKafka::TopicNames(core::PropertyBuilder::createProperty("T
   ->build());
 
 core::Property ConsumeKafka::TopicNameFormat(core::PropertyBuilder::createProperty("Topic Name Format")
-  ->withDescription("Specifies whether the Topic(s) provided are a comma separated list of names or a single regular expression.")
+  ->withDescription("Specifies whether the Topic(s) provided are a comma separated list of names or a single regular expression. "
+      "Using regular expressions does not automatically discover kafka topics created after the processor started.")
   ->withAllowableValues<std::string>({TOPIC_FORMAT_NAMES, TOPIC_FORMAT_PATTERNS})
   ->withDefaultValue(TOPIC_FORMAT_NAMES)
   ->isRequired(true)
@@ -318,10 +319,12 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext& context)
   rd_kafka_conf_set_rebalance_cb(conf_.get(), rebalance_cb);
 
   // Uncomment this for librdkafka debug logs:
-  // setKafkaConfigurationField(conf_.get(), "debug", "all");
+  logger_->log_info("Enabling all debug logs for kafka consumer.");
+  setKafkaConfigurationField(*conf_, "debug", "all");
 
   setKafkaConfigurationField(*conf_, "bootstrap.servers", kafka_brokers_);
-  setKafkaConfigurationField(*conf_, "auto.offset.reset", "latest");
+  setKafkaConfigurationField(*conf_, "allow.auto.create.topics", "true");
+  setKafkaConfigurationField(*conf_, "auto.offset.reset", offset_reset_);
   setKafkaConfigurationField(*conf_, "enable.auto.commit", "false");
   setKafkaConfigurationField(*conf_, "enable.auto.offset.store", "false");
   setKafkaConfigurationField(*conf_, "isolation.level", honor_transactions_ ? "read_committed" : "read_uncommitted");

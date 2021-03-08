@@ -1,20 +1,20 @@
 import logging
 import os
 
-
 from os import listdir
+from os.path import join
+
 from .FileOutputValidator import FileOutputValidator
 
+class NumFileRangeValidator(FileOutputValidator):
 
-class NoFileOutPutValidator(FileOutputValidator):
-    """
-    Validates if no flowfiles were transferred
-    """
-    def __init__(self, subdir=''):
+    def __init__(self, min_files, max_files, subdir=''):
         self.valid = False
+        self.min_files = min_files
+        self.max_files = max_files
         self.subdir = subdir
 
-    def validate(self, dir=''):
+    def validate(self):
         self.valid = False
         full_dir = os.path.join(self.output_dir, self.subdir)
         logging.info("Output folder: %s", full_dir)
@@ -22,5 +22,6 @@ class NoFileOutPutValidator(FileOutputValidator):
         if not os.path.isdir(full_dir):
             return self.valid
 
-        self.valid = (0 == self.get_num_files(full_dir))
+        num_files = self.get_num_files(full_dir)
+        self.valid = self.min_files < num_files and num_files < self.max_files
         return self.valid

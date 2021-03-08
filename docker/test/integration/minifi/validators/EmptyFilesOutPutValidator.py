@@ -23,6 +23,6 @@ class EmptyFilesOutPutValidator(FileOutputValidator):
         logging.info("Output folder: %s", full_dir)
         listing = listdir(full_dir)
         if listing:
-            self.valid = all(os.path.getsize(os.path.join(full_dir, x)) == 0 for x in listing)
+            self.valid = 1 < self.get_num_files(full_dir) and all(os.path.getsize(os.path.join(full_dir,x)) == 0 for x in listing)
 
         return self.valid
