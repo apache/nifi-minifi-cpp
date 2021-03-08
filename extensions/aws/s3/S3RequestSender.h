@@ -24,6 +24,7 @@
 
 #include "aws/core/auth/AWSCredentials.h"
 #include "aws/core/client/ClientConfiguration.h"
+#include "aws/core/utils/xml/XmlSerializer.h"
 #include "aws/s3/model/PutObjectRequest.h"
 #include "aws/s3/model/PutObjectResult.h"
 #include "aws/s3/model/DeleteObjectRequest.h"
