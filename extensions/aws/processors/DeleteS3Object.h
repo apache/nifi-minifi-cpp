@@ -50,8 +50,8 @@ class DeleteS3Object : public S3Processor {
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
-  explicit DeleteS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
-    : S3Processor(std::move(name), uuid, logging::LoggerFactory<DeleteS3Object>::getLogger()) {
+  explicit DeleteS3Object(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
+    : S3Processor(name, uuid, logging::LoggerFactory<DeleteS3Object>::getLogger()) {
   }
 
   ~DeleteS3Object() override = default;
@@ -62,8 +62,8 @@ class DeleteS3Object : public S3Processor {
  private:
   friend class ::S3TestsFixture<DeleteS3Object>;
 
-  explicit DeleteS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(std::move(name), uuid, logging::LoggerFactory<DeleteS3Object>::getLogger(), std::move(s3_request_sender)) {
+  explicit DeleteS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(name, uuid, logging::LoggerFactory<DeleteS3Object>::getLogger(), std::move(s3_request_sender)) {
   }
 };
 

@@ -114,15 +114,15 @@ const core::Property S3Processor::UseDefaultCredentials(
     ->isRequired(true)
     ->build());
 
-S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger)
-  : core::Processor(std::move(name), uuid)
+S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger)
+  : core::Processor(name, uuid)
   , logger_(logger) {
   setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
                           EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials});
 }
 
-S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-  : core::Processor(std::move(name), uuid)
+S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+  : core::Processor(name, uuid)
   , logger_(logger)
   , s3_wrapper_(std::move(s3_request_sender)) {
   setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,

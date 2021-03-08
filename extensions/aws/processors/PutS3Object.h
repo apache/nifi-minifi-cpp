@@ -65,8 +65,8 @@ class PutS3Object : public S3Processor {
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
-  explicit PutS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
-    : S3Processor(std::move(name), uuid, logging::LoggerFactory<PutS3Object>::getLogger()) {
+  explicit PutS3Object(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
+    : S3Processor(name, uuid, logging::LoggerFactory<PutS3Object>::getLogger()) {
   }
 
   ~PutS3Object() override = default;
@@ -121,8 +121,8 @@ class PutS3Object : public S3Processor {
  private:
   friend class ::S3TestsFixture<PutS3Object>;
 
-  explicit PutS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(std::move(name), uuid, logging::LoggerFactory<PutS3Object>::getLogger(), std::move(s3_request_sender)) {
+  explicit PutS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(name, uuid, logging::LoggerFactory<PutS3Object>::getLogger(), std::move(s3_request_sender)) {
   }
 
   void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);

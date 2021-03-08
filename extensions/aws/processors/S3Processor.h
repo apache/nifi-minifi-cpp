@@ -99,13 +99,13 @@ class S3Processor : public core::Processor {
   static const core::Property ProxyPassword;
   static const core::Property UseDefaultCredentials;
 
-  explicit S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger);
+  explicit S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger);
 
   bool supportsDynamicProperties() override { return true; }
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  protected:
-  explicit S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender);
+  explicit S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender);
 
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentials(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);

@@ -52,7 +52,7 @@ class FetchS3Object : public S3Processor {
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
-  explicit FetchS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
+  explicit FetchS3Object(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : S3Processor(name, uuid, logging::LoggerFactory<FetchS3Object>::getLogger()) {
   }
 
@@ -91,8 +91,8 @@ class FetchS3Object : public S3Processor {
  private:
   friend class ::S3TestsFixture<FetchS3Object>;
 
-  explicit FetchS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(std::move(name), uuid, logging::LoggerFactory<FetchS3Object>::getLogger(), std::move(s3_request_sender)) {
+  explicit FetchS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(name, uuid, logging::LoggerFactory<FetchS3Object>::getLogger(), std::move(s3_request_sender)) {
   }
 
   bool requester_pays_ = false;
