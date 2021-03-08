@@ -21,6 +21,7 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "utils/OptionalUtils.h"
 
@@ -40,9 +41,9 @@ struct UploadBlobResult {
 
 class BlobStorage {
  public:
-  BlobStorage(const std::string &connection_string, const std::string &container_name)
-    : connection_string_(connection_string)
-    , container_name_(container_name) {
+  BlobStorage(std::string connection_string, std::string container_name)
+    : connection_string_(std::move(connection_string))
+    , container_name_(std::move(container_name)) {
   }
 
   virtual void createContainer() = 0;

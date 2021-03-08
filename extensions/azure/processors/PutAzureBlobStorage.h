@@ -112,9 +112,9 @@ class PutAzureBlobStorage : public core::Processor {
   }
 
   std::string getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
-  std::string getAzureConnectionStringFromProperties(
+  static std::string getAzureConnectionStringFromProperties(
     const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) const;
+    const std::shared_ptr<core::FlowFile> &flow_file);
   std::string getConnectionString(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const;

@@ -37,7 +37,7 @@ namespace storage {
 
 class AzureBlobStorage : public BlobStorage {
  public:
-  AzureBlobStorage(const std::string &connection_string, const std::string &container_name);
+  AzureBlobStorage(std::string connection_string, std::string container_name);
   void createContainer() override;
   void resetClientIfNeeded(const std::string &connection_string, const std::string &container_name) override;
   utils::optional<UploadBlobResult> uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) override;

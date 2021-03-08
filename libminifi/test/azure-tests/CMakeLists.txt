@@ -17,9 +17,6 @@
 # under the License.
 #
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 file(GLOB AZURE_INTEGRATION_TESTS  "*.cpp")
 
 SET(AZURE_TEST_COUNT 0)
@@ -30,6 +27,7 @@ FOREACH(testfile ${AZURE_INTEGRATION_TESTS})
 	target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/azure")
 	target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/azure/storage")
 	target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/expression-language")
+	target_compile_features(${testfilename} PRIVATE cxx_std_14)
 	createTests("${testfilename}")
 	target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
   target_wholearchive_library(${testfilename} minifi-azure)

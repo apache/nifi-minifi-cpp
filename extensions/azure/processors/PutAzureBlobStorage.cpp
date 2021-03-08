@@ -169,7 +169,7 @@ std::string PutAzureBlobStorage::getConnectionStringFromControllerService(const 
 
 std::string PutAzureBlobStorage::getAzureConnectionStringFromProperties(
     const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) const {
+    const std::shared_ptr<core::FlowFile> &flow_file) {
   azure::storage::AzureStorageCredentials credentials;
   context->getProperty(StorageAccountName, credentials.storage_account_name, flow_file);
   context->getProperty(StorageAccountKey, credentials.storage_account_key, flow_file);
