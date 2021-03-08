@@ -27,10 +27,12 @@ MiNiFi is a child project effort of Apache NiFi.  This repository is for a nativ
   - [System Requirements](#system-requirements)
   - [Bootstrapping](#bootstrapping)
   - [Building For Other Distros](#building-for-other-distros)
-  - [Cleaning](#cleaning)
+  - [Snapcraft](#snapcraft)
+  - [Installation](#installation)
   - [Configuring](#configuring)
   - [Running](#running)
   - [Deploying](#deploying)
+  - [Cleaning](#cleaning)
   - [Extensions](#extensions)
   - [Security](#security)
 - [Operations](#operations)
@@ -73,7 +75,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | Extension Set        | Processors           | CMAKE Flag  |
 | ------------- |:-------------| :-----|
 | Archive Extensions    | [ApplyTemplate](PROCESSORS.md#applytemplate)<br/>[CompressContent](PROCESSORS.md#compresscontent)<br/>[ManipulateArchive](PROCESSORS.md#manipulatearchive)<br/>[MergeContent](PROCESSORS.md#mergecontent)<br/>[FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)<br/>[UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)      |   -DBUILD_LIBARCHIVE=ON |
-| AWS | [AWSCredentialsService](CONTROLLERS.md#awsCredentialsService)<br/>[PutS3Object](PROCESSORS.md#puts3object)<br/>[DeleteS3Object](PROCESSORS.md#deletes3object) | -DENABLE_AWS=ON  |
+| AWS | [AWSCredentialsService](CONTROLLERS.md#awscredentialsservice)<br/>[PutS3Object](PROCESSORS.md#puts3object)<br/>[DeleteS3Object](PROCESSORS.md#deletes3object) | -DENABLE_AWS=ON  |
 | CivetWeb | [ListenHTTP](PROCESSORS.md#listenhttp)  | -DDISABLE_CIVET=ON |
 | CURL | [InvokeHTTP](PROCESSORS.md#invokehttp)      |    -DDISABLE_CURL=ON  |
 | GPS | GetGPS      |    -DENABLE_GPS=ON  |
@@ -88,7 +90,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | SFTP | [FetchSFTP](PROCESSORS.md#fetchsftp)<br/>[ListSFTP](PROCESSORS.md#listsftp)<br/>[PutSFTP](PROCESSORS.md#putsftp) | -DENABLE_SFTP=ON |
 | SQL | ExecuteSQL<br/>PutSQL<br/>QueryDatabaseTable<br/> | -DENABLE_SQL=ON  |
 | SQLite | [ExecuteSQL](PROCESSORS.md#executesql)<br/>[PutSQL](PROCESSORS.md#putsql)      |    -DENABLE_SQLITE=ON  |
-| Tensorflow | [TFApplyGraph](PROCESSORS.md#tfapplygraph)<br/>[TFConvertImageToTensor](PROCESSORS.md#tfconvertimagetotensor)<br/>[TFExtractTopLabels](PROCESSORS.md#tfextracttoplabels)<br/>      |    -DENABLE_TENSORFLOW=ON  |
+| Tensorflow | TFApplyGraph<br/>TFConvertImageToTensor<br/>TFExtractTopLabels<br/>      |    -DENABLE_TENSORFLOW=ON  |
 | USB Camera | [GetUSBCamera](PROCESSORS.md#getusbcamera)     |    -DENABLE_USB_CAMERA=ON  |
 | Windows Event Log (Windows only) | CollectorInitiatedSubscription<br/>ConsumeWindowsEventLog<br/>TailEventLog | -DENABLE_WEL=ON |
 
@@ -99,22 +101,18 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 * Build and usage currently only supports Windows, Linux and OS X environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
 * Provenance events generation is supported and are persisted using RocksDB. Volatile repositories can be used on systems without persistent storage.
 * If MiNiFi C++ is built with the OPC-UA extension enabled, it bundles [open62541](https://open62541.org/), which is available under the Mozilla Public License Version 2.0, a Category B license under [ASF 3rd party license policy](https://www.apache.org/legal/resolved.html#category-b).
+* If MiNiFi C++ packaged on Windows, the resulting MSI may not be publicly redistributed under the Apache license, because it contains Microsoft redistributable DLLs, which fall under Category X of the [ASF 3rd party license policy](https://www.apache.org/legal/resolved.html#category-x).
 
 ## System Requirements
 
 ### To build
 
 #### Utilities
-* CMake
-  * 3.10 or greater
-* gcc
-  * 4.8.4 or greater
-* g++
-  * 4.8.4 or greater
-* bison
-  * 3.0.x (3.2 has been shown to fail builds)
-* flex
-  * 2.5 or greater
+* CMake 3.11 or greater
+* gcc 4.8.4 or greater
+* g++ 4.8.4 or greater
+* bison 3.0.x (3.2 has been shown to fail builds)
+* flex 2.5 or greater
 
 ##### External Projects
 
@@ -126,12 +124,11 @@ versions of LibreSSL, cURL, or zlib are used:
 * automake
 * libtool
 
-**NOTE** if Lua support is enabled, then a C++ compiler with support for c++-14 must be used. If using GCC, version 6.x
-or greater is recommended.
+**NOTE** if Lua support is enabled, then a C++ compiler with support for C++ 14 must be used. If using GCC, version 6.x or greater is recommended.
 
-**NOTE** if bustache (ApplyTemplate) support is enabled, a recent version of a compiler supporting c++-11 must be used. GCC versions >= 6.3.1 are known to work.
+**NOTE** if bustache (ApplyTemplate) support is enabled, a recent version of a compiler supporting C++ 11 must be used. GCC versions >= 6.3.1 are known to work.
 
-**NOTE** if Kafka support is enabled, a recent version of a compiler supporting C++-11 regexes must be used. GCC versions >= 4.9.x are recommended.
+**NOTE** if Kafka support is enabled, a recent version of a compiler supporting C++ 11 regexes must be used. GCC versions >= 4.9.x are recommended.
 
 **NOTE** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove:
 
@@ -151,6 +148,7 @@ and rebuild.
 * Python 3 and development headers -- Required, unless Python support is disabled
 * Lua and development headers -- Optional, unless Lua support is enabled
 * libgps-dev -- Required if building libGPS support
+* Zlib headers
 
 #### CentOS 6
 
@@ -236,7 +234,8 @@ $ yum install cmake \
   openssl-devel \
   bzip2-devel \
   xz-devel \
-  doxygen
+  doxygen \
+  zlib-devel
 $ # (Optional) for building Python support
 $ yum install python34-devel
 $ # (Optional) for building Lua support
@@ -271,7 +270,8 @@ $ apt-get install cmake \
   uuid-dev uuid \
   libboost-all-dev libssl-dev \
   libbz2-dev liblzma-dev \
-  doxygen
+  doxygen \
+  zlib1g-dev
 $ # (Optional) for building Python support
 $ apt-get install libpython3-dev
 $ # (Optional) for building Lua support
@@ -305,7 +305,8 @@ $ brew install cmake \
   lua \
   xz \
   bzip2 \
-  doxygen
+  doxygen \
+  zlib
 $ brew install curl
 $ brew link curl --force
 $ # (Optional) for building USB Camera support
@@ -327,17 +328,18 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
 
 - MiNiFi C++ offers a bootstrap script in the root of our github repo that will boot strap the cmake and build process for you without the need to install dependencies yourself. To use this process, please run the command `boostrap.sh` from the root of the MiNiFi C++ source tree.
 
-
 - Per the table, below, you will be presented with a menu guided bootstrap process. You may enable and disable extensions ( further defined below ). Once you are finished selecting the features you wish to build, enter P to continue with the process. CMAKE dependencies will be resolved for your distro. You may enter command line options -n to force yes to all prompts ( including the package installation prompts ) and -b to automatically run make once the cmake process is complete. Alternatively, you may include the package argument to boostrap, -p, which will run make package.
 
 - If you provide -b or -p to bootstrap.sh, you do not need to follow the Building section, below. If you do not provide these arguments you may skip the cmake .. section from Building.
+
+- Using the Release build profile is recommended to reduce binary size. (~200 MB vs ~30 MB)
 
   ```
   # ~/Development/code/apache/nifi-minifi-cpp on git:master
   $ ./bootstrap.sh
   # CMAKE Build dir exists, should we overwrite your build directory before we begin?
     If you have already bootstrapped, bootstrapping again isn't necessary to run make [ Y/N ] Y
-  $ *****************************************
+    *****************************************
      Select MiNiFi C++ Features to toggle.
     *****************************************
     A. Persistent Repositories .....Enabled
@@ -360,6 +362,7 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
     T. OpenCV Support ..............Disabled
     U. OPC-UA Support ..............Disabled
     W. SQL Support .................Disabled
+    X. Openwsman Support ...........Disabled
     ****************************************
                 Build Options.
     ****************************************
@@ -368,13 +371,14 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
     3. Enable JNI Support ..........Disabled
     4. Use Shared Dependency Links .Enabled
     5. Build Profile ...............RelWithDebInfo Debug MinSizeRel Release
+    6. Create ASAN build ...........Disabled
     P. Continue with these options
     Q. Quit
     * Extension cannot be installed due to
       version of cmake or other software, or
       incompatibility with other extensions
 
-    Enter choice [ A - W or 1-4 ]
+    Enter choice [ A - X or 1-6 ]
   ```
 
 - Boostrap now saves state between runs. State will automatically be saved. Provide -c or --clear to clear this state. The -i option provides a guided menu install with the ability to change
@@ -405,7 +409,7 @@ advanced features.
 - Perform a build
   ```
   # ~/Development/code/apache/nifi-minifi-cpp on git:master
-  $ make
+  $ make -j$(nproc)
   Scanning dependencies of target gmock_main
   Scanning dependencies of target gmock
   Scanning dependencies of target minifi
@@ -436,7 +440,7 @@ advanced features.
   CPack: Install projects
   CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
   CPack: Create package
-  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.7.0-bin.tar.gz generated.
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.9.0-bin.tar.gz generated.
   ```
 
 - Create a source assembly located in your build directory with suffix -source.tar.gz
@@ -448,18 +452,18 @@ advanced features.
   CPack: Install projects
   CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
   CPack: Create package
-  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.7.0-source.tar.gz generated.
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.9.0-source.tar.gz generated.
   ```
 
 - (Optional) Create a Docker image from the resulting binary assembly output from "make package".
 ```
 ~/Development/code/apache/nifi-minifi-cpp/build
 $ make docker
-NiFi-MiNiFi-CPP Version: 0.7.0
+NiFi-MiNiFi-CPP Version: 0.9.0
 Current Working Directory: /Users/jdyer/Development/github/nifi-minifi-cpp/docker
 CMake Source Directory: /Users/jdyer/Development/github/nifi-minifi-cpp
-MiNiFi Package: nifi-minifi-cpp-0.7.0-bin.tar.gz
-Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.7.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.7.0-bin.tar.gz -t apacheminificpp:0.7.0 .'
+MiNiFi Package: nifi-minifi-cpp-0.9.0-bin.tar.gz
+Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.9.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.9.0-bin.tar.gz -t apacheminificpp:0.9.0 .'
 Sending build context to Docker daemon 777.2 kB
 Step 1 : FROM alpine:3.5
  ---> 88e169ea8f46
@@ -494,13 +498,6 @@ provides the command to build your distro and the output file in your build dire
 | Ubuntu 18  | make u18 | nifi-minifi-cpp-bionic-$VERSION-bin.tar.gz
 
 
-### Cleaning
-Remove the build directory created above.
-```
-# ~/Development/code/apache/nifi-minifi-cpp on git:master
-$ rm -rf ./build
-```
-
 ### Snapcraft
 
 Snapcraft builds are supported. As per Snapcraft's official recommendations, we recommend using Ubuntu 16.04 as a build system when building the Snap. To build the snap, run
@@ -511,11 +508,20 @@ $ snapcraft
 
 from the project directory. Further instructions are available in the [Snapcraft documentation](https://docs.snapcraft.io/build-snaps/).
 
+### Installation
+After [building](#building) MiNiFi C++, extract the generated binary package 'nifi-minifi-cpp-$VERSION-bin.tar.gz' at your desired installation path.
+```shell
+$ MINIFI_PACKAGE="$(pwd)"/build/nifi-minifi-cpp-*-bin.tar.gz
+$ pushd /opt
+$ sudo tar xvzf "$MINIFI_PACKAGE"
+$ cd nifi-minifi-cpp-*
+```
+
 ### Configuring
-The 'conf' directory in the root contains a template config.yml document, minifi.properties, and minifi-log.properties. Please see our [Configuration document](CONFIGURE.md) for details on how to configure agents.
+The 'conf' directory in the installation root contains a template config.yml document, minifi.properties, and minifi-log.properties. Please see our [Configuration document](CONFIGURE.md) for details on how to configure agents.
 
 ### Running
-After completing a [build](#building), the application can be run by issuing the following from :
+After completing the [installation](#installation), the application can be run by issuing the following command from the installation directory:
 
     $ ./bin/minifi.sh start
 
@@ -543,6 +549,14 @@ The build identifier will be carried with the deployed binary for the configurat
 
 On Windows it is suggested that MSI be used for installation.
 
+### Cleaning
+Remove the build directory created above.
+```
+# ~/Development/code/apache/nifi-minifi-cpp on git:master
+$ rm -rf ./build
+```
+
+
 ### Extensions
 
 Please see [Extensions.md](Extensions.md) on how to build and run conditionally built dependencies and extensions.
@@ -560,7 +574,7 @@ Antivirus software can take a long time to scan directories and the files within
 - provenance_repository
 
 ## Operations
-See our [operations documentation for additional inforomation on how to manage instances](OPS.md)
+See our [operations documentation for additional information on how to manage instances](OPS.md)
 
 ## Issue Tracking
 See https://issues.apache.org/jira/projects/MINIFICPP/issues for the issue tracker.
@@ -577,6 +591,7 @@ New contributions are expected to follow the Google style guide when it is reaso
 Additionally, all new files must include a copy of the Apache License Header.
 
 For more details on how to contribute please see our [Contribution Guide](CONTRIB.md)
+
 ## License
 Except as otherwise noted this software is licensed under the
 [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)
