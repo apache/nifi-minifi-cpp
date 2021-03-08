@@ -179,9 +179,10 @@ class S3Wrapper {
   virtual ~S3Wrapper() = default;
 
  protected:
+  static Expiration getExpiration(const std::string& expiration);
+
   void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
   int64_t writeFetchedBody(Aws::IOStream& source, const int64_t data_size, const std::shared_ptr<io::BaseStream>& output);
-  Expiration getExpiration(const std::string& expiration);
   static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
 
   minifi::utils::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);

@@ -130,7 +130,7 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
 void ListS3::writeObjectTags(
     const std::string &bucket,
     const aws::s3::ListedObjectAttributes &object_attributes,
-    const std::shared_ptr<core::ProcessSession> &session,
+    core::ProcessSession &session,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   if (!write_object_tags_) {
     return;
@@ -139,7 +139,7 @@ void ListS3::writeObjectTags(
   auto get_object_tags_result = s3_wrapper_.getObjectTags(bucket, object_attributes.filename, object_attributes.version);
   if (get_object_tags_result) {
     for (const auto& tag : get_object_tags_result.value()) {
-      session->putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
+      session.putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
     }
   } else {
     logger_->log_warn("Failed to get object tags for object %s in bucket %s", object_attributes.filename, bucket);
@@ -148,7 +148,7 @@ void ListS3::writeObjectTags(
 
 void ListS3::writeUserMetadata(
     const aws::s3::ListedObjectAttributes &object_attributes,
-    const std::shared_ptr<core::ProcessSession> &session,
+    core::ProcessSession &session,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   if (!write_user_metadata_) {
     return;
@@ -162,7 +162,7 @@ void ListS3::writeUserMetadata(
   auto head_object_tags_result = s3_wrapper_.headObject(params);
   if (head_object_tags_result) {
     for (const auto& metadata : head_object_tags_result->user_metadata_map) {
-      session->putAttribute(flow_file, "s3.user.metadata." + metadata.first, metadata.second);
+      session.putAttribute(flow_file, "s3.user.metadata." + metadata.first, metadata.second);
     }
   } else {
     logger_->log_warn("Failed to get object metadata for object %s in bucket %s", params.object_key, params.bucket);
@@ -207,7 +207,7 @@ ListS3::ListingState ListS3::getCurrentState(const std::shared_ptr<core::Process
   return current_listing_state;
 }
 
-void ListS3::storeState(const std::shared_ptr<core::ProcessContext> &context, const ListS3::ListingState &latest_listing_state) {
+void ListS3::storeState(const ListS3::ListingState &latest_listing_state) {
   std::unordered_map<std::string, std::string> state;
   state[LATEST_LISTED_KEY_TIMESTAMP] = std::to_string(latest_listing_state.listed_key_timestamp);
   for (std::size_t i = 0; i < latest_listing_state.listed_keys.size(); ++i) {
@@ -218,23 +218,23 @@ void ListS3::storeState(const std::shared_ptr<core::ProcessContext> &context, co
 }
 
 void ListS3::createNewFlowFile(
-    const std::shared_ptr<core::ProcessSession> &session,
+    core::ProcessSession &session,
     const aws::s3::ListedObjectAttributes &object_attributes) {
-  auto flow_file = session->create();
-  session->putAttribute(flow_file, "s3.bucket", list_request_params_.bucket);
-  session->putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, object_attributes.filename);
-  session->putAttribute(flow_file, "s3.etag", object_attributes.etag);
-  session->putAttribute(flow_file, "s3.isLatest", object_attributes.is_latest ? "true" : "false");
-  session->putAttribute(flow_file, "s3.lastModified", std::to_string(object_attributes.last_modified));
-  session->putAttribute(flow_file, "s3.length", std::to_string(object_attributes.length));
-  session->putAttribute(flow_file, "s3.storeClass", object_attributes.store_class);
+  auto flow_file = session.create();
+  session.putAttribute(flow_file, "s3.bucket", list_request_params_.bucket);
+  session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, object_attributes.filename);
+  session.putAttribute(flow_file, "s3.etag", object_attributes.etag);
+  session.putAttribute(flow_file, "s3.isLatest", object_attributes.is_latest ? "true" : "false");
+  session.putAttribute(flow_file, "s3.lastModified", std::to_string(object_attributes.last_modified));
+  session.putAttribute(flow_file, "s3.length", std::to_string(object_attributes.length));
+  session.putAttribute(flow_file, "s3.storeClass", object_attributes.store_class);
   if (!object_attributes.version.empty()) {
-    session->putAttribute(flow_file, "s3.version", object_attributes.version);
+    session.putAttribute(flow_file, "s3.version", object_attributes.version);
   }
   writeObjectTags(list_request_params_.bucket, object_attributes, session, flow_file);
   writeUserMetadata(object_attributes, session, flow_file);
 
-  session->transfer(flow_file, Success);
+  session.transfer(flow_file, Success);
 }
 
 void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -256,13 +256,13 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
       continue;
     }
 
-    createNewFlowFile(session, object_attributes);
+    createNewFlowFile(*session, object_attributes);
     ++files_transferred;
     latest_listing_state.updateState(object_attributes);
   }
 
   logger_->log_debug("ListS3 transferred %zu flow files", files_transferred);
-  storeState(context, latest_listing_state);
+  storeState(latest_listing_state);
 
   if (files_transferred == 0) {
     logger_->log_debug("No new S3 objects were found in bucket %s to list", list_request_params_.bucket);
