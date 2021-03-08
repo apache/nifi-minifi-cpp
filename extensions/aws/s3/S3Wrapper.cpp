@@ -91,7 +91,7 @@ std::string S3Wrapper::getEncryptionString(Aws::S3::Model::ServerSideEncryption 
   }
 
   auto it = std::find_if(SERVER_SIDE_ENCRYPTION_MAP.begin(), SERVER_SIDE_ENCRYPTION_MAP.end(),
-    [&](const std::pair<std::string, const Aws::S3::Model::ServerSideEncryption&> pair) {
+    [&](const std::pair<std::string, const Aws::S3::Model::ServerSideEncryption>& pair) {
       return pair.second == encryption;
     });
   if (it != SERVER_SIDE_ENCRYPTION_MAP.end()) {
