@@ -295,6 +295,10 @@ bool TestPlan::runProcessor(const std::shared_ptr<core::Processor>& processor, c
 }
 
 bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& verify) {
+  if (!finalized) {
+    finalize();
+  }
+  logger_->log_info("Running next processor %d, processor_queue_.size %d, processor_contexts_.size %d", target_location, processor_queue_.size(), processor_contexts_.size());
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
   std::shared_ptr<core::Processor> processor = processor_queue_.at(target_location);
