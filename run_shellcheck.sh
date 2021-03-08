@@ -16,13 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+set -euo pipefail
 
-build_identifier=$1
-
-echo "${build_identifier}" > build_identifier
-
-./bootstrap.sh -d -p --build_identifier="${build_identifier}"
-
-pushd build || exit 1
-./controller/minificontroller --manifest >> build_output
-popd || exit 2
+directory=${1:-.}
+find "${directory}" -type d \( -path "*thirdparty*" -o -path "*build*" \) -prune -false -o -type f -name "*.sh" | xargs shellcheck --exclude=SC1090,SC1091

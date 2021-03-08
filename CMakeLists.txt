@@ -861,6 +861,9 @@ add_custom_target(linter
 			${CMAKE_SOURCE_DIR}/encrypt-config/ --
 			${CMAKE_SOURCE_DIR}/encrypt-config/
 	DEPENDS ${extensions})
+
+add_custom_target(shellcheck
+	COMMAND ${CMAKE_SOURCE_DIR}/run_shellcheck.sh ${CMAKE_SOURCE_DIR})
 endif(NOT WIN32)
 
 # Custom target to download and run Apache Release Audit Tool (RAT)

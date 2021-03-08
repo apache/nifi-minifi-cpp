@@ -1,8 +1,8 @@
 #!/bin/sh
 
-function create_ca {
+create_ca() {
   if [ $# -ne 2 ]; then
-    exit -1
+    exit 1
   fi
   name=$1
   cn=$2
@@ -11,9 +11,9 @@ function create_ca {
   openssl req -x509 -new -nodes -key "$name.key" -sha256 -days 10950 -subj "/C=US/ST=CA/O=Example, Inc./CN=$cn" -out "$name.crt"
 }
 
-function create_cert {
+create_cert() {
   if [ $# -ne 3 ]; then
-    exit -1
+    exit 1
   fi
   ca=$1
   name=$2

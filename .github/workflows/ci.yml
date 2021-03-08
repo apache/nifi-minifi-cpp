@@ -175,6 +175,8 @@ jobs:
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - id: build
         run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DENABLE_BUSTACHE=ON -DENABLE_SQL=ON -DENABLE_PCAP=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && make -j4 VERBOSE=1  && make test ARGS="--timeout 300 -j2 --output-on-failure"
+      - id: shellcheck
+        run: cd build && make shellcheck
   ubuntu_20_04_all_clang:
     name: "ubuntu-20.04-all-clang"
     runs-on: ubuntu-20.04

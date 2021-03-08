@@ -18,8 +18,7 @@
 
 verify_enable_platform(){
     feature="$1"
-    feature_status=${!1}
-    verify_gcc_enable $feature
+    verify_gcc_enable "$feature"
 }
 add_os_flags() {
     :
@@ -49,7 +48,7 @@ build_deps(){
                 VALUE=${cmake_opt#*:}
                 if [ "$KEY" = "$option" ]; then
                     FOUND_VALUE="$VALUE"
-                    echo $FOUND_VALUE
+                    echo "$FOUND_VALUE"
                     if [ "$FOUND_VALUE" = "libpcap" ]; then
                         INSTALLED+=("libpcap-devel")
                     elif [ "$FOUND_VALUE" = "libusb" ]; then
