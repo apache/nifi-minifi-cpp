@@ -151,7 +151,7 @@ struct ListedObjectAttributes {
   std::string etag;
   bool is_latest = false;
   int64_t last_modified = 0;
-  long long length = 0;
+  int64_t length = 0;
   std::string store_class;
   std::string version;
 };
