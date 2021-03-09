@@ -21,8 +21,8 @@ build_identifier=$1
 
 echo "${build_identifier}" > build_identifier
 
-./bootstrap.sh -d -p --build_identifier=${build_identifier}
+./bootstrap.sh -d -p --build_identifier="${build_identifier}"
 
-pushd build
+pushd build || exit 1
 ./controller/minificontroller --manifest >> build_output
-popd
+popd || exit 1
