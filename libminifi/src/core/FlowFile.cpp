@@ -36,16 +36,17 @@ std::shared_ptr<utils::IdGenerator> FlowFile::id_generator_ = utils::IdGenerator
 std::shared_ptr<utils::NonRepeatingStringGenerator> FlowFile::numeric_id_generator_ = std::make_shared<utils::NonRepeatingStringGenerator>();
 std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
 
-FlowFile::FlowFile()
+FlowFile::FlowFile(std::shared_ptr<utils::timeutils::Clock> clock)
     : CoreComponent("FlowFile"),
       size_(0),
       stored(false),
       offset_(0),
       last_queue_date_(0),
-      penaltyExpiration_ms_(0),
+      penalty_expiration_timestamp_(0),
       event_time_(0),
       claim_(nullptr),
-      marked_delete_(false) {
+      marked_delete_(false),
+      clock_(std::move(clock)) {
   id_ = numeric_id_generator_->generateId();
   entry_date_ = utils::timeutils::getTimeMillis();
   event_time_ = entry_date_;
@@ -61,10 +62,12 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
   lineage_Identifiers_ = other.lineage_Identifiers_;
   last_queue_date_ = other.last_queue_date_;
   size_ = other.size_;
-  penaltyExpiration_ms_ = other.penaltyExpiration_ms_;
+  penalty_expiration_timestamp_ = other.penalty_expiration_timestamp_;
   attributes_ = other.attributes_;
   claim_ = other.claim_;
   connection_ = other.connection_;
+  clock_ = other.clock_;
+  penalty_multiplier_ = other.penalty_multiplier_;
   return *this;
 }
 

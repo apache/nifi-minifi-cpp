@@ -705,12 +705,13 @@ void ProcessSession::commit() {
       if (record->isDeleted()) {
         continue;
       }
-
+      record->resetPenaltyMultiplier();
       connection = record->getConnection();
       if ((connection) != nullptr) {
         connectionQueues[connection].push_back(record);
       }
     }
+
     for (const auto &it : _addedFlowFiles) {
       auto record = it.second;
       logger_->log_trace("See %s in %s", record->getUUIDStr(), "_addedFlowFiles");
@@ -722,12 +723,13 @@ void ProcessSession::commit() {
         connectionQueues[connection].push_back(record);
       }
     }
-    // Process the clone flow files
+
     for (const auto &record : _clonedFlowFiles) {
       logger_->log_trace("See %s in %s", record->getUUIDStr(), "_clonedFlowFiles");
       if (record->isDeleted()) {
         continue;
       }
+      record->resetPenaltyMultiplier();
       connection = record->getConnection();
       if ((connection) != nullptr) {
         connectionQueues[connection].push_back(record);

@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
 #define LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <set>
@@ -42,7 +43,7 @@ class Connectable;
 
 class FlowFile : public CoreComponent, public ReferenceContainer {
  public:
-  FlowFile();
+  explicit FlowFile(std::shared_ptr<utils::timeutils::Clock> clock = std::make_shared<utils::timeutils::SteadyClock>());
   FlowFile& operator=(const FlowFile& other);
 
   using AttributeMap = utils::FlatMap<std::string, std::string>;
@@ -207,12 +208,18 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
 
   template<typename Rep, typename Period>
   void penalize(std::chrono::duration<Rep, Period> duration) {
-    const auto penalty_expiration = std::chrono::system_clock::now() + duration;
-    penaltyExpiration_ms_ = std::chrono::duration_cast<std::chrono::milliseconds>(penalty_expiration.time_since_epoch()).count();
+    penalty_expiration_timestamp_ = clock_->timeSinceEpoch() + penalty_multiplier_ * duration;
+
+    constexpr int MAX_PENALTY_MULTIPLIER = 1000;
+    penalty_multiplier_ = std::min(2 * penalty_multiplier_, MAX_PENALTY_MULTIPLIER);
   }
 
-  uint64_t getPenaltyExpiration() const {
-    return penaltyExpiration_ms_;
+  int64_t getPenaltyExpiration() const {
+    return penalty_expiration_timestamp_.count();
+  }
+
+  void resetPenaltyMultiplier() {
+    penalty_multiplier_ = 1;
   }
 
   /**
@@ -223,7 +230,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
 
   // Check whether it is still being penalized
   bool isPenalized() const {
-    return penaltyExpiration_ms_ > 0 && penaltyExpiration_ms_ > utils::timeutils::getTimeMillis();
+    return penalty_expiration_timestamp_.count() > 0 && penalty_expiration_timestamp_ > clock_->timeSinceEpoch();
   }
 
   uint64_t getId() const {
@@ -269,7 +276,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   // Offset to the content
   uint64_t offset_;
   // Penalty expiration
-  int64_t penaltyExpiration_ms_;
+  std::chrono::milliseconds penalty_expiration_timestamp_;
   // Attributes key/values pairs for the flow record
   AttributeMap attributes_;
   // Pointer to the associated content resource claim
@@ -287,6 +294,10 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   static std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   static std::shared_ptr<utils::NonRepeatingStringGenerator> numeric_id_generator_;
+
+ private:
+  std::shared_ptr<utils::timeutils::Clock> clock_;
+  int penalty_multiplier_ = 1;
 };
 
 // FlowFile Attribute
