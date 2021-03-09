@@ -161,7 +161,7 @@ using HeadObjectRequestParameters = GetObjectRequestParameters;
 class S3Wrapper {
  public:
   S3Wrapper();
-  explicit S3Wrapper(std::unique_ptr<S3RequestSender> request_sender);
+  explicit S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender);
 
   void setCredentials(const Aws::Auth::AWSCredentials& cred);
   void setRegion(const Aws::String& region);
@@ -171,7 +171,7 @@ class S3Wrapper {
 
   minifi::utils::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
   bool deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version = "");
-  minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, const std::shared_ptr<io::BaseStream>& fetched_body);
+  minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& fetched_body);
   minifi::utils::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
   minifi::utils::optional<std::map<std::string, std::string>> getObjectTags(const std::string& bucket, const std::string& object_key, const std::string& version = 0);
   minifi::utils::optional<HeadObjectResult> headObject(const HeadObjectRequestParameters& head_object_params);

@@ -78,6 +78,7 @@ class ListS3 : public S3Processor {
   };
 
   static std::vector<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state);
+  static uint64_t getLatestListedKeyTimestamp(const std::unordered_map<std::string, std::string> &state);
 
   void writeObjectTags(
     const std::string &bucket,
@@ -88,7 +89,6 @@ class ListS3 : public S3Processor {
     const aws::s3::ListedObjectAttributes &object_attributes,
     core::ProcessSession &session,
     const std::shared_ptr<core::FlowFile> &flow_file);
-  uint64_t getLatestListedKeyTimestamp(const std::unordered_map<std::string, std::string> &state);
   ListingState getCurrentState(const std::shared_ptr<core::ProcessContext> &context);
   void storeState(const ListingState &latest_listing_state);
   void createNewFlowFile(

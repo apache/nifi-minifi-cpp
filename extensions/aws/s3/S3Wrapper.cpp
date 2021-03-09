@@ -45,7 +45,7 @@ void HeadObjectResult::setFilePaths(const std::string& key) {
 S3Wrapper::S3Wrapper() : request_sender_(minifi::utils::make_unique<S3ClientRequestSender>()) {
 }
 
-S3Wrapper::S3Wrapper(std::unique_ptr<S3RequestSender> request_sender) : request_sender_(std::move(request_sender)) {
+S3Wrapper::S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender) : request_sender_(std::move(request_sender)) {
 }
 
 void S3Wrapper::setCredentials(const Aws::Auth::AWSCredentials& cred) {
@@ -162,14 +162,14 @@ int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_si
   return write_size;
 }
 
-minifi::utils::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectRequestParameters& get_object_params, const std::shared_ptr<io::BaseStream>& out_body) {
+minifi::utils::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& out_body) {
   auto request = createFetchObjectRequest<Aws::S3::Model::GetObjectRequest>(get_object_params);
   auto aws_result = request_sender_->sendGetObjectRequest(request);
   if (!aws_result) {
     return minifi::utils::nullopt;
   }
-  auto result = fillFetchObjectResult<Aws::S3::Model::GetObjectResult, GetObjectResult>(get_object_params, aws_result.value());
-  result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), *out_body);
+  auto result = fillFetchObjectResult<Aws::S3::Model::GetObjectResult, GetObjectResult>(get_object_params, *aws_result);
+  result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), out_body);
   return result;
 }
 

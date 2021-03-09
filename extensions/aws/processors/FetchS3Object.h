@@ -72,7 +72,7 @@ class FetchS3Object : public S3Processor {
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       std::vector<uint8_t> buffer;
-      result_ = s3_wrapper_.getObject(get_object_params_, stream);
+      result_ = s3_wrapper_.getObject(get_object_params_, *stream);
       if (!result_) {
         return 0;
       }
