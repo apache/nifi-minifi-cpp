@@ -151,7 +151,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
       core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
   REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
-  REQUIRE(30 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriodMsec());
+  REQUIRE(std::chrono::seconds(30) == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
   REQUIRE(1 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
   REQUIRE(0 == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
@@ -452,7 +452,7 @@ NiFi Properties Overrides: {}
   REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
   REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
-  REQUIRE(30 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriodMsec());
+  REQUIRE(std::chrono::seconds(30) == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
   REQUIRE(1 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
   REQUIRE(0 == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 

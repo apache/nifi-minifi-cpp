@@ -44,7 +44,7 @@ TEST_CASE("A flow file can be moved into the FlowFileQueue", "[FlowFileQueue][po
   utils::FlowFileQueue queue;
 
   auto penalized_flow_file = std::make_shared<core::FlowFile>();
-  penalized_flow_file->setPenaltyExpiration(utils::timeutils::getTimeMillis() + 100);
+  penalized_flow_file->penalize(std::chrono::milliseconds{100});
   queue.push(std::move(penalized_flow_file));
 
   queue.push(std::make_shared<core::FlowFile>());
@@ -86,18 +86,17 @@ class PenaltyHasExpired {
 
 TEST_CASE("Penalized flow files are popped from the FlowFileQueue in the order their penalties expire", "[FlowFileQueue][pop]") {
   utils::FlowFileQueue queue;
-  const auto now = utils::timeutils::getTimeMillis();
   const auto flow_file_1 = std::make_shared<core::FlowFile>();
-  flow_file_1->setPenaltyExpiration(now + 70);
+  flow_file_1->penalize(std::chrono::milliseconds{70});
   queue.push(flow_file_1);
   const auto flow_file_2 = std::make_shared<core::FlowFile>();
-  flow_file_2->setPenaltyExpiration(now + 50);
+  flow_file_2->penalize(std::chrono::milliseconds{50});
   queue.push(flow_file_2);
   const auto flow_file_3 = std::make_shared<core::FlowFile>();
-  flow_file_3->setPenaltyExpiration(now + 80);
+  flow_file_3->penalize(std::chrono::milliseconds{80});
   queue.push(flow_file_3);
   const auto flow_file_4 = std::make_shared<core::FlowFile>();
-  flow_file_4->setPenaltyExpiration(now + 60);
+  flow_file_4->penalize(std::chrono::milliseconds{60});
   queue.push(flow_file_4);
 
   REQUIRE_FALSE(queue.canBePopped());
@@ -124,7 +123,7 @@ TEST_CASE("Penalized flow files are popped from the FlowFileQueue in the order t
 TEST_CASE("If a penalized then a non-penalized flow file is added to the FlowFileQueue, pop() returns the correct one", "[FlowFileQueue][pop]") {
   utils::FlowFileQueue queue;
   const auto penalized_flow_file = std::make_shared<core::FlowFile>();
-  penalized_flow_file->setPenaltyExpiration(utils::timeutils::getTimeMillis() + 10);
+  penalized_flow_file->penalize(std::chrono::milliseconds{10});
   queue.push(penalized_flow_file);
   const auto flow_file = std::make_shared<core::FlowFile>();
   queue.push(flow_file);
@@ -149,7 +148,7 @@ TEST_CASE("If a penalized then a non-penalized flow file is added to the FlowFil
 TEST_CASE("Force pop on FlowFileQueue returns the flow files, whether penalized or not", "[FlowFileQueue][forcePop]") {
   utils::FlowFileQueue queue;
   const auto penalized_flow_file = std::make_shared<core::FlowFile>();
-  penalized_flow_file->setPenaltyExpiration(utils::timeutils::getTimeMillis() + 10);
+  penalized_flow_file->penalize(std::chrono::milliseconds{10});
   queue.push(penalized_flow_file);
   const auto flow_file = std::make_shared<core::FlowFile>();
   queue.push(flow_file);

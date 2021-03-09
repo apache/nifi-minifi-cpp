@@ -61,7 +61,7 @@ Processor::Processor(const std::string& name)
   scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
   run_duration_nano_ = DEFAULT_RUN_DURATION;
   yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS * 1000;
-  _penalizationPeriodMsec = DEFAULT_PENALIZATION_PERIOD_SECONDS * 1000;
+  penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
   yield_expiration_ = 0;
@@ -82,7 +82,7 @@ Processor::Processor(const std::string& name, const utils::Identifier &uuid)
   scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
   run_duration_nano_ = DEFAULT_RUN_DURATION;
   yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS * 1000;
-  _penalizationPeriodMsec = DEFAULT_PENALIZATION_PERIOD_SECONDS * 1000;
+  penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
   yield_expiration_ = 0;

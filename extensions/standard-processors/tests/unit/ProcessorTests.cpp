@@ -652,7 +652,7 @@ ProcessorWithIncomingConnectionTest::~ProcessorWithIncomingConnectionTest() {
   LogTestController::getInstance().reset();
 }
 
-}
+}  // namespace
 
 TEST_CASE_METHOD(ProcessorWithIncomingConnectionTest, "A Processor detects correctly if it has incoming flow files it can process", "[isWorkAvailable]") {
   SECTION("Initially, the queue is empty, so there is no work available") {
@@ -686,7 +686,7 @@ TEST_CASE_METHOD(ProcessorWithIncomingConnectionTest, "A Processor detects corre
   }
 
   SECTION("When a penalized flow file is queued, there is work available after the penalty expires") {
-    processor_->setPenalizationPeriodMsec(10);
+    processor_->setPenalizationPeriod(std::chrono::milliseconds{10});
 
     const auto flow_file = session_->create();
     session_->penalize(flow_file);
@@ -707,7 +707,7 @@ TEST_CASE_METHOD(ProcessorWithIncomingConnectionTest, "A failed and re-penalized
   const auto flow_file_3 = session_->create();
   incoming_connection_->put(flow_file_3);
 
-  processor_->setPenalizationPeriodMsec(100);
+  processor_->setPenalizationPeriod(std::chrono::milliseconds{100});
   const auto penalized_flow_file = session_->create();
   session_->penalize(penalized_flow_file);  // first penalty duration is 100 ms
   incoming_connection_->put(penalized_flow_file);

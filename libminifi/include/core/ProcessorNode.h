@@ -217,9 +217,8 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     processor_->setUUID(uuid);
   }
 
-// Get Processor penalization period in MilliSecond
-  uint64_t getPenalizationPeriodMsec(void) {
-    return processor_->getPenalizationPeriodMsec();
+  std::chrono::milliseconds getPenalizationPeriod() {
+    return processor_->getPenalizationPeriod();
   }
 
   /**

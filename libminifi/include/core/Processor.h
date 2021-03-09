@@ -137,9 +137,9 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   uint64_t getYieldPeriodMsec() const {
     return (yield_period_msec_);
   }
-  // Set Processor penalization period in MilliSecond
-  void setPenalizationPeriodMsec(uint64_t period) {
-    _penalizationPeriodMsec = period;
+
+  void setPenalizationPeriod(std::chrono::milliseconds period) {
+    penalization_period_ = period;
   }
 
   // Set Processor Maximum Concurrent Tasks

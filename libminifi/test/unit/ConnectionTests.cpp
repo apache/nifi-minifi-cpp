@@ -53,9 +53,7 @@ TEST_CASE("Connection::poll() works correctly", "[poll]") {
     SECTION("with expiration duration") { connection->setFlowExpirationDuration(1000); }
 
     const auto flow_file = std::make_shared<core::FlowFile>();
-    const auto future_time = std::chrono::system_clock::now() + std::chrono::seconds{10};
-    const auto future_time_ms_since_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(future_time.time_since_epoch()).count();
-    flow_file->setPenaltyExpiration(future_time_ms_since_epoch);
+    flow_file->penalize(std::chrono::seconds{10});
     connection->put(flow_file);
     REQUIRE(nullptr == connection->poll(expired_flow_files));
   }
@@ -74,9 +72,7 @@ TEST_CASE("Connection::poll() works correctly", "[poll]") {
     SECTION("with expiration duration") { connection->setFlowExpirationDuration(1000); }
 
     const auto penalized_flow_file = std::make_shared<core::FlowFile>();
-    const auto future_time = std::chrono::system_clock::now() + std::chrono::seconds{10};
-    const auto future_time_ms_since_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(future_time.time_since_epoch()).count();
-    penalized_flow_file->setPenaltyExpiration(future_time_ms_since_epoch);
+    penalized_flow_file->penalize(std::chrono::seconds{10});
     connection->put(penalized_flow_file);
 
     const auto flow_file = std::make_shared<core::FlowFile>();
