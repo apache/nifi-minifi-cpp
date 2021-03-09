@@ -175,12 +175,12 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
 
   while (!lockedQueue.empty()) {
     std::shared_ptr<core::FlowFile> item = lockedQueue.front();
+    lockedQueue.pop();
+    queued_data_size_ -= item->getSize();
 
     // We need to check for flow expiration
     if (expired_duration_ > 0 && utils::timeutils::getTimeMillis() > (item->getEntryDate() + expired_duration_)) {
       // Flow record expired
-      lockedQueue.pop();
-      queued_data_size_ -= item->getSize();
       expiredFlowRecords.insert(item);
       logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
       continue;
@@ -189,11 +189,11 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
     // Flow record not expired
     if (item->isPenalized()) {
       // Flow record was penalized
+      lockedQueue.push(item);
+      queued_data_size_ += item->getSize();
       break;
     }
 
-    lockedQueue.pop();
-    queued_data_size_ -= item->getSize();
     std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
     item->setConnection(connectable);
     logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
