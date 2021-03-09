@@ -18,20 +18,19 @@
 
 verify_enable_platform() {
   feature="$1"
-  feature_status=${!1}
   if [ "$OS_MAJOR" = "6" ]; then
     if [ "$feature" = "GPS_ENABLED" ]; then
       echo "false"
     elif [ "$feature" = "USB_ENABLED" ]; then
       echo "false"
     else
-      verify_gcc_enable $feature
+      verify_gcc_enable "$feature"
     fi
   else
     if [ "$feature" = "USB_ENABLED" ]; then
       echo "false"
     else
-      verify_gcc_enable $feature
+      verify_gcc_enable "$feature"
     fi
   fi
 }
@@ -45,8 +44,8 @@ install_bison() {
   if [ "$OS_MAJOR" = "6" ]; then
     BISON_INSTALLED="false"
     if [ -x "$(command -v bison)" ]; then
-      BISON_VERSION=`bison --version | head -n 1 | awk '{print $4}'`
-      BISON_MAJOR=`echo $BISON_VERSION | cut -d. -f1`
+      BISON_VERSION=$(bison --version | head -n 1 | awk '{print $4}')
+      BISON_MAJOR=$(echo "$BISON_VERSION" | cut -d. -f1)
       if (( BISON_MAJOR >= 3 )); then
         BISON_INSTALLED="true"
       fi
@@ -54,11 +53,11 @@ install_bison() {
     if [ "$BISON_INSTALLED" = "false" ]; then
       wget https://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.xz
       tar xvf bison-3.0.4.tar.xz
-      pushd bison-3.0.4
+      pushd bison-3.0.4 || return
       ./configure
       make
       make install
-      popd
+      popd || return
     fi
 
   else

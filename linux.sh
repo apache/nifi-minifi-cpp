@@ -1,3 +1,4 @@
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,13 +15,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#!/bin/bash
 verify_gcc_enable(){
   feature="$1"
-  feature_status=${!1}
-  if [ "$feature" = "BUSTACHE_ENABLED" ]; then 
+  if [ "$feature" = "BUSTACHE_ENABLED" ]; then
     if (( COMPILER_MAJOR == 6 && COMPILER_MINOR >= 3 && COMPILER_REVISION >= 1  )); then
-      echo "true" 	    
+      echo "true"
     elif (( COMPILER_MAJOR > 6 )); then
       echo "true"
     else
