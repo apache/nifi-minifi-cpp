@@ -241,7 +241,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObje
       return minifi::utils::nullopt;
     }
     const auto& objects = aws_result->GetContents();
-    logger_->log_debug("AWS S3 List operation returned %zu objects. This result is truncated: %s", objects.size(), aws_result->GetIsTruncated() ? "true" : "false");
+    logger_->log_debug("AWS S3 List operation returned %zu objects. This result is%s truncated.", objects.size(), aws_result->GetIsTruncated() ? "" : "not");
     addListResults(objects, params.min_object_age, attribute_list);
     if (aws_result->GetIsTruncated()) {
       request.SetContinuationToken(aws_result->GetNextContinuationToken());
