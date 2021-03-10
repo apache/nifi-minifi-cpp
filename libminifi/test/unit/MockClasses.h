@@ -84,7 +84,7 @@ class MockProcessor : public core::Processor {
 
   ~MockProcessor() = default;
 
-  virtual void initialize() {
+  void initialize() override {
     core::Property property("linkedService", "Linked service");
     std::set<core::Property> properties;
     properties.insert(property);
@@ -93,7 +93,7 @@ class MockProcessor : public core::Processor {
   }
 
   // OnTrigger method, implemented by NiFi Processor Designer
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession* /*session*/) {
+  void onTrigger(core::ProcessContext *context, core::ProcessSession* /*session*/) override {
 
     std::string linked_service = "";
     getProperty("linkedService", linked_service);
