@@ -23,11 +23,10 @@ flags=$6
 extensions=$7
 buildident=$8
 
-date=`date +%s`
+date=$(date +%s)
 
-if [ -d ${src_dir}/.git ]; then
-  buildrev=`git log -1 --pretty=format:"%H"`
-  hostname=`hostname`
+if [ -d "${src_dir}"/.git ]; then
+  buildrev=$(git log -1 --pretty=format:"%H")
 else
   buildrev="Unknown"
 fi
