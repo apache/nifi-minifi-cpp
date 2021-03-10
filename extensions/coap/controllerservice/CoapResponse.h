@@ -73,7 +73,7 @@ class CoapResponse {
    * Returns a const pointer to the constant data.
    * @return data pointer.
    */
-  uint8_t* getData() const {
+  const uint8_t* getData() const {
     return data_.get();
   }
 

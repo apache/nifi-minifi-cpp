@@ -84,9 +84,8 @@ class RocksDatabase {
   };
 
   RocksDatabase(const rocksdb::Options& options, const std::string& name, Mode mode = Mode::ReadWrite);
-  virtual ~RocksDatabase() = default;
 
-  virtual utils::optional<OpenRocksDB> open();
+  utils::optional<OpenRocksDB> open();
 
  private:
   /*

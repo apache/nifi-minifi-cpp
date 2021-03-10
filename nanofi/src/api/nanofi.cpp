@@ -457,6 +457,10 @@ int get_content(const flow_file_record* ff, uint8_t* target, int size) {
     return stream->read(target, size);
   } else {
     file_buffer fb = file_to_buffer(ff->contentLocation);
+    if (size < 0) {
+      return 0;
+    }
+
     size_t copy_size = static_cast<size_t>(size) < fb.file_len ? size : gsl::narrow<size_t>(fb.file_len);
     memcpy(target, fb.buffer, copy_size*sizeof(uint8_t));
     free(fb.buffer);
