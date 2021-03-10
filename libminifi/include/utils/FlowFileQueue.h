@@ -33,22 +33,18 @@ class FlowFileQueue {
   using value_type = std::shared_ptr<core::FlowFile>;
 
   value_type pop();
-  value_type forcePop();
   void push(const value_type& element);
   void push(value_type&& element);
-  bool canBePopped() const;
+  bool isWorkAvailable() const;
   bool empty() const;
   size_t size() const;
 
  private:
-  bool existsFlowFileWithExpiredPenalty() const;
-
   struct FlowFilePenaltyExpirationComparator {
     bool operator()(const value_type& left, const value_type& right);
   };
 
-  std::queue<value_type> fifo_queue_;
-  std::priority_queue<value_type, std::vector<value_type>, FlowFilePenaltyExpirationComparator> priority_queue_;
+  std::priority_queue<value_type, std::vector<value_type>, FlowFilePenaltyExpirationComparator> queue_;
 };
 
 }  // namespace utils
