@@ -18,37 +18,36 @@
 
 from __future__ import print_function
 
-MINIFI_SUBFOLDER = '/nifi/nifi-minifi-cpp/'
-APACHE_CLOSER_REPO_JSON_URL = 'https://www.apache.org/dyn/closer.cgi?as_json=1&path=/nifi/nifi-minifi-cpp'
-APACHE_MIRROR_LIST = "http://www.apache.org/mirrors/"
-
 import argparse
 import sys
-
-if sys.version_info[0] < 3:
-  from urllib2 import urlopen
-  input = raw_input
-else:
-  from urllib.request import urlopen
-
 import json
 import os.path
 import platform
 import tarfile
 
+if sys.version_info[0] < 3:
+  from urllib2 import urlopen
+  input = raw_input  # noqa: F821
+else:
+  from urllib.request import urlopen
 
 from distutils.util import strtobool
 from ftplib import FTP
+
+MINIFI_SUBFOLDER = '/nifi/nifi-minifi-cpp/'
+APACHE_CLOSER_REPO_JSON_URL = 'https://www.apache.org/dyn/closer.cgi?as_json=1&path=/nifi/nifi-minifi-cpp'
+APACHE_MIRROR_LIST = "http://www.apache.org/mirrors/"
+
 
 def install_package(package_name):
   try:
     import pip
     if hasattr(pip, 'main'):
-      pipcode = pip.main(['install', package])
+      pipcode = pip.main(['install', package_name])
     else:
-      pipcode = pip._internal.main(['install', package])
+      pipcode = pip._internal.main(['install', package_name])
     return pipcode == 0
-  except:
+  except ImportError:
     return False
 
 
@@ -58,7 +57,7 @@ try:
   import distro
 
   distro_available = True
-except:
+except ImportError:
   distro_available = install_package("distro")
 
 
@@ -70,7 +69,7 @@ def get_distro():
       return distro.linux_distribution(full_distribution_name=False)
     else:
       return platform.linux_distribution()
-  except:
+  except Exception:
     return ["N/A", "N/A", "N/A"]
 
 
@@ -95,12 +94,12 @@ def find_closest_mirror():
 
     return data['ftp'][0]
 
-  except Exception as e:
-    print ("Failed to find closest mirror, please specify one!")
+  except Exception:
+    print("Failed to find closest mirror, please specify one!")
     return ""
 
 
-def get_release_and_binaries_from_ftp(host, apache_dir, version = None):
+def get_release_and_binaries_from_ftp(host, apache_dir, version=None):
   ftp = FTP(host)
   ftp.login()
   ftp.cwd(apache_dir + MINIFI_SUBFOLDER)
@@ -132,12 +131,12 @@ def download_binary_from_ftp(host, apache_dir, release, binary):
     ftp.login()
     ftp.cwd(apache_dir + MINIFI_SUBFOLDER + release)
 
-    print ("Downloading: ftp://" + host + "/" + MINIFI_SUBFOLDER + release + "/" + binary)
+    print("Downloading: ftp://" + host + "/" + MINIFI_SUBFOLDER + release + "/" + binary)
 
     with open(os.path.join(os.getcwd(), binary), "wb") as targetfile:
       ftp.retrbinary("RETR " + binary, targetfile.write)
     successful_download = True
-  except:
+  except Exception:
     print("Failed to download binary")
   finally:
     ftp.quit()
@@ -157,7 +156,7 @@ def main(args):
     host, dir = local_repo.replace('ftp://', '').split('/', 1)
     latest_release, binaries = get_release_and_binaries_from_ftp(host, dir, args.version if args.version else None)
 
-  except:
+  except Exception:
     print("Failed to get binaries from Apache mirror")
     return -1
 
@@ -186,7 +185,7 @@ def main(args):
         invalid_input = False
         if download:
           selected_binary = matching_binaries[0]
-      except:
+      except Exception:
         pass
 
   else:
@@ -196,8 +195,7 @@ def main(args):
     print()
     while invalid_input:
       try:
-        user_input = input("Please select one to download (1 to " + str(
-          len(matching_binaries)) + ") or \"s\" to skip and compile locally\n")
+        user_input = input("Please select one to download (1 to " + str(len(matching_binaries)) + ") or \"s\" to skip and compile locally\n")
         user_input.lower()
         if user_input == "s":
           invalid_input = False
@@ -209,7 +207,7 @@ def main(args):
         selected_binary = matching_binaries[idx]
         download = True
         invalid_input = False
-      except:
+      except Exception:
         pass
 
   if not download:
@@ -221,7 +219,7 @@ def main(args):
   try:
     with tarfile.open(os.path.join(os.getcwd(), selected_binary), "r:gz") as tar:
       tar.extractall()
-  except:
+  except Exception:
     print("Failed to extract tar file")
     return -1
 
