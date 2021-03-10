@@ -20,9 +20,10 @@
     pip install pandas
 """
 import codecs
-import pandas as pd
+import pandas as pd  # noqa F401
 import datatable as dt
 from io import StringIO
+
 
 def describe(processor):
     """ describe what this processor does
@@ -31,10 +32,12 @@ def describe(processor):
                               supports a variety of data sources: pandas DataFrames, csv, numpy \
                               arrays, dictionary, list, raw Python objects, etc")
 
+
 def onInitialize(processor):
     """ onInitialize is where you can set properties
     """
     processor.setSupportsDynamicProperties()
+
 
 class ContentExtract(object):
     """ ContentExtract callback class is defined for reading streams of data through the session
@@ -42,12 +45,13 @@ class ContentExtract(object):
     """
     def __init__(self):
         self.content = None
-    
+
     def process(self, input_stream):
         """ Use codecs getReader to read that data
         """
         self.content = codecs.getreader('utf-8')(input_stream).read()
         return len(self.content)
+
 
 class ContentWrite(object):
     """ ContentWrite callback class is defined for writing streams of data through the session
@@ -61,6 +65,7 @@ class ContentWrite(object):
         codecs.getwriter('utf-8')(output_stream).write(self.content)
         return len(self.content)
 
+
 def onTrigger(context, session):
     """ onTrigger is executed and passed processor context and session
     """
@@ -73,7 +78,7 @@ def onTrigger(context, session):
         csv_data = StringIO()
         # load str data into datatable, then convert to pandas df
         dt_frame = dt.Frame(read_cb.content)
-        pd_dframe = dt_frame.to_pandas() 
+        pd_dframe = dt_frame.to_pandas()
         # convert df to csv file like object without df index
         pd_dframe.to_csv(csv_data, index=False)
         # set the csv to the start of text stream
@@ -83,4 +88,4 @@ def onTrigger(context, session):
         # write csv str to flow file
         write_cb = ContentWrite(csv_data)
         session.write(flow_file, write_cb)
-        session.transfer(flow_file, REL_SUCCESS)
+        session.transfer(flow_file, REL_SUCCESS)  # noqa F821
