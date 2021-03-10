@@ -1,14 +1,12 @@
 import json
 import logging
-import os
-import shutil
 import subprocess
 import sys
 import time
-import uuid
 
 from .SingleNodeDockerCluster import SingleNodeDockerCluster
 from .utils import retry_check
+
 
 class DockerTestCluster(SingleNodeDockerCluster):
     def __init__(self):
@@ -104,10 +102,10 @@ class DockerTestCluster(SingleNodeDockerCluster):
         print(output)
         print(output.count("TCP_DENIED/407"))
         print(output.count("TCP_MISS"))
-        return url in output and \
-            ((output.count("TCP_DENIED/407") != 0 and \
-              output.count("TCP_MISS") == output.count("TCP_DENIED/407")) or \
-             output.count("TCP_DENIED/407") == 0 and "TCP_MISS" in output)
+        return url in output \
+            and ((output.count("TCP_DENIED/407") != 0
+                  and output.count("TCP_MISS") == output.count("TCP_DENIED/407"))
+                 or output.count("TCP_DENIED/407") == 0 and "TCP_MISS" in output)
 
     @retry_check()
     def check_s3_server_object_data(self, test_data):
