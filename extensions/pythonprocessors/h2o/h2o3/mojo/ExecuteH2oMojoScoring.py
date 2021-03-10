@@ -22,7 +22,7 @@
     sudo apt-get -y update
 
     Install Java to include open source H2O-3 algorithms:
-    
+
     sudo apt-get -y install openjdk-8-jdk
 
     Install Datatable and pandas:
@@ -52,10 +52,11 @@
 """
 import h2o
 import codecs
-import pandas as pd
+import pandas as pd  # noqa: F401
 import datatable as dt
 
 mojo_model = None
+
 
 def describe(processor):
     """ describe what this processor does
@@ -65,6 +66,7 @@ def describe(processor):
         the incoming flow file content. If tabular data is one row, then MOJO does real-time \
         scoring. If tabular data is multiple rows, then MOJO does batch scoring.")
 
+
 def onInitialize(processor):
     """ onInitialize is where you can set properties
         processor.addProperty(name, description, defaultValue, required, el)
@@ -72,8 +74,8 @@ def onInitialize(processor):
     processor.addProperty("MOJO Model Filepath", "Add the filepath to the MOJO Model file. For example, \
         'path/to/mojo-model/GBM_grid__1_AutoML_20200511_075150_model_180.zip'.", "", True, False)
 
-    processor.addProperty("Is First Line Header", "Add True or False for whether first line is header.", \
-        "True", True, False)
+    processor.addProperty("Is First Line Header", "Add True or False for whether first line is header.",
+                          "True", True, False)
 
     processor.addProperty("Input Schema", "If first line is not header, then you must add Input Schema for \
         incoming data.If there is more than one column name, write a comma separated list of \
@@ -87,6 +89,7 @@ def onInitialize(processor):
         is more than one column name, write a comma separated list of column names. Else, H2O-3 will include \
         them by default", "", False, False)
 
+
 def onSchedule(context):
     """ onSchedule is where you load and read properties
         this function is called 1 time when the processor is scheduled to run
@@ -97,18 +100,20 @@ def onSchedule(context):
     mojo_model_filepath = context.getProperty("MOJO Model Filepath")
     mojo_model = h2o.import_mojo(mojo_model_filepath)
 
+
 class ContentExtract(object):
     """ ContentExtract callback class is defined for reading streams of data through the session
         and has a process function that accepts the input stream
     """
     def __init__(self):
         self.content = None
-    
+
     def process(self, input_stream):
         """ Use codecs getReader to read that data
         """
         self.content = codecs.getreader('utf-8')(input_stream).read()
         return len(self.content)
+
 
 class ContentWrite(object):
     """ ContentWrite callback class is defined for writing streams of data through the session
@@ -121,6 +126,7 @@ class ContentWrite(object):
         """
         codecs.getwriter('utf-8')(output_stream).write(self.content)
         return len(self.content)
+
 
 def onTrigger(context, session):
     """ onTrigger is executed and passed processor context and session
@@ -160,6 +166,6 @@ def onTrigger(context, session):
         # add one or more flow file attributes: predicted label name and associated score pair
         for i in range(len(pred_header)):
             ff_attr_name = pred_header[i] + "_pred_0"
-            flow_file.addAttribute(ff_attr_name, str(preds_pd_df.at[0,pred_header[i]]))
-            log.info("getAttribute({}): {}".format(ff_attr_name, flow_file.getAttribute(ff_attr_name)))
-        session.transfer(flow_file, REL_SUCCESS)
+            flow_file.addAttribute(ff_attr_name, str(preds_pd_df.at[0, pred_header[i]]))
+            log.info("getAttribute({}): {}".format(ff_attr_name, flow_file.getAttribute(ff_attr_name)))  # noqa: F821
+        session.transfer(flow_file, REL_SUCCESS)  # noqa: F821
