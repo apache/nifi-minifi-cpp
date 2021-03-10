@@ -700,19 +700,19 @@ TEST_CASE_METHOD(ProcessorWithIncomingConnectionTest, "A Processor detects corre
 }
 
 TEST_CASE_METHOD(ProcessorWithIncomingConnectionTest, "A failed and re-penalized flow file does not block the incoming queue of the Processor", "[penalize]") {
-  const auto flow_file_1 = session_->create();
-  incoming_connection_->put(flow_file_1);
-  const auto flow_file_2 = session_->create();
-  incoming_connection_->put(flow_file_2);
-  const auto flow_file_3 = session_->create();
-  incoming_connection_->put(flow_file_3);
-
   processor_->setPenalizationPeriod(std::chrono::milliseconds{100});
   const auto penalized_flow_file = session_->create();
   session_->penalize(penalized_flow_file);  // first penalty duration is 100 ms
   incoming_connection_->put(penalized_flow_file);
   const auto penalty_has_expired = [penalized_flow_file] { return !penalized_flow_file->isPenalized(); };
   REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, penalty_has_expired, std::chrono::milliseconds{10}));
+
+  const auto flow_file_1 = session_->create();
+  incoming_connection_->put(flow_file_1);
+  const auto flow_file_2 = session_->create();
+  incoming_connection_->put(flow_file_2);
+  const auto flow_file_3 = session_->create();
+  incoming_connection_->put(flow_file_3);
 
   REQUIRE(incoming_connection_->isWorkAvailable());
   std::set<std::shared_ptr<core::FlowFile>> expired_flow_files;
