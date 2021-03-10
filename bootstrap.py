@@ -25,14 +25,14 @@ import os.path
 import platform
 import tarfile
 
+from distutils.util import strtobool
+from ftplib import FTP
+
 if sys.version_info[0] < 3:
   from urllib2 import urlopen
   input = raw_input  # noqa: F821
 else:
   from urllib.request import urlopen
-
-from distutils.util import strtobool
-from ftplib import FTP
 
 MINIFI_SUBFOLDER = '/nifi/nifi-minifi-cpp/'
 APACHE_CLOSER_REPO_JSON_URL = 'https://www.apache.org/dyn/closer.cgi?as_json=1&path=/nifi/nifi-minifi-cpp'
