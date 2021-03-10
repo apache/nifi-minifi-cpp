@@ -1,10 +1,5 @@
-from subprocess import Popen, PIPE, STDOUT
-
 import docker
 import logging
-import os
-import shutil
-import threading
 import time
 import uuid
 
@@ -20,6 +15,7 @@ from minifi.validators.EmptyFilesOutPutValidator import EmptyFilesOutPutValidato
 from minifi.validators.NoFileOutPutValidator import NoFileOutPutValidator
 from minifi.validators.SingleFileOutputValidator import SingleFileOutputValidator
 from minifi.validators.MultiFileOutputValidator import MultiFileOutputValidator
+
 
 class MiNiFi_integration_test():
     def __init__(self, context):
@@ -55,7 +51,6 @@ class MiNiFi_integration_test():
             del cluster
 
         # The cluster deleter is not reliable for cleaning up
-        docker_client = docker.from_env()
         for container_id in container_ids:
             self.delete_docker_container_by_id(container_id)
 
