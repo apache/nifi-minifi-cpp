@@ -1,6 +1,5 @@
 from .Connectable import Connectable
 
-import logging
 
 class Processor(Connectable):
     def __init__(self,

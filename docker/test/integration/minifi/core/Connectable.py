@@ -1,5 +1,5 @@
 import uuid
-from copy import copy
+
 
 class Connectable(object):
     def __init__(self,

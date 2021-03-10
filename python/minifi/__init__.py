@@ -197,7 +197,6 @@ class MiNiFi(object):
         self._flow = self._minifi.create_new_flow(self._instance.get_instance())
         self._minifi.enable_logging()
 
-
     def __open_rpg(self, url, port):
         rpgPort = (RPG_PORT)(port)
         rpg = self._minifi.create_instance(url, rpgPort)

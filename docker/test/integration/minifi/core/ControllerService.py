@@ -1,6 +1,7 @@
 import uuid
 import logging
 
+
 class ControllerService(object):
     def __init__(self, name=None, properties=None):
 
