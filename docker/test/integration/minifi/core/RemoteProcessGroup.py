@@ -1,5 +1,6 @@
 import uuid
 
+
 class RemoteProcessGroup(object):
     def __init__(self, url, name=None):
         self.uuid = uuid.uuid4()
@@ -11,9 +12,8 @@ class RemoteProcessGroup(object):
 
         self.url = url
 
-
     def get_name(self):
-    	return self.name
+        return self.name
 
     def get_uuid(self):
-    	return self.uuid
+        return self.uuid

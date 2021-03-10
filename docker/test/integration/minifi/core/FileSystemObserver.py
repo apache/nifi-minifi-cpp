@@ -2,11 +2,10 @@ import logging
 import time
 from threading import Event
 
-from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from .OutputEventHandler import OutputEventHandler
-from ..validators.FileOutputValidator import FileOutputValidator
+
 
 class FileSystemObserver(object):
     def __init__(self, test_output_dir):

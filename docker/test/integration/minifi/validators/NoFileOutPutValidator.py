@@ -1,8 +1,9 @@
 import logging
 
-from os import listdir
 
+from os import listdir
 from .FileOutputValidator import FileOutputValidator
+
 
 class NoFileOutPutValidator(FileOutputValidator):
     """

@@ -6,6 +6,7 @@ from os.path import join
 
 from .FileOutputValidator import FileOutputValidator
 
+
 class SingleFileOutputValidator(FileOutputValidator):
     """
     Validates the content of a single file in the given directory.
@@ -26,8 +27,8 @@ class SingleFileOutputValidator(FileOutputValidator):
 
         listing = listdir(full_dir)
         if listing:
-            for l in listing:
-                logging.info("name:: %s", l)
+            for listed in listing:
+                logging.info("name:: %s", listed)
             out_file_name = listing[0]
             full_path = join(full_dir, out_file_name)
             if not os.path.isfile(full_path):

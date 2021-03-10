@@ -1,13 +1,16 @@
 from ..core.Processor import Processor
 
+
 class DeleteS3Object(Processor):
-    def __init__(self,
-        proxy_host = '',
-        proxy_port = '',
-        proxy_username = '',
-        proxy_password = ''):
-            super(DeleteS3Object, self).__init__('DeleteS3Object',
-            properties = {
+    def __init__(
+            self,
+            proxy_host='',
+            proxy_port='',
+            proxy_username='',
+            proxy_password=''):
+        super(DeleteS3Object, self).__init__(
+            'DeleteS3Object',
+            properties={
                 'Object Key': 'test_object_key',
                 'Bucket': 'test_bucket',
                 'Access Key': 'test_access_key',
@@ -19,4 +22,3 @@ class DeleteS3Object(Processor):
                 'Proxy Password': proxy_password,
             },
             auto_terminate=['success'])
-

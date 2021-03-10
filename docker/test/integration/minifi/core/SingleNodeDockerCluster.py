@@ -3,7 +3,6 @@ import docker
 import logging
 import os
 import tarfile
-import time
 import uuid
 
 from collections import OrderedDict
@@ -13,6 +12,7 @@ from textwrap import dedent
 from .Cluster import Cluster
 from ..flow_serialization.Minifi_flow_yaml_serializer import Minifi_flow_yaml_serializer
 from ..flow_serialization.Nifi_flow_xml_serializer import Nifi_flow_xml_serializer
+
 
 class SingleNodeDockerCluster(Cluster):
     """
@@ -125,8 +125,7 @@ class SingleNodeDockerCluster(Cluster):
                 ADD config.yml {minifi_root}/conf/config.yml
                 RUN chown minificpp:minificpp {minifi_root}/conf/config.yml
                 USER minificpp
-                """.format(name=self.name,hostname=self.name,
-                           base_image='apacheminificpp:' + self.minifi_version,
+                """.format(base_image='apacheminificpp:' + self.minifi_version,
                            minifi_root=self.minifi_root))
 
         serializer = Minifi_flow_yaml_serializer()
@@ -154,11 +153,11 @@ class SingleNodeDockerCluster(Cluster):
             conf_file_buffer.close()
 
         container = self.client.containers.run(
-                configured_image[0],
-                detach=True,
-                name=self.name,
-                network=self.network.name,
-                volumes=self.vols)
+            configured_image[0],
+            detach=True,
+            name=self.name,
+            network=self.network.name,
+            volumes=self.vols)
         self.network.reload()
 
         logging.info('Started container \'%s\'', container.name)
@@ -205,12 +204,12 @@ class SingleNodeDockerCluster(Cluster):
         logging.info('Creating and running docker container for flow...')
 
         container = self.client.containers.run(
-                configured_image[0],
-                detach=True,
-                name=self.name,
-                hostname=self.name,
-                network=self.network.name,
-                volumes=self.vols)
+            configured_image[0],
+            detach=True,
+            name=self.name,
+            hostname=self.name,
+            network=self.network.name,
+            volumes=self.vols)
 
         logging.info('Started container \'%s\'', container.name)
 
@@ -219,24 +218,22 @@ class SingleNodeDockerCluster(Cluster):
     def deploy_kafka_broker(self):
         logging.info('Creating and running docker containers for kafka broker...')
         zookeeper = self.client.containers.run(
-                    self.client.images.pull("wurstmeister/zookeeper:latest"),
-                    detach=True,
-                    name='zookeeper',
-                    network=self.network.name,
-                    ports={'2181/tcp': 2181},
-                    )
+            self.client.images.pull("wurstmeister/zookeeper:latest"),
+            detach=True,
+            name='zookeeper',
+            network=self.network.name,
+            ports={'2181/tcp': 2181})
         self.containers[zookeeper.name] = zookeeper
 
-        test_dir = os.environ['PYTHONPATH'].split(':')[-1] # Based on DockerVerify.sh
+        test_dir = os.environ['PYTHONPATH'].split(':')[-1]  # Based on DockerVerify.sh
         broker_image = self.build_image_by_path(test_dir + "/resources/kafka_broker", 'minifi-kafka')
         broker = self.client.containers.run(
-                    broker_image[0],
-                    detach=True,
-                    name='kafka-broker',
-                    network=self.network.name,
-                    ports={'9092/tcp': 9092},
-                    environment=["KAFKA_LISTENERS=PLAINTEXT://kafka-broker:9092,SSL://kafka-broker:9093", "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181"],
-                    )
+            broker_image[0],
+            detach=True,
+            name='kafka-broker',
+            network=self.network.name,
+            ports={'9092/tcp': 9092},
+            environment=["KAFKA_LISTENERS=PLAINTEXT://kafka-broker:9092,SSL://kafka-broker:9093", "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181"])
         self.containers[broker.name] = broker
 
         dockerfile = dedent("""FROM {base_image}
@@ -245,11 +242,10 @@ class SingleNodeDockerCluster(Cluster):
                 """.format(base_image='wurstmeister/kafka:2.12-2.5.0'))
         configured_image = self.build_image(dockerfile, [])
         consumer = self.client.containers.run(
-                    configured_image[0],
-                    detach=True,
-                    name='kafka-consumer',
-                    network=self.network.name,
-                    )
+            configured_image[0],
+            detach=True,
+            name='kafka-consumer',
+            network=self.network.name)
         self.containers[consumer.name] = consumer
 
     def deploy_http_proxy(self):
@@ -266,33 +262,30 @@ class SingleNodeDockerCluster(Cluster):
                 """.format(base_image='sameersbn/squid:3.5.27-2', proxy_username='admin', proxy_password='test101', proxy_port='3128'))
         configured_image = self.build_image(dockerfile, [])
         consumer = self.client.containers.run(
-                    configured_image[0],
-                    detach=True,
-                    name='http-proxy',
-                    network=self.network.name,
-                    ports={'3128/tcp': 3128},
-                    )
+            configured_image[0],
+            detach=True,
+            name='http-proxy',
+            network=self.network.name,
+            ports={'3128/tcp': 3128})
         self.containers[consumer.name] = consumer
 
     def deploy_s3_server(self):
         server = self.client.containers.run(
-                    "adobe/s3mock:2.1.28",
-                    detach=True,
-                    name='s3-server',
-                    network=self.network.name,
-                    ports={'9090/tcp': 9090, '9191/tcp': 9191},
-                    environment=["initialBuckets=test_bucket"],
-                    )
+            "adobe/s3mock:2.1.28",
+            detach=True,
+            name='s3-server',
+            network=self.network.name,
+            ports={'9090/tcp': 9090, '9191/tcp': 9191},
+            environment=["initialBuckets=test_bucket"])
         self.containers[server.name] = server
 
     def deploy_azure_storage_server(self):
         server = self.client.containers.run(
-                    "mcr.microsoft.com/azure-storage/azurite",
-                    detach=True,
-                    name='azure-storage-server',
-                    network=self.network.name,
-                    ports={'10000/tcp': 10000, '10001/tcp': 10001},
-                    )
+            "mcr.microsoft.com/azure-storage/azurite",
+            detach=True,
+            name='azure-storage-server',
+            network=self.network.name,
+            ports={'10000/tcp': 10000, '10001/tcp': 10001})
         self.containers[server.name] = server
 
     def build_image(self, dockerfile, context_files):

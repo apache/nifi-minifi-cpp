@@ -4,6 +4,7 @@ import yaml
 from ..core.Processor import Processor
 from ..core.InputPort import InputPort
 
+
 class Minifi_flow_yaml_serializer:
     def serialize(self, connectable, root=None, visited=None):
         if visited is None:

@@ -2,6 +2,7 @@ import logging
 
 from watchdog.events import FileSystemEventHandler
 
+
 class OutputEventHandler(FileSystemEventHandler):
     def __init__(self, done_event):
         self.done_event = done_event

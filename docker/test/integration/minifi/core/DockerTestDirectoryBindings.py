@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 
+
 class DockerTestDirectoryBindings:
     def __init__(self):
         self.data_directories = {}
@@ -19,7 +20,7 @@ class DockerTestDirectoryBindings:
         [self.create_directory(directory) for directory in self.data_directories[test_id].values()]
 
         # Add resources
-        test_dir = os.environ['PYTHONPATH'].split(':')[-1] # Based on DockerVerify.sh
+        test_dir = os.environ['PYTHONPATH'].split(':')[-1]  # Based on DockerVerify.sh
         shutil.copytree(test_dir + "/resources/kafka_broker/conf/certs", self.data_directories[test_id]["resources_dir"] + "/certs")
 
     def get_data_directories(self, test_id):

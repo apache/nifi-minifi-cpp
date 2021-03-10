@@ -1,5 +1,6 @@
 from .ControllerService import ControllerService
 
+
 class SSLContextService(ControllerService):
     def __init__(self, name=None, cert=None, key=None, ca_cert=None):
         super(SSLContextService, self).__init__(name=name)

@@ -9,4 +9,3 @@ class OutputValidator(object):
         Return True if output is valid; False otherwise.
         """
         raise NotImplementedError("validate function needs to be implemented for validators")
-

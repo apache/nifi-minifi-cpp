@@ -864,6 +864,9 @@ add_custom_target(linter
 
 add_custom_target(shellcheck
 	COMMAND ${CMAKE_SOURCE_DIR}/run_shellcheck.sh ${CMAKE_SOURCE_DIR})
+
+add_custom_target(flake8
+	COMMAND ${CMAKE_SOURCE_DIR}/run_flake8.sh ${CMAKE_SOURCE_DIR})
 endif(NOT WIN32)
 
 # Custom target to download and run Apache Release Audit Tool (RAT)

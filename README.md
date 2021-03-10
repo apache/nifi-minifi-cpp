@@ -597,6 +597,9 @@ New contributions are expected to pass the shellcheck analysis as part of the ve
 If a shellcheck requested change is unfeasable it shall be disabled on per-line basis and will be subjected to review.
 For more information on an issue please check the [shellcheck wiki page](https://github.com/koalaman/shellcheck/wiki).
 
+Python script files shall follow the PEP8 guidelines and best practices. The project includes [flake8](https://flake8.pycqa.org/en/latest/) checks
+as part of the verification process, that is applied to all new contributions.
+
 Additionally, all new files must include a copy of the Apache License Header.
 
 For more details on how to contribute please see our [Contribution Guide](CONTRIB.md)

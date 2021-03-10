@@ -5,6 +5,7 @@ from os import listdir
 
 from .FileOutputValidator import FileOutputValidator
 
+
 class EmptyFilesOutPutValidator(FileOutputValidator):
 
     """
@@ -22,6 +23,6 @@ class EmptyFilesOutPutValidator(FileOutputValidator):
         logging.info("Output folder: %s", full_dir)
         listing = listdir(full_dir)
         if listing:
-            self.valid = all(os.path.getsize(os.path.join(full_dir,x)) == 0 for x in listing)
+            self.valid = all(os.path.getsize(os.path.join(full_dir, x)) == 0 for x in listing)
 
         return self.valid

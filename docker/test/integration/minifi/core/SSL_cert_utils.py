@@ -3,6 +3,7 @@ import logging
 
 from M2Crypto import X509, EVP, RSA, ASN1
 
+
 def gen_cert():
     """
     Generate TLS certificate request for testing
@@ -32,8 +33,10 @@ def gen_cert():
 
     return cert, key
 
+
 def rsa_gen_key_callback():
     pass
+
 
 def gen_req():
     """
