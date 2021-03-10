@@ -42,7 +42,7 @@ FlowFile::FlowFile()
       stored(false),
       offset_(0),
       last_queue_date_(0),
-      penaltyExpiration_ms_(0),
+      to_be_processed_after_(std::chrono::steady_clock::now()),
       event_time_(0),
       claim_(nullptr),
       marked_delete_(false) {
@@ -61,7 +61,7 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
   lineage_Identifiers_ = other.lineage_Identifiers_;
   last_queue_date_ = other.last_queue_date_;
   size_ = other.size_;
-  penaltyExpiration_ms_ = other.penaltyExpiration_ms_;
+  to_be_processed_after_ = other.to_be_processed_after_;
   attributes_ = other.attributes_;
   claim_ = other.claim_;
   connection_ = other.connection_;

@@ -207,12 +207,11 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
 
   template<typename Rep, typename Period>
   void penalize(std::chrono::duration<Rep, Period> duration) {
-    const auto penalty_expiration = std::chrono::system_clock::now() + duration;
-    penaltyExpiration_ms_ = std::chrono::duration_cast<std::chrono::milliseconds>(penalty_expiration.time_since_epoch()).count();
+    to_be_processed_after_ = std::chrono::steady_clock::now() + duration;
   }
 
-  uint64_t getPenaltyExpiration() const {
-    return penaltyExpiration_ms_;
+  std::chrono::time_point<std::chrono::steady_clock> getPenaltyExpiration() const {
+    return to_be_processed_after_;
   }
 
   /**
@@ -221,9 +220,8 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    */
   uint64_t getOffset() const;
 
-  // Check whether it is still being penalized
   bool isPenalized() const {
-    return penaltyExpiration_ms_ > 0 && penaltyExpiration_ms_ > utils::timeutils::getTimeMillis();
+    return to_be_processed_after_ > std::chrono::steady_clock::now();
   }
 
   uint64_t getId() const {
@@ -269,7 +267,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   // Offset to the content
   uint64_t offset_;
   // Penalty expiration
-  int64_t penaltyExpiration_ms_;
+  std::chrono::time_point<std::chrono::steady_clock> to_be_processed_after_;
   // Attributes key/values pairs for the flow record
   AttributeMap attributes_;
   // Pointer to the associated content resource claim
