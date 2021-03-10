@@ -160,7 +160,7 @@ OS_MAJOR=$(echo "$VER" | cut -d. -f1)
 export OS_MAJOR
 OS_MINOR=$(echo "$VER" | cut -d. -f2)
 export OS_MINOR
-OS_REVISION=$(echo "$EVR"	 | cut -d. -f3)
+OS_REVISION=$(echo "$EVR" | cut -d. -f3)
 export OS_REVISION
 
 ### Verify the compiler version
@@ -377,7 +377,7 @@ fi
 ## change to the directory
 
 
-pushd "${BUILD_DIR}" || exit
+pushd "${BUILD_DIR}" || exit 1
 
 while [ ! "$FEATURES_SELECTED" == "true" ]
 do
@@ -533,4 +533,4 @@ if [ "$PACKAGE" = "true" ]; then
 fi
 
 
-popd || exit
+popd || exit 1

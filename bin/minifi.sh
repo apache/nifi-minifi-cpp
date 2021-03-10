@@ -18,7 +18,7 @@
 # Script structure inspired from Apache Karaf and other Apache projects with similar startup approaches
 
 PROGNAME=$(basename "$0")
-SCRIPTPATH="$( cd "$(dirname "$0")" || exit ; pwd -P )"
+SCRIPTPATH="$( cd "$(dirname "$0")" || exit 1; pwd -P )"
 MINIFI_HOME="$(dirname "${SCRIPTPATH}")"
 export MINIFI_HOME
 bin_dir=${MINIFI_HOME}/bin
