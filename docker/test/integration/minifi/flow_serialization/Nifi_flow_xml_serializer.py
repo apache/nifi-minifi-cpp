@@ -6,6 +6,7 @@ from xml.etree.cElementTree import Element
 from ..core.Processor import Processor
 from ..core.InputPort import InputPort
 
+
 class Nifi_flow_xml_serializer:
     def serialize(self, connectable, nifi_version=None, root=None, visited=None):
         if visited is None:
@@ -76,7 +77,7 @@ class Nifi_flow_xml_serializer:
             input_port_max_concurrent_tasks = Element('maxConcurrentTasks')
             input_port_max_concurrent_tasks.text = '1'
             input_port.append(input_port_max_concurrent_tasks)
-            next( res.iterfind('rootGroup') ).append(input_port)
+            next(res.iterfind('rootGroup')).append(input_port)
 
         if isinstance(connectable, Processor):
             conn_destination = Element('processor')
@@ -165,7 +166,7 @@ class Nifi_flow_xml_serializer:
                 proc_auto_terminated_relationship = Element('autoTerminatedRelationship')
                 proc_auto_terminated_relationship.text = auto_terminate_rel
                 conn_destination.append(proc_auto_terminated_relationship)
-            next( res.iterfind('rootGroup') ).append(conn_destination)
+            next(res.iterfind('rootGroup')).append(conn_destination)
             """ res.iterfind('rootGroup').next().append(conn_destination) """
 
             for svc in connectable.controller_services:
@@ -214,7 +215,7 @@ class Nifi_flow_xml_serializer:
                     controller_service_property_value.text = property_value
                     controller_service_property.append(controller_service_property_value)
                     controller_service.append(controller_service_property)
-                next( res.iterfind('rootGroup') ).append(controller_service)
+                next(res.iterfind('rootGroup')).append(controller_service)
                 """ res.iterfind('rootGroup').next().append(controller_service)"""
 
         for conn_name in connectable.connections:
@@ -222,36 +223,36 @@ class Nifi_flow_xml_serializer:
 
             if isinstance(conn_destinations, list):
                 for conn_destination in conn_destinations:
-                    connection = self.build_nifi_flow_xml_connection_element(res,
-                                                          bend_points,
-                                                          conn_name,
-                                                          connectable,
-                                                          label_index,
-                                                          conn_destination,
-                                                          z_index)
-                    next( res.iterfind('rootGroup') ).append(connection)
+                    connection = self.build_nifi_flow_xml_connection_element(
+                        res,
+                        bend_points,
+                        conn_name,
+                        connectable,
+                        label_index,
+                        conn_destination,
+                        z_index)
+                    next(res.iterfind('rootGroup')).append(connection)
                     """ res.iterfind('rootGroup').next().append(connection) """
 
                     if conn_destination not in visited:
                         self.serialize(conn_destination, nifi_version, res, visited)
             else:
-                connection = self.build_nifi_flow_xml_connection_element(res,
-                                                      bend_points,
-                                                      conn_name,
-                                                      connectable,
-                                                      label_index,
-                                                      conn_destinations,
-                                                      z_index)
-                next( res.iterfind('rootGroup') ).append(connection)
+                connection = self.build_nifi_flow_xml_connection_element(
+                    res,
+                    bend_points,
+                    conn_name,
+                    connectable,
+                    label_index,
+                    conn_destinations,
+                    z_index)
+                next(res.iterfind('rootGroup')).append(connection)
                 """ res.iterfind('rootGroup').next().append(connection) """
 
                 if conn_destinations not in visited:
                     self.serialize(conn_destinations, nifi_version, res, visited)
 
         if root is None:
-            return ('<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
-                    + "\n"
-                    + elementTree.tostring(res, encoding='utf-8').decode('utf-8'))
+            return ('<?xml version="1.0" encoding="UTF-8" standalone="no"?>' + "\n" + elementTree.tostring(res, encoding='utf-8').decode('utf-8'))
 
     def build_nifi_flow_xml_connection_element(self, res, bend_points, conn_name, connectable, label_index, destination, z_index):
         connection = Element('connection')
@@ -272,7 +273,7 @@ class Nifi_flow_xml_serializer:
         connection.append(connection_source_id)
 
         connection_source_group_id = Element('sourceGroupId')
-        connection_source_group_id.text = next( res.iterfind('rootGroup/id') ).text
+        connection_source_group_id.text = next(res.iterfind('rootGroup/id')).text
         """connection_source_group_id.text = res.iterfind('rootGroup/id').next().text"""
         connection.append(connection_source_group_id)
 
@@ -321,4 +322,3 @@ class Nifi_flow_xml_serializer:
         connection.append(connection_flow_file_expiration)
 
         return connection
-
