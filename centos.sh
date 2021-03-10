@@ -18,7 +18,6 @@
 
 verify_enable_platform() {
     feature="$1"
-    export feature_status=${!1}
     if [ "$OS_MAJOR" = "6" ]; then
         if [ "$feature" = "GPS_ENABLED" ]; then
             echo "false"
