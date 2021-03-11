@@ -177,6 +177,7 @@ jobs:
             ubuntu-20.04-all-clang-ccache-refs/heads/main-
       - id: install_deps
         run: |
+          sudo apt update
           sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
