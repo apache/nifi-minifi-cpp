@@ -173,7 +173,7 @@ class S3Wrapper {
   bool deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version = "");
   minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& fetched_body);
   minifi::utils::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
-  minifi::utils::optional<std::map<std::string, std::string>> getObjectTags(const std::string& bucket, const std::string& object_key, const std::string& version = 0);
+  minifi::utils::optional<std::map<std::string, std::string>> getObjectTags(const std::string& bucket, const std::string& object_key, const std::string& version = "");
   minifi::utils::optional<HeadObjectResult> headObject(const HeadObjectRequestParameters& head_object_params);
 
   virtual ~S3Wrapper() = default;
