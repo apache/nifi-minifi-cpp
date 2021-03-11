@@ -38,7 +38,7 @@ It's recommended to create your configuration in YAML format or configure the ag
           max concurrent tasks: 1
           scheduling strategy: TIMER_DRIVEN
           scheduling period: 1 sec
-          penalization period: 30 sec
+          penalization period: 5 sec
           yield period: 1 sec
           run duration nanos: 0
           auto-terminated relationships list:

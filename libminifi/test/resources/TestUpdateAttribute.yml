@@ -26,7 +26,7 @@ Processors:
       max concurrent tasks: 1
       scheduling strategy: TIMER_DRIVEN
       scheduling period: 1 sec
-      penalization period: 30 sec
+      penalization period: 5 sec
       yield period: 1 sec
       run duration nanos: 0
       auto-terminated relationships list:
@@ -36,7 +36,7 @@ Processors:
       class: org.apache.nifi.processors.standard.UpdateAttribute
       max concurrent tasks: 1
       scheduling strategy: EVENT_DRIVEN
-      penalization period: 30 sec
+      penalization period: 5 sec
       yield period: 1 sec
       run duration nanos: 0
       Properties:
@@ -46,7 +46,7 @@ Processors:
       class: org.apache.nifi.processors.standard.RouteOnAttribute
       max concurrent tasks: 1
       scheduling strategy: EVENT_DRIVEN
-      penalization period: 30 sec
+      penalization period: 5 sec
       yield period: 1 sec
       run duration nanos: 0
       Properties:
@@ -56,7 +56,7 @@ Processors:
       class: org.apache.nifi.processors.standard.UpdateAttribute
       max concurrent tasks: 1
       scheduling strategy: EVENT_DRIVEN
-      penalization period: 30 sec
+      penalization period: 5 sec
       yield period: 1 sec
       run duration nanos: 0
       Properties:
@@ -67,7 +67,7 @@ Processors:
       class: org.apache.nifi.processors.standard.LogAttribute
       max concurrent tasks: 1
       scheduling strategy: EVENT_DRIVEN
-      penalization period: 30 sec
+      penalization period: 5 sec
       yield period: 1 sec
       run duration nanos: 0
       auto-terminated relationships list:

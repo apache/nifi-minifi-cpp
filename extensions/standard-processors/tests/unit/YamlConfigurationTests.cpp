@@ -92,7 +92,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
       "      max concurrent tasks: 1\n"
       "      scheduling strategy: TIMER_DRIVEN\n"
       "      scheduling period: 1 sec\n"
-      "      penalization period: 30 sec\n"
+      "      penalization period: 5 sec\n"
       "      yield period: 1 sec\n"
       "      run duration nanos: 0\n"
       "      auto-terminated relationships list:\n"
@@ -151,7 +151,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
       core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
   REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
-  REQUIRE(std::chrono::seconds(30) == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
+  REQUIRE(std::chrono::seconds(5) == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
   REQUIRE(1 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
   REQUIRE(0 == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
@@ -256,7 +256,7 @@ Processors:
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
-  penalization period: 30 sec
+  penalization period: 5 sec
   yield period: 1 sec
   run duration nanos: 0
   auto-terminated relationships list: []
@@ -382,7 +382,7 @@ Processors:
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
-  penalization period: 30 sec
+  penalization period: 5 sec
   yield period: 1 sec
   run duration nanos: 0
   auto-terminated relationships list: []
@@ -452,7 +452,7 @@ NiFi Properties Overrides: {}
   REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
   REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
-  REQUIRE(std::chrono::seconds(30) == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
+  REQUIRE(std::chrono::seconds(5) == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
   REQUIRE(1 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
   REQUIRE(0 == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
