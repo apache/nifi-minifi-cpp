@@ -169,7 +169,7 @@ TEST_CASE("Test Scheduling Defaults", "[schedDef]") {
     } else if ("defaultSchedulingStrategy" == child.name) {
       REQUIRE("TIMER_DRIVEN" == child.value.to_string());
     } else if ("penalizationPeriodMillis" == child.name) {
-      REQUIRE("30000" == child.value.to_string());
+      REQUIRE("5000" == child.value.to_string());
     } else if ("yieldDurationMillis" == child.name) {
       REQUIRE("1000" == child.value.to_string());
     } else {

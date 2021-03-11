@@ -36,7 +36,7 @@ namespace core {
 #define DEFAULT_RUN_DURATION 0
 #define DEFAULT_MAX_CONCURRENT_TASKS 1
 #define DEFAULT_YIELD_PERIOD_SECONDS 1
-constexpr std::chrono::seconds DEFAULT_PENALIZATION_PERIOD{30};
+constexpr std::chrono::seconds DEFAULT_PENALIZATION_PERIOD{5};
 
 struct ProcessorConfig {
   std::string id;
