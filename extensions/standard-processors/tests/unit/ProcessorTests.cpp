@@ -702,7 +702,7 @@ TEST_CASE_METHOD(ProcessorWithIncomingConnectionTest, "A Processor detects corre
 TEST_CASE_METHOD(ProcessorWithIncomingConnectionTest, "A failed and re-penalized flow file does not block the incoming queue of the Processor", "[penalize]") {
   processor_->setPenalizationPeriod(std::chrono::milliseconds{100});
   const auto penalized_flow_file = session_->create();
-  session_->penalize(penalized_flow_file);  // first penalty duration is 100 ms
+  session_->penalize(penalized_flow_file);
   incoming_connection_->put(penalized_flow_file);
   const auto penalty_has_expired = [penalized_flow_file] { return !penalized_flow_file->isPenalized(); };
   REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, penalty_has_expired, std::chrono::milliseconds{10}));
@@ -719,7 +719,7 @@ TEST_CASE_METHOD(ProcessorWithIncomingConnectionTest, "A failed and re-penalized
   const auto next_flow_file_1 = incoming_connection_->poll(expired_flow_files);
   REQUIRE(next_flow_file_1 == penalized_flow_file);
 
-  session_->penalize(penalized_flow_file);  // second penalty duration is 200 ms
+  session_->penalize(penalized_flow_file);
   incoming_connection_->put(penalized_flow_file);
   std::this_thread::sleep_for(std::chrono::milliseconds{110});
 
