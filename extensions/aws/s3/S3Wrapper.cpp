@@ -48,26 +48,6 @@ S3Wrapper::S3Wrapper() : request_sender_(minifi::utils::make_unique<S3ClientRequ
 S3Wrapper::S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender) : request_sender_(std::move(request_sender)) {
 }
 
-void S3Wrapper::setCredentials(const Aws::Auth::AWSCredentials& cred) {
-  request_sender_->setCredentials(cred);
-}
-
-void S3Wrapper::setRegion(const Aws::String& region) {
-  request_sender_->setRegion(region);
-}
-
-void S3Wrapper::setTimeout(uint64_t timeout) {
-  request_sender_->setTimeout(timeout);
-}
-
-void S3Wrapper::setEndpointOverrideUrl(const Aws::String& url) {
-  request_sender_->setEndpointOverrideUrl(url);
-}
-
-void S3Wrapper::setProxy(const ProxyOptions& proxy) {
-  request_sender_->setProxy(proxy);
-}
-
 void S3Wrapper::setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const {
   if (canned_acl.empty() || CANNED_ACL_MAP.find(canned_acl) == CANNED_ACL_MAP.end())
     return;
@@ -115,7 +95,7 @@ minifi::utils::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectReq
   request.SetGrantWriteACP(put_object_params.write_acl_user_list);
   setCannedAcl(request, put_object_params.canned_acl);
 
-  auto aws_result = request_sender_->sendPutObjectRequest(request);
+  auto aws_result = request_sender_->sendPutObjectRequest(request, put_object_params.credentials, put_object_params.client_config);
   if (!aws_result) {
     return minifi::utils::nullopt;
   }
@@ -132,14 +112,14 @@ minifi::utils::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectReq
   return result;
 }
 
-bool S3Wrapper::deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version) {
+bool S3Wrapper::deleteObject(const DeleteObjectRequestParameters& params) {
   Aws::S3::Model::DeleteObjectRequest request;
-  request.SetBucket(bucket);
-  request.SetKey(object_key);
-  if (!version.empty()) {
-    request.SetVersionId(version);
+  request.SetBucket(params.bucket);
+  request.SetKey(params.object_key);
+  if (!params.version.empty()) {
+    request.SetVersionId(params.version);
   }
-  return request_sender_->sendDeleteObjectRequest(request);
+  return request_sender_->sendDeleteObjectRequest(request, params.credentials, params.client_config);
 }
 
 int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::BaseStream& output) {
@@ -161,7 +141,7 @@ int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_si
 
 minifi::utils::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& out_body) {
   auto request = createFetchObjectRequest<Aws::S3::Model::GetObjectRequest>(get_object_params);
-  auto aws_result = request_sender_->sendGetObjectRequest(request);
+  auto aws_result = request_sender_->sendGetObjectRequest(request, get_object_params.credentials, get_object_params.client_config);
   if (!aws_result) {
     return minifi::utils::nullopt;
   }
@@ -212,7 +192,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVers
   std::vector<ListedObjectAttributes> attribute_list;
   nonstd::optional_lite::optional<Aws::S3::Model::ListObjectVersionsResult> aws_result;
   do {
-    aws_result = request_sender_->sendListVersionsRequest(request);
+    aws_result = request_sender_->sendListVersionsRequest(request, params.credentials, params.client_config);
     if (!aws_result) {
       return minifi::utils::nullopt;
     }
@@ -233,7 +213,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObje
   std::vector<ListedObjectAttributes> attribute_list;
   nonstd::optional_lite::optional<Aws::S3::Model::ListObjectsV2Result> aws_result;
   do {
-    aws_result = request_sender_->sendListObjectsRequest(request);
+    aws_result = request_sender_->sendListObjectsRequest(request, params.credentials, params.client_config);
     if (!aws_result) {
       return minifi::utils::nullopt;
     }
@@ -256,14 +236,14 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listBuck
   return listObjects(params);
 }
 
-minifi::utils::optional<std::map<std::string, std::string>> S3Wrapper::getObjectTags(const std::string& bucket, const std::string& object_key, const std::string& version) {
+minifi::utils::optional<std::map<std::string, std::string>> S3Wrapper::getObjectTags(const GetObjectTagsParameters& params) {
   Aws::S3::Model::GetObjectTaggingRequest request;
-  request.SetBucket(bucket);
-  request.SetKey(object_key);
-  if (!version.empty()) {
-    request.SetVersionId(version);
+  request.SetBucket(params.bucket);
+  request.SetKey(params.object_key);
+  if (!params.version.empty()) {
+    request.SetVersionId(params.version);
   }
-  auto aws_result = request_sender_->sendGetObjectTaggingRequest(request);
+  auto aws_result = request_sender_->sendGetObjectTaggingRequest(request, params.credentials, params.client_config);
   if (!aws_result) {
     return minifi::utils::nullopt;
   }
@@ -276,7 +256,7 @@ minifi::utils::optional<std::map<std::string, std::string>> S3Wrapper::getObject
 
 minifi::utils::optional<HeadObjectResult> S3Wrapper::headObject(const HeadObjectRequestParameters& head_object_params) {
   auto request = createFetchObjectRequest<Aws::S3::Model::HeadObjectRequest>(head_object_params);
-  auto aws_result = request_sender_->sendHeadObjectRequest(request);
+  auto aws_result = request_sender_->sendHeadObjectRequest(request, head_object_params.credentials, head_object_params.client_config);
   if (!aws_result) {
     return minifi::utils::nullopt;
   }

@@ -167,7 +167,7 @@ std::string PutS3Object::parseAccessControlList(const std::string &comma_separat
 bool PutS3Object::setCannedAcl(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
-    aws::s3::PutObjectRequestParameters &put_s3_request_params) {
+    aws::s3::PutObjectRequestParameters &put_s3_request_params) const {
   context->getProperty(CannedACL, put_s3_request_params.canned_acl, flow_file);
   if (!put_s3_request_params.canned_acl.empty() && CANNED_ACLS.find(put_s3_request_params.canned_acl) == CANNED_ACLS.end()) {
     logger_->log_error("Canned ACL is invalid!");
@@ -180,7 +180,7 @@ bool PutS3Object::setCannedAcl(
 bool PutS3Object::setAccessControl(
       const std::shared_ptr<core::ProcessContext> &context,
       const std::shared_ptr<core::FlowFile> &flow_file,
-      aws::s3::PutObjectRequestParameters &put_s3_request_params) {
+      aws::s3::PutObjectRequestParameters &put_s3_request_params) const {
   std::string value;
   if (context->getProperty(FullControlUserList, value, flow_file) && !value.empty()) {
     put_s3_request_params.fullcontrol_user_list = parseAccessControlList(value);
@@ -205,8 +205,9 @@ bool PutS3Object::setAccessControl(
 minifi::utils::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
-    const CommonProperties &common_properties) {
-  aws::s3::PutObjectRequestParameters params;
+    const CommonProperties &common_properties) const {
+  aws::s3::PutObjectRequestParameters params(common_properties.credentials, client_config_);
+  params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   params.bucket = common_properties.bucket;
   params.user_metadata_map = user_metadata_map_;
   params.server_side_encryption = server_side_encryption_;
@@ -232,7 +233,7 @@ void PutS3Object::setAttributes(
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const aws::s3::PutObjectRequestParameters &put_s3_request_params,
-    const minifi::aws::s3::PutObjectResult &put_object_result) {
+    const minifi::aws::s3::PutObjectResult &put_object_result) const {
   session->putAttribute(flow_file, "s3.bucket", put_s3_request_params.bucket);
   session->putAttribute(flow_file, "s3.key", put_s3_request_params.object_key);
   session->putAttribute(flow_file, "s3.contenttype", put_s3_request_params.content_type);
@@ -268,24 +269,19 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     return;
   }
 
-  auto put_s3_request_params = buildPutS3RequestParams(context, flow_file, common_properties.value());
+  auto put_s3_request_params = buildPutS3RequestParams(context, flow_file, *common_properties);
   if (!put_s3_request_params) {
     session->transfer(flow_file, Failure);
     return;
   }
 
-  PutS3Object::ReadCallback callback(flow_file->getSize(), put_s3_request_params.value(), s3_wrapper_);
-  {
-    std::lock_guard<std::mutex> lock(s3_wrapper_mutex_);
-    configureS3Wrapper(common_properties.value());
-    session->read(flow_file, &callback);
-  }
-
+  PutS3Object::ReadCallback callback(flow_file->getSize(), *put_s3_request_params, s3_wrapper_);
+  session->read(flow_file, &callback);
   if (callback.result_ == minifi::utils::nullopt) {
     logger_->log_error("Failed to upload S3 object to bucket '%s'", put_s3_request_params->bucket);
     session->transfer(flow_file, Failure);
   } else {
-    setAttributes(session, flow_file, put_s3_request_params.value(), callback.result_.value());
+    setAttributes(session, flow_file, *put_s3_request_params, *callback.result_);
     logger_->log_debug("Successfully uploaded S3 object '%s' to bucket '%s'", put_s3_request_params->object_key, put_s3_request_params->bucket);
     session->transfer(flow_file, Success);
   }

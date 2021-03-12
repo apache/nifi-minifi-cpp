@@ -81,7 +81,6 @@ class ListS3 : public S3Processor {
   static uint64_t getLatestListedKeyTimestamp(const std::unordered_map<std::string, std::string> &state);
 
   void writeObjectTags(
-    const std::string &bucket,
     const aws::s3::ListedObjectAttributes &object_attributes,
     core::ProcessSession &session,
     const std::shared_ptr<core::FlowFile> &flow_file);
@@ -95,7 +94,7 @@ class ListS3 : public S3Processor {
     core::ProcessSession &session,
     const aws::s3::ListedObjectAttributes &object_attributes);
 
-  aws::s3::ListRequestParameters list_request_params_;
+  std::unique_ptr<aws::s3::ListRequestParameters> list_request_params_;
   bool write_object_tags_ = false;
   bool write_user_metadata_ = false;
   bool requester_pays_ = false;

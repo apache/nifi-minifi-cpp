@@ -59,25 +59,38 @@ struct ProxyOptions {
 
 class S3RequestSender {
  public:
-  virtual minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3::Model::PutObjectRequest& request) = 0;
-  virtual bool sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectRequest& request) = 0;
-  virtual minifi::utils::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request) = 0;
-  virtual minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(const Aws::S3::Model::ListObjectsV2Request& request) = 0;
-  virtual minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(const Aws::S3::Model::ListObjectVersionsRequest& request) = 0;
-  virtual minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(const Aws::S3::Model::GetObjectTaggingRequest& request) = 0;
-  virtual minifi::utils::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(const Aws::S3::Model::HeadObjectRequest& request) = 0;
+  virtual minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
+    const Aws::S3::Model::PutObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) = 0;
+  virtual bool sendDeleteObjectRequest(
+    const Aws::S3::Model::DeleteObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) = 0;
+  virtual minifi::utils::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
+    const Aws::S3::Model::GetObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) = 0;
+  virtual minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
+    const Aws::S3::Model::ListObjectsV2Request& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) = 0;
+  virtual minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
+    const Aws::S3::Model::ListObjectVersionsRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) = 0;
+  virtual minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
+    const Aws::S3::Model::GetObjectTaggingRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) = 0;
+  virtual minifi::utils::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
+    const Aws::S3::Model::HeadObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) = 0;
   virtual ~S3RequestSender() = default;
-
-  void setCredentials(const Aws::Auth::AWSCredentials& cred);
-  void setRegion(const Aws::String& region);
-  void setTimeout(uint64_t timeout);
-  void setEndpointOverrideUrl(const Aws::String& url);
-  void setProxy(const ProxyOptions& proxy);
 
  protected:
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
-  Aws::Client::ClientConfiguration client_config_;
-  Aws::Auth::AWSCredentials credentials_;
   std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3RequestSender>::getLogger()};
 };
 

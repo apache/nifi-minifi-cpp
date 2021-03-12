@@ -198,16 +198,15 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");
   }
 
-  if (!context->getProperty(Region.getName(), value) || value.empty() || REGIONS.count(value) == 0) {
+  if (!context->getProperty(Region.getName(), client_config_.region) || client_config_.region.empty() || REGIONS.count(client_config_.region) == 0) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Region property missing or invalid");
   }
-  s3_wrapper_.setRegion(value);
-  logger_->log_debug("S3Processor: Region [%s]", value);
+  logger_->log_debug("S3Processor: Region [%s]", client_config_.region);
 
   uint64_t timeout_val;
   if (context->getProperty(CommunicationsTimeout.getName(), value) && !value.empty() && core::Property::getTimeMSFromString(value, timeout_val)) {
-    s3_wrapper_.setTimeout(timeout_val);
     logger_->log_debug("S3Processor: Communications Timeout [%llu]", timeout_val);
+    client_config_.connectTimeoutMs = gsl::narrow<int64_t>(timeout_val);
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }
@@ -242,16 +241,6 @@ minifi::utils::optional<CommonProperties> S3Processor::getCommonELSupportedPrope
   }
 
   return properties;
-}
-
-void S3Processor::configureS3Wrapper(const CommonProperties &common_properties) {
-  s3_wrapper_.setCredentials(common_properties.credentials);
-  if (!common_properties.proxy.host.empty()) {
-    s3_wrapper_.setProxy(common_properties.proxy);
-  }
-  if (!common_properties.endpoint_override_url.empty()) {
-    s3_wrapper_.setEndpointOverrideUrl(common_properties.endpoint_override_url);
-  }
 }
 
 }  // namespace processors

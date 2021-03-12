@@ -28,8 +28,11 @@ namespace minifi {
 namespace aws {
 namespace s3 {
 
-minifi::utils::optional<Aws::S3::Model::PutObjectResult> S3ClientRequestSender::sendPutObjectRequest(const Aws::S3::Model::PutObjectRequest& request) {
-  Aws::S3::S3Client s3_client(credentials_, client_config_);
+minifi::utils::optional<Aws::S3::Model::PutObjectResult> S3ClientRequestSender::sendPutObjectRequest(
+    const Aws::S3::Model::PutObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) {
+  Aws::S3::S3Client s3_client(credentials, client_config);
   auto outcome = s3_client.PutObject(request);
 
   if (outcome.IsSuccess()) {
@@ -41,8 +44,11 @@ minifi::utils::optional<Aws::S3::Model::PutObjectResult> S3ClientRequestSender::
   }
 }
 
-bool S3ClientRequestSender::sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectRequest& request) {
-  Aws::S3::S3Client s3_client(credentials_, client_config_);
+bool S3ClientRequestSender::sendDeleteObjectRequest(
+    const Aws::S3::Model::DeleteObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) {
+  Aws::S3::S3Client s3_client(credentials, client_config);
   Aws::S3::Model::DeleteObjectOutcome outcome = s3_client.DeleteObject(request);
 
   if (outcome.IsSuccess()) {
@@ -57,8 +63,11 @@ bool S3ClientRequestSender::sendDeleteObjectRequest(const Aws::S3::Model::Delete
   }
 }
 
-minifi::utils::optional<Aws::S3::Model::GetObjectResult> S3ClientRequestSender::sendGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request) {
-  Aws::S3::S3Client s3_client(credentials_, client_config_);
+minifi::utils::optional<Aws::S3::Model::GetObjectResult> S3ClientRequestSender::sendGetObjectRequest(
+    const Aws::S3::Model::GetObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) {
+  Aws::S3::S3Client s3_client(credentials, client_config);
   auto outcome = s3_client.GetObject(request);
 
   if (outcome.IsSuccess()) {
@@ -70,8 +79,11 @@ minifi::utils::optional<Aws::S3::Model::GetObjectResult> S3ClientRequestSender::
   }
 }
 
-minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> S3ClientRequestSender::sendListObjectsRequest(const Aws::S3::Model::ListObjectsV2Request& request) {
-  Aws::S3::S3Client s3_client(credentials_, client_config_);
+minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> S3ClientRequestSender::sendListObjectsRequest(
+    const Aws::S3::Model::ListObjectsV2Request& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) {
+  Aws::S3::S3Client s3_client(credentials, client_config);
   auto outcome = s3_client.ListObjectsV2(request);
 
   if (outcome.IsSuccess()) {
@@ -83,8 +95,11 @@ minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> S3ClientRequestSend
   }
 }
 
-minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> S3ClientRequestSender::sendListVersionsRequest(const Aws::S3::Model::ListObjectVersionsRequest& request) {
-  Aws::S3::S3Client s3_client(credentials_, client_config_);
+minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> S3ClientRequestSender::sendListVersionsRequest(
+    const Aws::S3::Model::ListObjectVersionsRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) {
+  Aws::S3::S3Client s3_client(credentials, client_config);
   auto outcome = s3_client.ListObjectVersions(request);
 
   if (outcome.IsSuccess()) {
@@ -96,8 +111,11 @@ minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> S3ClientReques
   }
 }
 
-minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> S3ClientRequestSender::sendGetObjectTaggingRequest(const Aws::S3::Model::GetObjectTaggingRequest& request) {
-  Aws::S3::S3Client s3_client(credentials_, client_config_);
+minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> S3ClientRequestSender::sendGetObjectTaggingRequest(
+    const Aws::S3::Model::GetObjectTaggingRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) {
+  Aws::S3::S3Client s3_client(credentials, client_config);
   auto outcome = s3_client.GetObjectTagging(request);
 
   if (outcome.IsSuccess()) {
@@ -109,8 +127,11 @@ minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> S3ClientRequestS
   }
 }
 
-minifi::utils::optional<Aws::S3::Model::HeadObjectResult> S3ClientRequestSender::sendHeadObjectRequest(const Aws::S3::Model::HeadObjectRequest& request) {
-  Aws::S3::S3Client s3_client(credentials_, client_config_);
+minifi::utils::optional<Aws::S3::Model::HeadObjectResult> S3ClientRequestSender::sendHeadObjectRequest(
+    const Aws::S3::Model::HeadObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) {
+  Aws::S3::S3Client s3_client(credentials, client_config);
   auto outcome = s3_client.HeadObject(request);
 
   if (outcome.IsSuccess()) {

@@ -126,17 +126,17 @@ class PutS3Object : public S3Processor {
 
   void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);
   std::string parseAccessControlList(const std::string &comma_separated_list) const;
-  bool setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params);
-  bool setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params);
+  bool setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params) const;
+  bool setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params) const;
   void setAttributes(
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const aws::s3::PutObjectRequestParameters &put_s3_request_params,
-    const minifi::aws::s3::PutObjectResult &put_object_result);
+    const minifi::aws::s3::PutObjectResult &put_object_result) const;
   minifi::utils::optional<aws::s3::PutObjectRequestParameters> buildPutS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
-    const CommonProperties &common_properties);
+    const CommonProperties &common_properties) const;
 
   std::string user_metadata_;
   std::map<std::string, std::string> user_metadata_map_;
