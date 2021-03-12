@@ -30,13 +30,34 @@ namespace s3 {
 
 class S3ClientRequestSender : public S3RequestSender {
  public:
-  minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3::Model::PutObjectRequest& request) override;
-  bool sendDeleteObjectRequest(const Aws::S3::Model::DeleteObjectRequest& request) override;
-  minifi::utils::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request) override;
-  minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(const Aws::S3::Model::ListObjectsV2Request& request) override;
-  minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(const Aws::S3::Model::ListObjectVersionsRequest& request) override;
-  minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(const Aws::S3::Model::GetObjectTaggingRequest& request) override;
-  minifi::utils::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(const Aws::S3::Model::HeadObjectRequest& request) override;
+  minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
+    const Aws::S3::Model::PutObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) override;
+  bool sendDeleteObjectRequest(
+    const Aws::S3::Model::DeleteObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) override;
+  minifi::utils::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
+    const Aws::S3::Model::GetObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) override;
+  minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
+    const Aws::S3::Model::ListObjectsV2Request& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) override;
+  minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
+    const Aws::S3::Model::ListObjectVersionsRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) override;
+  minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
+    const Aws::S3::Model::GetObjectTaggingRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) override;
+  minifi::utils::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
+    const Aws::S3::Model::HeadObjectRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config) override;
 };
 
 }  // namespace s3

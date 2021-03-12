@@ -65,6 +65,11 @@ class DeleteS3Object : public S3Processor {
   explicit DeleteS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
     : S3Processor(name, uuid, logging::LoggerFactory<DeleteS3Object>::getLogger(), std::move(s3_request_sender)) {
   }
+
+  minifi::utils::optional<aws::s3::DeleteObjectRequestParameters> buildDeleteS3RequestParams(
+    const std::shared_ptr<core::ProcessContext> &context,
+    const std::shared_ptr<core::FlowFile> &flow_file,
+    const CommonProperties &common_properties);
 };
 
 REGISTER_RESOURCE(DeleteS3Object, "This Processor deletes FlowFiles on an Amazon S3 Bucket.");

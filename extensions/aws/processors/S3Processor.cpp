@@ -198,16 +198,14 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");
   }
 
-  if (!context->getProperty(Region.getName(), value) || value.empty() || REGIONS.count(value) == 0) {
+  if (!context->getProperty(Region.getName(), region_) || region_.empty() || REGIONS.count(region_) == 0) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Region property missing or invalid");
   }
-  s3_wrapper_.setRegion(value);
-  logger_->log_debug("S3Processor: Region [%s]", value);
+  logger_->log_debug("S3Processor: Region [%s]", region_);
 
   uint64_t timeout_val;
-  if (context->getProperty(CommunicationsTimeout.getName(), value) && !value.empty() && core::Property::getTimeMSFromString(value, timeout_val)) {
-    s3_wrapper_.setTimeout(timeout_val);
-    logger_->log_debug("S3Processor: Communications Timeout [%llu]", timeout_val);
+  if (context->getProperty(CommunicationsTimeout.getName(), value) && !value.empty() && core::Property::getTimeMSFromString(value, timeout_)) {
+    logger_->log_debug("S3Processor: Communications Timeout [%llu]", timeout_);
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }
@@ -244,14 +242,14 @@ minifi::utils::optional<CommonProperties> S3Processor::getCommonELSupportedPrope
   return properties;
 }
 
-void S3Processor::configureS3Wrapper(const CommonProperties &common_properties) {
-  s3_wrapper_.setCredentials(common_properties.credentials);
-  if (!common_properties.proxy.host.empty()) {
-    s3_wrapper_.setProxy(common_properties.proxy);
-  }
-  if (!common_properties.endpoint_override_url.empty()) {
-    s3_wrapper_.setEndpointOverrideUrl(common_properties.endpoint_override_url);
-  }
+void S3Processor::setClientConfig(Aws::Client::ClientConfiguration& config, const CommonProperties &common_properties) const {
+  config.proxyHost = common_properties.proxy.host;
+  config.proxyPort = common_properties.proxy.port;
+  config.proxyUserName = common_properties.proxy.username;
+  config.proxyPassword = common_properties.proxy.password;
+  config.endpointOverride = common_properties.endpoint_override_url;
+  config.region = region_;
+  config.connectTimeoutMs = timeout_;
 }
 
 }  // namespace processors

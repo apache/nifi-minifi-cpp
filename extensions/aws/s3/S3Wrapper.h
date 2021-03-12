@@ -99,7 +99,12 @@ struct PutObjectResult {
   std::string ssealgorithm;
 };
 
-struct PutObjectRequestParameters {
+struct RequestParameters {
+  Aws::Auth::AWSCredentials credentials;
+  Aws::Client::ClientConfiguration client_config;
+};
+
+struct PutObjectRequestParameters : public RequestParameters {
   std::string bucket;
   std::string object_key;
   std::string storage_class;
@@ -113,14 +118,20 @@ struct PutObjectRequestParameters {
   std::string canned_acl;
 };
 
-struct GetObjectRequestParameters {
+struct DeleteObjectRequestParameters : public RequestParameters {
+  std::string bucket;
+  std::string object_key;
+  std::string version;
+};
+
+struct GetObjectRequestParameters : public RequestParameters {
   std::string bucket;
   std::string object_key;
   std::string version;
   bool requester_pays = false;
 };
 
-struct HeadObjectResult {
+struct HeadObjectResult : public RequestParameters {
   std::string path;
   std::string absolute_path;
   std::string filename;
@@ -138,7 +149,7 @@ struct GetObjectResult : public HeadObjectResult {
   int64_t write_size = 0;
 };
 
-struct ListRequestParameters {
+struct ListRequestParameters : public RequestParameters {
   std::string bucket;
   std::string delimiter;
   std::string prefix;
@@ -146,7 +157,7 @@ struct ListRequestParameters {
   uint64_t min_object_age = 0;
 };
 
-struct ListedObjectAttributes {
+struct ListedObjectAttributes : public RequestParameters {
   std::string filename;
   std::string etag;
   bool is_latest = false;
@@ -157,23 +168,18 @@ struct ListedObjectAttributes {
 };
 
 using HeadObjectRequestParameters = GetObjectRequestParameters;
+using GetObjectTagsParameters = DeleteObjectRequestParameters;
 
 class S3Wrapper {
  public:
   S3Wrapper();
   explicit S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender);
 
-  void setCredentials(const Aws::Auth::AWSCredentials& cred);
-  void setRegion(const Aws::String& region);
-  void setTimeout(uint64_t timeout);
-  void setEndpointOverrideUrl(const Aws::String& url);
-  void setProxy(const ProxyOptions& proxy);
-
   minifi::utils::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
-  bool deleteObject(const std::string& bucket, const std::string& object_key, const std::string& version = "");
+  bool deleteObject(const DeleteObjectRequestParameters& options);
   minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& fetched_body);
   minifi::utils::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
-  minifi::utils::optional<std::map<std::string, std::string>> getObjectTags(const std::string& bucket, const std::string& object_key, const std::string& version = "");
+  minifi::utils::optional<std::map<std::string, std::string>> getObjectTags(const GetObjectTagsParameters& params);
   minifi::utils::optional<HeadObjectResult> headObject(const HeadObjectRequestParameters& head_object_params);
 
   virtual ~S3Wrapper() = default;

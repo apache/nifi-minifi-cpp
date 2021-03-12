@@ -107,15 +107,17 @@ class S3Processor : public core::Processor {
  protected:
   explicit S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender);
 
+  void setClientConfig(Aws::Client::ClientConfiguration& config, const CommonProperties &common_properties) const;
+
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentials(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
   minifi::utils::optional<aws::s3::ProxyOptions> getProxy(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
   minifi::utils::optional<CommonProperties> getCommonELSupportedProperties(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
-  void configureS3Wrapper(const CommonProperties &common_properties);
 
   std::shared_ptr<logging::Logger> logger_;
   aws::s3::S3Wrapper s3_wrapper_;
-  std::mutex s3_wrapper_mutex_;
+  std::string region_;
+  uint64_t timeout_;
 };
 
 }  // namespace processors

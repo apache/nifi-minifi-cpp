@@ -99,7 +99,8 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   if (!common_properties) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required property is not set or invalid");
   }
-  configureS3Wrapper(common_properties.value());
+  list_request_params_.credentials = common_properties->credentials;
+  setClientConfig(list_request_params_.client_config, *common_properties);
   list_request_params_.bucket = common_properties->bucket;
 
   context->getProperty(Delimiter.getName(), list_request_params_.delimiter);
@@ -128,7 +129,6 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
 }
 
 void ListS3::writeObjectTags(
-    const std::string &bucket,
     const aws::s3::ListedObjectAttributes &object_attributes,
     core::ProcessSession &session,
     const std::shared_ptr<core::FlowFile> &flow_file) {
@@ -136,13 +136,19 @@ void ListS3::writeObjectTags(
     return;
   }
 
-  auto get_object_tags_result = s3_wrapper_.getObjectTags(bucket, object_attributes.filename, object_attributes.version);
+  aws::s3::GetObjectTagsParameters params;
+  params.bucket = list_request_params_.bucket;
+  params.object_key = object_attributes.filename;
+  params.version = object_attributes.version;
+  params.client_config = list_request_params_.client_config;
+  params.credentials = list_request_params_.credentials;
+  auto get_object_tags_result = s3_wrapper_.getObjectTags(params);
   if (get_object_tags_result) {
-    for (const auto& tag : get_object_tags_result.value()) {
+    for (const auto& tag : *get_object_tags_result) {
       session.putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
     }
   } else {
-    logger_->log_warn("Failed to get object tags for object %s in bucket %s", object_attributes.filename, bucket);
+    logger_->log_warn("Failed to get object tags for object %s in bucket %s", object_attributes.filename, params.bucket);
   }
 }
 
@@ -159,6 +165,8 @@ void ListS3::writeUserMetadata(
   params.object_key = object_attributes.filename;
   params.version = object_attributes.version;
   params.requester_pays = requester_pays_;
+  params.credentials = list_request_params_.credentials;
+  params.client_config = list_request_params_.client_config;
   auto head_object_tags_result = s3_wrapper_.headObject(params);
   if (head_object_tags_result) {
     for (const auto& metadata : head_object_tags_result->user_metadata_map) {
@@ -231,7 +239,7 @@ void ListS3::createNewFlowFile(
   if (!object_attributes.version.empty()) {
     session.putAttribute(flow_file, "s3.version", object_attributes.version);
   }
-  writeObjectTags(list_request_params_.bucket, object_attributes, session, flow_file);
+  writeObjectTags(object_attributes, session, flow_file);
   writeUserMetadata(object_attributes, session, flow_file);
 
   session.transfer(flow_file, Success);
@@ -251,7 +259,7 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
   auto latest_listing_state = stored_listing_state;
   std::size_t files_transferred = 0;
 
-  for (const auto& object_attributes : aws_results.value()) {
+  for (const auto& object_attributes : *aws_results) {
     if (stored_listing_state.wasObjectListedAlready(object_attributes)) {
       continue;
     }

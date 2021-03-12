@@ -207,6 +207,8 @@ minifi::utils::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildP
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) {
   aws::s3::PutObjectRequestParameters params;
+  params.credentials = common_properties.credentials;
+  setClientConfig(params.client_config, common_properties);
   params.bucket = common_properties.bucket;
   params.user_metadata_map = user_metadata_map_;
   params.server_side_encryption = server_side_encryption_;
@@ -268,24 +270,19 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     return;
   }
 
-  auto put_s3_request_params = buildPutS3RequestParams(context, flow_file, common_properties.value());
+  auto put_s3_request_params = buildPutS3RequestParams(context, flow_file, *common_properties);
   if (!put_s3_request_params) {
     session->transfer(flow_file, Failure);
     return;
   }
 
-  PutS3Object::ReadCallback callback(flow_file->getSize(), put_s3_request_params.value(), s3_wrapper_);
-  {
-    std::lock_guard<std::mutex> lock(s3_wrapper_mutex_);
-    configureS3Wrapper(common_properties.value());
-    session->read(flow_file, &callback);
-  }
-
+  PutS3Object::ReadCallback callback(flow_file->getSize(), *put_s3_request_params, s3_wrapper_);
+  session->read(flow_file, &callback);
   if (callback.result_ == minifi::utils::nullopt) {
     logger_->log_error("Failed to upload S3 object to bucket '%s'", put_s3_request_params->bucket);
     session->transfer(flow_file, Failure);
   } else {
-    setAttributes(session, flow_file, put_s3_request_params.value(), callback.result_.value());
+    setAttributes(session, flow_file, *put_s3_request_params, *callback.result_);
     logger_->log_debug("Successfully uploaded S3 object '%s' to bucket '%s'", put_s3_request_params->object_key, put_s3_request_params->bucket);
     session->transfer(flow_file, Success);
   }
