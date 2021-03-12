@@ -38,27 +38,27 @@ def onInitialize(processor):
 
 
 class ContentExtract(object):
-  def __init__(self):
-    self.content = None
+    def __init__(self):
+        self.content = None
 
-  def process(self, input_stream):
-    self.content = codecs.getreader('utf-8')(input_stream).read()
-    return len(self.content)
+    def process(self, input_stream):
+        self.content = codecs.getreader('utf-8')(input_stream).read()
+        return len(self.content)
 
 
 def onTrigger(context, session):
-  flow_file = session.get()
-  if flow_file is not None:
-    credentials_filename = context.getProperty("Credentials Path")
-    sentiment = ContentExtract()
-    session.read(flow_file, sentiment)
-    client = language.LanguageServiceClient.from_service_account_json(credentials_filename)
-    document = types.Document(content=sentiment.content, type=enums.Document.Type.PLAIN_TEXT)
+    flow_file = session.get()
+    if flow_file is not None:
+        credentials_filename = context.getProperty("Credentials Path")
+        sentiment = ContentExtract()
+        session.read(flow_file, sentiment)
+        client = language.LanguageServiceClient.from_service_account_json(credentials_filename)
+        document = types.Document(content=sentiment.content, type=enums.Document.Type.PLAIN_TEXT)
 
-    annotations = client.analyze_sentiment(document=document, retry=None, timeout=1.0)
-    score = annotations.document_sentiment.score
-    magnitude = annotations.document_sentiment.magnitude
+        annotations = client.analyze_sentiment(document=document, retry=None, timeout=1.0)
+        score = annotations.document_sentiment.score
+        magnitude = annotations.document_sentiment.magnitude
 
-    flow_file.addAttribute("score", str(score))
-    flow_file.addAttribute("magnitude", str(magnitude))
-    session.transfer(flow_file, REL_SUCCESS)  # noqa: F821
+        flow_file.addAttribute("score", str(score))
+        flow_file.addAttribute("magnitude", str(magnitude))
+        session.transfer(flow_file, REL_SUCCESS)  # noqa: F821
