@@ -99,9 +99,6 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
     def check_http_proxy_access(self, url):
         output = subprocess.check_output(["docker", "exec", "http-proxy", "cat", "/var/log/squid/access.log"]).decode(self.get_stdout_encoding())
-        print(output)
-        print(output.count("TCP_DENIED/407"))
-        print(output.count("TCP_MISS"))
         return url in output \
             and ((output.count("TCP_DENIED/407") != 0
                   and output.count("TCP_MISS") == output.count("TCP_DENIED/407"))
