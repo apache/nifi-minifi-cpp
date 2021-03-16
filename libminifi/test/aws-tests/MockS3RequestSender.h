@@ -58,7 +58,7 @@ const std::string S3_CONTINUATION_TOKEN = "continue";
 class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
  public:
   MockS3RequestSender() {
-    for(auto i = 0; i < S3_OBJECT_COUNT; ++i) {
+    for(std::size_t i = 0; i < S3_OBJECT_COUNT; ++i) {
       Aws::S3::Model::ObjectVersion version;
       version.SetKey(S3_KEY_PREFIX + std::to_string(i));
       version.SetETag(S3_ETAG_PREFIX + std::to_string(i));
@@ -74,7 +74,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
       listed_versions_.push_back(version);
     }
 
-    for(auto i = 0; i < S3_OBJECT_COUNT; ++i) {
+    for(std::size_t i = 0; i < S3_OBJECT_COUNT; ++i) {
       Aws::S3::Model::Object object;
       object.SetKey(S3_KEY_PREFIX + std::to_string(i));
       object.SetETag(S3_ETAG_PREFIX + std::to_string(i));
@@ -129,7 +129,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
 
     Aws::S3::Model::ListObjectsV2Result list_object_result;
     if (!is_listing_truncated_) {
-      for (auto i = 0; i < listed_objects_.size(); ++i) {
+      for (std::size_t i = 0; i < listed_objects_.size(); ++i) {
         list_object_result.AddContents(listed_objects_[i]);
       }
       return list_object_result;
@@ -138,7 +138,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     if (request.GetContinuationToken().empty()) {
       list_object_result.SetNextContinuationToken(S3_CONTINUATION_TOKEN);
       list_object_result.SetIsTruncated(true);
-      for (auto i = 0; i < listed_objects_.size() / 2; ++i) {
+      for (std::size_t i = 0; i < listed_objects_.size() / 2; ++i) {
         list_object_result.AddContents(listed_objects_[i]);
       }
     } else {
@@ -155,7 +155,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
 
     Aws::S3::Model::ListObjectVersionsResult list_version_result;
     if (!is_listing_truncated_) {
-      for (auto i = 0; i < listed_versions_.size(); ++i) {
+      for (std::size_t i = 0; i < listed_versions_.size(); ++i) {
         list_version_result.AddVersions(listed_versions_[i]);
       }
       return list_version_result;
@@ -165,7 +165,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
       list_version_result.SetNextKeyMarker(S3_KEY_MARKER);
       list_version_result.SetNextVersionIdMarker(S3_VERSION_ID_MARKER);
       list_version_result.SetIsTruncated(true);
-      for (auto i = 0; i < listed_versions_.size() / 2; ++i) {
+      for (std::size_t i = 0; i < listed_versions_.size() / 2; ++i) {
         list_version_result.AddVersions(listed_versions_[i]);
       }
     } else {
