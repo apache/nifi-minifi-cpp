@@ -17,7 +17,7 @@ class FileSystemObserver(object):
         self.done_event = Event()
         self.event_handler = OutputEventHandler(self.done_event)
         self.observer = Observer()
-        self.observer.schedule(self.event_handler, self.test_output_dir)
+        self.observer.schedule(self.event_handler, self.test_output_dir, recursive=True)
         self.observer.start()
 
     def get_output_dir(self):
@@ -29,18 +29,19 @@ class FileSystemObserver(object):
 
         self.observer = Observer()
         self.done_event.clear()
-        self.observer.schedule(self.event_handler, self.test_output_dir)
+        self.observer.schedule(self.event_handler, self.test_output_dir, recursive=True)
         self.observer.start()
 
-    def wait_for_output(self, timeout_seconds, max_files):
-        logging.info('Waiting up to %d seconds for test output...', timeout_seconds)
+    def wait_for_output(self, timeout_seconds, output_validator, max_files):
+        logging.info('Waiting up to %d seconds for %d test outputs...', timeout_seconds, max_files)
         self.restart_observer_if_needed()
         wait_start_time = time.perf_counter()
         for i in range(0, max_files):
             # Note: The timing on Event.wait() is inaccurate
             self.done_event.wait(timeout_seconds)
+            self.done_event.clear()
             current_time = time.perf_counter()
-            if timeout_seconds < (current_time - wait_start_time):
+            if timeout_seconds < (current_time - wait_start_time) or output_validator.validate():
                 break
         self.observer.stop()
         self.observer.join()

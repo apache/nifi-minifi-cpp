@@ -27,7 +27,7 @@
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
 
-#include "S3WrapperBase.h"
+#include "S3Wrapper.h"
 #include "AWSCredentialsProvider.h"
 #include "core/Property.h"
 #include "core/Processor.h"
@@ -85,7 +85,6 @@ class S3Processor : public core::Processor {
   static const std::set<std::string> REGIONS;
 
   // Supported Properties
-  static const core::Property ObjectKey;
   static const core::Property Bucket;
   static const core::Property AccessKey;
   static const core::Property SecretKey;
@@ -100,13 +99,13 @@ class S3Processor : public core::Processor {
   static const core::Property ProxyPassword;
   static const core::Property UseDefaultCredentials;
 
-  explicit S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger);
+  explicit S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger);
 
   bool supportsDynamicProperties() override { return true; }
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  protected:
-  explicit S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper);
+  explicit S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender);
 
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentials(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file);
@@ -115,7 +114,7 @@ class S3Processor : public core::Processor {
   void configureS3Wrapper(const CommonProperties &common_properties);
 
   std::shared_ptr<logging::Logger> logger_;
-  std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper_;
+  aws::s3::S3Wrapper s3_wrapper_;
   std::mutex s3_wrapper_mutex_;
 };
 

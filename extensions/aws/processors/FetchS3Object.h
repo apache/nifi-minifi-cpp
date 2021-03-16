@@ -44,6 +44,7 @@ class FetchS3Object : public S3Processor {
   static constexpr char const* ProcessorName = "FetchS3Object";
 
   // Supported Properties
+  static const core::Property ObjectKey;
   static const core::Property Version;
   static const core::Property RequesterPays;
 
@@ -51,7 +52,7 @@ class FetchS3Object : public S3Processor {
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
-  explicit FetchS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
+  explicit FetchS3Object(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : S3Processor(name, uuid, logging::LoggerFactory<FetchS3Object>::getLogger()) {
   }
 
@@ -63,7 +64,7 @@ class FetchS3Object : public S3Processor {
 
   class WriteCallback : public OutputStreamCallback {
    public:
-    WriteCallback(uint64_t flow_size, const minifi::aws::s3::GetObjectRequestParameters& get_object_params, aws::s3::S3WrapperBase* s3_wrapper)
+    WriteCallback(uint64_t flow_size, const minifi::aws::s3::GetObjectRequestParameters& get_object_params, aws::s3::S3Wrapper& s3_wrapper)
       : flow_size_(flow_size)
       , get_object_params_(get_object_params)
       , s3_wrapper_(s3_wrapper) {
@@ -71,7 +72,7 @@ class FetchS3Object : public S3Processor {
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       std::vector<uint8_t> buffer;
-      result_ = s3_wrapper_->getObject(get_object_params_, stream);
+      result_ = s3_wrapper_.getObject(get_object_params_, *stream);
       if (!result_) {
         return 0;
       }
@@ -82,7 +83,7 @@ class FetchS3Object : public S3Processor {
     uint64_t flow_size_;
 
     const minifi::aws::s3::GetObjectRequestParameters& get_object_params_;
-    aws::s3::S3WrapperBase* s3_wrapper_;
+    aws::s3::S3Wrapper& s3_wrapper_;
     uint64_t write_size_ = 0;
     minifi::utils::optional<minifi::aws::s3::GetObjectResult> result_ = minifi::utils::nullopt;
   };
@@ -90,8 +91,8 @@ class FetchS3Object : public S3Processor {
  private:
   friend class ::S3TestsFixture<FetchS3Object>;
 
-  explicit FetchS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
-    : S3Processor(std::move(name), uuid, logging::LoggerFactory<FetchS3Object>::getLogger(), std::move(s3_wrapper)) {
+  explicit FetchS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(name, uuid, logging::LoggerFactory<FetchS3Object>::getLogger(), std::move(s3_request_sender)) {
   }
 
   bool requester_pays_ = false;

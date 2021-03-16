@@ -28,6 +28,7 @@
 #include "processors/PutS3Object.h"
 #include "processors/DeleteS3Object.h"
 #include "processors/FetchS3Object.h"
+#include "processors/ListS3.h"
 
 class AWSObjectFactory : public core::ObjectFactory {
  public:
@@ -55,6 +56,7 @@ class AWSObjectFactory : public core::ObjectFactory {
     class_names.push_back("PutS3Object");
     class_names.push_back("DeleteS3Object");
     class_names.push_back("FetchS3Object");
+    class_names.push_back("ListS3");
     return class_names;
   }
 
@@ -67,6 +69,8 @@ class AWSObjectFactory : public core::ObjectFactory {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::aws::processors::DeleteS3Object>());
     } else if (utils::StringUtils::equalsIgnoreCase(class_name, "FetchS3Object")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::aws::processors::FetchS3Object>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ListS3")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::aws::processors::ListS3>());
     } else {
       return nullptr;
     }

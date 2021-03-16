@@ -30,6 +30,11 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
+const core::Property FetchS3Object::ObjectKey(
+  core::PropertyBuilder::createProperty("Object Key")
+    ->withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
+    ->supportsExpressionLanguage(true)
+    ->build());
 const core::Property FetchS3Object::Version(
   core::PropertyBuilder::createProperty("Version")
     ->withDescription("The Version of the Object to download")
@@ -48,7 +53,7 @@ const core::Relationship FetchS3Object::Failure("failure", "FlowFiles are routed
 
 void FetchS3Object::initialize() {
   // Add new supported properties
-  updateSupportedProperties({Version, RequesterPays});
+  updateSupportedProperties({ObjectKey, Version, RequesterPays});
   // Set the supported relationships
   setSupportedRelationships({Failure, Success});
 }
@@ -76,13 +81,20 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
 
   minifi::aws::s3::GetObjectRequestParameters get_object_params;
   get_object_params.bucket = common_properties->bucket;
-  get_object_params.object_key = common_properties->object_key;
   get_object_params.requester_pays = requester_pays_;
+
+  context->getProperty(ObjectKey, get_object_params.object_key, flow_file);
+  if (get_object_params.object_key.empty() && (!flow_file->getAttribute("filename", get_object_params.object_key) || get_object_params.object_key.empty())) {
+    logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
+    session->transfer(flow_file, Failure);
+    return;
+  }
+  logger_->log_debug("FetchS3Object: Object Key [%s]", get_object_params.object_key);
 
   context->getProperty(Version, get_object_params.version, flow_file);
   logger_->log_debug("FetchS3Object: Version [%s]", get_object_params.version);
 
-  WriteCallback callback(flow_file->getSize(), get_object_params, s3_wrapper_.get());
+  WriteCallback callback(flow_file->getSize(), get_object_params, s3_wrapper_);
   {
     std::lock_guard<std::mutex> lock(s3_wrapper_mutex_);
     configureS3Wrapper(common_properties.value());

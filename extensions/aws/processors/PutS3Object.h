@@ -51,6 +51,7 @@ class PutS3Object : public S3Processor {
   static const std::set<std::string> SERVER_SIDE_ENCRYPTIONS;
 
   // Supported Properties
+  static const core::Property ObjectKey;
   static const core::Property ContentType;
   static const core::Property StorageClass;
   static const core::Property ServerSideEncryption;
@@ -64,8 +65,8 @@ class PutS3Object : public S3Processor {
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
-  explicit PutS3Object(std::string name, minifi::utils::Identifier uuid = minifi::utils::Identifier())
-    : S3Processor(std::move(name), uuid, logging::LoggerFactory<PutS3Object>::getLogger()) {
+  explicit PutS3Object(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
+    : S3Processor(name, uuid, logging::LoggerFactory<PutS3Object>::getLogger()) {
   }
 
   ~PutS3Object() override = default;
@@ -79,7 +80,7 @@ class PutS3Object : public S3Processor {
     static const uint64_t MAX_SIZE;
     static const uint64_t BUFFER_SIZE;
 
-    ReadCallback(uint64_t flow_size, const minifi::aws::s3::PutObjectRequestParameters& options, aws::s3::S3WrapperBase* s3_wrapper)
+    ReadCallback(uint64_t flow_size, const minifi::aws::s3::PutObjectRequestParameters& options, aws::s3::S3Wrapper& s3_wrapper)
       : flow_size_(flow_size)
       , options_(options)
       , s3_wrapper_(s3_wrapper) {
@@ -106,13 +107,13 @@ class PutS3Object : public S3Processor {
           break;
         }
       }
-      result_ = s3_wrapper_->putObject(options_, data_stream);
+      result_ = s3_wrapper_.putObject(options_, data_stream);
       return read_size_;
     }
 
     uint64_t flow_size_;
     const minifi::aws::s3::PutObjectRequestParameters& options_;
-    aws::s3::S3WrapperBase* s3_wrapper_;
+    aws::s3::S3Wrapper& s3_wrapper_;
     uint64_t read_size_ = 0;
     minifi::utils::optional<minifi::aws::s3::PutObjectResult> result_ = minifi::utils::nullopt;
   };
@@ -120,8 +121,8 @@ class PutS3Object : public S3Processor {
  private:
   friend class ::S3TestsFixture<PutS3Object>;
 
-  explicit PutS3Object(std::string name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
-    : S3Processor(std::move(name), uuid, logging::LoggerFactory<PutS3Object>::getLogger(), std::move(s3_wrapper)) {
+  explicit PutS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(name, uuid, logging::LoggerFactory<PutS3Object>::getLogger(), std::move(s3_request_sender)) {
   }
 
   void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);

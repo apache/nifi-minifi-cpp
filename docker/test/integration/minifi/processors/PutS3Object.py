@@ -1,14 +1,16 @@
 from ..core.Processor import Processor
 
+
 class PutS3Object(Processor):
     def __init__(self,
+        object_key='test_object_key',
         proxy_host='',
         proxy_port='',
         proxy_username='',
         proxy_password=''):
             super(PutS3Object, self).__init__('PutS3Object',
             properties = {
-                'Object Key': 'test_object_key',
+                'Object Key': object_key,
                 'Bucket': 'test_bucket',
                 'Access Key': 'test_access_key',
                 'Secret Key': 'test_secret',

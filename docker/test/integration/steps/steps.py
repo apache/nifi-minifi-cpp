@@ -11,6 +11,7 @@ from minifi.processors.PublishKafka import PublishKafka
 from minifi.processors.PutS3Object import PutS3Object
 from minifi.processors.DeleteS3Object import DeleteS3Object
 from minifi.processors.FetchS3Object import FetchS3Object
+from minifi.processors.ListS3 import ListS3
 
 
 from behave import given, then, when
@@ -40,7 +41,8 @@ def step_impl(context, processor_type, property, property_value, cluster_name):
     logging.info("Acquiring " + cluster_name)
     cluster = context.test.acquire_cluster(cluster_name)
     processor = locate("minifi.processors." + processor_type + "." + processor_type)()
-    processor.set_property(property, property_value)
+    if property:
+        processor.set_property(property, property_value)
     processor.set_name(processor_type)
     context.test.add_node(processor)
     # Assume that the first node declared is primary unless specified otherwise
@@ -48,11 +50,16 @@ def step_impl(context, processor_type, property, property_value, cluster_name):
         cluster.set_name(cluster_name)
         cluster.set_flow(processor)
 
-
 @given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\"")
 def step_impl(context, processor_type, property, property_value):
     context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow".
         format(processor_type=processor_type, property=property, property_value=property_value, cluster_name="primary_cluster"))
+
+@given("a {processor_type} processor in the \"{cluster_name}\" flow")
+@given("a {processor_type} processor in a \"{cluster_name}\" flow")
+def step_impl(context, processor_type, cluster_name):
+    context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow".
+        format(processor_type=processor_type, property=None, property_value=None, cluster_name=cluster_name))
 
 @given("a set of processors in the \"{cluster_name}\" flow")
 def step_impl(context, cluster_name):
@@ -154,6 +161,10 @@ def step_impl(context):
 def step_impl(context, content, path):
     context.test.add_test_data(path, content)
 
+@given("a file with filename \"{file_name}\" and content \"{content}\" is present in \"{path}\"")
+def step_impl(context, file_name, content, path):
+    context.test.add_test_data(path, content, file_name)
+
 # NiFi setups
 
 @given("a NiFi flow \"{cluster_name}\" receiving data from a RemoteProcessGroup \"{source_name}\" on port {port}")
@@ -188,7 +199,7 @@ def step_impl(context, cluster_name):
     cluster.set_flow(None)
 
 # TLS
-# 
+#
 @given("an ssl context service set up for {producer_name} and {consumer_name}")
 def step_impl(context, producer_name, consumer_name):
     cert, key = gen_cert()
@@ -227,9 +238,19 @@ def step_impl(context, cluster_name):
 def step_impl(context):
     context.test.start()
 
+@when("content \"{content}\" is added to file \"{file_name}\" present in directory \"{path}\" {seconds:d} seconds later")
+def step_impl(context, content, file_name, path, seconds):
+    time.sleep(seconds)
+    context.test.add_test_data(path, content, file_name)
+
 @then("a flowfile with the content \"{content}\" is placed in the monitored directory in less than {duration}")
 def step_impl(context, content, duration):
     context.test.check_for_file_with_content_generated(content, timeparse(duration))
+
+@then("{number_of_files:d} flowfiles are placed in the monitored directory in {duration}")
+@then("{number_of_files:d} flowfile is placed in the monitored directory in {duration}")
+def step_impl(context, number_of_files, duration):
+    context.test.check_for_multiple_files_generated(number_of_files, timeparse(duration))
 
 @then("at least one empty flowfile is placed in the monitored directory in less than {duration}")
 def step_impl(context, duration):

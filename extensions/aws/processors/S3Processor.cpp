@@ -42,11 +42,6 @@ const std::set<std::string> S3Processor::REGIONS({region::AF_SOUTH_1, region::AP
   region::EU_SOUTH_1, region::EU_WEST_1, region::EU_WEST_2, region::EU_WEST_3, region::ME_SOUTH_1, region::SA_EAST_1,
   region::US_EAST_1, region::US_EAST_2, region::US_GOV_EAST_1, region::US_GOV_WEST_1, region::US_WEST_1, region::US_WEST_2});
 
-const core::Property S3Processor::ObjectKey(
-  core::PropertyBuilder::createProperty("Object Key")
-    ->withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
-    ->supportsExpressionLanguage(true)
-    ->build());
 const core::Property S3Processor::Bucket(
   core::PropertyBuilder::createProperty("Bucket")
     ->withDescription("The S3 bucket")
@@ -119,19 +114,18 @@ const core::Property S3Processor::UseDefaultCredentials(
     ->isRequired(true)
     ->build());
 
-S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger)
-  : core::Processor(std::move(name), uuid)
-  , logger_(logger)
-  , s3_wrapper_(minifi::utils::make_unique<aws::s3::S3Wrapper>()) {
-  setSupportedProperties({ObjectKey, Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
+S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger)
+  : core::Processor(name, uuid)
+  , logger_(logger) {
+  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
                           EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials});
 }
 
-S3Processor::S3Processor(std::string name, minifi::utils::Identifier uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3WrapperBase> s3_wrapper)
-  : core::Processor(std::move(name), uuid)
+S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+  : core::Processor(name, uuid)
   , logger_(logger)
-  , s3_wrapper_(std::move(s3_wrapper)) {
-  setSupportedProperties({ObjectKey, Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
+  , s3_wrapper_(std::move(s3_request_sender)) {
+  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
                           EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials});
 }
 
@@ -205,13 +199,13 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   if (!context->getProperty(Region.getName(), value) || value.empty() || REGIONS.count(value) == 0) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Region property missing or invalid");
   }
-  s3_wrapper_->setRegion(value);
+  s3_wrapper_.setRegion(value);
   logger_->log_debug("S3Processor: Region [%s]", value);
 
   uint64_t timeout_val;
   if (context->getProperty(CommunicationsTimeout.getName(), value) && !value.empty() && core::Property::getTimeMSFromString(value, timeout_val)) {
-    s3_wrapper_->setTimeout(timeout_val);
-    logger_->log_debug("S3Processor: Communications Timeout [%d]", timeout_val);
+    s3_wrapper_.setTimeout(timeout_val);
+    logger_->log_debug("S3Processor: Communications Timeout [%llu]", timeout_val);
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }
@@ -221,13 +215,6 @@ minifi::utils::optional<CommonProperties> S3Processor::getCommonELSupportedPrope
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   CommonProperties properties;
-  context->getProperty(ObjectKey, properties.object_key, flow_file);
-  if (properties.object_key.empty() && (!flow_file->getAttribute("filename", properties.object_key) || properties.object_key.empty())) {
-    logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
-    return minifi::utils::nullopt;
-  }
-  logger_->log_debug("S3Processor: Object Key [%s]", properties.object_key);
-
   if (!context->getProperty(Bucket, properties.bucket, flow_file) || properties.bucket.empty()) {
     logger_->log_error("Bucket '%s' is invalid or empty!", properties.bucket);
     return minifi::utils::nullopt;
@@ -249,19 +236,19 @@ minifi::utils::optional<CommonProperties> S3Processor::getCommonELSupportedPrope
 
   context->getProperty(EndpointOverrideURL, properties.endpoint_override_url, flow_file);
   if (!properties.endpoint_override_url.empty()) {
-    logger_->log_debug("S3Processor: Endpoint Override URL [%d]", properties.endpoint_override_url);
+    logger_->log_debug("S3Processor: Endpoint Override URL [%s]", properties.endpoint_override_url);
   }
 
   return properties;
 }
 
 void S3Processor::configureS3Wrapper(const CommonProperties &common_properties) {
-  s3_wrapper_->setCredentials(common_properties.credentials);
+  s3_wrapper_.setCredentials(common_properties.credentials);
   if (!common_properties.proxy.host.empty()) {
-    s3_wrapper_->setProxy(common_properties.proxy);
+    s3_wrapper_.setProxy(common_properties.proxy);
   }
   if (!common_properties.endpoint_override_url.empty()) {
-    s3_wrapper_->setEndpointOverrideUrl(common_properties.endpoint_override_url);
+    s3_wrapper_.setEndpointOverrideUrl(common_properties.endpoint_override_url);
   }
 }
 
