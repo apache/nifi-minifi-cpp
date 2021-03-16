@@ -7,9 +7,7 @@ from minifi.processors.PublishKafka import PublishKafka
 from minifi.processors.PutS3Object import PutS3Object
 from minifi.processors.DeleteS3Object import DeleteS3Object
 from minifi.processors.FetchS3Object import FetchS3Object
-from minifi.processors.ListS3 import ListS3
 from minifi.processors.PutAzureBlobStorage import PutAzureBlobStorage
-
 
 from behave import given, then, when
 from behave.model_describe import ModelDescriptor
@@ -17,6 +15,7 @@ from pydoc import locate
 from pytimeparse.timeparse import timeparse
 
 import logging
+import time
 
 
 # Background
@@ -41,6 +40,7 @@ def step_impl(context, processor_type, property, property_value, cluster_name):
         cluster.set_name(cluster_name)
         cluster.set_flow(processor)
 
+
 @given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\"")
 def step_impl(context, processor_type, property, property_value):
     context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow".
@@ -51,7 +51,8 @@ def step_impl(context, processor_type, property, property_value):
 @given("a {processor_type} processor in a \"{cluster_name}\" flow")
 def step_impl(context, processor_type, cluster_name):
     context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow".
-        format(processor_type=processor_type, property=None, property_value=None, cluster_name=cluster_name))
+                          format(processor_type=processor_type, property=None, property_value=None, cluster_name=cluster_name))
+
 
 @given("a set of processors in the \"{cluster_name}\" flow")
 def step_impl(context, cluster_name):

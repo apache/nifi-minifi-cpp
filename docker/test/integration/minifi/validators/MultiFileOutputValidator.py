@@ -1,6 +1,5 @@
 import logging
 import os
-import subprocess
 
 from os import listdir
 from os.path import join
@@ -38,21 +37,19 @@ class MultiFileOutputValidator(FileOutputValidator):
             if not os.path.isfile(full_path):
                 return self.valid
 
-            with open(full_path, 'r') as out_file:
-                contents = out_file.read()
-                logging.info("dir %s -- name %s", full_dir, out_file_name)
-                logging.info("expected file count %d -- current file count %d", self.expected_file_count, len(self.file_timestamps))
+            logging.info("dir %s -- name %s", full_dir, out_file_name)
+            logging.info("expected file count %d -- current file count %d", self.expected_file_count, len(self.file_timestamps))
 
-                if full_path in self.file_timestamps and self.file_timestamps[full_path] != os.path.getmtime(full_path):
-                    logging.error("Last modified timestamp changed for %s", full_path)
-                    self.valid = False
-                    return self.valid
+            if full_path in self.file_timestamps and self.file_timestamps[full_path] != os.path.getmtime(full_path):
+                logging.error("Last modified timestamp changed for %s", full_path)
+                self.valid = False
+                return self.valid
 
-                self.file_timestamps[full_path] = os.path.getmtime(full_path)
-                logging.info("New file added %s", full_path)
+            self.file_timestamps[full_path] = os.path.getmtime(full_path)
+            logging.info("New file added %s", full_path)
 
-                if len(self.file_timestamps) == self.expected_file_count:
-                    self.valid = True
-                    return self.valid
+            if len(self.file_timestamps) == self.expected_file_count:
+                self.valid = True
+                return self.valid
 
         return self.valid
