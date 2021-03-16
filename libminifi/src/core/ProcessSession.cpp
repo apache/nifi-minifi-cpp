@@ -198,9 +198,9 @@ void ProcessSession::removeAttribute(const std::shared_ptr<core::FlowFile> &flow
 }
 
 void ProcessSession::penalize(const std::shared_ptr<core::FlowFile> &flow) {
-  uint64_t penalization_period = process_context_->getProcessorNode()->getPenalizationPeriodMsec();
-  logging::LOG_INFO(logger_) << "Penalizing " << flow->getUUIDStr() << " for " << penalization_period << "ms at " << process_context_->getProcessorNode()->getName();
-  flow->setPenaltyExpiration(utils::timeutils::getTimeMillis() + penalization_period);
+  const std::chrono::milliseconds penalization_period = process_context_->getProcessorNode()->getPenalizationPeriod();
+  logging::LOG_INFO(logger_) << "Penalizing " << flow->getUUIDStr() << " for " << penalization_period.count() << "ms at " << process_context_->getProcessorNode()->getName();
+  flow->penalize(penalization_period);
 }
 
 void ProcessSession::transfer(const std::shared_ptr<core::FlowFile> &flow, Relationship relationship) {

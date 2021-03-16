@@ -35,10 +35,8 @@ namespace core {
 #define DEFAULT_SCHEDULING_PERIOD_MILLIS 1000
 #define DEFAULT_RUN_DURATION 0
 #define DEFAULT_MAX_CONCURRENT_TASKS 1
-#define DEFAULT_PENALIZATION_PERIOD 1
-// Default yield period in second
 #define DEFAULT_YIELD_PERIOD_SECONDS 1
-#define DEFAULT_PENALIZATION_PERIOD_SECONDS 30
+constexpr std::chrono::seconds DEFAULT_PENALIZATION_PERIOD{30};
 
 struct ProcessorConfig {
   std::string id;

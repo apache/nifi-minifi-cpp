@@ -103,7 +103,7 @@ class RetryFlowFileTest {
     std::shared_ptr<core::Processor> putfile_on_failure          = plan_->addProcessor("PutFile", "putfile_on_failure", {success}, false);
     std::shared_ptr<core::Processor> log_attribute               = plan_->addProcessor("LogAttribute", "log", {success}, false);
 
-    retryflowfile->setPenalizationPeriodMsec(0);
+    retryflowfile->setPenalizationPeriod(std::chrono::milliseconds{0});
 
     plan_->addConnection(generate, success, update);
     plan_->addConnection(update, success, retryflowfile);

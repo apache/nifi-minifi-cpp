@@ -167,7 +167,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   void yield() override {}
 
   bool isWorkAvailable() override {
-    return queue_.canBePopped();
+    return queue_.isWorkAvailable();
   }
 
   bool isRunning() override {

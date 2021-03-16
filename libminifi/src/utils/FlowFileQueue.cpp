@@ -30,70 +30,41 @@ bool FlowFileQueue::FlowFilePenaltyExpirationComparator::operator()(const value_
 }
 
 FlowFileQueue::value_type FlowFileQueue::pop() {
-  if (existsFlowFileWithExpiredPenalty()) {
-    value_type next_flow_file = priority_queue_.top();
-    priority_queue_.pop();
-    return next_flow_file;
+  if (empty()) {
+    throw std::logic_error{"pop() called on an empty FlowFileQueue"};
   }
 
-  if (!fifo_queue_.empty()) {
-    value_type next_flow_file = fifo_queue_.front();
-    fifo_queue_.pop();
-    return next_flow_file;
-  }
-
-  throw std::logic_error{"pop() called on FlowFileQueue when canBePopped() is false"};
-}
-
-/**
- * Pops any flow file off the queue, whether it has an unexpired penalty or not.
- */
-FlowFileQueue::value_type FlowFileQueue::forcePop() {
-  if (!fifo_queue_.empty()) {
-    value_type next_flow_file = fifo_queue_.front();
-    fifo_queue_.pop();
-    return next_flow_file;
-  }
-
-  if (!priority_queue_.empty()) {
-    value_type next_flow_file = priority_queue_.top();
-    priority_queue_.pop();
-    return next_flow_file;
-  }
-
-  throw std::logic_error{"forcePop() called on an empty FlowFileQueue"};
+  value_type next_flow_file = queue_.top();
+  queue_.pop();
+  return next_flow_file;
 }
 
 void FlowFileQueue::push(const value_type& element) {
-  if (element->isPenalized()) {
-    priority_queue_.push(element);
-  } else {
-    fifo_queue_.push(element);
+  if (!element->isPenalized()) {
+    element->penalize(std::chrono::milliseconds{0});
   }
+
+  queue_.push(element);
 }
 
 void FlowFileQueue::push(value_type&& element) {
-  if (element->isPenalized()) {
-    priority_queue_.push(std::move(element));
-  } else {
-    fifo_queue_.push(std::move(element));
+  if (!element->isPenalized()) {
+    element->penalize(std::chrono::milliseconds{0});
   }
+
+  queue_.push(std::move(element));
 }
 
-bool FlowFileQueue::canBePopped() const {
-  return !fifo_queue_.empty() || existsFlowFileWithExpiredPenalty();
+bool FlowFileQueue::isWorkAvailable() const {
+  return !queue_.empty() && !queue_.top()->isPenalized();
 }
 
 bool FlowFileQueue::empty() const {
-  return fifo_queue_.empty() && priority_queue_.empty();
+  return queue_.empty();
 }
 
 size_t FlowFileQueue::size() const {
-  return fifo_queue_.size() + priority_queue_.size();
-}
-
-bool FlowFileQueue::existsFlowFileWithExpiredPenalty() const {
-  return !priority_queue_.empty() && !priority_queue_.top()->isPenalized();
+  return queue_.size();
 }
 
 }  // namespace utils
