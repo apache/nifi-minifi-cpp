@@ -69,11 +69,11 @@ class PutOPCProcessor : public BaseOPCProcessor {
     logger_ = logging::LoggerFactory<PutOPCProcessor>::getLogger();
   }
 
-  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
 
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
-  virtual void initialize(void) override;
+  void initialize(void) override;
 
  private:
 

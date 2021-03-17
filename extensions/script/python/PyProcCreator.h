@@ -36,7 +36,7 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<core::CoreComponent> create(const std::string &name) override {
+  std::shared_ptr<core::CoreComponent> create(const std::string &name) override {
     auto ptr = std::static_pointer_cast<minifi::python::processors::ExecutePythonProcessor>(DefautObjectFactory::create(name));
     ptr->initialize();
     ptr->setProperty(minifi::python::processors::ExecutePythonProcessor::ScriptFile, file_);
@@ -46,7 +46,7 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<core::CoreComponent> create(const std::string &name, const utils::Identifier & uuid) override {
+  std::shared_ptr<core::CoreComponent> create(const std::string &name, const utils::Identifier & uuid) override {
     auto ptr = std::static_pointer_cast<minifi::python::processors::ExecutePythonProcessor>(DefautObjectFactory::create(name, uuid));
     ptr->initialize();
     ptr->setProperty(minifi::python::processors::ExecutePythonProcessor::ScriptFile, file_);
@@ -56,7 +56,7 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual core::CoreComponent* createRaw(const std::string &name) override {
+  core::CoreComponent* createRaw(const std::string &name) override {
     auto ptr = dynamic_cast<minifi::python::processors::ExecutePythonProcessor*>(DefautObjectFactory::createRaw(name));
     ptr->initialize();
     ptr->setProperty(minifi::python::processors::ExecutePythonProcessor::ScriptFile, file_);
@@ -66,7 +66,7 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual core::CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) override {
+  core::CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) override {
     auto ptr = dynamic_cast<minifi::python::processors::ExecutePythonProcessor*>(DefautObjectFactory::createRaw(name, uuid));
     ptr->initialize();
     ptr->setProperty(minifi::python::processors::ExecutePythonProcessor::ScriptFile, file_);

@@ -54,17 +54,17 @@ class MQTTC2Protocol : public C2Protocol {
    * @param payload payload to consume.
    * @direction direction of operation.
    */
-  virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override;
+  C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override;
 
-  virtual C2Payload consumePayload(const C2Payload &payload, Direction /*direction*/, bool /*async*/) override {
+  C2Payload consumePayload(const C2Payload &payload, Direction /*direction*/, bool /*async*/) override {
     return serialize(payload);
   }
 
-  virtual void update(const std::shared_ptr<Configure>& /*configure*/) override {
+  void update(const std::shared_ptr<Configure>& /*configure*/) override {
     // no op.
   }
 
-  virtual void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) override;
+  void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) override;
 
  protected:
 

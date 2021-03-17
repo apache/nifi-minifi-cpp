@@ -60,7 +60,7 @@ class MetadataWalker : public pugi::xml_tree_walker {
    * Overloaded function to visit a node
    * @param node Node that we are visiting.
    */
-  virtual bool for_each(pugi::xml_node &node) override;
+  bool for_each(pugi::xml_node &node) override;
 
   static std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex = "");
   

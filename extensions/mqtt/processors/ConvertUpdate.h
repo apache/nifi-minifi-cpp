@@ -65,7 +65,7 @@ public:
   /**
      * Initialization of the processor
      */
-    virtual void initialize() override;
+    void initialize() override;
   /**
    * Function that's executed when the processor is triggered.
    * @param context process context.
@@ -73,7 +73,7 @@ public:
    * ProcessSession objects.
    */
 
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
 protected:
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;

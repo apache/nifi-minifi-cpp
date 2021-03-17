@@ -45,23 +45,23 @@ class AgentPrinter : public RESTProtocol, public HeartBeatReporter {
   /**
    * Initialize agent printer.
    */
-  virtual void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+  void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
                           const std::shared_ptr<Configure> &configure) override;
 
   /**
    * Accepts the heartbeat, only extracting AgentInformation.
    */
-  virtual int16_t heartbeat(const C2Payload &heartbeat) override;
+  int16_t heartbeat(const C2Payload &heartbeat) override;
 
   /**
    * Overrides extracting the agent information from the root.
    */
-  virtual std::string serializeJsonRootPayload(const C2Payload& payload) override;
+  std::string serializeJsonRootPayload(const C2Payload& payload) override;
 
   /**
    * Overrides extracting the agent information from the payload.
    */
-  virtual rapidjson::Value serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc) override;
+  rapidjson::Value serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc) override;
 
  protected:
 

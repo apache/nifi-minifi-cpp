@@ -62,7 +62,7 @@ class JVMCreator : public minifi::core::CoreComponent {
 
   }
 
-  virtual void configure(const std::shared_ptr<Configure> &configuration) override {
+  void configure(const std::shared_ptr<Configure> &configuration) override {
     std::string pathListings, jvmOptionsStr;
 
     // assuming we have the options set and can access the JVMCreator

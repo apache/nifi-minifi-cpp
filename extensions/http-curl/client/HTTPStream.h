@@ -46,7 +46,7 @@ class HttpStream : public io::BaseStream {
     forceClose();
   }
 
-  virtual void close() override;
+  void close() override;
 
   const std::shared_ptr<utils::HTTPClient> &getClientRef() {
     return http_client_;

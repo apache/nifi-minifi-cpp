@@ -58,9 +58,9 @@ class ProcessContextExpr : public core::ProcessContext {
    * @param value that will be filled
    * @param flow_file flow file.
    */
-  virtual bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
+  bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
 
-  virtual bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
+  bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
  protected:
 
   std::map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;

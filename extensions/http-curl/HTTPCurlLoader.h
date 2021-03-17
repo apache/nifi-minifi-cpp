@@ -54,18 +54,18 @@ class HttpCurlObjectFactory : public core::ObjectFactory {
    * Gets the name of the object.
    * @return class name of processor
    */
-  virtual std::string getName() override{
+  std::string getName() override{
     return "HttpCurlObjectFactory";
   }
 
-  virtual std::string getClassName() override{
+  std::string getClassName() override{
     return "HttpCurlObjectFactory";
   }
   /**
    * Gets the class name for the object
    * @return class name for the processor.
    */
-  virtual std::vector<std::string> getClassNames() override{
+  std::vector<std::string> getClassNames() override{
     std::vector<std::string> class_names;
     class_names.push_back("HttpProtocol");
     class_names.push_back("RESTSender");
@@ -75,7 +75,7 @@ class HttpCurlObjectFactory : public core::ObjectFactory {
     return class_names;
   }
 
-  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override{
+  std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override{
     if (utils::StringUtils::equalsIgnoreCase(class_name, "RESTSender")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::c2::RESTSender>());
     } else if (utils::StringUtils::equalsIgnoreCase(class_name, "InvokeHTTP")) {
@@ -89,7 +89,7 @@ class HttpCurlObjectFactory : public core::ObjectFactory {
     }
   }
 
-  virtual std::unique_ptr<core::ObjectFactoryInitializer> getInitializer() override{
+  std::unique_ptr<core::ObjectFactoryInitializer> getInitializer() override{
     return std::unique_ptr<core::ObjectFactoryInitializer>(new HttpCurlObjectFactoryInitializer());
   }
 

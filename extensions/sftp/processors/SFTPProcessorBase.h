@@ -72,7 +72,7 @@ class SFTPProcessorBase : public core::Processor {
   static constexpr char const *PROXY_TYPE_HTTP = "HTTP";
   static constexpr char const *PROXY_TYPE_SOCKS = "SOCKS";
 
-  virtual void notifyStop() override;
+  void notifyStop() override;
 
  protected:
   std::shared_ptr<logging::Logger> logger_;

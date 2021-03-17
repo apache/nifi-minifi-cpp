@@ -94,19 +94,19 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
    * Establish the protocol connection. Not needed for the HTTP connection, so we simply
    * return true.
    */
-  virtual bool establish() override {
+  bool establish() override {
     return true;
   }
 
-  virtual std::shared_ptr<Transaction> createTransaction(TransferDirection direction) override;
+  std::shared_ptr<Transaction> createTransaction(TransferDirection direction) override;
 
   // Transfer flow files for the process session
   // virtual bool transferFlowFiles(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
   //! Transfer string for the process session
-  virtual bool transmitPayload(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, const std::string &payload,
+  bool transmitPayload(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, const std::string &payload,
                                std::map<std::string, std::string> attributes) override;
   // deleteTransaction
-  virtual void deleteTransaction(const utils::Identifier& transactionID) override;
+  void deleteTransaction(const utils::Identifier& transactionID) override;
 
  protected:
 
@@ -116,14 +116,14 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
    */
   void closeTransaction(const utils::Identifier &transactionID);
 
-  virtual int readResponse(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message) override;
+  int readResponse(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message) override;
   // write respond
-  virtual int writeResponse(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message) override;
+  int writeResponse(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message) override;
 
   /**
    * Bootstrapping is not really required for the HTTP Site To Site so we will set the peer state and return true.
    */
-  virtual bool bootstrap() override {
+  bool bootstrap() override {
     peer_state_ = READY;
     return true;
   }
@@ -153,7 +153,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
     return uri;
   }
 
-  virtual void tearDown() override;
+  void tearDown() override;
 
   utils::optional<utils::Identifier> parseTransactionId(const std::string &uri);
 

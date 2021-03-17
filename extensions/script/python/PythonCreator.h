@@ -63,7 +63,7 @@ class PythonCreator : public minifi::core::CoreComponent {
 
   }
 
-  virtual void configure(const std::shared_ptr<Configure> &configuration) override {
+  void configure(const std::shared_ptr<Configure> &configuration) override {
 
     python::PythonScriptEngine::initialize();
 

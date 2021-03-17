@@ -61,14 +61,14 @@ class ConvertBase : public core::Processor, public minifi::c2::RESTProtocol {
   /**
    * Initialization of the processor
    */
-  virtual void initialize() override;
+  void initialize() override;
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
  protected:
 
   /**
