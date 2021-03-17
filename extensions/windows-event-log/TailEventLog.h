@@ -59,13 +59,13 @@ public:
    */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   // OnTrigger method, implemented by NiFi TailEventLog
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   // Initialize, over write by NiFi TailEventLog
-  virtual void initialize(void) override;
+  void initialize(void) override;
 
 protected:
 
-  virtual void notifyStop() override{
+  void notifyStop() override{
     CloseEventLog(log_handle_);
   }
 

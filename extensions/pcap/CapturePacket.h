@@ -115,15 +115,15 @@ class CapturePacket : public core::Processor {
   // Supported Relationships
   static core::Relationship Success;
 
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  virtual void initialize() override;
-  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void initialize() override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
   static void packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, void* data);
 
  protected:
 
-  virtual void notifyStop() override {
+  void notifyStop() override {
     logger_->log_debug("Stopping capture");
     for (auto dev : device_list_) {
       dev->stopCapture();

@@ -84,13 +84,13 @@ namespace processors {
   static core::Relationship Reject;
   static core::Relationship Failure;
 
-  virtual bool supportsDynamicProperties() override {
+  bool supportsDynamicProperties() override {
     return true;
   }
 
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  virtual void initialize() override;
-  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void initialize() override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
   class ReadCallback : public InputStreamCallback {
    public:
@@ -98,7 +98,7 @@ namespace processors {
         utils::SFTPClient& client,
         const std::string& conflict_resolution);
     ~ReadCallback();
-    virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
     std::shared_ptr<logging::Logger> logger_;

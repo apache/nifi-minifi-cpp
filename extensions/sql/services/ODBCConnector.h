@@ -104,7 +104,7 @@ class ODBCService : public DatabaseService {
     initialize();
   }
 
-  virtual std::unique_ptr<sql::Connection> getConnection() const override;
+  std::unique_ptr<sql::Connection> getConnection() const override;
 
  private:
   std::shared_ptr<logging::Logger> logger_;

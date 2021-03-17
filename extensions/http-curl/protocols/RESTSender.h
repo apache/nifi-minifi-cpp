@@ -50,13 +50,13 @@ class RESTSender : public RESTProtocol, public C2Protocol {
 
   explicit RESTSender(const std::string &name, const utils::Identifier &uuid = utils::Identifier());
 
-  virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override;
+  C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override;
 
-  virtual C2Payload consumePayload(const C2Payload &payload, Direction direction, bool async) override;
+  C2Payload consumePayload(const C2Payload &payload, Direction direction, bool async) override;
 
-  virtual void update(const std::shared_ptr<Configure> &configure) override;
+  void update(const std::shared_ptr<Configure> &configure) override;
 
-  virtual void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) override;
+  void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) override;
 
  protected:
 

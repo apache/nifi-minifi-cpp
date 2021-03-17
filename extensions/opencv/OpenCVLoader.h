@@ -45,24 +45,24 @@ class OpenCVObjectFactory : public core::ObjectFactory {
    * Gets the name of the object.
    * @return class name of processor
    */
-  virtual std::string getName() override{
+  std::string getName() override{
     return "OpenCVObjectFactory";
   }
 
-  virtual std::string getClassName() override{
+  std::string getClassName() override{
     return "OpenCVObjectFactory";
   }
   /**
    * Gets the class name for the object
    * @return class name for the processor.
    */
-  virtual std::vector<std::string> getClassNames() override{
+  std::vector<std::string> getClassNames() override{
     std::vector<std::string> class_names;
     class_names.push_back("CaptureRTSPFrame");
     return class_names;
   }
 
-  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override{
+  std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override{
     if (utils::StringUtils::equalsIgnoreCase(class_name, "CaptureRTSPFrame")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::CaptureRTSPFrame>());
     } else {

@@ -52,7 +52,7 @@ class JniFlowFile : public core::WeakReference {
 
   virtual ~JniFlowFile() = default;
 
-  virtual void remove() override;
+  void remove() override;
 
   std::shared_ptr<core::FlowFile> get() const {
     return ref_;
@@ -182,7 +182,7 @@ class JniInputStream : public core::WeakReference {
 
   }
 
-  virtual void remove() override {
+  void remove() override {
     std::lock_guard<std::mutex> guard(mutex_);
     if (!removed_) {
       servicer_->attach()->DeleteGlobalRef(in_instance_);
@@ -223,7 +223,7 @@ class JniSession : public core::WeakReference {
         session_instance_(session_instance) {
   }
 
-  virtual void remove() override {
+  void remove() override {
     std::lock_guard<std::mutex> guard(session_mutex_);
     if (!removed_) {
       for (auto ff : global_ff_objects_) {
@@ -310,7 +310,7 @@ class JniSessionFactory : public core::WeakReference {
         factory_(factory) {
   }
 
-  virtual void remove() override {
+  void remove() override {
     std::lock_guard<std::mutex> guard(session_mutex_);
     // remove all of the sessions
     // this should spark their destructor

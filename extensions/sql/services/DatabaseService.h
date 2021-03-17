@@ -60,7 +60,7 @@ class DatabaseService : public core::controller::ControllerService {
    */
   static core::Property ConnectionString;
 
-  virtual void initialize() override;
+  void initialize() override;
 
   void yield() override {
 
@@ -74,7 +74,7 @@ class DatabaseService : public core::controller::ControllerService {
     return false;
   }
 
-  virtual void onEnable() override;
+  void onEnable() override;
 
   virtual std::unique_ptr<sql::Connection> getConnection() const = 0;
 

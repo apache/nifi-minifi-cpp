@@ -66,7 +66,7 @@ class JavaControllerService : public core::controller::ControllerService, public
   static core::Property NarDeploymentDirectory;
   static core::Property NarDocumentDirectory;
 
-  virtual void initialize() override;
+  void initialize() override;
 
   void yield() override {
   }
@@ -79,7 +79,7 @@ class JavaControllerService : public core::controller::ControllerService, public
     return false;
   }
 
-  virtual void onEnable() override;
+  void onEnable() override;
 
   std::vector<std::string> getPaths() const {
     return classpaths_;
@@ -89,22 +89,22 @@ class JavaControllerService : public core::controller::ControllerService, public
     return loader->getObjectClass(name, jobj);
   }
 
-  virtual JavaClass loadClass(const std::string &class_name_) override {
+  JavaClass loadClass(const std::string &class_name_) override {
     std::string modifiedName = class_name_;
     modifiedName = utils::StringUtils::replaceAll(modifiedName, ".", "/");
     return loader->load_class(modifiedName);
   }
 
-  virtual JNIEnv *attach() override {
+  JNIEnv *attach() override {
     return loader->attach();
   }
-  virtual void detach() override {
+  void detach() override {
       loader->detach();
     }
 
 
 
-  virtual jobject getClassLoader() override {
+  jobject getClassLoader() override {
     return loader->getClassLoader();
   }
 
