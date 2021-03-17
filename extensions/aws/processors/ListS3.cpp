@@ -99,24 +99,24 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   if (!common_properties) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required property is not set or invalid");
   }
-  list_request_params_.credentials = common_properties->credentials;
-  setClientConfig(list_request_params_.client_config, *common_properties);
-  list_request_params_.bucket = common_properties->bucket;
+  list_request_params_ = minifi::utils::make_unique<aws::s3::ListRequestParameters>(common_properties->credentials, client_config_);
+  setClientConfig(list_request_params_->client_config, *common_properties);
+  list_request_params_->bucket = common_properties->bucket;
 
-  context->getProperty(Delimiter.getName(), list_request_params_.delimiter);
-  logger_->log_debug("ListS3: Delimiter [%s]", list_request_params_.delimiter);
+  context->getProperty(Delimiter.getName(), list_request_params_->delimiter);
+  logger_->log_debug("ListS3: Delimiter [%s]", list_request_params_->delimiter);
 
-  context->getProperty(Prefix.getName(), list_request_params_.prefix);
-  logger_->log_debug("ListS3: Prefix [%s]", list_request_params_.prefix);
+  context->getProperty(Prefix.getName(), list_request_params_->prefix);
+  logger_->log_debug("ListS3: Prefix [%s]", list_request_params_->prefix);
 
-  context->getProperty(UseVersions.getName(), list_request_params_.use_versions);
-  logger_->log_debug("ListS3: UseVersions [%s]", list_request_params_.use_versions ? "true" : "false");
+  context->getProperty(UseVersions.getName(), list_request_params_->use_versions);
+  logger_->log_debug("ListS3: UseVersions [%s]", list_request_params_->use_versions ? "true" : "false");
 
   std::string min_obj_age_str;
-  if (!context->getProperty(MinimumObjectAge.getName(), min_obj_age_str) || min_obj_age_str.empty() || !core::Property::getTimeMSFromString(min_obj_age_str, list_request_params_.min_object_age)) {
+  if (!context->getProperty(MinimumObjectAge.getName(), min_obj_age_str) || min_obj_age_str.empty() || !core::Property::getTimeMSFromString(min_obj_age_str, list_request_params_->min_object_age)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Minimum Object Age missing or invalid");
   }
-  logger_->log_debug("S3Processor: Minimum Object Age [%llud]", min_obj_age_str, list_request_params_.min_object_age);
+  logger_->log_debug("S3Processor: Minimum Object Age [%llud]", min_obj_age_str, list_request_params_->min_object_age);
 
   context->getProperty(WriteObjectTags.getName(), write_object_tags_);
   logger_->log_debug("ListS3: WriteObjectTags [%s]", write_object_tags_ ? "true" : "false");
@@ -136,12 +136,10 @@ void ListS3::writeObjectTags(
     return;
   }
 
-  aws::s3::GetObjectTagsParameters params;
-  params.bucket = list_request_params_.bucket;
+  aws::s3::GetObjectTagsParameters params(list_request_params_->credentials, list_request_params_->client_config);
+  params.bucket = list_request_params_->bucket;
   params.object_key = object_attributes.filename;
   params.version = object_attributes.version;
-  params.client_config = list_request_params_.client_config;
-  params.credentials = list_request_params_.credentials;
   auto get_object_tags_result = s3_wrapper_.getObjectTags(params);
   if (get_object_tags_result) {
     for (const auto& tag : *get_object_tags_result) {
@@ -160,13 +158,11 @@ void ListS3::writeUserMetadata(
     return;
   }
 
-  aws::s3::HeadObjectRequestParameters params;
-  params.bucket = list_request_params_.bucket;
+  aws::s3::HeadObjectRequestParameters params(list_request_params_->credentials, list_request_params_->client_config);
+  params.bucket = list_request_params_->bucket;
   params.object_key = object_attributes.filename;
   params.version = object_attributes.version;
   params.requester_pays = requester_pays_;
-  params.credentials = list_request_params_.credentials;
-  params.client_config = list_request_params_.client_config;
   auto head_object_tags_result = s3_wrapper_.headObject(params);
   if (head_object_tags_result) {
     for (const auto& metadata : head_object_tags_result->user_metadata_map) {
@@ -229,7 +225,7 @@ void ListS3::createNewFlowFile(
     core::ProcessSession &session,
     const aws::s3::ListedObjectAttributes &object_attributes) {
   auto flow_file = session.create();
-  session.putAttribute(flow_file, "s3.bucket", list_request_params_.bucket);
+  session.putAttribute(flow_file, "s3.bucket", list_request_params_->bucket);
   session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, object_attributes.filename);
   session.putAttribute(flow_file, "s3.etag", object_attributes.etag);
   session.putAttribute(flow_file, "s3.isLatest", object_attributes.is_latest ? "true" : "false");
@@ -248,9 +244,9 @@ void ListS3::createNewFlowFile(
 void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   logger_->log_debug("ListS3 onTrigger");
 
-  auto aws_results = s3_wrapper_.listBucket(list_request_params_);
+  auto aws_results = s3_wrapper_.listBucket(*list_request_params_);
   if (!aws_results) {
-    logger_->log_error("Failed to list S3 bucket %s", list_request_params_.bucket);
+    logger_->log_error("Failed to list S3 bucket %s", list_request_params_->bucket);
     context->yield();
     return;
   }
@@ -273,7 +269,7 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
   storeState(latest_listing_state);
 
   if (files_transferred == 0) {
-    logger_->log_debug("No new S3 objects were found in bucket %s to list", list_request_params_.bucket);
+    logger_->log_debug("No new S3 objects were found in bucket %s to list", list_request_params_->bucket);
     context->yield();
     return;
   }

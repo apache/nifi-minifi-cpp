@@ -69,7 +69,7 @@ minifi::utils::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buil
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) {
-  minifi::aws::s3::GetObjectRequestParameters get_object_params;
+  minifi::aws::s3::GetObjectRequestParameters get_object_params(common_properties.credentials, client_config_);
   get_object_params.bucket = common_properties.bucket;
   get_object_params.requester_pays = requester_pays_;
 
@@ -82,7 +82,6 @@ minifi::utils::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buil
 
   context->getProperty(Version, get_object_params.version, flow_file);
   logger_->log_debug("FetchS3Object: Version [%s]", get_object_params.version);
-  get_object_params.credentials = common_properties.credentials;
   setClientConfig(get_object_params.client_config, common_properties);
   return get_object_params;
 }

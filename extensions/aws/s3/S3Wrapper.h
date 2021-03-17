@@ -100,11 +100,16 @@ struct PutObjectResult {
 };
 
 struct RequestParameters {
+  RequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
+    : credentials(creds)
+    , client_config(config) {}
   Aws::Auth::AWSCredentials credentials;
   Aws::Client::ClientConfiguration client_config;
 };
 
 struct PutObjectRequestParameters : public RequestParameters {
+  PutObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
+    : RequestParameters(creds, config) {}
   std::string bucket;
   std::string object_key;
   std::string storage_class;
@@ -119,19 +124,23 @@ struct PutObjectRequestParameters : public RequestParameters {
 };
 
 struct DeleteObjectRequestParameters : public RequestParameters {
+  DeleteObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
+    : RequestParameters(creds, config) {}
   std::string bucket;
   std::string object_key;
   std::string version;
 };
 
 struct GetObjectRequestParameters : public RequestParameters {
+  GetObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
+    : RequestParameters(creds, config) {}
   std::string bucket;
   std::string object_key;
   std::string version;
   bool requester_pays = false;
 };
 
-struct HeadObjectResult : public RequestParameters {
+struct HeadObjectResult {
   std::string path;
   std::string absolute_path;
   std::string filename;
@@ -150,6 +159,8 @@ struct GetObjectResult : public HeadObjectResult {
 };
 
 struct ListRequestParameters : public RequestParameters {
+  ListRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
+    : RequestParameters(creds, config) {}
   std::string bucket;
   std::string delimiter;
   std::string prefix;
@@ -157,7 +168,7 @@ struct ListRequestParameters : public RequestParameters {
   uint64_t min_object_age = 0;
 };
 
-struct ListedObjectAttributes : public RequestParameters {
+struct ListedObjectAttributes {
   std::string filename;
   std::string etag;
   bool is_latest = false;

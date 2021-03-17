@@ -94,7 +94,7 @@ class ListS3 : public S3Processor {
     core::ProcessSession &session,
     const aws::s3::ListedObjectAttributes &object_attributes);
 
-  aws::s3::ListRequestParameters list_request_params_;
+  std::unique_ptr<aws::s3::ListRequestParameters> list_request_params_;
   bool write_object_tags_ = false;
   bool write_user_metadata_ = false;
   bool requester_pays_ = false;

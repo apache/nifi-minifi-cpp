@@ -55,7 +55,7 @@ minifi::utils::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) {
-  aws::s3::DeleteObjectRequestParameters params;
+  aws::s3::DeleteObjectRequestParameters params(common_properties.credentials, client_config_);
   context->getProperty(ObjectKey, params.object_key, flow_file);
   if (params.object_key.empty() && (!flow_file->getAttribute("filename", params.object_key) || params.object_key.empty())) {
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
@@ -67,7 +67,6 @@ minifi::utils::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::
   logger_->log_debug("DeleteS3Object: Version [%s]", params.version);
 
   params.bucket = common_properties.bucket;
-  params.credentials = common_properties.credentials;
   setClientConfig(params.client_config, common_properties);
   return params;
 }

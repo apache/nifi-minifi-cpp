@@ -206,8 +206,7 @@ minifi::utils::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildP
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) {
-  aws::s3::PutObjectRequestParameters params;
-  params.credentials = common_properties.credentials;
+  aws::s3::PutObjectRequestParameters params(common_properties.credentials, client_config_);
   setClientConfig(params.client_config, common_properties);
   params.bucket = common_properties.bucket;
   params.user_metadata_map = user_metadata_map_;
