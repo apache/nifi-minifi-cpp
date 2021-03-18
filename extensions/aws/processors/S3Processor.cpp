@@ -204,8 +204,9 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
   logger_->log_debug("S3Processor: Region [%s]", client_config_.region);
 
   uint64_t timeout_val;
-  if (context->getProperty(CommunicationsTimeout.getName(), value) && !value.empty() && core::Property::getTimeMSFromString(value, client_config_.connectTimeoutMs)) {
-    logger_->log_debug("S3Processor: Communications Timeout [%llu]", client_config_.connectTimeoutMs);
+  if (context->getProperty(CommunicationsTimeout.getName(), value) && !value.empty() && core::Property::getTimeMSFromString(value, timeout_val)) {
+    logger_->log_debug("S3Processor: Communications Timeout [%llu]", timeout_val);
+    client_config_.connectTimeoutMs = gsl::narrow<int64_t>(timeout_val);
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }
