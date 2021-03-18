@@ -119,7 +119,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
    * Provides a reference to the time out
    * @returns timeout
    */
-  const uint64_t getTimeOut() const {
+  uint64_t getTimeOut() const {
     return _timeOut;
   }
 

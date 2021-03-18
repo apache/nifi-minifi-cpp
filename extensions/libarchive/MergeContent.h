@@ -154,8 +154,10 @@ class ArchiveMerge {
   class WriteCallback: public OutputStreamCallback {
    public:
     WriteCallback(std::string merge_type, std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer)
-        : merge_type_(merge_type), flows_(flows), serializer_(serializer),
-          logger_(logging::LoggerFactory<ArchiveMerge>::getLogger()) {
+        : merge_type_(merge_type),
+          flows_(flows),
+          logger_(logging::LoggerFactory<ArchiveMerge>::getLogger()),
+          serializer_(serializer) {
       size_ = 0;
       stream_ = nullptr;
     }

@@ -193,7 +193,7 @@ ListSFTP::ListSFTP(std::string name, utils::Identifier uuid /*= utils::Identifie
 
 ListSFTP::~ListSFTP() = default;
 
-void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   parseCommonPropertiesOnSchedule(context);
 
   state_manager_ = context->getStateManager();
@@ -344,7 +344,7 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
 
   /* Age */
   time_t now = time(nullptr);
-  int64_t file_age = (now - attrs.mtime) * 1000;
+  uint64_t file_age = (now - attrs.mtime) * 1000;
   if (file_age < minimum_file_age_) {
     logger_->log_debug("Ignoring \"%s/%s\" because it is younger than the Minimum File Age: %ld ms < %lu ms",
         parent_path.c_str(),
@@ -396,7 +396,7 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
   return true;
 }
 
-bool ListSFTP::filterDirectory(const std::string& parent_path, const std::string& filename, const LIBSSH2_SFTP_ATTRIBUTES& attrs) {
+bool ListSFTP::filterDirectory(const std::string& parent_path, const std::string& filename, const LIBSSH2_SFTP_ATTRIBUTES& /*attrs*/) {
   if (!search_recursively_) {
     return false;
   }
@@ -424,12 +424,12 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
     const std::string& username,
     const ListSFTP::Child& child) {
   /* Convert mtime to string */
-  if (child.attrs.mtime > std::numeric_limits<int64_t>::max()) {
+  if (child.attrs.mtime > gsl::narrow<uint64_t>(std::numeric_limits<int64_t>::max())) {
     logger_->log_error("Modification date %lu of \"%s/%s\" larger than int64_t max", child.attrs.mtime, child.parent_path.c_str(), child.filename.c_str());
     return true;
   }
   std::string mtime_str;
-  if (!utils::timeutils::getDateTimeStr(static_cast<int64_t>(child.attrs.mtime), mtime_str)) {
+  if (!utils::timeutils::getDateTimeStr(gsl::narrow<int64_t>(child.attrs.mtime), mtime_str)) {
     logger_->log_error("Failed to convert modification date %lu of \"%s/%s\" to string", child.attrs.mtime, child.parent_path.c_str(), child.filename.c_str());
     return true;
   }
@@ -479,7 +479,7 @@ ListSFTP::ListedEntity::ListedEntity(uint64_t timestamp_, uint64_t size_)
     , size(size_) {
 }
 
-bool ListSFTP::persistTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::persistTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::unordered_map<std::string, std::string> state;
   state["listing_strategy"] = LISTING_STRATEGY_TRACKING_TIMESTAMPS;
   state["hostname"] = hostname;
@@ -495,7 +495,7 @@ bool ListSFTP::persistTrackingTimestampsCache(const std::shared_ptr<core::Proces
   return state_manager_->set(state);
 }
 
-bool ListSFTP::updateFromTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::updateFromTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::string state_listing_strategy;
   std::string state_hostname;
   std::string state_username;
@@ -738,7 +738,7 @@ void ListSFTP::listByTrackingTimestamps(
   }
 }
 
-bool ListSFTP::persistTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::persistTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::unordered_map<std::string, std::string> state;
   state["listing_strategy"] = listing_strategy_;
   state["hostname"] = hostname;
@@ -754,7 +754,7 @@ bool ListSFTP::persistTrackingEntitiesCache(const std::shared_ptr<core::ProcessC
   return state_manager_->set(state);
 }
 
-bool ListSFTP::updateFromTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::updateFromTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::string state_listing_strategy;
   std::string state_hostname;
   std::string state_username;

@@ -83,7 +83,6 @@ TEST_CASE("TailFile reads the file until the first delimiter", "[simple]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
-  auto id = tailfile->getUUIDStr();
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/var/tmp/gt.XXXXXX";
@@ -124,7 +123,6 @@ TEST_CASE("TailFile picks up the second line if a delimiter is written between r
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
-  auto id = tailfile->getUUIDStr();
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
@@ -169,7 +167,6 @@ TEST_CASE("TailFile re-reads the file if the state is deleted between runs", "[s
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
-  auto id = tailfile->getUUIDStr();
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
@@ -211,7 +208,6 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
-  auto id = tailfile->getUUIDStr();
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
@@ -692,7 +688,6 @@ TEST_CASE("TailFile processes a long line followed by multiple newlines correctl
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
-  auto id = tailfile->getUUIDStr();
   char format[] = "/var/tmp/gt.XXXXXX";
   auto dir = minifi::utils::createTempDir(&testController, format);
   std::stringstream temp_file;

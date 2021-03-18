@@ -44,7 +44,7 @@ class CoapIntegrationBase : public IntegrationBase {
     server.reset();
   }
 
-  void run(const utils::optional<std::string>& test_file_location = {}, const utils::optional<std::string>& bootstrap_file = {}) override {
+  void run(const utils::optional<std::string>& test_file_location = {}, const utils::optional<std::string>& = {}) override {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -100,7 +100,6 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
     if (scheme == "https" && !key_dir.empty()) {
       std::string cert = "";
       cert = key_dir + "nifi-cert.pem";
-      memset(&callback, 0, sizeof(callback));
       callback.init_ssl = ssl_enable;
       port += "s";
       callback.log_message = log_message;

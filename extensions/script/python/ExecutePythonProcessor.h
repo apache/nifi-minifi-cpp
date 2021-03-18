@@ -34,6 +34,8 @@
 #include "PythonScriptEngine.h"
 #include "core/Property.h"
 
+#pragma GCC visibility push(hidden)
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -141,5 +143,7 @@ REGISTER_RESOURCE(
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+
+#pragma GCC visibility pop
 
 #endif  // EXTENSIONS_SCRIPT_PYTHON_EXECUTEPYTHONPROCESSOR_H_

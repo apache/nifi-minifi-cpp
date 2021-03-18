@@ -85,9 +85,7 @@ void generateData(std::vector<char>& data, bool textData = false) {
   if (textData) {
     const int index_of_last_char = gsl::narrow<int>(strlen(TEXT_CHARS)) - 1;
     std::uniform_int_distribution<> distr(0, index_of_last_char);
-    auto rand = std::bind(distr, eng);
-    std::generate_n(data.begin(), data.size(), rand);
-    std::for_each(data.begin(), data.end(), [](char & c) { c = TEXT_CHARS[c];});
+    std::generate_n(data.begin(), data.size(), [&] { return TEXT_CHARS[static_cast<uint8_t>(distr(eng))]; });
   } else {
     std::uniform_int_distribution<> distr(std::numeric_limits<char>::min(), std::numeric_limits<char>::max());
     auto rand = std::bind(distr, eng);

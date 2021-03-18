@@ -108,7 +108,7 @@ class LogAttribute : public core::Processor {
         return 0U;
       }
       int ret = stream->read(buffer_.data(), gsl::narrow<int>(buffer_.size()));
-      if (ret != buffer_.size()) {
+      if (ret < 0 || static_cast<uint64_t>(ret) != buffer_.size()) {
         logger_->log_error("%zu bytes were requested from the stream but %d bytes were read. Rolling back.", buffer_.size(), ret);
         throw Exception(PROCESSOR_EXCEPTION, "Failed to read the entire FlowFile.");
       }

@@ -43,7 +43,7 @@ extern "C" {
 #define NULL_CHECK(ret_val, ...)                        \
   do {                                                  \
     const void *_p[] = { __VA_ARGS__ };                 \
-    int _i;                                             \
+    unsigned int _i;                                    \
     for (_i = 0; _i < sizeof(_p)/sizeof(*_p); _i++) {   \
       if (_p[_i] == NULL) {                             \
         return ret_val;                                 \
@@ -76,7 +76,7 @@ nifi_instance *create_instance_repo(const char *url, nifi_port *port, const char
  * @param port remote port the instance connects to
  * @return pointer to the new instance
  **/
-static nifi_instance *create_instance(const char *url, nifi_port *port){
+static inline nifi_instance *create_instance(const char *url, nifi_port *port){
   return create_instance_repo(url, port, "filesystemrepository");
 }
 

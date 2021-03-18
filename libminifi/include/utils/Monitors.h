@@ -40,9 +40,7 @@ class AfterExecute {
   virtual ~AfterExecute() = default;
 
   AfterExecute() = default;
-
-  explicit AfterExecute(AfterExecute &&other) {
-  }
+  AfterExecute(AfterExecute&& /*other*/) = default;
   virtual bool isFinished(const T &result) = 0;
   virtual bool isCancelled(const T &result) = 0;
   /**

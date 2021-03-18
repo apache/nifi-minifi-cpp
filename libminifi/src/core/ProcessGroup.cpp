@@ -48,10 +48,10 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const
 
 ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version, ProcessGroup *parent)
     : CoreComponent(name, uuid, id_generator_),
-      logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
-      type_(type),
       config_version_(version),
-      parent_process_group_(parent) {
+      type_(type),
+      parent_process_group_(parent),
+      logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
   yield_period_msec_ = 0;
 
   if (parent_process_group_ != 0) {
@@ -67,10 +67,10 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const
 
 ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name)
     : CoreComponent(name, {}, id_generator_),
-      logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
-      type_(type),
       config_version_(0),
-      parent_process_group_(0) {
+      type_(type),
+      parent_process_group_(0),
+      logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
   yield_period_msec_ = 0;
   onschedule_retry_msec_ = ONSCHEDULE_RETRY_INTERVAL;
   transmitting_ = false;

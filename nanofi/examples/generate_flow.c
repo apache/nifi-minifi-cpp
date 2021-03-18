@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   nifi_instance *instance = create_instance(instance_str, &port);
 
   flow *new_flow = create_new_flow(instance);
-  processor *generate_proc = add_processor(new_flow, "GenerateFlowFile");
+  add_processor(new_flow, "GenerateFlowFile");
 
   flow_file_record *record = get_next_flow_file(instance, new_flow);
 

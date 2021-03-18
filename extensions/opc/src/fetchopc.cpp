@@ -116,7 +116,7 @@ namespace processors {
 
     if(idType_ == opc::OPCNodeIDType::Int) {
       try {
-        int t = std::stoi(nodeID_);
+        std::stoi(nodeID_);
       } catch(...) {
         auto error_msg = utils::StringUtils::join_pack(nodeID_, " cannot be used as an int type node ID");
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
@@ -185,7 +185,7 @@ namespace processors {
 
   }
 
-  bool FetchOPCProcessor::nodeFoundCallBack(opc::Client& client, const UA_ReferenceDescription *ref, const std::string& path,
+  bool FetchOPCProcessor::nodeFoundCallBack(opc::Client& /*client*/, const UA_ReferenceDescription *ref, const std::string& path,
       const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
     nodesFound_++;
     if(ref->nodeClass == UA_NODECLASS_VARIABLE) {
@@ -215,7 +215,7 @@ namespace processors {
     return true;
   }
 
-  void FetchOPCProcessor::OPCData2FlowFile(const opc::NodeData& opcnode, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  void FetchOPCProcessor::OPCData2FlowFile(const opc::NodeData& opcnode, const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {
     auto flowFile = session->create();
     if (flowFile == nullptr) {
       logger_->log_error("Failed to create flowfile!");

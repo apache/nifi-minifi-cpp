@@ -103,8 +103,8 @@ class GetUSBCamera : public core::Processor {
    private:
     std::shared_ptr<std::mutex> png_write_mtx_;
     uvc_frame_t *frame_;
-    uint32_t width_;
-    uint32_t height_;
+    const uint32_t width_;
+    const uint32_t height_;
     std::vector<uint8_t> png_output_buf_;
     std::shared_ptr<logging::Logger> logger_;
   };

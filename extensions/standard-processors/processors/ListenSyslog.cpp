@@ -187,7 +187,7 @@ void ListenSyslog::runThread() {
         struct sockaddr_in cli_addr;
         clilen = sizeof(cli_addr);
         int recvlen = recvfrom(_serverSocket, _buffer, sizeof(_buffer), 0, (struct sockaddr *) &cli_addr, &clilen);
-        if (recvlen > 0 && (uint64_t) (recvlen + getEventQueueByteSize()) <= _recvBufSize) {
+        if (recvlen > 0 && (uint64_t) (recvlen + getEventQueueByteSize()) <= static_cast<uint64_t>(_recvBufSize)) {
           uint8_t *payload = new uint8_t[recvlen];
           memcpy(payload, _buffer, recvlen);
           putEvent(payload, recvlen);
@@ -204,7 +204,7 @@ void ListenSyslog::runThread() {
           logger_->log_debug("ListenSysLog client socket %d close", clientSocket);
           it = _clientSockets.erase(it);
         } else {
-          if ((uint64_t) (recvlen + getEventQueueByteSize()) <= _recvBufSize) {
+          if ((uint64_t) (recvlen + getEventQueueByteSize()) <= static_cast<uint64_t>(_recvBufSize)) {
             uint8_t *payload = new uint8_t[recvlen];
             memcpy(payload, _buffer, recvlen);
             putEvent(payload, recvlen);

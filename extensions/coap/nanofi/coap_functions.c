@@ -21,6 +21,14 @@
 extern "C" {
 #endif
 
+#ifndef UNUSED
+#define UNUSED(x) (void)(x)
+#endif
+
+// defines the context specific data for the data receiver
+static void *receiver;
+static callback_pointers global_ptrs;
+
 /**
  * Initialize the API access. Not thread safe.
  */
@@ -47,7 +55,6 @@ int create_session(coap_context_t **ctx, coap_session_t **session, const char *n
       perror("getaddrinfo");
       return -1;
     }
-    int skip = 1, count = 0;
     for (interface_itr = result; interface_itr != NULL; interface_itr = interface_itr->ai_next) {
       coap_address_t addr;
 
@@ -78,7 +85,6 @@ int create_session(coap_context_t **ctx, coap_session_t **session, const char *n
 
 int create_endpoint_context(coap_context_t **ctx, const char *node, const char *port) {
   struct addrinfo hints;
-  coap_proto_t proto = COAP_PROTO_UDP;
   struct addrinfo *result, *interface_itr;
 
   memset(&hints, 0, sizeof(struct addrinfo));
@@ -115,6 +121,7 @@ int create_endpoint_context(coap_context_t **ctx, const char *node, const char *
 }
 
 struct coap_pdu_t *create_request(struct coap_context_t *ctx, struct coap_session_t *session, coap_optlist_t **optlist, unsigned char code, coap_str_const_t *ptr) {
+  UNUSED(ctx);
   coap_pdu_t *pdu;
 
   if (!(pdu = coap_new_pdu(session)))
@@ -128,12 +135,12 @@ struct coap_pdu_t *create_request(struct coap_context_t *ctx, struct coap_sessio
     coap_add_optlist_pdu(pdu, optlist);
   }
 
-  int flags = 0;
   coap_add_data(pdu, ptr->length, ptr->s);
   return pdu;
 }
 
 int coap_event(struct coap_context_t *ctx, coap_event_t event, struct coap_session_t *session) {
+  UNUSED(session);
   if (event == COAP_EVENT_SESSION_FAILED && global_ptrs.received_error) {
     global_ptrs.received_error(receiver, ctx, -1);
   }
@@ -141,14 +148,19 @@ int coap_event(struct coap_context_t *ctx, coap_event_t event, struct coap_sessi
 }
 
 void no_acknowledgement(struct coap_context_t *ctx, coap_session_t *session, coap_pdu_t *sent, coap_nack_reason_t reason, const coap_tid_t id) {
+  UNUSED(session);
+  UNUSED(sent);
+  UNUSED(reason);
+  UNUSED(id);
   if (global_ptrs.received_error) {
     global_ptrs.received_error(receiver, ctx, -1);
   }
 }
 
 void response_handler(struct coap_context_t *ctx, struct coap_session_t *session, coap_pdu_t *sent, coap_pdu_t *received, const coap_tid_t id) {
-  unsigned char* data;
-  size_t data_len;
+  UNUSED(session);
+  UNUSED(sent);
+  UNUSED(id);
   coap_opt_iterator_t opt_iter;
   coap_opt_t * block_opt = coap_check_option(received, COAP_OPTION_BLOCK1, &opt_iter);
   if (block_opt) {

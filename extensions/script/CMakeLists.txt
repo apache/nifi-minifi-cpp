@@ -55,7 +55,7 @@ if (NOT DISABLE_PYTHON_SCRIPTING)
     endif()
 
     include_directories(${PYTHON_INCLUDE_DIR})
-    include_directories(../../thirdparty/pybind11/include)
+    include_directories(SYSTEM ../../thirdparty/pybind11/include)
 
     include_directories(python)
     add_definitions(-DPYTHON_SUPPORT)

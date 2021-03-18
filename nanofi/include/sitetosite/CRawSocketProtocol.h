@@ -76,23 +76,15 @@ int16_t sendPacket(struct CRawSiteToSiteClient * client, const char * transactio
 
 CTransaction* createTransaction(struct CRawSiteToSiteClient * client, TransferDirection direction);
 
-static const char * getResourceName() {
+static inline const char * getResourceName() {
   return "SocketFlowFileProtocol";
 }
 
-static const char * getCodecResourceName() {
+static inline const char * getCodecResourceName() {
   return "StandardFlowFileCodec";
 }
 
-static RespondCodeContext *getRespondCodeContext(RespondCode code) {
-  unsigned int i;
-  for (i = 0; i < sizeof(respondCodeContext) / sizeof(RespondCodeContext); i++) {
-    if (respondCodeContext[i].code == code) {
-      return &respondCodeContext[i];
-    }
-  }
-  return NULL;
-}
+RespondCodeContext *getRespondCodeContext(RespondCode code);
 
 // RawSiteToSiteClient Class
 struct CRawSiteToSiteClient {
@@ -139,11 +131,11 @@ struct CRawSiteToSiteClient {
   int _currentCodecVersionIndex;
 };
 
-static const char * getPortId(const struct CRawSiteToSiteClient * client) {
+static inline const char * getPortId(const struct CRawSiteToSiteClient * client) {
   return client->_port_id_str;
 }
 
-static void setPortId(struct CRawSiteToSiteClient * client, const char * id) {
+static inline void setPortId(struct CRawSiteToSiteClient * client, const char * id) {
   strncpy(client->_port_id_str, id, 37);
   client->_port_id_str[36] = '\0';
   int i;
@@ -152,23 +144,23 @@ static void setPortId(struct CRawSiteToSiteClient * client, const char * id) {
   }
 }
 
-static void setBatchSize(struct CRawSiteToSiteClient *client, uint64_t size) {
+static inline void setBatchSize(struct CRawSiteToSiteClient *client, uint64_t size) {
   client->_batch_size = size;
 }
 
-static void setBatchCount(struct CRawSiteToSiteClient *client, uint64_t count) {
+static inline void setBatchCount(struct CRawSiteToSiteClient *client, uint64_t count) {
   client->_batch_count = count;
 }
 
-static void setBatchDuration(struct CRawSiteToSiteClient *client, uint64_t duration) {
+static inline void setBatchDuration(struct CRawSiteToSiteClient *client, uint64_t duration) {
   client->_batch_duration = duration;
 }
 
-static uint64_t getTimeOut(const struct CRawSiteToSiteClient *client) {
+static inline uint64_t getTimeOut(const struct CRawSiteToSiteClient *client) {
   return client->_timeout;
 }
 
-static void initRawClient(struct CRawSiteToSiteClient *client, struct SiteToSiteCPeer * peer) {
+static inline void initRawClient(struct CRawSiteToSiteClient *client, struct SiteToSiteCPeer * peer) {
   client->_owns_resource = False;
   client->_peer = peer;
   client->_peer_state = IDLE;
@@ -191,7 +183,7 @@ static void initRawClient(struct CRawSiteToSiteClient *client, struct SiteToSite
   memset(client->_description_buffer, 0, DESCRIPTION_BUFFER_SIZE);
 }
 
-static struct CRawSiteToSiteClient* createClient(const char * host, uint16_t port, const char * nifi_port) {
+static inline struct CRawSiteToSiteClient* createClient(const char * host, uint16_t port, const char * nifi_port) {
   struct SiteToSiteCPeer * peer = (struct SiteToSiteCPeer *)malloc(sizeof(struct SiteToSiteCPeer));
   initPeer(peer, host, port);
   struct CRawSiteToSiteClient* client = (struct CRawSiteToSiteClient*)malloc(sizeof(struct CRawSiteToSiteClient));
@@ -201,7 +193,7 @@ static struct CRawSiteToSiteClient* createClient(const char * host, uint16_t por
   return client;
 }
 
-static void destroyClient(struct CRawSiteToSiteClient * client){
+static inline void destroyClient(struct CRawSiteToSiteClient * client){
   tearDown(client);
   if(client->_owns_resource == True) {
     freePeer(client->_peer);

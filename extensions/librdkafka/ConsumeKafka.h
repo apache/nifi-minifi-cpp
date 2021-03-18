@@ -165,7 +165,6 @@ class ConsumeKafka : public core::Processor {
   std::vector<std::string> headers_to_add_as_attributes_;
   std::size_t max_poll_records_;
   std::chrono::milliseconds max_poll_time_milliseconds_;
-  std::chrono::milliseconds communications_timeout_milliseconds_;
   std::chrono::milliseconds session_timeout_milliseconds_;
 
   std::unique_ptr<rd_kafka_t, utils::rd_kafka_consumer_deleter> consumer_;

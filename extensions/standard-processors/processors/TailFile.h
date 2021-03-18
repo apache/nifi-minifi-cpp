@@ -186,7 +186,7 @@ REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting dat
                   " as is generally the case with log files, an optional Rolling Filename Pattern can be used to retrieve data from files that have rolled over, even if the rollover"
                   " occurred while NiFi was not running (provided that the data still exists upon restart of NiFi). It is generally advisable to set the Run Schedule to a few seconds,"
                   " rather than running with the default value of 0 secs, as this Processor will consume a lot of resources if scheduled very aggressively. At this time, this Processor"
-                  " does not support ingesting files that have been compressed when 'rolled over'.")
+                  " does not support ingesting files that have been compressed when 'rolled over'.");
 
 }  // namespace processors
 }  // namespace minifi

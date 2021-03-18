@@ -66,7 +66,7 @@ void MotionDetector::initialize() {
 }
 
 void MotionDetector::onSchedule(const std::shared_ptr<core::ProcessContext> &context,
-                                  const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+                                  const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string value;
 
   if (context->getProperty(ImageEncoding.getName(), value)) {

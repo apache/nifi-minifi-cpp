@@ -190,7 +190,7 @@ minifi::utils::optional<aws::s3::ProxyOptions> S3Processor::getProxy(const std::
   return proxy;
 }
 
-void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string value;
   if (!context->getProperty(Bucket.getName(), value) || value.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");

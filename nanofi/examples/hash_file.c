@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  add_custom_processor("md5proc", custom_processor_logic);
+  add_custom_processor("md5proc", custom_processor_logic, NULL);
 
   standalone_processor *standalone_proc = create_processor("md5proc");
 

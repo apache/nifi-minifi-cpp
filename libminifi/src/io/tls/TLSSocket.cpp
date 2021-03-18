@@ -44,11 +44,11 @@ namespace io {
 
 TLSContext::TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service)
     : SocketContext(configure),
-      error_value(TLS_GOOD),
-      ctx(nullptr, deleteContext),
       logger_(logging::LoggerFactory<TLSContext>::getLogger()),
       configure_(configure),
-      ssl_service_(std::move(ssl_service)) {
+      ssl_service_(std::move(ssl_service)),
+      ctx(nullptr, deleteContext),
+      error_value(TLS_GOOD) {
 }
 
 /**
@@ -387,7 +387,6 @@ int TLSSocket::read(uint8_t *buf, int buflen, bool /*retrieve_all_bytes*/) {
 }
 
 int TLSSocket::writeData(const uint8_t *value, unsigned int size, int fd) {
-  gsl_Expects(size >= 0);
   unsigned int bytes = 0;
   int sent = 0;
   auto fd_ssl = get_ssl(fd);

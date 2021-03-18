@@ -79,7 +79,7 @@ class CoapResponse {
     return size_;
   }
 
-  uint8_t * const getData() const {
+  uint8_t* getData() const {
     return data_.get();
   }
 

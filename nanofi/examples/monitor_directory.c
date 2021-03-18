@@ -41,6 +41,7 @@ pthread_cond_t condition;
 int stopped;
 
 int stop_callback(char *c) {
+  (void)c;  // against unused variable warnings
   pthread_mutex_lock(&mutex);
   stopped = 1;
   pthread_cond_signal(&condition);
@@ -49,6 +50,7 @@ int stop_callback(char *c) {
 }
 
 int is_stopped(void *ptr) {
+  (void)ptr;  // against unused variable warnings
   int is_stop = 0;
   pthread_mutex_lock(&mutex);
   is_stop = stopped;
@@ -75,15 +77,7 @@ int main(int argc, char **argv) {
 
   port.port_id = portStr;
 
-  C2_Server server;
-  server.url = argv[4];
-  server.ack_url = argv[5];
-  server.identifier = "monitor_directory";
-  server.type = REST;
-
   nifi_instance *instance = create_instance(instance_str, &port);
-
-  // enable_async_c2(instance, &server, stop_callback, NULL, NULL);
 
   flow *new_flow = monitor_directory(instance, directory, 0x00, KEEP_SOURCE);
 

@@ -83,7 +83,7 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test listing without versioning", "[awsS3L
   setRequiredProperties();
   test_controller.runSession(plan, true);
 
-  for (auto i = 0; i < S3_OBJECT_COUNT; ++i) {
+  for (std::size_t i = 0; i < S3_OBJECT_COUNT; ++i) {
     REQUIRE(LogTestController::getInstance().contains("key:filename value:" + S3_KEY_PREFIX + std::to_string(i)));
     REQUIRE(LogTestController::getInstance().contains("key:s3.etag value:" + S3_ETAG_PREFIX + std::to_string(i)));
   }
@@ -104,7 +104,7 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test listing with versioning", "[awsS3List
   plan->setProperty(s3_processor, "Use Versions", "true");
   test_controller.runSession(plan, true);
 
-  for (auto i = 0; i < S3_OBJECT_COUNT; ++i) {
+  for (std::size_t i = 0; i < S3_OBJECT_COUNT; ++i) {
     // 2 versions of every object
     REQUIRE(LogTestController::getInstance().countOccurrences("key:filename value:" + S3_KEY_PREFIX + std::to_string(i)) == 2);
     REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.etag value:" + S3_ETAG_PREFIX + std::to_string(i)) == 2);
@@ -185,7 +185,7 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test truncated listing without versioning"
   setRequiredProperties();
   mock_s3_request_sender_ptr->setListingTruncated(true);
   test_controller.runSession(plan, true);
-  for (auto i = 0; i < S3_OBJECT_COUNT; ++i) {
+  for (std::size_t i = 0; i < S3_OBJECT_COUNT; ++i) {
     REQUIRE(LogTestController::getInstance().contains("key:filename value:" + S3_KEY_PREFIX + std::to_string(i)));
     REQUIRE(LogTestController::getInstance().contains("key:s3.etag value:" + S3_ETAG_PREFIX + std::to_string(i)));
   }
@@ -207,7 +207,7 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test truncated listing with versioning", "
   plan->setProperty(s3_processor, "Use Versions", "true");
   mock_s3_request_sender_ptr->setListingTruncated(true);
   test_controller.runSession(plan, true);
-  for (auto i = 0; i < S3_OBJECT_COUNT; ++i) {
+  for (std::size_t i = 0; i < S3_OBJECT_COUNT; ++i) {
     // 2 versions of every object
     REQUIRE(LogTestController::getInstance().countOccurrences("key:filename value:" + S3_KEY_PREFIX + std::to_string(i)) == 2);
     REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.etag value:" + S3_ETAG_PREFIX + std::to_string(i)) == 2);

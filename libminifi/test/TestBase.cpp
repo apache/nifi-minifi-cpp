@@ -76,7 +76,6 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
     return nullptr;
   }
   std::lock_guard<std::recursive_mutex> guard(mutex);
-  utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
   processor->setStreamFactory(stream_factory);
   // initialize the processor
   processor->initialize();
@@ -317,7 +316,7 @@ bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::P
   return runProcessor(location, verify);
 }
 
-bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> /*verify*/) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   return runProcessor(location);
 }
@@ -382,7 +381,7 @@ std::vector<minifi::Connection*> TestPlan::getProcessorOutboundConnections(const
   for (auto relationship : relationships_) {
     if (is_processor_outbound_connection(relationship)) {
       connections.emplace_back(relationship.get());
-    }    
+    }
   }
   return connections;
 }

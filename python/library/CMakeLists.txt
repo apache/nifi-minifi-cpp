@@ -23,6 +23,7 @@ IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
+include_directories(SYSTEM ../../thirdparty/)
 include_directories(../../nanofi/include/ ../../libminifi/include  ../../libminifi/include/c2  ../../libminifi/include/c2/protocols/  ../../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../../libminifi/include/core/yaml  ../../libminifi/include/core ../../thirdparty/)
 if(WIN32)
 	include_directories(../../libminifi/opsys/win)

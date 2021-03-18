@@ -120,7 +120,7 @@ class SecureSocketTest : public IntegrationBase {
     check = [this]() -> bool {
       return isRunning_;
     };
-    handler = [this](std::vector<uint8_t> *b, int *size) {
+    handler = [](std::vector<uint8_t> *b, int *size) {
       std::cout << "oh write!" << std::endl;
       b->reserve(20);
       memset(b->data(), 0x00, 20);
@@ -134,8 +134,8 @@ class SecureSocketTest : public IntegrationBase {
  protected:
   std::function<bool()> check;
   std::function<int(std::vector<uint8_t>*b, int *size)> handler;
-  std::atomic<bool> isRunning_;
   bool isSecure;
+  std::atomic<bool> isRunning_;
   std::string dir;
   std::stringstream ss;
   TestController testController;

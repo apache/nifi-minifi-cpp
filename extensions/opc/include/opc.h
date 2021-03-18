@@ -134,8 +134,6 @@ std::string OPCDateTime2String(UA_DateTime raw_date);
 
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory category, const char *msg, va_list args);
 
-static void logClear(void *context) {};
-
 } /* namespace opc */
 } /* namespace minifi */
 } /* namespace nifi */

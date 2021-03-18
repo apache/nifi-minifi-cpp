@@ -129,9 +129,8 @@ TEST_CASE("GeneralUtils::invoke FunctionObject", "[invoke function object]") {
   REQUIRE(true == utils::invoke(&free_function, true));
   REQUIRE(false == utils::invoke(&free_function, false));
 
-  const auto n = 3;
-  const auto int_timesn = [n](const int i) { return n * i; };
+  const auto int_timesn = [](const int i) { return 3 * i; };
 
-  // lambda with capture
+  // invoking lambda
   REQUIRE(60 == utils::invoke(int_timesn, 20));
 }

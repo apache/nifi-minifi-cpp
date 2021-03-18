@@ -33,9 +33,9 @@ C2Payload::C2Payload(Operation op, std::string identifier, bool isRaw)
 
 C2Payload::C2Payload(Operation op, state::UpdateState state, std::string identifier, bool isRaw)
     : state::Update(state::UpdateStatus(state, 0)),
+      ident_(std::move(identifier)),
       op_(op),
-      raw_(isRaw),
-      ident_(std::move(identifier)) {
+      raw_(isRaw) {
 }
 
 

@@ -151,10 +151,12 @@ class SimpleSSLTestClient  {
   gsl::not_null<std::shared_ptr<logging::Logger>> logger_{gsl::make_not_null(logging::LoggerFactory<SimpleSSLTestClient>::getLogger())};
 
   static SocketDescriptor openConnection(const char *host_name, const char *port, logging::Logger& logger) {
-    struct addrinfo hints = {0}, *addrs;
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
+    struct addrinfo *addrs;
     const int status = getaddrinfo(host_name, port, &hints, &addrs);
     assert(status == 0);
     SocketDescriptor sfd = INVALID_SOCKET;
@@ -249,7 +251,7 @@ class TLSServerSocketSupportedProtocolsTest {
       auto check = [this]() -> bool {
         return is_running_;
       };
-      auto handler = [this](std::vector<uint8_t> *bytes_written, int *size) {
+      auto handler = [](std::vector<uint8_t> *bytes_written, int *size) {
         std::string contents = "hello world";
         *bytes_written = {contents.begin(), contents.end()};
         bytes_written->push_back(0);

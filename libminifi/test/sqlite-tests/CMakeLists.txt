@@ -25,7 +25,7 @@ FOREACH(testfile ${SQLITE_INTEGRATION_TESTS})
   target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
   target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors/processors")
   target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/sqlite")
-  target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/thirdparty/sqlite")
+  target_include_directories(${testfilename} SYSTEM PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/thirdparty/sqlite")
 
   target_wholearchive_library(${testfilename} minifi-sqlite-extensions)
   target_wholearchive_library(${testfilename} minifi-standard-processors)

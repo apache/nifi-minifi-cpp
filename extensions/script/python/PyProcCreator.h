@@ -23,6 +23,8 @@
 #include "ExecutePythonProcessor.h"
 #include "utils/StringUtils.h"
 
+#pragma GCC visibility push(hidden)
+
 class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::processors::ExecutePythonProcessor> {
  public:
 
@@ -103,5 +105,6 @@ class PyProcCreator {
   std::map<std::string, std::string> file_mapping_;
 };
 
+#pragma GCC visibility pop
 
 #endif /* EXTENSIONS_PYPROCESS_PYPROCCREATOR_H_ */

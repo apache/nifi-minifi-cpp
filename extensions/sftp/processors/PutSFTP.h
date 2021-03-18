@@ -102,7 +102,6 @@ namespace processors {
 
    private:
     std::shared_ptr<logging::Logger> logger_;
-    bool write_succeeded_;
     const std::string target_path_;
     utils::SFTPClient& client_;
     const std::string conflict_resolution_;
@@ -119,7 +118,7 @@ namespace processors {
   bool processOne(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 };
 
-REGISTER_RESOURCE(PutSFTP, "Sends FlowFiles to an SFTP Server")
+REGISTER_RESOURCE(PutSFTP, "Sends FlowFiles to an SFTP Server");
 
 } /* namespace processors */
 } /* namespace minifi */

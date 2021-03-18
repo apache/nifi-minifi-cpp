@@ -220,36 +220,6 @@ typedef struct {
   const char *description; int hasDescription;
 } RespondCodeContext;
 
-
-
-// Request Type Str
-static const char *RequestTypeStr[MAX_REQUEST_TYPE] = { "NEGOTIATE_FLOWFILE_CODEC", "REQUEST_PEER_LIST", "SEND_FLOWFILES", "RECEIVE_FLOWFILES", "SHUTDOWN" };
-static RespondCodeContext respondCodeContext[21] = { //NOLINT
-  { RESERVED, "Reserved for Future Use", 0 },  //NOLINT
-  { PROPERTIES_OK, "Properties OK", 0 },  //NOLINT
-  { UNKNOWN_PROPERTY_NAME, "Unknown Property Name", 1 },  //NOLINT
-  { ILLEGAL_PROPERTY_VALUE, "Illegal Property Value", 1 },  //NOLINT
-  { MISSING_PROPERTY, "Missing Property", 1 },  //NOLINT
-  { CONTINUE_TRANSACTION, "Continue Transaction", 0 },  //NOLINT
-  { FINISH_TRANSACTION, "Finish Transaction", 0 },  //NOLINT
-  { CONFIRM_TRANSACTION, "Confirm Transaction", 1 },  //NOLINT
-  { TRANSACTION_FINISHED, "Transaction Finished", 0 },  //NOLINT
-  { TRANSACTION_FINISHED_BUT_DESTINATION_FULL, "Transaction Finished But Destination is Full", 0 },  //NOLINT
-  { CANCEL_TRANSACTION, "Cancel Transaction", 1 },  //NOLINT
-  { BAD_CHECKSUM, "Bad Checksum", 0 },  //NOLINT
-  { MORE_DATA, "More Data Exists", 0 },  //NOLINT
-  { NO_MORE_DATA, "No More Data Exists", 0 },  //NOLINT
-  { UNKNOWN_PORT, "Unknown Port", 0 },  //NOLINT
-  { PORT_NOT_IN_VALID_STATE, "Port Not in a Valid State", 1 },  //NOLINT
-  { PORTS_DESTINATION_FULL, "Port's Destination is Full", 0 },  //NOLINT
-  { UNAUTHORIZED, "User Not Authorized", 1 },  //NOLINT
-  { ABORT, "Abort", 1 },  //NOLINT
-  { UNRECOGNIZED_RESPONSE_CODE, "Unrecognized Response Code", 0 },  //NOLINT
-  { END_OF_STREAM, "End of Stream", 0 }
-};
-
-
-
 // Transaction Class
 typedef struct {
 
@@ -278,7 +248,7 @@ typedef struct {
   UT_hash_handle hh;
 } CTransaction;
 
-static void InitTransaction(CTransaction * transaction, TransferDirection direction, cstream * stream) {
+static inline void InitTransaction(CTransaction * transaction, TransferDirection direction, cstream * stream) {
   transaction->_stream = stream;
   transaction->_state = TRANSACTION_STARTED;
   transaction->_direction = direction;
@@ -294,35 +264,35 @@ static void InitTransaction(CTransaction * transaction, TransferDirection direct
   transaction->_uuid_str[36]='\0';
 }
 
-static TransferDirection getDirection(const CTransaction * transaction) {
+static inline TransferDirection getDirection(const CTransaction * transaction) {
   return transaction->_direction;
 }
 
-static TransactionState getState(const CTransaction * transaction) {
+static inline TransactionState getState(const CTransaction * transaction) {
   return transaction->_state;
 }
 
-static int isDataAvailable(const CTransaction * transaction) {
+static inline int isDataAvailable(const CTransaction * transaction) {
   return transaction->_dataAvailable;
 }
 
-static void setDataAvailable(CTransaction * transaction, int available) {
+static inline void setDataAvailable(CTransaction * transaction, int available) {
   transaction->_dataAvailable = available;
 }
 
-static uint64_t getCRC(const CTransaction * transaction) {
+static inline uint64_t getCRC(const CTransaction * transaction) {
   return transaction->_crc;
 }
 
-static const char * getUUIDStr(const CTransaction * transation) {
+static inline const char * getUUIDStr(const CTransaction * transation) {
   return transation->_uuid_str;
 }
 
-static void updateCRC(CTransaction * transaction, const uint8_t *buffer, uint32_t length) {
+static inline void updateCRC(CTransaction * transaction, const uint8_t *buffer, uint32_t length) {
   transaction->_crc = crc32(transaction->_crc, buffer, length);
 }
 
-static int writeData(CTransaction * transaction, const uint8_t *value, int size) {
+static inline int writeData(CTransaction * transaction, const uint8_t *value, int size) {
   int ret = write_buffer(value, size, transaction->_stream);
   if (ret > 0) {
     transaction->_crc = crc32(transaction->_crc, value, ret);
@@ -330,7 +300,7 @@ static int writeData(CTransaction * transaction, const uint8_t *value, int size)
   return ret;
 }
 
-static int readData(CTransaction * transaction, uint8_t *buf, int buflen) {
+static inline int readData(CTransaction * transaction, uint8_t *buf, int buflen) {
   int ret = read_buffer(buf, buflen, transaction->_stream);
   if (ret > 0) {
     transaction->_crc = crc32(transaction->_crc, buf, ret);
@@ -338,28 +308,28 @@ static int readData(CTransaction * transaction, uint8_t *buf, int buflen) {
   return ret;
 }
 
-static int write_uint64t(CTransaction * transaction, uint64_t base_value) {
+static inline int write_uint64t(CTransaction * transaction, uint64_t base_value) {
   const uint64_t value = htonll_r(base_value);
   const uint8_t * buf = (uint8_t*)(&value);
 
   return writeData(transaction, buf, sizeof(uint64_t));
 }
 
-static int write_uint32t(CTransaction * transaction, uint32_t base_value) {
+static inline int write_uint32t(CTransaction * transaction, uint32_t base_value) {
   const uint32_t value = htonl(base_value);
   const uint8_t * buf = (uint8_t*)(&value);
 
   return writeData(transaction, buf, sizeof(uint32_t));
 }
 
-static int write_uint16t(CTransaction * transaction, uint16_t base_value) {
+static inline int write_uint16t(CTransaction * transaction, uint16_t base_value) {
   const uint16_t value = htons(base_value);
   const uint8_t *buf = (uint8_t *) (&value);
 
   return writeData(transaction, buf, sizeof(uint16_t));
 }
 
-static int write_UTF_len(CTransaction * transaction, const char * str, size_t len, enum Bool widen) {
+static inline int write_UTF_len(CTransaction * transaction, const char * str, size_t len, enum Bool widen) {
   if (len > 65535) {
     return -1;
   }
@@ -387,7 +357,7 @@ static int write_UTF_len(CTransaction * transaction, const char * str, size_t le
   return ret;
 }
 
-static int write_UTF(CTransaction * transaction, const char * str, enum Bool widen) {
+static inline int write_UTF(CTransaction * transaction, const char * str, enum Bool widen) {
   return write_UTF_len(transaction, str, strlen(str), widen);
 }
 
@@ -401,7 +371,7 @@ typedef struct {
   const char * payload_;
 } CDataPacket;
 
-static void initPacket(CDataPacket * packet, CTransaction* transaction, const attribute_set * attributes, const char * payload) {
+static inline void initPacket(CDataPacket * packet, CTransaction* transaction, const attribute_set * attributes, const char * payload) {
   packet->payload_ = payload;
   packet->transaction_ = transaction;
   packet->_attributes = attributes;

@@ -247,7 +247,7 @@ void SFTPClient::setSendKeepAlive(bool send_keepalive) {
   send_keepalive_ = send_keepalive;
 }
 
-bool SFTPClient::setUseCompression(bool use_compression) {
+bool SFTPClient::setUseCompression(bool /*use_compression*/) {
   return libssh2_session_flag(ssh_session_, LIBSSH2_FLAG_COMPRESS, 1) == 0;
 }
 
@@ -526,7 +526,7 @@ bool SFTPClient::getFile(const std::string& path, io::BaseStream& output, int64_
     }
   } while (true);
 
-  if (expected_size >= 0 && total_read != expected_size) {
+  if (expected_size >= 0 && total_read != gsl::narrow<uint64_t>(expected_size)) {
     last_error_.setLibssh2Error(LIBSSH2_FX_OK);
     logger_->log_error("Remote file \"%s\" has unexpected size, expected: %ld, actual: %lu", path.c_str(), expected_size, total_read);
     return false;
@@ -590,7 +590,7 @@ bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool ov
     }
   } while (true);
 
-  if (expected_size >= 0 && total_read != expected_size) {
+  if (expected_size >= 0 && total_read != gsl::narrow<uint64_t>(expected_size)) {
     last_error_.setLibssh2Error(LIBSSH2_FX_OK);
     logger_->log_error("Input has unexpected size, expected: %ld, actual: %lu", path.c_str(), expected_size, total_read);
     return false;

@@ -68,7 +68,7 @@ std::string CapturePacket::generate_new_pcap(const std::string &base_path) {
   return path;
 }
 
-void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, void* data) {
+void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* /*dev*/, void* data) {
   // parse the packet
   PacketMovers* capture_mechanism = (PacketMovers*) data;
 
@@ -125,7 +125,7 @@ void CapturePacket::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string value;
   if (context->getProperty(BatchSize.getName(), value)) {
     core::Property::StringToInt(value, pcap_batch_size_);

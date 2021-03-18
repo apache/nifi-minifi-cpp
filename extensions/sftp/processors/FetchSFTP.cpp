@@ -124,7 +124,7 @@ FetchSFTP::FetchSFTP(std::string name, utils::Identifier uuid /*= utils::Identif
 
 FetchSFTP::~FetchSFTP() = default;
 
-void FetchSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void FetchSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   parseCommonPropertiesOnSchedule(context);
 
   std::string value;

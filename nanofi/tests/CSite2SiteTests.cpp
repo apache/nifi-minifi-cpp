@@ -115,7 +115,7 @@ void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, 
     s2s_data.request_type_ok = true;
     stream->read(s2s_data.attr_num);
     std::string key, value;
-    for(int i = 0; i < s2s_data.attr_num; ++i) {
+    for(uint32_t i = 0; i < s2s_data.attr_num; ++i) {
       stream->read(key, true);
       stream->read(value, true);
       s2s_data.attributes[key] = value;
@@ -142,7 +142,7 @@ void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfe
 
   // just consume handshake data
   bool found_codec = false;
-  int read_len = 0;
+  size_t read_len = 0;
   while(!found_codec) {
     uint8_t handshake_data[1000];
     int actual_len = stream->read(handshake_data+read_len, 1000-read_len);

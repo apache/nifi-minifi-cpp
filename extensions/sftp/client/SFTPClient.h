@@ -48,7 +48,7 @@ SMART_ENUM(SFTPError,
     (FileAlreadyExists, "File already exists"),
     (CommunicationFailure, "Communication failure"),
     (IoError, "IO error"),
-    (Unexpected, "Unexpected"));
+    (Unexpected, "Unexpected"))
 
 class SFTPException : public Exception {
  public:

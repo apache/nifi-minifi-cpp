@@ -40,10 +40,10 @@ template<typename T>
 class AtomicEntryStream : public BaseStream {
  public:
   AtomicEntryStream(const T key, core::repository::AtomicEntry<T> *entry)
-      : key_(key),
-        entry_(entry),
+      : length_(0),
         offset_(0),
-        length_(0),
+        key_(key),
+        entry_(entry),
         logger_(logging::LoggerFactory<AtomicEntryStream()>::getLogger()) {
     core::repository::RepoValue<T> *value;
     if (entry_->getValue(key, &value)) {

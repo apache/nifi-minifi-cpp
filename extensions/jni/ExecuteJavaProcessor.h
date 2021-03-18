@@ -295,7 +295,7 @@ class ExecuteJavaProcessor : public core::Processor {
 
 };
 
-REGISTER_RESOURCE(ExecuteJavaProcessor, "ExecuteJavaClass runs NiFi processors given a provided system path ")
+REGISTER_RESOURCE(ExecuteJavaProcessor, "ExecuteJavaClass runs NiFi processors given a provided system path ");
 
 } /* namespace processors */
 } /* namespace jni */

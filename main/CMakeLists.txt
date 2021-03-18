@@ -15,7 +15,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-# 
+#
 
 cmake_minimum_required(VERSION 2.6)
 
@@ -77,7 +77,7 @@ if(NOT WIN32 AND ENABLE_JNI AND NOT DISABLE_JEMALLOC)
 endif()
 
 if (WIN32)
-	include_directories("../thirdparty/Simple-Windows-Posix-Semaphore")
+	include_directories(SYSTEM "../thirdparty/Simple-Windows-Posix-Semaphore")
   	target_link_libraries(minifiexe semaphore)
 endif()
 

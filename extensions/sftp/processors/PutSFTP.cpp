@@ -148,7 +148,7 @@ void PutSFTP::initialize() {
   properties.insert(RemoteGroup);
   properties.insert(UseCompression);
   setSupportedProperties(properties);
-  
+
   // Set the supported relationships
   std::set<core::Relationship> relationships;
   relationships.insert(Success);
@@ -168,7 +168,7 @@ PutSFTP::PutSFTP(std::string name, utils::Identifier uuid /*= utils::Identifier(
 
 PutSFTP::~PutSFTP() = default;
 
-void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   parseCommonPropertiesOnSchedule(context);
 
   std::string value;
@@ -202,7 +202,6 @@ PutSFTP::ReadCallback::ReadCallback(const std::string& target_path,
                                     utils::SFTPClient& client,
                                     const std::string& conflict_resolution)
     : logger_(logging::LoggerFactory<PutSFTP::ReadCallback>::getLogger())
-    , write_succeeded_(false)
     , target_path_(target_path)
     , client_(client)
     , conflict_resolution_(conflict_resolution) {

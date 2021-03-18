@@ -75,7 +75,7 @@ void CaptureRTSPFrame::initialize() {
   setSupportedRelationships(std::move(relationships));
 }
 
-void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
 
   std::string value;
 

@@ -57,7 +57,7 @@ function(use_bundled_liblzma SOURCE_DIR BINARY_DIR)
                 EXCLUDE_FROM_ALL TRUE
         )
     else()
-        set(CONFIGURE_COMMAND ./configure "CFLAGS=${CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${CMAKE_CXX_FLAGS} -fPIC" --disable-xz --disable-xzdec --disable-lzmadec --disable-lzmainfo --disable-lzma-links --disable-scripts --disable-doc --enable-shared=no "--prefix=${LIBLZMA_BIN_DIR}")
+        set(CONFIGURE_COMMAND ./configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" --disable-xz --disable-xzdec --disable-lzmadec --disable-lzmainfo --disable-lzma-links --disable-scripts --disable-doc --enable-shared=no "--prefix=${LIBLZMA_BIN_DIR}")
         if(PORTABLE)
             list(APPEND CONFIGURE_COMMAND "--disable-assembler")
         endif()

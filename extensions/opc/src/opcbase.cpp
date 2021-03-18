@@ -65,7 +65,7 @@ namespace processors {
       core::PropertyBuilder::createProperty("Trusted server certificate path")
           ->withDescription("Path to the DER-encoded trusted server certificate")->build());
 
-  void BaseOPCProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
+  void BaseOPCProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
     logger_->log_trace("BaseOPCProcessor::onSchedule");
 
     applicationURI_.clear();

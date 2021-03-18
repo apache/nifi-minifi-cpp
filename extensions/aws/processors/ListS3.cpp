@@ -192,7 +192,7 @@ uint64_t ListS3::getLatestListedKeyTimestamp(const std::unordered_map<std::strin
   return stored_listed_key_timestamp;
 }
 
-ListS3::ListingState ListS3::getCurrentState(const std::shared_ptr<core::ProcessContext> &context) {
+ListS3::ListingState ListS3::getCurrentState(const std::shared_ptr<core::ProcessContext>& /*context*/) {
   ListS3::ListingState current_listing_state;
   std::unordered_map<std::string, std::string> state;
   if (!state_manager_->get(state)) {

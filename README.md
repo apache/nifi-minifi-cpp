@@ -341,12 +341,12 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
     If you have already bootstrapped, bootstrapping again isn't necessary to run make [ Y/N ] Y
     *****************************************
      Select MiNiFi C++ Features to toggle.
-    *****************************************
+    ****************************************
     A. Persistent Repositories .....Enabled
     B. Lib Curl Features ...........Enabled
     C. Lib Archive Features ........Enabled
     D. Execute Script support ......Enabled
-    E. Expression Langauge support .Enabled
+    E. Expression Language support .Enabled
     F. Kafka support ...............Disabled
     G. PCAP support ................Disabled
     H. USB Camera support ..........Disabled
@@ -372,13 +372,14 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
     4. Use Shared Dependency Links .Enabled
     5. Build Profile ...............RelWithDebInfo Debug MinSizeRel Release
     6. Create ASAN build ...........Disabled
+    7. Treat warnings as errors.....Disabled
     P. Continue with these options
     Q. Quit
     * Extension cannot be installed due to
       version of cmake or other software, or
       incompatibility with other extensions
 
-    Enter choice [ A - X or 1-6 ]
+    Enter choice [ A - X or 1-7 ]
   ```
 
 - Boostrap now saves state between runs. State will automatically be saved. Provide -c or --clear to clear this state. The -i option provides a guided menu install with the ability to change

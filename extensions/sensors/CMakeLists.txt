@@ -19,7 +19,7 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-include_directories(../../thirdparty/RTIMULib/RTIMULib)
+include_directories(SYSTEM ../../thirdparty/RTIMULib/RTIMULib)
 file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-sensors STATIC ${SOURCES})

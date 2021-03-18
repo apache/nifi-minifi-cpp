@@ -167,7 +167,7 @@ class CapturePacket : public core::Processor {
 
 REGISTER_RESOURCE(CapturePacket, "CapturePacket captures and writes one or more packets into a PCAP file that will be used as the content of a flow file."
     " Configuration options exist to adjust the batching of PCAP files. PCAP batching will place a single PCAP into a flow file. "
-    "A regular expression selects network interfaces. Bluetooth network interfaces can be selected through a separate option.")
+    "A regular expression selects network interfaces. Bluetooth network interfaces can be selected through a separate option.");
 
 } /* namespace processors */
 } /* namespace minifi */

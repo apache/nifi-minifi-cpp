@@ -175,7 +175,7 @@ minifi::utils::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectReq
 
 void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects) {
   for (const auto& version : content) {
-    if (last_bucket_list_timestamp_ - min_object_age < version.GetLastModified().Millis()) {
+    if (last_bucket_list_timestamp_ - min_object_age < gsl::narrow<uint64_t>(version.GetLastModified().Millis())) {
       logger_->log_debug("Object version '%s' of key '%s' skipped due to minimum object age filter", version.GetVersionId(), version.GetKey());
       continue;
     }
@@ -194,7 +194,7 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>&
 
 void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects) {
   for (const auto& object : content) {
-    if (last_bucket_list_timestamp_ - min_object_age < object.GetLastModified().Millis()) {
+    if (last_bucket_list_timestamp_ - min_object_age < gsl::narrow<uint64_t>(object.GetLastModified().Millis())) {
       logger_->log_debug("Object with key '%s' skipped due to minimum object age filter", object.GetKey());
       continue;
     }

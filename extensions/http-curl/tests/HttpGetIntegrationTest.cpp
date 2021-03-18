@@ -113,7 +113,6 @@ int main(int argc, char **argv) {
   if (scheme == "https") {
     std::string cert;
     cert = args.key_dir + "nifi-cert.pem";
-    memset(&callback, 0, sizeof(callback));
     callback.init_ssl = ssl_enable;
     std::string https_port = port + "s";
     callback.log_message = log_message;
@@ -123,7 +122,7 @@ int main(int argc, char **argv) {
   }
   controller->load();
   controller->start();
-  
+
   assert(verifyLogLinePresenceInPollTime(
       std::chrono::seconds(10),
       "key:invokehttp.request.url value:" + url,

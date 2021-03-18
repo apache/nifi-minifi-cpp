@@ -47,7 +47,7 @@ class AWSCredentialsService : public core::controller::ControllerService {
       : ControllerService(name, uuid) {
   }
 
-  explicit AWSCredentialsService(const std::string &name, const std::shared_ptr<Configure> &configuration)
+  explicit AWSCredentialsService(const std::string &name, const std::shared_ptr<Configure>& /*configuration*/)
       : ControllerService(name) {
   }
 

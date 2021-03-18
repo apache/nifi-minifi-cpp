@@ -28,7 +28,7 @@ bool verify_uuid(const char * uuid) {
   if(strlen(uuid_str.c_str()) != 36) {
     return false;
   }
-  for(int i = 0; i < uuid_str.length(); ++i) {
+  for(std::size_t i = 0; i < uuid_str.length(); ++i) {
     if(i % 5 == 3 && i > 5 && i < 25) {
       if (uuid_str[i] != '-') {
         return false;

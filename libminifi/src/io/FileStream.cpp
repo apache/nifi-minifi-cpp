@@ -45,9 +45,9 @@ constexpr const char *SEEKG_CALL_ERROR_MSG = "seekg call on file stream failed";
 constexpr const char *SEEKP_CALL_ERROR_MSG = "seekp call on file stream failed";
 
 FileStream::FileStream(const std::string &path, bool append)
-    : logger_(logging::LoggerFactory<FileStream>::getLogger()),
+    : offset_(0),
       path_(path),
-      offset_(0) {
+      logger_(logging::LoggerFactory<FileStream>::getLogger()) {
   file_stream_ = std::unique_ptr<std::fstream>(new std::fstream());
   if (append) {
     file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
@@ -71,9 +71,9 @@ FileStream::FileStream(const std::string &path, bool append)
 }
 
 FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enable)
-    : logger_(logging::LoggerFactory<FileStream>::getLogger()),
+    : offset_(offset),
       path_(path),
-      offset_(offset) {
+      logger_(logging::LoggerFactory<FileStream>::getLogger()) {
   file_stream_ = std::unique_ptr<std::fstream>(new std::fstream());
   if (write_enable) {
     file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::binary);

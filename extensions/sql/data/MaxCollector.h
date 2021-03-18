@@ -74,7 +74,7 @@ class MaxCollector: public SQLRowSubscriber {
     updateMaxValue(name, value);
   }
 
-  void processColumn(const std::string& name, const char* value) override {}
+  void processColumn(const std::string& /*name*/, const char* /*value*/) override {}
 
   template <typename T>
   struct MaxValue {
@@ -147,7 +147,7 @@ class MaxCollector: public SQLRowSubscriber {
   size_t countColumns_{};
   bool columnsVerified_{false};
 };
-  
+
 } /* namespace sql */
 } /* namespace minifi */
 } /* namespace nifi */

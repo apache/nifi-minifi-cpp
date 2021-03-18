@@ -48,6 +48,7 @@ const char * get_separator(int force_posix) {
         return "\\";
     }
 #endif
+    (void)force_posix;  // against unused variable warnings
     return "/";
 }
 
@@ -69,7 +70,6 @@ void remove_directory(const char * dir_path) {
         return;
     }
 
-    uint64_t path_len = strlen(dir_path);
     struct dirent * dir;
     DIR * d = opendir(dir_path);
 

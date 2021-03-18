@@ -41,6 +41,8 @@ class ScriptEngine {
    * @param res_var
    */
   virtual void evalFile(const std::string &file_name) = 0;
+
+  virtual ~ScriptEngine() = default;
 };
 
 } /* namespace script */

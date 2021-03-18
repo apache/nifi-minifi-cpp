@@ -138,7 +138,8 @@ Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string&
     memcpy(keyByteString.data, keyBuffer.data(), keyByteString.length);
 
     // Trusted certificates
-    UA_STACKARRAY(UA_ByteString, trustList, trustBuffers.size());
+    std::vector<UA_ByteString> trustList;
+    trustList.resize(trustBuffers.size());
     for (size_t i = 0; i < trustBuffers.size(); i++) {
       trustList[i] = UA_STRING_NULL;
       trustList[i].length = trustBuffers[i].size();
@@ -146,7 +147,7 @@ Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string&
       memcpy(trustList[i].data, trustBuffers[i].data(), trustList[i].length);
     }
     UA_StatusCode sc = UA_ClientConfig_setDefaultEncryption(cc, certByteString, keyByteString,
-                                                            trustList, trustBuffers.size(),
+                                                            trustList.data(), trustBuffers.size(),
                                                             nullptr, 0);
     UA_ByteString_clear(&certByteString);
     UA_ByteString_clear(&keyByteString);
@@ -160,7 +161,7 @@ Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string&
     }
   }
 
-  const UA_Logger MinifiUALogger = {logFunc, logger.get(), logClear};
+  const UA_Logger MinifiUALogger = {logFunc, logger.get(), [](void*){}};
 
   UA_ClientConfig *configPtr = UA_Client_getConfig(client_);
   configPtr->logger = MinifiUALogger;
@@ -321,17 +322,17 @@ void Client::traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb,
       }
     }
   }
-};
+}
 
 bool Client::exists(UA_NodeId nodeId) {
   bool retval = false;
-  auto callback = [&retval](Client& client, const UA_ReferenceDescription *ref, const std::string& pat) -> bool {
+  auto callback = [&retval](Client& /*client*/, const UA_ReferenceDescription* /*ref*/, const std::string& /*pat*/) -> bool {
     retval = true;
     return false;  // If any node is found, the given node exists, so traverse can be stopped
   };
   traverse(nodeId, callback, "", 1);
   return retval;
-};
+}
 
 UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<UA_NodeId>& foundNodeIDs, const std::shared_ptr<core::logging::Logger>& logger) {
   logger->log_trace("Trying to find node id for %s", path.c_str());
@@ -420,7 +421,7 @@ UA_StatusCode Client::update_node(const UA_NodeId nodeId, T value) {
   UA_StatusCode sc = UA_Client_writeValueAttribute(client_, nodeId, variant);
   UA_Variant_delete(variant);
   return sc;
-};
+}
 
 std::unique_ptr<Client> Client::createClient(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
                                              const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
@@ -570,7 +571,7 @@ std::string OPCDateTime2String(UA_DateTime raw_date) {
   return std::string(charBuf.data(), sz);
 }
 
-void logFunc(void *context, UA_LogLevel level, UA_LogCategory category, const char *msg, va_list args) {
+void logFunc(void *context, UA_LogLevel level, UA_LogCategory /*category*/, const char *msg, va_list args) {
   char buffer[1024];
   vsnprintf(buffer, 1024, msg, args);
   auto loggerPtr = reinterpret_cast<core::logging::BaseLogger*>(context);

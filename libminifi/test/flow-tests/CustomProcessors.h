@@ -94,6 +94,7 @@ class TestFlowFileGenerator : public processors::GenerateFlowFile, public Proces
   TestFlowFileGenerator(const std::string& name, const utils::Identifier &uuid) : GenerateFlowFile(name, uuid) {}
   TestFlowFileGenerator(const std::string& name) : GenerateFlowFile(name) {}
 
+  using processors::GenerateFlowFile::onTrigger;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override {
     ++trigger_count;
     if (onTriggerCb_) {

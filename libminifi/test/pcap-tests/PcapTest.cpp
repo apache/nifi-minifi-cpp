@@ -52,7 +52,7 @@ class PcapTestHarness : public IntegrationBase {
     dir = testController.createTempDirectory(format);
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::processors::CapturePacket>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -67,7 +67,7 @@ class PcapTestHarness : public IntegrationBase {
     IntegrationBase::cleanup();
   }
 
-  void runAssertions() {
+  void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
     assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
         // FIXME(fgerlits): These assertions don't work, but the test is still useful to check that the processor starts
@@ -78,7 +78,7 @@ class PcapTestHarness : public IntegrationBase {
         "because it matches .*"));
   }
 
-  void updateProperties(std::shared_ptr<minifi::FlowController> fc) {
+  void updateProperties(std::shared_ptr<minifi::FlowController> fc) override {
     auto components = fc->getComponents("pcap");
     for (const auto& component : components) {
       auto proccontroller = std::dynamic_pointer_cast<minifi::state::ProcessorController>(component);

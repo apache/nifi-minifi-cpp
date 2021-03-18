@@ -42,7 +42,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DYAML_SUPPORT")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DYAML_SUPPORT")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBDIFF")
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DBDIFF")
-#include_directories("../thirdparty/bsdiff/")
+#include_directories(SYSTEM "../thirdparty/bsdiff/")
 
 ENDIF()
 

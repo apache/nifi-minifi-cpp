@@ -53,17 +53,19 @@ std::string LuaBaseStream::read(size_t len) {
   //
   // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3337.pdf
   auto read = stream_->read(reinterpret_cast<uint8_t *>(&buffer[0]), static_cast<int>(len));
-
-  if (read != len) {
-    buffer.resize(static_cast<size_t >(read));
+  if (read < 0) {
+    return nullptr;
   }
 
-  return std::move(buffer);
+  if (gsl::narrow<size_t>(read) != len) {
+    buffer.resize(gsl::narrow<size_t>(read));
+  }
+
+  return buffer;
 }
 
 size_t LuaBaseStream::write(std::string buf) {
-  return static_cast<size_t>(stream_->write(reinterpret_cast<uint8_t *>(const_cast<char *>(buf.data())),
-                                                static_cast<int>(buf.length())));
+  return static_cast<size_t>(stream_->write(reinterpret_cast<uint8_t *>(const_cast<char *>(buf.data())), static_cast<int>(buf.length())));
 }
 
 } /* namespace lua */

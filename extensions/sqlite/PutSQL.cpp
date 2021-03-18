@@ -61,7 +61,7 @@ void PutSQL::initialize() {
 }
 
 void PutSQL::onSchedule(core::ProcessContext *context,
-                        core::ProcessSessionFactory *sessionFactory) {
+                        core::ProcessSessionFactory* /*sessionFactory*/) {
   context->getProperty(ConnectionURL.getName(), db_url_);
 
   if (db_url_.empty()) {

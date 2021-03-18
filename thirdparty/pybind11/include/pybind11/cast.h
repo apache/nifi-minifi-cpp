@@ -2008,7 +2008,7 @@ private:
             args_list.append(a);
     }
 
-    void process(list &/*args_list*/, arg_v a) {
+    void process(list& /*args_list*/, arg_v a) {
         if (!a.name)
 #if defined(NDEBUG)
             nameless_argument_error();
@@ -2033,7 +2033,7 @@ private:
         m_kwargs[a.name] = a.value;
     }
 
-    void process(list &/*args_list*/, detail::kwargs_proxy kp) {
+    void process(list& /*args_list*/, detail::kwargs_proxy kp) {
         if (!kp)
             return;
         for (const auto &k : reinterpret_borrow<dict>(kp)) {

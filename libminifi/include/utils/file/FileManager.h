@@ -80,6 +80,7 @@ class FileManager {
 
   std::string unique_file(bool keep = false) {
 #ifdef USE_BOOST
+    (void)keep;  // against unused variable warnings
     return boost::filesystem::unique_path().native();
 #else  // USE_BOOST
     return unique_file(std::string{}, keep);

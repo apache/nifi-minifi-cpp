@@ -203,9 +203,9 @@ class LegacyState {
 
  private:
    std::unordered_map<std::string, std::string> mapState_;
-   std::shared_ptr<logging::Logger> logger_;
    std::string filePath_;
    std::string tableName_;
+   std::shared_ptr<logging::Logger> logger_;
    bool ok_{};
 };
 
@@ -395,7 +395,7 @@ std::string QueryDatabaseTable::getSelectQuery() {
         continue;
       }
 
-      // Logic to differentiate ">" vs ">=" based on index is copied from: 
+      // Logic to differentiate ">" vs ">=" based on index is copied from:
       // https://github.com/apache/nifi/blob/master/nifi-nar-bundles/nifi-standard-bundle/nifi-standard-processors/src/main/java/org/apache/nifi/processors/standard/AbstractQueryDatabaseTable.java
       // (under comment "Add a condition for the WHERE clause"). And implementation explanation: https://issues.apache.org/jira/browse/NIFI-2712.
       if (index == 0) {

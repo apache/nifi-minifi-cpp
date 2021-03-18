@@ -30,7 +30,7 @@ void example_terminate_handler() {
   exit(0);
 }
 
-int main(int argc, char **argv) {
+int main() {
 
   nifi_port port;
 
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 
   flow *new_flow = create_new_flow(instance);
 
-  processor *generate_proc = add_processor(new_flow, "GenerateFlowFile");
+  add_processor(new_flow, "GenerateFlowFile");
 
   processor *put_proc = add_processor(new_flow, "PutFile");
 
