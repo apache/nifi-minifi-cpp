@@ -86,6 +86,14 @@ void GetGPS::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   logger_->log_trace("GPSD client scheduled");
 }
 
+int get_gps_status(struct gps_data_t* gps_data) {
+#if defined(GPSD_API_MAJOR_VERSION) && GPSD_API_MAJOR_VERSION >= 10
+  return gps_data->fix.status;
+#else
+  return gps_data->status;
+#endif
+}
+
 void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {
   try {
     gpsmm gps_rec(gpsdHost_.c_str(), gpsdPort_.c_str());
@@ -106,7 +114,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
         return;
       } else {
 
-        if (gpsdata->status > 0) {
+        if (get_gps_status(gpsdata) > 0) {
 
           if (gpsdata->fix.longitude != gpsdata->fix.longitude || gpsdata->fix.altitude != gpsdata->fix.altitude) {
             logger_->log_info("No GPS fix.");
