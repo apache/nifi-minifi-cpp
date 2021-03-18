@@ -79,6 +79,7 @@ class PublishKafka : public core::Processor {
   static const core::Property KerberosServiceName;
   static const core::Property KerberosPrincipal;
   static const core::Property KerberosKeytabPath;
+  static const core::Property KafkaKey;
   static const core::Property MessageKeyField;
   static const core::Property DebugContexts;
   static const core::Property FailEmptyFlowFiles;
@@ -110,7 +111,7 @@ class PublishKafka : public core::Processor {
 
  protected:
   bool configureNewConnection(const std::shared_ptr<core::ProcessContext> &context);
-  bool createNewTopic(const std::shared_ptr<core::ProcessContext> &context, const std::string& topic_name);
+  bool createNewTopic(const std::shared_ptr<core::ProcessContext> &context, const std::string& topic_name, const std::shared_ptr<core::FlowFile>& flow_file);
 
  private:
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PublishKafka>::getLogger()};

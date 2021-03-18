@@ -972,13 +972,13 @@ In the list below, the names of required properties appear in bold. Any other pr
 |**Known Brokers**|||A comma-separated list of known Kafka Brokers in the format <host>:<port><br/>**Supports Expression Language: true**|
 |Max Flow Segment Size|0 B||Maximum flow content payload segment size for the kafka record. 0 B means unlimited.|
 |Max Request Size|||Maximum Kafka protocol request message size|
-|Message Key Field|||The name of a field in the Input Records that should be used as the Key for the Kafka message.
-Supports Expression Language: true (will be evaluated using flow file attributes)|
-|Message Timeout|30 sec||The total time sending a message could take<br/>**Supports Expression Language: true**|
+|Kafka Key|||The key to use for the message. If not specified, the UUID of the flow file is used as the message key.<br/>**Supports Expression Language: true**|
+|Message Key Field|||DEPRECATED, does not work -- use Kafka Key instead|
+|Message Timeout|30 sec||The total time sending a message could take|
 |Queue Buffering Max Time|||Delay to wait for messages in the producer queue to accumulate before constructing message batches|
 |Queue Max Buffer Size|||Maximum total message size sum allowed on the producer queue|
 |Queue Max Message|||Maximum number of messages allowed on the producer queue|
-|Request Timeout|10 sec||The ack timeout of the producer request<br/>**Supports Expression Language: true**|
+|Request Timeout|10 sec||The ack timeout of the producer request|
 |Security CA|||File or directory path to CA certificate(s) for verifying the broker's key|
 |Security Cert|||Path to client's public key (PEM) used for authentication|
 |Security Pass Phrase|||Private key passphrase|

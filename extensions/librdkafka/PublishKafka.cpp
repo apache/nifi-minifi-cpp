@@ -74,19 +74,15 @@ const core::Property PublishKafka::MaxMessageSize(
 
 const core::Property PublishKafka::RequestTimeOut(
     core::PropertyBuilder::createProperty("Request Timeout")->withDescription("The ack timeout of the producer request")
-        ->isRequired(false)->withDefaultValue<core::TimePeriodValue>("10 sec")->supportsExpressionLanguage(true)->build());
+        ->isRequired(false)->withDefaultValue<core::TimePeriodValue>("10 sec")->build());
 
 const core::Property PublishKafka::MessageTimeOut(
     core::PropertyBuilder::createProperty("Message Timeout")->withDescription("The total time sending a message could take")
-        ->isRequired(false)->withDefaultValue<core::TimePeriodValue>("30 sec")->supportsExpressionLanguage(true)->build());
+        ->isRequired(false)->withDefaultValue<core::TimePeriodValue>("30 sec")->build());
 
 const core::Property PublishKafka::ClientName(
     core::PropertyBuilder::createProperty("Client Name")->withDescription("Client Name to use when communicating with Kafka")
         ->isRequired(true)->supportsExpressionLanguage(true)->build());
-
-/**
- * These don't appear to need EL support
- */
 
 const core::Property PublishKafka::BatchSize(
     core::PropertyBuilder::createProperty("Batch Size")->withDescription("Maximum number of messages batched in one MessageSet")
@@ -140,9 +136,14 @@ const core::Property PublishKafka::KerberosServiceName("Kerberos Service Name", 
 const core::Property PublishKafka::KerberosPrincipal("Kerberos Principal", "Keberos Principal", "");
 const core::Property PublishKafka::KerberosKeytabPath("Kerberos Keytab Path",
                                                 "The path to the location on the local filesystem where the kerberos keytab is located. Read permission on the file is required.", "");
-const core::Property PublishKafka::MessageKeyField("Message Key Field", "The name of a field in the Input Records that should be used as the Key for the Kafka message.\n"
-                                             "Supports Expression Language: true (will be evaluated using flow file attributes)",
-                                             "");
+
+const core::Property PublishKafka::KafkaKey(
+    core::PropertyBuilder::createProperty("Kafka Key")
+        ->withDescription("The key to use for the message. If not specified, the UUID of the flow file is used as the message key.")
+        ->supportsExpressionLanguage(true)
+        ->build());
+const core::Property PublishKafka::MessageKeyField("Message Key Field", "DEPRECATED, does not work -- use Kafka Key instead", "");
+
 const core::Property PublishKafka::DebugContexts("Debug contexts", "A comma-separated list of debug contexts to enable."
                                            "Including: generic, broker, topic, metadata, feature, queue, msg, protocol, cgrp, security, fetch, interceptor, plugin, consumer, admin, eos, all", "");
 const core::Property PublishKafka::FailEmptyFlowFiles(
@@ -491,6 +492,7 @@ void PublishKafka::initialize() {
   properties.insert(KerberosServiceName);
   properties.insert(KerberosPrincipal);
   properties.insert(KerberosKeytabPath);
+  properties.insert(KafkaKey);
   properties.insert(MessageKeyField);
   properties.insert(DebugContexts);
   properties.insert(FailEmptyFlowFiles);
@@ -507,10 +509,10 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
 
   // Try to get a KafkaConnection
   std::string client_id, brokers;
-  if (!context->getProperty(ClientName.getName(), client_id)) {
+  if (!context->getProperty(ClientName, client_id, nullptr)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Client Name property missing or invalid");
   }
-  if (!context->getProperty(SeedBrokers.getName(), brokers)) {
+  if (!context->getProperty(SeedBrokers, brokers, nullptr)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Known Brokers property missing or invalid");
   }
 
@@ -540,6 +542,11 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
 
   conn_ = utils::make_unique<KafkaConnection>(key_);
   configureNewConnection(context);
+
+  std::string message_key_field;
+  if (context->getProperty(MessageKeyField.getName(), message_key_field)) {
+    logger_->log_error("The %s property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead.", MessageKeyField.getName());
+  }
 
   logger_->log_debug("Successfully configured PublishKafka");
 }
@@ -745,10 +752,12 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
   logger_->log_info("PublishKafka registering %d librdkafka dynamic properties", dynamic_prop_keys.size());
 
   for (const auto &prop_key : dynamic_prop_keys) {
-    value = "";
-    if (context->getDynamicProperty(prop_key, value) && !value.empty()) {
-      logger_->log_debug("PublishKafka: DynamicProperty: [%s] -> [%s]", prop_key, value);
-      result = rd_kafka_conf_set(conf_.get(), prop_key.c_str(), value.c_str(), errstr.data(), errstr.size());
+    core::Property dynamic_property_key{prop_key, "dynamic property"};
+    dynamic_property_key.setSupportsExpressionLanguage(true);
+    std::string dynamic_property_value;
+    if (context->getDynamicProperty(dynamic_property_key, dynamic_property_value, nullptr) && !dynamic_property_value.empty()) {
+      logger_->log_debug("PublishKafka: DynamicProperty: [%s] -> [%s]", prop_key, dynamic_property_value);
+      result = rd_kafka_conf_set(conf_.get(), prop_key.c_str(), dynamic_property_value.c_str(), errstr.data(), errstr.size());
       if (result != RD_KAFKA_CONF_OK) {
         auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
@@ -776,7 +785,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
   return true;
 }
 
-bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &context, const std::string& topic_name) {
+bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &context, const std::string& topic_name, const std::shared_ptr<core::FlowFile>& flow_file) {
   std::unique_ptr<rd_kafka_topic_conf_t, rd_kafka_topic_conf_deleter> topic_conf_{ rd_kafka_topic_conf_new() };
   if (topic_conf_ == nullptr) {
     logger_->log_error("Failed to create rd_kafka_topic_conf_t object");
@@ -790,7 +799,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &c
   std::string valueConf;
 
   value = "";
-  if (context->getProperty(DeliveryGuarantee.getName(), value) && !value.empty()) {
+  if (context->getProperty(DeliveryGuarantee, value, flow_file) && !value.empty()) {
     /*
      * Because of a previous error in this processor, the default value of this property was "DELIVERY_ONE_NODE".
      * As this is not a valid value for "request.required.acks", the following rd_kafka_topic_conf_set call failed,
@@ -905,7 +914,9 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
     // Get Topic (FlowFile-dependent EL property)
     std::string topic;
-    if (!context->getProperty(Topic, topic, flowFile)) {
+    if (context->getProperty(Topic, topic, flowFile)) {
+      logger_->log_debug("PublishKafka: topic for flow file %s is '%s'", flowFile->getUUIDStr(), topic);
+    } else {
       logger_->log_error("Flow file %s does not have a valid Topic", flowFile->getUUIDStr());
       messages->modifyResult(flow_file_index, [](FlowFileResult& flow_file_result) {
         flow_file_result.flow_file_error = true;
@@ -915,7 +926,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
     // Add topic to the connection if needed
     if (!conn_->hasTopic(topic)) {
-      if (!createNewTopic(context, topic)) {
+      if (!createNewTopic(context, topic, flowFile)) {
         logger_->log_error("Failed to add topic %s", topic);
         messages->modifyResult(flow_file_index, [](FlowFileResult& flow_file_result) {
           flow_file_result.flow_file_error = true;
@@ -925,12 +936,10 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
 
     std::string kafkaKey;
-    kafkaKey = "";
-    if (context->getDynamicProperty(MessageKeyField, kafkaKey, flowFile) && !kafkaKey.empty()) {
-      logger_->log_debug("PublishKafka: Message Key Field [%s]", kafkaKey);
-    } else {
+    if (!context->getProperty(KafkaKey, kafkaKey, flowFile) || kafkaKey.empty()) {
       kafkaKey = flowFile->getUUIDStr();
     }
+    logger_->log_debug("PublishKafka: Message Key [%s]", kafkaKey);
 
     auto thisTopic = conn_->getTopic(topic);
     if (thisTopic == nullptr) {
