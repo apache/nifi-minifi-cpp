@@ -108,7 +108,7 @@ void PutAzureBlobStorage::initialize() {
   });
 }
 
-void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   context->getProperty(CreateContainer.getName(), create_container_);
 
   std::string value;

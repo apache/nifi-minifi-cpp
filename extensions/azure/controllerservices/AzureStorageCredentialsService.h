@@ -46,7 +46,7 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
         logger_(logging::LoggerFactory<AzureStorageCredentialsService>::getLogger()) {
   }
 
-  explicit AzureStorageCredentialsService(const std::string &name, const std::shared_ptr<Configure> &configuration)
+  explicit AzureStorageCredentialsService(const std::string& name, const std::shared_ptr<Configure>& /*configuration*/)
       : ControllerService(name),
         logger_(logging::LoggerFactory<AzureStorageCredentialsService>::getLogger()) {
   }
