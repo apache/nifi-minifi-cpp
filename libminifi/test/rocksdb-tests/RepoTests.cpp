@@ -342,6 +342,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
     return newFlow != nullptr;
   };
   assert(verifyEventHappenedInPollTime(std::chrono::seconds(10), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
+  (void)flowFileArrivedInOutput;  // unused in release builds
   REQUIRE(expiredFiles.empty());
 
   LogTestController::getInstance().reset();

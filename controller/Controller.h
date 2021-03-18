@@ -146,7 +146,7 @@ int getJstacks(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
 
     for (uint64_t i = 0; i < size; i++) {
       std::string name;
-      uint64_t lines;
+      uint64_t lines = 0;
       socket->read(name);
       socket->read(lines);
       for (uint64_t j = 0; j < lines; j++) {
