@@ -219,6 +219,10 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
     return to_be_processed_after_;
   }
 
+  void setPenaltyExpiration(std::chrono::time_point<std::chrono::steady_clock> to_be_processed_after) {
+    to_be_processed_after_ = to_be_processed_after;
+  }
+
   /**
    * Gets the offset within the flow file
    * @return size as a uint64_t

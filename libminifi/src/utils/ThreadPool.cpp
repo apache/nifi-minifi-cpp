@@ -253,7 +253,13 @@ void ThreadPool<T>::shutdown() {
       manager_thread_.join();
     }
 
-    delayed_task_available_.notify_all();
+    {
+      // this lock ensures that the delayed_scheduler_thread_
+      // is not between checking the running_ and before the cv_.wait*
+      // as then, it would survive the notify_all call
+      std::lock_guard<std::mutex> worker_lock(worker_queue_mutex_);
+      delayed_task_available_.notify_all();
+    }
     if (delayed_scheduler_thread_.joinable()) {
       delayed_scheduler_thread_.join();
     }

@@ -43,6 +43,7 @@
 #include "core/Connectable.h"
 #include "core/TraceableResource.h"
 #include "utils/BackTrace.h"
+#include "SwapManager.h"
 
 #ifndef WIN32
 #include <sys/stat.h>
@@ -141,7 +142,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   // Start the repository monitor thread
   virtual void start();
   // Stop the repository monitor thread
-  void stop();
+  virtual void stop();
   // whether the repo is full
   virtual bool isFull() {
     return repo_full_;

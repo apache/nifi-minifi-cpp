@@ -25,6 +25,7 @@
 #include <condition_variable>
 #include <utility>
 #include <stdexcept>
+#include <atomic>
 
 #include "utils/TryMoveCall.h"
 
@@ -215,25 +216,29 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
   }
 
   void stop() {
+    // this lock ensures that other threads did not yet
+    // check the running_ condition (as they all acquire
+    // the lock before the check) or already unlocked and
+    // are waiting, thus receiving the notify_all
+    // TODO(adebreceni): investigate a waiting_ counter
+    //   approach that would render the locking here unnecessary
     std::lock_guard<std::mutex> guard(this->mtx_);
     running_ = false;
     cv_.notify_all();
   }
 
   void start() {
-    std::unique_lock<std::mutex> lck(this->mtx_);
     running_ = true;
   }
 
   bool isRunning() const {
-    std::lock_guard<std::mutex> guard(this->mtx_);
     return running_;  // In case it's not running no notifications are generated, dequeueing fails instead of blocking to avoid hanging threads
   }
 
   using ConcurrentQueue<T>::remove;
 
  private:
-  bool running_;
+  std::atomic<bool> running_;
   std::condition_variable cv_;
 };
 

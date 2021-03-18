@@ -34,6 +34,9 @@
 #include "database/RocksDatabase.h"
 #include "encryption/RocksDbEncryptionProvider.h"
 #include "utils/crypto/EncryptionProvider.h"
+#include "SwapManager.h"
+#include "FlowFileLoader.h"
+#include "range/v3/algorithm/all_of.hpp"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -53,7 +56,7 @@ constexpr auto FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::mill
  * Flow File repository
  * Design: Extends Repository and implements the run function, using rocksdb as the primary substrate.
  */
-class FlowFileRepository : public core::Repository {
+class FlowFileRepository : public core::Repository, public SwapManager, public std::enable_shared_from_this<FlowFileRepository> {
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.flowfile.repository.encryption.key";
   // Constructor
@@ -203,6 +206,25 @@ class FlowFileRepository : public core::Repository {
     running_ = true;
     thread_ = std::thread(&FlowFileRepository::run, this);
     logger_->log_debug("%s Repository Monitor Thread Start", getName());
+    if (swap_loader_) {
+      swap_loader_->start();
+    }
+  }
+
+  void stop() override {
+    if (swap_loader_) {
+      swap_loader_->stop();
+    }
+    core::Repository::stop();
+  }
+
+  void store(std::vector<std::shared_ptr<core::FlowFile>> flow_files) override {
+    gsl_Expects(ranges::all_of(flow_files, &FlowFile::isStored));
+    // pass, flowfiles are already persisted in the repository
+  }
+
+  std::future<std::vector<std::shared_ptr<core::FlowFile>>> load(std::vector<SwappedFlowFile> flow_files) override {
+    return swap_loader_->load(std::move(flow_files));
   }
 
  private:
@@ -229,6 +251,7 @@ class FlowFileRepository : public core::Repository {
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::unique_ptr<rocksdb::Checkpoint> checkpoint_;
+  std::unique_ptr<FlowFileLoader> swap_loader_;
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<minifi::Configure> config_;
 };

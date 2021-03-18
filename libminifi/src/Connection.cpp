@@ -70,6 +70,15 @@ Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::s
   logger_->log_debug("Connection %s created", name_);
 }
 
+Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<SwapManager> swap_manager,
+                       const std::string& name, const utils::Identifier& uuid)
+    : core::Connectable(name, uuid),
+      flow_repository_(std::move(flow_repository)),
+      content_repo_(std::move(content_repo)),
+      queue_(std::move(swap_manager)) {
+  logger_->log_debug("Connection %s created", name_);
+}
+
 bool Connection::isEmpty() const {
   std::lock_guard<std::mutex> lock(mutex_);
 
@@ -141,7 +150,11 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
   std::lock_guard<std::mutex> lock(mutex_);
 
   while (queue_.isWorkAvailable()) {
-    std::shared_ptr<core::FlowFile> item = queue_.pop();
+    std::optional<std::shared_ptr<core::FlowFile>> opt_item = queue_.tryPop();
+    if (!opt_item) {
+      return nullptr;
+    }
+    std::shared_ptr<core::FlowFile> item = std::move(opt_item.value());
     queued_data_size_ -= item->getSize();
 
     if (expired_duration_.load() > 0ms) {
@@ -167,11 +180,16 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
 
 void Connection::drain(bool delete_permanently) {
   std::lock_guard<std::mutex> lock(mutex_);
-
-  while (!queue_.empty()) {
-    std::shared_ptr<core::FlowFile> item = queue_.pop();
-    logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
-    if (delete_permanently) {
+  if (!delete_permanently) {
+    // simply discard in-memory flow files
+    queue_.clear();
+  } else {
+    while (!queue_.empty()) {
+      auto opt_item = queue_.tryPop(std::chrono::milliseconds{100});
+      if (!opt_item) {
+        continue;
+      }
+      auto& item = opt_item.value();
       if (item->isStored() && flow_repository_->Delete(item->getUUIDStr())) {
         item->setStoredToRepository(false);
         auto claim = item->getResourceClaim();
@@ -179,6 +197,7 @@ void Connection::drain(bool delete_permanently) {
       }
     }
   }
+
   queued_data_size_ = 0;
   logger_->log_debug("Drain connection %s", name_);
 }

@@ -48,6 +48,7 @@ class YamlConnectionParser {
   [[nodiscard]] uint64_t getWorkQueueSizeFromYaml() const;
   [[nodiscard]] uint64_t getWorkQueueDataSizeFromYaml() const;
   [[nodiscard]] utils::Identifier getSourceUUIDFromYaml() const;
+  [[nodiscard]] uint64_t getSwapThresholdFromYaml() const;
   [[nodiscard]] utils::Identifier getDestinationUUIDFromYaml() const;
   [[nodiscard]] std::chrono::milliseconds getFlowFileExpirationFromYaml() const;
   [[nodiscard]] bool getDropEmptyFromYaml() const;

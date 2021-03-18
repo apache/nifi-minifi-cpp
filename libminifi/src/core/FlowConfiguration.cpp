@@ -158,6 +158,15 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(
 }
 
 std::unique_ptr<minifi::Connection> FlowConfiguration::createConnection(const std::string& name, const utils::Identifier& uuid) const {
+  // An alternative approach would be to thread the swap manager through all the classes
+  // but it kind of makes sense that swapping the flow files is the responsibility of the
+  // flow_file_repo_. If we introduce other swappers then we will have no other choice.
+  if (flow_file_repo_) {
+    auto swap_manager = std::dynamic_pointer_cast<SwapManager>(flow_file_repo_);
+    if (swap_manager) {
+      return std::make_unique<minifi::Connection>(flow_file_repo_, content_repo_, std::move(swap_manager), name, uuid);
+    }
+  }
   return std::make_unique<minifi::Connection>(flow_file_repo_, content_repo_, name, uuid);
 }
 
