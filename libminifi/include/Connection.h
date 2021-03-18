@@ -45,6 +45,8 @@ class Connection : public core::Connectable {
                       const utils::Identifier &srcUUID);
   explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid,
                       const utils::Identifier &srcUUID, const utils::Identifier &destUUID);
+  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<SwapManager> swap_manager,
+                      const std::string& name, const utils::Identifier& uuid);
   // Destructor
   ~Connection() override = default;
 
@@ -109,6 +111,11 @@ class Connection : public core::Connectable {
   // Set Max Queue Data Size
   void setMaxQueueDataSize(uint64_t size) {
     max_data_queue_size_ = size;
+  }
+  void setSwapThreshold(uint64_t size) {
+    queue_.setTargetSize(size);
+    queue_.setMinSize(size / 2);
+    queue_.setMaxSize(size * 3 / 2);
   }
   // Get Max Queue Data Size
   uint64_t getMaxQueueDataSize() {

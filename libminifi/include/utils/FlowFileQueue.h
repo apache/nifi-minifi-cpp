@@ -17,10 +17,14 @@
 #pragma once
 
 #include <memory>
-#include <queue>
 #include <vector>
 
 #include "core/FlowFile.h"
+#include "MinMaxHeap.h"
+#include "SwapManager.h"
+#include "TimeUtil.h"
+
+struct FlowFileQueueTestAccessor;
 
 namespace org {
 namespace apache {
@@ -29,22 +33,102 @@ namespace minifi {
 namespace utils {
 
 class FlowFileQueue {
+  friend struct ::FlowFileQueueTestAccessor;
+  using TimePoint = std::chrono::steady_clock::time_point;
+
  public:
   using value_type = std::shared_ptr<core::FlowFile>;
 
+  explicit FlowFileQueue(std::shared_ptr<SwapManager> swap_manager = {});
+
   value_type pop();
-  void push(const value_type& element);
-  void push(value_type&& element);
+  utils::optional<value_type> tryPop();
+  utils::optional<value_type> tryPop(std::chrono::milliseconds timeout);
+  void push(value_type element);
   bool isWorkAvailable() const;
   bool empty() const;
   size_t size() const;
+  void setMinSize(size_t min_size);
+  void setTargetSize(size_t target_size);
+  void setMaxSize(size_t max_size);
 
  private:
+  utils::optional<value_type> tryPopImpl(utils::optional<std::chrono::milliseconds> timeout);
+
+  void initiateLoadIfNeeded();
+
   struct FlowFilePenaltyExpirationComparator {
-    bool operator()(const value_type& left, const value_type& right);
+    bool operator()(const value_type& left, const value_type& right) const;
   };
 
-  std::priority_queue<value_type, std::vector<value_type>, FlowFilePenaltyExpirationComparator> queue_;
+  struct SwappedFlowFileComparator {
+    bool operator()(const SwappedFlowFile& left, const SwappedFlowFile& right) const;
+  };
+
+  struct LoadTask {
+    TimePoint min;
+    TimePoint max;
+    std::future<std::vector<std::shared_ptr<core::FlowFile>>> items;
+    size_t count;
+    // flow files that have been pushed into the queue while a
+    // load was pending
+    std::vector<value_type> intermediate_items;
+
+    size_t size() const {
+      return count + intermediate_items.size();
+    }
+  };
+
+  size_t shouldSwapOutCount() const {
+    if (!swap_manager_) {
+      return 0;
+    }
+    // read once for consistent view of a single atomic variable
+    size_t max_size = max_size_;
+    size_t target_size = target_size_;
+    if (max_size != 0 && target_size != 0
+        && max_size < queue_.size() && target_size < queue_.size()) {
+      return queue_.size() - target_size;
+    }
+    return 0;
+  }
+
+  size_t shouldSwapInCount() const {
+    if (!swap_manager_) {
+      return 0;
+    }
+    // read once for consistent view of a single atomic variable
+    size_t min_size = min_size_;
+    size_t target_size = target_size_;
+    if (min_size == 0 || target_size == 0) {
+      if (!swapped_flow_files_.empty()) {
+        logger_->log_info("Swapping in all the flow files");
+        return swapped_flow_files_.size();
+      }
+      return 0;
+    }
+    if (queue_.size() < min_size && queue_.size() < target_size) {
+      return std::min(target_size - queue_.size(), swapped_flow_files_.size());
+    }
+    return 0;
+  }
+
+  std::shared_ptr<SwapManager> swap_manager_;
+  // a load is initiated if the queue_ shrinks below this threshold
+  std::atomic<size_t> min_size_{0};
+  // a given operation (load/store) will try to approach this size
+  std::atomic<size_t> target_size_{0};
+  // a store is initiated if the queue_ grows beyond this threshold
+  std::atomic<size_t> max_size_{0};
+
+  MinMaxHeap<SwappedFlowFile, SwappedFlowFileComparator> swapped_flow_files_;
+  // the pending swap-in operation (if any)
+  utils::optional<LoadTask> load_task_;
+  MinMaxHeap<value_type, FlowFilePenaltyExpirationComparator> queue_;
+
+  std::shared_ptr<timeutils::SteadyClock> clock_{std::make_shared<timeutils::SteadyClock>()};
+
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 }  // namespace utils

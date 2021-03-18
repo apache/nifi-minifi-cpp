@@ -75,6 +75,21 @@ TEST_CASE("If three flow files are added to the FlowFileQueue, we can pop them i
   REQUIRE_FALSE(queue.isWorkAvailable());
 }
 
+TEST_CASE("Cannot add flow files in the past preempting others", "[FlowFileQueue][pop]") {
+  utils::FlowFileQueue queue;
+  const auto flow_file_1 = std::make_shared<core::FlowFile>();
+  queue.push(flow_file_1);
+  const auto flow_file_2 = std::make_shared<core::FlowFile>();
+  flow_file_2->penalize(std::chrono::seconds{-10});
+  queue.push(flow_file_2);
+
+  REQUIRE(queue.isWorkAvailable());
+  REQUIRE(queue.pop() == flow_file_1);
+  REQUIRE(queue.isWorkAvailable());
+  REQUIRE(queue.pop() == flow_file_2);
+  REQUIRE_FALSE(queue.isWorkAvailable());
+}
+
 namespace {
 
 class PenaltyHasExpired {

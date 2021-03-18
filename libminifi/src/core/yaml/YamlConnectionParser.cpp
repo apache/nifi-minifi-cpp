@@ -94,6 +94,21 @@ uint64_t YamlConnectionParser::getWorkQueueDataSizeFromYaml() const {
   return 0;
 }
 
+uint64_t YamlConnectionParser::getSwapThresholdFromYaml() const {
+  const YAML::Node swap_threshold_node = connectionNode_["swap threshold"];
+  if (swap_threshold_node) {
+    auto swap_threshold_str = swap_threshold_node.as<std::string>();
+    uint64_t swap_threshold;
+    if (core::Property::StringToInt(swap_threshold_str, swap_threshold)) {
+      logger_->log_debug("Setting %" PRIu64 " as the swap threshold.", swap_threshold);
+      return swap_threshold;
+    }
+    logger_->log_info("Invalid swap threshold value: %s.", swap_threshold_str);
+    throw std::invalid_argument("Invalid swap threshold");
+  }
+  return 0;
+}
+
 utils::Identifier YamlConnectionParser::getSourceUUIDFromYaml() const {
   const YAML::Node source_id_node = connectionNode_["source id"];
   if (source_id_node) {

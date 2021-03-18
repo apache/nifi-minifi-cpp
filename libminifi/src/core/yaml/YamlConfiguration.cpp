@@ -569,6 +569,7 @@ void YamlConfiguration::parseConnectionYaml(const YAML::Node& connectionsNode, c
     connectionParser.configureConnectionSourceRelationshipsFromYaml(*connection);
     connection->setMaxQueueSize(connectionParser.getWorkQueueSizeFromYaml());
     connection->setMaxQueueDataSize(connectionParser.getWorkQueueDataSizeFromYaml());
+    connection->setSwapThreshold(connectionParser.getSwapThresholdFromYaml());
     connection->setSourceUUID(connectionParser.getSourceUUIDFromYaml());
     connection->setDestinationUUID(connectionParser.getDestinationUUIDFromYaml());
     connection->setFlowExpirationDuration(connectionParser.getFlowFileExpirationFromYaml());

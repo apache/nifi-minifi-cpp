@@ -33,6 +33,7 @@
 #include "FlowController.h"
 #include "properties/Configure.h"
 #include "provenance/Provenance.h"
+#include "SwapManager.h"
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -237,6 +238,7 @@ class TestFlowRepository : public org::apache::nifi::minifi::core::Repository {
  protected:
   mutable std::mutex repository_results_mutex_;
   std::map<std::string, std::string> repository_results_;
+  std::shared_ptr<core::ContentRepository> content_repo_;
 };
 
 class TestFlowController : public org::apache::nifi::minifi::FlowController {

@@ -84,6 +84,10 @@ class SteadyClock : public Clock {
   std::chrono::milliseconds timeSinceEpoch() const override {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch());
   }
+
+  virtual std::chrono::time_point<std::chrono::steady_clock> now() const {
+    return std::chrono::steady_clock::now();
+  }
 };
 
 inline std::string getTimeStr(std::chrono::system_clock::time_point tp) {

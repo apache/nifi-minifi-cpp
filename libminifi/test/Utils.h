@@ -26,6 +26,8 @@
 using namespace std::chrono_literals;
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
+#include "Connection.h"
+#include "FlowFileQueue.h"
 
 #define FIELD_ACCESSOR(field) \
   template<typename T> \
@@ -118,3 +120,17 @@ void sendMessagesViaTCP(const std::vector<std::string_view>& contents, uint64_t 
   REQUIRE(!err);
   socket.close();
 }
+
+struct ConnectionTestAccessor {
+  FIELD_ACCESSOR(queue_);
+};
+
+struct FlowFileQueueTestAccessor {
+  FIELD_ACCESSOR(min_size_);
+  FIELD_ACCESSOR(max_size_);
+  FIELD_ACCESSOR(target_size_);
+  FIELD_ACCESSOR(clock_);
+  FIELD_ACCESSOR(swapped_flow_files_);
+  FIELD_ACCESSOR(load_task_);
+  FIELD_ACCESSOR(queue_);
+};

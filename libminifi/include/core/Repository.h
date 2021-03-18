@@ -43,6 +43,7 @@
 #include "core/Connectable.h"
 #include "core/TraceableResource.h"
 #include "utils/BackTrace.h"
+#include "SwapManager.h"
 
 #ifndef WIN32
 #include <sys/stat.h>
@@ -124,6 +125,10 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
 
   virtual bool Get(const std::string& /*key*/, std::string& /*value*/) {
     return false;
+  }
+
+  virtual SwapManager* castToSwapManager() {
+    return nullptr;
   }
 
   // Run function for the thread

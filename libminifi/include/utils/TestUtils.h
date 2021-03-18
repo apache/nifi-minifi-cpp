@@ -69,6 +69,24 @@ class ManualClock : public timeutils::Clock {
   std::chrono::milliseconds time_{0};
 };
 
+class ManualSteadyClock : public timeutils::SteadyClock {
+ public:
+  std::chrono::milliseconds timeSinceEpoch() const override { return time_; }
+  void advance(std::chrono::milliseconds elapsed_time) {
+    if (elapsed_time.count() < 0) {
+      throw std::logic_error("A steady clock can only be advanced forward");
+    }
+    time_ += elapsed_time;
+  }
+
+  std::chrono::steady_clock::time_point now() const override {
+    return std::chrono::steady_clock::time_point{time_};
+  }
+
+ private:
+  std::chrono::milliseconds time_{0};
+};
+
 
 #ifdef WIN32
 // The tzdata location is set as a global variable in date-tz library
