@@ -416,6 +416,7 @@ class HeartbeatHandler : public ServerAwareHandler {
       }
     }
     assert(found);
+    (void)found;  // unused in release builds
   }
 
   virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) {
@@ -431,6 +432,7 @@ class HeartbeatHandler : public ServerAwareHandler {
       rapidjson::Document root;
       rapidjson::ParseResult ok = root.Parse(post_data.data(), post_data.size());
       assert(ok);
+      (void)ok;  // unused in release builds
       std::string operation = root["operation"].GetString();
       if (operation == "heartbeat") {
         handleHeartbeat(root, conn);
