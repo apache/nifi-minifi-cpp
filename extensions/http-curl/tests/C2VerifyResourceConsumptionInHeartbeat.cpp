@@ -95,7 +95,7 @@ class VerifyResourceConsumptionInHeartbeat : public VerifyC2Base {
  public:
 
   VerifyResourceConsumptionInHeartbeat(std::function<bool()> event_to_wait_for) :
-      event_to_wait_for_(event_to_wait_for), VerifyC2Base() {
+      VerifyC2Base(), event_to_wait_for_(event_to_wait_for) {
   }
 
   void testSetup() override {
