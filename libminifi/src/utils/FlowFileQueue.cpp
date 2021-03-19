@@ -198,6 +198,40 @@ void FlowFileQueue::setMaxSize(size_t max_size) {
   max_size_ = max_size;
 }
 
+size_t FlowFileQueue::shouldSwapOutCount() const {
+  if (!swap_manager_) {
+    return 0;
+  }
+  // read once for consistent view of a single atomic variable
+  size_t max_size = max_size_;
+  size_t target_size = target_size_;
+  if (max_size != 0 && target_size != 0
+      && max_size < queue_.size() && target_size < queue_.size()) {
+    return queue_.size() - target_size;
+  }
+  return 0;
+}
+
+size_t FlowFileQueue::shouldSwapInCount() const {
+  if (!swap_manager_) {
+    return 0;
+  }
+  // read once for consistent view of a single atomic variable
+  size_t min_size = min_size_;
+  size_t target_size = target_size_;
+  if (min_size == 0 || target_size == 0) {
+    if (!swapped_flow_files_.empty()) {
+      logger_->log_info("Swapping in all the flow files");
+      return swapped_flow_files_.size();
+    }
+    return 0;
+  }
+  if (queue_.size() < min_size && queue_.size() < target_size) {
+    return std::min(target_size - queue_.size(), swapped_flow_files_.size());
+  }
+  return 0;
+}
+
 
 }  // namespace utils
 }  // namespace minifi
