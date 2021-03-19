@@ -473,7 +473,8 @@ endif()
 # Sensors extensions
 option(ENABLE_SENSORS "Enables the Sensors package." OFF)
 if(ENABLE_ALL OR ENABLE_SENSORS)
-	add_subdirectory(thirdparty/RTIMULib/RTIMULib)
+	include(BundledRTIMULib)
+	use_bundled_rtimulib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	createExtension(SENSOR-EXTENSIONS "SENSOR EXTENSIONS" "Enables the package of sensor extensions." "extensions/sensors" "${TEST_DIR}/sensors-tests")
 endif()
 
