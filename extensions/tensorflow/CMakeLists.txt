@@ -26,7 +26,7 @@ find_package(TensorFlow REQUIRED)
 
 message("-- Found TensorFlow: ${TENSORFLOW_INCLUDE_DIRS}")
 
-include_directories(${TENSORFLOW_INCLUDE_DIRS})
+include_directories(SYSTEM ${TENSORFLOW_INCLUDE_DIRS})
 
 file(GLOB SOURCES  "*.cpp")
 

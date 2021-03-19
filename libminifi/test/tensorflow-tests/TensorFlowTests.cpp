@@ -126,7 +126,7 @@ TEST_CASE("TensorFlow: Apply Graph", "[tfApplyGraph]") { // NOLINT
   }
 
   // Read test TensorFlow graph into TFApplyGraph
-  plan->runNextProcessor([&get_file, &in_graph_file, &plan](const std::shared_ptr<core::ProcessContext> context,
+  plan->runNextProcessor([&get_file, &in_graph_file, &plan](const std::shared_ptr<core::ProcessContext> /*context*/,
                                                             const std::shared_ptr<core::ProcessSession> session) {
     // Intercept the call so that we can add an attr (won't be required when we have UpdateAttribute processor)
     auto flow_file = session->create();
@@ -163,7 +163,7 @@ TEST_CASE("TensorFlow: Apply Graph", "[tfApplyGraph]") { // NOLINT
     tensorflow::TensorProto tensor_proto;
     tensor_proto.ParseFromIstream(&out_file_stream);
     tensorflow::Tensor tensor;
-    tensor.FromProto(tensor_proto);
+    REQUIRE(tensor.FromProto(tensor_proto));
 
     // Verify output tensor
     float tensor_val = tensor.flat<float>().data()[0];
@@ -286,7 +286,7 @@ TEST_CASE("TensorFlow: ConvertImageToTensor", "[tfConvertImageToTensor]") { // N
     tensorflow::TensorProto tensor_proto;
     tensor_proto.ParseFromIstream(&out_file_stream);
     tensorflow::Tensor tensor;
-    tensor.FromProto(tensor_proto);
+    REQUIRE(tensor.FromProto(tensor_proto));
 
     // Verify output tensor
     auto shape = tensor.shape();
@@ -358,7 +358,7 @@ TEST_CASE("TensorFlow: Extract Top Labels", "[tfExtractTopLabels]") { // NOLINT
   }
 
   // Read labels
-  plan->runNextProcessor([&get_file, &in_labels_file, &plan](const std::shared_ptr<core::ProcessContext> context,
+  plan->runNextProcessor([&get_file, &in_labels_file, &plan](const std::shared_ptr<core::ProcessContext> /*context*/,
                                                              const std::shared_ptr<core::ProcessSession> session) {
     // Intercept the call so that we can add an attr (won't be required when we have UpdateAttribute processor)
     auto flow_file = session->create();
