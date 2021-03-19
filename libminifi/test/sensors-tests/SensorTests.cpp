@@ -51,7 +51,7 @@ class PcapTestHarness : public IntegrationBase {
     dir = testController.createTempDirectory(format);
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::processors::GetEnvironmentalSensors>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -65,12 +65,12 @@ class PcapTestHarness : public IntegrationBase {
     IntegrationBase::cleanup();
   }
 
-  void runAssertions() {
+  void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
     assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "Initializing EnvironmentalSensors"));
   }
 
-  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
     std::shared_ptr<core::Processor> proc = pg->findProcessorByName("pcap");
     assert(proc != nullptr);
 
