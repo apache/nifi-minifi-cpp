@@ -97,7 +97,7 @@ class JVMLoader {
    * Attach the current thread
    * @return JNIEnv reference.
    */
-  JNIEnv *attach(const std::string &name = "") {
+  JNIEnv *attach(const std::string& /*name*/ = "") {
     JNIEnv* jenv;
     jint ret = jvm_->GetEnv((void**) &jenv, JNI_VERSION_1_8);
 
@@ -496,9 +496,9 @@ class JVMLoader {
       : java_options_(nullptr),
         jvm_(nullptr),
         env_(nullptr),
-        java_servicer_(nullptr),
+        gClassLoader(nullptr),
         gFindClassMethod(nullptr),
-        gClassLoader(nullptr) {
+        java_servicer_(nullptr) {
     initialized_ = false;
   }
 
