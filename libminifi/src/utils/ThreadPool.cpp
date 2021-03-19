@@ -99,11 +99,12 @@ void ThreadPool<T>::manage_delayed_queue() {
       worker_queue_.enqueue(std::move(task));
     }
     if (delayed_worker_queue_.empty()) {
-      delayed_task_available_.wait(lock);
+      delayed_task_available_.wait(lock, [&] {return !running_ || !delayed_worker_queue_.empty();});
     } else {
       auto wait_time = std::chrono::duration_cast<std::chrono::milliseconds>(
           delayed_worker_queue_.top().getNextExecutionTime() - std::chrono::steady_clock::now());
-      delayed_task_available_.wait_for(lock, std::max(wait_time, std::chrono::milliseconds(1)));
+      delayed_task_available_.wait_for(lock, std::max(wait_time, std::chrono::milliseconds(1)),
+          [&] {return !running_ || !delayed_worker_queue_.empty();});
     }
   }
 }
@@ -253,7 +254,13 @@ void ThreadPool<T>::shutdown() {
       manager_thread_.join();
     }
 
-    delayed_task_available_.notify_all();
+    {
+      // this lock ensures that the delayed_scheduler_thread_
+      // is not between checking the running_ and before the cv_.wait*
+      // as then, it would survive the notify_all call
+      std::lock_guard<std::mutex> worker_lock(worker_queue_mutex_);
+      delayed_task_available_.notify_all();
+    }
     if (delayed_scheduler_thread_.joinable()) {
       delayed_scheduler_thread_.join();
     }

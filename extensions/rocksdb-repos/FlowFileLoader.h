@@ -25,6 +25,7 @@
 #include "gsl.h"
 #include "core/ContentRepository.h"
 #include "SwapManager.h"
+#include "utils/ThreadPool.h"
 
 namespace org {
 namespace apache {
@@ -35,17 +36,7 @@ class FlowFileLoader {
   using FlowFilePtr = std::shared_ptr<core::FlowFile>;
   using FlowFilePtrVec = std::vector<FlowFilePtr>;
 
-  static constexpr size_t thread_count_ = 1;
-
-  struct Task {
-    std::promise<FlowFilePtrVec> result;
-    std::vector<SwappedFlowFile> flow_files;
-  };
-
-  struct Thread {
-    std::future<void> terminated;
-    std::thread impl;
-  };
+  static constexpr size_t thread_count_ = 2;
 
  public:
   FlowFileLoader();
@@ -61,15 +52,9 @@ class FlowFileLoader {
   std::future<FlowFilePtrVec> load(std::vector<SwappedFlowFile> flow_files);
 
  private:
-  void run(std::promise<void>&& terminated);
+  utils::TaskRescheduleInfo loadImpl(const std::vector<SwappedFlowFile>& flow_files, std::shared_ptr<std::promise<FlowFilePtrVec>>& output);
 
-  std::mutex task_mtx_;
-  std::list<Task> tasks_;
-  std::condition_variable cond_var_;
-
-  std::atomic<bool> running_{false};
-
-  std::vector<Thread> threads_;
+  utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_{thread_count_, false, nullptr, "FlowFileLoaderThreadPool"};
 
   minifi::internal::RocksDatabase* db_{nullptr};
 
