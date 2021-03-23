@@ -18,6 +18,8 @@
 
 #include <memory>
 #include <vector>
+#include <algorithm>
+#include <utility>
 
 #include "core/FlowFile.h"
 #include "MinMaxHeap.h"
