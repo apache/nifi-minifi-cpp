@@ -440,13 +440,6 @@ class TestController {
     return dir;
   }
 
-  template<size_t N>
-  utils::Path createTempDir(const char (&format)[N]) {
-    char copy[N];
-    std::copy(format, format + N, copy);
-    return createTempDirectory(copy);
-  }
-
  protected:
   std::shared_ptr<minifi::state::response::FlowVersion> flow_version_;
   LogTestController &log;
