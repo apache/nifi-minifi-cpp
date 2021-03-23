@@ -66,6 +66,9 @@ class FlowFileQueue {
     // load was pending
     std::vector<value_type> intermediate_items;
 
+    LoadTask(TimePoint min, TimePoint max, std::future<std::vector<std::shared_ptr<core::FlowFile>>> items, size_t count)
+      : min(min), max(max), items(std::move(items)), count(count) {}
+
     size_t size() const {
       return count + intermediate_items.size();
     }

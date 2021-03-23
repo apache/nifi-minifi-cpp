@@ -133,7 +133,7 @@ std::vector<int> createRandomInts(size_t N) {
 bool rollDice(size_t percentage = 50) {
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_int_distribution<int> dis{0, 100};
+  std::uniform_int_distribution<size_t> dis{0, 100};
   return dis(gen) < percentage;
 }
 
