@@ -67,14 +67,12 @@ bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() {
 }
 
 double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() {
-  double percent;
-
   uint64_t total_user_diff = total_user_ - previous_total_user_;
   uint64_t total_user_low_diff = total_user_low_ - previous_total_user_low_;
   uint64_t total_system_diff = total_sys_ - previous_total_sys_;
   uint64_t total_idle_diff = total_idle_ - previous_total_idle_;
   uint64_t total_diff =  total_user_diff + total_user_low_diff + total_system_diff;
-  percent = static_cast<double>(total_diff)/static_cast<double>(total_diff+total_idle_diff);
+  double percent = static_cast<double>(total_diff)/static_cast<double>(total_diff+total_idle_diff);
 
   return percent;
 }
@@ -82,48 +80,51 @@ double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() {
 
 #ifdef WIN32
 SystemCPUUsageTracker::SystemCPUUsageTracker() :
-    is_query_open_(false),
-    cpu_query_(),
-    cpu_total_() {
-  openQuery();
-}
-
-SystemCPUUsageTracker::~SystemCPUUsageTracker() {
-  PdhCloseQuery(cpu_query_);
+    total_idle_(0), total_sys_(0), total_user_(0),
+    previous_total_idle_(0), previous_total_sys_(0), previous_total_user_(0) {
+  queryCPUTimes();
 }
 
 double SystemCPUUsageTracker::getCPUUsageAndRestartCollection() {
-  double value = getValueFromOpenQuery();
-  return value;
-}
-
-void SystemCPUUsageTracker::openQuery() {
-  if (!is_query_open_) {
-    if (ERROR_SUCCESS != PdhOpenQuery(NULL, NULL, &cpu_query_))
-      return;
-    if (ERROR_SUCCESS != PdhAddEnglishCounter(cpu_query_, "\\Processor(_Total)\\% Processor Time", NULL, &cpu_total_)) {
-      PdhCloseQuery(cpu_query_);
-      return;
-    }
-    if (ERROR_SUCCESS != PdhCollectQueryData(cpu_query_)) {
-      PdhCloseQuery(cpu_query_);
-      return;
-    }
-    is_query_open_ = true;
+  queryCPUTimes();
+  if (isCurrentQuerySameAsPrevious() || isCurrentQuerySameAsPrevious()) {
+    return -1.0;
+  } else {
+    return getCPUUsageBetweenLastTwoQueries();
   }
 }
 
-double SystemCPUUsageTracker::getValueFromOpenQuery() {
-  if (!is_query_open_)
-    return -1.0;
+void SystemCPUUsageTracker::queryCPUTimes() {
+  previous_total_user_ = total_user_;
+  previous_total_sys_ = total_sys_;
+  previous_total_idle_ = total_idle_;
+  FILETIME fidle, fsys, fuser;
+  GetSystemTimes(&fidle, &fsys, &fuser);
+  total_user_ = ULARGE_INTEGER{ fuser.dwLowDateTime, fuser.dwHighDateTime }.QuadPart;
+  total_sys_ = ULARGE_INTEGER{ fsys.dwLowDateTime, fsys.dwHighDateTime }.QuadPart;
+  total_idle_ = ULARGE_INTEGER{ fidle.dwLowDateTime, fidle.dwHighDateTime }.QuadPart;
+}
 
-  PDH_FMT_COUNTERVALUE counterVal;
-  if (ERROR_SUCCESS != PdhCollectQueryData(cpu_query_))
-    return -1.0;
-  if (ERROR_SUCCESS != PdhGetFormattedCounterValue(cpu_total_, PDH_FMT_DOUBLE, NULL, &counterVal))
-    return -1.0;
+bool SystemCPUUsageTracker::isCurrentQueryOlderThanPrevious() {
+  return (total_user_ < previous_total_user_ ||
+    total_sys_ < previous_total_sys_ ||
+    total_idle_ < previous_total_idle_);
+}
 
-  return counterVal.doubleValue / 100;
+bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() {
+  return (total_user_ == previous_total_user_ &&
+    total_sys_ == previous_total_sys_ &&
+    total_idle_ == previous_total_idle_);
+}
+
+double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() {
+  uint64_t total_user_diff = total_user_ - previous_total_user_;
+  uint64_t total_sys_diff = total_sys_ - previous_total_sys_;
+  uint64_t total_idle_diff = total_idle_ - previous_total_idle_;
+  uint64_t total_diff = total_user_diff + total_sys_diff;
+  double percent = static_cast<double>(total_diff - total_idle_diff) / static_cast<double>(total_diff);
+
+  return percent;
 }
 #endif  // windows
 
@@ -169,12 +170,10 @@ bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() {
 }
 
 double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() {
-  double percent;
-
   uint64_t total_ticks_since_last_time = total_ticks_-previous_total_ticks_;
   uint64_t idle_ticks_since_last_time  = idle_ticks_-previous_idle_ticks_;
 
-  percent = static_cast<double>(total_ticks_since_last_time-idle_ticks_since_last_time)/static_cast<double>(total_ticks_since_last_time);
+  double percent = static_cast<double>(total_ticks_since_last_time-idle_ticks_since_last_time)/static_cast<double>(total_ticks_since_last_time);
 
   return percent;
 }

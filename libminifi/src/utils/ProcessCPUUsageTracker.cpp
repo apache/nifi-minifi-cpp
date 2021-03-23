@@ -68,11 +68,10 @@ bool ProcessCPUUsageTracker::isCurrentQuerySameAsPrevious() {
 }
 
 double ProcessCPUUsageTracker::getProcessCPUUsageBetweenLastTwoQueries() {
-  double percent;
   clock_t cpu_times_diff = cpu_times_ - previous_cpu_times_;
   clock_t sys_cpu_times_diff = sys_cpu_times_ - previous_sys_cpu_times_;
   clock_t user_cpu_times_diff = user_cpu_times_ - previous_user_cpu_times_;
-  percent = static_cast<double>(sys_cpu_times_diff + user_cpu_times_diff) / static_cast<double>(cpu_times_diff);
+  double percent = static_cast<double>(sys_cpu_times_diff + user_cpu_times_diff) / static_cast<double>(cpu_times_diff);
   percent = percent / std::thread::hardware_concurrency();
   return percent;
 }
@@ -125,11 +124,10 @@ void ProcessCPUUsageTracker::queryCPUTimes() {
 }
 
 double ProcessCPUUsageTracker::getProcessCPUUsageBetweenLastTwoQueries() {
-  double percent;
   uint64_t cpu_times_diff = cpu_times_ - previous_cpu_times_;
   uint64_t sys_cpu_times_diff = sys_cpu_times_ - previous_sys_cpu_times_;
   uint64_t user_cpu_times_diff = user_cpu_times_ - previous_user_cpu_times_;
-  percent = static_cast<double>(sys_cpu_times_diff + user_cpu_times_diff) / static_cast<double>(cpu_times_diff);
+  double percent = static_cast<double>(sys_cpu_times_diff + user_cpu_times_diff) / static_cast<double>(cpu_times_diff);
   percent = percent / std::thread::hardware_concurrency();
   return percent;
 }

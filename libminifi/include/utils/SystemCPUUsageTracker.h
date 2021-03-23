@@ -24,8 +24,9 @@
 #endif
 
 #ifdef WIN32
+#include <cstdint>
 #include "TCHAR.h"
-#include "pdh.h"
+#include "windows.h"
 #endif
 
 #ifdef __APPLE__
@@ -80,17 +81,23 @@ class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
 class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
  public:
   SystemCPUUsageTracker();
-  ~SystemCPUUsageTracker();
+  ~SystemCPUUsageTracker() = default;
   double getCPUUsageAndRestartCollection() override;
 
  protected:
-  void openQuery();
-  double getValueFromOpenQuery();
+  void queryCPUTimes();
+  bool isCurrentQuerySameAsPrevious();
+  bool isCurrentQueryOlderThanPrevious();
+  double getCPUUsageBetweenLastTwoQueries();
 
  private:
-  PDH_HQUERY cpu_query_;
-  PDH_HCOUNTER cpu_total_;
-  bool is_query_open_;
+  uint64_t total_idle_;
+  uint64_t total_sys_;
+  uint64_t total_user_;
+
+  uint64_t previous_total_idle_;
+  uint64_t previous_total_sys_;
+  uint64_t previous_total_user_;
 };
 #endif  // windows
 
