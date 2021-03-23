@@ -160,3 +160,24 @@ TEST_CASE_METHOD(SwapTestController, "Polling from load task", "[SwapTest8]") {
   popAll({30, 40, 45, 50, 60}, true);
   verifyQueue({}, {}, {});
 }
+
+TEST_CASE_METHOD(SwapTestController, "Popping below min checks if the pending load is finished", "[SwapTest8]") {
+  setLimits(6, 8, 10);
+  pushAll({10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120});
+  verifyQueue({10, 20, 30, 40, 50, 60, 70, 80}, {}, {90, 100, 110, 120});
+  clock_->advance(std::chrono::seconds{200});
+  clearSwapEvents();
+  popAll({10, 20, 30});
+  verifySwapEvents({{Load, {90, 100, 110}}});
+  verifyQueue({40, 50, 60, 70, 80}, {{}}, {120});
+  clearSwapEvents();
+
+  popAll({40, 50});
+  verifyQueue({60, 70, 80}, {{}}, {120});
+  flow_repo_->load_tasks_[0].complete();
+  popAll({60});
+  // even though the live queue is not empty we check if
+  // the load_task is finished and initiate a load if need be
+  verifySwapEvents({{Load, {120}}});
+  verifyQueue({70, 80, 90, 100, 110}, {{}}, {});
+}
