@@ -222,13 +222,13 @@ using a devtools-* package from the Software Collections (SCL).
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ yum install cmake \
   gcc gcc-c++ \
+  git \
   bison \
   flex \
   patch \
   autoconf \
   automake \
   libtool \
-  rocksdb-devel rocksdb \
   libuuid libuuid-devel \
   boost-devel \
   openssl-devel \
@@ -259,14 +259,15 @@ $ #depending on your yum repo you may need to manually build libcurl-openssl if 
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ apt-get install cmake \
   gcc g++ \
+  git \
   bison \
   flex \
   patch \
+  ca-certificates \
   autoconf \
   automake \
   libtool \
   libcurl4-openssl-dev \
-  librocksdb-dev librocksdb4.1 \
   uuid-dev uuid \
   libboost-all-dev libssl-dev \
   libbz2-dev liblzma-dev \
@@ -297,7 +298,6 @@ $ brew install cmake \
   autoconf \
   automake \
   libtool \
-  rocksdb \
   ossp-uuid \
   boost \
   openssl \
