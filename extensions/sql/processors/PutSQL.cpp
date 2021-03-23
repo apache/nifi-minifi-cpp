@@ -65,7 +65,7 @@ void PutSQL::initialize() {
   setSupportedRelationships({ Success });
 }
 
-void PutSQL::processOnSchedule(core::ProcessContext& context) {}
+void PutSQL::processOnSchedule(core::ProcessContext& /*context*/) {}
 
 void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   auto flow_file = session.get();

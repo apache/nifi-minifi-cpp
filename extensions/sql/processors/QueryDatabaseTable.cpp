@@ -140,7 +140,7 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
   initializeMaxValues(context);
 }
 
-void QueryDatabaseTable::processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, core::ProcessSession& session) {
   const auto& selectQuery = buildSelectQuery();
 
   logger_->log_info("QueryDatabaseTable: selectQuery: '%s'", selectQuery.c_str());

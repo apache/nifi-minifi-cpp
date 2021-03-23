@@ -45,9 +45,9 @@ void JSONSQLWriter::beginProcessBatch() {
   current_batch_ = rapidjson::Document(rapidjson::kArrayType);
 }
 
-void JSONSQLWriter::endProcessBatch(Progress progress) {}
+void JSONSQLWriter::endProcessBatch(Progress /*progress*/) {}
 
-void JSONSQLWriter::processColumnNames(const std::vector<std::string>& name) {}
+void JSONSQLWriter::processColumnNames(const std::vector<std::string>& /*name*/) {}
 
 void JSONSQLWriter::processColumn(const std::string& name, const std::string& value) {
   addToJSONRow(name, toJSONString(value));

@@ -39,7 +39,7 @@ const core::Property SQLProcessor::DBControllerService(
     ->withDescription("Database Controller Service.")
     ->supportsExpressionLanguage(true)->build());
 
-void SQLProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
+void SQLProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string controllerService;
   context->getProperty(DBControllerService.getName(), controllerService);
 
