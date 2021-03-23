@@ -53,7 +53,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorage {
     container_name_ = container_name;
   }
 
-  utils::optional<minifi::azure::storage::UploadBlobResult> uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) override {
+  utils::optional<minifi::azure::storage::UploadBlobResult> uploadBlob(const std::string& /*blob_name*/, const uint8_t* buffer, std::size_t buffer_size) override {
     input_data = std::string(buffer, buffer + buffer_size);
     minifi::azure::storage::UploadBlobResult result;
     result.etag = ETAG;
@@ -140,7 +140,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test required parameters", "[
     plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
   }
 
-  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception&);
 }
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "[azureStorageCredentials]") {
@@ -150,12 +150,12 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
   plan->setProperty(put_azure_blob_storage, "Blob", "${test.blob}");
 
   SECTION("No credentials are set") {
-    REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+    REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception&);
   }
 
   SECTION("No account key or SAS is set") {
     plan->setProperty(put_azure_blob_storage, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+    REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception&);
   }
 
   SECTION("Credentials set in Azure Storage Credentials Service") {
