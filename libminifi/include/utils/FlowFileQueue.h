@@ -57,14 +57,6 @@ class FlowFileQueue {
 
   void initiateLoadIfNeeded();
 
-  struct FlowFilePenaltyExpirationComparator {
-    bool operator()(const value_type& left, const value_type& right) const;
-  };
-
-  struct SwappedFlowFileComparator {
-    bool operator()(const SwappedFlowFile& left, const SwappedFlowFile& right) const;
-  };
-
   struct LoadTask {
     TimePoint min;
     TimePoint max;
@@ -77,6 +69,16 @@ class FlowFileQueue {
     size_t size() const {
       return count + intermediate_items.size();
     }
+  };
+
+  bool processLoadTaskWait(utils::optional<std::chrono::milliseconds> timeout);
+
+  struct FlowFilePenaltyExpirationComparator {
+    bool operator()(const value_type& left, const value_type& right) const;
+  };
+
+  struct SwappedFlowFileComparator {
+    bool operator()(const SwappedFlowFile& left, const SwappedFlowFile& right) const;
   };
 
   size_t shouldSwapOutCount() const;

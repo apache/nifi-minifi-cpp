@@ -99,12 +99,11 @@ void ThreadPool<T>::manage_delayed_queue() {
       worker_queue_.enqueue(std::move(task));
     }
     if (delayed_worker_queue_.empty()) {
-      delayed_task_available_.wait(lock, [&] {return !running_ || !delayed_worker_queue_.empty();});
+      delayed_task_available_.wait(lock);
     } else {
       auto wait_time = std::chrono::duration_cast<std::chrono::milliseconds>(
           delayed_worker_queue_.top().getNextExecutionTime() - std::chrono::steady_clock::now());
-      delayed_task_available_.wait_for(lock, std::max(wait_time, std::chrono::milliseconds(1)),
-          [&] {return !running_ || !delayed_worker_queue_.empty();});
+      delayed_task_available_.wait_for(lock, std::max(wait_time, std::chrono::milliseconds(1)));
     }
   }
 }

@@ -54,41 +54,21 @@ utils::optional<FlowFileQueue::value_type> FlowFileQueue::tryPopImpl(utils::opti
   utils::optional<std::shared_ptr<core::FlowFile>> result;
   if (!queue_.empty()) {
     result = queue_.popMin();
-    if (!load_task_) {
+    if (processLoadTaskWait(std::chrono::milliseconds{0})) {
       initiateLoadIfNeeded();
     }
     return result;
   }
   if (load_task_) {
     logger_->log_debug("Head is empty checking already running load task");
-    std::future_status status = std::future_status::ready;
-    if (timeout) {
-      status = load_task_.value().items.wait_for(timeout.value());
-    }
-    if (status == std::future_status::timeout) {
-      logger_->log_debug("Load task is not yet completed");
+    if (!processLoadTaskWait(timeout)) {
       return utils::nullopt;
-    } else if (status == std::future_status::ready) {
-      logger_->log_debug("Load task is completed");
-      size_t swapped_in_count = 0, intermediate_count = 0;
-      for (auto&& item : load_task_->items.get()) {
-        ++swapped_in_count;
-        queue_.push(std::move(item));
-      }
-      for (auto&& intermediate_item : load_task_->intermediate_items) {
-        ++intermediate_count;
-        queue_.push(std::move(intermediate_item));
-      }
-      load_task_.reset();
-      logger_->log_debug("Swapped in '%zu' flow files and committed '%zu' pending files", swapped_in_count, intermediate_count);
-      if (!queue_.empty()) {
-        // load provided items
-        result = queue_.popMin();
-        initiateLoadIfNeeded();
-        return result;
-      }
-    } else {
-      throw std::logic_error("Deferred future?");
+    }
+    if (!queue_.empty()) {
+      // load provided items
+      result = queue_.popMin();
+      initiateLoadIfNeeded();
+      return result;
     }
   }
   // no pending load_task_ and no items in the queue_
@@ -96,10 +76,39 @@ utils::optional<FlowFileQueue::value_type> FlowFileQueue::tryPopImpl(utils::opti
   return utils::nullopt;
 }
 
-void FlowFileQueue::push(value_type element) {
-  if (element->getPenaltyExpiration() < clock_->now()) {
-    element->setPenaltyExpiration(clock_->now());
+bool FlowFileQueue::processLoadTaskWait(utils::optional<std::chrono::milliseconds> timeout) {
+  if (!load_task_) {
+    return true;
   }
+  std::future_status status = std::future_status::ready;
+  if (timeout) {
+    status = load_task_.value().items.wait_for(timeout.value());
+  }
+  if (status == std::future_status::timeout) {
+    logger_->log_debug("Load task is not yet completed");
+    return false;
+  }
+  if (status != std::future_status::ready) {
+    throw std::logic_error("Unknown future status deferred future?");
+  }
+  logger_->log_debug("Getting loaded flow files");
+  size_t swapped_in_count = 0, intermediate_count = 0;
+  for (auto&& item : load_task_->items.get()) {
+    ++swapped_in_count;
+    queue_.push(std::move(item));
+  }
+  for (auto&& intermediate_item : load_task_->intermediate_items) {
+    ++intermediate_count;
+    queue_.push(std::move(intermediate_item));
+  }
+  load_task_.reset();
+  logger_->log_error("Swapped in '%zu' flow files and committed '%zu' pending files", swapped_in_count, intermediate_count);
+  return true;
+}
+
+void FlowFileQueue::push(value_type element) {
+  // do not allow pushing elements in the past
+  element->setPenaltyExpiration(std::max(element->getPenaltyExpiration(), clock_->now()));
 
   std::vector<value_type> flow_files_to_be_swapped_out;
 
