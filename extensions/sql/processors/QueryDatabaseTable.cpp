@@ -174,51 +174,52 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
   }
 
   if (new_max_values != max_values_) {
-    try {
-      session.commit();
-    } catch (std::exception& e) {
-      throw;
-    }
-
+    session.commit();
     max_values_ = new_max_values;
     saveState();
   }
 }
 
+bool QueryDatabaseTable::loadMaxValuesFromStoredState(const std::unordered_map<std::string, std::string> &state) {
+  std::unordered_map<std::string, std::string> new_max_values;
+  if (state.count(TABLENAME_KEY) == 0) {
+    logger_->log_info("State does not specify the table name.");
+    return false;
+  }
+  if (state.at(TABLENAME_KEY) != table_name_) {
+    logger_->log_info("Querying new table \"%s\", resetting state.", table_name_);
+    return false;
+  }
+  for (auto& elem : state) {
+    if (utils::StringUtils::startsWith(elem.first, MAXVALUE_KEY_PREFIX)) {
+      std::string column_name = elem.first.substr(MAXVALUE_KEY_PREFIX.length());
+      // add only those columns that we care about
+      if (std::find(max_value_columns_.begin(), max_value_columns_.end(), column_name) != max_value_columns_.end()) {
+        new_max_values.emplace(column_name, elem.second);
+      } else {
+        logger_->log_info("State contains obsolete maximum-value column \"%s\", resetting state.", column_name);
+        return false;
+      }
+    }
+  }
+  for (auto& column : max_value_columns_) {
+    if (new_max_values.find(column) == new_max_values.end()) {
+      logger_->log_info("New maximum-value column \"%s\" specified, resetting state.", column);
+      return false;
+    }
+  }
+  max_values_ = new_max_values;
+  return true;
+}
+
 void QueryDatabaseTable::initializeMaxValues(core::ProcessContext &context) {
   max_values_.clear();
-  std::unordered_map<std::string, std::string> new_state;
-  if (!state_manager_->get(new_state)) {
+  std::unordered_map<std::string, std::string> stored_state;
+  if (!state_manager_->get(stored_state)) {
     logger_->log_info("Found no stored state");
   } else {
-    const bool should_reset_state = [&] {
-      if (new_state[TABLENAME_KEY] != table_name_) {
-        logger_->log_info("Querying new table \"%s\", resetting state.", table_name_);
-        return true;
-      }
-      for (auto &&elem : new_state) {
-        if (utils::StringUtils::startsWith(elem.first, MAXVALUE_KEY_PREFIX)) {
-          std::string column_name = elem.first.substr(MAXVALUE_KEY_PREFIX.length());
-          // add only those columns that we care about
-          if (std::find(max_value_columns_.begin(), max_value_columns_.end(), column_name) != max_value_columns_.end()) {
-            max_values_.emplace(column_name, std::move(elem.second));
-          } else {
-            logger_->log_info("State contains obsolete maximum-value column \"%s\", resetting state.", column_name);
-            return true;
-          }
-        }
-      }
-      for (auto& column : max_value_columns_) {
-        if (max_values_.find(column) == max_values_.end()) {
-          logger_->log_info("New maximum-value column \"%s\" specified, resetting state.", column);
-          return true;
-        }
-      }
-      return false;
-    }();
-    if (should_reset_state) {
+    if (!loadMaxValuesFromStoredState(stored_state)) {
       state_manager_->clear();
-      max_values_.clear();
     }
   }
 

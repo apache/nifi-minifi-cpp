@@ -70,7 +70,7 @@ class FlowFileSource {
     void processColumn(const std::string& /*name*/, unsigned long long /*value*/) override {}
     void processColumn(const std::string& /*name*/, const char* /*value*/) override {}
 
-    std::shared_ptr<core::FlowFile> getLastFlowFile() {
+    std::shared_ptr<core::FlowFile> getLastFlowFile() const {
       if (!flow_files_.empty()) {
         return flow_files_.back();
       }

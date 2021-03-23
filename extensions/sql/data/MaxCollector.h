@@ -79,7 +79,7 @@ class MaxCollector: public SQLRowSubscriber {
     void updateMaxValue(const std::string& column, const T& value) {
       const auto it = column_maxima.find(column);
       if (it == column_maxima.end()) {
-        column_maxima.insert({ column, value });
+        column_maxima.emplace(column, value);
       } else {
         if (value > it->second) {
           it->second = value;
