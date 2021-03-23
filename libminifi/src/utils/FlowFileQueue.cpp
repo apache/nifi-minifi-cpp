@@ -102,7 +102,7 @@ bool FlowFileQueue::processLoadTaskWait(utils::optional<std::chrono::millisecond
     queue_.push(std::move(intermediate_item));
   }
   load_task_.reset();
-  logger_->log_error("Swapped in '%zu' flow files and committed '%zu' pending files", swapped_in_count, intermediate_count);
+  logger_->log_debug("Swapped in '%zu' flow files and committed '%zu' pending files", swapped_in_count, intermediate_count);
   return true;
 }
 
