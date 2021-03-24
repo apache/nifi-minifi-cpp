@@ -966,13 +966,13 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Compress Codec|none||compression codec to use for compressing message sets|
 |Debug contexts|||A comma-separated list of debug contexts to enable.Including: generic, broker, topic, metadata, feature, queue, msg, protocol, cgrp, security, fetch, interceptor, plugin, consumer, admin, eos, all|
 |Delivery Guarantee|1||Specifies the requirement for guaranteeing that a message is sent to Kafka. Valid values are 0 (do not wait for acks), -1 or all (block until message is committed by all in sync replicas) or any concrete number of nodes.<br/>**Supports Expression Language: true**|
+|Kafka Key|||The key to use for the message. If not specified, the UUID of the flow file is used as the message key.<br/>**Supports Expression Language: true**|
 |Kerberos Keytab Path|||The path to the location on the local filesystem where the kerberos keytab is located. Read permission on the file is required.|
 |Kerberos Principal|||Keberos Principal|
 |Kerberos Service Name|||Kerberos Service Name|
 |**Known Brokers**|||A comma-separated list of known Kafka Brokers in the format <host>:<port><br/>**Supports Expression Language: true**|
 |Max Flow Segment Size|0 B||Maximum flow content payload segment size for the kafka record. 0 B means unlimited.|
 |Max Request Size|||Maximum Kafka protocol request message size|
-|Kafka Key|||The key to use for the message. If not specified, the UUID of the flow file is used as the message key.<br/>**Supports Expression Language: true**|
 |Message Key Field|||DEPRECATED, does not work -- use Kafka Key instead|
 |Message Timeout|30 sec||The total time sending a message could take|
 |Queue Buffering Max Time|||Delay to wait for messages in the producer queue to accumulate before constructing message batches|
