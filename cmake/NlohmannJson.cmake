@@ -15,16 +15,21 @@
 # specific language governing permissions and limitations
 # under the License.
 
-if(NOT CURL_FOUND)
-    set(CURL_FOUND "YES" CACHE STRING "" FORCE)
-    set(CURL_INCLUDE_DIR "${EXPORTED_CURL_INCLUDE_DIR}" CACHE STRING "" FORCE)
-    set(CURL_INCLUDE_DIRS "${CURL_INCLUDE_DIR}" CACHE STRING "" FORCE)
-    set(CURL_LIBRARY "${EXPORTED_CURL_LIBRARY}" CACHE STRING "" FORCE)
-    set(CURL_LIBRARIES "${CURL_LIBRARY}" CACHE STRING "" FORCE)
+include(FetchContent)
+
+FetchContent_Declare(nlohmann_json
+    GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
+    GIT_TAG "v3.9.1")
+
+FetchContent_MakeAvailable(nlohmann_json)
+
+FetchContent_GetProperties(nlohmann_json)
+if(NOT nlohmann_json_POPULATED)
+    FetchContent_Populate(nlohmann_json)
+    add_subdirectory(${nlohmann_json_SOURCE_DIR} ${nlohmann_json_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-if(NOT TARGET CURL::libcurl)
-    add_library(CURL::libcurl STATIC IMPORTED)
-    set_target_properties(CURL::libcurl PROPERTIES IMPORTED_LOCATION "${CURL_LIBRARIES}")
-    set_property(TARGET CURL::libcurl APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIRS}")
-endif()
+set(NLOHMANN_JSON_INCLUDE_DIR "${nlohmann_json_SOURCE_DIR}/include")
+
+# Set exported variables for FindPackage.cmake
+set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_NLOHMANN_JSON_INCLUDE_DIR=${NLOHMANN_JSON_INCLUDE_DIR}" CACHE STRING "" FORCE)

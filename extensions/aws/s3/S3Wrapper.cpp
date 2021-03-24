@@ -143,13 +143,10 @@ bool S3Wrapper::deleteObject(const std::string& bucket, const std::string& objec
 }
 
 int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::BaseStream& output) {
-  static const int64_t BUFFER_SIZE = 4096;
-  std::vector<uint8_t> buffer;
-  buffer.resize(BUFFER_SIZE);
-
+  std::vector<uint8_t> buffer(4096);
   int64_t write_size = 0;
   while (write_size < data_size) {
-    auto next_write_size = (std::min)(data_size - write_size, BUFFER_SIZE);
+    auto next_write_size = (std::min)(data_size - write_size, static_cast<int64_t>(4096));
     if (!source.read(reinterpret_cast<char*>(buffer.data()), next_write_size)) {
       return -1;
     }

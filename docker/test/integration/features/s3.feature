@@ -195,4 +195,4 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     When all instances start up
 
     Then 1 flowfile is placed in the monitored directory in 120 seconds
-    And no errors were generated on the "http-proxy" regarding "http://s3-server:9090/test_bucket/test_object_key"
+    And no errors were generated on the "http-proxy" regarding "http://s3-server:9090/test_bucket"

@@ -367,6 +367,7 @@ show_supported_features() {
   echo "U. OPC-UA Support...............$(print_feature_status OPC_ENABLED)"
   echo "W. SQL Support..................$(print_feature_status SQL_ENABLED)"
   echo "X. Openwsman Support ...........$(print_feature_status OPENWSMAN_ENABLED)"
+  echo "Y. Azure Support ...............$(print_feature_status AZURE_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -418,6 +419,7 @@ read_feature_options(){
     u) ToggleFeature OPC_ENABLED ;;
     w) ToggleFeature SQL_ENABLED ;;
     x) ToggleFeature OPENWSMAN_ENABLED ;;
+    y) ToggleFeature AZURE_ENABLED ;;
     1) ToggleFeature TESTS_DISABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
@@ -436,7 +438,7 @@ read_feature_options(){
       fi
       ;;
     q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-X or 1-6...${NO_COLOR}" && sleep 2
+    *) echo -e "${RED}Please enter an option A-Y or 1-6...${NO_COLOR}" && sleep 2
   esac
 }
 

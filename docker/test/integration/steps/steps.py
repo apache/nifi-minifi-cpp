@@ -12,6 +12,7 @@ from minifi.processors.PutS3Object import PutS3Object
 from minifi.processors.DeleteS3Object import DeleteS3Object
 from minifi.processors.FetchS3Object import FetchS3Object
 from minifi.processors.ListS3 import ListS3
+from minifi.processors.PutAzureBlobStorage import PutAzureBlobStorage
 
 
 from behave import given, then, when
@@ -106,6 +107,12 @@ def step_impl(context):
     fetch_s3 = FetchS3Object()
     fetch_s3.set_name("FetchS3Object")
     context.test.add_node(fetch_s3)
+
+@given("a PutAzureBlobStorage processor set up to communicate with an Azure blob storage")
+def step_impl(context):
+    put_azure_blob_storage = PutAzureBlobStorage()
+    put_azure_blob_storage.set_name("PutAzureBlobStorage")
+    context.test.add_node(put_azure_blob_storage)
 
 @given("a PublishKafka processor set up to communicate with a kafka broker instance")
 def step_impl(context):
@@ -232,6 +239,15 @@ def step_impl(context, cluster_name):
     cluster.set_engine("s3-server")
     cluster.set_flow(None)
 
+# azure storage setup
+
+@given("an Azure storage server \"{cluster_name}\" is set up in correspondence with the PutAzureBlobStorage")
+def step_impl(context, cluster_name):
+    cluster = context.test.acquire_cluster(cluster_name)
+    cluster.set_name(cluster_name)
+    cluster.set_engine("azure-storage-server")
+    cluster.set_flow(None)
+
 @when("the MiNiFi instance starts up")
 @when("both instances start up")
 @when("all instances start up")
@@ -275,3 +291,7 @@ def step_impl(context, cluster_name, content_type):
 @then("the object bucket on the \"{cluster_name}\" s3 server is empty")
 def step_impl(context, cluster_name):
     context.test.check_empty_s3_bucket(cluster_name)
+
+@then("the object on the \"{cluster_name}\" Azure storage server is \"{object_data}\"")
+def step_impl(context, cluster_name, object_data):
+    context.test.check_azure_storage_server_data(cluster_name, object_data)

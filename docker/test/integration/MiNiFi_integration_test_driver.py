@@ -110,6 +110,12 @@ class MiNiFi_integration_test():
                 startup_success = cluster.wait_for_app_logs("Starting Flow Controller...", 120)
             elif cluster.get_engine() == "kafka-broker":
                 startup_success = cluster.wait_for_app_logs("Startup complete.", 120)
+            elif cluster.get_engine() == "http-proxy":
+                startup_success = cluster.wait_for_app_logs("Accepting HTTP Socket connections at", 120)
+            elif cluster.get_engine() == "s3-server":
+                startup_success = cluster.wait_for_app_logs("Started S3MockApplication", 120)
+            elif cluster.get_engine() == "azure-storage-server":
+                startup_success = cluster.wait_for_app_logs("Azurite Queue service is successfully listening at", 120)
             if not startup_success:
                 cluster.log_nifi_output()
             assert startup_success
@@ -200,15 +206,19 @@ class MiNiFi_integration_test():
 
     def check_s3_server_object_data(self, cluster_name, object_data):
         cluster = self.acquire_cluster(cluster_name)
-        cluster.check_s3_server_object_data(object_data)
+        assert cluster.check_s3_server_object_data(object_data)
 
     def check_s3_server_object_metadata(self, cluster_name, content_type):
         cluster = self.acquire_cluster(cluster_name)
-        cluster.check_s3_server_object_metadata(content_type)
+        assert cluster.check_s3_server_object_metadata(content_type)
 
     def check_empty_s3_bucket(self, cluster_name):
         cluster = self.acquire_cluster(cluster_name)
         assert cluster.is_s3_bucket_empty()
 
     def check_http_proxy_access(self, cluster_name, url):
-        self.clusters[cluster_name].check_http_proxy_access(url)
+        assert self.clusters[cluster_name].check_http_proxy_access(url)
+
+    def check_azure_storage_server_data(self, cluster_name, object_data):
+        cluster = self.acquire_cluster(cluster_name)
+        assert cluster.check_azure_storage_server_data(object_data)

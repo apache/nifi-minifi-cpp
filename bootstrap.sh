@@ -322,6 +322,8 @@ add_dependency TENSORFLOW_ENABLED "tensorflow"
 add_disabled_option OPC_ENABLED ${FALSE} "ENABLE_OPC"
 add_dependency OPC_ENABLED "mbedtls"
 
+add_disabled_option AZURE_ENABLED ${FALSE} "ENABLE_AZURE"
+
 USE_SHARED_LIBS=${TRUE}
 TESTS_DISABLED=${FALSE}
 ASAN_ENABLED=${FALSE}

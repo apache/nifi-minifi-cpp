@@ -477,7 +477,6 @@ if(ENABLE_ALL OR ENABLE_SENSORS)
 	createExtension(SENSOR-EXTENSIONS "SENSOR EXTENSIONS" "Enables the package of sensor extensions." "extensions/sensors" "${TEST_DIR}/sensors-tests")
 endif()
 
-
 ## SQLite extensions
 option(ENABLE_SQLITE "Disables the scripting extensions." OFF)
 if (ENABLE_SQLITE)
@@ -507,7 +506,7 @@ endif()
 
 ## AWS Extentions
 option(ENABLE_AWS "Enables AWS support." OFF)
-if (ENABLE_AWS)
+if (ENABLE_ALL OR ENABLE_AWS)
 	include(BundledAwsSdkCpp)
 	use_bundled_libaws(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	createExtension(AWS-EXTENSIONS "AWS EXTENSIONS" "This enables AWS support" "extensions/aws" "${TEST_DIR}/aws-tests")
@@ -518,7 +517,6 @@ option(ENABLE_OPENCV "Disables the OpenCV extensions." OFF)
 if (ENABLE_OPENCV)
 	createExtension(OPENCV-EXTENSIONS "OPENCV EXTENSIONS" "This enabled OpenCV support" "extensions/opencv" "extensions/opencv/tests")
 endif()
-
 
 ## Bustache/template extensions
 option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
@@ -550,17 +548,31 @@ if ((ENABLE_ALL OR ENABLE_SFTP) AND NOT DISABLE_CURL)
 	createExtension(SFTP "SFTP EXTENSIONS" "This enables SFTP support" "extensions/sftp" "extensions/sftp/tests")
 endif()
 
-## Openwsman Extesions
 option(ENABLE_OPENWSMAN "Enables the Openwsman extensions." OFF)
-if (ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL)
+option(ENABLE_AZURE "Enables Azure support." OFF)
+
+if ((ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL) OR ENABLE_ALL OR ENABLE_AZURE)
 	include(BundledLibXml2)
 	use_bundled_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
+endif()
 
+## Openwsman Extesions
+if (ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL)
 	include(BundledOpenWSMAN)
 	use_bundled_openwsman(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 	createExtension(OPENWSMAN-EXTENSIONS "OPENWSMAN EXTENSIONS" "This enables Openwsman support" "extensions/openwsman")
+endif()
+
+## Azure Extentions
+if (ENABLE_ALL OR ENABLE_AZURE)
+	include(NlohmannJson)
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/nlohmann_json/dummy")
+
+	include(BundledAzureSdkCpp)
+	use_bundled_libazure(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+	createExtension(AZURE-EXTENSIONS "AZURE EXTENSIONS" "This enables Azure support" "extensions/azure" "${TEST_DIR}/azure-tests")
 endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN

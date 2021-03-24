@@ -40,6 +40,9 @@ Copyright 2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 This product includes software developed by
 Amazon Technologies, Inc (http://www.amazon.com/).
 
+This bundles the 'Azure SDK for C++' (MIT licensed) project (https://github.com/Azure/azure-sdk-for-cpp), which includes the following NOTICE:
+Copyright (c) Microsoft Corporation.
+
 **********************
 THIRD PARTY COMPONENTS
 **********************
@@ -55,6 +58,7 @@ This software includes third party software subject to the following copyrights:
 - libsodium - Copyright (c) 2013 - 2018 Frank Denis under the ISC software license
 - IANA timezone database - public domain
 - date (HowardHinnant/date) - notices below
+- JSON for Modern C++ (nlohmann/json) - Copyright (c) 2013-2021 Niels Lohmann
 
 The licenses for these third party components are included in LICENSE.txt
 

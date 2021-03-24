@@ -1,0 +1,42 @@
+diff -rupN orig/sdk/core/azure-core/inc/azure/core/context.hpp patched/sdk/core/azure-core/inc/azure/core/context.hpp
+--- orig/sdk/core/azure-core/inc/azure/core/context.hpp	2021-02-03 09:06:18.580502882 +0000
++++ patched/sdk/core/azure-core/inc/azure/core/context.hpp	2021-02-03 09:07:11.302899054 +0000
+@@ -255,7 +255,7 @@ namespace Azure { namespace Core {
+     struct ContextSharedState
+     {
+       std::shared_ptr<ContextSharedState> Parent;
+-      std::atomic_int64_t CancelAtMsecSinceEpoch;
++      std::atomic<int64_t> CancelAtMsecSinceEpoch;
+       std::string Key;
+       ContextValue Value;
+
+diff -rupN orig/sdk/core/azure-core/src/http/policy.cpp patched/sdk/core/azure-core/src/http/policy.cpp
+--- orig/sdk/core/azure-core/src/http/policy.cpp	2021-02-03 09:10:44.454678199 +0000
++++ patched/sdk/core/azure-core/src/http/policy.cpp	2021-02-03 09:11:15.535238932 +0000
+@@ -10,10 +10,10 @@ using namespace Azure::Core::Http;
+ #ifndef _MSC_VER
+ // Non-MSVC compilers do require allocation of statics, even if they are const constexpr.
+ // MSVC, on the other hand, has problem if you "redefine" static constexprs.
+-Azure::Core::Logging::LogClassification const Azure::Core::Http::LogClassification::Request;
+-Azure::Core::Logging::LogClassification const Azure::Core::Http::LogClassification::Response;
+-Azure::Core::Logging::LogClassification const Azure::Core::Http::LogClassification::Retry;
+-Azure::Core::Logging::LogClassification const
++constexpr Azure::Core::Logging::LogClassification const Azure::Core::Http::LogClassification::Request;
++constexpr Azure::Core::Logging::LogClassification const Azure::Core::Http::LogClassification::Response;
++constexpr Azure::Core::Logging::LogClassification const Azure::Core::Http::LogClassification::Retry;
++constexpr Azure::Core::Logging::LogClassification const
+     Azure::Core::Http::LogClassification::HttpTransportAdapter;
+ #endif
+
+diff -rupN orig/sdk/keyvault/azure-security-keyvault-keys/src/key_client.cpp patched/sdk/keyvault/azure-security-keyvault-keys/src/key_client.cpp
+--- orig/sdk/keyvault/azure-security-keyvault-keys/src/key_client.cpp	2021-02-10 10:35:03.305252930 +0100
++++ patched/sdk/keyvault/azure-security-keyvault-keys/src/key_client.cpp	2021-02-10 16:11:25.139169400 +0100
+@@ -16,7 +16,7 @@ using namespace Azure::Core::Http;
+
+ KeyClient::KeyClient(
+     std::string const& vaultUrl,
+-    std::shared_ptr<Core::TokenCredential const> credential,
++    std::shared_ptr<Azure::Core::TokenCredential const> credential,
+     KeyClientOptions options)
+ {
+   auto apiVersion = options.GetVersionString();
