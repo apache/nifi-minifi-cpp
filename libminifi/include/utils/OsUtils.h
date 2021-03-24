@@ -38,6 +38,11 @@ int64_t getSystemPhysicalMemoryUsage();
 /// Returns the total physical memory in the system in bytes
 int64_t getSystemTotalPhysicalMemory();
 
+#ifdef WIN32
+/// Returns the total paging file size in bytes
+int64_t getTotalPagingFileSize();
+#endif
+
 /// Returns the host architecture (e.g. x32, arm64)
 std::string getMachineArchitecture();
 

@@ -493,7 +493,7 @@ if (ENABLE_TENSORFLOW)
 	createExtension(TENSORFLOW-EXTENSIONS "TENSORFLOW EXTENSIONS" "This enables TensorFlow support" "extensions/tensorflow" "${TEST_DIR}/tensorflow-tests")
 endif()
 
-## AWS Extentions
+## AWS Extensions
 option(ENABLE_AWS "Enables AWS support." OFF)
 if (ENABLE_ALL OR ENABLE_AWS)
 	include(BundledAwsSdkCpp)
@@ -501,7 +501,15 @@ if (ENABLE_ALL OR ENABLE_AWS)
 	createExtension(AWS-EXTENSIONS "AWS EXTENSIONS" "This enables AWS support" "extensions/aws" "${TEST_DIR}/aws-tests")
 endif()
 
-## OpenCV Extesions
+## PDH Extentsions
+if (WIN32)
+	option(ENABLE_PDH "Enables PDH support." OFF)
+	if (ENABLE_PDH)
+		createExtension(PDH-EXTENSIONS "PDH EXTENSIONS" "This enables PDH support" "extensions/pdh" "extensions/pdh/tests")
+	endif()
+endif()
+
+## OpenCV Extensions
 option(ENABLE_OPENCV "Disables the OpenCV extensions." OFF)
 if (ENABLE_OPENCV)
 	createExtension(OPENCV-EXTENSIONS "OPENCV EXTENSIONS" "This enabled OpenCV support" "extensions/opencv" "extensions/opencv/tests")
@@ -515,7 +523,7 @@ if (ENABLE_BUSTACHE)
 	createExtension(BUSTACHE-EXTENSIONS "BUSTACHE EXTENSIONS" "This enables bustache functionality including ApplyTemplate." "extensions/bustache" "${TEST_DIR}/bustache-tests")
 endif()
 
-## OPC Extentions
+## OPC Extensions
 if (ENABLE_OPC)
 	include(BundledMbedTLS)
 	use_bundled_mbedtls(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
@@ -546,7 +554,7 @@ if ((ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL) OR ENABLE_ALL 
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
 endif()
 
-## Openwsman Extesions
+## Openwsman Extensions
 if (ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL)
 	include(BundledOpenWSMAN)
 	use_bundled_openwsman(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
@@ -554,7 +562,7 @@ if (ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL)
 	createExtension(OPENWSMAN-EXTENSIONS "OPENWSMAN EXTENSIONS" "This enables Openwsman support" "extensions/openwsman")
 endif()
 
-## Azure Extentions
+## Azure Extensions
 if (ENABLE_ALL OR ENABLE_AZURE)
 	include(NlohmannJson)
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/nlohmann_json/dummy")

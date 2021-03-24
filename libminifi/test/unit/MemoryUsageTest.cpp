@@ -20,22 +20,22 @@
 #include "utils/OsUtils.h"
 #include "../TestBase.h"
 
-TEST_CASE("Test memory usage", "[testmemoryusage]") {
+TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   constexpr bool cout_enabled = true;
   std::vector<char> v(30000000);
-  const auto RAMUsagebyProcess = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
-  const auto RAMUsagebySystem = utils::OsUtils::getSystemPhysicalMemoryUsage();
-  const auto RAMTotal = utils::OsUtils::getSystemTotalPhysicalMemory();
+  const auto ram_usage_by_process = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
+  const auto ram_usage_by_system = utils::OsUtils::getSystemPhysicalMemoryUsage();
+  const auto ram_total = utils::OsUtils::getSystemTotalPhysicalMemory();
 
   if (cout_enabled) {
-    std::cout << "Physical Memory used by this process: " << RAMUsagebyProcess  << " bytes" << std::endl;
-    std::cout << "Physical Memory used by the system: " << RAMUsagebySystem << " bytes" << std::endl;
-    std::cout << "Total Physical Memory in the system: " << RAMTotal << " bytes" << std::endl;
+    std::cout << "Physical Memory used by this process: " << ram_usage_by_process << " bytes" << std::endl;
+    std::cout << "Physical Memory used by the system: " << ram_usage_by_system << " bytes" << std::endl;
+    std::cout << "Total Physical Memory in the system: " << ram_total << " bytes" << std::endl;
   }
-  REQUIRE(RAMUsagebyProcess >= v.size());
-  REQUIRE(v.size()*2 >= RAMUsagebyProcess);
-  REQUIRE(RAMUsagebySystem >= RAMUsagebyProcess);
-  REQUIRE(RAMTotal >= RAMUsagebySystem);
+  REQUIRE(ram_usage_by_process >= v.size());
+  REQUIRE(v.size()*2 >= ram_usage_by_process);
+  REQUIRE(ram_usage_by_system >= ram_usage_by_process);
+  REQUIRE(ram_total >= ram_usage_by_system);
 }
 
 #ifndef WIN32
@@ -45,5 +45,18 @@ size_t GetTotalMemoryLegacy() {
 
 TEST_CASE("Test new and legacy total system memory query equivalency") {
   REQUIRE(GetTotalMemoryLegacy() == utils::OsUtils::getSystemTotalPhysicalMemory());
+}
+#endif
+
+
+#ifdef WIN32
+TEST_CASE("Test Paging file size", "[testpagingfile]") {
+  constexpr bool cout_enabled = true;
+  const auto total_paging_file_size = utils::OsUtils::getTotalPagingFileSize();
+
+  if (cout_enabled) {
+    std::cout << "Total Paging file size: " << total_paging_file_size << " bytes" << std::endl;
+  }
+  REQUIRE(total_paging_file_size > 0);
 }
 #endif
