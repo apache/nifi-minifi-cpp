@@ -43,7 +43,7 @@ class MaxCollector: public SQLRowSubscriber {
   void endProcessRow() override {}
 
   void processColumnNames(const std::vector<std::string>& names) override {
-    for (auto& expected : state_) {
+    for (const auto& expected : state_) {
       if (std::find(names.begin(), names.end(), expected.first) == names.end()) {
         throw minifi::Exception(PROCESSOR_EXCEPTION,
           "Column '" + expected.first + "' is not found in the columns of '" + query_ + "' result.");

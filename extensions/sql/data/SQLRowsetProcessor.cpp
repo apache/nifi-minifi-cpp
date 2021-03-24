@@ -63,6 +63,7 @@ void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
 
   if (rowCount == 0) {
     std::vector<std::string> column_names;
+    column_names.reserve(row.size());
     for (std::size_t i = 0; i != row.size(); ++i) {
       column_names.push_back(utils::StringUtils::toLower(row.get_properties(i).get_name()));
     }
