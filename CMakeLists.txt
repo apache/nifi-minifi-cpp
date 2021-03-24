@@ -501,6 +501,14 @@ if (ENABLE_ALL OR ENABLE_AWS)
 	createExtension(AWS-EXTENSIONS "AWS EXTENSIONS" "This enables AWS support" "extensions/aws" "${TEST_DIR}/aws-tests")
 endif()
 
+## PDH Extentions
+if (WIN32)
+	option(ENABLE_PDH "Enables PDH support." OFF)
+	if (ENABLE_PDH)
+		createExtension(PDH-EXTENSIONS "PDH EXTENSIONS" "This enables PDH support" "extensions/pdh" "extensions/pdh/tests")
+	endif()
+endif()
+
 ## OpenCV Extesions
 option(ENABLE_OPENCV "Disables the OpenCV extensions." OFF)
 if (ENABLE_OPENCV)

@@ -274,6 +274,16 @@ int64_t OsUtils::getSystemTotalPhysicalMemory() {
 #endif
 }
 
+#ifdef WIN32
+int64_t OsUtils::getTotalPagingFileSize() {
+  MEMORYSTATUSEX memory_info;
+  memory_info.dwLength = sizeof(MEMORYSTATUSEX);
+  GlobalMemoryStatusEx(&memory_info);
+  DWORDLONG total_paging_file_size = memory_info.ullTotalPageFile;
+  return total_paging_file_size;
+}
+#endif
+
 std::string OsUtils::getMachineArchitecture() {
 #if defined(__linux__) || defined(__APPLE__)
   utsname buf;
