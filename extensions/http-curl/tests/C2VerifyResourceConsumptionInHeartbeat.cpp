@@ -52,8 +52,8 @@ class ResourceConsumptionInHeartbeatHandler : public HeartbeatHandler {
     assert(system_info.HasMember("physicalMem"));
     assert(system_info["physicalMem"].GetUint64() > 0);
 
-    assert(system_info.HasMember("memoryUtilization"));
-    assert(system_info["memoryUtilization"].GetUint64() > 0);
+    assert(system_info.HasMember("memoryUsage"));
+    assert(system_info["memoryUsage"].GetUint64() > 0);
 
     assert(system_info.HasMember("cpuUtilization"));
     if (!firstCall) {
@@ -75,8 +75,8 @@ class ResourceConsumptionInHeartbeatHandler : public HeartbeatHandler {
     assert(status.HasMember("resourceConsumption"));
     auto& resource_consumption = status["resourceConsumption"];
 
-    assert(resource_consumption.HasMember("memoryUtilization"));
-    assert(resource_consumption["memoryUtilization"].GetUint64() > 0);
+    assert(resource_consumption.HasMember("memoryUsage"));
+    assert(resource_consumption["memoryUsage"].GetUint64() > 0);
 
     assert(resource_consumption.HasMember("cpuUtilization"));
     auto& cpu_utilization = resource_consumption["cpuUtilization"];

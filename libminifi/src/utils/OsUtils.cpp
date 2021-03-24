@@ -168,8 +168,8 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
   return name;
 }
 
-uint64_t OsUtils::getCurrentProcessPhysicalMemoryUsage() {
-#ifdef __linux__
+int64_t OsUtils::getCurrentProcessPhysicalMemoryUsage() {
+#if defined(__linux__)
   static const std::string resident_set_size_prefix = "VmRSS:";
   std::ifstream status_file("/proc/self/status");
   std::string line;
@@ -183,28 +183,25 @@ uint64_t OsUtils::getCurrentProcessPhysicalMemoryUsage() {
     }
   }
 
-  throw std::runtime_error("Could not get memory info for current process");
-#endif
-
-#ifdef __APPLE__
+  return -1;
+#elif defined(__APPLE__)
   task_basic_info tInfo;
   mach_msg_type_number_t tInfoCount = TASK_BASIC_INFO_COUNT;
   if (KERN_SUCCESS != task_info(mach_task_self(), TASK_BASIC_INFO, (task_info_t)&tInfo, &tInfoCount))
-    throw std::runtime_error("Could not get memory info for current process");
+    return -1;
   return tInfo.resident_size;
-#endif
-
-#ifdef _WIN32
+#elif defined(WIN32)
   PROCESS_MEMORY_COUNTERS pmc;
   if (!GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
-    throw std::runtime_error("Could not get memory info for current process");
+    return -1;
   return pmc.WorkingSetSize;
+#else
+  static_assert(false, "Unsupported platform");
 #endif
-  throw std::runtime_error("getCurrentProcessPhysicalMemoryUsage() is not implemented for this platform");
 }
 
-uint64_t OsUtils::getSystemPhysicalMemoryUsage() {
-#ifdef __linux__
+int64_t OsUtils::getSystemPhysicalMemoryUsage() {
+#if defined(__linux__)
   const std::string available_memory_prefix = "MemAvailable:";
   const std::string total_memory_prefix = "MemTotal:";
   std::ifstream meminfo_file("/proc/meminfo");
@@ -226,10 +223,8 @@ uint64_t OsUtils::getSystemPhysicalMemoryUsage() {
   if (total_memory_kByte.has_value() && available_memory_kByte.has_value())
     return (total_memory_kByte.value() - available_memory_kByte.value()) * 1024;
 
-  throw std::runtime_error("Could not get memory info");
-#endif
-
-#ifdef __APPLE__
+  return -1;
+#elif defined(__APPLE__)
   vm_size_t page_size;
   mach_port_t mach_port = mach_host_self();
   vm_statistics64_data_t vm_stats;
@@ -241,29 +236,26 @@ uint64_t OsUtils::getSystemPhysicalMemoryUsage() {
                                (int64_t)vm_stats.wire_count) *  (int64_t)page_size;
       return physical_memory_used;
   }
-  throw std::runtime_error("Could not get memory info");
-#endif
-
-#ifdef _WIN32
+  return -1;
+#elif defined(WIN32)
   MEMORYSTATUSEX memory_info;
   memory_info.dwLength = sizeof(MEMORYSTATUSEX);
   GlobalMemoryStatusEx(&memory_info);
   DWORDLONG physical_memory_used = memory_info.ullTotalPhys - memory_info.ullAvailPhys;
   return physical_memory_used;
+#else
+  static_assert(false, "Unsupported platform");
 #endif
-  throw std::runtime_error("getSystemPhysicalMemoryUsage() is not implemented for this platform");
 }
 
-uint64_t OsUtils::getSystemTotalPhysicalMemory() {
-#ifdef __linux__
+int64_t OsUtils::getSystemTotalPhysicalMemory() {
+#if defined(__linux__)
   struct sysinfo memory_info;
   sysinfo(&memory_info);
   uint64_t total_physical_memory = memory_info.totalram;
   total_physical_memory *= memory_info.mem_unit;
   return total_physical_memory;
-#endif
-
-#ifdef __APPLE__
+#elif defined(__APPLE__)
   int mib[2];
   int64_t total_physical_memory = 0;
   mib[0] = CTL_HW;
@@ -271,16 +263,15 @@ uint64_t OsUtils::getSystemTotalPhysicalMemory() {
   size_t length = sizeof(int64_t);
   sysctl(mib, 2, &total_physical_memory, &length, NULL, 0);
   return total_physical_memory;
-#endif
-
-#ifdef _WIN32
+#elif defined(WIN32)
   MEMORYSTATUSEX memory_info;
   memory_info.dwLength = sizeof(MEMORYSTATUSEX);
   GlobalMemoryStatusEx(&memory_info);
   DWORDLONG total_physical_memory = memory_info.ullTotalPhys;
   return total_physical_memory;
+#else
+  static_assert(false, "Unsupported platform");
 #endif
-  throw std::runtime_error("getSystemTotalPhysicalMemory() is not implemented for this platform");
 }
 
 std::string OsUtils::getMachineArchitecture() {
@@ -309,7 +300,7 @@ std::string OsUtils::getMachineArchitecture() {
       return "unknown";
   }
 #endif
-  throw std::runtime_error("getMachineArchitecture() is not implemented for this platform");
+  return "unknown";
 }
 }  // namespace utils
 }  // namespace minifi

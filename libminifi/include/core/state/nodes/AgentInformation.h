@@ -427,13 +427,15 @@ class AgentStatus : public StateMonitorNode {
 
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
-    if (!repositories_.empty()) {
-      serialized.push_back(serializeRepositories());
+    auto serializedRepositories = serializeRepositories();
+    if (!serializedRepositories.empty()) {
+      serialized.push_back(serializedRepositories);
     }
     serialized.push_back(serializeUptime());
 
-    if (nullptr != monitor_) {
-      serialized.push_back(serializeComponents());
+    auto serializedComponents = serializeComponents();
+    if (serializedComponents.empty()) {
+      serialized.push_back(serializedComponents);
     }
 
     serialized.push_back(serializeResourceConsumption());
@@ -495,16 +497,16 @@ class AgentStatus : public StateMonitorNode {
         SerializedResponseNode component_node(false);
         component_node.name = component->getComponentName();
 
-        SerializedResponseNode uuidNode;
-        uuidNode.name = "uuid";
-        uuidNode.value = std::string{component->getComponentUUID().to_string()};
+        SerializedResponseNode uuid_node;
+        uuid_node.name = "uuid";
+        uuid_node.value = std::string{component->getComponentUUID().to_string()};
 
         SerializedResponseNode component_status_node;
         component_status_node.name = "running";
         component_status_node.value = component->isRunning();
 
         component_node.children.push_back(component_status_node);
-        component_node.children.push_back(uuidNode);
+        component_node.children.push_back(uuid_node);
         components_node.children.push_back(component_node);
       }
     }
@@ -513,8 +515,8 @@ class AgentStatus : public StateMonitorNode {
 
   SerializedResponseNode serializeAgentMemoryUsage() {
     SerializedResponseNode used_physical_memory;
-    used_physical_memory.name = "memoryUtilization";
-    used_physical_memory.value = (uint64_t)utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
+    used_physical_memory.name = "memoryUsage";
+    used_physical_memory.value = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
     return used_physical_memory;
   }
 

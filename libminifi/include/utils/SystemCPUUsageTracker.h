@@ -50,7 +50,6 @@ class SystemCPUUsageTrackerBase {
 };
 
 #ifdef __linux__
-
 class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
  public:
   SystemCPUUsageTracker();
@@ -74,7 +73,6 @@ class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
   uint64_t previous_total_sys_;
   uint64_t previous_total_idle_;
 };
-
 #endif  // linux
 
 #ifdef WIN32

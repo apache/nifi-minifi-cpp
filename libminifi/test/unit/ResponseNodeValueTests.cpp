@@ -44,21 +44,54 @@ TEST_CASE("IntValueNodeTests", "[responsenodevaluetests]") {
   REQUIRE(canConvertToType<int32_t>(value_node));
   REQUIRE(canConvertToType<int64_t>(value_node));
   REQUIRE(canConvertToType<int> (value_node));
-  REQUIRE(!canConvertToType<bool>(value_node));
-  REQUIRE(!canConvertToType<double>(value_node));
+  REQUIRE_FALSE(canConvertToType<bool>(value_node));
+  REQUIRE(canConvertToType<double>(value_node));
   REQUIRE(value_node.to_string() == "6");
 
   int negative_int_value = -7;
   value_node = negative_int_value;
   REQUIRE(value_node.getValue()->getTypeIndex() == org::apache::nifi::minifi::state::response::Value::INT_TYPE);
-  REQUIRE(!canConvertToType<uint32_t>(value_node));
-  REQUIRE(!canConvertToType<uint64_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<uint32_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<uint64_t>(value_node));
   REQUIRE(canConvertToType<int32_t>(value_node));
   REQUIRE(canConvertToType<int64_t>(value_node));
   REQUIRE(canConvertToType<int> (value_node));
-  REQUIRE(!canConvertToType<bool>(value_node));
-  REQUIRE(!canConvertToType<double>(value_node));
+  REQUIRE_FALSE(canConvertToType<bool>(value_node));
+  REQUIRE(canConvertToType<double>(value_node));
   REQUIRE(value_node.to_string() == "-7");
+
+  uint32_t max_uint32_value = (uint64_t{1} << 32) - 1;
+  value_node = max_uint32_value;
+  REQUIRE(value_node.getValue()->getTypeIndex() == org::apache::nifi::minifi::state::response::Value::UINT32_TYPE);
+  REQUIRE(canConvertToType<uint32_t>(value_node));
+  REQUIRE(canConvertToType<uint64_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int32_t>(value_node));
+  REQUIRE(canConvertToType<int64_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int> (value_node));
+  REQUIRE_FALSE(canConvertToType<bool>(value_node));
+  REQUIRE(canConvertToType<double>(value_node));
+
+  uint64_t big_uint64_value = uint64_t{1} << 34;
+  value_node = big_uint64_value;
+  REQUIRE(value_node.getValue()->getTypeIndex() == org::apache::nifi::minifi::state::response::Value::UINT64_TYPE);
+  REQUIRE_FALSE(canConvertToType<uint32_t>(value_node));
+  REQUIRE(canConvertToType<uint64_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int32_t>(value_node));
+  REQUIRE(canConvertToType<int64_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int> (value_node));
+  REQUIRE_FALSE(canConvertToType<bool>(value_node));
+  REQUIRE(canConvertToType<double>(value_node));
+
+  uint64_t huge_uint64_value = (uint64_t{1} << 53) + 1;
+  value_node = huge_uint64_value;
+  REQUIRE(value_node.getValue()->getTypeIndex() == org::apache::nifi::minifi::state::response::Value::UINT64_TYPE);
+  REQUIRE_FALSE(canConvertToType<uint32_t>(value_node));
+  REQUIRE(canConvertToType<uint64_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int32_t>(value_node));
+  REQUIRE(canConvertToType<int64_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int> (value_node));
+  REQUIRE_FALSE(canConvertToType<bool>(value_node));
+  REQUIRE_FALSE(canConvertToType<double>(value_node));  // double has 53 bits for the mantissa
 }
 
 TEST_CASE("BoolValueNodeTests", "[responsenodevaluetests]") {
@@ -77,20 +110,61 @@ TEST_CASE("BoolValueNodeTests", "[responsenodevaluetests]") {
   REQUIRE(value_node.to_string() == "true");
 }
 
+TEST_CASE("WholeDoubleValueNodeTests", "[responsenodevaluetests]") {
+  org::apache::nifi::minifi::state::response::ValueNode value_node;
+
+  double whole_double_value = 85;
+  value_node = whole_double_value;
+  REQUIRE(value_node.getValue()->getTypeIndex() == org::apache::nifi::minifi::state::response::Value::DOUBLE_TYPE);
+  REQUIRE(canConvertToType<uint32_t>(value_node));
+  REQUIRE(canConvertToType<uint64_t>(value_node));
+  REQUIRE(canConvertToType<int32_t>(value_node));
+  REQUIRE(canConvertToType<int64_t>(value_node));
+  REQUIRE(canConvertToType<int> (value_node));
+  REQUIRE_FALSE(canConvertToType<bool>(value_node));
+  REQUIRE(canConvertToType<double>(value_node));
+  REQUIRE(value_node.to_string() == "85.000000");
+
+  double negative_whole_double_value = -85;
+  value_node = negative_whole_double_value;
+  REQUIRE(value_node.getValue()->getTypeIndex() == org::apache::nifi::minifi::state::response::Value::DOUBLE_TYPE);
+  REQUIRE_FALSE(canConvertToType<uint32_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<uint64_t>(value_node));
+  REQUIRE(canConvertToType<int32_t>(value_node));
+  REQUIRE(canConvertToType<int64_t>(value_node));
+  REQUIRE(canConvertToType<int> (value_node));
+  REQUIRE_FALSE(canConvertToType<bool>(value_node));
+  REQUIRE(canConvertToType<double>(value_node));
+  REQUIRE(value_node.to_string() == "-85.000000");
+}
+
+
 TEST_CASE("DoubleValueNodeTests", "[responsenodevaluetests]") {
   org::apache::nifi::minifi::state::response::ValueNode value_node;
 
   double double_value = 0.85;
   value_node = double_value;
   REQUIRE(value_node.getValue()->getTypeIndex() == org::apache::nifi::minifi::state::response::Value::DOUBLE_TYPE);
-  REQUIRE(!canConvertToType<uint32_t>(value_node));
-  REQUIRE(!canConvertToType<uint64_t>(value_node));
-  REQUIRE(!canConvertToType<int32_t>(value_node));
-  REQUIRE(!canConvertToType<int64_t>(value_node));
-  REQUIRE(!canConvertToType<int> (value_node));
-  REQUIRE(!canConvertToType<bool>(value_node));
+  REQUIRE_FALSE(canConvertToType<uint32_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<uint64_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int32_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int64_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int> (value_node));
+  REQUIRE_FALSE(canConvertToType<bool>(value_node));
   REQUIRE(canConvertToType<double>(value_node));
   REQUIRE(value_node.to_string() == "0.850000");
+
+  double negative_double_value = -0.85;
+  value_node = negative_double_value;
+  REQUIRE(value_node.getValue()->getTypeIndex() == org::apache::nifi::minifi::state::response::Value::DOUBLE_TYPE);
+  REQUIRE_FALSE(canConvertToType<uint32_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<uint64_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int32_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int64_t>(value_node));
+  REQUIRE_FALSE(canConvertToType<int> (value_node));
+  REQUIRE_FALSE(canConvertToType<bool>(value_node));
+  REQUIRE(canConvertToType<double>(value_node));
+  REQUIRE(value_node.to_string() == "-0.850000");
 
   double_value = 0.85758291204;
   value_node = double_value;

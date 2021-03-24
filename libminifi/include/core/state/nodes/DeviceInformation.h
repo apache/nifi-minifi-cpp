@@ -387,14 +387,14 @@ class DeviceInfoNode : public DeviceInformation {
   SerializedResponseNode serializeTotalPhysicalMemoryInformation() {
     SerializedResponseNode total_physical_memory;
     total_physical_memory.name = "physicalMem";
-    total_physical_memory.value = (uint64_t)utils::OsUtils::getSystemTotalPhysicalMemory();
+    total_physical_memory.value = utils::OsUtils::getSystemTotalPhysicalMemory();
     return total_physical_memory;
   }
 
   SerializedResponseNode serializePhysicalMemoryUsageInformation() {
     SerializedResponseNode used_physical_memory;
-    used_physical_memory.name = "memoryUtilization";
-    used_physical_memory.value = (uint64_t)utils::OsUtils::getSystemPhysicalMemoryUsage();
+    used_physical_memory.name = "memoryUsage";
+    used_physical_memory.value = utils::OsUtils::getSystemPhysicalMemoryUsage();
     return used_physical_memory;
   }
 
