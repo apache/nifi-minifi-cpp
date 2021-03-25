@@ -50,7 +50,10 @@ size_t SQLRowsetProcessor::process(size_t max) {
   }
 
   for (const auto& subscriber : row_subscribers_) {
-    subscriber.get().endProcessBatch(count == 0 ? SQLRowSubscriber::Progress::DONE : SQLRowSubscriber::Progress::CONTINUE);
+    subscriber.get().endProcessBatch();
+    if (count == 0) {
+      subscriber.get().finishProcessing();
+    }
   }
 
   return count;

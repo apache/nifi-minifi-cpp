@@ -84,7 +84,7 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
   if (!context.getProperty(SQLSelectQuery, query, input_flow_file)) {
     if (!input_flow_file) {
       throw Exception(PROCESSOR_EXCEPTION,
-                      "No incoming FlowFile and the \"SQL select query\" processor property is not specified");
+                      "No incoming FlowFile and the \"" + SQLSelectQuery.getName() + "\" processor property is not specified");
     }
     logger_->log_debug("Using the contents of the flow file as the SQL statement");
     auto buffer = std::make_shared<io::BufferStream>();
@@ -98,13 +98,14 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
 
   auto row_set = connection_->prepareStatement(query)->execute(collectArguments(input_flow_file));
 
-  sql::JSONSQLWriter sqlWriter{output_format_ == OutputType::JSONPretty};
-  FlowFileGenerator flow_file_creator{session, sqlWriter};
-  sql::SQLRowsetProcessor sqlRowsetProcessor(row_set, {sqlWriter, flow_file_creator});
+  sql::JSONSQLWriter json_writer{output_format_ == OutputType::JSONPretty};
+  FlowFileGenerator flow_file_creator{session, json_writer};
+  sql::SQLRowsetProcessor sql_rowset_processor(row_set, {json_writer, flow_file_creator});
 
   // Process rowset.
-  while (size_t row_count = sqlRowsetProcessor.process(max_rows_)) {
+  while (size_t row_count = sql_rowset_processor.process(max_rows_)) {
     auto new_file = flow_file_creator.getLastFlowFile();
+    gsl_Expects(new_file);
     new_file->addAttribute(RESULT_ROW_COUNT, std::to_string(row_count));
     if (input_flow_file) {
       new_file->addAttribute(INPUT_FLOW_FILE_UUID, input_flow_file->getUUIDStr());

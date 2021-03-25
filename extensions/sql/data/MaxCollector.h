@@ -34,13 +34,12 @@ namespace sql {
 
 class MaxCollector: public SQLRowSubscriber {
   void beginProcessBatch() override {}
-  void endProcessBatch(Progress progress) override {
-    if (progress == Progress::DONE) {
-      updateMapState();
-    }
-  }
+  void endProcessBatch() override {}
   void beginProcessRow() override {}
   void endProcessRow() override {}
+  void finishProcessing() override {
+    updateMapState();
+  }
 
   void processColumnNames(const std::vector<std::string>& names) override {
     for (const auto& expected : state_) {

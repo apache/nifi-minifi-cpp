@@ -47,13 +47,9 @@ const std::string FlowFileSource::FRAGMENT_IDENTIFIER = "fragment.identifier";
 const std::string FlowFileSource::FRAGMENT_COUNT = "fragment.count";
 const std::string FlowFileSource::FRAGMENT_INDEX = "fragment.index";
 
-void FlowFileSource::FlowFileGenerator::endProcessBatch(Progress progress) {
-  if (progress == Progress::DONE) {
-    // annotate the flow files with the fragment.count
-    std::string fragment_count = std::to_string(flow_files_.size());
-    for (const auto& flow_file : flow_files_) {
-      flow_file->addAttribute(FRAGMENT_COUNT, fragment_count);
-    }
+void FlowFileSource::FlowFileGenerator::endProcessBatch() {
+  if (current_batch_size_ == 0) {
+    // do not create flow files with no rows
     return;
   }
 
@@ -63,6 +59,14 @@ void FlowFileSource::FlowFileGenerator::endProcessBatch(Progress progress) {
   new_flow->addAttribute(FRAGMENT_IDENTIFIER, batch_id_.to_string());
   session_.write(new_flow, &writer);
   flow_files_.push_back(std::move(new_flow));
+}
+
+void FlowFileSource::FlowFileGenerator::finishProcessing() {
+  // annotate the flow files with the fragment.count
+  std::string fragment_count = std::to_string(flow_files_.size());
+  for (const auto& flow_file : flow_files_) {
+    flow_file->addAttribute(FRAGMENT_COUNT, fragment_count);
+  }
 }
 
 }  // namespace processors

@@ -40,9 +40,10 @@ class JSONSQLWriter: public SQLWriter {
 
 private:
   void beginProcessBatch() override;
-  void endProcessBatch(Progress progress) override;
+  void endProcessBatch() override;
   void beginProcessRow() override;
   void endProcessRow() override;
+  void finishProcessing() override;
   void processColumnNames(const std::vector<std::string>& name) override;
   void processColumn(const std::string& name, const std::string& value) override;
   void processColumn(const std::string& name, double value) override;

@@ -57,7 +57,10 @@ class FlowFileSource {
     void beginProcessBatch() override {
       current_batch_size_ = 0;
     }
-    void endProcessBatch(Progress progress) override;
+    void endProcessBatch() override;
+
+    void finishProcessing() override;
+
     void beginProcessRow() override {}
     void endProcessRow() override {
       ++current_batch_size_;
