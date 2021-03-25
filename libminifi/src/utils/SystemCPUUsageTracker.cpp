@@ -47,9 +47,13 @@ void SystemCPUUsageTracker::queryCPUTimes() {
   previous_total_sys_ = total_sys_;
   previous_total_idle_ = total_idle_;
   FILE* file = fopen("/proc/stat", "r");
-  (void)fscanf(file, "cpu %lu %lu %lu %lu", &total_user_, &total_user_low_,
-         &total_sys_, &total_idle_);
-  (void)fclose(file);
+  if (fscanf(file, "cpu %lu %lu %lu %lu", &total_user_, &total_user_low_, &total_sys_, &total_idle_) != 4) {
+    total_user_ = previous_total_user_;
+    total_user_low_ = previous_total_user_low_;
+    total_idle_ = previous_total_idle_;
+    total_sys_ = previous_total_sys_;
+  }
+  fclose(file);
 }
 
 bool SystemCPUUsageTracker::isCurrentQueryOlderThanPrevious() {
