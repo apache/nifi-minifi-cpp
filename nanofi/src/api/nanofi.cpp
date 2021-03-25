@@ -133,9 +133,8 @@ nifi_instance *create_instance_repo(const char *url, nifi_port *port, const char
 
 nifi_instance * acquire_standalone_instance () {
   if (standalone_instance == nullptr) {
-    nifi_port port;
     auto port_str = utils::IdGenerator::getIdGenerator()->generate().to_string();
-    port.port_id = const_cast<char *>(port_str.c_str());
+    nifi_port port{const_cast<char *>(port_str.c_str())};
     standalone_instance = create_instance("internal_standalone", &port);
   }
   return standalone_instance;
