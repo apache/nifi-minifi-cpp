@@ -231,10 +231,7 @@ class IntValue : public Value {
   }
 
   bool getValue(uint32_t &ref) override {
-    if (value < 0)
-      return false;
-    ref = value;
-    return true;
+    return utils::internal::cast_if_in_range(value, ref);
   }
 
   bool getValue(int64_t &ref) override {
@@ -243,10 +240,7 @@ class IntValue : public Value {
   }
 
   bool getValue(uint64_t &ref) override {
-    if (value < 0)
-      return false;
-    ref = value;
-    return true;
+    return utils::internal::cast_if_in_range(value, ref);
   }
 
   bool getValue(bool& /*ref*/) override {
@@ -394,10 +388,7 @@ class Int64Value : public Value {
   }
 
   bool getValue(uint64_t& ref) override {
-    if (value < 0)
-      return false;
-    ref = value;
-    return true;
+    return utils::internal::cast_if_in_range(value, ref);
   }
 
   bool getValue(bool& /*ref*/) override {
