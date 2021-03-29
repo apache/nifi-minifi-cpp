@@ -55,10 +55,7 @@ FetchContent_Declare(date_src
 FetchContent_GetProperties(date_src)
 if (NOT date_src_POPULATED)
     FetchContent_Populate(date_src)
-    set(DATE_INCLUDE_DIR
-        $<BUILD_INTERFACE:${date_src_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-    )
+    set(DATE_INCLUDE_DIR "${date_src_SOURCE_DIR}/include" CACHE STRING "" FORCE)
     add_library(date INTERFACE)
     add_library(date::date ALIAS date)
     target_sources(date INTERFACE ${DATE_INCLUDE_DIR}/date/date.h)

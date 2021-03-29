@@ -17,11 +17,7 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 2.6)
-
-IF(POLICY CMP0048)
-  CMAKE_POLICY(SET CMP0048 OLD)
-ENDIF(POLICY CMP0048)
+cmake_minimum_required(VERSION 3.11)
 
 include_directories(/include)
 

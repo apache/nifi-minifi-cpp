@@ -1,18 +1,21 @@
 #pragma once
 
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <memory>
+#include <sstream>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include <systemd/sd-journal.h>
-#include <type_traits>
 #include "core/CoreComponentState.h"
 #include "core/Processor.h"
 #include "core/Resource.h"
 #include "core/logging/Logger.h"
+#include <date/date.h>
 #include "JournalHandle.h"
 #include "utils/Deleters.h"
 #include "utils/gsl.h"
@@ -41,7 +44,7 @@ class ConsumeJournald final : public core::Processor {
   }
 
   void notifyStop() final {
-    if (!journal_handle_) { return; }
+    if (!journal_handle_) return;
     worker_.enqueue([this] {
       journal_handle_.reset();
     }).get();
@@ -76,13 +79,14 @@ class ConsumeJournald final : public core::Processor {
 
     for (auto& msg: messages) {
       const auto flow_file = session->create();
-      for (auto& field: msg) {
+      for (auto& field: msg.fields) {
         if (field.name == "MESSAGE") {
           session->writeBuffer(flow_file, gsl::make_span(field.value));
         } else {
           flow_file->setAttribute(std::move(field.name), std::move(field.value));
         }
       }
+      flow_file->setAttribute("timestamp", date::format("%x %X %Z", msg.timestamp));
       session->transfer(flow_file, Success);
     }
     session->commit();
@@ -94,11 +98,15 @@ class ConsumeJournald final : public core::Processor {
     std::string value;
   };
 
-  static utils::optional<gsl::span<const char>> enumerateJournalEntry(sd_journal* const journal) {
-    gsl_Expects(journal);
+  struct journal_message {
+    std::vector<journal_field> fields;
+    std::chrono::system_clock::time_point timestamp;
+  };
+
+  static utils::optional<gsl::span<const char>> enumerateJournalEntry(sd_journal& journal) {
     const void* data_ptr{};
     size_t data_length{};
-    const auto status_code = sd_journal_enumerate_data(journal, &data_ptr, &data_length);
+    const auto status_code = sd_journal_enumerate_data(&journal, &data_ptr, &data_length);
     if (status_code == 0) return {};
     if (status_code < 0) throw SystemErrorException{ "sd_journal_enumerate_data", std::generic_category().default_error_condition(-status_code) };
     gsl_Ensures(data_ptr && "if sd_journal_enumerate_data was successful, then data_ptr must be set");
@@ -107,8 +115,7 @@ class ConsumeJournald final : public core::Processor {
     return gsl::make_span(data_str_ptr, data_length);
   }
 
-  static utils::optional<journal_field> getNextField(sd_journal* const journal) {
-    gsl_Expects(journal);
+  static utils::optional<journal_field> getNextField(sd_journal& journal) {
     return enumerateJournalEntry(journal) | utils::map([](gsl::span<const char> field) {
       const auto eq_pos = std::find(std::begin(field), std::end(field), '=');
       gsl_Ensures(eq_pos != std::end(field) && "field string must contain an equals sign");
@@ -120,18 +127,21 @@ class ConsumeJournald final : public core::Processor {
     });
   }
 
-  std::future<std::pair<std::string, std::vector<std::vector<journal_field>>>> getCursorAndMessageBatch() {
+  std::future<std::pair<std::string, std::vector<journal_message>>> getCursorAndMessageBatch() {
     return worker_.enqueue([this] {
-      std::vector<std::vector<journal_field>> messages;
+      std::vector<journal_message> messages;
       messages.reserve(batch_size_);
       std::unique_ptr<char, utils::FreeDeleter> cursor;
       journal_handle_->visit([this, &messages, &cursor](sd_journal* const journal) {
         for (size_t i = 0; i < batch_size_ && sd_journal_next(journal) > 0; ++i) {
-          std::vector<journal_field> message;
+          journal_message message;
           utils::optional<journal_field> field;
-          while ((field = getNextField(journal)).has_value()) {
-            message.push_back(std::move(*field));
+          while ((field = getNextField(*journal)).has_value()) {
+            message.fields.push_back(std::move(*field));
           }
+          uint64_t journal_timestamp_usec_since_epoch{};
+          sd_journal_get_realtime_usec(journal, &journal_timestamp_usec_since_epoch);
+          message.timestamp = std::chrono::system_clock::time_point{std::chrono::microseconds{journal_timestamp_usec_since_epoch}};
           messages.push_back(std::move(message));
         }
 
@@ -154,6 +164,6 @@ class ConsumeJournald final : public core::Processor {
   std::size_t batch_size_ = 10;
 };
 
-REGISTER_RESOURCE(ConsumeJournald, "Consume systemd-journald journal messages")
+REGISTER_RESOURCE(ConsumeJournald, "Consume systemd-journald journal messages");
 
 }}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd

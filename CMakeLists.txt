@@ -18,13 +18,8 @@
 #
 
 cmake_minimum_required(VERSION 3.11)
-cmake_policy(SET CMP0065 OLD) # default export policy, required for self-dlopen
-
-project(nifi-minifi-cpp)
+project(nifi-minifi-cpp VERSION 0.9.0)
 set(PROJECT_NAME "nifi-minifi-cpp")
-set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 9)
-set(PROJECT_VERSION_PATCH 0)
 
 # Optional build number for linux distribution targets' tar.gz output
 set(BUILD_NUMBER "" CACHE STRING "Build number")
@@ -318,6 +313,9 @@ target_include_directories(optional-lite SYSTEM INTERFACE "${CMAKE_CURRENT_SOURC
 # date
 include(Date)
 
+# libsystemd
+include(BundledLibsystemd)
+
 # Setup passthrough args used by third parties
 set(PASSTHROUGH_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 set(PASSTHROUGH_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
@@ -575,19 +573,15 @@ endif()
 ## Add the systemd extension
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	option(DISABLE_SYSTEMD "Disables the systemd extension." OFF)
+	option(BUILD_LIBSYSTEMD "Build libsystemd instead of relying on the version installed on the system" ON)
 	if (NOT DISABLE_SYSTEMD)
-		#if (BUILD_SYSTEMD)
-		#	include(BundledRocksDB)
-		#	use_bundled_rocksdb(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-		#else()
-		#	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/rocksdb/sys")
-		#	find_package(RocksDB REQUIRED)
-		#endif()
-
-		# TODO: use ExternalProject to get libsystemd
-		find_package(PkgConfig)
-		pkg_check_modules(SYSTEMD_PKGCONF systemd)
-		createExtension(SYSTEMD-EXTENSIONS "SYSTEMD EXTENSIONS" "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "extensions/systemd" "${TEST_DIR}/systemd-tests")
+		if (BUILD_LIBSYSTEMD)
+			use_bundled_libsystemd(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+		else()
+			find_package(PkgConfig)
+			pkg_check_modules(SYSTEMD_PKGCONF systemd)
+		endif()
+		createExtension(SYSTEMD-EXTENSIONS "SYSTEMD EXTENSIONS" "Enabled log collection from journald" "extensions/systemd" "${TEST_DIR}/systemd-tests")
 	endif()
 endif()
 
