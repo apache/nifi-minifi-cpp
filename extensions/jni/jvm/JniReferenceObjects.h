@@ -132,12 +132,12 @@ class JniByteInputStream : public minifi::InputStreamCallback {
   }
 
   int64_t read(JNIEnv *env, jbyteArray arr, int offset, int size) {
+    gsl_Expects(size >= 0);
     if (stream_ == nullptr) {
       return -1;
     }
 
     // seek to offset
-    gsl_Expects(size >= 0);
     uint64_t remaining = gsl::narrow<uint64_t>(size);
     int writtenOffset = 0;
     int read = 0;
