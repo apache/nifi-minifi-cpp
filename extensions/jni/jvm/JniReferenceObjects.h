@@ -137,12 +137,12 @@ class JniByteInputStream : public minifi::InputStreamCallback {
     }
 
     // seek to offset
-    int remaining = size;
+    gsl_Expects(size >= 0);
+    uint64_t remaining = gsl::narrow<uint64_t>(size);
     int writtenOffset = 0;
     int read = 0;
     do {
-
-      int actual = (int) stream_->read(buffer_, gsl::narrow<uint64_t>(remaining) <= buffer_size_ ? remaining : buffer_size_);
+      int actual = stream_->read(buffer_, std::min(remaining, buffer_size_));
       if (actual <= 0) {
         if (read == 0) {
           stream_ = nullptr;
@@ -153,7 +153,7 @@ class JniByteInputStream : public minifi::InputStreamCallback {
 
       read += actual;
       env->SetByteArrayRegion(arr, offset + writtenOffset, actual, (jbyte*) buffer_);
-      writtenOffset += (int) actual;
+      writtenOffset += actual;
 
       remaining -= actual;
 
