@@ -155,12 +155,13 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
     return return_columns_.empty()
       || std::find(return_columns_.begin(), return_columns_.end(), column_name) != return_columns_.end();
   };
-  sql::JSONSQLWriter sqlWriter{output_format_ == OutputType::JSONPretty, column_filter};
-  FlowFileGenerator flow_file_creator{session, sqlWriter};
-  sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, {sqlWriter, maxCollector, flow_file_creator});
+  sql::JSONSQLWriter json_writer{output_format_ == OutputType::JSONPretty, column_filter};
+  FlowFileGenerator flow_file_creator{session, json_writer};
+  sql::SQLRowsetProcessor sql_rowset_processor(rowset, {json_writer, maxCollector, flow_file_creator});
 
-  while (size_t row_count = sqlRowsetProcessor.process(max_rows_)) {
+  while (size_t row_count = sql_rowset_processor.process(max_rows_)) {
     auto new_file = flow_file_creator.getLastFlowFile();
+    gsl_Expects(new_file);
     new_file->addAttribute(RESULT_ROW_COUNT, std::to_string(row_count));
     new_file->addAttribute(RESULT_TABLE_NAME, table_name_);
   }

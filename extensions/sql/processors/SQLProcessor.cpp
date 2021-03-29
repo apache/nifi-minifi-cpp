@@ -45,7 +45,7 @@ void SQLProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
 
   db_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(controllerService));
   if (!db_service_) {
-    throw minifi::Exception(PROCESSOR_EXCEPTION, "'DB Controller Service' must be defined");
+    throw minifi::Exception(PROCESSOR_EXCEPTION, "'" + DBControllerService.getName() + "' must be defined");
   }
 
   processOnSchedule(*context);
