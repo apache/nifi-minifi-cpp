@@ -29,15 +29,15 @@ struct AttributeValue {
   AttributeValue(const char* value)
       : value{value} {}
 
-  AttributeValue(std::string value, bool is_variable)
-      : value{std::move(value)}, is_variable{is_variable} {}
+  AttributeValue(std::string value, utils::optional<std::string>& capture)
+      : value{std::move(value)}, capture{&capture} {}
 
   std::string value;
-  bool is_variable{false};
+  utils::optional<std::string>* capture{nullptr};
 };
 
-AttributeValue var(std::string name) {
-  return {std::move(name), true};
+AttributeValue capture(utils::optional<std::string>& value) {
+  return {"", value};
 }
 
 using ContentMatcher = std::function<void(const std::shared_ptr<core::FlowFile>& actual, const std::string& expected)>;
@@ -56,16 +56,8 @@ class FlowFileMatcher {
       REQUIRE(actual_file->getAttribute(attribute_name, actual_value));
 
       const auto& expected_value = expected_attributes[idx];
-      if (expected_value.is_variable) {
-        // check if variable is set
-        auto it = variables_.find(expected_value.value);
-        if (it == variables_.end()) {
-          // not yet set, initialize it
-          variables_[expected_value.value] = actual_value;
-        } else {
-          // already set, verify if equal to the stored value
-          REQUIRE(it->second == actual_value);
-        }
+      if (expected_value.capture != nullptr) {
+        *expected_value.capture = actual_value;
       } else {
         // simple value
         REQUIRE(expected_value.value == actual_value);
@@ -79,5 +71,4 @@ class FlowFileMatcher {
  private:
   ContentMatcher content_matcher_;
   std::vector<std::string> attribute_names_;
-  std::map<std::string, std::string> variables_;
 };

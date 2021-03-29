@@ -57,7 +57,7 @@ TEST_CASE("ExecuteSQL uses statement in property", "[ExecuteSQL2]") {
 
   auto plan = controller.createSQLPlan("ExecuteSQL", {{"success", "d"}});
   auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty("SQL select query", "SELECT * FROM test_table WHERE int_col == ${int_col_value}");
+  sql_proc->setProperty("SQL select query", "SELECT * FROM test_table WHERE int_col = ${int_col_value}");
 
   controller.insertValues({{11, "one"}, {22, "two"}});
 
@@ -119,7 +119,7 @@ TEST_CASE("ExecuteSQL uses sql.args.N.value attributes", "[ExecuteSQL4]") {
   auto input_file = plan->addInput({
     {"sql.args.1.value", "11"},
     {"sql.args.2.value", "banana"}
-  }, "SELECT * FROM test_table WHERE int_col == ? AND text_col == ?");
+  }, "SELECT * FROM test_table WHERE int_col = ? AND text_col = ?");
 
   plan->run();
 
@@ -174,13 +174,13 @@ TEST_CASE("ExecuteSQL honors Max Rows Per Flow File", "[ExecuteSQL5]") {
   auto flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 3);
   matcher.verify(flow_files[0],
-    {"2", "3", "0", var("frag_id")},
+    {"2", "3", "0", capture(fragment_id)},
     R"([{"text_col": "apple"}, {"text_col": "banana"}])");
   matcher.verify(flow_files[1],
-    {"2", "3", "1", var("frag_id")},
+    {"2", "3", "1", *fragment_id},
     R"([{"text_col": "pear"}, {"text_col": "strawberry"}])");
   matcher.verify(flow_files[2],
-    {"1", "3", "2", var("frag_id")},
+    {"1", "3", "2", *fragment_id},
     R"([{"text_col": "pineapple"}])");
 }
 

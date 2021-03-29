@@ -77,8 +77,8 @@ TEST_CASE("QueryDatabaseTable requerying the table returns only new rows", "[Que
     {105, "five"}
   });
 
-  SECTION("Without schedule") {plan->run();}
-  SECTION("With schedule") {plan->run(true);}
+  SECTION("Run onTrigger only") {plan->run();}
+  SECTION("Run both onSchedule and onTrigger") {plan->run(true);}
 
   auto second_flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(second_flow_files.size() == 1);
@@ -159,11 +159,13 @@ TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attr
   auto flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 2);
 
+  utils::optional<std::string> fragment_id;
+
   matcher.verify(flow_files[0],
-    {"test_table", "3", "2", "0", var("frag_id"), "105"},
+    {"test_table", "3", "2", "0", capture(fragment_id), "105"},
     R"([{"text_col": "one"}, {"text_col": "two"}, {"text_col": "three"}])");
   matcher.verify(flow_files[1],
-    {"test_table", "2", "2", "1", var("frag_id"), "105"},
+    {"test_table", "2", "2", "1", *fragment_id, "105"},
     R"([{"text_col": "four"}, {"text_col": "five"}])");
 }
 

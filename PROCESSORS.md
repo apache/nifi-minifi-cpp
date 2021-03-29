@@ -335,8 +335,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
 |**DB Controller Service**|||Database Controller Service.|
-|**Output Format**|JSON-Pretty|JSON<br/>JSON-Pretty|Set the output format type.|
 |**Max Rows Per Flow File**|0||The maximum number of result rows that will be included in a single FlowFile. This will allow you to break up very large result sets into multiple FlowFiles. If the value specified is zero, then all rows are returned in a single FlowFile.|
+|**Output Format**|JSON-Pretty|JSON<br/>JSON-Pretty|Set the output format type.|
 |SQL select query|||The SQL select query to execute. The query can be empty, a constant value, or built from attributes using Expression Language. If this property is specified, it will be used regardless of the content of incoming flowfiles. If this property is empty, the content of the incoming flow file is expected to contain a valid SQL select query, to be issued by the processor to the database.|
 ### Relationships
 
@@ -1231,18 +1231,23 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
-|**DB Controller Service**|||Database Controller Service.|
-|**Output Format**|JSON-Pretty|JSON<br/>JSON-Pretty|Set the output format type.|
-|**Max Rows Per Flow File**|0||The maximum number of result rows that will be included in a single FlowFile. This will allow you to break up very large result sets into multiple FlowFiles. If the value specified is zero, then all rows are returned in a single FlowFile.|
-|**Table Name**|||The name of the database table to be queried.|
 |Columns to Return|||A comma-separated list of column names to be used in the query. If your database requires special treatment of the names (quoting, e.g.), each name should include such treatment. If no column names are supplied, all columns in the specified table will be returned. NOTE: It is important to use consistent column names for a given table for incremental fetch to work properly.|
+|**DB Controller Service**|||Database Controller Service.|
+|**Max Rows Per Flow File**|0||The maximum number of result rows that will be included in a single FlowFile. This will allow you to break up very large result sets into multiple FlowFiles. If the value specified is zero, then all rows are returned in a single FlowFile.|
 |Maximum-value Columns|||A comma-separated list of column names. The processor will keep track of the maximum value for each column that has been returned since the processor started running. Using multiple columns implies an order to the column list, and each column's values are expected to increase more slowly than the previous columns' values. Thus, using multiple columns implies a hierarchical structure of columns, which is usually used for partitioning tables.|
+|**Output Format**|JSON-Pretty|JSON<br/>JSON-Pretty|Set the output format type.|
+|**Table Name**|||The name of the database table to be queried.|
 |Where Clause|||A custom clause to be added in the WHERE condition when building SQL queries.|
 ### Relationships
 
 | Name | Description |
 | - | - |
 |success|Successfully created FlowFile from SQL query result set.|
+### Dynamic Properties:
+
+| Name | Value | Description |
+| - | - | - |
+|initial.maxvalue.<max_value_column>|Initial maximum value for the specified column|Specifies an initial max value for max value column(s). Properties should be added in the format `initial.maxvalue.<max_value_column>`. This value is only used the first time the table is accessed (when a Maximum Value Column is specified).<br/>**Supports Expression Language: true**|
 
 
 ## RetryFlowFile

@@ -69,14 +69,6 @@ class SQLTestPlan {
     plan_->runProcessor(0);  // run the one and only sql processor
   }
 
-  std::map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> getAllOutputs() {
-    std::map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> flow_file_map;
-    for (const auto& output : outputs_) {
-      flow_file_map[output.first] = getOutputs(output.first);
-    }
-    return flow_file_map;
-  }
-
   std::vector<std::shared_ptr<core::FlowFile>> getOutputs(const core::Relationship& relationship) {
     auto conn = outputs_[relationship];
     REQUIRE(conn);

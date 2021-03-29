@@ -27,14 +27,14 @@
 #include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
 
-TEST_CASE("Test Creation of PutSQL", "[PutSQLCreate]") {  // NOLINT
+TEST_CASE("Test Creation of PutSQL", "[PutSQLCreate]") {
   TestController testController;
   std::shared_ptr<core::Processor>
       processor = std::make_shared<org::apache::nifi::minifi::processors::PutSQL>("processorname");
   REQUIRE(processor->getName() == "processorname");
 }
 
-TEST_CASE("Test Put", "[PutSQLPut]") {  // NOLINT
+TEST_CASE("Test Put", "[PutSQLPut]") {
   SQLTestController testController;
 
   auto plan = testController.createSQLPlan("PutSQL", {{"success", "d"}});
@@ -58,7 +58,7 @@ TEST_CASE("Test Put", "[PutSQLPut]") {  // NOLINT
   REQUIRE(rows[0].text_col == "asdf");
 }
 
-TEST_CASE("Test Put Content", "[PutSQLPutContent]") {  // NOLINT
+TEST_CASE("Test Put Content", "[PutSQLPutContent]") {
   SQLTestController testController;
 
   auto plan = testController.createSQLPlan("PutSQL", {{"success", "d"}});
