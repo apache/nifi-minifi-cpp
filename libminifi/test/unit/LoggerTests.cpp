@@ -179,7 +179,7 @@ TEST_CASE("Test Compression cache overflow is discarded intermittently", "[ttl8]
   REQUIRE(cache_shrunk);
 }
 
-TEST_CASE("Setting either properties to 0 disables the compression", "[ttl9]") {
+TEST_CASE("Setting either properties to 0 disables in-memory compressed logs", "[ttl9]") {
   auto& log_config = logging::LoggerConfiguration::getConfiguration();
   auto properties = std::make_shared<logging::LoggerProperties>();
   bool is_nullptr = false;
