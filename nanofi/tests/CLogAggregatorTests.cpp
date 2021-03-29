@@ -33,19 +33,14 @@
 
 void test_lists_equal(const token_list * tknlist, const std::vector<std::string>& sv) {
     REQUIRE(tknlist != NULL);
-    if (sv.empty()) {
-        REQUIRE(tknlist->head == NULL);
-        REQUIRE(tknlist->size == 0);
-        return;
-    }
     REQUIRE(tknlist->size == sv.size());
     token_node *node = tknlist->head;
     for (const auto& s : sv) {
-        if (node) {
-            REQUIRE(strcmp(s.c_str(), node->data) == 0);
-            node = node->next;
-        }
+        REQUIRE(node);
+        REQUIRE(strcmp(s.c_str(), node->data) == 0);
+        node = node->next;
     }
+    REQUIRE(node == nullptr);
 }
 
 std::string join_strings(const std::vector<std::string>& strings, const std::string& token) {
