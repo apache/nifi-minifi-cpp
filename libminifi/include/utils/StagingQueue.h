@@ -37,6 +37,12 @@ struct default_allocator {
 };
 }  // namespace internal
 
+/**
+ * Purpose: A FIFO container that allows chunked processing while trying to enforce
+ * soft limits like max chunk size and max total size. The "head" chunk might be
+ * modified in a thread-safe manner (usually appending to it) before committing it
+ * thus making it available for dequeuing.
+ */
 template<typename ActiveItem, typename Allocator = internal::default_allocator<ActiveItem>>
 class StagingQueue {
   using Item = typename std::decay<decltype(std::declval<ActiveItem&>().commit())>::type;
@@ -103,7 +109,11 @@ class StagingQueue {
     size_t original_size = active_item_.size();
     bool should_commit = FunctorCallHelper<Functor, ActiveItem&>::call(std::forward<Functor>(fn), active_item_);
     size_t new_size = active_item_.size();
-    total_size_ += new_size - original_size;
+    if (new_size >= original_size) {
+      total_size_ += new_size - original_size;
+    } else {
+      total_size_ -= original_size - new_size;
+    }
     if (should_commit || new_size > max_item_size_) {
       commit(lock);
     }
@@ -144,7 +154,7 @@ class StagingQueue {
   }
 
  private:
-  void commit(std::unique_lock<std::mutex>& lock) {
+  void commit(std::unique_lock<std::mutex>& /*lock*/) {
     queue_.enqueue(active_item_.commit());
     active_item_ = allocateActiveItem(allocator_, max_item_size_);
   }

@@ -143,7 +143,7 @@ std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name) 
   return getLogger(name, lock);
 }
 
-std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name, const std::lock_guard<std::mutex>& lock) {
+std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name, const std::lock_guard<std::mutex>& /*lock*/) {
   std::string adjusted_name = name;
   const std::string clazz = "class ";
   auto haz_clazz = name.find(clazz);

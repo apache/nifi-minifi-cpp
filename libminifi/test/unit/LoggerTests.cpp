@@ -178,3 +178,27 @@ TEST_CASE("Test Compression cache overflow is discarded intermittently", "[ttl8]
   });
   REQUIRE(cache_shrunk);
 }
+
+TEST_CASE("Setting either properties to 0 disables the compression", "[ttl9]") {
+  auto& log_config = logging::LoggerConfiguration::getConfiguration();
+  auto properties = std::make_shared<logging::LoggerProperties>();
+  bool is_nullptr = false;
+  SECTION("Cached log size is set to 0") {
+    is_nullptr = true;
+    properties->set(logging::internal::CompressionManager::compression_cached_log_max_size_, "0");
+  }
+  SECTION("Compressed log size is set to 0") {
+    is_nullptr = true;
+    properties->set(logging::internal::CompressionManager::compression_compressed_log_max_size_, "0");
+  }
+  SECTION("Sanity check") {
+    is_nullptr = false;
+    // pass
+  }
+  // by default the root logger is OFF
+  properties->set("logger.root", "INFO");
+  log_config.initialize(properties);
+  auto logger = log_config.getLogger("DisableCompressionTestLogger");
+  logger->log_error("Hi there");
+  REQUIRE((logging::LoggerConfiguration::getCompressedLog(true) == nullptr) == is_nullptr);
+}

@@ -145,9 +145,9 @@ ZlibDecompressStream::~ZlibDecompressStream() {
   if (state_ != ZlibStreamState::UNINITIALIZED) {
     int result = inflateEnd(&strm_);
     if (result == Z_STREAM_ERROR) {
-      logger_->log_debug("Stream state was inconsistent");
+      logger_->log_error("Stream state was inconsistent");
     } else if (result != Z_OK) {
-      logger_->log_debug("Unknown error while finishing decompression %d", result);
+      logger_->log_error("Unknown error while finishing decompression %d", result);
     }
   }
 }
