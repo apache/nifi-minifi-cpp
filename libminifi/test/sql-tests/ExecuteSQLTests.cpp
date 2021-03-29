@@ -176,6 +176,7 @@ TEST_CASE("ExecuteSQL honors Max Rows Per Flow File", "[ExecuteSQL5]") {
   matcher.verify(flow_files[0],
     {"2", "3", "0", capture(fragment_id)},
     R"([{"text_col": "apple"}, {"text_col": "banana"}])");
+  REQUIRE(fragment_id);
   matcher.verify(flow_files[1],
     {"2", "3", "1", *fragment_id},
     R"([{"text_col": "pear"}, {"text_col": "strawberry"}])");
