@@ -434,7 +434,7 @@ class AgentStatus : public StateMonitorNode {
     serialized.push_back(serializeUptime());
 
     auto serializedComponents = serializeComponents();
-    if (serializedComponents.empty()) {
+    if (!serializedComponents.empty()) {
       serialized.push_back(serializedComponents);
     }
 

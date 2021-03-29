@@ -574,7 +574,7 @@ struct SerializedResponseNode {
 
   SerializedResponseNode &operator=(const SerializedResponseNode &other) = default;
 
-  bool empty() {
+  bool empty() const {
     return value.empty() && children.empty();
   }
 };
