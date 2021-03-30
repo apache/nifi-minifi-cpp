@@ -22,6 +22,7 @@
 #include <string>
 #include <typeindex>
 #include <map>
+#include <memory>
 
 #include "state/Value.h"
 #include "utils/StringUtils.h"

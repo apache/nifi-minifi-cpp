@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#include <memory>
+
 #include "core/Property.h"
 #include "core/TypedValues.h"
 #include "core/logging/LoggerConfiguration.h"
