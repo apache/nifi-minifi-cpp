@@ -18,6 +18,8 @@
 
 #include "core/Property.h"
 #include "core/TypedValues.h"
+#include "core/logging/LoggerConfiguration.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -26,6 +28,11 @@ namespace core {
 
 const  std::type_index DataSizeValue::type_id = typeid(uint64_t);
 const  std::type_index TimePeriodValue::type_id = typeid(uint64_t);
+
+std::shared_ptr<logging::Logger>& DataSizeValue::getLogger() {
+  static std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<DataSizeValue>::getLogger();
+  return logger;
+}
 
 } /* namespace core */
 } /* namespace minifi */

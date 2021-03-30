@@ -116,6 +116,8 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
  * format <numeric> <byte size>.
  */
 class DataSizeValue : public TransformableValue, public state::response::UInt64Value {
+  static std::shared_ptr<logging::Logger>& getLogger();
+
  public:
   static const std::type_index type_id;
 
@@ -155,9 +157,12 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
       std::transform(unit_str.begin(), unit_str.end(), unit_str.begin(), ::toupper);
       auto multiplierIt = unit_map.find(unit_str);
       if (multiplierIt == unit_map.end()) {
-        return false;
+        getLogger()->log_warn("Unrecognized data unit: '%s', in the future this will constitute as an error", unit_str);
+        // backwards compatibility
+        // return false;
+      } else {
+        value *= multiplierIt->second;
       }
-      value *= multiplierIt->second;
     }
 
     output = gsl::narrow<T>(value);
