@@ -49,11 +49,11 @@ install_bison() {
     if [ "$BISON_INSTALLED" = "false" ]; then
         wget https://ftp.gnu.org/gnu/bison/bison-3.0.5.tar.xz
         tar xvf bison-3.0.5.tar.xz
-        pushd bison-3.0.5 || return
+        pushd bison-3.0.5 || exit 1
         ./configure
         make
         sudo make install
-        popd || return
+        popd || exit 2
     fi
 
 }

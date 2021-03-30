@@ -533,4 +533,4 @@ if [ "$PACKAGE" = "true" ]; then
 fi
 
 
-popd || exit 1
+popd || exit 2

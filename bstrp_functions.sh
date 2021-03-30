@@ -83,13 +83,10 @@ print_multi_option_status(){
 
   for option in "${!VAR_OPTS}" ; do
     if [ "${option}" = "$feature_status" ]; then
-      # shellcheck disable=SC2059
-    	printf "${RED}"
+      printf "%b%s%b " "${RED}" "${option}" "${NO_COLOR}"
+    else
+      printf "%s " "${option}"
     fi
-    # shellcheck disable=SC2059
-    printf "${option}"
-    # shellcheck disable=SC2059
-    printf "${NO_COLOR} "
   done
 }
 

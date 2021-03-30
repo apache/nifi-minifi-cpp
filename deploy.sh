@@ -25,4 +25,4 @@ echo "${build_identifier}" > build_identifier
 
 pushd build || exit 1
 ./controller/minificontroller --manifest >> build_output
-popd || exit 1
+popd || exit 2

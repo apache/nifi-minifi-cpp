@@ -55,11 +55,11 @@ install_bison() {
         if [ "$BISON_INSTALLED" = "false" ]; then
             wget https://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.xz
             tar xvf bison-3.0.4.tar.xz
-            pushd bison-3.0.4 || return
+            pushd bison-3.0.4 || exit 1
             ./configure
             make
             make install
-            popd || return
+            popd || exit 2
         fi
 
     else
@@ -72,13 +72,13 @@ install_libusb() {
         sudo yum -y install libtool libudev-devel patch
         #	git clone --branch v1.0.18 https://github.com/libusb/libusb.git
         git clone https://github.com/libusb/libusb.git
-        pushd libusb || return
+        pushd libusb || exit 3
         git checkout v1.0.18
         ./bootstrap.sh
         ./configure
         make
         sudo make install
-        popd || return
+        popd || exit 4
         rm -rf libusb
     else
         INSTALLED+=("libusb-devel")

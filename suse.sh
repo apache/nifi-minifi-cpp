@@ -53,11 +53,11 @@ install_bison() {
     ${INSTALL_BASE}
     wget https://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.xz
     tar xvf bison-3.0.4.tar.xz
-    pushd bison-3.0.4 || return
+    pushd bison-3.0.4 || exit 1
     ./configure
     make
     sudo make install
-    popd || return
+    popd || exit 2
   fi
 }
 
