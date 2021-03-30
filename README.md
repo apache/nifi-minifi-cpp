@@ -590,6 +590,10 @@ We welcome all contributions to Apache MiNiFi. To make development easier, we've
 the linter for the Google Style guide. Google provides an Eclipse formatter for their style
 guide. It is located [here](https://github.com/google/styleguide/blob/gh-pages/eclipse-cpp-google-style.xml).
 New contributions are expected to follow the Google style guide when it is reasonable.
+
+Shell script files shall follow the guidelines and best practices defined by the [shellcheck](https://github.com/koalaman/shellcheck) analysis tool.
+New contributions are expected to pass the shellcheck analysis as part of the verification process.
+
 Additionally, all new files must include a copy of the Apache License Header.
 
 For more details on how to contribute please see our [Contribution Guide](CONTRIB.md)
