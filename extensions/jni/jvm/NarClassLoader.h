@@ -220,7 +220,7 @@ class NarClassLoader {
 
     size_t size = getSize(list_class, env, obj);
 
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
 
       JniBundle bundle = getBundle(list_class, env, obj, i);
       for (const auto &cd : bundle.getDescriptions()) {
@@ -289,7 +289,7 @@ class NarClassLoader {
 
     size_t size = getSize(list_class, env, components);
 
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
       descriptions.push_back(getClassDescription(list_class, env, jni_component_clazz, components, i));
     }
 
@@ -320,7 +320,7 @@ class NarClassLoader {
           size_t size = getSize(list_class, env, descriptors);
 
           // iterate through each property descriptor
-          for (int i = 0; i < size; i++) {
+          for (size_t i = 0; i < size; i++) {
             auto propertyDescriptorObj = env->CallObjectMethod(descriptors, mthd, i);
             minifi::jni::ThrowIf(env);
             if (propertyDescriptorObj != nullptr) {
@@ -350,7 +350,7 @@ class NarClassLoader {
         size_t size = getSize(list_class, env, relationships);
 
         // iterate through each property descriptor
-        for (int i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; i++) {
           auto propertyDescriptorObj = env->CallObjectMethod(relationships, mthd, i);
           minifi::jni::ThrowIf(env);
           if (propertyDescriptorObj != nullptr) {

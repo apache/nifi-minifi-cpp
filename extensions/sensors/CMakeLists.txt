@@ -19,17 +19,15 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-include_directories(SYSTEM ../../thirdparty/RTIMULib/RTIMULib)
 file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-sensors STATIC ${SOURCES})
-
 set_property(TARGET minifi-sensors PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(minifi-sensors ${LIBMINIFI} Threads::Threads)
 
-add_dependencies(minifi-sensors RTIMULib)
-target_link_libraries(minifi-sensors RTIMULib)
+add_dependencies(minifi-sensors RTIMULib::RTIMULib)
+target_link_libraries(minifi-sensors RTIMULib::RTIMULib)
 
 SET (SENSOR-EXTENSIONS minifi-sensors PARENT_SCOPE)
 

@@ -62,8 +62,8 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
    */
   explicit ExecuteJavaControllerService(std::string name, utils::Identifier uuid = utils::Identifier())
       : ConfigurationContext(name, uuid),
-        clazzInstance(nullptr),
         contextInstance(nullptr),
+        clazzInstance(nullptr),
         logger_(logging::LoggerFactory<ExecuteJavaControllerService>::getLogger()) {
   }
   // Destructor

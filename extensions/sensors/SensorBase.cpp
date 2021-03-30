@@ -50,7 +50,7 @@ core::Relationship SensorBase::Success("success", "All files are routed to succe
 void SensorBase::initialize() {
 }
 
-void SensorBase::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void SensorBase::onSchedule(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   imu = std::unique_ptr<RTIMU>(RTIMU::createIMU(&settings));
   if (imu) {
     imu->IMUInit();
@@ -64,7 +64,7 @@ void SensorBase::onSchedule(const std::shared_ptr<core::ProcessContext> &context
 
 SensorBase::~SensorBase() = default;
 
-void SensorBase::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void SensorBase::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& /*session*/) {
 }
 
 } /* namespace processors */

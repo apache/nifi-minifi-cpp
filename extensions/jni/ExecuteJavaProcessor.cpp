@@ -71,7 +71,7 @@ void ExecuteJavaProcessor::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string controller_service_name;
   if (getProperty(JVMControllerService.getName(), controller_service_name)) {
     auto cs = context->getControllerService(controller_service_name);
@@ -170,14 +170,14 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
 
 ExecuteJavaProcessor::~ExecuteJavaProcessor() = default;
 
-JNINativeMethod ExecuteJavaProcessor::registerNativeMethod(const std::string &name, const std::string &params, const void *ptr) {
+JNINativeMethod ExecuteJavaProcessor::registerNativeMethod(const std::string& /*name*/, const std::string& /*params*/, const void* /*ptr*/) {
   JNINativeMethod mthd;
 
   return mthd;
 }
 
 void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-
+  (void)context;  // unused in release builds
   assert(context == jpc.context_);
   auto env = java_servicer_->attach();
 
@@ -227,7 +227,7 @@ void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>
   }
 }
 
-void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& /*session*/) {
   // do nothing.
 }
 

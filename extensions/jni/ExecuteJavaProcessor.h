@@ -59,8 +59,8 @@ class ExecuteJavaProcessor : public core::Processor {
    */
   explicit ExecuteJavaProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
-        context_instance_(nullptr),
         logger_instance_(nullptr),
+        context_instance_(nullptr),
         logger_(logging::LoggerFactory<ExecuteJavaProcessor>::getLogger()),
         nifi_logger_(nullptr) {
   }

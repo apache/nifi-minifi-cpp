@@ -117,8 +117,8 @@ class JniByteOutStream : public minifi::OutputStreamCallback {
 class JniByteInputStream : public minifi::InputStreamCallback {
  public:
   JniByteInputStream(uint64_t size)
-      : read_size_(0),
-        stream_(nullptr) {
+      : stream_(nullptr),
+        read_size_(0) {
     buffer_size_ = size;
     buffer_ = new uint8_t[buffer_size_];
   }
@@ -132,17 +132,17 @@ class JniByteInputStream : public minifi::InputStreamCallback {
   }
 
   int64_t read(JNIEnv *env, jbyteArray arr, int offset, int size) {
+    gsl_Expects(size >= 0);
     if (stream_ == nullptr) {
       return -1;
     }
 
     // seek to offset
-    int remaining = size;
+    uint64_t remaining = gsl::narrow<uint64_t>(size);
     int writtenOffset = 0;
     int read = 0;
     do {
-
-      int actual = (int) stream_->read(buffer_, remaining <= buffer_size_ ? remaining : buffer_size_);
+      int actual = stream_->read(buffer_, std::min(remaining, buffer_size_));
       if (actual <= 0) {
         if (read == 0) {
           stream_ = nullptr;
@@ -153,7 +153,7 @@ class JniByteInputStream : public minifi::InputStreamCallback {
 
       read += actual;
       env->SetByteArrayRegion(arr, offset + writtenOffset, actual, (jbyte*) buffer_);
-      writtenOffset += (int) actual;
+      writtenOffset += actual;
 
       remaining -= actual;
 
@@ -176,8 +176,8 @@ class JniInputStream : public core::WeakReference {
  public:
   JniInputStream(std::unique_ptr<JniByteInputStream> jbi, jobject in_instance, const std::shared_ptr<JavaServicer> &servicer)
       : removed_(false),
-        jbi_(std::move(jbi)),
         in_instance_(in_instance),
+        jbi_(std::move(jbi)),
         servicer_(servicer) {
 
   }
@@ -218,9 +218,9 @@ class JniSession : public core::WeakReference {
  public:
   JniSession(const std::shared_ptr<core::ProcessSession> &session, jobject session_instance, const std::shared_ptr<JavaServicer> &servicer)
       : removed_(false),
+        session_instance_(session_instance),
         session_(session),
-        servicer_(servicer),
-        session_instance_(session_instance) {
+        servicer_(servicer) {
   }
 
   virtual void remove() override {
@@ -306,8 +306,8 @@ class JniSessionFactory : public core::WeakReference {
 
   JniSessionFactory(const std::shared_ptr<core::ProcessSessionFactory> &factory, const std::shared_ptr<JavaServicer> &servicer, jobject java_object)
       : servicer_(servicer),
-        java_object_(java_object),
-        factory_(factory) {
+        factory_(factory),
+        java_object_(java_object) {
   }
 
   virtual void remove() override {

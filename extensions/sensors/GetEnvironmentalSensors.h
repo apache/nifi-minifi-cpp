@@ -56,18 +56,18 @@ class GetEnvironmentalSensors : public SensorBase {
         logger_(logging::LoggerFactory<GetEnvironmentalSensors>::getLogger()) {
   }
   // Destructor
-  virtual ~GetEnvironmentalSensors();
+  ~GetEnvironmentalSensors() override;
   // Processor Name
   static const char *ProcessorName;
   static core::Relationship Success;
   // Supported Properties
 
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  virtual void initialize() override;
-  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void initialize() override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  protected:
-  virtual void notifyStop();
+  void notifyStop() override;
  private:
   RTHumidity *humidity_sensor_;
   RTPressure *pressure_sensor_;
