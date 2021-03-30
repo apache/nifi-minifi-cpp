@@ -27,4 +27,4 @@ def onTrigger(context, session):
     flow_file = session.get()
     if flow_file is not None:
         flow_file.addAttribute("Python attribute", "attributevalue")
-        session.transfer(flow_file, REL_SUCCESS)  # noqa F821
+        session.transfer(flow_file, REL_SUCCESS)

@@ -44,4 +44,4 @@ def onTrigger(context, session):
         flow_file.addAttribute("positive", str(vs['pos']))
         flow_file.addAttribute("negative", str(vs['neg']))
         flow_file.addAttribute("neutral", str(vs['neu']))
-        session.transfer(flow_file, REL_SUCCESS)  # noqa: F821
+        session.transfer(flow_file, REL_SUCCESS)

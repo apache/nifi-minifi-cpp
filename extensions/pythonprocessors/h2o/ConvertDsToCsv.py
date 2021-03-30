@@ -88,4 +88,4 @@ def onTrigger(context, session):
         # write csv str to flow file
         write_cb = ContentWrite(csv_data)
         session.write(flow_file, write_cb)
-        session.transfer(flow_file, REL_SUCCESS)  # noqa F821
+        session.transfer(flow_file, REL_SUCCESS)

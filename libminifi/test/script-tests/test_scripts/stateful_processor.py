@@ -35,12 +35,12 @@ class WriteCallback(object):
 
 def onTrigger(context, session):
     global state
-    log.info('Vrrm, vrrrm, processor is running, vrrrm!!')  # noqa: F821
+    log.info('Vrrm, vrrrm, processor is running, vrrrm!!')
     # flow_file = session.get()
     flow_file = session.create()
     flow_file.setAttribute("filename", str(state))
-    log.info('created flow file: %s' % flow_file.getAttribute('filename'))  # noqa: F821
+    log.info('created flow file: %s' % flow_file.getAttribute('filename'))
 
     if flow_file is not None:
         session.write(flow_file, WriteCallback())
-        session.transfer(flow_file, REL_SUCCESS)  # noqa: F821
+        session.transfer(flow_file, REL_SUCCESS)

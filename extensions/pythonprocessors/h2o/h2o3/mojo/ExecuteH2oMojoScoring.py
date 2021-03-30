@@ -167,5 +167,5 @@ def onTrigger(context, session):
         for i in range(len(pred_header)):
             ff_attr_name = pred_header[i] + "_pred_0"
             flow_file.addAttribute(ff_attr_name, str(preds_pd_df.at[0, pred_header[i]]))
-            log.info("getAttribute({}): {}".format(ff_attr_name, flow_file.getAttribute(ff_attr_name)))  # noqa: F821
-        session.transfer(flow_file, REL_SUCCESS)  # noqa: F821
+            log.info("getAttribute({}): {}".format(ff_attr_name, flow_file.getAttribute(ff_attr_name)))
+        session.transfer(flow_file, REL_SUCCESS)

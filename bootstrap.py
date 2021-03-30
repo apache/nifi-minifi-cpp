@@ -30,7 +30,7 @@ from ftplib import FTP
 
 if sys.version_info[0] < 3:
     from urllib2 import urlopen
-    input = raw_input  # noqa: F821
+    input = raw_input
 else:
     from urllib.request import urlopen
 

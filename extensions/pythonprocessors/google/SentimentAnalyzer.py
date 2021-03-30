@@ -61,4 +61,4 @@ def onTrigger(context, session):
 
         flow_file.addAttribute("score", str(score))
         flow_file.addAttribute("magnitude", str(magnitude))
-        session.transfer(flow_file, REL_SUCCESS)  # noqa: F821
+        session.transfer(flow_file, REL_SUCCESS)
