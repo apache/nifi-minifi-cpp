@@ -37,7 +37,6 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "processors/InvokeHTTP.h"
-#include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 #include "utils/gsl.h"
 

@@ -467,4 +467,39 @@ TEST_CASE("TestPutFilePermissions", "[PutFilePermissions]") {
   REQUIRE(utils::file::FileUtils::get_permissions(putfiledir, perms));
   REQUIRE(perms == 0777);
 }
+
+TEST_CASE("PutFileCreateDirectoryTest", "[PutFilePermissions]") {
+  TestController testController;
+  LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
+  LogTestController::getInstance().setDebug<TestPlan>();
+  LogTestController::getInstance().setDebug<minifi::processors::PutFile>();
+  LogTestController::getInstance().setDebug<minifi::processors::PutFile::ReadCallback>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  // Define Directory
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+  char format2[] = "/tmp/ft.XXXXXX";
+  // Defining a sub directory
+  auto putfiledir = testController.createTempDirectory(format2) + utils::file::FileUtils::get_separator() + "test_dir";
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
+
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs.getName(), "true");
+
+  std::ofstream of(std::string(dir) + utils::file::FileUtils::get_separator() + "tstFile.ext");
+  of.close();
+  auto path = std::string(putfiledir) + utils::file::FileUtils::get_separator() + "tstFile.ext";
+
+  plan->runNextProcessor();
+  plan->runNextProcessor();
+
+  REQUIRE(org::apache::nifi::minifi::utils::file::exists(putfiledir));
+  REQUIRE(org::apache::nifi::minifi::utils::file::exists(path));
+}
 #endif
