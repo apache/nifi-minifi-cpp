@@ -593,6 +593,8 @@ New contributions are expected to follow the Google style guide when it is reaso
 
 Shell script files shall follow the guidelines and best practices defined by the [shellcheck](https://github.com/koalaman/shellcheck) analysis tool.
 New contributions are expected to pass the shellcheck analysis as part of the verification process.
+If a shellcheck requested change is unfeasable it shall be disabled on per-line basis and will be subjected to review.
+For more information on an issue please check the [shellcheck wiki page](https://github.com/koalaman/shellcheck/wiki).
 
 Additionally, all new files must include a copy of the Apache License Header.
 
