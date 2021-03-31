@@ -66,10 +66,9 @@ int16_t TLSContext::initialize(bool server_method) {
   }
 
   std::string clientAuthStr;
-  bool needClientCert = true;
-  if (!(configure_->get(Configure::nifi_security_need_ClientAuth, clientAuthStr) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(clientAuthStr, needClientCert))) {
-    needClientCert = true;
-  }
+  bool need_client_cert = (!configure_->get(Configure::nifi_security_need_ClientAuth, clientAuthStr) ||
+       org::apache::nifi::minifi::utils::StringUtils::toBool(clientAuthStr).value_or(true));
+
   const SSL_METHOD *method;
   method = server_method ? TLSv1_2_server_method() : TLSv1_2_client_method();
   auto local_context = std::unique_ptr<SSL_CTX, decltype(&deleteContext)>(SSL_CTX_new(method), deleteContext);
@@ -79,7 +78,7 @@ int16_t TLSContext::initialize(bool server_method) {
     return error_value;
   }
 
-  if (needClientCert) {
+  if (need_client_cert) {
     std::string certificate;
     std::string privatekey;
     std::string passphrase;

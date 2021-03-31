@@ -220,7 +220,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", DateHeader.getName(), DateHeader.getValue());
   }
 
-  date_header_include_ = utils::StringUtils::StringToBool(dateHeaderStr, date_header_include_);
+    date_header_include_ = utils::StringUtils::toBool(dateHeaderStr).value_or(DateHeader.getValue());
 
   if (!context->getProperty(PropPutOutputAttributes.getName(), put_attribute_name_)) {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", PropPutOutputAttributes.getName(), PropPutOutputAttributes.getValue());
@@ -230,19 +230,19 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", AttributesToSend.getName(), AttributesToSend.getValue());
   }
 
-  std::string always_output_response = "false";
+  std::string always_output_response;
   if (!context->getProperty(AlwaysOutputResponse.getName(), always_output_response)) {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", AlwaysOutputResponse.getName(), AlwaysOutputResponse.getValue());
   }
 
-  utils::StringUtils::StringToBool(always_output_response, always_output_response_);
+  always_output_response_ = utils::StringUtils::toBool(always_output_response).value_or(false);
 
   std::string penalize_no_retry = "false";
   if (!context->getProperty(PenalizeOnNoRetry.getName(), penalize_no_retry)) {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", PenalizeOnNoRetry.getName(), PenalizeOnNoRetry.getValue());
   }
 
-  utils::StringUtils::StringToBool(penalize_no_retry, penalize_no_retry_);
+  penalize_no_retry_ = utils::StringUtils::toBool(penalize_no_retry).value_or(false);
 
   std::string context_name;
   if (context->getProperty(SSLContext.getName(), context_name) && !IsNullOrEmpty(context_name)) {
@@ -257,12 +257,10 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", UseChunkedEncoding.getName(), UseChunkedEncoding.getValue());
   }
 
-  utils::StringUtils::StringToBool(useChunkedEncoding, use_chunked_encoding_);
+  use_chunked_encoding_ = utils::StringUtils::toBool(useChunkedEncoding).value_or(false);
 
-  std::string disablePeerVerification = "false";
-  if (context->getProperty(DisablePeerVerification.getName(), disablePeerVerification)) {
-    utils::StringUtils::StringToBool(disablePeerVerification, disable_peer_verification_);
-  }
+  std::string disablePeerVerification;
+  disable_peer_verification_ = (context->getProperty(DisablePeerVerification.getName(), disablePeerVerification) && utils::StringUtils::toBool(disablePeerVerification).value_or(false));
 
   proxy_ = {};
   context->getProperty(ProxyHost.getName(), proxy_.host);

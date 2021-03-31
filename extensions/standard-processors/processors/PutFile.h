@@ -79,6 +79,7 @@ class PutFile : public core::Processor {
 
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
+  friend class PutFileTestAccessor;
 
   class ReadCallback : public InputStreamCallback {
    public:

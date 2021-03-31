@@ -130,7 +130,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   }
 
   if (context->getProperty(StayConnected.getName(), value)) {
-    utils::StringUtils::StringToBool(value, stay_connected_);
+    stay_connected_ = utils::StringUtils::toBool(value).value_or(false);
   } else {
     stay_connected_ = true;
   }

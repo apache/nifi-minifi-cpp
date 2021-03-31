@@ -32,6 +32,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <tuple>
+#include <deque>
 
 #include "utils/ByteArrayCallback.h"
 #include "utils/TimeUtil.h"
@@ -210,12 +212,12 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   if (!context->getProperty(SearchRecursively.getName(), value)) {
     logger_->log_error("Search Recursively attribute is missing or invalid");
   } else {
-    utils::StringUtils::StringToBool(value, search_recursively_);
+    search_recursively_ = utils::StringUtils::toBool(value).value_or(false);
   }
   if (!context->getProperty(FollowSymlink.getName(), value)) {
     logger_->log_error("Follow symlink attribute is missing or invalid");
   } else {
-    utils::StringUtils::StringToBool(value, follow_symlink_);
+    follow_symlink_ = utils::StringUtils::toBool(value).value_or(false);
   }
   if (context->getProperty(FileFilterRegex.getName(), file_filter_regex_)) {
     try {
@@ -242,7 +244,7 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   if (!context->getProperty(IgnoreDottedFiles.getName(), value)) {
     logger_->log_error("Ignore Dotted Files attribute is missing or invalid");
   } else {
-    utils::StringUtils::StringToBool(value, ignore_dotted_files_);
+    ignore_dotted_files_ = utils::StringUtils::toBool(value).value_or(true);
   }
   context->getProperty(TargetSystemTimestampPrecision.getName(), target_system_timestamp_precision_);
   context->getProperty(EntityTrackingInitialListingTarget.getName(), entity_tracking_initial_listing_target_);
@@ -319,7 +321,7 @@ bool ListSFTP::filter(const std::string& parent_path, const std::tuple<std::stri
     return false;
   }
   if (!(attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS)) {
-    // TODO: maybe do a fallback stat here
+    // TODO(Bakai): maybe do a fallback stat here
     logger_->log_error("Failed to get permissions in stat for \"%s/%s\"", parent_path.c_str(), filename.c_str());
     return false;
   }
@@ -337,7 +339,7 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
   if (!(attrs.flags & LIBSSH2_SFTP_ATTR_UIDGID) ||
       !(attrs.flags & LIBSSH2_SFTP_ATTR_SIZE) ||
       !(attrs.flags & LIBSSH2_SFTP_ATTR_ACMODTIME)) {
-    // TODO: maybe do a fallback stat here
+    // TODO(Bakai): maybe do a fallback stat here
     logger_->log_error("Failed to get all attributes in stat for \"%s/%s\"", parent_path.c_str(), filename.c_str());
     return false;
   }

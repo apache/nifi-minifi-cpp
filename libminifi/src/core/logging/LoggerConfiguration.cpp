@@ -95,7 +95,7 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
    */
   std::string shorten_names_str;
   if (logger_properties->getString("spdlog.shorten_names", shorten_names_str)) {
-    utils::StringUtils::StringToBool(shorten_names_str, shorten_names_);
+    shorten_names_ = utils::StringUtils::toBool(shorten_names_str).value_or(false);
   }
 
   formatter_ = std::make_shared<spdlog::pattern_formatter>(spdlog_pattern);

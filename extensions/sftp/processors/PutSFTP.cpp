@@ -175,7 +175,7 @@ void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, c
   if (!context->getProperty(CreateDirectory.getName(), value)) {
     logger_->log_error("Create Directory attribute is missing or invalid");
   } else {
-    utils::StringUtils::StringToBool(value, create_directory_);
+    create_directory_ = utils::StringUtils::toBool(value).value_or(false);
   }
   if (!context->getProperty(BatchSize.getName(), value)) {
     logger_->log_error("Batch Size attribute is missing or invalid");
@@ -184,15 +184,15 @@ void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, c
   }
   context->getProperty(ConflictResolution.getName(), conflict_resolution_);
   if (context->getProperty(RejectZeroByte.getName(), value)) {
-    utils::StringUtils::StringToBool(value, reject_zero_byte_);
+    reject_zero_byte_ = utils::StringUtils::toBool(value).value_or(true);
   }
   if (context->getProperty(DotRename.getName(), value)) {
-    utils::StringUtils::StringToBool(value, dot_rename_);
+    dot_rename_ = utils::StringUtils::toBool(value).value_or(true);
   }
   if (!context->getProperty(UseCompression.getName(), value)) {
     logger_->log_error("Use Compression attribute is missing or invalid");
   } else {
-    utils::StringUtils::StringToBool(value, use_compression_);
+    use_compression_ = utils::StringUtils::toBool(value).value_or(false);
   }
 
   startKeepaliveThreadIfNeeded();
@@ -259,9 +259,9 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     remote_path = ".";
   }
   if (context->getDynamicProperty(DisableDirectoryListing.getName(), value)) {
-    utils::StringUtils::StringToBool(value, disable_directory_listing);
+    disable_directory_listing = utils::StringUtils::toBool(value).value_or(false);
   } else if (context->getProperty(DisableDirectoryListing.getName(), value)) {
-    utils::StringUtils::StringToBool(value, disable_directory_listing);
+    disable_directory_listing = utils::StringUtils::toBool(value).value_or(false);
   }
   context->getProperty(TempFilename, temp_file_name, flow_file);
   if (context->getProperty(LastModifiedTime, value, flow_file)) {

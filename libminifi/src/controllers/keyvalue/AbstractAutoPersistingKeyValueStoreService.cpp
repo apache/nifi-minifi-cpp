@@ -74,7 +74,7 @@ void AbstractAutoPersistingKeyValueStoreService::onEnable() {
   if (!getProperty(AlwaysPersist.getName(), value)) {
     logger_->log_error("Always Persist attribute is missing or invalid");
   } else {
-    utils::StringUtils::StringToBool(value, always_persist_);
+    always_persist_ = utils::StringUtils::toBool(value).value_or(false);
   }
   if (!getProperty(AutoPersistenceInterval.getName(), value)) {
     logger_->log_error("Auto Persistence Interval attribute is missing or invalid");

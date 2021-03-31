@@ -70,19 +70,17 @@ std::string CapturePacket::generate_new_pcap(const std::string &base_path) {
 
 void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* /*dev*/, void* data) {
   // parse the packet
-  PacketMovers* capture_mechanism = (PacketMovers*) data;
+  PacketMovers* capture_mechanism = reinterpret_cast <PacketMovers*> (data);
 
   CapturePacketMechanism *capture;
 
   if (capture_mechanism->source.try_dequeue(capture)) {
-
     // if needed - write the packet to the output pcap file
 
     if (capture->writer_ != nullptr) {
       capture->writer_->writePacket(*packet);
 
       if (capture->incrementAndCheck()) {
-
         capture->writer_->close();
 
         auto new_capture = create_new_capture(capture->getBasePath(), capture->getMaxSize());
@@ -93,7 +91,6 @@ void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevic
       } else {
         capture_mechanism->source.enqueue(capture);
       }
-
     }
   }
 }
@@ -138,7 +135,7 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
 
   value = "";
   if (context->getProperty(CaptureBluetooth.getName(), value)) {
-    utils::StringUtils::StringToBool(value, capture_bluetooth_);
+    capture_bluetooth_ = utils::StringUtils::toBool(value).value_or(false);
   }
 
   core::Property attached_controllers("Network Controllers", "List of network controllers to attach to -- each may be a regex", ".*");
@@ -226,8 +223,7 @@ void CapturePacket::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   }
 }
 
-}
-/* namespace processors */
+} /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

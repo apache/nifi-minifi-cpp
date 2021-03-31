@@ -99,7 +99,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
     }
   }
   if (context->getProperty(RedirectErrorStream.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, _redirectErrorStream);
+    _redirectErrorStream =  org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
   }
   this->_fullCommand = _command + " " + _commandArgument;
   if (_fullCommand.length() == 0) {

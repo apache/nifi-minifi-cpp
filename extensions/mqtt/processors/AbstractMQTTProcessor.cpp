@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <cinttypes>
+#include <set>
 
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
@@ -85,8 +86,9 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("AbstractMQTTProcessor: PassWord [%s]", passWord_);
   }
   value = "";
-  if (context->getProperty(CleanSession.getName(), value) && !value.empty() &&
-      org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, cleanSession_)) {
+  utils::optional<bool> cleanSession_parsed;
+  if (context->getProperty(CleanSession.getName(), value) && (cleanSession_parsed = org::apache::nifi::minifi::utils::StringUtils::toBool(value))) {
+    cleanSession_ = cleanSession_parsed.value();
     logger_->log_debug("AbstractMQTTProcessor: CleanSession [%d]", cleanSession_);
   }
   value = "";
@@ -146,7 +148,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     MQTTClient_create(&client_, uri_.c_str(), clientID_.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
   }
   if (client_) {
-    MQTTClient_setCallbacks(client_, (void *) this, connectionLost, msgReceived, msgDelivered);
+    MQTTClient_setCallbacks(client_, reinterpret_cast<void *> (this), connectionLost, msgReceived, msgDelivered);
     // call reconnect to bootstrap
     this->reconnect();
   }
@@ -174,7 +176,7 @@ bool AbstractMQTTProcessor::reconnect() {
   }
   if (isSubscriber_) {
     ret = MQTTClient_subscribe(client_, topic_.c_str(), qos_);
-    if(ret != MQTTCLIENT_SUCCESS) {
+    if (ret != MQTTCLIENT_SUCCESS) {
       logger_->log_error("Failed to subscribe to MQTT topic %s (%d)", topic_, ret);
       return false;
     }

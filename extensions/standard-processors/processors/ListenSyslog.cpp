@@ -269,7 +269,7 @@ void ListenSyslog::onTrigger(core::ProcessContext *context, core::ProcessSession
     _messageDelimiter = value;
   }
   if (context->getProperty(ParseMessages.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, _parseMessages);
+    _parseMessages = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
   }
   if (context->getProperty(Port.getName(), value)) {
     int64_t oldPort = _port;

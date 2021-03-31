@@ -95,7 +95,7 @@ void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
 
   std::string value;
   context->getProperty(CreateDirs.getName(), value);
-  utils::StringUtils::StringToBool(value, try_mkdirs_);
+  try_mkdirs_ = utils::StringUtils::toBool(value).value_or(true);
 
   if (context->getProperty(MaxDestFiles.getName(), value)) {
     core::Property::StringToInt(value, max_dest_files_);

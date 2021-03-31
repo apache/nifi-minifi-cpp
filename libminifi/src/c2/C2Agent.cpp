@@ -186,7 +186,8 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
 
   std::string update_settings;
-  if (configure->get("nifi.c2.agent.update.allow", "c2.agent.update.allow", update_settings) && utils::StringUtils::StringToBool(update_settings, allow_updates_)) {
+  if (configure->get("nifi.c2.agent.update.allow", "c2.agent.update.allow", update_settings)) {
+     allow_updates_ = utils::StringUtils::toBool(update_settings).value_or(true);
     // allow the agent to be updated. we then need to get an update command to execute after
   }
 
