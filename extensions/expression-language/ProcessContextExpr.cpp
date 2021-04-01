@@ -30,7 +30,9 @@ bool ProcessContextExpr::getProperty(const Property &property, std::string &valu
   auto name = property.getName();
   if (expressions_.find(name) == expressions_.end()) {
     std::string expression_str;
-    ProcessContext::getProperty(name, expression_str);
+    if (!ProcessContext::getProperty(name, expression_str)) {
+      return false;
+    }
     logger_->log_debug("Compiling expression for %s/%s: %s", getProcessorNode()->getName(), name, expression_str);
     expressions_.emplace(name, expression::compile(expression_str));
   }

@@ -50,6 +50,7 @@
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "core/state/nodes/FlowInformation.h"
 #include "utils/ClassUtils.h"
+#include "Path.h"
 
 class LogTestController {
  public:
@@ -251,6 +252,8 @@ class TestPlan {
   void increment_location() { ++location; }
   void reset_location() { location = -1; }
 
+  using PreTriggerVerifier = std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)>;
+
   std::vector<std::shared_ptr<core::Processor>>::iterator getProcessorItByUuid(const std::string& uuid);
   std::shared_ptr<core::ProcessContext> getProcessContextForProcessor(const std::shared_ptr<core::Processor>& processor);
 
@@ -260,10 +263,10 @@ class TestPlan {
 
   // Note: all this verify logic is only used in TensorFlow tests as a replacement for UpdateAttribute
   // It should probably not be the part of the standard way of running processors
-  bool runProcessor(const std::shared_ptr<core::Processor>& processor, std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
-  bool runProcessor(int target_location, std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
-  bool runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
-  bool runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
+  bool runProcessor(const std::shared_ptr<core::Processor>& processor, const PreTriggerVerifier& verify = nullptr);
+  bool runProcessor(size_t target_location, const PreTriggerVerifier& verify = nullptr);
+  bool runNextProcessor(const PreTriggerVerifier& verify = nullptr);
+  bool runCurrentProcessor(const PreTriggerVerifier& verify = nullptr);
   bool runCurrentProcessorUntilFlowfileIsProduced(const std::chrono::seconds& wait_duration);
 
   std::set<std::shared_ptr<provenance::ProvenanceEventRecord>> getProvenanceRecords();
@@ -277,6 +280,10 @@ class TestPlan {
 
   std::shared_ptr<core::Repository> getFlowRepo() {
     return flow_repo_;
+  }
+
+  std::shared_ptr<core::ContentRepository> getContentRepo() {
+    return content_repo_;
   }
 
   std::shared_ptr<core::Repository> getProvenanceRepo() {
@@ -293,6 +300,14 @@ class TestPlan {
 
   std::shared_ptr<core::CoreComponentStateManagerProvider> getStateManagerProvider() {
     return state_manager_provider_;
+  }
+
+  std::string getContent(const std::shared_ptr<core::FlowFile>& file) {
+    auto content_claim = file->getResourceClaim();
+    auto content_stream = content_repo_->read(*content_claim.get());
+    auto output_stream = std::make_shared<minifi::io::BufferStream>();
+    minifi::InputStreamPipe{output_stream}.process(content_stream);
+    return {reinterpret_cast<const char*>(output_stream->getBuffer()), output_stream->size()};
   }
 
   void finalize();

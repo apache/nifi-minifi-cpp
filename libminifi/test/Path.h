@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,32 +17,50 @@
 
 #pragma once
 
-#include <string>
-
-#include "FlowFileRecord.h"
+#include "utils/file/FileUtils.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace utils {
 
-class WriteCallback : public OutputStreamCallback {
-public:
-  explicit WriteCallback(const std::string& data)
-    : data_(data) {
+class Path {
+ public:
+  Path() = default;
+
+  Path(std::string value): value_(std::move(value)) {}
+
+  Path& operator=(const std::string& new_value) {
+    value_ = new_value;
+    return *this;
   }
 
- int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-    if (data_.empty())
-      return 0;
-
-    return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(data_.c_str())), data_.size());
+  template<typename T>
+  Path& operator/=(T&& suffix) {
+    value_ = file::concat_path(value_, std::string{std::forward<T>(suffix)});
+    return *this;
   }
 
- const std::string& data_;
+  template<typename T>
+  Path operator/(T&& suffix) {
+    return Path{file::concat_path(value_, std::string{std::forward<T>(suffix)})};
+  }
+
+  std::string str() const {
+    return value_;
+  }
+
+  explicit operator std::string() const {
+    return value_;
+  }
+
+ private:
+  std::string value_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

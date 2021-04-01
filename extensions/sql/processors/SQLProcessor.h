@@ -21,10 +21,11 @@
 #pragma once
 
 #include "core/Core.h"
-#include "FlowFileRecord.h"
-#include "concurrentqueue.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "utils/Enum.h"
+
+#include "services/DatabaseService.h"
 
 namespace org {
 namespace apache {
@@ -32,74 +33,38 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-template <typename T>
 class SQLProcessor: public core::Processor {
+ public:
+  static const core::Property DBControllerService;
+
  protected:
-  SQLProcessor(const std::string& name, utils::Identifier uuid)
-    : core::Processor(name, uuid), logger_(logging::LoggerFactory<T>::getLogger()) {
+  SQLProcessor(const std::string& name, utils::Identifier uuid, std::shared_ptr<logging::Logger> logger)
+    : core::Processor(name, uuid), logger_(std::move(logger)) {
   }
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) override {
-    std::string controllerService;
-    context->getProperty(dbControllerService().getName(), controllerService);
+  static std::vector<std::string> collectArguments(const std::shared_ptr<core::FlowFile>& flow_file);
 
-    dbService_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(controllerService));
-    if (!dbService_)
-      throw minifi::Exception(PROCESSOR_EXCEPTION, "'DB Controller Service' must be defined");
+  virtual void processOnSchedule(core::ProcessContext& context) = 0;
+  virtual void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) = 0;
 
-    static_cast<T*>(this)->processOnSchedule(*context);
-  }
+  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override {
-    std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
-    if (!lock.owns_lock()) {
-      logger_->log_warn("'onTrigger' is called before previous 'onTrigger' call is finished.");
-      context->yield();
-      return;
-    }
-
-    try {
-      if (!connection_) {
-        connection_ = dbService_->getConnection();
-      }
-      static_cast<T*>(this)->processOnTrigger(*session);
-    } catch (std::exception& e) {
-      logger_->log_error("SQLProcessor: '%s'", e.what());
-      if (connection_) {
-        std::string exp;
-        if (!connection_->connected(exp)) {
-          logger_->log_error("SQLProcessor: Connection exception: %s", exp.c_str());
-          connection_.reset();
-        }
-      }
-      context->yield();
-    }
-  }
+  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
 
   void notifyStop() override {
     connection_.reset();
   }
 
  protected:
-   static const core::Property& dbControllerService() {
-     static const core::Property s_dbControllerService =
-       core::PropertyBuilder::createProperty("DB Controller Service")->
-       isRequired(true)->
-       withDescription("Database Controller Service.")->
-       supportsExpressionLanguage(true)->
-       build();
-     return s_dbControllerService;
-   }
-
    std::shared_ptr<logging::Logger> logger_;
-   std::shared_ptr<sql::controllers::DatabaseService> dbService_;
+   std::shared_ptr<sql::controllers::DatabaseService> db_service_;
    std::unique_ptr<sql::Connection> connection_;
-   std::mutex onTriggerMutex_;
+   std::mutex on_trigger_mutex_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 

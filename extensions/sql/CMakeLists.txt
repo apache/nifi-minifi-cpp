@@ -43,16 +43,15 @@ else()
 	# Build project
 	ExternalProject_Add(
 			iodbc-external
-			URL "https://github.com/openlink/iODBC/archive/v3.52.13.tar.gz"
-			URL_HASH "SHA256=4bf67fc6d4d237a4db19b292b5dd255ee09a0b2daa4e4058cf3a918bc5102135"
+			URL "https://github.com/openlink/iODBC/archive/v3.52.14.tar.gz"
+			URL_HASH "SHA256=896d7e16b283cf9a6f5b5f46e8e9549aef21a11935726b0170987cd4c59d16db"
 			BUILD_IN_SOURCE true
 			SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-src"
 			BUILD_COMMAND make
 			CMAKE_COMMAND ""
 			UPDATE_COMMAND ""
 			INSTALL_COMMAND make install
-			CONFIGURE_COMMAND ""
-			PATCH_COMMAND ./autogen.sh && ./configure --prefix=${IODBC_BYPRODUCT_DIR}
+			CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=${IODBC_BYPRODUCT_DIR}
 			STEP_TARGETS build
 			BUILD_BYPRODUCTS "${IODBC_BYPRODUCT_DIR}/${IODBC_BYPRODUCT}"
 			EXCLUDE_FROM_ALL TRUE
@@ -76,12 +75,6 @@ else()
 endif()
 
 # Build SOCI
-
-# Find patch executable
-find_package(Patch)
-
-# Define patch step
-set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_CURRENT_SOURCE_DIR}/patch/soci.patch")
 
 # Define byproducts
 # This should be based on GNUInstallDirs, but it's done wrong in Soci:
@@ -109,15 +102,28 @@ foreach(SOCI_BYPRODUCT ${SOCI_BYPRODUCTS})
 	list(APPEND SOCI_LIBRARIES_LIST "${SOCI_BYPRODUCT_DIR}/${SOCI_BYPRODUCT}")
 endforeach(SOCI_BYPRODUCT)
 
-# Set build options
-set(SOCI_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-		"-DCMAKE_INSTALL_PREFIX=${SOCI_BYPRODUCT_DIR}"
-		"-DSOCI_TESTS=OFF"
-		"-DSOCI_SHARED=OFF"
-		"-DSOCI_CXX_C11=ON"
-		"-DWITH_ODBC=ON"
-		"-DSOCI_ODBC=ON"
-		"-DWITH_BOOST=OFF")
+if(WIN32)
+	# Set build options
+	set(SOCI_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+			"-DCMAKE_INSTALL_PREFIX=${SOCI_BYPRODUCT_DIR}"
+			"-DSOCI_TESTS=OFF"
+			"-DSOCI_SHARED=OFF"
+			"-DSOCI_CXX_C11=ON"
+			"-DWITH_ODBC=ON"
+			"-DWITH_BOOST=OFF")
+else()
+	# SOCI has its own FindODBC.cmake file
+	# Set build options
+	set(SOCI_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+			"-DCMAKE_INSTALL_PREFIX=${SOCI_BYPRODUCT_DIR}"
+			"-DSOCI_TESTS=OFF"
+			"-DSOCI_SHARED=OFF"
+			"-DSOCI_CXX_C11=ON"
+			"-DSOCI_ODBC=ON"
+			"-DODBC_INCLUDE_DIR=${IODBC_INCLUDE_DIRS}"
+			"-DODBC_LIBRARY=${IODBC_LIBRARIES}"
+			"-DWITH_BOOST=OFF")
+endif()
 
 if(NOT WIN32)
 	list(APPEND SOCI_CMAKE_ARGS "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/cmake/"
@@ -128,9 +134,8 @@ endif()
 # Build project
 ExternalProject_Add(
 		soci-external
-		URL "https://github.com/SOCI/soci/archive/4.0.0.tar.gz"
-		URL_HASH "SHA256=359b988d8cbe81357835317821919f7e270c0705e41951a92ac1627cb9fe8faf"
-		PATCH_COMMAND ${PC}
+		URL "https://github.com/SOCI/soci/archive/4.0.1.tar.gz"
+		URL_HASH "SHA256=fa69347b1a1ef74450c0382b665a67bd6777cc7005bbe09726479625bcf1e29c"
 		SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/soci-src"
 		CMAKE_ARGS ${SOCI_CMAKE_ARGS}
 		BUILD_BYPRODUCTS ${SOCI_LIBRARIES_LIST}

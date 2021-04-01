@@ -149,19 +149,28 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
 
 std::shared_ptr<minifi::Connection> TestPlan::addConnection(const std::shared_ptr<core::Processor>& source_proc, const core::Relationship& source_relationship, const std::shared_ptr<core::Processor>& destination_proc) {
   std::stringstream connection_name;
-  connection_name << source_proc->getUUIDStr() << "-to-" << destination_proc->getUUIDStr();
+  connection_name
+    << (source_proc ? source_proc->getUUIDStr().c_str() : "none")
+    << "-to-"
+    << (destination_proc ? destination_proc->getUUIDStr().c_str() : "none");
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
 
   connection->addRelationship(source_relationship);
 
   // link the connections so that we can test results at the end for this
-  connection->setSource(source_proc);
-  connection->setDestination(destination_proc);
 
-  connection->setSourceUUID(source_proc->getUUID());
-  connection->setDestinationUUID(destination_proc->getUUID());
-  source_proc->addConnection(connection);
-  if (source_proc != destination_proc) {
+  if (source_proc) {
+    connection->setSource(source_proc);
+    connection->setSourceUUID(source_proc->getUUID());
+  }
+  if (destination_proc) {
+    connection->setDestination(destination_proc);
+    connection->setDestinationUUID(destination_proc->getUUID());
+  }
+  if (source_proc) {
+    source_proc->addConnection(connection);
+  }
+  if (source_proc != destination_proc && destination_proc) {
     destination_proc->addConnection(connection);
   }
   relationships_.push_back(connection);
@@ -280,12 +289,12 @@ void TestPlan::scheduleProcessors() {
   }
 }
 
-bool TestPlan::runProcessor(const std::shared_ptr<core::Processor>& processor, std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+bool TestPlan::runProcessor(const std::shared_ptr<core::Processor>& processor, const PreTriggerVerifier& verify) {
   const std::size_t processor_location = std::distance(processor_queue_.begin(), getProcessorItByUuid(processor->getUUIDStr()));
   return runProcessor(gsl::narrow<int>(processor_location), verify);
 }
 
-bool TestPlan::runProcessor(int target_location, std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& verify) {
   if (!finalized) {
     finalize();
   }
@@ -310,13 +319,13 @@ bool TestPlan::runProcessor(int target_location, std::function<void(const std::s
   return gsl::narrow<size_t>(target_location + 1) < processor_queue_.size();
 }
 
-bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+bool TestPlan::runNextProcessor(const PreTriggerVerifier& verify) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   ++location;
   return runProcessor(location, verify);
 }
 
-bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> /*verify*/) {
+bool TestPlan::runCurrentProcessor(const PreTriggerVerifier& /*verify*/) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   return runProcessor(location);
 }

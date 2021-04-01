@@ -32,7 +32,7 @@ namespace sql {
 
 class SQLRowsetProcessor {
  public:
-  SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, const std::vector<SQLRowSubscriber*>& rowSubscribers);
+  SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> rowSubscribers);
 
   size_t process(size_t max);
 
@@ -41,16 +41,15 @@ class SQLRowsetProcessor {
 
    template <typename T>
    void processColumn(const std::string& name, const T& value) const {
-     for (const auto& pRowSubscriber: rowSubscribers_) {
-       pRowSubscriber->processColumn(name, value);
+     for (const auto& subscriber: row_subscribers_) {
+       subscriber.get().processColumn(name, value);
      }
    }
 
  private:
-  size_t totalCount_{};
   soci::rowset<soci::row>::const_iterator iter_;
   soci::rowset<soci::row> rowset_;
-  std::vector<SQLRowSubscriber*> rowSubscribers_;
+  std::vector<std::reference_wrapper<SQLRowSubscriber>> row_subscribers_;
 };
 
 } /* namespace sql */

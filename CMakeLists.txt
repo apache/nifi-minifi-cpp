@@ -431,7 +431,7 @@ endif(WIN32)
 
 option(ENABLE_SQL "Enables the SQL Suite of Tools." OFF)
 if (ENABLE_ALL OR ENABLE_SQL)
-	createExtension(SQL-EXTENSIONS "SQL EXTENSIONS" "Enables the SQL Suite of Tools" "extensions/sql")
+	createExtension(SQL-EXTENSIONS "SQL EXTENSIONS" "Enables the SQL Suite of Tools" "extensions/sql" "${TEST_DIR}/sql-tests")
 endif()
 
 ## Create MQTT Extension
@@ -476,18 +476,6 @@ if(ENABLE_ALL OR ENABLE_SENSORS)
 	include(BundledRTIMULib)
 	use_bundled_rtimulib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	createExtension(SENSOR-EXTENSIONS "SENSOR EXTENSIONS" "Enables the package of sensor extensions." "extensions/sensors" "${TEST_DIR}/sensors-tests")
-endif()
-
-## SQLite extensions
-option(ENABLE_SQLITE "Disables the scripting extensions." OFF)
-if (ENABLE_SQLITE)
-	include(BundledSQLite)
-	use_bundled_sqlite(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(SQLITE-EXTENSIONS "SQLITE EXTENSIONS" "This enables sqlite" "extensions/sqlite" "${TEST_DIR}/sqlite-tests")
-endif()
-
-if (ENABLE_SQL AND ENABLE_SQLITE)
-	message(FATAL_ERROR "ENABLE_SQL and ENABLE_SQLITE are incompatible. Set only one at a time.")
 endif()
 
 ## USB camera extensions

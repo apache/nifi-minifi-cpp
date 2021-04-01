@@ -21,23 +21,16 @@
 #include "PutSQL.h"
 
 #include <vector>
-#include <queue>
-#include <map>
-#include <set>
-#include <sstream>
-#include <stdio.h>
 #include <string>
-#include <iostream>
 #include <memory>
-#include <codecvt>
 
 #include <soci/soci.h>
 
 #include "io/BufferStream.h"
+#include "io/StreamPipe.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Exception.h"
-#include "utils/OsUtils.h"
 #include "data/DatabaseConnectors.h"
 #include "data/JSONSQLWriter.h"
 
@@ -49,53 +42,56 @@ namespace processors {
 
 const std::string PutSQL::ProcessorName("PutSQL");
 
-const core::Property PutSQL::s_sqlStatements(
-  core::PropertyBuilder::createProperty("SQL statements")->isRequired(true)->withDefaultValue("System")->withDescription(
-    "A semicolon-delimited list of SQL statements to execute. The statement can be empty, a constant value, or built from attributes using Expression Language. "
-    "If this property is specified, it will be used regardless of the content of incoming flowfiles. "
-    "If this property is empty, the content of the incoming flow file is expected to contain a valid SQL statements, to be issued by the processor to the database.")
-    ->supportsExpressionLanguage(true)->build());
+const core::Property PutSQL::SQLStatement(
+  core::PropertyBuilder::createProperty("SQL Statement")
+  ->isRequired(false)
+  ->withDescription(
+      "The SQL statement to execute. The statement can be empty, a constant value, or built from attributes using Expression Language. "
+      "If this property is specified, it will be used regardless of the content of incoming flowfiles. If this property is empty, the content of "
+      "the incoming flow file is expected to contain a valid SQL statement, to be issued by the processor to the database.")
+  ->supportsExpressionLanguage(true)->build());
 
-const core::Relationship PutSQL::s_success("success", "Database is successfully updated.");
+const core::Relationship PutSQL::Success("success", "Database is successfully updated.");
 
 PutSQL::PutSQL(const std::string& name, utils::Identifier uuid)
-  : SQLProcessor(name, uuid) {
+  : SQLProcessor(name, uuid, logging::LoggerFactory<PutSQL>::getLogger()) {
 }
-
-PutSQL::~PutSQL() = default;
 
 void PutSQL::initialize() {
   //! Set the supported properties
-  setSupportedProperties({ dbControllerService(), s_sqlStatements });
+  setSupportedProperties({ DBControllerService, SQLStatement });
 
   //! Set the supported relationships
-  setSupportedRelationships({ s_success });
+  setSupportedRelationships({ Success });
 }
 
-void PutSQL::processOnSchedule(core::ProcessContext& context) {
-  std::string sqlStatements;
-  context.getProperty(s_sqlStatements.getName(), sqlStatements);
-  sqlStatements_ = utils::StringUtils::split(sqlStatements, ";");
-}
+void PutSQL::processOnSchedule(core::ProcessContext& /*context*/) {}
 
-void PutSQL::processOnTrigger(core::ProcessSession& /*session*/) {
-  const auto dbSession = connection_->getSession();
-
-  try {
-    dbSession->begin();
-    for (const auto& statement : sqlStatements_) {
-      dbSession->execute(statement);
-    }
-    dbSession->commit();
-  } catch (std::exception& e) {
-    logger_->log_error("SQL statement error: %s", e.what());
-    dbSession->rollback();
-    throw;
+void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flow_file = session.get();
+  if (!flow_file) {
+    context.yield();
+    return;
   }
+  session.transfer(flow_file, Success);
+
+  std::string sql_statement;
+  if (!context.getProperty(SQLStatement, sql_statement, flow_file)) {
+    logger_->log_debug("Using the contents of the flow file as the SQL statement");
+    auto buffer = std::make_shared<io::BufferStream>();
+    InputStreamPipe read_callback{buffer};
+    session.read(flow_file, &read_callback);
+    sql_statement = std::string{reinterpret_cast<const char*>(buffer->getBuffer()), buffer->size()};
+  }
+  if (sql_statement.empty()) {
+    throw Exception(PROCESSOR_EXCEPTION, "Empty SQL statement");
+  }
+
+  connection_->prepareStatement(sql_statement)->execute(collectArguments(flow_file));
 }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

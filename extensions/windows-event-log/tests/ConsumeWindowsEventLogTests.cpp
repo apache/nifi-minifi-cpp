@@ -26,6 +26,7 @@
 #include "rapidjson/document.h"
 
 #include "CWELTestUtils.h"
+#include "Utils.h"
 
 using ConsumeWindowsEventLog = org::apache::nifi::minifi::processors::ConsumeWindowsEventLog;
 using LogAttribute = org::apache::nifi::minifi::processors::LogAttribute;

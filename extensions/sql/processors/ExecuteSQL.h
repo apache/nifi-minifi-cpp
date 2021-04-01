@@ -20,16 +20,13 @@
 
 #pragma once
 
-#include "core/Core.h"
-#include "FlowFileRecord.h"
-#include "concurrentqueue.h"
-#include "core/Processor.h"
-#include "core/ProcessSession.h"
-#include "services/DatabaseService.h"
-#include "SQLProcessor.h"
-#include "OutputFormat.h"
+#include <string>
 
-#include <sstream>
+#include "core/Resource.h"
+#include "core/ProcessSession.h"
+#include "core/ProcessContext.h"
+#include "SQLProcessor.h"
+#include "FlowFileSource.h"
 
 namespace org {
 namespace apache {
@@ -38,33 +35,31 @@ namespace minifi {
 namespace processors {
 
 //! ExecuteSQL Class
-class ExecuteSQL: public SQLProcessor<ExecuteSQL>, public OutputFormat {
+class ExecuteSQL : public SQLProcessor, public FlowFileSource {
  public:
   explicit ExecuteSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
-  virtual ~ExecuteSQL();
 
   //! Processor Name
   static const std::string ProcessorName;
 
-  void processOnSchedule(core::ProcessContext& context);
-  void processOnTrigger(core::ProcessSession& session);
+  void processOnSchedule(core::ProcessContext& context) override;
+  void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   void initialize() override;
 
-  static const core::Property s_sqlSelectQuery;
-  static const core::Property s_maxRowsPerFlowFile;
+  static const core::Property SQLSelectQuery;
 
-  static const core::Relationship s_success;
+  static const core::Relationship Success;
+  static const core::Relationship Failure;
 
- private:
-  int max_rows_;
-  std::string sqlSelectQuery_;
+  static const std::string RESULT_ROW_COUNT;
+  static const std::string INPUT_FLOW_FILE_UUID;
 };
 
 REGISTER_RESOURCE(ExecuteSQL, "ExecuteSQL to execute SELECT statement via ODBC.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

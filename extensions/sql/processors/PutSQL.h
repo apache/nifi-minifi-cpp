@@ -20,15 +20,11 @@
 
 #pragma once
 
-#include "core/Core.h"
-#include "FlowFileRecord.h"
-#include "concurrentqueue.h"
-#include "core/Processor.h"
-#include "core/ProcessSession.h"
-#include "services/DatabaseService.h"
-#include "SQLProcessor.h"
+#include <string>
 
-#include <sstream>
+#include "core/Resource.h"
+#include "core/ProcessSession.h"
+#include "SQLProcessor.h"
 
 namespace org {
 namespace apache {
@@ -37,31 +33,27 @@ namespace minifi {
 namespace processors {
 
 //! PutSQL Class
-class PutSQL: public SQLProcessor<PutSQL> {
+class PutSQL: public SQLProcessor {
  public:
   explicit PutSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
-  virtual ~PutSQL();
 
   //! Processor Name
   static const std::string ProcessorName;
 
-  void processOnSchedule(core::ProcessContext &context);
-  void processOnTrigger(core::ProcessSession &session);
+  void processOnSchedule(core::ProcessContext& context) override;
+  void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   
   void initialize() override;
 
-  static const core::Property s_sqlStatements;
+  static const core::Property SQLStatement;
 
-  static const core::Relationship s_success;
-
- private:
-   std::vector<std::string> sqlStatements_;
+  static const core::Relationship Success;
 };
 
 REGISTER_RESOURCE(PutSQL, "PutSQL to execute SQL command via ODBC.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace processors
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

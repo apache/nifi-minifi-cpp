@@ -45,8 +45,13 @@ class Statement {
 
   virtual ~Statement() = default;
 
-  soci::rowset<soci::row> execute() {
-    return session_.prepare << query_;
+  soci::rowset<soci::row> execute(const std::vector<std::string>& args = {}) {
+    auto stmt = session_.prepare << query_;
+    for (auto& arg : args) {
+      // binds arguments to the prepared statement
+      stmt.operator,(soci::use(arg));
+    }
+    return stmt;
   }
 
  protected:

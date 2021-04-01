@@ -30,6 +30,7 @@
 #include "IntegrationTestUtils.h"
 
 #include "CWELTestUtils.h"
+#include "Utils.h"
 
 // generated from the manifest file "custom-provider/unit-test-provider.man"
 // using the command "mc -um unit-test-provider.man"

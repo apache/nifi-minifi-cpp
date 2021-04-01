@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "rapidjson/document.h"
 
 #include "SQLWriter.h"
@@ -30,15 +32,19 @@ namespace sql {
 
 class JSONSQLWriter: public SQLWriter {
  public:
-  explicit JSONSQLWriter(bool pretty);
-  virtual ~JSONSQLWriter();
+  using ColumnFilter = std::function<bool(const std::string&)>;
+
+  explicit JSONSQLWriter(bool pretty, ColumnFilter column_filter = [] (const std::string&) {return true;});
 
   std::string toString() override;
 
 private:
+  void beginProcessBatch() override;
+  void endProcessBatch() override;
   void beginProcessRow() override;
   void endProcessRow() override;
-  void processColumnName(const std::string& name) override;
+  void finishProcessing() override;
+  void processColumnNames(const std::vector<std::string>& name) override;
   void processColumn(const std::string& name, const std::string& value) override;
   void processColumn(const std::string& name, double value) override;
   void processColumn(const std::string& name, int value) override;
@@ -52,8 +58,9 @@ private:
 
  private:
   bool pretty_;
-  rapidjson::Document jsonPayload_;
-  rapidjson::Value jsonRow_;
+  rapidjson::Document current_batch_;
+  rapidjson::Value current_row_;
+  ColumnFilter column_filter_;
 };
 
 } /* namespace sql */

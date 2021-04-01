@@ -20,6 +20,7 @@
 
 #include "Exception.h"
 #include "Utils.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -27,21 +28,31 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-SQLRowsetProcessor::SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, const std::vector<SQLRowSubscriber*>& rowSubscribers)
-  : rowset_(rowset), rowSubscribers_(rowSubscribers) {
+SQLRowsetProcessor::SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> row_subscribers)
+  : rowset_(rowset), row_subscribers_(std::move(row_subscribers)) {
   iter_ = rowset_.begin();
 }
 
 size_t SQLRowsetProcessor::process(size_t max) {
   size_t count = 0;
 
+  for (const auto& subscriber : row_subscribers_) {
+    subscriber.get().beginProcessBatch();
+  }
+
   for (; iter_ != rowset_.end(); ) {
     addRow(*iter_, count);
     iter_++;
     count++;
-    totalCount_++;
     if (max > 0 && count >= max) {
       break;
+    }
+  }
+
+  for (const auto& subscriber : row_subscribers_) {
+    subscriber.get().endProcessBatch();
+    if (count == 0) {
+      subscriber.get().finishProcessing();
     }
   }
 
@@ -49,22 +60,25 @@ size_t SQLRowsetProcessor::process(size_t max) {
 }
 
 void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
-  for (const auto& pRowSubscriber : rowSubscribers_) {
-    pRowSubscriber->beginProcessRow();
+  for (const auto& subscriber : row_subscribers_) {
+    subscriber.get().beginProcessRow();
   }
 
   if (rowCount == 0) {
+    std::vector<std::string> column_names;
+    column_names.reserve(row.size());
     for (std::size_t i = 0; i != row.size(); ++i) {
-      for (const auto& pRowSubscriber : rowSubscribers_) {
-        pRowSubscriber->processColumnName(utils::toLower(row.get_properties(i).get_name()));
-      }
+      column_names.push_back(utils::StringUtils::toLower(row.get_properties(i).get_name()));
+    }
+    for (const auto& subscriber : row_subscribers_) {
+      subscriber.get().processColumnNames(column_names);
     }
   }
 
   for (std::size_t i = 0; i != row.size(); ++i) {
     const soci::column_properties& props = row.get_properties(i);
 
-    const auto& name = utils::toLower(props.get_name());
+    const auto& name = utils::StringUtils::toLower(props.get_name());
 
     if (row.get_indicator(i) == soci::i_null) {
       processColumn(name, "NULL");
@@ -107,8 +121,8 @@ void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
     }
   }
 
-  for (const auto& pRowSubscriber : rowSubscribers_) {
-    pRowSubscriber->endProcessRow();
+  for (const auto& subscriber : row_subscribers_) {
+    subscriber.get().endProcessRow();
   }
 }
 
