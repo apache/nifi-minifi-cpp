@@ -99,9 +99,12 @@ core::Property InvokeHTTP::ContentType("Content-type", "The Content-Type to spec
                                        "POST or PATCH. In the case of an empty value after evaluating an expression language expression, "
                                        "Content-Type defaults to",
                                        "application/octet-stream");
-core::Property InvokeHTTP::SendBody("send-message-body", "If true, sends the HTTP message body on POST/PUT/PATCH requests (default).  "
-                                    "If false, suppresses the message body and content-type header for these requests.",
-                                    "true");
+core::Property InvokeHTTP::SendBody(
+    core::PropertyBuilder::createProperty("send-message-body")
+      ->withDescription("If true, sends the HTTP message body on POST/PUT/PATCH requests (default). "
+                        "If false, suppresses the message body and content-type header for these requests.")
+      ->withDefaultValue<bool>(true)
+      ->build());
 core::Property InvokeHTTP::UseChunkedEncoding("Use Chunked Encoding", "When POST'ing, PUT'ing or PATCH'ing content set this property to true in order to not pass the 'Content-length' header"
                                               " and instead send 'Transfer-Encoding' with a value of 'chunked'. This will enable the data transfer mechanism which was introduced in HTTP 1.1 "
                                               "to pass data of unknown lengths in chunks.",
@@ -264,6 +267,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
   context->getProperty(ProxyUsername.getName(), proxy_.username);
   context->getProperty(ProxyPassword.getName(), proxy_.password);
   context->getProperty(FollowRedirects.getName(), follow_redirects_);
+  context->getProperty(SendBody.getName(), send_body_);
 }
 
 InvokeHTTP::~InvokeHTTP() = default;
@@ -311,7 +315,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   client.setReadTimeout(read_timeout_ms_);
   client.setFollowRedirects(follow_redirects_);
 
-  if (!content_type_.empty()) {
+  if (send_body_ && !content_type_.empty()) {
     client.setContentType(content_type_);
   }
 
@@ -331,12 +335,16 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     std::shared_ptr<ResourceClaim> claim = flowFile->getResourceClaim();
     if (claim) {
       callback = std::unique_ptr<utils::ByteInputCallBack>(new utils::ByteInputCallBack());
-      session->read(flowFile, callback.get());
+      if (send_body_) {
+        session->read(flowFile, callback.get());
+      }
       callbackObj = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback);
       callbackObj->ptr = callback.get();
       callbackObj->pos = 0;
       logger_->log_trace("InvokeHTTP -- Setting callback, size is %d", callback->getBufferSize());
-      if (!use_chunked_encoding_) {
+      if (!send_body_) {
+        client.appendHeader("Content-Length", "0");
+      } else if (!use_chunked_encoding_) {
         client.appendHeader("Content-Length", std::to_string(flowFile->getSize()));
       }
       client.setUploadCallback(callbackObj.get());

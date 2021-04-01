@@ -84,6 +84,7 @@ exec
   behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance transfers data to another MiNiFi instance" &&
   behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance sends data through a HTTP proxy and another one listens" &&
   behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance and transfers hashed data to another MiNiFi instance" &&
+  behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance transfers data to another MiNiFi instance without message body" &&
   behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "A MiNiFi instance transfers data to a kafka broker" &&
   behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "PublishKafka sends flowfiles to failure when the broker is not available" &&
   behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "PublishKafka sends can use SSL connect" &&
