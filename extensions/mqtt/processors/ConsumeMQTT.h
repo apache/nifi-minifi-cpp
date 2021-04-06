@@ -43,7 +43,7 @@ namespace processors {
 #define MQTT_BROKER_ATTRIBUTE "mqtt.broker"
 
 // ConsumeMQTT Class
-class ConsumeMQTT : public processors::AbstractMQTTProcessor {
+class ConsumeMQTT : public processors::AbstractMQTTProcessor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_FORBIDDEN> {
  public:
   // Constructor
   /*!

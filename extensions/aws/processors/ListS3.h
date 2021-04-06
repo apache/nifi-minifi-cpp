@@ -36,7 +36,7 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
-class ListS3 : public S3Processor {
+class ListS3 : public S3Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_FORBIDDEN> {
  public:
   static constexpr char const* ProcessorName = "ListS3";
   static const std::string LATEST_LISTED_KEY_PREFIX;

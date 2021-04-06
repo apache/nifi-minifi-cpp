@@ -131,7 +131,7 @@ static const std::map<std::string, const std::function<HashReturnType(const std:
   { {"MD5",  MD5Hash}, {"SHA1", SHA1Hash}, {"SHA256", SHA256Hash} };
 
 //! HashContent Class
-class HashContent : public core::Processor {
+class HashContent : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
  public:
   //! Constructor
   /*!

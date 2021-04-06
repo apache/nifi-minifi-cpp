@@ -35,7 +35,7 @@ namespace minifi {
 namespace processors {
 
 //! ExecuteSQL Class
-class ExecuteSQL : public SQLProcessor, public FlowFileSource {
+class ExecuteSQL : public SQLProcessor, public FlowFileSource, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_ALLOWED> {
  public:
   explicit ExecuteSQL(const std::string& name, const utils::Identifier& uuid = {});
 

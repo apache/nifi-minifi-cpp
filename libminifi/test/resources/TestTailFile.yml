@@ -55,7 +55,6 @@ Connections:
       source relationship name: success
       destination name: la
       destination id: 2438e3c8-015a-1000-79ca-83af40ec1995
-      source relationship name: success
       max work queue size: 0
       max work queue data size: 1 MB
       flowfile expiration: 60 sec      

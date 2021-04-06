@@ -21,15 +21,9 @@
 
 #include <time.h>
 
-#include <chrono>
-#include <functional>
-#include <map>
 #include <memory>
-#include <queue>
 #include <set>
 #include <string>
-#include <thread>
-#include <utility>
 #include <vector>
 
 #include "Connection.h"
@@ -37,7 +31,6 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessorConfig.h"
 #include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "io/StreamFactory.h"
 #include "utils/gsl.h"
@@ -384,6 +377,37 @@ std::shared_ptr<Connectable> Processor::pickIncomingConnection() {
 
   // we did not find a preferred connection
   return getNextIncomingConnectionImpl(rel_guard);
+}
+
+void Processor::validateAnnotations() const {
+  switch (getInputRequirement()) {
+    case EInputRequirement::INPUT_ALLOWED:
+      return;
+    case EInputRequirement::INPUT_REQUIRED: {
+      if (!hasIncomingConnections()) {
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_REQUIRED was specified for the processor, but no inputs were found");
+      }
+      break;
+    }
+    case EInputRequirement::INPUT_FORBIDDEN: {
+      if (hasIncomingConnections()) {
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_FORBIDDEN was specified for the processor, but at least one input was found");
+      }
+      break;
+    }
+  }
+}
+
+EInputRequirement Processor::getInputRequirement() const {
+  // default input requirement
+  EInputRequirement myInputRequirement = EInputRequirement::INPUT_ALLOWED;
+  // get own input annotation if InputRequirementAnnotationBase is a base class
+  const auto myAnnotation = dynamic_cast<const InputRequirementAnnotationBase*>(this);
+  if (myAnnotation != nullptr) {
+    myInputRequirement = myAnnotation->value_;
+  }
+
+  return myInputRequirement;
 }
 
 }  // namespace core

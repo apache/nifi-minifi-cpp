@@ -40,7 +40,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class RetryFlowFile : public core::Processor {
+class RetryFlowFile : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
  public:
   explicit RetryFlowFile(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),

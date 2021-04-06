@@ -67,7 +67,7 @@ typedef struct {
 } SysLogEvent;
 
 // ListenSyslog Class
-class ListenSyslog : public core::Processor {
+class ListenSyslog : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_FORBIDDEN> {
  public:
   // Constructor
   /*!

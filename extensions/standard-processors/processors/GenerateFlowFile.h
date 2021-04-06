@@ -38,7 +38,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 // GenerateFlowFile Class
-class GenerateFlowFile : public core::Processor {
+class GenerateFlowFile : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_FORBIDDEN> {
  public:
   // Constructor
   /*!

@@ -51,7 +51,7 @@ namespace minifi {
 namespace processors {
 
 // PublishKafka Class
-class PublishKafka : public core::Processor {
+class PublishKafka : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
  public:
   static constexpr char const* ProcessorName = "PublishKafka";
 

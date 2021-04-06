@@ -40,6 +40,7 @@
 #include "Connectable.h"
 #include "Connection.h"
 #include "Core.h"
+#include "core/Annotation.h"
 #include "io/StreamFactory.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
@@ -250,6 +251,10 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   bool isThrottledByBackpressure() const;
 
   std::shared_ptr<Connectable> pickIncomingConnection() override;
+
+  virtual void validateAnnotations() const;
+
+  virtual EInputRequirement getInputRequirement() const;
 
  protected:
   virtual void notifyStop() {

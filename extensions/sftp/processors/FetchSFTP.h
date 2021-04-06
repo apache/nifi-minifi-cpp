@@ -38,7 +38,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class FetchSFTP : public SFTPProcessorBase {
+class FetchSFTP : public SFTPProcessorBase, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
  public:
 
   static constexpr char const *COMPLETION_STRATEGY_NONE = "None";
