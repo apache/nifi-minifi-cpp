@@ -147,22 +147,16 @@ class RemoteProcessorGroupPort : public core::Processor {
   void setURL(std::string val) {
     auto urls = utils::StringUtils::split(val, ",");
     for (auto url : urls) {
-      logger_->log_trace("Parsing %s", url);
-      std::string host, protocol;
-      int port = -1;
-      url = utils::StringUtils::trim(url);
-      utils::parse_url(&url, &host, &port, &protocol);
-      logger_->log_trace("Parsed -%s- %s %s, %d", url, protocol, host, port);
-      if (port == -1) {
-        if (protocol.find("https") != std::string::npos) {
-          port = 443;
-        } else if (protocol.find("http") != std::string::npos) {
-          port = 80;
-        }
+      utils::URL parsed_url{utils::StringUtils::trim(url)};
+      if (parsed_url.isValid()) {
+        logger_->log_debug("Parsed RPG URL '%s' -> '%s'", url, parsed_url.hostPort());
+        nifi_instances_.push_back({parsed_url.host(), parsed_url.port(), parsed_url.protocol()});
+      } else {
+        logger_->log_error("Could not parse RPG URL '%s'", url);
       }
-      nifi_instances_.push_back({ host, port, protocol });
     }
   }
+
   void setHTTPProxy(const utils::HTTPProxy &proxy) {
     this->proxy_ = proxy;
   }
