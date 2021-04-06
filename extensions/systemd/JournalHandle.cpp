@@ -27,8 +27,8 @@ namespace org { namespace apache { namespace nifi { namespace minifi { namespace
 
 namespace {
 std::unique_ptr<sd_journal, detail::JournalHandleDeleter> journal_open(const JournalHandle::JournalType type) {
-  const int flags{(type == JournalHandle::JournalType::USER ? SD_JOURNAL_CURRENT_USER : 0)
-      | (type == JournalHandle::JournalType::SYSTEM ? SD_JOURNAL_SYSTEM : 0)
+  const int flags{(type == JournalHandle::JournalType::User ? SD_JOURNAL_CURRENT_USER : 0)
+      | (type == JournalHandle::JournalType::System ? SD_JOURNAL_SYSTEM : 0)
       | SD_JOURNAL_LOCAL_ONLY};
   sd_journal* journal = nullptr;
   const int error_code = sd_journal_open(&journal, flags);

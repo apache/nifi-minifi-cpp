@@ -1,10 +1,28 @@
+/**
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #pragma once
 
-#include <algorithm>
+#include <atomic>
 #include <chrono>
-#include <cstring>
+#include <future>
 #include <memory>
-#include <sstream>
+#include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -24,73 +42,35 @@
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
 
+enum class PayloadFormat { Raw, Syslog };
+
 class ConsumeJournald final : public core::Processor {
  public:
   static constexpr const char* CURSOR_KEY = "cursor";
+  static constexpr const char* PAYLOAD_FORMAT_RAW = "Raw";
+  static constexpr const char* PAYLOAD_FORMAT_SYSLOG = "Syslog";
+  static constexpr const char* JOURNAL_TYPE_USER = "User";
+  static constexpr const char* JOURNAL_TYPE_SYSTEM = "System";
+  static constexpr const char* JOURNAL_TYPE_BOTH = "Both";
+
   static const core::Relationship Success;
 
-  explicit ConsumeJournald(const std::string& name, const utils::Identifier& id = {})
-      :core::Processor{name, id}
-  {}
+  static const core::Property BatchSize;
+  static const core::Property PayloadFormat;
+  static const core::Property IncludeTimestamp;
+  static const core::Property JournalType;
 
-  ~ConsumeJournald() final {
-    notifyStop();
-  }
+  explicit ConsumeJournald(const std::string& name, const utils::Identifier& id = {});
+  ConsumeJournald(const ConsumeJournald&) = delete;
+  ConsumeJournald(ConsumeJournald&&) = delete;
+  ConsumeJournald& operator=(const ConsumeJournald&) = delete;
+  ConsumeJournald& operator=(ConsumeJournald&&) = delete;
+  ~ConsumeJournald() final { notifyStop(); }
 
-  void initialize() final {
-    setSupportedProperties({});
-    // Set the supported relationships
-    setSupportedRelationships({Success});
-  }
-
-  void notifyStop() final {
-    if (!journal_handle_) return;
-    worker_.enqueue([this] {
-      journal_handle_.reset();
-    }).get();
-  }
-
-  void onSchedule(core::ProcessContext* const context, core::ProcessSessionFactory* const sessionFactory) final {
-    gsl_Expects(context && sessionFactory);
-    state_manager_ = context->getStateManager();
-    journal_handle_ = utils::make_optional(worker_.enqueue([]{ return JournalHandle{}; }).get());
-    worker_.enqueue([this] {
-      journal_handle_->visit([this](sd_journal* const journal) {
-        const auto cursor = state_manager_->get() | utils::map([](std::unordered_map<std::string, std::string>&& m) { return m.at(CURSOR_KEY); });
-        if (cursor) {
-          sd_journal_seek_cursor(journal, cursor->c_str());
-        } else {
-          sd_journal_seek_head(journal);
-        }
-      });
-    }).get();
-  }
-
-  void onTrigger(core::ProcessContext* const context, core::ProcessSession* const session) final {
-    gsl_Expects(context && session);
-    auto cursor_and_messages = getCursorAndMessageBatch().get();
-    state_manager_->set({{"cursor", std::move(cursor_and_messages.first)}});
-    auto messages = std::move(cursor_and_messages.second);
-
-    if (messages.empty()) {
-      yield();
-      return;
-    }
-
-    for (auto& msg: messages) {
-      const auto flow_file = session->create();
-      for (auto& field: msg.fields) {
-        if (field.name == "MESSAGE") {
-          session->writeBuffer(flow_file, gsl::make_span(field.value));
-        } else {
-          flow_file->setAttribute(std::move(field.name), std::move(field.value));
-        }
-      }
-      flow_file->setAttribute("timestamp", date::format("%x %X %Z", msg.timestamp));
-      session->transfer(flow_file, Success);
-    }
-    session->commit();
-  }
+  void initialize() final;
+  void notifyStop() final;
+  void onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* sessionFactory) final;
+  void onTrigger(core::ProcessContext* context, core::ProcessSession* session) final;
 
  private:
   struct journal_field {
@@ -103,65 +83,21 @@ class ConsumeJournald final : public core::Processor {
     std::chrono::system_clock::time_point timestamp;
   };
 
-  static utils::optional<gsl::span<const char>> enumerateJournalEntry(sd_journal& journal) {
-    const void* data_ptr{};
-    size_t data_length{};
-    const auto status_code = sd_journal_enumerate_data(&journal, &data_ptr, &data_length);
-    if (status_code == 0) return {};
-    if (status_code < 0) throw SystemErrorException{ "sd_journal_enumerate_data", std::generic_category().default_error_condition(-status_code) };
-    gsl_Ensures(data_ptr && "if sd_journal_enumerate_data was successful, then data_ptr must be set");
-    gsl_Ensures(data_length > 0 && "if sd_journal_enumerate_data was successful, then data_length must be greater than zero");
-    const char* const data_str_ptr = reinterpret_cast<const char*>(data_ptr);
-    return gsl::make_span(data_str_ptr, data_length);
-  }
-
-  static utils::optional<journal_field> getNextField(sd_journal& journal) {
-    return enumerateJournalEntry(journal) | utils::map([](gsl::span<const char> field) {
-      const auto eq_pos = std::find(std::begin(field), std::end(field), '=');
-      gsl_Ensures(eq_pos != std::end(field) && "field string must contain an equals sign");
-      const auto eq_idx = eq_pos - std::begin(field);
-      return journal_field{
-          utils::span_to<std::string>(field.subspan(0, eq_idx)),
-          utils::span_to<std::string>(field.subspan(eq_idx + 1))
-      };
-    });
-  }
-
-  std::future<std::pair<std::string, std::vector<journal_message>>> getCursorAndMessageBatch() {
-    return worker_.enqueue([this] {
-      std::vector<journal_message> messages;
-      messages.reserve(batch_size_);
-      std::unique_ptr<char, utils::FreeDeleter> cursor;
-      journal_handle_->visit([this, &messages, &cursor](sd_journal* const journal) {
-        for (size_t i = 0; i < batch_size_ && sd_journal_next(journal) > 0; ++i) {
-          journal_message message;
-          utils::optional<journal_field> field;
-          while ((field = getNextField(*journal)).has_value()) {
-            message.fields.push_back(std::move(*field));
-          }
-          uint64_t journal_timestamp_usec_since_epoch{};
-          sd_journal_get_realtime_usec(journal, &journal_timestamp_usec_since_epoch);
-          message.timestamp = std::chrono::system_clock::time_point{std::chrono::microseconds{journal_timestamp_usec_since_epoch}};
-          messages.push_back(std::move(message));
-        }
-
-        char* cursor_out;
-        const auto err_code = sd_journal_get_cursor(journal, &cursor_out);
-        if (err_code < 0) throw SystemErrorException{"sd_journal_get_cursor", std::generic_category().default_error_condition(-err_code)};
-        gsl_Ensures(cursor_out);
-        cursor.reset(cursor_out);
-      });
-      return std::make_pair(std::string{cursor.get()}, messages);
-    });
-  }
+  static utils::optional<gsl::span<const char>> enumerateJournalEntry(sd_journal& journal);
+  static utils::optional<journal_field> getNextField(sd_journal& journal);
+  std::future<std::pair<std::string, std::vector<journal_message>>> getCursorAndMessageBatch();
+  static std::string formatSyslogMessage(const journal_message&);
 
  private:
+  std::atomic<bool> running_{false};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger();
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
-  Worker worker_;
+  std::unique_ptr<Worker> worker_;
   utils::optional<JournalHandle> journal_handle_;
 
   std::size_t batch_size_ = 10;
+  systemd::PayloadFormat payload_format_ = systemd::PayloadFormat::Syslog;
+  bool include_timestamp_ = true;
 };
 
 REGISTER_RESOURCE(ConsumeJournald, "Consume systemd-journald journal messages");

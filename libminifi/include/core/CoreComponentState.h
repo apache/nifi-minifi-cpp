@@ -19,13 +19,14 @@
 #define LIBMINIFI_INCLUDE_CORE_CORECOMPONENTSTATE_H_
 
 #include "Core.h"
-#include "utils/OptionalUtils.h"
 
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
 #include <map>
 #include <string>
+
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {

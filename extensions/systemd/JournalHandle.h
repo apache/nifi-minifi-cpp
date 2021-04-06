@@ -47,8 +47,8 @@ class JournalHandleDeleter final {
  */
 class JournalHandle final {
  public:
-  enum class JournalType { USER, SYSTEM, BOTH };
-  explicit JournalHandle(JournalType = JournalType::BOTH);
+  enum class JournalType { User, System, Both };
+  explicit JournalHandle(JournalType = JournalType::Both);
 
   template<typename F>
   auto visit(F f) const -> decltype(f(std::declval<sd_journal*>())) {

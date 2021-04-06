@@ -31,7 +31,8 @@ namespace gsl = ::gsl_lite;
 namespace utils {
 template<typename Container, typename T>
 auto span_to(gsl::span<T> span)
-    -> typename std::enable_if<std::is_constructible<Container, typename gsl::span<T>::iterator, typename gsl::span<T>::iterator>::value && std::is_convertible<T, typename Container::value_type>::value, Container>::type {
+    -> typename std::enable_if<std::is_constructible<Container, typename gsl::span<T>::iterator, typename gsl::span<T>::iterator>::value
+        && std::is_convertible<T, typename Container::value_type>::value, Container>::type {
   return Container(std::begin(span), std::end(span));
 }
 template<template<typename...> class Container, typename T>

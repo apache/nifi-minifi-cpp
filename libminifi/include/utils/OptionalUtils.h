@@ -99,6 +99,32 @@ auto operator|(optional<SourceType>&& o, flat_map_wrapper<F> f) noexcept(noexcep
   }
 }
 
+template<typename T>
+struct or_else_wrapper {
+  T function;
+};
+
+// orElse implementation
+template<typename SourceType, typename F>
+auto operator|(optional<SourceType> o, or_else_wrapper<F> f) noexcept(noexcept(utils::invoke(std::forward<F>(f.function))))
+    -> typename std::enable_if<std::is_same<decltype(utils::invoke(std::forward<F>(f.function))), void>::value, optional<SourceType>>::type {
+  if (o.has_value()) {
+    return o;
+  } else {
+    utils::invoke(std::forward<F>(f.function));
+    return nullopt;
+  }
+}
+
+template<typename SourceType, typename F>
+auto operator|(optional<SourceType> o, or_else_wrapper<F> f) noexcept(noexcept(utils::invoke(std::forward<F>(f.function))))
+    -> typename std::enable_if<std::is_same<typename std::decay<decltype(utils::invoke(std::forward<F>(f.function)))>::type, optional<SourceType>>::value, optional<SourceType>>::type {
+  if (o.has_value()) {
+    return o;
+  } else {
+    return utils::invoke(std::forward<F>(f.function));
+  }
+}
 }  // namespace detail
 
 template<typename T>
@@ -106,6 +132,9 @@ detail::map_wrapper<T&&> map(T&& func) noexcept { return {std::forward<T>(func)}
 
 template<typename T>
 detail::flat_map_wrapper<T&&> flatMap(T&& func) noexcept { return {std::forward<T>(func)}; }
+
+template<typename T>
+detail::or_else_wrapper<T&&> orElse(T&& func) noexcept { return {std::forward<T>(func)}; }
 
 }  // namespace utils
 }  // namespace minifi

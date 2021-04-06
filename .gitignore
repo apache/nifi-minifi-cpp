@@ -47,6 +47,7 @@ cmake-build-debug
 # Generated files
 *flowfile_checkpoint
 build
+/*build*
 bt_state
 bin
 target
@@ -58,6 +59,11 @@ docs/generated
 thirdparty/apache-rat/apache-rat*
 /compile_commands.json
 __pycache__/
+/corecomponentstate
+/flowfile_repository
+/content_repository
+/provenance_repository
+/logs
 
 # Ignore source files that have been placed in the docker directory during build
 docker/minificppsource
