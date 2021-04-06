@@ -56,7 +56,19 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     proc->setProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
   }
 
-  void setupFlow(const utils::optional<std::string>& flow_yml_path) {
+  void setProperty(const std::string& property, const std::string& value) {
+    const auto components = flowController_->getComponents("InvokeHTTP");
+    assert(!components.empty());
+
+    const auto stateController = components.at(0);
+    assert(stateController);
+    const auto processorController = std::dynamic_pointer_cast<minifi::state::ProcessorController>(stateController);
+    assert(processorController);
+    auto proc = processorController->getProcessor();
+    proc->setProperty(property, value);
+  }
+
+  virtual void setupFlow(const utils::optional<std::string>& flow_yml_path) {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -75,14 +87,8 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
     flowController_->load();
 
-    const auto components = flowController_->getComponents("InvokeHTTP");
-    assert(!components.empty());
-
-    const auto stateController = components.at(0);
-    assert(stateController);
-    const auto processorController = std::dynamic_pointer_cast<minifi::state::ProcessorController>(stateController);
-    assert(processorController);
-    setProperties(processorController->getProcessor());
+    std::string url = scheme + "://localhost:" + getWebPort() + *path_;
+    setProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
   }
 
   void run(const utils::optional<std::string>& flow_yml_path = {}, const utils::optional<std::string>& = {}) override {
@@ -117,6 +123,31 @@ class VerifyInvokeHTTPOKResponse : public VerifyInvokeHTTP {
     assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
         "key:invokehttp.status.code value:201",
         "response code 201"));
+  }
+};
+
+class VerifyInvokeHTTPOK200Response : public VerifyInvokeHTTP {
+ public:
+  void runAssertions() override {
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
+        "key:invokehttp.status.code value:200",
+        "response code 200"));
+  }
+};
+
+class VerifyInvokeHTTPRedirectResponse : public VerifyInvokeHTTP {
+ public:
+  void setupFlow(const utils::optional<std::string>& flow_yml_path) override {
+    VerifyInvokeHTTP::setupFlow(flow_yml_path);
+    setProperty(minifi::processors::InvokeHTTP::FollowRedirects.getName(), "false");
+  }
+
+  void runAssertions() override {
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
+        "key:invokehttp.status.code value:301",
+        "response code 301"));
   }
 };
 
@@ -189,6 +220,18 @@ int main(int argc, char ** argv) {
   {
     InvokeHTTPResponseOKHandler handler;
     VerifyInvokeHTTPOKResponse harness;
+    run(harness, args.url, args.test_file, args.key_dir, &handler);
+  }
+
+  {
+    InvokeHTTPRedirectHandler handler;
+    VerifyInvokeHTTPOK200Response harness;
+    run(harness, args.url, args.test_file, args.key_dir, &handler);
+  }
+
+  {
+    InvokeHTTPRedirectHandler handler;
+    VerifyInvokeHTTPRedirectResponse harness;
     run(harness, args.url, args.test_file, args.key_dir, &handler);
   }
 

@@ -75,7 +75,11 @@ core::Property InvokeHTTP::ReadTimeout(
 core::Property InvokeHTTP::DateHeader(
     core::PropertyBuilder::createProperty("Include Date Header")->withDescription("Include an RFC-2616 Date header in the request.")->isRequired(false)->withDefaultValue<bool>(true)->build());
 
-core::Property InvokeHTTP::FollowRedirects("Follow Redirects", "Follow HTTP redirects issued by remote server.", "True");
+core::Property InvokeHTTP::FollowRedirects(
+  core::PropertyBuilder::createProperty("Follow Redirects")
+  ->withDescription("Follow HTTP redirects issued by remote server.")
+  ->withDefaultValue<bool>(true)
+  ->build());
 core::Property InvokeHTTP::AttributesToSend("Attributes to Send", "Regular expression that defines which attributes to send as HTTP"
                                             " headers in the request. If not defined, no attributes are sent as headers.",
                                             "");
@@ -154,6 +158,7 @@ void InvokeHTTP::initialize() {
   properties.insert(SendBody);
   properties.insert(DisablePeerVerification);
   properties.insert(AlwaysOutputResponse);
+  properties.insert(FollowRedirects);
 
   setSupportedProperties(properties);
   // Set the supported relationships
@@ -258,6 +263,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
   }
   context->getProperty(ProxyUsername.getName(), proxy_.username);
   context->getProperty(ProxyPassword.getName(), proxy_.password);
+  context->getProperty(FollowRedirects.getName(), follow_redirects_);
 }
 
 InvokeHTTP::~InvokeHTTP() = default;
@@ -303,6 +309,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   client.initialize(method_);
   client.setConnectionTimeout(connect_timeout_ms_);
   client.setReadTimeout(read_timeout_ms_);
+  client.setFollowRedirects(follow_redirects_);
 
   if (!content_type_.empty()) {
     client.setContentType(content_type_);

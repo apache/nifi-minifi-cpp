@@ -158,6 +158,7 @@ class InvokeHTTP : public core::Processor {
   // disable peer verification ( makes susceptible for MITM attacks )
   bool disable_peer_verification_{false};
   utils::HTTPProxy proxy_;
+  bool follow_redirects_{true};
 
  private:
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<InvokeHTTP>::getLogger()};

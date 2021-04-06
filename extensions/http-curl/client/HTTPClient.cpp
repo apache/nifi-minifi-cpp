@@ -434,6 +434,10 @@ void HTTPClient::setInterface(const std::string &ifc) {
   curl_easy_setopt(http_session_, CURLOPT_INTERFACE, ifc.c_str());
 }
 
+void HTTPClient::setFollowRedirects(bool follow) {
+  curl_easy_setopt(http_session_, CURLOPT_FOLLOWLOCATION, follow);
+}
+
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
