@@ -100,7 +100,7 @@ core::Property InvokeHTTP::ContentType("Content-type", "The Content-Type to spec
                                        "Content-Type defaults to",
                                        "application/octet-stream");
 core::Property InvokeHTTP::SendBody(
-    core::PropertyBuilder::createProperty("send-message-body")
+    core::PropertyBuilder::createProperty("send-message-body", "Send Body")
       ->withDescription("If true, sends the HTTP message body on POST/PUT/PATCH requests (default). "
                         "If false, suppresses the message body and content-type header for these requests.")
       ->withDefaultValue<bool>(true)
