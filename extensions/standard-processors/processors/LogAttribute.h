@@ -40,7 +40,7 @@ namespace minifi {
 namespace processors {
 
 // LogAttribute Class
-class LogAttribute : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
+class LogAttribute : public core::Processor, public core::annotation::input::Required {
  public:
   // Constructor
   /*!

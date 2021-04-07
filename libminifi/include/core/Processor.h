@@ -254,7 +254,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 
   virtual void validateAnnotations() const;
 
-  virtual EInputRequirement getInputRequirement() const;
+  virtual annotation::input::EInputRequirement getInputRequirement() const;
 
  protected:
   virtual void notifyStop() {

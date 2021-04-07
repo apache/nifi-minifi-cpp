@@ -36,7 +36,7 @@ namespace minifi {
 namespace processors {
 
 //! ExtractText Class
-class ExtractText : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
+class ExtractText : public core::Processor, public core::annotation::input::Required {
  public:
     //! Constructor
     /*!

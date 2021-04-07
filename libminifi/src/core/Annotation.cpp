@@ -23,6 +23,8 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
+namespace annotation {
+namespace input {
 
 std::string toString(const EInputRequirement inputRequirement) {
   switch (inputRequirement) {
@@ -34,6 +36,8 @@ std::string toString(const EInputRequirement inputRequirement) {
   return "ERROR_no_such_EInputRequirement_value";
 }
 
+}  // namespace input
+}  // namespace annotation
 }  // namespace core
 }  // namespace minifi
 }  // namespace nifi

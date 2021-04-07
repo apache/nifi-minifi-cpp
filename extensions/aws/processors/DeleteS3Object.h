@@ -38,7 +38,7 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
-class DeleteS3Object : public S3Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
+class DeleteS3Object : public S3Processor, public core::annotation::input::Required {
  public:
   static constexpr char const* ProcessorName = "DeleteS3Object";
 

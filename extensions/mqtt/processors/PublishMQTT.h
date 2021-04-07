@@ -37,7 +37,7 @@ namespace minifi {
 namespace processors {
 
 // PublishMQTT Class
-class PublishMQTT : public processors::AbstractMQTTProcessor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
+class PublishMQTT : public processors::AbstractMQTTProcessor, public core::annotation::input::Required {
  public:
   // Constructor
   /*!

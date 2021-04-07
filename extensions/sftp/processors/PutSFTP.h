@@ -45,7 +45,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
- class PutSFTP : public SFTPProcessorBase, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
+ class PutSFTP : public SFTPProcessorBase, public core::annotation::input::Required {
  public:
 
   static constexpr char const *CONFLICT_RESOLUTION_REPLACE = "REPLACE";

@@ -105,7 +105,7 @@ class GetFileMetrics : public state::response::ResponseNode {
 };
 
 // GetFile Class
-class GetFile : public core::Processor, public state::response::MetricsNodeSource, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_FORBIDDEN> {
+class GetFile : public core::Processor, public state::response::MetricsNodeSource, public core::annotation::input::Forbidden {
  public:
   // Constructor
   /*!

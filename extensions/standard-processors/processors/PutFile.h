@@ -38,7 +38,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class PutFile : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
+class PutFile : public core::Processor, public core::annotation::input::Required {
  public:
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_REPLACE = "replace";
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_IGNORE = "ignore";

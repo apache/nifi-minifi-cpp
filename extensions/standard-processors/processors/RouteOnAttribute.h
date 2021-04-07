@@ -37,7 +37,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class RouteOnAttribute : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
+class RouteOnAttribute : public core::Processor, public core::annotation::input::Required {
  public:
   RouteOnAttribute(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
       : core::Processor(name, uuid),

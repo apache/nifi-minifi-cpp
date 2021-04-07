@@ -25,12 +25,14 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
+namespace annotation {
 
 template <typename T>
-struct AnnotationBase {
+struct Annotation {
   const T value_;
 };
 
+namespace input {
 enum class EInputRequirement : uint8_t {
   /**
    * This value is used to indicate that the Processor requires input from other Processors
@@ -57,19 +59,19 @@ enum class EInputRequirement : uint8_t {
 
 std::string toString(EInputRequirement inputRequirement);
 
-struct InputRequirementAnnotationBase : AnnotationBase<EInputRequirement> {
-  explicit InputRequirementAnnotationBase(const EInputRequirement inputRequirement)
-    : AnnotationBase{inputRequirement}
-  {}
-};
-
 template <EInputRequirement T_Value>
-struct InputRequirementAnnotation : InputRequirementAnnotationBase {
+struct InputRequirementAnnotation : Annotation<EInputRequirement> {
   InputRequirementAnnotation()
-    : InputRequirementAnnotationBase{T_Value}
+    : Annotation{T_Value}
   {}
 };
 
+using Required = InputRequirementAnnotation<EInputRequirement::INPUT_REQUIRED>;
+using Allowed = InputRequirementAnnotation<EInputRequirement::INPUT_ALLOWED>;
+using Forbidden = InputRequirementAnnotation<EInputRequirement::INPUT_FORBIDDEN>;
+
+}  // namespace input
+}  // namespace annotation
 }  // namespace core
 }  // namespace minifi
 }  // namespace nifi

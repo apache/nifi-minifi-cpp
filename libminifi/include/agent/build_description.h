@@ -59,7 +59,7 @@ class ClassDescription {
   std::map<std::string, core::Property> class_properties_;
   std::vector<core::Relationship> class_relationships_;
   bool dynamic_properties_ = false;
-  core::EInputRequirement inputRequirement_ = core::EInputRequirement::INPUT_ALLOWED;
+  core::annotation::input::EInputRequirement inputRequirement_ = core::annotation::input::EInputRequirement::INPUT_ALLOWED;
   bool dynamic_relationships_ = false;
   bool is_controller_service_ = false;
 };

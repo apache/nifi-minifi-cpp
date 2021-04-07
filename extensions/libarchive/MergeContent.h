@@ -289,7 +289,7 @@ class KeepAllUniqueAttributesMerger: public AttributeMerger {
 };
 
 // MergeContent Class
-class MergeContent : public processors::BinFiles, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
+class MergeContent : public processors::BinFiles, public core::annotation::input::Required {
  public:
   // Constructor
   /*!

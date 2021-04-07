@@ -42,7 +42,7 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
-class PutS3Object : public S3Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
+class PutS3Object : public S3Processor, public core::annotation::input::Required {
  public:
   static constexpr char const* ProcessorName = "PutS3Object";
 

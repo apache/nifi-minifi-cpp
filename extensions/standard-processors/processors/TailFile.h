@@ -79,7 +79,7 @@ SMART_ENUM(InitialStartPositions,
   (CURRENT_TIME, "Current Time")
 );
 
-class TailFile : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_FORBIDDEN> {
+class TailFile : public core::Processor, public core::annotation::input::Forbidden {
  public:
   explicit TailFile(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(std::move(name), uuid),

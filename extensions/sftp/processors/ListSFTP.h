@@ -44,7 +44,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class ListSFTP : public SFTPProcessorBase, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_FORBIDDEN> {
+class ListSFTP : public SFTPProcessorBase, public core::annotation::input::Forbidden {
  public:
 
   static constexpr char const *LISTING_STRATEGY_TRACKING_TIMESTAMPS = "Tracking Timestamps";

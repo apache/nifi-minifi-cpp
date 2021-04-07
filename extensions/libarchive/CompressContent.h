@@ -43,7 +43,7 @@ namespace minifi {
 namespace processors {
 
 // CompressContent Class
-class CompressContent: public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_REQUIRED> {
+class CompressContent: public core::Processor, public core::annotation::input::Required {
 public:
   // Constructor
   /*!

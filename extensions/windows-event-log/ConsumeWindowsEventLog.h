@@ -52,7 +52,7 @@ struct EventRender {
 class Bookmark;
 
 //! ConsumeWindowsEventLog Class
-class ConsumeWindowsEventLog : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_FORBIDDEN> {
+class ConsumeWindowsEventLog : public core::Processor, public core::annotation::input::FORBIDDEN {
 public:
   //! Constructor
   /*!

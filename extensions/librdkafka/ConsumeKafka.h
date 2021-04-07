@@ -34,7 +34,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class ConsumeKafka : public core::Processor, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_FORBIDDEN> {
+class ConsumeKafka : public core::Processor, public core::annotation::input::Forbidden {
  public:
   static constexpr char const* ProcessorName = "ConsumeKafka";
 

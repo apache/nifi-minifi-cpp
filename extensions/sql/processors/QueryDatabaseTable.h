@@ -37,7 +37,7 @@ namespace minifi {
 namespace processors {
 
 //! QueryDatabaseTable Class
-class QueryDatabaseTable: public SQLProcessor, public FlowFileSource, public core::InputRequirementAnnotation<core::EInputRequirement::INPUT_FORBIDDEN> {
+class QueryDatabaseTable: public SQLProcessor, public FlowFileSource, public core::annotation::input::Forbidden {
  public:
   explicit QueryDatabaseTable(const std::string& name, const utils::Identifier& uuid = {});
 
