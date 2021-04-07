@@ -116,6 +116,10 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(st
   return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::ROOT_PROCESS_GROUP, name, uuid, version));
 }
 
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createSimpleProcessGroup(std::string name, utils::Identifier & uuid, int version) {
+  return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::SIMPLE_PROCESS_GROUP, name, uuid, version));
+}
+
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(std::string name, utils::Identifier & uuid) {
   return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::REMOTE_PROCESS_GROUP, name, uuid));
 }

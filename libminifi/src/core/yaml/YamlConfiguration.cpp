@@ -49,35 +49,45 @@ YamlConfiguration::YamlConfiguration(const std::shared_ptr<core::Repository>& re
       logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {}
 
 std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
-  utils::Identifier uuid;
-  int version = 0;
-
-  yaml::checkRequiredField(&rootFlowNode, "name", logger_,
-  CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
-  std::string flowName = rootFlowNode["name"].as<std::string>();
-
-  auto class_loader_functions = rootFlowNode["Class Loader Functions"];
+  auto flowControllerNode = rootFlowNode[CONFIG_YAML_FLOW_CONTROLLER_KEY];
+  auto class_loader_functions = flowControllerNode["Class Loader Functions"];
   if (class_loader_functions && class_loader_functions.IsSequence()) {
     for (auto function : class_loader_functions) {
       registerResource(function.as<std::string>());
     }
   }
 
-  std::string id = getOrGenerateId(&rootFlowNode);
+  auto rootGroup = parseProcessGroupYaml(flowControllerNode, rootFlowNode, true);
+  this->name_ = rootGroup->getName();
+  return rootGroup;
+}
+
+std::unique_ptr<core::ProcessGroup> YamlConfiguration::createProcessGroup(YAML::Node yamlNode, bool is_root) {
+  utils::Identifier uuid;
+  int version = 0;
+
+  yaml::checkRequiredField(&yamlNode, "name", logger_,
+  CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+  std::string flowName = yamlNode["name"].as<std::string>();
+
+  std::string id = getOrGenerateId(&yamlNode);
   uuid = id;
 
-  if (rootFlowNode["version"]) {
-    version = rootFlowNode["version"].as<int>();
+  if (yamlNode["version"]) {
+    version = yamlNode["version"].as<int>();
   }
 
   logger_->log_debug("parseRootProcessGroup: id => [%s], name => [%s]", id, flowName);
-  std::unique_ptr<core::ProcessGroup> group = FlowConfiguration::createRootProcessGroup(flowName, uuid, version);
+  std::unique_ptr<core::ProcessGroup> group;
+  if (is_root) {
+    group = FlowConfiguration::createRootProcessGroup(flowName, uuid, version);
+  } else {
+    group = FlowConfiguration::createSimpleProcessGroup(flowName, uuid, version);
+  }
 
-  this->name_ = flowName;
-
-  if (rootFlowNode["onschedule retry interval"]) {
+  if (yamlNode["onschedule retry interval"]) {
     int64_t onScheduleRetryPeriodValue = -1;
-    std::string onScheduleRetryPeriod = rootFlowNode["onschedule retry interval"].as<std::string>();
+    std::string onScheduleRetryPeriod = yamlNode["onschedule retry interval"].as<std::string>();
     logger_->log_debug("parseRootProcessGroup: onschedule retry period => [%s]", onScheduleRetryPeriod);
 
     core::TimeUnit unit;
@@ -93,26 +103,40 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseRootProcessGroupYaml
   return group;
 }
 
+std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseProcessGroupYaml(YAML::Node headerNode, YAML::Node yamlNode, bool is_root) {
+  auto group = createProcessGroup(headerNode, is_root);
+  YAML::Node processorsNode = yamlNode[CONFIG_YAML_PROCESSORS_KEY];
+  YAML::Node connectionsNode = yamlNode[yaml::YamlConnectionParser::CONFIG_YAML_CONNECTIONS_KEY];
+  YAML::Node remoteProcessingGroupsNode = yamlNode[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY];
+  YAML::Node childProcessGroupNodeSeq = yamlNode["Process Groups"];
+
+  if (!remoteProcessingGroupsNode) {
+    remoteProcessingGroupsNode = yamlNode[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3];
+  }
+
+  parseProcessorNodeYaml(processorsNode, group.get());
+  parseRemoteProcessGroupYaml(&remoteProcessingGroupsNode, group.get());
+  // parse connections last to give feedback if the source and/or destination
+  // is not in the same process group
+  parseConnectionYaml(&connectionsNode, group.get());
+
+  if (childProcessGroupNodeSeq && childProcessGroupNodeSeq.IsSequence()) {
+    for (YAML::const_iterator it = childProcessGroupNodeSeq.begin(); it != childProcessGroupNodeSeq.end(); ++it) {
+      YAML::Node childProcessGroupNode = it->as<YAML::Node>();
+      group->addProcessGroup(parseProcessGroupYaml(childProcessGroupNode, childProcessGroupNode));
+    }
+  }
+  return group;
+}
+
 std::unique_ptr<core::ProcessGroup> YamlConfiguration::getYamlRoot(YAML::Node *rootYamlNode) {
     YAML::Node rootYaml = *rootYamlNode;
-    YAML::Node flowControllerNode = rootYaml[CONFIG_YAML_FLOW_CONTROLLER_KEY];
-    YAML::Node processorsNode = rootYaml[CONFIG_YAML_PROCESSORS_KEY];
-    YAML::Node connectionsNode = rootYaml[yaml::YamlConnectionParser::CONFIG_YAML_CONNECTIONS_KEY];
     YAML::Node controllerServiceNode = rootYaml[CONFIG_YAML_CONTROLLER_SERVICES_KEY];
-    YAML::Node remoteProcessingGroupsNode = rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY];
-
-    if (!remoteProcessingGroupsNode) {
-      remoteProcessingGroupsNode = rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3];
-    }
-
     YAML::Node provenanceReportNode = rootYaml[CONFIG_YAML_PROVENANCE_REPORT_KEY];
 
     parseControllerServices(&controllerServiceNode);
     // Create the root process group
-    std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroupYaml(flowControllerNode);
-    parseProcessorNodeYaml(processorsNode, root.get());
-    parseRemoteProcessGroupYaml(&remoteProcessingGroupsNode, root.get());
-    parseConnectionYaml(&connectionsNode, root.get());
+    std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroupYaml(rootYaml);
     parseProvenanceReportingYaml(&provenanceReportNode, root.get());
 
     // set the controller services into the root group.
@@ -327,14 +351,12 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
         std::string url = urlNode.as<std::string>();
         logger_->log_debug("parseRemoteProcessGroupYaml: url => [%s]", url);
 
-        core::ProcessGroup *group = NULL;
         core::TimeUnit unit;
         int64_t timeoutValue = -1;
         int64_t yieldPeriodValue = -1;
         uuid = id;
-        group = this->createRemoteProcessGroup(name.c_str(), uuid).release();
+        auto group = this->createRemoteProcessGroup(name, uuid);
         group->setParent(parentGroup);
-        parentGroup->addProcessGroup(group);
 
         if (currRpgNode["yield period"]) {
           std::string yieldPeriod = currRpgNode["yield period"].as<std::string>();
@@ -409,7 +431,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
           for (YAML::const_iterator portIter = inputPorts.begin(); portIter != inputPorts.end(); ++portIter) {
             YAML::Node currPort = portIter->as<YAML::Node>();
 
-            this->parsePortYaml(&currPort, group, sitetosite::SEND);
+            this->parsePortYaml(&currPort, group.get(), sitetosite::SEND);
           }  // for node
         }
         YAML::Node outputPorts = currRpgNode["Output Ports"].as<YAML::Node>();
@@ -419,9 +441,10 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
 
             YAML::Node currPort = portIter->as<YAML::Node>();
 
-            this->parsePortYaml(&currPort, group, sitetosite::RECEIVE);
+            this->parsePortYaml(&currPort, group.get(), sitetosite::RECEIVE);
           }  // for node
         }
+        parentGroup->addProcessGroup(std::move(group));
       }
     }
   }
@@ -543,7 +566,7 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
             logger_->log_debug("Created Controller Service with UUID %s and name %s", id, name);
             controller_service_node->initialize();
             YAML::Node propertiesNode = controllerServiceNode["Properties"];
-            // we should propogate properties to the node and to the implementation
+            // we should propagate properties to the node and to the implementation
             parsePropertiesNodeYaml(&propertiesNode, std::static_pointer_cast<core::ConfigurableComponent>(controller_service_node), name,
             CONFIG_YAML_CONTROLLER_SERVICES_KEY);
             if (controller_service_node->getControllerServiceImplementation() != nullptr) {
@@ -599,6 +622,16 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node* connectionsNode, core::P
     connection->setDestinationUUID(connectionParser.getDestinationUUIDFromYaml());
     connection->setFlowExpirationDuration(connectionParser.getFlowFileExpirationFromYaml());
     connection->setDropEmptyFlowFiles(connectionParser.getDropEmptyFromYaml());
+
+    if (!parent->findProcessorById(connection->getSourceUUID(), ProcessGroup::Traverse::ExcludeChildren)) {
+      logger_->log_error("Couldn't find the source processor with id '%s' for the connection [name = '%s', id = '%s'] in the process group '%s'",
+                         connection->getSourceUUID().to_string(), connection->getName(), connection->getUUIDStr(), parent->getName());
+    }
+
+    if (!parent->findProcessorById(connection->getDestinationUUID(), ProcessGroup::Traverse::ExcludeChildren)) {
+      logger_->log_error("Couldn't find the destination processor with id '%s' for the connection [name = '%s', id = '%s'] in the process group '%s'",
+                         connection->getDestinationUUID().to_string(), connection->getName(), connection->getUUIDStr(), parent->getName());
+    }
 
     parent->addConnection(connection);
   }

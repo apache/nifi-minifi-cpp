@@ -106,6 +106,7 @@ class FlowConfiguration : public CoreComponent {
   // Create Root Processor Group
 
   std::unique_ptr<core::ProcessGroup> createRootProcessGroup(std::string name, utils::Identifier & uuid, int version);
+  std::unique_ptr<core::ProcessGroup> createSimpleProcessGroup(std::string name, utils::Identifier & uuid, int version);
 
   std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &class_name, const std::string &full_class_name, const std::string &name,
       const utils::Identifier& uuid);

@@ -158,6 +158,9 @@ class YamlConfiguration : public FlowConfiguration {
    */
   std::unique_ptr<core::ProcessGroup> getYamlRoot(YAML::Node *rootYamlNode);
 
+  std::unique_ptr<core::ProcessGroup> createProcessGroup(YAML::Node headerNode, bool is_root = false);
+
+  std::unique_ptr<core::ProcessGroup> parseProcessGroupYaml(YAML::Node headerNode, YAML::Node yamlNode, bool is_root = false);
   /**
    * Parses a processor from its corresponding YAML config node and adds
    * it to a parent ProcessGroup. The processorNode argument must point
