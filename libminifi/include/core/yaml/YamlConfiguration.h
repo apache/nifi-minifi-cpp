@@ -83,7 +83,7 @@ class YamlConfiguration : public FlowConfiguration {
     }
     try {
       YAML::Node rootYamlNode = YAML::Load(configuration.value());
-      return getYamlRoot(&rootYamlNode);
+      return getYamlRoot(rootYamlNode);
     } catch(...) {
       logger_->log_error("Invalid yaml configuration file");
       throw;
@@ -104,7 +104,7 @@ class YamlConfiguration : public FlowConfiguration {
   std::unique_ptr<core::ProcessGroup> getYamlRoot(std::istream &yamlConfigStream) {
     try {
       YAML::Node rootYamlNode = YAML::Load(yamlConfigStream);
-      return getYamlRoot(&rootYamlNode);
+      return getYamlRoot(rootYamlNode);
     } catch (const YAML::ParserException &pe) {
       logger_->log_error(pe.what());
       std::rethrow_exception(std::current_exception());
@@ -126,7 +126,7 @@ class YamlConfiguration : public FlowConfiguration {
   std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) override {
     try {
       YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
-      return getYamlRoot(&rootYamlNode);
+      return getYamlRoot(rootYamlNode);
     } catch (const YAML::ParserException &pe) {
       logger_->log_error(pe.what());
       std::rethrow_exception(std::current_exception());
@@ -156,8 +156,11 @@ class YamlConfiguration : public FlowConfiguration {
    * @return             the root ProcessGroup node of the flow
    *                       configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getYamlRoot(YAML::Node *rootYamlNode);
+  std::unique_ptr<core::ProcessGroup> getYamlRoot(const YAML::Node& rootYamlNode);
 
+  std::unique_ptr<core::ProcessGroup> createProcessGroup(const YAML::Node& headerNode, bool is_root = false);
+
+  std::unique_ptr<core::ProcessGroup> parseProcessGroupYaml(const YAML::Node& headerNode, const YAML::Node& yamlNode, bool is_root = false);
   /**
    * Parses a processor from its corresponding YAML config node and adds
    * it to a parent ProcessGroup. The processorNode argument must point
@@ -169,7 +172,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parent        the parent ProcessGroup to which the the created
    *                        Processor should be added
    */
-  void parseProcessorNodeYaml(YAML::Node processorNode, core::ProcessGroup *parent);
+  void parseProcessorNodeYaml(const YAML::Node& processorNode, core::ProcessGroup* parent);
 
   /**
    * Parses a port from its corressponding YAML config node and adds
@@ -182,7 +185,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parent    the parent ProcessGroup for the port
    * @param direction the TransferDirection of the port
    */
-  void parsePortYaml(YAML::Node *portNode, core::ProcessGroup *parent, sitetosite::TransferDirection direction);
+  void parsePortYaml(const YAML::Node& portNode, core::ProcessGroup* parent, sitetosite::TransferDirection direction);
 
   /**
    * Parses the root level YAML node for the flow configuration and
@@ -192,16 +195,16 @@ class YamlConfiguration : public FlowConfiguration {
    * @param rootNode
    * @return
    */
-  std::unique_ptr<core::ProcessGroup> parseRootProcessGroupYaml(YAML::Node rootNode);
+  std::unique_ptr<core::ProcessGroup> parseRootProcessGroupYaml(const YAML::Node& rootNode);
 
   // Process Property YAML
-  void parseProcessorPropertyYaml(YAML::Node *doc, YAML::Node *node, std::shared_ptr<core::Processor> processor);
+  void parseProcessorPropertyYaml(const YAML::Node& doc, const YAML::Node& node, std::shared_ptr<core::Processor> processor);
   /**
    * Parse controller services
    * @param controllerServicesNode controller services YAML node.
    * @param parent parent process group.
    */
-  void parseControllerServices(YAML::Node *controllerServicesNode);
+  void parseControllerServices(const YAML::Node& controllerServicesNode);
 
   /**
    * Parses the Connections section of a configuration YAML.
@@ -212,7 +215,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parent the root node of flow configuration to which
    *                 to add the connections that are parsed
    */
-  void parseConnectionYaml(YAML::Node *node, core::ProcessGroup *parent);
+  void parseConnectionYaml(const YAML::Node& node, core::ProcessGroup* parent);
 
   /**
    * Parses the Remote Process Group section of a configuration YAML.
@@ -223,7 +226,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parent the root node of flow configuration to which
    *                 to add the process groups that are parsed
    */
-  void parseRemoteProcessGroupYaml(YAML::Node *node, core::ProcessGroup *parent);
+  void parseRemoteProcessGroupYaml(const YAML::Node& node, core::ProcessGroup* parent);
 
   /**
    * Parses the Provenance Reporting section of a configuration YAML.
@@ -235,7 +238,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parentGroup the root node of flow configuration to which
    *                      to add the provenance reporting config
    */
-  void parseProvenanceReportingYaml(YAML::Node *reportNode, core::ProcessGroup *parentGroup);
+  void parseProvenanceReportingYaml(const YAML::Node& reportNode, core::ProcessGroup* parentGroup);
 
   /**
    * A helper function to parse the Properties Node YAML for a processor.
@@ -243,7 +246,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param propertiesNode the YAML::Node containing the properties
    * @param processor      the Processor to which to add the resulting properties
    */
-  void parsePropertiesNodeYaml(YAML::Node *propertiesNode, std::shared_ptr<core::ConfigurableComponent> processor, const std::string &component_name, const std::string &yaml_section);
+  void parsePropertiesNodeYaml(const YAML::Node& propertiesNode, std::shared_ptr<core::ConfigurableComponent> processor, const std::string& component_name, const std::string& yaml_section);
 
   /**
    * A helper function for parsing or generating optional id fields.
@@ -261,7 +264,7 @@ class YamlConfiguration : public FlowConfiguration {
    *                   is optional and defaults to 'id'
    * @return         the parsed or generated UUID string
    */
-  std::string getOrGenerateId(YAML::Node *yamlNode, const std::string &idField = "id");
+  std::string getOrGenerateId(const YAML::Node& yamlNode, const std::string& idField = "id");
 
   /**
    * This is a helper function for getting an optional value, if it exists.
@@ -277,7 +280,7 @@ class YamlConfiguration : public FlowConfiguration {
    *                       the optional field is missing. If not provided,
    *                       a default info message will be generated.
    */
-  YAML::Node getOptionalField(YAML::Node *yamlNode, const std::string &fieldName, const YAML::Node &defaultValue, const std::string &yamlSection = "", const std::string &infoMessage = "");
+  YAML::Node getOptionalField(const YAML::Node& yamlNode, const std::string& fieldName, const YAML::Node& defaultValue, const std::string& yamlSection = "", const std::string& infoMessage = "");
 
  protected:
   std::shared_ptr<io::StreamFactory> stream_factory_;

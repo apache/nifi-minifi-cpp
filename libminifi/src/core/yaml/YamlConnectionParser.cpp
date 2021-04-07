@@ -93,14 +93,14 @@ utils::Identifier YamlConnectionParser::getSourceUUIDFromYaml() const {
   checkRequiredField(&connectionNode_, "source name", logger_, CONFIG_YAML_CONNECTIONS_KEY);
   const std::string connectionSrcProcName = connectionNode_["source name"].as<std::string>();
   const utils::optional<utils::Identifier> srcUUID = utils::Identifier::parse(connectionSrcProcName);
-  if (srcUUID && parent_->findProcessorById(srcUUID.value())) {
+  if (srcUUID && parent_->findProcessorById(srcUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
     // the source name is a remote port id, so use that as the source id
     logger_->log_debug("Using 'source name' containing a remote port id to match the source for connection '%s': source name => [%s]", name_, connectionSrcProcName);
     return srcUUID.value();
   }
   // lastly, look the processor up by name
-  auto srcProcessor = parent_->findProcessorByName(connectionSrcProcName);
-  if (nullptr != srcProcessor) {
+  auto srcProcessor = parent_->findProcessorByName(connectionSrcProcName, ProcessGroup::Traverse::ExcludeChildren);
+  if (srcProcessor) {
     logger_->log_debug("Using 'source name' to match source with same name for connection '%s': source name => [%s]", name_, connectionSrcProcName);
     return srcProcessor->getUUID();
   }
@@ -126,14 +126,14 @@ utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
   checkRequiredField(&connectionNode_, "destination name", logger_, CONFIG_YAML_CONNECTIONS_KEY);
   std::string connectionDestProcName = connectionNode_["destination name"].as<std::string>();
   const utils::optional<utils::Identifier> destUUID = utils::Identifier::parse(connectionDestProcName);
-  if (destUUID && parent_->findProcessorById(destUUID.value())) {
+  if (destUUID && parent_->findProcessorById(destUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
     // the destination name is a remote port id, so use that as the dest id
     logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for connection '%s': destination name => [%s]", name_, connectionDestProcName);
     return destUUID.value();
   }
   // look the processor up by name
-  auto destProcessor = parent_->findProcessorByName(connectionDestProcName);
-  if (NULL != destProcessor) {
+  auto destProcessor = parent_->findProcessorByName(connectionDestProcName, ProcessGroup::Traverse::ExcludeChildren);
+  if (destProcessor) {
     logger_->log_debug("Using 'destination name' to match destination with same name for connection '%s': destination name => [%s]", name_, connectionDestProcName);
     return destProcessor->getUUID();
   }
