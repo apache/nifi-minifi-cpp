@@ -137,11 +137,6 @@ utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
     logger_->log_debug("Using 'destination name' to match destination with same name for connection '%s': destination name => [%s]", name_, connectionDestProcName);
     return destProcessor->getUUID();
   }
-  if (destUUID && parent_->findProcessorById(destUUID.value())) {
-    logger_->log_error("Processor with id '%s' is in another process group", destUUID->to_string());
-  } else if (parent_->findProcessorByName(connectionDestProcName)) {
-    logger_->log_error("Processor with name '%s' is in another process group", connectionDestProcName);
-  }
   // we ran out of ways to discover the destination processor
   const std::string error_msg = "Could not locate a destination with name " + connectionDestProcName + " to create a connection";
   logger_->log_error(error_msg.c_str());
