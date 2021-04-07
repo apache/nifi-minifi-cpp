@@ -379,8 +379,7 @@ std::shared_ptr<Connectable> Processor::pickIncomingConnection() {
   return getNextIncomingConnectionImpl(rel_guard);
 }
 
-using namespace annotation;
-using namespace annotation::input;
+using annotation::input::EInputRequirement;
 
 void Processor::validateAnnotations() const {
   switch (getInputRequirement()) {
@@ -405,7 +404,7 @@ EInputRequirement Processor::getInputRequirement() const {
   // default input requirement
   EInputRequirement myInputRequirement = EInputRequirement::INPUT_ALLOWED;
   // get own input annotation if InputRequirementAnnotationBase is a base class
-  const auto myAnnotation = dynamic_cast<const Annotation<EInputRequirement>*>(this);
+  const auto myAnnotation = dynamic_cast<const core::annotation::Annotation<EInputRequirement>*>(this);
   if (myAnnotation != nullptr) {
     myInputRequirement = myAnnotation->value_;
   }
