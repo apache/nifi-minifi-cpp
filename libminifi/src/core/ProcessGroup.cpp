@@ -345,11 +345,13 @@ void ProcessGroup::addConnection(const std::shared_ptr<Connection>& connection) 
     if (source) {
       source->addConnection(connection);
     } else {
-      logger_->log_error("Cannot find the source processor %s for connection %s", connection->getSourceUUID().to_string(), connection->getUUIDStr());
+      logger_->log_error("Cannot find the source processor with id '%s' for the connection [name = '%s', id = '%s']",
+                         connection->getSourceUUID().to_string(), connection->getName(), connection->getUUIDStr());
     }
     std::shared_ptr<Processor> destination = this->findProcessorById(connection->getDestinationUUID(), Traverse::ExcludeChildren);
     if (!destination) {
-      logger_->log_error("Cannot find the destination processor %s for connection %s", connection->getDestinationUUID().to_string(), connection->getUUIDStr());
+      logger_->log_error("Cannot find the destination processor with id '%s' for the connection [name = '%s', id = '%s']",
+                         connection->getDestinationUUID().to_string(), connection->getName(), connection->getUUIDStr());
     }
     if (destination && destination != source) {
       destination->addConnection(connection);

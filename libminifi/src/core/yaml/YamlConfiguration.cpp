@@ -623,16 +623,6 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node* connectionsNode, core::P
     connection->setFlowExpirationDuration(connectionParser.getFlowFileExpirationFromYaml());
     connection->setDropEmptyFlowFiles(connectionParser.getDropEmptyFromYaml());
 
-    if (!parent->findProcessorById(connection->getSourceUUID(), ProcessGroup::Traverse::ExcludeChildren)) {
-      logger_->log_error("Couldn't find the source processor with id '%s' for the connection [name = '%s', id = '%s'] in the process group '%s'",
-                         connection->getSourceUUID().to_string(), connection->getName(), connection->getUUIDStr(), parent->getName());
-    }
-
-    if (!parent->findProcessorById(connection->getDestinationUUID(), ProcessGroup::Traverse::ExcludeChildren)) {
-      logger_->log_error("Couldn't find the destination processor with id '%s' for the connection [name = '%s', id = '%s'] in the process group '%s'",
-                         connection->getDestinationUUID().to_string(), connection->getName(), connection->getUUIDStr(), parent->getName());
-    }
-
     parent->addConnection(connection);
   }
 }
