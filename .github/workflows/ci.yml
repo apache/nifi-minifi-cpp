@@ -109,6 +109,9 @@ jobs:
           sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev libsqliteodbc flake8 lua5.3 liblua5.3-dev
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
+          docker pull lordgamez/tensorflow-cc-binaries:ubuntu-20.04
+          docker run --rm lordgamez/tensorflow-cc-binaries:ubuntu-20.04 > tensorflow_binaries.tar.gz
+          tar -xf tensorflow_binaries.tar.gz -C ~/
       - name: build
         run: |
           ./bootstrap.sh -e -t
@@ -117,7 +120,8 @@ jobs:
           export CXX=g++-11
           cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DENABLE_BUSTACHE=ON -DENABLE_COAP=ON \
               -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_JNI=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_LINTER=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON -DENABLE_OPENCV=ON \
-              -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_PCAP=ON -DENABLE_PYTHON=ON -DENABLE_SENSORS=ON -DENABLE_SFTP=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON -DENABLE_TENSORFLOW=OFF \
+              -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_PCAP=ON -DENABLE_PYTHON=ON -DENABLE_SENSORS=ON -DENABLE_SFTP=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON -DENABLE_TENSORFLOW=ON \
+              -DTENSORFLOW_INCLUDE_PATH=~/tensorflow_binaries/tensorflow_include/include -DTENSORFLOW_LIB_PATH=~/tensorflow_binaries/libs -DGOOGLE_PROTOBUF_LIB_PATH=~/tensorflow_binaries/libs \
               -DENABLE_USB_CAMERA=ON -DENABLE_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON ..
           make -j$(nproc) VERBOSE=1
       - name: test
@@ -149,13 +153,18 @@ jobs:
           sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
+          docker pull lordgamez/tensorflow-cc-binaries:ubuntu-20.04
+          docker run --rm lordgamez/tensorflow-cc-binaries:ubuntu-20.04 > tensorflow_binaries.tar.gz
+          tar -xf tensorflow_binaries.tar.gz -C ~/
       - name: build
         run: |
           ./bootstrap.sh -e -t
           cd build
           export CC=clang
           export CXX=clang++
-          cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DENABLE_NANOFI=ON -DENABLE_JNI=ON -DENABLE_SENSORS=ON -DENABLE_OPENWSMAN=ON -DENABLE_OPENCV=ON -DENABLE_MQTT=ON -DENABLE_GPS=ON -DENABLE_USB_CAMERA=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_COAP=ON -DENABLE_PYTHON=ON -DENABLE_SQL=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON ..
+          cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DENABLE_NANOFI=ON -DENABLE_JNI=ON -DENABLE_SENSORS=ON -DENABLE_OPENWSMAN=ON -DENABLE_OPENCV=ON -DENABLE_MQTT=ON -DENABLE_GPS=ON -DENABLE_USB_CAMERA=ON \
+              -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_COAP=ON -DENABLE_PYTHON=ON -DENABLE_SQL=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON \
+              -DTENSORFLOW_INCLUDE_PATH=~/tensorflow_binaries/tensorflow_include/include -DTENSORFLOW_LIB_PATH=~/tensorflow_binaries/libs -DGOOGLE_PROTOBUF_LIB_PATH=~/tensorflow_binaries/libs -DENABLE_TENSORFLOW=ON ..
           cmake --build . --parallel $(nproc)
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
