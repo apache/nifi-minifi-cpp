@@ -67,7 +67,7 @@ minifi::utils::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::
   logger_->log_debug("DeleteS3Object: Version [%s]", params.version);
 
   params.bucket = common_properties.bucket;
-  setClientConfig(params.client_config, common_properties);
+  params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   return params;
 }
 

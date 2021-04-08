@@ -105,6 +105,14 @@ struct RequestParameters {
     , client_config(config) {}
   Aws::Auth::AWSCredentials credentials;
   Aws::Client::ClientConfiguration client_config;
+
+  void setClientConfig(const aws::s3::ProxyOptions& proxy, const std::string& endpoint_override_url) {
+    client_config.proxyHost = proxy.host;
+    client_config.proxyPort = proxy.port;
+    client_config.proxyUserName = proxy.username;
+    client_config.proxyPassword = proxy.password;
+    client_config.endpointOverride = endpoint_override_url;
+  }
 };
 
 struct PutObjectRequestParameters : public RequestParameters {

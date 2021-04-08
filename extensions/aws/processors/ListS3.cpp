@@ -100,7 +100,7 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required property is not set or invalid");
   }
   list_request_params_ = minifi::utils::make_unique<aws::s3::ListRequestParameters>(common_properties->credentials, client_config_);
-  setClientConfig(list_request_params_->client_config, *common_properties);
+  list_request_params_->setClientConfig(common_properties->proxy, common_properties->endpoint_override_url);
   list_request_params_->bucket = common_properties->bucket;
 
   context->getProperty(Delimiter.getName(), list_request_params_->delimiter);

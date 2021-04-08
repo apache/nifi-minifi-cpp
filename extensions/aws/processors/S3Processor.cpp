@@ -243,14 +243,6 @@ minifi::utils::optional<CommonProperties> S3Processor::getCommonELSupportedPrope
   return properties;
 }
 
-void S3Processor::setClientConfig(Aws::Client::ClientConfiguration& config, const CommonProperties &common_properties) {
-  config.proxyHost = common_properties.proxy.host;
-  config.proxyPort = common_properties.proxy.port;
-  config.proxyUserName = common_properties.proxy.username;
-  config.proxyPassword = common_properties.proxy.password;
-  config.endpointOverride = common_properties.endpoint_override_url;
-}
-
 }  // namespace processors
 }  // namespace aws
 }  // namespace minifi

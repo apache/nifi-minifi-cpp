@@ -82,7 +82,7 @@ minifi::utils::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buil
 
   context->getProperty(Version, get_object_params.version, flow_file);
   logger_->log_debug("FetchS3Object: Version [%s]", get_object_params.version);
-  setClientConfig(get_object_params.client_config, common_properties);
+  get_object_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   return get_object_params;
 }
 
