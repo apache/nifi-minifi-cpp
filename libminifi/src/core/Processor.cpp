@@ -403,7 +403,7 @@ void Processor::validateAnnotations() const {
 EInputRequirement Processor::getInputRequirement() const {
   // default input requirement
   EInputRequirement myInputRequirement = EInputRequirement::INPUT_ALLOWED;
-  // get own input annotation if InputRequirementAnnotationBase is a base class
+  // get own input annotation if Annotation<EInputRequirement> is a base class
   const auto myAnnotation = dynamic_cast<const core::annotation::Annotation<EInputRequirement>*>(this);
   if (myAnnotation != nullptr) {
     myInputRequirement = myAnnotation->value_;
