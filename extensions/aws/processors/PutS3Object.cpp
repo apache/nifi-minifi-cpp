@@ -167,7 +167,7 @@ std::string PutS3Object::parseAccessControlList(const std::string &comma_separat
 bool PutS3Object::setCannedAcl(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
-    aws::s3::PutObjectRequestParameters &put_s3_request_params) {
+    aws::s3::PutObjectRequestParameters &put_s3_request_params) const {
   context->getProperty(CannedACL, put_s3_request_params.canned_acl, flow_file);
   if (!put_s3_request_params.canned_acl.empty() && CANNED_ACLS.find(put_s3_request_params.canned_acl) == CANNED_ACLS.end()) {
     logger_->log_error("Canned ACL is invalid!");
@@ -180,7 +180,7 @@ bool PutS3Object::setCannedAcl(
 bool PutS3Object::setAccessControl(
       const std::shared_ptr<core::ProcessContext> &context,
       const std::shared_ptr<core::FlowFile> &flow_file,
-      aws::s3::PutObjectRequestParameters &put_s3_request_params) {
+      aws::s3::PutObjectRequestParameters &put_s3_request_params) const {
   std::string value;
   if (context->getProperty(FullControlUserList, value, flow_file) && !value.empty()) {
     put_s3_request_params.fullcontrol_user_list = parseAccessControlList(value);
@@ -205,7 +205,7 @@ bool PutS3Object::setAccessControl(
 minifi::utils::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
-    const CommonProperties &common_properties) {
+    const CommonProperties &common_properties) const {
   aws::s3::PutObjectRequestParameters params(common_properties.credentials, client_config_);
   setClientConfig(params.client_config, common_properties);
   params.bucket = common_properties.bucket;
@@ -233,7 +233,7 @@ void PutS3Object::setAttributes(
     const std::shared_ptr<core::ProcessSession> &session,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const aws::s3::PutObjectRequestParameters &put_s3_request_params,
-    const minifi::aws::s3::PutObjectResult &put_object_result) {
+    const minifi::aws::s3::PutObjectResult &put_object_result) const {
   session->putAttribute(flow_file, "s3.bucket", put_s3_request_params.bucket);
   session->putAttribute(flow_file, "s3.key", put_s3_request_params.object_key);
   session->putAttribute(flow_file, "s3.contenttype", put_s3_request_params.content_type);

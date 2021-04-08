@@ -69,7 +69,7 @@ class DeleteS3Object : public S3Processor {
   minifi::utils::optional<aws::s3::DeleteObjectRequestParameters> buildDeleteS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
-    const CommonProperties &common_properties);
+    const CommonProperties &common_properties) const;
 };
 
 REGISTER_RESOURCE(DeleteS3Object, "This Processor deletes FlowFiles on an Amazon S3 Bucket.");

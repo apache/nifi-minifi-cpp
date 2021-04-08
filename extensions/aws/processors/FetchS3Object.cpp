@@ -68,7 +68,7 @@ void FetchS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
 minifi::utils::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
-    const CommonProperties &common_properties) {
+    const CommonProperties &common_properties) const {
   minifi::aws::s3::GetObjectRequestParameters get_object_params(common_properties.credentials, client_config_);
   get_object_params.bucket = common_properties.bucket;
   get_object_params.requester_pays = requester_pays_;

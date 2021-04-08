@@ -54,7 +54,7 @@ void DeleteS3Object::initialize() {
 minifi::utils::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDeleteS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
-    const CommonProperties &common_properties) {
+    const CommonProperties &common_properties) const {
   aws::s3::DeleteObjectRequestParameters params(common_properties.credentials, client_config_);
   context->getProperty(ObjectKey, params.object_key, flow_file);
   if (params.object_key.empty() && (!flow_file->getAttribute("filename", params.object_key) || params.object_key.empty())) {
