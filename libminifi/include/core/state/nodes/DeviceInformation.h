@@ -363,42 +363,42 @@ class DeviceInfoNode : public DeviceInformation {
   }
 
  protected:
-  SerializedResponseNode serializeIdentifier() {
+  SerializedResponseNode serializeIdentifier() const {
     SerializedResponseNode identifier;
     identifier.name = "identifier";
     identifier.value = device_id_;
     return identifier;
   }
 
-  SerializedResponseNode serializeVCoreInfo() {
+  SerializedResponseNode serializeVCoreInfo() const {
     SerializedResponseNode v_cores;
     v_cores.name = "vCores";
     v_cores.value = std::thread::hardware_concurrency();
     return v_cores;
   }
 
-  SerializedResponseNode serializeOperatingSystemType() {
+  SerializedResponseNode serializeOperatingSystemType() const {
     SerializedResponseNode os_type;
     os_type.name = "operatingSystem";
     os_type.value = getOperatingSystem();
     return os_type;
   }
 
-  SerializedResponseNode serializeTotalPhysicalMemoryInformation() {
+  SerializedResponseNode serializeTotalPhysicalMemoryInformation() const {
     SerializedResponseNode total_physical_memory;
     total_physical_memory.name = "physicalMem";
     total_physical_memory.value = utils::OsUtils::getSystemTotalPhysicalMemory();
     return total_physical_memory;
   }
 
-  SerializedResponseNode serializePhysicalMemoryUsageInformation() {
+  SerializedResponseNode serializePhysicalMemoryUsageInformation() const {
     SerializedResponseNode used_physical_memory;
     used_physical_memory.name = "memoryUsage";
     used_physical_memory.value = utils::OsUtils::getSystemPhysicalMemoryUsage();
     return used_physical_memory;
   }
 
-  SerializedResponseNode serializeSystemCPUUsageInformation() {
+  SerializedResponseNode serializeSystemCPUUsageInformation() const {
     double system_cpu_usage = -1.0;
     {
       std::lock_guard<std::mutex> guard(cpu_load_tracker_mutex_);
@@ -410,14 +410,14 @@ class DeviceInfoNode : public DeviceInformation {
     return cpu_usage;
   }
 
-  SerializedResponseNode serializeArchitectureInformation() {
+  SerializedResponseNode serializeArchitectureInformation() const {
     SerializedResponseNode arch;
     arch.name = "machinearch";
     arch.value = utils::OsUtils::getMachineArchitecture();
     return arch;
   }
 
-  SerializedResponseNode serializeSystemInfo() {
+  SerializedResponseNode serializeSystemInfo() const {
     SerializedResponseNode systemInfo;
     systemInfo.name = "systemInfo";
 
@@ -431,21 +431,21 @@ class DeviceInfoNode : public DeviceInformation {
     return systemInfo;
   }
 
-  SerializedResponseNode serializeHostNameInfo() {
+  SerializedResponseNode serializeHostNameInfo() const {
     SerializedResponseNode hostname;
     hostname.name = "hostname";
     hostname.value = hostname_;
     return hostname;
   }
 
-  SerializedResponseNode serializeIPAddress() {
+  SerializedResponseNode serializeIPAddress() const {
     SerializedResponseNode ip;
     ip.name = "ipAddress";
     ip.value = !ip_.empty() ? ip_ : "127.0.0.1";
     return ip;
   }
 
-  SerializedResponseNode serializeNetworkInfo() {
+  SerializedResponseNode serializeNetworkInfo() const {
     SerializedResponseNode network_info;
     network_info.name = "networkInfo";
     network_info.children.push_back(serializeHostNameInfo());

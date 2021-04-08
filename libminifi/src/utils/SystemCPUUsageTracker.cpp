@@ -34,7 +34,7 @@ SystemCPUUsageTracker::SystemCPUUsageTracker() :
 
 double SystemCPUUsageTracker::getCPUUsageAndRestartCollection() {
   queryCPUTimes();
-  if (isCurrentQuerySameAsPrevious() || isCurrentQuerySameAsPrevious()) {
+  if (isCurrentQuerySameAsPrevious() || isCurrentQueryOlderThanPrevious()) {
     return -1.0;
   } else {
     return getCPUUsageBetweenLastTwoQueries();
@@ -91,7 +91,7 @@ SystemCPUUsageTracker::SystemCPUUsageTracker() :
 
 double SystemCPUUsageTracker::getCPUUsageAndRestartCollection() {
   queryCPUTimes();
-  if (isCurrentQuerySameAsPrevious() || isCurrentQuerySameAsPrevious()) {
+  if (isCurrentQuerySameAsPrevious() || isCurrentQueryOlderThanPrevious()) {
     return -1.0;
   } else {
     return getCPUUsageBetweenLastTwoQueries();
@@ -141,7 +141,7 @@ SystemCPUUsageTracker::SystemCPUUsageTracker() :
 
 double SystemCPUUsageTracker::getCPUUsageAndRestartCollection() {
   queryCPUTicks();
-  if (isCurrentQuerySameAsPrevious() || isCurrentQuerySameAsPrevious()) {
+  if (isCurrentQuerySameAsPrevious() || isCurrentQueryOlderThanPrevious()) {
     return -1.0;
   } else {
     return getCPUUsageBetweenLastTwoQueries();

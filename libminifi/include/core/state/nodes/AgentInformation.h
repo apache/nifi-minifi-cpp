@@ -444,12 +444,12 @@ class AgentStatus : public StateMonitorNode {
   }
 
  protected:
-  SerializedResponseNode serializeRepositories() {
+  SerializedResponseNode serializeRepositories() const {
     SerializedResponseNode repositories;
 
     repositories.name = "repositories";
 
-    for (auto &repo : repositories_) {
+    for (const auto& repo : repositories_) {
       SerializedResponseNode repoNode;
       repoNode.collapsible = false;
       repoNode.name = repo.first;
@@ -474,7 +474,7 @@ class AgentStatus : public StateMonitorNode {
     return repositories;
   }
 
-  SerializedResponseNode serializeUptime() {
+  SerializedResponseNode serializeUptime() const {
     SerializedResponseNode uptime;
 
     uptime.name = "uptime";
@@ -487,13 +487,13 @@ class AgentStatus : public StateMonitorNode {
     return uptime;
   }
 
-  SerializedResponseNode serializeComponents() {
+  SerializedResponseNode serializeComponents() const {
     SerializedResponseNode components_node(false);
     components_node.name = "components";
     if (monitor_ != nullptr) {
       auto components = monitor_->getAllComponents();
 
-      for (auto component : components) {
+      for (const auto& component : components) {
         SerializedResponseNode component_node(false);
         component_node.name = component->getComponentName();
 
@@ -513,14 +513,14 @@ class AgentStatus : public StateMonitorNode {
     return components_node;
   }
 
-  SerializedResponseNode serializeAgentMemoryUsage() {
+  SerializedResponseNode serializeAgentMemoryUsage() const {
     SerializedResponseNode used_physical_memory;
     used_physical_memory.name = "memoryUsage";
     used_physical_memory.value = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
     return used_physical_memory;
   }
 
-  SerializedResponseNode serializeAgentCPUUsage() {
+  SerializedResponseNode serializeAgentCPUUsage() const {
     double system_cpu_usage = -1.0;
     {
       std::lock_guard<std::mutex> guard(cpu_load_tracker_mutex_);
@@ -532,7 +532,7 @@ class AgentStatus : public StateMonitorNode {
     return cpu_usage;
   }
 
-  SerializedResponseNode serializeResourceConsumption() {
+  SerializedResponseNode serializeResourceConsumption() const {
     SerializedResponseNode resource_consumption;
     resource_consumption.name = "resourceConsumption";
     resource_consumption.children.push_back(serializeAgentMemoryUsage());
