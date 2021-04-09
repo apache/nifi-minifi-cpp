@@ -120,13 +120,13 @@ TEST_CASE("TensorFlow: Apply Graph", "[tfApplyGraph]") { // NOLINT
     tensorflow::GraphDef graph;
 
     // Write test TensorFlow graph
-    root.ToGraphDef(&graph);
+    REQUIRE(root.ToGraphDef(&graph).ok());
     std::ofstream in_file_stream(in_graph_file);
     graph.SerializeToOstream(&in_file_stream);
   }
 
   // Read test TensorFlow graph into TFApplyGraph
-  plan->runNextProcessor([&get_file, &in_graph_file, &plan](const std::shared_ptr<core::ProcessContext> /*context*/,
+  plan->runNextProcessor([&in_graph_file](const std::shared_ptr<core::ProcessContext> /*context*/,
                                                             const std::shared_ptr<core::ProcessSession> session) {
     // Intercept the call so that we can add an attr (won't be required when we have UpdateAttribute processor)
     auto flow_file = session->create();
@@ -358,7 +358,7 @@ TEST_CASE("TensorFlow: Extract Top Labels", "[tfExtractTopLabels]") { // NOLINT
   }
 
   // Read labels
-  plan->runNextProcessor([&get_file, &in_labels_file, &plan](const std::shared_ptr<core::ProcessContext> /*context*/,
+  plan->runNextProcessor([&in_labels_file](const std::shared_ptr<core::ProcessContext> /*context*/,
                                                              const std::shared_ptr<core::ProcessSession> session) {
     // Intercept the call so that we can add an attr (won't be required when we have UpdateAttribute processor)
     auto flow_file = session->create();
