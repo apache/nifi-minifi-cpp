@@ -190,3 +190,19 @@ TEST_CASE("PublishKafka dynamic properties can use expression language", "[Publi
 
   REQUIRE(LogTestController::getInstance().contains("PublishKafka: DynamicProperty: [retry.backoff.ms] -> [180000]"));
 }
+
+TEST_CASE("PublishKafka complains if Message Key Field is set, but only if it is set", "[PublishKafka][properties]") {
+  PublishKafkaTestRunner test_runner;
+
+  SECTION("Message Key Field is not set, so there is no error") {
+    test_runner.runProcessor();
+    REQUIRE_FALSE(LogTestController::getInstance().contains("error"));
+  }
+
+  SECTION("Message Key Field is set, so there is an error log") {
+    test_runner.setPublishKafkaProperty(processors::PublishKafka::MessageKeyField, "kafka.key");
+    test_runner.runProcessor();
+    REQUIRE(LogTestController::getInstance().contains("The " + processors::PublishKafka::MessageKeyField.getName() +
+        " property is set. This property is DEPRECATED and has no effect"));
+  }
+}
