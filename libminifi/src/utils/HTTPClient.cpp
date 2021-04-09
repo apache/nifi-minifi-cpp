@@ -26,6 +26,16 @@ namespace {
 constexpr const char* HTTP = "http://";
 constexpr const char* HTTPS = "https://";
 
+utils::optional<std::string> parseProtocol(const std::string& url_input) {
+  if (utils::StringUtils::startsWith(url_input, HTTP)) {
+    return HTTP;
+  } else if (utils::StringUtils::startsWith(url_input, HTTPS)) {
+    return HTTPS;
+  } else {
+    return {};
+  }
+}
+
 utils::optional<int> parsePortNumber(const std::string& port_string) {
   try {
     size_t pos;
@@ -74,10 +84,9 @@ std::string get_token(utils::BaseHTTPClient *client, std::string username, std::
 }
 
 URL::URL(const std::string& url_input) {
-  if (utils::StringUtils::startsWith(url_input, HTTP)) {
-    protocol_ = HTTP;
-  } else if (utils::StringUtils::startsWith(url_input, HTTPS)) {
-    protocol_ = HTTPS;
+  const auto protocol = parseProtocol(url_input);
+  if (protocol) {
+    protocol_ = *protocol;
   } else {
     logger_->log_error("Unknown protocol in URL '%s'", url_input);
     return;
