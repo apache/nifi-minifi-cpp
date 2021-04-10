@@ -174,14 +174,14 @@ TEST_CASE("ExecuteSQL honors Max Rows Per Flow File", "[ExecuteSQL5]") {
   auto flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 3);
   matcher.verify(flow_files[0],
-    {"2", "3", "0", capture(fragment_id)},
+    { AttributeValue("2"), AttributeValue("3"), AttributeValue("0"), capture(fragment_id) },
     R"([{"text_col": "apple"}, {"text_col": "banana"}])");
   REQUIRE(fragment_id);
   matcher.verify(flow_files[1],
-    {"2", "3", "1", *fragment_id},
+    { AttributeValue("2"), AttributeValue("3"), AttributeValue("1"), AttributeValue(*fragment_id) },
     R"([{"text_col": "pear"}, {"text_col": "strawberry"}])");
   matcher.verify(flow_files[2],
-    {"1", "3", "2", *fragment_id},
+    { AttributeValue("1"), AttributeValue("3"), AttributeValue("2"), AttributeValue(*fragment_id) },
     R"([{"text_col": "pineapple"}])");
 }
 

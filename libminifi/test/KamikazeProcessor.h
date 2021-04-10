@@ -18,13 +18,15 @@
  * limitations under the License.
  */
 
+#include <string>
+#include <memory>
+
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
 
-#ifndef NIFI_MINIFI_CPP_KAMIKAZEPROCESSOR_H
-#define NIFI_MINIFI_CPP_KAMIKAZEPROCESSOR_H
+#pragma once
 
 namespace org {
 namespace apache {
@@ -33,14 +35,14 @@ namespace minifi {
 namespace processors {
 // GenerateFlowFile Class
 class KamikazeProcessor : public core::Processor {
-public:
+ public:
   static const std::string OnScheduleExceptionStr;
   static const std::string OnTriggerExceptionStr;
   static const std::string OnScheduleLogStr;
   static const std::string OnTriggerLogStr;
   static const std::string OnUnScheduleLogStr;
 
-  KamikazeProcessor(const std::string& name, const utils::Identifier& uuid = {})
+  explicit KamikazeProcessor(const std::string& name, const utils::Identifier uuid = utils::Identifier())
   : Processor(name, uuid), logger_(logging::LoggerFactory<KamikazeProcessor>::getLogger()) {
     _throwInOnTrigger = false;
   }
@@ -51,15 +53,13 @@ public:
   static core::Property ThrowInOnSchedule;
   static core::Property ThrowInOnTrigger;
 
-public:
+ public:
   virtual void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   virtual void initialize();
   virtual void onUnSchedule();
 
-protected:
-
-private:
+ private:
   bool _throwInOnTrigger;
   // logger instance
   std::shared_ptr<logging::Logger> logger_;
@@ -72,5 +72,3 @@ REGISTER_RESOURCE(KamikazeProcessor, "This processor can throw exceptions in onT
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_KAMIKAZEPROCESSOR_H

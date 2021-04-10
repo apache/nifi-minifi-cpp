@@ -162,11 +162,11 @@ TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attr
   utils::optional<std::string> fragment_id;
 
   matcher.verify(flow_files[0],
-    {"test_table", "3", "2", "0", capture(fragment_id), "105"},
+    { AttributeValue("test_table"), AttributeValue("3"), AttributeValue("2"), AttributeValue("0"), capture(fragment_id), AttributeValue("105") },
     R"([{"text_col": "one"}, {"text_col": "two"}, {"text_col": "three"}])");
   REQUIRE(fragment_id);
   matcher.verify(flow_files[1],
-    {"test_table", "2", "2", "1", *fragment_id, "105"},
+    { AttributeValue("test_table"), AttributeValue("2"), AttributeValue("2"), AttributeValue("1"), AttributeValue(*fragment_id), AttributeValue("105") },
     R"([{"text_col": "four"}, {"text_col": "five"}])");
 }
 

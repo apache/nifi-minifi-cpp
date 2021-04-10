@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include "rapidjson/document.h"
 
 #define FIELD_ACCESSOR(field) \

@@ -17,8 +17,8 @@
 
 
 define_property(GLOBAL PROPERTY EXTENSION-OPTIONS
-    BRIEF_DOCS "Global extension list"
-    FULL_DOCS "Global extension list")
+  BRIEF_DOCS "Global extension list"
+  FULL_DOCS "Global extension list")
 
 set_property(GLOBAL PROPERTY EXTENSION-OPTIONS "")
 
@@ -32,96 +32,91 @@ endmacro()
 ### TESTING MACROS
 
 define_property(GLOBAL PROPERTY EXTENSION-TESTS
-    BRIEF_DOCS "Global extension tests"
-    FULL_DOCS "Global extension tests")
+  BRIEF_DOCS "Global extension tests"
+  FULL_DOCS "Global extension tests")
 
 set_property(GLOBAL PROPERTY EXTENSION-TESTS "")
 
-macro(register_extension_test extension-dir) 
+macro(register_extension_test extension-dir)
   if (NOT SKIP_TESTS)
-  	get_property(extensions GLOBAL PROPERTY EXTENSION-TESTS)
-  	set_property(GLOBAL APPEND PROPERTY EXTENSION-TESTS "${extension-dir}")
+    get_property(extensions GLOBAL PROPERTY EXTENSION-TESTS)
+    set_property(GLOBAL APPEND PROPERTY EXTENSION-TESTS "${extension-dir}")
   endif()
 endmacro()
 
 function(registerTest dirName)
-	if (NOT SKIP_TESTS)
-		add_subdirectory(${dirName})
-	endif()
+  if (NOT SKIP_TESTS)
+    add_subdirectory(${dirName})
+  endif()
 endfunction(registerTest)
 
 ### FUNCTION TO CREATE AN EXTENSION
 
 function(createExtension extensionGuard extensionName description dirName)
-	add_subdirectory(${dirName})
-	ADD_FEATURE_INFO("${extensionName}" ${extensionGuard} "${description}")
-    mark_as_advanced(${extensionGuard})
-    if (ARGV4)
-    	register_extension_test(${ARGV4})
-    endif(ARGV4)
-    if (ARGV5 AND ARGV6)
-    	if (${ARGV5})
-			add_subdirectory(${ARGV6})	
-		endif()
+  add_subdirectory(${dirName})
+  ADD_FEATURE_INFO("${extensionName}" ${extensionGuard} "${description}")
+  mark_as_advanced(${extensionGuard})
+  if (ARGV4)
+    register_extension_test(${ARGV4})
+  endif(ARGV4)
+  if (ARGV5 AND ARGV6)
+    if (${ARGV5})
+      add_subdirectory(${ARGV6})
     endif()
+  endif()
 endfunction()
 
 
 macro(register_extension_linter target-name)
-if (NOT WIN32)
-    get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
-    set_property(GLOBAL APPEND PROPERTY EXTENSION-LINTERS "${target-name}")
-    add_custom_target(${target-name}
-    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
-            ${CMAKE_SOURCE_DIR}/libminifi/include/
-            ${CMAKE_CURRENT_LIST_DIR}/ --
-            ${CMAKE_CURRENT_LIST_DIR}/)
-endif(NOT WIN32)
+  get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
+  set_property(GLOBAL APPEND PROPERTY EXTENSION-LINTERS "${target-name}")
+  add_custom_target(${target-name}
+  COMMAND python ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -i ${CMAKE_CURRENT_LIST_DIR}/)
 endmacro()
 
 # ARGN WILL be the
 function (build_git_project target prefix repourl repotag)
 
-	set(exec_dir ${CMAKE_BINARY_DIR}/force_${target})
+  set(exec_dir ${CMAKE_BINARY_DIR}/force_${target})
 
-	file(MAKE_DIRECTORY ${exec_dir} ${exec_dir}/build)
+  file(MAKE_DIRECTORY ${exec_dir} ${exec_dir}/build)
 
-	set(CMAKE_LIST_CONTENT "
-        include(ExternalProject)
-        ExternalProject_add(${target}
-            PREFIX ${prefix}/${target}
-            GIT_REPOSITORY ${repourl}
-        	GIT_TAG ${repotag}
-            CMAKE_ARGS \"${ARGN}\"
-            INSTALL_COMMAND \"\"
+  set(CMAKE_LIST_CONTENT "
+    include(ExternalProject)
+    ExternalProject_add(${target}
+      PREFIX ${prefix}/${target}
+      GIT_REPOSITORY ${repourl}
+      GIT_TAG ${repotag}
+      CMAKE_ARGS \"${ARGN}\"
+      INSTALL_COMMAND \"\"
+      )
+    add_custom_target(exec_${target})
+    add_dependencies(exec_${target} ${target})
+  ")
+
+  file(WRITE ${exec_dir}/CMakeLists.txt "${CMAKE_LIST_CONTENT}")
+
+  # Try to determine the number of CPUs and do a parallel build based on that
+  include(ProcessorCount OPTIONAL RESULT_VARIABLE PROCESSCOUNT_RESULT)
+  if(NOT PROCESSCOUNT_RESULT EQUAL NOTFOUND)
+    ProcessorCount(NUM_CPU)
+    math(EXPR PARALLELISM "${NUM_CPU} / 2")
+  endif()
+  if(NOT PARALLELISM OR PARALLELISM LESS 1)
+    set(PARALLELISM 1)
+  endif()
+
+  message("Building ${target} with a parallelism of ${PARALLELISM}")
+  execute_process(COMMAND ${CMAKE_COMMAND} ..
+          WORKING_DIRECTORY ${exec_dir}/build
+          )
+  if(${CMAKE_VERSION} VERSION_EQUAL "3.12.0" OR ${CMAKE_VERSION} VERSION_GREATER "3.12.0")
+    execute_process(COMMAND ${CMAKE_COMMAND} --build . --parallel ${PARALLELISM}
+            WORKING_DIRECTORY ${exec_dir}/build
             )
-         add_custom_target(exec_${target})
-        add_dependencies(exec_${target} ${target})
-    ")
-
-	file(WRITE ${exec_dir}/CMakeLists.txt "${CMAKE_LIST_CONTENT}")
-
-	# Try to determine the number of CPUs and do a parallel build based on that
-	include(ProcessorCount OPTIONAL RESULT_VARIABLE PROCESSCOUNT_RESULT)
-	if(NOT PROCESSCOUNT_RESULT EQUAL NOTFOUND)
-		ProcessorCount(NUM_CPU)
-		math(EXPR PARALLELISM "${NUM_CPU} / 2")
-	endif()
-	if(NOT PARALLELISM OR PARALLELISM LESS 1)
-		set(PARALLELISM 1)
-	endif()
-
-	message("Building ${target} with a parallelism of ${PARALLELISM}")
-	execute_process(COMMAND ${CMAKE_COMMAND} ..
-			WORKING_DIRECTORY ${exec_dir}/build
-			)
-	if(${CMAKE_VERSION} VERSION_EQUAL "3.12.0" OR ${CMAKE_VERSION} VERSION_GREATER "3.12.0")
-		execute_process(COMMAND ${CMAKE_COMMAND} --build . --parallel ${PARALLELISM}
-				WORKING_DIRECTORY ${exec_dir}/build
-				)
-	else()
-		execute_process(COMMAND ${CMAKE_COMMAND} --build .
-				WORKING_DIRECTORY ${exec_dir}/build
-				)
-	endif()
+  else()
+    execute_process(COMMAND ${CMAKE_COMMAND} --build .
+            WORKING_DIRECTORY ${exec_dir}/build
+            )
+  endif()
 endfunction()

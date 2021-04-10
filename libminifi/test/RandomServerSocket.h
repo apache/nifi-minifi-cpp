@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_RANDOMSERVERSOCKET_H
-#define NIFI_MINIFI_CPP_RANDOMSERVERSOCKET_H
+#pragma once
+
+#include <string>
 
 #include "io/ServerSocket.h"
 
@@ -29,7 +30,7 @@ namespace io {
 
 class RandomServerSocket : public ServerSocket {
  public:
-  RandomServerSocket(const std::string& host = "localhost", uint16_t offset = 30000, uint16_t range = 10000, uint16_t retries = 100);
+  explicit RandomServerSocket(const std::string& host = "localhost", uint16_t offset = 30000, uint16_t range = 10000, uint16_t retries = 100);
 };
 
 } /* namespace io */
@@ -37,5 +38,3 @@ class RandomServerSocket : public ServerSocket {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_RANDOMSERVERSOCKET_H

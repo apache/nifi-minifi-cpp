@@ -18,15 +18,20 @@
 
 #pragma once
 
+#include <functional>
+#include <vector>
+#include <string>
+#include <memory>
+#include <utility>
+
 #include "../TestBase.h"
 #include "core/FlowFile.h"
-#include <functional>
 
 struct AttributeValue {
-  AttributeValue(std::string value)
+  explicit AttributeValue(std::string value)
     : value{std::move(value)} {}
 
-  AttributeValue(const char* value)
+  explicit AttributeValue(const char* value)
       : value{value} {}
 
   AttributeValue(std::string value, utils::optional<std::string>& capture)

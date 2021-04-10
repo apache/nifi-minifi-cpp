@@ -859,21 +859,17 @@ else()
 	include(DockerConfig)
 endif()
 
-if(NOT WIN32)
 # Create a custom build target that will run the linter.
 get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
 add_custom_target(linter
-	COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
-			${CMAKE_SOURCE_DIR}/libminifi/include/ --
-			${CMAKE_SOURCE_DIR}/libminifi/src/
-	COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
-			${CMAKE_SOURCE_DIR}/libminifi/include/ --
-			${CMAKE_SOURCE_DIR}/libminifi/test/
-	COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
-			${CMAKE_SOURCE_DIR}/encrypt-config/ --
-			${CMAKE_SOURCE_DIR}/encrypt-config/
+	COMMAND python ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -i
+		${CMAKE_SOURCE_DIR}/libminifi/include/
+		${CMAKE_SOURCE_DIR}/libminifi/src/
+		${CMAKE_SOURCE_DIR}/libminifi/test/
+		${CMAKE_SOURCE_DIR}/encrypt-config/
 	DEPENDS ${extensions})
 
+if(NOT WIN32)
 add_custom_target(shellcheck
 	COMMAND ${CMAKE_SOURCE_DIR}/run_shellcheck.sh ${CMAKE_SOURCE_DIR})
 

@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_TEST_TESTBASE_H_
-#define LIBMINIFI_TEST_TESTBASE_H_
+#pragma once
+
 #include <cstdio>
 #include <cstdlib>
 #include <map>
@@ -25,6 +25,9 @@
 #include <sstream>
 #include <utility>
 #include <vector>
+#include <string>
+#include <memory>
+
 #include "ResourceClaim.h"
 #include "utils/file/FileUtils.h"
 #include "catch.hpp"
@@ -138,7 +141,9 @@ class LogTestController {
     return contains(log_output, ending, timeout, sleep_interval);
   }
 
-  bool contains(const std::ostringstream &stream, const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3), std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) {
+  bool contains(const std::ostringstream &stream, const std::string &ending,
+                std::chrono::seconds timeout = std::chrono::seconds(3),
+                std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) {
     if (ending.length() == 0) {
       return false;
     }
@@ -181,6 +186,7 @@ class LogTestController {
   std::ostringstream log_output;
 
   std::shared_ptr<logging::Logger> logger_;
+
  protected:
   LogTestController()
       : LogTestController(nullptr) {
@@ -319,7 +325,7 @@ class TestPlan {
       is_owner_ = true;
     }
 
-    StateDir(std::string path) : path_(std::move(path)), is_owner_(false) {}
+    explicit StateDir(std::string path) : path_(std::move(path)), is_owner_(false) {}
 
     StateDir(const StateDir&) = delete;
     StateDir& operator=(const StateDir&) = delete;
@@ -383,7 +389,6 @@ class TestPlan {
 
 class TestController {
  public:
-
   TestController()
       : log(LogTestController::getInstance()) {
     core::FlowConfiguration::initialize_static_functions();
@@ -441,5 +446,3 @@ class TestController {
   LogTestController &log;
   std::vector<std::string> directories;
 };
-
-#endif /* LIBMINIFI_TEST_TESTBASE_H_ */

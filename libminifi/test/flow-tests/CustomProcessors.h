@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_CUSTOMPROCESSORS_H
-#define NIFI_MINIFI_CPP_CUSTOMPROCESSORS_H
+#pragma once
 
 #include <unordered_map>
 #include <string>
+#include <memory>
 #include <random>
 #include <YamlConfiguration.h>
 #include "core/Processor.h"
@@ -49,7 +49,7 @@ class ProcessorWithStatistics {
 class TestProcessor : public core::Processor, public ProcessorWithStatistics {
  public:
   TestProcessor(const std::string& name, const utils::Identifier& uuid) : Processor(name, uuid) {}
-  TestProcessor(const std::string& name) : Processor(name) {}
+  explicit TestProcessor(const std::string& name) : Processor(name) {}
   void initialize() override {
     setSupportedProperties({AppleProbability, BananaProbability});
     setSupportedRelationships({Apple, Banana});
@@ -92,7 +92,7 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
 class TestFlowFileGenerator : public processors::GenerateFlowFile, public ProcessorWithStatistics {
  public:
   TestFlowFileGenerator(const std::string& name, const utils::Identifier& uuid) : GenerateFlowFile(name, uuid) {}
-  TestFlowFileGenerator(const std::string& name) : GenerateFlowFile(name) {}
+  explicit TestFlowFileGenerator(const std::string& name) : GenerateFlowFile(name) {}
 
   using processors::GenerateFlowFile::onTrigger;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override {
@@ -112,5 +112,3 @@ REGISTER_RESOURCE(TestFlowFileGenerator, "Processor generating files and notifyi
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_CUSTOMPROCESSORS_H

@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_TEST_UNIT_SITE2SITE_HELPER_H_
-#define LIBMINIFI_TEST_UNIT_SITE2SITE_HELPER_H_
+#pragma once
 
+#include <string>
 #include <queue>
 #include "io/BufferStream.h"
 #include "io/EndianCheck.h"
@@ -31,6 +31,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
  private:
   minifi::io::BufferStream server_responses_;
   std::queue<std::string> client_responses_;
+
  public:
   SiteToSiteResponder() = default;
   // initialize
@@ -63,5 +64,3 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
     return server_responses_.read(value, len);
   }
 };
-
-#endif /* LIBMINIFI_TEST_UNIT_SITE2SITE_HELPER_H_ */

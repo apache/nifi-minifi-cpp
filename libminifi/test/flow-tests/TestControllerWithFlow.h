@@ -16,12 +16,15 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_TESTCONTROLLERWITHFLOW_H
-#define NIFI_MINIFI_CPP_TESTCONTROLLERWITHFLOW_H
+#pragma once
+
+#include <string>
+#include <memory>
+#include <utility>
 
 class TestControllerWithFlow: public TestController{
  public:
-  TestControllerWithFlow(const char* yamlConfigContent) {
+  explicit TestControllerWithFlow(const char* yamlConfigContent) {
     LogTestController::getInstance().setTrace<processors::TestProcessor>();
     LogTestController::getInstance().setTrace<processors::TestFlowFileGenerator>();
     LogTestController::getInstance().setTrace<minifi::Connection>();
@@ -71,5 +74,3 @@ class TestControllerWithFlow: public TestController{
   std::shared_ptr<minifi::FlowController> controller_;
   std::shared_ptr<core::ProcessGroup> root_;
 };
-
-#endif  // NIFI_MINIFI_CPP_TESTCONTROLLERWITHFLOW_H
