@@ -33,8 +33,15 @@ Apache NiFi MiNiFi C++ is a review then commit community. As a result, we will r
 review. We ask that you provide tests and documentation when possible. 
 
 Once you have completed your changes, including source code and tests, you can verify that you follow the Google style guide by running the following command:
-     $ make linter.
-     
+##### Linux or macOS
+```
+$ make linter
+```
+##### Windows
+```
+> msbuild linter.vcxproj
+```
+
 This will provide output for all source files.
 
 ### Third parties

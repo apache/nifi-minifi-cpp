@@ -18,6 +18,13 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+#include <set>
+#include <utility>
+#include <map>
+#include <memory>
+
 #include "../TestBase.h"
 
 class SQLTestPlan {

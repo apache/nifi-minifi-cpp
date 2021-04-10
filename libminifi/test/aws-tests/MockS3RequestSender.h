@@ -22,6 +22,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <utility>
 
 #include "s3/S3RequestSender.h"
 #include "aws/core/utils/DateTime.h"

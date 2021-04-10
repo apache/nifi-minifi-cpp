@@ -20,6 +20,9 @@
 
 #include <stdlib.h>
 #include <iostream>
+#include <memory>
+#include <utility>
+#include <string>
 
 #include "core/Processor.h"
 #include "../TestBase.h"

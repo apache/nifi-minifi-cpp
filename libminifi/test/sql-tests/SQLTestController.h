@@ -18,6 +18,10 @@
 
 #pragma once
 
+#include <memory>
+#include <vector>
+#include <string>
+
 #include "../TestBase.h"
 
 #include "processors/PutSQL.h"
@@ -97,9 +101,9 @@ class SQLTestController : public TestController {
       case soci::data_type::dt_integer:
         return gsl::narrow<T>(row.get<int>(column_name));
       case soci::data_type::dt_long_long:
-        return gsl::narrow<T>(row.get<long long>(column_name));
+        return gsl::narrow<T>(row.get<long long>(column_name));  // NOLINT
       case soci::data_type::dt_unsigned_long_long:
-        return gsl::narrow<T>(row.get<unsigned long long>(column_name));
+        return gsl::narrow<T>(row.get<unsigned long long>(column_name));  // NOLINT
       default:
         throw std::logic_error("Unknown data type for column \"" + column_name + "\"");
     }

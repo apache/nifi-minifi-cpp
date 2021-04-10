@@ -15,11 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_TEST_INTEGRATION_INTEGRATIONBASE_H_
-#define LIBMINIFI_TEST_INTEGRATION_INTEGRATIONBASE_H_
+#pragma once
 
 #define DEFAULT_WAITTIME_MSECS 3000
 
+#include <memory>
+#include <utility>
+#include <string>
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
@@ -35,7 +37,7 @@
 
 class IntegrationBase {
  public:
-  IntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS);
+  explicit IntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS);
 
   virtual ~IntegrationBase() = default;
 
@@ -64,7 +66,6 @@ class IntegrationBase {
   virtual void runAssertions() = 0;
 
  protected:
-
   virtual void configureC2() {
   }
 
@@ -210,5 +211,3 @@ cmd_args parse_cmdline_args_with_url(int argc, char ** argv) {
   }
   return args;
 }
-
-#endif /* LIBMINIFI_TEST_INTEGRATION_INTEGRATIONBASE_H_ */

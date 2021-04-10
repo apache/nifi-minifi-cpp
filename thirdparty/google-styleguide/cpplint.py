@@ -6596,8 +6596,8 @@ def _IsParentOrSame(parent, child):
   child_suffix = child_suffix.lstrip(os.sep)
   return child == os.path.join(prefix, child_suffix)
 
-def main():
-  filenames = ParseArguments(sys.argv[1:])
+def main(arg):
+  filenames = ParseArguments(arg)
   backup_err = sys.stderr
   try:
     # Change stderr to write with replacement characters so we don't die
@@ -6621,4 +6621,4 @@ def main():
 
 
 if __name__ == '__main__':
-  main()
+  main(sys.argv[1:])

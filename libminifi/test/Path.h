@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <utility>
+#include <string>
+
 #include "utils/file/FileUtils.h"
 
 namespace org {
@@ -29,7 +32,7 @@ class Path {
  public:
   Path() = default;
 
-  Path(std::string value): value_(std::move(value)) {}
+  explicit Path(std::string value): value_(std::move(value)) {}
 
   Path& operator=(const std::string& new_value) {
     value_ = new_value;

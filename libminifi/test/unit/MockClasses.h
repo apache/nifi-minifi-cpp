@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_TEST_UNIT_MOCKCLASSES_H_
-#define LIBMINIFI_TEST_UNIT_MOCKCLASSES_H_
+#pragma once
+
+#include <set>
+#include <memory>
+#include <string>
 
 #include "core/controller/ControllerService.h"
 #include "core/Processor.h"
@@ -62,13 +65,13 @@ class MockControllerService : public core::controller::ControllerService {
   bool isWorkAvailable() {
     return true;
   }
+
  protected:
   std::string str;
 };
 
 class MockProcessor : public core::Processor {
  public:
-
   explicit MockProcessor(const std::string &name, const utils::Identifier &uuid)
       : Processor(name, uuid) {
     setTriggerWhenEmpty(true);
@@ -102,7 +105,6 @@ class MockProcessor : public core::Processor {
       } else {
         assert(false == context->isControllerServiceEnabled(linked_service));
       }
-
       // verify we have access to the controller service
       // and verify that we can execute it.
     }
@@ -112,5 +114,3 @@ class MockProcessor : public core::Processor {
     return false;
   }
 };
-
-#endif /* LIBMINIFI_TEST_UNIT_MOCKCLASSES_H_ */
