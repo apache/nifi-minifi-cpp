@@ -550,6 +550,14 @@ public:
   }
 };
 
+class InvokeHTTPRedirectHandler : public ServerAwareHandler {
+public:
+  bool handlePost(CivetServer *, struct mg_connection *conn) override {
+    mg_printf(conn, "HTTP/1.1 301 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nLocation: /\r\n\r\n");
+    return true;
+  }
+};
+
 class InvokeHTTPResponse404Handler : public ServerAwareHandler {
 public:
   bool handlePost(CivetServer *, struct mg_connection *conn) override {

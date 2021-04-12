@@ -173,6 +173,8 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void setInterface(const std::string &);
 
+  void setFollowRedirects(bool follow);
+
   const std::map<std::string, std::string> &getParsedHeaders() override {
     return header_response_.getHeaderMap();
   }

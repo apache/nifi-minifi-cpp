@@ -682,6 +682,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Connection Timeout|5 secs||Max wait time for connection to remote service.|
 |Content-type|application/octet-stream||The Content-Type to specify for when content is being transmitted through a PUT, POST or PATCH. In the case of an empty value after evaluating an expression language expression, Content-Type defaults to|
 |Disable Peer Verification|false||Disables peer verification for the SSL session|
+|Follow Redirects|true||Follow HTTP redirects issued by remote server.|
 |HTTP Method|GET||HTTP request method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). Arbitrary methods are also supported. Methods other than POST, PUT and PATCH will be sent without a message body.|
 |Include Date Header|true||Include an RFC-2616 Date header in the request.|
 |Proxy Host|||The fully qualified hostname or IP address of the proxy server|
