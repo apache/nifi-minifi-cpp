@@ -397,6 +397,12 @@ std::size_t ProcessGroup::getTotalFlowFileCount() const {
   return sum;
 }
 
+void ProcessGroup::verify() const {
+  for (const auto& processor : processors_) {
+    processor->validateAnnotations();
+  }
+}
+
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

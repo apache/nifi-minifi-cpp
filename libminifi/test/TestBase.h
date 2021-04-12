@@ -316,6 +316,8 @@ class TestPlan {
 
   void finalize();
 
+  void validateAnnotations() const;
+
  protected:
   class StateDir {
    public:
