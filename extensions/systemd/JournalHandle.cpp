@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,10 +17,7 @@
 
 #include "JournalHandle.h"
 
-#include "Exception.h"
 #include "utils/gsl.h"
-
-#include <systemd/sd-journal.h>
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
 

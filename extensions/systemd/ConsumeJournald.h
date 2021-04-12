@@ -32,7 +32,6 @@
 #include "core/Processor.h"
 #include "core/Resource.h"
 #include "core/logging/Logger.h"
-#include <date/date.h>
 #include "JournalHandle.h"
 #include "utils/Deleters.h"
 #include "utils/gsl.h"
@@ -87,7 +86,6 @@ class ConsumeJournald final : public core::Processor {
   std::future<std::pair<std::string, std::vector<journal_message>>> getCursorAndMessageBatch();
   static std::string formatSyslogMessage(const journal_message&);
 
- private:
   std::atomic<bool> running_{false};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger();
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;

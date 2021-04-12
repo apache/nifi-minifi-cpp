@@ -51,7 +51,7 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
 
   explicit TimePeriodValue(const std::string &timeString)
       : state::response::UInt64Value(0) {
-    TimeUnit units;
+    TimeUnit units{};
     if (!StringToTime(timeString, value, units)) {
       throw utils::internal::ParseException("Couldn't parse TimePeriodValue");
     }
