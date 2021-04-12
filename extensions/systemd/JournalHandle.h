@@ -23,41 +23,30 @@
 #include <type_traits>
 
 #include "utils/gsl.h"
-
-struct sd_journal;
+#include "libwrapper/LibWrapper.h"
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
-
-namespace detail {
-class JournalHandleDeleter final {
- public:
-  explicit JournalHandleDeleter(const std::thread::id owner_thread_id)
-      :owner_thread_id_{owner_thread_id}
-  {}
-
-  void operator()(sd_journal* j) const;
- private:
-  std::thread::id owner_thread_id_;
-};
-}  // namespace detail
-
 /**
  * A handle to the log journal for reading. Has to be used from the same thread throughout its lifetime.
  * @see man 8 sd_journal_open
  */
 class JournalHandle final {
  public:
-  enum class JournalType { User, System, Both };
-  explicit JournalHandle(JournalType = JournalType::Both);
+  explicit JournalHandle(std::unique_ptr<libwrapper::Journal>&&);
+  JournalHandle(const JournalHandle&) = delete;
+  JournalHandle(JournalHandle&&) = default;
+  JournalHandle& operator=(const JournalHandle&) = delete;
+  JournalHandle& operator=(JournalHandle&&) = default;
+  ~JournalHandle();
 
   template<typename F>
-  auto visit(F f) const -> decltype(f(std::declval<sd_journal*>())) {
+  auto visit(F f) const -> decltype(f(std::declval<libwrapper::Journal&>())) {
     gsl_Expects(std::this_thread::get_id() == owner_thread_id_);
-    return f(handle_.get());
+    return f(*handle_);
   }
  private:
   std::thread::id owner_thread_id_;
-  std::unique_ptr<sd_journal, detail::JournalHandleDeleter> handle_;
+  std::unique_ptr<libwrapper::Journal> handle_;
 };
 
 }}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd

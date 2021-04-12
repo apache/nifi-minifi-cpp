@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,22 +15,14 @@
  * limitations under the License.
  */
 
-#include "JournalHandle.h"
+#include "LibWrapper.h"
+#include "DlopenWrapper.h"
+#include "utils/GeneralUtils.h"
 
-#include "Exception.h"
-#include "utils/gsl.h"
+namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd { namespace libwrapper {
 
-#include <systemd/sd-journal.h>
-
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
-
-JournalHandle::JournalHandle(std::unique_ptr<libwrapper::Journal>&& journal_handle)
-    :owner_thread_id_{std::this_thread::get_id()},
-    handle_{std::move(journal_handle)}
-{ }
-
-JournalHandle::~JournalHandle() {
-  gsl_Expects(std::this_thread::get_id() == owner_thread_id_ || !handle_);
+std::unique_ptr<LibWrapper> createLibWrapper() {
+  return utils::make_unique<DlopenWrapper>();
 }
 
-}}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd
+}}}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd::libwrapper

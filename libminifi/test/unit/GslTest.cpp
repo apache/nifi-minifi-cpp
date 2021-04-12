@@ -16,17 +16,15 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
-
 #include <vector>
 #include <string>
-
+#include "../TestBase.h"
 #include "utils/gsl.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
 
 TEST_CASE("span to", "[span to]") {
-  const auto test_span = gsl::make_span("test text");
+  const auto test_span = gsl::make_span("test text", 9);
   const auto string = utils::span_to<std::string>(test_span);
   const auto vector = utils::span_to<std::vector>(test_span);
 

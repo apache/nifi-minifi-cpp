@@ -16,22 +16,10 @@
  * limitations under the License.
  */
 
-#include "JournalHandle.h"
-
-#include "Exception.h"
-#include "utils/gsl.h"
-
-#include <systemd/sd-journal.h>
+#pragma once
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
 
-JournalHandle::JournalHandle(std::unique_ptr<libwrapper::Journal>&& journal_handle)
-    :owner_thread_id_{std::this_thread::get_id()},
-    handle_{std::move(journal_handle)}
-{ }
-
-JournalHandle::~JournalHandle() {
-  gsl_Expects(std::this_thread::get_id() == owner_thread_id_ || !handle_);
-}
+enum class JournalType { User, System, Both };
 
 }}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd

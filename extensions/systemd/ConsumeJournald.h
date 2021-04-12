@@ -28,7 +28,6 @@
 #include <utility>
 #include <vector>
 
-#include <systemd/sd-journal.h>
 #include "core/CoreComponentState.h"
 #include "core/Processor.h"
 #include "core/Resource.h"
@@ -60,7 +59,7 @@ class ConsumeJournald final : public core::Processor {
   static const core::Property IncludeTimestamp;
   static const core::Property JournalType;
 
-  explicit ConsumeJournald(const std::string& name, const utils::Identifier& id = {});
+  explicit ConsumeJournald(const std::string& name, const utils::Identifier& id = {}, std::unique_ptr<libwrapper::LibWrapper>&& = libwrapper::createLibWrapper());
   ConsumeJournald(const ConsumeJournald&) = delete;
   ConsumeJournald(ConsumeJournald&&) = delete;
   ConsumeJournald& operator=(const ConsumeJournald&) = delete;
@@ -83,8 +82,8 @@ class ConsumeJournald final : public core::Processor {
     std::chrono::system_clock::time_point timestamp;
   };
 
-  static utils::optional<gsl::span<const char>> enumerateJournalEntry(sd_journal& journal);
-  static utils::optional<journal_field> getNextField(sd_journal& journal);
+  static utils::optional<gsl::span<const char>> enumerateJournalEntry(libwrapper::Journal&);
+  static utils::optional<journal_field> getNextField(libwrapper::Journal&);
   std::future<std::pair<std::string, std::vector<journal_message>>> getCursorAndMessageBatch();
   static std::string formatSyslogMessage(const journal_message&);
 
@@ -92,6 +91,7 @@ class ConsumeJournald final : public core::Processor {
   std::atomic<bool> running_{false};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger();
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
+  std::unique_ptr<libwrapper::LibWrapper> libwrapper_;
   std::unique_ptr<Worker> worker_;
   utils::optional<JournalHandle> journal_handle_;
 
