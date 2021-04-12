@@ -21,7 +21,7 @@
 #include <algorithm>
 
 #include <date/date.h>
-#include "fmt/format.h"
+#include "spdlog/spdlog.h"  // TODO(szaszm): for fmt, TODO: make fmt directly available
 #include <systemd/sd-journal.h>
 #include "utils/GeneralUtils.h"
 
