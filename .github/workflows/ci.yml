@@ -20,7 +20,9 @@ jobs:
             macos-xcode11.2.1-ccache-${{github.ref}}-
             macos-xcode11.2.1-ccache-refs/heads/main-
       - id: install_dependencies
-        run: brew install ossp-uuid boost flex openssl python lua@5.3 xz libssh2 ccache sqliteodbc
+        run: |
+          brew update
+          brew install ossp-uuid boost flex lua@5.3 ccache sqliteodbc
       - id: setup_env
         run: |
           echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
@@ -50,7 +52,9 @@ jobs:
             macos-xcode12.0-ccache-${{github.ref}}-
             macos-xcode12.0-ccache-refs/heads/main-
       - id: install_dependencies
-        run: brew install ossp-uuid boost flex openssl python lua@5.3 xz libssh2 ccache sqliteodbc
+        run: |
+          brew update
+          brew install ossp-uuid boost flex lua@5.3 ccache sqliteodbc
       - id: setup_env
         run: |
           echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
