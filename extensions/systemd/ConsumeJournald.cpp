@@ -20,7 +20,7 @@
 
 #include <algorithm>
 
-#include <date/date.hs
+#include <date/date.h>
 #include "fmt/format.h"
 #include <systemd/sd-journal.h>
 #include "utils/GeneralUtils.h"
