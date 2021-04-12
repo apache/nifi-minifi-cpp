@@ -302,7 +302,9 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
       this->root_ = std::shared_ptr<core::ProcessGroup>(loadInitialFlow());
     }
 
-    root_->verify();
+    if (root) {
+      root_->verify();
+    }
 
     logger_->log_info("Loaded root processor Group");
     logger_->log_info("Initializing timers");
