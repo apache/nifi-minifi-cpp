@@ -91,6 +91,7 @@ class TailFile : public core::Processor {
   static core::Property RecursiveLookup;
   static core::Property LookupFrequency;
   static core::Property RollingFilenamePattern;
+  static core::Property InitialStartPosition;
   // Supported Relationships
   static core::Relationship Success;
 
@@ -119,6 +120,16 @@ class TailFile : public core::Processor {
   std::chrono::milliseconds getLookupFrequency() const;
 
  private:
+  struct TailStateWithMtime {
+    using TimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>;
+
+    TailStateWithMtime(TailState tail_state, TimePoint mtime)
+      : tail_state_(std::move(tail_state)), mtime_(mtime) {}
+
+    TailState tail_state_;
+    TimePoint mtime_;
+  };
+
   static const char *CURRENT_STR;
   static const char *POSITION_STR;
   std::mutex tail_file_mutex_;
@@ -147,13 +158,27 @@ class TailFile : public core::Processor {
 
   std::string rolling_filename_pattern_;
 
+  std::string initial_start_position_;
+
+  bool first_trigger_{true};
+
   std::shared_ptr<logging::Logger> logger_;
 
   void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
 
-  void processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
+  void processAllRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
 
-  std::vector<TailState> findRotatedFiles(const TailState &state) const;
+  void processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state, std::vector<TailState> &rotated_file_states);
+
+  void processRotatedFilesAfterLastReadTime(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
+
+  std::string parseRollingFilePattern(const TailState &state) const;
+
+  std::vector<TailState> findAllRotatedFiles(const TailState &state) const;
+
+  std::vector<TailState> findRotatedFilesAfterLastReadTime(const TailState &state) const;
+
+  std::vector<TailState> findRotatedFiles(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime) const;
 
   void processFile(const std::shared_ptr<core::ProcessSession> &session,
                    const std::string &full_file_name,
