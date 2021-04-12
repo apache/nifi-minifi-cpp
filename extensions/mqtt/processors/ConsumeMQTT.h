@@ -100,7 +100,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   // Initialize, over write by NiFi ConsumeMQTT
   void initialize(void) override;
-  virtual bool enqueueReceiveMQTTMsg(MQTTClient_message *message);
+  bool enqueueReceiveMQTTMsg(MQTTClient_message *message) override;
 
  protected:
   void getReceivedMQTTMsg(std::deque<MQTTClient_message *> &msg_queue) {
