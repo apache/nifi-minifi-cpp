@@ -22,7 +22,6 @@
 
 #include <date/date.h>
 #include "spdlog/spdlog.h"  // TODO(szaszm): for fmt, TODO: make fmt directly available
-#include <systemd/sd-journal.h>
 #include "utils/GeneralUtils.h"
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
