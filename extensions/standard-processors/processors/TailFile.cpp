@@ -701,6 +701,7 @@ void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
     } else if (initial_start_position_ == "Current Time") {
       state.position_ = utils::file::FileUtils::file_size(full_file_name);
       state.last_read_time_ = std::chrono::system_clock::now();
+      storeState();
       return;
     }
   } else {
