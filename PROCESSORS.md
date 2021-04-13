@@ -693,7 +693,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Put Response Body in Attribute|||If set, the response body received back will be put into an attribute of the original FlowFile instead of a separate FlowFile. The attribute key to put to is determined by evaluating value of this property.|
 |Read Timeout|15 secs||Max wait time for response from remote service.|
 |Remote URL|||Remote URL which will be connected to, including scheme, host, port, path.<br/>**Supports Expression Language: true**|
-|send-message-body|true||If true, sends the HTTP message body on POST/PUT/PATCH requests (default).  If false, suppresses the message body and content-type header for these requests.|
+|send-message-body|true||DEPRECATED. Only kept for backwards compatibility, no functionality is included.|
+|Send Message Body|true||If true, sends the HTTP message body on POST/PUT/PATCH requests (default).  If false, suppresses the message body and content-type header for these requests.|
 |SSL Context Service|||The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.|
 |Use Chunked Encoding|false||When POST'ing, PUT'ing or PATCH'ing content set this property to true in order to not pass the 'Content-length' header and instead send 'Transfer-Encoding' with a value of 'chunked'. This will enable the data transfer mechanism which was introduced in HTTP 1.1 to pass data of unknown lengths in chunks.|
 ### Relationships

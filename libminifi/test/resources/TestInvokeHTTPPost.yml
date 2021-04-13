@@ -78,7 +78,7 @@ Processors:
     Read Timeout: 1 s
     Remote URL: http://localhost:0/minifi
     Use Chunked Encoding: 'false'
-    send-message-body: 'true'
+    Send Message Body: 'true'
 - id: 8543b2e2-a373-4d8d-8710-ac314666696b
   name: LogAttribute
   class: org.apache.nifi.minifi.processors.LogAttribute

@@ -72,6 +72,7 @@ class InvokeHTTP : public core::Processor {
   static core::Property ProxyPassword;
   static core::Property ContentType;
   static core::Property SendBody;
+  static core::Property SendMessageBody;
   static core::Property UseChunkedEncoding;
   static core::Property DisablePeerVerification;
   static core::Property PropPutOutputAttributes;

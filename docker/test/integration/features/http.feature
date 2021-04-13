@@ -64,7 +64,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And a file with the content "test" is present in "/tmp/input"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
     And the "HTTP Method" of the InvokeHTTP processor is set to "POST"
-    And the "send-message-body" of the InvokeHTTP processor is set to "false"
+    And the "Send Message Body" of the InvokeHTTP processor is set to "false"
     And the "success" relationship of the GetFile processor is connected to the InvokeHTTP
 
     And a ListenHTTP processor with the "Listening Port" property set to "8080" in a "secondary" flow

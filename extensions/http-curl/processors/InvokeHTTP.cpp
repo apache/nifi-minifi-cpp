@@ -101,6 +101,11 @@ core::Property InvokeHTTP::ContentType("Content-type", "The Content-Type to spec
                                        "application/octet-stream");
 core::Property InvokeHTTP::SendBody(
     core::PropertyBuilder::createProperty("send-message-body", "Send Body")
+      ->withDescription("DEPRECATED. Only kept for backwards compatibility, no functionality is included.")
+      ->withDefaultValue<bool>(true)
+      ->build());
+core::Property InvokeHTTP::SendMessageBody(
+    core::PropertyBuilder::createProperty("Send Message Body")
       ->withDescription("If true, sends the HTTP message body on POST/PUT/PATCH requests (default). "
                         "If false, suppresses the message body and content-type header for these requests.")
       ->withDefaultValue<bool>(true)
@@ -159,6 +164,7 @@ void InvokeHTTP::initialize() {
   properties.insert(UseChunkedEncoding);
   properties.insert(ContentType);
   properties.insert(SendBody);
+  properties.insert(SendMessageBody);
   properties.insert(DisablePeerVerification);
   properties.insert(AlwaysOutputResponse);
   properties.insert(FollowRedirects);
@@ -267,7 +273,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
   context->getProperty(ProxyUsername.getName(), proxy_.username);
   context->getProperty(ProxyPassword.getName(), proxy_.password);
   context->getProperty(FollowRedirects.getName(), follow_redirects_);
-  context->getProperty(SendBody.getName(), send_body_);
+  context->getProperty(SendMessageBody.getName(), send_body_);
 }
 
 InvokeHTTP::~InvokeHTTP() = default;
