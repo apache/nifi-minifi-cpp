@@ -25,6 +25,7 @@
 #include <utility>
 #include <string>
 #include <vector>
+#include <set>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -94,6 +95,8 @@ class TailFile : public core::Processor {
   static core::Property InitialStartPosition;
   // Supported Relationships
   static core::Relationship Success;
+
+  static const std::set<std::string> INITIAL_START_POSITIONS;
 
   /**
    * Function that's executed when the processor is scheduled.

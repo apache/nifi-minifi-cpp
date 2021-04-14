@@ -1680,3 +1680,31 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
 
   LogTestController::getInstance().reset();
 }
+
+TEST_CASE("Initial Start Position is set to invalid or empty value", "[initialStartPosition]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+  std::shared_ptr<core::Processor> logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  auto dir = minifi::utils::createTempDir(&testController);
+  createTempFile(dir, ROLLED_OVER_TMP_FILE, ROLLED_OVER_TAIL_DATA);
+  auto temp_file_path = createTempFile(dir, TMP_FILE, NEWLINE_FILE);
+
+  plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file_path);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+
+  SECTION("Initial Start Position is empty") {
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition.getName(), "");
+  }
+
+  SECTION("Initial Start Position is invalid") {
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition.getName(), "Invalid Value");
+  }
+
+  REQUIRE_THROWS_AS(testController.runSession(plan), minifi::Exception&);
+}

@@ -37,6 +37,7 @@
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "utils/RegexUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 #include "TailFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -46,6 +47,8 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+
+const std::set<std::string> TailFile::INITIAL_START_POSITIONS({"Beginning of Time", "Beginning of File", "Current Time"});
 
 core::Property TailFile::FileName(
     core::PropertyBuilder::createProperty("File to Tail")
@@ -118,7 +121,7 @@ core::Property TailFile::InitialStartPosition(
                           "any data in the File to Tail that has already been written.")
         ->isRequired(true)
         ->withDefaultValue<std::string>("Beginning of File")
-        ->withAllowableValues<std::string>({"Beginning of Time", "Beginning of File", "Current Time"})
+        ->withAllowableValues<std::string>(INITIAL_START_POSITIONS)
         ->build());
 
 core::Relationship TailFile::Success("success", "All files are routed to success");
@@ -398,8 +401,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   std::string rolling_filename_pattern_glob;
   context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
   rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
-
-  context->getProperty(InitialStartPosition.getName(), initial_start_position_);
+  initial_start_position_ = utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.getName(), INITIAL_START_POSITIONS);
 }
 
 void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const {

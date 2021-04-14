@@ -19,8 +19,10 @@
 
 #include <vector>
 #include <string>
+#include <set>
 
 #include "utils/StringUtils.h"
+#include "core/ProcessContext.h"
 
 namespace org {
 namespace apache {
@@ -71,6 +73,16 @@ utils::optional<uint64_t> getOptionalUintProperty(const core::ProcessContext& co
     return { value };
   }
   return utils::nullopt;
+}
+
+std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, const std::string& property_name, const std::set<std::string> allowable_values) {
+  std::string value;
+  if (!context.getProperty(property_name, value)
+      || value.empty()
+      || allowable_values.find(value) == allowable_values.end()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + " property missing or invalid");
+  }
+  return value;
 }
 
 }  // namespace utils
