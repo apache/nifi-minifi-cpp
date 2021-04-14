@@ -207,6 +207,8 @@ class TailFile : public core::Processor {
                                 std::shared_ptr<core::FlowFile> &flow_file) const;
 
   void updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const;
+
+  bool isOldFileInitiallyRead(TailState &state) const;
 };
 
 REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting data from the file as it is written to the file. The file is expected to be textual."

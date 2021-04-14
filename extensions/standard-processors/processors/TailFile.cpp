@@ -694,10 +694,15 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &, const st
   first_trigger_ = false;
 }
 
+bool TailFile::isOldFileInitiallyRead(TailState &state) const {
+  // This is our initial processing and no stored state was found
+  return first_trigger_ && state.checksum_ == 0;
+}
+
 void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
                            const std::string &full_file_name,
                            TailState &state) {
-  if (first_trigger_ && state.checksum_ == 0) {
+  if (isOldFileInitiallyRead(state)) {
     if (initial_start_position_ == "Beginning of Time") {
       processAllRotatedFiles(session, state);
     } else if (initial_start_position_ == "Current Time") {
