@@ -1321,6 +1321,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
 |File to Tail|||Fully-qualified filename of the file that should be tailed when using single file mode, or a file regex when using multifile mode|
+|**Initial Start Position**|Beginning of File|Beginning of Time<br>Beginning of File<br>Current Time|When the Processor first begins to tail data, this property specifies where the Processor should begin reading data. Once data has been ingested from a file, the Processor will continue from the last point from which it has received data.<br>Beginning of Time: Start with the oldest data that matches the Rolling Filename Pattern and then begin reading from the File to Tail.<br>Beginning of File: Start with the beginning of the File to Tail. Do not ingest any data that has already been rolled over.<br>Current Time: Start with the data at the end of the File to Tail. Do not ingest any data that has already been rolled over or any data in the File to Tail that has already been written.|
 |Input Delimiter|||Specifies the character that should be used for delimiting the data being tailedfrom the incoming file.If none is specified, data will be ingested as it becomes available.|
 |State File|TailFileState||Specifies the file that should be used for storing state about what data has been ingested so that upon restart NiFi can resume from where it left off|
 |tail-base-directory||||

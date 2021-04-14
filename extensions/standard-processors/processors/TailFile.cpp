@@ -111,9 +111,9 @@ core::Property TailFile::RollingFilenamePattern(
 core::Property TailFile::InitialStartPosition(
     core::PropertyBuilder::createProperty("Initial Start Position")
         ->withDescription("When the Processor first begins to tail data, this property specifies where the Processor should begin reading data. "
-                          "Once data has been ingested from a file, the Processor will continue from the last point from which it has received data. "
-                          "Beginning of Time: Start with the oldest data that matches the Rolling Filename Pattern and then begin reading from the File to Tail. "
-                          "Beginning of File: Start with the beginning of the File to Tail. Do not ingest any data that has already been rolled over. "
+                          "Once data has been ingested from a file, the Processor will continue from the last point from which it has received data.\n"
+                          "Beginning of Time: Start with the oldest data that matches the Rolling Filename Pattern and then begin reading from the File to Tail.\n"
+                          "Beginning of File: Start with the beginning of the File to Tail. Do not ingest any data that has already been rolled over.\n"
                           "Current Time: Start with the data at the end of the File to Tail. Do not ingest any data that has already been rolled over or "
                           "any data in the File to Tail that has already been written.")
         ->isRequired(true)
