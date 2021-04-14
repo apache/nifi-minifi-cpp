@@ -1555,14 +1555,14 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
   std::string new_tail_data = "newdata\n";
-  tmpfile.open(temp_file.str(), std::ios::out | std::ios::binary);
+  tmpfile.open(temp_file.str(), std::ios::app | std::ios::binary);
   tmpfile << new_tail_data;
   tmpfile.close();
 
   testController.runSession(plan);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(new_tail_data.find_first_of('\n') + 1) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + new_tail_data.find_first_of('\n')) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
@@ -1605,6 +1605,19 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
 
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
+
+  plan->reset(true);
+  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+
+  std::string new_tail_data = "newdata\n";
+  tmpfile.open(temp_file.str(), std::ios::app | std::ios::binary);
+  tmpfile << new_tail_data;
+  tmpfile.close();
+
+  testController.runSession(plan);
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + new_tail_data.find_first_of('\n')) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
@@ -1725,10 +1738,16 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set to B
   temp_file_3 << NEWLINE_FILE;
   temp_file_3.close();
 
+  std::string new_tail_data = "newdata\n";
+  temp_file_1.open(temp_file_1_path.str(), std::ios::app | std::ios::binary);
+  temp_file_1 << new_tail_data;
+  temp_file_1.close();
+
   testController.runSession(plan);
 
-  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + new_tail_data.find_first_of('\n')) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
@@ -1795,10 +1814,16 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set to B
   temp_file_3 << NEWLINE_FILE;
   temp_file_3.close();
 
+  std::string new_tail_data = "newdata\n";
+  temp_file_1.open(temp_file_1_path.str(), std::ios::app | std::ios::binary);
+  temp_file_1 << new_tail_data;
+  temp_file_1.close();
+
   testController.runSession(plan);
 
-  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + new_tail_data.find_first_of('\n')) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
@@ -1872,8 +1897,8 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set to C
   testController.runSession(plan);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(new_tail_data.find_first_of('\n') + 1) + " Offset:0"));
   REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(new_tail_data.find_first_of('\n') + 1) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
