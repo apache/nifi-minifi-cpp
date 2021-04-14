@@ -72,6 +72,7 @@ class InvokeHTTP : public core::Processor {
   static core::Property ProxyPassword;
   static core::Property ContentType;
   static core::Property SendBody;
+  static core::Property SendMessageBody;
   static core::Property UseChunkedEncoding;
   static core::Property DisablePeerVerification;
   static core::Property PropPutOutputAttributes;
@@ -159,6 +160,7 @@ class InvokeHTTP : public core::Processor {
   bool disable_peer_verification_{false};
   utils::HTTPProxy proxy_;
   bool follow_redirects_{true};
+  bool send_body_{true};
 
  private:
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<InvokeHTTP>::getLogger()};

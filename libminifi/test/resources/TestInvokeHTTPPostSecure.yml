@@ -77,7 +77,7 @@ Processors:
     Read Timeout: 1 s
     Remote URL: https://localhost:0/minifi
     Use Chunked Encoding: 'false'
-    send-message-body: 'true'
+    Send Message Body: 'true'
     SSL Context Service: SSLContextService
 - id: 8543b2e2-a373-4d8d-8710-ac314666696b
   name: LogAttribute
@@ -157,7 +157,7 @@ Connections:
   max work queue data size: 10000 B
   flowfile expiration: 0 seconds
   queue prioritizer class: ''
-  
+
 Controller Services:
   - name: SSLContextService
     id: 2438e3c8-015a-1000-79ca-83af40ec1994
