@@ -1522,26 +1522,10 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
   std::shared_ptr<core::Processor> logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   auto dir = minifi::utils::createTempDir(&testController);
-  std::stringstream rolled_over_file_path;
-  rolled_over_file_path << dir << utils::file::FileUtils::get_separator() << TMP_FILE << ".old.1";
+  createTempFile(dir, std::string(TMP_FILE) + ".old.1", NEWLINE_FILE);
+  auto temp_file_path = createTempFile(dir, TMP_FILE, NEWLINE_FILE);
 
-  std::ofstream rolled_over_file;
-  rolled_over_file.open(rolled_over_file_path.str(), std::ios::out | std::ios::binary);
-  rolled_over_file << NEWLINE_FILE;
-  rolled_over_file.close();
-
-  std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
-
-  std::ofstream tmpfile;
-  tmpfile.open(temp_file.str(), std::ios::out | std::ios::binary);
-  tmpfile << NEWLINE_FILE;
-  tmpfile.close();
-
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
-
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file_path);
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition.getName(), "Beginning of File");
   plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
@@ -1554,15 +1538,13 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
   plan->reset(true);
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-  std::string new_tail_data = "newdata\n";
-  tmpfile.open(temp_file.str(), std::ios::app | std::ios::binary);
-  tmpfile << new_tail_data;
-  tmpfile.close();
+  const std::string NEW_TAIL_DATA = "newdata\n";
+  appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
   testController.runSession(plan);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + new_tail_data.find_first_of('\n')) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + NEW_TAIL_DATA.find_first_of('\n')) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
@@ -1577,26 +1559,10 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
   std::shared_ptr<core::Processor> logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   auto dir = minifi::utils::createTempDir(&testController);
-  std::stringstream rolled_over_file_path;
-  rolled_over_file_path << dir << utils::file::FileUtils::get_separator() << TMP_FILE << ".old.1";
+  createTempFile(dir, std::string(TMP_FILE) + ".old.1", NEWLINE_FILE);
+  auto temp_file_path = createTempFile(dir, TMP_FILE, NEWLINE_FILE);
 
-  std::ofstream rolled_over_file;
-  rolled_over_file.open(rolled_over_file_path.str(), std::ios::out | std::ios::binary);
-  rolled_over_file << NEWLINE_FILE;
-  rolled_over_file.close();
-
-  std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
-
-  std::ofstream tmpfile;
-  tmpfile.open(temp_file.str(), std::ios::out | std::ios::binary);
-  tmpfile << NEWLINE_FILE;
-  tmpfile.close();
-
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
-
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file_path);
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition.getName(), "Beginning of Time");
   plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
@@ -1609,15 +1575,13 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
   plan->reset(true);
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-  std::string new_tail_data = "newdata\n";
-  tmpfile.open(temp_file.str(), std::ios::app | std::ios::binary);
-  tmpfile << new_tail_data;
-  tmpfile.close();
+  const std::string NEW_TAIL_DATA = "newdata\n";
+  appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
   testController.runSession(plan);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + new_tail_data.find_first_of('\n')) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + NEW_TAIL_DATA.find_first_of('\n')) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
@@ -1632,26 +1596,10 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
   std::shared_ptr<core::Processor> logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   auto dir = minifi::utils::createTempDir(&testController);
-  std::stringstream rolled_over_file_path;
-  rolled_over_file_path << dir << utils::file::FileUtils::get_separator() << TMP_FILE << ".old.1";
+  createTempFile(dir, std::string(TMP_FILE) + ".old.1", NEWLINE_FILE);
+  auto temp_file_path = createTempFile(dir, TMP_FILE, NEWLINE_FILE);
 
-  std::ofstream rolled_over_file;
-  rolled_over_file.open(rolled_over_file_path.str(), std::ios::out | std::ios::binary);
-  rolled_over_file << NEWLINE_FILE;
-  rolled_over_file.close();
-
-  std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
-
-  std::ofstream tmpfile;
-  tmpfile.open(temp_file.str(), std::ios::out | std::ios::binary);
-  tmpfile << NEWLINE_FILE;
-  tmpfile.close();
-
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
-
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file_path);
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition.getName(), "Current Time");
   plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
@@ -1663,15 +1611,13 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
   plan->reset(true);
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-  std::string new_tail_data = "newdata\n";
-  tmpfile.open(temp_file.str(), std::ios::app | std::ios::binary);
-  tmpfile << new_tail_data;
-  tmpfile.close();
+  const std::string NEW_TAIL_DATA = "newdata\n";
+  appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
   testController.runSession(plan);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(new_tail_data.find_first_of('\n') + 1) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEW_TAIL_DATA.find_first_of('\n') + 1) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
@@ -1686,33 +1632,10 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set to B
   std::shared_ptr<core::Processor> logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   auto dir = minifi::utils::createTempDir(&testController);
-  std::stringstream rolled_over_file_path;
-  rolled_over_file_path << dir << utils::file::FileUtils::get_separator() << TMP_FILE << ".old.1";
 
-  std::ofstream rolled_over_file;
-  rolled_over_file.open(rolled_over_file_path.str(), std::ios::out | std::ios::binary);
-  rolled_over_file << NEWLINE_FILE;
-  rolled_over_file.close();
-
-  std::stringstream temp_file_1_path;
-  temp_file_1_path << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
-
-  std::ofstream temp_file_1;
-  temp_file_1.open(temp_file_1_path.str(), std::ios::out | std::ios::binary);
-  temp_file_1 << NEWLINE_FILE;
-  temp_file_1.close();
-
-  std::string tmp_filename_2 = "minifi-tmpfile-2.txt";
-  std::stringstream temp_file_2_path;
-  temp_file_2_path << dir << utils::file::FileUtils::get_separator() << tmp_filename_2;
-
-  std::ofstream temp_file_2;
-  temp_file_2.open(temp_file_2_path.str(), std::ios::out | std::ios::binary);
-  temp_file_2 << NEWLINE_FILE;
-  temp_file_2.close();
-
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  createTempFile(dir, std::string(TMP_FILE) + ".old.1", NEWLINE_FILE);
+  createTempFile(dir, TMP_FILE, NEWLINE_FILE);
+  createTempFile(dir, "minifi-tmpfile-2.txt", NEWLINE_FILE);
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), ".*\\.txt");
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
@@ -1729,25 +1652,16 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set to B
   plan->reset(true);
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-  std::string tmp_filename_3 = "minifi-tmpfile-3.txt";
-  std::stringstream temp_file_3_path;
-  temp_file_3_path << dir << utils::file::FileUtils::get_separator() << tmp_filename_3;
+  createTempFile(dir, "minifi-tmpfile-3.txt", NEWLINE_FILE);
 
-  std::ofstream temp_file_3;
-  temp_file_3.open(temp_file_3_path.str(), std::ios::out | std::ios::binary);
-  temp_file_3 << NEWLINE_FILE;
-  temp_file_3.close();
-
-  std::string new_tail_data = "newdata\n";
-  temp_file_1.open(temp_file_1_path.str(), std::ios::app | std::ios::binary);
-  temp_file_1 << new_tail_data;
-  temp_file_1.close();
+  const std::string NEW_TAIL_DATA = "newdata\n";
+  appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
   testController.runSession(plan);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + new_tail_data.find_first_of('\n')) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + NEW_TAIL_DATA.find_first_of('\n')) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
@@ -1762,33 +1676,9 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set to B
   std::shared_ptr<core::Processor> logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   auto dir = minifi::utils::createTempDir(&testController);
-  std::stringstream rolled_over_file_path;
-  rolled_over_file_path << dir << utils::file::FileUtils::get_separator() << TMP_FILE << ".old.1";
-
-  std::ofstream rolled_over_file;
-  rolled_over_file.open(rolled_over_file_path.str(), std::ios::out | std::ios::binary);
-  rolled_over_file << NEWLINE_FILE;
-  rolled_over_file.close();
-
-  std::stringstream temp_file_1_path;
-  temp_file_1_path << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
-
-  std::ofstream temp_file_1;
-  temp_file_1.open(temp_file_1_path.str(), std::ios::out | std::ios::binary);
-  temp_file_1 << NEWLINE_FILE;
-  temp_file_1.close();
-
-  std::string tmp_filename_2 = "minifi-tmpfile-2.txt";
-  std::stringstream temp_file_2_path;
-  temp_file_2_path << dir << utils::file::FileUtils::get_separator() << tmp_filename_2;
-
-  std::ofstream temp_file_2;
-  temp_file_2.open(temp_file_2_path.str(), std::ios::out | std::ios::binary);
-  temp_file_2 << NEWLINE_FILE;
-  temp_file_2.close();
-
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  createTempFile(dir, std::string(TMP_FILE) + ".old.1", NEWLINE_FILE);
+  createTempFile(dir, TMP_FILE, NEWLINE_FILE);
+  createTempFile(dir, "minifi-tmpfile-2.txt", NEWLINE_FILE);
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), ".*\\.txt");
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
@@ -1805,25 +1695,16 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set to B
   plan->reset(true);
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-  std::string tmp_filename_3 = "minifi-tmpfile-3.txt";
-  std::stringstream temp_file_3_path;
-  temp_file_3_path << dir << utils::file::FileUtils::get_separator() << tmp_filename_3;
+  createTempFile(dir, "minifi-tmpfile-3.txt", NEWLINE_FILE);
 
-  std::ofstream temp_file_3;
-  temp_file_3.open(temp_file_3_path.str(), std::ios::out | std::ios::binary);
-  temp_file_3 << NEWLINE_FILE;
-  temp_file_3.close();
-
-  std::string new_tail_data = "newdata\n";
-  temp_file_1.open(temp_file_1_path.str(), std::ios::app | std::ios::binary);
-  temp_file_1 << new_tail_data;
-  temp_file_1.close();
+  const std::string NEW_TAIL_DATA = "newdata\n";
+  appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
   testController.runSession(plan);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + new_tail_data.find_first_of('\n')) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + NEW_TAIL_DATA.find_first_of('\n')) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
@@ -1838,33 +1719,9 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set to C
   std::shared_ptr<core::Processor> logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   auto dir = minifi::utils::createTempDir(&testController);
-  std::stringstream rolled_over_file_path;
-  rolled_over_file_path << dir << utils::file::FileUtils::get_separator() << TMP_FILE << ".old.1";
-
-  std::ofstream rolled_over_file;
-  rolled_over_file.open(rolled_over_file_path.str(), std::ios::out | std::ios::binary);
-  rolled_over_file << NEWLINE_FILE;
-  rolled_over_file.close();
-
-  std::stringstream temp_file_1_path;
-  temp_file_1_path << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
-
-  std::ofstream temp_file_1;
-  temp_file_1.open(temp_file_1_path.str(), std::ios::out | std::ios::binary);
-  temp_file_1 << NEWLINE_FILE;
-  temp_file_1.close();
-
-  std::string tmp_filename_2 = "minifi-tmpfile-2.txt";
-  std::stringstream temp_file_2_path;
-  temp_file_2_path << dir << utils::file::FileUtils::get_separator() << tmp_filename_2;
-
-  std::ofstream temp_file_2;
-  temp_file_2.open(temp_file_2_path.str(), std::ios::out | std::ios::binary);
-  temp_file_2 << NEWLINE_FILE;
-  temp_file_2.close();
-
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  createTempFile(dir, std::string(TMP_FILE) + ".old.1", NEWLINE_FILE);
+  createTempFile(dir, TMP_FILE, NEWLINE_FILE);
+  createTempFile(dir, "minifi-tmpfile-2.txt", NEWLINE_FILE);
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), ".*\\.txt");
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
@@ -1880,25 +1737,16 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set to C
   plan->reset(true);
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-  std::string tmp_filename_3 = "minifi-tmpfile-3.txt";
-  std::stringstream temp_file_3_path;
-  temp_file_3_path << dir << utils::file::FileUtils::get_separator() << tmp_filename_3;
+  createTempFile(dir, "minifi-tmpfile-3.txt", NEWLINE_FILE);
 
-  std::ofstream temp_file_3;
-  temp_file_3.open(temp_file_3_path.str(), std::ios::out | std::ios::binary);
-  temp_file_3 << NEWLINE_FILE;
-  temp_file_3.close();
-
-  std::string new_tail_data = "newdata\n";
-  temp_file_1.open(temp_file_1_path.str(), std::ios::app | std::ios::binary);
-  temp_file_1 << new_tail_data;
-  temp_file_1.close();
+  const std::string NEW_TAIL_DATA = "newdata\n";
+  appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
   testController.runSession(plan);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(new_tail_data.find_first_of('\n') + 1) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEW_TAIL_DATA.find_first_of('\n') + 1) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
