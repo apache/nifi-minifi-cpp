@@ -42,7 +42,7 @@ FlowConfiguration::~FlowConfiguration() {
   }
 }
 
-std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, utils::Identifier & uuid) {
+std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, utils::Identifier &uuid) {
   auto processor = minifi::processors::ProcessorUtils::createProcessor(name, name, uuid, stream_factory_);
   if (nullptr == processor) {
     logger_->log_error("No Processor defined for %s", name);
@@ -51,7 +51,7 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string 
   return processor;
 }
 
-std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const std::string &fullname, utils::Identifier & uuid) {
+std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const std::string &fullname, utils::Identifier &uuid) {
   auto processor = minifi::processors::ProcessorUtils::createProcessor(name, fullname, uuid, stream_factory_);
   if (nullptr == processor) {
     logger_->log_error("No Processor defined for %s", fullname);
@@ -112,16 +112,16 @@ bool FlowConfiguration::persist(const std::string &configuration) {
   return filesystem_->write(*config_path_, configuration);
 }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(std::string name, utils::Identifier & uuid, int version) {
-  return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::ROOT_PROCESS_GROUP, name, uuid, version));
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(const std::string &name, const utils::Identifier &uuid, int version) {
+  return utils::make_unique<core::ProcessGroup>(core::ROOT_PROCESS_GROUP, name, uuid, version);
 }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::createSimpleProcessGroup(std::string name, utils::Identifier & uuid, int version) {
-  return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::SIMPLE_PROCESS_GROUP, name, uuid, version));
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createSimpleProcessGroup(const std::string &name, const utils::Identifier &uuid, int version) {
+  return utils::make_unique<core::ProcessGroup>(core::SIMPLE_PROCESS_GROUP, name, uuid, version);
 }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(std::string name, utils::Identifier & uuid) {
-  return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::REMOTE_PROCESS_GROUP, name, uuid));
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(const std::string &name, const utils::Identifier &uuid) {
+  return utils::make_unique<core::ProcessGroup>(core::REMOTE_PROCESS_GROUP, name, uuid);
 }
 
 std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(std::string name, const utils::Identifier& uuid) const {

@@ -247,7 +247,7 @@ void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAge
 
 std::shared_ptr<Processor> ProcessGroup::findProcessorById(const utils::Identifier& uuid, Traverse traverse) const {
   const auto id_matches = [&] (const std::shared_ptr<Processor>& processor) {
-    logger_->log_debug("Current processor is %s", processor->getName());
+    logger_->log_trace("Searching for processor by id, checking processor %s", processor->getName());
     utils::Identifier processorUUID = processor->getUUID();
     return processorUUID && uuid == processorUUID;
   };
@@ -256,7 +256,7 @@ std::shared_ptr<Processor> ProcessGroup::findProcessorById(const utils::Identifi
 
 std::shared_ptr<Processor> ProcessGroup::findProcessorByName(const std::string &processorName, Traverse traverse) const {
   const auto name_matches = [&] (const std::shared_ptr<Processor>& processor) {
-    logger_->log_debug("Current processor is %s", processor->getName());
+    logger_->log_trace("Searching for processor by name, checking processor %s", processor->getName());
     return processor->getName() == processorName;
   };
   return findProcessor(name_matches, traverse);
@@ -387,11 +387,11 @@ void ProcessGroup::drainConnections() {
 
 std::size_t ProcessGroup::getTotalFlowFileCount() const {
   std::size_t sum = 0;
-  for (auto& conn : connections_) {
+  for (const auto& conn : connections_) {
     sum += gsl::narrow<std::size_t>(conn->getQueueSize());
   }
 
-  for (auto& childGroup : child_process_groups_) {
+  for (const auto& childGroup : child_process_groups_) {
     sum += childGroup->getTotalFlowFileCount();
   }
   return sum;

@@ -246,7 +246,7 @@ class ProcessGroup : public CoreComponent {
   // version
   int config_version_;
   // Process Group Type
-  ProcessGroupType type_;
+  const ProcessGroupType type_;
   // Processors (ProcessNode) inside this process group which include Input/Output Port, Remote Process Group input/Output port
   std::set<std::shared_ptr<Processor>> processors_;
   std::set<std::shared_ptr<Processor>> failed_processors_;
