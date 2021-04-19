@@ -167,6 +167,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   void yield() override {}
 
   bool isWorkAvailable() override {
+    const std::lock_guard<std::mutex> lock{mutex_};
     return queue_.isWorkAvailable();
   }
 
