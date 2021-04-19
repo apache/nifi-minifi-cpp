@@ -17,6 +17,12 @@
 
 #pragma once
 
+#include <utility>
+#include <string>
+#include <set>
+#include <memory>
+#include <vector>
+
 #include "TestBase.h"
 #include "YamlConfiguration.h"
 #include "Utils.h"
@@ -67,13 +73,13 @@ struct Proc {
 };
 
 struct UnresolvedProc {
-  UnresolvedProc(std::string id): id(std::move(id)) {}
+  explicit UnresolvedProc(std::string id): id(std::move(id)) {}
   std::string id;
 };
 
 struct MaybeProc {
-  MaybeProc(const Proc& proc): id(proc.id), name(proc.name) {}
-  MaybeProc(const UnresolvedProc& proc) : id(proc.id) {}
+  MaybeProc(const Proc& proc): id(proc.id), name(proc.name) {}  // NOLINT
+  MaybeProc(const UnresolvedProc& proc) : id(proc.id) {}  // NOLINT
 
   std::string id;
   utils::optional<std::string> name;
@@ -138,13 +144,13 @@ struct Group {
       body.emplace_back("Processors: []");
     } else {
       body.emplace_back("Processors:");
-      for (const auto& proc: processors_) {
+      for (const auto& proc : processors_) {
         body.append(proc.serialize().indentAll());
       }
     }
     if (!connections_.empty()) {
       body.emplace_back("Connections:");
-      for (const auto& conn: connections_) {
+      for (const auto& conn : connections_) {
         body.append(conn.serialize().indentAll());
       }
     }
@@ -152,13 +158,13 @@ struct Group {
       body.emplace_back("Remote Process Groups: []");
     } else {
       body.emplace_back("Remote Process Groups:");
-      for (const auto& rpg: rpgs_) {
+      for (const auto& rpg : rpgs_) {
         body.append(rpg.serialize().indentAll());
       }
     }
     if (!subgroups_.empty()) {
       body.emplace_back("Process Groups:");
-      for (const auto& subgroup: subgroups_) {
+      for (const auto& subgroup : subgroups_) {
         body.append(subgroup.serialize(false).indentAll());
       }
     }
@@ -229,8 +235,7 @@ void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
       REQUIRE(utils::verifyLogLinePresenceInPollTime(
           std::chrono::seconds{1},
           "Cannot find the source processor with id '" + expected.source.id
-          + "' for the connection [name = '" + expected.name + "'"
-      ));
+          + "' for the connection [name = '" + expected.name + "'"));
     } else {
       REQUIRE(conn->getSource()->getName() == expected.source.name);
     }
@@ -239,8 +244,7 @@ void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
       REQUIRE(utils::verifyLogLinePresenceInPollTime(
           std::chrono::seconds{1},
           "Cannot find the destination processor with id '" + expected.destination.id
-          + "' for the connection [name = '" + expected.name + "'"
-      ));
+          + "' for the connection [name = '" + expected.name + "'"));
     } else {
       REQUIRE(conn->getDestination()->getName() == expected.destination.name);
     }
