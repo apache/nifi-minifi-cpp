@@ -25,14 +25,7 @@ struct Lines {
   std::vector<std::string> lines;
 
   std::string join(const std::string& delim) const {
-    std::string result;
-    bool first = true;
-    for (const auto& line : lines) {
-      if (!first) result += delim;
-      first = false;
-      result += line;
-    }
-    return result;
+    return utils::StringUtils::join(delim, lines);
   }
 
   Lines& indentAll() & {
@@ -61,8 +54,8 @@ struct Lines {
 };
 
 struct Proc {
-  std::string name;
   std::string id;
+  std::string name;
 
   Lines serialize() const {
     return {{
@@ -73,9 +66,14 @@ struct Proc {
   }
 };
 
+struct UnresolvedProc {
+  UnresolvedProc(std::string id): id(std::move(id)) {}
+  std::string id;
+};
+
 struct MaybeProc {
   MaybeProc(const Proc& proc): id(proc.id), name(proc.name) {}
-  MaybeProc(std::string id, utils::optional<std::string> name) : id(std::move(id)), name(std::move(name)) {}
+  MaybeProc(const UnresolvedProc& proc) : id(proc.id) {}
 
   std::string id;
   utils::optional<std::string> name;
