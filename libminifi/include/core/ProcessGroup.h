@@ -40,7 +40,7 @@
 #include "utils/HTTPClient.h"
 #include "utils/CallBackTimer.h"
 
-struct TestAccessor;
+struct ProcessGroupTestAccessor;
 
 namespace org {
 namespace apache {
@@ -60,7 +60,7 @@ enum ProcessGroupType {
 
 // ProcessGroup Class
 class ProcessGroup : public CoreComponent {
-  friend struct ::TestAccessor;
+  friend struct ::ProcessGroupTestAccessor;
  public:
   enum class Traverse {
     ExcludeChildren,

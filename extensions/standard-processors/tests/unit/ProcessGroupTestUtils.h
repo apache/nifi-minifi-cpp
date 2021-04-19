@@ -183,7 +183,7 @@ struct Group {
   std::vector<RPG> rpgs_;
 };
 
-struct TestAccessor {
+struct ProcessGroupTestAccessor {
   FIELD_ACCESSOR(processors_)
   FIELD_ACCESSOR(connections_)
   FIELD_ACCESSOR(child_process_groups_)
@@ -221,7 +221,7 @@ void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
   // verify name
   REQUIRE(group.getName() == pattern.name_);
   // verify connections
-  std::set<std::shared_ptr<minifi::Connection>>& connections = TestAccessor::get_connections_(group);
+  std::set<std::shared_ptr<minifi::Connection>>& connections = ProcessGroupTestAccessor::get_connections_(group);
   REQUIRE(connections.size() == pattern.connections_.size());
   for (auto& expected : pattern.connections_) {
     auto conn = findByName(connections, expected.name);
@@ -249,7 +249,7 @@ void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
   }
 
   // verify processors
-  std::set<std::shared_ptr<core::Processor>>& processors = TestAccessor::get_processors_(group);
+  std::set<std::shared_ptr<core::Processor>>& processors = ProcessGroupTestAccessor::get_processors_(group);
   REQUIRE(processors.size() == pattern.processors_.size());
   for (auto& expected : pattern.processors_) {
     REQUIRE(findByName(processors, expected.name));
@@ -257,7 +257,7 @@ void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
 
   std::set<core::ProcessGroup*> simple_subgroups;
   std::set<core::ProcessGroup*> rpg_subgroups;
-  for (auto& subgroup : TestAccessor::get_child_process_groups_(group)) {
+  for (auto& subgroup : ProcessGroupTestAccessor::get_child_process_groups_(group)) {
     if (subgroup->isRemoteProcessGroup()) {
       rpg_subgroups.insert(subgroup.get());
     } else {
@@ -269,7 +269,7 @@ void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
   for (auto& expected : pattern.rpgs_) {
     auto rpg = findByName(rpg_subgroups, expected.name);
     REQUIRE(rpg);
-    std::set<std::shared_ptr<core::Processor>>& input_ports = TestAccessor::get_processors_(*rpg);
+    std::set<std::shared_ptr<core::Processor>>& input_ports = ProcessGroupTestAccessor::get_processors_(*rpg);
     REQUIRE(input_ports.size() == expected.input_ports.size());
     for (auto& expected_input_port : expected.input_ports) {
       auto input_port = dynamic_cast<minifi::RemoteProcessorGroupPort*>(findByName(input_ports, expected_input_port.name));
