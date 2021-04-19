@@ -279,7 +279,7 @@ void ProcessGroup::getAllProcessors(std::vector<std::shared_ptr<Processor>> &pro
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   for (auto& processor : processors_) {
-    logger_->log_debug("Current processor is %s", processor->getName());
+    logger_->log_trace("Collecting all processors, current processor is %s", processor->getName());
     processor_vec.push_back(processor);
   }
   for (auto& processGroup : child_process_groups_) {
