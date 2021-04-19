@@ -60,6 +60,7 @@ class GenerateFlowFile : public core::Processor {
   static core::Property BatchSize;
   static core::Property DataFormat;
   static core::Property UniqueFlowFiles;
+  static core::Property CustomText;
   static const char *DATA_FORMAT_TEXT;
   // Supported Relationships
   static core::Relationship Success;

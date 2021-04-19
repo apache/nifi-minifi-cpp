@@ -536,6 +536,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Data Format|Binary|Text<br>Binary<br>|Specifies whether the data should be Text or Binary|
 |File Size|1 kB||The size of the file that will be used|
 |Unique FlowFiles|true||If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles|
+|Custom Text|||If Data Format is text and if Unique FlowFiles is false, then this custom text will be used as content of the generated FlowFiles and the File Size will be ignored. Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles<br/>**Supports Expression Language: true**|
 ### Relationships
 
 | Name | Description |
