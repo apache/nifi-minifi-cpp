@@ -47,6 +47,52 @@ TEST_CASE("GenerateFlowFileTest", "[generateflowfiletest]") {
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "true");
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::DataFormat.getName(), "Text");
 
+  // This property will be ignored if unique flow files are used
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "Current time: ${now()}");
+
+  plan->runNextProcessor();  // Generate
+  plan->runNextProcessor();  // Put
+  plan->runCurrentProcessor();  // Put
+
+  std::vector<std::string> file_contents;
+
+  auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
+    std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    std::string file_content((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+    file_contents.push_back(file_content);
+    return true;
+  };
+
+  utils::file::FileUtils::list_dir(dir, lambda, plan->getLogger(), false);
+
+  REQUIRE(file_contents.size() == 2);
+  REQUIRE(file_contents[0].size() == 10);
+  REQUIRE(file_contents[1].size() == 10);
+  REQUIRE(file_contents[0] != file_contents[1]);
+}
+
+TEST_CASE("GenerateFlowFileWithNonUniqueBinaryData", "[generateflowfiletest]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<TestPlan>();
+
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+
+  std::shared_ptr<core::Processor> genfile = plan->addProcessor("GenerateFlowFile", "genfile");
+
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir);
+
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize.getName(), "10");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::BatchSize.getName(), "2");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "false");
+
+  // This property will be ignored if binary files are used
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "Current time: ${now()}");
+
   plan->runNextProcessor();  // Generate
   plan->runNextProcessor();  // Put
   plan->runCurrentProcessor();  // Put
@@ -74,7 +120,7 @@ TEST_CASE("GenerateFlowFileTest", "[generateflowfiletest]") {
   REQUIRE(fileContents.size() == 2);
   REQUIRE(fileContents[0].size() == 10);
   REQUIRE(fileContents[1].size() == 10);
-  REQUIRE(fileContents[0] != fileContents[1]);
+  REQUIRE(fileContents[0] == fileContents[1]);
 }
 
 TEST_CASE("GenerateFlowFileTestEmpty", "[generateemptyfiletest]") {
@@ -113,4 +159,85 @@ TEST_CASE("GenerateFlowFileTestEmpty", "[generateemptyfiletest]") {
   utils::file::FileUtils::list_dir(dir, lambda, plan->getLogger(), false);
 
   REQUIRE(counter == 1);
+}
+
+TEST_CASE("GenerateFlowFileCustomTextTest", "[generateflowfiletest]") {
+  TestController test_controller;
+  LogTestController::getInstance().setTrace<TestPlan>();
+
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = test_controller.createTempDirectory(format);
+
+  std::shared_ptr<TestPlan> plan = test_controller.createPlan();
+
+  std::shared_ptr<core::Processor> genfile = plan->addProcessor("GenerateFlowFile", "genfile");
+
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir);
+
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "Current year: ${now():format('%Y')}");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "false");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::DataFormat.getName(), "Text");
+
+  plan->runNextProcessor();  // Generate
+  plan->runNextProcessor();  // Put
+  plan->runCurrentProcessor();  // Put
+
+  std::vector<std::string> file_contents;
+
+  auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
+    std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    std::string file_content((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+    file_contents.push_back(file_content);
+    return true;
+  };
+
+  utils::file::FileUtils::list_dir(dir, lambda, plan->getLogger(), false);
+
+  REQUIRE(file_contents.size() == 1);
+  time_t t = time(nullptr);
+  struct tm lt;
+  localtime_r(&t, &lt);
+  std::string expected_content = "Current year: " + std::to_string(lt.tm_year + 1900);
+  REQUIRE(file_contents[0] == expected_content);
+}
+
+TEST_CASE("GenerateFlowFileCustomTextEmptyTest", "[generateflowfiletest]") {
+  TestController test_controller;
+  LogTestController::getInstance().setTrace<TestPlan>();
+
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = test_controller.createTempDirectory(format);
+
+  std::shared_ptr<TestPlan> plan = test_controller.createPlan();
+
+  std::shared_ptr<core::Processor> genfile = plan->addProcessor("GenerateFlowFile", "genfile");
+
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir);
+
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize.getName(), "10");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "false");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::DataFormat.getName(), "Text");
+
+  plan->runNextProcessor();  // Generate
+  plan->runNextProcessor();  // Put
+  plan->runCurrentProcessor();  // Put
+
+  std::vector<std::string> file_contents;
+
+  auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
+    std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    std::string file_content((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+    file_contents.push_back(file_content);
+    return true;
+  };
+
+  utils::file::FileUtils::list_dir(dir, lambda, plan->getLogger(), false);
+
+  REQUIRE(file_contents.size() == 1);
+  REQUIRE(file_contents[0].size() == 10);
 }
