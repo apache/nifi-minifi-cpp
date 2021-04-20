@@ -83,6 +83,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | Kafka | [PublishKafka](PROCESSORS.md#publishkafka)      |    -DENABLE_LIBRDKAFKA=ON  |
 | JNI | **NiFi Processors**     |    -DENABLE_JNI=ON  |
 | MQTT | [ConsumeMQTT](PROCESSORS.md#consumeMQTT)<br/>[PublishMQTT](PROCESSORS.md#publishMQTT)     |    -DENABLE_MQTT=ON  |
+| OPC  | [FetchOPCProcessor](PROCESSORS.md#fetchopcprocessor)  |  -DENABLE_OPC=ON |
 | OpenCV | [CaptureRTSPFrame](PROCESSORS.md#captureRTSPFrame)     |    -DENABLE_OPENCV=ON  |
 | OpenWSMAN | SourceInitiatedSubscriptionListener | -DENABLE_OPENWSMAN=ON |
 | PCAP | [CapturePacket](PROCESSORS.md#capturepacket)      |    -DENABLE_PCAP=ON  |
@@ -618,3 +619,4 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
