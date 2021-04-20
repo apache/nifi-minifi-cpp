@@ -29,6 +29,7 @@
 #include <vector> // NOLINT
 #include <string> // NOLINT
 #include <mutex> // NOLINT
+#include <memory>
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
@@ -41,6 +42,8 @@
 #include "controllers/SSLContextService.h"
 #include "utils/HTTPClient.h"
 #include "Exception.h"
+#include "c2/HeartBeatJSONSerializer.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -56,45 +59,26 @@ namespace c2 {
  *
  */
 
-struct ValueObject {
-  std::string name;
-  std::vector<rapidjson::Value*> values;
-};
-
-class RESTProtocol {
+class RESTProtocol : public HeartBeatJSONSerializer {
  public:
-  RESTProtocol()
-      : minimize_updates_(false) {
-  }
-
-  virtual ~RESTProtocol() = default;
+  RESTProtocol();
 
  protected:
-  virtual rapidjson::Value getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc);
+  void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure);
 
-  virtual rapidjson::Value serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc);
-
-  /**
-   * connection queues should have the uuid as the object name; however since we have an internal AST and don't want to
-   * impact backwards copmatibility ( where the object root is the name ), then we should serialize the queues differently.
-   */
-  virtual rapidjson::Value serializeConnectionQueues(const C2Payload &payload, std::string &label, rapidjson::Document::AllocatorType &alloc);
-
-  virtual std::string serializeJsonRootPayload(const C2Payload& payload);
-
-  virtual void mergePayloadContent(rapidjson::Value &target, const C2Payload &payload, rapidjson::Document::AllocatorType &alloc);
+  void serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) override;
 
   virtual const C2Payload parseJsonResponse(const C2Payload &payload, const std::vector<char> &response);
 
-  virtual std::string getOperation(const C2Payload &payload);
-
-  virtual Operation stringToOperation(const std::string str);
+ private:
+  virtual Operation stringToOperation(const std::string& str);
 
   bool containsPayload(const C2Payload &o);
 
-  std::mutex update_mutex_;
-  bool minimize_updates_;
+  bool minimize_updates_{false};
   std::map<std::string, C2Payload> nested_payloads_;
+
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 }  // namespace c2

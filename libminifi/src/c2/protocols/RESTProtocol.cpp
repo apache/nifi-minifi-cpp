@@ -244,70 +244,35 @@ void RESTProtocol::mergePayloadContent(rapidjson::Value &target, const C2Payload
           setJsonStr(op_arg.first, op_arg.second, target, alloc);
         }
       }
-    } else {
-    }
-    if (use_sub_option) {
-      rapidjson::Value sub_key = getStringValue(payload_content.name, alloc);
     }
   }
 }
 
-std::string RESTProtocol::serializeJsonRootPayload(const C2Payload& payload) {
-  rapidjson::Document json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
-  rapidjson::Document::AllocatorType &alloc = json_payload.GetAllocator();
+RESTProtocol::RESTProtocol() : logger_(logging::LoggerFactory<RESTProtocol>::getLogger()) {}
 
-  rapidjson::Value opReqStrVal;
-  std::string operation_request_str = getOperation(payload);
-  opReqStrVal.SetString(operation_request_str.c_str(), gsl::narrow<rapidjson::SizeType>(operation_request_str.length()), alloc);
-  json_payload.AddMember("operation", opReqStrVal, alloc);
-
-  std::string operationid = payload.getIdentifier();
-  if (operationid.length() > 0) {
-    json_payload.AddMember("operationId", getStringValue(operationid, alloc), alloc);
-    std::string operationStateStr = "FULLY_APPLIED";
-    switch (payload.getStatus().getState()) {
-      case state::UpdateState::FULLY_APPLIED:
-        operationStateStr = "FULLY_APPLIED";
-        break;
-      case state::UpdateState::PARTIALLY_APPLIED:
-        operationStateStr = "PARTIALLY_APPLIED";
-        break;
-      case state::UpdateState::READ_ERROR:
-        operationStateStr = "OPERATION_NOT_UNDERSTOOD";
-        break;
-      case state::UpdateState::SET_ERROR:
-      default:
-        operationStateStr = "NOT_APPLIED";
-    }
-
-    rapidjson::Value opstate(rapidjson::kObjectType);
-
-    opstate.AddMember("state", getStringValue(operationStateStr, alloc), alloc);
-    const auto details = payload.getRawData();
-
-    opstate.AddMember("details", getStringValue(std::string(details.data(), details.size()), alloc), alloc);
-
-    json_payload.AddMember("operationState", opstate, alloc);
-    json_payload.AddMember("identifier", getStringValue(operationid, alloc), alloc);
-  }
-
-  mergePayloadContent(json_payload, payload, alloc);
-
-  for (const auto &nested_payload : payload.getNestedPayloads()) {
-    if (!minimize_updates_ || (minimize_updates_ && !containsPayload(nested_payload))) {
-      rapidjson::Value np_key = getStringValue(nested_payload.getLabel(), alloc);
-      rapidjson::Value np_value = serializeJsonPayload(nested_payload, alloc);
-      if (minimize_updates_) {
-        nested_payloads_.insert(std::pair<std::string, C2Payload>(nested_payload.getLabel(), nested_payload));
+void RESTProtocol::initialize(core::controller::ControllerServiceProvider* /*controller*/, const std::shared_ptr<Configure> &configure) {
+  if (configure) {
+    std::string value_str;
+    if (configure->get("nifi.c2.rest.heartbeat.minimize.updates", "c2.rest.heartbeat.minimize.updates", value_str)) {
+      auto opt_value = utils::StringUtils::toBool(value_str);
+      if (!opt_value) {
+        logger_->log_error("Cannot convert '%s' to bool for property '%s'", value_str, "nifi.c2.rest.heartbeat.minimize.updates");
+      } else {
+        minimize_updates_ = opt_value.value();
       }
-      json_payload.AddMember(np_key, np_value, alloc);
     }
   }
+}
 
-  rapidjson::StringBuffer buffer;
-  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-  json_payload.Accept(writer);
-  return buffer.GetString();
+void RESTProtocol::serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
+  if (!minimize_updates_ || (minimize_updates_ && !containsPayload(payload))) {
+    rapidjson::Value np_key = getStringValue(payload.getLabel(), alloc);
+    rapidjson::Value np_value = serializeJsonPayload(payload, alloc);
+    if (minimize_updates_) {
+      nested_payloads_.insert(std::pair<std::string, C2Payload>(payload.getLabel(), payload));
+    }
+    target.AddMember(np_key, np_value, alloc);
+  }
 }
 
 bool RESTProtocol::containsPayload(const C2Payload &o) {
@@ -318,133 +283,7 @@ bool RESTProtocol::containsPayload(const C2Payload &o) {
   return false;
 }
 
-rapidjson::Value RESTProtocol::serializeConnectionQueues(const C2Payload &payload, std::string &label, rapidjson::Document::AllocatorType &alloc) {
-  rapidjson::Value json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
-
-  C2Payload adjusted(payload.getOperation(), payload.getIdentifier(), payload.isRaw());
-
-  auto name = payload.getLabel();
-  std::string uuid;
-  C2ContentResponse updatedContent(payload.getOperation());
-  for (const C2ContentResponse &content : payload.getContent()) {
-    for (const auto& op_arg : content.operation_arguments) {
-      if (op_arg.first == "uuid") {
-        uuid = op_arg.second.to_string();
-      }
-      updatedContent.operation_arguments.insert(op_arg);
-    }
-  }
-  updatedContent.name = uuid;
-  adjusted.setLabel(uuid);
-  adjusted.setIdentifier(uuid);
-  c2::AnnotatedValue nd;
-  // name should be what was previously the TLN ( top level node )
-  nd = name;
-  updatedContent.operation_arguments.insert(std::make_pair("name", nd));
-  // the rvalue reference is an unfortunate side effect of the underlying API decision.
-  adjusted.addContent(std::move(updatedContent), true);
-  mergePayloadContent(json_payload, adjusted, alloc);
-  label = uuid;
-  return json_payload;
-}
-
-rapidjson::Value RESTProtocol::serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc) {
-  // get the name from the content
-  rapidjson::Value json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
-
-  std::vector<ValueObject> children;
-
-  bool isQueue = payload.getLabel() == "queues";
-
-  for (const auto &nested_payload : payload.getNestedPayloads()) {
-    std::string label = nested_payload.getLabel();
-    rapidjson::Value* child_payload = new rapidjson::Value(isQueue ? serializeConnectionQueues(nested_payload, label, alloc) : serializeJsonPayload(nested_payload, alloc));
-
-    if (nested_payload.isCollapsible()) {
-      bool combine = false;
-      for (auto &subordinate : children) {
-        if (subordinate.name == label) {
-          subordinate.values.push_back(child_payload);
-          combine = true;
-          break;
-        }
-      }
-      if (!combine) {
-        ValueObject obj;
-        obj.name = label;
-        obj.values.push_back(child_payload);
-        children.push_back(obj);
-      }
-    } else {
-      ValueObject obj;
-      obj.name = label;
-      obj.values.push_back(child_payload);
-      children.push_back(obj);
-    }
-  }
-
-  for (auto child_vector : children) {
-    rapidjson::Value children_json;
-    rapidjson::Value newMemberKey = getStringValue(child_vector.name, alloc);
-    if (child_vector.values.size() > 1) {
-      children_json.SetArray();
-      for (auto child : child_vector.values) {
-        if (json_payload.IsArray())
-          json_payload.PushBack(child->Move(), alloc);
-        else
-          children_json.PushBack(child->Move(), alloc);
-      }
-      if (!json_payload.IsArray())
-        json_payload.AddMember(newMemberKey, children_json, alloc);
-    } else if (child_vector.values.size() == 1) {
-      rapidjson::Value* first = child_vector.values.front();
-      if (first->IsObject() && first->HasMember(newMemberKey)) {
-        if (json_payload.IsArray())
-          json_payload.PushBack((*first)[newMemberKey].Move(), alloc);
-        else
-          json_payload.AddMember(newMemberKey, (*first)[newMemberKey].Move(), alloc);
-      } else {
-        if (json_payload.IsArray()) {
-          json_payload.PushBack(first->Move(), alloc);
-        } else {
-          json_payload.AddMember(newMemberKey, first->Move(), alloc);
-        }
-      }
-    }
-    for (rapidjson::Value* child : child_vector.values)
-      delete child;
-  }
-
-  mergePayloadContent(json_payload, payload, alloc);
-  return json_payload;
-}
-
-std::string RESTProtocol::getOperation(const C2Payload &payload) {
-  switch (payload.getOperation()) {
-    case Operation::ACKNOWLEDGE:
-      return "acknowledge";
-    case Operation::HEARTBEAT:
-      return "heartbeat";
-    case Operation::RESTART:
-      return "restart";
-    case Operation::DESCRIBE:
-      return "describe";
-    case Operation::STOP:
-      return "stop";
-    case Operation::START:
-      return "start";
-    case Operation::UPDATE:
-      return "update";
-    case Operation::PAUSE:
-      return "pause";
-    case Operation::RESUME:
-      return "resume";
-    default:
-      return "heartbeat";
-  }
-}
-
-Operation RESTProtocol::stringToOperation(const std::string str) {
+Operation RESTProtocol::stringToOperation(const std::string& str) {
   std::string op = str;
   std::transform(str.begin(), str.end(), op.begin(), ::tolower);
   if (op == "heartbeat") {

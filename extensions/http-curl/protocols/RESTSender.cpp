@@ -44,6 +44,7 @@ RESTSender::RESTSender(const std::string &name, const utils::Identifier &uuid)
 
 void RESTSender::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) {
   C2Protocol::initialize(controller, configure);
+  RESTProtocol::initialize(controller, configure);
   // base URL when one is not specified.
   if (nullptr != configure) {
     std::string update_str, ssl_context_service_str;
@@ -55,8 +56,6 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
         ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
       }
     }
-    configure->get("nifi.c2.rest.heartbeat.minimize.updates", "c2.rest.heartbeat.minimize.updates", update_str);
-    minimize_updates_ = utils::StringUtils::toBool(update_str).value_or(false);
   }
   logger_->log_debug("Submitting to %s", rest_uri_);
 }
