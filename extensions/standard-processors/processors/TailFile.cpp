@@ -696,7 +696,7 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &, const st
 
 bool TailFile::isOldFileInitiallyRead(TailState &state) const {
   // This is our initial processing and no stored state was found
-  return first_trigger_ && state.checksum_ == 0;
+  return first_trigger_ && state.last_read_time_ == std::chrono::system_clock::time_point{};
 }
 
 void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
