@@ -48,8 +48,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::set<std::string> TailFile::INITIAL_START_POSITIONS({"Beginning of Time", "Beginning of File", "Current Time"});
-
 core::Property TailFile::FileName(
     core::PropertyBuilder::createProperty("File to Tail")
         ->withDescription("Fully-qualified filename of the file that should be tailed when using single file mode, or a file regex when using multifile mode")
@@ -120,8 +118,8 @@ core::Property TailFile::InitialStartPosition(
                           "Current Time: Start with the data at the end of the File to Tail. Do not ingest any data that has already been rolled over or "
                           "any data in the File to Tail that has already been written.")
         ->isRequired(true)
-        ->withDefaultValue<std::string>("Beginning of File")
-        ->withAllowableValues<std::string>(INITIAL_START_POSITIONS)
+        ->withDefaultValue(toString(InitialStartPositions::BEGINNING_OF_FILE))
+        ->withAllowableValues(InitialStartPositions::values())
         ->build());
 
 core::Relationship TailFile::Success("success", "All files are routed to success");
@@ -401,7 +399,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   std::string rolling_filename_pattern_glob;
   context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
   rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
-  initial_start_position_ = utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.getName(), INITIAL_START_POSITIONS);
+  initial_start_position_ = utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.getName(), InitialStartPositions::values());
 }
 
 void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const {
@@ -703,9 +701,9 @@ void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
                            const std::string &full_file_name,
                            TailState &state) {
   if (isOldFileInitiallyRead(state)) {
-    if (initial_start_position_ == "Beginning of Time") {
+    if (initial_start_position_ == InitialStartPositions::BEGINNING_OF_TIME) {
       processAllRotatedFiles(session, state);
-    } else if (initial_start_position_ == "Current Time") {
+    } else if (initial_start_position_ == InitialStartPositions::CURRENT_TIME) {
       state.position_ = utils::file::FileUtils::file_size(full_file_name);
       state.last_read_time_ = std::chrono::system_clock::now();
       storeState();

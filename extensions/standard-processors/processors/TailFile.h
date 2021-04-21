@@ -30,10 +30,11 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/Enum.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -71,6 +72,12 @@ std::ostream& operator<<(std::ostream &os, const TailState &tail_state);
 enum class Mode {
   SINGLE, MULTIPLE, UNDEFINED
 };
+
+SMART_ENUM(InitialStartPositions,
+  (BEGINNING_OF_TIME, "Beginning of Time"),
+  (BEGINNING_OF_FILE, "Beginning of File"),
+  (CURRENT_TIME, "Current Time")
+);
 
 class TailFile : public core::Processor {
  public:
@@ -161,7 +168,7 @@ class TailFile : public core::Processor {
 
   std::string rolling_filename_pattern_;
 
-  std::string initial_start_position_;
+  InitialStartPositions initial_start_position_;
 
   bool first_trigger_{true};
 
