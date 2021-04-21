@@ -195,13 +195,11 @@ def step_impl(context, processor_name, sceduling_period):
     processor.set_scheduling_strategy("TIMER_DRIVEN")
     processor.set_scheduling_period(sceduling_period)
 
-
 @given("these processor properties are set")
 @given("these processor properties are set to match the http proxy")
 def step_impl(context):
     for row in context.table:
         context.test.get_node_by_name(row["processor name"]).set_property(row["property name"], row["property value"])
-
 
 @given("the \"{relationship}\" relationship of the {source_name} processor is connected to the input port on the {remote_process_group_name}")
 def step_impl(context, relationship, source_name, remote_process_group_name):
@@ -211,14 +209,12 @@ def step_impl(context, relationship, source_name, remote_process_group_name):
     context.test.add_node(input_port_node)
     source.out_proc.connect({relationship: input_port_node})
 
-
 @given("the \"{relationship}\" relationship of the {source_name} is connected to the {destination_name}")
 @given("the \"{relationship}\" relationship of the {source_name} processor is connected to the {destination_name}")
 def step_impl(context, relationship, source_name, destination_name):
     source = context.test.get_node_by_name(source_name)
     destination = context.test.get_node_by_name(destination_name)
     source.out_proc.connect({relationship: destination})
-
 
 @given("the processors are connected up as described here")
 def step_impl(context):
@@ -332,22 +328,22 @@ def step_impl(context, cluster_name):
 
 @given("the topic \"{topic_name}\" is initialized on the kafka broker")
 def step_impl(context, topic_name):
-    a = AdminClient({'bootstrap.servers': "localhost:29092"})
+    admin = AdminClient({'bootstrap.servers': "localhost:29092"})
     new_topics = [NewTopic(topic_name, num_partitions=1, replication_factor=1)]
-    fs = a.create_topics(new_topics)
+    futures = admin.create_topics(new_topics)
     # Block until the topic is created
-    for topic, f in fs.items():
+    for topic, future in futures.items():
         try:
-            f.result()
+            future.result()
             print("Topic {} created".format(topic))
         except Exception as e:
             print("Failed to create topic {}: {}".format(topic, e))
     new_parts = [NewPartitions(topic, 3)]
-    fs = a.create_partitions(new_parts, validate_only=False)
+    futures = admin.create_partitions(new_parts, validate_only=False)
     # Wait for operation to finish.
-    for topic, f in fs.items():
+    for topic, future in futures.items():
         try:
-            f.result()  # The result itself is None
+            future.result()  # The result itself is None
             print("Additional partitions created for topic {}".format(topic))
         except Exception as e:
             print("Failed to add partitions to topic {}: {}".format(topic, e))
@@ -365,83 +361,73 @@ def step_impl(context, content, file_name, path, seconds):
     time.sleep(seconds)
     context.test.add_test_data(path, content, file_name)
 
+# Kafka
+def delivery_report(err, msg):
+    if err is not None:
+        logging.info('Message delivery failed: {}'.format(err))
+    else:
+        logging.info('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
+
 @when("a message with content \"{content}\" is published to the \"{topic_name}\" topic")
 def step_impl(context, content, topic_name):
-    p = Producer({"bootstrap.servers": "localhost:29092", "client.id": socket.gethostname()})
-    def delivery_report(err, msg):
-        if err is not None:
-            logging.info('Message delivery failed: {}'.format(err))
-        else:
-            logging.info('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
-    p.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
-    p.flush(10)
+    producer = Producer({"bootstrap.servers": "localhost:29092", "client.id": socket.gethostname()})
+    producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
+    producer.flush(10)
 
 # Used for testing transactional message consumption
 @when("the publisher performs a {transaction_type} transaction publishing to the \"{topic_name}\" topic these messages: {messages}")
 def step_impl(context, transaction_type, topic_name, messages):
-    p = Producer({"bootstrap.servers": "localhost:29092", "transactional.id": "1001"})
-    p.init_transactions()
+    producer = Producer({"bootstrap.servers": "localhost:29092", "transactional.id": "1001"})
+    producer.init_transactions()
     logging.info("Transaction type: %s", transaction_type)
     logging.info("Messages: %s", messages.split(", "))
-    def delivery_report(err, msg):
-        if err is not None:
-            logging.info('Message delivery failed: {}'.format(err))
-        else:
-            logging.info('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
     if transaction_type == "SINGLE_COMMITTED_TRANSACTION":
-        p.begin_transaction()
+        producer.begin_transaction()
         for content in messages.split(", "):
-            p.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
-        p.commit_transaction()
-        p.flush(10)
+            producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
+        producer.commit_transaction()
+        producer.flush(10)
     elif transaction_type == "TWO_SEPARATE_TRANSACTIONS":
         for content in messages.split(", "):
-            p.begin_transaction()
-            p.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
-            p.commit_transaction()
-        p.flush(10)
+            producer.begin_transaction()
+            producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
+            producer.commit_transaction()
+        producer.flush(10)
     elif transaction_type == "NON_COMMITTED_TRANSACTION":
-        p.begin_transaction()
+        producer.begin_transaction()
         for content in messages.split(", "):
-            p.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
-        p.flush(10)
+            producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
+        producer.flush(10)
     elif transaction_type == "CANCELLED_TRANSACTION":
-        p.begin_transaction()
+        producer.begin_transaction()
         for content in messages.split(", "):
-            p.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
-        p.flush(10)
-        p.abort_transaction()
+            producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
+        producer.flush(10)
+        producer.abort_transaction()
     else:
         raise Exception("Unknown transaction type.")
 
 @when("a message with content \"{content}\" is published to the \"{topic_name}\" topic with key \"{message_key}\"")
 def step_impl(context, content, topic_name, message_key):
-    p = Producer({"bootstrap.servers": "localhost:29092", "client.id": socket.gethostname()})
-    def delivery_report(err, msg):
-        """ Called once for each message produced to indicate delivery result.
-            Triggered by poll() or flush(). """
-        if err is not None:
-            logging.info('Message delivery failed: {}'.format(err))
-        else:
-            logging.info('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
+    producer = Producer({"bootstrap.servers": "localhost:29092", "client.id": socket.gethostname()})
     # Asynchronously produce a message, the delivery report callback
     # will be triggered from poll() above, or flush() below, when the message has
     # been successfully delivered or failed permanently.
-    p.produce(topic_name, content.encode("utf-8"), callback=delivery_report, key=message_key.encode("utf-8"))
+    producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report, key=message_key.encode("utf-8"))
     # Wait for any outstanding messages to be delivered and delivery report
     # callbacks to be triggered.
-    p.flush(10)
+    producer.flush(10)
 
 @when("{number_of_messages} kafka messages are sent to the topic \"{topic_name}\"")
 def step_impl(context, number_of_messages, topic_name):
-    p = Producer({"bootstrap.servers": "localhost:29092", "client.id": socket.gethostname()})
+    producer = Producer({"bootstrap.servers": "localhost:29092", "client.id": socket.gethostname()})
     for i in range(0, int(number_of_messages)):
-        p.produce(topic_name, str(uuid.uuid4()).encode("utf-8"))
-    p.flush(10)
+        producer.produce(topic_name, str(uuid.uuid4()).encode("utf-8"))
+    producer.flush(10)
 
 @when("a message with content \"{content}\" is published to the \"{topic_name}\" topic with headers \"{semicolon_separated_headers}\"")
 def step_impl(context, content, topic_name, semicolon_separated_headers):
-    # Confluent kafka does not support multiple headers with same key, another API must be used here
+    # Confluent kafka does not support multiple headers with same key, another API must be used here.
     headers = []
     for header in semicolon_separated_headers.split(";"):
         kv = header.split(":")
@@ -486,7 +472,6 @@ def step_impl(context, duration, contents):
 @then("minimum {lower_bound}, maximum {upper_bound} flowfiles are produced and placed in the monitored directory in less than {duration}")
 def step_impl(context, lower_bound, upper_bound, duration):
     context.test.check_for_num_file_range_generated(int(lower_bound), int(upper_bound), timeparse(duration))
-
 
 @then("{number_of_files:d} flowfiles are placed in the monitored directory in {duration}")
 @then("{number_of_files:d} flowfile is placed in the monitored directory in {duration}")
