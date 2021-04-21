@@ -43,8 +43,9 @@
 
 TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   TestController testController;
+  LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
+  LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::InvokeHTTP>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  LogTestController::getInstance().setInfo<org::apache::nifi::minifi::processors::InvokeHTTP>();
 
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
@@ -56,8 +57,11 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   auto dir = testController.createTempDirectory(format);
 
   std::shared_ptr<core::Processor> listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
+  listenhttp->initialize();
 
   std::shared_ptr<core::Processor> invokehttp = std::make_shared<org::apache::nifi::minifi::processors::InvokeHTTP>("invokehttp");
+  invokehttp->initialize();
+
   utils::Identifier processoruuid = listenhttp->getUUID();
   REQUIRE(processoruuid);
 
@@ -140,8 +144,8 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   for (auto provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
-  std::shared_ptr<core::FlowFile> ffr = session2->get();
-  REQUIRE(true == LogTestController::getInstance().contains("exiting because method is POST"));
+
+  REQUIRE(true == LogTestController::getInstance().contains("Exiting because method is POST"));
   LogTestController::getInstance().reset();
 }
 
@@ -160,7 +164,8 @@ class CallBack : public minifi::OutputStreamCallback {
 
 TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   TestController testController;
-  LogTestController::getInstance().setInfo<org::apache::nifi::minifi::processors::InvokeHTTP>();
+  LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
+  LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::InvokeHTTP>();
 
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
@@ -172,15 +177,20 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   auto dir = testController.createTempDirectory(format);
 
   std::shared_ptr<core::Processor> listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
+  listenhttp->initialize();
 
   std::shared_ptr<core::Processor> invokehttp = std::make_shared<org::apache::nifi::minifi::processors::InvokeHTTP>("invokehttp");
+  invokehttp->initialize();
+
   utils::Identifier processoruuid = listenhttp->getUUID();
   REQUIRE(processoruuid);
 
   utils::Identifier invokehttp_uuid = invokehttp->getUUID();
   REQUIRE(invokehttp_uuid);
 
+  auto configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  content_repo->initialize(configuration);
 
   std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
   gcConnection->addRelationship(core::Relationship("success", "description"));
@@ -197,17 +207,13 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
 
   // link the connections so that we can test results at the end for this
   connection->setSource(listenhttp);
-
   connection->setSourceUUID(invokehttp_uuid);
   connection->setDestinationUUID(processoruuid);
-
-  connection2->setSourceUUID(processoruuid);
   connection2->setSourceUUID(processoruuid);
 
   listenhttp->addConnection(connection);
   invokehttp->addConnection(connection);
   invokehttp->addConnection(connection2);
-
 
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp);
   std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(invokehttp);
@@ -269,23 +275,25 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   for (auto provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
-  std::shared_ptr<core::FlowFile> ffr = session2->get();
-  REQUIRE(true == LogTestController::getInstance().contains("exiting because method is POST"));
+
+  REQUIRE(true == LogTestController::getInstance().contains("Exiting because method is POST"));
   LogTestController::getInstance().reset();
 }
 
 TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   TestController testController;
-  LogTestController::getInstance().setInfo<org::apache::nifi::minifi::processors::InvokeHTTP>();
-  LogTestController::getInstance().setInfo<org::apache::nifi::minifi::processors::ListenHTTP>();
+  LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
+  LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::InvokeHTTP>();
   LogTestController::getInstance().setInfo<core::Processor>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> processor = plan->addProcessor("ListenHTTP", "listenhttp", core::Relationship("No Retry", "description"), false);
+  std::shared_ptr<core::Processor> listenhttp = plan->addProcessor("ListenHTTP", "listenhttp", core::Relationship("No Retry", "description"), false);
+  listenhttp->initialize();
   std::shared_ptr<core::Processor> invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
+  invokehttp->initialize();
 
-  REQUIRE(true == plan->setProperty(processor, org::apache::nifi::minifi::processors::ListenHTTP::Port.getName(), "8685"));
-  REQUIRE(true == plan->setProperty(processor, org::apache::nifi::minifi::processors::ListenHTTP::BasePath.getName(), "/testytesttest"));
+  REQUIRE(true == plan->setProperty(listenhttp, org::apache::nifi::minifi::processors::ListenHTTP::Port.getName(), "8685"));
+  REQUIRE(true == plan->setProperty(listenhttp, org::apache::nifi::minifi::processors::ListenHTTP::BasePath.getName(), "/testytesttest"));
 
   REQUIRE(true == plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::Method.getName(), "POST"));
   REQUIRE(true == plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::URL.getName(), "http://localhost:8685/testytesttest"));
@@ -301,12 +309,11 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   testController.runSession(plan, true);
 
   records = plan->getProvenanceRecords();
-  record = plan->getCurrentFlowFile();
 
   for (auto provEventRecord : records) {
-    REQUIRE(provEventRecord->getComponentType() == processor->getName());
+    REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
-  std::shared_ptr<core::FlowFile> ffr = plan->getCurrentFlowFile();
-  REQUIRE(true == LogTestController::getInstance().contains("exiting because method is POST"));
+
+  REQUIRE(true == LogTestController::getInstance().contains("Exiting because method is POST"));
   LogTestController::getInstance().reset();
 }
