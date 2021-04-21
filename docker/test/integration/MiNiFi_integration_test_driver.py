@@ -1,5 +1,8 @@
 import docker
 import logging
+import os
+import shutil
+import threading
 import time
 import uuid
 import datetime
@@ -131,7 +134,6 @@ class MiNiFi_integration_test():
         cluster = self.clusters[cluster_name]
         cluster.deploy_flow()
         assert self.wait_for_cluster_startup_finish(cluster)
-        time.sleep(10)
 
     def start(self):
         logging.info("MiNiFi_integration_test start")

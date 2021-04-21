@@ -319,8 +319,8 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext& context)
   rd_kafka_conf_set_rebalance_cb(conf_.get(), rebalance_cb);
 
   // Uncomment this for librdkafka debug logs:
-  logger_->log_info("Enabling all debug logs for kafka consumer.");
-  setKafkaConfigurationField(*conf_, "debug", "all");
+  // logger_->log_info("Enabling all debug logs for kafka consumer.");
+  // setKafkaConfigurationField(*conf_, "debug", "all");
 
   setKafkaConfigurationField(*conf_, "bootstrap.servers", kafka_brokers_);
   setKafkaConfigurationField(*conf_, "allow.auto.create.topics", "true");
