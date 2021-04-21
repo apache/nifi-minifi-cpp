@@ -40,7 +40,7 @@ namespace c2 {
  */
 class AgentPrinter : public HeartBeatJSONSerializer, public HeartBeatReporter {
  public:
-  AgentPrinter(const std::string& name, const utils::Identifier& uuid = {});
+  explicit AgentPrinter(const std::string& name, const utils::Identifier& uuid = {});
 
   /**
    * Initialize agent printer.

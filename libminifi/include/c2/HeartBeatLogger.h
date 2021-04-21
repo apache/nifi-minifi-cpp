@@ -18,6 +18,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "core/logging/Logger.h"
 #include "HeartBeatReporter.h"

@@ -28,6 +28,8 @@
 
 #include "utils/gsl.h"
 
+#include "rapidjson/prettywriter.h"
+
 namespace org {
 namespace apache {
 namespace nifi {

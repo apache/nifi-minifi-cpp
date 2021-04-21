@@ -266,12 +266,11 @@ void RESTProtocol::initialize(core::controller::ControllerServiceProvider* /*con
 
 void RESTProtocol::serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
   if (!minimize_updates_ || (minimize_updates_ && !containsPayload(payload))) {
-    rapidjson::Value np_key = getStringValue(payload.getLabel(), alloc);
-    rapidjson::Value np_value = serializeJsonPayload(payload, alloc);
+    rapidjson::Value value = serializeJsonPayload(payload, alloc);
     if (minimize_updates_) {
       nested_payloads_.insert(std::pair<std::string, C2Payload>(payload.getLabel(), payload));
     }
-    target.AddMember(np_key, np_value, alloc);
+    target.AddMember(rapidjson::Value(payload.getLabel(), alloc), value, alloc);
   }
 }
 

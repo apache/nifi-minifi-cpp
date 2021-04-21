@@ -27,180 +27,143 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-struct ValueObject {
-  std::string name;
-  std::vector<rapidjson::Value*> values;
-};
-
-std::string HeartBeatJSONSerializer::serializeJsonRootPayload(const C2Payload& payload) {
-  rapidjson::Document json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
-  rapidjson::Document::AllocatorType &alloc = json_payload.GetAllocator();
-
-  rapidjson::Value opReqStrVal;
-  std::string operation_request_str = getOperation(payload);
-  opReqStrVal.SetString(operation_request_str.c_str(), gsl::narrow<rapidjson::SizeType>(operation_request_str.length()), alloc);
-  json_payload.AddMember("operation", opReqStrVal, alloc);
-
-  std::string operationid = payload.getIdentifier();
-  if (operationid.length() > 0) {
-    json_payload.AddMember("operationId", getStringValue(operationid, alloc), alloc);
-    std::string operationStateStr = "FULLY_APPLIED";
-    switch (payload.getStatus().getState()) {
-      case state::UpdateState::FULLY_APPLIED:
-        operationStateStr = "FULLY_APPLIED";
-        break;
-      case state::UpdateState::PARTIALLY_APPLIED:
-        operationStateStr = "PARTIALLY_APPLIED";
-        break;
-      case state::UpdateState::READ_ERROR:
-        operationStateStr = "OPERATION_NOT_UNDERSTOOD";
-        break;
-      case state::UpdateState::SET_ERROR:
-      default:
-        operationStateStr = "NOT_APPLIED";
-    }
-
-    rapidjson::Value opstate(rapidjson::kObjectType);
-
-    opstate.AddMember("state", getStringValue(operationStateStr, alloc), alloc);
-    const auto details = payload.getRawData();
-
-    opstate.AddMember("details", getStringValue(std::string(details.data(), details.size()), alloc), alloc);
-
-    json_payload.AddMember("operationState", opstate, alloc);
-    json_payload.AddMember("identifier", getStringValue(operationid, alloc), alloc);
+std::string HeartBeatJSONSerializer::getOperation(const C2Payload& payload) {
+  switch (payload.getOperation()) {
+    case Operation::ACKNOWLEDGE:
+      return "acknowledge";
+    case Operation::HEARTBEAT:
+      return "heartbeat";
+    case Operation::RESTART:
+      return "restart";
+    case Operation::DESCRIBE:
+      return "describe";
+    case Operation::STOP:
+      return "stop";
+    case Operation::START:
+      return "start";
+    case Operation::UPDATE:
+      return "update";
+    case Operation::PAUSE:
+      return "pause";
+    case Operation::RESUME:
+      return "resume";
+    default:
+      return "heartbeat";
   }
-
-  mergePayloadContent(json_payload, payload, alloc);
-
-  for (const auto &nested_payload : payload.getNestedPayloads()) {
-    serializeNestedPayload(json_payload, nested_payload, alloc);
-  }
-
-  rapidjson::StringBuffer buffer;
-  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-  json_payload.Accept(writer);
-  return buffer.GetString();
 }
 
-void HeartBeatJSONSerializer::serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
-  rapidjson::Value key = getStringValue(payload.getLabel(), alloc);
-  rapidjson::Value value = serializeJsonPayload(payload, alloc);
-  target.AddMember(key, value, alloc);
+static void serializeOperationInfo(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
+  gsl_Expects(target.IsObject());
+
+  target.AddMember("operation", HeartBeatJSONSerializer::getOperation(payload), alloc);
+
+  std::string id = payload.getIdentifier();
+  if (id.empty()) {
+    return;
+  }
+
+  target.AddMember("operationId", id, alloc);
+  std::string state_str;
+  switch (payload.getStatus().getState()) {
+    case state::UpdateState::FULLY_APPLIED:
+      state_str = "FULLY_APPLIED";
+      break;
+    case state::UpdateState::PARTIALLY_APPLIED:
+      state_str = "PARTIALLY_APPLIED";
+      break;
+    case state::UpdateState::READ_ERROR:
+      state_str = "OPERATION_NOT_UNDERSTOOD";
+      break;
+    case state::UpdateState::SET_ERROR:
+    default:
+      state_str = "NOT_APPLIED";
+  }
+
+  rapidjson::Value state(rapidjson::kObjectType);
+
+  state.AddMember("state", state_str, alloc);
+  const auto details = payload.getRawData();
+
+  state.AddMember("details", std::string(details.data(), details.size()), alloc);
+
+  target.AddMember("operationState", state, alloc);
+  target.AddMember("identifier", id, alloc);
 }
 
-struct NamedValue {
-  std::string name;
-  std::vector<rapidjson::Value> values;
+static void setJsonStr(const std::string& key, const state::response::ValueNode& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {  // NOLINT
+  rapidjson::Value valueVal;
+  auto base_type = value.getValue();
 
-  rapidjson::Value to_array(rapidjson::Document::AllocatorType& alloc) {
-    rapidjson::Value arr(rapidjson::kArrayType);
-    spread_into(arr, alloc);
-    return arr;
-  }
-
-  void spread_into(rapidjson::Value& target_array, rapidjson::Document::AllocatorType& alloc) {
-    gsl_Expects(target_array.IsArray());
-    for (auto& child : values) {
-      target_array.PushBack(child, alloc);
+  auto type_index = base_type->getTypeIndex();
+  if (auto sub_type = std::dynamic_pointer_cast<core::TransformableValue>(base_type)) {
+    valueVal.SetString(base_type->getStringValue(), alloc);
+  } else {
+    if (type_index == state::response::Value::BOOL_TYPE) {
+      bool value = false;
+      base_type->convertValue(value);
+      valueVal.SetBool(value);
+    } else if (type_index == state::response::Value::INT_TYPE) {
+      int value = 0;
+      base_type->convertValue(value);
+      valueVal.SetInt(value);
+    } else if (type_index == state::response::Value::UINT32_TYPE) {
+      uint32_t value = 0;
+      base_type->convertValue(value);
+      valueVal.SetUint(value);
+    } else if (type_index == state::response::Value::INT64_TYPE) {
+      int64_t value = 0;
+      base_type->convertValue(value);
+      valueVal.SetInt64(value);
+    } else if (type_index == state::response::Value::UINT64_TYPE) {
+      int64_t value = 0;
+      base_type->convertValue(value);
+      valueVal.SetInt64(value);
+    } else {
+      valueVal.SetString(base_type->getStringValue(), alloc);
     }
   }
+  parent.AddMember(rapidjson::Value(key, alloc), valueVal, alloc);
+}
 
-  void move_into(rapidjson::Value& target, rapidjson::Document::AllocatorType& alloc) {
-    if (values.empty()) {
-      return;
-    }
-    rapidjson::Value member_key = HeartBeatJSONSerializer::getStringValue(name, alloc);
-    if (values.size() > 1) {
-      if (target.IsArray()) {
-        spread_into(target, alloc);
-      } else {
-        target.AddMember(member_key, to_array(alloc), alloc);
+static void mergePayloadContent(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
+  const std::vector<C2ContentResponse>& content = payload.getContent();
+  if (content.empty()) {
+    return;
+  }
+  const bool all_empty = [&] {
+    for (const auto& payload_content : content) {
+      for (const auto& op_arg : payload_content.operation_arguments) {
+        if (!op_arg.second.empty()) {
+          return false;
+        }
       }
-      return;
     }
-    rapidjson::Value& val = [&] () -> rapidjson::Value& {
-      return values[0].IsObject() && values[0].HasMember(member_key) ? values[0][member_key] : values[0];
-    }();
-    if (target.IsArray()) {
-      target.PushBack(val, alloc);
-    } else {
-      target.AddMember(member_key, val, alloc);
+    return true;
+  }();
+
+  if (all_empty) {
+    if (!target.IsArray()) {
+      target.SetArray();
     }
-  }
-};
-
-class NamedValueMap {
-  using Container = std::vector<NamedValue>;
- public:
-  Container::iterator find(const std::string& key) {
-    for (auto it = data_.begin(); it != data_.end(); ++it) {
-      if (it->name == key) return it;
+    for (const auto& payload_content : content) {
+      for (const auto& op_arg : payload_content.operation_arguments) {
+        target.PushBack(rapidjson::Value(op_arg.first, alloc), alloc);
+      }
     }
-    return data_.end();
+    return;
   }
-  Container::const_iterator find(const std::string& key) const {
-    for (auto it = data_.begin(); it != data_.end(); ++it) {
-      if (it->name == key) return it;
-    }
-    return data_.end();
-  }
-  std::vector<rapidjson::Value>& operator[](const std::string& key) {
-    auto it = find(key);
-    if (it == end()) {
-      data_.push_back(NamedValue{key, {}});
-      it = find(key);
-    }
-    return it->values;
-  }
-  std::vector<rapidjson::Value>& push_back(std::string key) {
-    data_.emplace_back(NamedValue{std::move(key), {}});
-    return data_.back().values;
-  }
-  Container::const_iterator begin() const {
-    return data_.begin();
-  }
-  Container::const_iterator end() const {
-    return data_.end();
-  }
-  Container::iterator begin() {
-    return data_.begin();
-  }
-  Container::iterator end() {
-    return data_.end();
-  }
- private:
-  Container data_;
-};
-
-rapidjson::Value HeartBeatJSONSerializer::serializeJsonPayload(const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
-  // get the name from the content
-  rapidjson::Value json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
-
-  NamedValueMap children;
-
-  const bool isQueue = payload.getLabel() == "queues";
-
-  for (const auto &nested_payload : payload.getNestedPayloads()) {
-    std::string label = nested_payload.getLabel();
-    rapidjson::Value child_payload(isQueue ? serializeConnectionQueues(nested_payload, label, alloc) : serializeJsonPayload(nested_payload, alloc));
-
-    if (nested_payload.isCollapsible()) {
-      children[label].push_back(std::move(child_payload));
-    } else {
-      children.push_back(label).push_back(std::move(child_payload));
+  for (const auto& payload_content : content) {
+    if (payload_content.op == payload.getOperation()) {
+      for (const auto& op_arg : payload_content.operation_arguments) {
+        if (!op_arg.second.empty()) {
+          setJsonStr(op_arg.first, op_arg.second, target, alloc);
+        }
+      }
     }
   }
-
-  for (auto& child : children) {
-    child.move_into(json_payload, alloc);
-  }
-
-  mergePayloadContent(json_payload, payload, alloc);
-  return json_payload;
 }
 
-rapidjson::Value HeartBeatJSONSerializer::serializeConnectionQueues(const C2Payload& payload, std::string& label, rapidjson::Document::AllocatorType& alloc) {
+static rapidjson::Value serializeConnectionQueues(const C2Payload& payload, std::string& label, rapidjson::Document::AllocatorType& alloc) {
   rapidjson::Value json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
 
   C2Payload adjusted(payload.getOperation(), payload.getIdentifier(), payload.isRaw());
@@ -230,134 +193,133 @@ rapidjson::Value HeartBeatJSONSerializer::serializeConnectionQueues(const C2Payl
   return json_payload;
 }
 
-void HeartBeatJSONSerializer::setJsonStr(const std::string& key, const state::response::ValueNode& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {  // NOLINT
-  rapidjson::Value keyVal;
-  rapidjson::Value valueVal;
-  const char* c_key = key.c_str();
-  auto base_type = value.getValue();
-  keyVal.SetString(c_key, gsl::narrow<rapidjson::SizeType>(key.length()), alloc);
+std::string HeartBeatJSONSerializer::serializeJsonRootPayload(const C2Payload& payload) {
+  rapidjson::Document json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
+  rapidjson::Document::AllocatorType &alloc = json_payload.GetAllocator();
 
-  auto type_index = base_type->getTypeIndex();
-  if (auto sub_type = std::dynamic_pointer_cast<core::TransformableValue>(base_type)) {
-    auto str = base_type->getStringValue();
-    const char* c_val = str.c_str();
-    valueVal.SetString(c_val, gsl::narrow<rapidjson::SizeType>(str.length()), alloc);
-  } else {
-    if (type_index == state::response::Value::BOOL_TYPE) {
-      bool value = false;
-      base_type->convertValue(value);
-      valueVal.SetBool(value);
-    } else if (type_index == state::response::Value::INT_TYPE) {
-      int value = 0;
-      base_type->convertValue(value);
-      valueVal.SetInt(value);
-    } else if (type_index == state::response::Value::UINT32_TYPE) {
-      uint32_t value = 0;
-      base_type->convertValue(value);
-      valueVal.SetUint(value);
-    } else if (type_index == state::response::Value::INT64_TYPE) {
-      int64_t value = 0;
-      base_type->convertValue(value);
-      valueVal.SetInt64(value);
-    } else if (type_index == state::response::Value::UINT64_TYPE) {
-      int64_t value = 0;
-      base_type->convertValue(value);
-      valueVal.SetInt64(value);
-    } else {
-      auto str = base_type->getStringValue();
-      const char* c_val = str.c_str();
-      valueVal.SetString(c_val, gsl::narrow<rapidjson::SizeType>(str.length()), alloc);
-    }
+  serializeOperationInfo(json_payload, payload, alloc);
+
+  mergePayloadContent(json_payload, payload, alloc);
+
+  for (const auto &nested_payload : payload.getNestedPayloads()) {
+    serializeNestedPayload(json_payload, nested_payload, alloc);
   }
-  parent.AddMember(keyVal, valueVal, alloc);
+
+  rapidjson::StringBuffer buffer;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+  json_payload.Accept(writer);
+  return buffer.GetString();
 }
 
-void HeartBeatJSONSerializer::mergePayloadContent(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
-  const std::vector<C2ContentResponse> &content = payload.getContent();
-  bool all_empty = !content.empty();
-  bool is_parent_array = target.IsArray();
+void HeartBeatJSONSerializer::serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
+  target.AddMember(rapidjson::Value(payload.getLabel(), alloc), serializeJsonPayload(payload, alloc), alloc);
+}
 
-  for (const auto &payload_content : content) {
-    for (const auto &op_arg : payload_content.operation_arguments) {
-      if (!op_arg.second.empty()) {
-        all_empty = false;
-        break;
-      }
-    }
-    if (!all_empty)
-      break;
-  }
+struct NamedValue {
+  std::string name;
+  std::vector<rapidjson::Value> values;
 
-  if (all_empty) {
-    if (!is_parent_array) {
-      target.SetArray();
-      is_parent_array = true;
-    }
+  rapidjson::Value to_array(rapidjson::Document::AllocatorType& alloc) {
     rapidjson::Value arr(rapidjson::kArrayType);
-    for (const auto &payload_content : content) {
-      for (const auto& op_arg : payload_content.operation_arguments) {
-        rapidjson::Value keyVal;
-        keyVal.SetString(op_arg.first.c_str(), gsl::narrow<rapidjson::SizeType>(op_arg.first.length()), alloc);
-        if (is_parent_array) {
-          target.PushBack(keyVal, alloc);
-        } else {
-          arr.PushBack(keyVal, alloc);
-        }
-      }
-    }
-
-    if (!is_parent_array) {
-      rapidjson::Value sub_key = getStringValue(payload.getLabel(), alloc);
-      target.AddMember(sub_key, arr, alloc);
-    }
-    return;
+    spread_into(arr, alloc);
+    return arr;
   }
-  for (const auto &payload_content : content) {
-    rapidjson::Value payload_content_values(rapidjson::kObjectType);
-    bool use_sub_option = true;
-    if (payload_content.op == payload.getOperation()) {
-      for (const auto& op_arg : payload_content.operation_arguments) {
-        if (!op_arg.second.empty()) {
-          setJsonStr(op_arg.first, op_arg.second, target, alloc);
-        }
+
+  void spread_into(rapidjson::Value& target_array, rapidjson::Document::AllocatorType& alloc) {
+    gsl_Expects(target_array.IsArray());
+    for (auto& child : values) {
+      target_array.PushBack(child, alloc);
+    }
+  }
+
+  void move_into(rapidjson::Value& target, rapidjson::Document::AllocatorType& alloc) {
+    if (values.empty()) {
+      return;
+    }
+    rapidjson::Value member_key(name, alloc);
+    if (values.size() > 1) {
+      if (target.IsArray()) {
+        spread_into(target, alloc);
+      } else {
+        target.AddMember(member_key, to_array(alloc), alloc);
       }
+      return;
+    }
+    rapidjson::Value& val = [&] () -> rapidjson::Value& {
+      return values[0].IsObject() && values[0].HasMember(member_key) ? values[0][member_key] : values[0];
+    }();
+    if (target.IsArray()) {
+      target.PushBack(val, alloc);
     } else {
-    }
-    if (use_sub_option) {
-      rapidjson::Value sub_key = getStringValue(payload_content.name, alloc);
+      target.AddMember(member_key, val, alloc);
     }
   }
-}
+};
 
-rapidjson::Value HeartBeatJSONSerializer::getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc) {  // NOLINT
-  rapidjson::Value Val;
-  Val.SetString(value.c_str(), gsl::narrow<rapidjson::SizeType>(value.length()), alloc);
-  return Val;
-}
+class NamedValueMap {
+  using Container = std::vector<NamedValue>;
 
-std::string HeartBeatJSONSerializer::getOperation(const C2Payload& payload) {
-  switch (payload.getOperation()) {
-    case Operation::ACKNOWLEDGE:
-      return "acknowledge";
-    case Operation::HEARTBEAT:
-      return "heartbeat";
-    case Operation::RESTART:
-      return "restart";
-    case Operation::DESCRIBE:
-      return "describe";
-    case Operation::STOP:
-      return "stop";
-    case Operation::START:
-      return "start";
-    case Operation::UPDATE:
-      return "update";
-    case Operation::PAUSE:
-      return "pause";
-    case Operation::RESUME:
-      return "resume";
-    default:
-      return "heartbeat";
+ public:
+  Container::iterator find(const std::string& key) {
+    for (auto it = data_.begin(); it != data_.end(); ++it) {
+      if (it->name == key) return it;
+    }
+    return data_.end();
   }
+  Container::const_iterator find(const std::string& key) const {
+    for (auto it = data_.begin(); it != data_.end(); ++it) {
+      if (it->name == key) return it;
+    }
+    return data_.end();
+  }
+  std::vector<rapidjson::Value>& operator[](const std::string& key) {
+    auto it = find(key);
+    if (it == end()) {
+      data_.push_back(NamedValue{key, {}});
+      it = find(key);
+    }
+    return it->values;
+  }
+  std::vector<rapidjson::Value>& push_back(std::string key) {
+    data_.emplace_back(NamedValue{std::move(key), {}});
+    return data_.back().values;
+  }
+  Container::iterator begin() {
+    return data_.begin();
+  }
+  Container::iterator end() {
+    return data_.end();
+  }
+
+ private:
+  Container data_;
+};
+
+rapidjson::Value HeartBeatJSONSerializer::serializeJsonPayload(const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
+  // get the name from the content
+  rapidjson::Value json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
+
+  NamedValueMap children;
+
+  const bool isQueue = payload.getLabel() == "queues";
+
+  for (const auto &nested_payload : payload.getNestedPayloads()) {
+    std::string label = nested_payload.getLabel();
+    rapidjson::Value child_payload(isQueue ? serializeConnectionQueues(nested_payload, label, alloc) : serializeJsonPayload(nested_payload, alloc));
+
+    if (nested_payload.isCollapsible()) {
+      children[label].push_back(std::move(child_payload));
+    } else {
+      children.push_back(label).push_back(std::move(child_payload));
+    }
+  }
+
+  for (auto& child : children) {
+    child.move_into(json_payload, alloc);
+  }
+
+  mergePayloadContent(json_payload, payload, alloc);
+  return json_payload;
 }
 
 }  // namespace c2

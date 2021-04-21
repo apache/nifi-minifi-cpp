@@ -21,20 +21,10 @@
 #include <map> // NOLINT
 #include <stdexcept> // NOLINT
 
-#ifdef RAPIDJSON_ASSERT
-#undef RAPIDJSON_ASSERT
-#endif
-#define RAPIDJSON_ASSERT(x) if(!(x)) throw std::logic_error("rapidjson exception"); //NOLINT
-
 #include <vector> // NOLINT
 #include <string> // NOLINT
 #include <mutex> // NOLINT
 #include <memory>
-
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/prettywriter.h"
 
 #include "utils/ByteArrayCallback.h"
 #include "c2/C2Protocol.h"

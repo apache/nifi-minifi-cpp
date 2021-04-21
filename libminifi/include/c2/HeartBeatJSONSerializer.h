@@ -17,8 +17,21 @@
 
 #pragma once
 
+#include <string>
+
 #include "HeartBeatReporter.h"
 #include "C2Payload.h"
+
+#ifdef RAPIDJSON_ASSERT
+#undef RAPIDJSON_ASSERT
+#endif
+#define RAPIDJSON_ASSERT(x) if(!(x)) throw std::logic_error("rapidjson exception"); //NOLINT
+
+#ifdef RAPIDJSON_HAS_STDSTRING
+#undef RAPIDJSON_HAS_STDSTRING
+#endif
+#define RAPIDJSON_HAS_STDSTRING 1
+
 #include "rapidjson/document.h"
 
 namespace org {
@@ -29,14 +42,12 @@ namespace c2 {
 
 class HeartBeatJSONSerializer {
  public:
-  virtual void serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc);
   virtual std::string serializeJsonRootPayload(const C2Payload& payload);
-  virtual rapidjson::Value serializeJsonPayload(const C2Payload& payload, rapidjson::Document::AllocatorType& alloc);
-  static rapidjson::Value serializeConnectionQueues(const C2Payload& payload, std::string& label, rapidjson::Document::AllocatorType& alloc);
-  static void setJsonStr(const std::string& key, const state::response::ValueNode& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc);
-  static rapidjson::Value getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc);
-  static void mergePayloadContent(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc);
   static std::string getOperation(const C2Payload& payload);
+
+ protected:
+  virtual rapidjson::Value serializeJsonPayload(const C2Payload& payload, rapidjson::Document::AllocatorType& alloc);
+  virtual void serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc);
 
   virtual ~HeartBeatJSONSerializer() = default;
 };
