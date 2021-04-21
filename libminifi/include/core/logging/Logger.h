@@ -197,7 +197,7 @@ class Logger : public BaseLogger {
   }
 
   void set_max_log_size(int size) {
-    max_log_size = size;
+    max_log_size_ = size;
   }
 
   bool should_log(const LOG_LEVEL &level);
@@ -224,11 +224,11 @@ class Logger : public BaseLogger {
     if (!delegate_->should_log(level)) {
       return;
     }
-    const auto str = format_string(max_log_size.load(), format, conditional_conversion(args)...);
+    const auto str = format_string(max_log_size_.load(), format, conditional_conversion(args)...);
     delegate_->log(level, str);
   }
 
-  std::atomic<int> max_log_size{LOG_BUFFER_SIZE};
+  std::atomic<int> max_log_size_{LOG_BUFFER_SIZE};
 
   Logger(Logger const&);
   Logger& operator=(Logger const&);
