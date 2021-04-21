@@ -68,6 +68,7 @@ message("-- Finished building ${CURL_INT_TEST_COUNT} libcURL integration test fi
 
 add_test(NAME HTTPClientTests COMMAND "HTTPClientTests" WORKING_DIRECTORY ${TEST_DIR})
 add_test(NAME HTTPStreamingCallbackTests COMMAND "HTTPStreamingCallbackTests" WORKING_DIRECTORY ${TEST_DIR})
+add_test(NAME InvokeHTTPTests COMMAND "InvokeHTTPTests" WORKING_DIRECTORY ${TEST_DIR})
 
 add_test(NAME HttpGetIntegrationTest COMMAND HttpGetIntegrationTest "${TEST_RESOURCES}/TestHTTPGet.yml"  "${TEST_RESOURCES}/")
 add_test(NAME C2UpdateTest COMMAND C2UpdateTest "${TEST_RESOURCES}/TestHTTPGet.yml"  "${TEST_RESOURCES}/")
