@@ -22,6 +22,7 @@ add_custom_target(
         -u 1000
         -g 1000
         -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+        -i release
         -c ENABLE_ALL=${ENABLE_ALL}
         -c ENABLE_PYTHON=${ENABLE_PYTHON}
         -c ENABLE_OPS=${ENABLE_OPS}
