@@ -103,8 +103,6 @@ class TailFile : public core::Processor {
   // Supported Relationships
   static core::Relationship Success;
 
-  static const std::set<std::string> INITIAL_START_POSITIONS;
-
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context, provides eg. configuration.
