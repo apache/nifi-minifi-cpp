@@ -16,6 +16,11 @@
  * limitations under the License.
  */
 
+#ifdef WIN32
+#pragma push_macro("GetObject")
+#undef GetObject
+#endif
+
 #include "c2/protocols/RESTProtocol.h"
 
 #include <algorithm>
@@ -35,10 +40,6 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-#ifdef WIN32
-#pragma push_macro("GetObject")
-#undef GetObject
-#endif
 
 AnnotatedValue parseAnnotatedValue(const rapidjson::Value& jsonValue) {
   AnnotatedValue result;
