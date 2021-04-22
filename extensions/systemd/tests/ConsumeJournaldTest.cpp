@@ -156,7 +156,7 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
   const auto consume_journald = plan->addProcessor(std::make_shared<ConsumeJournald>("ConsumeJournald", utils::Identifier{},
       std::move(libwrapper)), "ConsumeJournald");
   REQUIRE(consume_journald->setProperty(ConsumeJournald::TimestampFormat, "ISO8601"));
-  const auto get_cursor_position = [&consume_journald] { return ConsumeJournaldTestAccessor::get_state_manager_(dynamic_cast<ConsumeJournald&>(*consume_journald))->get()->at("cursor"); };
+  const auto get_cursor_position = [&consume_journald]() -> std::string { return ConsumeJournaldTestAccessor::get_state_manager_(dynamic_cast<ConsumeJournald&>(*consume_journald))->get()->at("cursor"); };
 
   SECTION("defaults") {
     // first run: seeks to the end, no flow files are created. Yields.
