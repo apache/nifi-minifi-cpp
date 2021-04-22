@@ -706,9 +706,7 @@ void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
     } else if (initial_start_position_ == InitialStartPositions::CURRENT_TIME) {
       state.position_ = utils::file::FileUtils::file_size(full_file_name);
       state.last_read_time_ = std::chrono::system_clock::now();
-      WholeFileReaderCallback file_reader{full_file_name, 0, 0};
-      file_reader.process(std::make_shared<io::BufferStream>());
-      state.checksum_ = file_reader.checksum();
+      state.checksum_ = utils::file::FileUtils::computeChecksum(full_file_name, state.position_);
       storeState();
       return;
     }
