@@ -28,8 +28,12 @@
 #include "utils/StringUtils.h"
 #include "Utils.h"
 
-using namespace org::apache::nifi::minifi;
-using namespace extensions::systemd;
+namespace minifi = org::apache::nifi::minifi;
+namespace utils = minifi::utils;
+namespace systemd = minifi::extensions::systemd;
+namespace libwrapper = systemd::libwrapper;
+using systemd::JournalType;
+using systemd::ConsumeJournald;
 
 namespace {
 namespace gsl = minifi::gsl;
