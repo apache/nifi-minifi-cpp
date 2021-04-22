@@ -24,5 +24,5 @@ set_property(TARGET minifi-systemd PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(minifi-systemd ${LIBMINIFI} Threads::Threads date::date)
 
-SET (SYSTEMD-EXTENSION minifi-systemd PARENT_SCOPE)
+set(SYSTEMD-EXTENSION minifi-systemd PARENT_SCOPE)
 register_extension(minifi-systemd)

@@ -33,7 +33,7 @@ using namespace extensions::systemd;
 
 namespace {
 namespace gsl = minifi::gsl;
-struct JournalEntry {
+struct JournalEntry final {
   JournalEntry(const char* const identifier, const char* const message, int pid = 0, std::vector<std::string> extra_fields = {}, const char* const hostname = "test-pc")
     :fields{std::move(extra_fields)}
   {
@@ -50,7 +50,7 @@ struct JournalEntry {
 
   std::vector<std::string> fields;  // in KEY=VALUE format, like systemd
 };
-struct TestJournal : libwrapper::Journal {
+struct TestJournal final : libwrapper::Journal {
   explicit TestJournal(std::vector<JournalEntry>& journal)
       :journal{&journal}
   { }
@@ -120,7 +120,7 @@ struct TestJournal : libwrapper::Journal {
   size_t field_id = 0;
   gsl::not_null<std::vector<JournalEntry>*> journal;
 };
-struct TestLibWrapper : libwrapper::LibWrapper {
+struct TestLibWrapper final : libwrapper::LibWrapper {
   explicit TestLibWrapper(std::vector<JournalEntry> journal)
       :journal{std::move(journal)}
   { }
