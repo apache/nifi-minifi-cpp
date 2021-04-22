@@ -43,13 +43,13 @@ const core::Property ConsumeJournald::PayloadFormat = core::PropertyBuilder::cre
     ->build();
 
 const core::Property ConsumeJournald::IncludeTimestamp = core::PropertyBuilder::createProperty("Include Timestamp")
-    ->withDescription("Include message timestamp in the 'timestamp' attribute")
+    ->withDescription("Include message timestamp in the 'timestamp' attribute.")
     ->withDefaultValue<bool>(true)
     ->isRequired(true)
     ->build();
 
 const core::Property ConsumeJournald::JournalType = core::PropertyBuilder::createProperty("Journal Type")
-    ->withDescription("Type of journal to consume")
+    ->withDescription("Type of journal to consume.")
     ->withDefaultValue<std::string>(JOURNAL_TYPE_SYSTEM)
     ->withAllowableValues<std::string>({JOURNAL_TYPE_USER, JOURNAL_TYPE_SYSTEM, JOURNAL_TYPE_BOTH})
     ->isRequired(true)
@@ -62,7 +62,7 @@ const core::Property ConsumeJournald::ProcessOldMessages = core::PropertyBuilder
     ->build();
 
 const core::Property ConsumeJournald::TimestampFormat = core::PropertyBuilder::createProperty("Timestamp Format")
-    ->withDescription("Format string to use when creating the timestamp attribute or writing messages in the syslog format")
+    ->withDescription("Format string to use when creating the timestamp attribute or writing messages in the syslog format.")
     ->withDefaultValue("%x %X %Z")
     ->isRequired(true)
     ->build();

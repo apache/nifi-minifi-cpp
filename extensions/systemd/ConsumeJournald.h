@@ -102,6 +102,6 @@ class ConsumeJournald final : public core::Processor {
   std::string timestamp_format_ = "%x %X %Z";
 };
 
-REGISTER_RESOURCE(ConsumeJournald, "Consume systemd-journald journal messages");
+REGISTER_RESOURCE(ConsumeJournald, "Consume systemd-journald journal messages. Creates one flow file per message. Fields are mapped to attributes. Realtime timestamp is mapped to the 'timestamp' attribute.");
 
 }}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd
