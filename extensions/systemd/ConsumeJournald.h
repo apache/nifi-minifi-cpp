@@ -57,6 +57,8 @@ class ConsumeJournald final : public core::Processor {
   static const core::Property PayloadFormat;
   static const core::Property IncludeTimestamp;
   static const core::Property JournalType;
+  static const core::Property ProcessOldMessages;
+  static const core::Property TimestampFormat;
 
   explicit ConsumeJournald(const std::string& name, const utils::Identifier& id = {}, std::unique_ptr<libwrapper::LibWrapper>&& = libwrapper::createLibWrapper());
   ConsumeJournald(const ConsumeJournald&) = delete;
@@ -70,6 +72,7 @@ class ConsumeJournald final : public core::Processor {
   void onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* sessionFactory) final;
   void onTrigger(core::ProcessContext* context, core::ProcessSession* session) final;
 
+  friend struct ConsumeJournaldTestAccessor;
  private:
   struct journal_field {
     std::string name;
@@ -84,7 +87,7 @@ class ConsumeJournald final : public core::Processor {
   static utils::optional<gsl::span<const char>> enumerateJournalEntry(libwrapper::Journal&);
   static utils::optional<journal_field> getNextField(libwrapper::Journal&);
   std::future<std::pair<std::string, std::vector<journal_message>>> getCursorAndMessageBatch();
-  static std::string formatSyslogMessage(const journal_message&);
+  std::string formatSyslogMessage(const journal_message&) const;
 
   std::atomic<bool> running_{false};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger();
@@ -93,9 +96,10 @@ class ConsumeJournald final : public core::Processor {
   std::unique_ptr<Worker> worker_;
   utils::optional<JournalHandle> journal_handle_;
 
-  std::size_t batch_size_ = 10;
+  std::size_t batch_size_ = 1000;
   systemd::PayloadFormat payload_format_ = systemd::PayloadFormat::Syslog;
   bool include_timestamp_ = true;
+  std::string timestamp_format_ = "%x %X %Z";
 };
 
 REGISTER_RESOURCE(ConsumeJournald, "Consume systemd-journald journal messages");

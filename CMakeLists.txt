@@ -582,7 +582,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 		#	find_package(PkgConfig)
 		#	pkg_check_modules(SYSTEMD_PKGCONF systemd)
 		#endif()
-		createExtension(SYSTEMD-EXTENSIONS "SYSTEMD EXTENSIONS" "Enabled log collection from journald" "extensions/systemd" "${TEST_DIR}/systemd-tests")
+		createExtension(SYSTEMD-EXTENSIONS "SYSTEMD EXTENSIONS" "Enabled log collection from journald" "extensions/systemd" "extensions/systemd/tests")
 	endif()
 endif()
 

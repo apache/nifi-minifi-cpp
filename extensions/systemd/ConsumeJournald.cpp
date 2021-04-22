@@ -21,12 +21,10 @@
 #include <algorithm>
 
 #include <date/date.h>
-#include "spdlog/spdlog.h"  // TODO(szaszm): for fmt, TODO: make fmt directly available
+#include "spdlog/spdlog.h"  // TODO(szaszm): make fmt directly available
 #include "utils/GeneralUtils.h"
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
-
-static constexpr const char* DATETIME_FORMAT = "%x %X %Z";
 
 constexpr const char* ConsumeJournald::CURSOR_KEY;
 const core::Relationship ConsumeJournald::Success("success", "Successfully consumed journal messages.");
@@ -57,13 +55,24 @@ const core::Property ConsumeJournald::JournalType = core::PropertyBuilder::creat
     ->isRequired(true)
     ->build();
 
+const core::Property ConsumeJournald::ProcessOldMessages = core::PropertyBuilder::createProperty("Process Old Messages")
+    ->withDescription("Process events created before the first usage (schedule) of the processor instance.")
+    ->withDefaultValue<bool>(false)
+    ->isRequired(true)
+    ->build();
+
+const core::Property ConsumeJournald::TimestampFormat = core::PropertyBuilder::createProperty("Timestamp Format")
+    ->withDescription("Format string to use when creating the timestamp attribute or writing messages in the syslog format")
+    ->withDefaultValue("%x %X %Z")
+    ->isRequired(true)
+    ->build();
+
 ConsumeJournald::ConsumeJournald(const std::string &name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
     :core::Processor{name, id}, libwrapper_{std::move(libwrapper)}
 {}
 
 void ConsumeJournald::initialize() {
-  setSupportedProperties({BatchSize});
-  // Set the supported relationships
+  setSupportedProperties({BatchSize, PayloadFormat, IncludeTimestamp, JournalType, ProcessOldMessages, TimestampFormat});
   setSupportedRelationships({Success});
 
   worker_ = utils::make_unique<Worker>();
@@ -97,22 +106,32 @@ void ConsumeJournald::onSchedule(core::ProcessContext* const context, core::Proc
   payload_format_ = (context->getProperty(PayloadFormat) | utils::flatMap(parse_payload_format)).value_or(systemd::PayloadFormat::Syslog);
   include_timestamp_ = context->getProperty<bool>(IncludeTimestamp).value_or(true);
   const auto journal_type = (context->getProperty(JournalType) | utils::flatMap(parse_journal_type)).value_or(JournalTypeEnum::System);
+  const auto process_old_messages = context->getProperty<bool>(ProcessOldMessages).value_or(false);
+  timestamp_format_ = [&context] {
+    auto tf_prop = context->getProperty(TimestampFormat).value_or(TimestampFormat.getDefaultValue());
+    if (tf_prop == "ISO" || tf_prop == "ISO 8601" || tf_prop == "ISO8601") return std::string{"%FT%T%Ez"};
+    return tf_prop;
+  }();
 
   state_manager_ = context->getStateManager();
   journal_handle_ = utils::make_optional(worker_->enqueue([this, journal_type]{
     return JournalHandle{libwrapper_->openJournal(journal_type)};
   }).get());
-  worker_->enqueue([this] {
-    journal_handle_->visit([this](libwrapper::Journal& journal) {
+  const auto seek_default = [process_old_messages](libwrapper::Journal& journal) {
+    if (process_old_messages) journal.seekHead();
+    else journal.seekTail();
+  };
+  worker_->enqueue([this, &seek_default] {
+    journal_handle_->visit([this, &seek_default](libwrapper::Journal& journal) {
       const auto cursor = state_manager_->get() | utils::map([](std::unordered_map<std::string, std::string>&& m) { return m.at(CURSOR_KEY); });
       if (!cursor) {
-        journal.seekTail();
+        seek_default(journal);
       } else {
         const auto ret = journal.seekCursor(cursor->c_str());
         if (ret < 0) {
           const auto error_message = std::generic_category().default_error_condition(-ret).message();
-          logger_->log_warn("Failed to seek to cursor: %s. Seeking to tail instead. cursor=\"%s\"", error_message, *cursor);
-          journal.seekTail();
+          logger_->log_warn("Failed to seek to cursor: %s. Seeking to tail or head (depending on Process Old Messages property) instead. cursor=\"%s\"", error_message, *cursor);
+          seek_default(journal);
         }
       }
     });
@@ -142,7 +161,7 @@ void ConsumeJournald::onTrigger(core::ProcessContext* const context, core::Proce
         flow_file->setAttribute(std::move(field.name), std::move(field.value));
       }
     }
-    if (include_timestamp_) flow_file->setAttribute("timestamp", date::format(DATETIME_FORMAT, msg.timestamp));
+    if (include_timestamp_) flow_file->setAttribute("timestamp", date::format(timestamp_format_, msg.timestamp));
     session->transfer(flow_file, Success);
   }
   session->commit();
@@ -205,7 +224,7 @@ std::future<std::pair<std::string, std::vector<ConsumeJournald::journal_message>
   });
 }
 
-std::string ConsumeJournald::formatSyslogMessage(const journal_message& msg) {
+std::string ConsumeJournald::formatSyslogMessage(const journal_message& msg) const {
   gsl_Expects(msg.timestamp != decltype(msg.timestamp){});
 
   const std::string* systemd_hostname = nullptr;
@@ -230,7 +249,7 @@ std::string ConsumeJournald::formatSyslogMessage(const journal_message& msg) {
       | utils::map([](const std::string* pid) { return fmt::format("[{}]", *pid); });
 
   return fmt::format("{} {} {}{}: {}",
-      date::format(DATETIME_FORMAT, msg.timestamp),
+      date::format(timestamp_format_, msg.timestamp),
       (utils::optional_from_ptr(systemd_hostname) | utils::map(utils::dereference)).value_or("unknown_host"),
       (utils::optional_from_ptr(syslog_identifier) | utils::map(utils::dereference)).value_or("unknown_process"),
       pid_string.value_or(std::string{}),

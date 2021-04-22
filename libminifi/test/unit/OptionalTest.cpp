@@ -52,9 +52,11 @@ TEST_CASE("optional orElse", "[optional or else]") {
   const auto test2 = utils::optional<int>{} | utils::orElse(opt_7);
   const auto test3 = utils::make_optional(3) | utils::orElse([]{});
   const auto test4 = utils::optional<int>{} | utils::orElse([]{});
+  struct ex : std::exception {};
 
   REQUIRE(6 == test1.value());
   REQUIRE(7 == test2.value());
   REQUIRE(3 == test3.value());
   REQUIRE(!test4);
+  REQUIRE_THROWS_AS(utils::optional<bool>{} | utils::orElse([]{ throw ex{}; }), const ex&);
 }
