@@ -32,7 +32,7 @@
 #include "core/Processor.h"
 #include "core/Resource.h"
 #include "core/logging/Logger.h"
-#include "JournalHandle.h"
+#include "libwrapper/LibWrapper.h"
 #include "utils/Deleters.h"
 #include "utils/gsl.h"
 #include "utils/OptionalUtils.h"
@@ -94,7 +94,7 @@ class ConsumeJournald final : public core::Processor {
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::unique_ptr<libwrapper::LibWrapper> libwrapper_;
   std::unique_ptr<Worker> worker_;
-  utils::optional<JournalHandle> journal_handle_;
+  std::unique_ptr<libwrapper::Journal> journal_;
 
   std::size_t batch_size_ = 1000;
   systemd::PayloadFormat payload_format_ = systemd::PayloadFormat::Syslog;

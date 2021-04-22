@@ -80,9 +80,9 @@ void ConsumeJournald::initialize() {
 
 void ConsumeJournald::notifyStop() {
   bool running = true;
-  if (!running_.compare_exchange_strong(running, false, std::memory_order_acq_rel) || !journal_handle_) return;
+  if (!running_.compare_exchange_strong(running, false, std::memory_order_acq_rel) || !journal_) return;
   worker_->enqueue([this] {
-    journal_handle_.reset();
+    journal_ = nullptr;
   }).get();
   worker_ = nullptr;
 }
@@ -114,27 +114,23 @@ void ConsumeJournald::onSchedule(core::ProcessContext* const context, core::Proc
   }();
 
   state_manager_ = context->getStateManager();
-  journal_handle_ = utils::make_optional(worker_->enqueue([this, journal_type]{
-    return JournalHandle{libwrapper_->openJournal(journal_type)};
-  }).get());
+  journal_ = worker_->enqueue([this, journal_type]{ return libwrapper_->openJournal(journal_type); }).get();
   const auto seek_default = [process_old_messages](libwrapper::Journal& journal) {
     if (process_old_messages) journal.seekHead();
     else journal.seekTail();
   };
   worker_->enqueue([this, &seek_default] {
-    journal_handle_->visit([this, &seek_default](libwrapper::Journal& journal) {
-      const auto cursor = state_manager_->get() | utils::map([](std::unordered_map<std::string, std::string>&& m) { return m.at(CURSOR_KEY); });
-      if (!cursor) {
-        seek_default(journal);
-      } else {
-        const auto ret = journal.seekCursor(cursor->c_str());
-        if (ret < 0) {
-          const auto error_message = std::generic_category().default_error_condition(-ret).message();
-          logger_->log_warn("Failed to seek to cursor: %s. Seeking to tail or head (depending on Process Old Messages property) instead. cursor=\"%s\"", error_message, *cursor);
-          seek_default(journal);
-        }
+    const auto cursor = state_manager_->get() | utils::map([](std::unordered_map<std::string, std::string>&& m) { return m.at(CURSOR_KEY); });
+    if (!cursor) {
+      seek_default(*journal_);
+    } else {
+      const auto ret = journal_->seekCursor(cursor->c_str());
+      if (ret < 0) {
+        const auto error_message = std::generic_category().default_error_condition(-ret).message();
+        logger_->log_warn("Failed to seek to cursor: %s. Seeking to tail or head (depending on Process Old Messages property) instead. cursor=\"%s\"", error_message, *cursor);
+        seek_default(*journal_);
       }
-    });
+    }
   }).get();
   running_ = true;
 }
@@ -197,29 +193,27 @@ std::future<std::pair<std::string, std::vector<ConsumeJournald::journal_message>
     std::vector<journal_message> messages;
     messages.reserve(batch_size_);
     std::unique_ptr<char, utils::FreeDeleter> cursor;
-    journal_handle_->visit([this, &messages, &cursor](libwrapper::Journal& journal) {
-      for (size_t i = 0; i < batch_size_ && journal.next() > 0; ++i) {
-        journal_message message;
-        utils::optional<journal_field> field;
-        while ((field = getNextField(journal)).has_value()) {
-          message.fields.push_back(std::move(*field));
-        }
-        if (include_timestamp_ || payload_format_ == systemd::PayloadFormat::Syslog) {
-          message.timestamp = [&journal] {
-            uint64_t journal_timestamp_usec_since_epoch{};
-            journal.getRealtimeUsec(&journal_timestamp_usec_since_epoch);
-            return std::chrono::system_clock::time_point{std::chrono::microseconds{journal_timestamp_usec_since_epoch}};
-          }();
-        }
-        messages.push_back(std::move(message));
+    for (size_t i = 0; i < batch_size_ && journal_->next() > 0; ++i) {
+      journal_message message;
+      utils::optional<journal_field> field;
+      while ((field = getNextField(*journal_)).has_value()) {
+        message.fields.push_back(std::move(*field));
       }
+      if (include_timestamp_ || payload_format_ == systemd::PayloadFormat::Syslog) {
+        message.timestamp = [this] {
+          uint64_t journal_timestamp_usec_since_epoch{};
+          journal_->getRealtimeUsec(&journal_timestamp_usec_since_epoch);
+          return std::chrono::system_clock::time_point{std::chrono::microseconds{journal_timestamp_usec_since_epoch}};
+        }();
+      }
+      messages.push_back(std::move(message));
+    }
 
-      char* cursor_out;
-      const auto err_code = journal.getCursor(&cursor_out);
-      if (err_code < 0) throw SystemErrorException{"sd_journal_get_cursor", std::generic_category().default_error_condition(-err_code)};
-      gsl_Ensures(cursor_out);
-      cursor.reset(cursor_out);
-    });
+    char* cursor_out;
+    const auto err_code = journal_->getCursor(&cursor_out);
+    if (err_code < 0) throw SystemErrorException{"sd_journal_get_cursor", std::generic_category().default_error_condition(-err_code)};
+    gsl_Ensures(cursor_out);
+    cursor.reset(cursor_out);
     return std::make_pair(std::string{cursor.get()}, messages);
   });
 }
