@@ -314,9 +314,6 @@ target_include_directories(optional-lite SYSTEM INTERFACE "${CMAKE_CURRENT_SOURC
 # date
 include(Date)
 
-# libsystemd
-#include(BundledLibsystemd)
-
 # Setup passthrough args used by third parties
 set(PASSTHROUGH_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 set(PASSTHROUGH_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
@@ -574,14 +571,7 @@ endif()
 ## Add the systemd extension
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	option(DISABLE_SYSTEMD "Disables the systemd extension." OFF)
-	option(BUILD_LIBSYSTEMD "Build libsystemd instead of relying on the version installed on the system" ON)
 	if (NOT DISABLE_SYSTEMD)
-		#if (BUILD_LIBSYSTEMD)
-		#	use_bundled_libsystemd(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-		#else()
-		#	find_package(PkgConfig)
-		#	pkg_check_modules(SYSTEMD_PKGCONF systemd)
-		#endif()
 		createExtension(SYSTEMD-EXTENSIONS "SYSTEMD EXTENSIONS" "Enabled log collection from journald" "extensions/systemd" "extensions/systemd/tests")
 	endif()
 endif()
