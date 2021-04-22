@@ -1590,27 +1590,43 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set"
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEW_TAIL_DATA.find_first_of('\n') + 1) + " Offset:0"));
   }
 
-  SECTION("Initial Start Position is set to Current Time with rollover") {
-    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition.getName(), "Current Time");
+  LogTestController::getInstance().reset();
+}
 
-    testController.runSession(plan);
+TEST_CASE("TailFile reads from a single file when Initial Start Position is set to Current Time with rollover", "[initialStartPosition]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-    REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+  std::shared_ptr<core::Processor> logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-    plan->reset(true);
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  auto dir = minifi::utils::createTempDir(&testController);
+  auto temp_file_path = createTempFile(dir, TMP_FILE, NEWLINE_FILE);
 
-    const std::string DATA_IN_NEW_FILE = "data in new file\n";
-    appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
-    renameTempFile(dir, TMP_FILE, ROLLED_OVER_TMP_FILE);
-    createTempFile(dir, TMP_FILE, DATA_IN_NEW_FILE);
+  plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file_path);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition.getName(), "Current Time");
 
-    testController.runSession(plan);
+  testController.runSession(plan);
 
-    REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
-    REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEW_TAIL_DATA.find_first_of('\n') + 1) + " Offset:0"));
-    REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(DATA_IN_NEW_FILE.find_first_of('\n') + 1) + " Offset:0"));
-  }
+  REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
+
+  plan->reset(true);
+  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+
+  const std::string DATA_IN_NEW_FILE = "data in new file\n";
+  appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
+  renameTempFile(dir, TMP_FILE, ROLLED_OVER_TMP_FILE);
+  createTempFile(dir, TMP_FILE, DATA_IN_NEW_FILE);
+
+  testController.runSession(plan);
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEW_TAIL_DATA.find_first_of('\n') + 1) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(DATA_IN_NEW_FILE.find_first_of('\n') + 1) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
