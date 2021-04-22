@@ -163,28 +163,17 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) override;
 
  private:
-  std::shared_ptr<GetFileMetrics> metrics_;
-
-  // Queue for store directory list
-  std::queue<std::string> _dirList;
-  // Whether the directory listing is empty
-  bool isListingEmpty();
-  // Put full path file name into directory listing
+  bool isListingEmpty() const;
   void putListing(std::string fileName);
-  // Poll directory listing for files
-  void pollListing(std::queue<std::string> &list, const GetFileRequest &request);
-  // Check whether file can be added to the directory listing
-  bool acceptFile(std::string fullName, std::string name, const GetFileRequest &request);
-  // Get file request object.
+  std::queue<std::string> pollListing(uint64_t batch_size);
+  bool fileMatchesRequestCriteria(std::string fullName, std::string name, const GetFileRequest &request);
+  void getSingleFile(core::ProcessSession& session, const std::string& file_name) const;
+
+  std::shared_ptr<GetFileMetrics> metrics_;
   GetFileRequest request_;
-  // Mutex for protection of the directory listing
-
-  std::mutex mutex_;
-
-  // last listing time for root directory ( if recursive, we will consider the root
-  // as the top level time.
+  std::queue<std::string> directory_listing_;
+  mutable std::mutex directory_listing_mutex_;
   std::atomic<uint64_t> last_listing_time_;
-
   std::shared_ptr<logging::Logger> logger_;
 };
 
