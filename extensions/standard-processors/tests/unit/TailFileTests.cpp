@@ -50,6 +50,7 @@ static const char *ROLLED_OVER_TMP_FILE = "minifi-tmpfile.txt.old.1";
 static const char *STATE_FILE = "minifi-state-file.txt";
 static const std::string ROLLED_OVER_TAIL_DATA = "rolled_over_data\n";
 static const std::string NEW_TAIL_DATA = "newdata\n";
+static const std::string ADDITIONALY_CREATED_FILE_CONTENT = "additional file data\n";
 
 namespace {
 std::string createTempFile(const std::string &directory, const std::string &file_name, const std::string &contents,
@@ -1647,13 +1648,13 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
     plan->reset(true);
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-    createTempFile(dir, "minifi-tmpfile-3.txt", NEWLINE_FILE);
+    createTempFile(dir, "minifi-tmpfile-3.txt", ADDITIONALY_CREATED_FILE_CONTENT);
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
     testController.runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
-    REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
+    REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(ADDITIONALY_CREATED_FILE_CONTENT.find_first_of('\n') + 1) + " Offset:0"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + NEW_TAIL_DATA.find_first_of('\n')) + " Offset:0"));
   }
 
@@ -1670,13 +1671,13 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
     plan->reset(true);
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-    createTempFile(dir, "minifi-tmpfile-3.txt", NEWLINE_FILE);
+    createTempFile(dir, "minifi-tmpfile-3.txt", ADDITIONALY_CREATED_FILE_CONTENT);
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
     testController.runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
-    REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
+    REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(ADDITIONALY_CREATED_FILE_CONTENT.find_first_of('\n') + 1) + " Offset:0"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + NEW_TAIL_DATA.find_first_of('\n')) + " Offset:0"));
   }
 
@@ -1690,13 +1691,13 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
     plan->reset(true);
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-    createTempFile(dir, "minifi-tmpfile-3.txt", NEWLINE_FILE);
+    createTempFile(dir, "minifi-tmpfile-3.txt", ADDITIONALY_CREATED_FILE_CONTENT);
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
     testController.runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
-    REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
+    REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(ADDITIONALY_CREATED_FILE_CONTENT.find_first_of('\n') + 1) + " Offset:0"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEW_TAIL_DATA.find_first_of('\n') + 1) + " Offset:0"));
   }
 
