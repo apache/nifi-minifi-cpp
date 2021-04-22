@@ -30,7 +30,7 @@ struct Journal {
   virtual int seekTail() noexcept = 0;
   virtual int seekCursor(const char*) noexcept = 0;
 
-  virtual int getCursor(char** cursor_out) noexcept = 0;
+  virtual int getCursor(gsl::owner<char*>* cursor_out) noexcept = 0;
 
   virtual int next() noexcept = 0;
   virtual int enumerateData(const void** data_out, size_t* size_out) noexcept = 0;

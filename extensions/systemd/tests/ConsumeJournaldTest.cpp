@@ -38,7 +38,7 @@ using systemd::ConsumeJournald;
 namespace {
 namespace gsl = minifi::gsl;
 struct JournalEntry final {
-  JournalEntry(const char* const identifier, const char* const message, int pid = 0, std::vector<std::string> extra_fields = {}, const char* const hostname = "test-pc")
+  JournalEntry(const char* const identifier, const char* const message, const int pid = 0, std::vector<std::string> extra_fields = {}, const char* const hostname = "test-pc")
     :fields{std::move(extra_fields)}
   {
     fields.reserve(fields.size() + 4);
@@ -86,7 +86,7 @@ struct TestJournal final : libwrapper::Journal {
     return 0;
   }
 
-  int getCursor(char** const cursor_out) noexcept override {
+  int getCursor(gsl::owner<char*>* const cursor_out) noexcept override {
     *cursor_out = strdup(std::to_string(consumed).c_str());
     return *cursor_out ? 0 : -ENOMEM;
   }

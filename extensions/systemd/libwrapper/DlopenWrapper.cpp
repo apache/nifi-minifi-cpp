@@ -34,7 +34,7 @@ struct dlclose_deleter {
 
 class DlopenJournal : public Journal {
  public:
-  explicit DlopenJournal(JournalType type) {
+  explicit DlopenJournal(const JournalType type) {
     constexpr auto SD_JOURNAL_LOCAL_ONLY = 1 << 0;
     constexpr auto SD_JOURNAL_SYSTEM = 1 << 2;
     constexpr auto SD_JOURNAL_CURRENT_USER = 1 << 3;
@@ -61,7 +61,7 @@ class DlopenJournal : public Journal {
   int seekTail() noexcept override { return seek_tail_(j_); }
   int seekCursor(const char* const cursor) noexcept override { return seek_cursor_(j_, cursor); }
 
-  int getCursor(char** const cursor_out) noexcept override { return get_cursor_(j_, cursor_out); }
+  int getCursor(gsl::owner<char*>* const cursor_out) noexcept override { return get_cursor_(j_, cursor_out); }
 
   int next() noexcept override { return next_(j_); }
   int enumerateData(const void** const data_out, size_t* const size_out) noexcept override { return enumerate_data_(j_, data_out, size_out); }
@@ -99,7 +99,7 @@ class DlopenJournal : public Journal {
   gsl::owner<sd_journal*> j_ = nullptr;
 };
 
-std::unique_ptr<Journal> DlopenWrapper::openJournal(JournalType type) {
+std::unique_ptr<Journal> DlopenWrapper::openJournal(const JournalType type) {
   return utils::make_unique<DlopenJournal>(type);
 }
 

@@ -192,7 +192,6 @@ std::future<std::pair<std::string, std::vector<ConsumeJournald::journal_message>
   return worker_->enqueue([this] {
     std::vector<journal_message> messages;
     messages.reserve(batch_size_);
-    std::unique_ptr<char, utils::FreeDeleter> cursor;
     for (size_t i = 0; i < batch_size_ && journal_->next() > 0; ++i) {
       journal_message message;
       utils::optional<journal_field> field;
@@ -209,11 +208,13 @@ std::future<std::pair<std::string, std::vector<ConsumeJournald::journal_message>
       messages.push_back(std::move(message));
     }
 
-    char* cursor_out;
-    const auto err_code = journal_->getCursor(&cursor_out);
-    if (err_code < 0) throw SystemErrorException{"sd_journal_get_cursor", std::generic_category().default_error_condition(-err_code)};
-    gsl_Ensures(cursor_out);
-    cursor.reset(cursor_out);
+    const auto cursor = [this] {
+      gsl::owner<char*> cursor_out;
+      const auto err_code = journal_->getCursor(&cursor_out);
+      if (err_code < 0) throw SystemErrorException{"sd_journal_get_cursor", std::generic_category().default_error_condition(-err_code)};
+      gsl_Ensures(cursor_out);
+      return std::unique_ptr<char, utils::FreeDeleter>{cursor_out};
+    }();
     return std::make_pair(std::string{cursor.get()}, messages);
   });
 }
