@@ -180,7 +180,7 @@ TEST_CASE("GenerateFlowFileCustomTextTest", "[generateflowfiletest]") {
 
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir);
 
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "Current year: ${now():format('%Y')}");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "${UUID()}");
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "false");
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::DataFormat.getName(), "Text");
 
@@ -200,11 +200,7 @@ TEST_CASE("GenerateFlowFileCustomTextTest", "[generateflowfiletest]") {
   utils::file::FileUtils::list_dir(dir, lambda, plan->getLogger(), false);
 
   REQUIRE(file_contents.size() == 1);
-  time_t t = time(nullptr);
-  struct tm lt;
-  localtime_r(&t, &lt);
-  std::string expected_content = "Current year: " + std::to_string(lt.tm_year + 1900);
-  REQUIRE(file_contents[0] == expected_content);
+  REQUIRE(file_contents[0].size() == 36);
 }
 
 TEST_CASE("GenerateFlowFileCustomTextEmptyTest", "[generateflowfiletest]") {
