@@ -292,7 +292,7 @@ add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
 add_disabled_option PYTHON_ENABLED ${FALSE} "ENABLE_PYTHON"
 add_dependency PYTHON_ENABLED "python"
 
-add_disabled_option COAP_ENABLED ${TRUE} "ENABLE_COAP"
+add_disabled_option COAP_ENABLED ${FALSE} "ENABLE_COAP"
 add_dependency COAP_ENABLED "automake"
 add_dependency COAP_ENABLED "autoconf"
 add_dependency COAP_ENABLED "libtool"
