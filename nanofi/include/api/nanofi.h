@@ -49,7 +49,7 @@ extern "C" {
         return ret_val;                                 \
       }                                                 \
     }                                                   \
-  } while(0)
+  } while (0)
 
 /**
  * Enables logging (disabled by default)

@@ -65,7 +65,7 @@ struct TransferState {
 };
 
 void wait_until(std::atomic<bool>& b) {
-  while(!b) {
+  while (!b) {
     std::this_thread::sleep_for(std::chrono::milliseconds(0));  // Just yield
   }
 }
@@ -143,7 +143,7 @@ void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfe
   // just consume handshake data
   bool found_codec = false;
   size_t read_len = 0;
-  while(!found_codec) {
+  while (!found_codec) {
     uint8_t handshake_data[1000];
     int actual_len = stream->read(handshake_data+read_len, 1000-read_len);
     if (actual_len <= 0) {
