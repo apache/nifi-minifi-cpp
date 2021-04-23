@@ -760,6 +760,7 @@ utils::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
     std::stringstream adjusted_url;
     std::string base;
     if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
+      base = utils::StringUtils::trim(base);
       adjusted_url << base;
       if (!utils::StringUtils::endsWith(base, "/")) {
         adjusted_url << "/";
@@ -767,7 +768,7 @@ utils::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
       adjusted_url << uri;
       resolved_url = adjusted_url.str();
     } else if (configuration_->get("nifi.c2.rest.url", "c2.rest.url", base)) {
-      utils::URL base_url{base};
+      utils::URL base_url{utils::StringUtils::trim(base)};
       if (!base_url.isValid()) {
         logger_->log_error("Could not parse C2 REST URL '%s'", base);
         return {};
