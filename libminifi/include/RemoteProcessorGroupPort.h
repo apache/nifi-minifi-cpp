@@ -146,7 +146,7 @@ class RemoteProcessorGroupPort : public core::Processor {
    */
   void setURL(std::string val) {
     auto urls = utils::StringUtils::split(val, ",");
-    for (auto url : urls) {
+    for (const auto& url : urls) {
       utils::URL parsed_url{utils::StringUtils::trim(url)};
       if (parsed_url.isValid()) {
         logger_->log_debug("Parsed RPG URL '%s' -> '%s'", url, parsed_url.hostPort());
