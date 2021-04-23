@@ -203,7 +203,7 @@ bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> opera
  * Returns True if there is data to interrogate.
  * @return true if our db has data stored.
  */
-bool FlowFileRepository::need_checkpoint(minifi::internal::OpenRocksDB& opendb){
+bool FlowFileRepository::need_checkpoint(minifi::internal::OpenRocksDB& opendb) {
   auto it = opendb.NewIterator(rocksdb::ReadOptions());
   it->SeekToFirst();
   return it->Valid();
@@ -215,7 +215,7 @@ void FlowFileRepository::initialize_repository() {
     return;
   }
   // first we need to establish a checkpoint iff it is needed.
-  if (!need_checkpoint(*opendb)){
+  if (!need_checkpoint(*opendb)) {
     logger_->log_trace("Do not need checkpoint");
     return;
   }

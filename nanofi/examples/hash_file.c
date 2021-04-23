@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
   stat(file, &stats);
 
   // Check for file existence
-  if (S_ISDIR(stats.st_mode)){
+  if (S_ISDIR(stats.st_mode)) {
     printf("Error: %s is a directory!\n", file);
     exit(1);
   }

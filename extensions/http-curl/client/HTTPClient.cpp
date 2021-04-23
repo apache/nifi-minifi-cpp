@@ -262,7 +262,7 @@ bool HTTPClient::submit() {
     curl_easy_setopt(http_session_, CURLOPT_NOPROGRESS, 0);
     curl_easy_setopt(http_session_, CURLOPT_XFERINFOFUNCTION, onProgress);
     curl_easy_setopt(http_session_, CURLOPT_XFERINFODATA, (void*)this);
-  }else{
+  }else {
     // the user explicitly set it to 0
     curl_easy_setopt(http_session_, CURLOPT_NOPROGRESS, 1);
   }
@@ -288,7 +288,7 @@ bool HTTPClient::submit() {
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPINTVL, keepAlive.count());
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPIDLE, keepIdle.count());
   }
-  else{
+  else {
     logger_->log_debug("Not using keep alive");
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 0L);
   }
@@ -350,11 +350,11 @@ void HTTPClient::set_request_method(const std::string method) {
   }
 }
 
-int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dlnow, curl_off_t /*ultotal*/, curl_off_t ulnow){
+int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dlnow, curl_off_t /*ultotal*/, curl_off_t ulnow) {
   HTTPClient& client = *(HTTPClient*)(clientp);
   auto now = std::chrono::steady_clock::now();
   auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - client.progress_.last_transferred_);
-  if (dlnow != client.progress_.downloaded_data_ || ulnow != client.progress_.uploaded_data_){
+  if (dlnow != client.progress_.downloaded_data_ || ulnow != client.progress_.uploaded_data_) {
     // did transfer data
     client.progress_.last_transferred_ = now;
     client.progress_.downloaded_data_ = dlnow;
@@ -362,7 +362,7 @@ int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dln
     return 0;
   }
   // did not transfer data
-  if (elapsed.count() > client.read_timeout_ms_.count()){
+  if (elapsed.count() > client.read_timeout_ms_.count()) {
     // timeout
     client.logger_->log_error("HTTP operation has been idle for %dms, limit (%dms) reached, terminating connection\n",
       (int)elapsed.count(), (int)client.read_timeout_ms_.count());

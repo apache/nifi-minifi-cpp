@@ -136,11 +136,11 @@ class ExecutionPlan {
     return content_repo_;
   }
 
-  std::shared_ptr<core::FlowFile> getNextFlowFile(){
+  std::shared_ptr<core::FlowFile> getNextFlowFile() {
     return next_ff_;
   }
 
-  void setNextFlowFile(std::shared_ptr<core::FlowFile> ptr){
+  void setNextFlowFile(std::shared_ptr<core::FlowFile> ptr) {
     next_ff_ = std::move(ptr);
   }
 

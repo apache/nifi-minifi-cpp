@@ -73,7 +73,7 @@ class CapturePacketMechanism {
     return file_;
   }
 
-  long getSize() const{
+  long getSize() const {
     return atomic_count_;
   }
  protected:

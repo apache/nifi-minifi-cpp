@@ -346,7 +346,7 @@ flow_file_record * write_to_flow(const char * buff, size_t count, processor_cont
  */
 void free_flowfile(flow_file_record *ff) {
   NULL_CHECK(, ff);
-  if (ff->crp){
+  if (ff->crp) {
     auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ff->crp);
     if ((*content_repo_ptr) && (ff->keepContent == 0)) {
       auto claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation, *content_repo_ptr);

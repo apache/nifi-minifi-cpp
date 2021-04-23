@@ -237,7 +237,7 @@ int main(int argc, char **argv) {
       }
       std::ofstream outref(argv[3]);
       dumpDocs(configure, argv[2], outref);
-    } else{
+    } else {
       dumpDocs(configure, argv[2], std::cout);
     }
     exit(0);

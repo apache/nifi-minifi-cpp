@@ -41,7 +41,7 @@ CoapEndpoint* create_endpoint(CoapServerContext * const server, const char * con
   }
   endpoint->resource = coap_resource_init(path, flags);
   coap_add_attr(endpoint->resource, coap_make_str_const("title"), coap_make_str_const("\"Created CoapEndpoint\""), 0);
-  if ( add_endpoint(endpoint, method, handler) ){
+  if ( add_endpoint(endpoint, method, handler) ) {
     return 0x00;
   }
   coap_add_resource(server->ctx, endpoint->resource);

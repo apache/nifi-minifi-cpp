@@ -133,11 +133,11 @@ namespace processors {
     lazy_mode_ = value == "On" ? true : false;
   }
 
-  void FetchOPCProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session){
+  void FetchOPCProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
     logger_->log_trace("FetchOPCProcessor::onTrigger");
 
     std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
-    if (!lock.owns_lock()){
+    if (!lock.owns_lock()) {
       logger_->log_warn("processor was triggered before previous listing finished, configuration should be revised!");
       return;
     }

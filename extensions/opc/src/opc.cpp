@@ -533,7 +533,7 @@ std::string nodeValue2String(const NodeData& nd) {
       ret_val = std::to_string(ui64t);
       break;
     case UA_TYPES_FLOAT:
-      if (sizeof(float) == 4 && std::numeric_limits<float>::is_iec559){
+      if (sizeof(float) == 4 && std::numeric_limits<float>::is_iec559) {
         float f;
         memcpy(&f, nd.data.data(), sizeof(float));
         ret_val = std::to_string(f);
@@ -542,7 +542,7 @@ std::string nodeValue2String(const NodeData& nd) {
       }
       break;
     case UA_TYPES_DOUBLE:
-      if (sizeof(double) == 8 && std::numeric_limits<double>::is_iec559){
+      if (sizeof(double) == 8 && std::numeric_limits<double>::is_iec559) {
         double d;
         memcpy(&d, nd.data.data(), sizeof(double));
         ret_val = std::to_string(d);

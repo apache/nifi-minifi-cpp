@@ -90,7 +90,7 @@ void setSyslogLogger() {
   logging::LoggerConfiguration::getConfiguration().initialize(service_logger);
 }
 
-std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger){
+std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger) {
   /* Try to determine MINIFI_HOME */
   std::string minifiHome = [&logger]() -> std::string {
     /* If MINIFI_HOME is set as an environment variable, we will use that */

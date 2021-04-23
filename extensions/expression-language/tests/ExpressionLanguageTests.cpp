@@ -1553,17 +1553,17 @@ TEST_CASE("resolve_user_id_test", "[resolve_user_id tests]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
 
-  SECTION("TEST 0"){
+  SECTION("TEST 0") {
   flow_file_a->addAttribute("attribute_sid", "0");
   REQUIRE("0" == expr({flow_file_a}).asString());
 }
 
-  SECTION("TEST abcd"){
+  SECTION("TEST abcd") {
   flow_file_a->addAttribute("attribute_sid", "abcd");
   REQUIRE("abcd" == expr({flow_file_a}).asString());
 }
 
-  SECTION("TEST empty"){
+  SECTION("TEST empty") {
   flow_file_a->addAttribute("attribute_sid", "");
   REQUIRE("" == expr({flow_file_a}).asString());
 }

@@ -111,7 +111,7 @@ class JVMLoader {
     return jenv;
   }
 
-  void detach(){
+  void detach() {
     jvm_->DetachCurrentThread();
   }
 

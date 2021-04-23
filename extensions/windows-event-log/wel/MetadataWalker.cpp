@@ -112,7 +112,7 @@ std::vector<std::string> MetadataWalker::getIdentifiers(const std::string &text)
     if (next_pos != std::string::npos) {
       auto potential_identifier = text.substr(pos + 2, next_pos - (pos + 2));
       std::smatch match;
-      if (potential_identifier.find("S-") != std::string::npos){
+      if (potential_identifier.find("S-") != std::string::npos) {
         found_strings.push_back(potential_identifier);
       }
     }

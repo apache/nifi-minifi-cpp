@@ -36,7 +36,7 @@ extern "C" {
 #endif
 
 
-int init_api(const char *resource){
+int init_api(const char *resource) {
   core::ClassLoader::getDefaultClassLoader().registerResource(resource, "createHttpCurlFactory");
   return 0;
 }

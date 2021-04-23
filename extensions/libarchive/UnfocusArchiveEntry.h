@@ -51,7 +51,7 @@ class UnfocusArchiveEntry : public core::Processor {
    */
   explicit UnfocusArchiveEntry(std::string name, utils::Identifier uuid = utils::Identifier())
   : core::Processor(name, uuid),
-    logger_(logging::LoggerFactory<UnfocusArchiveEntry>::getLogger()){
+    logger_(logging::LoggerFactory<UnfocusArchiveEntry>::getLogger()) {
   }
   //! Destructor
   virtual ~UnfocusArchiveEntry() = default;

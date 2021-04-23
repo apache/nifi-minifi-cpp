@@ -86,7 +86,7 @@ static inline void setPort(struct SiteToSiteCPeer * peer, uint16_t port) {
   if (peer->_url != NULL) {
     int i;
     for(i = (int)(strlen(peer->_url)) - 1; i >= 0; --i) {  // look for the last ':' in the string
-      if (peer->_url[i] == ':'){
+      if (peer->_url[i] == ':') {
         memset(peer->_url + i + 1, 0, 6);  // zero the port area  - the new port can be shorter
         snprintf(peer->_url + i + 1, 6, "%d", peer->_port);
         break;
