@@ -794,87 +794,87 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
   std::string value;
   context->getProperty(ListenHostname.getName(), listen_hostname_);
   if (!context->getProperty(ListenPort.getName(), value)) {
-    throw Exception(PROCESSOR_EXCEPTION,"Listen Port attribute is missing or invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "Listen Port attribute is missing or invalid");
   } else {
     core::Property::StringToInt(value, listen_port_);
   }
   context->getProperty(SubscriptionManagerPath.getName(), subscription_manager_path_);
   context->getProperty(SubscriptionsBasePath.getName(), subscriptions_base_path_);
   if (!context->getProperty(SSLCertificate.getName(), ssl_certificate_file)) {
-    throw Exception(PROCESSOR_EXCEPTION,"SSL Certificate attribute is missing");
+    throw Exception(PROCESSOR_EXCEPTION, "SSL Certificate attribute is missing");
   }
   if (!context->getProperty(SSLCertificateAuthority.getName(), ssl_ca_file)) {
-    throw Exception(PROCESSOR_EXCEPTION,"SSL Certificate Authority attribute is missing");
+    throw Exception(PROCESSOR_EXCEPTION, "SSL Certificate Authority attribute is missing");
   }
   if (!context->getProperty(SSLVerifyPeer.getName(), value)) {
-    throw Exception(PROCESSOR_EXCEPTION,"SSL Verify Peer attribute is missing or invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "SSL Verify Peer attribute is missing or invalid");
   } else {
     utils::StringUtils::StringToBool(value, verify_peer);
   }
   context->getProperty(XPathXmlQuery.getName(), xpath_xml_query_);
   if (!context->getProperty(InitialExistingEventsStrategy.getName(), initial_existing_events_strategy_)) {
-    throw Exception(PROCESSOR_EXCEPTION,"Initial Existing Events Strategy attribute is missing or invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "Initial Existing Events Strategy attribute is missing or invalid");
   }
   if (!context->getProperty(SubscriptionExpirationInterval.getName(), value)) {
-    throw Exception(PROCESSOR_EXCEPTION,"Subscription Expiration Interval attribute is missing or invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "Subscription Expiration Interval attribute is missing or invalid");
   } else {
     core::TimeUnit unit;
     if (!core::Property::StringToTime(value, subscription_expiration_interval_, unit) ||
         !core::Property::ConvertTimeUnitToMS(subscription_expiration_interval_, unit, subscription_expiration_interval_)) {
-      throw Exception(PROCESSOR_EXCEPTION,"Subscription Expiration Interval attribute is invalid");
+      throw Exception(PROCESSOR_EXCEPTION, "Subscription Expiration Interval attribute is invalid");
     }
   }
   if (!context->getProperty(HeartbeatInterval.getName(), value)) {
-    throw Exception(PROCESSOR_EXCEPTION,"Heartbeat Interval attribute is missing or invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "Heartbeat Interval attribute is missing or invalid");
   } else {
     core::TimeUnit unit;
     if (!core::Property::StringToTime(value, heartbeat_interval_, unit) || !core::Property::ConvertTimeUnitToMS(heartbeat_interval_, unit, heartbeat_interval_)) {
-      throw Exception(PROCESSOR_EXCEPTION,"Heartbeat Interval attribute is invalid");
+      throw Exception(PROCESSOR_EXCEPTION, "Heartbeat Interval attribute is invalid");
     }
   }
   if (!context->getProperty(MaxElements.getName(), value)) {
-    throw Exception(PROCESSOR_EXCEPTION,"Max Elements attribute is missing or invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "Max Elements attribute is missing or invalid");
   } else if (!core::Property::StringToInt(value, max_elements_)) {
-    throw Exception(PROCESSOR_EXCEPTION,"Max Elements attribute is invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "Max Elements attribute is invalid");
   }
   if (!context->getProperty(MaxLatency.getName(), value)) {
-    throw Exception(PROCESSOR_EXCEPTION,"Max Latency attribute is missing or invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "Max Latency attribute is missing or invalid");
   } else {
     core::TimeUnit unit;
     if (!core::Property::StringToTime(value, max_latency_, unit) || !core::Property::ConvertTimeUnitToMS(max_latency_, unit, max_latency_)) {
-      throw Exception(PROCESSOR_EXCEPTION,"Max Latency attribute is invalid");
+      throw Exception(PROCESSOR_EXCEPTION, "Max Latency attribute is invalid");
     }
   }
   if (!context->getProperty(ConnectionRetryInterval.getName(), value)) {
-    throw Exception(PROCESSOR_EXCEPTION,"Connection Retry Interval attribute is missing or invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Interval attribute is missing or invalid");
   } else {
     core::TimeUnit unit;
     if (!core::Property::StringToTime(value, connection_retry_interval_, unit) || !core::Property::ConvertTimeUnitToMS(connection_retry_interval_, unit, connection_retry_interval_)) {
-      throw Exception(PROCESSOR_EXCEPTION,"Connection Retry Interval attribute is invalid");
+      throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Interval attribute is invalid");
     }
   }
   if (!context->getProperty(ConnectionRetryCount.getName(), value)) {
-    throw Exception(PROCESSOR_EXCEPTION,"Connection Retry Count attribute is missing or invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Count attribute is missing or invalid");
   } else if (!core::Property::StringToInt(value, connection_retry_count_)) {
-    throw Exception(PROCESSOR_EXCEPTION,"Connection Retry Count attribute is invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Count attribute is invalid");
   }
 
   FILE* fp = fopen(ssl_ca_file.c_str(), "rb");
   if (fp == nullptr) {
-    throw Exception(PROCESSOR_EXCEPTION,"Failed to open file specified by SSL Certificate Authority attribute");
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to open file specified by SSL Certificate Authority attribute");
   }
   X509* ca = nullptr;
   PEM_read_X509(fp, &ca, nullptr, nullptr);
   fclose(fp);
   if (ca == nullptr) {
-    throw Exception(PROCESSOR_EXCEPTION,"Failed to parse file specified by SSL Certificate Authority attribute");
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to parse file specified by SSL Certificate Authority attribute");
   }
   utils::tls::X509_unique_ptr ca_ptr{ca};
 
   std::array<uint8_t, 20U> hash_buf;
   int ret = X509_digest(ca, EVP_sha1(), hash_buf.data(), nullptr);
   if (ret != 1) {
-    throw Exception(PROCESSOR_EXCEPTION,"Failed to get fingerprint for CA specified by SSL Certificate Authority attribute");
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to get fingerprint for CA specified by SSL Certificate Authority attribute");
   }
   ssl_ca_cert_thumbprint_ = utils::StringUtils::to_hex(hash_buf.data(), hash_buf.size(), true /*uppercase*/);
   logger_->log_debug("%s SHA-1 thumbprint is %s", ssl_ca_file.c_str(), ssl_ca_cert_thumbprint_.c_str());
@@ -906,7 +906,7 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
   } catch (const std::exception& e) {
     throw Exception(PROCESSOR_EXCEPTION, std::string("Failed to initialize server, error: ") + e.what());
   } catch (...) {
-    throw Exception(PROCESSOR_EXCEPTION,"Failed to initialize server");
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to initialize server");
   }
   handler_ = std::unique_ptr<Handler>(new Handler(*this));
   server_->addHandler("**", *handler_);

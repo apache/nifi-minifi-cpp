@@ -53,7 +53,7 @@ std::string join_strings(const std::vector<std::string>& strings, const std::str
     }
     const auto& initialValue = strings.at(0);
     return std::accumulate(strings.begin()+1, strings.end(), initialValue,
-                [token,initialValue](const std::string& s1, const std::string& s2) {
+                [token, initialValue](const std::string& s1, const std::string& s2) {
                 return s1 + token + s2;
             });
 }

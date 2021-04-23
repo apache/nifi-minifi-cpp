@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
     }
 
     if (result.count("inputc2docs") && result.count("outputc2docs")) {
-      generateC2Docs(result["inputc2docs"].as<std::string>(),result["outputc2docs"].as<std::string>());
+      generateC2Docs(result["inputc2docs"].as<std::string>(), result["outputc2docs"].as<std::string>());
       std::cout << "Generated docs at " << result["outputc2docs"].as<std::string>() << std::endl;
     }
 

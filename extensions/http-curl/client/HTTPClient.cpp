@@ -388,7 +388,7 @@ void HTTPClient::configure_secure_connection(CURL *http_session) {
   logger_->log_debug("Using CA certificate file \"%s\"", ssl_context_service_->getCACertificate());
 #if 0  // Reenable this path once we change from the direct manipulation of the SSL context to using the cURL API
   if (!ssl_context_service_->getCertificateFile().empty()) {
-    if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getCertificateFile(),"p12")) {
+    if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getCertificateFile(), "p12")) {
       curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "P12");
     }
     else {
@@ -397,7 +397,7 @@ void HTTPClient::configure_secure_connection(CURL *http_session) {
     curl_easy_setopt(http_session, CURLOPT_SSLCERT, ssl_context_service_->getCertificateFile().c_str());
   }
   if (!ssl_context_service_->getPrivateKeyFile().empty()) {
-    if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getPrivateKeyFile(),"p12")) {
+    if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getPrivateKeyFile(), "p12")) {
       curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "P12");
     }
     else {

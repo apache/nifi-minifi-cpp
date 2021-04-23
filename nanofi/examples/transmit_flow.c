@@ -40,18 +40,18 @@ void transfer_file_or_directory(nifi_instance *instance, char *file_or_dir) {
     d = opendir(file_or_dir);
     if (d) {
       while ((dir = readdir(d)) != NULL) {
-        if (!memcmp(dir->d_name,".",1) )
+        if (!memcmp(dir->d_name, ".", 1) )
           continue;
         char *file_path = malloc(strlen(file_or_dir) + strlen(dir->d_name) + 2);
-        sprintf(file_path,"%s/%s",file_or_dir,dir->d_name);
-        transfer_file_or_directory(instance,file_path);
+        sprintf(file_path, "%s/%s", file_or_dir, dir->d_name);
+        transfer_file_or_directory(instance, file_path);
         free(file_path);
       }
       closedir(d);
     }
     printf("%s is a directory", file_or_dir);
   } else {
-    printf("Transferring %s\n",file_or_dir);
+    printf("Transferring %s\n", file_or_dir);
 
     flow_file_record *record = create_flowfile(file_or_dir, strlen(file_or_dir));
 
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 
   // initializing will make the transmission slightly more efficient.
   // initialize_instance(instance);
-  transfer_file_or_directory(instance,file);
+  transfer_file_or_directory(instance, file);
 
   // Create flowfile without content (just a set of attributes)
   flow_file_record * record = create_ff_object_nc();

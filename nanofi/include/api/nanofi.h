@@ -126,7 +126,7 @@ flow *create_new_flow(nifi_instance * instance);
  * @attention in case first processor is empty or doesn't name any existing processor, an empty flow is returned.
  * @return a pointer to the created flow
  **/
-DEPRECATED(0.6.0,2.0) flow *create_flow(nifi_instance * instance, const char * first_processor);
+DEPRECATED(0.6.0, 2.0) flow *create_flow(nifi_instance * instance, const char * first_processor);
 
 /**
  * Add a getfile processor to "parent" flow.

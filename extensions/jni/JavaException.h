@@ -112,8 +112,8 @@ static inline void ThrowJava(JNIEnv *env, const char *message) {
  * MACROS can make code look worse and more difficult to develop -- but this is a simple
  * if that has no contrary result path.
  */
-#define THROW_IF_NULL(expr, env, message) if (UNLIKELY(expr == nullptr)) minifi::jni::ThrowJava(env,message)
+#define THROW_IF_NULL(expr, env, message) if (UNLIKELY(expr == nullptr)) minifi::jni::ThrowJava(env, message)
 
-#define THROW_IF(expr, env, message) if (UNLIKELY(expr)) minifi::jni::ThrowJava(env,message)
+#define THROW_IF(expr, env, message) if (UNLIKELY(expr)) minifi::jni::ThrowJava(env, message)
 
 #endif

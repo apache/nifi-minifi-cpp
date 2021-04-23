@@ -231,7 +231,7 @@ class VerifyC2UpdateAgent : public VerifyC2Update {
 
   void configureC2() override {
     VerifyC2Update::configureC2();
-    configuration->set("nifi.c2.agent.update.allow","true");
+    configuration->set("nifi.c2.agent.update.allow", "true");
     configuration->set("c2.agent.update.command", "echo \"verification command\"");
   }
 

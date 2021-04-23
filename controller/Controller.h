@@ -318,7 +318,7 @@ void printManifest(const std::shared_ptr<minifi::Configure> &configuration) {
   configuration->set("c2.agent.heartbeat.period", "25");
   configuration->set("nifi.c2.root.classes", "AgentInformation");
   configuration->set("nifi.c2.enable", "true");
-  configuration->set("nifi.c2.agent.class","test");
+  configuration->set("nifi.c2.agent.class", "test");
   configuration->set("c2.agent.listen", "true");
   configuration->set("c2.agent.heartbeat.reporter.classes", "AgentPrinter");
 

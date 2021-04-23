@@ -96,7 +96,7 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
       }
       const auto allowableValues = prop.second.getAllowedValues();
       std::stringstream s;
-      std::copy(allowableValues.begin(),allowableValues.end(), std::ostream_iterator<std::string>(s,"<br>"));
+      std::copy(allowableValues.begin(), allowableValues.end(), std::ostream_iterator<std::string>(s, "<br>"));
       outfile << "|";
       const auto defaultValue = prop.second.getDefaultValue().to_string();
       if (defaultValue.size() == 1 && (int)defaultValue.c_str()[0] == 0x0a){
@@ -123,7 +123,7 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
 
   }
 
-  std::map<std::string,std::string> fileList;
+  std::map<std::string, std::string> fileList;
 
   auto fileFind = [&fileList](const std::string& base_path, const std::string& file) -> bool {
     if (file.find(".extra") == std::string::npos)
