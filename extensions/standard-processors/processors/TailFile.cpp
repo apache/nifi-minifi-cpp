@@ -721,6 +721,7 @@ void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
   }
 
   processSingleFile(session, full_file_name, state);
+  storeState();
 }
 
 void TailFile::processRotatedFilesAfterLastReadTime(const std::shared_ptr<core::ProcessSession> &session, TailState &state) {
@@ -781,8 +782,6 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
     }
 
     state = state_copy;
-    storeState();
-
     logger_->log_info("%zu flowfiles were received from TailFile input", num_flow_files);
 
   } else {
@@ -793,8 +792,6 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
     updateFlowFileAttributes(full_file_name, state, fileName, baseName, extension, flow_file);
     session->transfer(flow_file, Success);
     updateStateAttributes(state, flow_file->getSize(), file_reader.checksum());
-
-    storeState();
   }
 }
 
