@@ -80,7 +80,7 @@ void FlowFileRepository::flush() {
   auto operation = [&batch, &opendb]() { return opendb->Write(rocksdb::WriteOptions(), &batch); };
 
   if (!ExecuteWithRetry(operation)) {
-    for (const auto& key: keystrings) {
+    for (const auto& key : keystrings) {
       keys_to_delete.enqueue(key);  // Push back the values that we could get but couldn't delete
     }
     return;  // Stop here - don't delete from content repo while we have records in FF repo

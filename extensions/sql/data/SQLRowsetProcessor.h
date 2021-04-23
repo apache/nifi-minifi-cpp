@@ -41,7 +41,7 @@ class SQLRowsetProcessor {
 
    template <typename T>
    void processColumn(const std::string& name, const T& value) const {
-     for (const auto& subscriber: row_subscribers_) {
+     for (const auto& subscriber : row_subscribers_) {
        subscriber.get().processColumn(name, value);
      }
    }
