@@ -455,7 +455,7 @@ template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parentNode
 template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, std::string value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
 
 int32_t OPCNodeDataTypeToTypeID(OPCNodeDataType dt) {
-  switch(dt) {
+  switch (dt) {
     case OPCNodeDataType::Boolean:
       return UA_NS0ID_BOOLEAN;
     case OPCNodeDataType::Int32:
