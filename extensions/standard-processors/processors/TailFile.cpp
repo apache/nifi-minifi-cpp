@@ -616,7 +616,7 @@ std::vector<TailState> TailFile::findAllRotatedFiles(const TailState &state) con
 
   utils::file::FileUtils::list_dir(state.path_, collect_matching_files, logger_, false);
 
-  return findRotatedFiles(state, matched_files_with_mtime);
+  return sortAndSkipMainFilePrefix(state, matched_files_with_mtime);
 }
 
 std::vector<TailState> TailFile::findRotatedFilesAfterLastReadTime(const TailState &state) const {
@@ -640,10 +640,10 @@ std::vector<TailState> TailFile::findRotatedFilesAfterLastReadTime(const TailSta
 
   utils::file::FileUtils::list_dir(state.path_, collect_matching_files, logger_, false);
 
-  return findRotatedFiles(state, matched_files_with_mtime);
+  return sortAndSkipMainFilePrefix(state, matched_files_with_mtime);
 }
 
-std::vector<TailState> TailFile::findRotatedFiles(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime) const {
+std::vector<TailState> TailFile::sortAndSkipMainFilePrefix(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime) const {
   std::sort(matched_files_with_mtime.begin(), matched_files_with_mtime.end(), [](const TailStateWithMtime &left, const TailStateWithMtime &right) {
     return std::tie(left.mtime_, left.tail_state_.file_name_) <
            std::tie(right.mtime_, right.tail_state_.file_name_);

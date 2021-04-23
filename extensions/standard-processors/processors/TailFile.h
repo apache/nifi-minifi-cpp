@@ -188,7 +188,7 @@ class TailFile : public core::Processor {
 
   std::vector<TailState> findRotatedFilesAfterLastReadTime(const TailState &state) const;
 
-  std::vector<TailState> findRotatedFiles(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime) const;
+  std::vector<TailState> sortAndSkipMainFilePrefix(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime) const;
 
   void processFile(const std::shared_ptr<core::ProcessSession> &session,
                    const std::string &full_file_name,
