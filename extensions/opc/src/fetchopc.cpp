@@ -171,7 +171,7 @@ namespace processors {
           return;
         }
       }
-      for(auto& nodeID: translatedNodeIDs_) {
+      for (auto& nodeID: translatedNodeIDs_) {
         connection_->traverse(nodeID, f, nodeID_, maxDepth_);
       }
     }
@@ -221,7 +221,7 @@ namespace processors {
       logger_->log_error("Failed to create flowfile!");
       return;
     }
-    for(const auto& attr: opcnode.attributes) {
+    for (const auto& attr: opcnode.attributes) {
       flowFile->setAttribute(attr.first, attr.second);
     }
     if (opcnode.data.size() > 0) {

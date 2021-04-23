@@ -150,13 +150,13 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
   genStream << "# Processors" << std::endl << std::endl;
   genStream << "## Table of Contents" << std::endl << std::endl;
 
-  for(const auto &file : fileList) {
+  for (const auto &file : fileList) {
     std::string lcfile=file.first;
     std::transform(lcfile.begin(), lcfile.end(), lcfile.begin(), ::tolower);
     genStream << "- [" << file.first << "](#" << lcfile << ")" << std::endl;
   }
 
-  for(const auto &file : fileList) {
+  for (const auto &file : fileList) {
       std::ifstream filestream(file.second);
       genStream << filestream.rdbuf() << std::endl;
       std::ifstream filestreamExtra(file.second + ".extra");

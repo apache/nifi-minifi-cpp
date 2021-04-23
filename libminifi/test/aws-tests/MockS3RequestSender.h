@@ -58,7 +58,7 @@ const std::string S3_CONTINUATION_TOKEN = "continue";
 class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
  public:
   MockS3RequestSender() {
-    for(std::size_t i = 0; i < S3_OBJECT_COUNT; ++i) {
+    for (std::size_t i = 0; i < S3_OBJECT_COUNT; ++i) {
       Aws::S3::Model::ObjectVersion version;
       version.SetKey(S3_KEY_PREFIX + std::to_string(i));
       version.SetETag(S3_ETAG_PREFIX + std::to_string(i));
@@ -74,7 +74,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
       listed_versions_.push_back(version);
     }
 
-    for(std::size_t i = 0; i < S3_OBJECT_COUNT; ++i) {
+    for (std::size_t i = 0; i < S3_OBJECT_COUNT; ++i) {
       Aws::S3::Model::Object object;
       object.SetKey(S3_KEY_PREFIX + std::to_string(i));
       object.SetETag(S3_ETAG_PREFIX + std::to_string(i));

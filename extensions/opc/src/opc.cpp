@@ -309,8 +309,8 @@ void Client::traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb,
 
   UA_BrowseRequest_deleteMembers(&bReq);
 
-  for(size_t i = 0; i < bResp.resultsSize; ++i) {
-    for(size_t j = 0; j < bResp.results[i].referencesSize; ++j) {
+  for (size_t i = 0; i < bResp.resultsSize; ++i) {
+    for (size_t j = 0; j < bResp.results[i].referencesSize; ++j) {
       UA_ReferenceDescription *ref = &(bResp.results[i].references[j]);
       if (cb(*this, ref, basePath)) {
         if (ref->nodeClass == UA_NODECLASS_VARIABLE || ref->nodeClass == UA_NODECLASS_OBJECT) {
@@ -339,7 +339,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
 
   auto tokens = utils::StringUtils::split(path, "/");
   std::vector<UA_UInt32> ids;
-  for(size_t i = 0; i < tokens.size(); ++i) {
+  for (size_t i = 0; i < tokens.size(); ++i) {
     UA_UInt32 val = (i ==0) ? UA_NS0ID_ORGANIZES : UA_NS0ID_HASCOMPONENT;
     ids.push_back(val);
   }
@@ -351,7 +351,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   browsePath.relativePath.elements = (UA_RelativePathElement*)UA_Array_new(tokens.size(), &UA_TYPES[UA_TYPES_RELATIVEPATHELEMENT]);
   browsePath.relativePath.elementsSize = tokens.size();
 
-  for(size_t i = 0; i < tokens.size(); ++i) {
+  for (size_t i = 0; i < tokens.size(); ++i) {
     UA_RelativePathElement *elem = &browsePath.relativePath.elements[i];
     elem->referenceTypeId = UA_NODEID_NUMERIC(0, ids[i]);
     elem->targetName = UA_QUALIFIEDNAME_ALLOC(0, tokens[i].c_str());
@@ -375,9 +375,9 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
 
   bool foundData = false;
 
-  for(size_t i = 0; i < response.resultsSize; ++i) {
+  for (size_t i = 0; i < response.resultsSize; ++i) {
     UA_BrowsePathResult res = response.results[i];
-    for(size_t j = 0; j < res.targetsSize; ++j) {
+    for (size_t j = 0; j < res.targetsSize; ++j) {
       foundData = true;
       UA_NodeId resultId;
       UA_NodeId_copy(&res.targets[j].targetId.nodeId, &resultId);

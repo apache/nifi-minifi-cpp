@@ -96,7 +96,7 @@ namespace processors {
   void PutOPCProcessor::initialize() {
     PutOPCProcessor::ValueType.clearAllowedValues();
     core::PropertyValue pv;
-    for(const auto& kv : opc::StringToOPCDataTypeMap) {
+    for (const auto& kv : opc::StringToOPCDataTypeMap) {
       pv = kv.first;
       PutOPCProcessor::ValueType.addAllowedValue(pv);
     }

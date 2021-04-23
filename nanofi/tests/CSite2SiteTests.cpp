@@ -95,7 +95,7 @@ TEST_CASE("TestSetPortId", "[S2S1]") {
 
 void send_response_code(minifi::io::BaseStream* stream, uint8_t resp) {
   std::array<uint8_t, 3> resp_codes = {'R', 'C', resp};
-  for(uint8_t r : resp_codes) {
+  for (uint8_t r : resp_codes) {
     stream->write(&r, 1);
   }
 }
@@ -115,7 +115,7 @@ void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, 
     s2s_data.request_type_ok = true;
     stream->read(s2s_data.attr_num);
     std::string key, value;
-    for(uint32_t i = 0; i < s2s_data.attr_num; ++i) {
+    for (uint32_t i = 0; i < s2s_data.attr_num; ++i) {
       stream->read(key, true);
       stream->read(value, true);
       s2s_data.attributes[key] = value;
@@ -179,7 +179,7 @@ TEST_CASE("TestSiteToBootStrap", "[S2S3]") {
   std::array<std::function<void(minifi::io::BaseStream*, TransferState&, S2SReceivedData&)>, 2> bootstrap_functions =
       {sunny_path_bootstrap, different_version_bootstrap};
 
-  for(const auto& bootstrap_func : bootstrap_functions) {
+  for (const auto& bootstrap_func : bootstrap_functions) {
     TransferState transfer_state;
     S2SReceivedData received_data;
     std::unique_ptr<minifi::io::ServerSocket> sckt(new minifi::io::RandomServerSocket("localhost"));

@@ -164,7 +164,7 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   process_sessions_.push_back(current_session);
   if (input_ff_params) {
     auto flowFile = current_session->create();
-    for(const auto& kv : input_ff_params->attributes) {
+    for (const auto& kv : input_ff_params->attributes) {
       flowFile->setAttribute(kv.first, kv.second);
     }
     current_session->importFrom(*(input_ff_params->content_stream.get()), flowFile);
