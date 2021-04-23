@@ -120,7 +120,7 @@ void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, 
       stream->read(value, true);
       s2s_data.attributes[key] = value;
     }
-    uint64_t content_size=0;
+    uint64_t content_size = 0;
     stream->read(content_size);
     s2s_data.payload.resize(content_size);
     stream->read(s2s_data.payload, content_size);

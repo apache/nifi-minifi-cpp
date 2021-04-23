@@ -48,7 +48,7 @@ void RESTReceiver::initialize(core::controller::ControllerServiceProvider* contr
   HeartBeatReporter::initialize(controller, updateSink, configure);
   logger_->log_trace("Initializing rest receiver");
   if (nullptr != configuration_) {
-    std::string listeningPort, rootUri="/", caCert;
+    std::string listeningPort, rootUri = "/", caCert;
     configuration_->get("nifi.c2.rest.listener.port", "c2.rest.listener.port", listeningPort);
     configuration_->get("nifi.c2.rest.listener.cacert", "c2.rest.listener.cacert", caCert);
     if (!listeningPort.empty() && !rootUri.empty()) {

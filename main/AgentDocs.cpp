@@ -151,7 +151,7 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
   genStream << "## Table of Contents" << std::endl << std::endl;
 
   for (const auto &file : fileList) {
-    std::string lcfile=file.first;
+    std::string lcfile = file.first;
     std::transform(lcfile.begin(), lcfile.end(), lcfile.begin(), ::tolower);
     genStream << "- [" << file.first << "](#" << lcfile << ")" << std::endl;
   }

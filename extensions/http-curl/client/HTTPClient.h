@@ -159,7 +159,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   }
 
   void setKeepAliveIdle(std::chrono::milliseconds idle) {
-    keep_alive_idle_= idle;
+    keep_alive_idle_ = idle;
   }
 
 

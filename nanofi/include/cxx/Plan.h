@@ -184,7 +184,7 @@ class ExecutionPlan {
       content_repo_ = cr_ptr;
     }
     void setCallback(failure_callback_type onerror_callback) {
-      callback_=onerror_callback;
+      callback_ = onerror_callback;
     }
     void setStrategy(FailureStrategy strat) {
       strategy_ = strat;
