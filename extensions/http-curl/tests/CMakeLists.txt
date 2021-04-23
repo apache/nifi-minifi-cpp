@@ -40,8 +40,8 @@ FOREACH(testfile ${CURL_UNIT_TESTS})
 	target_wholearchive_library(${testfilename} minifi-civet-extensions)
 	target_wholearchive_library(${testfilename} minifi-standard-processors)
 
-  	MATH(EXPR CURL_INT_TEST_COUNT "${CURL_INT_TEST_COUNT}+1")
-#	 add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
+ 	MATH(EXPR CURL_INT_TEST_COUNT "${CURL_INT_TEST_COUNT}+1")
+	add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
 
 FOREACH(testfile ${CURL_INTEGRATION_TESTS})
@@ -65,10 +65,6 @@ FOREACH(testfile ${CURL_INTEGRATION_TESTS})
 ENDFOREACH()
 
 message("-- Finished building ${CURL_INT_TEST_COUNT} libcURL integration test file(s)...")
-
-add_test(NAME HTTPClientTests COMMAND "HTTPClientTests" WORKING_DIRECTORY ${TEST_DIR})
-add_test(NAME HTTPStreamingCallbackTests COMMAND "HTTPStreamingCallbackTests" WORKING_DIRECTORY ${TEST_DIR})
-add_test(NAME InvokeHTTPTests COMMAND "InvokeHTTPTests" WORKING_DIRECTORY ${TEST_DIR})
 
 add_test(NAME HttpGetIntegrationTest COMMAND HttpGetIntegrationTest "${TEST_RESOURCES}/TestHTTPGet.yml"  "${TEST_RESOURCES}/")
 add_test(NAME C2UpdateTest COMMAND C2UpdateTest "${TEST_RESOURCES}/TestHTTPGet.yml"  "${TEST_RESOURCES}/")
