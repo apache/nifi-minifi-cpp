@@ -33,7 +33,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-#include <algorithm>
 
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
@@ -119,12 +118,14 @@ void GenerateFlowFile::onSchedule(const std::shared_ptr<core::ProcessContext> &c
     logger_->log_trace("Unique Flow files is configured to be %i", uniqueFlowFile_);
   }
 
-  if (textData_ && !uniqueFlowFile_) {
-    std::string custom_text;
-    context->getProperty(CustomText, custom_text, nullptr);
-    if (!custom_text.empty()) {
-      std::copy(custom_text.begin(), custom_text.end(), std::back_inserter(data_));
+  std::string custom_text;
+  context->getProperty(CustomText, custom_text, nullptr);
+  if (!custom_text.empty()) {
+    if (textData_ && !uniqueFlowFile_) {
+      data_.assign(custom_text.begin(), custom_text.end());
       return;
+    } else {
+      logger_->log_warn("Custom Text property is set, but not used!");
     }
   }
 

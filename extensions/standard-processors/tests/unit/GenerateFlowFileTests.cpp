@@ -30,6 +30,7 @@
 TEST_CASE("GenerateFlowFileTest", "[generateflowfiletest]") {
   TestController testController;
   LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setWarn<minifi::processors::GenerateFlowFile>();
 
   char format[] = "/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
@@ -69,11 +70,13 @@ TEST_CASE("GenerateFlowFileTest", "[generateflowfiletest]") {
   REQUIRE(file_contents[0].size() == 10);
   REQUIRE(file_contents[1].size() == 10);
   REQUIRE(file_contents[0] != file_contents[1]);
+  REQUIRE(LogTestController::getInstance().contains("Custom Text property is set, but not used!"));
 }
 
 TEST_CASE("GenerateFlowFileWithNonUniqueBinaryData", "[generateflowfiletest]") {
   TestController testController;
   LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setWarn<minifi::processors::GenerateFlowFile>();
 
   char format[] = "/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
@@ -121,6 +124,7 @@ TEST_CASE("GenerateFlowFileWithNonUniqueBinaryData", "[generateflowfiletest]") {
   REQUIRE(fileContents[0].size() == 10);
   REQUIRE(fileContents[1].size() == 10);
   REQUIRE(fileContents[0] == fileContents[1]);
+  REQUIRE(LogTestController::getInstance().contains("Custom Text property is set, but not used!"));
 }
 
 TEST_CASE("GenerateFlowFileTestEmpty", "[generateemptyfiletest]") {
