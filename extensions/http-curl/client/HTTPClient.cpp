@@ -262,7 +262,7 @@ bool HTTPClient::submit() {
     curl_easy_setopt(http_session_, CURLOPT_NOPROGRESS, 0);
     curl_easy_setopt(http_session_, CURLOPT_XFERINFOFUNCTION, onProgress);
     curl_easy_setopt(http_session_, CURLOPT_XFERINFODATA, (void*)this);
-  }else {
+  } else {
     // the user explicitly set it to 0
     curl_easy_setopt(http_session_, CURLOPT_NOPROGRESS, 1);
   }
