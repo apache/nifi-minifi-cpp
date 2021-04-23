@@ -241,7 +241,7 @@ std::string ConsumeJournald::formatSyslogMessage(const journal_message& msg) con
 
   const auto pid_string = utils::optional_from_ptr(syslog_pid)
       | utils::orElse([&] { return utils::optional_from_ptr(systemd_pid); })
-      | utils::map([](const std::string* pid) { return fmt::format("[{}]", *pid); });
+      | utils::map([](const std::string* const pid) { return fmt::format("[{}]", *pid); });
 
   return fmt::format("{} {} {}{}: {}",
       date::format(timestamp_format_, msg.timestamp),

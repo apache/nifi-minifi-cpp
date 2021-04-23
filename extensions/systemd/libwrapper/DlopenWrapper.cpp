@@ -39,8 +39,8 @@ class DlopenJournal : public Journal {
     constexpr auto SD_JOURNAL_SYSTEM = 1 << 2;
     constexpr auto SD_JOURNAL_CURRENT_USER = 1 << 3;
     const int flags{(type == JournalType::User ? SD_JOURNAL_CURRENT_USER : 0)
-                        | (type == JournalType::System ? SD_JOURNAL_SYSTEM : 0)
-                        | SD_JOURNAL_LOCAL_ONLY};
+        | (type == JournalType::System ? SD_JOURNAL_SYSTEM : 0)
+        | SD_JOURNAL_LOCAL_ONLY};
     const int error_code = open_(&j_, flags);
     if (error_code < 0) {
       // sd_journal_open returns negative errno values
@@ -74,9 +74,7 @@ class DlopenJournal : public Journal {
     // The cast below is supported by POSIX platforms. https://stackoverflow.com/a/1096349
     F const symbol = (F)dlsym(libhandle_.get(), symbol_name);
     const char* const err = dlerror();
-    if (err) {
-      throw Exception(ExceptionType::GENERAL_EXCEPTION, utils::StringUtils::join_pack("dlsym(", symbol_name, "): ", err));
-    }
+    if (err) throw Exception(ExceptionType::GENERAL_EXCEPTION, utils::StringUtils::join_pack("dlsym(", symbol_name, "): ", err));
     return symbol;
   }
 
