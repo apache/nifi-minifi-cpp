@@ -715,7 +715,7 @@ void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
     if (fsize < state.position_) {
       processRotatedFilesAfterLastReadTime(session, state);
     } else if (fsize == state.position_) {
-      logger_->log_trace("Skipping file %s as its size hasn't change since last read", state.file_name_);
+      logger_->log_trace("Skipping file %s as its size hasn't changed since last read", state.file_name_);
       return;
     }
   }
