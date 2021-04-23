@@ -114,7 +114,7 @@ namespace processors {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
 
-    if(idType_ == opc::OPCNodeIDType::Int) {
+    if (idType_ == opc::OPCNodeIDType::Int) {
       try {
         std::stoi(nodeID_);
       } catch(...) {
@@ -122,8 +122,8 @@ namespace processors {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
-    if(idType_ != opc::OPCNodeIDType::Path) {
-      if(!context->getProperty(NameSpaceIndex.getName(), nameSpaceIdx_)) {
+    if (idType_ != opc::OPCNodeIDType::Path) {
+      if (!context->getProperty(NameSpaceIndex.getName(), nameSpaceIdx_)) {
         auto error_msg = utils::StringUtils::join_pack(NameSpaceIndex.getName(), " is mandatory in case ", NodeIDType.getName(), " is not Path");
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
@@ -137,7 +137,7 @@ namespace processors {
     logger_->log_trace("FetchOPCProcessor::onTrigger");
 
     std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
-    if(!lock.owns_lock()){
+    if (!lock.owns_lock()){
       logger_->log_warn("processor was triggered before previous listing finished, configuration should be revised!");
       return;
     }
@@ -151,10 +151,10 @@ namespace processors {
     variablesFound_ = 0;
 
     std::function<opc::nodeFoundCallBackFunc> f = std::bind(&FetchOPCProcessor::nodeFoundCallBack, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, context, session);
-    if(idType_ != opc::OPCNodeIDType::Path) {
+    if (idType_ != opc::OPCNodeIDType::Path) {
       UA_NodeId myID;
       myID.namespaceIndex = nameSpaceIdx_;
-      if(idType_ == opc::OPCNodeIDType::Int) {
+      if (idType_ == opc::OPCNodeIDType::Int) {
         myID.identifierType = UA_NODEIDTYPE_NUMERIC;
         myID.identifier.numeric = std::stoi(nodeID_);
       } else if (idType_ == opc::OPCNodeIDType::String) {
@@ -163,9 +163,9 @@ namespace processors {
       }
       connection_->traverse(myID, f, "", maxDepth_);
     } else {
-      if(translatedNodeIDs_.empty()) {
+      if (translatedNodeIDs_.empty()) {
         auto sc = connection_->translateBrowsePathsToNodeIdsRequest(nodeID_, translatedNodeIDs_, logger_);
-        if(sc != UA_STATUSCODE_GOOD) {
+        if (sc != UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to translate %s to node id, no flow files will be generated (%s)", nodeID_.c_str(), UA_StatusCode_name(sc));
           yield();
           return;
@@ -175,7 +175,7 @@ namespace processors {
         connection_->traverse(nodeID, f, nodeID_, maxDepth_);
       }
     }
-    if(nodesFound_ == 0) {
+    if (nodesFound_ == 0) {
       logger_->log_warn("Connected to OPC server, but no variable nodes were found. Configuration might be incorrect! Yielding...");
       yield();
     } else if (variablesFound_ == 0) {
@@ -188,7 +188,7 @@ namespace processors {
   bool FetchOPCProcessor::nodeFoundCallBack(opc::Client& /*client*/, const UA_ReferenceDescription *ref, const std::string& path,
       const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
     nodesFound_++;
-    if(ref->nodeClass == UA_NODECLASS_VARIABLE) {
+    if (ref->nodeClass == UA_NODECLASS_VARIABLE) {
       try {
         opc::NodeData nodedata = connection_->getNodeData(ref, path);
         bool write = true;
@@ -224,7 +224,7 @@ namespace processors {
     for(const auto& attr: opcnode.attributes) {
       flowFile->setAttribute(attr.first, attr.second);
     }
-    if(opcnode.data.size() > 0) {
+    if (opcnode.data.size() > 0) {
       try {
         FetchOPCProcessor::WriteCallback callback(opc::nodeValue2String(opcnode));
         session->write(flowFile, &callback);

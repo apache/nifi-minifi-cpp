@@ -27,7 +27,7 @@
 
 void custom_processor_logic(processor_session * ps, processor_context * ctx) {
   flow_file_record * ffr = get(ps, ctx);
-  if(ffr == NULL) {
+  if (ffr == NULL) {
     return;
   }
   uint8_t * buffer = (uint8_t*)malloc(ffr->size* sizeof(uint8_t));
@@ -51,7 +51,7 @@ void custom_processor_logic(processor_session * ps, processor_context * ctx) {
 
   char prop_value[50];
 
-  if(get_property(ctx, "checksum_attr_name", prop_value, 50) != 0) {
+  if (get_property(ctx, "checksum_attr_name", prop_value, 50) != 0) {
     return;  // Attr name not found
   }
 
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 
   char *file = argv[1];
 
-  if(access(file, F_OK) == -1) {
+  if (access(file, F_OK) == -1) {
     printf("Error: %s doesn't exist!\n", file);
     exit(1);
   }

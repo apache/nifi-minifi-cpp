@@ -62,7 +62,7 @@ void FlowFileRepository::flush() {
   auto multistatus = opendb->MultiGet(options, keys, &values);
 
   for(size_t i=0; i<keys.size() && i<values.size() && i<multistatus.size(); ++i) {
-    if(!multistatus[i].ok()) {
+    if (!multistatus[i].ok()) {
       logger_->log_error("Failed to read key from rocksdb: %s! DB is most probably in an inconsistent state!", keys[i].data());
       keystrings.remove(keys[i].data());
       continue;

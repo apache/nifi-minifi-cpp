@@ -132,7 +132,7 @@ namespace processors {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
 
-    if(idType_ == opc::OPCNodeIDType::Int) {
+    if (idType_ == opc::OPCNodeIDType::Int) {
       try {
         std::stoi(nodeID_);
       } catch(...) {
@@ -140,8 +140,8 @@ namespace processors {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
-    if(idType_ != opc::OPCNodeIDType::Path) {
-      if(!context->getProperty(ParentNameSpaceIndex.getName(), nameSpaceIdx_)) {
+    if (idType_ != opc::OPCNodeIDType::Path) {
+      if (!context->getProperty(ParentNameSpaceIndex.getName(), nameSpaceIdx_)) {
         auto error_msg = utils::StringUtils::join_pack(ParentNameSpaceIndex.getName(), " is mandatory in case ", ParentNodeIDType.getName(), " is not Path");
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }

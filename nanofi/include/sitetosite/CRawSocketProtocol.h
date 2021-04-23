@@ -195,7 +195,7 @@ static inline struct CRawSiteToSiteClient* createClient(const char * host, uint1
 
 static inline void destroyClient(struct CRawSiteToSiteClient * client){
   tearDown(client);
-  if(client->_owns_resource == True) {
+  if (client->_owns_resource == True) {
     freePeer(client->_peer);
   }
 }

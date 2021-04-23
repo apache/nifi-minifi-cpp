@@ -217,7 +217,7 @@ class FlowFileResponder : public ServerAwareHandler {
       int read;
       uint64_t total_size = 0;
       read = stream.read(num_attributes);
-      if(!isServerRunning())return false;
+      if (!isServerRunning())return false;
       assert(read > 0); total_size += read;
 
       auto flow = std::make_shared<FlowObj>();
@@ -225,16 +225,16 @@ class FlowFileResponder : public ServerAwareHandler {
       for (uint32_t i = 0; i < num_attributes; i++) {
         std::string name, value;
         read = stream.read(name, true);
-        if(!isServerRunning())return false;
+        if (!isServerRunning())return false;
         assert(read > 0); total_size += read;
         read = stream.read(value, true);
-        if(!isServerRunning())return false;
+        if (!isServerRunning())return false;
         assert(read > 0); total_size += read;
         flow->attributes[name] = value;
       }
       uint64_t length;
       read = stream.read(length);
-      if(!isServerRunning())return false;
+      if (!isServerRunning())return false;
       assert(read > 0); total_size += read;
 
       total_size += length;
@@ -242,7 +242,7 @@ class FlowFileResponder : public ServerAwareHandler {
       flow->total_size = total_size;
 
       read = stream.read(flow->data.data(), gsl::narrow<int>(length));
-      if(!isServerRunning())return false;
+      if (!isServerRunning())return false;
       assert(read == gsl::narrow<int>(length));
 
       if (!invalid_checksum) {

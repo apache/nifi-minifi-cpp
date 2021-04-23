@@ -84,7 +84,7 @@ void ConsumeMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 
 void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {
   // reconnect if necessary
-  if(!reconnect()) {
+  if (!reconnect()) {
     yield();
   }
 

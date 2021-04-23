@@ -111,7 +111,7 @@ void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, 
   std::string requesttype;
   stream->read(requesttype);
 
-  if(requesttype == "SEND_FLOWFILES") {
+  if (requesttype == "SEND_FLOWFILES") {
     s2s_data.request_type_ok = true;
     stream->read(s2s_data.attr_num);
     std::string key, value;
@@ -146,13 +146,13 @@ void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfe
   while(!found_codec) {
     uint8_t handshake_data[1000];
     int actual_len = stream->read(handshake_data+read_len, 1000-read_len);
-    if(actual_len <= 0) {
+    if (actual_len <= 0) {
       continue;
     }
     read_len += actual_len;
     std::string incoming_data(reinterpret_cast<const char *>(handshake_data), read_len);
     auto it = std::search(incoming_data.begin(), incoming_data.end(), CODEC_NAME.begin(), CODEC_NAME.end());
-    if(it != incoming_data.end()){
+    if (it != incoming_data.end()){
       size_t idx = std::distance(incoming_data.begin(), it);
       // Actual version follows the string as an uint32_t // that should be the end of the buffer
       found_codec = idx + CODEC_NAME.length() + sizeof(uint32_t) == read_len;

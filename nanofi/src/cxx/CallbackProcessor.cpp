@@ -34,7 +34,7 @@ void CallbackProcessor::initialize() {
 }
 
 void CallbackProcessor::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/){
-  if(onschedule_callback_ != nullptr) {
+  if (onschedule_callback_ != nullptr) {
     onschedule_callback_(context);
   }
 }

@@ -174,7 +174,7 @@ bool AbstractMQTTProcessor::reconnect() {
   }
   if (isSubscriber_) {
     ret = MQTTClient_subscribe(client_, topic_.c_str(), qos_);
-    if(ret != MQTTCLIENT_SUCCESS) {
+    if (ret != MQTTCLIENT_SUCCESS) {
       logger_->log_error("Failed to subscribe to MQTT topic %s (%d)", topic_, ret);
       return false;
     }

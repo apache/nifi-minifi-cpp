@@ -98,7 +98,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
 
     options.compaction_style = rocksdb::CompactionStyle::kCompactionStyleFIFO;
     options.compaction_options_fifo = rocksdb::CompactionOptionsFIFO(max_partition_bytes_, false);
-    if(max_partition_millis_ > 0) {
+    if (max_partition_millis_ > 0) {
       options.ttl = max_partition_millis_ / 1000;
     }
 

@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
   as.size = 1;
   as.attributes = &attribute1;
 
-  if(transmitPayload(client, payload, &as) == 0){
+  if (transmitPayload(client, payload, &as) == 0){
     printf("Packet successfully sent\n");
   } else {
     printf("Failed to send packet\n");

@@ -79,7 +79,7 @@ protected:
 struct defaulted_handler{
   ServerAwareHandler* handler = nullptr;
   ServerAwareHandler* get(ServerAwareHandler *def) const {
-    if(handler)return handler;
+    if (handler)return handler;
     return def;
   }
   void set(std::vector<std::chrono::milliseconds>&& timeout) {

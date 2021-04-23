@@ -166,7 +166,7 @@ Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string&
   UA_ClientConfig *configPtr = UA_Client_getConfig(client_);
   configPtr->logger = MinifiUALogger;
 
-  if(applicationURI.length() > 0) {
+  if (applicationURI.length() > 0) {
     UA_String_clear(&configPtr->clientDescription.applicationUri);
     configPtr->clientDescription.applicationUri = UA_STRING_ALLOC(applicationURI.c_str());
   }
@@ -175,12 +175,12 @@ Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string&
 }
 
 Client::~Client() {
-  if(client_ == nullptr) {
+  if (client_ == nullptr) {
     return;
   }
-  if(UA_Client_getState(client_) != UA_CLIENTSTATE_DISCONNECTED) {
+  if (UA_Client_getState(client_) != UA_CLIENTSTATE_DISCONNECTED) {
     auto sc = UA_Client_disconnect(client_);
-    if(sc != UA_STATUSCODE_GOOD) {
+    if (sc != UA_STATUSCODE_GOOD) {
       logger_->log_warn("Failed to disconnect OPC client: %s", UA_StatusCode_name(sc));
     }
   }
@@ -188,7 +188,7 @@ Client::~Client() {
 }
 
 bool Client::isConnected() {
-  if(!client_) {
+  if (!client_) {
     return false;
   }
   return UA_Client_getState(client_) != UA_CLIENTSTATE_DISCONNECTED;
@@ -203,16 +203,16 @@ UA_StatusCode Client::connect(const std::string& url, const std::string& usernam
 }
 
 NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::string& basePath) {
-  if(ref->nodeClass == UA_NODECLASS_VARIABLE) {
+  if (ref->nodeClass == UA_NODECLASS_VARIABLE) {
     opc::NodeData nodedata;
     std::string browsename(reinterpret_cast<const char*>(ref->browseName.name.data), ref->browseName.name.length);
 
-    if(ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
+    if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
       std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.string.data),
                             ref->nodeId.nodeId.identifier.string.length);
       nodedata.attributes["NodeID"] = nodeidstr;
       nodedata.attributes["NodeID type"] = "string";
-    } else if(ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_BYTESTRING) {
+    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_BYTESTRING) {
       std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.byteString.data), ref->nodeId.nodeId.identifier.byteString.length);
       nodedata.attributes["NodeID"] = nodeidstr;
       nodedata.attributes["NodeID type"] = "bytestring";
@@ -224,7 +224,7 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
     nodedata.attributes["Full path"] = basePath + "/" + browsename;
     nodedata.dataTypeID = UA_TYPES_COUNT;
     UA_Variant* var = UA_Variant_new();
-    if(UA_Client_readValueAttribute(client_, ref->nodeId.nodeId, var) == UA_STATUSCODE_GOOD && var->type != NULL && var->data != NULL) {
+    if (UA_Client_readValueAttribute(client_, ref->nodeId.nodeId, var) == UA_STATUSCODE_GOOD && var->type != NULL && var->data != NULL) {
       // Because the timestamps are eliminated in readValueAttribute for simplification
       // We need to call the inner function UA_Client_Service_read.
       UA_ReadValueId item;
@@ -246,10 +246,10 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
 
       nodedata.dataTypeID = var->type->typeIndex;
       nodedata.addVariant(var);
-      if(var->type->typeName) {
+      if (var->type->typeName) {
         nodedata.attributes["Typename"] = std::string(var->type->typeName);
       }
-      if(var->type->memSize) {
+      if (var->type->memSize) {
         nodedata.attributes["Datasize"] = std::to_string(var->type->memSize);
         nodedata.data = std::vector<uint8_t>(var->type->memSize);
         memcpy(nodedata.data.data(), var->data, var->type->memSize);
@@ -286,9 +286,9 @@ void Client::traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb,
     UA_ReferenceDescription_delete(rootRef);
   }
 
-  if(maxDepth != 0) {
+  if (maxDepth != 0) {
     maxDepth--;
-    if(maxDepth == 0) {
+    if (maxDepth == 0) {
       return;
     }
   }
@@ -368,7 +368,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
     UA_BrowsePath_deleteMembers(&browsePath);
   });
 
-  if(response.resultsSize < 1) {
+  if (response.resultsSize < 1) {
     logger->log_warn("No node id in response for %s", path.c_str());
     return UA_STATUSCODE_BADNODATAAVAILABLE;
   }
@@ -388,7 +388,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
 
   UA_TranslateBrowsePathsToNodeIdsResponse_deleteMembers(&response);
 
-  if(foundData) {
+  if (foundData) {
     logger->log_debug("Found %lu nodes for path %s", foundNodeIDs.size(), path.c_str());
     return UA_STATUSCODE_GOOD;
   } else {
@@ -533,7 +533,7 @@ std::string nodeValue2String(const NodeData& nd) {
       ret_val = std::to_string(ui64t);
       break;
     case UA_TYPES_FLOAT:
-      if(sizeof(float) == 4 && std::numeric_limits<float>::is_iec559){
+      if (sizeof(float) == 4 && std::numeric_limits<float>::is_iec559){
         float f;
         memcpy(&f, nd.data.data(), sizeof(float));
         ret_val = std::to_string(f);
@@ -542,7 +542,7 @@ std::string nodeValue2String(const NodeData& nd) {
       }
       break;
     case UA_TYPES_DOUBLE:
-      if(sizeof(double) == 8 && std::numeric_limits<double>::is_iec559){
+      if (sizeof(double) == 8 && std::numeric_limits<double>::is_iec559){
         double d;
         memcpy(&d, nd.data.data(), sizeof(double));
         ret_val = std::to_string(d);

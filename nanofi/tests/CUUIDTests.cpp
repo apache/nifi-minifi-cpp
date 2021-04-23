@@ -25,16 +25,16 @@
 bool verify_uuid(const char * uuid) {
   std::string uuid_str(uuid, 36);
   fprintf(stderr, "Verifying UUID %s\n", uuid_str.c_str());
-  if(strlen(uuid_str.c_str()) != 36) {
+  if (strlen(uuid_str.c_str()) != 36) {
     return false;
   }
   for(std::size_t i = 0; i < uuid_str.length(); ++i) {
-    if(i % 5 == 3 && i > 5 && i < 25) {
+    if (i % 5 == 3 && i > 5 && i < 25) {
       if (uuid_str[i] != '-') {
         return false;
       }
     } else {
-      if(!isxdigit(uuid_str[i])) {
+      if (!isxdigit(uuid_str[i])) {
         return false;
       }
     }

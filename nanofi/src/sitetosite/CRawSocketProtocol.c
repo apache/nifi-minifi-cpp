@@ -183,7 +183,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
     }
   }
 
-  if(ret_val == 0) {
+  if (ret_val == 0) {
     ret = write_uint32_t(prop_size, client->_peer->_stream);
   }
   if (ret <= 0) {
@@ -191,10 +191,10 @@ int handShake(struct CRawSiteToSiteClient * client) {
   }
 
   HASH_ITER(hh, properties, current, tmp) {
-    if(ret_val == 0 && writeUTF(current->name, strlen(current->name), False, client->_peer->_stream) <= 0) {
+    if (ret_val == 0 && writeUTF(current->name, strlen(current->name), False, client->_peer->_stream) <= 0) {
       ret_val = -1;
     }
-    if(ret_val == 0 && writeUTF(current->value, strlen(current->value), False, client->_peer->_stream) <= 0) {
+    if (ret_val == 0 && writeUTF(current->value, strlen(current->value), False, client->_peer->_stream) <= 0) {
       ret_val = -1;
     }
     logc(debug, "Site2Site Protocol Send handshake properties %s %s", current->name, current->value);
@@ -202,7 +202,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
     free(current);
   }
 
-  if(ret_val < 0) {
+  if (ret_val < 0) {
     logc(err, "%s", "Failed to transfer handshake properties");
     return -1;
   }
@@ -218,7 +218,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
 
   RespondCodeContext *resCode = getRespondCodeContext(code);
 
-  if(resCode == NULL) {
+  if (resCode == NULL) {
     logc(err, "Received invalid respond code: %d", code);
     return -1;
   }
@@ -363,7 +363,7 @@ CTransaction* createTransaction(struct CRawSiteToSiteClient * client, TransferDi
 
     RespondCodeContext *resCode = getRespondCodeContext(code);
 
-    if(resCode == NULL) {
+    if (resCode == NULL) {
       logc(err, "Received invalid respond code: %d", code);
       return NULL;
     }
@@ -466,7 +466,7 @@ int transmitPayload(struct CRawSiteToSiteClient * client, const char * payload, 
 
   int ret = confirm(client, transactionID);
 
-  if(ret == 0) {
+  if (ret == 0) {
     ret = complete(client, transactionID);
   }
 
@@ -504,7 +504,7 @@ int complete(struct CRawSiteToSiteClient * client, const char * transactionID) {
       return 0;
     } else {
       logc(debug, "Site2Site transaction %s send finished", transactionID);
-      if(writeResponse(client, TRANSACTION_FINISHED, "Finished") <= 0) {
+      if (writeResponse(client, TRANSACTION_FINISHED, "Finished") <= 0) {
         return -1;
       } else {
         transaction->_state = TRANSACTION_COMPLETED;
@@ -520,7 +520,7 @@ int complete(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
     RespondCodeContext *resCode = getRespondCodeContext(code);
 
-    if(resCode == NULL) {
+    if (resCode == NULL) {
       logc(err, "Received invalid respond code: %d", code);
       return -1;
     }
@@ -598,7 +598,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
     RespondCodeContext *resCode = getRespondCodeContext(code);
 
-    if(resCode == NULL) {
+    if (resCode == NULL) {
       logc(err, "Received invalid respond code: %d", code);
       return -1;
     }
@@ -632,13 +632,13 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
     }
 
     RespondCode code;
-    if(readResponse(client, &code) <= 0) {
+    if (readResponse(client, &code) <= 0) {
       return -1;
     }
 
     RespondCodeContext *resCode = getRespondCodeContext(code);
 
-    if(resCode == NULL) {
+    if (resCode == NULL) {
       logc(err, "Received invalid respond code: %d", code);
       return -1;
     }
@@ -666,7 +666,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
         if (strcmp(client->_description_buffer, crc) == 0) {
           logc(debug, "Site2Site transaction %s CRC matched", transactionID);
-          if(writeResponse(client, CONFIRM_TRANSACTION, "CONFIRM_TRANSACTION") <= 0) {
+          if (writeResponse(client, CONFIRM_TRANSACTION, "CONFIRM_TRANSACTION") <= 0) {
             return -1;
           }
           transaction->_state = TRANSACTION_CONFIRMED;
@@ -749,12 +749,12 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
     uint64_t len = 0;
 
-    if(ff != NULL) {
+    if (ff != NULL) {
       int content_size = (int) ff->size;
 
       uint8_t * content_buf = NULL;
 
-      if(content_size > 0 && ff->crp != NULL) {
+      if (content_size > 0 && ff->crp != NULL) {
         content_buf = (uint8_t*)malloc(content_size*sizeof(uint8_t));
         int len_as_int = get_content(ff, content_buf, content_size);
         if (len_as_int <= 0) {
@@ -1049,12 +1049,12 @@ int establish(struct CRawSiteToSiteClient* client) {
     return -1;
   }
 
-  if(openPeer(client->_peer) != 0) {
+  if (openPeer(client->_peer) != 0) {
     return -1;
   }
 
   // Negotiate the version
-  if(initiateResourceNegotiation(client) != 0) {
+  if (initiateResourceNegotiation(client) != 0) {
     return -1;
   }
 
@@ -1075,14 +1075,14 @@ CTransaction * findTransaction(const struct CRawSiteToSiteClient * client, const
 
 void deleteTransaction(struct CRawSiteToSiteClient * client, const char * id) {
   CTransaction * transaction = findTransaction(client, id);
-  if(transaction) {
+  if (transaction) {
     HASH_DEL(client->_known_transactions, transaction);
     free(transaction);
   }
 }
 
 void clearTransactions(struct CRawSiteToSiteClient * client) {
-  if(client->_known_transactions == NULL) {
+  if (client->_known_transactions == NULL) {
     return;
   }
 
