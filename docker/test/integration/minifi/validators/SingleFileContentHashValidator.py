@@ -27,17 +27,16 @@ class SingleFileContentHashValidator(FileOutputValidator):
 
         listing = listdir(full_dir)
         if listing:
-            for l in listing:
-                logging.info("name:: %s", l)
-            out_file_name = listing[0]
-            logging.info("dir %s -- name %s", full_dir, out_file_name)
-            full_path = join(full_dir, out_file_name)
-            if not os.path.isfile(full_path):
-                return self.valid
-            
-            actual_md5_hash = md5(full_path)
-            logging.info("expected hash: %s -- actual: %s", self.expected_md5_hash, actual_md5_hash)
-            if self.expected_md5_hash == actual_md5_hash:
-                self.valid = True
-
+            all_matches = True
+            for out_file_name in listing:
+                logging.info("dir %s -- name %s", full_dir, out_file_name)
+                full_path = join(full_dir, out_file_name)
+                if not os.path.isfile(full_path):
+                    all_matches = False
+                    break
+                actual_md5_hash = md5(full_path)
+                logging.info("expected hash: %s -- actual: %s", self.expected_md5_hash, actual_md5_hash)
+                if self.expected_md5_hash != actual_md5_hash:
+                    all_matches = False
+            self.valid = all_matches
         return self.valid
