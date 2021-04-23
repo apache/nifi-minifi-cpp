@@ -61,7 +61,7 @@ void FlowFileRepository::flush() {
 
   auto multistatus = opendb->MultiGet(options, keys, &values);
 
-  for (size_t i = 0; i<keys.size() && i<values.size() && i<multistatus.size(); ++i) {
+  for (size_t i = 0; i < keys.size() && i < values.size() && i < multistatus.size(); ++i) {
     if (!multistatus[i].ok()) {
       logger_->log_error("Failed to read key from rocksdb: %s! DB is most probably in an inconsistent state!", keys[i].data());
       keystrings.remove(keys[i].data());
@@ -186,7 +186,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
 
 bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> operation) {
   int waitTime = 0;
-  for (int i=0; i<3; ++i) {
+  for (int i=0; i < 3; ++i) {
     auto status = operation();
     if (status.ok()) {
       logger_->log_trace("Rocksdb operation executed successfully");
