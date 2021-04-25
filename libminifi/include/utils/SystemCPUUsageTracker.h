@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_SYSTEMCPUUSAGETRACKER_H_
-#define LIBMINIFI_INCLUDE_UTILS_SYSTEMCPUUSAGETRACKER_H_
+#pragma once
+
 #ifdef __linux__
 #include <stdlib.h>
 #include <stdio.h>
@@ -58,9 +58,9 @@ class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
 
  protected:
   void queryCPUTimes();
-  bool isCurrentQuerySameAsPrevious();
-  bool isCurrentQueryOlderThanPrevious();
-  double getCPUUsageBetweenLastTwoQueries();
+  bool isCurrentQuerySameAsPrevious() const;
+  bool isCurrentQueryOlderThanPrevious() const;
+  double getCPUUsageBetweenLastTwoQueries() const;
 
  private:
   uint64_t total_user_;
@@ -84,9 +84,9 @@ class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
 
  protected:
   void queryCPUTimes();
-  bool isCurrentQuerySameAsPrevious();
-  bool isCurrentQueryOlderThanPrevious();
-  double getCPUUsageBetweenLastTwoQueries();
+  bool isCurrentQuerySameAsPrevious() const;
+  bool isCurrentQueryOlderThanPrevious() const;
+  double getCPUUsageBetweenLastTwoQueries() const;
 
  private:
   uint64_t total_idle_;
@@ -108,9 +108,9 @@ class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
 
  protected:
   void queryCPUTicks();
-  bool isCurrentQueryOlderThanPrevious();
-  bool isCurrentQuerySameAsPrevious();
-  double getCPUUsageBetweenLastTwoQueries();
+  bool isCurrentQueryOlderThanPrevious() const;
+  bool isCurrentQuerySameAsPrevious() const;
+  double getCPUUsageBetweenLastTwoQueries() const;
 
  private:
   uint64_t total_ticks_;
@@ -126,5 +126,3 @@ class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_SYSTEMCPUUSAGETRACKER_H_

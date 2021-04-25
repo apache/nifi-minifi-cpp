@@ -120,7 +120,7 @@ class ValueParser {
   }
 
   ValueParser& parse(double& out) {
-    double result;  // NOLINT
+    double result(0);
     auto len = safeCallConverter(std::strtod, result);
     if (len == 0) {
       throw ParseException("Couldn't parse double");

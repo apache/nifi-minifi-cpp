@@ -37,7 +37,7 @@ ProcessCPUUsageTracker::ProcessCPUUsageTracker() :
 
 double ProcessCPUUsageTracker::getCPUUsageAndRestartCollection() {
   queryCPUTimes();
-  if (isCurrentQuerySameAsPrevious() || isCurrentQuerySameAsPrevious()) {
+  if (isCurrentQuerySameAsPrevious() || isCurrentQueryOlderThanPrevious()) {
     return -1.0;
   } else {
     return getProcessCPUUsageBetweenLastTwoQueries();
@@ -55,19 +55,19 @@ void ProcessCPUUsageTracker::queryCPUTimes() {
   user_cpu_times_ = timeSample.tms_utime;
 }
 
-bool ProcessCPUUsageTracker::isCurrentQueryOlderThanPrevious() {
+bool ProcessCPUUsageTracker::isCurrentQueryOlderThanPrevious() const {
   return (cpu_times_ < previous_cpu_times_ ||
           sys_cpu_times_ < previous_sys_cpu_times_ ||
           user_cpu_times_ < previous_user_cpu_times_);
 }
 
-bool ProcessCPUUsageTracker::isCurrentQuerySameAsPrevious() {
+bool ProcessCPUUsageTracker::isCurrentQuerySameAsPrevious() const {
   return (cpu_times_ == previous_cpu_times_ &&
           sys_cpu_times_ == previous_sys_cpu_times_ &&
           user_cpu_times_ == previous_user_cpu_times_);
 }
 
-double ProcessCPUUsageTracker::getProcessCPUUsageBetweenLastTwoQueries() {
+double ProcessCPUUsageTracker::getProcessCPUUsageBetweenLastTwoQueries() const {
   clock_t cpu_times_diff = cpu_times_ - previous_cpu_times_;
   clock_t sys_cpu_times_diff = sys_cpu_times_ - previous_sys_cpu_times_;
   clock_t user_cpu_times_diff = user_cpu_times_ - previous_user_cpu_times_;
@@ -89,20 +89,20 @@ ProcessCPUUsageTracker::ProcessCPUUsageTracker() :
 
 double ProcessCPUUsageTracker::getCPUUsageAndRestartCollection() {
   queryCPUTimes();
-  if (isCurrentQuerySameAsPrevious() || isCurrentQuerySameAsPrevious()) {
+  if (isCurrentQuerySameAsPrevious() || isCurrentQueryOlderThanPrevious()) {
     return -1.0;
   } else {
     return getProcessCPUUsageBetweenLastTwoQueries();
   }
 }
 
-bool ProcessCPUUsageTracker::isCurrentQueryOlderThanPrevious() {
+bool ProcessCPUUsageTracker::isCurrentQueryOlderThanPrevious() const {
   return (cpu_times_ < previous_cpu_times_ ||
           sys_cpu_times_ < previous_sys_cpu_times_ ||
           user_cpu_times_ < previous_user_cpu_times_);
 }
 
-bool ProcessCPUUsageTracker::isCurrentQuerySameAsPrevious() {
+bool ProcessCPUUsageTracker::isCurrentQuerySameAsPrevious() const {
   return (cpu_times_ == previous_cpu_times_ &&
           sys_cpu_times_ == previous_sys_cpu_times_ &&
           user_cpu_times_ == previous_user_cpu_times_);
@@ -123,7 +123,7 @@ void ProcessCPUUsageTracker::queryCPUTimes() {
   user_cpu_times_ = ULARGE_INTEGER{ fuser.dwLowDateTime, fuser.dwHighDateTime }.QuadPart;
 }
 
-double ProcessCPUUsageTracker::getProcessCPUUsageBetweenLastTwoQueries() {
+double ProcessCPUUsageTracker::getProcessCPUUsageBetweenLastTwoQueries() const {
   uint64_t cpu_times_diff = cpu_times_ - previous_cpu_times_;
   uint64_t sys_cpu_times_diff = sys_cpu_times_ - previous_sys_cpu_times_;
   uint64_t user_cpu_times_diff = user_cpu_times_ - previous_user_cpu_times_;

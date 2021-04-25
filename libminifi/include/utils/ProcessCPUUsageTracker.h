@@ -14,17 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_PROCESSCPUUSAGETRACKER_H_
-#define LIBMINIFI_INCLUDE_UTILS_PROCESSCPUUSAGETRACKER_H_
-
-#if defined(__linux__) || defined(__APPLE__)
-#include <time.h>
-#endif
+#pragma once
 
 #ifdef WIN32
 #include <cstdint>
 #include "windows.h"
+#else
+#include <time.h>
 #endif
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -47,9 +45,9 @@ class ProcessCPUUsageTracker : ProcessCPUUsageTrackerBase {
 
  protected:
   void queryCPUTimes();
-  bool isCurrentQueryOlderThanPrevious();
-  bool isCurrentQuerySameAsPrevious();
-  double getProcessCPUUsageBetweenLastTwoQueries();
+  bool isCurrentQueryOlderThanPrevious() const;
+  bool isCurrentQuerySameAsPrevious() const;
+  double getProcessCPUUsageBetweenLastTwoQueries() const;
 
  private:
   clock_t cpu_times_;
@@ -71,9 +69,9 @@ class ProcessCPUUsageTracker : ProcessCPUUsageTrackerBase {
 
  protected:
   void queryCPUTimes();
-  bool isCurrentQuerySameAsPrevious();
-  bool isCurrentQueryOlderThanPrevious();
-  double getProcessCPUUsageBetweenLastTwoQueries();
+  bool isCurrentQuerySameAsPrevious() const;
+  bool isCurrentQueryOlderThanPrevious() const;
+  double getProcessCPUUsageBetweenLastTwoQueries() const;
 
  private:
   HANDLE self_;
@@ -92,5 +90,3 @@ class ProcessCPUUsageTracker : ProcessCPUUsageTrackerBase {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_PROCESSCPUUSAGETRACKER_H_

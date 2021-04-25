@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_UTILS_VALUECASTER_H_
-#define LIBMINIFI_INCLUDE_UTILS_VALUECASTER_H_
+#pragma once
 
 namespace org {
 namespace apache {
@@ -44,5 +43,3 @@ bool cast_if_in_range(T in, U& out) {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_VALUECASTER_H_

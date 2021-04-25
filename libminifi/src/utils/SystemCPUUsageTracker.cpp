@@ -56,21 +56,21 @@ void SystemCPUUsageTracker::queryCPUTimes() {
   fclose(file);
 }
 
-bool SystemCPUUsageTracker::isCurrentQueryOlderThanPrevious() {
+bool SystemCPUUsageTracker::isCurrentQueryOlderThanPrevious() const {
   return (total_user_ < previous_total_user_ ||
           total_user_low_ < previous_total_user_low_ ||
           total_sys_ < previous_total_sys_ ||
           total_idle_ < previous_total_idle_);
 }
 
-bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() {
+bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() const {
   return (total_user_ == previous_total_user_ &&
           total_user_low_ == previous_total_user_low_ &&
           total_sys_ == previous_total_sys_ &&
           total_idle_ == previous_total_idle_);
 }
 
-double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() {
+double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() const {
   uint64_t total_user_diff = total_user_ - previous_total_user_;
   uint64_t total_user_low_diff = total_user_low_ - previous_total_user_low_;
   uint64_t total_system_diff = total_sys_ - previous_total_sys_;
@@ -109,19 +109,19 @@ void SystemCPUUsageTracker::queryCPUTimes() {
   total_idle_ = ULARGE_INTEGER{ fidle.dwLowDateTime, fidle.dwHighDateTime }.QuadPart;
 }
 
-bool SystemCPUUsageTracker::isCurrentQueryOlderThanPrevious() {
+bool SystemCPUUsageTracker::isCurrentQueryOlderThanPrevious() const {
   return (total_user_ < previous_total_user_ ||
     total_sys_ < previous_total_sys_ ||
     total_idle_ < previous_total_idle_);
 }
 
-bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() {
+bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() const {
   return (total_user_ == previous_total_user_ &&
     total_sys_ == previous_total_sys_ &&
     total_idle_ == previous_total_idle_);
 }
 
-double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() {
+double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() const {
   uint64_t total_user_diff = total_user_ - previous_total_user_;
   uint64_t total_sys_diff = total_sys_ - previous_total_sys_;
   uint64_t total_idle_diff = total_idle_ - previous_total_idle_;
@@ -163,17 +163,17 @@ void SystemCPUUsageTracker::queryCPUTicks() {
   }
 }
 
-bool SystemCPUUsageTracker::isCurrentQueryOlderThanPrevious() {
+bool SystemCPUUsageTracker::isCurrentQueryOlderThanPrevious() const {
   return (total_ticks_ < previous_total_ticks_ ||
           idle_ticks_ < previous_idle_ticks_);
 }
 
-bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() {
+bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() const {
   return (total_ticks_ == previous_total_ticks_ &&
           idle_ticks_ == previous_idle_ticks_);
 }
 
-double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() {
+double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() const {
   uint64_t total_ticks_since_last_time = total_ticks_-previous_total_ticks_;
   uint64_t idle_ticks_since_last_time  = idle_ticks_-previous_idle_ticks_;
 
