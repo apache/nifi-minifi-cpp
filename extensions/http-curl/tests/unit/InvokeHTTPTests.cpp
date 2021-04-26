@@ -144,7 +144,7 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   for (auto provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
-  std::shared_ptr<core::FlowFile> ffr = session2->get();
+
   REQUIRE(true == LogTestController::getInstance().contains("Exiting because method is POST"));
   LogTestController::getInstance().reset();
 }
@@ -275,7 +275,7 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   for (auto provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
-  std::shared_ptr<core::FlowFile> ffr = session2->get();
+
   REQUIRE(true == LogTestController::getInstance().contains("Exiting because method is POST"));
   LogTestController::getInstance().reset();
 }
@@ -309,12 +309,11 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   testController.runSession(plan, true);
 
   records = plan->getProvenanceRecords();
-  record = plan->getCurrentFlowFile();
 
   for (auto provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
-  std::shared_ptr<core::FlowFile> ffr = plan->getCurrentFlowFile();
+
   REQUIRE(true == LogTestController::getInstance().contains("Exiting because method is POST"));
   LogTestController::getInstance().reset();
 }
