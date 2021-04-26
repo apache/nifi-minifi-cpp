@@ -35,14 +35,14 @@ namespace processors {
 //! PutSQL Class
 class PutSQL: public SQLProcessor {
  public:
-  explicit PutSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
+  explicit PutSQL(const std::string& name, const utils::Identifier& uuid = {});
 
   //! Processor Name
   static const std::string ProcessorName;
 
   void processOnSchedule(core::ProcessContext& context) override;
   void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
-  
+
   void initialize() override;
 
   static const core::Property SQLStatement;

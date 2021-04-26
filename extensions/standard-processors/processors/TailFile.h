@@ -73,7 +73,7 @@ enum class Mode {
 
 class TailFile : public core::Processor {
  public:
-  explicit TailFile(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit TailFile(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(std::move(name), uuid),
         logger_(logging::LoggerFactory<TailFile>::getLogger()) {
   }

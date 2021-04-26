@@ -74,7 +74,7 @@ namespace response {
 
 class ComponentManifest : public DeviceInformation {
  public:
-  ComponentManifest(const std::string& name, utils::Identifier & uuid)
+  ComponentManifest(const std::string& name, const utils::Identifier& uuid)
       : DeviceInformation(name, uuid) {
   }
 
@@ -307,7 +307,7 @@ class ComponentManifest : public DeviceInformation {
 
 class ExternalManifest : public ComponentManifest {
  public:
-  ExternalManifest(const std::string& name, utils::Identifier & uuid)
+  ExternalManifest(const std::string& name, const utils::Identifier& uuid)
       : ComponentManifest(name, uuid) {
   }
 
@@ -329,7 +329,7 @@ class ExternalManifest : public ComponentManifest {
 
 class Bundles : public DeviceInformation {
  public:
-  Bundles(const std::string& name, utils::Identifier & uuid)
+  Bundles(const std::string& name, const utils::Identifier& uuid)
       : DeviceInformation(name, uuid) {
     setArray(true);
   }
@@ -407,7 +407,7 @@ class Bundles : public DeviceInformation {
  */
 class AgentStatus : public StateMonitorNode {
  public:
-  AgentStatus(std::string name, utils::Identifier & uuid)
+  AgentStatus(const std::string& name, const utils::Identifier& uuid)
       : StateMonitorNode(name, uuid) {
   }
 
@@ -542,7 +542,7 @@ class AgentMonitor {
  */
 class AgentManifest : public DeviceInformation {
  public:
-  AgentManifest(const std::string& name, utils::Identifier & uuid)
+  AgentManifest(const std::string& name, const utils::Identifier& uuid)
       : DeviceInformation(name, uuid) {
   }
 

@@ -53,7 +53,7 @@ const core::Property PutSQL::SQLStatement(
 
 const core::Relationship PutSQL::Success("success", "Database is successfully updated.");
 
-PutSQL::PutSQL(const std::string& name, utils::Identifier uuid)
+PutSQL::PutSQL(const std::string& name, const utils::Identifier& uuid)
   : SQLProcessor(name, uuid, logging::LoggerFactory<PutSQL>::getLogger()) {
 }
 

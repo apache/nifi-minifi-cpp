@@ -60,7 +60,7 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
   /*!
    * Create a new processor
    */
-  explicit ExecuteJavaControllerService(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit ExecuteJavaControllerService(const std::string& name, const utils::Identifier& uuid = {})
       : ConfigurationContext(name, uuid),
         contextInstance(nullptr),
         clazzInstance(nullptr),

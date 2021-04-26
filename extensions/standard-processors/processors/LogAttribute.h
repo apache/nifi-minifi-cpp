@@ -46,7 +46,7 @@ class LogAttribute : public core::Processor {
   /*!
    * Create a new processor
    */
-  explicit LogAttribute(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit LogAttribute(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(std::move(name), uuid),
         flowfiles_to_log_(1),
         hexencode_(false),

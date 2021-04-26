@@ -40,7 +40,7 @@ public:
   static const std::string OnTriggerLogStr;
   static const std::string OnUnScheduleLogStr;
 
-  KamikazeProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
+  KamikazeProcessor(const std::string& name, const utils::Identifier& uuid = {})
   : Processor(name, uuid), logger_(logging::LoggerFactory<KamikazeProcessor>::getLogger()) {
     _throwInOnTrigger = false;
   }

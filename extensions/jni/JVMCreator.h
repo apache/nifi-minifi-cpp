@@ -40,7 +40,7 @@ namespace jni {
 class JVMCreator : public minifi::core::CoreComponent {
  public:
 
-  explicit JVMCreator(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit JVMCreator(const std::string &name, const utils::Identifier& uuid = {})
       : minifi::core::CoreComponent(name, uuid),
         loader_(nullptr),
         logger_(logging::LoggerFactory<JVMCreator>::getLogger()) {

@@ -46,7 +46,7 @@ namespace processors {
 
 class SFTPProcessorBase : public core::Processor {
  public:
-  SFTPProcessorBase(std::string name, utils::Identifier uuid);
+  SFTPProcessorBase(const std::string& name, const utils::Identifier& uuid);
   virtual ~SFTPProcessorBase();
 
   // Supported Properties

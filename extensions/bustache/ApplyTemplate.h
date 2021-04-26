@@ -41,7 +41,7 @@ class ApplyTemplate : public core::Processor {
   /*!
    * Create a new processor
    */
-  ApplyTemplate(std::string name, utils::Identifier uuid = utils::Identifier())
+  ApplyTemplate(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ApplyTemplate>::getLogger()) {}
   ~ApplyTemplate() = default;

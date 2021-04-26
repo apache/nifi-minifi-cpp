@@ -23,7 +23,7 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(const std::string& name, utils::Identifier uuid /*= utils::Identifier()*/)
+UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : PersistableKeyValueStoreService(name, uuid)
     , logger_(logging::LoggerFactory<UnorderedMapKeyValueStoreService>::getLogger()) {
 }

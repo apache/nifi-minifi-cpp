@@ -49,7 +49,7 @@ class InvokeHTTP : public core::Processor {
   /*!
    * Create a new processor
    */
-  InvokeHTTP(std::string name, utils::Identifier uuid = utils::Identifier())
+  InvokeHTTP(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
   }
   // Destructor

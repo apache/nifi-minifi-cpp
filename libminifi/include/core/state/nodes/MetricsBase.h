@@ -100,7 +100,7 @@ class DeviceInformation : public ResponseNode {
  */
 class ObjectNode : public ResponseNode {
  public:
-  ObjectNode(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
+  ObjectNode(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
       : ResponseNode(name, uuid) {
   }
 

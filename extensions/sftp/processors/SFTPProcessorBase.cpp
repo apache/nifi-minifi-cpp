@@ -108,7 +108,7 @@ constexpr char const* SFTPProcessorBase::PROXY_TYPE_SOCKS;
 
 constexpr size_t SFTPProcessorBase::CONNECTION_CACHE_MAX_SIZE;
 
-SFTPProcessorBase::SFTPProcessorBase(std::string name, utils::Identifier uuid)
+SFTPProcessorBase::SFTPProcessorBase(const std::string& name, const utils::Identifier& uuid)
     : Processor(name, uuid),
       connection_timeout_(0),
       data_timeout_(0),

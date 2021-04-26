@@ -37,7 +37,7 @@ class CaptureRTSPFrame : public core::Processor {
 
  public:
 
-  explicit CaptureRTSPFrame(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit CaptureRTSPFrame(const std::string &name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<CaptureRTSPFrame>::getLogger()) {
   }

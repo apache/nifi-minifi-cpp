@@ -35,7 +35,7 @@ namespace response {
 
 class SchedulingDefaults : public DeviceInformation {
  public:
-  SchedulingDefaults(std::string name, utils::Identifier &uuid)
+  SchedulingDefaults(const std::string &name, const utils::Identifier &uuid)
       : DeviceInformation(name, uuid) {
   }
 

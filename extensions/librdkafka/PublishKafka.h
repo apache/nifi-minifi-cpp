@@ -88,7 +88,7 @@ class PublishKafka : public core::Processor {
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
-  explicit PublishKafka(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit PublishKafka(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(std::move(name), uuid) {
   }
 

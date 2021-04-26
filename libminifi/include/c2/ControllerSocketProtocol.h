@@ -40,7 +40,7 @@ namespace c2 {
  */
 class ControllerSocketProtocol : public HeartBeatReporter {
  public:
-  ControllerSocketProtocol(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
+  ControllerSocketProtocol(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
       : HeartBeatReporter(name, uuid),
         logger_(logging::LoggerFactory<ControllerSocketProtocol>::getLogger()) {
   }

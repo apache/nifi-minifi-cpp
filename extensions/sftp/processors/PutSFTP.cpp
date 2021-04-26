@@ -157,7 +157,7 @@ void PutSFTP::initialize() {
   setSupportedRelationships(relationships);
 }
 
-PutSFTP::PutSFTP(std::string name, utils::Identifier uuid /*= utils::Identifier()*/)
+PutSFTP::PutSFTP(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
   : SFTPProcessorBase(name, uuid),
     create_directory_(false),
     batch_size_(0),

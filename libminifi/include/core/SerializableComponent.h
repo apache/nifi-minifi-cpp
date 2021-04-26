@@ -35,11 +35,11 @@ namespace core {
  */
 class SerializableComponent : public core::Connectable {
  public:
-  SerializableComponent(const std::string name) // NOLINT
+  SerializableComponent(const std::string& name) // NOLINT
         : core::Connectable(name) {
     }
 
-  SerializableComponent(const std::string name, utils::Identifier &uuid )
+  SerializableComponent(const std::string& name, const utils::Identifier& uuid)
       : core::Connectable(name, uuid) {
   }
 

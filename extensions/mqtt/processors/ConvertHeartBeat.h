@@ -45,7 +45,7 @@ public:
   /*!
    * Create a new processor
    */
-  explicit ConvertHeartBeat(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit ConvertHeartBeat(const std::string& name, const utils::Identifier& uuid = {})
     : ConvertBase(name, uuid), logger_(logging::LoggerFactory<ConvertHeartBeat>::getLogger()) {
   }
   // Destructor
