@@ -287,13 +287,13 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   LogTestController::getInstance().setInfo<core::Processor>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> processor = plan->addProcessor("ListenHTTP", "listenhttp", core::Relationship("No Retry", "description"), false);
-  processor->initialize();
+  std::shared_ptr<core::Processor> listenhttp = plan->addProcessor("ListenHTTP", "listenhttp", core::Relationship("No Retry", "description"), false);
+  listenhttp->initialize();
   std::shared_ptr<core::Processor> invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
   invokehttp->initialize();
 
-  REQUIRE(true == plan->setProperty(processor, org::apache::nifi::minifi::processors::ListenHTTP::Port.getName(), "8685"));
-  REQUIRE(true == plan->setProperty(processor, org::apache::nifi::minifi::processors::ListenHTTP::BasePath.getName(), "/testytesttest"));
+  REQUIRE(true == plan->setProperty(listenhttp, org::apache::nifi::minifi::processors::ListenHTTP::Port.getName(), "8685"));
+  REQUIRE(true == plan->setProperty(listenhttp, org::apache::nifi::minifi::processors::ListenHTTP::BasePath.getName(), "/testytesttest"));
 
   REQUIRE(true == plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::Method.getName(), "POST"));
   REQUIRE(true == plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::URL.getName(), "http://localhost:8685/testytesttest"));
@@ -312,7 +312,7 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   record = plan->getCurrentFlowFile();
 
   for (auto provEventRecord : records) {
-    REQUIRE(provEventRecord->getComponentType() == processor->getName());
+    REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = plan->getCurrentFlowFile();
   REQUIRE(true == LogTestController::getInstance().contains("Exiting because method is POST"));
