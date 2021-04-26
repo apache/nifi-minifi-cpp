@@ -87,16 +87,16 @@ class WindowsEventLogMetadata {
   static std::string getMetadataString(METADATA val) {
     static std::map< METADATA, std::string> map = {
         {LOG_NAME,  "LOG_NAME" },
-        {SOURCE, "SOURCE"}, 
-        {TIME_CREATED, "TIME_CREATED" }, 
-        {EVENTID, "EVENTID"}, 
-        {OPCODE, "OPCODE"}, 
-        {EVENT_RECORDID, "EVENT_RECORDID"}, 
-        {EVENT_TYPE, "EVENT_TYPE"}, 
+        {SOURCE, "SOURCE"},
+        {TIME_CREATED, "TIME_CREATED" },
+        {EVENTID, "EVENTID"},
+        {OPCODE, "OPCODE"},
+        {EVENT_RECORDID, "EVENT_RECORDID"},
+        {EVENT_TYPE, "EVENT_TYPE"},
         {TASK_CATEGORY, "TASK_CATEGORY"},
-        {LEVEL, "LEVEL"}, 
-        {KEYWORDS, "KEYWORDS"}, 
-        {USER, "USER"}, 
+        {LEVEL, "LEVEL"},
+        {KEYWORDS, "KEYWORDS"},
+        {USER, "USER"},
         {COMPUTER, "COMPUTER"}
     };
 
@@ -105,17 +105,17 @@ class WindowsEventLogMetadata {
 
   static METADATA getMetadataFromString(const std::string &val) {
     static std::map< std::string, METADATA> map = {
-        {"LOG_NAME", LOG_NAME}, 
-        {"SOURCE", SOURCE}, 
-        {"TIME_CREATED", TIME_CREATED }, 
-        {"EVENTID", EVENTID}, 
-        {"OPCODE", OPCODE}, 
-        {"EVENT_RECORDID", EVENT_RECORDID}, 
+        {"LOG_NAME", LOG_NAME},
+        {"SOURCE", SOURCE},
+        {"TIME_CREATED", TIME_CREATED },
+        {"EVENTID", EVENTID},
+        {"OPCODE", OPCODE},
+        {"EVENT_RECORDID", EVENT_RECORDID},
         {"TASK_CATEGORY", TASK_CATEGORY},
-        {"EVENT_TYPE", EVENT_TYPE}, 
-        {"LEVEL", LEVEL}, 
-        {"KEYWORDS", KEYWORDS}, 
-        {"USER", USER}, 
+        {"EVENT_TYPE", EVENT_TYPE},
+        {"LEVEL", LEVEL},
+        {"KEYWORDS", KEYWORDS},
+        {"USER", USER},
         {"COMPUTER", COMPUTER}
     };
 
