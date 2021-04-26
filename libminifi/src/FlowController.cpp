@@ -302,7 +302,7 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
       this->root_ = std::shared_ptr<core::ProcessGroup>(loadInitialFlow());
     }
 
-    if (root) {
+    if (root_) {
       root_->verify();
     }
 
