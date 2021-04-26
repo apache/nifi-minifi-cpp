@@ -48,7 +48,7 @@ class ProcessorWithStatistics {
 
 class TestProcessor : public core::Processor, public ProcessorWithStatistics {
  public:
-  TestProcessor(const std::string& name, const utils::Identifier &uuid) : Processor(name, uuid) {}
+  TestProcessor(const std::string& name, const utils::Identifier& uuid) : Processor(name, uuid) {}
   TestProcessor(const std::string& name) : Processor(name) {}
   void initialize() override {
     setSupportedProperties({AppleProbability, BananaProbability});
@@ -91,7 +91,7 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
 
 class TestFlowFileGenerator : public processors::GenerateFlowFile, public ProcessorWithStatistics {
  public:
-  TestFlowFileGenerator(const std::string& name, const utils::Identifier &uuid) : GenerateFlowFile(name, uuid) {}
+  TestFlowFileGenerator(const std::string& name, const utils::Identifier& uuid) : GenerateFlowFile(name, uuid) {}
   TestFlowFileGenerator(const std::string& name) : GenerateFlowFile(name) {}
 
   using processors::GenerateFlowFile::onTrigger;

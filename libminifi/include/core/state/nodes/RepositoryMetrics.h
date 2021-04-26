@@ -41,7 +41,7 @@ namespace response {
  */
 class RepositoryMetrics : public ResponseNode {
  public:
-  RepositoryMetrics(const std::string &name, utils::Identifier &uuid)
+  RepositoryMetrics(const std::string &name, const utils::Identifier &uuid)
       : ResponseNode(name, uuid) {
   }
 

@@ -40,7 +40,7 @@ namespace c2 {
  */
 class C2Trigger : public core::Connectable{
  public:
-  C2Trigger(std::string name, utils::Identifier uuid)
+  C2Trigger(const std::string& name, const utils::Identifier& uuid)
         : core::Connectable(name, uuid) {
   }
   virtual ~C2Trigger() = default;

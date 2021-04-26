@@ -34,7 +34,7 @@ namespace controllers {
 
 class PersistableKeyValueStoreService : public KeyValueStoreService, public AbstractCoreComponentStateManagerProvider {
  public:
-  explicit PersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
+  explicit PersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
 
   ~PersistableKeyValueStoreService() override;
 

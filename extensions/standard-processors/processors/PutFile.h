@@ -49,7 +49,7 @@ class PutFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  PutFile(std::string name,  utils::Identifier uuid = utils::Identifier()) // NOLINT
+  PutFile(const std::string& name,  const utils::Identifier& uuid = {}) // NOLINT
       : core::Processor(std::move(name), uuid),
         logger_(logging::LoggerFactory<PutFile>::getLogger()) {
   }

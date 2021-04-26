@@ -53,7 +53,7 @@ class CallbackProcessor : public core::Processor {
   /*!
    * Create a new processor
    */
-  CallbackProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
+  CallbackProcessor(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(std::move(name), uuid) {
   }
   // Destructor

@@ -120,8 +120,8 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   return processor;
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const utils::Identifier& uuid, const std::string &name,
-    const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
+std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const utils::Identifier &uuid, const std::string &name,
+    const std::initializer_list<core::Relationship> &relationships, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }

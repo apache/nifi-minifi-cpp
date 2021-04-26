@@ -49,7 +49,7 @@ class UnfocusArchiveEntry : public core::Processor {
   /*!
    * Create a new processor
    */
-  explicit UnfocusArchiveEntry(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit UnfocusArchiveEntry(const std::string& name, const utils::Identifier& uuid = {})
   : core::Processor(name, uuid),
     logger_(logging::LoggerFactory<UnfocusArchiveEntry>::getLogger()){
   }

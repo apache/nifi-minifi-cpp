@@ -43,7 +43,7 @@ HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::con
   http_session_ = curl_easy_init();
 }
 
-HTTPClient::HTTPClient(std::string name, utils::Identifier uuid)
+HTTPClient::HTTPClient(const std::string& name, const utils::Identifier& uuid)
     : core::Connectable(name, uuid) {
   http_session_ = curl_easy_init();
 }

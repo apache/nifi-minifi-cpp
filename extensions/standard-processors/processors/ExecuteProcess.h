@@ -57,7 +57,7 @@ class ExecuteProcess : public core::Processor {
   /*!
    * Create a new processor
    */
-  ExecuteProcess(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
+  ExecuteProcess(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ExecuteProcess>::getLogger()) {
     _redirectErrorStream = false;

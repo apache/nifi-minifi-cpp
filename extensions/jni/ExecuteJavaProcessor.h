@@ -57,7 +57,7 @@ class ExecuteJavaProcessor : public core::Processor {
   /*!
    * Create a new processor
    */
-  explicit ExecuteJavaProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit ExecuteJavaProcessor(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         logger_instance_(nullptr),
         context_instance_(nullptr),

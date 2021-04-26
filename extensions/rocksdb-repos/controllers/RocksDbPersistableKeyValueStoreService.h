@@ -42,7 +42,7 @@ namespace controllers {
 
 class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyValueStoreService {
  public:
-  explicit RocksDbPersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
+  explicit RocksDbPersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
 
   ~RocksDbPersistableKeyValueStoreService() override = default;
 

@@ -64,7 +64,7 @@ namespace core {
 // Processor Class
 class Processor : public Connectable, public ConfigurableComponent, public std::enable_shared_from_this<Processor> {
  public:
-  Processor(const std::string& name, const utils::Identifier &uuid);
+  Processor(const std::string& name, const utils::Identifier& uuid);
   explicit Processor(const std::string& name);
   virtual ~Processor() {
     notifyStop();

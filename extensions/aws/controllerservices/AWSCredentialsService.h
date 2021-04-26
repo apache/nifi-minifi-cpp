@@ -43,7 +43,7 @@ class AWSCredentialsService : public core::controller::ControllerService {
   static const core::Property SecretKey;
   static const core::Property CredentialsFile;
 
-  explicit AWSCredentialsService(const std::string &name, const minifi::utils::Identifier& uuid = {})
+  explicit AWSCredentialsService(const std::string &name, const minifi::utils::Identifier &uuid = {})
       : ControllerService(name, uuid) {
   }
 

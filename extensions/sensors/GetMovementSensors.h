@@ -49,7 +49,7 @@ class GetMovementSensors : public SensorBase {
   /*!
    * Create a new processor
    */
-  GetMovementSensors(std::string name, utils::Identifier uuid = utils::Identifier())
+  GetMovementSensors(const std::string& name, const utils::Identifier& uuid = {})
       : SensorBase(name, uuid),
         logger_(logging::LoggerFactory<GetMovementSensors>::getLogger()) {
   }

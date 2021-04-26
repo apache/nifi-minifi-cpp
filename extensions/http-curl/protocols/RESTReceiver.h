@@ -46,7 +46,7 @@ int ssl_protocol_en(void *ssl_context, void *user_data);
  */
 class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
  public:
-  RESTReceiver(std::string name, utils::Identifier uuid = utils::Identifier());
+  RESTReceiver(const std::string& name, const utils::Identifier& uuid = {});
 
   void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
                           const std::shared_ptr<Configure> &configure) override;

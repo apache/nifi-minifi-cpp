@@ -243,7 +243,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
 
 class ContentUpdaterProcessor : public core::Processor{
  public:
-  ContentUpdaterProcessor(const std::string& name, utils::Identifier& id) : Processor(name, id) {}
+  ContentUpdaterProcessor(const std::string& name, const utils::Identifier& id) : Processor(name, id) {}
   void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) override {
     auto ff = session->get();
     std::string data = "<override>";
@@ -253,7 +253,7 @@ class ContentUpdaterProcessor : public core::Processor{
   }
 };
 
-std::shared_ptr<core::Processor> setupContentUpdaterProcessor(utils::Identifier& id) {
+std::shared_ptr<core::Processor> setupContentUpdaterProcessor(const utils::Identifier& id) {
   return std::make_shared<ContentUpdaterProcessor>("Updater", id);
 }
 

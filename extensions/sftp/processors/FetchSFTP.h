@@ -51,7 +51,7 @@ class FetchSFTP : public SFTPProcessorBase {
   /*!
    * Create a new processor
    */
-  FetchSFTP(std::string name, utils::Identifier uuid = utils::Identifier());
+  FetchSFTP(const std::string& name, const utils::Identifier& uuid = {});
   virtual ~FetchSFTP();
 
   // Supported Properties

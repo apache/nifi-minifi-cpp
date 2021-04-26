@@ -48,7 +48,7 @@ class AbstractMQTTProcessor : public core::Processor {
   /*!
    * Create a new processor
    */
-  explicit AbstractMQTTProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit AbstractMQTTProcessor(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<AbstractMQTTProcessor>::getLogger()) {
     client_ = nullptr;

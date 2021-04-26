@@ -43,7 +43,7 @@ namespace python {
 class PythonCreator : public minifi::core::CoreComponent {
  public:
 
-  explicit PythonCreator(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit PythonCreator(const std::string &name, const utils::Identifier &uuid = {})
       : minifi::core::CoreComponent(name, uuid),
         logger_(logging::LoggerFactory<PythonCreator>::getLogger()) {
   }

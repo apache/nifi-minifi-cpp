@@ -43,7 +43,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   /*!
    * Create a new processor
    */
-  explicit PublishMQTT(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit PublishMQTT(const std::string& name, const utils::Identifier& uuid = {})
       : processors::AbstractMQTTProcessor(name, uuid),
         logger_(logging::LoggerFactory<PublishMQTT>::getLogger()) {
     retain_ = false;

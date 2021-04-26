@@ -49,7 +49,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   /*!
    * Create a new processor
    */
-  explicit ConsumeMQTT(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit ConsumeMQTT(const std::string& name, const utils::Identifier& uuid = {})
       : processors::AbstractMQTTProcessor(name, uuid),
         logger_(logging::LoggerFactory<ConsumeMQTT>::getLogger()) {
     isSubscriber_ = true;

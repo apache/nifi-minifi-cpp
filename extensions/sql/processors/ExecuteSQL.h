@@ -37,7 +37,7 @@ namespace processors {
 //! ExecuteSQL Class
 class ExecuteSQL : public SQLProcessor, public FlowFileSource {
  public:
-  explicit ExecuteSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
+  explicit ExecuteSQL(const std::string& name, const utils::Identifier& uuid = {});
 
   //! Processor Name
   static const std::string ProcessorName;

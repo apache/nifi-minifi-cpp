@@ -45,7 +45,7 @@ class BaseOPCProcessor : public core::Processor {
   static core::Property KeyPath;
   static core::Property TrustedPath;
 
-  BaseOPCProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
+  BaseOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
   : Processor(name, uuid) {
   }
 

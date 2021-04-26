@@ -92,7 +92,7 @@ const std::string QueryDatabaseTable::TABLENAME_KEY = "tablename";
 const std::string QueryDatabaseTable::MAXVALUE_KEY_PREFIX = "maxvalue.";
 
 // QueryDatabaseTable
-QueryDatabaseTable::QueryDatabaseTable(const std::string& name, utils::Identifier uuid)
+QueryDatabaseTable::QueryDatabaseTable(const std::string& name, const utils::Identifier& uuid)
   : SQLProcessor(name, uuid, logging::LoggerFactory<QueryDatabaseTable>::getLogger()) {
 }
 

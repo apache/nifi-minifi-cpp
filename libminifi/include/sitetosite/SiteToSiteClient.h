@@ -134,7 +134,7 @@ class SiteToSiteClient : public core::Connectable {
 
   // Receive the data packet from the transaction
   // Return false when any error occurs
-  bool receive(const utils::Identifier& transactionID, DataPacket *packet, bool &eof);
+  bool receive(const utils::Identifier &transactionID, DataPacket *packet, bool &eof);
   /**
    * Transfers raw data and attributes  to server
    * @param context process context
@@ -212,19 +212,19 @@ class SiteToSiteClient : public core::Connectable {
   }
 
   // Return -1 when any error occurs
-  virtual int16_t send(const utils::Identifier& transactionID, DataPacket *packet, const std::shared_ptr<core::FlowFile> &flowFile, const std::shared_ptr<core::ProcessSession> &session);
+  virtual int16_t send(const utils::Identifier &transactionID, DataPacket *packet, const std::shared_ptr<core::FlowFile> &flowFile, const std::shared_ptr<core::ProcessSession> &session);
 
  protected:
   // Cancel the transaction
-  virtual void cancel(const utils::Identifier& transactionID);
+  virtual void cancel(const utils::Identifier &transactionID);
   // Complete the transaction
-  virtual bool complete(const utils::Identifier& transactionID);
+  virtual bool complete(const utils::Identifier &transactionID);
   // Error the transaction
-  virtual void error(const utils::Identifier& transactionID);
+  virtual void error(const utils::Identifier &transactionID);
 
-  virtual bool confirm(const utils::Identifier& transactionID);
+  virtual bool confirm(const utils::Identifier &transactionID);
   // deleteTransaction
-  virtual void deleteTransaction(const utils::Identifier& transactionID);
+  virtual void deleteTransaction(const utils::Identifier &transactionID);
 
   virtual void tearDown() = 0;
 

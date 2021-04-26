@@ -46,7 +46,7 @@ namespace sitetosite {
 
 class Peer {
  public:
-  explicit Peer(utils::Identifier &port_id, const std::string &host, uint16_t port, bool secure = false)
+  explicit Peer(const utils::Identifier &port_id, const std::string &host, uint16_t port, bool secure = false)
       : host_(host),
         port_(port),
         secure_(secure) {

@@ -54,7 +54,7 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
 
   static constexpr char const* ProcessorName = "SourceInitiatedSubscriptionListener";
 
-  explicit SourceInitiatedSubscriptionListener(std::string name, utils::Identifier uuid = utils::Identifier());
+  explicit SourceInitiatedSubscriptionListener(const std::string& name, const utils::Identifier& uuid = {});
 
   // Supported Properties
   static core::Property ListenHostname;
