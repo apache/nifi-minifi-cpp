@@ -22,7 +22,7 @@ jobs:
       - id: install_dependencies
         run: |
           brew update
-          brew install ossp-uuid boost flex lua@5.3 ccache sqliteodbc
+          brew install ossp-uuid boost flex lua@5.3 ccache sqliteodbc automake autoconf
       - id: setup_env
         run: |
           echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
@@ -54,7 +54,7 @@ jobs:
       - id: install_dependencies
         run: |
           brew update
-          brew install ossp-uuid boost flex lua@5.3 ccache sqliteodbc
+          brew install ossp-uuid boost flex lua@5.3 ccache sqliteodbc automake autoconf
       - id: setup_env
         run: |
           echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
