@@ -27,6 +27,7 @@
 #include <iostream>
 
 #include "TestBase.h"
+#include "TestUtils.h"
 #include "core/Core.h"
 
 #include "core/FlowFile.h"
@@ -138,10 +139,8 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
   LogTestController::getInstance().setTrace<core::ProcessSession>();
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::HashContent>();
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-  char dir[] = "/tmp/gt.XXXXXX";
-  auto tempdir = testController.createTempDirectory(dir);
+  auto tempdir = minifi::utils::createTempDir(&testController);
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), tempdir);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
@@ -152,9 +151,9 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
   plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm.getName(), "MD5");
   plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::FailOnEmpty.getName(), "true");
 
-  std::stringstream ss1;
-  ss1 << tempdir << utils::file::FileUtils::get_separator() << TEST_FILE;
-  std::string test_file_path = ss1.str();
+  std::stringstream stream_dir;
+  stream_dir << tempdir << utils::file::FileUtils::get_separator() << TEST_FILE;
+  std::string test_file_path = stream_dir.str();
   std::ofstream test_file(test_file_path, std::ios::binary);
 
   plan->runNextProcessor();

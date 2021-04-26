@@ -220,7 +220,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", DateHeader.getName(), DateHeader.getValue());
   }
 
-    date_header_include_ = utils::StringUtils::toBool(dateHeaderStr).value_or(DateHeader.getValue());
+  date_header_include_ = utils::StringUtils::toBool(dateHeaderStr).value_or(DateHeader.getValue());
 
   if (!context->getProperty(PropPutOutputAttributes.getName(), put_attribute_name_)) {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", PropPutOutputAttributes.getName(), PropPutOutputAttributes.getValue());

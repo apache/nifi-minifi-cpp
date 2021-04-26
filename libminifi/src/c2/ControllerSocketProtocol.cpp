@@ -55,7 +55,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
     }
   }
 
-  const bool anyInterface =(configuration_->get("controller.socket.local.any.interface", limitStr) && utils::StringUtils::toBool(limitStr).value_or(false));
+  const bool anyInterface = configuration_->get("controller.socket.local.any.interface", limitStr) && utils::StringUtils::toBool(limitStr).value_or(false);
 
   // if host name isn't defined we will use localhost
   configuration_->get("controller.socket.host", host);

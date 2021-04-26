@@ -86,11 +86,17 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("AbstractMQTTProcessor: PassWord [%s]", passWord_);
   }
   value = "";
-  utils::optional<bool> cleanSession_parsed;
-  if (context->getProperty(CleanSession.getName(), value) && (cleanSession_parsed = org::apache::nifi::minifi::utils::StringUtils::toBool(value))) {
-    cleanSession_ = cleanSession_parsed.value();
+
+  const auto cleanSession_parsed = [&] () -> utils::optional<bool> {
+    std::string property_value;
+    if (!context->getProperty(CleanSession.getName(), value)) return utils::nullopt;
+    return utils::StringUtils::toBool(property_value);
+  }();
+  if ( cleanSession_parsed ) {
+    cleanSession_ = *cleanSession_parsed;
     logger_->log_debug("AbstractMQTTProcessor: CleanSession [%d]", cleanSession_);
   }
+
   value = "";
   if (context->getProperty(KeepLiveInterval.getName(), value) && !value.empty()) {
     core::TimeUnit unit;
@@ -148,7 +154,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     MQTTClient_create(&client_, uri_.c_str(), clientID_.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
   }
   if (client_) {
-    MQTTClient_setCallbacks(client_, reinterpret_cast<void *> (this), connectionLost, msgReceived, msgDelivered);
+    MQTTClient_setCallbacks(client_, this, connectionLost, msgReceived, msgDelivered);
     // call reconnect to bootstrap
     this->reconnect();
   }

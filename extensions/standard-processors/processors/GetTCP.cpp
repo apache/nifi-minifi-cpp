@@ -119,7 +119,6 @@ void GetTCP::initialize() {
 
 void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   std::string value;
-  stay_connected_ = true;
   if (context->getProperty(EndpointList.getName(), value)) {
     endpoints = utils::StringUtils::split(value, ",");
   }
@@ -129,11 +128,11 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
     concurrent_handlers_ = handlers;
   }
 
+  stay_connected_ = true;
   if (context->getProperty(StayConnected.getName(), value)) {
-    stay_connected_ = utils::StringUtils::toBool(value).value_or(false);
-  } else {
-    stay_connected_ = true;
+    stay_connected_ = utils::StringUtils::toBool(value).value_or(true);
   }
+
   int connects = 0;
   if (context->getProperty(ConnectionAttemptLimit.getName(), connects)) {
     connection_attempt_limit_ = connects;

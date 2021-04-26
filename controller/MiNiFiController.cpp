@@ -128,10 +128,9 @@ int main(int argc, char **argv) {
     if ((IsNullOrEmpty(host) && port == -1)) {
       std::cout << "MiNiFi Controller is disabled" << std::endl;
       exit(0);
-    } else {
+    }
     if (result.count("noheaders")) {
       show_headers = false;
-    }
     }
 
     if (result.count("stop") > 0) {
@@ -159,16 +158,18 @@ int main(int argc, char **argv) {
     if (result.count("c") > 0) {
       auto& components = result["c"].as<std::vector<std::string>>();
       for (const auto& connection : components) {
-        auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
+        auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context)
+                                                : stream_factory_->createSocket(host, port);
         if (clearConnection(std::move(socket), connection)) {
           std::cout << "Sent clear command to " << connection << ". Size before clear operation sent: " << std::endl;
-          socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
+          socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context)
+                                             : stream_factory_->createSocket(host, port);
           if (getConnectionSize(std::move(socket), std::cout, connection) < 0)
             std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
         } else {
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
-      }
-      }
+        }
+        }
     }
 
     if (result.count("getsize") > 0) {

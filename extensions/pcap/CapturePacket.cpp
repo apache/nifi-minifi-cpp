@@ -70,7 +70,7 @@ std::string CapturePacket::generate_new_pcap(const std::string &base_path) {
 
 void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* /*dev*/, void* data) {
   // parse the packet
-  PacketMovers* capture_mechanism = reinterpret_cast <PacketMovers*> (data);
+  PacketMovers* capture_mechanism = reinterpret_cast<PacketMovers*>(data);
 
   CapturePacketMechanism *capture;
 

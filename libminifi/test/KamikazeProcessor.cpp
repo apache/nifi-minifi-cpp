@@ -53,7 +53,6 @@ void KamikazeProcessor::initialize() {
 
 void KamikazeProcessor::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   std::string value;
-  _throwInOnTrigger = false;
   context->getProperty(ThrowInOnTrigger.getName(), value);
   _throwInOnTrigger = utils::StringUtils::toBool(value).value_or(false);
 

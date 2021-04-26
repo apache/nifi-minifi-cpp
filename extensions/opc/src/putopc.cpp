@@ -302,8 +302,7 @@ namespace processors {
           case opc::OPCNodeDataType::Boolean: {
             utils::optional<bool> contentstr_parsed = utils::StringUtils::toBool(contentstr);
             if (contentstr_parsed) {
-              bool value = contentstr_parsed.value();
-              sc = connection_->update_node(targetnode, value);
+              sc = connection_->update_node(targetnode, contentstr_parsed.value());
             } else {
               throw opc::OPCException(GENERAL_EXCEPTION, "Content cannot be converted to bool");
             }
@@ -380,8 +379,7 @@ namespace processors {
           case opc::OPCNodeDataType::Boolean: {
             utils::optional<bool> contentstr_parsed = utils::StringUtils::toBool(contentstr);
             if (contentstr_parsed) {
-              bool value = contentstr_parsed.value();
-              sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+              sc = connection_->add_node(parentNodeID_, targetnode, browsename, contentstr_parsed.value(), nodeDataType_, &resultnode);
             } else {
               throw opc::OPCException(GENERAL_EXCEPTION, "Content cannot be converted to bool");
             }

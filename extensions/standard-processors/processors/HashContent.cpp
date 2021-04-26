@@ -65,6 +65,8 @@ void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSession
 
   if (context->getProperty(FailOnEmpty.getName(), value)) {
     failOnEmpty_ = utils::StringUtils::toBool(value).value_or(false);
+  } else {
+    failOnEmpty_ = false;
   }
 
   std::transform(algoName_.begin(), algoName_.end(), algoName_.begin(), ::toupper);
@@ -82,7 +84,7 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
   }
 
   if (failOnEmpty_ && flowFile->getSize() == 0) {
-    logger_->log_trace("Failure as flow file is empty");
+    logger_->log_debug("Failure as flow file is empty");
     session->transfer(flowFile, Failure);
   }
 
