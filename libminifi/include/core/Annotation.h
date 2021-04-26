@@ -26,49 +26,30 @@ namespace nifi {
 namespace minifi {
 namespace core {
 namespace annotation {
-
-template <typename T>
-struct Annotation {
-  const T value_;
-};
-
 namespace input {
-enum class EInputRequirement : uint8_t {
+
   /**
-   * This value is used to indicate that the Processor requires input from other Processors
+   * This structure is used to indicate that the Processor requires input from other Processors
    * in order to run. As a result, the Processor will not be valid if it does not have any
    * incoming connections.
    */
-  INPUT_REQUIRED,
+  struct Required{};
+
   /**
-   * This value is used to indicate that the Processor will consume data from an incoming
+   * This structure is used to indicate that the Processor will consume data from an incoming
    * connection but does not require an incoming connection in order to perform its task.
-   * If the {@link InputRequirement} annotation is not present, this is the default value
-   * that is used.
+   * If no input annotation is present, this is the default value that is used.
    */
-  INPUT_ALLOWED,
+  struct Allowed{};
+
   /**
-   * This value is used to indicate that the Processor is a "Source Processor" and does
+   * This structure is used to indicate that the Processor is a "Source Processor" and does
    * not accept incoming connections. Because the Processor does not pull FlowFiles from
    * an incoming connection, it can be very confusing for users who create incoming connections
-   * to the Processor. As a result, this value can be used in order to clarify that incoming
+   * to the Processor. As a result, this structure can be used in order to clarify that incoming
    * connections will not be used. This prevents the user from even creating such a connection.
    */
-  INPUT_FORBIDDEN
-};
-
-std::string toString(EInputRequirement inputRequirement);
-
-template <EInputRequirement T_Value>
-struct InputRequirementAnnotation : Annotation<EInputRequirement> {
-  InputRequirementAnnotation()
-    : Annotation{T_Value}
-  {}
-};
-
-using Required = InputRequirementAnnotation<EInputRequirement::INPUT_REQUIRED>;
-using Allowed = InputRequirementAnnotation<EInputRequirement::INPUT_ALLOWED>;
-using Forbidden = InputRequirementAnnotation<EInputRequirement::INPUT_FORBIDDEN>;
+  struct Forbidden{};
 
 }  // namespace input
 }  // namespace annotation

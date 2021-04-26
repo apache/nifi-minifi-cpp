@@ -254,7 +254,7 @@ class ComponentManifest : public DeviceInformation {
         if (!group.class_relationships_.empty()) {
           SerializedResponseNode inputReq;
           inputReq.name = "inputRequirement";
-          inputReq.value = toString(group.inputRequirement_);
+          inputReq.value = group.inputRequirement_;
 
           SerializedResponseNode relationships;
           relationships.name = "supportedRelationships";

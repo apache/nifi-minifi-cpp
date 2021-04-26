@@ -59,7 +59,7 @@ class ClassDescription {
   std::map<std::string, core::Property> class_properties_;
   std::vector<core::Relationship> class_relationships_;
   bool dynamic_properties_ = false;
-  core::annotation::input::EInputRequirement inputRequirement_ = core::annotation::input::EInputRequirement::INPUT_ALLOWED;
+  std::string inputRequirement_;
   bool dynamic_relationships_ = false;
   bool is_controller_service_ = false;
 };
@@ -150,7 +150,7 @@ class BuildDescription {
           description.dynamic_properties_ = component->supportsDynamicProperties();
           description.dynamic_relationships_ = component->supportsDynamicRelationships();
           if (is_processor) {
-            description.inputRequirement_ = processor->getInputRequirement();
+            description.inputRequirement_ = processor->getInputRequirementAsString();
             description.class_relationships_ = processor->getSupportedRelationships();
             class_mappings[group].processors_.emplace_back(description);
           } else if (is_controller_service) {

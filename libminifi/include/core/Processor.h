@@ -252,9 +252,9 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 
   std::shared_ptr<Connectable> pickIncomingConnection() override;
 
-  virtual void validateAnnotations() const;
+  void validateAnnotations() const;
 
-  virtual annotation::input::EInputRequirement getInputRequirement() const;
+  std::string getInputRequirementAsString() const;
 
  protected:
   virtual void notifyStop() {
@@ -302,6 +302,8 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   void updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force = false);
 
   static bool partOfCycle(const std::shared_ptr<Connection>& conn);
+
+  const std::type_info& getInputRequirement() const;
 
   // an outgoing connection allows us to reach these nodes
   std::unordered_map<std::shared_ptr<Connection>, std::unordered_set<std::shared_ptr<const Processor>>> reachable_processors_;
