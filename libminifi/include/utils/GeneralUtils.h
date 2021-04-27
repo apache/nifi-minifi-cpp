@@ -62,6 +62,15 @@ struct identity {
 };
 #endif /* < C++20 */
 
+#if __cpp_lib_type_identity >= 201806L
+using std::type_identity;
+#else
+template<typename T>
+struct type_identity {
+  using type = T;
+};
+#endif /* has std::type_identity */
+
 using gsl::owner;
 
 #if __cplusplus < 201402L

@@ -241,8 +241,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
 
   static std::shared_ptr<core::CoreComponentStateManagerProvider> getOrCreateDefaultStateManagerProvider(
       controller::ControllerServiceProvider* controller_service_provider,
-      const std::shared_ptr<minifi::Configure>& configuration,
-      const char* base_path = "") {
+      const std::shared_ptr<minifi::Configure>& configuration) {
     static std::mutex mutex;
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -256,6 +255,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     std::string always_persist, auto_persistence_interval;
     configuration->get(Configure::nifi_state_management_provider_local_always_persist, always_persist);
     configuration->get(Configure::nifi_state_management_provider_local_auto_persistence_interval, auto_persistence_interval);
+    utils::optional<std::string> path = configuration->get(Configure::nifi_state_management_provider_local_path);
 
     /* Function to help creating a provider */
     auto create_provider = [&](
@@ -297,8 +297,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     if (preferredType.empty() || preferredType == "RocksDbPersistableKeyValueStoreService") {
       auto provider = create_provider("RocksDbPersistableKeyValueStoreService",
                                       "org.apache.nifi.minifi.controllers.RocksDbPersistableKeyValueStoreService",
-                                      {{"Directory", utils::file::FileUtils::concat_path(base_path,
-                                                                                         "corecomponentstate")}});
+                                      {{"Directory", path.value_or("corecomponentstate")}});
       if (provider != nullptr) {
         return provider;
       }
@@ -308,7 +307,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     if (preferredType.empty() || preferredType == "UnorderedMapPersistableKeyValueStoreService") {
       auto provider = create_provider("UnorderedMapPersistableKeyValueStoreService",
                                  "org.apache.nifi.minifi.controllers.UnorderedMapPersistableKeyValueStoreService",
-                                 {{"File", utils::file::FileUtils::concat_path(base_path, "corecomponentstate.txt")}});
+                                 {{"File", path.value_or("corecomponentstate.txt")}});
       if (provider != nullptr) {
         return provider;
       }

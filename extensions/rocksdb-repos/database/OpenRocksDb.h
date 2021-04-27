@@ -18,14 +18,11 @@
 
 #pragma once
 
-#include <mutex>
-
-#include "utils/OptionalUtils.h"
+#include <memory>
+#include "utils/gsl.h"
 #include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
 #include "rocksdb/utilities/checkpoint.h"
-#include "logging/Logger.h"
+#include "WriteBatch.h"
 
 namespace org {
 namespace apache {
@@ -33,19 +30,21 @@ namespace nifi {
 namespace minifi {
 namespace internal {
 
-class RocksDatabase;
+class RocksDbInstance;
+struct ColumnHandle;
 
-// Not thread safe
-class OpenRocksDB {
-  friend class RocksDatabase;
+class OpenRocksDb {
+  friend class RocksDbInstance;
 
-  OpenRocksDB(RocksDatabase& db, gsl::not_null<std::shared_ptr<rocksdb::DB>> impl);
+  OpenRocksDb(RocksDbInstance& db, gsl::not_null<std::shared_ptr<rocksdb::DB>> impl, gsl::not_null<std::shared_ptr<ColumnHandle>> column);
 
  public:
-  OpenRocksDB(const OpenRocksDB&) = delete;
-  OpenRocksDB(OpenRocksDB&&) noexcept = default;
-  OpenRocksDB& operator=(const OpenRocksDB&) = delete;
-  OpenRocksDB& operator=(OpenRocksDB&&) = default;
+  OpenRocksDb(const OpenRocksDb&) = delete;
+  OpenRocksDb(OpenRocksDb&&) noexcept = default;
+  OpenRocksDb& operator=(const OpenRocksDb&) = delete;
+  OpenRocksDb& operator=(OpenRocksDb&&) = default;
+
+  WriteBatch createWriteBatch() const noexcept;
 
   rocksdb::Status Put(const rocksdb::WriteOptions& options, const rocksdb::Slice& key, const rocksdb::Slice& value);
 
@@ -53,7 +52,7 @@ class OpenRocksDB {
 
   std::vector<rocksdb::Status> MultiGet(const rocksdb::ReadOptions& options, const std::vector<rocksdb::Slice>& keys, std::vector<std::string>* values);
 
-  rocksdb::Status Write(const rocksdb::WriteOptions& options, rocksdb::WriteBatch* updates);
+  rocksdb::Status Write(const rocksdb::WriteOptions& options, internal::WriteBatch* updates);
 
   rocksdb::Status Delete(const rocksdb::WriteOptions& options, const rocksdb::Slice& key);
 
@@ -70,42 +69,16 @@ class OpenRocksDB {
   rocksdb::DB* get();
 
  private:
-  gsl::not_null<RocksDatabase*> db_;
+  void handleResult(const rocksdb::Status& result);
+  void handleResult(const std::vector<rocksdb::Status>& results);
+
+  gsl::not_null<RocksDbInstance*> db_;
   gsl::not_null<std::shared_ptr<rocksdb::DB>> impl_;
+  gsl::not_null<std::shared_ptr<ColumnHandle>> column_;
 };
 
-class RocksDatabase {
-  friend class OpenRocksDB;
-
- public:
-  enum class Mode {
-    ReadOnly,
-    ReadWrite
-  };
-
-  RocksDatabase(const rocksdb::Options& options, const std::string& name, Mode mode = Mode::ReadWrite);
-
-  utils::optional<OpenRocksDB> open();
-
- private:
-  /*
-   * notify RocksDatabase that the next open should check if they can reopen the database
-   * until a successful reopen no more open is possible
-   */
-  void invalidate();
-
-  const rocksdb::Options open_options_;
-  const std::string db_name_;
-  const Mode mode_;
-
-  std::mutex mtx_;
-  std::shared_ptr<rocksdb::DB> impl_;
-
-  static std::shared_ptr<core::logging::Logger> logger_;
-};
-
-} /* namespace internal */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace internal
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

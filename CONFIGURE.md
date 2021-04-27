@@ -166,6 +166,29 @@ folder. You may specify your own path in place of these defaults.
      nifi.flowfile.repository.directory.default=${MINIFI_HOME}/flowfile_repository
 	 nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
 
+It is also possible to use a single database to store multiple repositories with the `minifidb://` scheme.
+This could help with migration and centralize agent state persistence. In the scheme the final path segment designates the
+column family in the repository, while the preceding path indicates the directory the rocksdb database is
+created into. E.g. in `minifidb:///home/user/minifi/agent_state/flowfile` a directory will be created at
+`/home/user/minifi/agent_state` populated with rocksdb-specific content, and in that repository a logically
+separate "subdatabase" is created under the name `"flowfile"`.
+
+     in minifi.properties
+     nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
+	 nifi.database.content.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/content
+	 nifi.state.manangement.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/processor_states
+
+We should not simultaneously use the same directory with and without the `minifidb://` scheme.
+Moreover the `"default"` name is restricted and should not be used.
+
+
+     in minifi.properties
+     nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
+	 nifi.database.content.repository.directory.default=${MINIFI_HOME}/agent_state
+	 ^ error: using the same database directory without the "minifidb://" scheme
+	 nifi.state.manangement.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/default
+	 ^ error: "default" is restricted
+
 ### Configuring Volatile and NO-OP Repositories
 Each of the repositories can be configured to be volatile ( state kept in memory and flushed
  upon restart ) or persistent. Currently, the flow file and provenance repositories can persist

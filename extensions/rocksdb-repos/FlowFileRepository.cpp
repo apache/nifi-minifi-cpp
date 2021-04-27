@@ -42,7 +42,7 @@ void FlowFileRepository::flush() {
   if (!opendb) {
     return;
   }
-  rocksdb::WriteBatch batch;
+  auto batch = opendb->createWriteBatch();
   rocksdb::ReadOptions options;
 
   std::vector<std::shared_ptr<FlowFile>> purgeList;
@@ -130,14 +130,15 @@ void FlowFileRepository::run() {
 }
 
 void FlowFileRepository::prune_stored_flowfiles() {
-  rocksdb::Options options;
-  options.create_if_missing = true;
-  options.use_direct_io_for_flush_and_compaction = true;
-  options.use_direct_reads = true;
-  minifi::internal::RocksDatabase checkpointDB(options, checkpoint_dir_, minifi::internal::RocksDatabase::Mode::ReadOnly);
-  utils::optional<minifi::internal::OpenRocksDB> opendb;
+  auto set_db_opts = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
+    db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
+    db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
+    db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
+  };
+  auto checkpointDB = minifi::internal::RocksDatabase::create(set_db_opts, {}, checkpoint_dir_, minifi::internal::RocksDbMode::ReadOnly);
+  utils::optional<minifi::internal::OpenRocksDb> opendb;
   if (nullptr != checkpoint_) {
-    opendb = checkpointDB.open();
+    opendb = checkpointDB->open();
     if (!opendb) {
       opendb = db_->open();
     }
@@ -203,7 +204,7 @@ bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> opera
  * Returns True if there is data to interrogate.
  * @return true if our db has data stored.
  */
-bool FlowFileRepository::need_checkpoint(minifi::internal::OpenRocksDB& opendb) {
+bool FlowFileRepository::need_checkpoint(minifi::internal::OpenRocksDb& opendb) {
   auto it = opendb.NewIterator(rocksdb::ReadOptions());
   it->SeekToFirst();
   return it->Valid();

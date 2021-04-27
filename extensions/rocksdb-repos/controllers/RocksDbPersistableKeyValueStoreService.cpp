@@ -58,18 +58,17 @@ void RocksDbPersistableKeyValueStoreService::onEnable() {
   }
 
   db_.reset();
-  rocksdb::Options options;
-  options.create_if_missing = true;
-  options.use_direct_io_for_flush_and_compaction = true;
-  options.use_direct_reads = true;
+  auto set_db_opts = [] (internal::Writable<rocksdb::DBOptions>& db_opts) {
+    db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
+    db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
+    db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
+  };
   // Use the same buffer settings as the FlowFileRepository
-  options.write_buffer_size = 8 << 20;
-  options.max_write_buffer_number = 20;
-  options.min_write_buffer_number_to_merge = 1;
-  if (!always_persist_) {
-    options.manual_wal_flush = true;
-  }
-  db_ = utils::make_unique<minifi::internal::RocksDatabase>(options, directory_);
+  auto set_cf_opts = [] (minifi::internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts) {
+    cf_opts.set(&rocksdb::ColumnFamilyOptions::write_buffer_size, 8ULL << 20U);
+    cf_opts.set<int>(&rocksdb::ColumnFamilyOptions::min_write_buffer_number_to_merge, 1);
+  };
+  db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_);
   if (db_->open()) {
     logger_->log_trace("Successfully opened RocksDB database at %s", directory_.c_str());
   } else {
