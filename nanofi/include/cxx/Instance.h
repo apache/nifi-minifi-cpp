@@ -52,7 +52,6 @@ class ProcessorLink {
  public:
   explicit ProcessorLink(const std::shared_ptr<core::Processor> &processor)
       : processor_(processor) {
-
   }
 
   const std::shared_ptr<core::Processor> &getProcessor() {
@@ -70,7 +69,6 @@ class Instance {
       : no_op_repo_(std::make_shared<minifi::core::Repository>()),
         url_(url),
         configure_(std::make_shared<Configure>()) {
-
     if (repo_class_name == "filesystemrepository") {
         content_repo_ = std::make_shared<minifi::core::repository::FileSystemRepository>();
     } else {

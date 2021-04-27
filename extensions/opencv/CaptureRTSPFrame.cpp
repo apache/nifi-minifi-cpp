@@ -76,7 +76,6 @@ void CaptureRTSPFrame::initialize() {
 }
 
 void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-
   std::string value;
 
   if (context->getProperty(RTSPUsername.getName(), value)) {
@@ -117,12 +116,10 @@ void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSe
   }
 
   rtsp_url_ = rtspURI;
-
 }
 
 void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
                                  const std::shared_ptr<core::ProcessSession> &session) {
-
   std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
   if (!lock.owns_lock()) {
     logger_->log_info("Cannot process due to an unfinished onTrigger");
@@ -172,7 +169,6 @@ void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &co
     logger_->log_error("Unable to read from capture handle on RTSP stream");
     session->transfer(flow_file, Failure);
   }
-
 }
 
 void CaptureRTSPFrame::notifyStop() {

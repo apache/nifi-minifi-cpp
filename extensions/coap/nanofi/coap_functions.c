@@ -80,7 +80,6 @@ int create_session(coap_context_t **ctx, coap_session_t **session, const char *n
     *session = coap_new_client_session(*ctx, 0x00, dst_addr, proto);
     return 0;
   }
-
 }
 
 int create_endpoint_context(coap_context_t **ctx, const char *node, const char *port) {
@@ -180,7 +179,6 @@ void response_handler(struct coap_context_t *ctx, struct coap_session_t *session
         global_ptrs.received_error(receiver, ctx, received->code);
     }
   }
-
 }
 
 int resolve_address(const struct coap_str_const_t *server, struct sockaddr *destination) {

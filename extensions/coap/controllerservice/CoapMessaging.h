@@ -93,14 +93,12 @@ class CoapMessaging {
     ptrs.data_received = receiveMessage;
     ptrs.received_error = receiveError;
     init_coap_api(this, &ptrs);
-
   }
   // connector mutex. mutable since it's used within hasResponse.
   mutable std::mutex connector_mutex_;
   // map of messages based on the context. We only allow a single message per context
   // at any given time.
   std::unordered_map<coap_context_t*, CoapResponse> messages_;
-
 };
 
 } /* namespace controllers */

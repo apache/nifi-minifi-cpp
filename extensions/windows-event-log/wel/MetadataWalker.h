@@ -97,7 +97,6 @@ class MetadataWalker : public pugi::xml_tree_walker {
   std::map<std::string, std::string> metadata_;
   std::map<std::string, std::string> fields_values_;
   std::map<std::string, std::string> replaced_identifiers_;
-
 };
 
 } /* namespace wel */

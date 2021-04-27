@@ -113,9 +113,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
         logger_->log_error("Read error");
         return;
       } else {
-
         if (get_gps_status(gpsdata) > 0) {
-
           if (gpsdata->fix.longitude != gpsdata->fix.longitude || gpsdata->fix.altitude != gpsdata->fix.altitude) {
             logger_->log_info("No GPS fix.");
             continue;
@@ -155,7 +153,6 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
         }
       }
     }
-
   } catch (std::exception &exception) {
     logger_->log_error("GetGPS Caught Exception %s", exception.what());
     throw;

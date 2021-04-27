@@ -291,7 +291,6 @@ class JVMLoader {
     auto field = env->GetFieldID(classref, fieldStr.c_str(), arg.c_str());
     auto fieldName = fieldStr + arg;
     getClassMapping().putField(name, fieldName, field);
-
   }
 
  protected:
@@ -377,7 +376,6 @@ class JVMLoader {
       store_error();
       if (EnumProcessModules(current_process_id, allModules,
               sizeof(allModules), &cbNeeded) != 0) {
-
         for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++) {
           TCHAR szModName[MAX_PATH];
 
@@ -410,7 +408,6 @@ class JVMLoader {
     SetErrorMode(uMode);
 
     return (void *)object;
-
   }
 
   int dlclose(void *handle) {

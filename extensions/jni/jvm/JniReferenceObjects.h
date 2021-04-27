@@ -47,7 +47,6 @@ class JniFlowFile : public core::WeakReference {
         ff_object(ff),
         ref_(ref),
         servicer_(servicer) {
-
   }
 
   virtual ~JniFlowFile() = default;
@@ -82,7 +81,6 @@ class JniFlowFile : public core::WeakReference {
   std::shared_ptr<core::FlowFile> ref_;
 
   std::shared_ptr<JavaServicer> servicer_;
-
 };
 
 /**
@@ -99,7 +97,6 @@ class JniByteOutStream : public minifi::OutputStreamCallback {
   JniByteOutStream(jbyte *bytes, size_t length)
       : bytes_(bytes),
         length_(length) {
-
   }
 
   virtual ~JniByteOutStream() = default;
@@ -156,7 +153,6 @@ class JniByteInputStream : public minifi::InputStreamCallback {
       writtenOffset += actual;
 
       remaining -= actual;
-
     } while (remaining > 0);
 
     return read;
@@ -179,7 +175,6 @@ class JniInputStream : public core::WeakReference {
         in_instance_(in_instance),
         jbi_(std::move(jbi)),
         servicer_(servicer) {
-
   }
 
   void remove() override {
@@ -189,7 +184,6 @@ class JniInputStream : public core::WeakReference {
       removed_ = true;
       jbi_ = nullptr;
     }
-
   }
 
   int64_t read(char &arr) {
@@ -237,7 +231,6 @@ class JniSession : public core::WeakReference {
       servicer_->attach()->DeleteGlobalRef(session_instance_);
       removed_ = true;
     }
-
   }
 
   std::shared_ptr<core::ProcessSession> &getSession() {
@@ -358,7 +351,6 @@ class JniSessionFactory : public core::WeakReference {
   std::vector<std::shared_ptr<JniSession>> sessions_;
   // we own the java object
   jobject java_object_;
-
 };
 
 

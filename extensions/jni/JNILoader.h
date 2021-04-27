@@ -70,7 +70,6 @@ class JNIFactory : public core::ObjectFactory {
   static minifi::jni::JVMLoader jvm;
 
   static bool added;
-
 }
 ;
 

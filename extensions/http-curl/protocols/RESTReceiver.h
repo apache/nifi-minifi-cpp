@@ -55,7 +55,6 @@ class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
  protected:
 
   class ListeningProtocol : public CivetHandler {
-
    public:
     ListeningProtocol() = default;
 
@@ -82,7 +81,6 @@ class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
    protected:
     std::mutex reponse_mutex_;
     std::string resp_;
-
   };
 
   std::unique_ptr<CivetServer> start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler, std::string &ca_cert);

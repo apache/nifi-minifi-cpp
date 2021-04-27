@@ -42,7 +42,6 @@ namespace jni {
  *
  */
 class JavaClass {
-
  public:
 
   JavaClass()
@@ -104,14 +103,12 @@ class JavaClass {
   void registerMethods(JNIEnv *env, JNINativeMethod *methods, size_t size) {
     env->RegisterNatives(class_ref_, methods, size);
     ThrowIf(env);
-
   }
 
   void registerMethods(JNIEnv *env, JavaSignatures &signatures) {
     auto methods = signatures.getSignatures();
     env->RegisterNatives(class_ref_, methods, signatures.getSize());
     ThrowIf(env);
-
   }
 
   template<typename ... Args>

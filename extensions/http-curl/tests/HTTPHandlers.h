@@ -85,7 +85,6 @@ class PeerResponder : public ServerAwareHandler {
   }
 
   bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
-
 #ifdef WIN32
     std::string hostname = org::apache::nifi::minifi::io::Socket::getMyHostName();
 #else
@@ -136,7 +135,6 @@ class TransactionResponder : public ServerAwareHandler {
         input_port(input_port),
         port_id(std::move(port_id)),
         flow_files_feed_(nullptr) {
-
     if (input_port) {
       transaction_id_str = "fe4a3a42-53b6-4af1-a80d-6fdfe60de96";
       transaction_id_str += std::to_string(transaction_id.load());
@@ -263,7 +261,6 @@ class FlowFileResponder : public ServerAwareHandler {
   }
 
   bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
-
     if (flow_files_feed_->size_approx() > 0) {
       std::shared_ptr<FlowObj> flowobj;
       std::vector<std::shared_ptr<FlowObj>> flows;
@@ -296,7 +293,6 @@ class FlowFileResponder : public ServerAwareHandler {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nConnection: "
                 "close\r\nContent-Length: 0\r\n");
       mg_printf(conn, "Content-Type: text/plain\r\n\r\n");
-
     }
     return true;
   }
@@ -401,7 +397,6 @@ class HeartbeatHandler : public ServerAwareHandler {
       assert(bundle.HasMember("artifact"));
       std::string str = bundle["artifact"].GetString();
       if (str == "minifi-standard-processors") {
-
         std::vector<std::string> classes;
         for (auto &proc : bundle["componentManifest"]["processors"].GetArray()) {
           classes.push_back(proc["type"].GetString());
@@ -412,7 +407,6 @@ class HeartbeatHandler : public ServerAwareHandler {
           assert(std::find(classes.begin(), classes.end(), proc.class_name_) != std::end(classes));
           found = true;
         }
-
       }
     }
     assert(found);

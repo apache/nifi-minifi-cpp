@@ -52,7 +52,6 @@ void UnfocusArchiveEntry::initialize() {
 }
 
 void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-
   auto flowFile = session->get();
 
   if (!flowFile) {

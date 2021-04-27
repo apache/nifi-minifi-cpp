@@ -117,7 +117,6 @@ namespace {
 Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
                const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
                const std::vector<std::vector<char>>& trustBuffers) {
-
   client_ = UA_Client_new();
   if (certBuffer.empty()) {
     UA_ClientConfig_setDefault(UA_Client_getConfig(client_));

@@ -222,7 +222,6 @@ typedef struct {
 
 // Transaction Class
 typedef struct {
-
   // Number of current transfers
   int current_transfers_;
   // number of total seen transfers

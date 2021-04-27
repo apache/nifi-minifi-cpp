@@ -109,7 +109,6 @@ TEST_CASE("Test string tokenizer only delimiter character string", "[stringToken
  */
 
 TEST_CASE("Test string tokenizer for a delimited string less than 4096 bytes", "[testDelimitedStringTokenizer]") {
-
     std::vector<std::string> slist = {"this", "is a", "delimited", "string", ""};
     std::string delimitedString = join_strings(slist, "-");
     int len = strlen(delimitedString.c_str());
@@ -180,7 +179,6 @@ TEST_CASE("Test string tokenizer for string starting and ending with delimited c
  */
 
 TEST_CASE("Simple log aggregator test", "[testLogAggregator]") {
-
     const char * content = "hello world";
     FileManager fm("test.txt");
     fm.Write(content);
@@ -257,7 +255,6 @@ TEST_CASE("Test tail file with less than 4096 delimited chars", "[testLogAggrega
 // Although there is no delimiter within the string that is at least 4096 bytes long,
 // tail_file still creates a flow file for the first 4096 bytes.
 TEST_CASE("Test tail file having 4096 bytes without delimiter", "[testLogAggregateFile4096Chars]") {
-
     FileManager fm("test.txt");
     const std::string s = fm.WriteNChars(4096, 'a');
     const std::string filePath = fm.getFilePath();
@@ -274,7 +271,6 @@ TEST_CASE("Test tail file having 4096 bytes without delimiter", "[testLogAggrega
 // tail_file creates a flow file for each subsequent 4096 byte chunk. It leaves the last chunk
 // if it is smaller than 4096 bytes and not delimited
 TEST_CASE("Test tail file having more than 4096 bytes without delimiter", "[testLogAggregarteFileMoreThan4096Chars]") {
-
     FileManager fm("test.txt");
     const std::string s1 = fm.WriteNChars(4096, 'a');
     const std::string s2 = fm.WriteNChars(4096, 'b');
@@ -298,7 +294,6 @@ TEST_CASE("Test tail file having more than 4096 bytes without delimiter", "[test
 }
 
 TEST_CASE("Test tail file having more than 4096 bytes with delimiter", "[testLogAggregateWithDelimitedString]") {
-
     FileManager fm("test.txt");
     const std::string s1 = fm.WriteNChars(4096, 'a');
     const std::string d1 = fm.WriteNChars(2, ';');
@@ -321,7 +316,6 @@ TEST_CASE("Test tail file having more than 4096 bytes with delimiter", "[testLog
 }
 
 TEST_CASE("Test tail file having more than 4096 bytes with delimiter and second chunk less than 4096", "[testLogAggregateDelimited]") {
-
     FileManager fm("test.txt");
     const std::string s1 = fm.WriteNChars(4096, 'a');
     const std::string d1 = fm.WriteNChars(2, ';');
@@ -345,7 +339,6 @@ TEST_CASE("Test tail file having more than 4096 bytes with delimiter and second 
 }
 
 TEST_CASE("Test tail file having more than 4096 bytes with delimiter and second chunk more than 4096", "[testLogAggregateDelimited]") {
-
     FileManager fm("test.txt");
     const std::string s1 = fm.WriteNChars(4096, 'a');
     const std::string d1 = fm.WriteNChars(2, ';');

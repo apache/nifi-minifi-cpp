@@ -86,7 +86,6 @@ class CallbackProcessor : public core::Processor {
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_{ logging::LoggerFactory<CallbackProcessor>::getLogger() };
-
 };
 
 REGISTER_RESOURCE(CallbackProcessor, "");

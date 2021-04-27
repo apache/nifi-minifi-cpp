@@ -46,7 +46,6 @@ int main(int argc, char **argv) {
       generateC2Docs(result["inputc2docs"].as<std::string>(),result["outputc2docs"].as<std::string>());
       std::cout << "Generated docs at " << result["outputc2docs"].as<std::string>() << std::endl;
     }
-
   }catch (const std::exception &exc) {
       // catch anything thrown within try block that derives from std::exception
       std::cerr << exc.what() << std::endl;

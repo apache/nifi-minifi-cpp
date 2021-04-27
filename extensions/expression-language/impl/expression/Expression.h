@@ -57,7 +57,6 @@ struct Parameters {
   Parameters(std::shared_ptr<core::FlowFile> ff = nullptr) {
     flow_file = ff;
   }
-
 };
 
 class Expression;

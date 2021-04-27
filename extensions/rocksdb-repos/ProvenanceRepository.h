@@ -39,7 +39,6 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
  public:
   ProvenanceRepository(const std::string& name, const utils::Identifier& /*uuid*/)
       : ProvenanceRepository(name){
-
   }
   // Constructor
   /*!
@@ -169,7 +168,6 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     size_t requested_batch = max_size;
     max_size = 0;
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
-
       if (max_size >= requested_batch)
         break;
       std::shared_ptr<core::SerializableComponent> eventRead = lambda();

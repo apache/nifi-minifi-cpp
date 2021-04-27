@@ -32,7 +32,6 @@ enum {
 typedef int transmission_stop(void *);
 
 uint8_t transmit_to_nifi(nifi_instance *instance, flow *flow, transmission_stop *stop_callback) {
-
   flow_file_record *record = 0x00;
   do {
     record = get_next_flow_file(instance, flow);

@@ -74,7 +74,6 @@ class RocksDBFactory : public core::ObjectFactory {
   }
 
   static bool added;
-
 };
 
 extern "C" {

@@ -40,7 +40,6 @@ namespace jni {
  * bundles and MiNiFi C++ bundles.
  */
 class JniBundle {
-
  public:
 
   explicit JniBundle(struct BundleDetails details)
@@ -74,7 +73,6 @@ class JniBundle {
  private:
   std::vector<ClassDescription> descriptions_;
   struct BundleDetails details_;
-
 };
 
 } /* namespace jni */

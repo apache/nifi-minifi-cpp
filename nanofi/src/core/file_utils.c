@@ -62,7 +62,6 @@ char * concat_path(const char * parent, const char * child) {
 }
 
 void remove_directory(const char * dir_path) {
-
     if (!is_directory(dir_path)) {
         if (unlink(dir_path) == -1) {
             printf("Could not remove file %s\n", dir_path);

@@ -64,7 +64,6 @@ class ReflexiveSession : public ProcessSession{
   //
   // Get the FlowFile from the highest priority queue
   std::shared_ptr<core::FlowFile> ff;
-
 };
 
 } /* namespace core */

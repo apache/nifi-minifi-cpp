@@ -62,7 +62,6 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
   int read(uint8_t *value, int len) override {
     return server_responses_.read(value, len);
   }
-
 };
 
 #endif /* LIBMINIFI_TEST_UNIT_SITE2SITE_HELPER_H_ */

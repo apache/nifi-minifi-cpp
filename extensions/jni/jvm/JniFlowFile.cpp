@@ -39,14 +39,12 @@ extern "C" {
 #endif
 
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getId(JNIEnv *env, jobject obj) {
-
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jlong id = ff->getId();
   return id;
-
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(JNIEnv *env, jobject obj) {
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
@@ -121,7 +119,6 @@ JNIEXPORT jstring JNICALL  Java_org_apache_nifi_processor_JniFlowFile_getUUIDStr
 }
 
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttributes(JNIEnv *env, jobject obj) {
-
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();

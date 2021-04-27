@@ -49,7 +49,6 @@ CoapEndpoint* create_endpoint(CoapServerContext * const server, const char * con
     coap_delete_str_const(path);
   }
   return endpoint;
-
 }
 
 int8_t add_endpoint(CoapEndpoint * const endpoint, uint8_t method, coap_method_handler_t handler) {

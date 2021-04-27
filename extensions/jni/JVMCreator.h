@@ -59,7 +59,6 @@ class JVMCreator : public minifi::core::CoreComponent {
       logger_->log_debug("Adding path %s", path);
       minifi::utils::file::FileUtils::addFilesMatchingExtension(logger_, path, ".jar", classpaths_);
     }
-
   }
 
   void configure(const std::shared_ptr<Configure> &configuration) override {

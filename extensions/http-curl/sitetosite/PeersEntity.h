@@ -114,7 +114,6 @@ class PeersEntity {
       logger->log_debug("General exception occurred");
       return false;
     }
-
   }
 };
 

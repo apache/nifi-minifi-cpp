@@ -63,7 +63,6 @@ void custom_processor_logic(processor_session * ps, processor_context * ctx) {
 }
 
 int main(int argc, char **argv) {
-
   if (argc < 2) {
     printf("Error: must run ./hash_file <file>\n");
     exit(1);

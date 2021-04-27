@@ -65,7 +65,6 @@ void ConvertHeartBeat::onTrigger(const std::shared_ptr<core::ProcessContext> &co
   if (!received_heartbeat) {
     context->yield();
   }
-
 }
 
 } /* namespace processors */

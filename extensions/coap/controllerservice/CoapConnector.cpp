@@ -69,7 +69,6 @@ void CoapConnectorService::onEnable() {
     if (configuration_->get("nifi.c2.agent.coap.host", host_) && configuration_->get("nifi.c2.agent.coap.port", port_str)) {
       core::Property::StringToInt(port_str, port_);
     }
-
   }
 }
 

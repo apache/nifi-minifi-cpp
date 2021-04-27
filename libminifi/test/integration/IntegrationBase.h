@@ -49,7 +49,6 @@ class IntegrationBase {
   virtual void testSetup() = 0;
 
   virtual void shutdownBeforeFlowController() {
-
   }
 
   const std::shared_ptr<minifi::Configure>& getConfiguration() const {
@@ -70,15 +69,12 @@ class IntegrationBase {
   }
 
   virtual void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> /*pg*/) {
-
   }
 
   virtual void configureFullHeartbeat() {
-
   }
 
   virtual void updateProperties(std::shared_ptr<minifi::FlowController> /*fc*/) {
-
   }
 
   void configureSecurity();

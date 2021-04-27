@@ -106,7 +106,6 @@ class CoapConnectorService : public core::controller::ControllerService {
   unsigned int port_{ 0 };
 
   std::shared_ptr<logging::Logger> logger_{ logging::LoggerFactory<CoapConnectorService>::getLogger() };
-
 };
 
 } /* namespace controllers */

@@ -30,12 +30,10 @@ class MockControllerService : public core::controller::ControllerService {
  public:
   explicit MockControllerService(const std::string &name, const utils::Identifier &uuid)
       : ControllerService(name, uuid) {
-
   }
 
   explicit MockControllerService(const std::string &name)
       : ControllerService(name) {
-
   }
   MockControllerService() = default;
 
@@ -55,7 +53,6 @@ class MockControllerService : public core::controller::ControllerService {
   }
 
   void yield() {
-
   }
 
   bool isRunning() {
@@ -89,16 +86,13 @@ class MockProcessor : public core::Processor {
     std::set<core::Property> properties;
     properties.insert(property);
     setSupportedProperties(properties);
-
   }
 
   // OnTrigger method, implemented by NiFi Processor Designer
   void onTrigger(core::ProcessContext *context, core::ProcessSession* /*session*/) override {
-
     std::string linked_service = "";
     getProperty("linkedService", linked_service);
     if (!IsNullOrEmpty(linked_service)) {
-
       std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(linked_service);
       std::lock_guard<std::mutex> lock(control_mutex);
       if (!disabled.load()) {
@@ -111,14 +105,12 @@ class MockProcessor : public core::Processor {
 
       // verify we have access to the controller service
       // and verify that we can execute it.
-
     }
   }
 
   bool isYield() override {
     return false;
   }
-
 };
 
 #endif /* LIBMINIFI_TEST_UNIT_MOCKCLASSES_H_ */

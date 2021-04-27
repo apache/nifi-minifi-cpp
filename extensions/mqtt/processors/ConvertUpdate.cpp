@@ -38,7 +38,6 @@ void ConvertUpdate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   while (mqtt_service_->get(100, listening_topic, update)) {
     // first we have the input topic string followed by the update URI
     if (update.size() > 0) {
-
       io::BufferStream stream(update.data(), update.size());
 
       std::string returnTopic, url;
@@ -83,7 +82,6 @@ void ConvertUpdate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   if (!received_update) {
     context->yield();
   }
-
 }
 
 void ConvertUpdate::initialize() {

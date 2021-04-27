@@ -54,7 +54,6 @@ std::string AgentDocs::extractClassName(const std::string &processor) const {
 void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
   std::map<std::string, ClassDescription> processorSet;
   for (const auto &group : minifi::AgentBuild::getExtensions()) {
-
     struct Components descriptions = BuildDescription::getClassDescriptions(group);
     for (const auto &processorName : descriptions.processors_) {
       processorSet.insert(std::make_pair(extractClassName(processorName.class_name_), processorName));
@@ -120,7 +119,6 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
     }
 
     outfile << std::endl;
-
   }
 
   std::map<std::string,std::string> fileList;

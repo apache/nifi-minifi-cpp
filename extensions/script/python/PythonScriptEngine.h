@@ -40,7 +40,6 @@ namespace python {
 namespace py = pybind11;
 
 struct Interpreter {
-
   Interpreter()
       : guard_(false) {
   }

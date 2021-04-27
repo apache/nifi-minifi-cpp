@@ -424,7 +424,6 @@ int64_t GetUSBCamera::PNGWriteCallback::process(const std::shared_ptr<io::BaseSt
   }
 
   try {
-
     png_set_write_fn(png, this, [](png_structp out_png,
                                    png_bytep out_data,
                                    png_size_t num_bytes) {

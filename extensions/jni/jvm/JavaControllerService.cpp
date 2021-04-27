@@ -106,7 +106,6 @@ void JavaControllerService::onEnable() {
   narClassLoaderClazz = loadClass("org/apache/nifi/processor/JniClassLoader");
 
   nar_loader_ = std::unique_ptr<NarClassLoader>(new NarClassLoader(shared_from_this(), narClassLoaderClazz, nardir, narscratch, nardocs));
-
 }
 
 } /* namespace controllers */

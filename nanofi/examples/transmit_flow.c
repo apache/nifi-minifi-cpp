@@ -67,7 +67,6 @@ void transfer_file_or_directory(nifi_instance *instance, char *file_or_dir) {
  * This is an example of the C API that transmits a flow file to a remote instance.
  */
 int main(int argc, char **argv) {
-
   if (argc < 4) {
     printf("Error: must run ./transmit_flow <instance> <remote port> <file or directory>\n");
     exit(1);

@@ -157,7 +157,6 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
   java_servicer_->setReference<minifi::jni::JniProcessContext>(env, context_instance_, &jpc);
 
   try {
-
     for (const auto &onScheduledName : onScheduledNames) {
       current_processor_class.callVoidMethod(env, clazzInstance, onScheduledName.first.c_str(), onScheduledName.second, context_instance_);
     }
@@ -184,7 +183,6 @@ void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>
   if (ClassRegistrar::getRegistrar().registerClasses(env, java_servicer_, "org/apache/nifi/processor/JniFlowFile", getFlowFileSignatures())) {
     static auto ffc = java_servicer_->loadClass("org/apache/nifi/processor/JniFlowFile");
     java_servicer_->putNativeFunctionMapping<JniFlowFile>(env, ffc);
-
   }
   if (ClassRegistrar::getRegistrar().registerClasses(env, java_servicer_, "org/apache/nifi/processor/JniInputStream", getInputStreamSignatures())) {
     static auto jin = java_servicer_->loadClass("org/apache/nifi/processor/JniInputStream");

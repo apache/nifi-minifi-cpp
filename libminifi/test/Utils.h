@@ -61,5 +61,4 @@ void verifyJSON(const std::string& actual_str, const std::string& expected_str, 
   } else {
     matchJSON(actual, expected);
   }
-
 }

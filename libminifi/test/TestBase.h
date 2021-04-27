@@ -132,7 +132,6 @@ class LogTestController {
         setLevel(name, level);
       }
     }
-
   }
 
   bool contains(const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3), std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) {
@@ -211,7 +210,6 @@ class LogTestController {
       config->initialize(my_properties_);
       logger_ = config->getLogger(core::getClassName<LogTestController>());
     }
-
   }
 
   void setLevel(const std::string name, spdlog::level::level_enum level);
@@ -411,9 +409,7 @@ class TestController {
 
   void runSession(std::shared_ptr<TestPlan> &plan, bool runToCompletion = true, std::function<void(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&)> verify =
                       nullptr) {
-
     while (plan->runNextProcessor(verify) && runToCompletion) {
-
     }
   }
 

@@ -86,7 +86,6 @@ class MQTTC2Protocol : public C2Protocol {
   // mqtt controller serviec name.
   std::string controller_service_name_;
 
-
 };
 } /* namespace c2 */
 } /* namespace minifi */

@@ -106,7 +106,6 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(TransferDir
 
 int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message) {
   if (current_code == FINISH_TRANSACTION) {
-
     if (transaction->getDirection() == SEND) {
       auto stream = dynamic_cast<io::HttpStream*>(peer_->getStream());
       stream->close();
@@ -124,7 +123,6 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
     }
   } else if (transaction->getDirection() == RECEIVE) {
     if (transaction->getState() == TRANSACTION_STARTED || transaction->getState() == DATA_EXCHANGED) {
-
       if (current_code == CONFIRM_TRANSACTION && transaction->getState() == DATA_EXCHANGED) {
         auto stream = dynamic_cast<io::HttpStream*>(peer_->getStream());
         if (!stream->isFinished()) {
@@ -166,7 +164,6 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
     return 1;
   }
   return SiteToSiteClient::readResponse(transaction, code, message);
-
 }
 // write respond
 int HttpSiteToSiteClient::writeResponse(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message) {
@@ -223,14 +220,12 @@ bool HttpSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCo
 }
 
 void HttpSiteToSiteClient::tearDown() {
-
   if (peer_state_ >= ESTABLISHED) {
     logger_->log_debug("Site2Site Protocol tearDown");
   }
   known_transactions_.clear();
   peer_->Close();
   peer_state_ = IDLE;
-
 }
 
 void HttpSiteToSiteClient::closeTransaction(const utils::Identifier &transactionID) {

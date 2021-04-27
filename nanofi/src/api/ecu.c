@@ -22,7 +22,6 @@ processor_params * procparams = NULL;
 volatile sig_atomic_t stopped = 0;
 
 void free_proc_params(const char * uuid) {
-
     struct processor_params * pp = NULL;
     HASH_FIND_STR(procparams, uuid, pp);
     if (pp) {

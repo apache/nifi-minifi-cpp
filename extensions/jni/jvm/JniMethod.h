@@ -36,7 +36,6 @@ namespace jni {
  * to contain the method signatures in internal objects.
  */
 class JavaMethodSignature {
-
  public:
   JavaMethodSignature(const JavaMethodSignature &other) = delete;
   JavaMethodSignature(JavaMethodSignature &&other) = default;

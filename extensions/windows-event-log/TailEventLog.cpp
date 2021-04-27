@@ -68,11 +68,9 @@ void TailEventLog::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
   log_handle_ = OpenEventLog(NULL, log_source_.c_str());
 
   logger_->log_trace("TailEventLog configured to tail %s",log_source_);
-
 }
 
 void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  
   if (log_handle_ == nullptr) {
     logger_->log_debug("Handle could not be created for %s", log_source_);
   }
@@ -95,7 +93,6 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       context->yield();
     }
     while (bytes_to_read > 0) {
-
       auto flowFile = session->create();
       if (flowFile == nullptr)
         return;
@@ -131,7 +128,6 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     logger_->log_trace("Yielding due to error");
     context->yield();
   }
-
 }
 } /* namespace processors */
 } /* namespace minifi */

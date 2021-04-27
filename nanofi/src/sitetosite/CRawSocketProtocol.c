@@ -548,7 +548,6 @@ int complete(struct CRawSiteToSiteClient * client, const char * transactionID) {
 }
 
 int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
-
   if (client->_peer_state != READY) {
     bootstrap(client);
   }
@@ -690,7 +689,6 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 }
 
   int16_t sendPacket(struct CRawSiteToSiteClient * client, const char * transactionID, CDataPacket *packet, flow_file_record * ff) {
-
     if (client->_peer_state != READY) {
       bootstrap(client);
     }

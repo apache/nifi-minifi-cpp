@@ -74,7 +74,6 @@ void MQTTControllerService::onEnable() {
       // call reconnect to bootstrap
       this->reconnect();
     }
-
   }
 }
 

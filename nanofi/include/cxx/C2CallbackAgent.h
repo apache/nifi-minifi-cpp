@@ -44,7 +44,6 @@ typedef int c2_ag_stop_callback(char *);
 typedef int c2_ag_start_callback(char *);
 
 class C2CallbackAgent : public c2::C2Agent {
-
  public:
 
   explicit C2CallbackAgent(
@@ -71,7 +70,6 @@ class C2CallbackAgent : public c2::C2Agent {
 
  private:
     std::shared_ptr<logging::Logger> logger_;
-
 };
 
 } /* namesapce c2 */

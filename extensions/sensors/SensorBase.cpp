@@ -59,7 +59,6 @@ void SensorBase::onSchedule(const std::shared_ptr<core::ProcessContext>& /*conte
   } else {
     throw std::runtime_error("RTIMU could not be initialized");
   }
-
 }
 
 SensorBase::~SensorBase() = default;

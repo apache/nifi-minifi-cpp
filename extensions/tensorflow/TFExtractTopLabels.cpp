@@ -58,7 +58,6 @@ void TFExtractTopLabels::onTrigger(const std::shared_ptr<core::ProcessContext> &
   }
 
   try {
-
     // Read labels
     std::string tf_type;
     flow_file->getAttribute("tf.type", tf_type);
@@ -111,7 +110,6 @@ void TFExtractTopLabels::onTrigger(const std::shared_ptr<core::ProcessContext> &
     }
 
     session->transfer(flow_file, Success);
-
   } catch (std::exception &exception) {
     logger_->log_error("Caught Exception %s", exception.what());
     session->transfer(flow_file, Failure);

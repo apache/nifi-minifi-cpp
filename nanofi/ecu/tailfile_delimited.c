@@ -27,7 +27,6 @@
 #include <stdio.h>
 
 int main(int argc, char** argv) {
-
     if (argc < 7) {
         printf("Error: must run ./tailfile_delimited <file> <interval> <delimiter> <hostname> <tcp port number> <nifi port uuid>\n");
         exit(1);
