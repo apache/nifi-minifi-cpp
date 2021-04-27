@@ -41,7 +41,7 @@ namespace processors {
 
 class GetUSBCamera : public core::Processor {
  public:
-  explicit GetUSBCamera(const std::string &name, const utils::Identifier& uuid = {})
+  explicit GetUSBCamera(const std::string &name, const utils::Identifier &uuid = {})
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<GetUSBCamera>::getLogger()) {
     png_write_mtx_ = std::make_shared<std::mutex>();

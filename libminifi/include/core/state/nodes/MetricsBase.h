@@ -49,7 +49,7 @@ class ResponseNode : public core::Connectable {
         is_array_(false) {
   }
 
-  ResponseNode(const std::string& name, const utils::Identifier &uuid)
+  ResponseNode(const std::string& name, const utils::Identifier& uuid)
       : core::Connectable(name, uuid),
         is_array_(false) {
   }
@@ -87,7 +87,7 @@ class ResponseNode : public core::Connectable {
  */
 class DeviceInformation : public ResponseNode {
  public:
-  DeviceInformation(const std::string& name, const utils::Identifier & uuid)
+  DeviceInformation(const std::string& name, const utils::Identifier& uuid)
       : ResponseNode(name, uuid) {
   }
   DeviceInformation(const std::string& name) // NOLINT

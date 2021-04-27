@@ -46,7 +46,7 @@ namespace controllers {
  */
 class JavaControllerService : public core::controller::ControllerService, public std::enable_shared_from_this<JavaControllerService>, public JavaServicer {
  public:
-  explicit JavaControllerService(const std::string &name, const utils::Identifier& uuid = {})
+  explicit JavaControllerService(const std::string &name, const utils::Identifier &uuid = {})
       : ControllerService(name, uuid),
         loader(nullptr),
         logger_(logging::LoggerFactory<JavaControllerService>::getLogger()) {

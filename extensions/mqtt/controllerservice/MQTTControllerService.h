@@ -57,7 +57,7 @@ class Message {
 
   Message &operator=(const Message &other) = default;
   Message &operator=(Message &&other) = default;
-  
+
   std::string topic_;
   std::vector<uint8_t> data_;
 };
@@ -68,7 +68,7 @@ class Message {
  */
 class MQTTControllerService : public core::controller::ControllerService {
  public:
-  explicit MQTTControllerService(const std::string &name, const utils::Identifier& uuid = {})
+  explicit MQTTControllerService(const std::string &name, const utils::Identifier &uuid = {})
       : ControllerService(name, uuid),
         initialized_(false),
         client_(nullptr),

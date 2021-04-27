@@ -44,7 +44,7 @@ namespace controllers {
  */
 class CoapConnectorService : public core::controller::ControllerService {
  public:
-  explicit CoapConnectorService(const std::string &name, const utils::Identifier& uuid = {})
+  explicit CoapConnectorService(const std::string &name, const utils::Identifier &uuid = {})
       : ControllerService(name, uuid) {
     initialize();
   }

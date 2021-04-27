@@ -181,7 +181,7 @@ class DefautObjectFactory : public ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<CoreComponent> create(const std::string &name, const utils::Identifier & uuid) {
+  virtual std::shared_ptr<CoreComponent> create(const std::string &name, const utils::Identifier &uuid) {
     std::shared_ptr<T> ptr = std::make_shared<T>(name, uuid);
     return std::static_pointer_cast<CoreComponent>(ptr);
   }

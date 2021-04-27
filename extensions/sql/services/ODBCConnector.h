@@ -90,7 +90,7 @@ class ODBCConnection : public sql::Connection {
  */
 class ODBCService : public DatabaseService {
  public:
-  explicit ODBCService(const std::string &name, const utils::Identifier& uuid = {})
+  explicit ODBCService(const std::string &name, const utils::Identifier &uuid = {})
     : DatabaseService(name, uuid),
       logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
     initialize();

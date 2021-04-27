@@ -40,7 +40,7 @@ namespace sitetosite {
 class PeersEntity {
  public:
 
-  static bool parse(const std::shared_ptr<logging::Logger> &logger, const std::string &entity, const utils::Identifier& id, std::vector<PeerStatus> &peer_statuses) {
+  static bool parse(const std::shared_ptr<logging::Logger> &logger, const std::string &entity, const utils::Identifier &id, std::vector<PeerStatus> &peer_statuses) {
     try {
       rapidjson::Document root;
       rapidjson::ParseResult ok = root.Parse(entity.c_str());

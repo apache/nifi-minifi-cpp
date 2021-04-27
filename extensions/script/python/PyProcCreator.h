@@ -46,7 +46,7 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
   /**
    * Create a shared pointer to a new processor.
    */
-  std::shared_ptr<core::CoreComponent> create(const std::string &name, const utils::Identifier & uuid) override {
+  std::shared_ptr<core::CoreComponent> create(const std::string &name, const utils::Identifier &uuid) override {
     auto ptr = std::static_pointer_cast<minifi::python::processors::ExecutePythonProcessor>(DefautObjectFactory::create(name, uuid));
     ptr->initialize();
     ptr->setProperty(minifi::python::processors::ExecutePythonProcessor::ScriptFile, file_);

@@ -51,7 +51,7 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(const std::s
   return processor;
 }
 
-std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier& uuid) {
+std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier &uuid) {
   auto processor = minifi::processors::ProcessorUtils::createProcessor(name, fullname, uuid, stream_factory_);
   if (nullptr == processor) {
     logger_->log_error("No Processor defined for %s", fullname);
