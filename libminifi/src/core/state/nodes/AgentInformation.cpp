@@ -24,7 +24,7 @@ namespace minifi {
 namespace state {
 namespace response {
 
-utils::ProcessCPUUsageTracker AgentStatus::cpu_load_tracker_;
+utils::ProcessCpuUsageTracker AgentStatus::cpu_load_tracker_;
 std::mutex AgentStatus::cpu_load_tracker_mutex_;
 
 } /* namespace response */

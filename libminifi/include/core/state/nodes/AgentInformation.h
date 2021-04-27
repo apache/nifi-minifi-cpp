@@ -62,7 +62,7 @@
 #include "SchedulingNodes.h"
 #include "utils/OptionalUtils.h"
 #include "utils/OsUtils.h"
-#include "utils/ProcessCPUUsageTracker.h"
+#include "utils/ProcessCpuUsageTracker.h"
 #include "core/AgentIdentificationProvider.h"
 
 namespace org {
@@ -524,7 +524,7 @@ class AgentStatus : public StateMonitorNode {
     double system_cpu_usage = -1.0;
     {
       std::lock_guard<std::mutex> guard(cpu_load_tracker_mutex_);
-      system_cpu_usage = cpu_load_tracker_.getCPUUsageAndRestartCollection();
+      system_cpu_usage = cpu_load_tracker_.getCpuUsageAndRestartCollection();
     }
     SerializedResponseNode cpu_usage;
     cpu_usage.name = "cpuUtilization";
@@ -542,7 +542,7 @@ class AgentStatus : public StateMonitorNode {
 
   std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
 
-  static utils::ProcessCPUUsageTracker cpu_load_tracker_;
+  static utils::ProcessCpuUsageTracker cpu_load_tracker_;
   static std::mutex cpu_load_tracker_mutex_;
 };
 

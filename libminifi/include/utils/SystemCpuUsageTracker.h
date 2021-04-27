@@ -42,25 +42,25 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-class SystemCPUUsageTrackerBase {
+class SystemCpuUsageTrackerBase {
  public:
-  SystemCPUUsageTrackerBase() = default;
-  virtual ~SystemCPUUsageTrackerBase() = default;
-  virtual double getCPUUsageAndRestartCollection() = 0;
+  SystemCpuUsageTrackerBase() = default;
+  virtual ~SystemCpuUsageTrackerBase() = default;
+  virtual double getCpuUsageAndRestartCollection() = 0;
 };
 
 #ifdef __linux__
-class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
+class SystemCpuUsageTracker : public SystemCpuUsageTrackerBase {
  public:
-  SystemCPUUsageTracker();
-  ~SystemCPUUsageTracker() = default;
-  double getCPUUsageAndRestartCollection() override;
+  SystemCpuUsageTracker();
+  ~SystemCpuUsageTracker() = default;
+  double getCpuUsageAndRestartCollection() override;
 
  protected:
-  void queryCPUTimes();
+  void queryCpuTimes();
   bool isCurrentQuerySameAsPrevious() const;
   bool isCurrentQueryOlderThanPrevious() const;
-  double getCPUUsageBetweenLastTwoQueries() const;
+  double getCpuUsageBetweenLastTwoQueries() const;
 
  private:
   uint64_t total_user_;
@@ -76,17 +76,17 @@ class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
 #endif  // linux
 
 #ifdef WIN32
-class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
+class SystemCpuUsageTracker : public SystemCpuUsageTrackerBase {
  public:
-  SystemCPUUsageTracker();
-  ~SystemCPUUsageTracker() = default;
-  double getCPUUsageAndRestartCollection() override;
+  SystemCpuUsageTracker();
+  ~SystemCpuUsageTracker() = default;
+  double getCpuUsageAndRestartCollection() override;
 
  protected:
-  void queryCPUTimes();
+  void queryCpuTimes();
   bool isCurrentQuerySameAsPrevious() const;
   bool isCurrentQueryOlderThanPrevious() const;
-  double getCPUUsageBetweenLastTwoQueries() const;
+  double getCpuUsageBetweenLastTwoQueries() const;
 
  private:
   uint64_t total_idle_;
@@ -100,17 +100,17 @@ class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
 #endif  // windows
 
 #ifdef __APPLE__
-class SystemCPUUsageTracker : public SystemCPUUsageTrackerBase {
+class SystemCpuUsageTracker : public SystemCpuUsageTrackerBase {
  public:
-  SystemCPUUsageTracker();
-  ~SystemCPUUsageTracker() = default;
-  double getCPUUsageAndRestartCollection() override;
+  SystemCpuUsageTracker();
+  ~SystemCpuUsageTracker() = default;
+  double getCpuUsageAndRestartCollection() override;
 
  protected:
-  void queryCPUTicks();
+  void queryCpuTicks();
   bool isCurrentQueryOlderThanPrevious() const;
   bool isCurrentQuerySameAsPrevious() const;
-  double getCPUUsageBetweenLastTwoQueries() const;
+  double getCpuUsageBetweenLastTwoQueries() const;
 
  private:
   uint64_t total_ticks_;

@@ -24,7 +24,7 @@ namespace minifi {
 namespace state {
 namespace response {
 
-utils::SystemCPUUsageTracker DeviceInfoNode::cpu_load_tracker_;
+utils::SystemCpuUsageTracker DeviceInfoNode::cpu_load_tracker_;
 std::mutex DeviceInfoNode::cpu_load_tracker_mutex_;
 
 } /* namespace response */
