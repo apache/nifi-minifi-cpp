@@ -39,7 +39,6 @@
 #include "cxxopts.hpp"
 
 int main(int argc, char **argv) {
-
   std::shared_ptr<logging::Logger> logger = logging::LoggerConfiguration::getConfiguration().getLogger("controller");
 
   const std::string minifiHome = determineMinifiHome(logger);

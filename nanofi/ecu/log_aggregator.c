@@ -32,7 +32,6 @@
 #include <sys/stat.h>
 
 int main(int argc, char** argv) {
-
     if (argc < 7) {
         printf("Error: must run ./log_aggregator <file> <interval> <delimiter> <hostname> <tcp port number> <nifi port uuid>\n");
         exit(1);

@@ -140,7 +140,6 @@ int getJstacks(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
   uint8_t resp = 0;
   socket->read(&resp, 1);
   if (resp == minifi::c2::Operation::DESCRIBE) {
-
     uint64_t size = 0;
     socket->read(size);
 
@@ -234,7 +233,6 @@ int listConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream &ou
 }
 
 std::shared_ptr<core::controller::ControllerService> getControllerService(const std::shared_ptr<minifi::Configure> &configuration, const std::string &service_name) {
-
   std::string prov_repo_class = "provenancerepository";
   std::string flow_repo_class = "flowfilerepository";
   std::string nifi_configuration_class_name = "yamlconfiguration";
@@ -280,7 +278,6 @@ std::shared_ptr<core::controller::ControllerService> getControllerService(const 
 }
 
 void printManifest(const std::shared_ptr<minifi::Configure> &configuration) {
-
   std::string prov_repo_class = "volatileprovenancerepository";
   std::string flow_repo_class = "volatileflowfilerepository";
   std::string nifi_configuration_class_name = "yamlconfiguration";

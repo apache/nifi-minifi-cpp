@@ -256,7 +256,6 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
     logger_->log_trace("Received ack. version %d. number of operations %d", version, size);
     minifi::c2::C2Payload new_payload(payload.getOperation(), state::UpdateState::NESTED);
     for (int i = 0; i < size; i++) {
-
       uint8_t operationType;
       uint16_t argsize = 0;
       std::string operand, id;

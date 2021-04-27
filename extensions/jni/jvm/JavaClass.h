@@ -42,7 +42,6 @@ namespace jni {
  *
  */
 class JavaClass {
-
  public:
 
   JavaClass()

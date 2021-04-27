@@ -40,7 +40,6 @@ void closePeer(struct SiteToSiteCPeer * peer);
 
 // Site2SitePeer Class
 struct SiteToSiteCPeer {
-
   cstream * _stream;
 
   // URL

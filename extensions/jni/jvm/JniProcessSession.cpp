@@ -72,7 +72,6 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_readF
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
   if (ptr->get()) {
-
     auto jincls = minifi::jni::JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniInputStream", env);
 
     auto jin = jincls.newInstance(env);

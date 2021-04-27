@@ -40,7 +40,6 @@ namespace jni {
  * bundles and MiNiFi C++ bundles.
  */
 class JniBundle {
-
  public:
 
   explicit JniBundle(struct BundleDetails details)

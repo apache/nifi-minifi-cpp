@@ -47,7 +47,6 @@ typedef struct {
  * Nifi instance struct
  */
 typedef struct {
-
   void *instance_ptr;
 
   nifi_port port;

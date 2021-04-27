@@ -43,7 +43,6 @@ bool ProcessContextExpr::getProperty(const Property &property, std::string &valu
 }
 
 bool ProcessContextExpr::getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
-
   if (!property.supportsExpressionLangauge()) {
     return ProcessContext::getDynamicProperty(property.getName(), value);
   }

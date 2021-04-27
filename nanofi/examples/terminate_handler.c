@@ -31,7 +31,6 @@ void example_terminate_handler() {
 }
 
 int main() {
-
   nifi_port port;
 
   port.port_id = "12345";

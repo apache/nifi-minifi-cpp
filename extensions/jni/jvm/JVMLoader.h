@@ -376,7 +376,6 @@ class JVMLoader {
       store_error();
       if (EnumProcessModules(current_process_id, allModules,
               sizeof(allModules), &cbNeeded) != 0) {
-
         for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++) {
           TCHAR szModName[MAX_PATH];
 

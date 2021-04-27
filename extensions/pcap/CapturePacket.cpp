@@ -75,14 +75,12 @@ void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevic
   CapturePacketMechanism *capture;
 
   if (capture_mechanism->source.try_dequeue(capture)) {
-
     // if needed - write the packet to the output pcap file
 
     if (capture->writer_ != nullptr) {
       capture->writer_->writePacket(*packet);
 
       if (capture->incrementAndCheck()) {
-
         capture->writer_->close();
 
         auto new_capture = create_new_capture(capture->getBasePath(), capture->getMaxSize());

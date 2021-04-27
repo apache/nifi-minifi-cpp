@@ -55,7 +55,6 @@ class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
  protected:
 
   class ListeningProtocol : public CivetHandler {
-
    public:
     ListeningProtocol() = default;
 

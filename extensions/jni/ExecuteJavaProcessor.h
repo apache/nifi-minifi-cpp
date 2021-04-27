@@ -203,7 +203,6 @@ class ExecuteJavaProcessor : public core::Processor {
   }
 
   void notifyStop() override {
-
     auto localEnv = java_servicer_->attach();
 
     auto onStoppedName = java_servicer_->getAnnotation(class_name_, "OnStopped");

@@ -90,11 +90,9 @@ class MockProcessor : public core::Processor {
 
   // OnTrigger method, implemented by NiFi Processor Designer
   void onTrigger(core::ProcessContext *context, core::ProcessSession* /*session*/) override {
-
     std::string linked_service = "";
     getProperty("linkedService", linked_service);
     if (!IsNullOrEmpty(linked_service)) {
-
       std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(linked_service);
       std::lock_guard<std::mutex> lock(control_mutex);
       if (!disabled.load()) {

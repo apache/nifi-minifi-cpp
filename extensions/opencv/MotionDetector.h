@@ -37,7 +37,6 @@ namespace minifi {
 namespace processors {
 
 class MotionDetector : public core::Processor {
-
  public:
 
   explicit MotionDetector(const std::string &name, utils::Identifier uuid = utils::Identifier())

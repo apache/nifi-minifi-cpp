@@ -157,7 +157,6 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
   java_servicer_->setReference<minifi::jni::JniProcessContext>(env, context_instance_, &jpc);
 
   try {
-
     for (const auto &onScheduledName : onScheduledNames) {
       current_processor_class.callVoidMethod(env, clazzInstance, onScheduledName.first.c_str(), onScheduledName.second, context_instance_);
     }

@@ -35,7 +35,6 @@ namespace minifi {
 namespace jni {
 
 class NarClassLoader {
-
  public:
 
   NarClassLoader(std::shared_ptr<minifi::jni::JavaServicer> servicer, JavaClass &clazz, const std::string &dir_name, const std::string &scratch_nar_dir, const std::string &docs_dir)
@@ -100,7 +99,6 @@ class NarClassLoader {
       }
     }
     {
-
       jmethodID mthd = env->GetMethodID(class_ref_.getReference(), "getSignature", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
       if (mthd == nullptr) {
         ThrowIf(env);
@@ -221,10 +219,8 @@ class NarClassLoader {
     size_t size = getSize(list_class, env, obj);
 
     for (size_t i = 0; i < size; i++) {
-
       JniBundle bundle = getBundle(list_class, env, obj, i);
       for (const auto &cd : bundle.getDescriptions()) {
-
         auto lastOfIdx = cd.class_name_.find_last_of(".");
         if (lastOfIdx != std::string::npos) {
           lastOfIdx++;  // if a value is found, increment to move beyond the .
@@ -275,7 +271,6 @@ class NarClassLoader {
   }
 
   std::vector<ClassDescription> getDescriptions(JNIEnv *env, jclass jni_bundle_clazz, jobject bundle) {
-
     std::vector<ClassDescription> descriptions;
     auto jni_component_clazz = getClass("org.apache.nifi.processor.JniComponent");
 
@@ -304,7 +299,6 @@ class NarClassLoader {
     auto component = env->CallObjectMethod(list, mthd, index);
     minifi::jni::ThrowIf(env);
     if (component != nullptr) {
-
       auto type = getStringMethod("getType", jni_component_clazz, env, component);
       auto isControllerService = getBoolmethod("isControllerService", jni_component_clazz, env, component);
       ClassDescription description(type);
@@ -376,7 +370,6 @@ class NarClassLoader {
   }
 
   struct BundleDetails getCoordinateDetails(JNIEnv *env, jclass jni_bundle_clazz, jobject bundle) {
-
     auto bundle_details = getClass("org.apache.nifi.bundle.BundleDetails");
     auto bundle_coordinate = getClass("org.apache.nifi.bundle.BundleCoordinate");
     struct BundleDetails details;
@@ -388,7 +381,6 @@ class NarClassLoader {
     auto jdetails = getDetails(jni_bundle_clazz, env, bundle);
 
     if (nullptr != jdetails) {
-
       auto jcoordinate = getCoordinate(bundle_details, env, jdetails);
       if (nullptr != jcoordinate) {
         details.artifact = getArtifact(bundle_coordinate, env, jcoordinate);

@@ -60,7 +60,6 @@ class JavaException : public std::exception {
 };
 
 static std::string getMessage(JNIEnv *env, jthrowable throwable) {
-
   jclass clazz = env->FindClass("java/lang/Throwable");
 
   jmethodID getMessage = env->GetMethodID(clazz, "toString", "()Ljava/lang/String;");

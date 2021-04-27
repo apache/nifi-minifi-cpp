@@ -55,7 +55,6 @@ std::shared_ptr<core::Processor> ExecutionPlan::addSimpleCallback(void *obj, std
 std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj,
     std::function<void(core::ProcessSession*, core::ProcessContext *)> ontrigger_callback,
     std::function<void(core::ProcessContext *)> onschedule_callback) {
-
   if (finalized) {
     return nullptr;
   }
@@ -280,7 +279,6 @@ std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::strin
 std::shared_ptr<core::Processor> ExecutionPlan::createCallback(void *obj,
     std::function<void(core::ProcessSession*, core::ProcessContext *)> ontrigger_callback,
     std::function<void(core::ProcessContext *)> onschedule_callback) {
-
   auto ptr = createProcessor(CallbackProcessorName, CallbackProcessorName);
   if (!ptr)
     return nullptr;

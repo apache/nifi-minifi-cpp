@@ -58,7 +58,6 @@ void TFExtractTopLabels::onTrigger(const std::shared_ptr<core::ProcessContext> &
   }
 
   try {
-
     // Read labels
     std::string tf_type;
     flow_file->getAttribute("tf.type", tf_type);

@@ -27,7 +27,6 @@
  * This is an example of the C API that transmits a flow file to a remote instance.
  */
 int main(int argc, char **argv) {
-
   if (argc < 3) {
     printf("Error: must run ./generate_flow <instance> <remote port> \n");
     exit(1);

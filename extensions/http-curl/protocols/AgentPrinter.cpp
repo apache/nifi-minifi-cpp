@@ -84,7 +84,6 @@ rapidjson::Value AgentPrinter::serializeJsonPayload(const C2Payload &payload, ra
   std::map<std::string, std::list<rapidjson::Value*>> children;
   bool print = payload.getLabel() == "agentManifest";
   for (const auto &nested_payload : payload.getNestedPayloads()) {
-
     rapidjson::Value* child_payload = new rapidjson::Value(serializeJsonPayload(nested_payload, alloc));
     children[nested_payload.getLabel()].push_back(child_payload);
   }
@@ -125,7 +124,6 @@ rapidjson::Value AgentPrinter::serializeJsonPayload(const C2Payload &payload, ra
   mergePayloadContent(json_payload, payload, alloc);
 
   if (print) {
-
     rapidjson::StringBuffer buffer;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
     json_payload.Accept(writer);

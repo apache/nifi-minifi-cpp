@@ -409,7 +409,6 @@ class TestController {
 
   void runSession(std::shared_ptr<TestPlan> &plan, bool runToCompletion = true, std::function<void(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&)> verify =
                       nullptr) {
-
     while (plan->runNextProcessor(verify) && runToCompletion) {
     }
   }

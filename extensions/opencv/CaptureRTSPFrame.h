@@ -34,7 +34,6 @@ namespace minifi {
 namespace processors {
 
 class CaptureRTSPFrame : public core::Processor {
-
  public:
 
   explicit CaptureRTSPFrame(const std::string &name, utils::Identifier uuid = utils::Identifier())

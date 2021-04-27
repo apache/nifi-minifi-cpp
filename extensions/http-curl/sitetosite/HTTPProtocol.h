@@ -57,7 +57,6 @@ typedef struct Site2SitePeerStatus {
 
 // HttpSiteToSiteClient Class
 class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
-
   static constexpr char const* PROTOCOL_VERSION_HEADER = "x-nifi-site-to-site-protocol-version";
  public:
 

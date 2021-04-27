@@ -91,7 +91,6 @@ Expression make_dynamic(const std::function<Value(const Parameters &params, cons
 
 Expression make_dynamic_attr(const std::string &attribute_id) {
   return make_dynamic([attribute_id](const Parameters &params, const std::vector<Expression>& /*sub_exprs*/) -> Value {
-
     std::string result;
     const auto cur_flow_file = params.flow_file.lock();
     if (cur_flow_file && cur_flow_file->getAttribute(attribute_id, result)) {
@@ -948,7 +947,6 @@ Value expr_random(const std::vector<Value>& /*args*/) {
 
 template<Value T(const std::vector<Value> &)>
 Expression make_dynamic_function_incomplete(const std::string &function_name, const std::vector<Expression> &args, std::size_t num_args) {
-
   if (args.size() < num_args) {
     std::stringstream message_ss;
     message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << num_args << " are required";
@@ -1558,7 +1556,6 @@ Expression make_dynamic_function(const std::string &function_name, const std::ve
 }
 
 Expression make_function_composition(const Expression &arg, const std::vector<std::pair<std::string, std::vector<Expression>>> &chain) {
-
   auto expr = arg;
 
   for (const auto &chain_part : chain) {
