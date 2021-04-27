@@ -80,7 +80,6 @@ void GetEnvironmentalSensors::onSchedule(const std::shared_ptr<core::ProcessCont
   } else {
     throw std::runtime_error("RTPressure could not be initialized");
   }
-
 }
 
 void GetEnvironmentalSensors::notifyStop() {
@@ -132,7 +131,6 @@ void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessConte
         ss << std::fixed << std::setprecision(2) << data.temperature;
         flow_file_->addAttribute("TEMPERATURE", ss.str());
       }
-
     }
   } else {
     logger_->log_trace("Could not read pressure sensors");
@@ -144,7 +142,6 @@ void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessConte
     session->write(flow_file_, &callback);
     session->transfer(flow_file_, Success);
   }
-
 }
 
 } /* namespace processors */

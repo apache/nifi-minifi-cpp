@@ -74,7 +74,6 @@ class JniBundle {
  private:
   std::vector<ClassDescription> descriptions_;
   struct BundleDetails details_;
-
 };
 
 } /* namespace jni */

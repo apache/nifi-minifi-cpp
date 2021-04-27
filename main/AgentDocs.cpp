@@ -120,7 +120,6 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
     }
 
     outfile << std::endl;
-
   }
 
   std::map<std::string,std::string> fileList;

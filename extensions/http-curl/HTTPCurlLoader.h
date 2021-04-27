@@ -94,7 +94,6 @@ class HttpCurlObjectFactory : public core::ObjectFactory {
   }
 
   static bool added;
-
 };
 
 extern "C" {

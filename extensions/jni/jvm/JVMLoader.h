@@ -291,7 +291,6 @@ class JVMLoader {
     auto field = env->GetFieldID(classref, fieldStr.c_str(), arg.c_str());
     auto fieldName = fieldStr + arg;
     getClassMapping().putField(name, fieldName, field);
-
   }
 
  protected:
@@ -410,7 +409,6 @@ class JVMLoader {
     SetErrorMode(uMode);
 
     return (void *)object;
-
   }
 
   int dlclose(void *handle) {

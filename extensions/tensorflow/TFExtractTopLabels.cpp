@@ -111,7 +111,6 @@ void TFExtractTopLabels::onTrigger(const std::shared_ptr<core::ProcessContext> &
     }
 
     session->transfer(flow_file, Success);
-
   } catch (std::exception &exception) {
     logger_->log_error("Caught Exception %s", exception.what());
     session->transfer(flow_file, Failure);

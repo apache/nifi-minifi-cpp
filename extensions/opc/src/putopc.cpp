@@ -150,7 +150,6 @@ namespace processors {
     std::string typestr;
     context->getProperty(ValueType.getName(), typestr);
     nodeDataType_ = opc::StringToOPCDataTypeMap.at(typestr);  // This throws, but allowed values are generated based on this map -> that's a really unexpected error
-
   }
 
   void PutOPCProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {

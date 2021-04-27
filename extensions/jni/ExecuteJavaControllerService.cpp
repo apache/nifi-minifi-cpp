@@ -66,7 +66,6 @@ void ExecuteJavaControllerService::initialize() {
   if (!existingValue.empty()) {
     setProperty(NiFiControllerService, existingValue);
   }
-
 }
 
 ExecuteJavaControllerService::~ExecuteJavaControllerService() = default;
@@ -104,7 +103,6 @@ void ExecuteJavaControllerService::onEnable() {
   } catch (std::runtime_error &re) {
     // this can be ignored.
   }
-
 }
 
 } /* namespace controllers */

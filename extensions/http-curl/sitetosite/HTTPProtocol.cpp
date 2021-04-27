@@ -166,7 +166,6 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
     return 1;
   }
   return SiteToSiteClient::readResponse(transaction, code, message);
-
 }
 // write respond
 int HttpSiteToSiteClient::writeResponse(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message) {
@@ -230,7 +229,6 @@ void HttpSiteToSiteClient::tearDown() {
   known_transactions_.clear();
   peer_->Close();
   peer_state_ = IDLE;
-
 }
 
 void HttpSiteToSiteClient::closeTransaction(const utils::Identifier &transactionID) {

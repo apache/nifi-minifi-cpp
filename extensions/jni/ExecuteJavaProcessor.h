@@ -119,7 +119,6 @@ class ExecuteJavaProcessor : public core::Processor {
     if (methodSignatures.empty()) {
       methodSignatures.addSignature({ "read", "()I", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInputStream_read) });
       methodSignatures.addSignature({ "readWithOffset", "([BII)I", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInputStream_readWithOffset) });
-
     }
     return methodSignatures;
   }
@@ -233,7 +232,6 @@ class ExecuteJavaProcessor : public core::Processor {
     if (init_context_.lookup_ref_) {
       localEnv->DeleteGlobalRef(init_context_.lookup_ref_);
     }
-
   }
 
  private:
@@ -246,7 +244,6 @@ class ExecuteJavaProcessor : public core::Processor {
       }
     }
     return nullptr;
-
   }
 
   JniSessionFactory *setFactory(const std::shared_ptr<core::ProcessSessionFactory> &ptr, jobject obj) {
@@ -254,7 +251,6 @@ class ExecuteJavaProcessor : public core::Processor {
     JniSessionFactory *factory = new JniSessionFactory(ptr, java_servicer_, obj);
     session_factories_.push_back(factory);
     return factory;
-
   }
 
   JNINativeMethod registerNativeMethod(const std::string &name, const std::string &params, const void *ptr);
@@ -292,7 +288,6 @@ class ExecuteJavaProcessor : public core::Processor {
   JniControllerServiceLookup csl_;
 
   JniInitializationContext init_context_;
-
 };
 
 REGISTER_RESOURCE(ExecuteJavaProcessor, "ExecuteJavaClass runs NiFi processors given a provided system path ");

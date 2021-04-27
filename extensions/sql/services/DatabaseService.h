@@ -63,7 +63,6 @@ class DatabaseService : public core::controller::ControllerService {
   void initialize() override;
 
   void yield() override {
-
   }
 
   bool isRunning() override {
@@ -92,7 +91,6 @@ class DatabaseService : public core::controller::ControllerService {
  private:
 
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 } /* namespace controllers */

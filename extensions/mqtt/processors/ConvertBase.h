@@ -77,7 +77,6 @@ class ConvertBase : public core::Processor, public minifi::c2::RESTProtocol {
   std::shared_ptr<controllers::MQTTControllerService> mqtt_service_;
 
   std::string listening_topic;
-
 };
 
 } /* namespace processors */

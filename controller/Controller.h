@@ -154,7 +154,6 @@ int getJstacks(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
         socket->read(line);
         out << name << " -- " << line << std::endl;
       }
-
     }
   }
   return 0;

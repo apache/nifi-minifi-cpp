@@ -62,7 +62,6 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_creat
   minifi::jni::JVMLoader::getInstance()->setReference(ff_instance, env, rawFlow);
 
   return ff_instance;
-
 }
 
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_readFlowFile(JNIEnv *env, jobject obj, jobject ff) {
@@ -94,7 +93,6 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_readF
   }
 
   return nullptr;
-
 }
 
 JNIEXPORT jint JNICALL Java_org_apache_nifi_processor_JniInputStream_read(JNIEnv *env, jobject obj) {
@@ -142,7 +140,6 @@ JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniProcessSession_writ
   }
 
   return false;
-
 }
 
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_clone(JNIEnv *env, jobject obj, jobject prevff) {
@@ -174,7 +171,6 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_clone
   }
 
   return nullptr;
-
 }
 
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_get(JNIEnv *env, jobject obj) {
@@ -237,7 +233,6 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_putAt
   }
 
   return ff;
-
 }
 
 JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_transfer(JNIEnv *env, jobject obj, jobject ff, jstring relationship) {
@@ -295,7 +290,6 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_creat
   }
 
   return nullptr;
-
 }
 
 JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_commit(JNIEnv *env, jobject obj) {
@@ -367,7 +361,6 @@ JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_remove(J
   if (ptr->get()) {
     session->getSession()->remove(ptr->get());
   }
-
 }
 
 JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniProcessSession_penalize(JNIEnv *env, jobject obj, jobject ff) {
@@ -432,7 +425,6 @@ JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniProcessSession_clon
   }
 
   return nullptr;
-
 }
 
 JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniProcessSession_append(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray) {
@@ -460,7 +452,6 @@ JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniProcessSession_appe
   }
 
   return false;
-
 }
 
 #ifdef __cplusplus

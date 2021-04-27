@@ -71,7 +71,6 @@ class C2CallbackAgent : public c2::C2Agent {
 
  private:
     std::shared_ptr<logging::Logger> logger_;
-
 };
 
 } /* namesapce c2 */

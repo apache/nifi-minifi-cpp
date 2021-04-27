@@ -182,7 +182,6 @@ namespace processors {
       logger_->log_warn("Found no variables when traversing the specified node. No flowfiles are generated. Yielding...");
       yield();
     }
-
   }
 
   bool FetchOPCProcessor::nodeFoundCallBack(opc::Client& /*client*/, const UA_ReferenceDescription *ref, const std::string& path,

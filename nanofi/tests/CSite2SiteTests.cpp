@@ -61,7 +61,6 @@ struct TransferState {
   std::atomic<bool> handshake_data_processed{false};
   std::atomic<bool> transer_completed{false};
   std::atomic<bool> data_processed{false};
-
 };
 
 void wait_until(std::atomic<bool>& b) {

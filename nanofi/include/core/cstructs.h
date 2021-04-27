@@ -51,7 +51,6 @@ typedef struct {
   void *instance_ptr;
 
   nifi_port port;
-
 } nifi_instance;
 
 /****
@@ -122,7 +121,6 @@ typedef struct {
   void * ffp;
 
   uint8_t keepContent;
-
 } flow_file_record;
 
 typedef struct flow flow;

@@ -296,7 +296,6 @@ class FlowFileResponder : public ServerAwareHandler {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nConnection: "
                 "close\r\nContent-Length: 0\r\n");
       mg_printf(conn, "Content-Type: text/plain\r\n\r\n");
-
     }
     return true;
   }
@@ -412,7 +411,6 @@ class HeartbeatHandler : public ServerAwareHandler {
           assert(std::find(classes.begin(), classes.end(), proc.class_name_) != std::end(classes));
           found = true;
         }
-
       }
     }
     assert(found);

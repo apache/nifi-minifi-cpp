@@ -64,7 +64,6 @@ class StringAppender : public rocksdb::AssociativeMergeOperator {
   }
 
  private:
-
 };
 
 /**
@@ -108,7 +107,6 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
   bool exists(const minifi::ResourceClaim &streamId) override;
 
   void yield() override {
-
   }
 
   /**

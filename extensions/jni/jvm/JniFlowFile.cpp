@@ -46,7 +46,6 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getId(JNIEnv 
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jlong id = ff->getId();
   return id;
-
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(JNIEnv *env, jobject obj) {
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);

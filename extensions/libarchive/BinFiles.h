@@ -95,7 +95,6 @@ class Bin {
           maxEntries_ = count;
           minEntries_ = count;
         } catch (...) {
-
         }
       }
     }

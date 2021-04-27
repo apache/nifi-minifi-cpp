@@ -64,7 +64,6 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
       }
       node.text().set(nodeText.c_str());
     }
-
   }
   else if (node_name == "TimeCreated") {
     metadata_["TimeCreated"] = node.attribute("SystemTime").value();

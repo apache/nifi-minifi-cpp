@@ -68,7 +68,6 @@ void TailEventLog::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
   log_handle_ = OpenEventLog(NULL, log_source_.c_str());
 
   logger_->log_trace("TailEventLog configured to tail %s",log_source_);
-
 }
 
 void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -131,7 +130,6 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     logger_->log_trace("Yielding due to error");
     context->yield();
   }
-
 }
 } /* namespace processors */
 } /* namespace minifi */

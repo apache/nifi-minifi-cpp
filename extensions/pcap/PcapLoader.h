@@ -56,7 +56,6 @@ class PcapFactory : public core::ObjectFactory {
   }
 
   static bool added;
-
 };
 
 extern "C" {

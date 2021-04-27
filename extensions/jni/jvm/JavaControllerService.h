@@ -162,7 +162,6 @@ class JavaControllerService : public core::controller::ControllerService, public
   JVMLoader *loader;
 
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 REGISTER_RESOURCE(JavaControllerService, "Allows specification of nars to be used within referenced processors. ");

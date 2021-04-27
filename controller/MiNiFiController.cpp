@@ -179,7 +179,6 @@ int main(int argc, char **argv) {
         if (getConnectionSize(std::move(socket), std::cout, component) < 0)
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
       }
-
     }
 
     if (result.count("l") > 0) {
@@ -192,7 +191,6 @@ int main(int argc, char **argv) {
         if (listConnections(std::move(socket), std::cout, show_headers) < 0)
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
       }
-
     }
 
     if (result.count("getfull") > 0) {

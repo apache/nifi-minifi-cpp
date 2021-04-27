@@ -106,7 +106,6 @@ class MQTTControllerService : public core::controller::ControllerService {
   virtual void initialize();
 
   void yield() {
-
   }
 
   int send(const std::string &topic, const std::vector<uint8_t> &data) {
@@ -315,7 +314,6 @@ class MQTTControllerService : public core::controller::ControllerService {
   std::shared_ptr<controllers::SSLContextService> ssl_context_service_;
 
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 } /* namespace controllers */

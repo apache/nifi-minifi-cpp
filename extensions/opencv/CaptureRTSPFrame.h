@@ -128,7 +128,6 @@ class CaptureRTSPFrame : public core::Processor {
 //  std::mutex mutex_;
 //
 //  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
-
 };
 
 REGISTER_RESOURCE(CaptureRTSPFrame, "Captures a frame from the RTSP stream at specified intervals."); // NOLINT

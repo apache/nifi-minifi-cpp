@@ -150,7 +150,6 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
 
       stream->write(bucketId);
       stream->write(flowId);
-
     } catch (const minifi::c2::PayloadParseException &pe) {
       logger_->log_error("Parser exception occurred, but is ignorable, reason %s", pe.what());
       // okay to ignore
@@ -209,7 +208,6 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
     require_registration_ = false;
 
     return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
-
   }
 
   uint16_t version = 0;

@@ -52,7 +52,6 @@ class CoapResponse {
       : code_(code),
         size_(0),
         data_(nullptr) {
-
   }
 
   CoapResponse(const CoapResponse &other) = delete;

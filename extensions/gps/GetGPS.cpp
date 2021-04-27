@@ -155,7 +155,6 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
         }
       }
     }
-
   } catch (std::exception &exception) {
     logger_->log_error("GetGPS Caught Exception %s", exception.what());
     throw;

@@ -272,7 +272,6 @@ class NarClassLoader {
     // assuming we have the bundle, we need to get the coordinate.
 
     return JniBundle();
-
   }
 
   std::vector<ClassDescription> getDescriptions(JNIEnv *env, jclass jni_bundle_clazz, jobject bundle) {
@@ -336,7 +335,6 @@ class NarClassLoader {
               builder = builder->isRequired(getBoolmethod("isRequired", property_descriptor_clazz, env, propertyDescriptorObj));
               core::Property prop(builder->build());
               description.class_properties_.insert(std::make_pair(prop.getName(), prop));
-
             }
           }
         }
@@ -360,7 +358,6 @@ class NarClassLoader {
             core::Relationship relationship(relName, relDesc);
 
             description.class_relationships_.push_back(relationship);
-
           }
         }
       }
@@ -372,12 +369,10 @@ class NarClassLoader {
       AgentDocs::putDescription(type, classDescription);
 
       return description;
-
     }
     // assuming we have the bundle, we need to get the coordinate.
 
     return ClassDescription("unknown");
-
   }
 
   struct BundleDetails getCoordinateDetails(JNIEnv *env, jclass jni_bundle_clazz, jobject bundle) {
@@ -400,7 +395,6 @@ class NarClassLoader {
         details.group = getGroup(bundle_coordinate, env, jcoordinate);
         details.version = getVersion(bundle_coordinate, env, jcoordinate);
       }
-
     }
 
     return details;
@@ -450,7 +444,6 @@ class NarClassLoader {
     auto coordinate = env->CallObjectMethod(jdetail, getCoordinateMethod);
     ThrowIf(env);
     return coordinate;
-
   }
 
   jobject getDetails(jclass bundle_details, JNIEnv *env, jobject bundle) {
@@ -461,7 +454,6 @@ class NarClassLoader {
     auto details = env->CallObjectMethod(bundle, getDetailsMethod);
     ThrowIf(env);
     return details;
-
   }
 
   jobject getComponents(jclass bundle_details, JNIEnv *env, jobject bundle) {
@@ -472,7 +464,6 @@ class NarClassLoader {
     auto details = env->CallObjectMethod(bundle, getDetailsMethod);
     ThrowIf(env);
     return details;
-
   }
 
   std::shared_ptr<logging::Logger> logger_;

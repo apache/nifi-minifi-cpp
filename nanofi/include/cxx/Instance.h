@@ -52,7 +52,6 @@ class ProcessorLink {
  public:
   explicit ProcessorLink(const std::shared_ptr<core::Processor> &processor)
       : processor_(processor) {
-
   }
 
   const std::shared_ptr<core::Processor> &getProcessor() {

@@ -125,7 +125,6 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
     std::string stackStr = archiveStack.toJsonString();
   
     flowFile->setAttribute("lens.archive.stack", stackStr);
-
   }
 
   // Update filename attribute to that of focused entry

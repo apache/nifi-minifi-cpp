@@ -52,7 +52,6 @@ std::string ConvertJSONAck::parseTopicName(const std::string &json) {
       }
     }
   } catch (...) {
-
   }
   return topic;
 }
@@ -81,7 +80,6 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     topic = parseTopicName(std::string(callback.buffer_.data(), callback.buffer_.size()));
 
     session->transfer(flow, Success);
-
   }
   flow = session->get();
 
@@ -101,11 +99,9 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     auto stream = c2::PayloadSerializer::serialize(1,payload);
 
     mqtt_service_->send(topic, stream->getBuffer(), stream->size());
-
   }
 
   session->transfer(flow, Success);
-
 }
 
 } /* namespace processors */

@@ -114,7 +114,6 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     server->add_endpoint(minifi::coap::Method::Post, [](minifi::coap::CoapQuery)->minifi::coap::CoapResponse {
       minifi::coap::CoapResponse response(205,0x00,0);
       return response;
-
     });
 
     {
@@ -158,7 +157,6 @@ class VerifyCoAPServer : public CoapIntegrationBase {
         minifi::coap::CoapResponse response(500,0,0);
         return response;
       }
-
     });
     server->start();
     configuration->set("c2.enable", "true");

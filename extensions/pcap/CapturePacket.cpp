@@ -93,7 +93,6 @@ void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevic
       } else {
         capture_mechanism->source.enqueue(capture);
       }
-
     }
   }
 }

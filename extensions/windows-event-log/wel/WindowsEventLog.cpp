@@ -105,7 +105,6 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
       default:
         event_type_index_ = 0;
     };
-
   }
   else {
     event_type_ = "N/A";

@@ -59,7 +59,6 @@ class SensorFactory : public core::ObjectFactory {
   }
 
   static bool added;
-
 }
 ;
 

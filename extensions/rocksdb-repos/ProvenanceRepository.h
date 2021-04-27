@@ -39,7 +39,6 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
  public:
   ProvenanceRepository(std::string name, utils::Identifier /*uuid*/)
       : ProvenanceRepository(name){
-
   }
   // Constructor
   /*!

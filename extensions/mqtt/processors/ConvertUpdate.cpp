@@ -83,7 +83,6 @@ void ConvertUpdate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   if (!received_update) {
     context->yield();
   }
-
 }
 
 void ConvertUpdate::initialize() {

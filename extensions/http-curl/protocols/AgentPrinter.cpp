@@ -87,7 +87,6 @@ rapidjson::Value AgentPrinter::serializeJsonPayload(const C2Payload &payload, ra
 
     rapidjson::Value* child_payload = new rapidjson::Value(serializeJsonPayload(nested_payload, alloc));
     children[nested_payload.getLabel()].push_back(child_payload);
-
   }
 
   // child_vector is Pair<string, vector<Value*>>

@@ -75,7 +75,6 @@ class OpenCVObjectFactory : public core::ObjectFactory {
   }
 
   static bool added;
-
 };
 
 extern "C" {

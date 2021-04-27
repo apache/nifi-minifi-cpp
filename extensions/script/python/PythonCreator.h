@@ -60,7 +60,6 @@ class PythonCreator : public minifi::core::CoreComponent {
     for (const auto &path : pathOrFiles) {
       utils::file::FileUtils::addFilesMatchingExtension(logger_, path, ".py", classpaths_);
     }
-
   }
 
   void configure(const std::shared_ptr<Configure> &configuration) override {
@@ -135,13 +134,9 @@ class PythonCreator : public minifi::core::CoreComponent {
           } catch (const std::exception &e) {
             logger_->log_warn("Cannot load %s because of %s", scriptName, e.what());
           }
-
         }
-
       }
-
     }
-
   }
 
  private:

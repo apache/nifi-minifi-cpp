@@ -48,7 +48,6 @@ class CoapQuery {
   CoapQuery(const std::string &query, std::unique_ptr<CoapMessage, decltype(&free_coap_message)> message)
       : query_(query),
         message_(std::move(message)) {
-
   }
   virtual ~CoapQuery() = default;
   CoapQuery(const CoapQuery &qry) = delete;
@@ -69,7 +68,6 @@ class CoapResponse {
       : code_(code),
         data_(std::move(data)),
         size_(size) {
-
   }
 
   int getCode() const {
@@ -130,7 +128,6 @@ class CoapServer : public core::Connectable {
         coap_check_notify(server_->ctx);
       }
       return 0;
-
     });
   }
 
@@ -195,7 +192,6 @@ class CoapServer : public core::Connectable {
   void waitForWork(uint64_t timeoutMs);
 
   virtual void yield() {
-
   }
 
   /**
@@ -222,9 +218,7 @@ class CoapServer : public core::Connectable {
       if (coap_send(session, response) == COAP_INVALID_TID) {
         printf("error while returning response");
       }
-
     }
-
   }
 
   std::future<uint64_t> future;
