@@ -90,6 +90,7 @@ class TailFile : public core::Processor {
 
   // Processor Name
   static constexpr char const* ProcessorName = "TailFile";
+
   // Supported Properties
   static core::Property FileName;
   static core::Property StateFile;
@@ -100,6 +101,7 @@ class TailFile : public core::Processor {
   static core::Property LookupFrequency;
   static core::Property RollingFilenamePattern;
   static core::Property InitialStartPosition;
+
   // Supported Relationships
   static core::Relationship Success;
 
@@ -118,13 +120,9 @@ class TailFile : public core::Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>  &session) override;
 
   void initialize() override;
-
   bool recoverState(const std::shared_ptr<core::ProcessContext>& context);
-
   void logState();
-
   bool storeState();
-
   std::chrono::milliseconds getLookupFrequency() const;
 
  private:
@@ -138,82 +136,50 @@ class TailFile : public core::Processor {
     TimePoint mtime_;
   };
 
-  static const char *CURRENT_STR;
-  static const char *POSITION_STR;
-  std::mutex tail_file_mutex_;
-
-  // Delimiter for the data incoming from the tailed file.
-  std::string delimiter_;
-
-  // StateManager
-  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
-
-  std::map<std::string, TailState> tail_states_;
-
-  static const int BUFFER_SIZE = 512;
-
-  Mode tail_mode_ = Mode::UNDEFINED;
-
-  std::string file_to_tail_;
-
-  std::string base_dir_;
-
-  bool recursive_lookup_ = false;
-
-  std::chrono::milliseconds lookup_frequency_;
-
-  std::chrono::steady_clock::time_point last_multifile_lookup_;
-
-  std::string rolling_filename_pattern_;
-
-  InitialStartPositions initial_start_position_;
-
-  bool first_trigger_{true};
-
-  std::shared_ptr<logging::Logger> logger_;
-
   void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
-
   void processAllRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
-
   void processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state, std::vector<TailState> &rotated_file_states);
-
   void processRotatedFilesAfterLastReadTime(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
-
   std::string parseRollingFilePattern(const TailState &state) const;
-
   std::vector<TailState> findAllRotatedFiles(const TailState &state) const;
-
   std::vector<TailState> findRotatedFilesAfterLastReadTime(const TailState &state) const;
-
   std::vector<TailState> sortAndSkipMainFilePrefix(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime) const;
-
   void processFile(const std::shared_ptr<core::ProcessSession> &session,
                    const std::string &full_file_name,
                    TailState &state);
-
   void processSingleFile(const std::shared_ptr<core::ProcessSession> &session,
                          const std::string &full_file_name,
                          TailState &state);
-
   bool getStateFromStateManager(std::map<std::string, TailState> &state) const;
-
   bool getStateFromLegacyStateFile(const std::shared_ptr<core::ProcessContext>& context,
                                    std::map<std::string, TailState> &new_tail_states) const;
-
   void doMultifileLookup();
-
   void checkForRemovedFiles();
-
   void checkForNewFiles();
-
   void updateFlowFileAttributes(const std::string &full_file_name, const TailState &state, const std::string &fileName,
                                 const std::string &baseName, const std::string &extension,
                                 std::shared_ptr<core::FlowFile> &flow_file) const;
-
   void updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const;
-
   bool isOldFileInitiallyRead(TailState &state) const;
+
+  static const char *CURRENT_STR;
+  static const char *POSITION_STR;
+  static const int BUFFER_SIZE = 512;
+
+  std::mutex tail_file_mutex_;
+  std::string delimiter_;  // Delimiter for the data incoming from the tailed file.
+  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
+  std::map<std::string, TailState> tail_states_;
+  Mode tail_mode_ = Mode::UNDEFINED;
+  std::string file_to_tail_;
+  std::string base_dir_;
+  bool recursive_lookup_ = false;
+  std::chrono::milliseconds lookup_frequency_;
+  std::chrono::steady_clock::time_point last_multifile_lookup_;
+  std::string rolling_filename_pattern_;
+  InitialStartPositions initial_start_position_;
+  bool first_trigger_{true};
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting data from the file as it is written to the file. The file is expected to be textual."
