@@ -168,11 +168,6 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
   return name;
 }
 
-[[deprecated("Unsupported platform")]]
-int64_t getResultForUnsupportedPlatform() {
-  return -1;
-}
-
 int64_t OsUtils::getCurrentProcessPhysicalMemoryUsage() {
 #if defined(__linux__)
   static const std::string resident_set_size_prefix = "VmRSS:";
@@ -201,7 +196,8 @@ int64_t OsUtils::getCurrentProcessPhysicalMemoryUsage() {
     return -1;
   return pmc.WorkingSetSize;
 #else
-  return getResultForUnsupportedPlatform();
+#warning("Unsupported platform")
+  return -1;
 #endif
 }
 
@@ -249,7 +245,8 @@ int64_t OsUtils::getSystemPhysicalMemoryUsage() {
   DWORDLONG physical_memory_used = memory_info.ullTotalPhys - memory_info.ullAvailPhys;
   return physical_memory_used;
 #else
-  return getResultForUnsupportedPlatform();
+#warning("Unsupported platform")
+  return -1;
 #endif
 }
 
@@ -275,7 +272,8 @@ int64_t OsUtils::getSystemTotalPhysicalMemory() {
   DWORDLONG total_physical_memory = memory_info.ullTotalPhys;
   return total_physical_memory;
 #else
-  return getResultForUnsupportedPlatform();
+#warning("Unsupported platform")
+  return -1;
 #endif
 }
 
