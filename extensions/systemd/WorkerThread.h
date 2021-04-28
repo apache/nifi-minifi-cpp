@@ -36,7 +36,7 @@ class WorkerThread final {
   ~WorkerThread();
 
   template<typename... Args>
-  void enqueue(Args&& ... args) { work_.enqueue(std::forward<Args>(args)...); }
+  void enqueue(Args&&... args) { work_.enqueue(std::forward<Args>(args)...); }
 
  private:
   void run() noexcept;

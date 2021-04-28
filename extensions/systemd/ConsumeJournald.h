@@ -88,6 +88,7 @@ class ConsumeJournald final : public core::Processor {
   static utils::optional<journal_field> getNextField(libwrapper::Journal&);
   std::future<std::pair<std::string, std::vector<journal_message>>> getCursorAndMessageBatch();
   std::string formatSyslogMessage(const journal_message&) const;
+  std::string getCursor() const;
 
   std::atomic<bool> running_{false};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger();

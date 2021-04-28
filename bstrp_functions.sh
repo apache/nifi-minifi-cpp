@@ -390,7 +390,7 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  echo -n "Enter choice [ A - X or 1-7 ] "
+  echo -n "Enter choice [ A - Y or 1-7 ] "
   read -r choice
   choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in

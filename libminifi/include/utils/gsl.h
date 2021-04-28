@@ -37,7 +37,7 @@ using remove_cvref_t = typename std::remove_cv<typename std::remove_reference<T>
 template<typename Container, typename T>
 Container span_to(gsl::span<T> span) {
   static_assert(std::is_constructible<Container, typename gsl::span<T>::iterator, typename gsl::span<T>::iterator>::value,
-                "The destination container must have an iterator (pointer) range constructor");
+      "The destination container must have an iterator (pointer) range constructor");
   return Container(std::begin(span), std::end(span));
 }
 template<template<typename...> class Container, typename T>

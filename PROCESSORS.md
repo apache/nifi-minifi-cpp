@@ -194,14 +194,14 @@ Consume systemd-journald journal messages. Available on Linux only.
 ### Properties
 All properties are required with a default value, making them effectively optional. None of the properties support the NiFi Expression Language.
 
-|         Name         |  Default Value  |                                  Allowable Values                                  |                                                       Description                                                     |
-| -------------------- | --------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-|      Batch Size      |      1000       |                                  Positive numbers                                  | The maximum number of entries processed in a single execution.                                                        |
-|    Payload Format    |     Syslog      |                                   Raw<br>Syslog                                    | Configures flow file content formatting.<br>Raw: only the message.<br>Syslog: similar to syslog or journalctl output. |
-|  Include Timestamp   |      true       |                                   true<br>false                                    | Include message timestamp in the 'timestamp' attribute.                                                               |
-|     Journal Type     |     System      |                               User<br>System<br>Both                               | Type of journal to consume.                                                                                           |
-| Process Old Messages |      false      |                                   true<br>false                                    | Process events created before the first usage (schedule) of the processor instance.                                   |
-|   Timestamp Format   |    %x %X %Z     | [date format](https://howardhinnant.github.io/date/date.html#to_stream_formatting) | Format string to use when creating the timestamp attribute or writing messages in the syslog format.                  |
+|         Name         |  Default Value  |                                  Allowable Values                                  |                                                                       Description                                                                        |
+| -------------------- | --------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|      Batch Size      |      1000       |                                  Positive numbers                                  | The maximum number of entries processed in a single execution.                                                                                           |
+|    Payload Format    |     Syslog      |                                   Raw<br>Syslog                                    | Configures flow file content formatting.<br>Raw: only the message.<br>Syslog: similar to syslog or journalctl output.                                    |
+|  Include Timestamp   |      true       |                                   true<br>false                                    | Include message timestamp in the 'timestamp' attribute.                                                                                                  |
+|     Journal Type     |     System      |                               User<br>System<br>Both                               | Type of journal to consume.                                                                                                                              |
+| Process Old Messages |      false      |                                   true<br>false                                    | Process events created before the first usage (schedule) of the processor instance.                                                                      |
+|   Timestamp Format   |    %x %X %Z     | [date format](https://howardhinnant.github.io/date/date.html#to_stream_formatting) | Format string to use when creating the timestamp attribute or writing messages in the syslog format. ISO|ISO 8601|ISO8601 are equivalent to "%FT%T%Ez".  |
 
 ### Relationships
 

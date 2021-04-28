@@ -114,10 +114,14 @@ void ConsumeJournald::onSchedule(core::ProcessContext* const context, core::Proc
   }();
 
   state_manager_ = context->getStateManager();
+  // All journal-related API calls are thread-agnostic, meaning they need to be called from the same thread. In our environment,
+  // where a processor can easily be scheduled on different threads, we ensure this by executing all library calls on a dedicated
+  // worker thread. This is why all such operations are dispatched to a thread and immediately waited for in the initiating thread.
   journal_ = worker_->enqueue([this, journal_type]{ return libwrapper_->openJournal(journal_type); }).get();
-  const auto seek_default = [process_old_messages](libwrapper::Journal& journal) {
+  const auto seek_default = [this, process_old_messages](libwrapper::Journal& journal) {
     if (process_old_messages) journal.seekHead();
     else journal.seekTail();
+    state_manager_->set({{"cursor", getCursor()}});
   };
   worker_->enqueue([this, &seek_default] {
     const auto cursor = state_manager_->get() | utils::map([](std::unordered_map<std::string, std::string>&& m) { return m.at(CURSOR_KEY); });
@@ -139,7 +143,6 @@ void ConsumeJournald::onTrigger(core::ProcessContext* const context, core::Proce
   gsl_Expects(context && session);
   if (!running_.load(std::memory_order_acquire)) return;
   auto cursor_and_messages = getCursorAndMessageBatch().get();
-  state_manager_->set({{"cursor", std::move(cursor_and_messages.first)}});
   auto messages = std::move(cursor_and_messages.second);
 
   if (messages.empty()) {
@@ -161,6 +164,7 @@ void ConsumeJournald::onTrigger(core::ProcessContext* const context, core::Proce
     session->transfer(flow_file, Success);
   }
   session->commit();
+  state_manager_->set({{"cursor", std::move(cursor_and_messages.first)}});
 }
 
 utils::optional<gsl::span<const char>> ConsumeJournald::enumerateJournalEntry(libwrapper::Journal& journal) {
@@ -208,14 +212,7 @@ std::future<std::pair<std::string, std::vector<ConsumeJournald::journal_message>
       messages.push_back(std::move(message));
     }
 
-    const auto cursor = [this] {
-      gsl::owner<char*> cursor_out;
-      const auto err_code = journal_->getCursor(&cursor_out);
-      if (err_code < 0) throw SystemErrorException{"sd_journal_get_cursor", std::generic_category().default_error_condition(-err_code)};
-      gsl_Ensures(cursor_out);
-      return std::unique_ptr<char, utils::FreeDeleter>{cursor_out};
-    }();
-    return std::make_pair(std::string{cursor.get()}, messages);
+    return std::make_pair(getCursor(), messages);
   });
 }
 
@@ -249,6 +246,17 @@ std::string ConsumeJournald::formatSyslogMessage(const journal_message& msg) con
       (utils::optional_from_ptr(syslog_identifier) | utils::map(utils::dereference)).value_or("unknown_process"),
       pid_string.value_or(std::string{}),
       *message);
+}
+
+std::string ConsumeJournald::getCursor() const {
+  const auto cursor = [this] {
+    gsl::owner<char*> cursor_out;
+    const auto err_code = journal_->getCursor(&cursor_out);
+    if (err_code < 0) throw SystemErrorException{"sd_journal_get_cursor", std::generic_category().default_error_condition(-err_code)};
+    gsl_Ensures(cursor_out);
+    return std::unique_ptr<char, utils::FreeDeleter>{cursor_out};
+  }();
+  return std::string{cursor.get()};
 }
 
 }}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd
