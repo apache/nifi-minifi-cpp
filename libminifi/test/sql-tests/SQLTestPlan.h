@@ -26,6 +26,7 @@
 #include <memory>
 
 #include "../TestBase.h"
+#include "mocks/MockODBCService.h"
 
 class SQLTestPlan {
  public:
@@ -39,7 +40,8 @@ class SQLTestPlan {
     }
 
     // initialize database service
-    auto service = plan_->addController("ODBCService", "ODBCService");
+    // auto service = plan_->addController("ODBCService", "ODBCService");
+    auto service = plan_->addController("MockODBCService", "ODBCService");
     plan_->setProperty(service, minifi::sql::controllers::DatabaseService::ConnectionString.getName(), connection_str);
   }
 

@@ -20,10 +20,8 @@
 
 #include <memory>
 #include <string>
-
-#include <soci/soci.h>
-
-#include "Utils.h"
+#include <vector>
+#include <ctime>
 
 namespace org {
 namespace apache {
@@ -31,61 +29,59 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-/**
- * We do not intend to create an abstract facade here. We know that SOCI is the underlying
- * SQL library. We only wish to abstract ODBC specific information
- */
+enum class DataType {
+  STRING,
+  DOUBLE,
+  INTEGER,
+  LONG_LONG,
+  UNSIGNED_LONG_LONG,
+  DATE
+};
+
+class Row {
+ public:
+  virtual ~Row() = default;
+  virtual std::size_t size() const = 0;
+  virtual std::string getColumnName(std::size_t index) const = 0;
+  virtual bool isNull(std::size_t index) const = 0;
+  virtual DataType getDataType(std::size_t index) const = 0;
+  virtual std::string getString(std::size_t index) const = 0;
+  virtual double getDouble(std::size_t index) const = 0;
+  virtual int getInteger(std::size_t index) const = 0;
+  virtual long long getLongLong(std::size_t index) const = 0;
+  virtual unsigned long long getUnsignedLongLong(std::size_t index) const = 0;
+  virtual std::tm getDate(std::size_t index) const = 0;
+};
+
+class Rowset {
+ public:
+  virtual ~Rowset() = default;
+  virtual void reset() = 0;
+  virtual bool is_done() = 0;
+  virtual Row& getCurrent() = 0;
+  virtual void next() = 0;
+};
 
 class Statement {
  public:
-
-  explicit Statement(soci::session& session, const std::string &query)
-    : session_(session), query_(query) {
+  explicit Statement(const std::string &query)
+    : query_(query) {
   }
 
   virtual ~Statement() = default;
-
-  soci::rowset<soci::row> execute(const std::vector<std::string>& args = {}) {
-    auto stmt = session_.prepare << query_;
-    for (auto& arg : args) {
-      // binds arguments to the prepared statement
-      stmt.operator,(soci::use(arg));
-    }
-    return stmt;
-  }
+  virtual std::unique_ptr<Rowset> execute(const std::vector<std::string> &args = {}) = 0;
 
  protected:
-  soci::session& session_;
   std::string query_;
 };
 
 class Session {
  public:
-
-  explicit Session(soci::session& session)
-    : session_(session) {
-  }
-
   virtual ~Session() = default;
-
-  void begin() {
-    session_.begin();
-  }
-
-  void commit() {
-    session_.commit();
-  }
-
-  void rollback() {
-    session_.rollback();
-  }
-
-  void execute(const std::string &statement) {
-    session_ << statement;
-  }
-
-protected:
-  soci::session& session_;
+  virtual void begin() = 0;
+  virtual void commit() = 0;
+  virtual void rollback() = 0;
+  virtual void execute(const std::string &statement) = 0;
 };
 
 class Connection {

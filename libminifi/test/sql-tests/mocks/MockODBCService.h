@@ -18,41 +18,48 @@
 
 #pragma once
 
-#include <vector>
+#include <memory>
 
-#include "SQLRowSubscriber.h"
-#include "DatabaseConnectors.h"
+#include "MockConnectors.h"
+#include "services/DatabaseService.h"
+#include "core/Resource.h"
+#include "data/DatabaseConnectors.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace sql {
+namespace controllers {
 
-class SQLRowsetProcessor {
+class MockODBCService : public DatabaseService {
  public:
-  SQLRowsetProcessor(std::unique_ptr<Rowset> rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> rowSubscribers);
+  explicit MockODBCService(const std::string &name, utils::Identifier uuid = utils::Identifier())
+    : DatabaseService(name, uuid),
+      logger_(logging::LoggerFactory<MockODBCService>::getLogger()) {
+    initialize();
+  }
 
-  size_t process(size_t max);
+  explicit MockODBCService(const std::string &name, const std::shared_ptr<Configure> &configuration)
+      : DatabaseService(name),
+        logger_(logging::LoggerFactory<MockODBCService>::getLogger()) {
+    setConfiguration(configuration);
+    initialize();
+  }
+
+  std::unique_ptr<sql::Connection> getConnection() const {
+    return std::unique_ptr<sql::Connection>(new MockODBCConnection(connection_string_));
+  }
 
  private:
-   void addRow(const Row& row, size_t rowCount);
-
-   template <typename T>
-   void processColumn(const std::string& name, const T& value) const {
-     for (const auto& subscriber : row_subscribers_) {
-       subscriber.get().processColumn(name, value);
-     }
-   }
-
- private:
-  std::unique_ptr<Rowset> rowset_;
-  std::vector<std::reference_wrapper<SQLRowSubscriber>> row_subscribers_;
+  std::shared_ptr<logging::Logger> logger_;
 };
 
+REGISTER_RESOURCE(MockODBCService, "Controller service that provides Mock ODBC database connection");
+
+} /* namespace controllers */
 } /* namespace sql */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-

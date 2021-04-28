@@ -33,7 +33,8 @@
 #include "processors/QueryDatabaseTable.h"
 #include "SQLTestPlan.h"
 
-#include "services/ODBCConnector.h"
+// #include "services/ODBCConnector.h"
+#include "mocks/MockConnectors.h"
 
 struct TableRow {
   int64_t int_col;
@@ -63,8 +64,10 @@ class SQLTestController : public TestController {
     connection_str_ = "Driver=" + DRIVER + ";Database=" + database_.str();
 
     // Create test dbs
-    minifi::sql::controllers::ODBCConnection{connection_str_}.prepareStatement("CREATE TABLE test_table (int_col INTEGER, text_col TEXT);")->execute();
-    minifi::sql::controllers::ODBCConnection{connection_str_}.prepareStatement("CREATE TABLE empty_test_table (int_col INTEGER, text_col TEXT);")->execute();
+    // minifi::sql::ODBCConnection{connection_str_}.prepareStatement("CREATE TABLE test_table (int_col INTEGER, text_col TEXT);")->execute();
+    // minifi::sql::ODBCConnection{connection_str_}.prepareStatement("CREATE TABLE empty_test_table (int_col INTEGER, text_col TEXT);")->execute();
+    minifi::sql::MockODBCConnection{connection_str_}.prepareStatement("CREATE TABLE test_table (int_col INTEGER, text_col TEXT);")->execute();
+    minifi::sql::MockODBCConnection{connection_str_}.prepareStatement("CREATE TABLE empty_test_table (int_col INTEGER, text_col TEXT);")->execute();
   }
 
   std::shared_ptr<SQLTestPlan> createSQLPlan(const std::string& sql_processor, std::initializer_list<core::Relationship> outputs) {
@@ -72,7 +75,8 @@ class SQLTestController : public TestController {
   }
 
   void insertValues(std::initializer_list<TableRow> values) {
-    minifi::sql::controllers::ODBCConnection connection{connection_str_};
+    // minifi::sql::ODBCConnection connection{connection_str_};
+    minifi::sql::MockODBCConnection connection{connection_str_};
     for (const auto& value : values) {
       connection.prepareStatement("INSERT INTO test_table (int_col, text_col) VALUES (?, ?);")
           ->execute({std::to_string(value.int_col), value.text_col});
@@ -81,10 +85,12 @@ class SQLTestController : public TestController {
 
   std::vector<TableRow> fetchValues() {
     std::vector<TableRow> rows;
-    minifi::sql::controllers::ODBCConnection connection{connection_str_};
-    auto soci_rowset = connection.prepareStatement("SELECT * FROM test_table;")->execute();
-    for (const auto& soci_row : soci_rowset) {
-      rows.push_back(TableRow{get_column_cast<int64_t>(soci_row, "int_col"), soci_row.get<std::string>("text_col")});
+    // minifi::sql::ODBCConnection connection{connection_str_};
+    minifi::sql::MockODBCConnection connection{connection_str_};
+    auto rowset = connection.prepareStatement("SELECT * FROM test_table;")->execute();
+    for (rowset->reset(); !rowset->is_done(); rowset->next()) {
+      const auto& row = rowset->getCurrent();
+      rows.push_back(TableRow{row.getInteger(0), row.getString(1)});
     }
     return rows;
   }
@@ -94,21 +100,6 @@ class SQLTestController : public TestController {
   }
 
  private:
-  template<typename T>
-  T get_column_cast(const soci::row& row, const std::string& column_name) {
-    const auto& column_props = row.get_properties(column_name);
-    switch (const auto data_type = column_props.get_data_type()) {
-      case soci::data_type::dt_integer:
-        return gsl::narrow<T>(row.get<int>(column_name));
-      case soci::data_type::dt_long_long:
-        return gsl::narrow<T>(row.get<long long>(column_name));  // NOLINT
-      case soci::data_type::dt_unsigned_long_long:
-        return gsl::narrow<T>(row.get<unsigned long long>(column_name));  // NOLINT
-      default:
-        throw std::logic_error("Unknown data type for column \"" + column_name + "\"");
-    }
-  }
-
   utils::Path test_dir_;
   utils::Path database_;
   std::string connection_str_;

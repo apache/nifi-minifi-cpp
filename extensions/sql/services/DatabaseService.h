@@ -15,16 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_DATABASESERVICE_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_DATABASESERVICE_H_
+#pragma once
+
+#include <memory>
+#include <unordered_map>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
 #include "data/DatabaseConnectors.h"
-#include <memory>
-#include <unordered_map>
-
-#include <soci/soci.h>
 
 namespace org {
 namespace apache {
@@ -99,5 +97,3 @@ class DatabaseService : public core::controller::ControllerService {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_DATABASESERVICE_H_ */

@@ -157,7 +157,7 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
   };
   sql::JSONSQLWriter json_writer{output_format_ == OutputType::JSONPretty, column_filter};
   FlowFileGenerator flow_file_creator{session, json_writer};
-  sql::SQLRowsetProcessor sql_rowset_processor(rowset, {json_writer, maxCollector, flow_file_creator});
+  sql::SQLRowsetProcessor sql_rowset_processor(std::move(rowset), {json_writer, maxCollector, flow_file_creator});
 
   while (size_t row_count = sql_rowset_processor.process(max_rows_)) {
     auto new_file = flow_file_creator.getLastFlowFile();

@@ -16,8 +16,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-file(GLOB SQL_TESTS  "*.cpp")
+file(GLOB SQL_MOCK_SOURCES  "mocks/*.cpp")
+add_library(minifi-sql-mocks STATIC ${SQL_MOCK_SOURCES})
+target_include_directories(minifi-sql-mocks BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include")
+target_include_directories(minifi-sql-mocks BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/sql")
+target_include_directories(minifi-sql-mocks BEFORE PRIVATE "mocks")
+target_wholearchive_library(minifi-sql-mocks core-minifi)
 
+file(GLOB SQL_TESTS  "*.cpp")
 set(SQL_TEST_COUNT 0)
 foreach(testfile ${SQL_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
@@ -31,6 +37,7 @@ foreach(testfile ${SQL_TESTS})
 
     createTests("${testfilename}")
     target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
+    target_link_libraries(${testfilename} minifi-sql-mocks)
     target_wholearchive_library(${testfilename} minifi-sql)
     target_wholearchive_library(${testfilename} minifi-standard-processors)
     target_wholearchive_library(${testfilename} minifi-expression-language-extensions)

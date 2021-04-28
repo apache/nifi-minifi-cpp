@@ -20,18 +20,9 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
-
-#include "utils/GeneralUtils.h"
 #include "DatabaseService.h"
 #include "core/Resource.h"
-#include "data/DatabaseConnectors.h"
-#include <memory>
-#include <unordered_map>
-
-#include <soci/soci.h>
-#include <soci/odbc/soci-odbc.h>
-
-#include <iostream>
+#include "data/SociConnectors.h"
 
 namespace org {
 namespace apache {
@@ -39,49 +30,6 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 namespace controllers {
-
-class ODBCConnection : public sql::Connection {
- public:
-  explicit ODBCConnection(std::string connectionString)
-    : connection_string_(std::move(connectionString)) {
-      session_ = utils::make_unique<soci::session>(getSessionParameters());
-  }
-
-  bool connected(std::string& exception) const override {
-    try {
-      exception.clear();
-      // According to https://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most by Rob Hruska,
-      // 'select 1' works for: H2, MySQL, Microsoft SQL Server, PostgreSQL, SQLite. For Oracle 'SELECT 1 FROM DUAL' works.
-      prepareStatement("select 1")->execute();
-      return true;
-    } catch (const std::exception& e) {
-      exception = e.what();
-      return false;
-    }
-  }
-
-  std::unique_ptr<sql::Statement> prepareStatement(const std::string& query) const override {
-    return utils::make_unique<sql::Statement>(*session_, query);
-  }
-
-  std::unique_ptr<Session> getSession() const override {
-    return utils::make_unique<sql::Session>(*session_);
-  }
-
- private:
-   soci::connection_parameters getSessionParameters() const {
-     static const soci::backend_factory &backEnd = *soci::factory_odbc();
-
-     soci::connection_parameters parameters(backEnd, connection_string_);
-     parameters.set_option(soci::odbc_option_driver_complete, "0" /* SQL_DRIVER_NOPROMPT */);
-
-     return parameters;
-   }
-
- private:
-  std::unique_ptr<soci::session> session_;
-  std::string connection_string_;
-};
 
 /**
  * Purpose and Justification: Controller services function as a layerable way to provide
