@@ -201,7 +201,7 @@ All properties are required with a default value, making them effectively option
 |  Include Timestamp   |      true       |                                   true<br>false                                    | Include message timestamp in the 'timestamp' attribute.                                                                                                  |
 |     Journal Type     |     System      |                               User<br>System<br>Both                               | Type of journal to consume.                                                                                                                              |
 | Process Old Messages |      false      |                                   true<br>false                                    | Process events created before the first usage (schedule) of the processor instance.                                                                      |
-|   Timestamp Format   |    %x %X %Z     | [date format](https://howardhinnant.github.io/date/date.html#to_stream_formatting) | Format string to use when creating the timestamp attribute or writing messages in the syslog format. ISO|ISO 8601|ISO8601 are equivalent to "%FT%T%Ez".  |
+|   Timestamp Format   |    %x %X %Z     | [date format](https://howardhinnant.github.io/date/date.html#to_stream_formatting) | Format string to use when creating the timestamp attribute or writing messages in the syslog format. ISO/ISO 8601/ISO8601 are equivalent to "%FT%T%Ez".  |
 
 ### Relationships
 
