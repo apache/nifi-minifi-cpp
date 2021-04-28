@@ -85,11 +85,10 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     passWord_ = value;
     logger_->log_debug("AbstractMQTTProcessor: PassWord [%s]", passWord_);
   }
-  value = "";
 
   const auto cleanSession_parsed = [&] () -> utils::optional<bool> {
     std::string property_value;
-    if (!context->getProperty(CleanSession.getName(), value)) return utils::nullopt;
+    if (!context->getProperty(CleanSession.getName(), property_value)) return utils::nullopt;
     return utils::StringUtils::toBool(property_value);
   }();
   if ( cleanSession_parsed ) {

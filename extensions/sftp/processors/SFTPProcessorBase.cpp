@@ -180,7 +180,7 @@ void SFTPProcessorBase::parseCommonPropertiesOnSchedule(const std::shared_ptr<co
   if (!context->getProperty(SendKeepaliveOnTimeout.getName(), value)) {
     logger_->log_error("Send Keep Alive On Timeout attribute is missing or invalid");
   } else {
-    use_keepalive_on_timeout_ = utils::StringUtils::toBool(value).value_or(false);
+    use_keepalive_on_timeout_ = utils::StringUtils::toBool(value).value_or(true);
   }
   context->getProperty(ProxyType.getName(), proxy_type_);
 }

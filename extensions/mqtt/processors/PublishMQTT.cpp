@@ -63,11 +63,10 @@ void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     max_seg_size_ = valInt;
     logger_->log_debug("PublishMQTT: max flow segment size [%" PRIu64 "]", max_seg_size_);
   }
-  value = "";
 
   const auto retain_parsed = [&] () -> utils::optional<bool> {
     std::string property_value;
-    if (!context->getProperty(CleanSession.getName(), value)) return utils::nullopt;
+    if (!context->getProperty(CleanSession.getName(), property_value)) return utils::nullopt;
     return utils::StringUtils::toBool(property_value);
   }();
   if ( retain_parsed ) {
