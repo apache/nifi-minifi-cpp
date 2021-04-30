@@ -29,6 +29,8 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "AWSCredentialsProvider.h"
 
+class AWSCredentialsServiceTestAccessor;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -66,16 +68,14 @@ class AWSCredentialsService : public core::controller::ControllerService {
 
   void onEnable() override;
 
-  Aws::Auth::AWSCredentials getAWSCredentials() {
-    return aws_credentials_;
-  }
+  Aws::Auth::AWSCredentials getAWSCredentials();
 
  private:
+  friend class ::AWSCredentialsServiceTestAccessor;
+
+  void cacheCredentials();
+
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
-  std::string access_key_;
-  std::string secret_key_;
-  std::string credentials_file_;
-  bool use_default_credentials_ = false;
   Aws::Auth::AWSCredentials aws_credentials_;
   AWSCredentialsProvider aws_credentials_provider_;
 };
