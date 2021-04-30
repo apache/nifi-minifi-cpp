@@ -66,9 +66,7 @@ class AWSCredentialsService : public core::controller::ControllerService {
 
   void onEnable() override;
 
-  Aws::Auth::AWSCredentials getAWSCredentials() {
-    return aws_credentials_;
-  }
+  Aws::Auth::AWSCredentials getAWSCredentials();
 
  private:
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();

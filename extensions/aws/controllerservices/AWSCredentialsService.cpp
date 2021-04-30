@@ -76,6 +76,16 @@ void AWSCredentialsService::onEnable() {
   }
 }
 
+Aws::Auth::AWSCredentials AWSCredentialsService::getAWSCredentials() {
+  if (aws_credentials_.IsExpiredOrEmpty()) {
+    auto aws_credentials_result = aws_credentials_provider_.getAWSCredentials();
+    if (aws_credentials_result) {
+      aws_credentials_ = aws_credentials_result.value();
+    }
+  }
+  return aws_credentials_;
+}
+
 }  // namespace controllers
 }  // namespace aws
 }  // namespace minifi
