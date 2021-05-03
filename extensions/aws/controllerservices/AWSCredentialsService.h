@@ -76,10 +76,6 @@ class AWSCredentialsService : public core::controller::ControllerService {
   void cacheCredentials();
 
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
-  std::string access_key_;
-  std::string secret_key_;
-  std::string credentials_file_;
-  bool use_default_credentials_ = false;
   Aws::Auth::AWSCredentials aws_credentials_;
   AWSCredentialsProvider aws_credentials_provider_;
 };

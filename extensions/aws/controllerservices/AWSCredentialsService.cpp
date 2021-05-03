@@ -60,17 +60,16 @@ void AWSCredentialsService::initialize() {
 }
 
 void AWSCredentialsService::onEnable() {
-  getProperty(AccessKey.getName(), access_key_);
-  getProperty(SecretKey.getName(), secret_key_);
-  getProperty(CredentialsFile.getName(), credentials_file_);
-  getProperty(UseDefaultCredentials.getName(), use_default_credentials_);
-
-  aws_credentials_provider_.setAccessKey(access_key_);
-  aws_credentials_provider_.setSecretKey(secret_key_);
-  aws_credentials_provider_.setCredentialsFile(credentials_file_);
-  aws_credentials_provider_.setUseDefaultCredentials(use_default_credentials_);
-
-  cacheCredentials();
+  std::string value;
+  getProperty(AccessKey.getName(), value);
+  aws_credentials_provider_.setAccessKey(value);
+  getProperty(SecretKey.getName(), value);
+  aws_credentials_provider_.setSecretKey(value);
+  getProperty(CredentialsFile.getName(), value);
+  aws_credentials_provider_.setCredentialsFile(value);
+  bool use_default_credentials = false;
+  getProperty(UseDefaultCredentials.getName(), use_default_credentials);
+  aws_credentials_provider_.setUseDefaultCredentials(use_default_credentials);
 }
 
 Aws::Auth::AWSCredentials AWSCredentialsService::getAWSCredentials() {
