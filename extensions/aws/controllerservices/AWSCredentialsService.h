@@ -73,6 +73,8 @@ class AWSCredentialsService : public core::controller::ControllerService {
  private:
   friend class ::AWSCredentialsServiceTestAccessor;
 
+  void cacheCredentials();
+
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   std::string access_key_;
   std::string secret_key_;

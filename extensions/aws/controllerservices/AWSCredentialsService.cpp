@@ -70,20 +70,21 @@ void AWSCredentialsService::onEnable() {
   aws_credentials_provider_.setCredentialsFile(credentials_file_);
   aws_credentials_provider_.setUseDefaultCredentials(use_default_credentials_);
 
-  auto aws_credentials_result = aws_credentials_provider_.getAWSCredentials();
-  if (aws_credentials_result) {
-    aws_credentials_ = aws_credentials_result.value();
-  }
+  cacheCredentials();
 }
 
 Aws::Auth::AWSCredentials AWSCredentialsService::getAWSCredentials() {
   if (aws_credentials_.IsExpiredOrEmpty()) {
-    auto aws_credentials_result = aws_credentials_provider_.getAWSCredentials();
-    if (aws_credentials_result) {
-      aws_credentials_ = aws_credentials_result.value();
-    }
+    cacheCredentials();
   }
   return aws_credentials_;
+}
+
+void AWSCredentialsService::cacheCredentials() {
+  auto aws_credentials_result = aws_credentials_provider_.getAWSCredentials();
+  if (aws_credentials_result) {
+    aws_credentials_ = aws_credentials_result.value();
+  }
 }
 
 }  // namespace controllers
