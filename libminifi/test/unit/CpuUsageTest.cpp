@@ -19,8 +19,8 @@
 
 #include <chrono>
 #include <thread>
-#include "utils/SystemCPUUsageTracker.h"
-#include "utils/ProcessCPUUsageTracker.h"
+#include "utils/SystemCpuUsageTracker.h"
+#include "utils/ProcessCpuUsageTracker.h"
 #include "../TestBase.h"
 
 void busySleep(int duration_ms, std::chrono::milliseconds& start_ms, std::chrono::milliseconds& end_ms, const std::chrono::system_clock::time_point& origin) {
@@ -37,7 +37,7 @@ void idleSleep(int duration_ms, std::chrono::milliseconds& start_ms, std::chrono
   end_ms = std::chrono::duration_cast<std::chrono::milliseconds> (std::chrono::system_clock::now() - origin);
 }
 
-void printCPUUtilization(const std::string& target, const std::string& sleep_type, uint64_t start, uint64_t end, double utilizationPercent) {
+void printCpuUtilization(const std::string& target, const std::string& sleep_type, uint64_t start, uint64_t end, double utilizationPercent) {
   std::cout << target << " CPU Utilization during "<< sleep_type << " between " << start << "ms and " << end << "ms : " << utilizationPercent << std::endl;
 }
 
@@ -47,8 +47,8 @@ TEST_CASE("Test System CPU Utilization", "[testcpuusage]") {
   constexpr int sleep_duration_ms = 1000;
   constexpr bool cout_enabled = true;
 
-  org::apache::nifi::minifi::utils::SystemCPUUsageTracker hostTracker;
-  org::apache::nifi::minifi::utils::ProcessCPUUsageTracker processTracker;
+  org::apache::nifi::minifi::utils::SystemCpuUsageTracker hostTracker;
+  org::apache::nifi::minifi::utils::ProcessCpuUsageTracker processTracker;
   int vCores = std::thread::hardware_concurrency();
   auto test_start = std::chrono::system_clock::now();
   for (int i = 0; i < number_of_rounds; ++i) {
@@ -57,15 +57,15 @@ TEST_CASE("Test System CPU Utilization", "[testcpuusage]") {
       std::chrono::milliseconds idle_sleep_end;
       idleSleep(sleep_duration_ms, idle_sleep_start, idle_sleep_end, test_start);
 
-      double system_cpu_usage_during_idle_sleep = hostTracker.getCPUUsageAndRestartCollection();
-      double process_cpu_usage_during_idle_sleep = processTracker.getCPUUsageAndRestartCollection();
+      double system_cpu_usage_during_idle_sleep = hostTracker.getCpuUsageAndRestartCollection();
+      double process_cpu_usage_during_idle_sleep = processTracker.getCpuUsageAndRestartCollection();
       REQUIRE(system_cpu_usage_during_idle_sleep >= 0);
       REQUIRE(process_cpu_usage_during_idle_sleep >= 0);
       REQUIRE(system_cpu_usage_during_idle_sleep <= 1);
       REQUIRE(process_cpu_usage_during_idle_sleep < 0.1);
       if (cout_enabled) {
-        printCPUUtilization("System", "idle sleep", idle_sleep_start.count(), idle_sleep_end.count(), system_cpu_usage_during_idle_sleep);
-        printCPUUtilization("Process", "idle sleep", idle_sleep_start.count(), idle_sleep_end.count(), process_cpu_usage_during_idle_sleep);
+        printCpuUtilization("System", "idle sleep", idle_sleep_start.count(), idle_sleep_end.count(), system_cpu_usage_during_idle_sleep);
+        printCpuUtilization("Process", "idle sleep", idle_sleep_start.count(), idle_sleep_end.count(), process_cpu_usage_during_idle_sleep);
         std::cout << std::endl;
       }
     }
@@ -74,15 +74,15 @@ TEST_CASE("Test System CPU Utilization", "[testcpuusage]") {
       std::chrono::milliseconds busy_sleep_end;
       busySleep(sleep_duration_ms, busy_sleep_start, busy_sleep_end, test_start);
 
-      double system_cpu_usage_during_busy_sleep = hostTracker.getCPUUsageAndRestartCollection();
-      double process_cpu_usage_during_busy_sleep = processTracker.getCPUUsageAndRestartCollection();
+      double system_cpu_usage_during_busy_sleep = hostTracker.getCpuUsageAndRestartCollection();
+      double process_cpu_usage_during_busy_sleep = processTracker.getCpuUsageAndRestartCollection();
       REQUIRE(system_cpu_usage_during_busy_sleep > (0.8 / vCores));
       REQUIRE(system_cpu_usage_during_busy_sleep <= 1);
       REQUIRE(process_cpu_usage_during_busy_sleep >= 0);
       REQUIRE(process_cpu_usage_during_busy_sleep <= 1);
       if (cout_enabled) {
-        printCPUUtilization("System", "busy sleep", busy_sleep_start.count(), busy_sleep_end.count(), system_cpu_usage_during_busy_sleep);
-        printCPUUtilization("Process", "busy sleep", busy_sleep_start.count(), busy_sleep_end.count(), process_cpu_usage_during_busy_sleep);
+        printCpuUtilization("System", "busy sleep", busy_sleep_start.count(), busy_sleep_end.count(), system_cpu_usage_during_busy_sleep);
+        printCpuUtilization("Process", "busy sleep", busy_sleep_start.count(), busy_sleep_end.count(), process_cpu_usage_during_busy_sleep);
         std::cout << std::endl;
       }
     }

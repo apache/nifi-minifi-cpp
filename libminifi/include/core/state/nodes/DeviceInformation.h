@@ -58,7 +58,7 @@
 #include "Connection.h"
 #include "io/ClientSocket.h"
 #include "utils/OsUtils.h"
-#include "utils/SystemCPUUsageTracker.h"
+#include "utils/SystemCpuUsageTracker.h"
 
 namespace org {
 namespace apache {
@@ -402,7 +402,7 @@ class DeviceInfoNode : public DeviceInformation {
     double system_cpu_usage = -1.0;
     {
       std::lock_guard<std::mutex> guard(cpu_load_tracker_mutex_);
-      system_cpu_usage = cpu_load_tracker_.getCPUUsageAndRestartCollection();
+      system_cpu_usage = cpu_load_tracker_.getCpuUsageAndRestartCollection();
     }
     SerializedResponseNode cpu_usage;
     cpu_usage.name = "cpuUtilization";
@@ -477,7 +477,7 @@ class DeviceInfoNode : public DeviceInformation {
   std::string hostname_;
   std::string ip_;
   std::string device_id_;
-  static utils::SystemCPUUsageTracker cpu_load_tracker_;
+  static utils::SystemCpuUsageTracker cpu_load_tracker_;
   static std::mutex cpu_load_tracker_mutex_;
 };
 

@@ -29,25 +29,25 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-class ProcessCPUUsageTrackerBase {
+class ProcessCpuUsageTrackerBase {
  public:
-  ProcessCPUUsageTrackerBase() = default;
-  virtual ~ProcessCPUUsageTrackerBase() = default;
-  virtual double getCPUUsageAndRestartCollection() = 0;
+  ProcessCpuUsageTrackerBase() = default;
+  virtual ~ProcessCpuUsageTrackerBase() = default;
+  virtual double getCpuUsageAndRestartCollection() = 0;
 };
 
-#if defined(__linux__) || defined(__APPLE__)
-class ProcessCPUUsageTracker : ProcessCPUUsageTrackerBase {
+#ifndef WIN32
+class ProcessCpuUsageTracker : ProcessCpuUsageTrackerBase {
  public:
-  ProcessCPUUsageTracker();
-  ~ProcessCPUUsageTracker() = default;
-  double getCPUUsageAndRestartCollection() override;
+  ProcessCpuUsageTracker();
+  ~ProcessCpuUsageTracker() = default;
+  double getCpuUsageAndRestartCollection() override;
 
  protected:
-  void queryCPUTimes();
+  void queryCpuTimes();
   bool isCurrentQueryOlderThanPrevious() const;
   bool isCurrentQuerySameAsPrevious() const;
-  double getProcessCPUUsageBetweenLastTwoQueries() const;
+  double getProcessCpuUsageBetweenLastTwoQueries() const;
 
  private:
   clock_t cpu_times_;
@@ -58,20 +58,20 @@ class ProcessCPUUsageTracker : ProcessCPUUsageTrackerBase {
   clock_t previous_sys_cpu_times_;
   clock_t previous_user_cpu_times_;
 };
-#endif  // linux, macOS
 
-#if defined(WIN32)
-class ProcessCPUUsageTracker : ProcessCPUUsageTrackerBase {
+#else
+
+class ProcessCpuUsageTracker : ProcessCpuUsageTrackerBase {
  public:
-  ProcessCPUUsageTracker();
-  ~ProcessCPUUsageTracker() = default;
-  double getCPUUsageAndRestartCollection() override;
+  ProcessCpuUsageTracker();
+  ~ProcessCpuUsageTracker() = default;
+  double getCpuUsageAndRestartCollection() override;
 
  protected:
-  void queryCPUTimes();
+  void queryCpuTimes();
   bool isCurrentQuerySameAsPrevious() const;
   bool isCurrentQueryOlderThanPrevious() const;
-  double getProcessCPUUsageBetweenLastTwoQueries() const;
+  double getProcessCpuUsageBetweenLastTwoQueries() const;
 
  private:
   HANDLE self_;
@@ -83,7 +83,7 @@ class ProcessCPUUsageTracker : ProcessCPUUsageTrackerBase {
   uint64_t previous_sys_cpu_times_;
   uint64_t previous_user_cpu_times_;
 };
-#endif  // Windows
+#endif
 
 } /* namespace utils */
 } /* namespace minifi */

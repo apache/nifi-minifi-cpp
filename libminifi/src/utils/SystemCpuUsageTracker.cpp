@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "utils/SystemCPUUsageTracker.h"
+#include "utils/SystemCpuUsageTracker.h"
 
 namespace org {
 namespace apache {
@@ -24,24 +24,24 @@ namespace minifi {
 namespace utils {
 #ifdef __linux__
 
-SystemCPUUsageTracker::SystemCPUUsageTracker() :
+SystemCpuUsageTracker::SystemCpuUsageTracker() :
     total_user_(0), previous_total_user_(0),
     total_user_low_(0), previous_total_user_low_(0),
     total_sys_(0), previous_total_sys_(0),
     total_idle_(0), previous_total_idle_(0) {
-  queryCPUTimes();
+  queryCpuTimes();
 }
 
-double SystemCPUUsageTracker::getCPUUsageAndRestartCollection() {
-  queryCPUTimes();
+double SystemCpuUsageTracker::getCpuUsageAndRestartCollection() {
+  queryCpuTimes();
   if (isCurrentQuerySameAsPrevious() || isCurrentQueryOlderThanPrevious()) {
     return -1.0;
   } else {
-    return getCPUUsageBetweenLastTwoQueries();
+    return getCpuUsageBetweenLastTwoQueries();
   }
 }
 
-void SystemCPUUsageTracker::queryCPUTimes() {
+void SystemCpuUsageTracker::queryCpuTimes() {
   previous_total_user_ = total_user_;
   previous_total_user_low_ = total_user_low_;
   previous_total_sys_ = total_sys_;
@@ -56,21 +56,21 @@ void SystemCPUUsageTracker::queryCPUTimes() {
   fclose(file);
 }
 
-bool SystemCPUUsageTracker::isCurrentQueryOlderThanPrevious() const {
+bool SystemCpuUsageTracker::isCurrentQueryOlderThanPrevious() const {
   return (total_user_ < previous_total_user_ ||
           total_user_low_ < previous_total_user_low_ ||
           total_sys_ < previous_total_sys_ ||
           total_idle_ < previous_total_idle_);
 }
 
-bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() const {
+bool SystemCpuUsageTracker::isCurrentQuerySameAsPrevious() const {
   return (total_user_ == previous_total_user_ &&
           total_user_low_ == previous_total_user_low_ &&
           total_sys_ == previous_total_sys_ &&
           total_idle_ == previous_total_idle_);
 }
 
-double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() const {
+double SystemCpuUsageTracker::getCpuUsageBetweenLastTwoQueries() const {
   uint64_t total_user_diff = total_user_ - previous_total_user_;
   uint64_t total_user_low_diff = total_user_low_ - previous_total_user_low_;
   uint64_t total_system_diff = total_sys_ - previous_total_sys_;
@@ -83,22 +83,22 @@ double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() const {
 #endif  // linux
 
 #ifdef WIN32
-SystemCPUUsageTracker::SystemCPUUsageTracker() :
+SystemCpuUsageTracker::SystemCpuUsageTracker() :
     total_idle_(0), total_sys_(0), total_user_(0),
     previous_total_idle_(0), previous_total_sys_(0), previous_total_user_(0) {
-  queryCPUTimes();
+  queryCpuTimes();
 }
 
-double SystemCPUUsageTracker::getCPUUsageAndRestartCollection() {
-  queryCPUTimes();
+double SystemCpuUsageTracker::getCpuUsageAndRestartCollection() {
+  queryCpuTimes();
   if (isCurrentQuerySameAsPrevious() || isCurrentQueryOlderThanPrevious()) {
     return -1.0;
   } else {
-    return getCPUUsageBetweenLastTwoQueries();
+    return getCpuUsageBetweenLastTwoQueries();
   }
 }
 
-void SystemCPUUsageTracker::queryCPUTimes() {
+void SystemCpuUsageTracker::queryCpuTimes() {
   previous_total_user_ = total_user_;
   previous_total_sys_ = total_sys_;
   previous_total_idle_ = total_idle_;
@@ -109,19 +109,19 @@ void SystemCPUUsageTracker::queryCPUTimes() {
   total_idle_ = ULARGE_INTEGER{ fidle.dwLowDateTime, fidle.dwHighDateTime }.QuadPart;
 }
 
-bool SystemCPUUsageTracker::isCurrentQueryOlderThanPrevious() const {
+bool SystemCpuUsageTracker::isCurrentQueryOlderThanPrevious() const {
   return (total_user_ < previous_total_user_ ||
     total_sys_ < previous_total_sys_ ||
     total_idle_ < previous_total_idle_);
 }
 
-bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() const {
+bool SystemCpuUsageTracker::isCurrentQuerySameAsPrevious() const {
   return (total_user_ == previous_total_user_ &&
     total_sys_ == previous_total_sys_ &&
     total_idle_ == previous_total_idle_);
 }
 
-double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() const {
+double SystemCpuUsageTracker::getCpuUsageBetweenLastTwoQueries() const {
   uint64_t total_user_diff = total_user_ - previous_total_user_;
   uint64_t total_sys_diff = total_sys_ - previous_total_sys_;
   uint64_t total_idle_diff = total_idle_ - previous_total_idle_;
@@ -133,22 +133,22 @@ double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() const {
 #endif  // windows
 
 #ifdef __APPLE__
-SystemCPUUsageTracker::SystemCPUUsageTracker() :
+SystemCpuUsageTracker::SystemCpuUsageTracker() :
     total_ticks_(0), previous_total_ticks_(0),
     idle_ticks_(0), previous_idle_ticks_(0) {
-  queryCPUTicks();
+  queryCpuTicks();
 }
 
-double SystemCPUUsageTracker::getCPUUsageAndRestartCollection() {
-  queryCPUTicks();
+double SystemCpuUsageTracker::getCpuUsageAndRestartCollection() {
+  queryCpuTicks();
   if (isCurrentQuerySameAsPrevious() || isCurrentQueryOlderThanPrevious()) {
     return -1.0;
   } else {
-    return getCPUUsageBetweenLastTwoQueries();
+    return getCpuUsageBetweenLastTwoQueries();
   }
 }
 
-void SystemCPUUsageTracker::queryCPUTicks() {
+void SystemCpuUsageTracker::queryCpuTicks() {
   host_cpu_load_info_data_t cpuinfo;
   mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
   auto query_result = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&cpuinfo, &count);
@@ -163,17 +163,17 @@ void SystemCPUUsageTracker::queryCPUTicks() {
   }
 }
 
-bool SystemCPUUsageTracker::isCurrentQueryOlderThanPrevious() const {
+bool SystemCpuUsageTracker::isCurrentQueryOlderThanPrevious() const {
   return (total_ticks_ < previous_total_ticks_ ||
           idle_ticks_ < previous_idle_ticks_);
 }
 
-bool SystemCPUUsageTracker::isCurrentQuerySameAsPrevious() const {
+bool SystemCpuUsageTracker::isCurrentQuerySameAsPrevious() const {
   return (total_ticks_ == previous_total_ticks_ &&
           idle_ticks_ == previous_idle_ticks_);
 }
 
-double SystemCPUUsageTracker::getCPUUsageBetweenLastTwoQueries() const {
+double SystemCpuUsageTracker::getCpuUsageBetweenLastTwoQueries() const {
   uint64_t total_ticks_since_last_time = total_ticks_-previous_total_ticks_;
   uint64_t idle_ticks_since_last_time  = idle_ticks_-previous_idle_ticks_;
 

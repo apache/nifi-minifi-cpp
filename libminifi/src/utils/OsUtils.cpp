@@ -196,7 +196,8 @@ int64_t OsUtils::getCurrentProcessPhysicalMemoryUsage() {
     return -1;
   return pmc.WorkingSetSize;
 #else
-  static_assert(false, "Unsupported platform");
+#warning "Unsupported platform"
+  return -1;
 #endif
 }
 
@@ -244,7 +245,8 @@ int64_t OsUtils::getSystemPhysicalMemoryUsage() {
   DWORDLONG physical_memory_used = memory_info.ullTotalPhys - memory_info.ullAvailPhys;
   return physical_memory_used;
 #else
-  static_assert(false, "Unsupported platform");
+#warning "Unsupported platform"
+  return -1;
 #endif
 }
 
@@ -270,18 +272,12 @@ int64_t OsUtils::getSystemTotalPhysicalMemory() {
   DWORDLONG total_physical_memory = memory_info.ullTotalPhys;
   return total_physical_memory;
 #else
-  static_assert(false, "Unsupported platform");
+#warning "Unsupported platform"
+  return -1;
 #endif
 }
 
 std::string OsUtils::getMachineArchitecture() {
-#if defined(__linux__) || defined(__APPLE__)
-  utsname buf;
-  if (uname(&buf) == -1)
-    return "unknown";
-  else
-    return buf.machine;
-#endif
 #if defined(WIN32)
   SYSTEM_INFO system_information;
   GetNativeSystemInfo(&system_information);
@@ -299,6 +295,12 @@ std::string OsUtils::getMachineArchitecture() {
     default:
       return "unknown";
   }
+#else
+  utsname buf;
+  if (uname(&buf) == -1)
+    return "unknown";
+  else
+    return buf.machine;
 #endif
   return "unknown";
 }

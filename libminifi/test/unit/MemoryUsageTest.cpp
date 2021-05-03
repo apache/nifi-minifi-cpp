@@ -40,7 +40,7 @@ TEST_CASE("Test memory usage", "[testmemoryusage]") {
 
 #ifndef WIN32
 size_t GetTotalMemoryLegacy() {
-  return (size_t) sysconf(_SC_PHYS_PAGES) * (size_t) sysconf(_SC_PAGESIZE);
+  return static_cast<size_t>(sysconf(_SC_PHYS_PAGES)) * static_cast<size_t>(sysconf(_SC_PAGESIZE));
 }
 
 TEST_CASE("Test new and legacy total system memory query equivalency") {
