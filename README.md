@@ -87,6 +87,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | OpenCV | [CaptureRTSPFrame](PROCESSORS.md#captureRTSPFrame)     |    -DENABLE_OPENCV=ON  |
 | OpenWSMAN | SourceInitiatedSubscriptionListener | -DENABLE_OPENWSMAN=ON |
 | PCAP | [CapturePacket](PROCESSORS.md#capturepacket)      |    -DENABLE_PCAP=ON  |
+| PDH (Windows only) | [PerformanceDataMonitor](PROCESSORS.md#performancedatamonitor)      |    -DENABLE_PDH=ON  |
 | Scripting | [ExecuteScript](PROCESSORS.md#executescript)<br/>**Custom Python Processors**     |    -DDISABLE_SCRIPTING=ON  |
 | Sensors | GetEnvironmentalSensors<br/>GetMovementSensors | -DENABLE_SENSORS=ON |
 | SFTP | [FetchSFTP](PROCESSORS.md#fetchsftp)<br/>[ListSFTP](PROCESSORS.md#listsftp)<br/>[PutSFTP](PROCESSORS.md#putsftp) | -DENABLE_SFTP=ON |

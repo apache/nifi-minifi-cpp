@@ -31,17 +31,17 @@ namespace processors {
 core::Relationship PerformanceDataMonitor::Success("success", "All files are routed to success");
 
 core::Property PerformanceDataMonitor::PredefinedGroups(
-    core::PropertyBuilder::createProperty("PredefinedGroups")->
+    core::PropertyBuilder::createProperty("Predefined Groups")->
     withDescription("Comma separated list to which predefined groups should be included")->
     withDefaultValue("")->build());
 
 core::Property PerformanceDataMonitor::CustomPDHCounters(
-    core::PropertyBuilder::createProperty("CustomPDHCounters")->
+    core::PropertyBuilder::createProperty("Custom PDH Counters")->
     withDescription("Comma separated list of PDHCounters to collect from")->
     withDefaultValue("")->build());
 
 core::Property PerformanceDataMonitor::OutputFormatProperty(
-    core::PropertyBuilder::createProperty("OutputFormat")->
+    core::PropertyBuilder::createProperty("Output format")->
     withDescription("Format of the created flowfiles")->
     withAllowableValue<std::string>(JSON_FORMAT_STR)->
     withAllowableValue(OPEN_TELEMETRY_FORMAT_STR)->

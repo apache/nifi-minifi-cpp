@@ -36,6 +36,7 @@
 - [ManipulateArchive](#manipulatearchive)
 - [MergeContent](#mergecontent)
 - [MotionDetector](#motiondetector)
+- [PerformanceDataMonitor](#performancedatamonitor)
 - [PublishKafka](#publishkafka)
 - [PublishMQTT](#publishmqtt)
 - [PutAzureBlobStorage](#putazureblobstorage)
@@ -953,6 +954,27 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |failure|Failure to detect motion|
 |success|Successful to detect motion|
+
+
+## PerformanceDataMonitor
+
+### Description
+This Windows only processor can create FlowFiles populated with various performance data with the help of Windows Performance Counters.
+Windows Performance Counters provide a high-level abstraction layer with a consistent interface for collecting various kinds of system data such as CPU, memory, and disk usage statistics.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|Predefined Groups||CPU<br>IO<br>Disk<br>Network<br>Memory<br>System<br>Process|Comma separated list from the allowable values, to monitor multiple common Windows Performance counters related to these groups. (e.g. "CPU,Network")|
+|Custom PDH Counters|||Comma separated list of Windows Performance Counters to monitor. (e.g. "\\System\\Threads,\\Process(*)\\ID Process")|
+|**Output format**|JSON|JSON<br>OpenTelemetry|The output format of the new flowfile|
+### Relationships
+
+| Name | Description |
+| - | - |
+|success|All files are routed to success|
 
 
 ## PublishKafka
