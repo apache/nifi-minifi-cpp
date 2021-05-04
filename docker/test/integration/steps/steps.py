@@ -20,6 +20,7 @@ from kafka import KafkaProducer
 from confluent_kafka.admin import AdminClient, NewTopic
 from confluent_kafka import Producer
 import socket
+import os
 
 
 # Background
@@ -352,6 +353,21 @@ def delivery_report(err, msg):
 @when("a message with content \"{content}\" is published to the \"{topic_name}\" topic")
 def step_impl(context, content, topic_name):
     producer = Producer({"bootstrap.servers": "localhost:29092", "client.id": socket.gethostname()})
+    producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
+    producer.flush(10)
+
+
+@when("a message with content \"{content}\" is published to the \"{topic_name}\" topic using an ssl connection")
+def step_impl(context, content, topic_name):
+    test_dir = os.environ['PYTHONPATH'].split(':')[-1]  # Based on DockerVerify.sh
+    producer = Producer({
+        "bootstrap.servers": "localhost:29093",
+        "security.protocol": "ssl",
+        "ssl.ca.location": os.path.join(test_dir, "resources/kafka_broker/conf/certs/ca-cert"),
+        "ssl.certificate.location": os.path.join(test_dir, "resources/kafka_broker/conf/certs/client_LMN_client.pem"),
+        "ssl.key.location": os.path.join(test_dir, "resources/kafka_broker/conf/certs/client_LMN_client.key"),
+        "ssl.key.password": "abcdefgh",
+        "client.id": socket.gethostname()})
     producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
     producer.flush(10)
 

@@ -65,8 +65,8 @@ core::Property ConsumeKafka::KafkaBrokers(core::PropertyBuilder::createProperty(
   ->build());
 
 core::Property ConsumeKafka::SecurityProtocol(core::PropertyBuilder::createProperty("Security Protocol")
-  ->withDescription("This property is currently not supported. Protocol used to communicate with brokers. Corresponds to Kafka's 'security.protocol' property.")
-  ->withAllowableValues<std::string>({SECURITY_PROTOCOL_PLAINTEXT/*, SECURITY_PROTOCOL_SSL, SECURITY_PROTOCOL_SASL_PLAINTEXT, SECURITY_PROTOCOL_SASL_SSL*/ })
+  ->withDescription("Protocol used to communicate with brokers. Corresponds to Kafka's 'security.protocol' property.")
+  ->withAllowableValues<std::string>({SECURITY_PROTOCOL_PLAINTEXT, SECURITY_PROTOCOL_SSL})
   ->withDefaultValue(SECURITY_PROTOCOL_PLAINTEXT)
   ->isRequired(true)
   ->build());
@@ -167,6 +167,26 @@ core::Property ConsumeKafka::SessionTimeout(core::PropertyBuilder::createPropert
   ->withDefaultValue<core::TimePeriodValue>("60 seconds")
   ->build());
 
+core::Property ConsumeKafka::SecurityCA(core::PropertyBuilder::createProperty("Security CA")
+  ->withDescription("File or directory path to CA certificate(s) for verifying the broker's key")
+  ->withDefaultValue("")
+  ->build());
+
+core::Property ConsumeKafka::SecurityCert(core::PropertyBuilder::createProperty("Security Cert")
+  ->withDescription("Path to client's public key (PEM) used for authentication")
+  ->withDefaultValue("")
+  ->build());
+
+core::Property ConsumeKafka::SecurityPrivateKey(core::PropertyBuilder::createProperty("Security Private Key")
+  ->withDescription("Path to client's private key (PEM) used for authentication")
+  ->withDefaultValue("")
+  ->build());
+
+core::Property ConsumeKafka::SecurityPrivateKeyPassword(core::PropertyBuilder::createProperty("Security Pass Phrase")
+  ->withDescription("Private key passphrase")
+  ->withDefaultValue("")
+  ->build());
+
 const core::Relationship ConsumeKafka::Success("success", "Incoming Kafka messages as flowfiles. Depending on the demarcation strategy, this can be one or multiple flowfiles per message.");
 
 void ConsumeKafka::initialize() {
@@ -185,7 +205,11 @@ void ConsumeKafka::initialize() {
     DuplicateHeaderHandling,
     MaxPollRecords,
     MaxPollTime,
-    SessionTimeout
+    SessionTimeout,
+    SecurityCA,
+    SecurityCert,
+    SecurityPrivateKey,
+    SecurityPrivateKeyPassword
   });
   setSupportedRelationships({
     Success,
@@ -211,13 +235,13 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
   context->getProperty(MessageHeaderEncoding.getName(), message_header_encoding_);
   context->getProperty(DuplicateHeaderHandling.getName(), duplicate_header_handling_);
 
+  context->getProperty(SecurityCA.getName(), ssl_data_.ca_loc);
+  context->getProperty(SecurityCert.getName(), ssl_data_.cert_loc);
+  context->getProperty(SecurityPrivateKey.getName(), ssl_data_.key_loc);
+  context->getProperty(SecurityPrivateKeyPassword.getName(), ssl_data_.key_pw);
+
   headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.getName());
   max_poll_records_ = gsl::narrow<std::size_t>(utils::getOptionalUintProperty(*context, MaxPollRecords.getName()).value_or(DEFAULT_MAX_POLL_RECORDS));
-
-  // For now security protocols are not yet supported
-  if (!utils::StringUtils::equalsIgnoreCase(SECURITY_PROTOCOL_PLAINTEXT, security_protocol_)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Security protocols are not supported yet.");
-  }
 
   if (!utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_UTF_8, key_attribute_encoding_) && !utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_HEX, key_attribute_encoding_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported key attribute encoding: " + key_attribute_encoding_);
@@ -325,6 +349,15 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext& context)
   setKafkaConfigurationField(*conf_, "bootstrap.servers", kafka_brokers_);
   setKafkaConfigurationField(*conf_, "allow.auto.create.topics", "true");
   setKafkaConfigurationField(*conf_, "auto.offset.reset", offset_reset_);
+
+  if (security_protocol_ == SECURITY_PROTOCOL_SSL) {
+    setKafkaConfigurationField(*conf_, "security.protocol", "ssl");
+    setKafkaConfigurationField(*conf_, "ssl.ca.location", ssl_data_.ca_loc);
+    setKafkaConfigurationField(*conf_, "ssl.certificate.location", ssl_data_.cert_loc);
+    setKafkaConfigurationField(*conf_, "ssl.key.location", ssl_data_.key_loc);
+    setKafkaConfigurationField(*conf_, "ssl.key.password", ssl_data_.key_pw);
+  }
+
   setKafkaConfigurationField(*conf_, "enable.auto.commit", "false");
   setKafkaConfigurationField(*conf_, "enable.auto.offset.store", "false");
   setKafkaConfigurationField(*conf_, "isolation.level", honor_transactions_ ? "read_committed" : "read_uncommitted");

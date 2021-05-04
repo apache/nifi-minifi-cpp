@@ -54,6 +54,11 @@ class KafkaTestProducer {
     setKafkaConfigurationField(*conf, "bootstrap.servers", kafka_brokers);
     setKafkaConfigurationField(*conf, "compression.codec", "snappy");
     setKafkaConfigurationField(*conf, "batch.num.messages", "1");
+    setKafkaConfigurationField(*conf, "security.protocol", "ssl");
+    setKafkaConfigurationField(*conf, "ssl.ca.location", utils::file::FileUtils::get_executable_dir() + "/../../../docker/test/integration/resources/kafka_broker/conf/certs/ca-cert");
+    setKafkaConfigurationField(*conf, "ssl.certificate.location", utils::file::FileUtils::get_executable_dir() + "/../../../docker/test/integration/resources/kafka_broker/conf/certs/client_LMN_client.pem");  // NOLINT
+    setKafkaConfigurationField(*conf, "ssl.key.location", utils::file::FileUtils::get_executable_dir() + "/../../../docker/test/integration/resources/kafka_broker/conf/certs/client_LMN_client.key");
+    setKafkaConfigurationField(*conf, "ssl.key.password", "abcdefgh");
 
     if (transactional) {
       setKafkaConfigurationField(*conf, "transactional.id", "ConsumeKafkaTest_transaction_id");
@@ -272,6 +277,13 @@ class ConsumeKafkaPropertiesTest : public ConsumeKafkaTest {
 
     plan_->setProperty(consume_kafka, ConsumeKafka::KafkaBrokers.getName(), kafka_brokers);
     plan_->setProperty(consume_kafka, ConsumeKafka::SecurityProtocol.getName(), security_protocol);
+    if (security_protocol == ConsumeKafka::SECURITY_PROTOCOL_SSL) {
+      plan_->setProperty(consume_kafka, ConsumeKafka::SecurityCA.getName(), utils::file::FileUtils::get_executable_dir() + "/../../../docker/test/integration/resources/kafka_broker/conf/certs/ca-cert");  // NOLINT
+      plan_->setProperty(consume_kafka, ConsumeKafka::SecurityCert.getName(), utils::file::FileUtils::get_executable_dir() + "/../../../docker/test/integration/resources/kafka_broker/conf/certs/client_LMN_client.pem");  // NOLINT
+      plan_->setProperty(consume_kafka, ConsumeKafka::SecurityPrivateKey.getName(), utils::file::FileUtils::get_executable_dir() + "/../../../docker/test/integration/resources/kafka_broker/conf/certs/client_LMN_client.key");  // NOLINT
+      plan_->setProperty(consume_kafka, ConsumeKafka::SecurityPrivateKeyPassword.getName(), "abcdefgh");
+    }
+
     plan_->setProperty(consume_kafka, ConsumeKafka::TopicNames.getName(), topic_names);
 
     optional_set_property(consume_kafka, ConsumeKafka::TopicNameFormat.getName(), topic_name_format);
@@ -582,6 +594,21 @@ TEST_CASE_METHOD(ConsumeKafkaContinuousPublishingTest, "ConsumeKafka can spend n
   //     Group "test_group_id" heartbeat error response in state up (join state wait-revoke-rebalance_cb, 1 partition(s) assigned): Broker: Group rebalance in progress
   //
   //  I tried adding a wait time for more than "session.timeout.ms" inbetween tests, but it was not sufficient
+}
+
+TEST_CASE_METHOD(ConsumeKafkaPropertiesTest, "ConsumeKafka can communicate with the broker via SSL.", "[ConsumeKafka][Kafka][SSL]") {
+  auto run_tests = [&] (const std::vector<std::string>& messages_on_topic) {
+    single_consumer_with_plain_text_test(true, {}, messages_on_topic, NON_TRANSACTIONAL_MESSAGES, {}, "localhost:9093", ConsumeKafka::SECURITY_PROTOCOL_SSL, "ConsumeKafkaTest", {}, {}, "test_group_id", {}, {}, {}, {}, {}, {}, "1", "2 sec", "60 sec"); // NOLINT
+  };
+  const auto get_current_timestamp = [] {
+    const std::time_t result = std::time(nullptr);
+    std::stringstream time_stream;
+    time_stream << std::asctime(std::localtime(&result));
+    return time_stream.str();
+  };
+  run_tests({  "Pride and Prejudice - " + get_current_timestamp(), "Jane Austen"      });
+  run_tests({                 "Dune - " + get_current_timestamp(), "Frank Herbert"    });
+  run_tests({      "The Black Sheep - " + get_current_timestamp(), "Honore De Balzac" });
 }
 
 }  // namespace

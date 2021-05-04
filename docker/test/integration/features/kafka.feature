@@ -44,11 +44,11 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | PublishKafka   | Delivery Guarantee     | 1                                          |
       | PublishKafka   | Request Timeout        | 10 sec                                     |
       | PublishKafka   | Message Timeout        | 12 sec                                     |
+      | PublishKafka   | Security Protocol      | ssl                                        |
       | PublishKafka   | Security CA            | /tmp/resources/certs/ca-cert               |
       | PublishKafka   | Security Cert          | /tmp/resources/certs/client_LMN_client.pem |
-      | PublishKafka   | Security Pass Phrase   | abcdefgh                                   |
       | PublishKafka   | Security Private Key   | /tmp/resources/certs/client_LMN_client.key |
-      | PublishKafka   | Security Protocol      | ssl                                        |
+      | PublishKafka   | Security Pass Phrase   | abcdefgh                                   |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
@@ -252,3 +252,24 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | message 1        | message 2      | property name           | property value |
       | Miyamoto Musashi | Eiji Yoshikawa | Key Attribute Encoding  | UTF-32         |
       | Shogun           | James Clavell  | Message Header Encoding | UTF-32         |
+
+  Scenario: ConsumeKafka receives data via SSL
+    Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
+    And these processor properties are set:
+      | processor name | property name        | property value                             |
+      | ConsumeKafka   | Kafka Brokers        | kafka-broker:9093                          |
+      | ConsumeKafka   | Security Protocol    | ssl                                        |
+      | ConsumeKafka   | Security CA          | /tmp/resources/certs/ca-cert               |
+      | ConsumeKafka   | Security Cert        | /tmp/resources/certs/client_LMN_client.pem |
+      | ConsumeKafka   | Security Private Key | /tmp/resources/certs/client_LMN_client.key |
+      | ConsumeKafka   | Security Pass Phrase | abcdefgh                                   |
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
+    And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
+
+    And a kafka broker "broker" is set up in correspondence with the publisher flow
+
+    When all instances start up
+    And a message with content "Alice's Adventures in Wonderland" is published to the "ConsumeKafkaTest" topic using an ssl connection
+    And a message with content "Lewis Carroll" is published to the "ConsumeKafkaTest" topic using an ssl connection
+
+    Then two flowfiles with the contents "Alice's Adventures in Wonderland" and "Lewis Carroll" are placed in the monitored directory in less than 60 seconds

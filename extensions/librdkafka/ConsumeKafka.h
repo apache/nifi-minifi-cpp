@@ -56,14 +56,17 @@ class ConsumeKafka : public core::Processor {
   static core::Property MaxPollTime;
   static core::Property SessionTimeout;
 
+  static core::Property SecurityCA;
+  static core::Property SecurityCert;
+  static core::Property SecurityPrivateKey;
+  static core::Property SecurityPrivateKeyPassword;
+
   // Supported Relationships
   static const core::Relationship Success;
 
   // Security Protocol allowable values
-  static constexpr char const* SECURITY_PROTOCOL_PLAINTEXT = "PLAINTEXT";
-  static constexpr char const* SECURITY_PROTOCOL_SSL = "SSL";
-  static constexpr char const* SECURITY_PROTOCOL_SASL_PLAINTEXT = "SASL_PLAINTEXT";
-  static constexpr char const* SECURITY_PROTOCOL_SASL_SSL = "SASL_SSL";
+  static constexpr char const* SECURITY_PROTOCOL_PLAINTEXT = "plaintext";
+  static constexpr char const* SECURITY_PROTOCOL_SSL = "ssl";
 
   // Topic Name Format allowable values
   static constexpr char const* TOPIC_FORMAT_NAMES = "Names";
@@ -171,6 +174,8 @@ class ConsumeKafka : public core::Processor {
   std::size_t max_poll_records_;
   std::chrono::milliseconds max_poll_time_milliseconds_;
   std::chrono::milliseconds session_timeout_milliseconds_;
+
+  utils::SSL_data ssl_data_;
 
   std::unique_ptr<rd_kafka_t, utils::rd_kafka_consumer_deleter> consumer_;
   std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf_;

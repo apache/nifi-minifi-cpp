@@ -36,6 +36,13 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+struct SSL_data {
+  std::string ca_loc;
+  std::string cert_loc;
+  std::string key_loc;
+  std::string key_pw;
+};
+
 enum class KafkaEncoding {
   UTF8,
   HEX
