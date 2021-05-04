@@ -38,7 +38,7 @@ namespace c2 {
 
 RESTSender::RESTSender(const std::string &name, const utils::Identifier &uuid)
     : C2Protocol(name, uuid),
-      logger_(logging::LoggerFactory<Connectable>::getLogger()) {
+      logger_(logging::LoggerFactory<RESTSender>::getLogger()) {
 }
 
 void RESTSender::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) {
@@ -139,6 +139,12 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   }
   bool isOkay = client.submit();
   int64_t respCode = client.getResponseCode();
+  if (400 <= respCode && respCode < 600) {
+    // client or server error
+    logger_->log_error("Error response code '" "%" PRId64 "' from '%s'", respCode, url);
+  } else {
+    logger_->log_debug("Response code '" "%" PRId64 "' from '%s'", respCode, url);
+  }
   auto rs = client.getResponseBody();
   if (isOkay && respCode) {
     if (payload.isRaw()) {
