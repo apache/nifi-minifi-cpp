@@ -24,7 +24,7 @@ class FileOutputValidator(OutputValidator):
           with open(full_path, 'r') as out_file:
               contents = out_file.read()
               logging.info("dir %s -- name %s", dir_path, file_name)
-              logging.info("expected content: %s -- actual: %s, match: %r", expected_content, contents, expected_content == contents)
+              logging.info("expected content: %s -- actual: %s, match: %r", expected_content, contents, expected_content in contents)
               if expected_content in contents:
                   files_of_matching_content_found += 1
         return files_of_matching_content_found
