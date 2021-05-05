@@ -329,7 +329,7 @@ def step_impl(context, cluster_name):
 @given("the topic \"{topic_name}\" is initialized on the kafka broker")
 def step_impl(context, topic_name):
     admin = AdminClient({'bootstrap.servers': "localhost:29092"})
-    new_topics = [NewTopic(topic_name, num_partitions=1, replication_factor=1)]
+    new_topics = [NewTopic(topic_name, num_partitions=3, replication_factor=1)]
     futures = admin.create_topics(new_topics)
     # Block until the topic is created
     for topic, future in futures.items():
@@ -338,15 +338,6 @@ def step_impl(context, topic_name):
             print("Topic {} created".format(topic))
         except Exception as e:
             print("Failed to create topic {}: {}".format(topic, e))
-    new_parts = [NewPartitions(topic, 3)]
-    futures = admin.create_partitions(new_parts, validate_only=False)
-    # Wait for operation to finish.
-    for topic, future in futures.items():
-        try:
-            future.result()  # The result itself is None
-            print("Additional partitions created for topic {}".format(topic))
-        except Exception as e:
-            print("Failed to add partitions to topic {}: {}".format(topic, e))
  
 @when("the MiNiFi instance starts up")
 @when("both instances start up")
@@ -461,7 +452,7 @@ def step_impl(context, content_1, content_2, duration):
         format(content=content_1, duration=duration))
     context.execute_steps("""
         then a flowfile with the content \"{content}\" is placed in the monitored directory in less than {duration}""".
-        format(content=content_1, duration=str(timeparse(duration) - (time.perf_counter() - wait_start_time)) + " seconds"))
+        format(content=content_2, duration=str(timeparse(duration) - (time.perf_counter() - wait_start_time)) + " seconds"))
 
 @then("flowfiles with these contents are placed in the monitored directory in less than {duration}: \"{contents}\"")
 def step_impl(context, duration, contents):
