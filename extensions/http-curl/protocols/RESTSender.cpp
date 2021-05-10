@@ -139,8 +139,9 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   }
   bool isOkay = client.submit();
   int64_t respCode = client.getResponseCode();
-  if (400 <= respCode && respCode < 600) {
-    // client or server error
+  const bool clientError = 400 <= respCode && respCode < 500;
+  const bool serverError = 500 <= respCode && respCode < 600;
+  if (clientError || serverError) {
     logger_->log_error("Error response code '" "%" PRId64 "' from '%s'", respCode, url);
   } else {
     logger_->log_debug("Response code '" "%" PRId64 "' from '%s'", respCode, url);
