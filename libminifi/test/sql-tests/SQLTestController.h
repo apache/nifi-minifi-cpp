@@ -33,8 +33,13 @@
 #include "processors/QueryDatabaseTable.h"
 #include "SQLTestPlan.h"
 
-// #include "services/ODBCConnector.h"
+#ifdef USE_REAL_ODBC_TEST_DRIVER
+#include "services/ODBCConnector.h"
+using ODBCConnection = minifi::sql::ODBCConnection;
+#else
 #include "mocks/MockConnectors.h"
+using ODBCConnection = minifi::sql::MockODBCConnection;
+#endif
 
 struct TableRow {
   int64_t int_col;
@@ -64,10 +69,8 @@ class SQLTestController : public TestController {
     connection_str_ = "Driver=" + DRIVER + ";Database=" + database_.str();
 
     // Create test dbs
-    // minifi::sql::ODBCConnection{connection_str_}.prepareStatement("CREATE TABLE test_table (int_col INTEGER, text_col TEXT);")->execute();
-    // minifi::sql::ODBCConnection{connection_str_}.prepareStatement("CREATE TABLE empty_test_table (int_col INTEGER, text_col TEXT);")->execute();
-    minifi::sql::MockODBCConnection{connection_str_}.prepareStatement("CREATE TABLE test_table (int_col INTEGER, text_col TEXT);")->execute();
-    minifi::sql::MockODBCConnection{connection_str_}.prepareStatement("CREATE TABLE empty_test_table (int_col INTEGER, text_col TEXT);")->execute();
+    ODBCConnection{connection_str_}.prepareStatement("CREATE TABLE test_table (int_col INTEGER, text_col TEXT);")->execute();
+    ODBCConnection{connection_str_}.prepareStatement("CREATE TABLE empty_test_table (int_col INTEGER, text_col TEXT);")->execute();
   }
 
   std::shared_ptr<SQLTestPlan> createSQLPlan(const std::string& sql_processor, std::initializer_list<core::Relationship> outputs) {
@@ -75,8 +78,7 @@ class SQLTestController : public TestController {
   }
 
   void insertValues(std::initializer_list<TableRow> values) {
-    // minifi::sql::ODBCConnection connection{connection_str_};
-    minifi::sql::MockODBCConnection connection{connection_str_};
+    ODBCConnection connection{connection_str_};
     for (const auto& value : values) {
       connection.prepareStatement("INSERT INTO test_table (int_col, text_col) VALUES (?, ?);")
           ->execute({std::to_string(value.int_col), value.text_col});
@@ -85,8 +87,7 @@ class SQLTestController : public TestController {
 
   std::vector<TableRow> fetchValues() {
     std::vector<TableRow> rows;
-    // minifi::sql::ODBCConnection connection{connection_str_};
-    minifi::sql::MockODBCConnection connection{connection_str_};
+    ODBCConnection connection{connection_str_};
     auto rowset = connection.prepareStatement("SELECT * FROM test_table;")->execute();
     for (rowset->reset(); !rowset->is_done(); rowset->next()) {
       const auto& row = rowset->getCurrent();
