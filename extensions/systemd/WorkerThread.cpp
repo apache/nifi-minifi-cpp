@@ -24,13 +24,13 @@ WorkerThread::WorkerThread()
     : thread_{&WorkerThread::run, this} {}
 
 WorkerThread::~WorkerThread() {
-  work_.stop();
+  task_queue_.stop();
   thread_.join();
 }
 
 void WorkerThread::run() noexcept {
-  while (work_.isRunning()) {
-    work_.consumeWait([](std::packaged_task<void()>&& f) { f(); });
+  while (task_queue_.isRunning()) {
+    task_queue_.consumeWait([](std::packaged_task<void()>&& f) { f(); });
   }
 }
 }  // namespace detail

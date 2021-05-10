@@ -36,12 +36,12 @@ class WorkerThread final {
   ~WorkerThread();
 
   template<typename... Args>
-  void enqueue(Args&&... args) { work_.enqueue(std::forward<Args>(args)...); }
+  void enqueue(Args&&... args) { task_queue_.enqueue(std::forward<Args>(args)...); }
 
  private:
   void run() noexcept;
 
-  utils::ConditionConcurrentQueue<std::packaged_task<void()>> work_;
+  utils::ConditionConcurrentQueue<std::packaged_task<void()>> task_queue_;
   std::thread thread_;
 };
 }  // namespace detail
