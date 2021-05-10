@@ -1,4 +1,4 @@
-from .ControllerService import ControllerService
+from ..core.ControllerService import ControllerService
 
 
 class SSLContextService(ControllerService):

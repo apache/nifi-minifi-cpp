@@ -114,6 +114,8 @@ class SingleNodeDockerCluster(Cluster):
             self.deploy_s3_server()
         elif self.engine == 'azure-storage-server':
             self.deploy_azure_storage_server()
+        elif self.engine == 'postgresql-server':
+            self.deploy_postgres_server()
         else:
             raise Exception('invalid flow engine: \'%s\'' % self.engine)
 
@@ -122,6 +124,32 @@ class SingleNodeDockerCluster(Cluster):
         # Build configured image
         dockerfile = dedent("""FROM {base_image}
                 USER root
+                RUN apk --update --no-cache add psqlodbc
+                RUN echo "[PostgreSQL ANSI]" > /odbcinst.ini.template && \
+                    echo "Description=PostgreSQL ODBC driver (ANSI version)" >> /odbcinst.ini.template && \
+                    echo "Driver=psqlodbca.so" >> /odbcinst.ini.template && \
+                    echo "Setup=libodbcpsqlS.so" >> /odbcinst.ini.template && \
+                    echo "Debug=0" >> /odbcinst.ini.template && \
+                    echo "CommLog=1" >> /odbcinst.ini.template && \
+                    echo "UsageCount=1" >> /odbcinst.ini.template && \
+                    echo "" >> /odbcinst.ini.template && \
+                    echo "[PostgreSQL Unicode]" >> /odbcinst.ini.template && \
+                    echo "Description=PostgreSQL ODBC driver (Unicode version)" >> /odbcinst.ini.template && \
+                    echo "Driver=psqlodbcw.so" >> /odbcinst.ini.template && \
+                    echo "Setup=libodbcpsqlS.so" >> /odbcinst.ini.template && \
+                    echo "Debug=0" >> /odbcinst.ini.template && \
+                    echo "CommLog=1" >> /odbcinst.ini.template && \
+                    echo "UsageCount=1" >> /odbcinst.ini.template
+                RUN odbcinst -i -d -f /odbcinst.ini.template
+                RUN echo "[ODBC]" > /etc/odbc.ini && \
+                    echo "Driver = PostgreSQL ANSI" >> /etc/odbc.ini && \
+                    echo "Description = PostgreSQL Data Source" >> /etc/odbc.ini && \
+                    echo "Servername = postgres" >> /etc/odbc.ini && \
+                    echo "Port = 5432" >> /etc/odbc.ini && \
+                    echo "Protocol = 8.4" >> /etc/odbc.ini && \
+                    echo "UserName = postgres" >> /etc/odbc.ini && \
+                    echo "Password = password" >> /etc/odbc.ini && \
+                    echo "Database = postgres" >> /etc/odbc.ini
                 ADD config.yml {minifi_root}/conf/config.yml
                 RUN chown minificpp:minificpp {minifi_root}/conf/config.yml
                 RUN sed -i -e 's/INFO/DEBUG/g' {minifi_root}/conf/minifi-log.properties
@@ -281,6 +309,27 @@ class SingleNodeDockerCluster(Cluster):
             name='azure-storage-server',
             network=self.network.name,
             ports={'10000/tcp': 10000, '10001/tcp': 10001})
+        self.containers[server.name] = server
+
+    def deploy_postgres_server(self):
+        dockerfile = dedent("""FROM {base_image}
+                RUN mkdir -p /docker-entrypoint-initdb.d
+                RUN echo "#!/bin/bash" > /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "set -e" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "    CREATE TABLE test_table (int_col INTEGER, text_col TEXT);" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "    INSERT INTO test_table (int_col, text_col) VALUES (1, 'apple');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "    INSERT INTO test_table (int_col, text_col) VALUES (2, 'banana');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "    INSERT INTO test_table (int_col, text_col) VALUES (3, 'pear');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh
+                """.format(base_image='postgres:13.2'))
+        configured_image = self.build_image(dockerfile, [])
+        server = self.client.containers.run(
+            configured_image[0],
+            detach=True,
+            name='postgresql-server',
+            network=self.network.name,
+            environment=["POSTGRES_PASSWORD=password"])
         self.containers[server.name] = server
 
     def build_image(self, dockerfile, context_files):

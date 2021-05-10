@@ -1,6 +1,5 @@
 from minifi.core.FileSystemObserver import FileSystemObserver
 from minifi.core.RemoteProcessGroup import RemoteProcessGroup
-from minifi.core.SSLContextService import SSLContextService
 from minifi.core.SSL_cert_utils import gen_cert, rsa_gen_key_callback
 
 from minifi.processors.ConsumeKafka import ConsumeKafka
@@ -9,6 +8,9 @@ from minifi.processors.FetchS3Object import FetchS3Object
 from minifi.processors.PutAzureBlobStorage import PutAzureBlobStorage
 from minifi.processors.PublishKafka import PublishKafka
 from minifi.processors.PutS3Object import PutS3Object
+
+from minifi.controllers.SSLContextService import SSLContextService
+from minifi.controllers.ODBCService import ODBCService
 
 from behave import given, then, when
 from behave.model_describe import ModelDescriptor
@@ -346,6 +348,23 @@ def step_impl(context, topic_name):
             print("Failed to create topic {}: {}".format(topic, e))
 
 
+# SQL
+@given("an ODBCService is setup up for {processor_name} with the name \"{service_name}\" and connection string \"{connection_string}\"")
+def step_impl(context, processor_name, service_name, connection_string):
+    odbc_service = ODBCService(name=service_name, connection_string=connection_string)
+    processor = context.test.get_node_by_name(processor_name)
+    processor.controller_services.append(odbc_service)
+    processor.set_property("DB Controller Service", odbc_service.name)
+
+
+@given("a PostgreSQL server \"{cluster_name}\" is set up")
+def step_impl(context, cluster_name):
+    cluster = context.test.acquire_cluster(cluster_name)
+    cluster.set_name(cluster_name)
+    cluster.set_engine("postgresql-server")
+    cluster.set_flow(None)
+
+
 @when("the MiNiFi instance starts up")
 @when("both instances start up")
 @when("all instances start up")
@@ -450,6 +469,7 @@ def step_impl(context, cluster_name):
 
 
 @then("a flowfile with the content \"{content}\" is placed in the monitored directory in less than {duration}")
+@then("a flowfile with the content '{content}' is placed in the monitored directory in less than {duration}")
 def step_impl(context, content, duration):
     context.test.check_for_single_file_with_content_generated(content, timeparse(duration))
 
@@ -522,3 +542,9 @@ def step_impl(context, cluster_name):
 @then("the object on the \"{cluster_name}\" Azure storage server is \"{object_data}\"")
 def step_impl(context, cluster_name, object_data):
     context.test.check_azure_storage_server_data(cluster_name, object_data)
+
+
+# SQL
+@then("the query \"{query}\" returns {number_of_rows:d} rows in less than {timeout_seconds:d} seconds on the \"{cluster_name}\" PostgreSQL server")
+def step_impl(context, cluster_name, query, number_of_rows, timeout_seconds):
+    context.test.check_query_results(cluster_name, query, number_of_rows, timeout_seconds)

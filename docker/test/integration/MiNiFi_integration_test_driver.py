@@ -120,6 +120,8 @@ class MiNiFi_integration_test():
             startup_success = cluster.wait_for_app_logs("Started S3MockApplication", 120)
         elif cluster.get_engine() == "azure-storage-server":
             startup_success = cluster.wait_for_app_logs("Azurite Queue service is successfully listening at", 120)
+        elif cluster.get_engine() == "postgresql-server":
+            startup_success = cluster.wait_for_app_logs("database system is ready to accept connections", 120)
         if not startup_success:
             logging.error("Cluster startup failed for %s", cluster.get_name())
             cluster.log_app_output()
@@ -266,3 +268,7 @@ class MiNiFi_integration_test():
     def wait_for_kafka_consumer_to_be_registered(self, cluster_name):
         cluster = self.acquire_cluster(cluster_name)
         assert cluster.wait_for_kafka_consumer_to_be_registered()
+
+    def check_query_results(self, cluster_name, query, number_of_rows, timeout_seconds):
+        cluster = self.acquire_cluster(cluster_name)
+        assert cluster.check_query_results(query, number_of_rows, timeout_seconds)
