@@ -28,7 +28,7 @@
 #include "Connection.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "concurrentqueue.h"
-#include "RocksDatabase.h"
+#include "database/RocksDatabase.h"
 
 namespace org {
 namespace apache {
@@ -98,10 +98,11 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       }
     }
     logger_->log_debug("NiFi FlowFile Max Storage Time: [%d] ms", max_partition_millis_);
-    rocksdb::Options options;
-    options.create_if_missing = true;
-    options.use_direct_io_for_flush_and_compaction = true;
-    options.use_direct_reads = true;
+    auto db_options = [] (minifi::internal::Writable<rocksdb::DBOptions>& options) {
+      options.set(&rocksdb::DBOptions::create_if_missing, true);
+      options.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
+      options.set(&rocksdb::DBOptions::use_direct_reads, true);
+    };
 
     // Write buffers are used as db operation logs. When they get filled the events are merged and serialized.
     // The default size is 64MB.
@@ -109,10 +110,12 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     // To avoid DB write issues during heavy load it's recommended to have high number of buffer.
     // Rocksdb's stall feature can also trigger in case the number of buffers is >= 3.
     // The more buffers we have the more memory rocksdb can utilize without significant memory consumption under low load.
-    options.write_buffer_size = 8 << 20;
-    options.max_write_buffer_number = 20;
-    options.min_write_buffer_number_to_merge = 1;
-    db_ = utils::make_unique<minifi::internal::RocksDatabase>(options, directory_);
+    auto cf_options = [] (minifi::internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts) {
+      cf_opts.set(&rocksdb::ColumnFamilyOptions::write_buffer_size, 8ULL << 20U);
+      cf_opts.set<int>(&rocksdb::ColumnFamilyOptions::max_write_buffer_number, 20);
+      cf_opts.set<int>(&rocksdb::ColumnFamilyOptions::min_write_buffer_number_to_merge, 1);
+    };
+    db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_);
     if (db_->open()) {
       logger_->log_debug("NiFi FlowFile Repository database open %s success", directory_);
       return true;
@@ -140,7 +143,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     if (!opendb) {
       return false;
     }
-    rocksdb::WriteBatch batch;
+    auto batch = opendb->createWriteBatch();
     for (const auto &item : data) {
       rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->size());
       if (!batch.Put(item.first, value).ok()) {
@@ -201,7 +204,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
    * Returns true if a checkpoint is needed at startup
    * @return true if a checkpoint is needed.
    */
-  bool need_checkpoint(minifi::internal::OpenRocksDB& opendb);
+  bool need_checkpoint(minifi::internal::OpenRocksDb& opendb);
 
   /**
    * Prunes stored flow files.

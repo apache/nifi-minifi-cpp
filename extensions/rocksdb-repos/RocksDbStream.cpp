@@ -31,7 +31,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable, rocksdb::WriteBatch* batch)
+RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable, minifi::internal::WriteBatch* batch)
     : BaseStream(),
       path_(std::move(path)),
       write_enable_(write_enable),

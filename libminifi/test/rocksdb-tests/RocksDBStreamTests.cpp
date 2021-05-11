@@ -19,20 +19,22 @@
 #include "../TestBase.h"
 #include "../../extensions/rocksdb-repos/RocksDbStream.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
+#include "../../extensions/rocksdb-repos/database/StringAppender.h"
 
 class RocksDBStreamTest : TestController {
  public:
   RocksDBStreamTest() {
     char format[] = "/var/tmp/testdb.XXXXXX";
     dbPath = createTempDirectory(format);
-    rocksdb::Options options;
-    options.create_if_missing = true;
-    options.use_direct_io_for_flush_and_compaction = true;
-    options.use_direct_reads = true;
-    options.merge_operator = std::make_shared<core::repository::StringAppender>();
-    options.error_if_exists = false;
-    options.max_successive_merges = 0;
-    db = utils::make_unique<minifi::internal::RocksDatabase>(options, dbPath);
+    auto db_opts = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
+      db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
+      db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
+      db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
+    };
+    auto cf_opts = [] (minifi::internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts) {
+      cf_opts.transform<core::repository::StringAppender>(&rocksdb::ColumnFamilyOptions::merge_operator);
+    };
+    db = minifi::internal::RocksDatabase::create(db_opts, cf_opts, dbPath);
     REQUIRE(db->open());
   }
 

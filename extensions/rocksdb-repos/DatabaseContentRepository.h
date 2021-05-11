@@ -18,14 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_DatabaseContentRepository_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_DatabaseContentRepository_H_
 
-#include "rocksdb/db.h"
-#include "rocksdb/merge_operator.h"
 #include "core/Core.h"
 #include "core/Connectable.h"
 #include "core/ContentRepository.h"
 #include "properties/Configure.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "RocksDatabase.h"
+#include "database/RocksDatabase.h"
 #include "core/ContentSession.h"
 
 namespace org {
@@ -34,37 +32,6 @@ namespace nifi {
 namespace minifi {
 namespace core {
 namespace repository {
-
-class StringAppender : public rocksdb::AssociativeMergeOperator {
- public:
-  // Constructor: specify delimiter
-  explicit StringAppender() = default;
-
-  virtual bool Merge(const rocksdb::Slice& /*key*/, const rocksdb::Slice* existing_value, const rocksdb::Slice& value, std::string* new_value, rocksdb::Logger* /*logger*/) const {
-    // Clear the *new_value for writing.
-    if (nullptr == new_value) {
-      return false;
-    }
-    new_value->clear();
-
-    if (!existing_value) {
-      // No existing_value. Set *new_value = value
-      new_value->assign(value.data(), value.size());
-    } else {
-      new_value->reserve(existing_value->size() + value.size());
-      new_value->assign(existing_value->data(), existing_value->size());
-      new_value->append(value.data(), value.size());
-    }
-
-    return true;
-  }
-
-  virtual const char* Name() const {
-    return "StringAppender";
-  }
-
- private:
-};
 
 /**
  * DatabaseContentRepository is a content repository that stores data onto the local file system.
@@ -125,7 +92,7 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
   }
 
  private:
-  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, rocksdb::WriteBatch* batch);
+  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, minifi::internal::WriteBatch* batch);
 
   bool is_valid_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;

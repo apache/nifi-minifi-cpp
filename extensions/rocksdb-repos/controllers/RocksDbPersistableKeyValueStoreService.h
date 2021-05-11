@@ -22,7 +22,7 @@
 #include "properties/Configure.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "../RocksDatabase.h"
+#include "../database/RocksDatabase.h"
 
 #include "rocksdb/db.h"
 #include "rocksdb/options.h"
