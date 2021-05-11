@@ -53,6 +53,7 @@ TEST_CASE_METHOD(AWSCredentialsServiceTestAccessor, "Test expired credentials ar
   auto aws_credentials_impl = std::static_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(aws_credentials_service->getControllerServiceImplementation());
 
   // Check intial credentials
+  REQUIRE(aws_credentials_impl->getAWSCredentials());
   REQUIRE(aws_credentials_impl->getAWSCredentials()->GetAWSAccessKeyId() == "key");
   REQUIRE(aws_credentials_impl->getAWSCredentials()->GetAWSSecretKey() == "secret");
   REQUIRE(!aws_credentials_impl->getAWSCredentials()->IsExpired());
