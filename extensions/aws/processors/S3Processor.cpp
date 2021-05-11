@@ -147,7 +147,7 @@ minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredential
     return minifi::utils::nullopt;
   }
 
-  return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(aws_credentials_service->getAWSCredentials());
+  return aws_credentials_service->getAWSCredentials();
 }
 
 minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentials(

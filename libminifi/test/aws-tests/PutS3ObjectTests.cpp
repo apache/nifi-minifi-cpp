@@ -111,10 +111,10 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test incomplete credentials in creden
   setBucket();
   plan->setProperty(aws_credentials_service, "Secret Key", "secret");
   setCredentialsService();
-  test_controller.runSession(plan, true);
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "No AWS credentials were set."));
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception&);
+  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "AWS Credentials have not been set!"));
 
-  // Test that no invalid credentials file was set
+  // Test that no invalid credentials file was set from previous properties
   REQUIRE(!LogTestController::getInstance().contains("load configure file failed", std::chrono::seconds(0), std::chrono::milliseconds(0)));
 }
 

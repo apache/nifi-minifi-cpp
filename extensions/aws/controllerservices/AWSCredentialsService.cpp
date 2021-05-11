@@ -76,18 +76,11 @@ void AWSCredentialsService::onEnable() {
   }
 }
 
-Aws::Auth::AWSCredentials AWSCredentialsService::getAWSCredentials() {
-  if (aws_credentials_.IsExpiredOrEmpty()) {
-    cacheCredentials();
+minifi::utils::optional<Aws::Auth::AWSCredentials> AWSCredentialsService::getAWSCredentials() {
+  if (!aws_credentials_ || aws_credentials_->IsExpiredOrEmpty()) {
+    aws_credentials_ = aws_credentials_provider_.getAWSCredentials();
   }
   return aws_credentials_;
-}
-
-void AWSCredentialsService::cacheCredentials() {
-  auto aws_credentials_result = aws_credentials_provider_.getAWSCredentials();
-  if (aws_credentials_result) {
-    aws_credentials_ = aws_credentials_result.value();
-  }
 }
 
 }  // namespace controllers
