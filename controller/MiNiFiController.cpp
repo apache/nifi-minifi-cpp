@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
         } else {
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
         }
-        }
+      }
     }
 
     if (result.count("getsize") > 0) {
