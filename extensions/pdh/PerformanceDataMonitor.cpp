@@ -65,7 +65,7 @@ void PerformanceDataMonitor::onSchedule(const std::shared_ptr<core::ProcessConte
       if (add_to_query_result != ERROR_SUCCESS) {
         logger_->log_error("Error adding %s to query, error code: 0x%x", pdh_counter->getName(), add_to_query_result);
         it = resource_consumption_counters_.erase(it);
-        break;
+        continue;
       }
     }
     ++it;
@@ -92,8 +92,8 @@ void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::Proc
   rapidjson::Document root = rapidjson::Document(rapidjson::kObjectType);
   rapidjson::Value& body = prepareJSONBody(root);
   for (auto& counter : resource_consumption_counters_) {
-    counter->collectData();
-    counter->addToJson(body, root.GetAllocator());
+    if (counter->collectData())
+      counter->addToJson(body, root.GetAllocator());
   }
   utils::JsonOutputCallback callback(std::move(root));
   session->write(flowFile, &callback);

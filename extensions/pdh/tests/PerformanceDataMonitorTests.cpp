@@ -24,6 +24,7 @@
 #include "TestBase.h"
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
+#include "utils/TestUtils.h"
 #include "PerformanceDataMonitor.h"
 #include "rapidjson/filereadstream.h"
 
@@ -35,7 +36,7 @@ class PerformanceDataMonitorTester {
  public:
   PerformanceDataMonitorTester() {
     LogTestController::getInstance().setTrace<TestPlan>();
-    dir_ = test_controller_.createTempDirectory("/tmp/gt.XXXXXX");
+    dir_ = utils::createTempDir(&test_controller_);
     plan_ = test_controller_.createPlan();
     performance_monitor_ = plan_->addProcessor("PerformanceDataMonitor", "pdhsys");
     putfile_ = plan_->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
@@ -50,7 +51,7 @@ class PerformanceDataMonitorTester {
     plan_->runCurrentProcessor();   // PutFile
   }
 
-  void setPerformanceMonitorProperty(core::Property property, const std::string& value) {
+  void setPerformanceMonitorProperty(const core::Property& property, const std::string& value) {
     plan_->setProperty(performance_monitor_, property.getName(), value);
   }
 

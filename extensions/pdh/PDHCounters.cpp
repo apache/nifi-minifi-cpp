@@ -60,7 +60,7 @@ void SinglePDHCounter::addToJson(rapidjson::Value& body, rapidjson::Document::Al
 }
 
 PDH_STATUS SinglePDHCounter::addToQuery(PDH_HQUERY& pdh_query)  {
-  return PdhAddEnglishCounterA(pdh_query, pdh_english_counter_name_.c_str(), NULL, &counter_);
+  return PdhAddEnglishCounterA(pdh_query, pdh_english_counter_name_.c_str(), 0, &counter_);
 }
 
 bool SinglePDHCounter::collectData() {
@@ -97,7 +97,7 @@ void PDHCounterArray::addToJson(rapidjson::Value& body, rapidjson::Document::All
 }
 
 PDH_STATUS PDHCounterArray::addToQuery(PDH_HQUERY& pdh_query) {
-  return PdhAddEnglishCounterA(pdh_query, pdh_english_counter_name_.c_str(), NULL, &counter_);
+  return PdhAddEnglishCounterA(pdh_query, pdh_english_counter_name_.c_str(), 0, &counter_);
 }
 
 bool PDHCounterArray::collectData() {
