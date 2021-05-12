@@ -18,6 +18,7 @@
 #pragma once
 
 #include "rocksdb/merge_operator.h"
+#include <cstring>
 
 namespace org {
 namespace apache {
