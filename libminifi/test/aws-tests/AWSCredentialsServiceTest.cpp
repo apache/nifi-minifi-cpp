@@ -56,12 +56,12 @@ TEST_CASE_METHOD(AWSCredentialsServiceTestAccessor, "Test expired credentials ar
   REQUIRE(aws_credentials_impl->getAWSCredentials());
   REQUIRE(aws_credentials_impl->getAWSCredentials()->GetAWSAccessKeyId() == "key");
   REQUIRE(aws_credentials_impl->getAWSCredentials()->GetAWSSecretKey() == "secret");
-  REQUIRE(!aws_credentials_impl->getAWSCredentials()->IsExpired());
+  REQUIRE_FALSE(aws_credentials_impl->getAWSCredentials()->IsExpired());
 
   // Expire credentials
   get_aws_credentials_(*aws_credentials_impl)->SetExpiration(Aws::Utils::DateTime(0.0));
   REQUIRE(get_aws_credentials_(*aws_credentials_impl)->IsExpired());
 
   // Check for credential refresh
-  REQUIRE(!aws_credentials_impl->getAWSCredentials()->IsExpired());
+  REQUIRE_FALSE(aws_credentials_impl->getAWSCredentials()->IsExpired());
 }
