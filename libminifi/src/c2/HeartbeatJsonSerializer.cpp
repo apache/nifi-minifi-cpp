@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "c2/HeartBeatJSONSerializer.h"
+#include "c2/HeartbeatJsonSerializer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
@@ -27,7 +27,7 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-std::string HeartBeatJSONSerializer::getOperation(const C2Payload& payload) {
+std::string HeartbeatJsonSerializer::getOperation(const C2Payload& payload) {
   switch (payload.getOperation()) {
     case Operation::ACKNOWLEDGE:
       return "acknowledge";
@@ -55,7 +55,7 @@ std::string HeartBeatJSONSerializer::getOperation(const C2Payload& payload) {
 static void serializeOperationInfo(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
   gsl_Expects(target.IsObject());
 
-  target.AddMember("operation", HeartBeatJSONSerializer::getOperation(payload), alloc);
+  target.AddMember("operation", HeartbeatJsonSerializer::getOperation(payload), alloc);
 
   std::string id = payload.getIdentifier();
   if (id.empty()) {
@@ -118,6 +118,10 @@ static void setJsonStr(const std::string& key, const state::response::ValueNode&
       int64_t value = 0;
       base_type->convertValue(value);
       valueVal.SetInt64(value);
+    } else if (type_index == state::response::Value::DOUBLE_TYPE) {
+      double value = 0;
+      base_type->convertValue(value);
+      valueVal.SetDouble(value);
     } else {
       valueVal.SetString(base_type->getStringValue(), alloc);
     }
@@ -193,7 +197,7 @@ static rapidjson::Value serializeConnectionQueues(const C2Payload& payload, std:
   return json_payload;
 }
 
-std::string HeartBeatJSONSerializer::serializeJsonRootPayload(const C2Payload& payload) {
+std::string HeartbeatJsonSerializer::serializeJsonRootPayload(const C2Payload& payload) {
   rapidjson::Document json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
   rapidjson::Document::AllocatorType &alloc = json_payload.GetAllocator();
 
@@ -211,7 +215,7 @@ std::string HeartBeatJSONSerializer::serializeJsonRootPayload(const C2Payload& p
   return buffer.GetString();
 }
 
-void HeartBeatJSONSerializer::serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
+void HeartbeatJsonSerializer::serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
   target.AddMember(rapidjson::Value(payload.getLabel(), alloc), serializeJsonPayload(payload, alloc), alloc);
 }
 
@@ -295,7 +299,7 @@ class NamedValueMap {
   Container data_;
 };
 
-rapidjson::Value HeartBeatJSONSerializer::serializeJsonPayload(const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
+rapidjson::Value HeartbeatJsonSerializer::serializeJsonPayload(const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
   // get the name from the content
   rapidjson::Value json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
 

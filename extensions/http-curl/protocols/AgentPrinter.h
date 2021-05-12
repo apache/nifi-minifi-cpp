@@ -38,7 +38,7 @@ namespace c2 {
  * Will be used to print agent information from the C2 response to stdout, selecting the agent's manifest
  *
  */
-class AgentPrinter : public HeartBeatJSONSerializer, public HeartBeatReporter {
+class AgentPrinter : public HeartbeatJsonSerializer, public HeartbeatReporter {
  public:
   explicit AgentPrinter(const std::string& name, const utils::Identifier& uuid = {});
 

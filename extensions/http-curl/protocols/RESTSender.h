@@ -24,7 +24,7 @@
 #include "utils/ByteArrayCallback.h"
 #include "c2/C2Protocol.h"
 #include "c2/protocols/RESTProtocol.h"
-#include "c2/HeartBeatReporter.h"
+#include "c2/HeartbeatReporter.h"
 #include "controllers/SSLContextService.h"
 #include "../client/HTTPClient.h"
 

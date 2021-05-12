@@ -37,13 +37,13 @@ namespace minifi {
 namespace c2 {
 
 AgentPrinter::AgentPrinter(const std::string& name, const utils::Identifier& uuid)
-    : HeartBeatReporter(name, uuid),
+    : HeartbeatReporter(name, uuid),
       logger_(logging::LoggerFactory<AgentPrinter>::getLogger()) {
 }
 
 void AgentPrinter::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
                               const std::shared_ptr<Configure> &configure) {
-  HeartBeatReporter::initialize(controller, updateSink, configure);
+  HeartbeatReporter::initialize(controller, updateSink, configure);
 }
 int16_t AgentPrinter::heartbeat(const C2Payload &payload) {
   std::string outputConfig = serializeJsonRootPayload(payload);
@@ -53,7 +53,7 @@ int16_t AgentPrinter::heartbeat(const C2Payload &payload) {
 rapidjson::Value AgentPrinter::serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc) {
   const bool print = payload.getLabel() == "agentManifest";
 
-  rapidjson::Value result = HeartBeatJSONSerializer::serializeJsonPayload(payload, alloc);
+  rapidjson::Value result = HeartbeatJsonSerializer::serializeJsonPayload(payload, alloc);
 
   if (print) {
     rapidjson::StringBuffer buffer;

@@ -218,7 +218,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     std::vector<std::string> reporters = utils::StringUtils::splitAndTrim(heartbeat_reporters, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (const auto& reporter : reporters) {
-      auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate<HeartBeatReporter>(reporter, reporter);
+      auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate<HeartbeatReporter>(reporter, reporter);
       if (heartbeat_reporter_obj == nullptr) {
         logger_->log_error("Could not instantiate %s", reporter);
       } else {
@@ -244,7 +244,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
 
   std::string base_reporter = "ControllerSocketProtocol";
-  auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate<HeartBeatReporter>(base_reporter, base_reporter);
+  auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate<HeartbeatReporter>(base_reporter, base_reporter);
   if (heartbeat_reporter_obj == nullptr) {
     logger_->log_error("Could not instantiate %s", base_reporter);
   } else {

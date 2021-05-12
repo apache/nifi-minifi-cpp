@@ -15,7 +15,24 @@
  * limitations under the License.
  */
 
-#include "c2/HeartBeatLogger.h"
+#pragma once
+
+#include <string>
+
+#include "HeartbeatReporter.h"
+#include "C2Payload.h"
+
+#ifdef RAPIDJSON_ASSERT
+#undef RAPIDJSON_ASSERT
+#endif
+#define RAPIDJSON_ASSERT(x) if(!(x)) throw std::logic_error("rapidjson exception"); //NOLINT
+
+#ifdef RAPIDJSON_HAS_STDSTRING
+#undef RAPIDJSON_HAS_STDSTRING
+#endif
+#define RAPIDJSON_HAS_STDSTRING 1
+
+#include "rapidjson/document.h"
 
 namespace org {
 namespace apache {
@@ -23,22 +40,17 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-HeartBeatLogger::HeartBeatLogger(const std::string& name, const utils::Identifier& id)
-  : HeartBeatReporter(name, id),
-    logger_(logging::LoggerFactory<HeartBeatLogger>::getLogger()) {
-  logger_->set_max_log_size(-1);  // log however huge the heartbeat is
-}
+class HeartbeatJsonSerializer {
+ public:
+  virtual std::string serializeJsonRootPayload(const C2Payload& payload);
+  static std::string getOperation(const C2Payload& payload);
 
-int16_t HeartBeatLogger::heartbeat(const C2Payload &heartbeat) {
-  std::string serialized = serializeJsonRootPayload(heartbeat);
-  logger_->log_trace("%s", serialized);
-  return 0;
-}
+ protected:
+  virtual rapidjson::Value serializeJsonPayload(const C2Payload& payload, rapidjson::Document::AllocatorType& alloc);
+  virtual void serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc);
 
-void HeartBeatLogger::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure) {
-  HeartBeatReporter::initialize(controller, updateSink, configure);
-  RESTProtocol::initialize(controller, configure);
-}
+  virtual ~HeartbeatJsonSerializer() = default;
+};
 
 }  // namespace c2
 }  // namespace minifi

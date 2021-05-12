@@ -28,11 +28,11 @@
 
 #include "utils/ByteArrayCallback.h"
 #include "c2/C2Protocol.h"
-#include "c2/HeartBeatReporter.h"
+#include "c2/HeartbeatReporter.h"
 #include "controllers/SSLContextService.h"
 #include "utils/HTTPClient.h"
 #include "Exception.h"
-#include "c2/HeartBeatJSONSerializer.h"
+#include "c2/HeartbeatJsonSerializer.h"
 
 namespace org {
 namespace apache {
@@ -49,7 +49,7 @@ namespace c2 {
  *
  */
 
-class RESTProtocol : public HeartBeatJSONSerializer {
+class RESTProtocol : public HeartbeatJsonSerializer {
  public:
   RESTProtocol();
 

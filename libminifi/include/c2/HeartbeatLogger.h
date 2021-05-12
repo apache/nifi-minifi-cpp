@@ -21,7 +21,7 @@
 #include <string>
 
 #include "core/logging/Logger.h"
-#include "HeartBeatReporter.h"
+#include "HeartbeatReporter.h"
 #include "c2/protocols/RESTProtocol.h"
 
 namespace org {
@@ -30,9 +30,9 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-class HeartBeatLogger : public RESTProtocol, public HeartBeatReporter {
+class HeartbeatLogger : public RESTProtocol, public HeartbeatReporter {
  public:
-  explicit HeartBeatLogger(const std::string& name, const utils::Identifier& id = {});
+  explicit HeartbeatLogger(const std::string& name, const utils::Identifier& id = {});
   int16_t heartbeat(const C2Payload &heartbeat) override;
   void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure) override;
 
@@ -40,7 +40,7 @@ class HeartBeatLogger : public RESTProtocol, public HeartBeatReporter {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(HeartBeatLogger, "Logs heartbeats at TRACE level.");
+REGISTER_RESOURCE(HeartbeatLogger, "Logs heartbeats at TRACE level.");
 
 }  // namespace c2
 }  // namespace minifi

@@ -36,9 +36,9 @@ namespace c2 {
  * Defines a heart beat reporting interface. Note that this differs from
  * C2Protocol as heartbeats can be any interface which provides only one way communication.
  */
-class HeartBeatReporter : public core::Connectable {
+class HeartbeatReporter : public core::Connectable {
  public:
-  HeartBeatReporter(const std::string& name, const utils::Identifier& uuid)
+  HeartbeatReporter(const std::string& name, const utils::Identifier& uuid)
       : core::Connectable(name, uuid),
         controller_(nullptr),
         update_sink_(nullptr),
@@ -51,7 +51,7 @@ class HeartBeatReporter : public core::Connectable {
     update_sink_ = updateSink;
     configuration_ = configure;
   }
-  virtual ~HeartBeatReporter() = default;
+  virtual ~HeartbeatReporter() = default;
   /**
    * Send a C2 payloadd to the provided URI. The direction indicates to the protocol whether or not this a transmit or receive operation.
    * Depending on the protocol this may mean different things.
