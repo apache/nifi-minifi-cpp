@@ -23,6 +23,7 @@
 #include <string>
 
 #include "PerformanceDataCounter.h"
+#include <memory>
 
 namespace org {
 namespace apache {
@@ -30,57 +31,57 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class PDHCounterBase : public PerformanceDataCounter {
+class PDHCounter : public PerformanceDataCounter {
  public:
-  virtual ~PDHCounterBase() {}
-  static PDHCounterBase* createPDHCounter(const std::string& query_name, bool is_double = true);
+  virtual ~PDHCounter() {}
+  static std::unique_ptr<PDHCounter> createPDHCounter(const std::string& query_name, bool is_double = true);
 
   const std::string& getName() const;
   virtual std::string getObjectName() const;
   virtual std::string getCounterName() const;
   virtual PDH_STATUS addToQuery(PDH_HQUERY& pdh_query) = 0;
-  virtual PDH_STATUS collectData() = 0;
  protected:
-  PDHCounterBase(const std::string& query_name, bool is_double) : PerformanceDataCounter(),
-    is_double_format_(is_double), pdh_english_counter_name_(query_name) {
-  }
+  PDHCounter(const std::string& query_name, bool is_double)
+      : PerformanceDataCounter(), is_double_format_(is_double), pdh_english_counter_name_(query_name) {}
+
   DWORD getDWFormat() const;
+
   const bool is_double_format_;
   std::string pdh_english_counter_name_;
 };
 
-class PDHCounter : public PDHCounterBase {
+class SinglePDHCounter : public PDHCounter {
  public:
   void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const override;
 
   PDH_STATUS addToQuery(PDH_HQUERY& pdh_query) override;
-  PDH_STATUS collectData() override;
+  bool collectData() override;
 
  protected:
-  friend PDHCounterBase* PDHCounterBase::createPDHCounter(const std::string& query_name, bool is_double);
-  explicit PDHCounter(const std::string& query_name, bool is_double) : PDHCounterBase(query_name, is_double),
-    counter_(), current_value_() {
-  }
+  friend std::unique_ptr<PDHCounter> PDHCounter::createPDHCounter(const std::string& query_name, bool is_double);
+  explicit SinglePDHCounter(const std::string& query_name, bool is_double)
+      : PDHCounter(query_name, is_double), counter_(nullptr), current_value_() {}
+
   rapidjson::Value getValue() const;
 
   PDH_HCOUNTER counter_;
   PDH_FMT_COUNTERVALUE current_value_;
 };
 
-class PDHCounterArray : public PDHCounterBase {
+class PDHCounterArray : public PDHCounter {
  public:
   virtual ~PDHCounterArray() { clearCurrentData(); }
   void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const override;
 
   std::string getObjectName() const override;
   PDH_STATUS addToQuery(PDH_HQUERY& pdh_query) override;
-  PDH_STATUS collectData() override;
+  bool collectData() override;
 
  protected:
-  friend PDHCounterBase* PDHCounterBase::createPDHCounter(const std::string& query_name, bool is_double);
-  explicit PDHCounterArray(std::string query_name, bool is_double) : PDHCounterBase(query_name, is_double),
-    counter_(), buffer_size_(0), item_count_(0), values_(nullptr) {
-  }
+  friend std::unique_ptr<PDHCounter> PDHCounter::createPDHCounter(const std::string& query_name, bool is_double);
+  explicit PDHCounterArray(const std::string& query_name, bool is_double)
+      : PDHCounter(query_name, is_double), counter_(nullptr), buffer_size_(0), item_count_(0), values_(nullptr) {}
+
   void clearCurrentData();
   rapidjson::Value getValue(const DWORD i) const;
 

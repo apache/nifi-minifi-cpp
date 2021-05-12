@@ -27,9 +27,9 @@
 #include "PerformanceDataMonitor.h"
 #include "rapidjson/filereadstream.h"
 
-using PutFile = org::apache::nifi::minifi::processors::PutFile;
-using PerformanceDataMonitor = org::apache::nifi::minifi::processors::PerformanceDataMonitor;
-using PerformanceDataCounter = org::apache::nifi::minifi::processors::PerformanceDataCounter;
+using org::apache::nifi::minifi::processors::PutFile;
+using org::apache::nifi::minifi::processors::PerformanceDataMonitor;
+using org::apache::nifi::minifi::processors::PerformanceDataCounter;
 
 class PerformanceDataMonitorTester {
  public:
@@ -68,14 +68,8 @@ TEST_CASE("PerformanceDataMonitorEmptyPropertiesTest", "[performancedatamonitore
 
   REQUIRE(tester.test_controller_.getLog().getInstance().contains("No valid counters for PerformanceDataMonitor", std::chrono::seconds(0)));
 
-  uint32_t number_of_flowfiles = 0;
-  auto lambda = [&number_of_flowfiles](const std::string& path, const std::string& filename) -> bool {
-    ++number_of_flowfiles;
-    return true;
-  };
-
-  utils::file::FileUtils::list_dir(tester.dir_, lambda, tester.plan_->getLogger(), false);
-  REQUIRE(number_of_flowfiles == 0);
+  auto created_flow_files = utils::file::FileUtils::list_dir_all(tester.dir_, tester.plan_->getLogger(), false);
+  REQUIRE(created_flow_files.size() == 0);
 }
 
 TEST_CASE("PerformanceDataMonitorPartiallyInvalidGroupPropertyTest", "[performancedatamonitorpartiallyinvalidgrouppropertytest]") {
@@ -95,14 +89,14 @@ TEST_CASE("PerformanceDataMonitorPartiallyInvalidGroupPropertyTest", "[performan
     REQUIRE(fp != nullptr);
     char readBuffer[500];
     rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-    rapidjson::Document d;
-    d.ParseStream(is);
+    rapidjson::Document document;
+    document.ParseStream(is);
     fclose(fp);
-    REQUIRE(d.IsObject());
-    REQUIRE(d.HasMember("LogicalDisk"));
-    REQUIRE(d["LogicalDisk"].HasMember("_Total"));
-    REQUIRE(d["LogicalDisk"]["_Total"].HasMember("Free Megabytes"));
-    REQUIRE(d["System"].HasMember("Processes"));
+    REQUIRE(document.IsObject());
+    REQUIRE(document.HasMember("LogicalDisk"));
+    REQUIRE(document["LogicalDisk"].HasMember("_Total"));
+    REQUIRE(document["LogicalDisk"]["_Total"].HasMember("Free Megabytes"));
+    REQUIRE(document["System"].HasMember("Processes"));
     return true;
   };
 
@@ -123,15 +117,15 @@ TEST_CASE("PerformanceDataMonitorCustomPDHCountersTest", "[performancedatamonito
     REQUIRE(fp != nullptr);
     char readBuffer[50000];
     rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-    rapidjson::Document d;
-    d.ParseStream(is);
+    rapidjson::Document document;
+    document.ParseStream(is);
     fclose(fp);
-    REQUIRE(d.IsObject());
-    REQUIRE(d.HasMember("System"));
-    REQUIRE(d["System"].HasMember("Processes"));
-    REQUIRE(d.HasMember("Process"));
-    REQUIRE(d["Process"].HasMember("PerformanceDataMonitorTests"));
-    REQUIRE(d["Process"]["PerformanceDataMonitorTests"].HasMember("% Processor Time"));
+    REQUIRE(document.IsObject());
+    REQUIRE(document.HasMember("System"));
+    REQUIRE(document["System"].HasMember("Processes"));
+    REQUIRE(document.HasMember("Process"));
+    REQUIRE(document["Process"].HasMember("PerformanceDataMonitorTests"));
+    REQUIRE(document["Process"]["PerformanceDataMonitorTests"].HasMember("% Processor Time"));
     return true;
   };
 
@@ -153,18 +147,18 @@ TEST_CASE("PerformanceDataMonitorCustomPDHCountersTestOpenTelemetry", "[performa
     REQUIRE(fp != nullptr);
     char readBuffer[50000];
     rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-    rapidjson::Document d;
-    d.ParseStream(is);
+    rapidjson::Document document;
+    document.ParseStream(is);
     fclose(fp);
-    REQUIRE(d.IsObject());
-    REQUIRE(d.HasMember("Name"));
-    REQUIRE(d.HasMember("Timestamp"));
-    REQUIRE(d.HasMember("Body"));
-    REQUIRE(d["Body"].HasMember("System"));
-    REQUIRE(d["Body"]["System"].HasMember("Processes"));
-    REQUIRE(d["Body"].HasMember("Process"));
-    REQUIRE(d["Body"]["Process"].HasMember("PerformanceDataMonitorTests"));
-    REQUIRE(d["Body"]["Process"]["PerformanceDataMonitorTests"].HasMember("ID Process"));
+    REQUIRE(document.IsObject());
+    REQUIRE(document.HasMember("Name"));
+    REQUIRE(document.HasMember("Timestamp"));
+    REQUIRE(document.HasMember("Body"));
+    REQUIRE(document["Body"].HasMember("System"));
+    REQUIRE(document["Body"]["System"].HasMember("Processes"));
+    REQUIRE(document["Body"].HasMember("Process"));
+    REQUIRE(document["Body"]["Process"].HasMember("PerformanceDataMonitorTests"));
+    REQUIRE(document["Body"]["Process"]["PerformanceDataMonitorTests"].HasMember("ID Process"));
     return true;
   };
 
@@ -186,83 +180,51 @@ TEST_CASE("PerformanceDataMonitorAllPredefinedGroups", "[performancedatamonitora
     REQUIRE(fp != nullptr);
     char readBuffer[50000];
     rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-    rapidjson::Document d;
-    d.ParseStream(is);
+    rapidjson::Document document;
+    document.ParseStream(is);
     fclose(fp);
-    REQUIRE(d.IsObject());
-    REQUIRE(d.HasMember("Name"));
-    REQUIRE(d.HasMember("Timestamp"));
-    REQUIRE(d.HasMember("Body"));
-    REQUIRE(d["Body"].HasMember("PhysicalDisk"));
-    REQUIRE(d["Body"]["PhysicalDisk"].HasMember("_Total"));
-    REQUIRE(d["Body"]["PhysicalDisk"]["_Total"].HasMember("% Disk Read Time"));
-    REQUIRE(d["Body"]["PhysicalDisk"]["_Total"].HasMember("% Disk Time"));
-    REQUIRE(d["Body"]["PhysicalDisk"]["_Total"].HasMember("% Disk Write Time"));
-    REQUIRE(d["Body"]["PhysicalDisk"]["_Total"].HasMember("% Idle Time"));
+    REQUIRE(document.IsObject());
+    REQUIRE(document.HasMember("Name"));
+    REQUIRE(document.HasMember("Timestamp"));
+    REQUIRE(document.HasMember("Body"));
+    REQUIRE(document["Body"].HasMember("PhysicalDisk"));
+    REQUIRE(document["Body"]["PhysicalDisk"].HasMember("_Total"));
+    REQUIRE(document["Body"]["PhysicalDisk"]["_Total"].HasMember("% Disk Read Time"));
+    REQUIRE(document["Body"]["PhysicalDisk"]["_Total"].HasMember("% Disk Time"));
+    REQUIRE(document["Body"]["PhysicalDisk"]["_Total"].HasMember("% Disk Write Time"));
+    REQUIRE(document["Body"]["PhysicalDisk"]["_Total"].HasMember("% Idle Time"));
 
-    REQUIRE(d["Body"].HasMember("LogicalDisk"));
-    REQUIRE(d["Body"]["LogicalDisk"].HasMember("_Total"));
-    REQUIRE(d["Body"]["LogicalDisk"]["_Total"].HasMember("Free Megabytes"));
-    REQUIRE(d["Body"]["LogicalDisk"]["_Total"].HasMember("% Free Space"));
+    REQUIRE(document["Body"].HasMember("LogicalDisk"));
+    REQUIRE(document["Body"]["LogicalDisk"].HasMember("_Total"));
+    REQUIRE(document["Body"]["LogicalDisk"]["_Total"].HasMember("Free Megabytes"));
+    REQUIRE(document["Body"]["LogicalDisk"]["_Total"].HasMember("% Free Space"));
 
-    REQUIRE(d["Body"].HasMember("Processor"));
-    REQUIRE(d["Body"]["Processor"].HasMember("_Total"));
+    REQUIRE(document["Body"].HasMember("Processor"));
+    REQUIRE(document["Body"]["Processor"].HasMember("_Total"));
 
-    REQUIRE(d["Body"].HasMember("Network Interface"));
+    REQUIRE(document["Body"].HasMember("Network Interface"));
 
-    REQUIRE(d["Body"].HasMember("Memory"));
-    REQUIRE(d["Body"]["Memory"].HasMember("% Committed Bytes In Use"));
-    REQUIRE(d["Body"]["Memory"].HasMember("Available MBytes"));
-    REQUIRE(d["Body"]["Memory"].HasMember("Page Faults/sec"));
-    REQUIRE(d["Body"]["Memory"].HasMember("Pages/sec"));
+    REQUIRE(document["Body"].HasMember("Memory"));
+    REQUIRE(document["Body"]["Memory"].HasMember("% Committed Bytes In Use"));
+    REQUIRE(document["Body"]["Memory"].HasMember("Available MBytes"));
+    REQUIRE(document["Body"]["Memory"].HasMember("Page Faults/sec"));
+    REQUIRE(document["Body"]["Memory"].HasMember("Pages/sec"));
 
-    REQUIRE(d["Body"].HasMember("System"));
-    REQUIRE(d["Body"]["System"].HasMember("% Registry Quota In Use"));
-    REQUIRE(d["Body"]["System"].HasMember("Context Switches/sec"));
-    REQUIRE(d["Body"]["System"].HasMember("File Control Bytes/sec"));
-    REQUIRE(d["Body"]["System"].HasMember("File Control Operations/sec"));
+    REQUIRE(document["Body"].HasMember("System"));
+    REQUIRE(document["Body"]["System"].HasMember("% Registry Quota In Use"));
+    REQUIRE(document["Body"]["System"].HasMember("Context Switches/sec"));
+    REQUIRE(document["Body"]["System"].HasMember("File Control Bytes/sec"));
+    REQUIRE(document["Body"]["System"].HasMember("File Control Operations/sec"));
 
-    REQUIRE(d["Body"].HasMember("Process"));
-    REQUIRE(d["Body"]["Process"].HasMember("PerformanceDataMonitorTests"));
-    REQUIRE(d["Body"]["Process"]["PerformanceDataMonitorTests"].HasMember("% Processor Time"));
-    REQUIRE(d["Body"]["Process"]["PerformanceDataMonitorTests"].HasMember("Elapsed Time"));
-    REQUIRE(d["Body"]["Process"]["PerformanceDataMonitorTests"].HasMember("ID Process"));
-    REQUIRE(d["Body"]["Process"]["PerformanceDataMonitorTests"].HasMember("Private Bytes"));
+    REQUIRE(document["Body"].HasMember("Process"));
+    REQUIRE(document["Body"]["Process"].HasMember("PerformanceDataMonitorTests"));
+    REQUIRE(document["Body"]["Process"]["PerformanceDataMonitorTests"].HasMember("% Processor Time"));
+    REQUIRE(document["Body"]["Process"]["PerformanceDataMonitorTests"].HasMember("Elapsed Time"));
+    REQUIRE(document["Body"]["Process"]["PerformanceDataMonitorTests"].HasMember("ID Process"));
+    REQUIRE(document["Body"]["Process"]["PerformanceDataMonitorTests"].HasMember("Private Bytes"));
     return true;
   };
 
   utils::file::FileUtils::list_dir(tester.dir_, lambda, tester.plan_->getLogger(), false);
   REQUIRE(number_of_flowfiles == 2);
-}
-
-class MockCounter : public org::apache::nifi::minifi::processors::PerformanceDataCounter {
- public:
-  explicit MockCounter(bool& is_active) : is_active_(is_active) {
-    is_active_ = true;
-  }
-  ~MockCounter() { is_active_ = false; }
-  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const override {}
-
-  bool& is_active_;
-};
-
-class TestablePerformanceDataMonitor : public PerformanceDataMonitor {
- public:
-  explicit TestablePerformanceDataMonitor(const std::string& name, utils::Identifier uuid = utils::Identifier())
-    : PerformanceDataMonitor(name, uuid) {
-  }
-
-  void addCounter(PerformanceDataCounter* counter) {
-    resource_consumption_counters_.push_back(counter);
-  }
-};
-
-TEST_CASE("PerformanceMonitorDeletesItsCountersWhenItGetsDeleted", "[performancemonitordeletesitscounterswhenitgetsdeleted]") {
-  bool mock_alive = false;
-  {
-    TestablePerformanceDataMonitor tester("TestablePerformanceDataMonitor");
-    tester.addCounter(new MockCounter(mock_alive));
-    REQUIRE(mock_alive);
-  }
-  REQUIRE_FALSE(mock_alive);
 }

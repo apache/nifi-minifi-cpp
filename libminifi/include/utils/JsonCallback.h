@@ -17,34 +17,37 @@
 #pragma once
 
 #include <string>
-#include "rapidjson/document.h"
+#include <utility>
+#include <memory>
+
+#include "rapidjson/stream.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/prettywriter.h"
+
+#include "io/StreamPipe.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace processors {
+namespace utils {
 
-class PerformanceDataCounter {
+class JsonOutputCallback : public OutputStreamCallback {
  public:
-  PerformanceDataCounter() = default;
-  virtual ~PerformanceDataCounter() = default;
+  explicit JsonOutputCallback(rapidjson::Document&& root) : root_(std::move(root)) {}
 
-  virtual bool collectData() = 0;
-  virtual void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const = 0;
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+    rapidjson::StringBuffer buffer;
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+    root_.Accept(writer);
+    return stream->write(reinterpret_cast<const uint8_t*>(buffer.GetString()), gsl::narrow<int>(buffer.GetSize()));
+  }
 
  protected:
-  static rapidjson::Value& acquireNode(const std::string& node_name, rapidjson::Value& parent_node, rapidjson::Document::AllocatorType& alloc) {
-    if (!parent_node.HasMember(node_name.c_str())) {
-      rapidjson::Value value(rapidjson::kObjectType);
-      rapidjson::Value key(node_name.c_str(), alloc);
-      parent_node.AddMember(key, value, alloc);
-    }
-    return parent_node[node_name.c_str()];
-  }
+  rapidjson::Document root_;
 };
 
-}  // namespace processors
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

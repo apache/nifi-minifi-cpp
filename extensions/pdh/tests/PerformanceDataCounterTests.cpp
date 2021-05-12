@@ -20,40 +20,40 @@
 #include "PDHCounters.h"
 #include "MemoryConsumptionCounter.h"
 
-using PDHCounter = org::apache::nifi::minifi::processors::PDHCounter;
-using PDHCounterArray = org::apache::nifi::minifi::processors::PDHCounterArray;
-using PDHCounterBase = org::apache::nifi::minifi::processors::PDHCounterBase;
-using MemoryConsumptionCounter = org::apache::nifi::minifi::processors::MemoryConsumptionCounter;
+using org::apache::nifi::minifi::processors::SinglePDHCounter;
+using org::apache::nifi::minifi::processors::PDHCounterArray;
+using org::apache::nifi::minifi::processors::PDHCounter;
+using org::apache::nifi::minifi::processors::MemoryConsumptionCounter;
 
 
 TEST_CASE("PDHCounterNameTests", "[pdhcounternametests]") {
-  PDHCounterBase* test_counter = PDHCounterBase::createPDHCounter("\\System\\Threads");
-  REQUIRE(nullptr != dynamic_cast<PDHCounter*> (test_counter));
+  std::unique_ptr<PDHCounter> test_counter = PDHCounter::createPDHCounter("\\System\\Threads");
+  REQUIRE(nullptr != dynamic_cast<SinglePDHCounter*> (test_counter.get()));
   REQUIRE("\\System\\Threads" == test_counter->getName());
   REQUIRE("System" == test_counter->getObjectName());
   REQUIRE("Threads" == test_counter->getCounterName());
 }
 
 TEST_CASE("PDHCounterArrayNameTests", "[pdhcounterarraytests]") {
-  PDHCounterBase* test_counter_array = PDHCounterBase::createPDHCounter("\\LogicalDisk(*)\\% Free Space");
-  REQUIRE(nullptr != dynamic_cast<PDHCounterArray*> (test_counter_array));
+  std::unique_ptr<PDHCounter> test_counter_array = PDHCounter::createPDHCounter("\\LogicalDisk(*)\\% Free Space");
+  REQUIRE(nullptr != dynamic_cast<PDHCounterArray*> (test_counter_array.get()));
   REQUIRE("\\LogicalDisk(*)\\% Free Space" == test_counter_array->getName());
   REQUIRE("LogicalDisk" == test_counter_array->getObjectName());
   REQUIRE("% Free Space" == test_counter_array->getCounterName());
 }
 
 TEST_CASE("PDHCountersInvalidNameTests", "[pdhcountersinvalidnametests]") {
-  REQUIRE(nullptr == PDHCounterBase::createPDHCounter("Invalid Name"));
-  REQUIRE(nullptr == PDHCounterBase::createPDHCounter(""));
-  REQUIRE(nullptr == PDHCounterBase::createPDHCounter("Something\\Counter"));
-  REQUIRE(nullptr == PDHCounterBase::createPDHCounter("\\Too\\Many\\Separators"));
-  REQUIRE(nullptr == PDHCounterBase::createPDHCounter("Too\\Many\\Separators"));
-  REQUIRE(nullptr != PDHCounterBase::createPDHCounter("\\Valid\\Counter"));
+  REQUIRE(nullptr == PDHCounter::createPDHCounter("Invalid Name"));
+  REQUIRE(nullptr == PDHCounter::createPDHCounter(""));
+  REQUIRE(nullptr == PDHCounter::createPDHCounter("Something\\Counter"));
+  REQUIRE(nullptr == PDHCounter::createPDHCounter("\\Too\\Many\\Separators"));
+  REQUIRE(nullptr == PDHCounter::createPDHCounter("Too\\Many\\Separators"));
+  REQUIRE(nullptr != PDHCounter::createPDHCounter("\\Valid\\Counter"));
 }
 
-class TestablePDHCounter : public PDHCounter {
+class TestablePDHCounter : public SinglePDHCounter {
  public:
-  explicit TestablePDHCounter(const std::string& query_name, bool is_double = true) : PDHCounter(query_name, is_double) {
+  explicit TestablePDHCounter(const std::string& query_name, bool is_double = true) : SinglePDHCounter(query_name, is_double) {
   }
 };
 
@@ -65,7 +65,7 @@ class TestablePDHCounterArray : public PDHCounterArray {
 
 TEST_CASE("PDHCountersAddingToQueryTests", "[pdhcountersaddingtoquerytests]") {
   PDH_HQUERY pdh_query;
-  PdhOpenQuery(NULL, NULL, &pdh_query);
+  PdhOpenQueryA(nullptr, 0, &pdh_query);
   PDH_HQUERY unopened_pdh_query;
 
   TestablePDHCounter valid_counter("\\System\\Threads");
@@ -78,7 +78,7 @@ TEST_CASE("PDHCountersAddingToQueryTests", "[pdhcountersaddingtoquerytests]") {
   TestablePDHCounter counter_with_invalid_counter_name("\\System\\Invalid");
   REQUIRE(PDH_CSTATUS_NO_COUNTER == counter_with_invalid_counter_name.addToQuery(pdh_query));
 
-  TestablePDHCounter unparsable_counter("asd");  // Unparsable names are also filtered when using PDHCounterBase::createPDHCounter
+  TestablePDHCounter unparsable_counter("asd");  // Unparsable names are also filtered when using PDHCounter::createPDHCounter
   REQUIRE(PDH_CSTATUS_BAD_COUNTERNAME == unparsable_counter.addToQuery(pdh_query));
 
   PdhCloseQuery(&pdh_query);
@@ -86,7 +86,7 @@ TEST_CASE("PDHCountersAddingToQueryTests", "[pdhcountersaddingtoquerytests]") {
 
 TEST_CASE("PDHCounterArraysAddingToQueryTests", "[pdhcounterarraysaddingtoquerytests]") {
   PDH_HQUERY pdh_query;
-  PdhOpenQuery(NULL, NULL, &pdh_query);
+  PdhOpenQueryA(nullptr, 0, &pdh_query);
   PDH_HQUERY unopened_pdh_query;
 
   TestablePDHCounterArray valid_counter("\\Processor(*)\\% Processor Time");
@@ -99,7 +99,7 @@ TEST_CASE("PDHCounterArraysAddingToQueryTests", "[pdhcounterarraysaddingtoqueryt
   TestablePDHCounterArray counter_with_invalid_counter_name("\\Processor(*)\\SomethingInvalid");
   REQUIRE(PDH_CSTATUS_NO_COUNTER == counter_with_invalid_counter_name.addToQuery(pdh_query));
 
-  TestablePDHCounterArray unparsable_counter("asd");  // Unparsable names are also filtered when using PDHCounterBase::createPDHCounter
+  TestablePDHCounterArray unparsable_counter("asd");  // Unparsable names are also filtered when using PDHCounter::createPDHCounter
   REQUIRE(PDH_CSTATUS_BAD_COUNTERNAME == unparsable_counter.addToQuery(pdh_query));
 
   PdhCloseQuery(&pdh_query);
@@ -107,7 +107,7 @@ TEST_CASE("PDHCounterArraysAddingToQueryTests", "[pdhcounterarraysaddingtoqueryt
 
 TEST_CASE("PDHCounterDataCollectionTest", "[pdhcounterdatacollectiontest]") {
   PDH_HQUERY pdh_query;
-  PdhOpenQuery(NULL, NULL, &pdh_query);
+  PdhOpenQueryA(nullptr, 0, &pdh_query);
 
   TestablePDHCounter double_counter("\\System\\Threads");
   TestablePDHCounter int_counter("\\System\\Processes", false);
@@ -116,8 +116,8 @@ TEST_CASE("PDHCounterDataCollectionTest", "[pdhcounterdatacollectiontest]") {
 
   PdhCollectQueryData(pdh_query);
 
-  REQUIRE(ERROR_SUCCESS == double_counter.collectData());
-  REQUIRE(ERROR_SUCCESS == int_counter.collectData());
+  REQUIRE(double_counter.collectData());
+  REQUIRE(int_counter.collectData());
 
   rapidjson::Document document(rapidjson::kObjectType);
   double_counter.addToJson(document, document.GetAllocator());
@@ -135,7 +135,7 @@ TEST_CASE("PDHCounterDataCollectionTest", "[pdhcounterdatacollectiontest]") {
 
 TEST_CASE("PDHCounterArrayDataCollectionTest", "[pdhcounterarraydatacollectiontest]") {
   PDH_HQUERY pdh_query;
-  PdhOpenQuery(NULL, NULL, &pdh_query);
+  PdhOpenQueryA(nullptr, 0, &pdh_query);
 
   TestablePDHCounterArray double_counter_array("\\Process(*)\\Thread Count");
   TestablePDHCounterArray int_counter_array("\\Process(*)\\ID Process", false);
@@ -147,8 +147,8 @@ TEST_CASE("PDHCounterArrayDataCollectionTest", "[pdhcounterarraydatacollectionte
   double_counter_array.collectData();
   int_counter_array.collectData();
   std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-  REQUIRE(ERROR_SUCCESS == double_counter_array.collectData());
-  REQUIRE(ERROR_SUCCESS == int_counter_array.collectData());
+  REQUIRE(double_counter_array.collectData());
+  REQUIRE(int_counter_array.collectData());
 
   rapidjson::Document document(rapidjson::kObjectType);
   double_counter_array.addToJson(document, document.GetAllocator());
@@ -166,6 +166,9 @@ TEST_CASE("PDHCounterArrayDataCollectionTest", "[pdhcounterarraydatacollectionte
 
 TEST_CASE("MemoryConsumptionCounterTest", "[memoryconsumptioncountertest]") {
   MemoryConsumptionCounter memory_counter;
+  REQUIRE_FALSE(memory_counter.dataIsValid());
+  memory_counter.collectData();
+  REQUIRE(memory_counter.dataIsValid());
 
   rapidjson::Document document(rapidjson::kObjectType);
   memory_counter.addToJson(document, document.GetAllocator());

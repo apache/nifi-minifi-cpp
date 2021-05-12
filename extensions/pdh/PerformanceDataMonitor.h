@@ -40,14 +40,14 @@ namespace processors {
 // PerformanceDataMonitor Class
 class PerformanceDataMonitor : public core::Processor {
  public:
-  static constexpr char const* JSON_FORMAT_STR = "JSON";
-  static constexpr char const* OPEN_TELEMETRY_FORMAT_STR = "OpenTelemetry";
+  static constexpr const char* JSON_FORMAT_STR = "JSON";
+  static constexpr const char* OPEN_TELEMETRY_FORMAT_STR = "OpenTelemetry";
 
   explicit PerformanceDataMonitor(const std::string& name, utils::Identifier uuid = utils::Identifier())
-      : Processor(name, uuid), output_format_(OutputFormat::kJSON),
-      logger_(logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
-      pdh_query_(nullptr), resource_consumption_counters_() {
-  }
+      : Processor(name, uuid), output_format_(OutputFormat::JSON),
+        logger_(logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
+        pdh_query_(nullptr), resource_consumption_counters_() {}
+
   ~PerformanceDataMonitor() override;
   static constexpr char const* ProcessorName = "PerformanceDataMonitor";
   // Supported Properties
@@ -56,28 +56,16 @@ class PerformanceDataMonitor : public core::Processor {
   static core::Property OutputFormatProperty;
   // Supported Relationships
   static core::Relationship Success;
-  // Nest Callback Class for write stream
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    explicit WriteCallback(rapidjson::Document&& root) : root_(std::move(root)) {
-    }
-    rapidjson::Document root_;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      rapidjson::StringBuffer buffer;
-      rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-      root_.Accept(writer);
-      return stream->write(reinterpret_cast<const uint8_t*>(buffer.GetString()), gsl::narrow<int>(buffer.GetSize()));
-    }
-  };
+
 
  public:
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
-  void initialize(void) override;
+  void initialize() override;
 
  protected:
   enum class OutputFormat {
-    kJSON, kOpenTelemetry
+    JSON, OPENTELEMETRY
   };
 
   rapidjson::Value& prepareJSONBody(rapidjson::Document& root);
@@ -90,7 +78,7 @@ class PerformanceDataMonitor : public core::Processor {
 
   std::shared_ptr<logging::Logger> logger_;
   PDH_HQUERY pdh_query_;
-  std::vector<PerformanceDataCounter*> resource_consumption_counters_;
+  std::vector<std::unique_ptr<PerformanceDataCounter>> resource_consumption_counters_;
 };
 
 REGISTER_RESOURCE(PerformanceDataMonitor, "This processor can create FlowFiles with various performance data through Performance Data Helper. (Windows only)");

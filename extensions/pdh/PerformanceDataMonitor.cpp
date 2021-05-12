@@ -21,6 +21,8 @@
 #include "PerformanceDataMonitor.h"
 #include "PDHCounters.h"
 #include "MemoryConsumptionCounter.h"
+#include "utils/StringUtils.h"
+#include "utils/JsonCallback.h"
 
 namespace org {
 namespace apache {
@@ -32,209 +34,200 @@ core::Relationship PerformanceDataMonitor::Success("success", "All files are rou
 
 core::Property PerformanceDataMonitor::PredefinedGroups(
     core::PropertyBuilder::createProperty("Predefined Groups")->
-    withDescription("Comma separated list to which predefined groups should be included")->
+    withDescription("Comma separated list from the allowable values, to monitor multiple common Windows Performance counters related to these groups")->
     withDefaultValue("")->build());
 
 core::Property PerformanceDataMonitor::CustomPDHCounters(
     core::PropertyBuilder::createProperty("Custom PDH Counters")->
-    withDescription("Comma separated list of PDHCounters to collect from")->
+    withDescription("Comma separated list of Windows Performance Counters to monitor")->
     withDefaultValue("")->build());
 
 core::Property PerformanceDataMonitor::OutputFormatProperty(
-    core::PropertyBuilder::createProperty("Output format")->
+    core::PropertyBuilder::createProperty("Output Format")->
     withDescription("Format of the created flowfiles")->
     withAllowableValue<std::string>(JSON_FORMAT_STR)->
     withAllowableValue(OPEN_TELEMETRY_FORMAT_STR)->
     withDefaultValue(JSON_FORMAT_STR)->build());
 
 PerformanceDataMonitor::~PerformanceDataMonitor() {
-  if (pdh_query_ != nullptr)
-    PdhCloseQuery(pdh_query_);
-  for (PerformanceDataCounter* resource_consumption_counter : resource_consumption_counters_) {
-    delete resource_consumption_counter;
-  }
+  PdhCloseQuery(pdh_query_);
 }
 
 void PerformanceDataMonitor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
   setupMembersFromProperties(context);
 
-  std::vector<PerformanceDataCounter*> valid_counters;
+  PdhOpenQueryA(nullptr, 0, &pdh_query_);
 
-  for (PerformanceDataCounter* counter : resource_consumption_counters_) {
-    PDHCounterBase* pdh_counter = dynamic_cast<PDHCounterBase*> (counter);
+  for (auto it = resource_consumption_counters_.begin(); it != resource_consumption_counters_.end();) {
+    PDHCounter* pdh_counter = dynamic_cast<PDHCounter*> (it->get());
     if (pdh_counter != nullptr) {
-      if (pdh_query_ == nullptr)
-        PdhOpenQuery(NULL, NULL, &pdh_query_);
       PDH_STATUS add_to_query_result = pdh_counter->addToQuery(pdh_query_);
       if (add_to_query_result != ERROR_SUCCESS) {
-        logger_->log_error(("Error adding " + pdh_counter->getName() + " to query: " + std::to_string(add_to_query_result)).c_str());
-        delete counter;
-      } else {
-        valid_counters.push_back(counter);
+        logger_->log_error("Error adding %s to query, error code: 0x%x", pdh_counter->getName(), add_to_query_result);
+        it = resource_consumption_counters_.erase(it);
+        break;
       }
-    } else {
-      valid_counters.push_back(counter);
     }
+    ++it;
   }
-  resource_consumption_counters_ = valid_counters;
   PdhCollectQueryData(pdh_query_);
 }
 
 void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
   if (resource_consumption_counters_.empty()) {
     logger_->log_error("No valid counters for PerformanceDataMonitor");
+    yield();
     return;
   }
 
   std::shared_ptr<core::FlowFile> flowFile = session->create();
   if (!flowFile) {
     logger_->log_error("Failed to create flowfile!");
+    yield();
     return;
   }
 
-  if (pdh_query_ != nullptr)
-    PdhCollectQueryData(pdh_query_);
+  PdhCollectQueryData(pdh_query_);
 
   rapidjson::Document root = rapidjson::Document(rapidjson::kObjectType);
   rapidjson::Value& body = prepareJSONBody(root);
-  for (PerformanceDataCounter* counter : resource_consumption_counters_) {
-    PDHCounterBase* pdh_counter = dynamic_cast<PDHCounterBase*>(counter);
-    if (pdh_counter != nullptr && pdh_counter->collectData() != ERROR_SUCCESS)
-      continue;
+  for (auto& counter : resource_consumption_counters_) {
+    counter->collectData();
     counter->addToJson(body, root.GetAllocator());
   }
-  PerformanceDataMonitor::WriteCallback callback(std::move(root));
+  utils::JsonOutputCallback callback(std::move(root));
   session->write(flowFile, &callback);
   session->transfer(flowFile, Success);
 }
 
-void PerformanceDataMonitor::initialize(void) {
+void PerformanceDataMonitor::initialize() {
   setSupportedProperties({ CustomPDHCounters, PredefinedGroups, OutputFormatProperty });
   setSupportedRelationships({ PerformanceDataMonitor::Success });
 }
 
 rapidjson::Value& PerformanceDataMonitor::prepareJSONBody(rapidjson::Document& root) {
   switch (output_format_) {
-    case (OutputFormat::kOpenTelemetry):
+    case OutputFormat::OPENTELEMETRY:
       root.AddMember("Name", "PerformanceData", root.GetAllocator());
       root.AddMember("Timestamp", std::time(0), root.GetAllocator());
       root.AddMember("Body", rapidjson::Value{ rapidjson::kObjectType }, root.GetAllocator());
       return root["Body"];
-    case (OutputFormat::kJSON):
+    case OutputFormat::JSON:
       return root;
     default:
       return root;
   }
 }
 
-void add_cpu_related_counters(std::vector<PerformanceDataCounter*>& resource_consumption_counters) {
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Processor(*)\\% Processor Time"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Processor(*)\\% User Time"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Processor(*)\\% Privileged Time"));
+void add_cpu_related_counters(std::vector<std::unique_ptr<PerformanceDataCounter>>& resource_consumption_counters) {
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Processor(*)\\% Processor Time"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Processor(*)\\% User Time"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Processor(*)\\% Privileged Time"));
 }
 
-void add_io_related_counters(std::vector<PerformanceDataCounter*>& resource_consumption_counters) {
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Process(_Total)\\IO Read Bytes/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Process(_Total)\\IO Write Bytes/sec"));
+void add_io_related_counters(std::vector<std::unique_ptr<PerformanceDataCounter>>& resource_consumption_counters) {
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Process(_Total)\\IO Read Bytes/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Process(_Total)\\IO Write Bytes/sec"));
 }
 
-void add_disk_related_counters(std::vector<PerformanceDataCounter*>& resource_consumption_counters) {
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\LogicalDisk(*)\\% Free Space"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\LogicalDisk(*)\\Free Megabytes", false));
+void add_disk_related_counters(std::vector<std::unique_ptr<PerformanceDataCounter>>& resource_consumption_counters) {
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\LogicalDisk(*)\\% Free Space"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\LogicalDisk(*)\\Free Megabytes", false));
 
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\% Disk Read Time"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\% Disk Time"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\% Disk Write Time"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\% Idle Time"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Bytes/Transfer"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Bytes/Read"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Bytes/Write"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Write Queue Length"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Read Queue Length"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Queue Length"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk sec/Transfer"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk sec/Read"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk sec/Write"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Current Disk Queue Length"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Disk Transfers/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Disk Reads/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Disk Writes/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Disk Bytes/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Disk Read Bytes/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Disk Write Bytes/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\PhysicalDisk(*)\\Split IO/Sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\% Disk Read Time"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\% Disk Time"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\% Disk Write Time"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\% Idle Time"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Bytes/Transfer"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Bytes/Read"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Bytes/Write"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Write Queue Length"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Read Queue Length"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk Queue Length"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk sec/Transfer"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk sec/Read"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Avg. Disk sec/Write"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Current Disk Queue Length", false));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Disk Transfers/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Disk Reads/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Disk Writes/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Disk Bytes/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Disk Read Bytes/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Disk Write Bytes/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\PhysicalDisk(*)\\Split IO/Sec"));
 }
 
-void add_network_related_counters(std::vector<PerformanceDataCounter*>& resource_consumption_counters) {
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Bytes Received/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Bytes Sent/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Bytes Total/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Current Bandwidth"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Packets/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Packets Received/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Packets Sent/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Packets Received Discarded", false));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Packets Received Errors", false));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Packets Received Unknown", false));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Packets Received Non-Unicast/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Packets Received Unicast/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Packets Sent Unicast/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Network Interface(*)\\Packets Sent Non-Unicast/sec"));
+void add_network_related_counters(std::vector<std::unique_ptr<PerformanceDataCounter>>& resource_consumption_counters) {
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Bytes Received/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Bytes Sent/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Bytes Total/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Current Bandwidth", false));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Packets/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Packets Received/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Packets Sent/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Packets Received Discarded", false));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Packets Received Errors", false));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Packets Received Unknown", false));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Packets Received Non-Unicast/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Packets Received Unicast/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Packets Sent Unicast/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Network Interface(*)\\Packets Sent Non-Unicast/sec"));
 }
 
-void add_memory_related_counters(std::vector<PerformanceDataCounter*>& resource_consumption_counters) {
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Memory\\% Committed Bytes In Use"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Memory\\Available MBytes"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Memory\\Page Faults/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Memory\\Pages/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Paging File(_Total)\\% Usage"));
+void add_memory_related_counters(std::vector<std::unique_ptr<PerformanceDataCounter>>& resource_consumption_counters) {
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Memory\\% Committed Bytes In Use"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Memory\\Available MBytes", false));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Memory\\Page Faults/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Memory\\Pages/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Paging File(_Total)\\% Usage"));
 
-  resource_consumption_counters.push_back(new MemoryConsumptionCounter());
+  resource_consumption_counters.push_back(std::make_unique<MemoryConsumptionCounter>());
 }
 
-void add_process_related_counters(std::vector<PerformanceDataCounter*>& resource_consumption_counters) {
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Process(*)\\% Processor Time"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Process(*)\\Elapsed Time"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Process(*)\\ID Process", false));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\Process(*)\\Private Bytes", false));
+void add_process_related_counters(std::vector<std::unique_ptr<PerformanceDataCounter>>& resource_consumption_counters) {
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Process(*)\\% Processor Time"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Process(*)\\Elapsed Time"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Process(*)\\ID Process", false));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\Process(*)\\Private Bytes", false));
 }
 
-void add_system_related_counters(std::vector<PerformanceDataCounter*>& resource_consumption_counters) {
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\% Registry Quota In Use"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\Context Switches/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\File Control Bytes/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\File Control Operations/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\File Read Bytes/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\File Read Operations/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\File Write Bytes/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\File Write Operations/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\File Data Operations/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\Processes", false));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\Processor Queue Length", false));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\System Calls/sec"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\System Up Time"));
-  resource_consumption_counters.push_back(PDHCounterBase::createPDHCounter("\\System\\Threads", false));
+void add_system_related_counters(std::vector<std::unique_ptr<PerformanceDataCounter>>& resource_consumption_counters) {
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\% Registry Quota In Use"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\Context Switches/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\File Control Bytes/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\File Control Operations/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\File Read Bytes/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\File Read Operations/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\File Write Bytes/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\File Write Operations/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\File Data Operations/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\Processes", false));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\Processor Queue Length", false));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\System Calls/sec"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\System Up Time"));
+  resource_consumption_counters.push_back(PDHCounter::createPDHCounter("\\System\\Threads", false));
 }
 
 void PerformanceDataMonitor::addCountersFromPredefinedGroupsProperty(const std::string& predefined_groups) {
   auto groups = utils::StringUtils::split(predefined_groups, ",");
   for (const auto& group : groups) {
-    if (group == "CPU") {
+    auto trimmed_group_name = utils::StringUtils::trim(group);
+    if (trimmed_group_name == "CPU") {
       add_cpu_related_counters(resource_consumption_counters_);
-    } else if (group == "IO") {
+    } else if (trimmed_group_name == "IO") {
       add_io_related_counters(resource_consumption_counters_);
-    } else if (group == "Disk") {
+    } else if (trimmed_group_name == "Disk") {
       add_disk_related_counters(resource_consumption_counters_);
-    } else if (group == "Network") {
+    } else if (trimmed_group_name == "Network") {
       add_network_related_counters(resource_consumption_counters_);
-    } else if (group == "Memory") {
+    } else if (trimmed_group_name == "Memory") {
       add_memory_related_counters(resource_consumption_counters_);
-    } else if (group == "System") {
+    } else if (trimmed_group_name == "System") {
       add_system_related_counters(resource_consumption_counters_);
-    } else if (group == "Process") {
+    } else if (trimmed_group_name == "Process") {
       add_process_related_counters(resource_consumption_counters_);
     } else {
-      logger_->log_error((group + " is not a valid predefined group for PerformanceDataMonitor").c_str());
+      logger_->log_error((trimmed_group_name + " is not a valid predefined group for PerformanceDataMonitor").c_str());
     }
   }
 }
@@ -242,9 +235,9 @@ void PerformanceDataMonitor::addCountersFromPredefinedGroupsProperty(const std::
 void PerformanceDataMonitor::addCustomPDHCountersFromProperty(const std::string& custom_pdh_counters) {
   const auto custom_counters = utils::StringUtils::split(custom_pdh_counters, ",");
   for (const auto& custom_counter : custom_counters) {
-    PDHCounterBase* counter = PDHCounterBase::createPDHCounter(custom_counter);
+    auto counter = PDHCounter::createPDHCounter(utils::StringUtils::trim(custom_counter));
     if (counter != nullptr)
-      resource_consumption_counters_.push_back(counter);
+      resource_consumption_counters_.push_back(std::move(counter));
   }
 }
 
@@ -265,13 +258,13 @@ void PerformanceDataMonitor::setupMembersFromProperties(const std::shared_ptr<co
   if (context->getProperty(OutputFormatProperty.getName(), output_format_string)) {
     if (output_format_string == OPEN_TELEMETRY_FORMAT_STR) {
       logger_->log_trace("OutputFormat is configured to be OpenTelemetry");
-      output_format_ = OutputFormat::kOpenTelemetry;
+      output_format_ = OutputFormat::OPENTELEMETRY;
     } else if (output_format_string == JSON_FORMAT_STR) {
       logger_->log_trace("OutputFormat is configured to be JSON");
-      output_format_ = OutputFormat::kJSON;
+      output_format_ = OutputFormat::JSON;
     } else {
       logger_->log_error("Invalid OutputFormat, defaulting to JSON");
-      output_format_ = OutputFormat::kJSON;
+      output_format_ = OutputFormat::JSON;
     }
   }
 }

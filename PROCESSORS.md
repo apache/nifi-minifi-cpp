@@ -969,7 +969,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - | - | - |
 |Predefined Groups||CPU<br>IO<br>Disk<br>Network<br>Memory<br>System<br>Process|Comma separated list from the allowable values, to monitor multiple common Windows Performance counters related to these groups. (e.g. "CPU,Network")|
 |Custom PDH Counters|||Comma separated list of Windows Performance Counters to monitor. (e.g. "\\System\\Threads,\\Process(*)\\ID Process")|
-|**Output format**|JSON|JSON<br>OpenTelemetry|The output format of the new flowfile|
+|**Output Format**|JSON|JSON<br>OpenTelemetry|The output format of the new flowfile|
 ### Relationships
 
 | Name | Description |
