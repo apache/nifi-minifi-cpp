@@ -147,7 +147,7 @@ minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredential
     return minifi::utils::nullopt;
   }
 
-  return minifi::utils::make_optional<Aws::Auth::AWSCredentials>(aws_credentials_service->getAWSCredentials());
+  return aws_credentials_service->getAWSCredentials();
 }
 
 minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentials(
@@ -159,19 +159,21 @@ minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredential
     return service_cred.value();
   }
 
-  std::string access_key;
-  context->getProperty(AccessKey, access_key, flow_file);
   aws::AWSCredentialsProvider aws_credentials_provider;
-  aws_credentials_provider.setAccessKey(access_key);
-  std::string secret_key;
-  context->getProperty(SecretKey, secret_key, flow_file);
-  aws_credentials_provider.setSecretKey(secret_key);
-  std::string credential_file;
-  context->getProperty(CredentialsFile.getName(), credential_file);
-  aws_credentials_provider.setCredentialsFile(credential_file);
+  std::string value;
+  if (context->getProperty(AccessKey, value, flow_file)) {
+    aws_credentials_provider.setAccessKey(value);
+  }
+  if (context->getProperty(SecretKey, value, flow_file)) {
+    aws_credentials_provider.setSecretKey(value);
+  }
+  if (context->getProperty(CredentialsFile.getName(), value)) {
+    aws_credentials_provider.setCredentialsFile(value);
+  }
   bool use_default_credentials = false;
-  context->getProperty(UseDefaultCredentials.getName(), use_default_credentials);
-  aws_credentials_provider.setUseDefaultCredentials(use_default_credentials);
+  if (context->getProperty(UseDefaultCredentials.getName(), use_default_credentials)) {
+    aws_credentials_provider.setUseDefaultCredentials(use_default_credentials);
+  }
 
   return aws_credentials_provider.getAWSCredentials();
 }

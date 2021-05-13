@@ -29,6 +29,7 @@
 #include "utils/file/FileUtils.h"
 #include "MockS3RequestSender.h"
 #include "utils/TestUtils.h"
+#include "AWSCredentialsProvider.h"
 
 using org::apache::nifi::minifi::utils::createTempDir;
 
@@ -52,6 +53,7 @@ class S3TestsFixture {
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setTrace<T>();
+    LogTestController::getInstance().setDebug<minifi::aws::AWSCredentialsProvider>();
 
     // Build MiNiFi processing graph
     plan = test_controller.createPlan();
