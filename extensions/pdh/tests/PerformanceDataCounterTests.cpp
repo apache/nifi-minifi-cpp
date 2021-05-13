@@ -67,7 +67,7 @@ class TestablePDHCounterArray : public PDHCounterArray {
 TEST_CASE("PDHCountersAddingToQueryTests", "[pdhcountersaddingtoquerytests]") {
   PDH_HQUERY pdh_query;
   PdhOpenQueryA(nullptr, 0, &pdh_query);
-  gsl::finally([&pdh_query] { PdhCloseQuery(&pdh_query); });
+  auto cleanup = gsl::finally([&pdh_query] { PdhCloseQuery(pdh_query); });
 
   PDH_HQUERY unopened_pdh_query;
 
@@ -88,7 +88,7 @@ TEST_CASE("PDHCountersAddingToQueryTests", "[pdhcountersaddingtoquerytests]") {
 TEST_CASE("PDHCounterArraysAddingToQueryTests", "[pdhcounterarraysaddingtoquerytests]") {
   PDH_HQUERY pdh_query;
   PdhOpenQueryA(nullptr, 0, &pdh_query);
-  gsl::finally([&pdh_query] { PdhCloseQuery(&pdh_query); });
+  auto cleanup = gsl::finally([&pdh_query] { PdhCloseQuery(pdh_query); });
 
   PDH_HQUERY unopened_pdh_query;
 
@@ -109,7 +109,7 @@ TEST_CASE("PDHCounterArraysAddingToQueryTests", "[pdhcounterarraysaddingtoqueryt
 TEST_CASE("PDHCounterDataCollectionTest", "[pdhcounterdatacollectiontest]") {
   PDH_HQUERY pdh_query;
   PdhOpenQueryA(nullptr, 0, &pdh_query);
-  gsl::finally([&pdh_query] { PdhCloseQuery(&pdh_query); });
+  auto cleanup = gsl::finally([&pdh_query] { PdhCloseQuery(pdh_query); });
 
   TestablePDHCounter double_counter("\\System\\Threads");
   TestablePDHCounter int_counter("\\System\\Processes", false);
@@ -136,7 +136,7 @@ TEST_CASE("PDHCounterDataCollectionTest", "[pdhcounterdatacollectiontest]") {
 TEST_CASE("PDHCounterArrayDataCollectionTest", "[pdhcounterarraydatacollectiontest]") {
   PDH_HQUERY pdh_query;
   PdhOpenQueryA(nullptr, 0, &pdh_query);
-  gsl::finally([&pdh_query] { PdhCloseQuery(&pdh_query); });
+  auto cleanup = gsl::finally([&pdh_query] { PdhCloseQuery(pdh_query); });
 
   TestablePDHCounterArray double_counter_array("\\Process(*)\\Thread Count");
   TestablePDHCounterArray int_counter_array("\\Process(*)\\ID Process", false);

@@ -70,7 +70,11 @@ void PerformanceDataMonitor::onSchedule(const std::shared_ptr<core::ProcessConte
     }
     ++it;
   }
-  PdhCollectQueryData(pdh_query_);
+
+  PDH_STATUS collect_query_data_result = PdhCollectQueryData(pdh_query_);
+  if (ERROR_SUCCESS != collect_query_data_result) {
+    logger_->log_error("Error during PdhCollectQueryData, error code: 0x%x", collect_query_data_result);
+  }
 }
 
 void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
@@ -87,7 +91,12 @@ void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::Proc
     return;
   }
 
-  PdhCollectQueryData(pdh_query_);
+  PDH_STATUS collect_query_data_result = PdhCollectQueryData(pdh_query_);
+  if (ERROR_SUCCESS != collect_query_data_result) {
+    logger_->log_error("Error during PdhCollectQueryData, error code: 0x%x", collect_query_data_result);
+    yield();
+    return;
+  }
 
   rapidjson::Document root = rapidjson::Document(rapidjson::kObjectType);
   rapidjson::Value& body = prepareJSONBody(root);
