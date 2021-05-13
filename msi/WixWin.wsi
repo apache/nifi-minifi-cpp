@@ -44,20 +44,14 @@ Licensed to the Apache Software Foundation (ASF) under one or more
     <?ifdef CPACK_WIX_UI_BANNER?>
     <WixVariable Id="WixUIBannerBmp" Value="$(var.CPACK_WIX_UI_BANNER)"/>
     <?endif?>
-    <!-- <InstallExecuteSequence>
-
-      <Custom Action="UpdateConfig" After="InstallFiles">NOT Installed</Custom>
-    </InstallExecuteSequence> -->
-
-<!--
-    <Feature Id="VCRedist64" Title="Visual C++ 14.0 Runtime" AllowAdvertise="yes"  Level="1">
-      <MergeRef Id="VCRedist64"/>
-      <Condition Level="1"><![CDATA[(var.CPACK_SYSTEM_NAME="win64")]]></Condition>
-    </Feature>-->
 
     <Feature Id="InstallService" Title="Apache NiFi MiNiFi C++ Service" AllowAdvertise="no" Display="hidden" Level="1">
       <ComponentRef Id="minifiService"/>
       <ComponentRef Id="minifiServiceNotLocal"/>
+    </Feature>
+
+    <Feature Id="InstallVSRedistributableFiles" Title="Visual Studio redistributable files" AllowAdvertise="no" Display="hidden" Level="1">
+      <ComponentRef Id="VSRedistributableFiles"/>
     </Feature>
 
     <Feature Id="InstallConf" Title="Apache NiFi MiNiFi C++ Configuration" AllowAdvertise="yes"  Level="1">
@@ -69,7 +63,6 @@ Licensed to the Apache Software Foundation (ASF) under one or more
     </Feature>
 
     <FeatureRef Id="ProductFeature"/>
-
 
     <?ifdef CPACK_WIX_UI_DIALOG?>
     <WixVariable Id="WixUIDialogBmp" Value="$(var.CPACK_WIX_UI_DIALOG)"/>
@@ -128,8 +121,6 @@ Licensed to the Apache Software Foundation (ASF) under one or more
     <UIRef Id="WixUI_Common" />
     <UI>
       <!-- Define the installer UI -->
-
-
 
       <Dialog Id="ApacheLicenseDlg" Width="370" Height="270" Title="Please review our license">
         <Control Id="LicenseAcceptedCheckBox" Type="CheckBox" X="20" Y="207" Width="330" Height="18" CheckBoxValue="1" Property="LicenseAccepted" Text="Click here to accept this license" />
@@ -254,10 +245,7 @@ Licensed to the Apache Software Foundation (ASF) under one or more
 -->
       </Dialog>
 
-
       <UIRef Id="WixUI_HK" />
-
-
 
     </UI>
 
@@ -318,12 +306,6 @@ Licensed to the Apache Software Foundation (ASF) under one or more
             <Directory Id="INSTALLBINDIR" Name="bin">
               <Component Id="minifiService" Guid="87658309-0339-425c-8633-f54ffaaa4921">
                 <File Id="MiNiFiExe" Name="minifi.exe" KeyPath="yes" Source="main\minifi.exe"/>
-                <File Id="MiNiFiExe_concrt140" Name="concrt140.dll" KeyPath="no" Source="redist\concrt140.dll"/>
-                <File Id="MiNiFiExe_msvcp140" Name="msvcp140.dll" KeyPath="no" Source="redist\msvcp140.dll"/>
-                <File Id="MiNiFiExe_msvcp140_1" Name="msvcp140_1.dll" KeyPath="no" Source="redist\msvcp140_1.dll"/>
-                <File Id="MiNiFiExe_msvcp140_2" Name="msvcp140_2.dll" KeyPath="no" Source="redist\msvcp140_2.dll"/>
-                <File Id="MiNiFiExe_vccorlib140" Name="vccorlib140.dll" KeyPath="no" Source="redist\vccorlib140.dll"/>
-                <File Id="MiNiFiExe_vcruntime140" Name="vcruntime140.dll" KeyPath="no" Source="redist\vcruntime140.dll"/>
                 <!--
                 It is not possible to set 'ServiceConfig' for 2 'Component' (error LGHT0130 : The primary key 'Apache NiFi MiNiFi' is duplicated in table 'ServiceConfig').
                 Problem is described: http://windows-installer-xml-wix-toolset.687559.n2.nabble.com/Installing-a-Service-with-Varying-Dependencies-td693097.html
@@ -362,12 +344,6 @@ Licensed to the Apache Software Foundation (ASF) under one or more
               </Component>
               <Component Id="minifiServiceNotLocal" Guid="87658309-0339-425c-8633-f54ffaaa4922">
                 <File Id="MiNiFiExeWithPassword" Name="minifi.exe" KeyPath="yes" Source="main\minifi.exe"/>
-                <File Id="MiNiFiExeWithPassword_concrt140" Name="concrt140.dll" KeyPath="no" Source="redist\concrt140.dll"/>
-                <File Id="MiNiFiExeWithPassword_msvcp140" Name="msvcp140.dll" KeyPath="no" Source="redist\msvcp140.dll"/>
-                <File Id="MiNiFiExeWithPassword_msvcp140_1" Name="msvcp140_1.dll" KeyPath="no" Source="redist\msvcp140_1.dll"/>
-                <File Id="MiNiFiExeWithPassword_msvcp140_2" Name="msvcp140_2.dll" KeyPath="no" Source="redist\msvcp140_2.dll"/>
-                <File Id="MiNiFiExeWithPassword_vccorlib140" Name="vccorlib140.dll" KeyPath="no" Source="redist\vccorlib140.dll"/>
-                <File Id="MiNiFiExeWithPassword_vcruntime140" Name="vcruntime140.dll" KeyPath="no" Source="redist\vcruntime140.dll"/>
                 <ServiceInstall Id="MiNiFiExeServiceWithPassword"
                                 Type="ownProcess"
                                 Vital="yes"
@@ -395,6 +371,23 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                                   EventMessageFile="[#MiNiFiExeWithPassword]" />
                 <Condition><![CDATA[SERVICEACCOUNT<>"LocalSystem"]]></Condition>
               </Component>
+
+              <Component Id="VSRedistributableFiles" Guid="7923f16d-785a-41cb-aa74-17e0fa5f1314">
+                <File Id="MiNiFiExe_concrt140" Name="concrt140.dll" KeyPath="no" Source="redist\concrt140.dll"/>
+                <File Id="MiNiFiExe_msvcp140" Name="msvcp140.dll" KeyPath="no" Source="redist\msvcp140.dll"/>
+                <File Id="MiNiFiExe_msvcp140_1" Name="msvcp140_1.dll" KeyPath="no" Source="redist\msvcp140_1.dll"/>
+                <File Id="MiNiFiExe_msvcp140_2" Name="msvcp140_2.dll" KeyPath="no" Source="redist\msvcp140_2.dll"/>
+                <File Id="MiNiFiExe_vccorlib140" Name="vccorlib140.dll" KeyPath="no" Source="redist\vccorlib140.dll"/>
+                <File Id="MiNiFiExe_vcruntime140" Name="vcruntime140.dll" KeyPath="no" Source="redist\vcruntime140.dll"/>
+                <?if $(env.VisualStudioVersion) = 16.0 ?>
+                  <File Id="MiNiFiExe_msvcp140_atomic_wait" Name="msvcp140_atomic_wait.dll" KeyPath="no" Source="redist\msvcp140_atomic_wait.dll"/>
+                  <File Id="MiNiFiExe_msvcp140_codecvt_ids" Name="msvcp140_codecvt_ids.dll" KeyPath="no" Source="redist\msvcp140_codecvt_ids.dll"/>
+                  <?if $(env.build_platform) = x64 ?>
+                    <File Id="MiNiFiExe_vcruntime140_1" Name="vcruntime140_1.dll" KeyPath="no" Source="redist\vcruntime140_1.dll"/>
+                  <?endif ?>
+                <?endif ?>
+              </Component>
+
             </Directory>
           </Directory>
     </DirectoryRef>
