@@ -862,7 +862,7 @@ endif()
 # Create a custom build target that will run the linter.
 get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
 add_custom_target(linter
-	COMMAND python ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -i
+	COMMAND python ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -q -i
 		${CMAKE_SOURCE_DIR}/libminifi/include/
 		${CMAKE_SOURCE_DIR}/libminifi/src/
 		${CMAKE_SOURCE_DIR}/libminifi/test/
