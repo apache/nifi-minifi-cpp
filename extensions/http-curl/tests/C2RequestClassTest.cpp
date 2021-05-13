@@ -33,7 +33,7 @@ class C2AcknowledgeHandler : public ServerAwareHandler {
     std::string req = readPayload(conn);
     rapidjson::Document root;
     root.Parse(req.data(), req.size());
-    if (root.HasMember("operationId")) {
+    if (root.IsObject() && root.HasMember("operationId")) {
       std::lock_guard<std::mutex> guard(mtx_);
       acknowledged_operations_.insert(root["operationId"].GetString());
     }
@@ -61,7 +61,7 @@ class C2HeartbeatHandler : public ServerAwareHandler {
     rapidjson::Document root;
     root.Parse(req.data(), req.size());
     utils::optional<std::string> agent_class;
-    if (root["agentInfo"].HasMember("agentClass")) {
+    if (root.IsObject() && root["agentInfo"].HasMember("agentClass")) {
       agent_class = root["agentInfo"]["agentClass"].GetString();
     }
     {
