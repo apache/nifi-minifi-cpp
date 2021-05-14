@@ -734,11 +734,13 @@ utils::TaskRescheduleInfo C2Agent::produce() {
 }
 
 utils::TaskRescheduleInfo C2Agent::consume() {
-  const auto consume_success = responses.consume([this] (C2Payload&& payload) {
-    extractPayload(std::move(payload));
-  });
-  if (!consume_success) {
-    extractPayload(C2Payload{ Operation::HEARTBEAT });
+  if (!responses.empty()) {
+    const auto consume_success = responses.consume([this] (C2Payload&& payload) {
+      extractPayload(std::move(payload));
+    });
+    if (!consume_success) {
+      extractPayload(C2Payload{ Operation::HEARTBEAT });
+    }
   }
   return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
 }
