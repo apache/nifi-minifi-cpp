@@ -218,33 +218,32 @@ void add_system_related_counters(std::vector<std::unique_ptr<PerformanceDataCoun
 }
 
 void PerformanceDataMonitor::addCountersFromPredefinedGroupsProperty(const std::string& predefined_groups) {
-  auto groups = utils::StringUtils::split(predefined_groups, ",");
+  auto groups = utils::StringUtils::splitAndTrim(predefined_groups, ",");
   for (const auto& group : groups) {
-    auto trimmed_group_name = utils::StringUtils::trim(group);
-    if (trimmed_group_name == "CPU") {
+    if (group == "CPU") {
       add_cpu_related_counters(resource_consumption_counters_);
-    } else if (trimmed_group_name == "IO") {
+    } else if (group == "IO") {
       add_io_related_counters(resource_consumption_counters_);
-    } else if (trimmed_group_name == "Disk") {
+    } else if (group == "Disk") {
       add_disk_related_counters(resource_consumption_counters_);
-    } else if (trimmed_group_name == "Network") {
+    } else if (group == "Network") {
       add_network_related_counters(resource_consumption_counters_);
-    } else if (trimmed_group_name == "Memory") {
+    } else if (group == "Memory") {
       add_memory_related_counters(resource_consumption_counters_);
-    } else if (trimmed_group_name == "System") {
+    } else if (group == "System") {
       add_system_related_counters(resource_consumption_counters_);
-    } else if (trimmed_group_name == "Process") {
+    } else if (group == "Process") {
       add_process_related_counters(resource_consumption_counters_);
     } else {
-      logger_->log_error((trimmed_group_name + " is not a valid predefined group for PerformanceDataMonitor").c_str());
+      logger_->log_error((group + " is not a valid predefined group for PerformanceDataMonitor").c_str());
     }
   }
 }
 
 void PerformanceDataMonitor::addCustomPDHCountersFromProperty(const std::string& custom_pdh_counters) {
-  const auto custom_counters = utils::StringUtils::split(custom_pdh_counters, ",");
+  const auto custom_counters = utils::StringUtils::splitAndTrim(custom_pdh_counters, ",");
   for (const auto& custom_counter : custom_counters) {
-    auto counter = PDHCounter::createPDHCounter(utils::StringUtils::trim(custom_counter));
+    auto counter = PDHCounter::createPDHCounter(custom_counter);
     if (counter != nullptr)
       resource_consumption_counters_.push_back(std::move(counter));
   }
