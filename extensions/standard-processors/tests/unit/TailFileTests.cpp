@@ -191,7 +191,10 @@ TEST_CASE("TailFile re-reads the file if the state is deleted between runs", "[s
   plan->reset(true);  // start a new but with state file
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-  plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->clear();
+  const auto stateManager = plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile);
+  stateManager->beginTransaction();
+  stateManager->clear();
+  stateManager->commit();
 
   testController.runSession(plan, true);
 
@@ -235,14 +238,16 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
   std::string filePath, fileName;
   REQUIRE(utils::file::getFileNameAndPath(temp_file.str(), filePath, fileName));
 
+  const auto stateManager = plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile);
+
   // should stay the same
   for (int i = 0; i < 5; i++) {
     plan->reset(true);  // start a new but with state file
     LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
-    plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->set({{"file.0.name", fileName},
-                                                                                   {"file.0.position", "14"},
-                                                                                   {"file.0.current", temp_file.str()}});
+    stateManager->beginTransaction();
+    stateManager->set({{"file.0.name", fileName}, {"file.0.position", "14"}, {"file.0.current", temp_file.str()}});
+    stateManager->commit();
 
     testController.runSession(plan, true);
 
@@ -252,9 +257,9 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
   for (int i = 14; i < 34; i++) {
     plan->reset(true);  // start a new but with state file
 
-    plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->set({{"file.0.name", fileName},
-                                                                                   {"file.0.position", std::to_string(i)},
-                                                                                   {"file.0.current", temp_file.str()}});
+    stateManager->beginTransaction();
+    stateManager->set({{"file.0.name", fileName}, {"file.0.position", std::to_string(i)}, {"file.0.current", temp_file.str()}});
+    stateManager->commit();
 
     testController.runSession(plan, true);
   }

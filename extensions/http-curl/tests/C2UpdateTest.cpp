@@ -25,7 +25,7 @@
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "update");
   C2UpdateHandler handler(args.test_file);
-  VerifyC2Update harness(10000);
+  VerifyC2Update harness(std::chrono::seconds(10));
   harness.setKeyDir(args.key_dir);
   harness.setUrl(args.url, &handler);
   handler.setC2RestResponse(harness.getC2RestUrl(), "configuration");

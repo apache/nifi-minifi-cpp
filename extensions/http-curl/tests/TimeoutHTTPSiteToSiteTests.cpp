@@ -38,7 +38,7 @@
 class SiteToSiteTestHarness : public HTTPIntegrationBase {
  public:
   explicit SiteToSiteTestHarness(bool isSecure, std::chrono::milliseconds waitTime = std::chrono::milliseconds{1000})
-      : HTTPIntegrationBase(waitTime.count()), isSecure(isSecure) {
+      : HTTPIntegrationBase(waitTime), isSecure(isSecure) {
     dir = testController.createTempDirectory();
   }
 

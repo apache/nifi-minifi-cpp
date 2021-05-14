@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
   std::string minifi_home = controller.createTempDirectory();
   const cmd_args args = parse_cmdline_args(argc, argv);
   C2FlowProvider handler(args.test_file);
-  VerifyFlowFetched harness(10000);
+  VerifyFlowFetched harness(std::chrono::seconds(10));
   harness.setKeyDir(args.key_dir);
   harness.setUrl(args.url, &handler);
   harness.setFlowUrl(harness.getC2RestUrl());

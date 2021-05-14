@@ -203,7 +203,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     else
       return 0;
   }
-  // Whether flow file queue full in any of the outgoin connection
+  // Whether flow file queue full in any of the outgoing connection
   bool flowFilesOutGoingFull() const;
 
   bool addConnection(std::shared_ptr<Connectable> connection);

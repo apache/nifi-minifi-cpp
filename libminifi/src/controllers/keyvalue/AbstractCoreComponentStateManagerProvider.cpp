@@ -16,6 +16,7 @@
  */
 
 #include "controllers/keyvalue/AbstractCoreComponentStateManagerProvider.h"
+#include "Exception.h"
 
 #include <memory>
 
@@ -25,6 +26,41 @@
 #include "rapidjson/writer.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
+
+namespace {
+std::string serialize(const core::CoreComponentState &kvs) {
+  rapidjson::Document doc(rapidjson::kObjectType);
+  rapidjson::Document::AllocatorType &alloc = doc.GetAllocator();
+  for (const auto &kv : kvs) {
+    doc.AddMember(rapidjson::StringRef(kv.first.c_str(), kv.first.size()),
+                  rapidjson::StringRef(kv.second.c_str(), kv.second.size()), alloc);
+  }
+
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  doc.Accept(writer);
+
+  return buffer.GetString();
+}
+
+core::CoreComponentState deserialize(const std::string &serialized) {
+  rapidjson::StringStream stream(serialized.c_str());
+  rapidjson::Document doc;
+  rapidjson::ParseResult res = doc.ParseStream(stream);
+  if (!res || !doc.IsObject()) {
+    using org::apache::nifi::minifi::Exception;
+    using org::apache::nifi::minifi::FILE_OPERATION_EXCEPTION;
+    throw Exception(FILE_OPERATION_EXCEPTION, "Could not deserialize saved state, error during JSON parsing.");
+  }
+
+  core::CoreComponentState retState;
+  for (const auto &kv : doc.GetObject()) {
+    retState[kv.name.GetString()] = kv.value.GetString();
+  }
+
+  return retState;
+}
+}  // anonymous namespace
 
 namespace org {
 namespace apache {
@@ -37,25 +73,36 @@ AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::Ab
     const utils::Identifier& id)
     : provider_(std::move(provider))
     , id_(id)
-    , state_valid_(false) {
+    , state_valid_(false)
+    , transactionInProgress_(false)
+    , changeType_(ChangeType::NONE) {
   std::string serialized;
-  if (provider_->getImpl(id_, serialized) && provider_->deserialize(serialized, state_)) {
+  if (provider_->getImpl(id_, serialized)) {
+    state_ = deserialize(serialized);
     state_valid_ = true;
   }
 }
 
+AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::~AbstractCoreComponentStateManager() {
+  provider_->removeFromCache(id_);
+}
+
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::set(const core::CoreComponentState& kvs) {
-  if (provider_->setImpl(id_, provider_->serialize(kvs))) {
-    state_valid_ = true;
-    state_ = kvs;
-    return true;
-  } else {
+  if (!transactionInProgress_) {
     return false;
   }
+
+  changeType_ = ChangeType::SET;
+  stateToSet_ = kvs;
+  return true;
 }
 
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::get(core::CoreComponentState& kvs) {
   if (!state_valid_) {
+    return false;
+  }
+  // not allowed, if there were modifications (dirty read)
+  if (changeType_ != ChangeType::NONE) {
     return false;
   }
   kvs = state_;
@@ -63,29 +110,100 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
 }
 
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::clear() {
-  if (!state_valid_) {
+  if (!state_valid_ || !transactionInProgress_) {
     return false;
   }
-  if (provider_->removeImpl(id_)) {
-    state_valid_ = false;
-    state_.clear();
-    return true;
-  } else {
-    return false;
-  }
+
+  changeType_ = ChangeType::CLEAR;
+  stateToSet_.clear();
+  return true;
 }
 
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::persist() {
-  if (!state_valid_) {
-    return false;
-  }
   return provider_->persistImpl();
 }
 
-AbstractCoreComponentStateManagerProvider::~AbstractCoreComponentStateManagerProvider() = default;
+bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::isTransactionInProgress() const {
+  return transactionInProgress_;
+}
+
+bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::beginTransaction() {
+  if (transactionInProgress_) {
+    return false;
+  }
+  transactionInProgress_ = true;
+  return true;
+}
+
+bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::commit() {
+  if (!transactionInProgress_) {
+    return false;
+  }
+
+  bool success = true;
+
+  // actually make the pending changes
+  if (changeType_ == ChangeType::SET) {
+    if (provider_->setImpl(id_, serialize(stateToSet_))) {
+      state_valid_ = true;
+      state_ = stateToSet_;
+    } else {
+      success = false;
+    }
+  } else if (changeType_ == ChangeType::CLEAR) {
+    if (!state_valid_) {
+      success = false;
+    } else if (provider_->removeImpl(id_)) {
+      state_valid_ = false;
+      state_.clear();
+    } else {
+      success = false;
+    }
+  }
+
+  if (success && changeType_ != ChangeType::NONE) {
+    success = persist();
+  }
+
+  changeType_ = ChangeType::NONE;
+  stateToSet_.clear();
+  transactionInProgress_ = false;
+  return success;
+}
+
+bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::rollback() {
+  if (!transactionInProgress_) {
+    return false;
+  }
+
+  changeType_ = ChangeType::NONE;
+  stateToSet_.clear();
+  transactionInProgress_ = false;
+  return true;
+}
 
 std::shared_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManagerProvider::getCoreComponentStateManager(const utils::Identifier& uuid) {
-  return std::make_shared<AbstractCoreComponentStateManager>(shared_from_this(), uuid);
+  std::lock_guard<std::mutex> guard(mutex);
+
+  const auto iter = stateManagerCache_.find(uuid);
+  if (iter == stateManagerCache_.end()) {
+    auto stateManager = std::make_shared<AbstractCoreComponentStateManager>(shared_from_this(), uuid);
+    stateManagerCache_.emplace(uuid, stateManager);
+    return stateManager;
+  }
+
+  auto cachedStateManager = iter->second.lock();
+  if (!cachedStateManager) {
+    auto stateManager = std::make_shared<AbstractCoreComponentStateManager>(shared_from_this(), uuid);
+    iter->second = stateManager;
+    return stateManager;
+  }
+  return cachedStateManager;
+}
+
+void AbstractCoreComponentStateManagerProvider::removeFromCache(const utils::Identifier id) {
+  std::lock_guard<std::mutex> guard(mutex);
+  stateManagerCache_.erase(id);
 }
 
 std::map<utils::Identifier, core::CoreComponentState> AbstractCoreComponentStateManagerProvider::getAllCoreComponentStates() {
@@ -96,46 +214,10 @@ std::map<utils::Identifier, core::CoreComponentState> AbstractCoreComponentState
 
   std::map<utils::Identifier, core::CoreComponentState> all_deserialized;
   for (const auto& serialized : all_serialized) {
-    core::CoreComponentState deserialized;
-    if (deserialize(serialized.second, deserialized)) {
-      all_deserialized.emplace(serialized.first, std::move(deserialized));
-    }
+    all_deserialized.emplace(serialized.first, deserialize(serialized.second));
   }
 
   return all_deserialized;
-}
-
-std::string AbstractCoreComponentStateManagerProvider::serialize(const core::CoreComponentState& kvs) {
-  rapidjson::Document doc(rapidjson::kObjectType);
-  rapidjson::Document::AllocatorType &alloc = doc.GetAllocator();
-  for (const auto& kv : kvs) {
-    doc.AddMember(rapidjson::StringRef(kv.first.c_str(), kv.first.size()), rapidjson::StringRef(kv.second.c_str(), kv.second.size()), alloc);
-  }
-
-  rapidjson::StringBuffer buffer;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-  doc.Accept(writer);
-
-  return buffer.GetString();
-}
-
-bool AbstractCoreComponentStateManagerProvider::deserialize(const std::string& serialized, core::CoreComponentState& kvs) {
-  rapidjson::StringStream stream(serialized.c_str());
-  rapidjson::Document doc;
-  rapidjson::ParseResult res = doc.ParseStream(stream);
-  if (!res) {
-    return false;
-  }
-  if (!doc.IsObject()) {
-    return false;
-  }
-
-  kvs.clear();
-  for (const auto& kv : doc.GetObject()) {
-    kvs[kv.name.GetString()] = kv.value.GetString();
-  }
-
-  return true;
 }
 
 }  // namespace controllers

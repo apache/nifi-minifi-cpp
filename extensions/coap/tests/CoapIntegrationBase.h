@@ -37,7 +37,7 @@ int ssl_enable(void *, void *) {
 
 class CoapIntegrationBase : public IntegrationBase {
  public:
-  explicit CoapIntegrationBase(uint64_t waitTime = 5000)
+  explicit CoapIntegrationBase(std::chrono::milliseconds waitTime = std::chrono::milliseconds(5000))
       : IntegrationBase(waitTime),
         server(nullptr) {
   }
@@ -80,7 +80,7 @@ class CoapIntegrationBase : public IntegrationBase {
     runAssertions();
 
     shutdownBeforeFlowController();
-    controller->waitUnload(wait_time_);
+    controller->waitUnload(wait_time_.count());
     controller->stopC2();
 
     cleanup();

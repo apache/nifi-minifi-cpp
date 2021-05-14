@@ -34,29 +34,39 @@ namespace controllers {
 class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from_this<AbstractCoreComponentStateManagerProvider>,
                                                    public core::CoreComponentStateManagerProvider {
  public:
-  ~AbstractCoreComponentStateManagerProvider() override;
-
   std::shared_ptr<core::CoreComponentStateManager> getCoreComponentStateManager(const utils::Identifier& uuid) override;
-
   std::map<utils::Identifier, std::unordered_map<std::string, std::string>> getAllCoreComponentStates() override;
 
   class AbstractCoreComponentStateManager : public core::CoreComponentStateManager{
    public:
     AbstractCoreComponentStateManager(std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider, const utils::Identifier& id);
 
+    ~AbstractCoreComponentStateManager() override;
+
     bool set(const core::CoreComponentState& kvs) override;
-
     bool get(core::CoreComponentState& kvs) override;
-
     bool clear() override;
-
     bool persist() override;
 
+    bool isTransactionInProgress() const override;
+    bool beginTransaction() override;
+    bool commit() override;
+    bool rollback() override;
+
    private:
+    enum class ChangeType {
+      NONE,
+      SET,
+      CLEAR
+    };
+
     std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider_;
     utils::Identifier id_;
     bool state_valid_;
     core::CoreComponentState state_;
+    bool transactionInProgress_;
+    ChangeType changeType_;
+    core::CoreComponentState stateToSet_;
   };
 
  protected:
@@ -66,8 +76,11 @@ class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from
   virtual bool removeImpl(const utils::Identifier& key) = 0;
   virtual bool persistImpl() = 0;
 
-  virtual std::string serialize(const core::CoreComponentState& kvs);
-  bool deserialize(const std::string& serialized, core::CoreComponentState& kvs);
+ private:
+  void removeFromCache(utils::Identifier id);
+
+  std::mutex mutex;
+  std::map<utils::Identifier, std::weak_ptr<core::CoreComponentStateManager>> stateManagerCache_;
 };
 
 }  // namespace controllers

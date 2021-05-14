@@ -36,7 +36,7 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-/// Key-value store serice purely in RAM without disk usage
+/// Key-value store service purely in RAM without disk usage
 class UnorderedMapKeyValueStoreService : virtual public PersistableKeyValueStoreService {
  public:
   explicit UnorderedMapKeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
@@ -45,17 +45,11 @@ class UnorderedMapKeyValueStoreService : virtual public PersistableKeyValueStore
   ~UnorderedMapKeyValueStoreService() override;
 
   bool set(const std::string& key, const std::string& value) override;
-
   bool get(const std::string& key, std::string& value) override;
-
   bool get(std::unordered_map<std::string, std::string>& kvs) override;
-
   bool remove(const std::string& key) override;
-
   bool clear() override;
-
   bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
-
   bool persist() override {
     return true;
   }

@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
   // the C2 server will update the flow with the contents of args.test_file
   // which will be encrypted and persisted to the temporary live_config_file
   C2UpdateHandler handler(args.test_file);
-  VerifyC2Update harness(10000);
+  VerifyC2Update harness(std::chrono::seconds(10));
   harness.getConfiguration()->set(minifi::Configure::nifi_flow_configuration_encrypt, "true");
   harness.setKeyDir(args.key_dir);
   harness.setUrl(args.url, &handler);

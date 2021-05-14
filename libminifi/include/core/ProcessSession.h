@@ -52,14 +52,7 @@ class ProcessSession : public ReferenceContainer {
   /*!
    * Create a new process session
    */
-  ProcessSession(std::shared_ptr<ProcessContext> processContext = nullptr) // NOLINT
-      : process_context_(std::move(processContext)),
-        logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
-    logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());
-    auto repo = process_context_->getProvenanceRepository();
-    provenance_report_ = std::make_shared<provenance::ProvenanceReporter>(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
-    content_session_ = process_context_->getContentRepository()->createSession();
-  }
+  explicit ProcessSession(std::shared_ptr<ProcessContext> processContext = nullptr);
 
   // Destructor
   virtual ~ProcessSession();
@@ -189,6 +182,8 @@ class ProcessSession : public ReferenceContainer {
   std::shared_ptr<provenance::ProvenanceReporter> provenance_report_;
 
   std::shared_ptr<ContentSession> content_session_;
+
+  std::shared_ptr<CoreComponentStateManager> stateManager_;
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };

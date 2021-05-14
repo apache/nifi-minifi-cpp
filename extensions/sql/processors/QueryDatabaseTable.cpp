@@ -176,7 +176,6 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
   }
 
   if (new_max_values != max_values_) {
-    session.commit();
     max_values_ = new_max_values;
     saveState();
   }
@@ -221,7 +220,9 @@ void QueryDatabaseTable::initializeMaxValues(core::ProcessContext &context) {
     logger_->log_info("Found no stored state");
   } else {
     if (!loadMaxValuesFromStoredState(stored_state)) {
+      state_manager_->beginTransaction();
       state_manager_->clear();
+      state_manager_->commit();
     }
   }
 

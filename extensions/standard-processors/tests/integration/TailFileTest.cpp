@@ -34,7 +34,7 @@
 
 class TailFileTestHarness : public IntegrationBase {
  public:
-  TailFileTestHarness() : IntegrationBase(1000) {
+  TailFileTestHarness() : IntegrationBase(std::chrono::seconds(1)) {
     dir = testController.createTempDirectory();
 
     statefile = dir + utils::file::FileUtils::get_separator();

@@ -40,7 +40,6 @@ class CoreComponentStateManager {
   virtual ~CoreComponentStateManager() = default;
 
   virtual bool set(const CoreComponentState& kvs) = 0;
-
   virtual bool get(CoreComponentState& kvs) = 0;
 
   std::optional<std::unordered_map<std::string, std::string>> get() {
@@ -53,8 +52,12 @@ class CoreComponentStateManager {
   }
 
   virtual bool clear() = 0;
-
   virtual bool persist() = 0;
+
+  virtual bool isTransactionInProgress() const = 0;
+  virtual bool beginTransaction() = 0;
+  virtual bool commit() = 0;
+  virtual bool rollback() = 0;
 };
 
 class CoreComponentStateManagerProvider {

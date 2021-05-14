@@ -147,11 +147,13 @@ SET(INT_TEST_COUNT 0)
 FOREACH(testfile ${INTEGRATION_TESTS})
   get_filename_component(testfilename "${testfile}" NAME_WE)
   add_executable("${testfilename}" "${TEST_DIR}/integration/${testfile}")
+  target_wholearchive_library("${testfilename}" minifi-standard-processors)
   createTests("${testfilename}")
   MATH(EXPR INT_TEST_COUNT "${INT_TEST_COUNT}+1")
 ENDFOREACH()
 
 add_test(NAME OnScheduleErrorHandlingTests COMMAND OnScheduleErrorHandlingTests "${TEST_RESOURCES}/TestOnScheduleRetry.yml"  "${TEST_RESOURCES}/")
+add_test(NAME StateTransactionalityTests COMMAND StateTransactionalityTests "${TEST_RESOURCES}/TestStateTransactionality.yml")
 
 message("-- Finished building ${INT_TEST_COUNT} integration test file(s)...")
 

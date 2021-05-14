@@ -33,7 +33,7 @@
 
 class HttpTestHarness : public HTTPIntegrationBase {
  public:
-  HttpTestHarness() : HTTPIntegrationBase(4000) {
+  HttpTestHarness() : HTTPIntegrationBase(std::chrono::seconds(4)) {
     dir = testController.createTempDirectory();
   }
 

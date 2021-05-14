@@ -40,7 +40,7 @@ int ssl_enable(void* /*ssl_context*/, void* /*user_data*/) {
 
 class HTTPIntegrationBase : public IntegrationBase {
  public:
-  explicit HTTPIntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS)
+  explicit HTTPIntegrationBase(std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS))
       : IntegrationBase(waitTime),
         server(nullptr) {
   }
@@ -163,7 +163,7 @@ class VerifyC2Describe : public VerifyC2Base {
 
 class VerifyC2Update : public HTTPIntegrationBase {
  public:
-  explicit VerifyC2Update(uint64_t waitTime)
+  explicit VerifyC2Update(std::chrono::milliseconds waitTime)
       : HTTPIntegrationBase(waitTime) {
   }
 
@@ -227,7 +227,7 @@ class VerifyFlowFetched : public HTTPIntegrationBase {
 
 class VerifyC2FailedUpdate : public VerifyC2Update {
  public:
-  explicit VerifyC2FailedUpdate(uint64_t waitTime)
+  explicit VerifyC2FailedUpdate(std::chrono::milliseconds waitTime)
       : VerifyC2Update(waitTime) {
   }
 

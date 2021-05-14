@@ -71,9 +71,7 @@ int main(int argc, char **argv) {
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
-  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot();
-  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
-  ptr.release();
+  std::shared_ptr<core::ProcessGroup> pg = yaml_config.getRoot();
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
   org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 10005, 1);
 

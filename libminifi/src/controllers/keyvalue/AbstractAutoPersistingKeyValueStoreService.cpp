@@ -55,10 +55,7 @@ void AbstractAutoPersistingKeyValueStoreService::stopPersistingThread() {
 
 void AbstractAutoPersistingKeyValueStoreService::initialize() {
   ControllerService::initialize();
-  std::set<core::Property> supportedProperties;
-  supportedProperties.insert(AlwaysPersist);
-  supportedProperties.insert(AutoPersistenceInterval);
-  updateSupportedProperties(supportedProperties);
+  updateSupportedProperties({AlwaysPersist, AutoPersistenceInterval});
 }
 
 void AbstractAutoPersistingKeyValueStoreService::onEnable() {
