@@ -88,7 +88,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(3),
         "Received ack. version 3. number of operations 1",
         "Received ack. version 3. number of operations 0",
-        "Received error event from protocol",
+        "Received read error event from protocol",
         "Received op 1, with id id and operand operand"));
   }
 
