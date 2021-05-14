@@ -57,7 +57,7 @@ public:
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
     assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
-        "C2Agent] [debug] Could not instantiate null",
+        "C2Agent] [error] Could not instantiate null",
         "Class is RESTSender"));
   }
 
