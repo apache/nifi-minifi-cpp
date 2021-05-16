@@ -45,7 +45,7 @@ namespace processors {
 
 class ExecutePythonProcessor : public core::Processor {
  public:
-  explicit ExecutePythonProcessor(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit ExecutePythonProcessor(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),
         python_dynamic_(false),
         valid_init_(false),

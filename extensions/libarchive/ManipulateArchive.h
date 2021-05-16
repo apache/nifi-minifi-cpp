@@ -41,7 +41,7 @@ using logging::Logger;
 
 class ManipulateArchive : public core::Processor {
 public:
-  ManipulateArchive(std::string name, utils::Identifier uuid = utils::Identifier())
+  ManipulateArchive(const std::string& name, const utils::Identifier& uuid = {})
   : core::Processor(name, uuid),
     logger_(logging::LoggerFactory<ManipulateArchive>::getLogger()) {
   }

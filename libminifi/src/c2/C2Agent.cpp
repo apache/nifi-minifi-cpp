@@ -141,21 +141,21 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
 
   if (!reconfigure) {
     if (!configure->get("nifi.c2.agent.protocol.class", "c2.agent.protocol.class", clazz)) {
-      clazz = "CoapProtocol";
+      clazz = "RESTSender";
     }
     logger_->log_info("Class is %s", clazz);
 
     auto protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw(clazz, clazz);
     if (protocol == nullptr) {
       logger_->log_warn("Class %s not found", clazz);
-      protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("CoapProtocol", "CoapProtocol");
+      protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("RESTSender", "RESTSender");
       if (!protocol) {
-        const char* errmsg = "Attempted to load CoapProtocol. To enable C2, please specify an active protocol for this agent.";
+        const char* errmsg = "Attempted to load RESTSender. To enable C2, please specify an active protocol for this agent.";
         logger_->log_error(errmsg);
         throw minifi::Exception{ minifi::GENERAL_EXCEPTION, errmsg };
       }
 
-      logger_->log_info("Class is CoapProtocol");
+      logger_->log_info("Class is RESTSender");
     }
 
     // Since !reconfigure, the call comes from the ctor and protocol_ is null, therefore no delete is necessary
@@ -760,22 +760,20 @@ utils::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
     std::stringstream adjusted_url;
     std::string base;
     if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
+      base = utils::StringUtils::trim(base);
       adjusted_url << base;
       if (!utils::StringUtils::endsWith(base, "/")) {
         adjusted_url << "/";
       }
       adjusted_url << uri;
       resolved_url = adjusted_url.str();
-    } else if (configuration_->get("c2.rest.url", base)) {
-      std::string host, protocol;
-      int port = -1;
-      utils::parse_url(&base, &host, &port, &protocol);
-      adjusted_url << protocol << host;
-      if (port > 0) {
-        adjusted_url << ":" << port;
+    } else if (configuration_->get("nifi.c2.rest.url", "c2.rest.url", base)) {
+      utils::URL base_url{utils::StringUtils::trim(base)};
+      if (!base_url.isValid()) {
+        logger_->log_error("Could not parse C2 REST URL '%s'", base);
+        return {};
       }
-      adjusted_url << "/c2/api/" << uri;
-      resolved_url = adjusted_url.str();
+      resolved_url = base_url.hostPort() + "/c2/api/" + uri;
     }
   }
 

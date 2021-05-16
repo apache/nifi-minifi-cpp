@@ -39,7 +39,7 @@ namespace controllers {
  */
 class ThreadManagementService : public core::controller::ControllerService {
  public:
-  explicit ThreadManagementService(const std::string &name, const utils::Identifier& uuid = {})
+  explicit ThreadManagementService(const std::string &name, const utils::Identifier &uuid = {})
       : ControllerService(name, uuid),
         logger_(logging::LoggerFactory<ThreadManagementService>::getLogger()) {
   }

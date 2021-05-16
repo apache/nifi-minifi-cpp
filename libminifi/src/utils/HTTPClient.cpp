@@ -15,8 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "utils/HTTPClient.h"
+#include <algorithm>
 #include <string>
+
+#include "utils/HTTPClient.h"
+#include "utils/StringUtils.h"
+
+namespace {
+
+constexpr const char* HTTP = "http://";
+constexpr const char* HTTPS = "https://";
+
+utils::optional<std::string> parseProtocol(const std::string& url_input) {
+  if (utils::StringUtils::startsWith(url_input, HTTP)) {
+    return HTTP;
+  } else if (utils::StringUtils::startsWith(url_input, HTTPS)) {
+    return HTTPS;
+  } else {
+    return {};
+  }
+}
+
+utils::optional<int> parsePortNumber(const std::string& port_string) {
+  try {
+    size_t pos;
+    int port = std::stoi(port_string, &pos);
+    if (pos == port_string.size()) {
+      return port;
+    }
+  } catch (const std::invalid_argument&) {
+  } catch (const std::out_of_range&) {
+  }
+
+  return {};
+}
+
+}  // namespace
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -48,72 +83,86 @@ std::string get_token(utils::BaseHTTPClient *client, std::string username, std::
   return token;
 }
 
-void parse_url(const std::string *url, std::string *host, int *port, std::string *protocol) {
-  static std::string http("http://");
-  static std::string https("https://");
-
-  if (url->compare(0, http.size(), http) == 0)
-    *protocol = http;
-
-  if (url->compare(0, https.size(), https) == 0)
-    *protocol = https;
-
-  if (!protocol->empty()) {
-    size_t pos = url->find_first_of(":", protocol->size());
-
-    if (pos == std::string::npos) {
-      pos = url->size();
-    }
-
-    *host = url->substr(protocol->size(), pos - protocol->size());
-
-    if (pos < url->size() && (*url)[pos] == ':') {
-      size_t ppos = url->find_first_of("/", pos);
-      if (ppos == std::string::npos) {
-        ppos = url->size();
-      }
-      std::string portStr(url->substr(pos + 1, ppos - pos - 1));
-      if (portStr.size() > 0) {
-        *port = std::stoi(portStr);
-      }
-    } else {
-      // In case the host contains no port, the first part is needed only
-      // For eg.: nifi.io/nifi
-      size_t ppos = host->find_first_of("/");
-      if (ppos != std::string::npos) {
-        *host = host->substr(0, ppos);
-      }
-    }
-  }
-}
-
-void parse_url(const std::string *url, std::string *host, int *port, std::string *protocol, std::string *path, std::string *query) {
-  int temp_port = -1;
-
-  parse_url(url, host, &temp_port, protocol);
-
-  if (host->empty() || protocol->empty()) {
+URL::URL(const std::string& url_input) {
+  const auto protocol = parseProtocol(url_input);
+  if (protocol) {
+    protocol_ = *protocol;
+  } else {
+    logger_->log_error("Unknown protocol in URL '%s'", url_input);
     return;
   }
 
-  size_t base_len = host->size() + protocol->size();
-  if (temp_port != -1) {
-    *port = temp_port;
-    base_len += std::to_string(temp_port).size() + 1;  // +1 for the :
+  std::string::const_iterator current_pos = url_input.begin();
+  std::advance(current_pos, protocol_.size());
+
+  constexpr const char HOST_TERMINATORS[] = ":/?#";
+  std::string::const_iterator end_of_host = std::find_first_of(current_pos, url_input.end(), std::begin(HOST_TERMINATORS), std::end(HOST_TERMINATORS));
+  host_ = std::string{current_pos, end_of_host};
+  if (host_.empty()) {
+    logger_->log_error("No host found in URL '%s'", url_input);
+    return;
+  }
+  current_pos = end_of_host;
+
+  if (current_pos != url_input.end() && *current_pos == ':') {
+    constexpr const char PORT_TERMINATORS[] = "/?#";
+    ++current_pos;
+    std::string::const_iterator end_of_port = std::find_first_of(current_pos, url_input.end(), std::begin(PORT_TERMINATORS), std::end(PORT_TERMINATORS));
+    const auto port_number = parsePortNumber(std::string{current_pos, end_of_port});
+    if (port_number) {
+      port_ = *port_number;
+    } else {
+      logger_->log_error("Could not parse the port number in URL '%s'", url_input);
+      return;
+    }
+    current_pos = end_of_port;
   }
 
-  auto query_loc = url->find_first_of("?", base_len);
+  if (current_pos != url_input.end()) {
+    path_ = std::string{current_pos, url_input.end()};
+  }
 
-  if (query_loc < url->size()) {
-    *path = url->substr(base_len + 1, query_loc - base_len - 1);
-    *query = url->substr(query_loc + 1, url->size() - query_loc - 1);
+  is_valid_ = true;
+}
+
+int URL::port() const {
+  if (port_) {
+    return *port_;
+  } else if (protocol_ == HTTP) {
+    return 80;
+  } else if (protocol_ == HTTPS) {
+    return 443;
   } else {
-    *path = url->substr(base_len + 1, url->size() - base_len - 1);
+    throw std::logic_error{"Undefined port in URL: " + toString()};
   }
 }
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+std::string URL::hostPort() const {
+  if (!isValid()) {
+    return "INVALID";
+  }
+
+  if (port_) {
+    return protocol_ + host_ + ':' + std::to_string(*port_);
+  } else {
+    return protocol_ + host_;
+  }
+}
+
+std::string URL::toString() const {
+  if (!isValid()) {
+    return "INVALID";
+  }
+
+  if (path_) {
+    return hostPort() + *path_;
+  } else {
+    return hostPort();
+  }
+}
+
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

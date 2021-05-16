@@ -81,7 +81,7 @@ class SSLContext {
  */
 class SSLContextService : public core::controller::ControllerService {
  public:
-  explicit SSLContextService(const std::string &name, const utils::Identifier& uuid = {})
+  explicit SSLContextService(const std::string &name, const utils::Identifier &uuid = {})
       : ControllerService(name, uuid),
         initialized_(false),
         valid_(false),

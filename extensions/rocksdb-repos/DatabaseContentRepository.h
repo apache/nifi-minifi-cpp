@@ -79,7 +79,7 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
   };
  public:
 
-  DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>(), utils::Identifier uuid = utils::Identifier())
+  DatabaseContentRepository(const std::string& name = getClassName<DatabaseContentRepository>(), const utils::Identifier& uuid = {})
       : core::Connectable(name, uuid),
         is_valid_(false),
         db_(nullptr),

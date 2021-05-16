@@ -37,6 +37,7 @@
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "utils/RegexUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 #include "TailFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -108,6 +109,19 @@ core::Property TailFile::RollingFilenamePattern(
         ->withDefaultValue<std::string>("${filename}.*")
         ->build());
 
+core::Property TailFile::InitialStartPosition(
+    core::PropertyBuilder::createProperty("Initial Start Position")
+        ->withDescription("When the Processor first begins to tail data, this property specifies where the Processor should begin reading data. "
+                          "Once data has been ingested from a file, the Processor will continue from the last point from which it has received data.\n"
+                          "Beginning of Time: Start with the oldest data that matches the Rolling Filename Pattern and then begin reading from the File to Tail.\n"
+                          "Beginning of File: Start with the beginning of the File to Tail. Do not ingest any data that has already been rolled over.\n"
+                          "Current Time: Start with the data at the end of the File to Tail. Do not ingest any data that has already been rolled over or "
+                          "any data in the File to Tail that has already been written.")
+        ->isRequired(true)
+        ->withDefaultValue(toString(InitialStartPositions::BEGINNING_OF_FILE))
+        ->withAllowableValues(InitialStartPositions::values())
+        ->build());
+
 core::Relationship TailFile::Success("success", "All files are routed to success");
 
 const char *TailFile::CURRENT_STR = "CURRENT.";
@@ -161,16 +175,6 @@ std::map<std::string, TailState> update_keys_in_legacy_states(const std::map<std
   }
   return new_tail_states;
 }
-
-struct TailStateWithMtime {
-  using TimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>;
-
-  TailStateWithMtime(TailState tail_state, TimePoint mtime)
-    : tail_state_(std::move(tail_state)), mtime_(mtime) {}
-
-  TailState tail_state_;
-  TimePoint mtime_;
-};
 
 void openFile(const std::string &file_name, uint64_t offset, std::ifstream &input_stream, const std::shared_ptr<logging::Logger> &logger) {
   logger->log_debug("Opening %s", file_name);
@@ -323,6 +327,7 @@ void TailFile::initialize() {
   properties.insert(RecursiveLookup);
   properties.insert(LookupFrequency);
   properties.insert(RollingFilenamePattern);
+  properties.insert(InitialStartPosition);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -394,6 +399,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   std::string rolling_filename_pattern_glob;
   context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
   rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
+  initial_start_position_ = utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.getName(), InitialStartPositions::values());
 }
 
 void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const {
@@ -586,12 +592,37 @@ bool TailFile::storeState() {
   return true;
 }
 
-std::vector<TailState> TailFile::findRotatedFiles(const TailState &state) const {
-  logger_->log_debug("Searching for files rolled over; last read time is %" PRId64, state.lastReadTimeInMilliseconds());
-
+std::string TailFile::parseRollingFilePattern(const TailState &state) const {
   std::size_t last_dot_position = state.file_name_.find_last_of('.');
   std::string base_name = state.file_name_.substr(0, last_dot_position);
-  std::string pattern = utils::StringUtils::replaceOne(rolling_filename_pattern_, "${filename}", base_name);
+  return utils::StringUtils::replaceOne(rolling_filename_pattern_, "${filename}", base_name);
+}
+
+std::vector<TailState> TailFile::findAllRotatedFiles(const TailState &state) const {
+  logger_->log_debug("Searching for all files rolled over");
+
+  std::string pattern = parseRollingFilePattern(state);
+
+  std::vector<TailStateWithMtime> matched_files_with_mtime;
+  auto collect_matching_files = [&](const std::string &path, const std::string &file_name) -> bool {
+    if (file_name != state.file_name_ && utils::Regex::matchesFullInput(pattern, file_name)) {
+      std::string full_file_name = path + utils::file::FileUtils::get_separator() + file_name;
+      TailStateWithMtime::TimePoint mtime{utils::file::FileUtils::last_write_time_point(full_file_name)};
+      logger_->log_debug("File %s with mtime %" PRId64 " matches rolling filename pattern %s, so we are reading it", file_name, int64_t{mtime.time_since_epoch().count()}, pattern);
+      matched_files_with_mtime.emplace_back(TailState{path, file_name}, mtime);
+    }
+    return true;
+  };
+
+  utils::file::FileUtils::list_dir(state.path_, collect_matching_files, logger_, false);
+
+  return sortAndSkipMainFilePrefix(state, matched_files_with_mtime);
+}
+
+std::vector<TailState> TailFile::findRotatedFilesAfterLastReadTime(const TailState &state) const {
+  logger_->log_debug("Searching for files rolled over after last read time: %" PRId64, state.lastReadTimeInMilliseconds());
+
+  std::string pattern = parseRollingFilePattern(state);
 
   std::vector<TailStateWithMtime> matched_files_with_mtime;
   auto collect_matching_files = [&](const std::string &path, const std::string &file_name) -> bool {
@@ -609,6 +640,10 @@ std::vector<TailState> TailFile::findRotatedFiles(const TailState &state) const 
 
   utils::file::FileUtils::list_dir(state.path_, collect_matching_files, logger_, false);
 
+  return sortAndSkipMainFilePrefix(state, matched_files_with_mtime);
+}
+
+std::vector<TailState> TailFile::sortAndSkipMainFilePrefix(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime) const {
   std::sort(matched_files_with_mtime.begin(), matched_files_with_mtime.end(), [](const TailStateWithMtime &left, const TailStateWithMtime &right) {
     return std::tie(left.mtime_, left.tail_state_.file_name_) <
            std::tie(right.mtime_, right.tail_state_.file_name_);
@@ -653,29 +688,58 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &, const st
   if (!session->existsFlowFileInRelationship(Success)) {
     yield();
   }
+
+  first_trigger_ = false;
+}
+
+bool TailFile::isOldFileInitiallyRead(TailState &state) const {
+  // This is our initial processing and no stored state was found
+  return first_trigger_ && state.last_read_time_ == std::chrono::system_clock::time_point{};
 }
 
 void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
                            const std::string &full_file_name,
                            TailState &state) {
-  uint64_t fsize = utils::file::FileUtils::file_size(full_file_name);
-  if (fsize < state.position_) {
-    processRotatedFiles(session, state);
-  } else if (fsize == state.position_) {
-    logger_->log_trace("Skipping file %s as its size hasn't change since last read", state.file_name_);
-    return;
+  if (isOldFileInitiallyRead(state)) {
+    if (initial_start_position_ == InitialStartPositions::BEGINNING_OF_TIME) {
+      processAllRotatedFiles(session, state);
+    } else if (initial_start_position_ == InitialStartPositions::CURRENT_TIME) {
+      state.position_ = utils::file::FileUtils::file_size(full_file_name);
+      state.last_read_time_ = std::chrono::system_clock::now();
+      state.checksum_ = utils::file::FileUtils::computeChecksum(full_file_name, state.position_);
+      storeState();
+      return;
+    }
+  } else {
+    uint64_t fsize = utils::file::FileUtils::file_size(full_file_name);
+    if (fsize < state.position_) {
+      processRotatedFilesAfterLastReadTime(session, state);
+    } else if (fsize == state.position_) {
+      logger_->log_trace("Skipping file %s as its size hasn't changed since last read", state.file_name_);
+      return;
+    }
   }
 
   processSingleFile(session, full_file_name, state);
+  storeState();
 }
 
-void TailFile::processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state) {
-    std::vector<TailState> rotated_file_states = findRotatedFiles(state);
-    for (TailState &file_state : rotated_file_states) {
-      processSingleFile(session, file_state.fileNameWithPath(), file_state);
-    }
-    state.position_ = 0;
-    state.checksum_ = 0;
+void TailFile::processRotatedFilesAfterLastReadTime(const std::shared_ptr<core::ProcessSession> &session, TailState &state) {
+  std::vector<TailState> rotated_file_states = findRotatedFilesAfterLastReadTime(state);
+  processRotatedFiles(session, state, rotated_file_states);
+}
+
+void TailFile::processAllRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state) {
+  std::vector<TailState> rotated_file_states = findAllRotatedFiles(state);
+  processRotatedFiles(session, state, rotated_file_states);
+}
+
+void TailFile::processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state, std::vector<TailState> &rotated_file_states) {
+  for (TailState &file_state : rotated_file_states) {
+    processSingleFile(session, file_state.fileNameWithPath(), file_state);
+  }
+  state.position_ = 0;
+  state.checksum_ = 0;
 }
 
 void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &session,
@@ -718,8 +782,6 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
     }
 
     state = state_copy;
-    storeState();
-
     logger_->log_info("%zu flowfiles were received from TailFile input", num_flow_files);
 
   } else {
@@ -730,8 +792,6 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
     updateFlowFileAttributes(full_file_name, state, fileName, baseName, extension, flow_file);
     session->transfer(flow_file, Success);
     updateStateAttributes(state, flow_file->getSize(), file_reader.checksum());
-
-    storeState();
   }
 }
 

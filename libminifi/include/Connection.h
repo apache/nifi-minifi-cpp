@@ -48,21 +48,21 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   /*
    * Create a new processor
    */
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name);
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, const utils::Identifier& uuid);
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, const utils::Identifier& uuid,
-                      const utils::Identifier& srcUUID);
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, const utils::Identifier& uuid,
-                      const utils::Identifier& srcUUID, const utils::Identifier& destUUID);
+  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name);
+  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid);
+  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid,
+                      const utils::Identifier &srcUUID);
+  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid,
+                      const utils::Identifier &srcUUID, const utils::Identifier &destUUID);
   // Destructor
   virtual ~Connection() = default;
 
   // Set Source Processor UUID
-  void setSourceUUID(const utils::Identifier& uuid) {
+  void setSourceUUID(const utils::Identifier &uuid) {
     src_uuid_ = uuid;
   }
   // Set Destination Processor UUID
-  void setDestinationUUID(const utils::Identifier& uuid) {
+  void setDestinationUUID(const utils::Identifier &uuid) {
     dest_uuid_ = uuid;
   }
   // Get Source Processor UUID

@@ -42,7 +42,7 @@ class ExtractText : public core::Processor {
     /*!
      * Create a new processor
      */
-    explicit ExtractText(std::string name,  utils::Identifier uuid = utils::Identifier())
+    explicit ExtractText(const std::string& name,  const utils::Identifier& uuid = {})
     : Processor(name, uuid) {
         logger_ = logging::LoggerFactory<ExtractText>::getLogger();
     }

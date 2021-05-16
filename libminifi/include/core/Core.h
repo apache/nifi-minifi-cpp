@@ -148,7 +148,7 @@ class CoreComponent {
    * Constructor that sets the name and uuid.
    */
 
-  explicit CoreComponent(const std::string &name, const utils::Identifier& uuid = {}, const std::shared_ptr<utils::IdGenerator>& idGenerator = utils::IdGenerator::getIdGenerator())
+  explicit CoreComponent(const std::string &name, const utils::Identifier &uuid = {}, const std::shared_ptr<utils::IdGenerator> &idGenerator = utils::IdGenerator::getIdGenerator())
       : name_(name) {
     if (uuid.isNil()) {
       // Generate the global UUID for the flow record

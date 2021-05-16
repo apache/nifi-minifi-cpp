@@ -39,7 +39,7 @@ namespace processors {
 //! QueryDatabaseTable Class
 class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
  public:
-  explicit QueryDatabaseTable(const std::string& name, utils::Identifier uuid = utils::Identifier());
+  explicit QueryDatabaseTable(const std::string& name, const utils::Identifier& uuid = {});
 
   static const std::string RESULT_TABLE_NAME;
   static const std::string RESULT_ROW_COUNT;

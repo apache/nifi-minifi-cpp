@@ -39,7 +39,7 @@ namespace processors {
 
 class RouteOnAttribute : public core::Processor {
  public:
-  RouteOnAttribute(std::string name, utils::Identifier uuid = utils::Identifier()) // NOLINT
+  RouteOnAttribute(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<RouteOnAttribute>::getLogger()) {
   }

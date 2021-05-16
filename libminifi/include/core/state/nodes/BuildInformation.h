@@ -68,7 +68,7 @@ namespace response {
  */
 class BuildInformation : public DeviceInformation {
  public:
-  BuildInformation(std::string name, const utils::Identifier &uuid)
+  BuildInformation(const std::string &name, const utils::Identifier &uuid)
       : DeviceInformation(name, uuid) {
   }
 

@@ -41,7 +41,7 @@ namespace controllers {
  */
 class UpdatePolicyControllerService : public core::controller::ControllerService, public std::enable_shared_from_this<UpdatePolicyControllerService> {
  public:
-  explicit UpdatePolicyControllerService(const std::string &name, const utils::Identifier& uuid = {})
+  explicit UpdatePolicyControllerService(const std::string &name, const utils::Identifier &uuid = {})
       : ControllerService(name, uuid),
         persist_updates_(false),
         policy_(new state::UpdatePolicy(false)),

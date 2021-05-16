@@ -24,7 +24,7 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-PersistableKeyValueStoreService::PersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid /*= utils::Identifier()*/)
+PersistableKeyValueStoreService::PersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : KeyValueStoreService(name, uuid) {
 }
 

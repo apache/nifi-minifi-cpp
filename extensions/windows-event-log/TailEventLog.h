@@ -37,8 +37,8 @@ const char log_name[255] = "Application";
 
 class TailEventLog : public core::Processor {
 public:
-  TailEventLog(std::string name, utils::Identifier uuid = utils::Identifier())
-  : core::Processor(name, uuid), logger_(logging::LoggerFactory<TailEventLog>::getLogger()), max_events_(1) {
+  TailEventLog(const std::string& name, const utils::Identifier& uuid = {})
+  : core::Processor(name, uuid), logger_(logging::LoggerFactory<TailEventLog>::getLogger()),max_events_(1) {
   }
   virtual ~TailEventLog() = default;
   static const std::string ProcessorName;

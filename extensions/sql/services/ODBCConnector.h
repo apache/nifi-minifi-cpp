@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#pragma once 
+#pragma once
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
@@ -50,7 +50,7 @@ class ODBCConnection : public sql::Connection {
   bool connected(std::string& exception) const override {
     try {
       exception.clear();
-      // According to https://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most by Rob Hruska, 
+      // According to https://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most by Rob Hruska,
       // 'select 1' works for: H2, MySQL, Microsoft SQL Server, PostgreSQL, SQLite. For Oracle 'SELECT 1 FROM DUAL' works.
       prepareStatement("select 1")->execute();
       return true;
@@ -90,7 +90,7 @@ class ODBCConnection : public sql::Connection {
  */
 class ODBCService : public DatabaseService {
  public:
-  explicit ODBCService(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit ODBCService(const std::string &name, const utils::Identifier &uuid = {})
     : DatabaseService(name, uuid),
       logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
     initialize();

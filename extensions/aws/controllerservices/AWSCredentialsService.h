@@ -24,10 +24,13 @@
 #include "aws/core/auth/AWSCredentials.h"
 
 #include "utils/AWSInitializer.h"
+#include "utils/OptionalUtils.h"
 #include "core/Resource.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "AWSCredentialsProvider.h"
+
+class AWSCredentialsServiceTestAccessor;
 
 namespace org {
 namespace apache {
@@ -43,7 +46,7 @@ class AWSCredentialsService : public core::controller::ControllerService {
   static const core::Property SecretKey;
   static const core::Property CredentialsFile;
 
-  explicit AWSCredentialsService(const std::string &name, const minifi::utils::Identifier& uuid = {})
+  explicit AWSCredentialsService(const std::string &name, const minifi::utils::Identifier &uuid = {})
       : ControllerService(name, uuid) {
   }
 
@@ -66,17 +69,13 @@ class AWSCredentialsService : public core::controller::ControllerService {
 
   void onEnable() override;
 
-  Aws::Auth::AWSCredentials getAWSCredentials() {
-    return aws_credentials_;
-  }
+  minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
 
  private:
+  friend class ::AWSCredentialsServiceTestAccessor;
+
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
-  std::string access_key_;
-  std::string secret_key_;
-  std::string credentials_file_;
-  bool use_default_credentials_ = false;
-  Aws::Auth::AWSCredentials aws_credentials_;
+  minifi::utils::optional<Aws::Auth::AWSCredentials> aws_credentials_;
   AWSCredentialsProvider aws_credentials_provider_;
 };
 

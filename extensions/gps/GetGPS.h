@@ -32,7 +32,7 @@ namespace processors {
 
 class GetGPS : public core::Processor {
 public:
-  GetGPS(std::string name, utils::Identifier uuid = utils::Identifier())
+  GetGPS(const std::string& name, const utils::Identifier& uuid = {})
   : core::Processor(name, uuid), logger_(logging::LoggerFactory<GetGPS>::getLogger()) {
     gpsdHost_ = "localhost";
     gpsdPort_ = "2947";

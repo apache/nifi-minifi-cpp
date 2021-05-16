@@ -41,7 +41,7 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   static const core::Property CommonStorageAccountEndpointSuffix;
   static const core::Property ConnectionString;
 
-  explicit AzureStorageCredentialsService(const std::string &name, const minifi::utils::Identifier& uuid = {})
+  explicit AzureStorageCredentialsService(const std::string& name, const minifi::utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
         logger_(logging::LoggerFactory<AzureStorageCredentialsService>::getLogger()) {
   }

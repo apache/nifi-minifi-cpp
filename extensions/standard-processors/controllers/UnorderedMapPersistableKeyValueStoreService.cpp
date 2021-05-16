@@ -58,7 +58,7 @@ core::Property UnorderedMapPersistableKeyValueStoreService::File(
     core::PropertyBuilder::createProperty("File")->withDescription("Path to a file to store state")
         ->isRequired(true)->build());
 
-UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid /*= utils::Identifier()*/)
+UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : PersistableKeyValueStoreService(name, uuid)
     , AbstractAutoPersistingKeyValueStoreService(name, uuid)
     , UnorderedMapKeyValueStoreService(name, uuid)

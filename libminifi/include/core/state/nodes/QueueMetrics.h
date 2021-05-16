@@ -41,7 +41,7 @@ namespace response {
  */
 class QueueMetrics : public ResponseNode {
  public:
-  QueueMetrics(const std::string &name, utils::Identifier &  uuid)
+  QueueMetrics(const std::string &name, const utils::Identifier &uuid)
       : ResponseNode(name, uuid) {
   }
 

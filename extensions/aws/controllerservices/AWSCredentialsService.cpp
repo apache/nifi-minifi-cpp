@@ -60,20 +60,27 @@ void AWSCredentialsService::initialize() {
 }
 
 void AWSCredentialsService::onEnable() {
-  getProperty(AccessKey.getName(), access_key_);
-  getProperty(SecretKey.getName(), secret_key_);
-  getProperty(CredentialsFile.getName(), credentials_file_);
-  getProperty(UseDefaultCredentials.getName(), use_default_credentials_);
-
-  aws_credentials_provider_.setAccessKey(access_key_);
-  aws_credentials_provider_.setSecretKey(secret_key_);
-  aws_credentials_provider_.setCredentialsFile(credentials_file_);
-  aws_credentials_provider_.setUseDefaultCredentials(use_default_credentials_);
-
-  auto aws_credentials_result = aws_credentials_provider_.getAWSCredentials();
-  if (aws_credentials_result) {
-    aws_credentials_ = aws_credentials_result.value();
+  std::string value;
+  if (getProperty(AccessKey.getName(), value)) {
+    aws_credentials_provider_.setAccessKey(value);
   }
+  if (getProperty(SecretKey.getName(), value)) {
+    aws_credentials_provider_.setSecretKey(value);
+  }
+  if (getProperty(CredentialsFile.getName(), value)) {
+    aws_credentials_provider_.setCredentialsFile(value);
+  }
+  bool use_default_credentials = false;
+  if (getProperty(UseDefaultCredentials.getName(), use_default_credentials)) {
+    aws_credentials_provider_.setUseDefaultCredentials(use_default_credentials);
+  }
+}
+
+minifi::utils::optional<Aws::Auth::AWSCredentials> AWSCredentialsService::getAWSCredentials() {
+  if (!aws_credentials_ || aws_credentials_->IsExpiredOrEmpty()) {
+    aws_credentials_ = aws_credentials_provider_.getAWSCredentials();
+  }
+  return aws_credentials_;
 }
 
 }  // namespace controllers

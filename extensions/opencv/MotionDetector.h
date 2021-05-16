@@ -40,7 +40,7 @@ class MotionDetector : public core::Processor {
 
  public:
 
-  explicit MotionDetector(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit MotionDetector(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<MotionDetector>::getLogger()) {
   }

@@ -46,7 +46,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const
     : ProcessGroup(type, name, uuid, version, 0) {
 }
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version, ProcessGroup *parent)
+ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version, ProcessGroup* parent)
     : CoreComponent(name, uuid, id_generator_),
       config_version_(version),
       type_(type),

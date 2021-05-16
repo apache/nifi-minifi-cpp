@@ -101,8 +101,8 @@ class FlowConfiguration : public CoreComponent {
   ~FlowConfiguration() override;
 
   // Create Processor (Node/Input/Output Port) based on the name
-  std::shared_ptr<core::Processor> createProcessor(std::string name, utils::Identifier &uuid);
-  std::shared_ptr<core::Processor> createProcessor(const std::string &name, const std::string &fullname, utils::Identifier &uuid);
+  std::shared_ptr<core::Processor> createProcessor(const std::string &name, const utils::Identifier &uuid);
+  std::shared_ptr<core::Processor> createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier &uuid);
   // Create Root Processor Group
 
   std::unique_ptr<core::ProcessGroup> createRootProcessGroup(const std::string &name, const utils::Identifier &uuid, int version);
@@ -110,10 +110,10 @@ class FlowConfiguration : public CoreComponent {
   std::unique_ptr<core::ProcessGroup> createRemoteProcessGroup(const std::string &name, const utils::Identifier &uuid);
 
   std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &class_name, const std::string &full_class_name, const std::string &name,
-      const utils::Identifier& uuid);
+      const utils::Identifier &uuid);
 
   // Create Connection
-  std::shared_ptr<minifi::Connection> createConnection(std::string name, const utils::Identifier& uuid) const;
+  std::shared_ptr<minifi::Connection> createConnection(const std::string &name, const utils::Identifier &uuid) const;
   // Create Provenance Report Task
   std::shared_ptr<core::Processor> createProvenanceReportTask(void);
 

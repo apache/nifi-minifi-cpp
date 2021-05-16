@@ -57,6 +57,8 @@
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
 #include "io/ClientSocket.h"
+#include "utils/OsUtils.h"
+#include "utils/SystemCpuUsageTracker.h"
 
 namespace org {
 namespace apache {
@@ -186,7 +188,7 @@ class Device {
      can free list later */
     for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++) {
       if (ifa->ifa_addr == NULL)
-      continue;
+        continue;
 
       family = ifa->ifa_addr->sa_family;
 
@@ -353,119 +355,104 @@ class DeviceInfoNode : public DeviceInformation {
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
 
-    SerializedResponseNode identifier;
-    identifier.name = "identifier";
-    identifier.value = device_id_;
-
-    SerializedResponseNode systemInfo;
-    systemInfo.name = "systemInfo";
-
-    SerializedResponseNode vcores;
-    vcores.name = "vCores";
-    size_t ncpus = std::thread::hardware_concurrency();
-
-    vcores.value = ncpus;
-
-    systemInfo.children.push_back(vcores);
-
-    SerializedResponseNode ostype;
-    ostype.name = "operatingSystem";
-    ostype.value = getOperatingSystem();
-
-    systemInfo.children.push_back(ostype);
-#if defined(_SC_PHYS_PAGES) && defined(_SC_PAGESIZE)
-    SerializedResponseNode mem;
-    mem.name = "physicalMem";
-
-    uint64_t mema = (size_t) sysconf(_SC_PHYS_PAGES) * (size_t) sysconf(_SC_PAGESIZE);
-
-    mem.value = mema;
-
-    systemInfo.children.push_back(mem);
-#endif
-#ifndef WIN32
-    SerializedResponseNode arch;
-    arch.name = "machinearch";
-
-    utsname buf;
-
-    if (uname(&buf) == -1) {
-      arch.value = "unknown";
-    } else {
-      arch.value = buf.machine;
-    }
-
-    systemInfo.children.push_back(arch);
-#else
-    SYSTEM_INFO si;
-    GetSystemInfo(&si);
-
-    SerializedResponseNode mem;
-    mem.name = "physicalMem";
-
-    MEMORYSTATUSEX statex;
-
-    statex.dwLength = sizeof(statex);
-
-    GlobalMemoryStatusEx(&statex);
-
-    mem.value = statex.ullTotalPhys;
-
-    systemInfo.children.push_back(mem);
-
-    SerializedResponseNode arch;
-    arch.name = "machinearch";
-
-    switch (si.wProcessorArchitecture) {
-#ifdef PROCESSOR_ARCHITECTURE_ARM
-      case PROCESSOR_ARCHITECTURE_ARM:
-      arch.value = "arm32";
-      break;
-#endif
-#ifdef PROCESSOR_ARCHITECTURE_ARM64
-      case PROCESSOR_ARCHITECTURE_ARM64:
-      arch.value = "arm64";
-      break;
-#endif
-      case PROCESSOR_ARCHITECTURE_INTEL:
-#ifdef PROCESSOR_ARCHITECTURE_IA32_ON_ARM64
-      case PROCESSOR_ARCHITECTURE_IA32_ON_ARM64:
-      arch.value = "x32";
-      break;
-#endif
-      case PROCESSOR_ARCHITECTURE_AMD64:
-      case PROCESSOR_ARCHITECTURE_IA64:
-      arch.value = "x64";
-      break;
-      default:
-      arch.value = "unknown";
-    }
-
-    systemInfo.children.push_back(arch);
-#endif
-    serialized.push_back(identifier);
-    serialized.push_back(systemInfo);
-
-    SerializedResponseNode networkinfo;
-    networkinfo.name = "networkInfo";
-
-    SerializedResponseNode hostname;
-    hostname.name = "hostname";
-    hostname.value = hostname_;
-
-    SerializedResponseNode ip;
-    ip.name = "ipAddress";
-    ip.value = !ip_.empty() ? ip_ : "127.0.0.1";
-
-    networkinfo.children.push_back(hostname);
-    networkinfo.children.push_back(ip);
-
-    serialized.push_back(networkinfo);
+    serialized.push_back(serializeIdentifier());
+    serialized.push_back(serializeSystemInfo());
+    serialized.push_back(serializeNetworkInfo());
 
     return serialized;
   }
 
  protected:
+  SerializedResponseNode serializeIdentifier() const {
+    SerializedResponseNode identifier;
+    identifier.name = "identifier";
+    identifier.value = device_id_;
+    return identifier;
+  }
+
+  SerializedResponseNode serializeVCoreInfo() const {
+    SerializedResponseNode v_cores;
+    v_cores.name = "vCores";
+    v_cores.value = std::thread::hardware_concurrency();
+    return v_cores;
+  }
+
+  SerializedResponseNode serializeOperatingSystemType() const {
+    SerializedResponseNode os_type;
+    os_type.name = "operatingSystem";
+    os_type.value = getOperatingSystem();
+    return os_type;
+  }
+
+  SerializedResponseNode serializeTotalPhysicalMemoryInformation() const {
+    SerializedResponseNode total_physical_memory;
+    total_physical_memory.name = "physicalMem";
+    total_physical_memory.value = utils::OsUtils::getSystemTotalPhysicalMemory();
+    return total_physical_memory;
+  }
+
+  SerializedResponseNode serializePhysicalMemoryUsageInformation() const {
+    SerializedResponseNode used_physical_memory;
+    used_physical_memory.name = "memoryUsage";
+    used_physical_memory.value = utils::OsUtils::getSystemPhysicalMemoryUsage();
+    return used_physical_memory;
+  }
+
+  SerializedResponseNode serializeSystemCPUUsageInformation() const {
+    double system_cpu_usage = -1.0;
+    {
+      std::lock_guard<std::mutex> guard(cpu_load_tracker_mutex_);
+      system_cpu_usage = cpu_load_tracker_.getCpuUsageAndRestartCollection();
+    }
+    SerializedResponseNode cpu_usage;
+    cpu_usage.name = "cpuUtilization";
+    cpu_usage.value = system_cpu_usage;
+    return cpu_usage;
+  }
+
+  SerializedResponseNode serializeArchitectureInformation() const {
+    SerializedResponseNode arch;
+    arch.name = "machinearch";
+    arch.value = utils::OsUtils::getMachineArchitecture();
+    return arch;
+  }
+
+  SerializedResponseNode serializeSystemInfo() const {
+    SerializedResponseNode systemInfo;
+    systemInfo.name = "systemInfo";
+
+    systemInfo.children.push_back(serializeVCoreInfo());
+    systemInfo.children.push_back(serializeOperatingSystemType());
+    systemInfo.children.push_back(serializeTotalPhysicalMemoryInformation());
+    systemInfo.children.push_back(serializeArchitectureInformation());
+    systemInfo.children.push_back(serializePhysicalMemoryUsageInformation());
+    systemInfo.children.push_back(serializeSystemCPUUsageInformation());
+
+    return systemInfo;
+  }
+
+  SerializedResponseNode serializeHostNameInfo() const {
+    SerializedResponseNode hostname;
+    hostname.name = "hostname";
+    hostname.value = hostname_;
+    return hostname;
+  }
+
+  SerializedResponseNode serializeIPAddress() const {
+    SerializedResponseNode ip;
+    ip.name = "ipAddress";
+    ip.value = !ip_.empty() ? ip_ : "127.0.0.1";
+    return ip;
+  }
+
+  SerializedResponseNode serializeNetworkInfo() const {
+    SerializedResponseNode network_info;
+    network_info.name = "networkInfo";
+    network_info.children.push_back(serializeHostNameInfo());
+    network_info.children.push_back(serializeIPAddress());
+    return network_info;
+  }
+
   /**
    * Have found various ways of identifying different operating system variants
    * so these were either pulled from header files or online.
@@ -490,6 +477,8 @@ class DeviceInfoNode : public DeviceInformation {
   std::string hostname_;
   std::string ip_;
   std::string device_id_;
+  static utils::SystemCpuUsageTracker cpu_load_tracker_;
+  static std::mutex cpu_load_tracker_mutex_;
 };
 
 REGISTER_RESOURCE(DeviceInfoNode, "Node part of an AST that defines device characteristics to the C2 protocol");

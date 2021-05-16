@@ -278,19 +278,19 @@ class TestFlowController : public minifi::FlowController {
     return true;
   }
 
-  std::shared_ptr<core::Processor> createProcessor(std::string /*name*/, utils::Identifier& /*uuid*/) {
+  std::shared_ptr<core::Processor> createProcessor(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
     return 0;
   }
 
-  core::ProcessGroup *createRootProcessGroup(std::string /*name*/, utils::Identifier& /*uuid*/) {
+  core::ProcessGroup *createRootProcessGroup(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
     return 0;
   }
 
-  core::ProcessGroup *createRemoteProcessGroup(std::string /*name*/, utils::Identifier& /*uuid*/) {
+  core::ProcessGroup *createRemoteProcessGroup(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
     return 0;
   }
 
-  std::shared_ptr<minifi::Connection> createConnection(std::string /*name*/, utils::Identifier& /*uuid*/) {
+  std::shared_ptr<minifi::Connection> createConnection(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
     return 0;
   }
 };

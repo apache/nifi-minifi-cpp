@@ -39,7 +39,7 @@ int ssl_protocol_en(void* /*ssl_context*/, void* /*user_data*/) {
   return 0;
 }
 
-RESTReceiver::RESTReceiver(std::string name, utils::Identifier uuid)
+RESTReceiver::RESTReceiver(const std::string& name, const utils::Identifier& uuid)
     : HeartBeatReporter(name, uuid),
       logger_(logging::LoggerFactory<RESTReceiver>::getLogger()) {
 }

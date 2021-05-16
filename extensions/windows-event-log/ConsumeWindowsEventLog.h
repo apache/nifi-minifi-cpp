@@ -58,7 +58,7 @@ public:
   /*!
   * Create a new processor
   */
-  ConsumeWindowsEventLog(const std::string& name, utils::Identifier uuid = utils::Identifier());
+  ConsumeWindowsEventLog(const std::string& name, const utils::Identifier& uuid = {});
 
   //! Destructor
   virtual ~ConsumeWindowsEventLog();

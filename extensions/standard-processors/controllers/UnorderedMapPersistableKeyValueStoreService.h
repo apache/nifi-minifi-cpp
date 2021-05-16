@@ -40,7 +40,7 @@ namespace controllers {
 class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistingKeyValueStoreService,
                                                     public UnorderedMapKeyValueStoreService {
  public:
-  explicit UnorderedMapPersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
+  explicit UnorderedMapPersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
   explicit UnorderedMapPersistableKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure>& configuration);
 
   ~UnorderedMapPersistableKeyValueStoreService() override;

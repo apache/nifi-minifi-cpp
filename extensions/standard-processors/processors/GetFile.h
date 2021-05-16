@@ -61,7 +61,7 @@ class GetFileMetrics : public state::response::ResponseNode {
     input_bytes_ = 0;
   }
 
-  GetFileMetrics(std::string name, utils::Identifier &uuid)
+  GetFileMetrics(const std::string& name, const utils::Identifier& uuid)
       : state::response::ResponseNode(name, uuid) {
     iterations_ = 0;
     accepted_files_ = 0;

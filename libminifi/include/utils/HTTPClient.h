@@ -36,6 +36,7 @@
 #include "controllers/SSLContextService.h"
 #include "core/Deprecated.h"
 #include "utils/gsl.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -362,10 +363,27 @@ class BaseHTTPClient {
   virtual inline bool matches(const std::string &value, const std::string &sregex) = 0;
 };
 
-extern std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password);
+std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password);
 
-extern void parse_url(const std::string *url, std::string *host, int *port, std::string *protocol);
-extern void parse_url(const std::string *url, std::string *host, int *port, std::string *protocol, std::string *path, std::string *query);
+class URL {
+ public:
+  explicit URL(const std::string& url_input);
+  bool isValid() const { return is_valid_; }
+  std::string protocol() const { return protocol_; }
+  std::string host() const { return host_; }
+  int port() const;
+  std::string hostPort() const;
+  std::string toString() const;
+
+ private:
+  std::string protocol_;
+  std::string host_;
+  utils::optional<int> port_;
+  utils::optional<std::string> path_;
+  bool is_valid_ = false;
+  std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<URL>::getLogger();
+};
+
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi

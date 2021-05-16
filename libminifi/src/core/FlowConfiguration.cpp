@@ -42,7 +42,7 @@ FlowConfiguration::~FlowConfiguration() {
   }
 }
 
-std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, utils::Identifier &uuid) {
+std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const utils::Identifier &uuid) {
   auto processor = minifi::processors::ProcessorUtils::createProcessor(name, name, uuid, stream_factory_);
   if (nullptr == processor) {
     logger_->log_error("No Processor defined for %s", name);
@@ -51,7 +51,7 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string 
   return processor;
 }
 
-std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const std::string &fullname, utils::Identifier &uuid) {
+std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier &uuid) {
   auto processor = minifi::processors::ProcessorUtils::createProcessor(name, fullname, uuid, stream_factory_);
   if (nullptr == processor) {
     logger_->log_error("No Processor defined for %s", fullname);
@@ -124,7 +124,7 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(
   return utils::make_unique<core::ProcessGroup>(core::REMOTE_PROCESS_GROUP, name, uuid);
 }
 
-std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(std::string name, const utils::Identifier& uuid) const {
+std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(const std::string& name, const utils::Identifier& uuid) const {
   return std::make_shared<minifi::Connection>(flow_file_repo_, content_repo_, name, uuid);
 }
 

@@ -141,7 +141,7 @@ constexpr char const* SourceInitiatedSubscriptionListener::INITIAL_EXISTING_EVEN
 
 constexpr char const* SourceInitiatedSubscriptionListener::ProcessorName;
 
-SourceInitiatedSubscriptionListener::SourceInitiatedSubscriptionListener(std::string name, utils::Identifier uuid)
+SourceInitiatedSubscriptionListener::SourceInitiatedSubscriptionListener(const std::string& name, const utils::Identifier& uuid)
     : Processor(name, uuid)
     , logger_(logging::LoggerFactory<SourceInitiatedSubscriptionListener>::getLogger())
     , session_factory_(nullptr)

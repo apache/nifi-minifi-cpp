@@ -61,6 +61,13 @@ core::Property GenerateFlowFile::UniqueFlowFiles(
     core::PropertyBuilder::createProperty("Unique FlowFiles")->withDescription("If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles")
         ->isRequired(false)->withDefaultValue<bool>(true)->build());
 
+core::Property GenerateFlowFile::CustomText(
+    core::PropertyBuilder::createProperty("Custom Text")
+      ->withDescription("If Data Format is text and if Unique FlowFiles is false, then this custom text will be used as content of the generated FlowFiles and the File Size will be ignored. "
+                        "Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles")
+      ->supportsExpressionLanguage(true)
+      ->build());
+
 core::Relationship GenerateFlowFile::Success("success", "success operational on the flow record");
 
 constexpr const char * TEXT_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+/?.,';:\"?<>\n\t ";
@@ -72,6 +79,7 @@ void GenerateFlowFile::initialize() {
   properties.insert(BatchSize);
   properties.insert(DataFormat);
   properties.insert(UniqueFlowFiles);
+  properties.insert(CustomText);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -108,6 +116,17 @@ void GenerateFlowFile::onSchedule(const std::shared_ptr<core::ProcessContext> &c
   }
   if (context->getProperty(UniqueFlowFiles.getName(), uniqueFlowFile_)) {
     logger_->log_trace("Unique Flow files is configured to be %i", uniqueFlowFile_);
+  }
+
+  std::string custom_text;
+  context->getProperty(CustomText, custom_text, nullptr);
+  if (!custom_text.empty()) {
+    if (textData_ && !uniqueFlowFile_) {
+      data_.assign(custom_text.begin(), custom_text.end());
+      return;
+    } else {
+      logger_->log_warn("Custom Text property is set, but not used!");
+    }
   }
 
   if (!uniqueFlowFile_) {

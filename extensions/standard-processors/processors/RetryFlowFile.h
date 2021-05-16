@@ -42,7 +42,7 @@ namespace processors {
 
 class RetryFlowFile : public core::Processor {
  public:
-  explicit RetryFlowFile(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit RetryFlowFile(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<RetryFlowFile>::getLogger()) {}
   // Destructor

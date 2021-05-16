@@ -42,7 +42,7 @@ namespace controllers {
  */
 class LinuxPowerManagerService : public ThreadManagementService {
  public:
-  explicit LinuxPowerManagerService(const std::string &name, utils::Identifier uuid = utils::Identifier())
+  explicit LinuxPowerManagerService(const std::string &name, const utils::Identifier &uuid = {})
       : ThreadManagementService(name, uuid),
         enabled_(false),
         battery_level_(0),

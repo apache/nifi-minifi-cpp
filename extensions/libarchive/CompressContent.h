@@ -49,7 +49,7 @@ public:
   /*!
    * Create a new processor
    */
-  explicit CompressContent(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit CompressContent(const std::string& name, const utils::Identifier& uuid = {})
     : core::Processor(name, uuid)
     , logger_(logging::LoggerFactory<CompressContent>::getLogger())
     , updateFileName_(false)

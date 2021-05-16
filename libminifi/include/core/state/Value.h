@@ -27,6 +27,7 @@
 #include <vector>
 #include <typeinfo>
 #include "utils/ValueParser.h"
+#include "utils/ValueCaster.h"
 
 namespace org {
 namespace apache {
@@ -74,6 +75,7 @@ class Value {
   static const std::type_index UINT32_TYPE;
   static const std::type_index INT_TYPE;
   static const std::type_index BOOL_TYPE;
+  static const std::type_index DOUBLE_TYPE;
   static const std::type_index STRING_TYPE;
 
  protected:
@@ -142,6 +144,17 @@ class Value {
     return true;
   }
 
+  virtual bool getValue(double &ref) {
+    try {
+      double value;
+      utils::internal::ValueParser(string_value).parse(value).parseEnd();
+      ref = value;
+    } catch(const ParseException&) {
+      return false;
+    }
+    return true;
+  }
+
   std::string string_value;
   std::type_index type_id;
 };
@@ -165,31 +178,31 @@ class UInt32Value : public Value {
   }
 
  protected:
-  virtual bool getValue(uint32_t &ref) {
+  bool getValue(uint32_t &ref) override {
     ref = value;
     return true;
   }
 
-  virtual bool getValue(int &ref) {
-    if (value <= static_cast<uint32_t>(std::numeric_limits<int>::max())) {
-      ref = value;
-      return true;
-    }
+  bool getValue(int &ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
+  }
+
+  bool getValue(int64_t &ref) override {
+    ref = value;
+    return true;
+  }
+
+  bool getValue(uint64_t &ref) override {
+    ref = value;
+    return true;
+  }
+
+  bool getValue(bool& /*ref*/) override {
     return false;
   }
 
-  virtual bool getValue(int64_t &ref) {
-    ref = value;
-    return true;
-  }
-
-  virtual bool getValue(uint64_t &ref) {
-    ref = value;
-    return true;
-  }
-
-  virtual bool getValue(bool& /*ref*/) {
-    return false;
+  bool getValue(double& ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
   }
 
   uint32_t value;
@@ -212,29 +225,30 @@ class IntValue : public Value {
   }
 
  protected:
-  virtual bool getValue(int &ref) {
+  bool getValue(int &ref) override {
     ref = value;
     return true;
   }
 
-  virtual bool getValue(uint32_t &ref) {
-    if (value < 0) return false;
+  bool getValue(uint32_t &ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
+  }
+
+  bool getValue(int64_t &ref) override {
     ref = value;
     return true;
   }
 
-  virtual bool getValue(int64_t &ref) {
-    ref = value;
-    return true;
+  bool getValue(uint64_t &ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
   }
 
-  virtual bool getValue(uint64_t &ref) {
-    ref = value;
-    return true;
-  }
-
-  virtual bool getValue(bool& /*ref*/) {
+  bool getValue(bool& /*ref*/) override {
     return false;
+  }
+
+  bool getValue(double& ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
   }
 
   int value;
@@ -258,23 +272,27 @@ class BoolValue : public Value {
   }
 
  protected:
-  virtual bool getValue(int &ref) {
+  bool getValue(int &ref) override {
     return PreventSwearingInFutureRefactor(ref);
   }
 
-  virtual bool getValue(uint32_t &ref) {
+  bool getValue(uint32_t &ref) override {
     return PreventSwearingInFutureRefactor(ref);
   }
 
-  virtual bool getValue(int64_t &ref) {
+  bool getValue(int64_t &ref) override {
     return PreventSwearingInFutureRefactor(ref);
   }
 
-  virtual bool getValue(uint64_t &ref) {
+  bool getValue(uint64_t &ref) override {
     return PreventSwearingInFutureRefactor(ref);
   }
 
-  virtual bool getValue(bool &ref) {
+  bool getValue(double &ref) override {
+    return PreventSwearingInFutureRefactor(ref);
+  }
+
+  bool getValue(bool &ref) override {
     ref = value;
     return true;
   }
@@ -311,29 +329,28 @@ class UInt64Value : public Value {
   }
 
  protected:
-  virtual bool getValue(int& /*ref*/) {
+  bool getValue(int& ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
+  }
+
+  bool getValue(uint32_t& ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
+  }
+
+  bool getValue(int64_t &ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
+  }
+
+  bool getValue(uint64_t &ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
+  }
+
+  bool getValue(bool& /*ref*/) override {
     return false;
   }
 
-  virtual bool getValue(uint32_t& /*ref*/) {
-    return false;
-  }
-
-  virtual bool getValue(int64_t &ref) {
-    if (value <= static_cast<uint32_t>(std::numeric_limits<int64_t>::max())) {
-      ref = value;
-      return true;
-    }
-    return false;
-  }
-
-  virtual bool getValue(uint64_t &ref) {
-    ref = value;
-    return true;
-  }
-
-  virtual bool getValue(bool& /*ref*/) {
-    return false;
+  bool getValue(double& ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
   }
 
   uint64_t value;
@@ -357,30 +374,78 @@ class Int64Value : public Value {
   }
 
  protected:
-  virtual bool getValue(int& /*ref*/) {
-    return false;
+  bool getValue(int& ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
   }
 
-  virtual bool getValue(uint32_t& /*ref*/) {
-    return false;
+  bool getValue(uint32_t& ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
   }
 
-  virtual bool getValue(int64_t &ref) {
+  bool getValue(int64_t& ref) override {
     ref = value;
     return true;
   }
 
-  virtual bool getValue(uint64_t &ref) {
-    if (value < 0) return false;
-    ref = value;
-    return true;
+  bool getValue(uint64_t& ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
   }
 
-  virtual bool getValue(bool& /*ref*/) {
+  bool getValue(bool& /*ref*/) override {
     return false;
+  }
+
+  bool getValue(double& ref) override {
+    return utils::internal::cast_if_in_range(value, ref);
   }
 
   int64_t value;
+};
+
+class DoubleValue : public Value {
+ public:
+  explicit DoubleValue(double value)
+      : Value(std::to_string(value)),
+      value(value) {
+    setTypeId<double>();
+  }
+  explicit DoubleValue(const std::string &strvalue)
+      : Value(strvalue) {
+    utils::internal::ValueParser(strvalue).parse(value).parseEnd();
+    setTypeId<double>();
+  }
+
+  double getValue() {
+    return value;
+  }
+
+ protected:
+  virtual bool getValue(int& ref) {
+    return utils::internal::cast_if_in_range(value, ref);
+  }
+
+  virtual bool getValue(uint32_t& ref) {
+    return utils::internal::cast_if_in_range(value, ref);
+  }
+
+  virtual bool getValue(int64_t& ref ) {
+    return utils::internal::cast_if_in_range(value, ref);
+  }
+
+  virtual bool getValue(uint64_t& ref) {
+    return utils::internal::cast_if_in_range(value, ref);
+  }
+
+  virtual bool getValue(bool&) {
+    return false;
+  }
+
+  virtual bool getValue(double& ref) {
+    ref = value;
+    return true;
+  }
+
+  double value;
 };
 
 static inline std::shared_ptr<Value> createValue(const bool &object) {
@@ -419,6 +484,10 @@ static inline std::shared_ptr<Value> createValue(const int &object) {
   return std::make_shared<IntValue>(object);
 }
 
+static inline std::shared_ptr<Value> createValue(const double &object) {
+  return std::make_shared<DoubleValue>(object);
+}
+
 /**
  * Purpose: ValueNode is the AST container for a value
  */
@@ -444,6 +513,7 @@ class ValueNode {
   std::is_same<T, bool >::value ||
   std::is_same<T, char* >::value ||
   std::is_same<T, const char* >::value ||
+  std::is_same<T, double>::value ||
   std::is_same<T, std::string>::value, ValueNode&>::type {
     value_ = createValue(ref);
     return *this;
@@ -494,6 +564,10 @@ struct SerializedResponseNode {
   SerializedResponseNode(const SerializedResponseNode &other) = default;
 
   SerializedResponseNode &operator=(const SerializedResponseNode &other) = default;
+
+  bool empty() const {
+    return value.empty() && children.empty();
+  }
 };
 
 }  // namespace response

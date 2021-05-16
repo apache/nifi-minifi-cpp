@@ -410,7 +410,7 @@ bool SiteToSiteClient::complete(const utils::Identifier& transactionID) {
   }
 }
 
-int16_t SiteToSiteClient::send(const utils::Identifier& transactionID, DataPacket *packet, const std::shared_ptr<core::FlowFile> &flowFile, const std::shared_ptr<core::ProcessSession> &session) {
+int16_t SiteToSiteClient::send(const utils::Identifier &transactionID, DataPacket *packet, const std::shared_ptr<core::FlowFile> &flowFile, const std::shared_ptr<core::ProcessSession> &session) {
   int ret;
 
   if (peer_state_ != READY) {

@@ -48,7 +48,7 @@ class FocusArchiveEntry : public core::Processor {
   /*!
    * Create a new processor
    */
-  explicit FocusArchiveEntry(std::string name, utils::Identifier uuid = utils::Identifier())
+  explicit FocusArchiveEntry(const std::string& name, const utils::Identifier& uuid = {})
   : core::Processor(name, uuid),
     logger_(logging::LoggerFactory<FocusArchiveEntry>::getLogger()) {
   }

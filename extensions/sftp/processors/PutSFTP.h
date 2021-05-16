@@ -61,7 +61,7 @@ namespace processors {
   /*!
    * Create a new processor
    */
-  PutSFTP(std::string name, utils::Identifier uuid = utils::Identifier());
+  PutSFTP(const std::string& name, const utils::Identifier& uuid = {});
   virtual ~PutSFTP();
 
   // Supported Properties

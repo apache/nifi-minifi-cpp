@@ -64,7 +64,7 @@ class ListSFTP : public SFTPProcessorBase {
   /*!
    * Create a new processor
    */
-  ListSFTP(std::string name, utils::Identifier uuid = utils::Identifier());
+  ListSFTP(const std::string& name, const utils::Identifier& uuid = {});
   virtual ~ListSFTP();
 
   // Supported Properties

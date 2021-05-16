@@ -63,15 +63,15 @@ class FlowFileRecord : public core::FlowFile {
   //! Serialize and Persistent to the repository
   bool Persist(const std::shared_ptr<core::Repository>& flowRepository);
   //! DeSerialize
-  static std::shared_ptr<FlowFileRecord> DeSerialize(const uint8_t *buffer, int bufferSize, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container) {
+  static std::shared_ptr<FlowFileRecord> DeSerialize(const uint8_t *buffer, int bufferSize, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container) {
     io::BufferStream inStream{buffer, gsl::narrow<unsigned int>(bufferSize)};
     return DeSerialize(inStream, content_repo, container);
   }
   //! DeSerialize
-  static std::shared_ptr<FlowFileRecord> DeSerialize(io::InputStream &stream, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
+  static std::shared_ptr<FlowFileRecord> DeSerialize(io::InputStream &stream, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container);
   //! DeSerialize
   static std::shared_ptr<FlowFileRecord> DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository,
-      const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier& container);
+      const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container);
 
   std::string getContentFullPath() {
     return claim_ ? claim_->getContentFullPath() : "";

@@ -40,7 +40,7 @@ namespace controllers {
 /// Key-value store serice purely in RAM without disk usage
 class UnorderedMapKeyValueStoreService : virtual public PersistableKeyValueStoreService {
  public:
-  explicit UnorderedMapKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
+  explicit UnorderedMapKeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
   explicit UnorderedMapKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure>& configuration);
 
   ~UnorderedMapKeyValueStoreService() override;

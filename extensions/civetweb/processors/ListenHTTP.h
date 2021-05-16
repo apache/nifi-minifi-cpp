@@ -48,7 +48,7 @@ class ListenHTTP : public core::Processor {
   /*!
    * Create a new processor
    */
-  ListenHTTP(std::string name, utils::Identifier uuid = utils::Identifier())
+  ListenHTTP(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ListenHTTP>::getLogger()),
         batch_size_(0) {
