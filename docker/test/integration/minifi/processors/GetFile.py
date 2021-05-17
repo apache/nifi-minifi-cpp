@@ -7,7 +7,7 @@ class GetFile(Processor):
             'GetFile',
             properties={
                 'Input Directory': input_dir,
-                'Keep Source File': 'true'
+                'Keep Source File': 'false'
             },
             schedule=schedule,
             auto_terminate=['success'])

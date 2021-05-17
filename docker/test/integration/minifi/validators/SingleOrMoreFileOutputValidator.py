@@ -6,6 +6,7 @@ from os.path import join
 
 from .FileOutputValidator import FileOutputValidator
 
+
 class SingleOrMoreFileOutputValidator(FileOutputValidator):
     """
     Validates the content of a single file in the given directory.

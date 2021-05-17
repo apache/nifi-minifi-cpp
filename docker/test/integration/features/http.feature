@@ -6,7 +6,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
   Background:
     Given the content of "/tmp/output" is monitored
 
-  Scenario: A MiNiFi instance transfers data to another MiNiFi instance
+  Scenario: A MiNiFi instance transfers data to another MiNiFi instance with message body
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
@@ -87,4 +87,4 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "success" relationship of the ListenHTTP processor is connected to the PutFile
 
     When both instances start up
-    Then at least one empty flowfile is placed in the monitored directory in less than 30 seconds
+    Then one empty flowfile is placed in the monitored directory in less than 30 seconds

@@ -117,7 +117,7 @@ class MiNiFi_integration_test():
         elif cluster.get_engine() == "nifi":
             startup_success = cluster.wait_for_app_logs("Starting Flow Controller...", 120)
         elif cluster.get_engine() == "kafka-broker":
-            startup_success = cluster.wait_for_app_logs("Startup complete.", 120)
+            startup_success = cluster.wait_for_app_logs("Kafka startTimeMs", 120)
         elif cluster.get_engine() == "http-proxy":
             startup_success = cluster.wait_for_app_logs("Accepting HTTP Socket connections at", 120)
         elif cluster.get_engine() == "s3-server":
@@ -147,10 +147,6 @@ class MiNiFi_integration_test():
                 logging.info("Container %s is already started with an engine of %s", cluster.get_name(), cluster.get_engine())
         for cluster in self.clusters.values():
             assert self.wait_for_cluster_startup_finish(cluster)
-        # Seems like some extra time needed for consumers to negotiate with the broker
-        for cluster in self.clusters.values():
-            if cluster.get_engine() == "kafka-broker":
-                time.sleep(10)
 
     def add_node(self, processor):
         if processor.get_name() in (elem.get_name() for elem in self.connectable_nodes):
@@ -171,7 +167,7 @@ class MiNiFi_integration_test():
         for node in self.connectable_nodes:
             if name == node.get_name():
                 return node
-        raise Exception("Trying to fetch unknow node: \"%s\"" % name)
+        raise Exception("Trying to fetch unknown node: \"%s\"" % name)
 
     def add_remote_process_group(self, remote_process_group):
         if remote_process_group.get_name() in (elem.get_name() for elem in self.remote_process_groups):
@@ -216,10 +212,11 @@ class MiNiFi_integration_test():
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, 1, subdir)
 
-    def check_for_multiple_files_generated(self, file_count, timeout_seconds, subdir=''):
-        output_validator = MultiFileOutputValidator(file_count, subdir)
+    def check_for_multiple_files_generated(self, file_count, timeout_seconds, expected_content=[], subdir=''):
+        output_validator = MultiFileOutputValidator(file_count, expected_content, subdir)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, file_count, subdir)
+
     def check_for_at_least_one_file_with_content_generated(self, content, timeout_seconds, subdir=''):
         output_validator = SingleOrMoreFileOutputValidator(content)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
@@ -235,13 +232,10 @@ class MiNiFi_integration_test():
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output_force_wait(timeout_seconds, output_validator, subdir)
 
-    def check_for_multiple_empty_files_generated(self, timeout_seconds, subdir=''):
+    def check_for_an_empty_file_generated(self, timeout_seconds, subdir=''):
         output_validator = EmptyFilesOutPutValidator()
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, 2, subdir)
-
-    def wait_for_multiple_output_files(self, timeout_seconds, max_files):
-        self.file_system_observer.wait_for_output(timeout_seconds, max_files)
+        self.check_output(timeout_seconds, output_validator, 1, subdir)
 
     def check_output_force_wait(self, timeout_seconds, output_validator, subdir):
         if subdir:
@@ -252,9 +246,6 @@ class MiNiFi_integration_test():
     def check_output(self, timeout_seconds, output_validator, max_files, subdir):
         if subdir:
             output_validator.subdir = subdir
-        # Other interfaces only call this with a single file,
-        # call wait_for_multiple_output_files manually if multiple
-        # output files with different content are expected in the same directory
         self.file_system_observer.wait_for_output(timeout_seconds, max_files)
         self.validate(output_validator)
 

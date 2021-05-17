@@ -29,7 +29,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And the "success" relationship of the from-minifi is connected to the PutFile
 
     When both instances start up
-    Then at least one empty flowfile is placed in the monitored directory in less than 90 seconds
+    Then one empty flowfile is placed in the monitored directory in less than 90 seconds
 
   Scenario: Zero length files are not transfered between via s2s if the "drop empty" connection property is true
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"

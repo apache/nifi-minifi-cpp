@@ -74,6 +74,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
     And the "Topic Names" of the ConsumeKafka processor is set to "<topic names>"
     And the "Topic Name Format" of the ConsumeKafka processor is set to "<topic name format>"
+    And the "Offset Reset" of the ConsumeKafka processor is set to "earliest"
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
@@ -85,7 +86,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic
     And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic
 
-    Then two flowfiles with the contents "<message 1>" and "<message 2>" are placed in the monitored directory in less than 45 seconds
+    Then two flowfiles with the contents "<message 1>" and "<message 2>" are placed in the monitored directory in less than 90 seconds
 
   Examples: Topic names and formats to test
     | message 1            | message 2           | topic names              | topic name format |
@@ -112,7 +113,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     When all instances start up
     And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic with key "consume_kafka_test_key"
     And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic with key "consume_kafka_test_key"
-   
+
     Then two flowfiles with the contents "<message 1>" and "<message 2>" are placed in the monitored directory in less than 45 seconds
 
   Examples: Key attribute encoding values
@@ -134,7 +135,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     When all instances start up
     And the publisher performs a <transaction type> transaction publishing to the "ConsumeKafkaTest" topic these messages: <messages sent>
 
-    Then <number of flowfiles expected> flowfiles are placed in the monitored directory in less than 45 seconds
+    Then <number of flowfiles expected> flowfiles are placed in the monitored directory in less than 30 seconds
 
   Examples: Transaction descriptions
     | messages sent                     | transaction type             | honor transactions | number of flowfiles expected |
@@ -188,7 +189,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a message with content "Barbapapa" is published to the "ConsumeKafkaTest" topic
     And a message with content "Anette Tison and Talus Taylor" is published to the "ConsumeKafkaTest" topic
 
-    Then flowfiles with these contents are placed in the monitored directory in less than 30 seconds: "B,rb,p,Anette Tison ,nd T,lus T,ylor"
+    Then flowfiles with these contents are placed in the monitored directory in less than 45 seconds: "B,rb,p,Anette Tison ,nd T,lus T,ylor"
 
   Scenario Outline: The ConsumeKafka "Maximum Poll Records" property sets a limit on the messages processed in a single batch
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
@@ -227,7 +228,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic
     And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic
 
-    Then no files are placed in the monitored directory in 45 seconds of running time
+    Then no files are placed in the monitored directory in 30 seconds of running time
 
     Examples: Unsupported property values
       | message 1        | message 2      | property name           | property value |

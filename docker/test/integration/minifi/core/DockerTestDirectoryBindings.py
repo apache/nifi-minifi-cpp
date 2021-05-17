@@ -77,6 +77,7 @@ class DockerTestDirectoryBindings:
         logging.info('Writing %d bytes of content to file: %s', len(contents), file_abs_path)
         with open(file_abs_path, 'ab') as test_input_file:
             test_input_file.write(contents)
+        os.chmod(file_abs_path, 0o0777)
 
     def put_test_resource(self, test_id, file_name, contents):
         """

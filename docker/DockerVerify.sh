@@ -66,6 +66,7 @@ export PATH
 PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
 export PYTHONPATH
 
+# Add --no-logcapture to see logs inline
 BEHAVE_OPTS=(-f pretty --logging-level INFO --logging-clear-handlers)
 
 cd "${docker_dir}/test/integration"
@@ -75,7 +76,7 @@ exec
   behave "${BEHAVE_OPTS[@]}" "features/s2s.feature" -n "A MiNiFi instance produces and transfers data to a NiFi instance via s2s" &&
   behave "${BEHAVE_OPTS[@]}" "features/s2s.feature" -n "Zero length files are transfered between via s2s if the \"drop empty\" connection property is false" &&
   behave "${BEHAVE_OPTS[@]}" "features/s2s.feature" -n "Zero length files are not transfered between via s2s if the \"drop empty\" connection property is true" &&
-  behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance transfers data to another MiNiFi instance" &&
+  behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance transfers data to another MiNiFi instance with message body" &&
   behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance sends data through a HTTP proxy and another one listens" &&
   behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance and transfers hashed data to another MiNiFi instance" &&
   behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance transfers data to another MiNiFi instance without message body" &&

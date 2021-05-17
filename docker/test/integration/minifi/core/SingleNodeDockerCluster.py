@@ -124,6 +124,7 @@ class SingleNodeDockerCluster(Cluster):
                 USER root
                 ADD config.yml {minifi_root}/conf/config.yml
                 RUN chown minificpp:minificpp {minifi_root}/conf/config.yml
+                RUN sed -i -e 's/INFO/DEBUG/g' {minifi_root}/conf/minifi-log.properties
                 USER minificpp
                 """.format(base_image='apacheminificpp:' + self.minifi_version,
                            minifi_root=self.minifi_root))
@@ -247,23 +248,10 @@ class SingleNodeDockerCluster(Cluster):
         logging.info('Adding container \'%s\'', broker.name)
         self.containers[broker.name] = broker
 
-        dockerfile = dedent("""FROM {base_image}
-                USER root
-                CMD $KAFKA_HOME/bin/kafka-console-consumer.sh --bootstrap-server kafka-broker:9092 --topic test > heaven_signal.txt
-                """.format(base_image='wurstmeister/kafka:2.13-2.7.0'))
-        configured_image = self.build_image(dockerfile, [])
-        consumer = self.client.containers.run(
-            configured_image[0],
-            detach=True,
-            name='kafka-consumer',
-            network=self.network.name)
-        logging.info('Adding container \'%s\'', consumer.name)
-        self.containers[consumer.name] = consumer
-
     def deploy_http_proxy(self):
         logging.info('Creating and running http-proxy docker container...')
         dockerfile = dedent("""FROM {base_image}
-                RUN apt update && apt install -y apache2-utils
+                RUN apt -y update && apt install -y apache2-utils
                 RUN htpasswd -b -c /etc/squid/.squid_users {proxy_username} {proxy_password}
                 RUN echo 'auth_param basic program /usr/lib/squid3/basic_ncsa_auth /etc/squid/.squid_users'  > /etc/squid/squid.conf && \
                     echo 'auth_param basic realm proxy' >> /etc/squid/squid.conf && \
