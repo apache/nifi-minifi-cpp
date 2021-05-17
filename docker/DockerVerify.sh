@@ -69,35 +69,9 @@ export PYTHONPATH
 # Add --no-logcapture to see logs inline
 BEHAVE_OPTS=(-f pretty --logging-level INFO --logging-clear-handlers)
 
+# Specify feature or scenario to run a specific test e.g.:
+# behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature"
+# behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature" -n "Get and put operations run in a simple flow"
 cd "${docker_dir}/test/integration"
 exec
-  behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature" -n "Get and put operations run in a simple flow" &&
-  behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature" -n "PutFile does not overwrite a file that already exists" &&
-  behave "${BEHAVE_OPTS[@]}" "features/s2s.feature" -n "A MiNiFi instance produces and transfers data to a NiFi instance via s2s" &&
-  behave "${BEHAVE_OPTS[@]}" "features/s2s.feature" -n "Zero length files are transfered between via s2s if the \"drop empty\" connection property is false" &&
-  behave "${BEHAVE_OPTS[@]}" "features/s2s.feature" -n "Zero length files are not transfered between via s2s if the \"drop empty\" connection property is true" &&
-  behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance transfers data to another MiNiFi instance with message body" &&
-  behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance sends data through a HTTP proxy and another one listens" &&
-  behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance and transfers hashed data to another MiNiFi instance" &&
-  behave "${BEHAVE_OPTS[@]}" "features/http.feature" -n "A MiNiFi instance transfers data to another MiNiFi instance without message body" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "A MiNiFi instance transfers data to a kafka broker" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "PublishKafka sends flowfiles to failure when the broker is not available" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "PublishKafka sends can use SSL connect" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "MiNiFi consumes data from a kafka topic" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "ConsumeKafka parses and uses kafka topics and topic name formats" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "ConsumeKafka key attribute is encoded according to the \"Key Attribute Encoding\" property" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "Headers on consumed kafka messages are extracted into attributes if requested on ConsumeKafka" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "ConsumeKafka transactional behaviour is supported" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "Key attribute is encoded according to the \"Key Attribute Encoding\" property" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "Messages are separated into multiple flowfiles if the message demarcator is present in the message" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "The ConsumeKafka \"Maximum Poll Records\" property sets a limit on the messages processed in a single batch" &&
-  behave "${BEHAVE_OPTS[@]}" "features/kafka.feature" -n "Unsupported encoding attributes for ConsumeKafka throw scheduling errors" &&
-  behave "${BEHAVE_OPTS[@]}" "features/s3.feature" -n "A MiNiFi instance transfers encoded data to s3" &&
-  behave "${BEHAVE_OPTS[@]}" "features/s3.feature" -n "A MiNiFi instance transfers encoded data through a http proxy to s3" &&
-  behave "${BEHAVE_OPTS[@]}" "features/s3.feature" -n "A MiNiFi instance can remove s3 bucket objects" &&
-  behave "${BEHAVE_OPTS[@]}" "features/s3.feature" -n "Deletion of a s3 object through a proxy-server succeeds" &&
-  behave "${BEHAVE_OPTS[@]}" "features/s3.feature" -n "A MiNiFi instance can download s3 bucket objects directly" &&
-  behave "${BEHAVE_OPTS[@]}" "features/s3.feature" -n "A MiNiFi instance can download s3 bucket objects via a http-proxy" &&
-  behave "${BEHAVE_OPTS[@]}" "features/s3.feature" -n "A MiNiFi instance can list an S3 bucket directly" &&
-  behave "${BEHAVE_OPTS[@]}" "features/s3.feature" -n "A MiNiFi instance can list an S3 bucket objects via a http-proxy" &&
-  behave "${BEHAVE_OPTS[@]}" "features/azure_storage.feature" -n "A MiNiFi instance can upload data to Azure blob storage"
+  behave "${BEHAVE_OPTS[@]}"

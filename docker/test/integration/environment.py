@@ -18,11 +18,19 @@ def integration_test_cleanup(test):
 
 
 def before_scenario(context, scenario):
+    if "skip" in scenario.effective_tags:
+        scenario.skip("Marked with @skip")
+        return
+
     logging.info("Integration test setup at {time:%H:%M:%S:%f}".format(time=datetime.datetime.now()))
     context.test = MiNiFi_integration_test(context)
 
 
 def after_scenario(context, scenario):
+    if "skip" in scenario.effective_tags:
+        logging.info("Scenario was skipped, no need for clean up.")
+        return
+
     logging.info("Integration test teardown at {time:%H:%M:%S:%f}".format(time=datetime.datetime.now()))
     if context is not None and hasattr(context, "test"):
         context.test.cleanup()  # force invocation

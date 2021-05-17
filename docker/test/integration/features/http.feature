@@ -20,6 +20,8 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 50 seconds
 
+  # Failing scenario, needs to be fixed
+  @skip
   Scenario: Multiple files transfered via HTTP are received and transferred only once
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" of the GetFile processor is set to "false"

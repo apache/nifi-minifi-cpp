@@ -1,3 +1,5 @@
+# Failing feature, needs to be fixed
+@skip
 Feature: Using SSL context service to send data with TLS
   In order to send data via HTTPS
   As a user of MiNiFi
