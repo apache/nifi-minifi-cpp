@@ -42,7 +42,7 @@ class KamikazeProcessor : public core::Processor {
   static const std::string OnTriggerLogStr;
   static const std::string OnUnScheduleLogStr;
 
-  explicit KamikazeProcessor(const std::string& name, const utils::Identifier uuid = utils::Identifier())
+  explicit KamikazeProcessor(const std::string& name, const utils::Identifier& uuid = utils::Identifier())
   : Processor(name, uuid), logger_(logging::LoggerFactory<KamikazeProcessor>::getLogger()) {
     _throwInOnTrigger = false;
   }
