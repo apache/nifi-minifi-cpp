@@ -6,15 +6,14 @@ from .FileOutputValidator import FileOutputValidator
 
 class NumFileRangeValidator(FileOutputValidator):
 
-    def __init__(self, min_files, max_files, subdir=''):
+    def __init__(self, min_files, max_files):
         self.valid = False
         self.min_files = min_files
         self.max_files = max_files
-        self.subdir = subdir
 
     def validate(self):
         self.valid = False
-        full_dir = os.path.join(self.output_dir, self.subdir)
+        full_dir = os.path.join(self.output_dir)
         logging.info("Output folder: %s", full_dir)
 
         if not os.path.isdir(full_dir):

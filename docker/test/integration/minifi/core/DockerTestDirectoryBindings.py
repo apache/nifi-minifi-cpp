@@ -96,9 +96,6 @@ class DockerTestDirectoryBindings:
         file_abs_path = os.path.join(self.docker_path_to_local_path(test_id, path), file_name)
         self.put_file_contents(file_abs_path, contents)
 
-    def get_out_subdir(self, test_id, dir):
-        return os.path.join(self.data_directories[test_id]["output_dir"], dir)
-
     def rm_out_child(self, test_id, dir):
         child = os.path.join(self.data_directories[test_id]["output_dir"], dir)
         logging.info('Removing %s from output folder', child)

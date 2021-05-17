@@ -8,13 +8,12 @@ class NoFileOutPutValidator(FileOutputValidator):
     """
     Validates if no flowfiles were transferred
     """
-    def __init__(self, subdir=''):
+    def __init__(self):
         self.valid = False
-        self.subdir = subdir
 
-    def validate(self, dir=''):
+    def validate(self):
         self.valid = False
-        full_dir = os.path.join(self.output_dir, self.subdir)
+        full_dir = os.path.join(self.output_dir)
         logging.info("Output folder: %s", full_dir)
 
         if not os.path.isdir(full_dir):

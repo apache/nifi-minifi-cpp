@@ -189,59 +189,52 @@ class MiNiFi_integration_test():
     def put_test_resource(self, file_name, contents):
         self.docker_directory_bindings.put_test_resource(self.test_id, file_name, contents)
 
-    def get_out_subdir(self, subdir):
-        return self.docker_directory_bindings.get_out_subdir(self.test_id, subdir)
-
-    def rm_out_child(self, subdir):
-        self.docker_directory_bindings.rm_out_child(self.test_id, subdir)
+    def rm_out_child(self):
+        self.docker_directory_bindings.rm_out_child(self.test_id)
 
     def add_file_system_observer(self, file_system_observer):
         self.file_system_observer = file_system_observer
 
-    def check_for_no_files_generated(self, timeout_seconds, subdir=''):
+    def check_for_no_files_generated(self, timeout_seconds):
         output_validator = NoFileOutPutValidator()
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, 1, subdir)
+        self.check_output(timeout_seconds, output_validator, 1)
 
-    def check_for_single_file_with_content_generated(self, content, timeout_seconds, subdir=''):
+    def check_for_single_file_with_content_generated(self, content, timeout_seconds):
         output_validator = SingleFileOutputValidator(content)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, 1, subdir)
+        self.check_output(timeout_seconds, output_validator, 1)
 
-    def check_for_multiple_files_generated(self, file_count, timeout_seconds, expected_content=[], subdir=''):
-        output_validator = MultiFileOutputValidator(file_count, expected_content, subdir)
+    def check_for_multiple_files_generated(self, file_count, timeout_seconds, expected_content=[]):
+        output_validator = MultiFileOutputValidator(file_count, expected_content)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, file_count, subdir)
+        self.check_output(timeout_seconds, output_validator, file_count)
 
-    def check_for_at_least_one_file_with_content_generated(self, content, timeout_seconds, subdir=''):
+    def check_for_at_least_one_file_with_content_generated(self, content, timeout_seconds):
         output_validator = SingleOrMoreFileOutputValidator(content)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, 1, subdir)
+        self.check_output(timeout_seconds, output_validator, 1)
 
-    def check_for_num_files_generated(self, num_flowfiles, timeout_seconds, subdir=''):
+    def check_for_num_files_generated(self, num_flowfiles, timeout_seconds):
         output_validator = NoContentCheckFileNumberValidator(num_flowfiles)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, max(1, num_flowfiles), subdir)
+        self.check_output(timeout_seconds, output_validator, max(1, num_flowfiles))
 
-    def check_for_num_file_range_generated(self, min_files, max_files, timeout_seconds, subdir=''):
+    def check_for_num_file_range_generated(self, min_files, max_files, timeout_seconds):
         output_validator = NumFileRangeValidator(min_files, max_files)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output_force_wait(timeout_seconds, output_validator, subdir)
+        self.check_output_force_wait(timeout_seconds, output_validator)
 
-    def check_for_an_empty_file_generated(self, timeout_seconds, subdir=''):
+    def check_for_an_empty_file_generated(self, timeout_seconds):
         output_validator = EmptyFilesOutPutValidator()
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, 1, subdir)
+        self.check_output(timeout_seconds, output_validator, 1)
 
-    def check_output_force_wait(self, timeout_seconds, output_validator, subdir):
-        if subdir:
-            output_validator.subdir = subdir
+    def check_output_force_wait(self, timeout_seconds, output_validator):
         time.sleep(timeout_seconds)
         self.validate(output_validator)
 
-    def check_output(self, timeout_seconds, output_validator, max_files, subdir):
-        if subdir:
-            output_validator.subdir = subdir
+    def check_output(self, timeout_seconds, output_validator, max_files):
         self.file_system_observer.wait_for_output(timeout_seconds, max_files)
         self.validate(output_validator)
 
