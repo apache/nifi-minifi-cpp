@@ -5,12 +5,12 @@ import cpplint
 script_dir = os.path.dirname(os.path.realpath(__file__))
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-i', '--includePathes', nargs="+", help='Run linter check in these directories')
+parser.add_argument('-i', '--includePaths', nargs="+", help='Run linter check in these directories')
 parser.add_argument('-q', '--quiet', action='store_true', help='Don\'t print anything if no errors are found.')
 args = parser.parse_args()
 
 list_of_files = list()
-for include_path in args.includePathes:
+for include_path in args.includePaths:
   for (dir_path, dir_names, file_names) in os.walk(include_path):
     for file_name in file_names:
       if (".h" in file_name) or (".cpp" in file_name):

@@ -36,8 +36,6 @@ jobs:
           ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_LUA_SCRIPTING=1 -DENABLE_AWS=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j4 --output-on-failure"
-      - name: linter
-        run: cd build && make linter
   macos_xcode_12_0:
     name: "macos-xcode12.0"
     runs-on: macos-10.15
@@ -117,9 +115,6 @@ jobs:
       - name: test
         run: cd build && ctest --timeout 300 --parallel 8 -C Release --output-on-failure
         shell: cmd
-      - name: linter
-        run: cd build && msbuild linter.vcxproj
-        shell: cmd
   windows_VS2019:
     name: "windows-vs2019"
     runs-on: windows-2019
@@ -190,8 +185,6 @@ jobs:
         run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT .. && cmake --build . --parallel 4
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j2 --output-on-failure"
-      - name: linter
-        run: cd build && make linter
   ubuntu_16_04_gcc_4_8:
     name: "ubuntu-16.04-gcc-4.8"
     runs-on: ubuntu-16.04
@@ -221,8 +214,6 @@ jobs:
         run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DENABLE_SQL=ON .. && cmake --build . --parallel 4
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j2 --output-on-failure"
-      - name: linter
-        run: cd build && make linter
   ubuntu_20_04:
     name: "ubuntu-20.04"
     runs-on: ubuntu-20.04
@@ -281,8 +272,6 @@ jobs:
         run: ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DENABLE_JNI=ON -DENABLE_SENSORS=ON -DENABLE_OPENWSMAN=ON -DENABLE_OPENCV=ON -DENABLE_MQTT=ON -DENABLE_GPS=ON -DENABLE_USB_CAMERA=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_MQTT=ON -DENABLE_COAP=ON -DENABLE_PYTHON=ON -DENABLE_SQL=ON -DENABLE_AWS=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ .. &&  cmake --build . --parallel 4
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
-      - name: linter
-        run: cd build && make linter
   ubuntu_16_04_all:
     name: "ubuntu-16.04-all"
     runs-on: ubuntu-16.04
@@ -310,8 +299,6 @@ jobs:
         run: sudo mount tmpfs -t tmpfs /tmp && ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DENABLE_OPENWSMAN=ON -DENABLE_OPENCV=ON -DENABLE_MQTT=ON -DENABLE_GPS=ON -DENABLE_USB_CAMERA=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_MQTT=ON -DENABLE_COAP=ON -DENABLE_PYTHON=ON -DENABLE_SQL=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. &&  cmake --build . --parallel 4
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
-      - name: linter
-        run: cd build && make linter
   debian:
     name: "debian"
     runs-on: ubuntu-18.04

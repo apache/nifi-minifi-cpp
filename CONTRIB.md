@@ -39,7 +39,7 @@ $ make linter
 ```
 ##### Windows
 ```
-$ msbuild linter.vcxproj
+> msbuild linter.vcxproj
 ```
 
 This will provide output for all source files.
