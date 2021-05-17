@@ -1,11 +1,8 @@
 import docker
 import logging
-import os
-import shutil
 import threading
 import time
 import uuid
-import datetime
 
 from pydoc import locate
 
@@ -64,7 +61,6 @@ class MiNiFi_integration_test():
 
             # The cluster deleter is not reliable for cleaning up
             logging.info("%d containers left for integration tests.", len(container_ids))
-            docker_client = docker.from_env()
             for container_id in container_ids:
                 self.delete_docker_container_by_id(container_id)
 

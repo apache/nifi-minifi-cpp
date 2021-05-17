@@ -20,10 +20,8 @@ import time
 import uuid
 import binascii
 
-import docker
-
 from kafka import KafkaProducer
-from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions
+from confluent_kafka.admin import AdminClient, NewTopic
 from confluent_kafka import Producer
 import socket
 
@@ -66,8 +64,7 @@ def step_impl(context, processor_type, cluster_name):
 
 @given("a {processor_type} processor")
 def step_impl(context, processor_type):
-    context.execute_steps("given a {processor_type} processor in the \"{cluster_name}\" flow".
-        format(processor_type=processor_type, cluster_name="primary_cluster"))
+    context.execute_steps("given a {processor_type} processor in the \"{cluster_name}\" flow".format(processor_type=processor_type, cluster_name="primary_cluster"))
 
 
 @given("a set of processors in the \"{cluster_name}\" flow")
@@ -142,8 +139,7 @@ def step_impl(context, directory):
         given a GetFile processor with the \"Input Directory\" property set to \"{directory}\"
         and the \"Keep Source File\" of the GetFile processor is set to \"false\"
         and a PublishKafka processor set up to communicate with a kafka broker instance
-        and the "success" relationship of the GetFile processor is connected to the PublishKafka""".
-        format(directory=directory))
+        and the "success" relationship of the GetFile processor is connected to the PublishKafka""".format(directory=directory))
 
 
 @given("a ConsumeKafka processor set up in a \"{cluster_name}\" flow")
@@ -192,7 +188,7 @@ def step_impl(context, property_name, processor_name, attribute_key, attribute_v
         # Ignore filtering
         processor.set_property(property_name, "true")
         return
-    filtering = "${" +  attribute_key + ":equals('" + attribute_value + "')}"
+    filtering = "${" + attribute_key + ":equals('" + attribute_value + "')}"
     logging.info("Filter: \"%s\"", filtering)
     logging.info("Key: \"%s\", value: \"%s\"", attribute_key, attribute_value)
     processor.set_property(property_name, filtering)
@@ -256,8 +252,8 @@ def step_impl(context, file_name, content, path):
 def step_impl(context, content_1, content_2, path):
     context.execute_steps("""
         given a file with the content \"{content_1}\" is present in \"{path}\"
-        and a file with the content \"{content_2}\" is present in \"{path}\"""".
-        format(content_1=content_1, content_2=content_2, path=path))
+        and a file with the content \"{content_2}\" is present in \"{path}\"""".format(content_1=content_1, content_2=content_2, path=path))
+
 
 # NiFi setups
 @given("a NiFi flow \"{cluster_name}\" receiving data from a RemoteProcessGroup \"{source_name}\" on port {port}")
@@ -306,6 +302,7 @@ def step_impl(context, producer_name, consumer_name):
     consumer = context.test.get_node_by_name(consumer_name)
     consumer.set_property("SSL Certificate", crt_file)
     consumer.set_property("SSL Verify Peer", "no")
+
 
 # Kafka setup
 @given("a kafka broker \"{cluster_name}\" is set up in correspondence with the PublishKafka")
@@ -448,7 +445,7 @@ def step_impl(context, content, topic_name, semicolon_separated_headers):
         headers.append((kv[0].strip(), kv[1].strip().encode("utf-8")))
     producer = KafkaProducer(bootstrap_servers='localhost:29092')
     future = producer.send(topic_name, content.encode("utf-8"), headers=headers)
-    result = future.get(timeout=60)
+    assert future.get(timeout=60)
 
 
 @then("a flowfile with the content \"{content}\" is placed in the monitored directory in less than {duration}")
@@ -464,8 +461,7 @@ def step_impl(context, content, duration):
 @then("{num_flowfiles} flowfiles are placed in the monitored directory in less than {duration}")
 def step_impl(context, num_flowfiles, duration):
     if num_flowfiles == 0:
-        context.execute_steps("""no files are placed in the monitored directory in {duration} of running time""".
-            format(duration=duration))
+        context.execute_steps("""no files are placed in the monitored directory in {duration} of running time""".format(duration=duration))
         return
     context.test.check_for_num_files_generated(int(num_flowfiles), timeparse(duration))
 

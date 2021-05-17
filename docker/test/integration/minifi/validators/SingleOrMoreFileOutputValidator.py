@@ -1,9 +1,6 @@
 import logging
 import os
 
-from os import listdir
-from os.path import join
-
 from .FileOutputValidator import FileOutputValidator
 
 

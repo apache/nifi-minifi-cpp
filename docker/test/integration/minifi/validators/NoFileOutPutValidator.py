@@ -1,8 +1,6 @@
 import logging
 import os
 
-
-from os import listdir
 from .FileOutputValidator import FileOutputValidator
 
 

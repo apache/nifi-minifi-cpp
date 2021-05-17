@@ -39,8 +39,8 @@ class FileOutputValidator(OutputValidator):
         for file_name in listing:
             full_path = join(dir_path, file_name)
             if os.path.isfile(full_path):
-              logging.info("Found output file in %s: %s", dir_path, file_name)
-              files_found += 1
+                logging.info("Found output file in %s: %s", dir_path, file_name)
+                files_found += 1
         return files_found
 
     def validate(self, dir=''):
