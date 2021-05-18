@@ -53,8 +53,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::enableControllerService(
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
   auto future = thread_pool_.execute(std::move(functor));
-  if (future.valid())
-    future.wait();
+  future.wait();
   return future;
 }
 
@@ -73,8 +72,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
   auto future = thread_pool_.execute(std::move(functor));
-  if (future.valid())
-    future.wait();
+  future.wait();
   return future;
 }
 

@@ -45,7 +45,7 @@ namespace processors {
 
 class SocketAfterExecute : public utils::AfterExecute<int> {
  public:
-  explicit SocketAfterExecute(std::atomic<bool> &running, std::string endpoint, std::map<std::string, std::future<int>*> *list, std::mutex *mutex)
+  explicit SocketAfterExecute(std::atomic<bool> &running, std::string endpoint, std::map<std::string, std::future<int>> *list, std::mutex *mutex)
       : running_(running.load()),
         endpoint_(std::move(endpoint)),
         mutex_(mutex),
@@ -85,7 +85,7 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
   std::atomic<bool> running_;
   std::string endpoint_;
   std::mutex *mutex_;
-  std::map<std::string, std::future<int>*> *list_;
+  std::map<std::string, std::future<int>> *list_;
 };
 
 class DataHandlerCallback : public OutputStreamCallback {
@@ -244,7 +244,7 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 
   std::vector<std::string> endpoints;
 
-  std::map<std::string, std::future<int>*> live_clients_;
+  std::map<std::string, std::future<int>> live_clients_;
 
   utils::ThreadPool<int> client_thread_pool_;
 

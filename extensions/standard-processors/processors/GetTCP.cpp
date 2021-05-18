@@ -285,17 +285,14 @@ void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
       } else {
         logger_->log_error("Could not create socket for %s", endpoint);
       }
-      std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new SocketAfterExecute(running_, endpoint, &live_clients_, &mutex_));
+      auto after_execute = std::unique_ptr<utils::AfterExecute<int>>(new SocketAfterExecute(running_, endpoint, &live_clients_, &mutex_));
       utils::Worker<int> functor(f_ex, "workers", std::move(after_execute));
-      auto* future = new std::future<int>(client_thread_pool_.execute(std::move(functor)));
-      live_clients_[endpoint] = future;
+      live_clients_[endpoint] = client_thread_pool_.execute(std::move(functor));
     } else {
-      if (!endPointFuture->second->valid()) {
-        delete endPointFuture->second;
-        std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new SocketAfterExecute(running_, endpoint, &live_clients_, &mutex_));
+      if (!endPointFuture->second.valid()) {
+        auto after_execute = std::unique_ptr<utils::AfterExecute<int>>(new SocketAfterExecute(running_, endpoint, &live_clients_, &mutex_));
         utils::Worker<int> functor(f_ex, "workers", std::move(after_execute));
-        auto* future = new std::future<int>(client_thread_pool_.execute(std::move(functor)));
-        live_clients_[endpoint] = future;
+        endPointFuture->second = client_thread_pool_.execute(std::move(functor));
       } else {
         logger_->log_debug("Thread still running for %s", endPointFuture->first);
         // we have a thread corresponding to this.
