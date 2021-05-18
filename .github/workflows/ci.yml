@@ -117,10 +117,10 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.CLCACHE_DIR }}
-          key: windows-vs2019-clcache-${{github.ref}}-${{github.sha}}
+          key: windows-vs2019-clcache-v2-${{github.ref}}-${{github.sha}}
           restore-keys: |
-            windows-vs2019-clcache-${{github.ref}}-
-            windows-vs2019-clcache-refs/heads/main-
+            windows-vs2019-clcache-v2-${{github.ref}}-
+            windows-vs2019-clcache-v2-refs/heads/main-
       - name: Setup PATH
         uses: microsoft/setup-msbuild@v1.0.2
       - id: install-sqliteodbc-driver
