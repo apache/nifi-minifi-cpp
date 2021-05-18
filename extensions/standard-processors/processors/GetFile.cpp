@@ -195,11 +195,8 @@ void GetFile::getSingleFile(core::ProcessSession& session, const std::string& fi
         logger_->log_error("GetFile could not delete file '%s', error %d: %s", file_name, errno, strerror(errno));
       }
     }
-  } catch (const std::exception& exception) {
-    logger_->log_error("GetFile caught exception while processing file '%s': %s", file_name, exception.what());
-    flow_file->setDeleted(true);
-  } catch (...) {
-    logger_->log_error("GetFile caught unknown exception while processing file '%s'", file_name);
+  } catch (const utils::FileReaderCallbackIOError& io_error) {
+    logger_->log_error("IO error while processing file '%s': %s", file_name, io_error.what());
     flow_file->setDeleted(true);
   }
 }

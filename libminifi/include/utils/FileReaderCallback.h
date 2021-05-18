@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 
 #include "io/StreamPipe.h"
@@ -40,6 +41,11 @@ class FileReaderCallback : public OutputStreamCallback {
  private:
   std::ifstream input_stream_;
   std::shared_ptr<core::logging::Logger> logger_;
+};
+
+class FileReaderCallbackIOError : public std::runtime_error {
+ public:
+  FileReaderCallbackIOError(const std::string& message) : std::runtime_error{message} {}
 };
 
 }  // namespace utils
