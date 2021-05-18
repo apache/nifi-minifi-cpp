@@ -61,8 +61,6 @@ class RESTProtocol : public HeartbeatJsonSerializer {
   virtual const C2Payload parseJsonResponse(const C2Payload &payload, const std::vector<char> &response);
 
  private:
-  virtual Operation stringToOperation(const std::string& str);
-
   bool containsPayload(const C2Payload &o);
 
   bool minimize_updates_{false};

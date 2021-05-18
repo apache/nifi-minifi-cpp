@@ -103,3 +103,8 @@ TEST_CASE("Enum checks") {
   REQUIRE(!C{C::_3}.cast<A>());
   REQUIRE(!B{B::_2}.cast<A>());
 }
+
+TEST_CASE("Fallback enum operations") {
+  REQUIRE(A{}.toStringOr("fallback") == std::string{"fallback"});
+  REQUIRE(A::parseOr("banana", A::_0) == A::_0);
+}

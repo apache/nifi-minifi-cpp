@@ -70,7 +70,7 @@ C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &pa
 }
 
 C2Payload RESTSender::consumePayload(const C2Payload &payload, Direction direction, bool async) {
-  if (payload.getOperation() == ACKNOWLEDGE) {
+  if (payload.getOperation() == Operation::ACKNOWLEDGE) {
     return consumePayload(ack_uri_, payload, direction, async);
   }
   return consumePayload(rest_uri_, payload, direction, async);
@@ -128,7 +128,7 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     client.set_request_method("GET");
   }
 
-  if (payload.getOperation() == TRANSFER) {
+  if (payload.getOperation() == Operation::TRANSFER) {
     file_callback = std::unique_ptr<utils::ByteOutputCallback>(new utils::ByteOutputCallback(std::numeric_limits<size_t>::max()));
     read.pos = 0;
     read.ptr = file_callback.get();

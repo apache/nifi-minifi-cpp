@@ -46,7 +46,7 @@ class VerifyLogC2Heartbeat : public VerifyC2Base {
 
   void configureC2() override {
     VerifyC2Base::configureC2();
-    configuration->set("c2.agent.heartbeat.reporter.classes", "HeartbeatLogger");
+    configuration->set("nifi.c2.agent.heartbeat.reporter.classes", "HeartbeatLogger");
   }
 };
 

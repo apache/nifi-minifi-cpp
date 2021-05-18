@@ -27,35 +27,10 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-std::string HeartbeatJsonSerializer::getOperation(const C2Payload& payload) {
-  switch (payload.getOperation()) {
-    case Operation::ACKNOWLEDGE:
-      return "acknowledge";
-    case Operation::HEARTBEAT:
-      return "heartbeat";
-    case Operation::RESTART:
-      return "restart";
-    case Operation::DESCRIBE:
-      return "describe";
-    case Operation::STOP:
-      return "stop";
-    case Operation::START:
-      return "start";
-    case Operation::UPDATE:
-      return "update";
-    case Operation::PAUSE:
-      return "pause";
-    case Operation::RESUME:
-      return "resume";
-    default:
-      return "heartbeat";
-  }
-}
-
 static void serializeOperationInfo(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
   gsl_Expects(target.IsObject());
 
-  target.AddMember("operation", HeartbeatJsonSerializer::getOperation(payload), alloc);
+  target.AddMember("operation", std::string{payload.getOperation().toStringOr("unknown")}, alloc);
 
   std::string id = payload.getIdentifier();
   if (id.empty()) {

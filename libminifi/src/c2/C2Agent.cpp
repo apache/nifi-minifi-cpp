@@ -353,7 +353,7 @@ void C2Agent::extractPayload(const C2Payload &resp) {
 }
 
 void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
-  switch (resp.op) {
+  switch (resp.op.value()) {
     case Operation::CLEAR:
       // we've been told to clear something
       if (resp.name == "connection") {

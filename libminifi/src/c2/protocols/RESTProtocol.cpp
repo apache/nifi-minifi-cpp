@@ -65,8 +65,6 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
   try {
     rapidjson::ParseResult ok = root.Parse(response.data(), response.size());
     if (ok) {
-      std::string requested_operation = getOperation(payload);
-
       std::string identifier;
       for (auto key : {"operationid", "operationId", "identifier"}) {
         if (root.HasMember(key)) {
@@ -94,7 +92,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
       auto array = root.HasMember("requested_operations") ? root["requested_operations"].GetArray() : root["requestedOperations"].GetArray();
 
       for (const rapidjson::Value& request : array) {
-        Operation newOp = stringToOperation(request["operation"].GetString());
+        Operation newOp = Operation::parseOr(request["operation"].GetString(), Operation::HEARTBEAT);
         C2Payload nested_payload(newOp, state::UpdateState::READ_COMPLETE);
         C2ContentResponse new_command(newOp);
         new_command.delay = 0;
@@ -178,32 +176,6 @@ bool RESTProtocol::containsPayload(const C2Payload &o) {
   return false;
 }
 
-Operation RESTProtocol::stringToOperation(const std::string& str) {
-  std::string op = str;
-  std::transform(str.begin(), str.end(), op.begin(), ::tolower);
-  if (op == "heartbeat") {
-    return Operation::HEARTBEAT;
-  } else if (op == "acknowledge") {
-    return Operation::ACKNOWLEDGE;
-  } else if (op == "update") {
-    return Operation::UPDATE;
-  } else if (op == "describe") {
-    return Operation::DESCRIBE;
-  } else if (op == "restart") {
-    return Operation::RESTART;
-  } else if (op == "clear") {
-    return Operation::CLEAR;
-  } else if (op == "stop") {
-    return Operation::STOP;
-  } else if (op == "start") {
-    return Operation::START;
-  } else if (op == "pause") {
-    return Operation::PAUSE;
-  } else if (op == "resume") {
-    return Operation::RESUME;
-  }
-  return Operation::HEARTBEAT;
-}
 #ifdef WIN32
 #pragma pop_macro("GetObject")
 #endif

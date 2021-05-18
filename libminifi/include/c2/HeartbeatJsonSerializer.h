@@ -43,7 +43,6 @@ namespace c2 {
 class HeartbeatJsonSerializer {
  public:
   virtual std::string serializeJsonRootPayload(const C2Payload& payload);
-  static std::string getOperation(const C2Payload& payload);
 
  protected:
   virtual rapidjson::Value serializeJsonPayload(const C2Payload& payload, rapidjson::Document::AllocatorType& alloc);

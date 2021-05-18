@@ -108,7 +108,7 @@ class PayloadSerializer {
   static uint8_t opToInt(const Operation opt) {
     uint8_t op;
 
-    switch (opt) {
+    switch (opt.value()) {
       case Operation::ACKNOWLEDGE:
         op = 1;
         break;

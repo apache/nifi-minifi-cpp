@@ -60,6 +60,22 @@ namespace utils {
 #define FOR_EACH_8(fn, delim, _1, _2, _3, _4, _5, _6, _7, _8) \
   fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
   fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8)
+#define FOR_EACH_9(fn, delim, _1, _2, _3, _4, _5, _6, _7, _8, _9) \
+  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
+  fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8) delim() \
+  fn(_9)
+#define FOR_EACH_10(fn, delim, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10) \
+  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
+  fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8) delim() \
+  fn(_9) delim() fn(_10)
+#define FOR_EACH_11(fn, delim, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11) \
+  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
+  fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8) delim() \
+  fn(_9) delim() fn(_10) delim() fn(_11)
+#define FOR_EACH_12(fn, delim, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12) \
+  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
+  fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8) delim() \
+  fn(_9) delim() fn(_10) delim() fn(_11) delim() fn(_12)
 
 #define FIRST_(a, b) a
 #define FIRST(x, ...) FIRST_ x
@@ -109,23 +125,23 @@ namespace utils {
     const char* toString() const { \
       return detail::toStringImpl(value_, #Clazz); \
     } \
+    const char* toStringOr(const char* fallback) const { \
+      if (*this) { \
+        return toString(); \
+      } \
+      return fallback; \
+    } \
     static std::set<std::string> values() { \
       return detail::values(); \
     } \
-    bool operator==(Type val) const { \
-      return value_ == val; \
+    friend bool operator==(Clazz lhs, Clazz rhs) { \
+      return lhs.value_ == rhs.value_; \
     } \
-    bool operator!=(Type val) const { \
-      return value_ != val; \
+    friend bool operator!=(Clazz lhs, Clazz rhs) { \
+      return lhs.value_ != rhs.value_; \
     } \
-    bool operator==(const Clazz& other) const { \
-      return value_ == other.value_; \
-    } \
-    bool operator!=(const Clazz& other) const { \
-      return value_ != other.value_; \
-    } \
-    bool operator<(const Clazz& other) const { \
-      return value_ < other.value_;\
+    friend bool operator<(Clazz lhs, Clazz rhs) { \
+      return lhs.value_ < rhs.value_;\
     } \
     explicit operator bool() const { \
       int idx = static_cast<int>(value_); \
@@ -140,6 +156,13 @@ namespace utils {
         throw std::runtime_error(std::string("Cannot convert \"") + str + "\" to " #Clazz); \
       } \
       return {}; \
+    } \
+    static Clazz parseOr(const char* str, Clazz fallback) { \
+      Clazz result = parse(str, false); \
+      if (result) { \
+        return result; \
+      } \
+      return fallback; \
     } \
     template<typename T, typename = typename std::enable_if<std::is_base_of<typename T::detail, detail>::value>::type> \
     T cast() const { \

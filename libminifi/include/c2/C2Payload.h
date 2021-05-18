@@ -27,6 +27,7 @@
 
 #include "../core/state/Value.h"
 #include "core/state/UpdateController.h"
+#include "utils/Enum.h"
 
 namespace org {
 namespace apache {
@@ -34,20 +35,20 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-enum Operation {
-  ACKNOWLEDGE,
-  START,
-  STOP,
-  RESTART,
-  DESCRIBE,
-  HEARTBEAT,
-  UPDATE,
-  VALIDATE,
-  CLEAR,
-  TRANSFER,
-  PAUSE,
-  RESUME
-};
+SMART_ENUM(Operation,
+  (ACKNOWLEDGE, "acknowledge"),
+  (START, "start"),
+  (STOP, "stop"),
+  (RESTART, "restart"),
+  (DESCRIBE, "describe"),
+  (HEARTBEAT, "heartbeat"),
+  (UPDATE, "update"),
+  (VALIDATE, "validate"),
+  (CLEAR, "clear"),
+  (TRANSFER, "transfer"),
+  (PAUSE, "pause"),
+  (RESUME, "resume")
+)
 
 #define PAYLOAD_NO_STATUS 0
 #define PAYLOAD_SUCCESS 1
