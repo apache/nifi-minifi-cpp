@@ -27,11 +27,6 @@
 #endif
 #define RAPIDJSON_ASSERT(x) if(!(x)) throw std::logic_error("rapidjson exception"); //NOLINT
 
-#ifdef RAPIDJSON_HAS_STDSTRING
-#undef RAPIDJSON_HAS_STDSTRING
-#endif
-#define RAPIDJSON_HAS_STDSTRING 1
-
 #include "rapidjson/document.h"
 
 namespace org {

@@ -164,7 +164,7 @@ void RESTProtocol::serializeNestedPayload(rapidjson::Value& target, const C2Payl
     if (minimize_updates_) {
       nested_payloads_.insert(std::pair<std::string, C2Payload>(payload.getLabel(), payload));
     }
-    target.AddMember(rapidjson::Value(payload.getLabel(), alloc), value, alloc);
+    target.AddMember(rapidjson::Value(payload.getLabel().c_str(), alloc), value, alloc);
   }
 }
 

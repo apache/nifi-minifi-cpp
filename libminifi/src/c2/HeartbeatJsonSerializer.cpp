@@ -30,14 +30,14 @@ namespace c2 {
 static void serializeOperationInfo(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
   gsl_Expects(target.IsObject());
 
-  target.AddMember("operation", std::string{payload.getOperation().toStringOr("unknown")}, alloc);
+  target.AddMember("operation", rapidjson::Value(payload.getOperation().toStringOr("unknown"), alloc), alloc);
 
   std::string id = payload.getIdentifier();
   if (id.empty()) {
     return;
   }
 
-  target.AddMember("operationId", id, alloc);
+  target.AddMember("operationId", rapidjson::Value(id.c_str(), alloc), alloc);
   std::string state_str;
   switch (payload.getStatus().getState()) {
     case state::UpdateState::FULLY_APPLIED:
@@ -56,13 +56,13 @@ static void serializeOperationInfo(rapidjson::Value& target, const C2Payload& pa
 
   rapidjson::Value state(rapidjson::kObjectType);
 
-  state.AddMember("state", state_str, alloc);
+  state.AddMember("state", rapidjson::Value(state_str.c_str(), alloc), alloc);
   const auto details = payload.getRawData();
 
-  state.AddMember("details", std::string(details.data(), details.size()), alloc);
+  state.AddMember("details", rapidjson::Value(details.data(), details.size(), alloc), alloc);
 
   target.AddMember("operationState", state, alloc);
-  target.AddMember("identifier", id, alloc);
+  target.AddMember("identifier", rapidjson::Value(id.c_str(), alloc), alloc);
 }
 
 static void setJsonStr(const std::string& key, const state::response::ValueNode& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {  // NOLINT
@@ -71,7 +71,7 @@ static void setJsonStr(const std::string& key, const state::response::ValueNode&
 
   auto type_index = base_type->getTypeIndex();
   if (auto sub_type = std::dynamic_pointer_cast<core::TransformableValue>(base_type)) {
-    valueVal.SetString(base_type->getStringValue(), alloc);
+    valueVal.SetString(base_type->getStringValue().c_str(), alloc);
   } else {
     if (type_index == state::response::Value::BOOL_TYPE) {
       bool value = false;
@@ -98,10 +98,10 @@ static void setJsonStr(const std::string& key, const state::response::ValueNode&
       base_type->convertValue(value);
       valueVal.SetDouble(value);
     } else {
-      valueVal.SetString(base_type->getStringValue(), alloc);
+      valueVal.SetString(base_type->getStringValue().c_str(), alloc);
     }
   }
-  parent.AddMember(rapidjson::Value(key, alloc), valueVal, alloc);
+  parent.AddMember(rapidjson::Value(key.c_str(), alloc), valueVal, alloc);
 }
 
 static void mergePayloadContent(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
@@ -126,7 +126,7 @@ static void mergePayloadContent(rapidjson::Value& target, const C2Payload& paylo
     }
     for (const auto& payload_content : content) {
       for (const auto& op_arg : payload_content.operation_arguments) {
-        target.PushBack(rapidjson::Value(op_arg.first, alloc), alloc);
+        target.PushBack(rapidjson::Value(op_arg.first.c_str(), alloc), alloc);
       }
     }
     return;
@@ -191,7 +191,7 @@ std::string HeartbeatJsonSerializer::serializeJsonRootPayload(const C2Payload& p
 }
 
 void HeartbeatJsonSerializer::serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
-  target.AddMember(rapidjson::Value(payload.getLabel(), alloc), serializeJsonPayload(payload, alloc), alloc);
+  target.AddMember(rapidjson::Value(payload.getLabel().c_str(), alloc), serializeJsonPayload(payload, alloc), alloc);
 }
 
 struct NamedValue {
@@ -215,7 +215,7 @@ struct NamedValue {
     if (values.empty()) {
       return;
     }
-    rapidjson::Value member_key(name, alloc);
+    rapidjson::Value member_key(name.c_str(), alloc);
     if (values.size() > 1) {
       if (target.IsArray()) {
         spread_into(target, alloc);
