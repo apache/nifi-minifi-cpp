@@ -26,3 +26,4 @@ target_link_libraries(minifi-systemd ${LIBMINIFI} Threads::Threads date::date)
 
 set(SYSTEMD-EXTENSION minifi-systemd PARENT_SCOPE)
 register_extension(minifi-systemd)
+register_extension_linter(minifi-systemd-extension-linter)
