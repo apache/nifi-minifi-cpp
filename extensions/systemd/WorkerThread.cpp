@@ -35,4 +35,9 @@ void WorkerThread::run() noexcept {
 }
 }  // namespace detail
 
-}}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd
+}  // namespace systemd
+}  // namespace extensions
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

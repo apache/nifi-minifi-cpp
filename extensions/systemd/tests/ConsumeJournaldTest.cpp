@@ -151,7 +151,7 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
   LogTestController::getInstance().setTrace<ConsumeJournald>();
   const auto plan = test_controller.createPlan();
   auto libwrapper = utils::make_unique<TestLibWrapper>(TestLibWrapper{{
-      {"kernel", "Linux version 5.10.12-gentoo-x86_64 (root@test-pc.test.local) (x86_64-pc-linux-gnu-gcc (Gentoo 10.2.0-r5 p6) 10.2.0, GNU ld (Gentoo 2.35.2 p1) 2.35.2) #1 SMP Sat Feb 20 03:13:45 CET 2021"},
+      {"kernel", "Linux version 5.10.12-gentoo-x86_64 (root@test-pc.test.local) (x86_64-pc-linux-gnu-gcc (Gentoo 10.2.0-r5 p6) 10.2.0, GNU ld (Gentoo 2.35.2 p1) 2.35.2) #1 SMP Sat Feb 20 03:13:45 CET 2021"},  // NOLINT
       {"kernel", "NX (Execute Disable) protection: active"},
       {"kernel", "ACPI: Local APIC address 0xfee00000"},
       {"kernel", "HugeTLB registered 1.00 GiB page size, pre-allocated 0 pages"},
@@ -162,13 +162,14 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
   const auto consume_journald = plan->addProcessor(std::make_shared<ConsumeJournald>("ConsumeJournald", utils::Identifier{},
       std::move(libwrapper)), "ConsumeJournald");
   REQUIRE(consume_journald->setProperty(ConsumeJournald::TimestampFormat, "ISO8601"));
-  const auto get_cursor_position = [&consume_journald]() -> std::string { return ConsumeJournaldTestAccessor::get_state_manager_(dynamic_cast<ConsumeJournald&>(*consume_journald))->get()->at("cursor"); };
+  const auto get_cursor_position = [&consume_journald]() -> std::string {
+    return ConsumeJournaldTestAccessor::get_state_manager_(dynamic_cast<ConsumeJournald&>(*consume_journald))->get()->at("cursor");
+  };
 
   SECTION("defaults") {
-    // first run: seeks to the end, no flow files are created. Yields.
+    // first run: seeks to the end, no flow files are created. Yields. Can't check cursor position, because it's only set during message consumption.
     plan->runNextProcessor();
     REQUIRE(nullptr == plan->getFlowFileProducedByCurrentProcessor());  // ConsumeJournald seeks to tail by default, therefore no flow files are produced
-    REQUIRE("5" == get_cursor_position());
     REQUIRE(consume_journald->isYield());
 
     // add a flow file, check the content
@@ -196,7 +197,7 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
       REQUIRE(!consume_journald->isYield());
       const auto flowfile = plan->getCurrentFlowFile();
       const auto content = plan->getContent(flowfile);
-      REQUIRE("Linux version 5.10.12-gentoo-x86_64 (root@test-pc.test.local) (x86_64-pc-linux-gnu-gcc (Gentoo 10.2.0-r5 p6) 10.2.0, GNU ld (Gentoo 2.35.2 p1) 2.35.2) #1 SMP Sat Feb 20 03:13:45 CET 2021"
+      REQUIRE("Linux version 5.10.12-gentoo-x86_64 (root@test-pc.test.local) (x86_64-pc-linux-gnu-gcc (Gentoo 10.2.0-r5 p6) 10.2.0, GNU ld (Gentoo 2.35.2 p1) 2.35.2) #1 SMP Sat Feb 20 03:13:45 CET 2021"  // NOLINT
           == content);
       REQUIRE("2021-04-15T17:17:03.123456000+00:00" == flowfile->getAttribute("timestamp").value_or("n/a"));
     }
@@ -276,5 +277,20 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
     plan->runCurrentProcessor();
     REQUIRE(8 == plan->getNumFlowFileProducedByCurrentProcessor());
     REQUIRE(consume_journald->isYield());
+  }
+  SECTION("throw on invalid batch size") {
+    REQUIRE_THROWS(consume_journald->setProperty(ConsumeJournald::BatchSize, "asdf"));
+  }
+  SECTION("throw on invalid payload format") {
+    REQUIRE(consume_journald->setProperty(ConsumeJournald::PayloadFormat, "raw"));  // case-sensitive
+    REQUIRE_THROWS(plan->scheduleProcessor(consume_journald));
+  }
+  SECTION("throw on invalid journal type") {
+    REQUIRE(consume_journald->setProperty(ConsumeJournald::JournalType, "hello"));
+    REQUIRE_THROWS(plan->scheduleProcessor(consume_journald));
+  }
+  SECTION("throw on invalid journal type") {
+    REQUIRE(consume_journald->setProperty(ConsumeJournald::JournalType, "hello"));
+    REQUIRE_THROWS(plan->scheduleProcessor(consume_journald));
   }
 }

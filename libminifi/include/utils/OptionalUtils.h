@@ -36,7 +36,8 @@ using nonstd::make_optional;
 
 template<typename T>
 optional<typename gsl_lite::remove_cvref<T>::type> optional_from_ptr(T&& obj) {
-  return obj == nullptr ? nullopt : optional<typename gsl_lite::remove_cvref<T>::type>{ std::forward<T>(obj) };
+  // detail::remove_cvref_t comes from gsl.h
+  return obj == nullptr ? nullopt : optional<detail::remove_cvref_t<T>>{ std::forward<T>(obj) };
 }
 
 template<typename>

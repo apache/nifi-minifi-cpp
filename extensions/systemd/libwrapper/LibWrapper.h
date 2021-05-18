@@ -48,4 +48,10 @@ struct LibWrapper {
 
 std::unique_ptr<LibWrapper> createLibWrapper();
 
-}}}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd::libwrapper
+}  // namespace libwrapper
+}  // namespace systemd
+}  // namespace extensions
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

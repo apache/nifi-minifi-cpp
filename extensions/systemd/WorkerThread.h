@@ -17,10 +17,11 @@
 
 #pragma once
 
-#include "utils/MinifiConcurrentQueue.h"
-
 #include <future>
 #include <thread>
+#include <utility>
+
+#include "utils/MinifiConcurrentQueue.h"
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
 
@@ -63,4 +64,9 @@ class Worker final {
   detail::WorkerThread worker_thread_;
 };
 
-}}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd
+}  // namespace systemd
+}  // namespace extensions
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

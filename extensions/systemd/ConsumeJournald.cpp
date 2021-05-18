@@ -20,7 +20,7 @@
 
 #include <algorithm>
 
-#include <date/date.h>
+#include "date/date.h"
 #include "spdlog/spdlog.h"  // TODO(szaszm): make fmt directly available
 #include "utils/GeneralUtils.h"
 
@@ -92,23 +92,29 @@ void ConsumeJournald::onSchedule(core::ProcessContext* const context, core::Proc
   using JournalTypeEnum = systemd::JournalType;
 
   const auto parse_payload_format = [](const std::string& property_value) -> utils::optional<systemd::PayloadFormat> {
-    if (utils::StringUtils::equalsIgnoreCase(property_value, PAYLOAD_FORMAT_RAW)) return systemd::PayloadFormat::Raw;
-    if (utils::StringUtils::equalsIgnoreCase(property_value, PAYLOAD_FORMAT_SYSLOG)) return systemd::PayloadFormat::Syslog;
+    if (property_value == PAYLOAD_FORMAT_RAW) return systemd::PayloadFormat::Raw;
+    if (property_value == PAYLOAD_FORMAT_SYSLOG) return systemd::PayloadFormat::Syslog;
     return utils::nullopt;
   };
   const auto parse_journal_type = [](const std::string& property_value) -> utils::optional<JournalTypeEnum> {
-    if (utils::StringUtils::equalsIgnoreCase(property_value, JOURNAL_TYPE_USER)) return JournalTypeEnum::User;
-    if (utils::StringUtils::equalsIgnoreCase(property_value, JOURNAL_TYPE_SYSTEM)) return JournalTypeEnum::System;
-    if (utils::StringUtils::equalsIgnoreCase(property_value, JOURNAL_TYPE_BOTH)) return JournalTypeEnum::Both;
+    if (property_value == JOURNAL_TYPE_USER) return JournalTypeEnum::User;
+    if (property_value == JOURNAL_TYPE_SYSTEM) return JournalTypeEnum::System;
+    if (property_value == JOURNAL_TYPE_BOTH) return JournalTypeEnum::Both;
     return utils::nullopt;
   };
-  batch_size_ = context->getProperty<size_t>(BatchSize).value_or(10);
-  payload_format_ = (context->getProperty(PayloadFormat) | utils::flatMap(parse_payload_format)).value_or(systemd::PayloadFormat::Syslog);
-  include_timestamp_ = context->getProperty<bool>(IncludeTimestamp).value_or(true);
-  const auto journal_type = (context->getProperty(JournalType) | utils::flatMap(parse_journal_type)).value_or(JournalTypeEnum::System);
+  batch_size_ = context->getProperty<size_t>(BatchSize).value();
+  payload_format_ = (context->getProperty(PayloadFormat) | utils::flatMap(parse_payload_format)
+      | utils::orElse([]{ throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "invalid payload format"}; }))
+      .value();
+  include_timestamp_ = context->getProperty<bool>(IncludeTimestamp).value();
+  const auto journal_type = (context->getProperty(JournalType) | utils::flatMap(parse_journal_type)
+      | utils::orElse([]{ throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "invalid journal type"}; }))
+      .value();
   const auto process_old_messages = context->getProperty<bool>(ProcessOldMessages).value_or(false);
   timestamp_format_ = [&context] {
-    auto tf_prop = context->getProperty(TimestampFormat).value_or(TimestampFormat.getDefaultValue());
+    auto tf_prop = (context->getProperty(TimestampFormat)
+        | utils::orElse([]{ throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "invalid timestamp format" }; }))
+        .value();
     if (tf_prop == "ISO" || tf_prop == "ISO 8601" || tf_prop == "ISO8601") return std::string{"%FT%T%Ez"};
     return tf_prop;
   }();
@@ -118,10 +124,8 @@ void ConsumeJournald::onSchedule(core::ProcessContext* const context, core::Proc
   // where a processor can easily be scheduled on different threads, we ensure this by executing all library calls on a dedicated
   // worker thread. This is why all such operations are dispatched to a thread and immediately waited for in the initiating thread.
   journal_ = worker_->enqueue([this, journal_type]{ return libwrapper_->openJournal(journal_type); }).get();
-  const auto seek_default = [this, process_old_messages](libwrapper::Journal& journal) {
-    if (process_old_messages) journal.seekHead();
-    else journal.seekTail();
-    state_manager_->set({{"cursor", getCursor()}});
+  const auto seek_default = [process_old_messages](libwrapper::Journal& journal) {
+    return process_old_messages ? journal.seekHead() : journal.seekTail();
   };
   worker_->enqueue([this, &seek_default] {
     const auto cursor = state_manager_->get() | utils::map([](std::unordered_map<std::string, std::string>&& m) { return m.at(CURSOR_KEY); });
@@ -144,7 +148,6 @@ void ConsumeJournald::onTrigger(core::ProcessContext* const context, core::Proce
   if (!running_.load(std::memory_order_acquire)) return;
   auto cursor_and_messages = getCursorAndMessageBatch().get();
   auto messages = std::move(cursor_and_messages.second);
-
   if (messages.empty()) {
     yield();
     return;
@@ -259,4 +262,9 @@ std::string ConsumeJournald::getCursor() const {
   return std::string{cursor.get()};
 }
 
-}}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd
+}  // namespace systemd
+}  // namespace extensions
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

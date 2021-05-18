@@ -22,4 +22,9 @@ namespace org { namespace apache { namespace nifi { namespace minifi { namespace
 
 enum class JournalType { User, System, Both };
 
-}}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd
+}  // namespace systemd
+}  // namespace extensions
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
