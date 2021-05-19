@@ -21,6 +21,9 @@
 #include <cstring>
 #include <set>
 
+#include "OptionalUtils.h"
+#include "StringUtils.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -147,22 +150,15 @@ namespace utils {
       int idx = static_cast<int>(value_); \
       return 0 <= idx && idx < length; \
     } \
-    static Clazz parse(const char* str, bool throw_on_invalid = true) { \
+    static Clazz parse(const char* str, const ::org::apache::nifi::minifi::utils::optional<Clazz>& fallback = {}, bool caseSensitive = true) { \
       for (int idx = 0; idx < length; ++idx) { \
-        if (std::strcmp(str, detail::toStringImpl(static_cast<Type>(idx), #Clazz)) == 0) \
+        if (::org::apache::nifi::minifi::utils::StringUtils::equals(str, detail::toStringImpl(static_cast<Type>(idx), #Clazz), caseSensitive)) \
           return static_cast<Type>(idx); \
       } \
-      if (throw_on_invalid) { \
-        throw std::runtime_error(std::string("Cannot convert \"") + str + "\" to " #Clazz); \
+      if (fallback) { \
+        return fallback.value(); \
       } \
-      return {}; \
-    } \
-    static Clazz parseOr(const char* str, Clazz fallback) { \
-      Clazz result = parse(str, false); \
-      if (result) { \
-        return result; \
-      } \
-      return fallback; \
+      throw std::runtime_error(std::string("Cannot convert \"") + str + "\" to " #Clazz); \
     } \
     template<typename T, typename = typename std::enable_if<std::is_base_of<typename T::detail, detail>::value>::type> \
     T cast() const { \

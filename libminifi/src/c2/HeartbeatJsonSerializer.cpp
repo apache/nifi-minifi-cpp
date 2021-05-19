@@ -59,7 +59,7 @@ static void serializeOperationInfo(rapidjson::Value& target, const C2Payload& pa
   state.AddMember("state", rapidjson::Value(state_str.c_str(), alloc), alloc);
   const auto details = payload.getRawData();
 
-  state.AddMember("details", rapidjson::Value(details.data(), details.size(), alloc), alloc);
+  state.AddMember("details", rapidjson::Value(std::string{details.data(), details.size()}.c_str(), alloc), alloc);
 
   target.AddMember("operationState", state, alloc);
   target.AddMember("identifier", rapidjson::Value(id.c_str(), alloc), alloc);
