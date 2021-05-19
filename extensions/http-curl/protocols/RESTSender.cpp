@@ -25,6 +25,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <limits>
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileManager.h"
@@ -55,7 +56,7 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
       }
     }
     configure->get("nifi.c2.rest.heartbeat.minimize.updates", "c2.rest.heartbeat.minimize.updates", update_str);
-    utils::StringUtils::StringToBool(update_str, minimize_updates_);
+    minimize_updates_ = utils::StringUtils::toBool(update_str).value_or(false);
   }
   logger_->log_debug("Submitting to %s", rest_uri_);
 }

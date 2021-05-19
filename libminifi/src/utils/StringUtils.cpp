@@ -27,12 +27,6 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-bool StringUtils::StringToBool(std::string input, bool &output) {
-  std::transform(input.begin(), input.end(), input.begin(), ::tolower);
-  std::istringstream(input) >> std::boolalpha >> output;
-  return output;
-}
-
 utils::optional<bool> StringUtils::toBool(const std::string& str) {
   std::string trimmed = trim(str);
   if (equalsIgnoreCase(trimmed, "true")) {

@@ -39,8 +39,6 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
   stream_factory_ = minifi::io::StreamFactory::getInstance(configuration);
 
   std::string host = "localhost", port, limitStr, context_name;
-  bool anyInterface = false;
-
   std::shared_ptr<minifi::controllers::SSLContextService> secure_context = nullptr;
 
   if (configuration_->get("controller.ssl.context.service", context_name)) {
@@ -51,18 +49,13 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
   }
   if (nullptr == secure_context) {
     std::string secureStr;
-    bool is_secure = false;
-    if (configuration->get(Configure::nifi_remote_input_secure, secureStr) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr, is_secure)) {
+    if (configuration->get(Configure::nifi_remote_input_secure, secureStr) && org::apache::nifi::minifi::utils::StringUtils::toBool(secureStr).value_or(false)) {
       secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration);
       secure_context->onEnable();
     }
   }
 
-  std::string value;
-
-  if (configuration_->get("controller.socket.local.any.interface", limitStr)) {
-    utils::StringUtils::StringToBool(limitStr, anyInterface);
-  }
+  const bool anyInterface = configuration_->get("controller.socket.local.any.interface", limitStr) && utils::StringUtils::toBool(limitStr).value_or(false);
 
   // if host name isn't defined we will use localhost
   configuration_->get("controller.socket.host", host);
@@ -249,8 +242,7 @@ void ControllerSocketProtocol::parse_content(const std::vector<C2ContentResponse
   for (const auto &payload_content : content) {
     if (payload_content.name == "Components") {
       for (auto content : payload_content.operation_arguments) {
-        bool is_enabled = false;
-        minifi::utils::StringUtils::StringToBool(content.second.to_string(), is_enabled);
+        bool is_enabled = minifi::utils::StringUtils::toBool(content.second.to_string()).value_or(false);
         std::lock_guard<std::mutex> lock(controller_mutex_);
         component_map_[content.first] = is_enabled;
       }

@@ -168,8 +168,7 @@ uint64_t YamlConnectionParser::getFlowFileExpirationFromYaml() const {
 bool YamlConnectionParser::getDropEmptyFromYaml() const {
   const YAML::Node drop_empty_node = connectionNode_["drop empty"];
   if (drop_empty_node) {
-    bool dropEmpty = false;
-    return utils::StringUtils::StringToBool(drop_empty_node.as<std::string>(), dropEmpty) && dropEmpty;
+    return utils::StringUtils::toBool(drop_empty_node.as<std::string>()).value_or(false);
   }
   return false;
 }

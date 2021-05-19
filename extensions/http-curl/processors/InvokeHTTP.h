@@ -19,10 +19,10 @@
 #ifndef __INVOKE_HTTP_H__
 #define __INVOKE_HTTP_H__
 
+#include <curl/curl.h>
 #include <memory>
 #include <string>
 
-#include <curl/curl.h>
 #include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -44,7 +44,6 @@ namespace processors {
 // InvokeHTTP Class
 class InvokeHTTP : public core::Processor {
  public:
-
   // Constructor
   /*!
    * Create a new processor
@@ -107,7 +106,6 @@ class InvokeHTTP : public core::Processor {
   }
 
  protected:
-
   /**
    * Generate a transaction ID
    * @return transaction ID string.
@@ -166,7 +164,7 @@ class InvokeHTTP : public core::Processor {
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<InvokeHTTP>::getLogger()};
 };
 
-REGISTER_RESOURCE(InvokeHTTP,"An HTTP client processor which can interact with a configurable HTTP Endpoint. "
+REGISTER_RESOURCE(InvokeHTTP, "An HTTP client processor which can interact with a configurable HTTP Endpoint. "
     "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
     "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).");
 
@@ -176,4 +174,4 @@ REGISTER_RESOURCE(InvokeHTTP,"An HTTP client processor which can interact with a
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif  // EXTENSIONS_HTTP_CURL_PROCESSORS_INVOKEHTTP_H_

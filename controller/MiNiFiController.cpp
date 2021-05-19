@@ -39,7 +39,6 @@
 #include "cxxopts.hpp"
 
 int main(int argc, char **argv) {
-
   std::shared_ptr<logging::Logger> logger = logging::LoggerConfiguration::getConfiguration().getLogger("controller");
 
   const std::string minifiHome = determineMinifiHome(logger);
@@ -71,8 +70,7 @@ int main(int argc, char **argv) {
 
   if (nullptr == secure_context) {
     std::string secureStr;
-    bool is_secure = false;
-    if (configuration->get(minifi::Configure::nifi_remote_input_secure, secureStr) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr, is_secure)) {
+    if (configuration->get(minifi::Configure::nifi_remote_input_secure, secureStr) && org::apache::nifi::minifi::utils::StringUtils::toBool(secureStr).value_or(false)) {
       secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration);
       secure_context->onEnable();
     }
@@ -130,8 +128,7 @@ int main(int argc, char **argv) {
     if ((IsNullOrEmpty(host) && port == -1)) {
       std::cout << "MiNiFi Controller is disabled" << std::endl;
       exit(0);
-    } else
-
+    }
     if (result.count("noheaders")) {
       show_headers = false;
     }
@@ -161,14 +158,17 @@ int main(int argc, char **argv) {
     if (result.count("c") > 0) {
       auto& components = result["c"].as<std::vector<std::string>>();
       for (const auto& connection : components) {
-        auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
+        auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context)
+                                                : stream_factory_->createSocket(host, port);
         if (clearConnection(std::move(socket), connection)) {
           std::cout << "Sent clear command to " << connection << ". Size before clear operation sent: " << std::endl;
-          socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
+          socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context)
+                                             : stream_factory_->createSocket(host, port);
           if (getConnectionSize(std::move(socket), std::cout, connection) < 0)
             std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
-        } else
+        } else {
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+        }
       }
     }
 
@@ -179,9 +179,7 @@ int main(int argc, char **argv) {
         if (getConnectionSize(std::move(socket), std::cout, component) < 0)
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
       }
-
     }
-
     if (result.count("l") > 0) {
       auto& option = result["l"].as<std::string>();
       auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
@@ -192,9 +190,7 @@ int main(int argc, char **argv) {
         if (listConnections(std::move(socket), std::cout, show_headers) < 0)
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
       }
-
     }
-
     if (result.count("getfull") > 0) {
       auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
       if (getFullConnections(std::move(socket), std::cout) < 0)

@@ -21,6 +21,7 @@
 #include <fstream>
 
 #include "TestBase.h"
+#include "TestUtils.h"
 #include "LogAttribute.h"
 #include "GetFile.h"
 #include "utils/file/FileUtils.h"
@@ -99,4 +100,36 @@ TEST_CASE("GetFile: Directory", "[getFileDir]") {
   auto plan = testController.createPlan();
   auto get_file = plan->addProcessor("GetFile", "Get");
   REQUIRE_THROWS_AS(plan->runNextProcessor(), minifi::Exception&);
+}
+
+TEST_CASE("GetFileHiddenPropertyCheck", "[getFileProperty]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setTrace<processors::GetFile>();
+  LogTestController::getInstance().setTrace<processors::LogAttribute>();
+  auto plan = testController.createPlan();
+
+  auto temp_path = minifi::utils::createTempDir(&testController);
+  std::string in_file(temp_path + utils::file::FileUtils::get_separator() + "testfifo");
+  std::string hidden_in_file(temp_path + utils::file::FileUtils::get_separator() + ".testfifo");
+
+  auto get_file = plan->addProcessor("GetFile", "Get");
+  plan->setProperty(get_file, processors::GetFile::IgnoreHiddenFile.getName(), "false");
+
+  plan->setProperty(get_file, processors::GetFile::Directory.getName(), temp_path);
+  auto log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
+  plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+
+  std::ofstream in_file_stream(in_file);
+  in_file_stream << "This file is not hidden" << std::endl;
+  in_file_stream.close();
+
+  std::ofstream hidden_in_file_stream(hidden_in_file);
+  hidden_in_file_stream << "This file is hidden" << std::endl;
+  hidden_in_file_stream.close();
+
+  plan->runNextProcessor();
+  plan->runNextProcessor();
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
 }

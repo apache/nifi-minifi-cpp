@@ -48,6 +48,7 @@ void HashContent::initialize() {
   std::set<core::Property> properties;
   properties.insert(HashAttribute);
   properties.insert(HashAlgorithm);
+  properties.insert(FailOnEmpty);
   setSupportedProperties(properties);
   //! Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -62,9 +63,8 @@ void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSession
   attrKey_ = (context->getProperty(HashAttribute.getName(), value)) ? value : "Checksum";
   algoName_ = (context->getProperty(HashAlgorithm.getName(), value)) ? value : "SHA256";
 
-  if (context->getProperty(HashAlgorithm.getName(), value)) {
-    bool bool_value;
-    failOnEmpty_ = utils::StringUtils::StringToBool(value, bool_value) && bool_value;  // Only true in case of valid true string
+  if (context->getProperty(FailOnEmpty.getName(), value)) {
+    failOnEmpty_ = utils::StringUtils::toBool(value).value_or(false);
   } else {
     failOnEmpty_ = false;
   }
@@ -84,6 +84,7 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
   }
 
   if (failOnEmpty_ && flowFile->getSize() == 0) {
+    logger_->log_debug("Failure as flow file is empty");
     session->transfer(flowFile, Failure);
   }
 

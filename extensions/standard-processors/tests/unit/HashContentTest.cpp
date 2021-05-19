@@ -27,6 +27,7 @@
 #include <iostream>
 
 #include "TestBase.h"
+#include "TestUtils.h"
 #include "core/Core.h"
 
 #include "core/FlowFile.h"
@@ -129,6 +130,36 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   log_check = ss2.str();
 
   REQUIRE(LogTestController::getInstance().contains(log_check));
+}
+
+TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::GetFile>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::HashContent>();
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+
+  auto tempdir = minifi::utils::createTempDir(&testController);
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), tempdir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+
+  std::shared_ptr<core::Processor> md5processor = plan->addProcessor("HashContent", "HashContentMD5",
+                                                                     core::Relationship("success", "description"), true);
+  plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAttribute.getName(), MD5_ATTR);
+  plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm.getName(), "MD5");
+  plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::FailOnEmpty.getName(), "true");
+
+  std::stringstream stream_dir;
+  stream_dir << tempdir << utils::file::FileUtils::get_separator() << TEST_FILE;
+  std::string test_file_path = stream_dir.str();
+  std::ofstream test_file(test_file_path, std::ios::binary);
+
+  plan->runNextProcessor();
+  plan->runNextProcessor();
+
+  REQUIRE(LogTestController::getInstance().contains("Failure as flow file is empty"));
 }
 
 #endif  // OPENSSL_SUPPORT

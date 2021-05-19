@@ -28,6 +28,7 @@
 
 #include "utils/file/FileUtils.h"
 #include "TestBase.h"
+#include "TestUtils.h"
 #include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
@@ -39,6 +40,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
+#include "Exception.h"
 
 TEST_CASE("Test Creation of PutFile", "[getfileCreate]") {
   TestController testController;
@@ -467,4 +469,91 @@ TEST_CASE("TestPutFilePermissions", "[PutFilePermissions]") {
   REQUIRE(utils::file::FileUtils::get_permissions(putfiledir, perms));
   REQUIRE(perms == 0777);
 }
+
+TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
+  TestController testController;
+  LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
+  LogTestController::getInstance().setDebug<TestPlan>();
+  LogTestController::getInstance().setDebug<minifi::processors::PutFile>();
+  LogTestController::getInstance().setDebug<minifi::processors::PutFile::ReadCallback>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  // Define Directory
+  auto dir = minifi::utils::createTempDir(&testController);
+  // Defining a sub directory
+  auto putfiledir = minifi::utils::createTempDir(&testController) + utils::file::FileUtils::get_separator() + "test_dir";
+
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+
+  SECTION("with an empty file and create directory property set to true") {
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs.getName(), "true");
+
+    std::ofstream of(std::string(dir) + utils::file::FileUtils::get_separator() + "tstFile.ext");
+    of.close();
+    auto path = std::string(putfiledir) + utils::file::FileUtils::get_separator() + "tstFile.ext";
+
+    plan->runNextProcessor();
+    plan->runNextProcessor();
+
+    REQUIRE(org::apache::nifi::minifi::utils::file::exists(putfiledir));
+    REQUIRE(org::apache::nifi::minifi::utils::file::exists(path));
+  }
+
+  SECTION("with an empty file and create directory property set to false") {
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs.getName(), "false");
+    putfile->setAutoTerminatedRelationships({core::Relationship("failure", "description")});
+
+    std::ofstream of(std::string(dir) + utils::file::FileUtils::get_separator() + "tstFile.ext");
+    of.close();
+    auto path = std::string(putfiledir) + utils::file::FileUtils::get_separator() + "tstFile.ext";
+
+    plan->runNextProcessor();
+    plan->runNextProcessor();
+
+    REQUIRE_FALSE(org::apache::nifi::minifi::utils::file::exists(putfiledir));
+    REQUIRE_FALSE(org::apache::nifi::minifi::utils::file::exists(path));
+    std::string check = "Failed to create empty file: " + path;
+    REQUIRE(LogTestController::getInstance().contains(check));
+  }
+
+  SECTION("with a non-empty file and create directory property set to true") {
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs.getName(), "true");
+
+    std::ofstream of(std::string(dir) + utils::file::FileUtils::get_separator() + "tstFile.ext");
+    of << "tempFile";
+    of.close();
+    auto path = std::string(putfiledir) + utils::file::FileUtils::get_separator() + "tstFile.ext";
+
+    plan->runNextProcessor();
+    plan->runNextProcessor();
+
+    REQUIRE(org::apache::nifi::minifi::utils::file::exists(putfiledir));
+    REQUIRE(org::apache::nifi::minifi::utils::file::exists(path));
+  }
+
+  SECTION("with a non-empty file and create directory property set to false") {
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs.getName(), "false");
+    putfile->setAutoTerminatedRelationships({core::Relationship("failure", "description")});
+
+    std::ofstream of(std::string(dir) + utils::file::FileUtils::get_separator() + "tstFile.ext");
+    of << "tempFile";
+    of.close();
+    auto path = std::string(putfiledir) + utils::file::FileUtils::get_separator() + "tstFile.ext";
+
+    plan->runNextProcessor();
+    plan->runNextProcessor();
+
+    REQUIRE_FALSE(org::apache::nifi::minifi::utils::file::exists(putfiledir));
+    REQUIRE_FALSE(org::apache::nifi::minifi::utils::file::exists(path));
+    std::string check = "PutFile commit put file operation to " + path + " failed because write failed";
+    REQUIRE(LogTestController::getInstance().contains(check));
+  }
+}
+
 #endif

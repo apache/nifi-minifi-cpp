@@ -75,13 +75,10 @@ struct string_traits<wchar_t>{
 class StringUtils {
  public:
   /**
-   * Converts a string to a boolean
-   * Better handles mixed case.
+   * Checks and converts a string to a boolean
    * @param input input string
-   * @param output output string.
+   * @returns an optional of a boolean: true if the string is "true" (ignoring case), false if it is "false" (ignoring case), nullopt for any other value
    */
-  static bool StringToBool(std::string input, bool &output);
-
   static utils::optional<bool> toBool(const std::string& input);
 
   static std::string toLower(std::string str);

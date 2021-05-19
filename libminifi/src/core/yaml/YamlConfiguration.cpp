@@ -717,10 +717,7 @@ namespace {
   void handleExceptionOnValidatedProcessorPropertyRead(const core::Property& propertyFromProcessor, const YAML::Node& propertyValueNode,
       const std::shared_ptr<Configure>& config, const std::type_index& defaultType, std::shared_ptr<logging::Logger>& logger) {
     std::string eof;
-    bool exit_on_failure = false;
-    if (config->get(Configure::nifi_flow_configuration_file_exit_failure, eof)) {
-      utils::StringUtils::StringToBool(eof, exit_on_failure);
-    }
+    bool const exit_on_failure = (config->get(Configure::nifi_flow_configuration_file_exit_failure, eof) && utils::StringUtils::toBool(eof).value_or(false));
     logger->log_error("Invalid conversion for field %s. Value %s", propertyFromProcessor.getName(), propertyValueNode.as<std::string>());
     if (exit_on_failure) {
       // We do not exit here even if exit_on_failure is set. Maybe we should?

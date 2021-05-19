@@ -63,8 +63,14 @@ void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     max_seg_size_ = valInt;
     logger_->log_debug("PublishMQTT: max flow segment size [%" PRIu64 "]", max_seg_size_);
   }
-  value = "";
-  if (context->getProperty(Retain.getName(), value) && !value.empty() && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, retain_)) {
+
+  const auto retain_parsed = [&] () -> utils::optional<bool> {
+    std::string property_value;
+    if (!context->getProperty(CleanSession.getName(), property_value)) return utils::nullopt;
+    return utils::StringUtils::toBool(property_value);
+  }();
+  if ( retain_parsed ) {
+    retain_ = *retain_parsed;
     logger_->log_debug("PublishMQTT: Retain [%d]", retain_);
   }
 }
@@ -75,7 +81,6 @@ void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
     yield();
     return;
   }
-  
   std::shared_ptr<core::FlowFile> flowFile = session->get();
 
   if (!flowFile) {

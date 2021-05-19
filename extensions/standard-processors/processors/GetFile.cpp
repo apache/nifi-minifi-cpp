@@ -123,10 +123,10 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
     core::Property::StringToInt(value, request_.batchSize);
   }
   if (context->getProperty(IgnoreHiddenFile.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, request_.ignoreHiddenFile);
+    request_.ignoreHiddenFile = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(true);
   }
   if (context->getProperty(KeepSourceFile.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, request_.keepSourceFile);
+    request_.keepSourceFile = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
   }
 
   context->getProperty(MaxAge.getName(), request_.maxAge);
@@ -142,7 +142,7 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
   context->getProperty(PollInterval.getName(), request_.pollInterval);
 
   if (context->getProperty(Recurse.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, request_.recursive);
+    request_.recursive = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(true);
   }
 
   if (context->getProperty(FileFilter.getName(), value)) {

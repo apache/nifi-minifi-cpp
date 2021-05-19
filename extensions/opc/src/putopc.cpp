@@ -96,7 +96,7 @@ namespace processors {
   void PutOPCProcessor::initialize() {
     PutOPCProcessor::ValueType.clearAllowedValues();
     core::PropertyValue pv;
-    for(const auto& kv : opc::StringToOPCDataTypeMap) {
+    for (const auto& kv : opc::StringToOPCDataTypeMap) {
       pv = kv.first;
       PutOPCProcessor::ValueType.addAllowedValue(pv);
     }
@@ -132,7 +132,7 @@ namespace processors {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
 
-    if(idType_ == opc::OPCNodeIDType::Int) {
+    if (idType_ == opc::OPCNodeIDType::Int) {
       try {
         std::stoi(nodeID_);
       } catch(...) {
@@ -140,8 +140,8 @@ namespace processors {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
-    if(idType_ != opc::OPCNodeIDType::Path) {
-      if(!context->getProperty(ParentNameSpaceIndex.getName(), nameSpaceIdx_)) {
+    if (idType_ != opc::OPCNodeIDType::Path) {
+      if (!context->getProperty(ParentNameSpaceIndex.getName(), nameSpaceIdx_)) {
         auto error_msg = utils::StringUtils::join_pack(ParentNameSpaceIndex.getName(), " is mandatory in case ", ParentNodeIDType.getName(), " is not Path");
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
@@ -150,7 +150,6 @@ namespace processors {
     std::string typestr;
     context->getProperty(ValueType.getName(), typestr);
     nodeDataType_ = opc::StringToOPCDataTypeMap.at(typestr);  // This throws, but allowed values are generated based on this map -> that's a really unexpected error
-
   }
 
   void PutOPCProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -301,9 +300,9 @@ namespace processors {
             break;
           }
           case opc::OPCNodeDataType::Boolean: {
-            bool value;
-            if (utils::StringUtils::StringToBool(contentstr, value)) {
-              sc = connection_->update_node(targetnode, value);
+            utils::optional<bool> contentstr_parsed = utils::StringUtils::toBool(contentstr);
+            if (contentstr_parsed) {
+              sc = connection_->update_node(targetnode, contentstr_parsed.value());
             } else {
               throw opc::OPCException(GENERAL_EXCEPTION, "Content cannot be converted to bool");
             }
@@ -378,9 +377,9 @@ namespace processors {
             break;
           }
           case opc::OPCNodeDataType::Boolean: {
-            bool value;
-            if (utils::StringUtils::StringToBool(contentstr, value)) {
-              sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            utils::optional<bool> contentstr_parsed = utils::StringUtils::toBool(contentstr);
+            if (contentstr_parsed) {
+              sc = connection_->add_node(parentNodeID_, targetnode, browsename, contentstr_parsed.value(), nodeDataType_, &resultnode);
             } else {
               throw opc::OPCException(GENERAL_EXCEPTION, "Content cannot be converted to bool");
             }
