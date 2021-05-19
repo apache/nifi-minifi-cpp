@@ -419,8 +419,8 @@ class ConsumeKafkaContinuousPublishingTest : public ConsumeKafkaTest {
     plan_->scheduleProcessors();
 
     const auto get_time_property_ms = [] (const std::string& property_string) {
-      int64_t value;
-      org::apache::nifi::minifi::core::TimeUnit unit;
+      int64_t value{};
+      org::apache::nifi::minifi::core::TimeUnit unit{};
       REQUIRE(org::apache::nifi::minifi::core::Property::StringToTime(property_string, value, unit));
       int64_t value_as_ms;
       REQUIRE(org::apache::nifi::minifi::core::Property::ConvertTimeUnitToMS(value, unit, value_as_ms));

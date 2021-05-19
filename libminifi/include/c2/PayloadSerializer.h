@@ -222,7 +222,7 @@ class PayloadSerializer {
   static bool deserializePayload(C2Payload &parent, Operation operation, std::string identifier, io::BaseStream *stream) {
     uint32_t payloads = 0;
     stream->read(payloads);
-    uint8_t op, st;
+    uint8_t op{}, st{};
     std::string label;
     for (size_t i = 0; i < payloads; i++) {
       stream->read(op);
@@ -257,7 +257,7 @@ class PayloadSerializer {
   static bool deserialize(std::vector<uint8_t> data, C2Payload &payload) {
     io::BufferStream stream(data.data(), gsl::narrow<unsigned int>(data.size()));
 
-    uint8_t op, st = 0;
+    uint8_t op = 0, st = 0;
     uint16_t version = 0;
 
     std::string identifier, label;
