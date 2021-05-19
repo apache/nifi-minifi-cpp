@@ -15,8 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_COAPCONNECTOR_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_COAPCONNECTOR_H_
+#pragma once
+
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
@@ -26,9 +30,6 @@
 #include "coap_functions.h"
 #include "coap_connection.h"
 #include "coap_message.h"
-#include <memory>
-#include <unordered_map>
-#include <utility>
 
 namespace org {
 namespace apache {
@@ -87,7 +88,6 @@ class CoapConnectorService : public core::controller::ControllerService {
   CoapResponse sendPayload(uint8_t type, const std::string &endpoint, const CoapMessage * message);
 
  protected:
-
   void initializeProperties();
 
   // connector mutex to controll access to the mapping, above.
@@ -99,7 +99,6 @@ class CoapConnectorService : public core::controller::ControllerService {
   std::atomic<bool> initialized_{ false };
 
  private:
-
   // host connecting to.
   std::string host_;
   // port connecting to
@@ -107,12 +106,9 @@ class CoapConnectorService : public core::controller::ControllerService {
 
   std::shared_ptr<logging::Logger> logger_{ logging::LoggerFactory<CoapConnectorService>::getLogger() };
 };
-
 } /* namespace controllers */
 } /* namespace coap */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_COAPCONNECTOR_H_ */

@@ -21,6 +21,8 @@
  */
 
 #include <vector>
+#include <memory>
+#include <string>
 #include <set>
 #include <codecvt>
 
@@ -40,7 +42,7 @@ class SupportedProperties {
   std::vector<ISupportedProperty*> listISupportedProperty_;
   std::vector<core::Property*> listProperties_;
 
-public:
+ public:
   void init(const std::shared_ptr<core::ProcessContext>& context) {
     for (auto pProp : listISupportedProperty_) {
       pProp->Init(context);
@@ -62,7 +64,7 @@ public:
     add(arg, args...);
   }
 
-private:
+ private:
   template <typename Arg>
   void add(Arg& arg) {
     listISupportedProperty_.emplace_back(&arg);
@@ -80,9 +82,9 @@ template <typename T>
 class SupportedProperty : public ISupportedProperty, public core::Property {
   T t_;
 
-public:
+ public:
   template <typename ...Args>
-  SupportedProperty(const Args& ...args): core::Property(args...) {
+  explicit SupportedProperty(const Args& ...args): core::Property(args...) {
   }
 
   void Init(const std::shared_ptr<core::ProcessContext>& context) override {
@@ -99,7 +101,7 @@ void SupportedProperty<std::wstring>::Init(const std::shared_ptr<core::ProcessCo
   context->getProperty(getName(), val);
 
   t_ = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(val);
-};
+}
 
 } /* namespace processors */
 } /* namespace minifi */

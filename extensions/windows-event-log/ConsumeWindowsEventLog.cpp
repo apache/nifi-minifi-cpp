@@ -19,12 +19,14 @@
  */
 
 #include "ConsumeWindowsEventLog.h"
+#include <stdio.h>
 #include <vector>
+#include <tuple>
+#include <utility>
 #include <queue>
 #include <map>
 #include <set>
 #include <sstream>
-#include <stdio.h>
 #include <string>
 #include <iostream>
 #include <memory>
@@ -127,8 +129,8 @@ core::Property ConsumeWindowsEventLog::EventHeaderDelimiter(
 core::Property ConsumeWindowsEventLog::EventHeader(
   core::PropertyBuilder::createProperty("Event Header")->
   isRequired(false)->
-  withDefaultValue("LOG_NAME=Log Name, SOURCE = Source, TIME_CREATED = Date,EVENT_RECORDID=Record ID,EVENTID = Event ID,TASK_CATEGORY = Task Category,LEVEL = Level,KEYWORDS = Keywords,USER = User,COMPUTER = Computer, EVENT_TYPE = EventType")->
-  withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")->
+  withDefaultValue("LOG_NAME=Log Name, SOURCE = Source, TIME_CREATED = Date,EVENT_RECORDID=Record ID,EVENTID = Event ID,TASK_CATEGORY = Task Category,LEVEL = Level,KEYWORDS = Keywords,USER = User,COMPUTER = Computer, EVENT_TYPE = EventType")->  // NOLINT linelength
+  withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")-> // NOLINT linelength
   build());
 
 core::Property ConsumeWindowsEventLog::OutputFormat(
@@ -491,15 +493,12 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
         const auto it = xmlPercentageItemsResolutions_.find(key);
         if (it == xmlPercentageItemsResolutions_.end()) {
           LPTSTR pBuffer{};
-          if (FormatMessage(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
-            hMsobjsDll_,
-            number,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            (LPTSTR)&pBuffer,
-            1024,
-            0
-          )) {
+          if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
+                            hMsobjsDll_,
+                            number,
+                            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                            (LPTSTR)&pBuffer,
+                            1024, 0)) {
             value = pBuffer;
             LocalFree(pBuffer);
 
@@ -656,7 +655,7 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
   DYNAMIC_TIME_ZONE_INFORMATION tzinfo;
   auto ret = GetDynamicTimeZoneInformation(&tzinfo);
   std::wstring tzstr;
-  long tzbias = 0;
+  long tzbias = 0;  // NOLINT long comes from WINDOWS API
   bool dst = false;
   switch (ret) {
     case TIME_ZONE_ID_INVALID:
@@ -689,8 +688,8 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
 
 void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session) const {
   struct WriteCallback : public OutputStreamCallback {
-    WriteCallback(const std::string& str)
-      : str_(str) {
+    explicit WriteCallback(const std::string& str)
+        : str_(str) {
     }
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
@@ -755,7 +754,7 @@ void ConsumeWindowsEventLog::LogWindowsError(std::string error) const {
     (LPTSTR)&lpMsg,
     0, NULL);
 
-  logger_->log_error((error + " %x: %s\n").c_str(), (int)error_id, (char *)lpMsg);
+  logger_->log_error((error + " %x: %s\n").c_str(), static_cast<int>(error_id), reinterpret_cast<char *>(lpMsg));
 
   LocalFree(lpMsg);
 }

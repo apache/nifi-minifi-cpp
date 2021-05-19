@@ -20,21 +20,28 @@
 
 #pragma once
 
-#include "core/Core.h"
-#include "wel/WindowsEventLog.h"
-#include "FlowFileRecord.h"
-#include "concurrentqueue.h"
-#include "core/Processor.h"
-#include "core/ProcessSession.h"
-#include "pugixml.hpp"
+#include <Windows.h>
 #include <winevt.h>
+#include <Objbase.h>
+
 #include <sstream>
 #include <regex>
 #include <codecvt>
-#include "utils/OsUtils.h"
-#include <Objbase.h>
 #include <mutex>
 #include <unordered_map>
+#include <tuple>
+#include <map>
+#include <memory>
+#include <string>
+
+#include "core/Core.h"
+#include "core/Processor.h"
+#include "core/ProcessSession.h"
+#include "utils/OsUtils.h"
+#include "wel/WindowsEventLog.h"
+#include "FlowFileRecord.h"
+#include "concurrentqueue.h"
+#include "pugixml.hpp"
 
 namespace org {
 namespace apache {
@@ -53,12 +60,12 @@ class Bookmark;
 
 //! ConsumeWindowsEventLog Class
 class ConsumeWindowsEventLog : public core::Processor {
-public:
+ public:
   //! Constructor
   /*!
   * Create a new processor
   */
-  ConsumeWindowsEventLog(const std::string& name, const utils::Identifier& uuid = {});
+  explicit ConsumeWindowsEventLog(const std::string& name, const utils::Identifier& uuid = {});
 
   //! Destructor
   virtual ~ConsumeWindowsEventLog();
@@ -86,7 +93,7 @@ public:
   //! Supported Relationships
   static core::Relationship Success;
 
-public:
+ public:
   /**
   * Function that's executed when the processor is scheduled.
   * @param context process context.
@@ -100,7 +107,7 @@ public:
   void initialize(void) override;
   void notifyStop() override;
 
-protected:
+ protected:
   void refreshTimeZoneData();
   void putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session) const;
   wel::WindowsEventLogHandler getEventLogHandler(const std::string & name);
@@ -117,7 +124,7 @@ protected:
   static constexpr const char* JSONSimple = "Simple";
   static constexpr const char* JSONFlattened = "Flattened";
 
-private:
+ private:
   struct TimeDiff {
     auto operator()() const {
       return int64_t{ std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count() };

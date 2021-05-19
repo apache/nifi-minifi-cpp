@@ -17,6 +17,7 @@
  */
 #include "CoapServer.h"
 #include <coap2/coap.h>
+#include <map>
 
 namespace org {
 namespace apache {

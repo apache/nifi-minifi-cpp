@@ -34,4 +34,4 @@ target_link_libraries(minifi-civet-extensions CIVETWEB::c-library CIVETWEB::cive
 SET (civet-EXTENSIONS minifi-civet-extensions PARENT_SCOPE)
 
 register_extension(minifi-civet-extensions)
-
+register_extension_linter(minifi-civet-extensions-linter)

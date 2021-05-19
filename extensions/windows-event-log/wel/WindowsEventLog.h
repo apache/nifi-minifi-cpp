@@ -18,19 +18,26 @@
 
 #pragma once
 
+#include <Windows.h>
+#include <winevt.h>
+
+#include <algorithm>
+#include <codecvt>
+#include <map>
+#include <sstream>
+#include <string>
+#include <regex>
+#include <utility>
+#include <vector>
+
 #include "core/Core.h"
-#include "FlowFileRecord.h"
 #include "concurrentqueue.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include <pugixml.hpp>
-#include <winevt.h>
-#include <sstream>
-#include <regex>
-#include <codecvt>
 #include "utils/OsUtils.h"
+#include "FlowFileRecord.h"
 
-
+#include "pugixml.hpp"
 
 namespace org {
 namespace apache {
@@ -61,7 +68,7 @@ namespace wel {
 typedef std::vector<std::pair<METADATA, std::string>> METADATA_NAMES;
 
 class WindowsEventLogHandler {
-public:
+ public:
   WindowsEventLogHandler() : metadata_provider_(nullptr) {
   }
 
@@ -73,7 +80,7 @@ public:
 
   EVT_HANDLE getMetadata() const;
 
-private:
+ private:
   EVT_HANDLE metadata_provider_;
 };
 
@@ -82,11 +89,11 @@ class WindowsEventLogMetadata {
   virtual ~WindowsEventLogMetadata() = default;
   virtual std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const = 0;
   virtual std::string getEventTimestamp() const = 0;
-  virtual short getEventTypeIndex() const = 0;
+  virtual short getEventTypeIndex() const = 0;  // NOLINT short comes from WINDOWS API
 
   static std::string getMetadataString(METADATA val) {
-    static std::map< METADATA, std::string> map = {
-        {LOG_NAME,  "LOG_NAME" },
+    static std::map<METADATA, std::string> map = {
+        {LOG_NAME, "LOG_NAME" },
         {SOURCE, "SOURCE"},
         {TIME_CREATED, "TIME_CREATED" },
         {EVENTID, "EVENTID"},
@@ -104,7 +111,7 @@ class WindowsEventLogMetadata {
   }
 
   static METADATA getMetadataFromString(const std::string &val) {
-    static std::map< std::string, METADATA> map = {
+    static std::map<std::string, METADATA> map = {
         {"LOG_NAME", LOG_NAME},
         {"SOURCE", SOURCE},
         {"TIME_CREATED", TIME_CREATED },
@@ -122,8 +129,7 @@ class WindowsEventLogMetadata {
     auto enumVal = map.find(val);
     if (enumVal != std::end(map)) {
       return enumVal->second;
-    }
-    else {
+    } else {
       return METADATA::UNKNOWN;
     }
   }
@@ -135,8 +141,7 @@ class WindowsEventLogMetadata {
       DWORD size = sizeof(buff);
       if (GetComputerNameExA(ComputerNameDnsFullyQualified, buff, &size)) {
         computer_name = buff;
-      }
-      else {
+      } else {
         computer_name = "N/A";
       }
     }
@@ -145,7 +150,7 @@ class WindowsEventLogMetadata {
 };
 
 class WindowsEventLogMetadataImpl : public WindowsEventLogMetadata {
-public:
+ public:
   WindowsEventLogMetadataImpl(EVT_HANDLE metadataProvider, EVT_HANDLE event_ptr) : metadata_ptr_(metadataProvider), event_timestamp_(0), event_ptr_(event_ptr) {
     renderMetadata();
   }
@@ -154,21 +159,21 @@ public:
 
   std::string getEventTimestamp() const override { return event_timestamp_str_; }
 
-  short getEventTypeIndex() const override { return event_type_index_; }
+  short getEventTypeIndex() const override { return event_type_index_; }  // NOLINT short comes from WINDOWS API
 
  private:
   void renderMetadata();
 
   uint64_t event_timestamp_;
   std::string event_type_;
-  short event_type_index_;
+  short event_type_index_;  // NOLINT short comes from WINDOWS API
   std::string event_timestamp_str_;
   EVT_HANDLE event_ptr_;
   EVT_HANDLE metadata_ptr_;
 };
 
 class WindowsEventLogHeader {
-public:
+ public:
   explicit WindowsEventLogHeader(METADATA_NAMES header_names) : header_names_(header_names) {}
 
   void setDelimiter(const std::string &delim);
@@ -176,7 +181,7 @@ public:
   template<typename MetadataCollection>
   std::string getEventHeader(const MetadataCollection& metadata_collection) const;
 
-private:
+ private:
   std::string createDefaultDelimiter(size_t max, size_t length) const;
 
   std::string delimiter_;

@@ -25,12 +25,13 @@ extern "C" {
 
 typedef unsigned char method_t;
 
+#include <stdio.h>
+#include <string.h>
+
 #include "coap2/coap.h"
 #include "coap2/uri.h"
 #include "coap2/address.h"
 
-#include <stdio.h>
-#include <string.h>
 #ifdef WIN32
 #include <winsock2.h>
 #else

@@ -20,18 +20,25 @@
 
 #pragma once
 
-#include "WindowsEventLog.h"
+#include <Windows.h>
+#include <winevt.h>
+#include <codecvt>
+
+#include <map>
+#include <sstream>
+#include <string>
+#include <regex>
+#include <vector>
+
 #include "core/Core.h"
-#include "FlowFileRecord.h"
-#include "concurrentqueue.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include <pugixml.hpp>
-#include <winevt.h>
-#include <sstream>
-#include <regex>
-#include <codecvt>
 #include "utils/OsUtils.h"
+#include "FlowFileRecord.h"
+#include "WindowsEventLog.h"
+
+#include "concurrentqueue.h"
+#include "pugixml.hpp"
 
 namespace org {
 namespace apache {
@@ -63,7 +70,7 @@ class MetadataWalker : public pugi::xml_tree_walker {
   bool for_each(pugi::xml_node &node) override;
 
   static std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex = "");
-  
+
   std::map<std::string, std::string> getFieldValues() const;
 
   std::map<std::string, std::string> getIdentifiers() const;

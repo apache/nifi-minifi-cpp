@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include <string>
-#include <memory>
 #include <windows.h>
 #include <winevt.h>
+#include <string>
+#include <memory>
 #include <type_traits>
 
 #include "core/ProcessContext.h"
@@ -37,8 +37,14 @@ namespace processors {
 #define LOG_LAST_ERROR(func) logger_->log_error("!"#func" error %x", GetLastError())
 
 class Bookmark {
-public:
-  Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const utils::Identifier& uuid, bool processOldEvents, std::shared_ptr<core::CoreComponentStateManager> state_manager, std::shared_ptr<logging::Logger> logger);
+ public:
+  Bookmark(const std::wstring& channel,
+      const std::wstring& query,
+      const std::string& bookmarkRootDir,
+      const utils::Identifier& uuid,
+      bool processOldEvents,
+      std::shared_ptr<core::CoreComponentStateManager> state_manager,
+      std::shared_ptr<logging::Logger> logger);
   ~Bookmark();
   explicit operator bool() const noexcept;
 
@@ -46,7 +52,7 @@ public:
   bool getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml);
   bool saveBookmarkXml(const std::wstring& bookmarkXml);
 
-private:
+ private:
   bool saveBookmark(EVT_HANDLE hEvent);
   bool getBookmarkXmlFromFile(std::wstring& bookmarkXml);
 

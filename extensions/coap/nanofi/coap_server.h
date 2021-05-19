@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_COAP_NANOFI_COAP_SERVER_H
-#define EXTENSIONS_COAP_NANOFI_COAP_SERVER_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,5 +78,3 @@ void free_server(CoapServerContext * const);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* EXTENSIONS_COAP_NANOFI_COAP_SERVER_H */

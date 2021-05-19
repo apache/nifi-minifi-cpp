@@ -152,8 +152,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
         minifi::coap::CoapResponse resp(500, 0, 0);;
         responses.try_dequeue(resp);
         return resp;
-      }
-      else {
+      } else {
         minifi::coap::CoapResponse response(500, 0, 0);
         return response;
       }
