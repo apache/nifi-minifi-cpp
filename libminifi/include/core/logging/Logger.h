@@ -70,28 +70,28 @@ inline T conditional_conversion(T t) {
 
 template<typename ... Args>
 inline std::string format_string(int max_size, char const* format_str, Args&&... args) {
-  if (0 <= max_size && max_size <= LOG_BUFFER_SIZE) {
-    // use static buffer
-    char buf[LOG_BUFFER_SIZE + 1];
-    std::snprintf(buf, max_size + 1, format_str, conditional_conversion(std::forward<Args>(args))...);
-    return std::string(buf);
+  // try to use static buffer
+  char buf[LOG_BUFFER_SIZE + 1];
+  int result = std::snprintf(buf, LOG_BUFFER_SIZE + 1, format_str, conditional_conversion(std::forward<Args>(args))...);
+  if (result < 0) {
+    return std::string("Error while formatting log message");
   }
-  // use dynamically allocated buffer
-  if (max_size < 0) {
-    // query what buffer size we need
-    int size_needed = std::snprintf(nullptr, 0, format_str, conditional_conversion(std::forward<Args>(args))...);
-    if (size_needed < 0) {
-      // error
-      return std::string("Error while formatting log message");
-    }
-    std::vector<char> buffer(size_needed + 1);  // extra '\0' character
-    std::snprintf(buffer.data(), buffer.size(), format_str, conditional_conversion(std::forward<Args>(args))...);
-    return std::string(buffer.data());
+  if (result <= LOG_BUFFER_SIZE) {
+    // static buffer was large enough
+    return std::string(buf, result);
   }
-  // use dynamic but fix-sized buffer
-  std::vector<char> buffer(max_size);
-  std::snprintf(buffer.data(), buffer.size(), format_str, conditional_conversion(std::forward<Args>(args))...);
-  return std::string(buffer.data());
+  if (max_size >= 0 && max_size <= LOG_BUFFER_SIZE) {
+    // static buffer was already larger than allowed, use the filled buffer
+    return std::string(buf, LOG_BUFFER_SIZE);
+  }
+  // try to use dynamic buffer
+  size_t dynamic_buffer_size = max_size < 0 ? result : std::min(result, max_size);
+  std::vector<char> buffer(dynamic_buffer_size + 1);  // extra '\0' character
+  result = std::snprintf(buffer.data(), buffer.size(), format_str, conditional_conversion(std::forward<Args>(args))...);
+  if (result < 0) {
+    return std::string("Error while formatting log message");
+  }
+  return std::string(buffer.cbegin(), buffer.cend() - 1);  // -1 to not include the terminating '\0'
 }
 
 inline std::string format_string(int /*max_size*/, char const* format_str) {

@@ -38,21 +38,19 @@ static void serializeOperationInfo(rapidjson::Value& target, const C2Payload& pa
   }
 
   target.AddMember("operationId", rapidjson::Value(id.c_str(), alloc), alloc);
-  std::string state_str;
-  switch (payload.getStatus().getState()) {
-    case state::UpdateState::FULLY_APPLIED:
-      state_str = "FULLY_APPLIED";
-      break;
-    case state::UpdateState::PARTIALLY_APPLIED:
-      state_str = "PARTIALLY_APPLIED";
-      break;
-    case state::UpdateState::READ_ERROR:
-      state_str = "OPERATION_NOT_UNDERSTOOD";
-      break;
-    case state::UpdateState::SET_ERROR:
-    default:
-      state_str = "NOT_APPLIED";
-  }
+  std::string state_str = [&] {
+    switch (payload.getStatus().getState()) {
+      case state::UpdateState::FULLY_APPLIED:
+        return "FULLY_APPLIED";
+      case state::UpdateState::PARTIALLY_APPLIED:
+        return "PARTIALLY_APPLIED";
+      case state::UpdateState::READ_ERROR:
+        return "OPERATION_NOT_UNDERSTOOD";
+      case state::UpdateState::SET_ERROR:
+      default:
+        return "NOT_APPLIED";
+    }
+  }();
 
   rapidjson::Value state(rapidjson::kObjectType);
 

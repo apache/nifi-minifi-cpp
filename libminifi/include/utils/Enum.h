@@ -47,38 +47,30 @@ namespace utils {
   CALL(CONCAT(FOR_EACH_, COUNT ARGS), fn, delim, SPREAD ARGS)
 
 #define FOR_EACH_0(...)
-#define FOR_EACH_1(fn, delim, _1) fn(_1)
-#define FOR_EACH_2(fn, delim, _1, _2) fn(_1) delim() fn(_2)
-#define FOR_EACH_3(fn, delim, _1, _2, _3) fn(_1) delim() fn(_2) delim() fn(_3)
+#define FOR_EACH_1(fn, delim, _1) \
+  fn(_1)
+#define FOR_EACH_2(fn, delim, _1, _2) \
+  fn(_1) delim() fn(_2)
+#define FOR_EACH_3(fn, delim, _1, _2, _3) \
+  fn(_1) delim() FOR_EACH_2(fn, delim, _2, _3)
 #define FOR_EACH_4(fn, delim, _1, _2, _3, _4) \
-  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4)
+  fn(_1) delim() FOR_EACH_3(fn, delim, _2, _3, _4)
 #define FOR_EACH_5(fn, delim, _1, _2, _3, _4, _5) \
-  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() fn(_5)
+  fn(_1) delim() FOR_EACH_4(fn, delim, _2, _3, _4, _5)
 #define FOR_EACH_6(fn, delim, _1, _2, _3, _4, _5, _6) \
-  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
-  fn(_5) delim() fn(_6)
+  fn(_1) delim() FOR_EACH_5(fn, delim, _2, _3, _4, _5, _6)
 #define FOR_EACH_7(fn, delim, _1, _2, _3, _4, _5, _6, _7) \
-  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
-  fn(_5) delim() fn(_6) delim() fn(_7)
+  fn(_1) delim() FOR_EACH_6(fn, delim, _2, _3, _4, _5, _6, _7)
 #define FOR_EACH_8(fn, delim, _1, _2, _3, _4, _5, _6, _7, _8) \
-  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
-  fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8)
+  fn(_1) delim() FOR_EACH_7(fn, delim, _2, _3, _4, _5, _6, _7, _8)
 #define FOR_EACH_9(fn, delim, _1, _2, _3, _4, _5, _6, _7, _8, _9) \
-  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
-  fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8) delim() \
-  fn(_9)
+  fn(_1) delim() FOR_EACH_8(fn, delim, _2, _3, _4, _5, _6, _7, _8, _9)
 #define FOR_EACH_10(fn, delim, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10) \
-  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
-  fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8) delim() \
-  fn(_9) delim() fn(_10)
+  fn(_1) delim() FOR_EACH_9(fn, delim, _2, _3, _4, _5, _6, _7, _8, _9, _10)
 #define FOR_EACH_11(fn, delim, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11) \
-  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
-  fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8) delim() \
-  fn(_9) delim() fn(_10) delim() fn(_11)
+  fn(_1) delim() FOR_EACH_10(fn, delim, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11)
 #define FOR_EACH_12(fn, delim, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12) \
-  fn(_1) delim() fn(_2) delim() fn(_3) delim() fn(_4) delim() \
-  fn(_5) delim() fn(_6) delim() fn(_7) delim() fn(_8) delim() \
-  fn(_9) delim() fn(_10) delim() fn(_11) delim() fn(_12)
+  fn(_1) delim() FOR_EACH_11(fn, delim, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12)
 
 #define FIRST_(a, b) a
 #define FIRST(x, ...) FIRST_ x
