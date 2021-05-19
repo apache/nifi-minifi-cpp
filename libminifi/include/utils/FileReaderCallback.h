@@ -45,7 +45,7 @@ class FileReaderCallback : public OutputStreamCallback {
 
 class FileReaderCallbackIOError : public std::runtime_error {
  public:
-  FileReaderCallbackIOError(const std::string& message) : std::runtime_error{message} {}
+  explicit FileReaderCallbackIOError(const std::string& message) : std::runtime_error{message} {}
 };
 
 }  // namespace utils
