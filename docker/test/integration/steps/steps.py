@@ -488,7 +488,7 @@ def step_impl(context, number_of_files, duration):
     context.test.check_for_multiple_files_generated(number_of_files, timeparse(duration))
 
 
-@then("one empty flowfile is placed in the monitored directory in less than {duration}")
+@then("at least one empty flowfile is placed in the monitored directory in less than {duration}")
 def step_impl(context, duration):
     context.test.check_for_an_empty_file_generated(timeparse(duration))
 
