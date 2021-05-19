@@ -25,6 +25,7 @@
 #include <utility>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 #include "spdlog/common.h"
 #include "spdlog/logger.h"

@@ -151,6 +151,7 @@ void RESTProtocol::initialize(core::controller::ControllerServiceProvider* /*con
       auto opt_value = utils::StringUtils::toBool(value_str);
       if (!opt_value) {
         logger_->log_error("Cannot convert '%s' to bool for property '%s'", value_str, "nifi.c2.rest.heartbeat.minimize.updates");
+        minimize_updates_ = false;
       } else {
         minimize_updates_ = opt_value.value();
       }
