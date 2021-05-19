@@ -570,8 +570,8 @@ endif()
 
 ## Add the systemd extension
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-	option(DISABLE_SYSTEMD "Disables the systemd extension." OFF)
-	if (NOT DISABLE_SYSTEMD)
+	option(ENABLE_SYSTEMD "Disables the systemd extension." ON)
+	if (ENABLE_SYSTEMD)
 		createExtension(SYSTEMD-EXTENSIONS "SYSTEMD EXTENSIONS" "Enabled log collection from journald" "extensions/systemd" "extensions/systemd/tests")
 	endif()
 endif()

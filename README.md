@@ -92,7 +92,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | Sensors | GetEnvironmentalSensors<br/>GetMovementSensors | -DENABLE_SENSORS=ON |
 | SFTP | [FetchSFTP](PROCESSORS.md#fetchsftp)<br/>[ListSFTP](PROCESSORS.md#listsftp)<br/>[PutSFTP](PROCESSORS.md#putsftp) | -DENABLE_SFTP=ON |
 | SQL | [ExecuteSQL](PROCESSORS.md#executesql)<br/>[PutSQL](PROCESSORS.md#putsql)<br/>[QueryDatabaseTable](PROCESSORS.md#querydatabasetable)<br/> | -DENABLE_SQL=ON  |
-| Systemd | [ConsumeJournald](PROCESSORS.md#consumejournald) | -DDISABLE_SYSTEMD=OFF |
+| Systemd | [ConsumeJournald](PROCESSORS.md#consumejournald) | -DENABLE_SYSTEMD=ON |
 | Tensorflow | TFApplyGraph<br/>TFConvertImageToTensor<br/>TFExtractTopLabels<br/>      |    -DENABLE_TENSORFLOW=ON  |
 | USB Camera | [GetUSBCamera](PROCESSORS.md#getusbcamera)     |    -DENABLE_USB_CAMERA=ON  |
 | Windows Event Log (Windows only) | CollectorInitiatedSubscription<br/>ConsumeWindowsEventLog<br/>TailEventLog | -DENABLE_WEL=ON |

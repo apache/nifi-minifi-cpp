@@ -324,7 +324,7 @@ add_dependency OPC_ENABLED "mbedtls"
 
 add_disabled_option AZURE_ENABLED ${FALSE} "ENABLE_AZURE"
 
-add_enabled_option SYSTEMD_ENABLED ${TRUE} "DISABLE_SYSTEMD"
+add_disabled_option SYSTEMD_ENABLED ${TRUE} "ENABLE_SYSTEMD"
 
 USE_SHARED_LIBS=${TRUE}
 ASAN_ENABLED=${FALSE}
