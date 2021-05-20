@@ -161,8 +161,6 @@ class SingleNodeDockerCluster(Cluster):
             volumes=self.vols)
         self.network.reload()
 
-        logging.info('Started container \'%s\'', container.name)
-
         logging.info('Adding container \'%s\'', container.name)
         self.containers[container.name] = container
 
@@ -212,8 +210,6 @@ class SingleNodeDockerCluster(Cluster):
             hostname=self.name,
             network=self.network.name,
             volumes=self.vols)
-
-        logging.info('Started container \'%s\'', container.name)
 
         logging.info('Adding container \'%s\'', container.name)
         self.containers[container.name] = container
