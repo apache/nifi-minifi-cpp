@@ -48,7 +48,7 @@ class PcapFactory : public core::ObjectFactory {
   }
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
-    if (utils::StringUtils::equalsIgnoreCase(class_name,"CapturePacket")) {
+    if (utils::StringUtils::equalsIgnoreCase(class_name, "CapturePacket")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<processors::CapturePacket>());
     } else {
       return nullptr;

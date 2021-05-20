@@ -86,7 +86,7 @@ int read_buffer(uint8_t *buf, int len, cstream * stream) {
     buf += bytes_read;
     total_read += bytes_read;
   }
-  if(total_read)
+  if (total_read)
     logc(trace, "Received data size %d over socket %" PRI_SOCKET, total_read, stream->socket_);
   return total_read;
 }
@@ -105,7 +105,7 @@ int writeUTF(const char * cstr, size_t length, enum Bool widen, cstream * stream
     ret = write_uint32_t(len, stream);
   }
 
-  if(len == 0 || ret < 0) {
+  if (len == 0 || ret < 0) {
     return ret;
   }
 
@@ -116,7 +116,7 @@ int writeUTF(const char * cstr, size_t length, enum Bool widen, cstream * stream
 int read_uint8_t(uint8_t *value, cstream * stream) {
   uint8_t val;
   int ret = read_buffer(&val, sizeof(uint8_t), stream);
-  if(ret == sizeof(uint8_t)) {
+  if (ret == sizeof(uint8_t)) {
     *value = val;
   }
   return ret;
@@ -124,7 +124,7 @@ int read_uint8_t(uint8_t *value, cstream * stream) {
 int read_uint16_t(uint16_t *value, cstream * stream) {
   uint16_t val;
   int ret = read_buffer((uint8_t*)&val, sizeof(uint16_t), stream);
-  if(ret == sizeof(uint16_t)) {
+  if (ret == sizeof(uint16_t)) {
     *value = ntohs(val);
   }
   return ret;
@@ -132,7 +132,7 @@ int read_uint16_t(uint16_t *value, cstream * stream) {
 int read_uint32_t(uint32_t *value, cstream * stream) {
   uint32_t val;
   int ret = read_buffer((uint8_t*)&val, sizeof(uint32_t), stream);
-  if(ret == sizeof(uint32_t)) {
+  if (ret == sizeof(uint32_t)) {
     *value = ntohl(val);
   }
   return ret;
@@ -153,7 +153,7 @@ int readUTF(char * buf, uint32_t buflen, cstream * stream) {
 }
 
 void close_stream(cstream * stream) {
-  if(stream != NULL && stream->socket_ != -1) {
+  if (stream != NULL && stream->socket_ != -1) {
 #ifdef _WIN32
     shutdown(stream->socket_, SD_BOTH);
     closesocket(stream->socket_);
@@ -171,7 +171,7 @@ cstream * create_socket(const char * host, uint16_t portnum) {
 
 #ifdef _WIN32
   WSADATA wsa;
-  if (WSAStartup(MAKEWORD(2,2),&wsa) != 0) {
+  if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
     logc(err, "%s", "WSAStartup failed");
     return NULL;
   }
@@ -226,7 +226,7 @@ cstream * create_socket(const char * host, uint16_t portnum) {
 }
 
 void free_socket(cstream * stream) {
-  if(stream != NULL) {
+  if (stream != NULL) {
     close_stream(stream);
     free(stream);
   }

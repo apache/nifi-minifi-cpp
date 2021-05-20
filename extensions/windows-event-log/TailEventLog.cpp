@@ -67,7 +67,7 @@ void TailEventLog::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
 
   log_handle_ = OpenEventLog(NULL, log_source_.c_str());
 
-  logger_->log_trace("TailEventLog configured to tail %s",log_source_);
+  logger_->log_trace("TailEventLog configured to tail %s", log_source_);
 }
 
 void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -87,7 +87,7 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   
   logger_->log_trace("%d and %d", current_record_, num_records_);
 
-  if (ReadEventLog(log_handle_,EVENTLOG_FORWARDS_READ | EVENTLOG_SEEK_READ, current_record_, event_record,MAX_RECORD_BUFFER_SIZE, &bytes_to_read,&min_bytes)) {
+  if (ReadEventLog(log_handle_, EVENTLOG_FORWARDS_READ | EVENTLOG_SEEK_READ, current_record_, event_record, MAX_RECORD_BUFFER_SIZE, &bytes_to_read, &min_bytes)) {
     if (bytes_to_read == 0) {
       logger_->log_debug("Yielding");
       context->yield();

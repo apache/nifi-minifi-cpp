@@ -809,7 +809,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP batching does not fail even if on
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP put large file", "[PutSFTP]") {
-  std::mt19937 rng(std::random_device{}());
+  std::mt19937 rng(std::random_device{}()); // NOLINT
   std::string content(4 * 1024 * 1024U, '\0');
   std::generate_n(content.begin(), 4 * 1024 * 1024U, std::ref(rng));
 

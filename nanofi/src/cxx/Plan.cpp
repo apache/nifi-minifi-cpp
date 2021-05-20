@@ -163,7 +163,7 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   process_sessions_.push_back(current_session);
   if (input_ff_params) {
     auto flowFile = current_session->create();
-    for(const auto& kv : input_ff_params->attributes) {
+    for (const auto& kv : input_ff_params->attributes) {
       flowFile->setAttribute(kv.first, kv.second);
     }
     current_session->importFrom(*(input_ff_params->content_stream.get()), flowFile);
@@ -247,11 +247,11 @@ std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::strin
 
   auto custom_proc = custom_processors.find(processor_name);
 
-  if(custom_proc != custom_processors.end()) {
+  if (custom_proc != custom_processors.end()) {
     auto ontrigger_c_func = custom_proc->second.ontr_cb;
     auto onschedule_c_func = custom_proc->second.onsc_cb;
     auto ontrigger_wrapper_func = [ontrigger_c_func](core::ProcessSession * session, core::ProcessContext * context) {
-      if(ontrigger_c_func) {
+      if (ontrigger_c_func) {
         ontrigger_c_func(reinterpret_cast<processor_session *>(session),
                          reinterpret_cast<processor_context *>(context));
       }
@@ -332,7 +332,7 @@ bool ExecutionPlan::setFailureStrategy(FailureStrategy start) {
 }
 
 bool ExecutionPlan::addCustomProcessor(custom_processor_args in) {
-  if(CallbackProcessorName == in.name) {
+  if (CallbackProcessorName == in.name) {
     return false;  // This name cannot be registered
   }
 

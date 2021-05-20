@@ -64,7 +64,7 @@ struct TransferState {
 };
 
 void wait_until(std::atomic<bool>& b) {
-  while(!b) {
+  while (!b) {
     std::this_thread::sleep_for(std::chrono::milliseconds(0));  // Just yield
   }
 }
@@ -94,7 +94,7 @@ TEST_CASE("TestSetPortId", "[S2S1]") {
 
 void send_response_code(minifi::io::BaseStream* stream, uint8_t resp) {
   std::array<uint8_t, 3> resp_codes = {'R', 'C', resp};
-  for(uint8_t r : resp_codes) {
+  for (uint8_t r : resp_codes) {
     stream->write(&r, 1);
   }
 }
@@ -110,16 +110,16 @@ void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, 
   std::string requesttype;
   stream->read(requesttype);
 
-  if(requesttype == "SEND_FLOWFILES") {
+  if (requesttype == "SEND_FLOWFILES") {
     s2s_data.request_type_ok = true;
     stream->read(s2s_data.attr_num);
     std::string key, value;
-    for(uint32_t i = 0; i < s2s_data.attr_num; ++i) {
+    for (uint32_t i = 0; i < s2s_data.attr_num; ++i) {
       stream->read(key, true);
       stream->read(value, true);
       s2s_data.attributes[key] = value;
     }
-    uint64_t content_size=0;
+    uint64_t content_size = 0;
     stream->read(content_size);
     s2s_data.payload.resize(content_size);
     stream->read(s2s_data.payload, content_size);
@@ -142,16 +142,16 @@ void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfe
   // just consume handshake data
   bool found_codec = false;
   size_t read_len = 0;
-  while(!found_codec) {
+  while (!found_codec) {
     uint8_t handshake_data[1000];
     int actual_len = stream->read(handshake_data+read_len, 1000-read_len);
-    if(actual_len <= 0) {
+    if (actual_len <= 0) {
       continue;
     }
     read_len += actual_len;
     std::string incoming_data(reinterpret_cast<const char *>(handshake_data), read_len);
     auto it = std::search(incoming_data.begin(), incoming_data.end(), CODEC_NAME.begin(), CODEC_NAME.end());
-    if(it != incoming_data.end()){
+    if (it != incoming_data.end()) {
       size_t idx = std::distance(incoming_data.begin(), it);
       // Actual version follows the string as an uint32_t // that should be the end of the buffer
       found_codec = idx + CODEC_NAME.length() + sizeof(uint32_t) == read_len;
@@ -178,7 +178,7 @@ TEST_CASE("TestSiteToBootStrap", "[S2S3]") {
   std::array<std::function<void(minifi::io::BaseStream*, TransferState&, S2SReceivedData&)>, 2> bootstrap_functions =
       {sunny_path_bootstrap, different_version_bootstrap};
 
-  for(const auto& bootstrap_func : bootstrap_functions) {
+  for (const auto& bootstrap_func : bootstrap_functions) {
     TransferState transfer_state;
     S2SReceivedData received_data;
     std::unique_ptr<minifi::io::ServerSocket> sckt(new minifi::io::RandomServerSocket("localhost"));

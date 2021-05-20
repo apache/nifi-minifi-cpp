@@ -80,7 +80,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
   else {
     static std::map<std::string, EVT_FORMAT_MESSAGE_FLAGS> formatFlagMap = {
         {"Channel", EvtFormatMessageChannel}, {"Keywords", EvtFormatMessageKeyword}, {"Level", EvtFormatMessageLevel},
-        {"Opcode", EvtFormatMessageOpcode}, {"Task",EvtFormatMessageTask}
+        {"Opcode", EvtFormatMessageOpcode}, {"Task", EvtFormatMessageTask}
     };
     auto it = formatFlagMap.find(node_name);
     if (it != formatFlagMap.end()) {
@@ -111,7 +111,7 @@ std::vector<std::string> MetadataWalker::getIdentifiers(const std::string &text)
     if (next_pos != std::string::npos) {
       auto potential_identifier = text.substr(pos + 2, next_pos - (pos + 2));
       std::smatch match;
-      if (potential_identifier.find("S-") != std::string::npos){
+      if (potential_identifier.find("S-") != std::string::npos) {
         found_strings.push_back(potential_identifier);
       }
     }
@@ -125,21 +125,21 @@ std::string MetadataWalker::getMetadata(METADATA metadata) const {
       case LOG_NAME:
         return log_name_;
       case SOURCE:
-        return getString(metadata_,"Provider");
+        return getString(metadata_, "Provider");
       case TIME_CREATED:
         return windows_event_log_metadata_.getEventTimestamp();
       case EVENTID:
-        return getString(metadata_,"EventID");
+        return getString(metadata_, "EventID");
       case EVENT_RECORDID:
         return getString(metadata_, "EventRecordID");
       case OPCODE:
         return getString(metadata_, "Opcode");
       case TASK_CATEGORY:
-        return getString(metadata_,"Task");
+        return getString(metadata_, "Task");
       case LEVEL:
-        return getString(metadata_,"Level");
+        return getString(metadata_, "Level");
       case KEYWORDS:
-        return getString(metadata_,"Keywords");
+        return getString(metadata_, "Keywords");
       case EVENT_TYPE:
         return std::to_string(windows_event_log_metadata_.getEventTypeIndex());
       case COMPUTER:

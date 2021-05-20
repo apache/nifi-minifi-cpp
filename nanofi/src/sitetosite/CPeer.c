@@ -28,9 +28,9 @@ int openPeer(struct SiteToSiteCPeer * peer) {
   }
 
   // In case there was no socket injected, let's create it
-  if(peer->_stream == NULL) {
+  if (peer->_stream == NULL) {
     peer->_stream = create_socket(peer->_host, peer->_port);
-    if(peer->_stream == NULL) {
+    if (peer->_stream == NULL) {
       logc(err, "%s", "failed to open socket");
       return -1;
     }
@@ -46,7 +46,7 @@ int openPeer(struct SiteToSiteCPeer * peer) {
 
   uint16_t data_size = sizeof MAGIC_BYTES;
 
-  if(write_buffer((uint8_t*)MAGIC_BYTES, data_size, peer->_stream) != data_size) {
+  if (write_buffer((uint8_t*)MAGIC_BYTES, data_size, peer->_stream) != data_size) {
     logc(err, "%s", "failed to write buffer");
     return -1;
   }

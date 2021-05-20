@@ -89,8 +89,8 @@ struct NodeData {
   uint16_t dataTypeID;
   std::map<std::string, std::string> attributes;
 
-  virtual ~NodeData(){
-    if(var_) {
+  virtual ~NodeData() {
+    if (var_) {
       UA_Variant_delete(var_);
     }
   }
@@ -112,7 +112,7 @@ struct NodeData {
     var_ = var;
   }
   void addVariant(UA_Variant * var) {
-    if(var_) {
+    if (var_) {
       UA_Variant_delete(var_);
     }
     var_ = var;

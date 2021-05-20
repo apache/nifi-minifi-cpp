@@ -346,9 +346,9 @@ flow_file_record * write_to_flow(const char * buff, size_t count, processor_cont
  */
 void free_flowfile(flow_file_record *ff) {
   NULL_CHECK(, ff);
-  if (ff->crp){
+  if (ff->crp) {
     auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ff->crp);
-    if((*content_repo_ptr) && (ff->keepContent == 0)) {
+    if ((*content_repo_ptr) && (ff->keepContent == 0)) {
       auto claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation, *content_repo_ptr);
       (*content_repo_ptr)->remove(*claim);
     }
@@ -455,7 +455,7 @@ int8_t remove_attribute(flow_file_record *ff, const char *key) {
 int get_content(const flow_file_record* ff, uint8_t* target, int size) {
   NULL_CHECK(0, ff, target);
   auto content_repo = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ff->crp);
-  if(ff->crp && (*content_repo)) {
+  if (ff->crp && (*content_repo)) {
     std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation,
                                                                                            *content_repo);
     auto stream = (*content_repo)->read(*claim);
@@ -489,7 +489,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
   }
 
   AttributeMap& attribute_map = empty_attribute_map;
-  if(ff->attributes) {
+  if (ff->attributes) {
     attribute_map = *(static_cast<AttributeMap *>(ff->attributes));
   }
 
@@ -500,7 +500,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
   std::shared_ptr<minifi::ResourceClaim> claim = nullptr;
   std::shared_ptr<minifi::io::BufferStream> stream = nullptr;  // Used when content is not in content repo
 
-  if(ff->contentLocation) {
+  if (ff->contentLocation) {
     auto ff_content_repo_ptr = (static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ff->crp));
     if (ff->crp && (*ff_content_repo_ptr)) {
       content_repo = *ff_content_repo_ptr;
@@ -547,7 +547,7 @@ flow *create_flow(nifi_instance *instance, const char *first_processor) {
   NULL_CHECK(nullptr, instance);
   auto new_flow = create_new_flow(instance);
 
-  if(new_flow != nullptr && first_processor != nullptr && strlen(first_processor) > 0) {
+  if (new_flow != nullptr && first_processor != nullptr && strlen(first_processor) > 0) {
     // automatically adds it with success
     new_flow->addProcessor(first_processor, first_processor);
   }
@@ -612,7 +612,7 @@ int set_standalone_property(standalone_processor *proc, const char *name, const 
 
 uint8_t get_property(const processor_context * context, const char * name, char * buffer, size_t size) {
   std::string value;
-  if(!context->getDynamicProperty(name, value)) {
+  if (!context->getDynamicProperty(name, value)) {
     return -1;
   }
   size_t chars_to_copy = std::min(value.length(), size-1);
@@ -631,7 +631,7 @@ int free_flow(flow *flow) {
 
 flow_file_record* flowfile_to_record(std::shared_ptr<core::FlowFile> ff, const std::shared_ptr<minifi::core::ContentRepository>& crp) {
   auto claim = ff->getResourceClaim();
-  if(claim == nullptr) {
+  if (claim == nullptr) {
     return nullptr;
   }
 
@@ -656,7 +656,7 @@ flow_file_record* flowfile_to_record(std::shared_ptr<core::FlowFile> ff, Executi
 
 flow_file_record* get(processor_session *session, processor_context *context) {
   auto ff = session->get();
-  if(!ff) {
+  if (!ff) {
     return nullptr;
   }
 
@@ -711,7 +711,7 @@ flow_file_record *invoke_ff(standalone_processor* proc, const flow_file_record *
     auto content_repo = static_cast<std::shared_ptr<minifi::core::ContentRepository> *>(input_ff->crp);
     auto ff_data = std::make_shared<flowfile_input_params>();
 
-    if(input_ff->crp && (*content_repo)) {
+    if (input_ff->crp && (*content_repo)) {
       std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(input_ff->contentLocation,
                                                                                              *content_repo);
       ff_data->content_stream = (*content_repo)->read(*claim);
@@ -787,7 +787,7 @@ int delete_custom_processor(const char * name) {
 }
 
 int transfer_to_relationship(flow_file_record * ffr, processor_session * ps, const char * relationship) {
-  if(ffr == nullptr || ffr->ffp == nullptr || ps == nullptr || relationship == nullptr || strlen(relationship) == 0) {
+  if (ffr == nullptr || ffr->ffp == nullptr || ps == nullptr || relationship == nullptr || strlen(relationship) == 0) {
     return -1;
   }
   auto ff_sptr = reinterpret_cast<std::shared_ptr<core::FlowFile>*>(ffr->ffp);

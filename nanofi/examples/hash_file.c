@@ -27,7 +27,7 @@
 
 void custom_processor_logic(processor_session * ps, processor_context * ctx) {
   flow_file_record * ffr = get(ps, ctx);
-  if(ffr == NULL) {
+  if (ffr == NULL) {
     return;
   }
   uint8_t * buffer = (uint8_t*)malloc(ffr->size* sizeof(uint8_t));
@@ -45,13 +45,13 @@ void custom_processor_logic(processor_session * ps, processor_context * ctx) {
   MD5_Final(digest, &context);
 
   char md5string[33];
-  for(int i = 0; i < 16; ++i) {
+  for (int i = 0; i < 16; ++i) {
     sprintf(&md5string[i*2], "%02x", (unsigned int)digest[i]);
   }
 
   char prop_value[50];
 
-  if(get_property(ctx, "checksum_attr_name", prop_value, 50) != 0) {
+  if (get_property(ctx, "checksum_attr_name", prop_value, 50) != 0) {
     return;  // Attr name not found
   }
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 
   char *file = argv[1];
 
-  if(access(file, F_OK) == -1) {
+  if (access(file, F_OK) == -1) {
     printf("Error: %s doesn't exist!\n", file);
     exit(1);
   }
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
   stat(file, &stats);
 
   // Check for file existence
-  if (S_ISDIR(stats.st_mode)){
+  if (S_ISDIR(stats.st_mode)) {
     printf("Error: %s is a directory!\n", file);
     exit(1);
   }

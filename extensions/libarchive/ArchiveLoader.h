@@ -59,11 +59,11 @@ class ArchiveFactory : public core::ObjectFactory {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::MergeContent>());
     } else if (utils::StringUtils::equalsIgnoreCase(class_name, "CompressContent")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::CompressContent>());
-    } else if (utils::StringUtils::equalsIgnoreCase(class_name,"FocusArchiveEntry")) {
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "FocusArchiveEntry")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::FocusArchiveEntry>());
-    } else if (utils::StringUtils::equalsIgnoreCase(class_name,"UnfocusArchiveEntry")) {
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "UnfocusArchiveEntry")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::UnfocusArchiveEntry>());
-    } else if (utils::StringUtils::equalsIgnoreCase(class_name,"ManipulateArchive")) {
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ManipulateArchive")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ManipulateArchive>());
     } else {
       return nullptr;

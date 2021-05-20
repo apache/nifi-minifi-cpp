@@ -95,18 +95,18 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
       }
       const auto allowableValues = prop.second.getAllowedValues();
       std::stringstream s;
-      std::copy(allowableValues.begin(),allowableValues.end(), std::ostream_iterator<std::string>(s,"<br>"));
+      std::copy(allowableValues.begin(), allowableValues.end(), std::ostream_iterator<std::string>(s, "<br>"));
       outfile << "|";
       const auto defaultValue = prop.second.getDefaultValue().to_string();
-      if (defaultValue.size() == 1 && (int)defaultValue.c_str()[0] == 0x0a){
+      if (defaultValue.size() == 1 && (int)defaultValue.c_str()[0] == 0x0a) {
         outfile << "\\n";
       }
-      else{
+      else {
         outfile << defaultValue;
       }
       std::string description = prop.second.getDescription();
       outfile << "|" << s.str() << "|" << utils::StringUtils::replaceAll(description, "\n", "<br/>");
-      if (supportsEl){
+      if (supportsEl) {
         outfile << "<br/>**Supports Expression Language: true**";
       }
       outfile << "|" << std::endl;
@@ -121,7 +121,7 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
     outfile << std::endl;
   }
 
-  std::map<std::string,std::string> fileList;
+  std::map<std::string, std::string> fileList;
 
   auto fileFind = [&fileList](const std::string& base_path, const std::string& file) -> bool {
     if (file.find(".extra") == std::string::npos)
@@ -144,21 +144,21 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
   "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied."
   "See the License for the specific language governing permissions and"
   "limitations under the License."
-  "-->"<<std::endl;
+  "-->" << std::endl;
   genStream << "# Processors" << std::endl << std::endl;
   genStream << "## Table of Contents" << std::endl << std::endl;
 
-  for(const auto &file : fileList){
-    std::string lcfile=file.first;
+  for (const auto &file : fileList) {
+    std::string lcfile = file.first;
     std::transform(lcfile.begin(), lcfile.end(), lcfile.begin(), ::tolower);
     genStream << "- [" << file.first << "](#" << lcfile << ")" << std::endl;
   }
 
-  for(const auto &file : fileList){
+  for (const auto &file : fileList) {
       std::ifstream filestream(file.second);
       genStream << filestream.rdbuf() << std::endl;
       std::ifstream filestreamExtra(file.second + ".extra");
-      if (filestreamExtra.good()){
+      if (filestreamExtra.good()) {
         genStream << filestreamExtra.rdbuf()<< std::endl;
       }
   }

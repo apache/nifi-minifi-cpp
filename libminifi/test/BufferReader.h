@@ -24,7 +24,7 @@
 
 class BufferReader : public org::apache::nifi::minifi::InputStreamCallback {
  public:
-  explicit BufferReader(std::vector<uint8_t>& buffer) : buffer_(buffer){}
+  explicit BufferReader(std::vector<uint8_t>& buffer) : buffer_(buffer) {}
 
   int write(org::apache::nifi::minifi::io::BaseStream& input, std::size_t len) {
     uint8_t tmpBuffer[4096]{};

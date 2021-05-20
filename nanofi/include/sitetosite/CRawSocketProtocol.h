@@ -139,7 +139,7 @@ static inline void setPortId(struct CRawSiteToSiteClient * client, const char * 
   strncpy(client->_port_id_str, id, 37);
   client->_port_id_str[36] = '\0';
   int i;
-  for(i = 0; i < 37; i++){
+  for (i = 0; i < 37; i++) {
     client->_port_id_str[i] = tolower(client->_port_id_str[i]);
   }
 }
@@ -193,9 +193,9 @@ static inline struct CRawSiteToSiteClient* createClient(const char * host, uint1
   return client;
 }
 
-static inline void destroyClient(struct CRawSiteToSiteClient * client){
+static inline void destroyClient(struct CRawSiteToSiteClient * client) {
   tearDown(client);
-  if(client->_owns_resource == True) {
+  if (client->_owns_resource == True) {
     freePeer(client->_peer);
   }
 }

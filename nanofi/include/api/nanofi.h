@@ -49,7 +49,7 @@ extern "C" {
         return ret_val;                                 \
       }                                                 \
     }                                                   \
-  } while(0)
+  } while (0)
 
 /**
  * Enables logging (disabled by default)
@@ -76,7 +76,7 @@ nifi_instance *create_instance_repo(const char *url, nifi_port *port, const char
  * @param port remote port the instance connects to
  * @return pointer to the new instance
  **/
-static inline nifi_instance *create_instance(const char *url, nifi_port *port){
+static inline nifi_instance *create_instance(const char *url, nifi_port *port) {
   return create_instance_repo(url, port, "filesystemrepository");
 }
 
@@ -126,7 +126,7 @@ flow *create_new_flow(nifi_instance * instance);
  * @attention in case first processor is empty or doesn't name any existing processor, an empty flow is returned.
  * @return a pointer to the created flow
  **/
-DEPRECATED(0.6.0,2.0) flow *create_flow(nifi_instance * instance, const char * first_processor);
+DEPRECATED(0.6.0, 2.0) flow *create_flow(nifi_instance * instance, const char * first_processor);
 
 /**
  * Add a getfile processor to "parent" flow.

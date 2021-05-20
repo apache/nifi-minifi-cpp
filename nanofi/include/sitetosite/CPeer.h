@@ -57,13 +57,13 @@ static inline const char * getURL(const struct SiteToSiteCPeer * peer) {
 }
 
 static inline void setHostName(struct SiteToSiteCPeer * peer, const char * hostname) {
-  if(peer->_host) {
+  if (peer->_host) {
     free(peer->_host);
   }
-  if(peer->_url) {
+  if (peer->_url) {
     free(peer->_url);
   }
-  if(hostname == NULL || strlen(hostname) == 0) {
+  if (hostname == NULL || strlen(hostname) == 0) {
     peer->_host = NULL;
     peer->_url = NULL;
     return;
@@ -74,7 +74,7 @@ static inline void setHostName(struct SiteToSiteCPeer * peer, const char * hostn
   memset(peer->_url, 0, host_len + 14);  // make sure to have zero padding no matter the length of the port
   snprintf(peer->_host, host_len + 1, "%s", hostname);
   snprintf(peer->_url, host_len + 14, "nifi://%s:", hostname);
-  if(peer->_port != 0) {
+  if (peer->_port != 0) {
     snprintf(peer->_url + host_len + 8, 6, "%d", peer->_port);
   }
   return;
@@ -82,10 +82,10 @@ static inline void setHostName(struct SiteToSiteCPeer * peer, const char * hostn
 
 static inline void setPort(struct SiteToSiteCPeer * peer, uint16_t port) {
   peer->_port = port;
-  if(peer->_url != NULL) {
+  if (peer->_url != NULL) {
     int i;
-    for(i = (int)(strlen(peer->_url)) - 1; i >= 0; --i) {  // look for the last ':' in the string
-      if(peer->_url[i] == ':'){
+    for (i = (int)(strlen(peer->_url)) - 1; i >= 0; --i) {  // look for the last ':' in the string
+      if (peer->_url[i] == ':') {
         memset(peer->_url + i + 1, 0, 6);  // zero the port area  - the new port can be shorter
         snprintf(peer->_url + i + 1, 6, "%d", peer->_port);
         break;
@@ -107,7 +107,7 @@ static inline void freePeer(struct SiteToSiteCPeer * peer) {
   closePeer(peer);
   setHostName(peer, NULL);
 
-  if(peer->_stream != NULL) {
+  if (peer->_stream != NULL) {
     free_socket(peer->_stream);
     peer->_stream = NULL;
   }

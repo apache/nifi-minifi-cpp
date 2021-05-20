@@ -29,7 +29,7 @@ std::map<coap_resource_t*, std::function<CoapResponse(CoapQuery)>> CoapServer::f
 CoapServer::~CoapServer() {
   running_ = false;
   future.get();
-  if(server_){
+  if (server_) {
     free_server(server_);
   }
 }

@@ -23,11 +23,11 @@
 #include <jni.h>
 
 static inline std::string JniStringToUTF(JNIEnv *env, const jstring &jstr) {
-  if(!jstr && !env) {
+  if (!jstr && !env) {
     return "";
   }
   const char * c_str = env->GetStringUTFChars(jstr, NULL);
-  if(c_str == NULL) {
+  if (c_str == NULL) {
     return "";
   }
   std::string str = c_str;

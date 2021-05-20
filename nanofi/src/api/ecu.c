@@ -79,7 +79,7 @@ int validate_input_params(tailfile_input_params * params, uint64_t * intrvl, uin
         return -1;
     }
     // Check for file existence
-    if (S_ISDIR(stats.st_mode)){
+    if (S_ISDIR(stats.st_mode)) {
         printf("Error: %s is a directory!\n", params->file);
         return -1;
     }

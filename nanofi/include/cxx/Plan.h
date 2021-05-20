@@ -136,11 +136,11 @@ class ExecutionPlan {
     return content_repo_;
   }
 
-  std::shared_ptr<core::FlowFile> getNextFlowFile(){
+  std::shared_ptr<core::FlowFile> getNextFlowFile() {
     return next_ff_;
   }
 
-  void setNextFlowFile(std::shared_ptr<core::FlowFile> ptr){
+  void setNextFlowFile(std::shared_ptr<core::FlowFile> ptr) {
     next_ff_ = std::move(ptr);
   }
 
@@ -184,7 +184,7 @@ class ExecutionPlan {
       content_repo_ = cr_ptr;
     }
     void setCallback(failure_callback_type onerror_callback) {
-      callback_=onerror_callback;
+      callback_ = onerror_callback;
     }
     void setStrategy(FailureStrategy strat) {
       strategy_ = strat;

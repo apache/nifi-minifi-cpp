@@ -154,12 +154,12 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
     keep_alive_idle_ = std::chrono::milliseconds(idle * 1000);
   }
 
-  void setKeepAliveProbe(std::chrono::milliseconds probe){
+  void setKeepAliveProbe(std::chrono::milliseconds probe) {
     keep_alive_probe_ = probe;
   }
 
-  void setKeepAliveIdle(std::chrono::milliseconds idle){
-    keep_alive_idle_= idle;
+  void setKeepAliveIdle(std::chrono::milliseconds idle) {
+    keep_alive_idle_ = idle;
   }
 
 

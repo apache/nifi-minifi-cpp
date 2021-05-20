@@ -62,7 +62,7 @@ static const char *log_level_str[trace+1] = { "OFF", "CRITICAL", "ERROR", "WARN"
 #endif  // C99 compiler support
 
 static inline void set_log_level(log_level lvl) {
-  if(lvl >= off && lvl <= trace) {
+  if (lvl >= off && lvl <= trace) {
     global_log_level = lvl;
     logc(info, "Log level was set to %s", log_level_str[lvl]);
   }

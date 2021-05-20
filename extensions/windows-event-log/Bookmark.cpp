@@ -83,7 +83,7 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
     return;
   }
 
-  const unique_evt_handle hEvent = [this,&hEventResults] {
+  const unique_evt_handle hEvent = [this, &hEventResults] {
     DWORD dwReturned{};
     EVT_HANDLE hEvent{ nullptr };
     if (!EvtNext(hEventResults.get(), 1, &hEvent, INFINITE, 0, &dwReturned)) {

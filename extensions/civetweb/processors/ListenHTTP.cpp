@@ -514,7 +514,7 @@ bool ListenHTTP::isSecure() const {
 }
 
 std::string ListenHTTP::getPort() const {
-  if(isSecure()) {
+  if (isSecure()) {
     return listeningPort.substr(0, listeningPort.length() -1);
   }
   return listeningPort;

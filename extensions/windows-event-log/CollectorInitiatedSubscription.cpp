@@ -503,7 +503,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
     {EcSubscriptionCommonUserName, sourceUserName_.value()},
     {EcSubscriptionCommonPassword, sourcePassword_.value()}
   };
-  for (auto& prop: listProperty) {
+  for (auto& prop : listProperty) {
     if (!EcSetSubscriptionProperty(hSubscription, prop.propId_, 0, &prop.prop_)) {
       LOG_SUBSCRIPTION_WINDOWS_ERROR("EcSetSubscriptionProperty id: " + std::to_string(prop.propId_));
       return false;
@@ -542,7 +542,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
     return false;
   }
 
-  for (auto& prop: std::vector<SubscriptionProperty>{{EcSubscriptionEventSourceAddress, sourceAddress_.value()}, {EcSubscriptionEventSourceEnabled, true}}) {
+  for (auto& prop : std::vector<SubscriptionProperty>{{EcSubscriptionEventSourceAddress, sourceAddress_.value()}, {EcSubscriptionEventSourceEnabled, true}}) {
     if (!EcSetObjectArrayProperty(hArray, prop.propId_, dwEventSourceCount, 0, &prop.prop_)) {
       LOG_SUBSCRIPTION_WINDOWS_ERROR("EcSetObjectArrayProperty id: " + std::to_string(prop.propId_));
       return false;

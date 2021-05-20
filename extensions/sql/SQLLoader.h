@@ -36,14 +36,14 @@ class SQLFactory : public core::ObjectFactory {
     return "SQLFactory";
   }
 
-  std::string getClassName() override{
+  std::string getClassName() override {
     return "SQLFactory";
   }
   /**
    * Gets the class name for the object
    * @return class name for the processor.
    */
-  std::vector<std::string> getClassNames() override{
+  std::vector<std::string> getClassNames() override {
     return {"ExecuteSQL", "PutSQL", "QueryDatabaseTable", "ODBCService"};
   }
 

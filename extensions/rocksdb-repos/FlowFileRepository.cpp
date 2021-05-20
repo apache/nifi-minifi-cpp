@@ -61,8 +61,8 @@ void FlowFileRepository::flush() {
 
   auto multistatus = opendb->MultiGet(options, keys, &values);
 
-  for(size_t i=0; i<keys.size() && i<values.size() && i<multistatus.size(); ++i) {
-    if(!multistatus[i].ok()) {
+  for (size_t i = 0; i < keys.size() && i < values.size() && i < multistatus.size(); ++i) {
+    if (!multistatus[i].ok()) {
       logger_->log_error("Failed to read key from rocksdb: %s! DB is most probably in an inconsistent state!", keys[i].data());
       keystrings.remove(keys[i].data());
       continue;
@@ -80,7 +80,7 @@ void FlowFileRepository::flush() {
   auto operation = [&batch, &opendb]() { return opendb->Write(rocksdb::WriteOptions(), &batch); };
 
   if (!ExecuteWithRetry(operation)) {
-    for (const auto& key: keystrings) {
+    for (const auto& key : keystrings) {
       keys_to_delete.enqueue(key);  // Push back the values that we could get but couldn't delete
     }
     return;  // Stop here - don't delete from content repo while we have records in FF repo
@@ -186,7 +186,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
 
 bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> operation) {
   int waitTime = 0;
-  for (int i=0; i<3; ++i) {
+  for (int i=0; i < 3; ++i) {
     auto status = operation();
     if (status.ok()) {
       logger_->log_trace("Rocksdb operation executed successfully");
@@ -203,7 +203,7 @@ bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> opera
  * Returns True if there is data to interrogate.
  * @return true if our db has data stored.
  */
-bool FlowFileRepository::need_checkpoint(minifi::internal::OpenRocksDB& opendb){
+bool FlowFileRepository::need_checkpoint(minifi::internal::OpenRocksDB& opendb) {
   auto it = opendb.NewIterator(rocksdb::ReadOptions());
   it->SeekToFirst();
   return it->Valid();
@@ -215,7 +215,7 @@ void FlowFileRepository::initialize_repository() {
     return;
   }
   // first we need to establish a checkpoint iff it is needed.
-  if (!need_checkpoint(*opendb)){
+  if (!need_checkpoint(*opendb)) {
     logger_->log_trace("Do not need checkpoint");
     return;
   }

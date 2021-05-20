@@ -45,7 +45,7 @@ void ProvenanceRepository::run() {
     count++;
     // Hack, to be removed in scope of https://issues.apache.org/jira/browse/MINIFICPP-1145
     count = count % 30;
-    if(count == 0) {
+    if (count == 0) {
       printStats();
     }
   }

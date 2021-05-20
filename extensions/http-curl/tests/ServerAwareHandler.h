@@ -31,7 +31,7 @@ protected:
   }
 
 public:
-  void stop(){
+  void stop() {
     terminate_ = true;
     stop_signal_.notify_all();
   }
