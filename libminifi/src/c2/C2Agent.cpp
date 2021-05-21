@@ -67,8 +67,6 @@ C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
       protocol_(nullptr),
       logger_(logging::LoggerFactory<C2Agent>::getLogger()),
       thread_pool_(2, false, nullptr, "C2 threadpool") {
-  allow_updates_ = true;
-
   manifest_sent_ = false;
 
   running_c2_configuration = std::make_shared<Configure>();
@@ -185,34 +183,6 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       heart_beat_period_ = 3000;
   }
 
-  std::string update_settings;
-  if (configure->get("nifi.c2.agent.update.allow", "c2.agent.update.allow", update_settings)) {
-     allow_updates_ = utils::StringUtils::toBool(update_settings).value_or(true);
-    // allow the agent to be updated. we then need to get an update command to execute after
-  }
-
-  if (allow_updates_) {
-    if (!configure->get("nifi.c2.agent.update.command", "c2.agent.update.command", update_command_)) {
-      std::string cwd = utils::Environment::getCurrentWorkingDirectory();
-      if (cwd.empty()) {
-        logger_->log_error("Could not set the update command because the working directory could not be determined");
-      } else {
-        update_command_ = cwd + "/minifi.sh update";
-      }
-    }
-
-    if (!configure->get("nifi.c2.agent.update.temp.location", "c2.agent.update.temp.location", update_location_)) {
-      std::string cwd = utils::Environment::getCurrentWorkingDirectory();
-      if (cwd.empty()) {
-        logger_->log_error("Could not set the update location because the working directory could not be determined");
-      } else {
-        update_location_ = cwd + "/minifi.update";
-      }
-    }
-
-    // if not defined we won't be able to update
-    configure->get("nifi.c2.agent.bin.location", "c2.agent.bin.location", bin_location_);
-  }
   std::string heartbeat_reporters;
   if (configure->get("nifi.c2.agent.heartbeat.reporter.classes", "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
     std::vector<std::string> reporters = utils::StringUtils::splitAndTrim(heartbeat_reporters, ",");
@@ -604,52 +574,6 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       configure(running_c2_configuration);
     C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, true);
     enqueue_c2_response(std::move(response));
-  } else if (resp.name == "agent") {
-    // we are upgrading the agent. therefore we must be given a location
-    auto location = resp.operation_arguments.find("location");
-    auto isPartialStr = resp.operation_arguments.find("partial");
-
-    bool partial_update = false;
-    if (isPartialStr != std::end(resp.operation_arguments)) {
-      partial_update = utils::StringUtils::equalsIgnoreCase(isPartialStr->second.to_string(), "true");
-    }
-    if (location != resp.operation_arguments.end()) {
-      logger_->log_debug("Update agent with location %s", location->second.to_string());
-      // we will not have a raw payload
-      C2Payload payload(Operation::TRANSFER, true);
-
-      C2Payload &&response = protocol_.load()->consumePayload(location->second.to_string(), payload, RECEIVE, false);
-
-      auto raw_data = response.getRawData();
-
-      std::string file_path = std::string(raw_data.data(), raw_data.size());
-
-      logger_->log_debug("Update requested with file %s", file_path);
-
-      // acknowledge the transfer. For a transfer, the response identifier should be the checksum of the
-      // file transferred.
-      C2Payload transfer_response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, response.getIdentifier(), true);
-
-      protocol_.load()->consumePayload(std::move(transfer_response));
-
-      if (allow_updates_) {
-        logger_->log_debug("Update allowed from file %s", file_path);
-        if (partial_update && !bin_location_.empty()) {
-          utils::file::DiffUtils::apply_binary_diff(bin_location_.c_str(), file_path.c_str(), update_location_.c_str());
-        } else {
-          utils::file::FileUtils::copy_file(file_path, update_location_);
-        }
-        // remove the downloaded file.
-        logger_->log_debug("removing file %s", file_path);
-        std::remove(file_path.c_str());
-        update_agent();
-      } else {
-        logger_->log_error("Update disallowed from file %s", file_path);
-      }
-
-    } else {
-      logger_->log_error("No location present");
-    }
   } else {
     C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NOT_APPLIED, resp.ident, true);
     enqueue_c2_response(std::move(response));
@@ -680,14 +604,6 @@ void C2Agent::restart_agent() {
   std::string command = cwd + "/bin/minifi.sh restart";
   if (system(command.c_str()) != 0) {
     logger_->log_error("System command '%s' failed", command);
-  }
-}
-
-void C2Agent::update_agent() {
-  if (system(update_command_.c_str()) == 0) {
-    logger_->log_info("Executed update command '%s'", update_command_);
-  } else {
-    logger_->log_error("Update command %s failed; may not have command processor", update_command_);
   }
 }
 

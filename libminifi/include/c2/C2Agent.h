@@ -93,8 +93,6 @@ class C2Agent : public state::UpdateController {
  protected:
   void restart_agent();
 
-  void update_agent();
-
   /**
    * Check the collection of triggers for any updates that need to be handled.
    * This is an optional step
@@ -224,14 +222,6 @@ class C2Agent : public state::UpdateController {
   std::vector<std::shared_ptr<C2Trigger>> triggers_;
 
   std::atomic<C2Protocol*> protocol_;
-
-  bool allow_updates_;
-
-  std::string update_command_;
-
-  std::string update_location_;
-
-  std::string bin_location_;
 
   std::shared_ptr<logging::Logger> logger_;
 
