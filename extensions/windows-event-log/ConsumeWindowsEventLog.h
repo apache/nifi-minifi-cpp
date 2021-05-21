@@ -126,7 +126,7 @@ private:
   };
 
   core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::Forbidden;
+    return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
   bool commitAndSaveBookmark(const std::wstring &bookmarkXml, const std::shared_ptr<core::ProcessSession> &session);
