@@ -62,78 +62,101 @@ class HttpResponder : public CivetHandler {
   }
 };
 
+class VerifyHTTPGetFixture {
+ public:
+  VerifyHTTPGetFixture(const cmd_args& args, HttpResponder& h_ex)
+      : args_(args)
+      , configuration_(std::make_shared<minifi::Configure>())
+      , test_repo_(std::make_shared<TestRepository>())
+      , test_flow_repo_(std::make_shared<TestFlowRepository>())
+      , content_repo_(std::make_shared<core::repository::VolatileContentRepository>())
+      , stream_factory_(minifi::io::StreamFactory::getInstance(configuration_)) {
+    LogTestController::getInstance().setDebug<core::Processor>();
+    LogTestController::getInstance().setDebug<core::ProcessSession>();
+    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
+    LogTestController::getInstance().setDebug<minifi::processors::InvokeHTTP>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+    setupFlow();
+    setupURL();
+    setupServer(h_ex);
+    controller_->load();
+  }
+
+  ~VerifyHTTPGetFixture() {
+    controller_->waitUnload(60000);
+    LogTestController::getInstance().reset();
+  }
+
+  void run() {
+    controller_->start();
+
+    assert(org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime(
+        std::chrono::seconds(10),
+        "key:invokehttp.request.url value:" + url_,
+        "key:invokehttp.status.code value:200",
+        "key:flow.id"));
+  }
+
+ private:
+  void setupFlow() {
+    configuration_->set(minifi::Configure::nifi_default_directory, args_.key_dir);
+    configuration_->set(minifi::Configure::nifi_flow_configuration_file, args_.test_file);
+    content_repo_->initialize(configuration_);
+
+    std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
+        new core::YamlConfiguration(test_repo_, test_repo_, content_repo_, stream_factory_, configuration_, args_.test_file));
+
+    controller_ = std::make_shared<minifi::FlowController>(
+        test_repo_, test_flow_repo_, configuration_, std::move(yaml_ptr), content_repo_, DEFAULT_ROOT_GROUP_NAME, true);
+  }
+
+  void setupURL() {
+    core::YamlConfiguration yaml_config(test_repo_, test_repo_, content_repo_, stream_factory_, configuration_, args_.test_file);
+
+    std::shared_ptr<core::Processor> proc = yaml_config.getRoot()->findProcessorByName("invoke");
+    assert(proc != nullptr);
+
+    const auto inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
+    assert(inv != nullptr);
+
+    inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url_);
+  }
+
+  void setupServer(HttpResponder& h_ex) {
+    std::string port, scheme, path;
+    parse_http_components(url_, port, scheme, path);
+    CivetCallbacks callback{};
+    if (scheme == "https") {
+      std::string cert;
+      cert = args_.key_dir + "nifi-cert.pem";
+      callback.init_ssl = ssl_enable;
+      std::string https_port = port + "s";
+      callback.log_message = log_message;
+      server_ = utils::make_unique<TestServer>(https_port, path, &h_ex, &callback, cert, cert);
+    } else {
+      server_ = utils::make_unique<TestServer>(port, path, &h_ex);
+    }
+  }
+
+  cmd_args args_;
+  std::shared_ptr<minifi::Configure> configuration_;
+  std::shared_ptr<core::Repository> test_repo_;
+  std::shared_ptr<core::Repository> test_flow_repo_;
+  std::shared_ptr<core::ContentRepository> content_repo_;
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
+  std::shared_ptr<minifi::FlowController> controller_;
+  std::string url_;
+  std::unique_ptr<TestServer> server_;
+};
+
 int main(int argc, char **argv) {
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   const cmd_args args = parse_cmdline_args(argc, argv);
 
-  LogTestController::getInstance().setDebug<core::Processor>();
-  LogTestController::getInstance().setDebug<core::ProcessSession>();
-  LogTestController::getInstance().setDebug<utils::HTTPClient>();
-  LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
-  LogTestController::getInstance().setDebug<minifi::processors::InvokeHTTP>();
-  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
-
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  configuration->set(minifi::Configure::nifi_default_directory, args.key_dir);
-
-  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
-  std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
-
-  configuration->set(minifi::Configure::nifi_flow_configuration_file, args.test_file);
-
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
-
-  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-
-  content_repo->initialize(configuration);
-
-  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file));
-  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
-
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(
-      test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
-
-  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
-
-  std::shared_ptr<core::Processor> proc = yaml_config.getRoot()->findProcessorByName("invoke");
-  assert(proc != nullptr);
-
-  const auto inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
-  assert(inv != nullptr);
-
-  std::string url;
-  inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
   HttpResponder h_ex;
-  std::string port, scheme, path;
-  std::unique_ptr<TestServer> server;
-  parse_http_components(url, port, scheme, path);
-  CivetCallbacks callback{};
-  if (scheme == "https") {
-    std::string cert;
-    cert = args.key_dir + "nifi-cert.pem";
-    callback.init_ssl = ssl_enable;
-    std::string https_port = port + "s";
-    callback.log_message = log_message;
-    server = utils::make_unique<TestServer>(https_port, path, &h_ex, &callback, cert, cert);
-  } else {
-    server = utils::make_unique<TestServer>(port, path, &h_ex);
-  }
-  controller->load();
-  controller->start();
+  VerifyHTTPGetFixture test_fixture(args, h_ex);
+  test_fixture.run();
 
-  assert(verifyLogLinePresenceInPollTime(
-      std::chrono::seconds(10),
-      "key:invokehttp.request.url value:" + url,
-      "key:invokehttp.status.code value:200",
-      "key:flow.id"));
-
-  controller->waitUnload(60000);
-  if (url.find("localhost") == std::string::npos) {
-    server.reset();
-    exit(1);
-  }
-
-  LogTestController::getInstance().reset();
   return 0;
 }
