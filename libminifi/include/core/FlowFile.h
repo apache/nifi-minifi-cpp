@@ -158,8 +158,11 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   /**
    * setAttribute, if attribute already there, update it, else, add it
    */
-  bool setAttribute(const std::string& key, const std::string& value) {
-    return attributes_.insert_or_assign(key, value).second;
+  bool setAttribute(const std::string& key, std::string value) {
+    return attributes_.insert_or_assign(key, std::move(value)).second;
+  }
+  bool setAttribute(std::string&& key, std::string value) {
+    return attributes_.insert_or_assign(std::move(key), std::move(value)).second;
   }
 
   /**

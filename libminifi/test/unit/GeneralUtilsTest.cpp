@@ -134,3 +134,10 @@ TEST_CASE("GeneralUtils::invoke FunctionObject", "[invoke function object]") {
   // invoking lambda
   REQUIRE(60 == utils::invoke(int_timesn, 20));
 }
+
+TEST_CASE("GeneralUtils::dereference", "[dereference]") {
+  const int a = 42;
+  const auto* const pa = &a;
+  REQUIRE(42 == utils::dereference(pa));
+  REQUIRE(&a == &utils::dereference(pa));
+}

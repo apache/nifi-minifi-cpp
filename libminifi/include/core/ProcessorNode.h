@@ -155,7 +155,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value property value.
    * @return whether property was set or not
    */
-  bool setProperty(Property &prop, std::string value) {
+  bool setProperty(const Property &prop, std::string value) {
     const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
     bool ret = ConfigurableComponent::setProperty(prop, value);
     if (nullptr != processor_cast)

@@ -88,7 +88,7 @@ class ConfigurableComponent {
    * @param value property value.
    * @return whether property was set or not
    */
-  bool setProperty(Property &prop, std::string value);
+  bool setProperty(const Property& prop, std::string value);
 
   /**
      * Sets the property using the provided name
@@ -96,7 +96,7 @@ class ConfigurableComponent {
      * @param value property value.
      * @return whether property was set or not
      */
-  bool setProperty(Property &prop, PropertyValue &value);
+  bool setProperty(const Property& prop, PropertyValue &value);
 
   /**
    * Sets supported properties for the ConfigurableComponent

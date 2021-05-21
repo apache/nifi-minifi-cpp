@@ -92,6 +92,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | Sensors | GetEnvironmentalSensors<br/>GetMovementSensors | -DENABLE_SENSORS=ON |
 | SFTP | [FetchSFTP](PROCESSORS.md#fetchsftp)<br/>[ListSFTP](PROCESSORS.md#listsftp)<br/>[PutSFTP](PROCESSORS.md#putsftp) | -DENABLE_SFTP=ON |
 | SQL | [ExecuteSQL](PROCESSORS.md#executesql)<br/>[PutSQL](PROCESSORS.md#putsql)<br/>[QueryDatabaseTable](PROCESSORS.md#querydatabasetable)<br/> | -DENABLE_SQL=ON  |
+| Systemd | [ConsumeJournald](PROCESSORS.md#consumejournald) | -DENABLE_SYSTEMD=ON |
 | Tensorflow | TFApplyGraph<br/>TFConvertImageToTensor<br/>TFExtractTopLabels<br/>      |    -DENABLE_TENSORFLOW=ON  |
 | USB Camera | [GetUSBCamera](PROCESSORS.md#getusbcamera)     |    -DENABLE_USB_CAMERA=ON  |
 | Windows Event Log (Windows only) | CollectorInitiatedSubscription<br/>ConsumeWindowsEventLog<br/>TailEventLog | -DENABLE_WEL=ON |
@@ -345,8 +346,8 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
      Select MiNiFi C++ Features to toggle.
     ****************************************
     A. Persistent Repositories .....Enabled
-    B. Lib Curl Features ...........Enabled
-    C. Lib Archive Features ........Enabled
+    B. libcurl features  ...........Enabled
+    C. libarchive features  ........Enabled
     D. Execute Script support ......Enabled
     E. Expression Language support .Enabled
     F. Kafka support ...............Disabled
@@ -356,16 +357,16 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
     J. TensorFlow Support ..........Disabled
     K. Bustache Support ............Disabled
     L. MQTT Support ................Disabled
-    M. SQLite Support ..............Disabled
-    N. Python Support ..............Disabled
-    O. COAP Support ................Enabled
-    S. SFTP Support ................Disabled
-    V. AWS Support .................Disabled
+    M. Python Support ..............Disabled
+    N. COAP Support ................Enabled
+    O. SFTP Support ................Disabled
+    S. AWS Support .................Disabled
     T. OpenCV Support ..............Disabled
     U. OPC-UA Support ..............Disabled
-    W. SQL Support .................Disabled
-    X. Openwsman Support ...........Disabled
-    Y. Azure Support ...............Disabled
+    V. SQL Support .................Disabled
+    W. Openwsman Support ...........Disabled
+    X. Azure Support ...............Disabled
+    Y. Systemd Support .............Enabled
     ****************************************
                 Build Options.
     ****************************************
@@ -382,7 +383,7 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
       version of cmake or other software, or
       incompatibility with other extensions
 
-    Enter choice [ A - X or 1-7 ]
+    Enter choice [ A - Y or 1-7 ]
   ```
 
 - Boostrap now saves state between runs. State will automatically be saved. Provide -c or --clear to clear this state. The -i option provides a guided menu install with the ability to change

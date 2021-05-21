@@ -40,6 +40,8 @@
 #include "core/FlowFile.h"
 #include "core/CoreComponentState.h"
 #include "utils/file/FileUtils.h"
+#include "utils/OptionalUtils.h"
+#include "utils/PropertyErrors.h"
 #include "VariableRegistry.h"
 
 namespace org {
@@ -97,6 +99,18 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return processor_node_;
   }
 
+  template<typename T = std::string>
+  typename std::enable_if<std::is_default_constructible<T>::value, utils::optional<T>>::type
+  getProperty(const Property& property) {
+    T value;
+    try {
+      if (!getProperty(property.getName(), value)) return utils::nullopt;
+    } catch (const utils::internal::ValueException&) {
+      return utils::nullopt;
+    }
+    return value;
+  }
+
   template<typename T>
   bool getProperty(const std::string &name, T &value) const {
     return getPropertyImp<typename std::common_type<T>::type>(name, value);
@@ -122,7 +136,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return processor_node_->setDynamicProperty(name, value);
   }
   // Sets the property value using the Property object
-  bool setProperty(Property prop, std::string value) {
+  bool setProperty(const Property& prop, std::string value) {
     return processor_node_->setProperty(prop, value);
   }
   // Whether the relationship is supported

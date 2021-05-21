@@ -17,13 +17,10 @@
 # under the License.
 #
 
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.11)
 
-project(nifi-libcore-minifi)
+project(nifi-libcore-minifi VERSION 0.9.0)
 set(PROJECT_NAME "nifi-libcore-minifi")
-set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 9)
-set(PROJECT_VERSION_PATCH 0)
 
 
 #### Establish Project Configuration ####
@@ -127,7 +124,7 @@ if(NOT WIN32)
 	list(APPEND LIBMINIFI_LIBRARIES OSSP::libuuid++)
 endif()
 if (NOT OPENSSL_OFF)
-	list(APPEND LIBMINIFI_LIBRARIES OpenSSL::SSL)
+	list(APPEND LIBMINIFI_LIBRARIES OpenSSL::Crypto OpenSSL::SSL)
 endif()
 target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${LIBMINIFI_LIBRARIES})
 

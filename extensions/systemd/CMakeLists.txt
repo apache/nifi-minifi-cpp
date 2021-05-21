@@ -17,19 +17,13 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 3.11)
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
+add_library(minifi-systemd STATIC ConsumeJournald.cpp WorkerThread.cpp libwrapper/LibWrapper.cpp libwrapper/DlopenWrapper.cpp)
+set_property(TARGET minifi-systemd PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-if (NOT WIN32)
-add_executable(log_aggregator log_aggregator.c)
-target_link_libraries(log_aggregator nanofi Threads::Threads)
-target_wholearchive_library(log_aggregator minifi-http-curl)
+target_link_libraries(minifi-systemd ${LIBMINIFI} Threads::Threads date::date)
 
-add_executable(tailfile_chunk tailfile_chunk.c)
-target_link_libraries(tailfile_chunk nanofi Threads::Threads)
-target_wholearchive_library(tailfile_chunk minifi-http-curl)
-
-add_executable(tailfile_delimited tailfile_delimited.c)
-target_link_libraries(tailfile_delimited nanofi Threads::Threads)
-target_wholearchive_library(tailfile_delimited minifi-http-curl)
-endif()
+set(SYSTEMD-EXTENSION minifi-systemd PARENT_SCOPE)
+register_extension(minifi-systemd)
+register_extension_linter(minifi-systemd-extension-linter)

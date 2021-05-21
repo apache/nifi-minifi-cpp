@@ -17,11 +17,7 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 2.6)
-
-IF(POLICY CMP0048)
-  CMAKE_POLICY(SET CMP0048 OLD)
-ENDIF(POLICY CMP0048)
+cmake_minimum_required(VERSION 3.11)
 
 include_directories(../libminifi/include)
 
@@ -95,6 +91,7 @@ foreach(EXTENSION ${extensions})
 endforeach()
 
 set_target_properties(minifiexe PROPERTIES OUTPUT_NAME minifi)
+set_target_properties(minifiexe PROPERTIES ENABLE_EXPORTS True)
 
 if (NOT WIN32)
 add_custom_command(TARGET minifiexe POST_BUILD

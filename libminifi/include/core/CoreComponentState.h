@@ -26,6 +26,8 @@
 #include <map>
 #include <string>
 
+#include "utils/OptionalUtils.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -41,6 +43,15 @@ class CoreComponentStateManager {
   virtual bool set(const CoreComponentState& kvs) = 0;
 
   virtual bool get(CoreComponentState& kvs) = 0;
+
+  utils::optional<std::unordered_map<std::string, std::string>> get() {
+    std::unordered_map<std::string, std::string> out;
+    if (get(out)) {
+      return out;
+    } else {
+      return utils::nullopt;
+    }
+  }
 
   virtual bool clear() = 0;
 

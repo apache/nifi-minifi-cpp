@@ -19,12 +19,8 @@
 
 cmake_minimum_required(VERSION 3.11)
 cmake_policy(SET CMP0065 OLD) # default export policy, required for self-dlopen
-
-project(nifi-minifi-cpp)
+project(nifi-minifi-cpp VERSION 0.9.0)
 set(PROJECT_NAME "nifi-minifi-cpp")
-set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 9)
-set(PROJECT_VERSION_PATCH 0)
 
 # Optional build number for linux distribution targets' tar.gz output
 set(BUILD_NUMBER "" CACHE STRING "Build number")
@@ -570,6 +566,14 @@ if (ENABLE_ALL OR ENABLE_AZURE)
 	include(BundledAzureSdkCpp)
 	use_bundled_libazure(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	createExtension(AZURE-EXTENSIONS "AZURE EXTENSIONS" "This enables Azure support" "extensions/azure" "${TEST_DIR}/azure-tests")
+endif()
+
+## Add the systemd extension
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	option(ENABLE_SYSTEMD "Disables the systemd extension." ON)
+	if (ENABLE_SYSTEMD)
+		createExtension(SYSTEMD-EXTENSIONS "SYSTEMD EXTENSIONS" "Enabled log collection from journald" "extensions/systemd" "extensions/systemd/tests")
+	endif()
 endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN

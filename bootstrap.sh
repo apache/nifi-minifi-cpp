@@ -324,6 +324,8 @@ add_dependency OPC_ENABLED "mbedtls"
 
 add_disabled_option AZURE_ENABLED ${FALSE} "ENABLE_AZURE"
 
+add_disabled_option SYSTEMD_ENABLED ${TRUE} "ENABLE_SYSTEMD"
+
 USE_SHARED_LIBS=${TRUE}
 ASAN_ENABLED=${FALSE}
 FAIL_ON_WARNINGS=${FALSE}
@@ -352,7 +354,8 @@ if [ "${OVERRIDE_BUILD_IDENTIFIER}" != "${BUILD_IDENTIFIER}" ]; then
 fi
 
 if [ "$BUILD_DIR_D" != "build" ] && [ "$BUILD_DIR_D" != "$BUILD_DIR" ]; then
-  read -r -p "Build dir will override stored state, $BUILD_DIR. Press any key to continue " overwrite
+  echo -n "Build dir will override stored state, $BUILD_DIR. Press any key to continue "
+  read -r overwrite
   BUILD_DIR=$BUILD_DIR_D
 
 fi
@@ -364,7 +367,8 @@ else
   overwrite="Y"
   if [ "$NO_PROMPT" = "false" ] && [ "$FEATURES_SELECTED" = "false" ]; then
     echo "CMAKE Build dir (${BUILD_DIR}) exists, should we overwrite your build directory before we begin?"
-    read -r -p "If you have already bootstrapped, bootstrapping again isn't necessary to run make [ Y/N ] " overwrite
+    echo -n "If you have already bootstrapped, bootstrapping again isn't necessary to run make [ Y/N ] "
+    read -r overwrite
   fi
   if [ "$overwrite" = "N" ] || [ "$overwrite" = "n" ]; then
     echo "Exiting ...."
@@ -375,8 +379,6 @@ else
 fi
 
 ## change to the directory
-
-
 pushd "${BUILD_DIR}" || exit 1
 
 while [ ! "$FEATURES_SELECTED" == "true" ]
@@ -392,15 +394,13 @@ do
     read_feature_options
   fi
 done
+
 ### ensure we have all dependencies
-
 save_state
-
 build_deps
 
 
 ## just in case
-
 CMAKE_VERSION=$(${CMAKE_COMMAND} --version | head -n 1 | awk '{print $3}')
 
 CMAKE_MAJOR=$(echo "$CMAKE_VERSION" | cut -d. -f1)
@@ -506,7 +506,8 @@ build_cmake_command(){
 
   continue_with_plan="Y"
   if [ ! "$NO_PROMPT" = "true" ]; then
-    read -r -p "Command will be '${CMAKE_BUILD_COMMAND}', run this? [ Y/N ] " continue_with_plan
+    echo -n "Command will be '${CMAKE_BUILD_COMMAND}', run this? [ Y/N ] "
+    read -r continue_with_plan
   fi
   if [ "$continue_with_plan" = "N" ] || [ "$continue_with_plan" = "n" ]; then
     echo "Exiting ...."

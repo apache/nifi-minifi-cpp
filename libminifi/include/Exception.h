@@ -27,6 +27,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 
 #include "utils/StringUtils.h"
 
@@ -55,7 +56,7 @@ inline const char *ExceptionTypeToString(ExceptionType type) {
   if (type < MAX_EXCEPTION)
     return ExceptionStr[type];
   else
-    return NULL;
+    return nullptr;
 }
 
 struct Exception : public std::runtime_error {
@@ -63,12 +64,32 @@ struct Exception : public std::runtime_error {
    * Create a new exception
    */
   Exception(ExceptionType type, const std::string& errorMsg)
-      : std::runtime_error{ org::apache::nifi::minifi::utils::StringUtils::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
+      :Exception{ utils::StringUtils::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
   { }
 
   Exception(ExceptionType type, const char* errorMsg)
-      : std::runtime_error{ org::apache::nifi::minifi::utils::StringUtils::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
+      :Exception{ utils::StringUtils::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
   { }
+
+ protected:
+  explicit Exception(const std::string& errmsg)
+      :std::runtime_error{ errmsg }
+  {}
+  explicit Exception(const char* errmsg)
+      :std::runtime_error{ errmsg }
+  {}
+};
+
+struct SystemErrorException : Exception {
+  explicit SystemErrorException(const char* const operation, std::error_condition error_condition)
+      :Exception{ utils::StringUtils::join_pack(operation, ": ", error_condition.message()) },
+      error_condition_{ error_condition }
+  {}
+
+  std::error_condition error_condition() { return error_condition_; }
+
+ private:
+  std::error_condition error_condition_;
 };
 
 }  // namespace minifi

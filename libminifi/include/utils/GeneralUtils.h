@@ -174,6 +174,15 @@ auto invoke(F&& f, Args&&... args) MINIFICPP_UTIL_DEDUCED(detail::invoke_impl(st
 using std::invoke
 #endif /* < C++17 */
 
+namespace detail {
+struct dereference_t {
+  template<typename T>
+  T &operator()(T *ptr) const noexcept { return *ptr; }
+};
+}  // namespace detail
+
+constexpr detail::dereference_t dereference{};
+
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi

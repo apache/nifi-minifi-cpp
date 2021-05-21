@@ -139,7 +139,8 @@ EnableAllFeatures(){
 }
 
 pause(){
-  read -r -p "Press [Enter] key to continue..."
+  echo -n "Press [Enter] key to continue..."
+  read -r _
 }
 
 
@@ -301,7 +302,8 @@ show_main_menu() {
 
 read_main_menu_options(){
   local choice
-  read -r -p "Enter choice [ A-C ] " choice
+  echo -n "Enter choice [ A-C ] "
+  read -r choice
   choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) MENU="features" ;;
@@ -325,7 +327,8 @@ show_advanced_features_menu() {
 
 read_advanced_menu_options(){
   local choice
-  read -r -p "Enter choice [ A-C ] " choice
+  echo -n "Enter choice [ A-C ] "
+  read -r choice
   choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) ToggleFeature PORTABLE_BUILD ;;
@@ -344,8 +347,8 @@ show_supported_features() {
   echo " Select MiNiFi C++ Features to toggle."
   echo "****************************************"
   echo "A. Persistent Repositories .....$(print_feature_status ROCKSDB_ENABLED)"
-  echo "B. Lib Curl Features ...........$(print_feature_status HTTP_CURL_ENABLED)"
-  echo "C. Lib Archive Features ........$(print_feature_status LIBARCHIVE_ENABLED)"
+  echo "B. libcurl features ............$(print_feature_status HTTP_CURL_ENABLED)"
+  echo "C. libarchive features .........$(print_feature_status LIBARCHIVE_ENABLED)"
   echo "D. Execute Script support ......$(print_feature_status EXECUTE_SCRIPT_ENABLED)"
   echo "E. Expression Language support .$(print_feature_status EXPRESSION_LANGAUGE_ENABLED)"
   echo "F. Kafka support ...............$(print_feature_status KAFKA_ENABLED)"
@@ -364,6 +367,7 @@ show_supported_features() {
   echo "V. SQL Support..................$(print_feature_status SQL_ENABLED)"
   echo "W. Openwsman Support ...........$(print_feature_status OPENWSMAN_ENABLED)"
   echo "X. Azure Support ...............$(print_feature_status AZURE_ENABLED)"
+  echo "Y. Systemd Support .............$(print_feature_status SYSTEMD_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -386,7 +390,8 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  read -r -p "Enter choice [ A - X or 1-7 ] " choice
+  echo -n "Enter choice [ A - Y or 1-7 ] "
+  read -r choice
   choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) ToggleFeature ROCKSDB_ENABLED ;;
@@ -415,6 +420,7 @@ read_feature_options(){
     v) ToggleFeature SQL_ENABLED ;;
     w) ToggleFeature OPENWSMAN_ENABLED ;;
     x) ToggleFeature AZURE_ENABLED ;;
+    y) ToggleFeature SYSTEMD_ENABLED ;;
     1) ToggleFeature TESTS_ENABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;

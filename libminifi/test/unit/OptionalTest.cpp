@@ -45,3 +45,18 @@ TEST_CASE("optional flatMap", "[optional flat map]") {
   const auto test3 = utils::make_optional(7) | utils::flatMap(mutable_lval_func);
   REQUIRE(!test3.has_value());
 }
+
+TEST_CASE("optional orElse", "[optional or else]") {
+  const auto opt_7 = [] { return utils::make_optional(7); };
+  const auto test1 = utils::make_optional(6) | utils::orElse(opt_7);
+  const auto test2 = utils::optional<int>{} | utils::orElse(opt_7);
+  const auto test3 = utils::make_optional(3) | utils::orElse([]{});
+  const auto test4 = utils::optional<int>{} | utils::orElse([]{});
+  struct ex : std::exception {};
+
+  REQUIRE(6 == test1.value());
+  REQUIRE(7 == test2.value());
+  REQUIRE(3 == test3.value());
+  REQUIRE(!test4);
+  REQUIRE_THROWS_AS(utils::optional<bool>{} | utils::orElse([]{ throw ex{}; }), const ex&);
+}

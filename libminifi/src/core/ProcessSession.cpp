@@ -241,6 +241,18 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
   }
 }
 
+void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer) {
+  struct BufferOutputStreamCallback : OutputStreamCallback {
+    explicit BufferOutputStreamCallback(gsl::span<const char> buffer) :buffer{buffer} {}
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) final {
+      return stream->write(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size());
+    }
+    gsl::span<const char> buffer;
+  };
+  BufferOutputStreamCallback cb{ buffer };
+  write(flow_file, &cb);
+}
+
 void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
   std::shared_ptr<ResourceClaim> claim = flow->getResourceClaim();
   if (!claim) {
