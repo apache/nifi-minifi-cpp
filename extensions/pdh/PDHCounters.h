@@ -52,7 +52,7 @@ class PDHCounter : public PerformanceDataCounter {
 
 class SinglePDHCounter : public PDHCounter {
  public:
-  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const override;
+  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, int8_t double_precision = -1) const override;
 
   PDH_STATUS addToQuery(PDH_HQUERY& pdh_query) override;
   bool collectData() override;
@@ -62,7 +62,7 @@ class SinglePDHCounter : public PDHCounter {
   explicit SinglePDHCounter(const std::string& query_name, bool is_double)
       : PDHCounter(query_name, is_double), counter_(nullptr), current_value_() {}
 
-  rapidjson::Value getValue() const;
+  rapidjson::Value getValue(int8_t double_precision) const;
 
   PDH_HCOUNTER counter_;
   PDH_FMT_COUNTERVALUE current_value_;
@@ -71,7 +71,7 @@ class SinglePDHCounter : public PDHCounter {
 class PDHCounterArray : public PDHCounter {
  public:
   virtual ~PDHCounterArray() { clearCurrentData(); }
-  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const override;
+  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, int8_t double_precision = -1) const override;
 
   std::string getObjectName() const override;
   PDH_STATUS addToQuery(PDH_HQUERY& pdh_query) override;

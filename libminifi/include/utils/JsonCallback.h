@@ -38,6 +38,21 @@ class JsonOutputCallback : public OutputStreamCallback {
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    root_.Accept(writer);
+    return stream->write(reinterpret_cast<const uint8_t*>(buffer.GetString()), gsl::narrow<int>(buffer.GetSize()));
+  }
+
+ protected:
+  rapidjson::Document root_;
+};
+
+class PrettyJsonOutputCallback : public OutputStreamCallback {
+ public:
+  explicit PrettyJsonOutputCallback(rapidjson::Document&& root) : root_(std::move(root)) {}
+
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+    rapidjson::StringBuffer buffer;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
     root_.Accept(writer);
     return stream->write(reinterpret_cast<const uint8_t*>(buffer.GetString()), gsl::narrow<int>(buffer.GetSize()));

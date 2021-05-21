@@ -40,11 +40,13 @@ namespace processors {
 // PerformanceDataMonitor Class
 class PerformanceDataMonitor : public core::Processor {
  public:
-  static constexpr const char* JSON_FORMAT_STR = "JSON";
-  static constexpr const char* OPEN_TELEMETRY_FORMAT_STR = "OpenTelemetry";
+  static constexpr const char* PRETTY_JSON_FORMAT_STR = "Pretty JSON";
+  static constexpr const char* COMPACT_JSON_FORMAT_STR = "Compact JSON";
+  static constexpr const char* PRETTY_OPEN_TELEMETRY_FORMAT_STR = "Pretty OpenTelemetry";
+  static constexpr const char* COMPACT_OPEN_TELEMETRY_FORMAT_STR = "Compact OpenTelemetry";
 
   explicit PerformanceDataMonitor(const std::string& name, utils::Identifier uuid = utils::Identifier())
-      : Processor(name, uuid), output_format_(OutputFormat::JSON),
+      : Processor(name, uuid), double_precision_(-1), output_format_(OutputFormat::JSON),
         logger_(logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
         pdh_query_(nullptr), resource_consumption_counters_() {}
 
@@ -54,6 +56,7 @@ class PerformanceDataMonitor : public core::Processor {
   static core::Property PredefinedGroups;
   static core::Property CustomPDHCounters;
   static core::Property OutputFormatProperty;
+  static core::Property DoublePrecisionProperty;
   // Supported Relationships
   static core::Relationship Success;
 
@@ -75,7 +78,9 @@ class PerformanceDataMonitor : public core::Processor {
   void addCustomPDHCountersFromProperty(const std::string& custom_pdh_counters);
 
   OutputFormat output_format_;
+  bool pretty_output_;
 
+  int8_t double_precision_;
   std::shared_ptr<logging::Logger> logger_;
   PDH_HQUERY pdh_query_;
   std::vector<std::unique_ptr<PerformanceDataCounter>> resource_consumption_counters_;

@@ -45,9 +45,15 @@ core::Property PerformanceDataMonitor::CustomPDHCounters(
 core::Property PerformanceDataMonitor::OutputFormatProperty(
     core::PropertyBuilder::createProperty("Output Format")->
     withDescription("Format of the created flowfiles")->
-    withAllowableValue<std::string>(JSON_FORMAT_STR)->
-    withAllowableValue(OPEN_TELEMETRY_FORMAT_STR)->
-    withDefaultValue(JSON_FORMAT_STR)->build());
+    withAllowableValue(PRETTY_JSON_FORMAT_STR)->
+    withAllowableValue(COMPACT_JSON_FORMAT_STR)->
+    withAllowableValue(PRETTY_OPEN_TELEMETRY_FORMAT_STR)->
+    withAllowableValue(COMPACT_OPEN_TELEMETRY_FORMAT_STR)->
+    withDefaultValue(PRETTY_JSON_FORMAT_STR)->build());
+
+core::Property PerformanceDataMonitor::DoublePrecisionProperty(
+  core::PropertyBuilder::createProperty("Double Precision")->
+  withDescription("Rounds the double values to this precision (blank for maximum precision)")->build());
 
 PerformanceDataMonitor::~PerformanceDataMonitor() {
   PdhCloseQuery(pdh_query_);
@@ -102,25 +108,36 @@ void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::Proc
   rapidjson::Value& body = prepareJSONBody(root);
   for (auto& counter : resource_consumption_counters_) {
     if (counter->collectData())
-      counter->addToJson(body, root.GetAllocator());
+      counter->addToJson(body, root.GetAllocator(), double_precision_);
   }
-  utils::JsonOutputCallback callback(std::move(root));
-  session->write(flowFile, &callback);
-  session->transfer(flowFile, Success);
+  if (pretty_output_) {
+    utils::PrettyJsonOutputCallback callback(std::move(root));
+    session->write(flowFile, &callback);
+    session->transfer(flowFile, Success);
+  } else {
+    utils::JsonOutputCallback callback(std::move(root));
+    session->write(flowFile, &callback);
+    session->transfer(flowFile, Success);
+  }
 }
 
 void PerformanceDataMonitor::initialize() {
-  setSupportedProperties({ CustomPDHCounters, PredefinedGroups, OutputFormatProperty });
+  setSupportedProperties({ CustomPDHCounters, PredefinedGroups, OutputFormatProperty, DoublePrecisionProperty });
   setSupportedRelationships({ PerformanceDataMonitor::Success });
 }
 
 rapidjson::Value& PerformanceDataMonitor::prepareJSONBody(rapidjson::Document& root) {
   switch (output_format_) {
-    case OutputFormat::OPENTELEMETRY:
+    case OutputFormat::OPENTELEMETRY: {
       root.AddMember("Name", "PerformanceData", root.GetAllocator());
       root.AddMember("Timestamp", std::time(0), root.GetAllocator());
+      std::string hostname = io::Socket::getMyHostName();
+      rapidjson::Value hostname_value;
+      hostname_value.SetString(hostname.c_str(), hostname.length(), root.GetAllocator());
+      root.AddMember("Hostname", hostname_value, root.GetAllocator());
       root.AddMember("Body", rapidjson::Value{ rapidjson::kObjectType }, root.GetAllocator());
       return root["Body"];
+    }
     case OutputFormat::JSON:
       return root;
     default:
@@ -264,16 +281,29 @@ void PerformanceDataMonitor::setupMembersFromProperties(const std::shared_ptr<co
 
   std::string output_format_string;
   if (context->getProperty(OutputFormatProperty.getName(), output_format_string)) {
-    if (output_format_string == OPEN_TELEMETRY_FORMAT_STR) {
-      logger_->log_trace("OutputFormat is configured to be OpenTelemetry");
+    if (output_format_string == PRETTY_OPEN_TELEMETRY_FORMAT_STR || output_format_string == COMPACT_OPEN_TELEMETRY_FORMAT_STR) {
       output_format_ = OutputFormat::OPENTELEMETRY;
-    } else if (output_format_string == JSON_FORMAT_STR) {
-      logger_->log_trace("OutputFormat is configured to be JSON");
+      pretty_output_ = output_format_string == PRETTY_OPEN_TELEMETRY_FORMAT_STR;
+      logger_->log_trace("OutputFormat is configured to be %s OpenTelemetry", pretty_output_ ? "pretty" : "compact");
+    } else if (output_format_string == PRETTY_JSON_FORMAT_STR || output_format_string == COMPACT_JSON_FORMAT_STR) {
       output_format_ = OutputFormat::JSON;
+      pretty_output_ = output_format_string == PRETTY_JSON_FORMAT_STR;
+      logger_->log_trace("OutputFormat is configured to be %s JSON", pretty_output_ ? "pretty" : "compact");
     } else {
-      logger_->log_error("Invalid OutputFormat, defaulting to JSON");
       output_format_ = OutputFormat::JSON;
+      pretty_output_ = true;
+      logger_->log_error("Invalid OutputFormat, defaulting to %s JSON", pretty_output_ ? "pretty" : "compact");
     }
+  }
+
+  std::string double_precision_string;
+  if (context->getProperty(DoublePrecisionProperty.getName(), double_precision_string)) {
+    try {
+      double_precision_ = std::stoi(double_precision_string);
+    } catch (const std::invalid_argument&) {
+      logger_->log_error("Invalid Double Precision Property: %s", double_precision_string);
+    }
+    logger_->log_trace("Double Precision is configured to be %d decimals", double_precision_);
   }
 }
 

@@ -77,9 +77,11 @@ TEST_CASE("PerformanceDataMonitorPartiallyInvalidGroupPropertyTest", "[performan
   PerformanceDataMonitorTester tester;
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::PredefinedGroups, "Disk,CPU,Asd");
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::CustomPDHCounters, "\\Invalid\\Counter,\\System\\Processes");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DoublePrecisionProperty, "asd");
   tester.runProcessors();
 
   REQUIRE(tester.test_controller_.getLog().getInstance().contains("Asd is not a valid predefined group", std::chrono::seconds(0)));
+  REQUIRE(tester.test_controller_.getLog().getInstance().contains("Invalid Double Precision Property", std::chrono::seconds(0)));
   REQUIRE(tester.test_controller_.getLog().getInstance().contains("Error adding \\Invalid\\Counter to query", std::chrono::seconds(0)));
 
   uint32_t number_of_flowfiles = 0;
@@ -136,8 +138,9 @@ TEST_CASE("PerformanceDataMonitorCustomPDHCountersTest", "[performancedatamonito
 
 TEST_CASE("PerformanceDataMonitorCustomPDHCountersTestOpenTelemetry", "[performancedatamonitorcustompdhcounterstestopentelemetry]") {
   PerformanceDataMonitorTester tester;
-  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::CustomPDHCounters, "\\System\\Processes,\\Process(*)\\ID Process");
-  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputFormatProperty, "OpenTelemetry");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::PredefinedGroups, "Disk");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::CustomPDHCounters, "\\System\\Processes,\\Process(*)\\ID Process,\\Process(*)\\Private Bytes");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputFormatProperty, "Compact OpenTelemetry");
   tester.runProcessors();
 
   uint32_t number_of_flowfiles = 0;
@@ -170,7 +173,7 @@ TEST_CASE("PerformanceDataMonitorCustomPDHCountersTestOpenTelemetry", "[performa
 TEST_CASE("PerformanceDataMonitorAllPredefinedGroups", "[performancedatamonitorallpredefinedgroups]") {
   PerformanceDataMonitorTester tester;
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::PredefinedGroups, "CPU,Disk,Network,Memory,IO,System,Process");
-  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputFormatProperty, "OpenTelemetry");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputFormatProperty, "Pretty OpenTelemetry");
   tester.runProcessors();
 
   uint32_t number_of_flowfiles = 0;

@@ -16,35 +16,27 @@
  */
 #pragma once
 
-#include <string>
-#include "rapidjson/document.h"
+#include <math.h>
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace processors {
+namespace utils {
 
-class PerformanceDataCounter {
+class MathUtils {
  public:
-  PerformanceDataCounter() = default;
-  virtual ~PerformanceDataCounter() = default;
-
-  virtual bool collectData() = 0;
-  virtual void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, int8_t double_precision = -1) const = 0;
-
- protected:
-  static rapidjson::Value& acquireNode(const std::string& node_name, rapidjson::Value& parent_node, rapidjson::Document::AllocatorType& alloc) {
-    if (!parent_node.HasMember(node_name.c_str())) {
-      rapidjson::Value value(rapidjson::kObjectType);
-      rapidjson::Value key(node_name.c_str(), alloc);
-      parent_node.AddMember(key, value, alloc);
+  static double round_to(double original, int8_t precision) {
+    if (precision < 0) {
+      return original;
+    } else {
+      double power_ten = pow(10, precision);
+      return std::round(original * power_ten) / power_ten;
     }
-    return parent_node[node_name.c_str()];
   }
 };
 
-}  // namespace processors
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
