@@ -391,7 +391,7 @@ void Processor::validateAnnotations() const {
       return;
     case annotation::Input::INPUT_FORBIDDEN: {
       if (hasIncomingConnections()) {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_FORBIDDEN was specified for the processor, but at least one input was found");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_FORBIDDEN was specified for the processor, but there are incoming connections");
       }
       return;
     }
