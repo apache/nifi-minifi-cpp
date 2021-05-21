@@ -34,7 +34,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class ConsumeKafka : public core::Processor, public core::annotation::input::Forbidden {
+class ConsumeKafka : public core::Processor {
  public:
   static constexpr char const* ProcessorName = "ConsumeKafka";
 
@@ -150,6 +150,10 @@ class ConsumeKafka : public core::Processor, public core::annotation::input::For
     uint8_t* data_;
     uint64_t dataSize_;
   };
+
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
 
   std::string kafka_brokers_;
   std::string security_protocol_;

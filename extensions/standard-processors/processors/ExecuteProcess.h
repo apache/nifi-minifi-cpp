@@ -51,7 +51,7 @@ namespace processors {
 #ifndef WIN32
 
 // ExecuteProcess Class
-class ExecuteProcess : public core::Processor, public core::annotation::input::Allowed {
+class ExecuteProcess : public core::Processor {
  public:
   // Constructor
   /*!

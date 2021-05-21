@@ -40,7 +40,7 @@ namespace minifi {
 namespace processors {
 
 // ListenHTTP Class
-class ListenHTTP : public core::Processor, public core::annotation::input::Forbidden {
+class ListenHTTP : public core::Processor {
  public:
   using FlowFileBufferPair = std::pair<std::shared_ptr<FlowFileRecord>, std::unique_ptr<io::BufferStream>>;
 
@@ -195,6 +195,10 @@ class ListenHTTP : public core::Processor, public core::annotation::input::Forbi
 
  private:
   static const uint64_t DEFAULT_BUFFER_SIZE;
+
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
 
   void processIncomingFlowFile(core::ProcessSession *session);
   void processRequestBuffer(core::ProcessSession *session);

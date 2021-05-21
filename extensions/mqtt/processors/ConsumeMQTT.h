@@ -43,7 +43,7 @@ namespace processors {
 #define MQTT_BROKER_ATTRIBUTE "mqtt.broker"
 
 // ConsumeMQTT Class
-class ConsumeMQTT : public processors::AbstractMQTTProcessor, public core::annotation::input::Forbidden {
+class ConsumeMQTT : public processors::AbstractMQTTProcessor {
  public:
   // Constructor
   /*!
@@ -111,6 +111,10 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor, public core::annot
   }
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   std::shared_ptr<logging::Logger> logger_;
   std::mutex mutex_;
   uint64_t maxQueueSize_;

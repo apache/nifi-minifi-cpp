@@ -131,7 +131,7 @@ static const std::map<std::string, const std::function<HashReturnType(const std:
   { {"MD5",  MD5Hash}, {"SHA1", SHA1Hash}, {"SHA256", SHA256Hash} };
 
 //! HashContent Class
-class HashContent : public core::Processor, public core::annotation::input::Required {
+class HashContent : public core::Processor {
  public:
   //! Constructor
   /*!
@@ -170,6 +170,10 @@ class HashContent : public core::Processor, public core::annotation::input::Requ
   };
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
   //! Logger
   std::shared_ptr<logging::Logger> logger_;
   std::string algoName_;

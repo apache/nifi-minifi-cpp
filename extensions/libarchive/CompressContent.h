@@ -43,7 +43,7 @@ namespace minifi {
 namespace processors {
 
 // CompressContent Class
-class CompressContent: public core::Processor, public core::annotation::input::Required {
+class CompressContent: public core::Processor {
 public:
   // Constructor
   /*!
@@ -438,6 +438,10 @@ private:
   static std::string toMimeType(CompressionFormat format);
 
   void processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<core::ProcessSession>& session);
+
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
 
   std::shared_ptr<logging::Logger> logger_;
   int compressLevel_;

@@ -38,7 +38,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 // GenerateFlowFile Class
-class GenerateFlowFile : public core::Processor, public core::annotation::input::Forbidden {
+class GenerateFlowFile : public core::Processor {
  public:
   // Constructor
   /*!
@@ -96,6 +96,10 @@ class GenerateFlowFile : public core::Processor, public core::annotation::input:
   bool textData_;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   // logger instance
   std::shared_ptr<logging::Logger> logger_;
 };

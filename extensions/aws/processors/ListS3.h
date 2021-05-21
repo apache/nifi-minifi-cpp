@@ -36,7 +36,7 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
-class ListS3 : public S3Processor, public core::annotation::input::Forbidden {
+class ListS3 : public S3Processor {
  public:
   static constexpr char const* ProcessorName = "ListS3";
   static const std::string LATEST_LISTED_KEY_PREFIX;
@@ -69,6 +69,10 @@ class ListS3 : public S3Processor, public core::annotation::input::Forbidden {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   struct ListingState {
     int64_t listed_key_timestamp = 0;
     std::vector<std::string> listed_keys;

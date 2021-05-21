@@ -380,52 +380,35 @@ std::shared_ptr<Connectable> Processor::pickIncomingConnection() {
 }
 
 void Processor::validateAnnotations() const {
-  if (getInputRequirement() == typeid(core::annotation::input::Allowed)) {
-    return;
-  }
-
-  if (getInputRequirement() == typeid(core::annotation::input::Required)) {
-    if (!hasIncomingConnections()) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_REQUIRED was specified for the processor, but no inputs were found");
+  switch (getInputRequirement()) {
+    case annotation::Input::INPUT_REQUIRED: {
+      if (!hasIncomingConnections()) {
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_REQUIRED was specified for the processor, but no inputs were found");
+      }
+      return;
     }
-    return;
-  }
-
-  if (getInputRequirement() == typeid(core::annotation::input::Forbidden)) {
-    if (hasIncomingConnections()) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_FORBIDDEN was specified for the processor, but at least one input was found");
+    case annotation::Input::INPUT_ALLOWED:
+      return;
+    case annotation::Input::INPUT_FORBIDDEN: {
+      if (hasIncomingConnections()) {
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_FORBIDDEN was specified for the processor, but at least one input was found");
+      }
+      return;
     }
-    return;
   }
 }
 
 std::string Processor::getInputRequirementAsString() const {
-  if (getInputRequirement() == typeid(core::annotation::input::Required)) {
-    return "INPUT_REQUIRED";
-  }
-
-  if (getInputRequirement() == typeid(core::annotation::input::Allowed)) {
-    return "INPUT_ALLOWED";
-  }
-
-  if (getInputRequirement() == typeid(core::annotation::input::Forbidden)) {
-    return "INPUT_FORBIDDEN";
+  switch (getInputRequirement()) {
+    case annotation::Input::INPUT_REQUIRED:
+      return "INPUT_REQUIRED";
+    case annotation::Input::INPUT_ALLOWED:
+      return "INPUT_ALLOWED";
+    case annotation::Input::INPUT_FORBIDDEN:
+      return "INPUT_FORBIDDEN";
   }
 
   return "ERROR_no_such_input_requirement";
-}
-
-const std::type_info& Processor::getInputRequirement() const {
-  // tell which annotation is a base class
-  if (dynamic_cast<const core::annotation::input::Required*>(this) != nullptr) {
-    return typeid(core::annotation::input::Required);
-  }
-  if (dynamic_cast<const core::annotation::input::Forbidden*>(this) != nullptr) {
-    return typeid(core::annotation::input::Forbidden);
-  }
-
-  // default input requirement
-  return typeid(core::annotation::input::Allowed);
 }
 
 }  // namespace core

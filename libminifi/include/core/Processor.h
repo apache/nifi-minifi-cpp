@@ -303,7 +303,10 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 
   static bool partOfCycle(const std::shared_ptr<Connection>& conn);
 
-  const std::type_info& getInputRequirement() const;
+  virtual annotation::Input getInputRequirement() const {
+      // default input requirement
+      return annotation::Input::INPUT_ALLOWED;
+  }
 
   // an outgoing connection allows us to reach these nodes
   std::unordered_map<std::shared_ptr<Connection>, std::unordered_set<std::shared_ptr<const Processor>>> reachable_processors_;

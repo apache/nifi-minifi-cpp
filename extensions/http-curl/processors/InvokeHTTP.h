@@ -42,7 +42,7 @@ namespace minifi {
 namespace processors {
 
 // InvokeHTTP Class
-class InvokeHTTP : public core::Processor, public core::annotation::input::Allowed {
+class InvokeHTTP : public core::Processor {
  public:
   // Constructor
   /*!

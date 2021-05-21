@@ -45,7 +45,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
- class PutSFTP : public SFTPProcessorBase, public core::annotation::input::Required {
+ class PutSFTP : public SFTPProcessorBase {
  public:
 
   static constexpr char const *CONFLICT_RESOLUTION_REPLACE = "REPLACE";
@@ -108,6 +108,9 @@ namespace processors {
   };
 
  private:
+   core::annotation::Input getInputRequirement() const override {
+     return core::annotation::Input::INPUT_REQUIRED;
+   }
 
   bool create_directory_;
   uint64_t batch_size_;

@@ -79,7 +79,7 @@ SMART_ENUM(InitialStartPositions,
   (CURRENT_TIME, "Current Time")
 );
 
-class TailFile : public core::Processor, public core::annotation::input::Forbidden {
+class TailFile : public core::Processor {
  public:
   explicit TailFile(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(std::move(name), uuid),
@@ -135,6 +135,10 @@ class TailFile : public core::Processor, public core::annotation::input::Forbidd
     TailState tail_state_;
     TimePoint mtime_;
   };
+
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
 
   void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
   void processAllRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state);

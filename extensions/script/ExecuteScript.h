@@ -34,7 +34,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class ExecuteScript : public core::Processor, public core::annotation::input::Allowed {
+class ExecuteScript : public core::Processor {
  public:
   explicit ExecuteScript(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),

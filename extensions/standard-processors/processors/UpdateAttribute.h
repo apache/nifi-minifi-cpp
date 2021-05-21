@@ -37,7 +37,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class UpdateAttribute : public core::Processor, public core::annotation::input::Required {
+class UpdateAttribute : public core::Processor {
  public:
   UpdateAttribute(const std::string& name,  const utils::Identifier& uuid = {}) // NOLINT
       : core::Processor(name, uuid),
@@ -66,6 +66,10 @@ class UpdateAttribute : public core::Processor, public core::annotation::input::
   virtual void initialize(void);
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
   std::shared_ptr<logging::Logger> logger_;
   std::vector<core::Property> attributes_;
 };

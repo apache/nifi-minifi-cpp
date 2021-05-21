@@ -40,7 +40,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class RetryFlowFile : public core::Processor, public core::annotation::input::Required {
+class RetryFlowFile : public core::Processor {
  public:
   explicit RetryFlowFile(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
@@ -90,6 +90,10 @@ class RetryFlowFile : public core::Processor, public core::annotation::input::Re
   void readDynamicPropertyKeys(core::ProcessContext* context);
   utils::optional<uint64_t> getRetryPropertyValue(const std::shared_ptr<core::FlowFile>& flow_file) const;
   void setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<core::FlowFile>& flow_file) const;
+
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
 
   std::string retry_attribute_;
   uint64_t maximum_retries_ = 3;  // The real default value is set by the default on the MaximumRetries property

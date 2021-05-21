@@ -44,7 +44,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class ListSFTP : public SFTPProcessorBase, public core::annotation::input::Forbidden {
+class ListSFTP : public SFTPProcessorBase {
  public:
 
   static constexpr char const *LISTING_STRATEGY_TRACKING_TIMESTAMPS = "Tracking Timestamps";
@@ -103,6 +103,10 @@ class ListSFTP : public SFTPProcessorBase, public core::annotation::input::Forbi
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
 
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::string listing_strategy_;

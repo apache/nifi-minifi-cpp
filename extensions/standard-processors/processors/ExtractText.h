@@ -36,7 +36,7 @@ namespace minifi {
 namespace processors {
 
 //! ExtractText Class
-class ExtractText : public core::Processor, public core::annotation::input::Required {
+class ExtractText : public core::Processor {
  public:
     //! Constructor
     /*!
@@ -86,6 +86,10 @@ class ExtractText : public core::Processor, public core::annotation::input::Requ
     };
 
  private:
+    core::annotation::Input getInputRequirement() const override {
+      return core::annotation::Input::INPUT_REQUIRED;
+    }
+
     //! Logger
     std::shared_ptr<logging::Logger> logger_;
 };

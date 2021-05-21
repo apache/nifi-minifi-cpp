@@ -105,7 +105,7 @@ class GetFileMetrics : public state::response::ResponseNode {
 };
 
 // GetFile Class
-class GetFile : public core::Processor, public state::response::MetricsNodeSource, public core::annotation::input::Forbidden {
+class GetFile : public core::Processor, public state::response::MetricsNodeSource {
  public:
   // Constructor
   /*!
@@ -163,6 +163,10 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) override;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   bool isListingEmpty() const;
   void putListing(std::string fileName);
   std::queue<std::string> pollListing(uint64_t batch_size);

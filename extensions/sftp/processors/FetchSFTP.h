@@ -38,7 +38,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class FetchSFTP : public SFTPProcessorBase, public core::annotation::input::Required {
+class FetchSFTP : public SFTPProcessorBase {
  public:
 
   static constexpr char const *COMPLETION_STRATEGY_NONE = "None";
@@ -91,6 +91,9 @@ class FetchSFTP : public SFTPProcessorBase, public core::annotation::input::Requ
   };
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
 
   std::string completion_strategy_;
   bool create_directory_;

@@ -289,7 +289,7 @@ class KeepAllUniqueAttributesMerger: public AttributeMerger {
 };
 
 // MergeContent Class
-class MergeContent : public processors::BinFiles, public core::annotation::input::Required {
+class MergeContent : public processors::BinFiles {
  public:
   // Constructor
   /*!
@@ -344,6 +344,10 @@ class MergeContent : public processors::BinFiles, public core::annotation::input
 
  private:
   void validatePropertyOptions();
+
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
 
   std::shared_ptr<logging::Logger> logger_;
   std::string mergeStrategy_;

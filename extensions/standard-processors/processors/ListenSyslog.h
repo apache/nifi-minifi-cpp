@@ -67,7 +67,7 @@ typedef struct {
 } SysLogEvent;
 
 // ListenSyslog Class
-class ListenSyslog : public core::Processor, public core::annotation::input::Forbidden {
+class ListenSyslog : public core::Processor {
  public:
   // Constructor
   /*!
@@ -149,6 +149,10 @@ class ListenSyslog : public core::Processor, public core::annotation::input::For
   virtual void initialize(void);
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Run function for the thread

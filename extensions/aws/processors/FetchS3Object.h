@@ -39,7 +39,7 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
-class FetchS3Object : public S3Processor, public core::annotation::input::Required {
+class FetchS3Object : public S3Processor {
  public:
   static constexpr char const* ProcessorName = "FetchS3Object";
 
@@ -89,6 +89,10 @@ class FetchS3Object : public S3Processor, public core::annotation::input::Requir
   };
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
   friend class ::S3TestsFixture<FetchS3Object>;
 
   explicit FetchS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)

@@ -37,7 +37,7 @@ namespace minifi {
 namespace processors {
 
 // PublishMQTT Class
-class PublishMQTT : public processors::AbstractMQTTProcessor, public core::annotation::input::Required {
+class PublishMQTT : public processors::AbstractMQTTProcessor {
  public:
   // Constructor
   /*!
@@ -129,9 +129,11 @@ class PublishMQTT : public processors::AbstractMQTTProcessor, public core::annot
   // Initialize, over write by NiFi PublishMQTT
   void initialize(void) override;
 
- protected:
-
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
   uint64_t max_seg_size_;
   bool retain_;
   std::shared_ptr<logging::Logger> logger_;
