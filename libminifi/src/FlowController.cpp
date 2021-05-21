@@ -476,7 +476,7 @@ std::vector<std::shared_ptr<state::StateController>> FlowController::getComponen
 
   if (name == "FlowController") {
     vec.push_back(shared_from_this());
-  } else {
+  } else if (root_) {
     // check processors
     std::shared_ptr<core::Processor> processor = root_->findProcessorByName(name);
     if (processor != nullptr) {

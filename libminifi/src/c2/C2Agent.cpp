@@ -218,13 +218,12 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     std::vector<std::string> reporters = utils::StringUtils::splitAndTrim(heartbeat_reporters, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (const auto& reporter : reporters) {
-      auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate(reporter, reporter);
+      auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate<HeartbeatReporter>(reporter, reporter);
       if (heartbeat_reporter_obj == nullptr) {
         logger_->log_error("Could not instantiate %s", reporter);
       } else {
-        std::shared_ptr<HeartBeatReporter> shp_reporter = std::static_pointer_cast<HeartBeatReporter>(heartbeat_reporter_obj);
-        shp_reporter->initialize(controller_, update_sink_, configuration_);
-        heartbeat_protocols_.push_back(shp_reporter);
+        heartbeat_reporter_obj->initialize(controller_, update_sink_, configuration_);
+        heartbeat_protocols_.push_back(heartbeat_reporter_obj);
       }
     }
   }
@@ -234,25 +233,23 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     std::vector<std::string> triggers = utils::StringUtils::splitAndTrim(trigger_classes, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (const auto& trigger : triggers) {
-      auto trigger_obj = core::ClassLoader::getDefaultClassLoader().instantiate(trigger, trigger);
+      auto trigger_obj = core::ClassLoader::getDefaultClassLoader().instantiate<C2Trigger>(trigger, trigger);
       if (trigger_obj == nullptr) {
         logger_->log_error("Could not instantiate %s", trigger);
       } else {
-        std::shared_ptr<C2Trigger> trg_impl = std::static_pointer_cast<C2Trigger>(trigger_obj);
-        trg_impl->initialize(configuration_);
-        triggers_.push_back(trg_impl);
+        trigger_obj->initialize(configuration_);
+        triggers_.push_back(trigger_obj);
       }
     }
   }
 
-  auto base_reporter = "ControllerSocketProtocol";
-  auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate(base_reporter, base_reporter);
+  std::string base_reporter = "ControllerSocketProtocol";
+  auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate<HeartbeatReporter>(base_reporter, base_reporter);
   if (heartbeat_reporter_obj == nullptr) {
     logger_->log_error("Could not instantiate %s", base_reporter);
   } else {
-    std::shared_ptr<HeartBeatReporter> shp_reporter = std::static_pointer_cast<HeartBeatReporter>(heartbeat_reporter_obj);
-    shp_reporter->initialize(controller_, update_sink_, configuration_);
-    heartbeat_protocols_.push_back(shp_reporter);
+    heartbeat_reporter_obj->initialize(controller_, update_sink_, configuration_);
+    heartbeat_protocols_.push_back(heartbeat_reporter_obj);
   }
 }
 
@@ -356,7 +353,7 @@ void C2Agent::extractPayload(const C2Payload &resp) {
 }
 
 void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
-  switch (resp.op) {
+  switch (resp.op.value()) {
     case Operation::CLEAR:
       // we've been told to clear something
       if (resp.name == "connection") {

@@ -77,13 +77,15 @@ TEST_CASE("Enum checks") {
   REQUIRE(C::values() == (std::set<std::string>{"zero", "one", "two", "three"}));
 
   REQUIRE_THROWS(A::parse("not_any"));
-  REQUIRE(!A::parse("not_any", false));
+  REQUIRE(!A::parse("not_any", A{}));
   REQUIRE(A::parse("zero") == A::_0);
   REQUIRE(B::parse("zero") == B::_0);
   REQUIRE(C::parse("one") == C::_1);
   REQUIRE(C::parse("three") == C::_3);
   REQUIRE_THROWS(C::parse("nada"));
-  REQUIRE(!C::parse("nada", false));
+  REQUIRE(!C::parse("nada", C{}));
+  REQUIRE(!C::parse("ThRee", C{}));
+  REQUIRE(C::parse("ThRee", {}, false) == C::_3);
 
   REQUIRE(A{A::_0}.toString() == std::string{"zero"});
   REQUIRE(toString(A::_0) == std::string{"zero"});
@@ -92,6 +94,7 @@ TEST_CASE("Enum checks") {
   REQUIRE(toString(B::_2) == std::string{"two"});
   REQUIRE(toString(C::_1) == std::string{"one"});
   REQUIRE(toString(C::_3) == std::string{"three"});
+  REQUIRE(A{}.toStringOr("fallback") == std::string{"fallback"});
   REQUIRE_THROWS(toString(A::Type(55)));
   REQUIRE_THROWS(toString(C::Type(-1)));
   REQUIRE_THROWS(C{}.toString());

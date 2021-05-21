@@ -24,7 +24,7 @@
 #include "utils/ByteArrayCallback.h"
 #include "c2/C2Protocol.h"
 #include "c2/protocols/RESTProtocol.h"
-#include "c2/HeartBeatReporter.h"
+#include "c2/HeartbeatReporter.h"
 #include "controllers/SSLContextService.h"
 #include "../client/HTTPClient.h"
 
@@ -47,7 +47,6 @@ namespace c2 {
  */
 class RESTSender : public RESTProtocol, public C2Protocol {
  public:
-
   explicit RESTSender(const std::string &name, const utils::Identifier &uuid = utils::Identifier());
 
   C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override;
@@ -59,7 +58,6 @@ class RESTSender : public RESTProtocol, public C2Protocol {
   void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) override;
 
  protected:
-
   virtual const C2Payload sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig);
 
   /**
@@ -81,10 +79,10 @@ class RESTSender : public RESTProtocol, public C2Protocol {
 
 REGISTER_RESOURCE(RESTSender, "Encapsulates the restful protocol that is built upon C2Protocol.");
 
-} /* namesapce c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namesapce c2
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif /* LIBMINIFI_INCLUDE_C2_RESTPROTOCOL_H_ */

@@ -24,6 +24,8 @@
 #include <sstream>
 #include <utility>
 #include <iostream>
+#include <vector>
+#include <algorithm>
 
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
@@ -68,13 +70,32 @@ inline T conditional_conversion(T t) {
 }
 
 template<typename ... Args>
-inline std::string format_string(char const* format_str, Args&&... args) {
-  char buf[LOG_BUFFER_SIZE];
-  std::snprintf(buf, LOG_BUFFER_SIZE, format_str, conditional_conversion(std::forward<Args>(args))...);
-  return std::string(buf);
+inline std::string format_string(int max_size, char const* format_str, Args&&... args) {
+  // try to use static buffer
+  char buf[LOG_BUFFER_SIZE + 1];
+  int result = std::snprintf(buf, LOG_BUFFER_SIZE + 1, format_str, conditional_conversion(std::forward<Args>(args))...);
+  if (result < 0) {
+    return std::string("Error while formatting log message");
+  }
+  if (result <= LOG_BUFFER_SIZE) {
+    // static buffer was large enough
+    return std::string(buf, result);
+  }
+  if (max_size >= 0 && max_size <= LOG_BUFFER_SIZE) {
+    // static buffer was already larger than allowed, use the filled buffer
+    return std::string(buf, LOG_BUFFER_SIZE);
+  }
+  // try to use dynamic buffer
+  size_t dynamic_buffer_size = max_size < 0 ? result : std::min(result, max_size);
+  std::vector<char> buffer(dynamic_buffer_size + 1);  // extra '\0' character
+  result = std::snprintf(buffer.data(), buffer.size(), format_str, conditional_conversion(std::forward<Args>(args))...);
+  if (result < 0) {
+    return std::string("Error while formatting log message");
+  }
+  return std::string(buffer.cbegin(), buffer.cend() - 1);  // -1 to not include the terminating '\0'
 }
 
-inline std::string format_string(char const* format_str) {
+inline std::string format_string(int /*max_size*/, char const* format_str) {
   return format_str;
 }
 
@@ -176,6 +197,10 @@ class Logger : public BaseLogger {
     log(spdlog::level::trace, format, args...);
   }
 
+  void set_max_log_size(int size) {
+    max_log_size_ = size;
+  }
+
   bool should_log(const LOG_LEVEL &level);
 
   virtual void log_string(LOG_LEVEL level, std::string str);
@@ -200,9 +225,11 @@ class Logger : public BaseLogger {
     if (!delegate_->should_log(level)) {
       return;
     }
-    const auto str = format_string(format, conditional_conversion(args)...);
+    const auto str = format_string(max_log_size_.load(), format, conditional_conversion(args)...);
     delegate_->log(level, str);
   }
+
+  std::atomic<int> max_log_size_{LOG_BUFFER_SIZE};
 
   Logger(Logger const&);
   Logger& operator=(Logger const&);

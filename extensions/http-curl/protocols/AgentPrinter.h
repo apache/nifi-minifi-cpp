@@ -38,9 +38,9 @@ namespace c2 {
  * Will be used to print agent information from the C2 response to stdout, selecting the agent's manifest
  *
  */
-class AgentPrinter : public RESTProtocol, public HeartBeatReporter {
+class AgentPrinter : public HeartbeatJsonSerializer, public HeartbeatReporter {
  public:
-  AgentPrinter(const std::string& name, const utils::Identifier& uuid = {});
+  explicit AgentPrinter(const std::string& name, const utils::Identifier& uuid = {});
 
   /**
    * Initialize agent printer.
@@ -52,11 +52,6 @@ class AgentPrinter : public RESTProtocol, public HeartBeatReporter {
    * Accepts the heartbeat, only extracting AgentInformation.
    */
   int16_t heartbeat(const C2Payload &heartbeat) override;
-
-  /**
-   * Overrides extracting the agent information from the root.
-   */
-  std::string serializeJsonRootPayload(const C2Payload& payload) override;
 
   /**
    * Overrides extracting the agent information from the payload.

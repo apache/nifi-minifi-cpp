@@ -44,6 +44,7 @@ RESTSender::RESTSender(const std::string &name, const utils::Identifier &uuid)
 
 void RESTSender::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) {
   C2Protocol::initialize(controller, configure);
+  RESTProtocol::initialize(controller, configure);
   // base URL when one is not specified.
   if (nullptr != configure) {
     std::string update_str, ssl_context_service_str;
@@ -55,8 +56,6 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
         ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
       }
     }
-    configure->get("nifi.c2.rest.heartbeat.minimize.updates", "c2.rest.heartbeat.minimize.updates", update_str);
-    minimize_updates_ = utils::StringUtils::toBool(update_str).value_or(false);
   }
   logger_->log_debug("Submitting to %s", rest_uri_);
 }
@@ -71,7 +70,7 @@ C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &pa
 }
 
 C2Payload RESTSender::consumePayload(const C2Payload &payload, Direction direction, bool async) {
-  if (payload.getOperation() == ACKNOWLEDGE) {
+  if (payload.getOperation() == Operation::ACKNOWLEDGE) {
     return consumePayload(ack_uri_, payload, direction, async);
   }
   return consumePayload(rest_uri_, payload, direction, async);
@@ -129,7 +128,7 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     client.set_request_method("GET");
   }
 
-  if (payload.getOperation() == TRANSFER) {
+  if (payload.getOperation() == Operation::TRANSFER) {
     file_callback = std::unique_ptr<utils::ByteOutputCallback>(new utils::ByteOutputCallback(std::numeric_limits<size_t>::max()));
     read.pos = 0;
     read.ptr = file_callback.get();

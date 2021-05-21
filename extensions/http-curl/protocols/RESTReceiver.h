@@ -44,7 +44,7 @@ int ssl_protocol_en(void *ssl_context, void *user_data);
  * will encompass other protocols the context of its meaning here simply translates into POST and GET respectively.
  *
  */
-class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
+class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
  public:
   RESTReceiver(const std::string& name, const utils::Identifier& uuid = {});
 

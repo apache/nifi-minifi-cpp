@@ -97,7 +97,6 @@ class CoapProtocol : public minifi::c2::RESTSender {
     return response.getCode() == COAP_RESPONSE_400 && !memcmp(response.getData(), REGISTRATION_MSG, response.getSize());
   }
 
-  using minifi::c2::RESTProtocol::getOperation;
   /**
    * Returns the operation for the translated integer
    * @param type input type

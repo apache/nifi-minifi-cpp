@@ -123,6 +123,18 @@ class StringUtils {
     return std::equal(right.cbegin(), right.cend(), left.cbegin(), [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
   }
 
+  static inline bool equals(const char* left, const char* right, bool caseSensitive = true) {
+    if (caseSensitive) {
+      return std::strcmp(left, right) == 0;
+    }
+    size_t left_len = std::strlen(left);
+    size_t right_len = std::strlen(right);
+    if (left_len != right_len) {
+      return false;
+    }
+    return std::equal(right, right + right_len, left, [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
+  }
+
   static std::vector<std::string> split(const std::string &str, const std::string &delimiter);
   static std::vector<std::string> splitAndTrim(const std::string &str, const std::string &delimiter);
 

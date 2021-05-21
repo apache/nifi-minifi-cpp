@@ -35,7 +35,7 @@ namespace c2 {
 
 void ControllerSocketProtocol::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
                                           const std::shared_ptr<Configure> &configuration) {
-  HeartBeatReporter::initialize(controller, updateSink, configuration);
+  HeartbeatReporter::initialize(controller, updateSink, configuration);
   stream_factory_ = minifi::io::StreamFactory::getInstance(configuration);
 
   std::string host = "localhost", port, limitStr, context_name;

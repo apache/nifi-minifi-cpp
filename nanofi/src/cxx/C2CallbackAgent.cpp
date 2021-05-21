@@ -42,7 +42,7 @@ C2CallbackAgent::C2CallbackAgent(core::controller::ControllerServiceProvider* co
 }
 
 void C2CallbackAgent::handle_c2_server_response(const C2ContentResponse &resp) {
-  switch (resp.op) {
+  switch (resp.op.value()) {
     case Operation::CLEAR:
       break;
     case Operation::UPDATE:

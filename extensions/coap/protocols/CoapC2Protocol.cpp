@@ -166,27 +166,27 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
 minifi::c2::Operation CoapProtocol::getOperation(int type) const {
   switch (type) {
     case 0:
-      return minifi::c2::ACKNOWLEDGE;
+      return minifi::c2::Operation::ACKNOWLEDGE;
     case 1:
-      return minifi::c2::HEARTBEAT;
+      return minifi::c2::Operation::HEARTBEAT;
     case 2:
-      return minifi::c2::CLEAR;
+      return minifi::c2::Operation::CLEAR;
     case 3:
-      return minifi::c2::DESCRIBE;
+      return minifi::c2::Operation::DESCRIBE;
     case 4:
-      return minifi::c2::RESTART;
+      return minifi::c2::Operation::RESTART;
     case 5:
-      return minifi::c2::START;
+      return minifi::c2::Operation::START;
     case 6:
-      return minifi::c2::UPDATE;
+      return minifi::c2::Operation::UPDATE;
     case 7:
-      return minifi::c2::STOP;
+      return minifi::c2::Operation::STOP;
     case 8:
-      return minifi::c2::PAUSE;
+      return minifi::c2::Operation::PAUSE;
     case 9:
-      return minifi::c2::RESUME;
+      return minifi::c2::Operation::RESUME;
   }
-  return minifi::c2::ACKNOWLEDGE;
+  return minifi::c2::Operation::ACKNOWLEDGE;
 }
 
 minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &payload) {
@@ -217,8 +217,8 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
 
   stream.write(version);
   std::string endpoint = "heartbeat";
-  switch (payload.getOperation()) {
-    case minifi::c2::ACKNOWLEDGE:
+  switch (payload.getOperation().value()) {
+    case minifi::c2::Operation::ACKNOWLEDGE:
       endpoint = "acknowledge";
       payload_type = 0;
       stream.write(&payload_type, 1);
@@ -226,7 +226,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
         return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
       }
       break;
-    case minifi::c2::HEARTBEAT:
+    case minifi::c2::Operation::HEARTBEAT:
       payload_type = 1;
       stream.write(&payload_type, 1);
       if (writeHeartbeat(&stream, payload) != 0) {
