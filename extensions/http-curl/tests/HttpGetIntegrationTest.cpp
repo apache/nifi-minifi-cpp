@@ -48,8 +48,7 @@ int ssl_enable(void* /*ssl_context*/, void* /*user_data*/) {
   return 0;
 }
 
-class HttpResponder : public CivetHandler {
- private:
+class HttpGetResponder : public CivetHandler {
  public:
   bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
     puts("handle get");
@@ -62,9 +61,18 @@ class HttpResponder : public CivetHandler {
   }
 };
 
-class VerifyHTTPGetFixture {
+class RetryHttpGetResponder : public CivetHandler {
  public:
-  VerifyHTTPGetFixture(const cmd_args& args, HttpResponder& h_ex)
+  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
+    puts("handle get with retry");
+    mg_printf(conn, "HTTP/1.1 501 Not Implemented\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+    return true;
+  }
+};
+
+class VerifyHTTPGet {
+ public:
+  VerifyHTTPGet(const cmd_args& args, CivetHandler& http_handler)
       : args_(args)
       , configuration_(std::make_shared<minifi::Configure>())
       , test_repo_(std::make_shared<TestRepository>())
@@ -80,18 +88,22 @@ class VerifyHTTPGetFixture {
 
     setupFlow();
     setupURL();
-    setupServer(h_ex);
+    setupServer(http_handler);
     controller_->load();
   }
 
-  ~VerifyHTTPGetFixture() {
+  ~VerifyHTTPGet() {
     controller_->waitUnload(60000);
     LogTestController::getInstance().reset();
   }
 
   void run() {
     controller_->start();
+    runAssertions();
+  }
 
+ protected:
+  virtual void runAssertions() {
     assert(org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds(10),
         "key:invokehttp.request.url value:" + url_,
@@ -99,7 +111,6 @@ class VerifyHTTPGetFixture {
         "key:flow.id"));
   }
 
- private:
   void setupFlow() {
     configuration_->set(minifi::Configure::nifi_default_directory, args_.key_dir);
     configuration_->set(minifi::Configure::nifi_flow_configuration_file, args_.test_file);
@@ -124,19 +135,18 @@ class VerifyHTTPGetFixture {
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url_);
   }
 
-  void setupServer(HttpResponder& h_ex) {
+  void setupServer(CivetHandler& http_handler) {
     std::string port, scheme, path;
     parse_http_components(url_, port, scheme, path);
     CivetCallbacks callback{};
     if (scheme == "https") {
-      std::string cert;
-      cert = args_.key_dir + "nifi-cert.pem";
-      callback.init_ssl = ssl_enable;
+      std::string cert = args_.key_dir + "nifi-cert.pem";
       std::string https_port = port + "s";
+      callback.init_ssl = ssl_enable;
       callback.log_message = log_message;
-      server_ = utils::make_unique<TestServer>(https_port, path, &h_ex, &callback, cert, cert);
+      server_ = utils::make_unique<TestServer>(https_port, path, &http_handler, &callback, cert, cert);
     } else {
-      server_ = utils::make_unique<TestServer>(port, path, &h_ex);
+      server_ = utils::make_unique<TestServer>(port, path, &http_handler);
     }
   }
 
@@ -151,12 +161,34 @@ class VerifyHTTPGetFixture {
   std::unique_ptr<TestServer> server_;
 };
 
+class VerifyRetryHTTPGet : public VerifyHTTPGet {
+ public:
+  VerifyRetryHTTPGet(const cmd_args& args, CivetHandler& http_handler) : VerifyHTTPGet(args, http_handler) {}
+
+  virtual void runAssertions() override {
+    assert(org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime(
+        std::chrono::seconds(10),
+        "isSuccess: 0, response code 501"));
+    assert(org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime(
+        std::chrono::seconds(10),
+        "from invoke to relationship retry"));
+  }
+};
+
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv);
 
-  HttpResponder h_ex;
-  VerifyHTTPGetFixture test_fixture(args, h_ex);
-  test_fixture.run();
+  {
+    HttpGetResponder http_handler;
+    VerifyHTTPGet test_fixture(args, http_handler);
+    test_fixture.run();
+  }
+
+  {
+    RetryHttpGetResponder http_handler;
+    VerifyRetryHTTPGet test_fixture(args, http_handler);
+    test_fixture.run();
+  }
 
   return 0;
 }
