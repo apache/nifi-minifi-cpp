@@ -729,6 +729,10 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|All files are routed to success|
+|response|Represents a response flowfile|
+|retry|The original FlowFile will be routed on any status code that can be retried (5xx status codes). It will have new attributes detailing the request.|
+|no retry|The original FlowFile will be routed on any status code that should NOT be retried (1xx, 3xx, 4xx status codes). It will have new attributes detailing the request.|
+|failure|The original FlowFile will be routed on any type of connection failure, timeout or general exception. It will have new attributes detailing the request.|
 
 
 ## ListSFTP
