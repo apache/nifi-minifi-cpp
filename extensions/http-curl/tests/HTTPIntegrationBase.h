@@ -223,28 +223,6 @@ class VerifyFlowFetched : public HTTPIntegrationBase {
   }
 };
 
-class VerifyC2UpdateAgent : public VerifyC2Update {
- public:
-  explicit VerifyC2UpdateAgent(uint64_t waitTime)
-      : VerifyC2Update(waitTime) {
-  }
-
-  void configureC2() override {
-    VerifyC2Update::configureC2();
-    configuration->set("nifi.c2.agent.update.allow", "true");
-    configuration->set("c2.agent.update.command", "echo \"verification command\"");
-  }
-
-  void testSetup() override {
-    LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
-  }
-
-  void runAssertions() override {
-    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(10), "removing file", "Executed update command"));
-  }
-};
-
 class VerifyC2FailedUpdate : public VerifyC2Update {
 public:
   explicit VerifyC2FailedUpdate(uint64_t waitTime)
