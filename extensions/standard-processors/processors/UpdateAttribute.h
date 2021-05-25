@@ -55,15 +55,15 @@ class UpdateAttribute : public core::Processor {
    * NiFi API implementation
    */
 
-  virtual bool supportsDynamicProperties() {
+  bool supportsDynamicProperties() override {
     return true;
   }
 
-  virtual void onSchedule(core::ProcessContext *context,
-                          core::ProcessSessionFactory *sessionFactory);
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session);
-  virtual void initialize(void);
+  void onSchedule(core::ProcessContext *context,
+                          core::ProcessSessionFactory *sessionFactory) override;
+  void onTrigger(core::ProcessContext *context,
+                         core::ProcessSession *session) override;
+  void initialize() override;
 
  private:
   core::annotation::Input getInputRequirement() const override {
