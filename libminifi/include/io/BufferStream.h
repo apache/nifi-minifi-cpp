@@ -35,7 +35,7 @@ class BufferStream : public BaseStream {
  public:
   BufferStream() = default;
 
-  BufferStream(const uint8_t *buf, const unsigned int len) {
+  BufferStream(const uint8_t *buf, const size_t len) {
     write(buf, len);
   }
 
@@ -48,7 +48,7 @@ class BufferStream : public BaseStream {
 
   int write(const uint8_t* data, int len) final;
 
-  int read(uint8_t* buffer, int len) override;
+  size_t read(uint8_t* buffer, size_t len) override;
 
   int initialize() override {
     buffer_.clear();
@@ -56,7 +56,7 @@ class BufferStream : public BaseStream {
     return 0;
   }
 
-  void seek(uint64_t offset) override {
+  void seek(size_t offset) override {
     readOffset_ += offset;
   }
 

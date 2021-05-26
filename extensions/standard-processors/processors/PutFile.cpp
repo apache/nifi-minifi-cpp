@@ -25,10 +25,12 @@
 #include <memory>
 #include <string>
 #include <set>
+#include <utility>
 #ifdef WIN32
 #include <Windows.h>
 #endif
 #include "utils/file/FileUtils.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -304,9 +306,9 @@ void PutFile::getDirectoryPermissions(core::ProcessContext *context) {
 }
 #endif
 
-PutFile::ReadCallback::ReadCallback(const std::string &tmp_file, const std::string &dest_file)
-    : tmp_file_(tmp_file),
-      dest_file_(dest_file) {
+PutFile::ReadCallback::ReadCallback(std::string tmp_file, std::string dest_file)
+    : tmp_file_(std::move(tmp_file)),
+      dest_file_(std::move(dest_file)) {
 }
 
 // Copy the entire file contents to the temporary file
@@ -319,17 +321,10 @@ int64_t PutFile::ReadCallback::process(const std::shared_ptr<io::BaseStream>& st
   std::ofstream tmp_file_os(tmp_file_, std::ios::out | std::ios::binary);
 
   do {
-    int read = stream->read(buffer, 1024);
-
-    if (read < 0) {
-      return -1;
-    }
-
-    if (read == 0) {
-      break;
-    }
-
-    tmp_file_os.write(reinterpret_cast<char *>(buffer), read);
+    const auto read = stream->read(buffer, 1024);
+    if (io::isError(read)) return -1;
+    if (read == 0) break;
+    tmp_file_os.write(reinterpret_cast<char *>(buffer), gsl::narrow<std::streamsize>(read));
     size += read;
   } while (size < stream->size());
 
@@ -339,7 +334,7 @@ int64_t PutFile::ReadCallback::process(const std::shared_ptr<io::BaseStream>& st
     write_succeeded_ = true;
   }
 
-  return size;
+  return gsl::narrow<int64_t>(size);
 }
 
 // Renames tmp file to final destination

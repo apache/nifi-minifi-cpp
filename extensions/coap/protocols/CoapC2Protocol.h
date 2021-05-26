@@ -49,7 +49,7 @@ namespace coap {
 namespace c2 {
 
 #define REQUIRE_VALID(x) \
-  if (-1 == x) { \
+  if (io::isError(x)) { \
     return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR); \
   }
 

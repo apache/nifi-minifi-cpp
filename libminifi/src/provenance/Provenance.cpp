@@ -235,145 +235,191 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableCo
 }
 
 bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t bufferSize) {
-  int ret;
-
   org::apache::nifi::minifi::io::BufferStream outStream(buffer, gsl::narrow<unsigned int>(bufferSize));
 
-  ret = outStream.read(uuid_);
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = outStream.read(uuid_);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
   }
 
   uint32_t eventType;
-  ret = outStream.read(eventType);
-  if (ret != 4) {
-    return false;
+  {
+    const auto ret = outStream.read(eventType);
+    if (ret != 4) {
+      return false;
+    }
   }
+
   this->_eventType = (ProvenanceEventRecord::ProvenanceEventType) eventType;
-
-  ret = outStream.read(this->_eventTime);
-  if (ret != 8) {
-    return false;
+  {
+    const auto ret = outStream.read(this->_eventTime);
+    if (ret != 8) {
+      return false;
+    }
   }
 
-  ret = outStream.read(this->_entryDate);
-  if (ret != 8) {
-    return false;
+  {
+    const auto ret = outStream.read(this->_entryDate);
+    if (ret != 8) {
+      return false;
+    }
   }
 
-  ret = outStream.read(this->_eventDuration);
-  if (ret != 8) {
-    return false;
+  {
+    const auto ret = outStream.read(this->_eventDuration);
+    if (ret != 8) {
+      return false;
+    }
   }
 
-  ret = outStream.read(this->_lineageStartDate);
-  if (ret != 8) {
-    return false;
+  {
+    const auto ret = outStream.read(this->_lineageStartDate);
+    if (ret != 8) {
+      return false;
+    }
   }
 
-  ret = outStream.read(this->_componentId);
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = outStream.read(this->_componentId);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
   }
 
-  ret = outStream.read(this->_componentType);
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = outStream.read(this->_componentType);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
   }
 
-  ret = outStream.read(this->flow_uuid_);
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = outStream.read(this->flow_uuid_);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
   }
 
-  ret = outStream.read(this->_details);
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = outStream.read(this->_details);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
   }
 
   // read flow attributes
   uint32_t numAttributes = 0;
-  ret = outStream.read(numAttributes);
-  if (ret != 4) {
-    return false;
+  {
+    const auto ret = outStream.read(numAttributes);
+    if (ret != 4) {
+      return false;
+    }
   }
 
   for (uint32_t i = 0; i < numAttributes; i++) {
     std::string key;
-    ret = outStream.read(key);
-    if (ret <= 0) {
-      return false;
+    {
+      const auto ret = outStream.read(key);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
     }
     std::string value;
-    ret = outStream.read(value);
-    if (ret <= 0) {
-      return false;
+    {
+      const auto ret = outStream.read(value);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
     }
     this->_attributes[key] = value;
   }
 
-  ret = outStream.read(this->_contentFullPath);
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = outStream.read(this->_contentFullPath);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
   }
 
-  ret = outStream.read(this->_size);
-  if (ret != 8) {
-    return false;
+  {
+    const auto ret = outStream.read(this->_size);
+    if (ret != 8) {
+      return false;
+    }
   }
 
-  ret = outStream.read(this->_offset);
-  if (ret != 8) {
-    return false;
+  {
+    const auto ret = outStream.read(this->_offset);
+    if (ret != 8) {
+      return false;
+    }
   }
 
-  ret = outStream.read(this->_sourceQueueIdentifier);
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = outStream.read(this->_sourceQueueIdentifier);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
   }
 
   if (this->_eventType == ProvenanceEventRecord::FORK || this->_eventType == ProvenanceEventRecord::CLONE || this->_eventType == ProvenanceEventRecord::JOIN) {
     // read UUIDs
     uint32_t number = 0;
-    ret = outStream.read(number);
-    if (ret != 4) {
-      return false;
+    {
+      const auto ret = outStream.read(number);
+      if (ret != 4) {
+        return false;
+      }
     }
 
     for (uint32_t i = 0; i < number; i++) {
       utils::Identifier parentUUID;
-      ret = outStream.read(parentUUID);
-      if (ret <= 0) {
-        return false;
+      {
+        const auto ret = outStream.read(parentUUID);
+        if (ret == 0 || io::isError(ret)) {
+          return false;
+        }
       }
       this->addParentUuid(parentUUID);
     }
     number = 0;
-    ret = outStream.read(number);
-    if (ret != 4) {
-      return false;
+    {
+      const auto ret = outStream.read(number);
+      if (ret != 4) {
+        return false;
+      }
     }
     for (uint32_t i = 0; i < number; i++) {
       utils::Identifier childUUID;
-      ret = outStream.read(childUUID);
-      if (ret <= 0) {
-        return false;
+      {
+        const auto ret = outStream.read(childUUID);
+        if (ret == 0 || io::isError(ret)) {
+          return false;
+        }
       }
       this->addChildUuid(childUUID);
     }
   } else if (this->_eventType == ProvenanceEventRecord::SEND || this->_eventType == ProvenanceEventRecord::FETCH) {
-    ret = outStream.read(this->_transitUri);
-    if (ret <= 0) {
-      return false;
+    {
+      const auto ret = outStream.read(this->_transitUri);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
     }
   } else if (this->_eventType == ProvenanceEventRecord::RECEIVE) {
-    ret = outStream.read(this->_transitUri);
-    if (ret <= 0) {
-      return false;
+    {
+      const auto ret = outStream.read(this->_transitUri);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
     }
-    ret = outStream.read(this->_sourceSystemFlowFileIdentifier);
-    if (ret <= 0) {
-      return false;
+    {
+      const auto ret = outStream.read(this->_sourceSystemFlowFileIdentifier);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
     }
   }
 

@@ -34,6 +34,7 @@
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/MinifiConcurrentQueue.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -58,7 +59,7 @@ class ListenHTTP : public core::Processor {
     callbacks_.log_access = &logAccess;
   }
   // Destructor
-  virtual ~ListenHTTP();
+  ~ListenHTTP() override;
   // Processor Name
   static constexpr char const *ProcessorName = "ListenHTTP";
   // Supported Properties
@@ -133,14 +134,12 @@ class ListenHTTP : public core::Processor {
     }
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       out_str_->resize(stream->size());
-      uint64_t num_read = stream->read(reinterpret_cast<uint8_t *>(&(*out_str_)[0]),
-                                           gsl::narrow<int>(stream->size()));
-
+      const auto num_read = stream->read(reinterpret_cast<uint8_t *>(&(*out_str_)[0]), stream->size());
       if (num_read != stream->size()) {
         throw std::runtime_error("GraphReadCallback failed to fully read flow file input stream");
       }
 
-      return num_read;
+      return gsl::narrow<int64_t>(num_read);
     }
 
    private:
@@ -161,11 +160,11 @@ class ListenHTTP : public core::Processor {
     try {
       struct mg_context* ctx = mg_get_context(conn);
       /* CivetServer stores 'this' as the userdata when calling mg_start */
-      CivetServer* server = static_cast<CivetServer*>(mg_get_user_data(ctx));
+      auto* const server = static_cast<CivetServer*>(mg_get_user_data(ctx));
       if (server == nullptr) {
         return 0;
       }
-      std::shared_ptr<logging::Logger>* logger = static_cast<std::shared_ptr<logging::Logger>*>(const_cast<void*>(server->getUserContext()));
+      auto* const logger = static_cast<std::shared_ptr<logging::Logger>*>(const_cast<void*>(server->getUserContext()));
       if (logger == nullptr) {
         return 0;
       }

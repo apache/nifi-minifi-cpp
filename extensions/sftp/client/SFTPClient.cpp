@@ -562,12 +562,12 @@ bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool ov
     return true;
   }
 
-  const size_t buf_size = expected_size < 0 ? MAX_BUFFER_SIZE : std::min<size_t>(expected_size, MAX_BUFFER_SIZE);
+  const size_t buf_size = expected_size < 0 ? MAX_BUFFER_SIZE : std::min(gsl::narrow<size_t>(expected_size), MAX_BUFFER_SIZE);
   std::vector<uint8_t> buf(buf_size);
   uint64_t total_read = 0U;
   do {
-    int read_ret = input.read(buf.data(), buf.size());
-    if (read_ret < 0) {
+    const auto read_ret = input.read(buf.data(), buf.size());
+    if (io::isError(read_ret)) {
       last_error_.setLibssh2Error(LIBSSH2_FX_OK);
       logger_->log_error("Error while reading input");
       return false;
@@ -577,20 +577,20 @@ bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool ov
     }
     logger_->log_trace("Read %d bytes", read_ret);
     total_read += read_ret;
-    ssize_t remaining = read_ret;
+    auto remaining = read_ret;
     while (remaining > 0) {
-      int write_ret = libssh2_sftp_write(file_handle, reinterpret_cast<char*>(buf.data() + (read_ret - remaining)), remaining);
+      const auto write_ret = libssh2_sftp_write(file_handle, reinterpret_cast<char*>(buf.data() + (read_ret - remaining)), remaining);
       if (write_ret < 0) {
         last_error_.setSftpError(SFTPError::IoError);
         logger_->log_error("Failed to write remote file \"%s\"", path.c_str());
         return false;
       }
       logger_->log_trace("Wrote %d bytes to remote file \"%s\"", write_ret, path.c_str());
-      remaining -= write_ret;
+      remaining -= gsl::narrow<size_t>(write_ret);
     }
   } while (true);
 
-  if (expected_size >= 0 && total_read != gsl::narrow<uint64_t>(expected_size)) {
+  if (expected_size >= 0 && total_read != gsl::narrow<size_t>(expected_size)) {
     last_error_.setLibssh2Error(LIBSSH2_FX_OK);
     logger_->log_error("Input has unexpected size, expected: %ld, actual: %lu", path.c_str(), expected_size, total_read);
     return false;

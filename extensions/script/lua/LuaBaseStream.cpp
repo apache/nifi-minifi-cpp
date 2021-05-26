@@ -39,7 +39,7 @@ std::string LuaBaseStream::read(size_t len) {
   }
 
   if (len <= 0) {
-    return nullptr;
+    return std::string{};
   }
 
   std::string buffer;
@@ -52,16 +52,11 @@ std::string LuaBaseStream::read(size_t len) {
   //     0 <= n < s.size()."
   //
   // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3337.pdf
-  auto read = stream_->read(reinterpret_cast<uint8_t *>(&buffer[0]), static_cast<int>(len));
-  if (read < 0) {
-    return nullptr;
+  const auto read = stream_->read(reinterpret_cast<uint8_t *>(&buffer[0]), len);
+  if (!io::isError(read) && read != len) {
+    buffer.resize(read);
   }
-
-  if (gsl::narrow<size_t>(read) != len) {
-    buffer.resize(gsl::narrow<size_t>(read));
-  }
-
-  return buffer;
+  return io::isError(read) ? std::string{} : buffer;
 }
 
 size_t LuaBaseStream::write(std::string buf) {

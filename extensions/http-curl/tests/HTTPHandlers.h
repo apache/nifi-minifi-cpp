@@ -214,7 +214,7 @@ class FlowFileResponder : public ServerAwareHandler {
       minifi::io::CivetStream civet_stream(conn);
       minifi::io::CRCStream < minifi::io::CivetStream > stream(gsl::make_not_null(&civet_stream));
       uint32_t num_attributes;
-      int read;
+      size_t read;
       uint64_t total_size = 0;
       read = stream.read(num_attributes);
       if (!isServerRunning())return false;
@@ -241,9 +241,10 @@ class FlowFileResponder : public ServerAwareHandler {
       flow->data.resize(gsl::narrow<size_t>(length));
       flow->total_size = total_size;
 
-      read = stream.read(flow->data.data(), gsl::narrow<int>(length));
-      if (!isServerRunning())return false;
-      assert(read == gsl::narrow<int>(length));
+      read = stream.read(flow->data.data(), length);
+      if (!isServerRunning()) return false;
+      (void)read;
+      assert(read == length);
 
       if (!invalid_checksum) {
         site2site_rest_resp = std::to_string(stream.getCRC());

@@ -24,6 +24,7 @@
 #include "concurrentqueue.h"
 #include "FlowFileRecord.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -45,10 +46,10 @@ class ByteInputCallBack : public InputStreamCallback {
     if (stream->size() > 0) {
       vec.resize(stream->size());
 
-      stream->read(reinterpret_cast<uint8_t*>(vec.data()), gsl::narrow<int>(stream->size()));
+      stream->read(reinterpret_cast<uint8_t*>(vec.data()), stream->size());
     }
 
-    return vec.size();
+    return gsl::narrow<int64_t>(vec.size());
   }
 
   virtual void seek(size_t) { }
@@ -101,7 +102,7 @@ class ByteOutputCallback : public OutputStreamCallback {
 
   virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream);
 
-  virtual const std::vector<char> to_string();
+  virtual std::vector<char> to_string();
 
   virtual void close();
 

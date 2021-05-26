@@ -60,7 +60,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
    * @param len length to read
    * @return resulting read size
    **/
-  int read(uint8_t *value, int len) override {
+  size_t read(uint8_t *value, size_t len) override {
     return server_responses_.read(value, len);
   }
 };

@@ -37,6 +37,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 #include "utils/StringUtils.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -427,21 +428,15 @@ namespace processors {
     uint64_t size = 0;
 
     do {
-      int read = stream->read(buf_.data() + size, 1024);
-
-      if (read < 0) {
-        return -1;
-      }
-
-      if (read == 0) {
-        break;
-      }
+      const auto read = stream->read(buf_.data() + size, 1024);
+      if (io::isError(read)) return -1;
+      if (read == 0) break;
       size += read;
     } while (size < stream->size());
 
     logger_->log_trace("Read %llu bytes from flowfile content to buffer", stream->size());
 
-    return size;
+    return gsl::narrow<int64_t>(size);
   }
 
 } /* namespace processors */

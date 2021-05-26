@@ -47,14 +47,14 @@ class LogAttribute : public core::Processor {
    * Create a new processor
    */
   explicit LogAttribute(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid),
+      : Processor(name, uuid),
         flowfiles_to_log_(1),
         hexencode_(false),
         max_line_length_(80U),
         logger_(logging::LoggerFactory<LogAttribute>::getLogger()) {
   }
   // Destructor
-  virtual ~LogAttribute() = default;
+  ~LogAttribute() override = default;
   // Processor Name
   static constexpr char const* ProcessorName = "LogAttribute";
   // Supported Properties
@@ -103,16 +103,14 @@ class LogAttribute : public core::Processor {
         : logger_(std::move(logger))
         , buffer_(size)  {
     }
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      if (buffer_.size() == 0U) {
-        return 0U;
-      }
-      int ret = stream->read(buffer_.data(), gsl::narrow<int>(buffer_.size()));
-      if (ret < 0 || static_cast<uint64_t>(ret) != buffer_.size()) {
-        logger_->log_error("%zu bytes were requested from the stream but %d bytes were read. Rolling back.", buffer_.size(), ret);
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+      if (buffer_.empty()) return 0U;
+      const auto ret = stream->read(buffer_.data(), buffer_.size());
+      if (ret != buffer_.size()) {
+        logger_->log_error("%zu bytes were requested from the stream but %zu bytes were read. Rolling back.", buffer_.size(), size_t{ret});
         throw Exception(PROCESSOR_EXCEPTION, "Failed to read the entire FlowFile.");
       }
-      return buffer_.size();
+      return gsl::narrow<int64_t>(buffer_.size());
     }
     std::shared_ptr<logging::Logger> logger_;
     std::vector<uint8_t> buffer_;
@@ -123,7 +121,7 @@ class LogAttribute : public core::Processor {
   // OnTrigger method, implemented by NiFi LogAttribute
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   // Initialize, over write by NiFi LogAttribute
-  void initialize(void) override;
+  void initialize() override;
 
  private:
   core::annotation::Input getInputRequirement() const override {

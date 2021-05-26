@@ -30,42 +30,43 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-int InputStream::read(std::vector<uint8_t>& buffer, int len) {
-  if (buffer.size() < gsl::narrow<size_t>(len)) {
+size_t InputStream::read(std::vector<uint8_t>& buffer, size_t len) {
+  if (buffer.size() < len) {
     buffer.resize(len);
   }
-  int ret = read(buffer.data(), len);
-  buffer.resize((std::max)(ret, 0));
+  const auto ret = read(buffer.data(), len);
+  if (io::isError(ret)) return ret;
+  buffer.resize((std::max)(ret, size_t{0}));
   return ret;
 }
 
-int InputStream::read(bool &value) {
+size_t InputStream::read(bool &value) {
   uint8_t buf = 0;
 
   if (read(&buf, 1) != 1) {
-    return -1;
+    return static_cast<size_t>(-1);
   }
   value = buf;
   return 1;
 }
 
-int InputStream::read(utils::Identifier &value) {
+size_t InputStream::read(utils::Identifier &value) {
   std::string uuidStr;
-  int ret = read(uuidStr);
-  if (ret < 0) {
+  const auto ret = read(uuidStr);
+  if (isError(ret)) {
     return ret;
   }
   auto optional_uuid = utils::Identifier::parse(uuidStr);
   if (!optional_uuid) {
-    return -1;
+    return static_cast<size_t>(-1);
   }
   value = optional_uuid.value();
   return ret;
 }
 
-int InputStream::read(std::string &str, bool widen) {
+size_t InputStream::read(std::string &str, bool widen) {
   uint32_t len = 0;
-  int ret = 0;
+  size_t ret = 0;
   if (!widen) {
     uint16_t shortLength = 0;
     ret = read(shortLength);
@@ -74,7 +75,7 @@ int InputStream::read(std::string &str, bool widen) {
     ret = read(len);
   }
 
-  if (ret <= 0) {
+  if (ret == 0 || isError(ret)) {
     return ret;
   }
 
@@ -84,9 +85,9 @@ int InputStream::read(std::string &str, bool widen) {
   }
 
   std::vector<uint8_t> buffer(len);
-  uint32_t bytes_read = gsl::narrow<uint32_t>(read(buffer.data(), len));
+  const auto bytes_read = gsl::narrow<uint32_t>(read(buffer.data(), len));
   if (bytes_read != len) {
-    return -1;
+    return static_cast<size_t>(-1);
   }
 
   str = std::string(reinterpret_cast<const char*>(buffer.data()), len);

@@ -37,7 +37,7 @@ class PyBaseStream {
 
   py::bytes read();
   py::bytes read(size_t len = 0);
-  size_t write(py::bytes buf);
+  size_t write(const py::bytes& buf);
 
  private:
   std::shared_ptr<io::BaseStream> stream_;

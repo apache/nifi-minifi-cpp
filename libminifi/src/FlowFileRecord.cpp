@@ -161,70 +161,90 @@ bool FlowFileRecord::Persist(const std::shared_ptr<core::Repository>& flowReposi
 }
 
 std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(io::InputStream& inStream, const std::shared_ptr<core::ContentRepository>& content_repo, utils::Identifier& container) {
-  int ret;
-
   auto file = std::make_shared<FlowFileRecord>();
 
-  ret = inStream.read(file->event_time_);
-  if (ret != 8) {
-    return {};
+  {
+    const auto ret = inStream.read(file->event_time_);
+    if (ret != 8) {
+      return {};
+    }
   }
 
-  ret = inStream.read(file->entry_date_);
-  if (ret != 8) {
-    return {};
+  {
+    const auto ret = inStream.read(file->entry_date_);
+    if (ret != 8) {
+      return {};
+    }
   }
 
-  ret = inStream.read(file->lineage_start_date_);
-  if (ret != 8) {
-    return {};
+  {
+    const auto ret = inStream.read(file->lineage_start_date_);
+    if (ret != 8) {
+      return {};
+    }
   }
 
-  ret = inStream.read(file->uuid_);
-  if (ret <= 0) {
-    return {};
+  {
+    const auto ret = inStream.read(file->uuid_);
+    if (ret == 0 || io::isError(ret)) {
+      return {};
+    }
   }
 
-  ret = inStream.read(container);
-  if (ret <= 0) {
-    return {};
+  {
+    const auto ret = inStream.read(container);
+    if (ret == 0 || io::isError(ret)) {
+      return {};
+    }
   }
 
   // read flow attributes
   uint32_t numAttributes = 0;
-  ret = inStream.read(numAttributes);
-  if (ret != 4) {
-    return {};
+  {
+    const auto ret = inStream.read(numAttributes);
+    if (ret != 4) {
+      return {};
+    }
   }
 
   for (uint32_t i = 0; i < numAttributes; i++) {
     std::string key;
-    ret = inStream.read(key, true);
-    if (ret <= 0) {
-      return {};
+    {
+      const auto ret = inStream.read(key, true);
+      if (ret == 0 || io::isError(ret)) {
+        return {};
+      }
     }
     std::string value;
-    ret = inStream.read(value, true);
-    if (ret <= 0) {
-      return {};
+    {
+      const auto ret = inStream.read(value, true);
+      if (ret == 0 || io::isError(ret)) {
+        return {};
+      }
     }
     file->attributes_[key] = value;
   }
 
   std::string content_full_path;
-  ret = inStream.read(content_full_path);
-  if (ret <= 0) {
-    return {};
+  {
+    const auto ret = inStream.read(content_full_path);
+    if (ret == 0 || io::isError(ret)) {
+      return {};
+    }
   }
 
-  ret = inStream.read(file->size_);
-  if (ret != 8) {
-    return {};
+  {
+    const auto ret = inStream.read(file->size_);
+    if (ret != 8) {
+      return {};
+    }
   }
 
-  ret = inStream.read(file->offset_);
-  if (ret != 8) {
-    return {};
+  {
+    const auto ret = inStream.read(file->offset_);
+    if (ret != 8) {
+      return {};
+    }
   }
 
   file->claim_ = std::make_shared<ResourceClaim>(content_full_path, content_repo);

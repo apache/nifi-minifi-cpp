@@ -32,8 +32,8 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
-
 #include "utils/RegexUtils.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -113,10 +113,9 @@ void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession 
 }
 
 int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  int64_t ret = 0;
-  uint64_t read_size = 0;
+  size_t read_size = 0;
   bool regex_mode;
-  uint64_t size_limit = flowFile_->getSize();
+  size_t size_limit = flowFile_->getSize();
 
   std::string attrKey, sizeLimitStr;
   ctx_->getProperty(Attribute.getName(), attrKey);
@@ -126,22 +125,22 @@ int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>
   if (sizeLimitStr.empty())
     size_limit = DEFAULT_SIZE_LIMIT;
   else if (sizeLimitStr != "0")
-    size_limit = std::stoi(sizeLimitStr);
+    size_limit = static_cast<size_t>(std::stoi(sizeLimitStr));
 
   std::ostringstream contentStream;
 
   while (read_size < size_limit) {
     // Don't read more than config limit or the size of the buffer
-    int length = gsl::narrow<int>(std::min<uint64_t>(size_limit - read_size, buffer_.size()));
-    ret = stream->read(buffer_, length);
+    const auto length = std::min(size_limit - read_size, buffer_.size());
+    const auto ret = stream->read(buffer_, length);
 
-    if (ret < 0) {
+    if (io::isError(ret)) {
       return -1;  // Stream error
     } else if (ret == 0) {
       break;  // End of stream, no more data
     }
 
-    contentStream.write(reinterpret_cast<const char*>(buffer_.data()), ret);
+    contentStream.write(reinterpret_cast<const char*>(buffer_.data()), gsl::narrow<std::streamsize>(ret));
     read_size += ret;
     if (contentStream.fail()) {
       return -1;
@@ -162,9 +161,11 @@ int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>
     bool repeatingcapture;
     ctx_->getProperty(EnableRepeatingCaptureGroup.getName(), repeatingcapture);
 
-    int maxCaptureSizeProperty;
-    ctx_->getProperty(MaxCaptureGroupLen.getName(), maxCaptureSizeProperty);
-    size_t maxCaptureSize = gsl::narrow<size_t>(maxCaptureSizeProperty);
+    const size_t maxCaptureSize = [this] {
+      uint64_t val;
+      ctx_->getProperty(MaxCaptureGroupLen.getName(), val);
+      return gsl::narrow<size_t>(val);
+    }();
 
     std::string contentStr = contentStream.str();
 
@@ -212,7 +213,7 @@ int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>
   } else {
     flowFile_->setAttribute(attrKey, contentStream.str());
   }
-  return read_size;
+  return gsl::narrow<int64_t>(read_size);
 }
 
 ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ctx,  std::shared_ptr<logging::Logger> lgr)

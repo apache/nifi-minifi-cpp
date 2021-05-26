@@ -337,8 +337,8 @@ void ProcessSession::importFrom(io::InputStream&& stream, const std::shared_ptr<
  *
  */
 void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<core::FlowFile> &flow) {
-  std::shared_ptr<ResourceClaim> claim = content_session_->create();
-  int max_read = getpagesize();
+  const std::shared_ptr<ResourceClaim> claim = content_session_->create();
+  const auto max_read = gsl::narrow_cast<size_t>(getpagesize());
   std::vector<uint8_t> charBuffer(max_read);
 
   try {
@@ -348,10 +348,10 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
     if (nullptr == content_stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Could not obtain claim for " + claim->getContentFullPath());
     }
-    int position = 0;
-    const int max_size = gsl::narrow<int>(stream.size());
+    size_t position = 0;
+    const auto max_size = stream.size();
     while (position < max_size) {
-      const int read_size = std::min(max_read, max_size - position);
+      const auto read_size = std::min(max_read, max_size - position);
       stream.read(charBuffer, read_size);
 
       content_stream->write(charBuffer.data(), read_size);

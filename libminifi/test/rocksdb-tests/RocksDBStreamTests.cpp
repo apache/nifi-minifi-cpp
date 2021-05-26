@@ -72,5 +72,5 @@ TEST_CASE_METHOD(RocksDBStreamTest, "Read zero bytes") {
 
   minifi::io::RocksDbStream nonExistingStream("two", gsl::make_not_null(db.get()));
 
-  REQUIRE(nonExistingStream.read(nullptr, 0) == -1);
+  REQUIRE(minifi::io::isError(nonExistingStream.read(nullptr, 0)));
 }
