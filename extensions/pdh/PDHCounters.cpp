@@ -55,7 +55,7 @@ std::string PDHCounter::getCounterName() const {
   return groups[1];
 }
 
-void SinglePDHCounter::addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, const utils::optional<int8_t>& decimal_places) const {
+void SinglePDHCounter::addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, utils::optional<int8_t> decimal_places) const {
   rapidjson::Value key(getCounterName().c_str(), getCounterName().length(), alloc);
   rapidjson::Value& group_node = acquireNode(getObjectName(), body, alloc);
   group_node.AddMember(key, getValue(decimal_places), alloc);
@@ -69,7 +69,7 @@ bool SinglePDHCounter::collectData() {
   return PdhGetFormattedCounterValue(counter_, getDWFormat(), nullptr, &current_value_) == ERROR_SUCCESS;
 }
 
-rapidjson::Value SinglePDHCounter::getValue(const utils::optional<int8_t>& decimal_places) const {
+rapidjson::Value SinglePDHCounter::getValue(utils::optional<int8_t> decimal_places) const {
   rapidjson::Value value;
   if (is_double_format_)
     value.SetDouble(decimal_places.has_value() ? utils::MathUtils::round_to_decimal_places(current_value_.doubleValue, decimal_places.value()) : current_value_.doubleValue);
@@ -83,7 +83,7 @@ std::string PDHCounterArray::getObjectName() const {
   return group_name_with_wildcard.substr(0, group_name_with_wildcard.find("(*)"));
 }
 
-void PDHCounterArray::addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, const utils::optional<int8_t>& decimal_places) const {
+void PDHCounterArray::addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, utils::optional<int8_t> decimal_places) const {
   rapidjson::Value& group_node = acquireNode(getObjectName(), body, alloc);
   std::unordered_map<std::string, uint32_t> instance_name_counter;
   for (DWORD i = 0; i < item_count_; ++i) {
@@ -117,7 +117,7 @@ void PDHCounterArray::clearCurrentData() {
   buffer_size_ = item_count_ = 0;
 }
 
-rapidjson::Value PDHCounterArray::getValue(const DWORD i, const utils::optional<int8_t>& decimal_places) const {
+rapidjson::Value PDHCounterArray::getValue(const DWORD i, utils::optional<int8_t> decimal_places) const {
   rapidjson::Value value;
   if (is_double_format_)
     value.SetDouble(decimal_places.has_value() ? utils::MathUtils::round_to_decimal_places(values_[i].FmtValue.doubleValue, decimal_places.value()) : values_[i].FmtValue.doubleValue);

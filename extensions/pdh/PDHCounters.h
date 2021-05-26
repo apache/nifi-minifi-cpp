@@ -52,7 +52,7 @@ class PDHCounter : public PerformanceDataCounter {
 
 class SinglePDHCounter : public PDHCounter {
  public:
-  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, const utils::optional<int8_t>& decimal_places) const override;
+  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, utils::optional<int8_t> decimal_places) const override;
 
   PDH_STATUS addToQuery(PDH_HQUERY& pdh_query) override;
   bool collectData() override;
@@ -62,7 +62,7 @@ class SinglePDHCounter : public PDHCounter {
   explicit SinglePDHCounter(const std::string& query_name, bool is_double)
       : PDHCounter(query_name, is_double), counter_(nullptr), current_value_() {}
 
-  rapidjson::Value getValue(const utils::optional<int8_t>& decimal_places) const;
+  rapidjson::Value getValue(utils::optional<int8_t> decimal_places) const;
 
   PDH_HCOUNTER counter_;
   PDH_FMT_COUNTERVALUE current_value_;
@@ -71,7 +71,7 @@ class SinglePDHCounter : public PDHCounter {
 class PDHCounterArray : public PDHCounter {
  public:
   virtual ~PDHCounterArray() { clearCurrentData(); }
-  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, const utils::optional<int8_t>& decimal_places) const override;
+  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, utils::optional<int8_t> decimal_places) const override;
 
   std::string getObjectName() const override;
   PDH_STATUS addToQuery(PDH_HQUERY& pdh_query) override;
@@ -83,7 +83,7 @@ class PDHCounterArray : public PDHCounter {
       : PDHCounter(query_name, is_double), counter_(nullptr), buffer_size_(0), item_count_(0), values_(nullptr) {}
 
   void clearCurrentData();
-  rapidjson::Value getValue(const DWORD i, const utils::optional<int8_t>& decimal_places) const;
+  rapidjson::Value getValue(const DWORD i, utils::optional<int8_t> decimal_places) const;
 
   PDH_HCOUNTER counter_;
   DWORD buffer_size_;         // Size of the values_ array in bytes
