@@ -46,8 +46,13 @@
 class ReadCallback: public minifi::InputStreamCallback {
  public:
   explicit ReadCallback(size_t size)
-      :buffer_size_{size}
+      :buffer_size_{size}  // default member initializers use this
   {}
+  ReadCallback(const ReadCallback&) = delete;
+  ReadCallback(ReadCallback&&) = delete;
+  ReadCallback& operator=(const ReadCallback&) = delete;
+  ReadCallback& operator=(ReadCallback&&) = delete;
+
   ~ReadCallback() override {
     delete[] buffer_;
     delete[] archive_buffer_;

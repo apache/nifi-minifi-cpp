@@ -77,7 +77,7 @@ size_t SecureDescriptorStream::read(uint8_t * const buf, const size_t buflen) {
   if (buflen == 0) {
     return 0;
   }
-  if (IsNullOrEmpty(buf)) return static_cast<size_t>(-1);
+  if (IsNullOrEmpty(buf)) return STREAM_ERROR;
   size_t total_read = 0;
   uint8_t* writepos = buf;
   while (buflen > total_read) {

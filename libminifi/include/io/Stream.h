@@ -24,8 +24,10 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
+constexpr size_t STREAM_ERROR = static_cast<size_t>(-1);
+
 inline bool isError(const size_t read_return) noexcept {
-  return read_return == static_cast<size_t>(-1)   // general error
+  return read_return == STREAM_ERROR  // general error
       || read_return == static_cast<size_t>(-2);  // Socket EAGAIN, to be refactored to eliminate this error condition
 }
 

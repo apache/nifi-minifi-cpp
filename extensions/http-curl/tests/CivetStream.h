@@ -46,7 +46,7 @@ class CivetStream : public io::InputStream {
    */
   size_t read(uint8_t *buf, size_t buflen) override {
     const auto ret = mg_read(conn, buf, buflen);
-    if (ret < 0) return static_cast<size_t>(-1);
+    if (ret < 0) return STREAM_ERROR;
     return gsl::narrow<size_t>(ret);
   }
 

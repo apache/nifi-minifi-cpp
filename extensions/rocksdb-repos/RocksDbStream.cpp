@@ -86,9 +86,9 @@ int RocksDbStream::write(const uint8_t *value, int size) {
 
 size_t RocksDbStream::read(uint8_t *buf, size_t buflen) {
   // The check have to be in this order for RocksDBStreamTest "Read zero bytes" to succeed
-  if (!exists_) return static_cast<size_t>(-1);
+  if (!exists_) return STREAM_ERROR;
   if (buflen == 0) return 0;
-  if (IsNullOrEmpty(buf)) return static_cast<size_t>(-1);
+  if (IsNullOrEmpty(buf)) return STREAM_ERROR;
   if (offset_ >= value_.size()) return 0;
 
   const auto amtToRead = std::min(buflen, value_.size() - offset_);

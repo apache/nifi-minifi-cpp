@@ -113,7 +113,7 @@ std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
     explicit ArchiveEntryReader(archive* arch) : arch(arch) {}
     size_t read(uint8_t* out, std::size_t len) {
       const auto ret = archive_read_data(arch, out, len);
-      return ret < 0 ? static_cast<size_t>(-1) : gsl::narrow<size_t>(ret);
+      return ret < 0 ? minifi::io::STREAM_ERROR : gsl::narrow<size_t>(ret);
     }
    private:
     archive* arch;

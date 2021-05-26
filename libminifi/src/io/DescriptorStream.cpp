@@ -82,12 +82,12 @@ size_t DescriptorStream::read(uint8_t *buf, size_t buflen) {
 #endif
 
     if (size_read < 0) {
-      return static_cast<size_t>(-1);
+      return STREAM_ERROR;
     }
     return gsl::narrow<size_t>(size_read);
 
   } else {
-    return static_cast<size_t>(-1);
+    return STREAM_ERROR;
   }
 }
 

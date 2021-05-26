@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "FlowFileRecord.h"
+#include "Stream.h"
 #include "utils/gsl.h"
 
 class BufferReader : public org::apache::nifi::minifi::InputStreamCallback {
@@ -48,7 +49,8 @@ class BufferReader : public org::apache::nifi::minifi::InputStreamCallback {
   }
 
   int64_t process(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
-    return static_cast<int64_t>(write(*stream.get(), stream->size()));
+    const auto write_result = write(*stream.get(), stream->size());
+    return minifi::io::isError(write_result) ? -1 : gsl::narrow<int64_t>(write_result);
   }
 
  private:

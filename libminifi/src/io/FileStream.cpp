@@ -152,7 +152,7 @@ size_t FileStream::read(uint8_t *buf, size_t buflen) {
     std::lock_guard<std::mutex> lock(file_lock_);
     if (file_stream_ == nullptr || !file_stream_->is_open()) {
       logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
-      return static_cast<size_t>(-1);
+      return STREAM_ERROR;
     }
     file_stream_->read(reinterpret_cast<char*>(buf), gsl::narrow<std::streamsize>(buflen));
     if (file_stream_->eof() || file_stream_->fail()) {
@@ -161,7 +161,7 @@ size_t FileStream::read(uint8_t *buf, size_t buflen) {
       auto tellg_result = file_stream_->tellg();
       if (tellg_result == std::streampos(-1)) {
         logging::LOG_ERROR(logger_) << READ_ERROR_MSG << TELLG_CALL_ERROR_MSG;
-        return static_cast<size_t>(-1);
+        return STREAM_ERROR;
       }
       const auto len = gsl::narrow<size_t>(tellg_result);
       size_t ret = len - offset_;
@@ -176,7 +176,7 @@ size_t FileStream::read(uint8_t *buf, size_t buflen) {
     }
   } else {
     logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_BUFFER_ERROR_MSG;
-    return static_cast<size_t>(-1);
+    return STREAM_ERROR;
   }
 }
 

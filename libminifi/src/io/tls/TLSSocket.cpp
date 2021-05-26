@@ -357,18 +357,18 @@ size_t TLSSocket::read(uint8_t *buf, size_t buflen, bool /*retrieve_all_bytes*/)
   int16_t fd = select_descriptor(1000);
   if (fd < 0) {
     close();
-    return static_cast<size_t>(-1);
+    return STREAM_ERROR;
   }
   auto fd_ssl = get_ssl(fd);
   if (IsNullOrEmpty(fd_ssl)) {
-    return static_cast<size_t>(-1);
+    return STREAM_ERROR;
   }
   if (!SSL_pending(fd_ssl)) {
     return 0;
   }
   while (buflen) {
     if (fd <= 0) {
-      return static_cast<size_t>(-1);
+      return STREAM_ERROR;
     }
     int sslStatus;
     do {
@@ -426,14 +426,14 @@ size_t TLSSocket::read(uint8_t *buf, size_t buflen) {
     const int16_t fd = select_descriptor(1000);
     if (fd < 0) {
       close();
-      return static_cast<size_t>(-1);
+      return STREAM_ERROR;
     }
 
     int sslStatus;
     do {
       const auto fd_ssl = get_ssl(fd);
       if (IsNullOrEmpty(fd_ssl)) {
-        return static_cast<size_t>(-1);
+        return STREAM_ERROR;
       }
       const auto ssl_read_size = gsl::narrow<int>(std::min(buflen, gsl::narrow<size_t>(std::numeric_limits<int>::max())));
       status = SSL_read(fd_ssl, buf, ssl_read_size);

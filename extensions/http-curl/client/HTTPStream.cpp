@@ -95,7 +95,7 @@ size_t HttpStream::read(uint8_t *buf, size_t buflen) {
     return http_read_callback_.readFully(reinterpret_cast<char*>(buf), buflen);
 
   } else {
-    return static_cast<size_t>(-1);
+    return STREAM_ERROR;
   }
 }
 

@@ -534,7 +534,7 @@ size_t Socket::read(uint8_t *buf, size_t buflen, bool retrieve_all_bytes) {
         logger_->log_debug("fd %d close %i", fd, buflen);
         utils::file::FileUtils::close(socket_file_descriptor_);
       }
-      return static_cast<size_t>(-1);
+      return STREAM_ERROR;
     }
     const auto bytes_read = recv(fd, reinterpret_cast<char*>(buf), buflen, 0);
     logger_->log_trace("Recv call %d", bytes_read);
@@ -558,7 +558,7 @@ size_t Socket::read(uint8_t *buf, size_t buflen, bool retrieve_all_bytes) {
 
 #endif  // WIN32
       }
-      return static_cast<size_t>(-1);
+      return STREAM_ERROR;
     }
     buflen -= gsl::narrow<size_t>(bytes_read);
     buf += bytes_read;

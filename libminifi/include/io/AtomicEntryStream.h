@@ -151,7 +151,7 @@ size_t AtomicEntryStream<T>::read(uint8_t *buf, size_t buflen) {
       return len;
     }
   }
-  return static_cast<size_t>(-1);
+  return STREAM_ERROR;
 }
 
 }  // namespace io

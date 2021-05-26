@@ -39,7 +39,7 @@ class InputStream : public virtual Stream {
    * Reads a byte array from the stream. Use isError (Stream.h) to check for errors.
    * @param value reference in which will set the result
    * @param len length to read
-   * @return resulting read size or static_cast<size_t>(-1) on error or static_cast<size_t>(-2) on EAGAIN
+   * @return resulting read size or STREAM_ERROR on error or static_cast<size_t>(-2) on EAGAIN
    **/
   virtual size_t read(uint8_t *value, size_t len) = 0;
 
@@ -48,34 +48,34 @@ class InputStream : public virtual Stream {
   /**
    * Read string from stream. Use isError (Stream.h) to check for errors.
    * @param str reference string
-   * @return resulting read size or static_cast<size_t>(-1) on error or static_cast<size_t>(-2) on EAGAIN
+   * @return resulting read size or STREAM_ERROR on error or static_cast<size_t>(-2) on EAGAIN
    **/
   size_t read(std::string &str, bool widen = false);
 
   /**
    * Read a bool from stream. Use isError (Stream.h) to check for errors.
    * @param value reference to the output
-   * @return resulting read size or static_cast<size_t>(-1) on error or static_cast<size_t>(-2) on EAGAIN
+   * @return resulting read size or STREAM_ERROR on error or static_cast<size_t>(-2) on EAGAIN
    **/
   size_t read(bool& value);
 
   /**
    * Read a uuid from stream. Use isError (Stream.h) to check for errors.
    * @param value reference to the output
-   * @return resulting read size or static_cast<size_t>(-1) on error or static_cast<size_t>(-2) on EAGAIN
+   * @return resulting read size or STREAM_ERROR on error or static_cast<size_t>(-2) on EAGAIN
    **/
   size_t read(utils::Identifier& value);
 
   /**
    * Reads sizeof(Integral) bytes from the stream. Use isError (Stream.h) to check for errors.
    * @param value reference in which will set the result
-   * @return resulting read size or static_cast<size_t>(-1) on error or static_cast<size_t>(-2) on EAGAIN
+   * @return resulting read size or STREAM_ERROR on error or static_cast<size_t>(-2) on EAGAIN
    **/
   template<typename Integral, typename = std::enable_if<std::is_unsigned<Integral>::value && !std::is_same<Integral, bool>::value>>
   size_t read(Integral& value) {
     uint8_t buf[sizeof(Integral)]{};
     if (read(buf, sizeof(Integral)) != sizeof(Integral)) {
-      return static_cast<size_t>(-1);
+      return io::STREAM_ERROR;
     }
 
     value = 0;
