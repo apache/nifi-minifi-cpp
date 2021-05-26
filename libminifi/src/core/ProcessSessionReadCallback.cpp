@@ -24,6 +24,7 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "io/BaseStream.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -47,20 +48,16 @@ int64_t ProcessSessionReadCallback::process(const std::shared_ptr<io::BaseStream
   size_t size = 0;
   uint8_t buffer[8192];
   do {
-    int read = stream->read(buffer, 8192);
-    if (read < 0) {
-      return -1;
-    }
-    if (read == 0) {
-      break;
-    }
+    const auto read = stream->read(buffer, 8192);
+    if (io::isError(read)) return -1;
+    if (read == 0) break;
     if (!_tmpFileOs.write(reinterpret_cast<char*>(buffer), read)) {
       return -1;
     }
     size += read;
   } while (size < stream->size());
   _writeSucceeded = true;
-  return size;
+  return gsl::narrow<int64_t>(size);
 }
 
 // Renames tmp file to final destination

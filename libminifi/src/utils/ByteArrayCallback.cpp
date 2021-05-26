@@ -35,10 +35,10 @@ int64_t ByteOutputCallback::process(const std::shared_ptr<io::BaseStream>& strea
   if (stream->size() > 0) {
     std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[stream->size()]);
     readFully(buffer.get(), stream->size());
-    stream->read(reinterpret_cast<uint8_t*>(buffer.get()), gsl::narrow<int>(stream->size()));
-    return stream->size();
+    stream->read(reinterpret_cast<uint8_t*>(buffer.get()), stream->size());
+    return gsl::narrow<int64_t>(stream->size());
   }
-  return size_.load();
+  return gsl::narrow<int64_t>(size_.load());
 }
 
 int64_t StreamOutputCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
@@ -46,7 +46,7 @@ int64_t StreamOutputCallback::process(const std::shared_ptr<io::BaseStream>& str
   std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[size_.load()]);
   auto written = readFully(buffer.get(), size_);
   stream->write(reinterpret_cast<uint8_t*>(buffer.get()), gsl::narrow<int>(written));
-  return stream->size();
+  return gsl::narrow<int64_t>(stream->size());
 }
 
 void StreamOutputCallback::write(char *data, size_t size) {
@@ -55,7 +55,7 @@ void StreamOutputCallback::write(char *data, size_t size) {
   write_and_notify(data, size);
 }
 
-const std::vector<char> ByteOutputCallback::to_string() {
+std::vector<char> ByteOutputCallback::to_string() {
   std::vector<char> buffer;
   buffer.resize(size_.load());
   readFully(buffer.data(), size_.load());

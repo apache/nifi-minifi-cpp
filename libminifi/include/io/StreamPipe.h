@@ -49,14 +49,10 @@ inline int64_t pipe(const std::shared_ptr<io::InputStream>& src, const std::shar
   uint8_t buffer[4096U];
   int64_t totalTransferred = 0;
   while (true) {
-    int readRet = src->read(buffer, sizeof(buffer));
-    if (readRet < 0) {
-      return readRet;
-    }
-    if (readRet == 0) {
-      break;
-    }
-    int remaining = readRet;
+    const auto readRet = src->read(buffer, sizeof(buffer));
+    if (io::isError(readRet)) return -1;
+    if (readRet == 0) break;
+    auto remaining = readRet;
     int transferred = 0;
     while (remaining > 0) {
       int writeRet = dst->write(buffer + transferred, remaining);

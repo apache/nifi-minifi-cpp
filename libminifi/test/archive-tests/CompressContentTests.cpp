@@ -41,29 +41,28 @@
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
 #include "../Utils.h"
+#include "utils/gsl.h"
 
 class ReadCallback: public minifi::InputStreamCallback {
  public:
-  explicit ReadCallback(size_t size) :
-      read_size_(0) {
-    buffer_size_ = size;
-    buffer_ = new uint8_t[buffer_size_];
-    archive_buffer_ = nullptr;
-    archive_buffer_size_ = 0;
+  explicit ReadCallback(size_t size)
+      :buffer_size_{size}  // default member initializers use this
+  {}
+  ReadCallback(const ReadCallback&) = delete;
+  ReadCallback(ReadCallback&&) = delete;
+  ReadCallback& operator=(const ReadCallback&) = delete;
+  ReadCallback& operator=(ReadCallback&&) = delete;
+
+  ~ReadCallback() override {
+    delete[] buffer_;
+    delete[] archive_buffer_;
   }
-  ~ReadCallback() {
-    if (buffer_)
-      delete[] buffer_;
-    if (archive_buffer_)
-      delete[] archive_buffer_;
-  }
-  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
+  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) override {
     int64_t total_read = 0;
-    int64_t ret = 0;
     do {
-      ret = stream->read(buffer_ + read_size_, gsl::narrow<int>(buffer_size_ - read_size_));
+      const auto ret = stream->read(buffer_ + read_size_, buffer_size_ - read_size_);
       if (ret == 0) break;
-      if (ret < 0) return ret;
+      if (minifi::io::isError(ret)) return -1;
       read_size_ += gsl::narrow<size_t>(ret);
       total_read += ret;
     } while (buffer_size_ != read_size_);
@@ -78,18 +77,18 @@ class ReadCallback: public minifi::InputStreamCallback {
     struct archive_entry *ae;
 
     REQUIRE(archive_read_next_header(a, &ae) == ARCHIVE_OK);
-    int size = gsl::narrow<int>(archive_entry_size(ae));
+    const auto size = archive_entry_size(ae);
     archive_buffer_ = new char[size];
     archive_buffer_size_ = size;
-    archive_read_data(a, archive_buffer_, size);
+    archive_read_data(a, archive_buffer_, gsl::narrow<size_t>(size));
     archive_read_free(a);
   }
 
-  uint8_t *buffer_;
   size_t buffer_size_;
-  size_t read_size_;
-  char *archive_buffer_;
-  int archive_buffer_size_;
+  uint8_t *buffer_ = new uint8_t[buffer_size_];
+  size_t read_size_ = 0;
+  char *archive_buffer_ = nullptr;
+  int64_t archive_buffer_size_ = 0;
 };
 
 /**

@@ -39,6 +39,7 @@
 #include "core/cstructs.h"
 #include "RandomServerSocket.h"
 #include "core/log.h"
+#include "utils/gsl.h"
 
 #define FMT_DEFAULT fmt_lower
 
@@ -144,15 +145,15 @@ void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfe
   size_t read_len = 0;
   while (!found_codec) {
     uint8_t handshake_data[1000];
-    int actual_len = stream->read(handshake_data+read_len, 1000-read_len);
-    if (actual_len <= 0) {
+    const auto actual_len = stream->read(handshake_data+read_len, 1000-read_len);
+    if(actual_len == 0 || minifi::io::isError(actual_len)) {
       continue;
     }
     read_len += actual_len;
-    std::string incoming_data(reinterpret_cast<const char *>(handshake_data), read_len);
-    auto it = std::search(incoming_data.begin(), incoming_data.end(), CODEC_NAME.begin(), CODEC_NAME.end());
-    if (it != incoming_data.end()) {
-      size_t idx = std::distance(incoming_data.begin(), it);
+    const std::string incoming_data(reinterpret_cast<const char *>(handshake_data), read_len);
+    const auto it = std::search(incoming_data.begin(), incoming_data.end(), CODEC_NAME.begin(), CODEC_NAME.end());
+    if(it != incoming_data.end()){
+      const auto idx = gsl::narrow<size_t>(std::distance(incoming_data.begin(), it));
       // Actual version follows the string as an uint32_t // that should be the end of the buffer
       found_codec = idx + CODEC_NAME.length() + sizeof(uint32_t) == read_len;
     }

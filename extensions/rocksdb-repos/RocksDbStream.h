@@ -56,7 +56,7 @@ class RocksDbStream : public io::BaseStream {
    * Skip to the specified offset.
    * @param offset offset to which we will skip
    */
-  void seek(uint64_t offset) override;
+  void seek(size_t offset) override;
 
   size_t size() const override {
     return size_;
@@ -70,7 +70,7 @@ class RocksDbStream : public io::BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  int read(uint8_t *buf, int buflen) override;
+  size_t read(uint8_t *buf, size_t buflen) override;
 
   /**
    * writes value to stream

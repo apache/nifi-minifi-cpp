@@ -31,6 +31,7 @@
 
 #include "S3Processor.h"
 #include "utils/GeneralUtils.h"
+#include "utils/gsl.h"
 
 template<typename T>
 class S3TestsFixture;
@@ -94,20 +95,20 @@ class PutS3Object : public S3Processor {
       auto data_stream = std::make_shared<std::stringstream>();
       read_size_ = 0;
       while (read_size_ < flow_size_) {
-        auto next_read_size = (std::min)(flow_size_ - read_size_, BUFFER_SIZE);
-        int read_ret = stream->read(buffer, next_read_size);
-        if (read_ret < 0) {
+        const auto next_read_size = (std::min)(flow_size_ - read_size_, BUFFER_SIZE);
+        const auto read_ret = stream->read(buffer, next_read_size);
+        if (io::isError(read_ret)) {
           return -1;
         }
         if (read_ret > 0) {
-          data_stream->write(reinterpret_cast<char*>(buffer.data()), next_read_size);
+          data_stream->write(reinterpret_cast<char*>(buffer.data()), gsl::narrow<std::streamsize>(next_read_size));
           read_size_ += read_ret;
         } else {
           break;
         }
       }
       result_ = s3_wrapper_.putObject(options_, data_stream);
-      return read_size_;
+      return gsl::narrow<int64_t>(read_size_);
     }
 
     uint64_t flow_size_;

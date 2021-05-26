@@ -299,7 +299,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     return stream_->write(data, len);
   }
 
-  int read(uint8_t* data, int len) override {
+  size_t read(uint8_t* data, size_t len) override {
     return stream_->read(data, len);
   }
 

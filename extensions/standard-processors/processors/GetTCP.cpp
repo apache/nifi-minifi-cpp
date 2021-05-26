@@ -166,12 +166,12 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
       do {
         if ( socket_ring_buffer_.try_dequeue(socket_ptr) ) {
           buffer.resize(receive_buffer_size_);
-          int size_read = socket_ptr->read(buffer.data(), gsl::narrow<int>(receive_buffer_size_), false);
-          if (size_read >= 0) {
-            if (size_read > 0) {
+          const auto size_read = socket_ptr->read(buffer.data(), receive_buffer_size_, false);
+          if (!io::isError(size_read)) {
+            if (size_read != 0) {
               // determine cut location
-              int startLoc = 0, i = 0;
-              for (; i < size_read; i++) {
+              size_t startLoc = 0;
+              for (size_t i = 0; i < size_read; i++) {
                 if (buffer.at(i) == endOfMessageByte && i > 0) {
                   if (i-startLoc > 0) {
                     handler_->handle(socket_ptr->getHostname(), buffer.data()+startLoc, (i-startLoc), true);
@@ -193,7 +193,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
               reconnects = 0;
             }
             socket_ring_buffer_.enqueue(std::move(socket_ptr));
-          } else if (size_read == -2 && stay_connected_) {
+          } else if (size_read == static_cast<size_t>(-2) && stay_connected_) {
             if (++reconnects > connection_attempt_limit_) {
               logger_->log_info("Too many reconnects, exiting thread");
               socket_ptr->close();

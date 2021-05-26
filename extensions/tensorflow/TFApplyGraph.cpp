@@ -16,9 +16,11 @@
  */
 
 #include "TFApplyGraph.h"
-#include <core/ProcessContext.h>
-#include <core/ProcessSession.h>
 #include <tensorflow/cc/ops/standard_ops.h>
+
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -191,29 +193,23 @@ void TFApplyGraph::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 int64_t TFApplyGraph::GraphReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   std::string graph_proto_buf;
   graph_proto_buf.resize(stream->size());
-  auto num_read = stream->read(reinterpret_cast<uint8_t *>(&graph_proto_buf[0]),
-                                   static_cast<int>(stream->size()));
-
+  const auto num_read = stream->read(reinterpret_cast<uint8_t *>(&graph_proto_buf[0]), stream->size());
   if (num_read != stream->size()) {
     throw std::runtime_error("GraphReadCallback failed to fully read flow file input stream");
   }
-
   graph_def_->ParseFromString(graph_proto_buf);
-  return num_read;
+  return gsl::narrow<int64_t>(num_read);
 }
 
 int64_t TFApplyGraph::TensorReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   std::string tensor_proto_buf;
   tensor_proto_buf.resize(stream->size());
-  auto num_read = stream->read(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
-                                   static_cast<int>(stream->size()));
-
+  const auto num_read = stream->read(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]), stream->size());
   if (num_read != stream->size()) {
     throw std::runtime_error("TensorReadCallback failed to fully read flow file input stream");
   }
-
   tensor_proto_->ParseFromString(tensor_proto_buf);
-  return num_read;
+  return gsl::narrow<int64_t>(num_read);
 }
 
 int64_t TFApplyGraph::TensorWriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {

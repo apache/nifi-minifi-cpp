@@ -49,13 +49,11 @@ py::bytes PyBaseStream::read(size_t len) {
 
   std::vector<uint8_t> buffer(len);
 
-  auto read = stream_->read(buffer.data(), static_cast<int>(len));
-  auto result = py::bytes(reinterpret_cast<char *>(buffer.data()), static_cast<size_t>(read));
-
-  return result;
+  const auto read = stream_->read(buffer.data(), len);
+  return py::bytes(reinterpret_cast<char *>(buffer.data()), read);
 }
 
-size_t PyBaseStream::write(py::bytes buf) {
+size_t PyBaseStream::write(const py::bytes& buf) {
   const auto &&buf_str = buf.operator std::string();
   return static_cast<size_t>(stream_->write(reinterpret_cast<uint8_t *>(const_cast<char *>(buf_str.data())),
                                                 static_cast<int>(buf_str.length())));

@@ -71,26 +71,26 @@ int FlowControlProtocol::selectClient(int msec) {
 }
 
 int FlowControlProtocol::readData(uint8_t *buf, int buflen) {
+  gsl_Expects(buflen >= 0);
   int sendSize = buflen;
 
   while (buflen) {
-    int status;
-    status = selectClient(MAX_READ_TIMEOUT);
-    if (status <= 0) {
-      return status;
+    const auto selectstatus = selectClient(MAX_READ_TIMEOUT);
+    if (selectstatus <= 0) {
+      return selectstatus;
     }
 #ifdef WIN32
-    status = _read(_socket, buf, buflen);
+    const auto readstatus = _read(_socket, buf, buflen);
 #elif !defined(__MACH__)
-    status = read(_socket, buf, buflen);
+    const auto readstatus = read(_socket, buf, gsl::narrow<size_t>(buflen));
 #else
-    status = recv(_socket, buf, buflen, 0);
+    const auto readstatus = recv(_socket, buf, buflen, 0);
 #endif
-    if (status <= 0) {
-      return status;
+    if (readstatus <= 0) {
+      return gsl::narrow<int>(readstatus);
     }
-    buflen -= status;
-    buf += status;
+    buflen -= readstatus;
+    buf += readstatus;
   }
 
   return sendSize;

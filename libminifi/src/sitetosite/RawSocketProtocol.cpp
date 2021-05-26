@@ -114,28 +114,31 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
 
   logger_->log_debug("Negotiate protocol version with destination port %s current version %d", port_id_.to_string(), _currentVersion);
 
-  int ret = peer_->write(getResourceName());
-
-  logger_->log_trace("result of writing resource name is %i", ret);
-  if (ret <= 0) {
-    logger_->log_debug("result of writing resource name is %i", ret);
-    // tearDown();
-    return false;
+  {
+    const auto ret = peer_->write(getResourceName());
+    logger_->log_trace("result of writing resource name is %i", ret);
+    if (ret <= 0) {
+      logger_->log_debug("result of writing resource name is %i", ret);
+      // tearDown();
+      return false;
+    }
   }
 
-  ret = peer_->write(_currentVersion);
-
-  if (ret <= 0) {
-    logger_->log_debug("result of writing version is %i", ret);
-    return false;
+  {
+    const auto ret = peer_->write(_currentVersion);
+    if (ret <= 0) {
+      logger_->log_debug("result of writing version is %i", ret);
+      return false;
+    }
   }
 
   uint8_t statusCode;
-  ret = peer_->read(statusCode);
-
-  if (ret <= 0) {
-    logger_->log_debug("result of writing version status code  %i", ret);
-    return false;
+  {
+    const auto ret = peer_->read(statusCode);
+    if (ret == 0 || io::isError(ret)) {
+      logger_->log_debug("result of writing version status code  %i", ret);
+      return false;
+    }
   }
   logger_->log_debug("status code is %i", statusCode);
   switch (statusCode) {
@@ -144,9 +147,11 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
       return true;
     case DIFFERENT_RESOURCE_VERSION:
       uint32_t serverVersion;
-      ret = peer_->read(serverVersion);
-      if (ret <= 0) {
-        return false;
+      {
+        const auto ret = peer_->read(serverVersion);
+        if (ret == 0 || io::isError(ret)) {
+          return false;
+        }
       }
 
       logging::LOG_INFO(logger_) << "Site2Site Server Response asked for a different protocol version " << serverVersion;
@@ -178,36 +183,40 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
 
   logger_->log_trace("Negotiate Codec version with destination port %s current version %d", port_id_.to_string(), _currentCodecVersion);
 
-  int ret = peer_->write(getCodecResourceName());
-
-  if (ret <= 0) {
-    logger_->log_debug("result of getCodecResourceName is %i", ret);
-    return false;
+  {
+    const auto ret = peer_->write(getCodecResourceName());
+    if (ret <= 0) {
+      logger_->log_debug("result of getCodecResourceName is %i", ret);
+      return false;
+    }
   }
 
-  ret = peer_->write(_currentCodecVersion);
-
-  if (ret <= 0) {
-    logger_->log_debug("result of _currentCodecVersion is %i", ret);
-    return false;
+  {
+    const auto ret = peer_->write(_currentCodecVersion);
+    if (ret <= 0) {
+      logger_->log_debug("result of _currentCodecVersion is %i", ret);
+      return false;
+    }
   }
 
   uint8_t statusCode;
-  ret = peer_->read(statusCode);
-
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = peer_->read(statusCode);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
   }
-
   switch (statusCode) {
     case RESOURCE_OK:
       logger_->log_trace("Site2Site Codec Negotiate version OK");
       return true;
     case DIFFERENT_RESOURCE_VERSION:
       uint32_t serverVersion;
-      ret = peer_->read(serverVersion);
-      if (ret <= 0) {
-        return false;
+      {
+        const auto ret = peer_->read(serverVersion);
+        if (ret == 0 || io::isError(ret)) {
+          return false;
+        }
       }
       logging::LOG_INFO(logger_) << "Site2Site Server Response asked for a different protocol version " << serverVersion;
 
@@ -237,10 +246,11 @@ bool RawSiteToSiteClient::handShake() {
   logger_->log_debug("Site2Site Protocol Perform hand shake with destination port %s", port_id_.to_string());
   _commsIdentifier = id_generator_->generate();
 
-  int ret = peer_->write(_commsIdentifier);
-
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = peer_->write(_commsIdentifier);
+    if (ret <= 0) {
+      return false;
+    }
   }
 
   std::map<std::string, std::string> properties;
@@ -257,27 +267,33 @@ bool RawSiteToSiteClient::handShake() {
   }
 
   if (_currentVersion >= 3) {
-    ret = peer_->write(peer_->getURL());
+    const auto ret = peer_->write(peer_->getURL());
     if (ret <= 0) {
       return false;
     }
   }
 
-  uint32_t size = gsl::narrow<uint32_t>(properties.size());
-  ret = peer_->write(size);
-  if (ret <= 0) {
-    return false;
+  {
+    const auto size = gsl::narrow<uint32_t>(properties.size());
+    const auto ret = peer_->write(size);
+    if (ret <= 0) {
+      return false;
+    }
   }
 
   std::map<std::string, std::string>::iterator it;
   for (it = properties.begin(); it != properties.end(); it++) {
-    ret = peer_->write(it->first);
-    if (ret <= 0) {
-      return false;
+    {
+      const auto ret = peer_->write(it->first);
+      if (ret <= 0) {
+        return false;
+      }
     }
-    ret = peer_->write(it->second);
-    if (ret <= 0) {
-      return false;
+    {
+      const auto ret = peer_->write(it->second);
+      if (ret <= 0) {
+        return false;
+      }
     }
     logger_->log_debug("Site2Site Protocol Send handshake properties %s %s", it->first, it->second);
   }
@@ -285,10 +301,11 @@ bool RawSiteToSiteClient::handShake() {
   RespondCode code;
   std::string message;
 
-  ret = readRespond(nullptr, code, message);
-
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = readRespond(nullptr, code, message);
+    if (ret <= 0) {
+      return false;
+    }
   }
 
   std::string error;
@@ -310,13 +327,11 @@ bool RawSiteToSiteClient::handShake() {
     // Unknown error
     default:
       logger_->log_error("HandShake Failed because of unknown respond code %d", code);
-      ret = -1;
       return false;
   }
 
   // All known error cases handled here
   logger_->log_error("Site2Site HandShake Failed because destination port, %s, is %s", port_id_.to_string(), error);
-  ret = -1;
   return false;
 }
 
@@ -334,48 +349,54 @@ void RawSiteToSiteClient::tearDown() {
 
 bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
   if (establish() && handShake()) {
-    int status = writeRequestType(REQUEST_PEER_LIST);
-
-    if (status <= 0) {
+    if (writeRequestType(REQUEST_PEER_LIST) <= 0) {
       tearDown();
       return false;
     }
 
-    uint32_t number;
-    status = peer_->read(number);
-
-    if (status <= 0) {
-      tearDown();
-      return false;
-    }
-
-    for (uint32_t i = 0; i < number; i++) {
-      std::string host;
-      status = peer_->read(host);
-      if (status <= 0) {
+    uint32_t number_of_peers;
+    {
+      const auto ret = peer_->read(number_of_peers);
+      if (ret == 0 || io::isError(ret)) {
         tearDown();
         return false;
+      }
+    }
+
+    for (uint32_t i = 0; i < number_of_peers; i++) {
+      std::string host;
+      {
+        const auto ret = peer_->read(host);
+        if (ret == 0 || io::isError(ret)) {
+          tearDown();
+          return false;
+        }
       }
       uint32_t port;
-      status = peer_->read(port);
-      if (status <= 0) {
-        tearDown();
-        return false;
+      {
+        const auto ret = peer_->read(port);
+        if (ret == 0 || io::isError(ret)) {
+          tearDown();
+          return false;
+        }
       }
       uint8_t secure;
-      status = peer_->read(secure);
-      if (status <= 0) {
-        tearDown();
-        return false;
+      {
+        const auto ret = peer_->read(secure);
+        if (ret == 0 || io::isError(ret)) {
+          tearDown();
+          return false;
+        }
       }
       uint32_t count;
-      status = peer_->read(count);
-      if (status <= 0) {
-        tearDown();
-        return false;
+      {
+        const auto ret = peer_->read(count);
+        if (ret == 0 || io::isError(ret)) {
+          tearDown();
+          return false;
+        }
       }
-      PeerStatus status(std::make_shared<Peer>(port_id_, host, gsl::narrow<uint16_t>(port), secure != 0), count, true);
-      peers.push_back(std::move(status));
+      peers.push_back(PeerStatus{std::make_shared<Peer>(port_id_, host, gsl::narrow<uint16_t>(port), secure != 0), count, true});
       logging::LOG_TRACE(logger_) << "Site2Site Peer host " << host << " port " << port << " Secure " << std::to_string(secure);
     }
 
@@ -397,15 +418,14 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
   int RawSiteToSiteClient::readRequestType(RequestType &type) {
     std::string requestTypeStr;
 
-    int ret = peer_->read(requestTypeStr);
-
-    if (ret <= 0)
-      return ret;
+    const auto ret = peer_->read(requestTypeStr);
+    if (ret == 0 || io::isError(ret))
+      return static_cast<int>(ret);
 
     for (int i = NEGOTIATE_FLOWFILE_CODEC; i <= SHUTDOWN; i++) {
       if (SiteToSiteRequest::RequestTypeStr[i] == requestTypeStr) {
         type = (RequestType) i;
-        return ret;
+        return static_cast<int>(ret);
       }
     }
 
@@ -417,7 +437,7 @@ int RawSiteToSiteClient::readRespond(const std::shared_ptr<Transaction> &transac
 }
 
 int RawSiteToSiteClient::writeRespond(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message) {
-  return writeResponse(transaction, code, message);
+  return writeResponse(transaction, code, std::move(message));
 }
 
 bool RawSiteToSiteClient::negotiateCodec() {

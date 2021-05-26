@@ -31,47 +31,43 @@ namespace sitetosite {
 
 int SiteToSiteClient::readResponse(const std::shared_ptr<Transaction>& /*transaction*/, RespondCode &code, std::string &message) {
   uint8_t firstByte;
-
-  int ret = peer_->read(firstByte);
-
-  if (ret <= 0 || firstByte != CODE_SEQUENCE_VALUE_1)
-    return -1;
+  {
+    const auto ret = peer_->read(firstByte);
+    if (ret == 0 || io::isError(ret) || firstByte != CODE_SEQUENCE_VALUE_1)
+      return -1;
+  }
 
   uint8_t secondByte;
-
-  ret = peer_->read(secondByte);
-
-  if (ret <= 0 || secondByte != CODE_SEQUENCE_VALUE_2)
-    return -1;
+  {
+    const auto ret = peer_->read(secondByte);
+    if (ret == 0 || io::isError(ret) || secondByte != CODE_SEQUENCE_VALUE_2)
+      return -1;
+  }
 
   uint8_t thirdByte;
-
-  ret = peer_->read(thirdByte);
-
-  if (ret <= 0)
-    return ret;
+  {
+    const auto ret = peer_->read(thirdByte);
+    if (ret == 0 || io::isError(ret))
+      return static_cast<int>(ret);
+  }
 
   code = (RespondCode) thirdByte;
-
   RespondCodeContext *resCode = this->getRespondCodeContext(code);
-
-  if (resCode == NULL) {
-    // Not a valid respond code
+  if (!resCode) {
     return -1;
   }
   if (resCode->hasDescription) {
-    ret = peer_->read(message);
-    if (ret <= 0)
+    const auto ret = peer_->read(message);
+    if (ret == 0 || io::isError(ret))
       return -1;
   }
   return gsl::narrow<int>(3 + message.size());
 }
 
 void SiteToSiteClient::deleteTransaction(const utils::Identifier& transactionID) {
-  std::shared_ptr<Transaction> transaction = NULL;
+  std::shared_ptr<Transaction> transaction;
 
   auto it = this->known_transactions_.find(transactionID);
-
   if (it == known_transactions_.end()) {
     return;
   } else {
@@ -85,7 +81,7 @@ void SiteToSiteClient::deleteTransaction(const utils::Identifier& transactionID)
 int SiteToSiteClient::writeResponse(const std::shared_ptr<Transaction>& /*transaction*/, RespondCode code, std::string message) {
   RespondCodeContext *resCode = this->getRespondCodeContext(code);
 
-  if (resCode == NULL) {
+  if (!resCode) {
     // Not a valid respond code
     return -1;
   }
@@ -205,7 +201,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
 
 bool SiteToSiteClient::confirm(const utils::Identifier& transactionID) {
   int ret;
-  std::shared_ptr<Transaction> transaction = NULL;
+  std::shared_ptr<Transaction> transaction;
 
   if (peer_state_ != READY) {
     bootstrap();
@@ -529,8 +525,7 @@ int16_t SiteToSiteClient::send(const utils::Identifier &transactionID, DataPacke
 }
 
 bool SiteToSiteClient::receive(const utils::Identifier& transactionID, DataPacket *packet, bool &eof) {
-  int ret;
-  std::shared_ptr<Transaction> transaction = NULL;
+  std::shared_ptr<Transaction> transaction;
 
   if (peer_state_ != READY) {
     bootstrap();
@@ -568,9 +563,7 @@ bool SiteToSiteClient::receive(const utils::Identifier& transactionID, DataPacke
     RespondCode code;
     std::string message;
 
-    ret = readResponse(transaction, code, message);
-
-    if (ret <= 0) {
+    if (readResponse(transaction, code, message) <= 0) {
       return false;
     }
     if (code == CONTINUE_TRANSACTION) {
@@ -595,9 +588,11 @@ bool SiteToSiteClient::receive(const utils::Identifier& transactionID, DataPacke
 
   // start to read the packet
   uint32_t numAttributes;
-  ret = transaction->getStream().read(numAttributes);
-  if (ret <= 0 || numAttributes > MAX_NUM_ATTRIBUTES) {
-    return false;
+  {
+    const auto ret = transaction->getStream().read(numAttributes);
+    if (ret == 0 || io::isError(ret) || numAttributes > MAX_NUM_ATTRIBUTES) {
+      return false;
+    }
   }
 
   // read the attributes
@@ -605,22 +600,28 @@ bool SiteToSiteClient::receive(const utils::Identifier& transactionID, DataPacke
   for (unsigned int i = 0; i < numAttributes; i++) {
     std::string key;
     std::string value;
-    ret = transaction->getStream().read(key, true);
-    if (ret <= 0) {
-      return false;
+    {
+      const auto ret = transaction->getStream().read(key, true);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
     }
-    ret = transaction->getStream().read(value, true);
-    if (ret <= 0) {
-      return false;
+    {
+      const auto ret = transaction->getStream().read(value, true);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
     }
     packet->_attributes[key] = value;
     logger_->log_debug("Site2Site transaction %s receives attribute key %s value %s", transactionID.to_string(), key, value);
   }
 
   uint64_t len;
-  ret = transaction->getStream().read(len);
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = transaction->getStream().read(len);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
   }
 
   packet->_size = len;

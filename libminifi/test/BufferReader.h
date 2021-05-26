@@ -24,20 +24,21 @@
 #include <vector>
 
 #include "FlowFileRecord.h"
+#include "Stream.h"
 #include "utils/gsl.h"
 
 class BufferReader : public org::apache::nifi::minifi::InputStreamCallback {
  public:
   explicit BufferReader(std::vector<uint8_t>& buffer) : buffer_(buffer) {}
 
-  int write(org::apache::nifi::minifi::io::BaseStream& input, std::size_t len) {
+  size_t write(org::apache::nifi::minifi::io::BaseStream& input, std::size_t len) {
     uint8_t tmpBuffer[4096]{};
     std::size_t remaining_len = len;
-    int total_read = 0;
+    size_t total_read = 0;
     while (remaining_len > 0) {
-      auto ret = input.read(tmpBuffer, gsl::narrow<int>(std::min(remaining_len, sizeof(tmpBuffer))));
+      const auto ret = input.read(tmpBuffer, std::min(remaining_len, sizeof(tmpBuffer)));
       if (ret == 0) break;
-      if (ret < 0) return ret;
+      if (minifi::io::isError(ret)) return ret;
       remaining_len -= ret;
       total_read += ret;
       auto prevSize = buffer_.size();
@@ -48,7 +49,8 @@ class BufferReader : public org::apache::nifi::minifi::InputStreamCallback {
   }
 
   int64_t process(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
-    return write(*stream.get(), stream->size());
+    const auto write_result = write(*stream.get(), stream->size());
+    return minifi::io::isError(write_result) ? -1 : gsl::narrow<int64_t>(write_result);
   }
 
  private:

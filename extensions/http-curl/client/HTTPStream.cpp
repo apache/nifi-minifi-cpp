@@ -47,7 +47,7 @@ void HttpStream::close() {
   http_read_callback_.close();
 }
 
-void HttpStream::seek(uint64_t /*offset*/) {
+void HttpStream::seek(size_t /*offset*/) {
   // seek is an unnecessary part of this implementatino
   throw std::logic_error{"HttpStream::seek is unimplemented"};
 }
@@ -77,8 +77,7 @@ int HttpStream::write(const uint8_t *value, int size) {
   }
 }
 
-int HttpStream::read(uint8_t *buf, int buflen) {
-  gsl_Expects(buflen >= 0);
+size_t HttpStream::read(uint8_t *buf, size_t buflen) {
   if (buflen == 0) {
     return 0;
   }
@@ -93,10 +92,10 @@ int HttpStream::read(uint8_t *buf, int buflen) {
         started_ = true;
       }
     }
-    return gsl::narrow<int>(http_read_callback_.readFully(reinterpret_cast<char*>(buf), buflen));
+    return http_read_callback_.readFully(reinterpret_cast<char*>(buf), buflen);
 
   } else {
-    return -1;
+    return STREAM_ERROR;
   }
 }
 

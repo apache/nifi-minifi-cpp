@@ -159,7 +159,7 @@ class Socket : public BaseStream {
    * @param buflen
    * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
-  int read(uint8_t *buf, int buflen) override {
+  size_t read(uint8_t *buf, size_t buflen) override {
     return read(buf, buflen, true);
   }
 
@@ -169,7 +169,7 @@ class Socket : public BaseStream {
    * @param buflen
    * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
-  virtual int read(uint8_t *buf, int buflen, bool retrieve_all_bytes);
+  virtual size_t read(uint8_t *buf, size_t buflen, bool retrieve_all_bytes);
 
  protected:
   /**

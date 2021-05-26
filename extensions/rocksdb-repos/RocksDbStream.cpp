@@ -47,7 +47,7 @@ RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::R
 void RocksDbStream::close() {
 }
 
-void RocksDbStream::seek(uint64_t /*offset*/) {
+void RocksDbStream::seek(size_t /*offset*/) {
   // noop
 }
 
@@ -84,28 +84,17 @@ int RocksDbStream::write(const uint8_t *value, int size) {
   }
 }
 
-int RocksDbStream::read(uint8_t *buf, int buflen) {
-  gsl_Expects(buflen >= 0);
-  if (!exists_) {
-    return -1;
-  }
-  if (buflen == 0) {
-    return 0;
-  }
-  if (!IsNullOrEmpty(buf)) {
-    size_t amtToRead = gsl::narrow<size_t>(buflen);
-    if (offset_ >= value_.size()) {
-      return 0;
-    }
-    if (amtToRead > value_.size() - offset_) {
-      amtToRead = value_.size() - offset_;
-    }
-    std::memcpy(buf, value_.data() + offset_, amtToRead);
-    offset_ += amtToRead;
-    return gsl::narrow<int>(amtToRead);
-  } else {
-    return -1;
-  }
+size_t RocksDbStream::read(uint8_t *buf, size_t buflen) {
+  // The check have to be in this order for RocksDBStreamTest "Read zero bytes" to succeed
+  if (!exists_) return STREAM_ERROR;
+  if (buflen == 0) return 0;
+  if (IsNullOrEmpty(buf)) return STREAM_ERROR;
+  if (offset_ >= value_.size()) return 0;
+
+  const auto amtToRead = std::min(buflen, value_.size() - offset_);
+  std::memcpy(buf, value_.data() + offset_, amtToRead);
+  offset_ += amtToRead;
+  return amtToRead;
 }
 
 } /* namespace io */

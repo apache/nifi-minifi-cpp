@@ -40,7 +40,7 @@ DescriptorStream::DescriptorStream(int fd)
       logger_(logging::LoggerFactory<DescriptorStream>::getLogger()) {
 }
 
-void DescriptorStream::seek(uint64_t offset) {
+void DescriptorStream::seek(size_t offset) {
   std::lock_guard<std::recursive_mutex> lock(file_lock_);
 #ifdef WIN32
   _lseeki64(fd_, gsl::narrow<int64_t>(offset), 0x00);
@@ -70,25 +70,24 @@ int DescriptorStream::write(const uint8_t *value, int size) {
   }
 }
 
-int DescriptorStream::read(uint8_t *buf, int buflen) {
-  gsl_Expects(buflen >= 0);
+size_t DescriptorStream::read(uint8_t *buf, size_t buflen) {
   if (buflen == 0) {
     return 0;
   }
   if (!IsNullOrEmpty(buf)) {
 #ifdef WIN32
-    auto size_read = _read(fd_, buf, buflen);
+    const auto size_read = _read(fd_, buf, buflen);
 #else
-    auto size_read = ::read(fd_, buf, buflen);
+    const auto size_read = ::read(fd_, buf, buflen);
 #endif
 
     if (size_read < 0) {
-      return -1;
+      return STREAM_ERROR;
     }
-    return  size_read;
+    return gsl::narrow<size_t>(size_read);
 
   } else {
-    return -1;
+    return STREAM_ERROR;
   }
 }
 

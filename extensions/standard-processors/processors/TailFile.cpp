@@ -399,7 +399,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   std::string rolling_filename_pattern_glob;
   context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
   rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
-  initial_start_position_ = utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.getName(), InitialStartPositions::values());
+  initial_start_position_ = InitialStartPositions{utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.getName(), InitialStartPositions::values())};
 }
 
 void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const {

@@ -27,6 +27,7 @@
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
 #include "core/TypedValues.h"
+#include "utils/gsl.h"
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -160,11 +161,11 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
           while (1) {
             std::this_thread::sleep_for(std::chrono::milliseconds(_batchDuration));
             char buffer[4096];
-            int numRead = read(_pipefd[0], buffer, sizeof(buffer));
+            const auto  numRead = read(_pipefd[0], buffer, sizeof(buffer));
             if (numRead <= 0)
               break;
-            logger_->log_debug("Execute Command Respond %d", numRead);
-            ExecuteProcess::WriteCallback callback(buffer, numRead);
+            logger_->log_debug("Execute Command Respond %zd", numRead);
+            ExecuteProcess::WriteCallback callback(buffer, gsl::narrow<uint64_t>(numRead));
             auto flowFile = session->create();
             if (!flowFile)
               continue;
@@ -177,13 +178,13 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
         } else {
           char buffer[4096];
           char *bufPtr = buffer;
-          int totalRead = 0;
+          size_t totalRead = 0;
           std::shared_ptr<core::FlowFile> flowFile = nullptr;
           while (true) {
-            int numRead = read(_pipefd[0], bufPtr, (sizeof(buffer) - totalRead));
+            const auto numRead = read(_pipefd[0], bufPtr, (sizeof(buffer) - totalRead));
             if (numRead <= 0) {
               if (totalRead > 0) {
-                logger_->log_debug("Execute Command Respond %d", totalRead);
+                logger_->log_debug("Execute Command Respond %zu", totalRead);
                 // child exits and close the pipe
                 ExecuteProcess::WriteCallback callback(buffer, totalRead);
                 if (!flowFile) {
@@ -200,9 +201,9 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
               }
               break;
             } else {
-              if (numRead == static_cast<int>((sizeof(buffer) - totalRead))) {
+              if (numRead == static_cast<ssize_t>((sizeof(buffer) - totalRead))) {
                 // we reach the max buffer size
-                logger_->log_debug("Execute Command Max Respond %d", sizeof(buffer));
+                logger_->log_debug("Execute Command Max Respond %zu", sizeof(buffer));
                 ExecuteProcess::WriteCallback callback(buffer, sizeof(buffer));
                 if (!flowFile) {
                   flowFile = session->create();

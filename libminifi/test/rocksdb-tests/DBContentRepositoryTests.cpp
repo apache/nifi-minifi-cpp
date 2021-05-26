@@ -103,8 +103,8 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
 
   std::string readstr;
 
-  // -1 tell us we have an invalid stream
-  REQUIRE(read_stream->read(readstr) == -1);
+  // error tells us we have an invalid stream
+  REQUIRE(minifi::io::isError(read_stream->read(readstr)));
 }
 
 TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
@@ -139,8 +139,8 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
 
   std::string readstr;
 
-  // -1 tell us we have an invalid stream
-  REQUIRE(read_stream->read(readstr) == -1);
+  // error tells us we have an invalid stream
+  REQUIRE(minifi::io::isError(read_stream->read(readstr)));
 }
 
 TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
@@ -179,7 +179,6 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
 
   std::string readstr;
 
-  // -1 tell us we have an invalid stream
   read_stream->read(readstr);
 
   REQUIRE(readstr == "well hello there");
@@ -227,7 +226,6 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
 
   std::string readstr;
 
-  // -1 tell us we have an invalid stream
   read_stream->read(readstr);
 
   REQUIRE(readstr == "well hello there");

@@ -19,6 +19,7 @@
 #ifndef LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITECLIENT_H_
 #define LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITECLIENT_H_
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <string>
@@ -30,6 +31,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessContext.h"
 #include "core/Connectable.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -43,15 +45,14 @@ namespace sitetosite {
  */
 class DataPacket {
  public:
-  DataPacket(const std::shared_ptr<logging::Logger> &logger, const std::shared_ptr<Transaction> &transaction, std::map<std::string, std::string> attributes, const std::string &payload)
-      : payload_(payload),
-        logger_reference_(logger) {
-    _size = 0;
-    transaction_ = transaction;
-    _attributes = attributes;
+  DataPacket(std::shared_ptr<logging::Logger> logger, std::shared_ptr<Transaction> transaction, std::map<std::string, std::string> attributes, const std::string &payload)
+      : _attributes{std::move(attributes)},
+        transaction_{std::move(transaction)},
+        payload_{payload},
+        logger_reference_{std::move(logger)} {
   }
   std::map<std::string, std::string> _attributes;
-  uint64_t _size;
+  uint64_t _size{0};
   std::shared_ptr<Transaction> transaction_;
   const std::string & payload_;
   std::shared_ptr<logging::Logger> logger_reference_;
@@ -60,24 +61,10 @@ class DataPacket {
 class SiteToSiteClient : public core::Connectable {
  public:
   SiteToSiteClient()
-      : core::Connectable("SitetoSiteClient"),
-        peer_state_(IDLE),
-        _batchSendNanos(5000000000),
-        ssl_context_service_(nullptr),
-        logger_(logging::LoggerFactory<SiteToSiteClient>::getLogger()) {
-    _supportedVersion[0] = 5;
-    _supportedVersion[1] = 4;
-    _supportedVersion[2] = 3;
-    _supportedVersion[3] = 2;
-    _supportedVersion[4] = 1;
-    _currentVersion = _supportedVersion[0];
-    _currentVersionIndex = 0;
-    _supportedCodecVersion[0] = 1;
-    _currentCodecVersion = _supportedCodecVersion[0];
-    _currentCodecVersionIndex = 0;
+      : core::Connectable("SitetoSiteClient") {
   }
 
-  virtual ~SiteToSiteClient() = default;
+  ~SiteToSiteClient() override = default;
 
   void setSSLContextService(const std::shared_ptr<minifi::controllers::SSLContextService> &context_service) {
     ssl_context_service_ = context_service;
@@ -189,13 +176,13 @@ class SiteToSiteClient : public core::Connectable {
     return logger_;
   }
 
-  virtual void yield() {
+  void yield() override {
   }
 
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() {
+  bool isRunning() override {
     return running_;
   }
 
@@ -203,7 +190,7 @@ class SiteToSiteClient : public core::Connectable {
    * Determines if work is available by this connectable
    * @return boolean if work is available.
    */
-  virtual bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return true;
   }
 
@@ -234,16 +221,16 @@ class SiteToSiteClient : public core::Connectable {
   virtual int writeResponse(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message);
   // getRespondCodeContext
   virtual RespondCodeContext *getRespondCodeContext(RespondCode code) {
-    for (unsigned int i = 0; i < sizeof(SiteToSiteRequest::respondCodeContext) / sizeof(RespondCodeContext); i++) {
-      if (SiteToSiteRequest::respondCodeContext[i].code == code) {
-        return &SiteToSiteRequest::respondCodeContext[i];
+    for (auto & i : SiteToSiteRequest::respondCodeContext) {
+      if (i.code == code) {
+        return &i;
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   // Peer State
-  PeerState peer_state_;
+  PeerState peer_state_{PeerState::IDLE};
 
   // portId
   utils::Identifier port_id_;
@@ -254,28 +241,28 @@ class SiteToSiteClient : public core::Connectable {
   // Peer Connection
   std::unique_ptr<SiteToSitePeer> peer_;
 
-  std::atomic<bool> running_;
+  std::atomic<bool> running_{false};
 
   // transaction map
   std::map<utils::Identifier, std::shared_ptr<Transaction>> known_transactions_;
 
   // BATCH_SEND_NANOS
-  uint64_t _batchSendNanos;
+  uint64_t _batchSendNanos{5000000000};
 
   /***
    * versioning
    */
-  uint32_t _supportedVersion[5];
-  uint32_t _currentVersion;
-  int _currentVersionIndex;
-  uint32_t _supportedCodecVersion[1];
-  uint32_t _currentCodecVersion;
-  int _currentCodecVersionIndex;
+  uint32_t _supportedVersion[5] = {5, 4, 3, 2, 1};
+  int _currentVersionIndex{0};
+  uint32_t _currentVersion{_supportedVersion[_currentVersionIndex]};
+  uint32_t _supportedCodecVersion[1] = {1};
+  int _currentCodecVersionIndex{0};
+  uint32_t _currentCodecVersion{_supportedCodecVersion[_currentCodecVersionIndex]};
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<SiteToSiteClient>::getLogger()};
 };
 
 // Nest Callback Class for write stream
@@ -286,13 +273,13 @@ class WriteCallback : public OutputStreamCallback {
   }
   DataPacket *_packet;
   // void process(std::ofstream *stream) {
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     uint8_t buffer[16384];
     uint64_t len = _packet->_size;
     uint64_t total = 0;
     while (len > 0) {
-      int size = len < 16384 ? static_cast<int>(len) : 16384;
-      int ret = _packet->transaction_->getStream().read(buffer, size);
+      const auto size = std::min(len, uint64_t{16384});
+      const auto ret = _packet->transaction_->getStream().read(buffer, size);
       if (ret != size) {
         logging::LOG_ERROR(_packet->logger_reference_) << "Site2Site Receive Flow Size " << size << " Failed " << ret << ", should have received " << len;
         return -1;
@@ -302,7 +289,7 @@ class WriteCallback : public OutputStreamCallback {
       total += size;
     }
     logging::LOG_INFO(_packet->logger_reference_) << "Received " << total << " from stream";
-    return len;
+    return gsl::narrow<int64_t>(len);
   }
 };
 // Nest Callback Class for read stream
@@ -312,29 +299,23 @@ class ReadCallback : public InputStreamCallback {
       : _packet(packet) {
   }
   DataPacket *_packet;
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     _packet->_size = 0;
     uint8_t buffer[8192] = { 0 };
-    int readSize;
     size_t size = 0;
     do {
-      readSize = stream->read(buffer, 8192);
-
-      if (readSize == 0) {
-        break;
-      }
-      if (readSize < 0) {
-        return -1;
-      }
-      int ret = _packet->transaction_->getStream().write(buffer, readSize);
-      if (ret != readSize) {
+      const auto readSize = stream->read(buffer, 8192);
+      if (readSize == 0) break;
+      if (io::isError(readSize)) return -1;
+      const auto ret = _packet->transaction_->getStream().write(buffer, readSize);
+      if (ret < 0 || gsl::narrow<size_t>(ret) != readSize) {
         logging::LOG_INFO(_packet->logger_reference_) << "Site2Site Send Flow Size " << readSize << " Failed " << ret;
         return -1;
       }
       size += readSize;
     } while (size < stream->size());
     _packet->_size = size;
-    return size;
+    return gsl::narrow<int64_t>(size);
   }
 };
 

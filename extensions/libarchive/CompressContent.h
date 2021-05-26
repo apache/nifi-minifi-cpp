@@ -21,6 +21,7 @@
 #define __COMPRESS_CONTENT_H__
 
 #include <cinttypes>
+#include <utility>
 
 #include "archive_entry.h"
 #include "archive.h"
@@ -43,7 +44,7 @@ namespace minifi {
 namespace processors {
 
 // CompressContent Class
-class CompressContent: public core::Processor {
+class CompressContent : public core::Processor {
 public:
   // Constructor
   /*!
@@ -56,7 +57,7 @@ public:
     , encapsulateInTar_(false) {
   }
   // Destructor
-  virtual ~CompressContent() = default;
+  ~CompressContent() override = default;
   // Processor Name
   static constexpr char const* ProcessorName = "CompressContent";
   // Supported Properties
@@ -94,8 +95,8 @@ public:
     ReadCallbackCompress(std::shared_ptr<core::FlowFile> &flow, struct archive *arch, struct archive_entry *entry) :
         flow_(flow), arch_(arch), entry_(entry), status_(0), logger_(logging::LoggerFactory<CompressContent>::getLogger()) {
     }
-    ~ReadCallbackCompress() = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
+    ~ReadCallbackCompress() override = default;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       uint8_t buffer[4096U];
       int64_t ret = 0;
       uint64_t read_size = 0;
@@ -107,24 +108,24 @@ public:
         return -1;
       }
       while (read_size < flow_->getSize()) {
-        ret = stream->read(buffer, sizeof(buffer));
-        if (ret < 0) {
+        const auto readret = stream->read(buffer, sizeof(buffer));
+        if (io::isError(readret)) {
           status_ = -1;
           return -1;
         }
-        if (ret > 0) {
-          ret = archive_write_data(arch_, buffer, gsl::narrow<size_t>(ret));
+        if (readret > 0) {
+          ret = archive_write_data(arch_, buffer, readret);
           if (ret < 0) {
             logger_->log_error("Compress Content archive error %s", archive_error_string(arch_));
             status_ = -1;
             return -1;
           }
-          read_size += ret;
+          read_size += gsl::narrow<uint64_t>(ret);
         } else {
           break;
         }
       }
-      return read_size;
+      return gsl::narrow<int64_t>(read_size);
     }
     std::shared_ptr<core::FlowFile> flow_;
     struct archive *arch_;
@@ -133,28 +134,24 @@ public:
     std::shared_ptr<logging::Logger> logger_;
   };
   // Nest Callback Class for read stream from flow for decompress
-  class ReadCallbackDecompress: public InputStreamCallback {
-  public:
-    ReadCallbackDecompress(const std::shared_ptr<core::FlowFile> &flow) :
-        read_size_(0), offset_(0), flow_(flow) {
-      origin_offset_ = flow_->getOffset();
+  struct ReadCallbackDecompress : InputStreamCallback {
+    explicit ReadCallbackDecompress(std::shared_ptr<core::FlowFile> flow) :
+        flow_file(std::move(flow)) {
     }
-    ~ReadCallbackDecompress() = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      read_size_ = 0;
-      stream->seek(offset_);
-      int readRet = stream->read(buffer_, sizeof(buffer_));
-      read_size_ = readRet;
-      if (readRet > 0) {
-        offset_ += read_size_;
+    ~ReadCallbackDecompress() override = default;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+      stream->seek(offset);
+      const auto readRet = stream->read(buffer, sizeof(buffer));
+      stream_read_result = readRet;
+      if (!io::isError(readRet)) {
+        offset += readRet;
       }
-      return readRet;
+      return gsl::narrow<int64_t>(readRet);
     }
-    int64_t read_size_;
-    uint8_t buffer_[8192];
-    uint64_t offset_;
-    uint64_t origin_offset_;
-    std::shared_ptr<core::FlowFile> flow_;
+    size_t stream_read_result = 0;  // read size or error code, to be checked with io::isError
+    uint8_t buffer[8192] = {0};
+    size_t offset = 0;
+    std::shared_ptr<core::FlowFile> flow_file;
   };
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
@@ -190,16 +187,15 @@ public:
       return ret;
     }
 
-    static la_ssize_t archive_read(struct archive *arch, void *context, const void **buff) {
-      WriteCallback *callback = (WriteCallback *) context;
+    static la_ssize_t archive_read(struct archive* archive, void *context, const void **buff) {
+      auto *callback = (WriteCallback *) context;
       callback->session_->read(callback->flow_, &callback->readDecompressCb_);
-      if (callback->readDecompressCb_.read_size_ >= 0) {
-        *buff = callback->readDecompressCb_.buffer_;
-        return gsl::narrow<la_ssize_t>(callback->readDecompressCb_.read_size_);
-      } else {
-        archive_set_error(arch, EIO, "Error reading flowfile");
+      *buff = callback->readDecompressCb_.buffer;
+      if (io::isError(callback->readDecompressCb_.stream_read_result)) {
+        archive_set_error(archive, EIO, "Error reading flowfile");
         return -1;
       }
+      return gsl::narrow<la_ssize_t>(callback->readDecompressCb_.stream_read_result);
     }
 
     static la_int64_t archive_skip(struct archive* /*a*/, void* /*client_data*/, la_int64_t /*request*/) {
@@ -383,13 +379,14 @@ public:
           std::vector<uint8_t> buffer(16 * 1024U);
           int64_t read_size = 0;
           while (read_size < gsl::narrow<int64_t>(writer_.flow_->getSize())) {
-            int ret = inputStream->read(buffer.data(), gsl::narrow<int>(buffer.size()));
-            if (ret < 0) {
+            const auto ret = inputStream->read(buffer.data(), buffer.size());
+            if (io::isError(ret)) {
               return -1;
             } else if (ret == 0) {
               break;
             } else {
-              if (outputStream_->write(buffer.data(), ret) != ret) {
+              const auto writeret = outputStream_->write(buffer.data(), ret);
+              if (io::isError(writeret) || gsl::narrow<size_t>(writeret) != ret) {
                 return -1;
               }
               read_size += ret;
@@ -414,7 +411,7 @@ public:
 
       success_ = filterStream->isFinished();
 
-      return flow_->getSize();
+      return gsl::narrow<int64_t>(flow_->getSize());
     }
   };
 
@@ -444,7 +441,7 @@ private:
   }
 
   std::shared_ptr<logging::Logger> logger_;
-  int compressLevel_;
+  int compressLevel_{};
   CompressionMode compressMode_;
   ExtendedCompressionFormat compressFormat_;
   bool updateFileName_;

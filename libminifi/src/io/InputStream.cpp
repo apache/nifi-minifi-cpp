@@ -16,13 +16,10 @@
  * limitations under the License.
  */
 #include <cstdio>
-#include <iostream>
 #include <vector>
 #include <string>
-#include <algorithm>
 #include "io/InputStream.h"
 #include "utils/gsl.h"
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -30,67 +27,68 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-int InputStream::read(std::vector<uint8_t>& buffer, int len) {
-  if (buffer.size() < gsl::narrow<size_t>(len)) {
+size_t InputStream::read(std::vector<uint8_t>& buffer, size_t len) {
+  if (buffer.size() < len) {
     buffer.resize(len);
   }
-  int ret = read(buffer.data(), len);
-  buffer.resize((std::max)(ret, 0));
+  const auto ret = read(buffer.data(), len);
+  if (io::isError(ret)) return ret;
+  buffer.resize(ret);
   return ret;
 }
 
-int InputStream::read(bool &value) {
+size_t InputStream::read(bool &value) {
   uint8_t buf = 0;
 
   if (read(&buf, 1) != 1) {
-    return -1;
+    return STREAM_ERROR;
   }
   value = buf;
   return 1;
 }
 
-int InputStream::read(utils::Identifier &value) {
+size_t InputStream::read(utils::Identifier &value) {
   std::string uuidStr;
-  int ret = read(uuidStr);
-  if (ret < 0) {
+  const auto ret = read(uuidStr);
+  if (isError(ret)) {
     return ret;
   }
   auto optional_uuid = utils::Identifier::parse(uuidStr);
   if (!optional_uuid) {
-    return -1;
+    return STREAM_ERROR;
   }
   value = optional_uuid.value();
   return ret;
 }
 
-int InputStream::read(std::string &str, bool widen) {
-  uint32_t len = 0;
-  int ret = 0;
+size_t InputStream::read(std::string &str, bool widen) {
+  uint32_t string_length = 0;
+  size_t length_return = 0;
   if (!widen) {
     uint16_t shortLength = 0;
-    ret = read(shortLength);
-    len = shortLength;
+    length_return = read(shortLength);
+    string_length = shortLength;
   } else {
-    ret = read(len);
+    length_return = read(string_length);
   }
 
-  if (ret <= 0) {
-    return ret;
+  if (length_return == 0 || isError(length_return)) {
+    return length_return;
   }
 
-  if (len == 0) {
-    str = "";
-    return ret;
+  if (string_length == 0) {
+    str.clear();
+    return length_return;
   }
 
-  std::vector<uint8_t> buffer(len);
-  uint32_t bytes_read = gsl::narrow<uint32_t>(read(buffer.data(), len));
-  if (bytes_read != len) {
-    return -1;
+  std::vector<uint8_t> buffer(string_length);
+  const auto read_return = read(buffer.data(), string_length);
+  if (read_return != string_length) {
+    return read_return;
   }
 
-  str = std::string(reinterpret_cast<const char*>(buffer.data()), len);
-  return ret + len;
+  str = std::string(reinterpret_cast<const char*>(buffer.data()), string_length);
+  return length_return + string_length;
 }
 
 } /* namespace io */

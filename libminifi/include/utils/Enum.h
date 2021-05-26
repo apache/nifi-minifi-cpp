@@ -83,8 +83,8 @@ namespace utils {
 
 #define SMART_ENUM_BODY(Clazz, ...) \
     constexpr Clazz(Type value = static_cast<Type>(-1)) : value_{value} {} \
-    Clazz(const std::string& str) : value_{parse(str.c_str()).value_} {} \
-    Clazz(const char* str) : value_{parse(str).value_} {} \
+    explicit Clazz(const std::string& str) : value_{parse(str.c_str()).value_} {} \
+    explicit Clazz(const char* str) : value_{parse(str).value_} {} \
    private: \
     Type value_; \
    public: \

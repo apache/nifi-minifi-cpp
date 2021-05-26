@@ -136,14 +136,14 @@ class TLSSocket : public Socket {
   using Socket::read;
   using Socket::write;
 
-  int read(uint8_t *buf, int buflen, bool retrieve_all_bytes) override;
+  size_t read(uint8_t *buf, size_t buflen, bool retrieve_all_bytes) override;
 
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  int read(uint8_t *buf, int buflen) override;
+  size_t read(uint8_t *buf, size_t buflen) override;
 
   /**
    * Write value to the stream using uint8_t ptr

@@ -31,6 +31,8 @@
 #include "MQTTClient.h"
 #include "c2/protocols/RESTProtocol.h"
 #include "ConvertBase.h"
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -52,7 +54,7 @@ class ConvertJSONAck : public ConvertBase {
         logger_(logging::LoggerFactory<ConvertJSONAck>::getLogger()) {
   }
   // Destructor
-  virtual ~ConvertJSONAck() = default;
+  ~ConvertJSONAck() override = default;
   // Processor Name
   static constexpr char const* ProcessorName = "ConvertJSONAck";
 
@@ -72,14 +74,13 @@ class ConvertJSONAck : public ConvertBase {
   class ReadCallback : public InputStreamCallback {
    public:
     ReadCallback() = default;
-    ~ReadCallback() = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      int64_t ret = 0;
+    ~ReadCallback() override = default;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       if (nullptr == stream)
         return 0;
       buffer_.resize(stream->size());
-      ret = stream->read(reinterpret_cast<uint8_t*>(buffer_.data()), stream->size());
-      return ret;
+      const auto ret = stream->read(reinterpret_cast<uint8_t*>(buffer_.data()), stream->size());
+      return !io::isError(ret) ? gsl::narrow<int64_t>(ret) : -1;
     }
     std::vector<char> buffer_;
   };

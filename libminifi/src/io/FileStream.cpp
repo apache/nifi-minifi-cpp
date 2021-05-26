@@ -25,6 +25,8 @@
 #include "io/FileStream.h"
 #include "io/InputStream.h"
 #include "io/OutputStream.h"
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -97,13 +99,13 @@ void FileStream::close() {
   file_stream_.reset();
 }
 
-void FileStream::seek(uint64_t offset) {
+void FileStream::seek(size_t offset) {
   std::lock_guard<std::mutex> lock(file_lock_);
   if (file_stream_ == nullptr || !file_stream_->is_open()) {
     logging::LOG_ERROR(logger_) << SEEK_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
     return;
   }
-  offset_ = gsl::narrow<size_t>(offset);
+  offset_ = offset;
   file_stream_->clear();
   if (!file_stream_->seekg(offset_))
     logging::LOG_ERROR(logger_) << SEEK_ERROR_MSG << SEEKG_CALL_ERROR_MSG;
@@ -142,8 +144,7 @@ int FileStream::write(const uint8_t *value, int size) {
   }
 }
 
-int FileStream::read(uint8_t *buf, int buflen) {
-  gsl_Expects(buflen >= 0);
+size_t FileStream::read(uint8_t *buf, size_t buflen) {
   if (buflen == 0) {
     return 0;
   }
@@ -151,32 +152,31 @@ int FileStream::read(uint8_t *buf, int buflen) {
     std::lock_guard<std::mutex> lock(file_lock_);
     if (file_stream_ == nullptr || !file_stream_->is_open()) {
       logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
-      return -1;
+      return STREAM_ERROR;
     }
-    file_stream_->read(reinterpret_cast<char*>(buf), buflen);
+    file_stream_->read(reinterpret_cast<char*>(buf), gsl::narrow<std::streamsize>(buflen));
     if (file_stream_->eof() || file_stream_->fail()) {
       file_stream_->clear();
       seekToEndOfFile(READ_ERROR_MSG);
       auto tellg_result = file_stream_->tellg();
       if (tellg_result == std::streampos(-1)) {
         logging::LOG_ERROR(logger_) << READ_ERROR_MSG << TELLG_CALL_ERROR_MSG;
-        return -1;
+        return STREAM_ERROR;
       }
-      size_t len = gsl::narrow<size_t>(tellg_result);
+      const auto len = gsl::narrow<size_t>(tellg_result);
       size_t ret = len - offset_;
       offset_ = len;
       length_ = len;
       logging::LOG_DEBUG(logger_) << path_ << " eof bit, ended at " << offset_;
-      return gsl::narrow<int>(ret);
+      return ret;
     } else {
       offset_ += buflen;
-      file_stream_->seekp(offset_);
+      file_stream_->seekp(gsl::narrow<std::streamoff>(offset_));
       return buflen;
     }
-
   } else {
     logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_BUFFER_ERROR_MSG;
-    return -1;
+    return STREAM_ERROR;
   }
 }
 

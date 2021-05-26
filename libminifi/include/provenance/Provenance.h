@@ -363,25 +363,23 @@ class ProvenanceEventRecord : public core::SerializableComponent {
 
   uint64_t getEventTime(const uint8_t *buffer, const size_t bufferSize) {
     const auto size = std::min<size_t>(72, bufferSize);
-    org::apache::nifi::minifi::io::BufferStream outStream(buffer, gsl::narrow<int>(size));
+    org::apache::nifi::minifi::io::BufferStream outStream(buffer, size);
 
     std::string uuid;
-    int ret = outStream.read(uuid);
-
-    if (ret <= 0) {
+    const auto uuidret = outStream.read(uuid);
+    if (uuidret == 0 || io::isError(uuidret)) {
       return 0;
     }
 
     uint32_t eventType;
-    ret = outStream.read(eventType);
-    if (ret != 4) {
+    const auto typeret = outStream.read(eventType);
+    if (typeret != 4) {
       return 0;
     }
 
     uint64_t event_time;
-
-    ret = outStream.read(event_time);
-    if (ret != 8) {
+    const auto timeret = outStream.read(event_time);
+    if (timeret != 8) {
       return 0;
     }
 

@@ -88,9 +88,9 @@ class FixedBuffer : public minifi::InputStreamCallback {
     REQUIRE(size_ + len <= capacity_);
     int total_read = 0;
     do {
-      auto ret = input.read(end(), gsl::narrow<int>(len));
+      const auto ret = input.read(end(), len);
       if (ret == 0) break;
-      if (ret < 0) return ret;
+      if (minifi::io::isError(ret)) return -1;
       size_ += ret;
       len -= ret;
       total_read += ret;
@@ -98,7 +98,7 @@ class FixedBuffer : public minifi::InputStreamCallback {
     return total_read;
   }
   int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
-    return write(*stream.get(), capacity_);
+    return write(*stream, capacity_);
   }
 
  private:
@@ -111,8 +111,9 @@ std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
   class ArchiveEntryReader {
    public:
     explicit ArchiveEntryReader(archive* arch) : arch(arch) {}
-    int read(uint8_t* out, std::size_t len) {
-      return gsl::narrow<int>(archive_read_data(arch, out, len));
+    size_t read(uint8_t* out, std::size_t len) {
+      const auto ret = archive_read_data(arch, out, len);
+      return ret < 0 ? minifi::io::STREAM_ERROR : gsl::narrow<size_t>(ret);
     }
    private:
     archive* arch;

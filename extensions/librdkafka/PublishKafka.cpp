@@ -409,14 +409,13 @@ class ReadCallback : public InputStreamCallback {
     }
 
     for (size_t segment_num = 0; read_size_ < flow_size_; ++segment_num) {
-      const int readRet = stream->read(buffer.data(), gsl::narrow<int>(buffer.size()));
-      if (readRet < 0) {
+      const auto readRet = stream->read(buffer.data(), buffer.size());
+      if (io::isError(readRet)) {
         status_ = -1;
         error_ = "Failed to read from stream";
         return read_size_;
       }
-
-      if (readRet <= 0) { break; }
+      if (readRet == 0) { break; }
 
       const auto err = produce(segment_num, buffer, readRet);
       if (err) {

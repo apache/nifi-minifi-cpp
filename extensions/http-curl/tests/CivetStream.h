@@ -21,6 +21,8 @@
 
 #include "io/BaseStream.h"
 #include "civetweb.h"
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -42,8 +44,10 @@ class CivetStream : public io::InputStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  int read(uint8_t *buf, int buflen) override {
-    return mg_read(conn, buf, buflen);
+  size_t read(uint8_t *buf, size_t buflen) override {
+    const auto ret = mg_read(conn, buf, buflen);
+    if (ret < 0) return STREAM_ERROR;
+    return gsl::narrow<size_t>(ret);
   }
 
  protected:

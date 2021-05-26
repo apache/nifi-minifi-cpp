@@ -84,7 +84,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
 
     if (stream->size() > 0) {
       vec.resize(stream->size());
-      stream->read(reinterpret_cast<uint8_t*>(vec.data()), gsl::narrow<int>(stream->size()));
+      stream->read(reinterpret_cast<uint8_t*>(vec.data()), stream->size());
     }
 
     return processInner(std::move(vec));
