@@ -92,7 +92,7 @@ class SecureSocketTest : public IntegrationBase {
     std::shared_ptr<minifi::processors::GetTCP> inv = std::dynamic_pointer_cast<minifi::processors::GetTCP>(proc);
 
     assert(inv != nullptr);
-    std::string url = "";
+    std::string url;
     configuration->set("nifi.remote.input.secure", "true");
     std::string path = key_dir + "cn.crt.pem";
     configuration->set("nifi.security.client.certificate", path);
@@ -117,23 +117,15 @@ class SecureSocketTest : public IntegrationBase {
     assert(0 == server_socket_->initialize());
 
     isRunning_ = true;
-    check = [this]() -> bool {
-      return isRunning_;
+    auto handler = [](std::vector<uint8_t> *b) {
+      *b = {'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', 0, 0, 0, 0, 0, 0, 0, 0, 0};
+      assert(b->size() == 20);
+      return b->size();
     };
-    handler = [](std::vector<uint8_t> *b, int *size) {
-      std::cout << "oh write!" << std::endl;
-      b->reserve(20);
-      memset(b->data(), 0x00, 20);
-      memcpy(b->data(), "hello world", 11);
-      *size = 20;
-      return *size;
-    };
-    server_socket_->registerCallback(check, handler, std::chrono::milliseconds(50));
+    server_socket_->registerCallback([this] { return isRunning_.load(); }, std::move(handler), std::chrono::milliseconds(50));
   }
 
  protected:
-  std::function<bool()> check;
-  std::function<int(std::vector<uint8_t>*b, int *size)> handler;
   bool isSecure;
   std::atomic<bool> isRunning_;
   std::string dir;

@@ -695,7 +695,8 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     }
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(str_.c_str())), gsl::narrow<int>(str_.size()));
+      const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(str_.c_str()), str_.size());
+      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
     }
 
     const std::string& str_;

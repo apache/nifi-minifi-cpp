@@ -53,7 +53,7 @@ TEST_CASE("TestFileOverWrite", "[TestFiles]") {
 
   stream.seek(4);
 
-  stream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("file")), 4);
+  stream.write(reinterpret_cast<const uint8_t*>("file"), 4);
 
   stream.seek(0);
 
@@ -91,7 +91,7 @@ TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
 
   stream.seek(4);
 
-  stream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("file")), 0);
+  stream.write(reinterpret_cast<const uint8_t*>("file"), 0);
 
   stream.seek(0);
 
@@ -276,7 +276,7 @@ TEST_CASE("Non-existing file read/write test") {
   minifi::io::FileStream stream(utils::file::concat_path(dir, "non_existing_file.txt"), 0, true);
   REQUIRE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
   REQUIRE(test_controller.getLog().getInstance().contains("No such file or directory", std::chrono::seconds(0)));
-  REQUIRE(stream.write("lorem ipsum", false) == -1);
+  REQUIRE(minifi::io::isError(stream.write("lorem ipsum", false)));
   REQUIRE(test_controller.getLog().getInstance().contains("Error writing to file: invalid file stream", std::chrono::seconds(0)));
   std::vector<uint8_t> readBuffer;
   stream.seek(0);
@@ -296,7 +296,7 @@ TEST_CASE("Existing file read/write test") {
   }
   minifi::io::FileStream stream(path_to_existing_file, 0, true);
   REQUIRE_FALSE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
-  REQUIRE_FALSE(stream.write("dolor sit amet", false) == -1);
+  REQUIRE_FALSE(minifi::io::isError(stream.write("dolor sit amet", false)));
   REQUIRE_FALSE(test_controller.getLog().getInstance().contains("Error writing to file", std::chrono::seconds(0)));
   std::vector<uint8_t> readBuffer;
   stream.seek(0);
@@ -341,6 +341,6 @@ TEST_CASE("Readonly filestream write test") {
     outfile.close();
   }
   minifi::io::FileStream stream(path_to_file, 0, false);
-  REQUIRE(stream.write("dolor sit amet", false) == -1);
+  REQUIRE(minifi::io::isError(stream.write("dolor sit amet", false)));
   REQUIRE(test_controller.getLog().getInstance().contains("Error writing to file: write call on file stream failed", std::chrono::seconds(0)));
 }

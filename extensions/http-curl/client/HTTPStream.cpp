@@ -19,6 +19,7 @@
 #include "HTTPStream.h"
 
 #include <fstream>
+#include <utility>
 #include <memory>
 
 #include "HTTPCallback.h"
@@ -32,7 +33,7 @@ namespace minifi {
 namespace io {
 
 HttpStream::HttpStream(std::shared_ptr<utils::HTTPClient> client)
-    : http_client_(client),
+    : http_client_(std::move(client)),
       written(0),
       // given the nature of the stream we don't want to slow libCURL, we will produce
       // a warning instead allowing us to adjust it server side or through the local configuration.
@@ -54,27 +55,23 @@ void HttpStream::seek(size_t /*offset*/) {
 
 // data stream overrides
 
-int HttpStream::write(const uint8_t *value, int size) {
-  gsl_Expects(size >= 0);
-  if (size == 0) {
-    return 0;
+size_t HttpStream::write(const uint8_t *value, size_t size) {
+  if (size == 0) return 0;
+  if (IsNullOrEmpty(value)) {
+    return STREAM_ERROR;
   }
-  if (!IsNullOrEmpty(value)) {
+  if (!started_) {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!started_) {
-      std::lock_guard<std::mutex> lock(mutex_);
-      if (!started_) {
-        callback_.ptr = &http_callback_;
-        callback_.pos = 0;
-        http_client_->setUploadCallback(&callback_);
-        http_client_future_ = std::async(std::launch::async, submit_client, http_client_);
-        started_ = true;
-      }
+      callback_.ptr = &http_callback_;
+      callback_.pos = 0;
+      http_client_->setUploadCallback(&callback_);
+      http_client_future_ = std::async(std::launch::async, submit_client, http_client_);
+      started_ = true;
     }
-    http_callback_.process(value, size);
-    return size;
-  } else {
-    return -1;
   }
+  http_callback_.process(value, size);
+  return size;
 }
 
 size_t HttpStream::read(uint8_t *buf, size_t buflen) {

@@ -47,8 +47,7 @@ class ContentSessionController : public TestController {
 };
 
 const std::shared_ptr<minifi::io::BaseStream>& operator<<(const std::shared_ptr<minifi::io::BaseStream>& stream, const std::string& str) {
-  int length = gsl::narrow<int>(str.length());
-  REQUIRE(stream->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), length) == length);
+  REQUIRE(stream->write(reinterpret_cast<const uint8_t*>(str.data()), str.length()) == str.length());
   return stream;
 }
 
@@ -57,7 +56,7 @@ const std::shared_ptr<minifi::io::BaseStream>& operator>>(const std::shared_ptr<
   uint8_t buffer[4096]{};
   while (true) {
     const auto ret = stream->read(buffer, sizeof(buffer));
-    REQUIRE(!minifi::io::isError(ret));
+    REQUIRE_FALSE(minifi::io::isError(ret));
     if (ret == 0) { break; }
     str += std::string{reinterpret_cast<char*>(buffer), ret};
   }

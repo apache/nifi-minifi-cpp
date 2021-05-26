@@ -42,6 +42,7 @@
 #include "core/Resource.h"
 #include "FlowFileRecord.h"
 #include "io/BaseStream.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -92,11 +93,10 @@ class ExecuteProcess : public core::Processor {
     char *_data;
     uint64_t _dataSize;
     // void process(std::ofstream *stream) {
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      int64_t ret = 0;
-      if (_data && _dataSize > 0)
-        ret = stream->write(reinterpret_cast<uint8_t*>(_data), _dataSize);
-      return ret;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+      if (!_data || _dataSize <= 0) return 0;
+      const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(_data), _dataSize);
+      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
     }
   };
 

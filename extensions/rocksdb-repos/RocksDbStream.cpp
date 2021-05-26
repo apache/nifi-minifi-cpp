@@ -51,36 +51,28 @@ void RocksDbStream::seek(size_t /*offset*/) {
   // noop
 }
 
-int RocksDbStream::write(const uint8_t *value, int size) {
-  gsl_Expects(size >= 0);
-  if (!write_enable_) {
-    return -1;
+size_t RocksDbStream::write(const uint8_t *value, size_t size) {
+  if (!write_enable_) return STREAM_ERROR;
+  if (size == 0) return 0;
+  if (IsNullOrEmpty(value)) return STREAM_ERROR;
+  auto opendb = db_->open();
+  if (!opendb) {
+    return STREAM_ERROR;
   }
-  if (size == 0) {
-    return 0;
-  }
-  if (!IsNullOrEmpty(value)) {
-    auto opendb = db_->open();
-    if (!opendb) {
-      return -1;
-    }
-    rocksdb::Slice slice_value((const char *) value, size);
-    rocksdb::Status status;
-    size_ += size;
-    if (batch_ != nullptr) {
-      status = batch_->Merge(path_, slice_value);
-    } else {
-      rocksdb::WriteOptions opts;
-      opts.sync = true;
-      status = opendb->Merge(opts, path_, slice_value);
-    }
-    if (status.ok()) {
-      return size;
-    } else {
-      return -1;
-    }
+  rocksdb::Slice slice_value((const char*)value, size);
+  rocksdb::Status status;
+  size_ += size;
+  if (batch_ != nullptr) {
+    status = batch_->Merge(path_, slice_value);
   } else {
-    return -1;
+    rocksdb::WriteOptions opts;
+    opts.sync = true;
+    status = opendb->Merge(opts, path_, slice_value);
+  }
+  if (status.ok()) {
+    return size;
+  } else {
+    return STREAM_ERROR;
   }
 }
 

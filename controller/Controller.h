@@ -36,7 +36,7 @@ bool sendSingleCommand(std::unique_ptr<minifi::io::Socket> socket, uint8_t op, c
   minifi::io::BufferStream stream;
   stream.write(&op, 1);
   stream.write(value);
-  return static_cast<size_t>(socket->write(const_cast<uint8_t*>(stream.getBuffer()), gsl::narrow<int>(stream.size()))) == stream.size();
+  return socket->write(stream.getBuffer(), stream.size()) == stream.size();
 }
 
 /**
@@ -77,7 +77,7 @@ int updateFlow(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, st
   stream.write(&op, 1);
   stream.write("flow");
   stream.write(file);
-  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), gsl::narrow<int>(stream.size())) < 0) {
+  if (minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
     return -1;
   }
   // read the response
@@ -107,7 +107,7 @@ int getFullConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream 
   minifi::io::BufferStream stream;
   stream.write(&op, 1);
   stream.write("getfull");
-  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), gsl::narrow<int>(stream.size())) < 0) {
+  if (minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
     return -1;
   }
   // read the response
@@ -133,7 +133,7 @@ int getJstacks(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
   minifi::io::BufferStream stream;
   stream.write(&op, 1);
   stream.write("jstack");
-  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), gsl::narrow<int>(stream.size())) < 0) {
+  if (minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
     return -1;
   }
   // read the response
@@ -171,7 +171,7 @@ int getConnectionSize(std::unique_ptr<minifi::io::Socket> socket, std::ostream &
   stream.write(&op, 1);
   stream.write("queue");
   stream.write(connection);
-  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), gsl::narrow<int>(stream.size())) < 0) {
+  if (minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
     return -1;
   }
   // read the response
@@ -191,7 +191,7 @@ int listComponents(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out
   uint8_t op = minifi::c2::Operation::DESCRIBE;
   stream.write(&op, 1);
   stream.write("components");
-  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), gsl::narrow<int>(stream.size())) < 0) {
+  if (minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
     return -1;
   }
   uint16_t responses = 0;
@@ -215,7 +215,7 @@ int listConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream &ou
   uint8_t op = minifi::c2::Operation::DESCRIBE;
   stream.write(&op, 1);
   stream.write("connections");
-  if (socket->write(const_cast<uint8_t*>(stream.getBuffer()), gsl::narrow<int>(stream.size())) < 0) {
+  if (minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
     return -1;
   }
   uint16_t responses = 0;

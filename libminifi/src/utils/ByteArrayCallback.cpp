@@ -45,7 +45,7 @@ int64_t StreamOutputCallback::process(const std::shared_ptr<io::BaseStream>& str
   stream->seek(0);
   std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[size_.load()]);
   auto written = readFully(buffer.get(), size_);
-  stream->write(reinterpret_cast<uint8_t*>(buffer.get()), gsl::narrow<int>(written));
+  stream->write(reinterpret_cast<uint8_t*>(buffer.get()), written);
   return gsl::narrow<int64_t>(stream->size());
 }
 

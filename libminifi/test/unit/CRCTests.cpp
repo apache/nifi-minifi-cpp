@@ -26,7 +26,7 @@
 TEST_CASE("Test CRC1", "[testcrc1]") {
   org::apache::nifi::minifi::io::BufferStream base;
   org::apache::nifi::minifi::io::CRCStream<org::apache::nifi::minifi::io::BaseStream> test(gsl::make_not_null(&base));
-  test.write(reinterpret_cast<uint8_t*>(const_cast<char*>("cow")), 3);
+  test.write(reinterpret_cast<const uint8_t*>("cow"), 3);
   REQUIRE(2580823964 == test.getCRC());
 }
 
@@ -35,7 +35,7 @@ TEST_CASE("Test CRC2", "[testcrc2]") {
   org::apache::nifi::minifi::io::CRCStream<org::apache::nifi::minifi::io::BaseStream> test(gsl::make_not_null(&base));
   std::string fox = "the quick brown fox jumped over the brown fox";
   std::vector<uint8_t> charvect(fox.begin(), fox.end());
-  test.write(charvect, gsl::narrow<int>(charvect.size()));
+  test.write(charvect, charvect.size());
   REQUIRE(1922388889 == test.getCRC());
 }
 
@@ -74,8 +74,8 @@ TEST_CASE("CRCStream with initial crc = 0 is the same as without initial crc", "
   std::vector<uint8_t> textVector1(textString.begin(), textString.end());
   std::vector<uint8_t> textVector2(textString.begin(), textString.end());
 
-  test_noinit.write(textVector1, gsl::narrow<int>(textVector1.size()));
-  test_initzero.write(textVector2, gsl::narrow<int>(textVector2.size()));
+  test_noinit.write(textVector1, textVector1.size());
+  test_initzero.write(textVector2, textVector2.size());
   REQUIRE(test_noinit.getCRC() == test_initzero.getCRC());
 }
 
@@ -85,17 +85,17 @@ TEST_CASE("CRCStream: one long write is the same as writing in two pieces", "[in
   org::apache::nifi::minifi::io::BufferStream base_full;
   org::apache::nifi::minifi::io::CRCStream<org::apache::nifi::minifi::io::BaseStream> test_full(gsl::make_not_null(&base_full), 0);
   std::vector<uint8_t> textVector_full(textString.begin(), textString.end());
-  test_full.write(textVector_full, gsl::narrow<int>(textVector_full.size()));
+  test_full.write(textVector_full, textVector_full.size());
 
   org::apache::nifi::minifi::io::BufferStream base_piece1;
   org::apache::nifi::minifi::io::CRCStream<org::apache::nifi::minifi::io::BaseStream> test_piece1(gsl::make_not_null(&base_piece1), 0);
   std::vector<uint8_t> textVector_piece1(textString.begin(), textString.begin() + 15);
-  test_piece1.write(textVector_piece1, gsl::narrow<int>(textVector_piece1.size()));
+  test_piece1.write(textVector_piece1, textVector_piece1.size());
 
   org::apache::nifi::minifi::io::BufferStream base_piece2;
   org::apache::nifi::minifi::io::CRCStream<org::apache::nifi::minifi::io::BaseStream> test_piece2(gsl::make_not_null(&base_piece2), test_piece1.getCRC());
   std::vector<uint8_t> textVector_piece2(textString.begin() + 15, textString.end());
-  test_piece2.write(textVector_piece2, gsl::narrow<int>(textVector_piece2.size()));
+  test_piece2.write(textVector_piece2, textVector_piece2.size());
 
   REQUIRE(test_full.getCRC() == test_piece2.getCRC());
 }

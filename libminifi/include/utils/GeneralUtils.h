@@ -19,6 +19,7 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_
 
+#include <algorithm>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -173,6 +174,7 @@ auto invoke(F&& f, Args&&... args) MINIFICPP_UTIL_DEDUCED(detail::invoke_impl(st
 #else
 using std::invoke
 #endif /* < C++17 */
+
 
 namespace detail {
 struct dereference_t {

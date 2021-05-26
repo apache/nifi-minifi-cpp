@@ -47,30 +47,24 @@ void SecureDescriptorStream::seek(size_t offset) {
 
 // data stream overrides
 
-int SecureDescriptorStream::write(const uint8_t *value, int size) {
-  gsl_Expects(size >= 0);
+size_t SecureDescriptorStream::write(const uint8_t *value, size_t size) {
   if (size == 0) {
     return 0;
   }
-  if (!IsNullOrEmpty(value)) {
-    std::lock_guard<std::recursive_mutex> lock(file_lock_);
-    int bytes = 0;
-     int sent = 0;
-     while (bytes < size) {
-       sent = SSL_write(ssl_, value + bytes, size - bytes);
-       // check for errors
-       if (sent < 0) {
-         int ret = 0;
-         ret = SSL_get_error(ssl_, sent);
-         logger_->log_error("WriteData socket %d send failed %s %d", fd_, strerror(errno), ret);
-         return sent;
-       }
-       bytes += sent;
-     }
-     return size;
-  } else {
-    return -1;
+  if (IsNullOrEmpty(value)) return STREAM_ERROR;
+  std::lock_guard<std::recursive_mutex> lock(file_lock_);
+  size_t bytes = 0;
+  while (bytes < size) {
+    const auto write_status = SSL_write(ssl_, value + bytes, gsl::narrow_cast<int>(size - bytes));
+    // check for errors
+    if (write_status < 0) {
+      const auto ret = SSL_get_error(ssl_, write_status);
+      logger_->log_error("WriteData socket %d send failed %s %d", fd_, strerror(errno), ret);
+      return STREAM_ERROR;
+    }
+    bytes += gsl::narrow<size_t>(write_status);
   }
+  return size;
 }
 
 size_t SecureDescriptorStream::read(uint8_t * const buf, const size_t buflen) {

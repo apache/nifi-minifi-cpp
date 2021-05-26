@@ -556,11 +556,10 @@ void ConsumeKafka::onTrigger(core::ProcessContext* /* context */, core::ProcessS
 }
 
 int64_t ConsumeKafka::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  int64_t ret = 0;
-  if (data_) {
-    ret = stream->write(data_, gsl::narrow<int>(dataSize_));
-  }
-  return ret;
+  if (!data_) return 0;
+  const auto write_ret = stream->write(data_, dataSize_);
+  if (io::isError(write_ret)) return -1;
+  return gsl::narrow<int64_t>(write_ret);
 }
 
 }  // namespace processors

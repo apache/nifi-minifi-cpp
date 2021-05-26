@@ -55,14 +55,14 @@ inline int64_t pipe(const std::shared_ptr<io::InputStream>& src, const std::shar
     auto remaining = readRet;
     int transferred = 0;
     while (remaining > 0) {
-      int writeRet = dst->write(buffer + transferred, remaining);
+      const auto writeRet = dst->write(buffer + transferred, remaining);
       // TODO(adebreceni):
       //   write might return 0, e.g. in case of a congested server
       //   what should we return then?
       //     - the number of bytes read or
       //     - the number of bytes wrote
-      if (writeRet < 0) {
-        return writeRet;
+      if (io::isError(writeRet)) {
+        return -1;
       }
       transferred += writeRet;
       remaining -= writeRet;

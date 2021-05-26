@@ -88,7 +88,7 @@ class FixedBuffer : public minifi::InputStreamCallback {
     REQUIRE(size_ + len <= capacity_);
     int total_read = 0;
     do {
-      const auto ret = input.read(end(), len);
+      const size_t ret{ input.read(end(), len) };
       if (ret == 0) break;
       if (minifi::io::isError(ret)) return -1;
       size_ += ret;
@@ -679,7 +679,7 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping All Un
 }
 
 void writeString(const std::string& str, const std::shared_ptr<minifi::io::BaseStream>& out) {
-  out->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), gsl::narrow<int>(str.length()));
+  out->write(reinterpret_cast<const uint8_t*>(str.data()), str.length());
 }
 
 TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {

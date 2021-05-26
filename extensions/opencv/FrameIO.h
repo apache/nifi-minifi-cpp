@@ -18,6 +18,8 @@
 #ifndef NIFI_MINIFI_CPP_FRAMEIO_H
 #define NIFI_MINIFI_CPP_FRAMEIO_H
 
+#include "utils/gsl.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -33,10 +35,9 @@ class FrameWriteCallback : public OutputStreamCallback {
     ~FrameWriteCallback() override = default;
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      int64_t ret = 0;
       imencode(image_encoding_, image_mat_, image_buf_);
-      ret = stream->write(image_buf_.data(), image_buf_.size());
-      return ret;
+      const auto ret = stream->write(image_buf_.data(), image_buf_.size());
+      return io::isError(ret) ? -1 : gsl::narrow<int64_t>(ret);
     }
 
   private:

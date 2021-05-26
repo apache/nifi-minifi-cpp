@@ -513,16 +513,16 @@ bool SFTPClient::getFile(const std::string& path, io::BaseStream& output, int64_
       break;
     }
     logger_->log_trace("Read %d bytes from remote file \"%s\"", read_ret, path.c_str());
-    total_read += read_ret;
-    int remaining = read_ret;
+    total_read += gsl::narrow<uint64_t>(read_ret);
+    auto remaining = read_ret;
     while (remaining > 0) {
-      int write_ret = output.write(buf.data() + (read_ret - remaining), remaining);
-      if (write_ret < 0) {
+      const auto write_ret = output.write(buf.data() + (read_ret - remaining), gsl::narrow<size_t>(remaining));
+      if (io::isError(write_ret)) {
         last_error_.setLibssh2Error(LIBSSH2_FX_OK);
         logger_->log_error("Failed to write output");
         return false;
       }
-      remaining -= write_ret;
+      remaining -= gsl::narrow<decltype(remaining)>(write_ret);
     }
   } while (true);
 

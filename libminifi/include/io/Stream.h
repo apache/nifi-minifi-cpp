@@ -26,13 +26,9 @@ namespace io {
 
 constexpr size_t STREAM_ERROR = static_cast<size_t>(-1);
 
-inline bool isError(const size_t read_return) noexcept {
-  return read_return == STREAM_ERROR  // general error
-      || read_return == static_cast<size_t>(-2);  // Socket EAGAIN, to be refactored to eliminate this error condition
-}
-
-inline bool isError(const int write_return) noexcept {
-  return write_return == -1;
+inline bool isError(const size_t read_write_return) noexcept {
+  return read_write_return == STREAM_ERROR  // general error
+      || read_write_return == static_cast<size_t>(-2);  // read: Socket EAGAIN, to be refactored to eliminate this error condition
 }
 
 /**

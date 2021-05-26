@@ -81,7 +81,7 @@ class SecureDescriptorStream : public io::BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  int write(const uint8_t *value, int size) override;
+  size_t write(const uint8_t *value, size_t size) override;
 
  protected:
   std::recursive_mutex file_lock_;

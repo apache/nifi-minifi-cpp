@@ -29,6 +29,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/WeakReference.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -101,7 +102,8 @@ class JniByteOutStream : public minifi::OutputStreamCallback {
 
   virtual ~JniByteOutStream() = default;
   virtual int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
-    return stream->write((uint8_t*) bytes_, length_);
+    const auto write_ret = stream->write((uint8_t*)bytes_, length_);
+    return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
   }
  private:
   jbyte *bytes_;

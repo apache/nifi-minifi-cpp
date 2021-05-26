@@ -151,7 +151,7 @@ class Socket : public BaseStream {
   using BaseStream::write;
   using BaseStream::read;
 
-  int write(const uint8_t *value, int size) override;
+  size_t write(const uint8_t *value, size_t size) override;
 
   /**
    * Reads data and places it into buf

@@ -476,29 +476,27 @@ void ListenHTTP::Handler::writeBody(mg_connection *conn, const mg_request_info *
 
 std::unique_ptr<io::BufferStream> ListenHTTP::Handler::createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info) {
   auto content_buffer = utils::make_unique<io::BufferStream>();
-  int64_t rlen;
-  int64_t nlen = 0;
+  size_t nlen = 0;
   int64_t tlen = req_info->content_length;
   uint8_t buf[16384];
 
   // if we have no content length we should call mg_read until
   // there is no data left from the stream to be HTTP/1.1 compliant
-  while (tlen == -1 || nlen < tlen) {
-    rlen = tlen == -1 ? sizeof(buf) : tlen - nlen;
-
-    if (rlen > (int64_t) sizeof(buf)) {
-      rlen = (int64_t) sizeof(buf);
+  while (tlen == -1 || (tlen > 0 && nlen < gsl::narrow<size_t>(tlen))) {
+    auto rlen = tlen == -1 ? sizeof(buf) : gsl::narrow<size_t>(tlen) - nlen;
+    if (rlen > sizeof(buf)) {
+      rlen = sizeof(buf);
     }
 
     // Read a buffer of data from client
-    rlen = mg_read(conn, &buf[0], (size_t) rlen);
-
-    if (rlen <= 0) {
+    const auto mg_read_return = mg_read(conn, &buf[0], rlen);
+    if (mg_read_return <= 0) {
       break;
     }
+    rlen = gsl::narrow<size_t>(mg_read_return);
 
     // Transfer buffer data to the output stream
-    content_buffer->write(&buf[0], gsl::narrow<int>(rlen));
+    content_buffer->write(&buf[0], rlen);
 
     nlen += rlen;
   }
@@ -511,7 +509,8 @@ ListenHTTP::WriteCallback::WriteCallback(std::unique_ptr<io::BufferStream> reque
 }
 
 int64_t ListenHTTP::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  return stream->write(const_cast<uint8_t*>(request_content_->getBuffer()), gsl::narrow<int>(request_content_->size()));
+  const auto write_ret = stream->write(request_content_->getBuffer(), request_content_->size());
+  return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
 }
 
 bool ListenHTTP::isSecure() const {

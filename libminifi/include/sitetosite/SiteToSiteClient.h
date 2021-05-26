@@ -308,7 +308,7 @@ class ReadCallback : public InputStreamCallback {
       if (readSize == 0) break;
       if (io::isError(readSize)) return -1;
       const auto ret = _packet->transaction_->getStream().write(buffer, readSize);
-      if (ret < 0 || gsl::narrow<size_t>(ret) != readSize) {
+      if (io::isError(ret) || gsl::narrow<size_t>(ret) != readSize) {
         logging::LOG_INFO(_packet->logger_reference_) << "Site2Site Send Flow Size " << readSize << " Failed " << ret;
         return -1;
       }

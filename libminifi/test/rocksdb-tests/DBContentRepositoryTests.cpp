@@ -65,7 +65,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
   // should not be able to write to the read stream
   // -1 will indicate that we were not able to write any data
 
-  REQUIRE(read_stream->write("other value") == -1);
+  REQUIRE(minifi::io::isError(read_stream->write("other value")));
 }
 
 TEST_CASE("Delete Claim", "[TestDBCR2]") {

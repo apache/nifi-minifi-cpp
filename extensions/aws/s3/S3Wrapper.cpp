@@ -24,11 +24,12 @@
 #include <utility>
 #include <vector>
 
+#include "S3ClientRequestSender.h"
 #include "utils/GeneralUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/RegexUtils.h"
-#include "S3ClientRequestSender.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -124,19 +125,20 @@ bool S3Wrapper::deleteObject(const DeleteObjectRequestParameters& params) {
 
 int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::BaseStream& output) {
   std::vector<uint8_t> buffer(4096);
-  int64_t write_size = 0;
-  while (write_size < data_size) {
-    auto next_write_size = (std::min)(data_size - write_size, static_cast<int64_t>(4096));
-    if (!source.read(reinterpret_cast<char*>(buffer.data()), next_write_size)) {
+  size_t write_size = 0;
+  if (data_size < 0) return 0;
+  while (write_size < gsl::narrow<uint64_t>(data_size)) {
+    const auto next_write_size = (std::min)(gsl::narrow<size_t>(data_size) - write_size, size_t{4096});
+    if (!source.read(reinterpret_cast<char*>(buffer.data()), gsl::narrow<std::streamsize>(next_write_size))) {
       return -1;
     }
-    auto ret = output.write(buffer.data(), next_write_size);
-    if (ret < 0) {
-      return ret;
+    const auto ret = output.write(buffer.data(), next_write_size);
+    if (io::isError(ret)) {
+      return -1;
     }
     write_size += next_write_size;
   }
-  return write_size;
+  return gsl::narrow<int64_t>(write_size);
 }
 
 minifi::utils::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& out_body) {

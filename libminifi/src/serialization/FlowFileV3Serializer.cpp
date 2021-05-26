@@ -27,85 +27,78 @@ namespace minifi {
 
 constexpr uint8_t FlowFileV3Serializer::MAGIC_HEADER[];
 
-int FlowFileV3Serializer::writeLength(std::size_t length, const std::shared_ptr<io::OutputStream>& out) {
+size_t FlowFileV3Serializer::writeLength(std::size_t length, const std::shared_ptr<io::OutputStream>& out) {
   if (length < MAX_2_BYTE_VALUE) {
     return out->write(static_cast<uint16_t>(length));
   }
-  int sum = 0;
-  int ret;
-  ret = out->write(static_cast<uint16_t>(MAX_2_BYTE_VALUE));
-  if (ret < 0) {
-    return ret;
+  size_t sum = 0;
+  {
+    const auto ret = out->write(static_cast<uint16_t>(MAX_2_BYTE_VALUE));
+    if (io::isError(ret)) return ret;
+    sum += ret;
   }
-  sum += ret;
-  ret = out->write(static_cast<uint32_t>(length));
-  if (ret < 0) {
-    return ret;
+  {
+    const auto ret = out->write(static_cast<uint32_t>(length));
+    if (io::isError(ret)) return ret;
+    sum += ret;
   }
-  sum += ret;
   return sum;
 }
 
-int FlowFileV3Serializer::writeString(const std::string &str, const std::shared_ptr<io::OutputStream> &out) {
-  int sum = 0;
-  int ret;
-  ret = writeLength(str.length(), out);
-  if (ret < 0) {
-    return ret;
+size_t FlowFileV3Serializer::writeString(const std::string &str, const std::shared_ptr<io::OutputStream> &out) {
+  size_t sum = 0;
+  {
+    const auto ret = writeLength(str.length(), out);
+    if (io::isError(ret)) return ret;
+    sum += ret;
   }
-  sum += ret;
-  ret = out->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), gsl::narrow<int>(str.length()));
-  if (ret < 0) {
-    return ret;
+  {
+    const auto ret = out->write(reinterpret_cast<const uint8_t*>(str.data()), str.length());
+    if (io::isError(ret)) return ret;
+    if (ret != str.length()) return io::STREAM_ERROR;
+    sum += ret;
   }
-  if (gsl::narrow<size_t>(ret) != str.length()) {
-    return -1;
-  }
-  sum += ret;
   return sum;
 }
 
 int FlowFileV3Serializer::serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) {
-  int sum = 0;
-  int ret;
-  ret = out->write(const_cast<uint8_t*>(MAGIC_HEADER), sizeof(MAGIC_HEADER));
-  if (ret < 0) {
-    return ret;
+  size_t sum = 0;
+  {
+    const auto ret = out->write(MAGIC_HEADER, sizeof(MAGIC_HEADER));
+    if (io::isError(ret)) return -1;
+    if (ret != sizeof(MAGIC_HEADER)) return -1;
+    sum += ret;
   }
-  if (ret != sizeof(MAGIC_HEADER)) {
-    return -1;
-  }
-  sum += ret;
   const auto& attributes = flowFile->getAttributes();
-  ret = writeLength(attributes.size(), out);
-  if (ret < 0) {
-    return ret;
+  {
+    const auto ret = writeLength(attributes.size(), out);
+    if (io::isError(ret)) return -1;
+    sum += ret;
   }
-  sum += ret;
   for (const auto& attrIt : attributes) {
-    ret = writeString(attrIt.first, out);
-    if (ret < 0) {
-      return ret;
+    {
+      const auto ret = writeString(attrIt.first, out);
+      if (io::isError(ret)) return -1;
+      sum += ret;
     }
-    sum += ret;
-    ret = writeString(attrIt.second, out);
-    if (ret < 0) {
-      return ret;
+    {
+      const auto ret = writeString(attrIt.second, out);
+      if (io::isError(ret)) return -1;
+      sum += ret;
     }
+  }
+  {
+    const auto ret = out->write(static_cast<uint64_t>(flowFile->getSize()));
+    if (io::isError(ret)) return -1;
     sum += ret;
   }
-  ret = out->write(static_cast<uint64_t>(flowFile->getSize()));
-  if (ret < 0) {
-    return ret;
-  }
-  sum += ret;
   InputStreamPipe pipe(out);
-  ret = reader_(flowFile, &pipe);
-  if (ret < 0) {
-    return ret;
+  {
+    const auto ret = reader_(flowFile, &pipe);
+    if (ret < 0) return -1;
+    sum += gsl::narrow<size_t>(ret);
   }
-  sum += ret;
-  return sum;
+  return gsl::narrow<int>(sum);
 }
 
 } /* namespace minifi */

@@ -82,7 +82,7 @@ class AtomicEntryStream : public BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  int write(const uint8_t *value, int size) override;
+  size_t write(const uint8_t *value, size_t size) override;
 
  private:
   size_t length_;
@@ -110,22 +110,18 @@ void AtomicEntryStream<T>::seek(size_t offset) {
 
 // data stream overrides
 template<typename T>
-int AtomicEntryStream<T>::write(const uint8_t *value, int size) {
-  gsl_Expects(size >= 0);
-  if (size == 0) {
-    return 0;
-  }
-  if (nullptr != value && !invalid_stream_) {
-    std::lock_guard<std::recursive_mutex> lock(entry_lock_);
-    if (entry_->insert(key_, const_cast<uint8_t*>(value), size)) {
-      offset_ += size;
-      if (offset_ > length_) {
-        length_ = offset_;
-      }
-      return size;
+size_t AtomicEntryStream<T>::write(const uint8_t *value, size_t size) {
+  if (size == 0) return 0;
+  if (!value || invalid_stream_) return STREAM_ERROR;
+  std::lock_guard<std::recursive_mutex> lock(entry_lock_);
+  if (entry_->insert(key_, const_cast<uint8_t*>(value), size)) {
+    offset_ += size;
+    if (offset_ > length_) {
+      length_ = offset_;
     }
+    return size;
   }
-  return -1;
+  return STREAM_ERROR;
 }
 
 template<typename T>

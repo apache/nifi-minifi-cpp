@@ -38,6 +38,7 @@
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -83,7 +84,8 @@ protected:
       : data_(data) {
     }
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(data_.c_str())), data_.size());
+      const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(data_.c_str()), data_.size());
+      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
     }
   };
   std::string nodeID_;

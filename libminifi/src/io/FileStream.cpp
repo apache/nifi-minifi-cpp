@@ -113,35 +113,30 @@ void FileStream::seek(size_t offset) {
     logging::LOG_ERROR(logger_) << SEEK_ERROR_MSG << SEEKP_CALL_ERROR_MSG;
 }
 
-int FileStream::write(const uint8_t *value, int size) {
-  gsl_Expects(size >= 0);
-  if (size == 0) {
-    return 0;
-  }
-  if (!IsNullOrEmpty(value)) {
-    std::lock_guard<std::mutex> lock(file_lock_);
-    if (file_stream_ == nullptr || !file_stream_->is_open()) {
-      logging::LOG_ERROR(logger_) << WRITE_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
-      return -1;
-    }
-    if (file_stream_->write(reinterpret_cast<const char*>(value), size)) {
-      offset_ += size;
-      if (offset_ > length_) {
-        length_ = offset_;
-      }
-      if (!file_stream_->flush()) {
-        logging::LOG_ERROR(logger_) << WRITE_ERROR_MSG << FLUSH_CALL_ERROR_MSG;
-        return -1;
-      }
-      return size;
-    } else {
-      logging::LOG_ERROR(logger_) << WRITE_ERROR_MSG << WRITE_CALL_ERROR_MSG;
-      return -1;
-    }
-  } else {
+size_t FileStream::write(const uint8_t *value, size_t size) {
+  if (size == 0) return 0;
+  if (IsNullOrEmpty(value)) {
     logging::LOG_ERROR(logger_) << WRITE_ERROR_MSG << EMPTY_MESSAGE_ERROR_MSG;
-    return -1;
+    return STREAM_ERROR;
   }
+  std::lock_guard<std::mutex> lock(file_lock_);
+  if (file_stream_ == nullptr || !file_stream_->is_open()) {
+    logging::LOG_ERROR(logger_) << WRITE_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
+    return STREAM_ERROR;
+  }
+  if (!file_stream_->write(reinterpret_cast<const char*>(value), gsl::narrow<std::streamsize>(size))) {
+    logging::LOG_ERROR(logger_) << WRITE_ERROR_MSG << WRITE_CALL_ERROR_MSG;
+    return STREAM_ERROR;
+  }
+  offset_ += size;
+  if (offset_ > length_) {
+    length_ = offset_;
+  }
+  if (!file_stream_->flush()) {
+    logging::LOG_ERROR(logger_) << WRITE_ERROR_MSG << FLUSH_CALL_ERROR_MSG;
+    return STREAM_ERROR;
+  }
+  return size;
 }
 
 size_t FileStream::read(uint8_t *buf, size_t buflen) {

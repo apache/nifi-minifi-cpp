@@ -54,9 +54,8 @@ py::bytes PyBaseStream::read(size_t len) {
 }
 
 size_t PyBaseStream::write(const py::bytes& buf) {
-  const auto &&buf_str = buf.operator std::string();
-  return static_cast<size_t>(stream_->write(reinterpret_cast<uint8_t *>(const_cast<char *>(buf_str.data())),
-                                                static_cast<int>(buf_str.length())));
+  auto buf_str = buf.operator std::string();
+  return stream_->write(reinterpret_cast<const uint8_t*>(buf_str.data()), buf_str.length());
 }
 
 } /* namespace python */

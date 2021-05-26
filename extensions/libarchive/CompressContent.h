@@ -180,11 +180,10 @@ public:
     int status_;
 
     static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
-      WriteCallback *callback = (WriteCallback *) context;
-      la_ssize_t ret = callback->stream_->write(reinterpret_cast<uint8_t*>(const_cast<void*>(buff)), gsl::narrow<int>(size));
-      if (ret > 0)
-        callback->size_ += (int64_t) ret;
-      return ret;
+      auto* const callback = static_cast<WriteCallback*>(context);
+      const auto ret = callback->stream_->write(reinterpret_cast<const uint8_t*>(buff), size);
+      if (!io::isError(ret)) callback->size_ += gsl::narrow<int64_t>(ret);
+      return io::isError(ret) ? -1 : gsl::narrow<la_ssize_t>(ret);
     }
 
     static la_ssize_t archive_read(struct archive* archive, void *context, const void **buff) {
@@ -337,8 +336,8 @@ public:
           if (read_result == 0)
             break;
           size_ += read_result;
-          const auto write_result = stream_->write(reinterpret_cast<uint8_t*>(buffer), gsl::narrow<int>(read_result));
-          if (write_result < 0) {
+          const auto write_result = stream_->write(reinterpret_cast<uint8_t*>(buffer), gsl::narrow<size_t>(read_result));
+          if (io::isError(write_result)) {
             archive_read_log_error_cleanup(arch);
             return -1;
           }
@@ -377,8 +376,8 @@ public:
 
         int64_t process(const std::shared_ptr<io::BaseStream>& inputStream) override {
           std::vector<uint8_t> buffer(16 * 1024U);
-          int64_t read_size = 0;
-          while (read_size < gsl::narrow<int64_t>(writer_.flow_->getSize())) {
+          size_t read_size = 0;
+          while (read_size < writer_.flow_->getSize()) {
             const auto ret = inputStream->read(buffer.data(), buffer.size());
             if (io::isError(ret)) {
               return -1;
@@ -393,7 +392,7 @@ public:
             }
           }
           outputStream_->close();
-          return read_size;
+          return gsl::narrow<int64_t>(read_size);
         }
 
         GzipWriteCallback& writer_;

@@ -153,9 +153,9 @@ typedef struct {
 } UnfocusArchiveEntryWriteData;
 
 la_ssize_t UnfocusArchiveEntry::WriteCallback::write_cb(struct archive *, void *d, const void *buffer, size_t length) {
-  auto data = static_cast<UnfocusArchiveEntryWriteData *>(d);
-  const uint8_t *ui_buffer = static_cast<const uint8_t*>(buffer);
-  return data->stream->write(const_cast<uint8_t*>(ui_buffer), gsl::narrow<int>(length));
+  auto* const data = static_cast<UnfocusArchiveEntryWriteData *>(d);
+  const auto write_ret = data->stream->write(static_cast<const uint8_t*>(buffer), length);
+  return io::isError(write_ret) ? -1 : gsl::narrow<la_ssize_t>(write_ret);
 }
 
 int64_t UnfocusArchiveEntry::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {

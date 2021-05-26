@@ -61,15 +61,14 @@ ZlibCompressStream::~ZlibCompressStream() {
   }
 }
 
-int ZlibCompressStream::write(const uint8_t* value, int size) {
-  gsl_Expects(size >= 0);
+size_t ZlibCompressStream::write(const uint8_t* value, size_t size) {
   if (state_ != ZlibStreamState::INITIALIZED) {
     logger_->log_error("writeData called in invalid ZlibCompressStream state, state is %hhu", state_);
-    return -1;
+    return STREAM_ERROR;
   }
 
   strm_.next_in = const_cast<uint8_t*>(value);
-  strm_.avail_in = size;
+  strm_.avail_in = gsl::narrow<uInt>(size);
 
   /*
    * deflate consumes all input data it can (i.e. if it has enough output buffer it never leaves input data unconsumed)
@@ -92,14 +91,14 @@ int ZlibCompressStream::write(const uint8_t* value, int size) {
     if (ret == Z_STREAM_ERROR) {
       logger_->log_error("deflate failed, error code: %d", ret);
       state_ = ZlibStreamState::ERRORED;
-      return -1;
+      return STREAM_ERROR;
     }
-    int output_size = gsl::narrow<int>(outputBuffer_.size() - strm_.avail_out);
+    const auto output_size = outputBuffer_.size() - strm_.avail_out;
     logger_->log_trace("deflate produced %d B of output data", output_size);
     if (output_->write(outputBuffer_.data(), output_size) != output_size) {
       logger_->log_error("Failed to write to underlying stream");
       state_ = ZlibStreamState::ERRORED;
-      return -1;
+      return STREAM_ERROR;
     }
   } while (strm_.avail_out == 0);
 
@@ -131,15 +130,14 @@ ZlibDecompressStream::~ZlibDecompressStream() {
   }
 }
 
-int ZlibDecompressStream::write(const uint8_t* value, int size) {
-  gsl_Expects(size >= 0);
+size_t ZlibDecompressStream::write(const uint8_t* value, size_t size) {
   if (state_ != ZlibStreamState::INITIALIZED) {
     logger_->log_error("writeData called in invalid ZlibDecompressStream state, state is %hhu", state_);
-    return -1;
+    return STREAM_ERROR;
   }
 
   strm_.next_in = const_cast<uint8_t*>(value);
-  strm_.avail_in = size;
+  strm_.avail_in = gsl::narrow<uInt>(size);
 
   /*
    * inflate works similarly to deflate in that it will not leave input data unconsumed, and we have to watch avail_out,
@@ -160,14 +158,14 @@ int ZlibDecompressStream::write(const uint8_t* value, int size) {
         ret == Z_MEM_ERROR) {
       logger_->log_error("inflate failed, error code: %d", ret);
       state_ = ZlibStreamState::ERRORED;
-      return -1;
+      return STREAM_ERROR;
     }
-    int output_size = gsl::narrow<int>(outputBuffer_.size() - strm_.avail_out);
+    const auto output_size = outputBuffer_.size() - strm_.avail_out;
     logger_->log_trace("deflate produced %d B of output data", output_size);
     if (output_->write(outputBuffer_.data(), output_size) != output_size) {
       logger_->log_error("Failed to write to underlying stream");
       state_ = ZlibStreamState::ERRORED;
-      return -1;
+      return STREAM_ERROR;
     }
   } while (strm_.avail_out == 0);
 

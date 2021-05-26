@@ -510,7 +510,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
     } else {
       file_buffer fb = file_to_buffer(ff->contentLocation);
       stream = std::make_shared<minifi::io::BufferStream>();
-      stream->write(fb.buffer, gsl::narrow<int>(fb.file_len));
+      stream->write(fb.buffer, fb.file_len);
       free(fb.buffer);
     }
   } else {
@@ -718,7 +718,7 @@ flow_file_record *invoke_ff(standalone_processor* proc, const flow_file_record *
     } else {
       ff_data->content_stream = std::make_shared<minifi::io::BufferStream>();
       file_buffer fb = file_to_buffer(input_ff->contentLocation);
-      ff_data->content_stream->write(fb.buffer, gsl::narrow<int>(fb.file_len));
+      ff_data->content_stream->write(fb.buffer, fb.file_len);
       free(fb.buffer);
     }
 
@@ -745,7 +745,7 @@ flow_file_record *invoke_chunk(standalone_processor* proc, uint8_t* buf, uint64_
 
   auto ff_data = std::make_shared<flowfile_input_params>();
   ff_data->content_stream = std::make_shared<minifi::io::BufferStream>();
-  ff_data->content_stream->write(buf, gsl::narrow<int>(size));
+  ff_data->content_stream->write(buf, size);
 
   plan->runNextProcessor(nullptr, ff_data);
   while (plan->runNextProcessor()) {

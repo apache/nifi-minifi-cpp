@@ -117,7 +117,7 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
   {
     const auto ret = peer_->write(getResourceName());
     logger_->log_trace("result of writing resource name is %i", ret);
-    if (ret <= 0) {
+    if (ret == 0 || io::isError(ret)) {
       logger_->log_debug("result of writing resource name is %i", ret);
       // tearDown();
       return false;
@@ -126,7 +126,7 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
 
   {
     const auto ret = peer_->write(_currentVersion);
-    if (ret <= 0) {
+    if (ret == 0 || io::isError(ret)) {
       logger_->log_debug("result of writing version is %i", ret);
       return false;
     }
@@ -185,7 +185,7 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
 
   {
     const auto ret = peer_->write(getCodecResourceName());
-    if (ret <= 0) {
+    if (ret == 0 || io::isError(ret)) {
       logger_->log_debug("result of getCodecResourceName is %i", ret);
       return false;
     }
@@ -193,7 +193,7 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
 
   {
     const auto ret = peer_->write(_currentCodecVersion);
-    if (ret <= 0) {
+    if (ret == 0 || io::isError(ret)) {
       logger_->log_debug("result of _currentCodecVersion is %i", ret);
       return false;
     }
@@ -248,7 +248,7 @@ bool RawSiteToSiteClient::handShake() {
 
   {
     const auto ret = peer_->write(_commsIdentifier);
-    if (ret <= 0) {
+    if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
@@ -268,7 +268,7 @@ bool RawSiteToSiteClient::handShake() {
 
   if (_currentVersion >= 3) {
     const auto ret = peer_->write(peer_->getURL());
-    if (ret <= 0) {
+    if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
@@ -276,7 +276,7 @@ bool RawSiteToSiteClient::handShake() {
   {
     const auto size = gsl::narrow<uint32_t>(properties.size());
     const auto ret = peer_->write(size);
-    if (ret <= 0) {
+    if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
@@ -285,13 +285,13 @@ bool RawSiteToSiteClient::handShake() {
   for (it = properties.begin(); it != properties.end(); it++) {
     {
       const auto ret = peer_->write(it->first);
-      if (ret <= 0) {
+      if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
     {
       const auto ret = peer_->write(it->second);
-      if (ret <= 0) {
+      if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
@@ -412,7 +412,8 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
     if (type >= MAX_REQUEST_TYPE)
       return -1;
 
-    return peer_->write(SiteToSiteRequest::RequestTypeStr[type]);
+    const auto write_result = peer_->write(SiteToSiteRequest::RequestTypeStr[type]);
+    return io::isError(write_result) ? -1 : gsl::narrow<int>(write_result);
   }
 
   int RawSiteToSiteClient::readRequestType(RequestType &type) {

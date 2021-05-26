@@ -35,17 +35,17 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
   SECTION("Empty") {
   }
   SECTION("Simple content in one write") {
-    int length = gsl::narrow<int>(strlen("foobar"));
-    REQUIRE(length == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("foobar")), length));
+    const auto length = strlen("foobar");
+    REQUIRE(length == compressStream.write(reinterpret_cast<const uint8_t*>("foobar"), length));
     original += "foobar";
   }
   SECTION("Simple content in two writes") {
-    int foo_length = gsl::narrow<int>(strlen("foo"));
-    REQUIRE(foo_length == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("foo")), foo_length));
+    const auto foo_length = strlen("foo");
+    REQUIRE(foo_length == compressStream.write(reinterpret_cast<const uint8_t*>("foo"), foo_length));
     original += "foo";
 
-    int bar_length = gsl::narrow<int>(strlen("bar"));
-    REQUIRE(bar_length == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("bar")), bar_length));
+    const auto bar_length = strlen("bar");
+    REQUIRE(bar_length == compressStream.write(reinterpret_cast<const uint8_t*>("bar"), bar_length));
     original += "bar";
   }
   SECTION("Large data") {
@@ -55,7 +55,7 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
     for (size_t i = 0U; i < 1024U; i++) {
       std::generate(buf.begin(), buf.end(), [&](){return dist(gen);});
       original += std::string(reinterpret_cast<const char*>(buf.data()), buf.size());
-      REQUIRE(-1 != compressStream.write(buf.data(), gsl::narrow<int>(buf.size())));
+      REQUIRE_FALSE(io::isError(compressStream.write(buf.data(), buf.size())));
     }
   }
 
@@ -71,7 +71,7 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
   io::BufferStream decompressBuffer;
   io::ZlibDecompressStream decompressStream(gsl::make_not_null(&decompressBuffer));
 
-  decompressStream.write(const_cast<uint8_t*>(compressBuffer.getBuffer()), gsl::narrow<int>(compressBuffer.size()));
+  decompressStream.write(compressBuffer.getBuffer(), compressBuffer.size());
 
   REQUIRE(decompressStream.isFinished());
   REQUIRE(original == std::string(reinterpret_cast<const char*>(decompressBuffer.getBuffer()), decompressBuffer.size()));
@@ -86,17 +86,17 @@ TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
   SECTION("Empty") {
   }
   SECTION("Simple content in one write") {
-    int foobar_length = gsl::narrow<int>(strlen("foobar"));
-    REQUIRE(foobar_length == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("foobar")), foobar_length));
+    const auto foobar_length = strlen("foobar");
+    REQUIRE(foobar_length == compressStream.write(reinterpret_cast<const uint8_t*>("foobar"), foobar_length));
     original += "foobar";
   }
   SECTION("Simple content in two writes") {
-    int foo_length = gsl::narrow<int>(strlen("foo"));
-    REQUIRE(foo_length == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("foo")), foo_length));
+    const auto foo_length = strlen("foo");
+    REQUIRE(foo_length == compressStream.write(reinterpret_cast<const uint8_t*>("foo"), foo_length));
     original += "foo";
 
-    int bar_length = gsl::narrow<int>(strlen("bar"));
-    REQUIRE(bar_length == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("bar")), bar_length));
+    const auto bar_length = strlen("bar");
+    REQUIRE(bar_length == compressStream.write(reinterpret_cast<const uint8_t*>("bar"), bar_length));
     original += "bar";
   }
   SECTION("Large data") {
@@ -106,8 +106,7 @@ TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
     for (size_t i = 0U; i < 1024U; i++) {
       std::generate(buf.begin(), buf.end(), [&](){return dist(gen);});
       original += std::string(reinterpret_cast<const char*>(buf.data()), buf.size());
-      int buffer_size = gsl::narrow<int>(buf.size());
-      REQUIRE(buffer_size == compressStream.write(buf.data(), buffer_size));
+      REQUIRE(buf.size() == compressStream.write(buf.data(), buf.size()));
     }
   }
 

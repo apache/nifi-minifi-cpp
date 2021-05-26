@@ -35,7 +35,7 @@ std::shared_ptr<minifi::FlowFileRecord> createEmptyFlowFile() {
 TEST_CASE("Payload Serializer", "[testPayload]") {
   std::string content = "flowFileContent";
   auto contentStream = std::make_shared<minifi::io::BufferStream>();
-  contentStream->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(content.data())), gsl::narrow<int>(content.length()));
+  contentStream->write(reinterpret_cast<const uint8_t*>(content.data()), content.length());
 
   auto result = std::make_shared<minifi::io::BufferStream>();
 
@@ -57,7 +57,7 @@ TEST_CASE("Payload Serializer", "[testPayload]") {
 TEST_CASE("FFv3 Serializer", "[testFFv3]") {
   std::string content = "flowFileContent";
   auto contentStream = std::make_shared<minifi::io::BufferStream>();
-  contentStream->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(content.data())), gsl::narrow<int>(content.length()));
+  contentStream->write(reinterpret_cast<const uint8_t*>(content.data()), content.length());
 
   auto result = std::make_shared<minifi::io::BufferStream>();
 

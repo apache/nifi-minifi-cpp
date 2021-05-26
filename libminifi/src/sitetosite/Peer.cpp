@@ -45,7 +45,7 @@ bool SiteToSitePeer::Open() {
    * previously by the socket preference.
    */
   if (!this->local_network_interface_.getInterface().empty()) {
-    auto socket = static_cast<io::Socket*>(stream_.get());
+    auto* socket = dynamic_cast<io::Socket*>(stream_.get());
     if (nullptr != socket) {
       socket->setInterface(io::NetworkInterface(local_network_interface_.getInterface(), nullptr));
     }
@@ -54,9 +54,8 @@ bool SiteToSitePeer::Open() {
   if (stream_->initialize() < 0)
     return false;
 
-  int data_size = gsl::narrow<int>(sizeof MAGIC_BYTES);
-
-  if (stream_->write(reinterpret_cast<uint8_t *>(const_cast<char*>(MAGIC_BYTES)), data_size) != data_size) {
+  const auto data_size = sizeof MAGIC_BYTES;
+  if (stream_->write(reinterpret_cast<const uint8_t *>(MAGIC_BYTES), data_size) != data_size) {
     return false;
   }
 
