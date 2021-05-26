@@ -122,8 +122,8 @@ TEST_CASE("PDHCounterDataCollectionTest", "[pdhcounterdatacollectiontest]") {
   REQUIRE(int_counter.collectData());
 
   rapidjson::Document document(rapidjson::kObjectType);
-  double_counter.addToJson(document, document.GetAllocator());
-  int_counter.addToJson(document, document.GetAllocator());
+  double_counter.addToJson(document, document.GetAllocator(), utils::optional<int8_t>());
+  int_counter.addToJson(document, document.GetAllocator(), utils::optional<int8_t>());
 
   REQUIRE(document.HasMember("System"));
   REQUIRE(document["System"].HasMember("Threads"));
@@ -152,8 +152,8 @@ TEST_CASE("PDHCounterArrayDataCollectionTest", "[pdhcounterarraydatacollectionte
   REQUIRE(int_counter_array.collectData());
 
   rapidjson::Document document(rapidjson::kObjectType);
-  double_counter_array.addToJson(document, document.GetAllocator());
-  int_counter_array.addToJson(document, document.GetAllocator());
+  double_counter_array.addToJson(document, document.GetAllocator(), utils::optional<int8_t>());
+  int_counter_array.addToJson(document, document.GetAllocator(), utils::optional<int8_t>());
 
   REQUIRE(document.HasMember("Process"));
   REQUIRE(document["Process"].HasMember("PerformanceDataCounterTests"));
@@ -170,7 +170,7 @@ TEST_CASE("MemoryConsumptionCounterTest", "[memoryconsumptioncountertest]") {
   REQUIRE(memory_counter.dataIsValid());
 
   rapidjson::Document document(rapidjson::kObjectType);
-  memory_counter.addToJson(document, document.GetAllocator());
+  memory_counter.addToJson(document, document.GetAllocator(), utils::optional<int8_t>());
 
   REQUIRE(document.HasMember("Memory"));
   REQUIRE(document["Memory"].HasMember("Total Physical Memory"));

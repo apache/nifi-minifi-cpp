@@ -18,6 +18,7 @@
 
 #include <string>
 #include "rapidjson/document.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -31,7 +32,7 @@ class PerformanceDataCounter {
   virtual ~PerformanceDataCounter() = default;
 
   virtual bool collectData() = 0;
-  virtual void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, int8_t double_precision = -1) const = 0;
+  virtual void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, const utils::optional<int8_t>& decimal_places) const = 0;
 
  protected:
   static rapidjson::Value& acquireNode(const std::string& node_name, rapidjson::Value& parent_node, rapidjson::Document::AllocatorType& alloc) {

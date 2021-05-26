@@ -45,15 +45,13 @@ core::Property PerformanceDataMonitor::CustomPDHCounters(
 core::Property PerformanceDataMonitor::OutputFormatProperty(
     core::PropertyBuilder::createProperty("Output Format")->
     withDescription("Format of the created flowfiles")->
-    withAllowableValue(PRETTY_JSON_FORMAT_STR)->
-    withAllowableValue(COMPACT_JSON_FORMAT_STR)->
-    withAllowableValue(PRETTY_OPEN_TELEMETRY_FORMAT_STR)->
-    withAllowableValue(COMPACT_OPEN_TELEMETRY_FORMAT_STR)->
+    withAllowableValues<std::string>({ PRETTY_JSON_FORMAT_STR, COMPACT_JSON_FORMAT_STR, PRETTY_OPEN_TELEMETRY_FORMAT_STR, COMPACT_OPEN_TELEMETRY_FORMAT_STR })->
     withDefaultValue(PRETTY_JSON_FORMAT_STR)->build());
 
-core::Property PerformanceDataMonitor::DoublePrecisionProperty(
-  core::PropertyBuilder::createProperty("Double Precision")->
-  withDescription("Rounds the double values to this precision (blank for maximum precision)")->build());
+core::Property PerformanceDataMonitor::DecimalPlaces(
+  core::PropertyBuilder::createProperty("Round to decimal places")->
+  withDescription("The number of decimal places to round the values to (blank for no rounding)")->
+  withDefaultValue("3")->build());
 
 PerformanceDataMonitor::~PerformanceDataMonitor() {
   PdhCloseQuery(pdh_query_);
@@ -107,8 +105,9 @@ void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::Proc
   rapidjson::Document root = rapidjson::Document(rapidjson::kObjectType);
   rapidjson::Value& body = prepareJSONBody(root);
   for (auto& counter : resource_consumption_counters_) {
-    if (counter->collectData())
-      counter->addToJson(body, root.GetAllocator(), double_precision_);
+    if (counter->collectData()) {
+      counter->addToJson(body, root.GetAllocator(), decimal_places_);
+    }
   }
   if (pretty_output_) {
     utils::PrettyJsonOutputCallback callback(std::move(root));
@@ -122,7 +121,7 @@ void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::Proc
 }
 
 void PerformanceDataMonitor::initialize() {
-  setSupportedProperties({ CustomPDHCounters, PredefinedGroups, OutputFormatProperty, DoublePrecisionProperty });
+  setSupportedProperties({ CustomPDHCounters, PredefinedGroups, OutputFormatProperty, DecimalPlaces });
   setSupportedRelationships({ PerformanceDataMonitor::Success });
 }
 
@@ -266,45 +265,56 @@ void PerformanceDataMonitor::addCustomPDHCountersFromProperty(const std::string&
   }
 }
 
-void PerformanceDataMonitor::setupMembersFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
-  std::string predefined_groups;
-  if (context->getProperty(PredefinedGroups.getName(), predefined_groups)) {
-    logger_->log_trace("Predefined group configured to be %s", predefined_groups);
-    addCountersFromPredefinedGroupsProperty(predefined_groups);
-  }
-
+void PerformanceDataMonitor::setupCountersFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
   std::string custom_pdh_counters;
   if (context->getProperty(CustomPDHCounters.getName(), custom_pdh_counters)) {
     logger_->log_trace("Custom PDH counters configured to be %s", custom_pdh_counters);
     addCustomPDHCountersFromProperty(custom_pdh_counters);
   }
+}
 
+void PerformanceDataMonitor::setupPredefinedGroupsFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
+  std::string predefined_groups;
+  if (context->getProperty(PredefinedGroups.getName(), predefined_groups)) {
+    logger_->log_trace("Predefined group configured to be %s", predefined_groups);
+    addCountersFromPredefinedGroupsProperty(predefined_groups);
+  }
+}
+
+void PerformanceDataMonitor::setupOutputFormatFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
   std::string output_format_string;
   if (context->getProperty(OutputFormatProperty.getName(), output_format_string)) {
     if (output_format_string == PRETTY_OPEN_TELEMETRY_FORMAT_STR || output_format_string == COMPACT_OPEN_TELEMETRY_FORMAT_STR) {
       output_format_ = OutputFormat::OPENTELEMETRY;
       pretty_output_ = output_format_string == PRETTY_OPEN_TELEMETRY_FORMAT_STR;
-      logger_->log_trace("OutputFormat is configured to be %s OpenTelemetry", pretty_output_ ? "pretty" : "compact");
     } else if (output_format_string == PRETTY_JSON_FORMAT_STR || output_format_string == COMPACT_JSON_FORMAT_STR) {
       output_format_ = OutputFormat::JSON;
       pretty_output_ = output_format_string == PRETTY_JSON_FORMAT_STR;
-      logger_->log_trace("OutputFormat is configured to be %s JSON", pretty_output_ ? "pretty" : "compact");
     } else {
-      output_format_ = OutputFormat::JSON;
-      pretty_output_ = true;
-      logger_->log_error("Invalid OutputFormat, defaulting to %s JSON", pretty_output_ ? "pretty" : "compact");
+      throw std::invalid_argument(("Invalid PerformanceDataMonitor Output Format: %s", output_format_string));
     }
   }
+  logger_->log_trace("OutputFormat is configured to be %s %s", pretty_output_ ? "pretty" : "compact", output_format_ == OutputFormat::JSON ? "JSON" : "OpenTelemtry");
+}
 
-  std::string double_precision_string;
-  if (context->getProperty(DoublePrecisionProperty.getName(), double_precision_string)) {
+void PerformanceDataMonitor::setupDecimalPlacesFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
+  std::string decimal_places_str;
+  if (context->getProperty(DecimalPlaces.getName(), decimal_places_str)) {  // TODO(mzink): Implement int8_t in Value.h to convert int8_t implicitly
     try {
-      double_precision_ = std::stoi(double_precision_string);
+      decimal_places_ = std::stoi(decimal_places_str);
     } catch (const std::invalid_argument&) {
-      logger_->log_error("Invalid Double Precision Property: %s", double_precision_string);
+      logger_->log_error("Invalid Rounding Decimal Places: %s", decimal_places_str);
     }
-    logger_->log_trace("Double Precision is configured to be %d decimals", double_precision_);
   }
+  if (decimal_places_.has_value())
+    logger_->log_trace("Rounding is enabled with %d decimal places", decimal_places_.value());
+}
+
+void PerformanceDataMonitor::setupMembersFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
+  setupCountersFromProperties(context);
+  setupPredefinedGroupsFromProperties(context);
+  setupOutputFormatFromProperties(context);
+  setupDecimalPlacesFromProperties(context);
 }
 
 }  // namespace processors

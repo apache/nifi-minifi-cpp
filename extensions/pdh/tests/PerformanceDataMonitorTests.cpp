@@ -77,11 +77,11 @@ TEST_CASE("PerformanceDataMonitorPartiallyInvalidGroupPropertyTest", "[performan
   PerformanceDataMonitorTester tester;
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::PredefinedGroups, "Disk,CPU,Asd");
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::CustomPDHCounters, "\\Invalid\\Counter,\\System\\Processes");
-  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DoublePrecisionProperty, "asd");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "asd");
   tester.runProcessors();
 
   REQUIRE(tester.test_controller_.getLog().getInstance().contains("Asd is not a valid predefined group", std::chrono::seconds(0)));
-  REQUIRE(tester.test_controller_.getLog().getInstance().contains("Invalid Double Precision Property", std::chrono::seconds(0)));
+  REQUIRE(tester.test_controller_.getLog().getInstance().contains("Invalid Rounding Decimal Places", std::chrono::seconds(0)));
   REQUIRE(tester.test_controller_.getLog().getInstance().contains("Error adding \\Invalid\\Counter to query", std::chrono::seconds(0)));
 
   uint32_t number_of_flowfiles = 0;

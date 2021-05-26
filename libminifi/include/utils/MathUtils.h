@@ -26,13 +26,9 @@ namespace utils {
 
 class MathUtils {
  public:
-  static double round_to(double original, int8_t precision) {
-    if (precision < 0) {
-      return original;
-    } else {
-      double power_ten = pow(10, precision);
-      return std::round(original * power_ten) / power_ten;
-    }
+  static double round_to_decimal_places(double original, int8_t decimal_places) {
+    double power_ten = pow(10, decimal_places);
+    return std::round(original * power_ten) / power_ten;
   }
 };
 

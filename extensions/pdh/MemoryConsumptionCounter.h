@@ -43,7 +43,7 @@ class MemoryConsumptionCounter : public PerformanceDataCounter {
     return dataIsValid();
   }
 
-  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, int8_t double_precision = -1) const override {
+  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, const utils::optional<int8_t>&) const override {
     rapidjson::Value& group_node = acquireNode(std::string("Memory"), body, alloc);
 
     rapidjson::Value total_physical_memory_value;

@@ -46,8 +46,8 @@ class PerformanceDataMonitor : public core::Processor {
   static constexpr const char* COMPACT_OPEN_TELEMETRY_FORMAT_STR = "Compact OpenTelemetry";
 
   explicit PerformanceDataMonitor(const std::string& name, utils::Identifier uuid = utils::Identifier())
-      : Processor(name, uuid), double_precision_(-1), output_format_(OutputFormat::JSON),
-        logger_(logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
+      : Processor(name, uuid), output_format_(OutputFormat::JSON), pretty_output_(false),
+        decimal_places_(), logger_(logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
         pdh_query_(nullptr), resource_consumption_counters_() {}
 
   ~PerformanceDataMonitor() override;
@@ -56,7 +56,7 @@ class PerformanceDataMonitor : public core::Processor {
   static core::Property PredefinedGroups;
   static core::Property CustomPDHCounters;
   static core::Property OutputFormatProperty;
-  static core::Property DoublePrecisionProperty;
+  static core::Property DecimalPlaces;
   // Supported Relationships
   static core::Relationship Success;
 
@@ -74,13 +74,17 @@ class PerformanceDataMonitor : public core::Processor {
   rapidjson::Value& prepareJSONBody(rapidjson::Document& root);
 
   void setupMembersFromProperties(const std::shared_ptr<core::ProcessContext>& context);
+  void setupCountersFromProperties(const std::shared_ptr<core::ProcessContext>& context);
+  void setupPredefinedGroupsFromProperties(const std::shared_ptr<core::ProcessContext>& context);
+  void setupOutputFormatFromProperties(const std::shared_ptr<core::ProcessContext>& context);
+  void setupDecimalPlacesFromProperties(const std::shared_ptr<core::ProcessContext>& context);
   void addCountersFromPredefinedGroupsProperty(const std::string& custom_pdh_counters);
   void addCustomPDHCountersFromProperty(const std::string& custom_pdh_counters);
 
   OutputFormat output_format_;
   bool pretty_output_;
 
-  int8_t double_precision_;
+  utils::optional<int8_t> decimal_places_;
   std::shared_ptr<logging::Logger> logger_;
   PDH_HQUERY pdh_query_;
   std::vector<std::unique_ptr<PerformanceDataCounter>> resource_consumption_counters_;
