@@ -47,7 +47,7 @@ class PerformanceDataMonitor : public core::Processor {
 
   explicit PerformanceDataMonitor(const std::string& name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid), output_format_(OutputFormat::JSON), pretty_output_(false),
-        decimal_places_(), logger_(logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
+        decimal_places_(utils::nullopt), logger_(logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
         pdh_query_(nullptr), resource_consumption_counters_() {}
 
   ~PerformanceDataMonitor() override;
