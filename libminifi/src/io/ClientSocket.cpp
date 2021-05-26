@@ -501,25 +501,22 @@ std::string Socket::getHostname() const {
 
 // data stream overrides
 
-int Socket::write(const uint8_t *value, int size) {
-  gsl_Expects(size >= 0);
-
-  int ret = 0, bytes = 0;
-
+size_t Socket::write(const uint8_t *value, size_t size) {
+  size_t bytes = 0;
   int fd = select_descriptor(1000);
-  if (fd < 0) { return -1; }
+  if (fd < 0) { return STREAM_ERROR; }
   while (bytes < size) {
-    ret = send(fd, reinterpret_cast<const char*>(value) + bytes, size - bytes, 0);
+    const auto send_ret = send(fd, reinterpret_cast<const char*>(value) + bytes, size - bytes, 0);
     // check for errors
-    if (ret <= 0) {
+    if (send_ret <= 0) {
       utils::file::FileUtils::close(fd);
       logger_->log_error("Could not send to %d, error: %s", fd, get_last_socket_error_message());
-      return ret;
+      return STREAM_ERROR;
     }
-    bytes += ret;
+    bytes += gsl::narrow<size_t>(send_ret);
   }
 
-  if (ret)
+  if (bytes > 0)
     logger_->log_trace("Send data size %d over socket %d", size, fd);
   total_written_ += bytes;
   return bytes;

@@ -624,17 +624,16 @@ void CollectorInitiatedSubscription::unsubscribe() {
 
 int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::ProcessSession> &session) {
   struct WriteCallback: public OutputStreamCallback {
-    explicit WriteCallback(const std::string& str)
-      : str_(str) {
-      status_ = 0;
+    explicit WriteCallback(std::string& str)
+      : str_(&str) {
     }
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      return stream->write(reinterpret_cast<uint8_t*>(&str_[0]), gsl::narrow<int>(str_.size()));
+      const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(str_.data())), str_.size());
+      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
     }
 
-    std::string str_;
-    int status_;
+    gsl::not_null<std::string*> str_;
   };
 
   int flowFileCount = 0;

@@ -97,7 +97,7 @@ class HttpStream : public io::BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  int write(const uint8_t *value, int size) override;
+  size_t write(const uint8_t *value, size_t size) override;
 
   static bool submit_client(std::shared_ptr<utils::HTTPClient> client) {
     if (client == nullptr)
@@ -132,17 +132,6 @@ class HttpStream : public io::BaseStream {
   }
 
  protected:
-  /**
-   * Populates the vector using the provided type name.
-   * @param buf output buffer
-   * @param t incoming object
-   * @returns number of bytes read.
-   */
-  template<typename T>
-  int readBuffer(std::vector<uint8_t>&, const T&);
-
-  void reset();
-
   std::vector<uint8_t> array;
 
   std::shared_ptr<utils::HTTPClient> http_client_;

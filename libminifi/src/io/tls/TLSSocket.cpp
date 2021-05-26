@@ -387,34 +387,32 @@ size_t TLSSocket::read(uint8_t *buf, size_t buflen, bool /*retrieve_all_bytes*/)
   return total_read;
 }
 
-int TLSSocket::writeData(const uint8_t *value, unsigned int size, int fd) {
-  unsigned int bytes = 0;
-  int sent = 0;
+size_t TLSSocket::writeData(const uint8_t *value, size_t size, int fd) {
+  size_t bytes = 0;
   auto fd_ssl = get_ssl(fd);
   if (IsNullOrEmpty(fd_ssl)) {
-    return -1;
+    return STREAM_ERROR;
   }
   while (bytes < size) {
-    sent = SSL_write(fd_ssl, value + bytes, gsl::narrow<int>(size - bytes));
+    const auto sent = SSL_write(fd_ssl, value + bytes, gsl::narrow<int>(size - bytes));
     // check for errors
     if (sent < 0) {
       int ret = 0;
       ret = SSL_get_error(fd_ssl, sent);
       logger_->log_trace("WriteData socket %d send failed %s %d", fd, strerror(errno), ret);
-
-      return sent;
+      return STREAM_ERROR;
     }
     logger_->log_trace("WriteData socket %d send succeed %d", fd, sent);
-    bytes += sent;
+    bytes += gsl::narrow<size_t>(sent);
   }
-  return gsl::narrow<int>(size);
+  return size;
 }
 
-int TLSSocket::write(const uint8_t *value, int size) {
-  int fd = select_descriptor(1000);
+size_t TLSSocket::write(const uint8_t *value, size_t size) {
+  const int fd = select_descriptor(1000);
   if (fd < 0) {
     close();
-    return -1;
+    return STREAM_ERROR;
   }
   return writeData(value, size, fd);
 }

@@ -40,13 +40,13 @@ class BufferStream : public BaseStream {
   }
 
   explicit BufferStream(const std::string& data) {
-    write(reinterpret_cast<const uint8_t*>(data.c_str()), gsl::narrow<int>(data.length()));
+    write(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
   }
 
   using BaseStream::read;
   using BaseStream::write;
 
-  int write(const uint8_t* data, int len) final;
+  size_t write(const uint8_t* data, size_t len) final;
 
   size_t read(uint8_t* buffer, size_t len) override;
 

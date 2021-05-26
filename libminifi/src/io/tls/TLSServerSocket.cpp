@@ -33,6 +33,7 @@
 #include <cstdio>
 #include <memory>
 #include <chrono>
+#include <limits>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -44,6 +45,8 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "io/tls/SecureDescriptorStream.h"
 #include "io/validation.h"
+#include "utils/GeneralUtils.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -89,7 +92,6 @@ void TLSServerSocket::registerCallback(std::function<bool()> accept_function, st
  */
 void TLSServerSocket::registerCallback(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler, std::chrono::milliseconds timeout) {
   fx = [this](std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler, std::chrono::milliseconds timeout) {
-    int ret = 0;
     std::vector<int> fds;
     int size;
     while (accept_function()) {
@@ -98,8 +100,9 @@ void TLSServerSocket::registerCallback(std::function<bool()> accept_function, st
         int fd_remove = 0;
         std::vector<uint8_t> data;
         if ( handler(&data, &size) > 0 ) {
-          ret = writeData(data.data(), size, fd);
-          if (ret < 0) {
+          const auto clamped_size = gsl::narrow<size_t>(utils::clamp(size, 0, std::numeric_limits<int>::max()));
+          const auto ret = writeData(data.data(), clamped_size, fd);
+          if (io::isError(ret)) {
             close_ssl(fd_remove);
           } else {
             fds.push_back(fd);
@@ -110,8 +113,9 @@ void TLSServerSocket::registerCallback(std::function<bool()> accept_function, st
         for (auto &&fd : fds) {
           std::vector<uint8_t> data;
           if ( handler(&data, &size) > 0 ) {
-            ret = writeData(data.data(), size, fd);
-            if (ret < 0) {
+            const auto clamped_size = gsl::narrow<size_t>(utils::clamp(size, 0, std::numeric_limits<int>::max()));
+            const auto ret = writeData(data.data(), clamped_size, fd);
+            if (io::isError(ret)) {
               fd_remove = fd;
               break;
             }

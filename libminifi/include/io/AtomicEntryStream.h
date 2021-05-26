@@ -82,7 +82,7 @@ class AtomicEntryStream : public BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  int write(const uint8_t *value, int size) override;
+  size_t write(const uint8_t *value, size_t size) override;
 
  private:
   size_t length_;
@@ -110,8 +110,7 @@ void AtomicEntryStream<T>::seek(size_t offset) {
 
 // data stream overrides
 template<typename T>
-int AtomicEntryStream<T>::write(const uint8_t *value, int size) {
-  gsl_Expects(size >= 0);
+size_t AtomicEntryStream<T>::write(const uint8_t *value, size_t size) {
   if (size == 0) {
     return 0;
   }
@@ -125,7 +124,7 @@ int AtomicEntryStream<T>::write(const uint8_t *value, int size) {
       return size;
     }
   }
-  return -1;
+  return STREAM_ERROR;
 }
 
 template<typename T>

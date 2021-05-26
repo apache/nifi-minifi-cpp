@@ -19,6 +19,7 @@
 #include "HTTPStream.h"
 
 #include <fstream>
+#include <utility>
 #include <memory>
 
 #include "HTTPCallback.h"
@@ -32,7 +33,7 @@ namespace minifi {
 namespace io {
 
 HttpStream::HttpStream(std::shared_ptr<utils::HTTPClient> client)
-    : http_client_(client),
+    : http_client_(std::move(client)),
       written(0),
       // given the nature of the stream we don't want to slow libCURL, we will produce
       // a warning instead allowing us to adjust it server side or through the local configuration.
@@ -54,8 +55,7 @@ void HttpStream::seek(size_t /*offset*/) {
 
 // data stream overrides
 
-int HttpStream::write(const uint8_t *value, int size) {
-  gsl_Expects(size >= 0);
+size_t HttpStream::write(const uint8_t *value, size_t size) {
   if (size == 0) {
     return 0;
   }
@@ -73,7 +73,7 @@ int HttpStream::write(const uint8_t *value, int size) {
     http_callback_.process(value, size);
     return size;
   } else {
-    return -1;
+    return STREAM_ERROR;
   }
 }
 

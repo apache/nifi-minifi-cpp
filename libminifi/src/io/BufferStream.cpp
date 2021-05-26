@@ -28,8 +28,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-int BufferStream::write(const uint8_t *value, int size) {
-  gsl_Expects(size >= 0);
+size_t BufferStream::write(const uint8_t *value, size_t size) {
   size_t originalSize = buffer_.size();
   buffer_.resize(originalSize + size);
   std::memcpy(buffer_.data() + originalSize, value, size);

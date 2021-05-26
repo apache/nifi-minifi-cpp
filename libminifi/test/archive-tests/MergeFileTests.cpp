@@ -679,7 +679,7 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping All Un
 }
 
 void writeString(const std::string& str, const std::shared_ptr<minifi::io::BaseStream>& out) {
-  out->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), gsl::narrow<int>(str.length()));
+  out->write(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(str.data())), str.length());
 }
 
 TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {

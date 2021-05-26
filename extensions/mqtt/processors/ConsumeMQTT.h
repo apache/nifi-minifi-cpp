@@ -32,6 +32,7 @@
 #include "concurrentqueue.h"
 #include "MQTTClient.h"
 #include "AbstractMQTTProcessor.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -80,10 +81,13 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
     }
     MQTTClient_message *message_;
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      int64_t len = stream->write(reinterpret_cast<uint8_t*>(message_->payload), message_->payloadlen);
-      if (len < 0)
+      if (message_->payloadlen < 0) return -1;
+      const auto len = stream->write(reinterpret_cast<uint8_t*>(message_->payload), gsl::narrow<size_t>(message_->payloadlen));
+      if (io::isError(len)) {
         status_ = -1;
-      return len;
+        return -1;
+      }
+      return gsl::narrow<int64_t>(len);
     }
     int status_;
   };

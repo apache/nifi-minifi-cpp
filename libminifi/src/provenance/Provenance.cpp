@@ -88,134 +88,158 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
 }
 
 bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStream& outStream) {
-  int ret;
-
-  ret = outStream.write(this->uuid_);
-  if (ret <= 0) {
-    return false;
-  }
-
-  uint32_t eventType = this->_eventType;
-  ret = outStream.write(eventType);
-  if (ret != 4) {
-    return false;
-  }
-
-  ret = outStream.write(this->_eventTime);
-  if (ret != 8) {
-    return false;
-  }
-
-  ret = outStream.write(this->_entryDate);
-  if (ret != 8) {
-    return false;
-  }
-
-  ret = outStream.write(this->_eventDuration);
-  if (ret != 8) {
-    return false;
-  }
-
-  ret = outStream.write(this->_lineageStartDate);
-  if (ret != 8) {
-    return false;
-  }
-
-  ret = outStream.write(this->_componentId);
-  if (ret <= 0) {
-    return false;
-  }
-
-  ret = outStream.write(this->_componentType);
-  if (ret <= 0) {
-    return false;
-  }
-
-  ret = outStream.write(this->flow_uuid_);
-  if (ret <= 0) {
-    return false;
-  }
-
-  ret = outStream.write(this->_details);
-  if (ret <= 0) {
-    return false;
-  }
-
-  // write flow attributes
-  uint32_t numAttributes = gsl::narrow<uint32_t>(this->_attributes.size());
-  ret = outStream.write(numAttributes);
-  if (ret != 4) {
-    return false;
-  }
-
-  for (const auto& itAttribute : _attributes) {
-    ret = outStream.write(itAttribute.first);
-    if (ret <= 0) {
-      return false;
-    }
-    ret = outStream.write(itAttribute.second);
-    if (ret <= 0) {
+  {
+    const auto ret = outStream.write(this->uuid_);
+    if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
-
-  ret = outStream.write(this->_contentFullPath);
-  if (ret <= 0) {
-    return false;
-  }
-
-  ret = outStream.write(this->_size);
-  if (ret != 8) {
-    return false;
-  }
-
-  ret = outStream.write(this->_offset);
-  if (ret != 8) {
-    return false;
-  }
-
-  ret = outStream.write(this->_sourceQueueIdentifier);
-  if (ret <= 0) {
-    return false;
-  }
-
-  if (this->_eventType == ProvenanceEventRecord::FORK || this->_eventType == ProvenanceEventRecord::CLONE || this->_eventType == ProvenanceEventRecord::JOIN) {
-    // write UUIDs
-    uint32_t parent_uuids_count = gsl::narrow<uint32_t>(this->_parentUuids.size());
-    ret = outStream.write(parent_uuids_count);
+  {
+    uint32_t eventType = this->_eventType;
+    const auto ret = outStream.write(eventType);
     if (ret != 4) {
       return false;
     }
-    for (const auto& parentUUID : _parentUuids) {
-      ret = outStream.write(parentUUID);
-      if (ret <= 0) {
+  }
+  {
+    const auto ret = outStream.write(this->_eventTime);
+    if (ret != 8) {
+      return false;
+    }
+  }
+  {
+    const auto ret = outStream.write(this->_entryDate);
+    if (ret != 8) {
+      return false;
+    }
+  }
+  {
+    const auto ret = outStream.write(this->_eventDuration);
+    if (ret != 8) {
+      return false;
+    }
+  }
+  {
+    const auto ret = outStream.write(this->_lineageStartDate);
+    if (ret != 8) {
+      return false;
+    }
+  }
+  {
+    const auto ret = outStream.write(this->_componentId);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
+  }
+  {
+    const auto ret = outStream.write(this->_componentType);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
+  }
+  {
+    const auto ret = outStream.write(this->flow_uuid_);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
+  }
+  {
+    const auto ret = outStream.write(this->_details);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
+  }
+  // write flow attributes
+  {
+    const auto numAttributes = gsl::narrow<uint32_t>(this->_attributes.size());
+    const auto ret = outStream.write(numAttributes);
+    if (ret != 4) {
+      return false;
+    }
+  }
+  for (const auto& itAttribute : _attributes) {
+    {
+      const auto ret = outStream.write(itAttribute.first);
+      if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
-    uint32_t children_uuids_count = gsl::narrow<uint32_t>(this->_childrenUuids.size());
-    ret = outStream.write(children_uuids_count);
-    if (ret != 4) {
+    {
+      const auto ret = outStream.write(itAttribute.second);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
+    }
+  }
+  {
+    const auto ret = outStream.write(this->_contentFullPath);
+    if (ret == 0 || io::isError(ret)) {
       return false;
     }
+  }
+  {
+    const auto ret = outStream.write(this->_size);
+    if (ret != 8) {
+      return false;
+    }
+  }
+  {
+    const auto ret = outStream.write(this->_offset);
+    if (ret != 8) {
+      return false;
+    }
+  }
+  {
+    const auto ret = outStream.write(this->_sourceQueueIdentifier);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
+  }
+  if (this->_eventType == ProvenanceEventRecord::FORK || this->_eventType == ProvenanceEventRecord::CLONE || this->_eventType == ProvenanceEventRecord::JOIN) {
+    // write UUIDs
+    {
+      const auto parent_uuids_count = gsl::narrow<uint32_t>(this->_parentUuids.size());
+      const auto ret = outStream.write(parent_uuids_count);
+      if (ret != 4) {
+        return false;
+      }
+    }
+    for (const auto& parentUUID : _parentUuids) {
+      const auto ret = outStream.write(parentUUID);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
+    }
+    {
+      const auto children_uuids_count = gsl::narrow<uint32_t>(this->_childrenUuids.size());
+      const auto ret = outStream.write(children_uuids_count);
+      if (ret != 4) {
+        return false;
+      }
+    }
     for (const auto& childUUID : _childrenUuids) {
-      ret = outStream.write(childUUID);
-      if (ret <= 0) {
+      const auto ret = outStream.write(childUUID);
+      if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
   } else if (this->_eventType == ProvenanceEventRecord::SEND || this->_eventType == ProvenanceEventRecord::FETCH) {
-    ret = outStream.write(this->_transitUri);
-    if (ret <= 0) {
+    const auto ret = outStream.write(this->_transitUri);
+    if (ret == 0 || io::isError(ret)) {
       return false;
     }
   } else if (this->_eventType == ProvenanceEventRecord::RECEIVE) {
-    ret = outStream.write(this->_transitUri);
-    if (ret <= 0) {
-      return false;
+    {
+      const auto ret = outStream.write(this->_transitUri);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
     }
-    ret = outStream.write(this->_sourceSystemFlowFileIdentifier);
-    if (ret <= 0) {
-      return false;
+    {
+      const auto ret = outStream.write(this->_sourceSystemFlowFileIdentifier);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
     }
   }
 

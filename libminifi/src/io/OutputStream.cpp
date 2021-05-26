@@ -30,43 +30,43 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-int OutputStream::write(const std::vector<uint8_t>& buffer, int len) {
-  if (buffer.size() < gsl::narrow<size_t>(len)) {
-    return -1;
+size_t OutputStream::write(const std::vector<uint8_t>& buffer, size_t len) {
+  if (buffer.size() < len) {
+    return STREAM_ERROR;
   }
   return write(buffer.data(), len);
 }
 
-int OutputStream::write(bool value) {
+size_t OutputStream::write(bool value) {
   uint8_t temp = value;
   return write(&temp, 1);
 }
 
-int OutputStream::write(const utils::Identifier &value) {
+size_t OutputStream::write(const utils::Identifier &value) {
   return write(value.to_string());
 }
 
-int OutputStream::write(const std::string& str, bool widen) {
+size_t OutputStream::write(const std::string& str, bool widen) {
   return write_str(str.c_str(), gsl::narrow<uint32_t>(str.length()), widen);
 }
 
-int OutputStream::write(const char* str, bool widen) {
+size_t OutputStream::write(const char* str, bool widen) {
   return write_str(str, gsl::narrow<uint32_t>(std::strlen(str)), widen);
 }
 
-int OutputStream::write_str(const char* str, uint32_t len, bool widen) {
-  int ret = 0;
+size_t OutputStream::write_str(const char* str, uint32_t len, bool widen) {
+  size_t ret = 0;
   if (!widen) {
-    uint16_t shortLen = len;
+    const auto shortLen = gsl::narrow_cast<uint16_t>(len);
     if (len != shortLen) {
-      return -1;
+      return STREAM_ERROR;
     }
     ret = write(shortLen);
   } else {
     ret = write(len);
   }
 
-  if (ret <= 0) {
+  if (ret == 0 || isError(ret)) {
     return ret;
   }
 

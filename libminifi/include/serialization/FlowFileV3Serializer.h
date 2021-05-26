@@ -34,9 +34,9 @@ class FlowFileV3Serializer : public FlowFileSerializer {
 
   static constexpr uint16_t MAX_2_BYTE_VALUE = (std::numeric_limits<uint16_t>::max)();
 
-  static int writeLength(std::size_t length, const std::shared_ptr<io::OutputStream>& out);
+  static size_t writeLength(std::size_t length, const std::shared_ptr<io::OutputStream>& out);
 
-  static int writeString(const std::string& str, const std::shared_ptr<io::OutputStream>& out);
+  static size_t writeString(const std::string& str, const std::shared_ptr<io::OutputStream>& out);
 
  public:
   using FlowFileSerializer::FlowFileSerializer;

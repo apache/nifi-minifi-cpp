@@ -45,40 +45,52 @@ class OutputStream : public virtual Stream {
    * @param len length of value
    * @return resulting write size
    **/
-  virtual int write(const uint8_t *value, int len) = 0;
+  virtual size_t write(const uint8_t *value, size_t len) = 0;
 
-  int write(const std::vector<uint8_t>& buffer, int len);
+  /**
+   * write: resolve nullptr ambiguity
+   * call: write(nullptr, 0)
+   * candidate1: write(const uint8_t*, size_t): conversion from std::nullptr_t to const uint8_t* and from int to size_t
+   * candidate2: write(const char*, bool): conversion from std::nullptr_t to const char* and from int to bool
+   * @param len
+   * @return
+   */
+  size_t write(std::nullptr_t, size_t len) {
+    return write(static_cast<const uint8_t*>(nullptr), len);
+  }
+
+  size_t write(const std::vector<uint8_t>& buffer, size_t len);
 
   /**
    * write bool to stream
    * @param value non encoded value
    * @return resulting write size
    **/
-  int write(bool value);
+  size_t write(bool value);
 
   /**
    * write Identifier to stream
    * @param value non encoded value
    * @return resulting write size
    **/
-  int write(const utils::Identifier& value);
+  size_t write(const utils::Identifier& value);
 
   /**
    * write string to stream
    * @param str string to write
    * @return resulting write size
    **/
-  int write(const std::string& str, bool widen = false);
+  size_t write(const std::string& str, bool widen = false);
 
   /**
    * write string to stream
    * @param str string to write
    * @return resulting write size
    **/
-  int write(const char* str, bool widen = false);
+  size_t write(const char* str, bool widen = false);
 
   template<size_t N>
-  int write(const utils::SmallString<N>& str, bool widen = false) {
+  size_t write(const utils::SmallString<N>& str, bool widen = false) {
     return write(str.c_str(), widen);
   }
 
@@ -88,7 +100,7 @@ class OutputStream : public virtual Stream {
   * @return resulting write size
   **/
   template<typename Integral, typename = std::enable_if<std::is_unsigned<Integral>::value && !std::is_same<Integral, bool>::value>>
-  int write(Integral value) {
+  size_t write(Integral value) {
     uint8_t buffer[sizeof(Integral)]{};
 
     for (std::size_t byteIdx = 0; byteIdx < sizeof(Integral); ++byteIdx) {
@@ -99,7 +111,7 @@ class OutputStream : public virtual Stream {
   }
 
  private:
-  int write_str(const char* str, uint32_t len, bool widen);
+  size_t write_str(const char* str, uint32_t len, bool widen);
 };
 
 }  // namespace io

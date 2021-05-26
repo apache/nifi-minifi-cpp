@@ -17,15 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <png.h>
+#include "GetUSBCamera.h"
 
 #include <utility>
 #include <string>
 #include <vector>
 #include <set>
 #include <algorithm>
+#include <png.h>
 
-#include "GetUSBCamera.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -460,7 +461,8 @@ int64_t GetUSBCamera::PNGWriteCallback::process(const std::shared_ptr<io::BaseSt
     throw;
   }
 
-  return stream->write(png_output_buf_.data(), png_output_buf_.size());
+  const auto write_ret = stream->write(png_output_buf_.data(), png_output_buf_.size());
+  return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
 }
 
 GetUSBCamera::RawWriteCallback::RawWriteCallback(uvc_frame_t *frame)
@@ -470,7 +472,8 @@ GetUSBCamera::RawWriteCallback::RawWriteCallback(uvc_frame_t *frame)
 
 int64_t GetUSBCamera::RawWriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   logger_->log_info("Writing %d bytes of raw capture data", frame_->data_bytes);
-  return stream->write(reinterpret_cast<uint8_t *>(frame_->data), frame_->data_bytes);
+  const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(frame_->data), frame_->data_bytes);
+  return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
 }
 
 } /* namespace processors */

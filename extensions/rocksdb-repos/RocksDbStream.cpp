@@ -51,10 +51,9 @@ void RocksDbStream::seek(size_t /*offset*/) {
   // noop
 }
 
-int RocksDbStream::write(const uint8_t *value, int size) {
-  gsl_Expects(size >= 0);
+size_t RocksDbStream::write(const uint8_t *value, size_t size) {
   if (!write_enable_) {
-    return -1;
+    return STREAM_ERROR;
   }
   if (size == 0) {
     return 0;
@@ -62,7 +61,7 @@ int RocksDbStream::write(const uint8_t *value, int size) {
   if (!IsNullOrEmpty(value)) {
     auto opendb = db_->open();
     if (!opendb) {
-      return -1;
+      return STREAM_ERROR;
     }
     rocksdb::Slice slice_value((const char *) value, size);
     rocksdb::Status status;
@@ -77,10 +76,10 @@ int RocksDbStream::write(const uint8_t *value, int size) {
     if (status.ok()) {
       return size;
     } else {
-      return -1;
+      return STREAM_ERROR;
     }
   } else {
-    return -1;
+    return STREAM_ERROR;
   }
 }
 

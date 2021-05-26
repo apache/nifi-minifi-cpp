@@ -76,7 +76,7 @@ class ZlibCompressStream : public ZlibBaseStream {
 
   ~ZlibCompressStream() override;
 
-  int write(const uint8_t* value, int size) override;
+  size_t write(const uint8_t* value, size_t size) override;
 
   void close() override;
 
@@ -95,7 +95,7 @@ class ZlibDecompressStream : public ZlibBaseStream {
 
   ~ZlibDecompressStream() override;
 
-  int write(const uint8_t *value, int size) override;
+  size_t write(const uint8_t *value, size_t size) override;
 
  private:
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ZlibDecompressStream>::getLogger()};

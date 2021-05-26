@@ -148,7 +148,7 @@ void GenerateFlowFile::onTrigger(core::ProcessContext* /*context*/, core::Proces
       if (fileSize_ > 0) {
         generateData(data, textData_);
       }
-      GenerateFlowFile::WriteCallback callback(std::move(data));
+      GenerateFlowFile::WriteCallback callback(data);
       session->write(flowFile, &callback);
     } else {
       GenerateFlowFile::WriteCallback callback(data_);

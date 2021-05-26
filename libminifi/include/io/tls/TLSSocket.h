@@ -151,12 +151,12 @@ class TLSSocket : public Socket {
    * @param buflen buffer to write
    *
    */
-  int write(const uint8_t *value, int size) override;
+  size_t write(const uint8_t *value, size_t size) override;
 
   void close() override;
 
  protected:
-  int writeData(const uint8_t *value, unsigned int size, int fd);
+  size_t writeData(const uint8_t *value, size_t size, int fd);
 
   SSL *get_ssl(int fd) {
     if (UNLIKELY(listeners_ > 0)) {

@@ -19,6 +19,7 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_
 
+#include <algorithm>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -174,6 +175,7 @@ auto invoke(F&& f, Args&&... args) MINIFICPP_UTIL_DEDUCED(detail::invoke_impl(st
 using std::invoke
 #endif /* < C++17 */
 
+
 namespace detail {
 struct dereference_t {
   template<typename T>
@@ -182,6 +184,18 @@ struct dereference_t {
 }  // namespace detail
 
 constexpr detail::dereference_t dereference{};
+
+#if __cplusplus < 201703L
+template<typename T, typename Compare = std::less<T>>
+constexpr const T& clamp(const T& v, const T& lo, const T& hi, Compare less = {}) {
+#if __cplusplus >= 201402L
+  gsl_Expects(!less(hi, lo));
+#endif
+  return less(v, lo) ? lo : (less(hi, v) ? hi : v);
+}
+#else
+using std::clamp;
+#endif /* < C++17 */
 
 }  // namespace utils
 }  // namespace minifi

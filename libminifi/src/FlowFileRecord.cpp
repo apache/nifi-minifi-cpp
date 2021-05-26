@@ -70,69 +70,82 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& k
 }
 
 bool FlowFileRecord::Serialize(io::OutputStream &outStream) {
-  int ret;
-
-  ret = outStream.write(event_time_);
-  if (ret != 8) {
-    return false;
+  {
+    const auto ret = outStream.write(event_time_);
+    if (ret != 8) {
+      return false;
+    }
   }
-
-  ret = outStream.write(entry_date_);
-  if (ret != 8) {
-    return false;
+  {
+    const auto ret = outStream.write(entry_date_);
+    if (ret != 8) {
+      return false;
+    }
   }
-
-  ret = outStream.write(lineage_start_date_);
-  if (ret != 8) {
-    return false;
+  {
+    const auto ret = outStream.write(lineage_start_date_);
+    if (ret != 8) {
+      return false;
+    }
   }
-
-  ret = outStream.write(uuid_);
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = outStream.write(uuid_);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
   }
-
   utils::Identifier containerId;
   if (connection_) {
     containerId = connection_->getUUID();
   }
-  ret = outStream.write(containerId);
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = outStream.write(containerId);
+    if (ret == 0 || io::isError(ret)) {
+      return false;
+    }
   }
   // write flow attributes
-  uint32_t numAttributes = gsl::narrow<uint32_t>(attributes_.size());
-  ret = outStream.write(numAttributes);
-  if (ret != 4) {
-    return false;
+  {
+    const auto numAttributes = gsl::narrow<uint32_t>(attributes_.size());
+    const auto ret = outStream.write(numAttributes);
+    if (ret != 4) {
+      return false;
+    }
   }
 
   for (auto& itAttribute : attributes_) {
-    ret = outStream.write(itAttribute.first, true);
-    if (ret <= 0) {
+    {
+      const auto ret = outStream.write(itAttribute.first, true);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
+    }
+    {
+      const auto ret = outStream.write(itAttribute.second, true);
+      if (ret == 0 || io::isError(ret)) {
+        return false;
+      }
+    }
+  }
+
+  {
+    const auto ret = outStream.write(getContentFullPath());
+    if (ret == 0 || io::isError(ret)) {
       return false;
     }
-    ret = outStream.write(itAttribute.second, true);
-    if (ret <= 0) {
+  }
+  {
+    const auto ret = outStream.write(size_);
+    if (ret != 8) {
       return false;
     }
   }
-
-  ret = outStream.write(getContentFullPath());
-  if (ret <= 0) {
-    return false;
+  {
+    const auto ret = outStream.write(offset_);
+    if (ret != 8) {
+      return false;
+    }
   }
-
-  ret = outStream.write(size_);
-  if (ret != 8) {
-    return false;
-  }
-
-  ret = outStream.write(offset_);
-  if (ret != 8) {
-    return false;
-  }
-
   return true;
 }
 

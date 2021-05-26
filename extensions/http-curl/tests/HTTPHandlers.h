@@ -303,7 +303,7 @@ class FlowFileResponder : public ServerAwareHandler {
         }
         uint64_t length = flow->data.size();
         stream.write(length);
-        stream.write(flow->data.data(), gsl::narrow<int>(length));
+        stream.write(flow->data.data(), gsl::narrow<size_t>(length));
       }
     } else {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nConnection: "

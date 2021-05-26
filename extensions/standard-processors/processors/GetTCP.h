@@ -98,7 +98,8 @@ class DataHandlerCallback : public OutputStreamCallback {
   ~DataHandlerCallback() override = default;
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    return stream->write(message_, gsl::narrow<int>(size_));
+    const auto write_ret = stream->write(message_, size_);
+    return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
   }
 
  private:

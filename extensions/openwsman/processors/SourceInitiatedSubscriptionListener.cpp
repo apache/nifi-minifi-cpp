@@ -606,7 +606,8 @@ SourceInitiatedSubscriptionListener::Handler::WriteCallback::WriteCallback(char*
 }
 
 int64_t SourceInitiatedSubscriptionListener::Handler::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  return stream->write(reinterpret_cast<uint8_t*>(text_), strlen(text_));
+  const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(text_), strlen(text_));
+  return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
 }
 
 int SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback(WsXmlNodeH node, void* data) {

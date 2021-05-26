@@ -80,18 +80,18 @@ class BinaryConcatenationMerge : public MergeBin {
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
       int64_t ret = 0;
       if (!header_.empty()) {
-        int64_t len = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(header_.data())), gsl::narrow<int>(header_.size()));
-        if (len < 0)
-          return len;
-        ret += len;
+        const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(header_.data())), header_.size());
+        if (io::isError(write_ret))
+          return -1;
+        ret += gsl::narrow<int64_t>(write_ret);
       }
       bool isFirst = true;
-      for (auto flow : flows_) {
+      for (const auto& flow : flows_) {
         if (!isFirst && !demarcator_.empty()) {
-          int64_t len = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(demarcator_.data())), gsl::narrow<int>(demarcator_.size()));
-          if (len < 0)
-            return len;
-          ret += len;
+          const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(demarcator_.data())), demarcator_.size());
+          if (io::isError(write_ret))
+            return -1;
+          ret += gsl::narrow<int64_t>(write_ret);
         }
         int len = serializer_.serialize(flow, stream);
         if (len < 0)
@@ -100,10 +100,10 @@ class BinaryConcatenationMerge : public MergeBin {
         isFirst = false;
       }
       if (!footer_.empty()) {
-        int64_t len = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(footer_.data())), gsl::narrow<int>(footer_.size()));
-        if (len < 0)
-          return len;
-        ret += len;
+        const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(footer_.data())), footer_.size());
+        if (io::isError(write_ret))
+          return -1;
+        ret += gsl::narrow<int64_t>(write_ret);
       }
       return ret;
     }
@@ -122,25 +122,26 @@ class ArchiveMerge {
   class ArchiveWriter : public io::OutputStream {
    public:
     ArchiveWriter(struct archive *arch, struct archive_entry *entry) : arch_(arch), entry_(entry) {}
-    int write(const uint8_t* data, int size) override {
+    size_t write(const uint8_t* data, size_t size) override {
       if (!header_emitted_) {
         if (archive_write_header(arch_, entry_) != ARCHIVE_OK) {
-          return -1;
+          return io::STREAM_ERROR;
         }
         header_emitted_ = true;
       }
-      int totalWrote = 0;
-      int remaining = size;
+      size_t totalWrote = 0;
+      size_t remaining = size;
       while (remaining > 0) {
         const auto ret = archive_write_data(arch_, data + totalWrote, remaining);
         if (ret < 0) {
-          return ret;
+          return io::STREAM_ERROR;
         }
-        if (ret == 0) {
+        const auto zret = gsl::narrow<size_t>(ret);
+        if (zret == 0) {
           break;
         }
-        totalWrote += ret;
-        remaining -= ret;
+        totalWrote += zret;
+        remaining -= zret;
       }
       return totalWrote;
     }
@@ -174,10 +175,10 @@ class ArchiveMerge {
       WriteCallback *callback = (WriteCallback *) context;
       uint8_t* data = reinterpret_cast<uint8_t*>(const_cast<void*>(buff));
       la_ssize_t totalWrote = 0;
-      int remaining = gsl::narrow<int>(size);
+      size_t remaining = size;
       while (remaining > 0) {
-        la_ssize_t ret = callback->stream_->write(data + totalWrote, remaining);
-        if (ret < 0) {
+        const auto ret = callback->stream_->write(data + totalWrote, remaining);
+        if (io::isError(ret)) {
           // libarchive expects us to return -1 on error
           return -1;
         }
@@ -185,7 +186,7 @@ class ArchiveMerge {
           break;
         }
         callback->size_ += ret;
-        totalWrote += ret;
+        totalWrote += static_cast<la_ssize_t>(ret);
         remaining -= ret;
       }
       return totalWrote;

@@ -87,7 +87,7 @@ void DatabaseContentRepository::Session::commit() {
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
     }
-    const int size = gsl::narrow<int>(resource.second->size());
+    const auto size = resource.second->size();
     if (outStream->write(const_cast<uint8_t*>(resource.second->getBuffer()), size) != size) {
       throw Exception(REPOSITORY_EXCEPTION, "Failed to write new resource: " + resource.first->getContentFullPath());
     }
@@ -97,7 +97,7 @@ void DatabaseContentRepository::Session::commit() {
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
     }
-    const int size = gsl::narrow<int>(resource.second->size());
+    const auto size = resource.second->size();
     if (outStream->write(const_cast<uint8_t*>(resource.second->getBuffer()), size) != size) {
       throw Exception(REPOSITORY_EXCEPTION, "Failed to append to resource: " + resource.first->getContentFullPath());
     }

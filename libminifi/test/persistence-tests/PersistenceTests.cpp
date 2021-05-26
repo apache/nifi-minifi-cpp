@@ -96,7 +96,7 @@ struct TestFlow{
     processor->onSchedule(processorContext.get(), new core::ProcessSessionFactory(processorContext));
   }
   std::shared_ptr<core::FlowFile> write(const std::string& data) {
-    minifi::io::BufferStream stream(reinterpret_cast<const uint8_t*>(data.c_str()), gsl::narrow<int>(data.length()));
+    minifi::io::BufferStream stream(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
     core::ProcessSession sessionGenFlowFile(inputContext);
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     sessionGenFlowFile.importFrom(stream, flow);
