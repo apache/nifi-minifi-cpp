@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <unordered_map>
 
 #include "PDHCounters.h"
 #include "utils/StringUtils.h"
@@ -83,13 +84,12 @@ std::string PDHCounterArray::getObjectName() const {
 
 void PDHCounterArray::addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const {
   rapidjson::Value& group_node = acquireNode(getObjectName(), body, alloc);
+  std::unordered_map<std::string, uint32_t> instance_name_counter;
   for (DWORD i = 0; i < item_count_; ++i) {
-    rapidjson::Value& counter_node = acquireNode(std::string(values_[i].szName), group_node, alloc);
-    rapidjson::Value value;
-    if (is_double_format_)
-      value.SetDouble(values_[i].FmtValue.doubleValue);
-    else
-      value.SetInt64(values_[i].FmtValue.largeValue);
+    uint32_t instance_name_count = instance_name_counter[std::string(values_[i].szName)]++;
+    std::string node_name = instance_name_count > 0 ? std::string(values_[i].szName) + "#" + std::to_string(instance_name_count) : values_[i].szName;
+    rapidjson::Value& counter_node = acquireNode(node_name, group_node, alloc);
+    rapidjson::Value value = getValue(i);
     rapidjson::Value key;
     key.SetString(getCounterName().c_str(), getCounterName().length(), alloc);
     counter_node.AddMember(key, value, alloc);

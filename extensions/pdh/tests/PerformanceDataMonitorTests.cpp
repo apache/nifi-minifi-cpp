@@ -136,8 +136,10 @@ TEST_CASE("PerformanceDataMonitorCustomPDHCountersTest", "[performancedatamonito
 
 TEST_CASE("PerformanceDataMonitorCustomPDHCountersTestOpenTelemetry", "[performancedatamonitorcustompdhcounterstestopentelemetry]") {
   PerformanceDataMonitorTester tester;
-  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::CustomPDHCounters, "\\System\\Processes,\\Process(*)\\ID Process");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::PredefinedGroups, "Disk");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::CustomPDHCounters, "\\System\\Processes,\\Process(*)\\ID Process,\\Process(*)\\Private Bytes");
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputFormatProperty, "OpenTelemetry");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputCompactness, "Compact");
   tester.runProcessors();
 
   uint32_t number_of_flowfiles = 0;
@@ -171,6 +173,7 @@ TEST_CASE("PerformanceDataMonitorAllPredefinedGroups", "[performancedatamonitora
   PerformanceDataMonitorTester tester;
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::PredefinedGroups, "CPU,Disk,Network,Memory,IO,System,Process");
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputFormatProperty, "OpenTelemetry");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputCompactness, "Pretty");
   tester.runProcessors();
 
   uint32_t number_of_flowfiles = 0;
@@ -228,4 +231,22 @@ TEST_CASE("PerformanceDataMonitorAllPredefinedGroups", "[performancedatamonitora
 
   utils::file::FileUtils::list_dir(tester.dir_, lambda, tester.plan_->getLogger(), false);
   REQUIRE(number_of_flowfiles == 2);
+}
+
+TEST_CASE("PerformanceDataMonitorDecimalPlacesPropertyTest", "[performancedatamonitordecimalplacespropertytest]") {
+  {
+    PerformanceDataMonitorTester tester;
+    tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "asd");
+    REQUIRE_THROWS_WITH(tester.runProcessors(), "General Operation: Invalid conversion to int64_t for asd");
+  }
+  {
+    PerformanceDataMonitorTester tester;
+    tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "1234586123");
+    REQUIRE_THROWS_WITH(tester.runProcessors(), "Process Schedule Operation: PerformanceDataMonitor Decimal Places is out of range");
+  }
+  {
+    PerformanceDataMonitorTester tester;
+    tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "");
+    REQUIRE_NOTHROW(tester.runProcessors());
+  }
 }

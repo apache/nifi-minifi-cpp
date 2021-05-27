@@ -995,6 +995,109 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Predefined Groups||CPU<br>IO<br>Disk<br>Network<br>Memory<br>System<br>Process|Comma separated list from the allowable values, to monitor multiple common Windows Performance counters related to these groups. (e.g. "CPU,Network")|
 |Custom PDH Counters|||Comma separated list of Windows Performance Counters to monitor. (e.g. "\\System\\Threads,\\Process(*)\\ID Process")|
 |**Output Format**|JSON|JSON<br>OpenTelemetry|The output format of the new flowfile|
+|Round to decimal places|3|integers|The number of decimal places to round the values to (blank for no rounding)|
+
+#### Predefined Groups
+<ul>
+  <li>CPU
+    <ul>
+      <li>\Processor(*)\% Processor Time</li>
+      <li>\Processor(*)\% User Time</li>
+      <li>\Processor(*)\% Privileged Time</li>
+    </ul>
+  </li>
+  <li>IO
+    <ul>
+      <li>\Process(_Total)\IO Read Bytes/sec</li>
+      <li>\Process(_Total)\IO Write Bytes/sec</li>
+    </ul>
+  </li>
+  <li>Disk
+    <ul>
+      <li>\LogicalDisk(*)\% Free Space</li>
+      <li>\LogicalDisk(*)\Free Megabytes</li>
+      <li>\PhysicalDisk(*)\% Disk Read Time</li>
+      <li>\PhysicalDisk(*)\% Disk Time</li>
+      <li>\PhysicalDisk(*)\% Disk Write Time</li>
+      <li>\PhysicalDisk(*)\% Idle Time</li>
+      <li>\PhysicalDisk(*)\Avg. Disk Bytes/Transfer</li>
+      <li>\PhysicalDisk(*)\Avg. Disk Bytes/Read</li>
+      <li>\PhysicalDisk(*)\Avg. Disk Bytes/Write</li>
+      <li>\PhysicalDisk(*)\Avg. Disk Write Queue Length</li>
+      <li>\PhysicalDisk(*)\Avg. Disk Read Queue Length</li>
+      <li>\PhysicalDisk(*)\Avg. Disk Queue Length</li>
+      <li>\PhysicalDisk(*)\Avg. Disk sec/Transfer</li>
+      <li>\PhysicalDisk(*)\Avg. Disk sec/Read</li>
+      <li>\PhysicalDisk(*)\Avg. Disk sec/Write</li>
+      <li>\PhysicalDisk(*)\Current Disk Queue Length</li>
+      <li>\PhysicalDisk(*)\Disk Transfers/sec</li>
+      <li>\PhysicalDisk(*)\Disk Reads/sec</li>
+      <li>\PhysicalDisk(*)\Disk Writes/sec</li>
+      <li>\PhysicalDisk(*)\Disk Bytes/sec</li>
+      <li>\PhysicalDisk(*)\Disk Read Bytes/sec</li>
+      <li>\PhysicalDisk(*)\Disk Write Bytes/sec</li>
+      <li>\PhysicalDisk(*)\Split IO/Sec</li>
+    </ul>
+  </li>
+  <li>Network
+    <ul>
+      <li>\Network Interface(*)\Bytes Received/sec</li>
+      <li>\Network Interface(*)\Bytes Sent/sec</li>
+      <li>\Network Interface(*)\Bytes Total/sec</li>
+      <li>\Network Interface(*)\Current Bandwidth</li>
+      <li>\Network Interface(*)\Packets/sec</li>
+      <li>\Network Interface(*)\Packets Received/sec</li>
+      <li>\Network Interface(*)\Packets Sent/sec</li>
+      <li>\Network Interface(*)\Packets Received Discarded</li>
+      <li>\Network Interface(*)\Packets Received Errors</li>
+      <li>\Network Interface(*)\Packets Received Unknown</li>
+      <li>\Network Interface(*)\Packets Received Non-Unicast/sec</li>
+      <li>\Network Interface(*)\Packets Received Unicast/sec</li>
+      <li>\Network Interface(*)\Packets Sent Unicast/sec</li>
+      <li>\Network Interface(*)\Packets Sent Non-Unicast/sec</li>
+    </ul>
+  </li>
+  <li>Memory
+    <ul>
+      <li>\Memory\% Committed Bytes In Use</li>
+      <li>\Memory\Available MBytes</li>
+      <li>\Memory\Page Faults/sec</li>
+      <li>\Memory\Pages/sec</li>
+      <li>\Paging File(_Total)\% Usage</li>
+      <li>Different source: Total Physical Memory</li>
+      <li>Different source: Available Physical Memory</li>
+      <li>Different source: Total paging file size</li>
+    </ul>
+  </li>
+  <li>System
+    <ul>
+      <li>\System\% Registry Quota In Use</li>
+      <li>\System\Context Switches/sec</li>
+      <li>\System\File Control Bytes/sec</li>
+      <li>\System\File Control Operations/sec</li>
+      <li>\System\File Read Bytes/sec</li>
+      <li>\System\File Read Operations/sec</li>
+      <li>\System\File Write Bytes/sec</li>
+      <li>\System\File Write Operations/sec</li>
+      <li>\System\File Data Operations/sec</li>
+      <li>\System\Processes</li>
+      <li>\System\Processor Queue Length</li>
+      <li>\System\System Calls/sec</li>
+      <li>\System\System Up Time</li>
+      <li>\System\Threads</li>
+    </ul>
+  </li>
+  <li>Process
+    <ul>
+      <li>\Process(*)\% Processor Time</li>
+      <li>\Process(*)\Elapsed Time</li>
+      <li>\Process(*)\ID Process</li>
+      <li>\Process(*)\Private Bytes</li>
+    </ul>
+  </li>
+</ul>
+
+
 ### Relationships
 
 | Name | Description |

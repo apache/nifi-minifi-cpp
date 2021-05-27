@@ -19,6 +19,8 @@
  */
 
 #include "PerformanceDataMonitor.h"
+#include <limits>
+
 #include "PDHCounters.h"
 #include "MemoryConsumptionCounter.h"
 #include "utils/StringUtils.h"
@@ -45,9 +47,19 @@ core::Property PerformanceDataMonitor::CustomPDHCounters(
 core::Property PerformanceDataMonitor::OutputFormatProperty(
     core::PropertyBuilder::createProperty("Output Format")->
     withDescription("Format of the created flowfiles")->
-    withAllowableValue<std::string>(JSON_FORMAT_STR)->
-    withAllowableValue(OPEN_TELEMETRY_FORMAT_STR)->
+    withAllowableValues<std::string>({ JSON_FORMAT_STR, OPEN_TELEMETRY_FORMAT_STR })->
     withDefaultValue(JSON_FORMAT_STR)->build());
+
+core::Property PerformanceDataMonitor::OutputCompactness(
+  core::PropertyBuilder::createProperty("Output Compactness")->
+  withDescription("Format of the created flowfiles")->
+  withAllowableValues<std::string>({ PRETTY_FORMAT_STR, COMPACT_FORMAT_STR})->
+  withDefaultValue(PRETTY_FORMAT_STR)->build());
+
+core::Property PerformanceDataMonitor::DecimalPlaces(
+  core::PropertyBuilder::createProperty("Round to decimal places")->
+  withDescription("The number of decimal places to round the values to (blank for no rounding)")->
+  withDefaultValue("")->build());
 
 PerformanceDataMonitor::~PerformanceDataMonitor() {
   PdhCloseQuery(pdh_query_);
@@ -101,26 +113,38 @@ void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::Proc
   rapidjson::Document root = rapidjson::Document(rapidjson::kObjectType);
   rapidjson::Value& body = prepareJSONBody(root);
   for (auto& counter : resource_consumption_counters_) {
-    if (counter->collectData())
+    if (counter->collectData()) {
       counter->addToJson(body, root.GetAllocator());
+    }
   }
-  utils::JsonOutputCallback callback(std::move(root));
-  session->write(flowFile, &callback);
-  session->transfer(flowFile, Success);
+  if (pretty_output_) {
+    utils::PrettyJsonOutputCallback callback(std::move(root), decimal_places_);
+    session->write(flowFile, &callback);
+    session->transfer(flowFile, Success);
+  } else {
+    utils::JsonOutputCallback callback(std::move(root), decimal_places_);
+    session->write(flowFile, &callback);
+    session->transfer(flowFile, Success);
+  }
 }
 
 void PerformanceDataMonitor::initialize() {
-  setSupportedProperties({ CustomPDHCounters, PredefinedGroups, OutputFormatProperty });
+  setSupportedProperties({ CustomPDHCounters, PredefinedGroups, OutputFormatProperty, OutputCompactness, DecimalPlaces });
   setSupportedRelationships({ PerformanceDataMonitor::Success });
 }
 
 rapidjson::Value& PerformanceDataMonitor::prepareJSONBody(rapidjson::Document& root) {
   switch (output_format_) {
-    case OutputFormat::OPENTELEMETRY:
+    case OutputFormat::OPENTELEMETRY: {
       root.AddMember("Name", "PerformanceData", root.GetAllocator());
       root.AddMember("Timestamp", std::time(0), root.GetAllocator());
+      std::string hostname = io::Socket::getMyHostName();
+      rapidjson::Value hostname_value;
+      hostname_value.SetString(hostname.c_str(), hostname.length(), root.GetAllocator());
+      root.AddMember("Hostname", hostname_value, root.GetAllocator());
       root.AddMember("Body", rapidjson::Value{ rapidjson::kObjectType }, root.GetAllocator());
       return root["Body"];
+    }
     case OutputFormat::JSON:
       return root;
     default:
@@ -249,32 +273,70 @@ void PerformanceDataMonitor::addCustomPDHCountersFromProperty(const std::string&
   }
 }
 
-void PerformanceDataMonitor::setupMembersFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
-  std::string predefined_groups;
-  if (context->getProperty(PredefinedGroups.getName(), predefined_groups)) {
-    logger_->log_trace("Predefined group configured to be %s", predefined_groups);
-    addCountersFromPredefinedGroupsProperty(predefined_groups);
-  }
-
+void PerformanceDataMonitor::setupCountersFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
   std::string custom_pdh_counters;
   if (context->getProperty(CustomPDHCounters.getName(), custom_pdh_counters)) {
     logger_->log_trace("Custom PDH counters configured to be %s", custom_pdh_counters);
     addCustomPDHCountersFromProperty(custom_pdh_counters);
   }
+}
 
+void PerformanceDataMonitor::setupPredefinedGroupsFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
+  std::string predefined_groups;
+  if (context->getProperty(PredefinedGroups.getName(), predefined_groups)) {
+    logger_->log_trace("Predefined group configured to be %s", predefined_groups);
+    addCountersFromPredefinedGroupsProperty(predefined_groups);
+  }
+}
+
+void PerformanceDataMonitor::setupOutputFormatFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
   std::string output_format_string;
   if (context->getProperty(OutputFormatProperty.getName(), output_format_string)) {
     if (output_format_string == OPEN_TELEMETRY_FORMAT_STR) {
-      logger_->log_trace("OutputFormat is configured to be OpenTelemetry");
       output_format_ = OutputFormat::OPENTELEMETRY;
     } else if (output_format_string == JSON_FORMAT_STR) {
-      logger_->log_trace("OutputFormat is configured to be JSON");
       output_format_ = OutputFormat::JSON;
     } else {
-      logger_->log_error("Invalid OutputFormat, defaulting to JSON");
-      output_format_ = OutputFormat::JSON;
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid PerformanceDataMonitor Output Format: " + output_format_string);
     }
   }
+
+  std::string output_compactness_string;
+  if (context->getProperty(OutputCompactness.getName(), output_compactness_string)) {
+    if (output_compactness_string == PRETTY_FORMAT_STR) {
+      pretty_output_ = true;
+    } else if (output_compactness_string == COMPACT_FORMAT_STR) {
+      pretty_output_ = false;
+    } else {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid PerformanceDataMonitor Output Compactness: " + output_compactness_string);
+    }
+  }
+
+  logger_->log_trace("OutputFormat is configured to be %s %s", pretty_output_ ? "pretty" : "compact", output_format_ == OutputFormat::JSON ? "JSON" : "OpenTelemetry");
+}
+
+void PerformanceDataMonitor::setupDecimalPlacesFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
+  std::string decimal_places_str;
+  if (!context->getProperty(DecimalPlaces.getName(), decimal_places_str) || decimal_places_str == "") {
+    decimal_places_ = utils::nullopt;
+    return;
+  }
+
+  int64_t decimal_places;
+  if (context->getProperty(DecimalPlaces.getName(), decimal_places)) {
+    if (decimal_places > std::numeric_limits<uint8_t>::max() || decimal_places < 1)
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "PerformanceDataMonitor Decimal Places is out of range");
+    decimal_places_ = static_cast<uint8_t>(decimal_places);
+  }
+  if (decimal_places_.has_value())
+    logger_->log_trace("Rounding is enabled with %d decimal places", decimal_places_.value());
+}
+
+void PerformanceDataMonitor::setupMembersFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
+  setupCountersFromProperties(context);
+  setupPredefinedGroupsFromProperties(context);
+  setupOutputFormatFromProperties(context);
+  setupDecimalPlacesFromProperties(context);
 }
 
 }  // namespace processors
