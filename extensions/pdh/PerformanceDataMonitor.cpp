@@ -291,20 +291,18 @@ void PerformanceDataMonitor::setupOutputFormatFromProperties(const std::shared_p
       output_format_ = OutputFormat::JSON;
       pretty_output_ = output_format_string == PRETTY_JSON_FORMAT_STR;
     } else {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, ("Invalid PerformanceDataMonitor Output Format: %s", output_format_string));
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid PerformanceDataMonitor Output Format: " + output_format_string);
     }
   }
   logger_->log_trace("OutputFormat is configured to be %s %s", pretty_output_ ? "pretty" : "compact", output_format_ == OutputFormat::JSON ? "JSON" : "OpenTelemtry");
 }
 
 void PerformanceDataMonitor::setupDecimalPlacesFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
-  std::string decimal_places_str;
-  if (context->getProperty(DecimalPlaces.getName(), decimal_places_str)) {  // TODO(mzink): Implement int8_t in Value.h to convert int8_t implicitly
-    try {
-      decimal_places_ = std::stoi(decimal_places_str);
-    } catch (const std::invalid_argument&) {
-      logger_->log_error("Invalid Rounding Decimal Places: %s", decimal_places_str);
-    }
+  int64_t decimal_places;
+  if (context->getProperty(DecimalPlaces.getName(), decimal_places)) {
+    if (decimal_places > INT8_MAX || decimal_places < INT8_MIN)
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "PerformanceDataMonitor Decimal Places is out of range");
+    decimal_places_ = static_cast<int8_t>(decimal_places);
   }
   if (decimal_places_.has_value())
     logger_->log_trace("Rounding is enabled with %d decimal places", decimal_places_.value());

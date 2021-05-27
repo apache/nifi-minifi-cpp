@@ -77,11 +77,9 @@ TEST_CASE("PerformanceDataMonitorPartiallyInvalidGroupPropertyTest", "[performan
   PerformanceDataMonitorTester tester;
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::PredefinedGroups, "Disk,CPU,Asd");
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::CustomPDHCounters, "\\Invalid\\Counter,\\System\\Processes");
-  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "asd");
   tester.runProcessors();
 
   REQUIRE(tester.test_controller_.getLog().getInstance().contains("Asd is not a valid predefined group", std::chrono::seconds(0)));
-  REQUIRE(tester.test_controller_.getLog().getInstance().contains("Invalid Rounding Decimal Places", std::chrono::seconds(0)));
   REQUIRE(tester.test_controller_.getLog().getInstance().contains("Error adding \\Invalid\\Counter to query", std::chrono::seconds(0)));
 
   uint32_t number_of_flowfiles = 0;
@@ -231,4 +229,17 @@ TEST_CASE("PerformanceDataMonitorAllPredefinedGroups", "[performancedatamonitora
 
   utils::file::FileUtils::list_dir(tester.dir_, lambda, tester.plan_->getLogger(), false);
   REQUIRE(number_of_flowfiles == 2);
+}
+
+TEST_CASE("PerformanceDataMonitorDecimalPlacesPropertyTest", "[performancedatamonitordecimalplacespropertytest]") {
+  {
+    PerformanceDataMonitorTester tester;
+    tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "asd");
+    REQUIRE_THROWS_WITH(tester.runProcessors(), "General Operation: Invalid conversion to int64_t for asd");
+  }
+  {
+    PerformanceDataMonitorTester tester;
+    tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "1234586123");
+    REQUIRE_THROWS_WITH(tester.runProcessors(), "Process Schedule Operation: PerformanceDataMonitor Decimal Places is out of range");
+  }
 }
