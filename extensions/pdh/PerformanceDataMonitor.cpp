@@ -106,15 +106,15 @@ void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::Proc
   rapidjson::Value& body = prepareJSONBody(root);
   for (auto& counter : resource_consumption_counters_) {
     if (counter->collectData()) {
-      counter->addToJson(body, root.GetAllocator(), decimal_places_);
+      counter->addToJson(body, root.GetAllocator());
     }
   }
   if (pretty_output_) {
-    utils::PrettyJsonOutputCallback callback(std::move(root));
+    utils::PrettyJsonOutputCallback callback(std::move(root), decimal_places_);
     session->write(flowFile, &callback);
     session->transfer(flowFile, Success);
   } else {
-    utils::JsonOutputCallback callback(std::move(root));
+    utils::JsonOutputCallback callback(std::move(root), decimal_places_);
     session->write(flowFile, &callback);
     session->transfer(flowFile, Success);
   }

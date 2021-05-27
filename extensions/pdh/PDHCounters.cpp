@@ -18,7 +18,6 @@
 
 #include "PDHCounters.h"
 #include "utils/StringUtils.h"
-#include "utils/MathUtils.h"
 
 namespace org {
 namespace apache {
@@ -55,10 +54,10 @@ std::string PDHCounter::getCounterName() const {
   return groups[1];
 }
 
-void SinglePDHCounter::addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, utils::optional<int8_t> decimal_places) const {
+void SinglePDHCounter::addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const {
   rapidjson::Value key(getCounterName().c_str(), getCounterName().length(), alloc);
   rapidjson::Value& group_node = acquireNode(getObjectName(), body, alloc);
-  group_node.AddMember(key, getValue(decimal_places), alloc);
+  group_node.AddMember(key, getValue(), alloc);
 }
 
 PDH_STATUS SinglePDHCounter::addToQuery(PDH_HQUERY& pdh_query)  {
@@ -69,10 +68,10 @@ bool SinglePDHCounter::collectData() {
   return PdhGetFormattedCounterValue(counter_, getDWFormat(), nullptr, &current_value_) == ERROR_SUCCESS;
 }
 
-rapidjson::Value SinglePDHCounter::getValue(utils::optional<int8_t> decimal_places) const {
+rapidjson::Value SinglePDHCounter::getValue() const {
   rapidjson::Value value;
   if (is_double_format_)
-    value.SetDouble(decimal_places.has_value() ? utils::MathUtils::round_to_decimal_places(current_value_.doubleValue, decimal_places.value()) : current_value_.doubleValue);
+    value.SetDouble(current_value_.doubleValue);
   else
     value.SetInt64(current_value_.largeValue);
   return value;
@@ -83,14 +82,14 @@ std::string PDHCounterArray::getObjectName() const {
   return group_name_with_wildcard.substr(0, group_name_with_wildcard.find("(*)"));
 }
 
-void PDHCounterArray::addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc, utils::optional<int8_t> decimal_places) const {
+void PDHCounterArray::addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const {
   rapidjson::Value& group_node = acquireNode(getObjectName(), body, alloc);
   std::unordered_map<std::string, uint32_t> instance_name_counter;
   for (DWORD i = 0; i < item_count_; ++i) {
     uint32_t instance_name_count = instance_name_counter[std::string(values_[i].szName)]++;
     std::string node_name = instance_name_count > 0 ? std::string(values_[i].szName) + "#" + std::to_string(instance_name_count) : values_[i].szName;
     rapidjson::Value& counter_node = acquireNode(node_name, group_node, alloc);
-    rapidjson::Value value = getValue(i, decimal_places);
+    rapidjson::Value value = getValue(i);
     rapidjson::Value key;
     key.SetString(getCounterName().c_str(), getCounterName().length(), alloc);
     counter_node.AddMember(key, value, alloc);
@@ -117,10 +116,10 @@ void PDHCounterArray::clearCurrentData() {
   buffer_size_ = item_count_ = 0;
 }
 
-rapidjson::Value PDHCounterArray::getValue(const DWORD i, utils::optional<int8_t> decimal_places) const {
+rapidjson::Value PDHCounterArray::getValue(const DWORD i) const {
   rapidjson::Value value;
   if (is_double_format_)
-    value.SetDouble(decimal_places.has_value() ? utils::MathUtils::round_to_decimal_places(values_[i].FmtValue.doubleValue, decimal_places.value()) : values_[i].FmtValue.doubleValue);
+    value.SetDouble(values_[i].FmtValue.doubleValue);
   else
     value.SetInt64(values_[i].FmtValue.largeValue);
   return value;
