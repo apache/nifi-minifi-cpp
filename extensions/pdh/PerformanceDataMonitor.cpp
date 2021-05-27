@@ -291,7 +291,7 @@ void PerformanceDataMonitor::setupOutputFormatFromProperties(const std::shared_p
       output_format_ = OutputFormat::JSON;
       pretty_output_ = output_format_string == PRETTY_JSON_FORMAT_STR;
     } else {
-      throw std::invalid_argument(("Invalid PerformanceDataMonitor Output Format: %s", output_format_string));
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, ("Invalid PerformanceDataMonitor Output Format: %s", output_format_string));
     }
   }
   logger_->log_trace("OutputFormat is configured to be %s %s", pretty_output_ ? "pretty" : "compact", output_format_ == OutputFormat::JSON ? "JSON" : "OpenTelemtry");
