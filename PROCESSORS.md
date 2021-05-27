@@ -970,7 +970,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Predefined Groups||CPU<br>IO<br>Disk<br>Network<br>Memory<br>System<br>Process|Comma separated list from the allowable values, to monitor multiple common Windows Performance counters related to these groups. (e.g. "CPU,Network")|
 |Custom PDH Counters|||Comma separated list of Windows Performance Counters to monitor. (e.g. "\\System\\Threads,\\Process(*)\\ID Process")|
 |**Output Format**|JSON|JSON<br>OpenTelemetry|The output format of the new flowfile|
-|Double Precision||integers|Rounds the double values to this precision (blank for maximum precision)|
+|Round to decimal places|3|integers|The number of decimal places to round the values to (blank for no rounding)|
 
 #### Predefined Groups
 <ul>
