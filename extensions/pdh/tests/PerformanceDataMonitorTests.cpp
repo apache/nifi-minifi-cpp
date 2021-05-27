@@ -138,7 +138,8 @@ TEST_CASE("PerformanceDataMonitorCustomPDHCountersTestOpenTelemetry", "[performa
   PerformanceDataMonitorTester tester;
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::PredefinedGroups, "Disk");
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::CustomPDHCounters, "\\System\\Processes,\\Process(*)\\ID Process,\\Process(*)\\Private Bytes");
-  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputFormatProperty, "Compact OpenTelemetry");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputFormatProperty, "OpenTelemetry");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputCompactness, "Compact");
   tester.runProcessors();
 
   uint32_t number_of_flowfiles = 0;
@@ -171,7 +172,8 @@ TEST_CASE("PerformanceDataMonitorCustomPDHCountersTestOpenTelemetry", "[performa
 TEST_CASE("PerformanceDataMonitorAllPredefinedGroups", "[performancedatamonitorallpredefinedgroups]") {
   PerformanceDataMonitorTester tester;
   tester.setPerformanceMonitorProperty(PerformanceDataMonitor::PredefinedGroups, "CPU,Disk,Network,Memory,IO,System,Process");
-  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputFormatProperty, "Pretty OpenTelemetry");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputFormatProperty, "OpenTelemetry");
+  tester.setPerformanceMonitorProperty(PerformanceDataMonitor::OutputCompactness, "Pretty");
   tester.runProcessors();
 
   uint32_t number_of_flowfiles = 0;
@@ -241,5 +243,10 @@ TEST_CASE("PerformanceDataMonitorDecimalPlacesPropertyTest", "[performancedatamo
     PerformanceDataMonitorTester tester;
     tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "1234586123");
     REQUIRE_THROWS_WITH(tester.runProcessors(), "Process Schedule Operation: PerformanceDataMonitor Decimal Places is out of range");
+  }
+  {
+    PerformanceDataMonitorTester tester;
+    tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "");
+    REQUIRE_NOTHROW(tester.runProcessors());
   }
 }

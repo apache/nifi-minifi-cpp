@@ -18,7 +18,6 @@
 
 #include <string>
 #include "rapidjson/document.h"
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
