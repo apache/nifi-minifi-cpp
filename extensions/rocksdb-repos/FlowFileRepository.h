@@ -33,6 +33,8 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "concurrentqueue.h"
 #include "database/RocksDatabase.h"
+#include "encryption/RocksDbEncryptionProvider.h"
+#include "utils/EncryptionProvider.h"
 
 namespace org {
 namespace apache {
@@ -59,6 +61,7 @@ namespace repository {
  */
 class FlowFileRepository : public core::Repository, public std::enable_shared_from_this<FlowFileRepository> {
  public:
+  static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.flowfile.repository.encryption.key";
   // Constructor
 
   FlowFileRepository(const std::string& name, const utils::Identifier& /*uuid*/)
@@ -87,6 +90,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 
   // initialize
   virtual bool initialize(const std::shared_ptr<Configure> &configure) {
+    config_ = configure;
     std::string value;
 
     if (configure->get(Configure::nifi_flowfile_repository_directory_default, value)) {
@@ -104,10 +108,25 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       }
     }
     logger_->log_debug("NiFi FlowFile Max Storage Time: [%d] ms", max_partition_millis_);
-    auto db_options = [] (minifi::internal::Writable<rocksdb::DBOptions>& options) {
+    rocksdb::Env* encrypted_env = [&] {
+      DbEncryptionOptions encryption_opts;
+      encryption_opts.database = directory_;
+      encryption_opts.encryption_key_name = ENCRYPTION_KEY_NAME;
+      if (auto encryption_provider = createEncryptionProvider(utils::crypto::EncryptionManager{configure->getHome()}, encryption_opts)) {
+        logger_->log_info("Using encrypted FlowFileRepository");
+        return rocksdb::NewEncryptedEnv(rocksdb::Env::Default(), encryption_provider);
+      } else {
+        logger_->log_info("Using plaintext FlowFileRepository");
+        return nullptr;
+      }
+    }();
+    auto db_options = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& options) {
       options.set(&rocksdb::DBOptions::create_if_missing, true);
       options.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
       options.set(&rocksdb::DBOptions::use_direct_reads, true);
+      if (encrypted_env) {
+        options.set(&rocksdb::DBOptions::env, encrypted_env);
+      }
     };
 
     // Write buffers are used as db operation logs. When they get filled the events are merged and serialized.
@@ -222,6 +241,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::unique_ptr<rocksdb::Checkpoint> checkpoint_;
   std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<minifi::Configure> config_;
 };
 
 } /* namespace repository */

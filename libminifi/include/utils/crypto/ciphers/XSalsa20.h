@@ -17,14 +17,9 @@
 
 #pragma once
 
-#include <utility>
 #include <string>
-#include <memory>
+
 #include "utils/EncryptionUtils.h"
-#include "utils/OptionalUtils.h"
-#include "utils/crypto/ciphers/XSalsa20.h"
-#include "utils/crypto/ciphers/Aes256Ecb.h"
-#include "core/logging/Logger.h"
 
 namespace org {
 namespace apache {
@@ -33,37 +28,20 @@ namespace minifi {
 namespace utils {
 namespace crypto {
 
-class EncryptionManager {
-  static std::shared_ptr<core::logging::Logger> logger_;
+class XSalsa20Cipher {
  public:
-  explicit EncryptionManager(std::string key_dir) : key_dir_(std::move(key_dir)) {}
-
-  utils::optional<XSalsa20Cipher> createXSalsa20Cipher(const std::string& key_name) const;
-  utils::optional<Aes256EcbCipher> createAes256EcbCipher(const std::string& key_name) const;
- private:
-  utils::optional<Bytes> readKey(const std::string& key_name) const;
-  bool writeKey(const std::string& key_name, const Bytes& key) const;
-
-  std::string key_dir_;
-};
-
-class EncryptionProvider {
- public:
-  explicit EncryptionProvider(Bytes key) : cipher_impl_(std::move(key)) {}
-  explicit EncryptionProvider(XSalsa20Cipher cipher_impl) : cipher_impl_(std::move(cipher_impl)) {}
-
-  static utils::optional<EncryptionProvider> create(const std::string& home_path);
+  explicit XSalsa20Cipher(Bytes encryption_key) : encryption_key_(std::move(encryption_key)) {}
 
   std::string encrypt(const std::string& data) const {
-    return cipher_impl_.encrypt(data);
+    return utils::crypto::encrypt(data, encryption_key_);
   }
 
   std::string decrypt(const std::string& data) const {
-    return cipher_impl_.decrypt(data);
+    return utils::crypto::decrypt(data, encryption_key_);
   }
 
  private:
-  const XSalsa20Cipher cipher_impl_;
+  const Bytes encryption_key_;
 };
 
 }  // namespace crypto

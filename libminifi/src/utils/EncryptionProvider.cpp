@@ -16,10 +16,14 @@
  */
 
 #include <string>
+#include <memory>
 #include "utils/EncryptionProvider.h"
 #include "properties/Properties.h"
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
+#include "utils/crypto/ciphers/XSalsa20.h"
+#include "utils/crypto/ciphers/Aes256Ecb.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -40,14 +44,51 @@ constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sens
 
 }  // namespace
 
-utils::optional<EncryptionProvider> EncryptionProvider::create(const std::string& home_path) {
+std::shared_ptr<core::logging::Logger> EncryptionManager::logger_{core::logging::LoggerFactory<EncryptionManager>::getLogger()};
+
+utils::optional<XSalsa20Cipher> EncryptionManager::createXSalsa20Cipher(const std::string &key_name) const {
+  return readKey(key_name)
+    | utils::map([] (const Bytes& key) {return XSalsa20Cipher{key};});
+}
+
+utils::optional<Aes256EcbCipher> EncryptionManager::createAes256EcbCipher(const std::string &key_name) const {
+  utils::optional<Bytes> key = readKey(key_name);
+  if (!key) {
+    logger_->log_info("No encryption key found for '%s'", key_name);
+    return {};
+  }
+  if (key->empty()) {
+    // generate new key
+    logger_->log_info("Generating encryption key '%s'", key_name);
+    key = Aes256EcbCipher::generateKey();
+    writeKey(key_name, key.value());
+  } else {
+    logger_->log_info("Using existing encryption key '%s'", key_name);
+  }
+  return Aes256EcbCipher{key.value()};
+}
+
+
+utils::optional<Bytes> EncryptionManager::readKey(const std::string& key_name) const {
   minifi::Properties bootstrap_conf;
-  bootstrap_conf.setHome(home_path);
+  bootstrap_conf.setHome(key_dir_);
   bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
-  return bootstrap_conf.getString(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME)
-    | utils::map([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); })
-    | utils::map(&utils::crypto::stringToBytes)
-    | utils::map([](const utils::crypto::Bytes &encryption_key_bytes) { return EncryptionProvider{encryption_key_bytes}; });
+  return bootstrap_conf.getString(key_name)
+         | utils::map([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); })
+         | utils::map(&utils::crypto::stringToBytes);
+}
+
+bool EncryptionManager::writeKey(const std::string &key_name, const Bytes& key) const {
+  minifi::Properties bootstrap_conf;
+  bootstrap_conf.setHome(key_dir_);
+  bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
+  bootstrap_conf.set(key_name, utils::StringUtils::to_hex(key));
+  return bootstrap_conf.persistProperties();
+}
+
+utils::optional<EncryptionProvider> EncryptionProvider::create(const std::string& home_path) {
+  return EncryptionManager{home_path}.createXSalsa20Cipher(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME)
+    | utils::map([] (const XSalsa20Cipher& cipher) {return EncryptionProvider{cipher};});
 }
 
 }  // namespace crypto

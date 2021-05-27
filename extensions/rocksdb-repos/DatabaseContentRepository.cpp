@@ -17,6 +17,7 @@
  */
 
 #include "DatabaseContentRepository.h"
+#include "encryption/RocksDbEncryptionProvider.h"
 
 #include <memory>
 #include <string>
@@ -42,11 +43,26 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   } else {
     directory_ = configuration->getHome() + "/dbcontentrepository";
   }
+  rocksdb::Env* encrypted_env = [&] {
+    DbEncryptionOptions encryption_opts;
+    encryption_opts.database = directory_;
+    encryption_opts.encryption_key_name = ENCRYPTION_KEY_NAME;
+    if (auto encryption_provider = createEncryptionProvider(utils::crypto::EncryptionManager{configuration->getHome()}, encryption_opts)) {
+      logger_->log_info("Using encrypted DatabaseContentRepository");
+      return rocksdb::NewEncryptedEnv(rocksdb::Env::Default(), encryption_provider);
+    } else {
+      logger_->log_info("Using plaintext DatabaseContentRepository");
+      return nullptr;
+    }
+  }();
   auto set_db_opts = [] (internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
     db_opts.set(&rocksdb::DBOptions::error_if_exists, false);
+    if (encrypted_env) {
+      db_opts.set(&rocksdb::DBOptions::env, encrypted_env);
+    }
   };
   auto set_cf_opts = [] (internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts){
     cf_opts.transform<StringAppender>(&rocksdb::ColumnFamilyOptions::merge_operator);

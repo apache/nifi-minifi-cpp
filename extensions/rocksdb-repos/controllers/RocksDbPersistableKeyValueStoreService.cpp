@@ -19,7 +19,7 @@
 #include <set>
 
 #include "RocksDbPersistableKeyValueStoreService.h"
-
+#include "../encryption/RocksDbEncryptionProvider.h"
 #include "utils/StringUtils.h"
 
 
@@ -60,10 +60,25 @@ void RocksDbPersistableKeyValueStoreService::onEnable() {
   }
 
   db_.reset();
-  auto set_db_opts = [] (internal::Writable<rocksdb::DBOptions>& db_opts) {
+  rocksdb::Env* encrypted_env = [&] {
+    core::repository::DbEncryptionOptions encryption_opts;
+    encryption_opts.database = directory_;
+    encryption_opts.encryption_key_name = ENCRYPTION_KEY_NAME;
+    if (auto encryption_provider = createEncryptionProvider(utils::crypto::EncryptionManager{configuration_->getHome()}, encryption_opts)) {
+      logger_->log_info("Using encrypted RocksDbPersistableKeyValueStoreService");
+      return rocksdb::NewEncryptedEnv(rocksdb::Env::Default(), encryption_provider);
+    } else {
+      logger_->log_info("Using plaintext RocksDbPersistableKeyValueStoreService");
+      return nullptr;
+    }
+  }();
+  auto set_db_opts = [encrypted_env] (internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
+    if (encrypted_env) {
+      db_opts.set(&rocksdb::DBOptions::env, encrypted_env);
+    }
   };
   // Use the same buffer settings as the FlowFileRepository
   auto set_cf_opts = [] (minifi::internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts) {

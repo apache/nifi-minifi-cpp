@@ -48,6 +48,8 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
   };
 
  public:
+  static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.database.content.repository.encryption.key";
+
   explicit DatabaseContentRepository(const std::string& name = getClassName<DatabaseContentRepository>(), const utils::Identifier& uuid = {})
       : core::Connectable(name, uuid),
         is_valid_(false),
