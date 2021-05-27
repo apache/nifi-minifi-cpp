@@ -16,7 +16,7 @@
 # under the License.
 
 function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
-    set(PC git reset --hard HEAD &&"${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/azure-sdk-cpp-for-cpp/azure-sdk-for-cpp-old-compiler.patch")
+    set(PC git reset --hard HEAD && "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/azure-sdk-cpp-for-cpp/azure-sdk-for-cpp-old-compiler.patch")
 
     # Define byproducts
     if (WIN32)
