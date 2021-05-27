@@ -123,9 +123,12 @@ const char* InvokeHTTP::REMOTE_DN = "invokehttp.remote.dn";
 const char* InvokeHTTP::EXCEPTION_CLASS = "invokehttp.java.exception.class";
 const char* InvokeHTTP::EXCEPTION_MESSAGE = "invokehttp.java.exception.message";
 
-core::Relationship InvokeHTTP::Success("success", "All files are routed to success");
+core::Relationship InvokeHTTP::Success("success", "The original FlowFile will be routed upon success (2xx status codes). "
+                                       "It will have new attributes detailing the success of the request.");
 
-core::Relationship InvokeHTTP::RelResponse("response", "Represents a response flowfile");
+core::Relationship InvokeHTTP::RelResponse("response", "A Response FlowFile will be routed upon success (2xx status codes). "
+                                           "If the 'Output Response Regardless' property is true then the response will be sent "
+                                           "to this relationship regardless of the status code received.");
 
 core::Relationship InvokeHTTP::RelRetry("retry", "The original FlowFile will be routed on any status code that can be retried "
                                         "(5xx status codes). It will have new attributes detailing the request.");
