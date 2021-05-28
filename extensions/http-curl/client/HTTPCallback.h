@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_HTTP_CURL_CLIENT_HTTPCALLBACK_H_
-#define EXTENSIONS_HTTP_CURL_CLIENT_HTTPCALLBACK_H_
+#pragma once
 
 #include <deque>
-#include <thread>
 #include <mutex>
 #include <vector>
+#include <string>
+#include <memory>
+#include <utility>
 #include <condition_variable>
 
 #include "core/logging/LoggerConfiguration.h"
@@ -138,7 +139,6 @@ class HttpStreamingCallback : public ByteInputCallBack {
   }
 
  private:
-
   /**
    * Loads the next available buffer
    * @param lock unique_lock which *must* own the lock
@@ -230,5 +230,3 @@ class HttpStreamingCallback : public ByteInputCallBack {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_HTTP_CURL_CLIENT_HTTPCALLBACK_H_ */

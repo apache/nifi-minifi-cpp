@@ -17,14 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_PROCESSORS_GETUSBCAMERA_H_
-#define LIBMINIFI_INCLUDE_PROCESSORS_GETUSBCAMERA_H_
+#pragma once
 
 #include <list>
 #include <memory>
 #include <string>
+#include <vector>
 
-#include <libuvc/libuvc.h>
+#include "libuvc/libuvc.h"
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -138,12 +138,10 @@ class GetUSBCamera : public core::Processor {
   void cleanupUvc();
 };
 
-REGISTER_RESOURCE(GetUSBCamera, "Gets images from USB Video Class (UVC)-compatible devices. Outputs one flow file per frame at the rate specified by the FPS property in the format specified by the Format property.");
+REGISTER_RESOURCE(GetUSBCamera, "Gets images from USB Video Class (UVC)-compatible devices. Outputs one flow file per frame at the rate specified by the FPS property in the format specified by the Format property.");  // NOLINT line length
 
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // LIBMINIFI_INCLUDE_PROCESSORS_GETUSBCAMERA_H_

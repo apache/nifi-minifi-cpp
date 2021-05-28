@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_EXPRESSIONLANGUAGE_IMPL_EXPRESSION_H
-#define EXTENSIONS_EXPRESSIONLANGUAGE_IMPL_EXPRESSION_H
+#pragma once
 
 #define EXPRESSION_LANGUAGE_USE_REGEX
 
@@ -32,13 +31,15 @@
 #undef EXPRESSION_LANGUAGE_USE_DATE
 #endif
 
-#include "common/Value.h"
-#include <FlowFile.h>
-#include <VariableRegistry.h>
-
 #include <string>
 #include <memory>
 #include <functional>
+#include <utility>
+#include <vector>
+
+#include "common/Value.h"
+#include "FlowFile.h"
+#include "VariableRegistry.h"
 
 namespace org {
 namespace apache {
@@ -49,12 +50,12 @@ namespace expression {
 struct Parameters {
   std::weak_ptr<core::FlowFile> flow_file;
   std::weak_ptr<core::VariableRegistry> registry_;
-  Parameters(std::shared_ptr<core::VariableRegistry> reg, std::shared_ptr<core::FlowFile> ff = nullptr)
+  explicit Parameters(std::shared_ptr<core::VariableRegistry> reg, std::shared_ptr<core::FlowFile> ff = nullptr)
       : registry_(reg) {
     flow_file = ff;
   }
 
-  Parameters(std::shared_ptr<core::FlowFile> ff = nullptr) {
+  explicit Parameters(std::shared_ptr<core::FlowFile> ff = nullptr) {
     flow_file = ff;
   }
 };
@@ -68,7 +69,6 @@ static const std::function<Value(const Parameters &params, const std::vector<Exp
  */
 class Expression {
  public:
-
   Expression() {
     val_fn_ = NOOP_FN;
   }
@@ -199,5 +199,3 @@ Expression make_function_composition(const Expression &arg, const std::vector<st
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // EXTENSIONS_EXPRESSIONLANGUAGE_IMPL_EXPRESSION_H

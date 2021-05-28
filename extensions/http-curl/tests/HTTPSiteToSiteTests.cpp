@@ -35,7 +35,7 @@
 #include "client/HTTPStream.h"
 
 class SiteToSiteTestHarness : public HTTPIntegrationBase {
-public:
+ public:
   explicit SiteToSiteTestHarness(bool isSecure, std::chrono::milliseconds waitTime = std::chrono::milliseconds{2000})
       : HTTPIntegrationBase(waitTime.count()), isSecure(isSecure) {
     char format[] = "/tmp/ssth.XXXXXX";

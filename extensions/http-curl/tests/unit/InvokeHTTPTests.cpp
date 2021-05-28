@@ -16,13 +16,9 @@
  * limitations under the License.
  */
 
-#include <fstream>
-#include <map>
 #include <memory>
 #include <utility>
 #include <string>
-#include <set>
-#include "FlowController.h"
 #include "io/BaseStream.h"
 #include "TestBase.h"
 #include "processors/GetFile.h"
@@ -36,7 +32,6 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
-#include "processors/InvokeHTTP.h"
 #include "processors/LogAttribute.h"
 #include "utils/gsl.h"
 

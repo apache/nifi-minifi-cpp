@@ -18,8 +18,10 @@
 #ifndef EXTENSIONS_EXPRESSION_LANGUAGE_EXPRESSIONCONTEXTBUILDER_H_
 #define EXTENSIONS_EXPRESSION_LANGUAGE_EXPRESSIONCONTEXTBUILDER_H_
 
+#include <string>
+#include <memory>
+
 #include "core/ProcessContextBuilder.h"
-#include "ProcessContextExpr.h"
 
 namespace org {
 namespace apache {
@@ -39,7 +41,7 @@ class ExpressionContextBuilder : public core::ProcessContextBuilder {
  public:
   ExpressionContextBuilder(const std::string &name, const minifi::utils::Identifier &uuid);
 
-  ExpressionContextBuilder(const std::string &name);
+  explicit ExpressionContextBuilder(const std::string &name);
 
   virtual ~ExpressionContextBuilder();
 

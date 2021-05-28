@@ -33,7 +33,7 @@
 #include "utils/IntegrationTestUtils.h"
 
 class VerifyC2Server : public HTTPIntegrationBase {
-public:
+ public:
   explicit VerifyC2Server(bool isSecure)
       : isSecure(isSecure) {
     char format[] = "/tmp/ssth.XXXXXX";

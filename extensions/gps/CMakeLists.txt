@@ -37,3 +37,4 @@ target_link_libraries(minifi-gps ${LIBGPS_LIBRARIES})
 SET (GPS-EXTENSION minifi-gps PARENT_SCOPE)
 
 register_extension(minifi-gps)
+register_extension_linter(minifi-gps-linter)

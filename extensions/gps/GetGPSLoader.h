@@ -15,10 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_GPS_GETGPSLOADER_H
-#define EXTENSIONS_GPS_GETGPSLOADER_H
+#pragma once
 
 #include "GetGPS.h"
+
+#include <vector>
+#include <memory>
+#include <string>
+
 #include "core/ClassLoader.h"
 #include "utils/StringUtils.h"
 
@@ -61,4 +65,3 @@ class GpsFactory : public core::ObjectFactory {
 extern "C" {
 DLL_EXPORT void *createGPSFactory(void);
 }
-#endif  // EXTENSIONS_GPS_GETGPSLOADER_H

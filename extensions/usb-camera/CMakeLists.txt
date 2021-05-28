@@ -58,3 +58,4 @@ target_link_libraries(minifi-usb-camera-extensions libuvc PNG::PNG)
 SET (USB-CAMERA-EXTENSIONS minifi-usb-camera-extensions PARENT_SCOPE)
 
 register_extension(minifi-usb-camera-extensions)
+register_extension_linter(minifi-usb-camera-extensions-linter)

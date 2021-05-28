@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_HTTP_CURL_CLIENT_HTTPSTREAM_H_
-#define EXTENSIONS_HTTP_CURL_CLIENT_HTTPSTREAM_H_
+#pragma once
 
 #include <memory>
 #include <thread>
@@ -133,7 +132,6 @@ class HttpStream : public io::BaseStream {
   }
 
  protected:
-
   /**
    * Populates the vector using the provided type name.
    * @param buf output buffer
@@ -165,7 +163,6 @@ class HttpStream : public io::BaseStream {
   std::atomic<bool> started_;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 };
 } /* namespace io */
@@ -173,5 +170,3 @@ class HttpStream : public io::BaseStream {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_HTTP_CURL_CLIENT_HTTPSTREAM_H_ */

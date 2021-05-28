@@ -17,6 +17,8 @@
 
 #include "ProcessContextExpr.h"
 #include <memory>
+#include <string>
+
 namespace org {
 namespace apache {
 namespace nifi {

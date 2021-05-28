@@ -16,18 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __INVOKE_HTTP_H__
-#define __INVOKE_HTTP_H__
+#pragma once
 
 #include <curl/curl.h>
 #include <memory>
 #include <string>
 
-#include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
 #include "core/Property.h"
 #include "core/Resource.h"
 #include "controllers/SSLContextService.h"
@@ -48,7 +45,7 @@ class InvokeHTTP : public core::Processor {
   /*!
    * Create a new processor
    */
-  InvokeHTTP(const std::string& name, const utils::Identifier& uuid = {})
+  explicit InvokeHTTP(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
   }
   // Destructor
@@ -173,5 +170,3 @@ REGISTER_RESOURCE(InvokeHTTP, "An HTTP client processor which can interact with 
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // EXTENSIONS_HTTP_CURL_PROCESSORS_INVOKEHTTP_H_

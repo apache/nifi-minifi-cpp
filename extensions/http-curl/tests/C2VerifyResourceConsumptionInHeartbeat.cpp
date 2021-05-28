@@ -17,6 +17,8 @@
  */
 
 #undef NDEBUG
+#include <functional>
+
 #include "TestBase.h"
 #include "c2/C2Agent.h"
 #include "protocols/RESTProtocol.h"
@@ -93,8 +95,7 @@ class ResourceConsumptionInHeartbeatHandler : public HeartbeatHandler {
 
 class VerifyResourceConsumptionInHeartbeat : public VerifyC2Base {
  public:
-
-  VerifyResourceConsumptionInHeartbeat(std::function<bool()> event_to_wait_for) :
+  explicit VerifyResourceConsumptionInHeartbeat(std::function<bool()> event_to_wait_for) :
       VerifyC2Base(), event_to_wait_for_(event_to_wait_for) {
   }
 
@@ -108,7 +109,7 @@ class VerifyResourceConsumptionInHeartbeat : public VerifyC2Base {
 
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-    assert(verifyEventHappenedInPollTime(std::chrono::milliseconds(7000),event_to_wait_for_));
+    assert(verifyEventHappenedInPollTime(std::chrono::milliseconds(7000), event_to_wait_for_));
   }
 
   void configureFullHeartbeat() override {

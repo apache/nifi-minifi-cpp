@@ -24,8 +24,7 @@
 #pragma warning(disable: 4996)
 #endif
 
-#ifndef EXTENSIONS_HTTP_CURL_CLIENT_HTTPCLIENT_H_
-#define EXTENSIONS_HTTP_CURL_CLIENT_HTTPCLIENT_H_
+#pragma once
 
 #include "utils/HTTPClient.h"
 #ifdef WIN32
@@ -41,7 +40,6 @@
 #include <curl/easy.h>
 #include <vector>
 #include <memory>
-#include <iostream>
 #include <map>
 #include <chrono>
 #include <string>
@@ -55,8 +53,6 @@
 #include "controllers/SSLContextService.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "properties/Configure.h"
-#include "io/validation.h"
 
 namespace org {
 namespace apache {
@@ -146,11 +142,11 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   bool setMinimumSSLVersion(SSLVersion minimum_version) override;
 
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setKeepAliveProbe(long probe) {
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setKeepAliveProbe(long probe) {  // NOLINT deprecated
     keep_alive_probe_ = std::chrono::milliseconds(probe * 1000);
   }
 
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setKeepAliveIdle(long idle) {
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setKeepAliveIdle(long idle) {  // NOLINT deprecated
     keep_alive_idle_ = std::chrono::milliseconds(idle * 1000);
   }
 
@@ -235,6 +231,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
       }
     }
   }
+
  private:
   static int onProgress(void *client, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
 
@@ -304,8 +301,6 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif  // EXTENSIONS_HTTP_CURL_CLIENT_HTTPCLIENT_H_
 
 #ifdef WIN32
 #pragma warning(pop)

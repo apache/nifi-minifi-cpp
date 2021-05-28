@@ -23,7 +23,7 @@
 #include "HTTPHandlers.h"
 
 class DescribeManifestHandler: public HeartbeatHandler {
-public:
+ public:
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
     sendHeartbeatResponse("DESCRIBE", "manifest", "889345", conn);
   }
