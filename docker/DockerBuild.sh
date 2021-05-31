@@ -147,7 +147,7 @@ DOCKER_COMMAND="${DOCKER_COMMAND} ${BUILD_ARGS} \
                 -t \
                 apacheminificpp:${TAG} .."
 
-echo "Docker Command: '$DOCKER_COMMAND'"
+echo "Docker Command: 'DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}'"
 DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}
 
 if [ -n "${DUMP_LOCATION}" ]; then

@@ -22,11 +22,16 @@
 #else
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
-#include <sys/sysctl.h>
 #include <net/if.h>
 #endif
 #ifdef MAC_OS_X
 #include <net/if_dl.h>
+#endif
+
+#if defined(__linux__) && !defined(__GLIBC__)
+#include <linux/sysctl.h>
+#elif !defined(WIN32) && !defined(WINx64)
+#include <sys/sysctl.h>
 #endif
 
 // On Mac OS X timeout of -1 causes pcap_open_live to fail so value of 1ms is set here.
@@ -292,7 +297,7 @@ void PcapLiveDevice::close()
 	pcap_close(m_PcapDescriptor);
 	LOG_DEBUG("Receive pcap descriptor closed");
 	if (!sameDescriptor)
-	{ 
+	{
 		pcap_close(m_PcapSendDescriptor);
 		LOG_DEBUG("Send pcap descriptor closed");
 	}

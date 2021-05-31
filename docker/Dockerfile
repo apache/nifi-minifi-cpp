@@ -17,7 +17,7 @@
 #
 
 # First stage: the common build environment dependencies
-ARG BASE_ALPINE_IMAGE="alpine:3.12"
+ARG BASE_ALPINE_IMAGE="alpine:3.13"
 FROM ${BASE_ALPINE_IMAGE} AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
@@ -32,29 +32,23 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
   bison \
   flex \
   flex-dev \
+  linux-headers \
   maven \
   openjdk8-jre-base \
   openjdk8 \
   autoconf \
   automake \
   libtool \
-  wget \
-  gdb \
-  musl-dev \
-  vim \
-  util-linux-dev \
   curl-dev \
   cmake \
   git \
-  nss \
-  nss-dev \
-  unzip \
-  gpsd-dev \
-  libressl-dev \
-  zlib-dev \
-  bzip2-dev \
-  python3-dev \
   patch \
+  libpcap-dev \
+  libpng-dev \
+  libusb-dev \
+  gpsd-dev \
+  python3-dev \
+  boost-dev \
   doxygen
 
 ENV USER minificpp
@@ -78,7 +72,7 @@ FROM build_deps AS build_minimal
 RUN cd ${MINIFI_BASE_DIR} \
   && mkdir build \
   && cd build \
-  && cmake -DENABLE_PYTHON=OFF -DDISABLE_SCRIPTING=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_AWS=ON -DSKIP_TESTS=true -DCMAKE_BUILD_TYPE=MinSizeRel .. \
+  && cmake -DENABLE_PYTHON=OFF -DDISABLE_SCRIPTING=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_AWS=ON -DSKIP_TESTS=true -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE=MinSizeRel .. \
   && make -j$(nproc) package \
   && tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
 
@@ -129,7 +123,7 @@ RUN cd ${MINIFI_BASE_DIR} \
     -DDISABLE_CURL=${DISABLE_CURL} -DDISABLE_JEMALLOC=${DISABLE_JEMALLOC} -DDISABLE_CIVET=${DISABLE_CIVET} \
     -DDISABLE_EXPRESSION_LANGUAGE=${DISABLE_EXPRESSION_LANGUAGE} -DDISABLE_ROCKSDB=${DISABLE_ROCKSDB} \
     -DDISABLE_LIBARCHIVE=${DISABLE_LIBARCHIVE} -DDISABLE_LZMA=${DISABLE_LZMA} -DDISABLE_BZIP2=${DISABLE_BZIP2} \
-    -DDISABLE_SCRIPTING=${DISABLE_SCRIPTING} -DDISABLE_PYTHON_SCRIPTING=${DDISABLE_PYTHON_SCRIPTING} -DDISABLE_CONTROLLER=${DISABLE_CONTROLLER} -DCMAKE_BUILD_TYPE=Release .. \
+    -DDISABLE_SCRIPTING=${DISABLE_SCRIPTING} -DDISABLE_PYTHON_SCRIPTING=${DDISABLE_PYTHON_SCRIPTING} -DDISABLE_CONTROLLER=${DISABLE_CONTROLLER} -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE=Release .. \
   && make -j$(nproc) package \
   && tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
 
@@ -178,18 +172,21 @@ CMD ./bin/minifi.sh run
 
 # Final stage of release image
 FROM common_runtime_deps AS release
-RUN apk --update --no-cache upgrade && apk add --update --no-cache \
-  util-linux \
-  curl \
-  unzip \
-  gpsd \
-  openjdk8-jre-base \
-  openjdk8 \
-  nss \
-  nss-dev \
-  libressl \
-  python3 \
-  zlib
+ARG ENABLE_GPS=OFF
+ARG ENABLE_JNI=OFF
+ARG ENABLE_PCAP=OFF
+ARG ENABLE_USB_CAMERA=OFF
+ARG ENABLE_OPENCV=OFF
+ARG ENABLE_PYTHON=OFF
+ARG ENABLE_BUSTACHE=OFF
+ARG DISABLE_SCRIPTING=OFF
+RUN apk --update --no-cache upgrade && apk add --update --no-cache libstdc++ && \
+    if [ "$ENABLE_GPS" = "ON" ]; then apk add --update --no-cache gpsd; fi && \
+    if [ "$ENABLE_JNI" = "ON" ]; then apk add --update --no-cache openjdk8-jre-base; fi && \
+    if [ "$ENABLE_PCAP" = "ON" ]; then apk add --update --no-cache libpcap; fi && \
+    if [ "$ENABLE_USB_CAMERA" = "ON" ]; then apk add --update --no-cache libpng libusb; fi && \
+    if [ "$ENABLE_OPENCV" = "ON" ] || [ "$ENABLE_BUSTACHE" = "ON" ]; then apk add --update --no-cache boost; fi && \
+    if [ "$ENABLE_PYTHON" = "ON" ] || [ "$DISABLE_SCRIPTING" = "OFF" ]; then apk add --update --no-cache python3-dev; fi
 
 # Copy built minifi distribution from builder
 COPY --from=build_release --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}

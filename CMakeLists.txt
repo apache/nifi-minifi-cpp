@@ -839,18 +839,7 @@ registerTest("encrypt-config/tests")
 
 include(BuildDocs)
 
-if (ENABLE_PYTHON OR NOT DISABLE_SCRIPTING)
-	message(STATUS "Python and scripting extensions will disabled for the docker build as they produce many error messages on MiNiFi startup.")
-	set(ENABLE_PYTHON_CACHE ${ENABLE_PYTHON})
-	set(DISABLE_SCRIPTING_CACHE ${DISABLE_SCRIPTING})
-	set(ENABLE_PYTHON OFF)
-	set(DISABLE_SCRIPTING ON) # Implies DISABLE_PYTHON_SCRIPTING as well
-	include(DockerConfig)
-	set(ENABLE_PYTHON ${ENABLE_PYTHON_CACHE})
-	set(DISABLE_SCRIPTING ${DISABLE_SCRIPTING_CACHE})
-else()
-	include(DockerConfig)
-endif()
+include(DockerConfig)
 
 # Create a custom build target that will run the linter.
 get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
