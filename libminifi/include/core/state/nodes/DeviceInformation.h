@@ -58,6 +58,7 @@
 #include "Connection.h"
 #include "io/ClientSocket.h"
 #include "utils/OsUtils.h"
+#include "utils/NetworkInterfaceInfo.h"
 #include "utils/SystemCpuUsageTracker.h"
 
 namespace org {
@@ -122,52 +123,17 @@ class Device {
   std::vector<std::string> getIpAddresses() {
     static std::vector<std::string> ips;
     if (ips.empty()) {
-#ifndef WIN32
-      struct ifaddrs *ifaddr, *ifa;
-      if (getifaddrs(&ifaddr) == -1) {
-        perror("getifaddrs");
-        exit(EXIT_FAILURE);
-      }
-
-      for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-        if ((strcmp("lo", ifa->ifa_name) == 0) || !(ifa->ifa_flags & (IFF_RUNNING)))
-          continue;
-        if ((ifa->ifa_addr != NULL) && (ifa->ifa_addr->sa_family == AF_INET)) {
-          ips.push_back(inet_ntoa(((struct sockaddr_in *) ifa->ifa_addr)->sin_addr));
-        }
-      }
-
-      freeifaddrs(ifaddr);
-#else
-      PIP_ADAPTER_INFO adapterPtr;
-      PIP_ADAPTER_INFO adapter = NULL;
-
-      DWORD dwRetVal = 0;
-
-      ULONG adapterLen = sizeof(IP_ADAPTER_INFO);
-      adapterPtr = reinterpret_cast<IP_ADAPTER_INFO*>(malloc(sizeof(IP_ADAPTER_INFO)));
-      if (adapterPtr == NULL) {
-        return ips;
-      }
-      if (GetAdaptersInfo(adapterPtr, &adapterLen) == ERROR_BUFFER_OVERFLOW) {
-        free(adapterPtr);
-        adapterPtr = reinterpret_cast<IP_ADAPTER_INFO*>(malloc(adapterLen));
-        if (adapterPtr == NULL) {
-          return ips;
-        }
-      }
-
-      if ((dwRetVal = GetAdaptersInfo(adapterPtr, &adapterLen)) == NO_ERROR) {
-        adapter = adapterPtr;
-        while (adapter) {
-          ips.emplace_back(adapter->IpAddressList.IpAddress.String);
-          adapter = adapter->Next;
-        }
-      }
-
-      if (adapterPtr)
-      free(adapterPtr);
-#endif
+      auto filter = [](const utils::NetworkInterfaceInfo& interface_info) -> bool {
+        if (interface_info.isLoopback())
+          return false;
+        if (!interface_info.isRunning())
+          return false;
+        return true;
+      };
+      auto network_interface_infos = utils::NetworkInterfaceInfo::getNetworkInterfaceInfos(filter);
+      for (const auto& network_interface_info : network_interface_infos)
+        for (const auto& ip_v4_address : network_interface_info.second.getIpV4Addresses())
+          ips.push_back(ip_v4_address);
     }
     return ips;
   }

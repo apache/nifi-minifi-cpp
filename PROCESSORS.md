@@ -63,9 +63,10 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
-|Hostname Attribute|source.hostname||Flowfile attribute to used to record the agent's hostname|
-|IP Attribute|source.ipv4||Flowfile attribute to used to record the agent's IP address|
-|Network Interface Name|eth0||Network interface from which to read an IP v4 address|
+|Hostname Attribute|source.hostname||Flowfile attribute used to record the agent's hostname|
+|IP Attribute|source.ipv4||Flowfile attribute used to record the agent's IP address|
+|Network Interface Filter|||A regular expression to filter ip addresses based on the name of the network interface|
+|Refresh Policy|On schedule|On schedule<br>On every trigger|When to recalculate the host info|
 ### Relationships
 
 | Name | Description |

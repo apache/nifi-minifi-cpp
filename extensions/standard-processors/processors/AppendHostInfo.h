@@ -37,38 +37,43 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// AppendHostInfo Class
 class AppendHostInfo : public core::Processor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
-  AppendHostInfo(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
+  static constexpr const char* REFRESH_POLICY_ON_TRIGGER = "On every trigger";
+  static constexpr const char* REFRESH_POLICY_ON_SCHEDULE = "On schedule";
+
+  explicit AppendHostInfo(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<AppendHostInfo>::getLogger()) {
+        logger_(logging::LoggerFactory<AppendHostInfo>::getLogger()),
+        refresh_on_trigger_(false) {
   }
-  // Destructor
   virtual ~AppendHostInfo() = default;
-  // Processor Name
   static constexpr char const* ProcessorName = "AppendHostInfo";
-  // Supported Properties
-  static core::Property InterfaceName;
+
+  static core::Property InterfaceNameFilter;
   static core::Property HostAttribute;
   static core::Property IPAttribute;
+  static core::Property RefreshPolicy;
 
-  // Supported Relationships
   static core::Relationship Success;
 
  public:
-  // OnTrigger method, implemented by NiFi AppendHostInfo
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-  // Initialize, over write by NiFi AppendHostInfo
-  virtual void initialize(void);
+  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
+  void onTrigger(core::ProcessContext* context, core::ProcessSession* session) override;
+  void initialize(void) override;
+
+ protected:
+  virtual void refreshHostInfo();
 
  private:
-  // Logger
   std::shared_ptr<logging::Logger> logger_;
+  std::string hostname_attribute_name_;
+  std::string ipaddress_attribute_name_;
+  std::string interface_name_filter_;
+
+  std::string hostname_;
+  utils::optional<std::string> ipaddresses_;
+  bool refresh_on_trigger_;
 };
 
 REGISTER_RESOURCE(AppendHostInfo, "Appends host information such as IP address and hostname as an attribute to incoming flowfiles.");
