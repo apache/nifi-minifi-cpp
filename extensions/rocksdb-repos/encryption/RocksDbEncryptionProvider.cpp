@@ -18,10 +18,6 @@
 
 #include "RocksDbEncryptionProvider.h"
 #include "utils/crypto/ciphers/Aes256Ecb.h"
-#include "openssl/conf.h"
-#include "openssl/evp.h"
-#include "openssl/err.h"
-#include "openssl/rand.h"
 #include "logging/LoggerConfiguration.h"
 
 namespace org {

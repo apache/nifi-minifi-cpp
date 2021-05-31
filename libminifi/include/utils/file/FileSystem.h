@@ -20,7 +20,7 @@
 #include <string>
 #include <memory>
 #include "utils/OptionalUtils.h"
-#include "utils/EncryptionProvider.h"
+#include "utils/crypto/EncryptionProvider.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {

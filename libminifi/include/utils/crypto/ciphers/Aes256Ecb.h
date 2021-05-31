@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include "utils/EncryptionUtils.h"
+#include "utils/crypto/EncryptionUtils.h"
 #include "Exception.h"
 #include "core/logging/Logger.h"
 

@@ -34,7 +34,7 @@
 #include "concurrentqueue.h"
 #include "database/RocksDatabase.h"
 #include "encryption/RocksDbEncryptionProvider.h"
-#include "utils/EncryptionProvider.h"
+#include "utils/crypto/EncryptionProvider.h"
 
 namespace org {
 namespace apache {

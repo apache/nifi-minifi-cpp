@@ -14,38 +14,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#include <istream>
+#include <utility>
 #include <string>
-#include <vector>
-
+#include <memory>
 #include "utils/crypto/EncryptionUtils.h"
 #include "utils/OptionalUtils.h"
-#include "properties/PropertiesFile.h"
+#include "utils/crypto/ciphers/XSalsa20.h"
+#include "core/logging/Logger.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace encrypt_config {
+namespace utils {
+namespace crypto {
 
-class ConfigFile : public PropertiesFile {
+class EncryptionProvider {
  public:
-  using PropertiesFile::PropertiesFile;
+  explicit EncryptionProvider(Bytes key) : cipher_impl_(std::move(key)) {}
+  explicit EncryptionProvider(XSalsa20Cipher cipher_impl) : cipher_impl_(std::move(cipher_impl)) {}
 
-  std::vector<std::string> getSensitiveProperties() const;
+  static utils::optional<EncryptionProvider> create(const std::string& home_path);
+
+  std::string encrypt(const std::string& data) const {
+    return cipher_impl_.encrypt(data);
+  }
+
+  std::string decrypt(const std::string& data) const {
+    return cipher_impl_.decrypt(data);
+  }
 
  private:
-  friend class ConfigFileTestAccessor;
-  friend bool operator==(const ConfigFile&, const ConfigFile&);
-  static std::vector<std::string> mergeProperties(std::vector<std::string> properties,
-                                                  const std::vector<std::string>& additional_properties);
+  const XSalsa20Cipher cipher_impl_;
 };
 
-}  // namespace encrypt_config
+}  // namespace crypto
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-

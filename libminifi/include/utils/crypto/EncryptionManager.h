@@ -20,7 +20,7 @@
 #include <utility>
 #include <string>
 #include <memory>
-#include "utils/EncryptionUtils.h"
+#include "utils/crypto/EncryptionUtils.h"
 #include "utils/OptionalUtils.h"
 #include "utils/crypto/ciphers/XSalsa20.h"
 #include "utils/crypto/ciphers/Aes256Ecb.h"
@@ -45,25 +45,6 @@ class EncryptionManager {
   bool writeKey(const std::string& key_name, const Bytes& key) const;
 
   std::string key_dir_;
-};
-
-class EncryptionProvider {
- public:
-  explicit EncryptionProvider(Bytes key) : cipher_impl_(std::move(key)) {}
-  explicit EncryptionProvider(XSalsa20Cipher cipher_impl) : cipher_impl_(std::move(cipher_impl)) {}
-
-  static utils::optional<EncryptionProvider> create(const std::string& home_path);
-
-  std::string encrypt(const std::string& data) const {
-    return cipher_impl_.encrypt(data);
-  }
-
-  std::string decrypt(const std::string& data) const {
-    return cipher_impl_.decrypt(data);
-  }
-
- private:
-  const XSalsa20Cipher cipher_impl_;
 };
 
 }  // namespace crypto

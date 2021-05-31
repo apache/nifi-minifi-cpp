@@ -17,7 +17,7 @@
 
 #include <string>
 #include <memory>
-#include "utils/EncryptionProvider.h"
+#include "utils/crypto/EncryptionManager.h"
 #include "properties/Properties.h"
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
@@ -32,23 +32,17 @@ namespace minifi {
 namespace utils {
 namespace crypto {
 
-namespace {
-
 #ifdef WIN32
 constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "\\conf\\bootstrap.conf";
 #else
 constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "./conf/bootstrap.conf";
 #endif  // WIN32
 
-constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
-
-}  // namespace
-
 std::shared_ptr<core::logging::Logger> EncryptionManager::logger_{core::logging::LoggerFactory<EncryptionManager>::getLogger()};
 
 utils::optional<XSalsa20Cipher> EncryptionManager::createXSalsa20Cipher(const std::string &key_name) const {
   return readKey(key_name)
-    | utils::map([] (const Bytes& key) {return XSalsa20Cipher{key};});
+         | utils::map([] (const Bytes& key) {return XSalsa20Cipher{key};});
 }
 
 utils::optional<Aes256EcbCipher> EncryptionManager::createAes256EcbCipher(const std::string &key_name) const {
@@ -84,11 +78,6 @@ bool EncryptionManager::writeKey(const std::string &key_name, const Bytes& key) 
   bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
   bootstrap_conf.set(key_name, utils::StringUtils::to_hex(key));
   return bootstrap_conf.persistProperties();
-}
-
-utils::optional<EncryptionProvider> EncryptionProvider::create(const std::string& home_path) {
-  return EncryptionManager{home_path}.createXSalsa20Cipher(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME)
-    | utils::map([] (const XSalsa20Cipher& cipher) {return EncryptionProvider{cipher};});
 }
 
 }  // namespace crypto

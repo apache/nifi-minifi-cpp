@@ -19,9 +19,9 @@
 #pragma once
 
 #include "rocksdb/env_encryption.h"
-#include "utils/EncryptionUtils.h"
+#include "utils/crypto/EncryptionUtils.h"
 #include "logging/Logger.h"
-#include "utils/EncryptionProvider.h"
+#include "utils/crypto/EncryptionManager.h"
 
 namespace org {
 namespace apache {

@@ -19,7 +19,7 @@
 #include <fstream>
 #include "utils/file/FileSystem.h"
 #include "utils/OptionalUtils.h"
-#include "utils/EncryptionProvider.h"
+#include "utils/crypto/EncryptionProvider.h"
 
 namespace org {
 namespace apache {
