@@ -152,7 +152,7 @@ jobs:
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64
           PATH %PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\Roslyn
-          win_build_vs.bat build /2019 /64 /CI /S /A /PDH /T
+          win_build_vs.bat build /2019 /64 /CI /S /A /PDH /T /L
         shell: cmd
       - name: test
         run: cd build && ctest --timeout 300 --parallel 8 -C Release --output-on-failure

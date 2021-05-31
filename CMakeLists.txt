@@ -37,6 +37,7 @@ include(ExternalProject)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(WholeArchive)
 
+option(ENABLE_LINTER "Create linter components" ON)
 option(SKIP_TESTS "Skips building all tests." OFF)
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
 option(USE_SHARED_LIBS "Builds using shared libraries" ON)
