@@ -19,7 +19,7 @@
 
 cmake_minimum_required (VERSION 3.11)
 
-project(nifi-libcore-minifi VERSION 0.9.0)
+project(nifi-libcore-minifi VERSION 0.10.0)
 set(PROJECT_NAME "nifi-libcore-minifi")
 
 
