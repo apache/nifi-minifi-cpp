@@ -73,12 +73,12 @@ class RetryHttpGetResponder : public CivetHandler {
 class VerifyHTTPGet {
  public:
   VerifyHTTPGet(const cmd_args& args, CivetHandler& http_handler)
-      : args_(args)
-      , configuration_(std::make_shared<minifi::Configure>())
-      , test_repo_(std::make_shared<TestRepository>())
-      , test_flow_repo_(std::make_shared<TestFlowRepository>())
-      , content_repo_(std::make_shared<core::repository::VolatileContentRepository>())
-      , stream_factory_(minifi::io::StreamFactory::getInstance(configuration_)) {
+      : args_(args),
+        configuration_(std::make_shared<minifi::Configure>()),
+        test_repo_(std::make_shared<TestRepository>()),
+        test_flow_repo_(std::make_shared<TestFlowRepository>()),
+        content_repo_(std::make_shared<core::repository::VolatileContentRepository>()),
+        stream_factory_(minifi::io::StreamFactory::getInstance(configuration_)) {
     LogTestController::getInstance().setDebug<core::Processor>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
