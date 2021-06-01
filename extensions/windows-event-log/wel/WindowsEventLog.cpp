@@ -49,17 +49,17 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
     EvtClose(context);
   });
   if (!EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount)) {
-    if (ERROR_INSUFFICIENT_BUFFER == (status = GetLastError())) {
-      dwBufferSize = dwBufferUsed;
-      rendered_values.reset((PEVT_VARIANT)(malloc(dwBufferSize)));
-      if (!rendered_values) {
-        return;
-      }
-      EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount);
-    } else {
+    if (ERROR_INSUFFICIENT_BUFFER != (status = GetLastError())) {
       return;
     }
 
+    dwBufferSize = dwBufferUsed;
+    rendered_values.reset((PEVT_VARIANT)(malloc(dwBufferSize)));
+    if (!rendered_values) {
+      return;
+    }
+
+    EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount);
     if (ERROR_SUCCESS != (status = GetLastError())) {
       return;
     }

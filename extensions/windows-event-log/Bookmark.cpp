@@ -179,7 +179,7 @@ bool Bookmark::getBookmarkXmlFromFile(std::wstring& bookmarkXml) {
     return false;
   }
 
-  // Generically is not efficient, but bookmarkXML is small ~100 bytes.
+  // Generally is not efficient, but bookmarkXML is small ~100 bytes.
   wchar_t c;
   do {
     file.read(&c, 1);

@@ -152,10 +152,9 @@ class VerifyCoAPServer : public CoapIntegrationBase {
         minifi::coap::CoapResponse resp(500, 0, 0);;
         responses.try_dequeue(resp);
         return resp;
-      } else {
-        minifi::coap::CoapResponse response(500, 0, 0);
-        return response;
       }
+      minifi::coap::CoapResponse response(500, 0, 0);
+      return response;
     });
     server->start();
     configuration->set("c2.enable", "true");
