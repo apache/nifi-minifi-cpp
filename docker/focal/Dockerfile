@@ -17,7 +17,7 @@
 #
 
 # First stage: the build environment
-FROM ubuntu:xenial AS build_deps
+FROM ubuntu:focal AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION
@@ -28,7 +28,8 @@ ENV MINIFI_BASE_DIR /opt/minifi
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
-RUN apt-get update && apt-get install -y openjdk-8-jdk openjdk-8-source sudo git maven autogen autoconf automake
+RUN apt update
+RUN DEBIAN_FRONTEND="noninteractive" apt install -y openjdk-8-jdk openjdk-8-source python3.9-dev sudo git maven autogen autoconf automake cmake
 
 RUN mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}

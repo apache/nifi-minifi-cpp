@@ -138,9 +138,9 @@ build_deps(){
                         INSTALLED+=("java-1.8.0-openjdk-devel")
                         INSTALLED+=("maven")
                     elif [ "$FOUND_VALUE" = "python" ]; then
-                        INSTALLED+=("python34-devel")
+                        INSTALLED+=("python36-devel")
                     elif [ "$FOUND_VALUE" = "lua" ]; then
-                        INSTALLED+=("lua-devel")
+                        INSTALLED+=("lua-libs")
                     elif [ "$FOUND_VALUE" = "gpsd" ]; then
                         INSTALLED+=("gpsd-devel")
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then

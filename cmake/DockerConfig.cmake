@@ -124,7 +124,7 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
-    u16
+    u20
     COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
         -u 1000
         -g 1000
@@ -132,7 +132,7 @@ add_custom_target(
         -i release
         -c ENABLE_JNI=${ENABLE_JNI}
         -l ${CMAKE_BINARY_DIR}
-        -d xenial
+        -d focal
         -c BUILD_NUMBER=${BUILD_NUMBER}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 

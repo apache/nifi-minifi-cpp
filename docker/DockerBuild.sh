@@ -36,7 +36,7 @@ function usage {
   echo "-i, --image-type      Can be release or minimal (default: release)"
   echo "-u, --uid             User id to be used in the Docker image (default: 1000)"
   echo "-g, --gid             Group id to be used in the Docker image (default: 1000)"
-  echo "-d, --distro-name     Linux distribution build to be used for alternative builds (xenial|bionic|fedora|debian|centos)"
+  echo "-d, --distro-name     Linux distribution build to be used for alternative builds (bionic|focal|fedora|debian|centos)"
   echo "-l  --dump-location   Path where to the output dump to be put"
   echo "-c  --cmake-param     CMake parameter passed in PARAM=value format"
   echo "-h  --help            Show this help message"
@@ -117,18 +117,19 @@ TAG=""
 if [ "${IMAGE_TYPE}" != "release" ]; then
   TAG="${IMAGE_TYPE}-"
 fi
-
-TARGZ_TAG=""
 if [ -n "${DISTRO_NAME}" ]; then
   TAG="${TAG}${DISTRO_NAME}-"
-  TARGZ_TAG="${DISTRO_NAME}-"
 fi
-
 TAG="${TAG}${MINIFI_VERSION}"
-TARGZ_TAG="${TARGZ_TAG}${MINIFI_VERSION}"
-
 if [ -n "${BUILD_NUMBER}" ]; then
   TAG="${TAG}-${BUILD_NUMBER}"
+fi
+
+TARGZ_TAG="bin"
+if [ -n "${DISTRO_NAME}" ]; then
+  TARGZ_TAG="${TARGZ_TAG}-${DISTRO_NAME}"
+fi
+if [ -n "${BUILD_NUMBER}" ]; then
   TARGZ_TAG="${TARGZ_TAG}-${BUILD_NUMBER}"
 fi
 
@@ -150,5 +151,5 @@ echo "Docker Command: '$DOCKER_COMMAND'"
 DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}
 
 if [ -n "${DUMP_LOCATION}" ]; then
-  docker run --rm --entrypoint cat "apacheminificpp:${TAG}" "/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz" > "${DUMP_LOCATION}/nifi-minifi-cpp-${TARGZ_TAG}-bin.tar.gz"
+  docker run --rm --entrypoint cat "apacheminificpp:${TAG}" "/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz" > "${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.tar.gz"
 fi

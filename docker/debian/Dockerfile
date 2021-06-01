@@ -17,7 +17,7 @@
 #
 
 # First stage: the build environment
-FROM debian:stretch AS build_deps
+FROM debian:buster AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION
@@ -28,11 +28,7 @@ ENV MINIFI_BASE_DIR /opt/minifi
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
-RUN echo "deb http://deb.debian.org/debian stretch-backports main" | tee -a /etc/apt/sources.list \
-    && echo "deb http://deb.debian.org/debian stretch-backports-sloppy main" | tee -a /etc/apt/sources.list \
-    && apt-get update && apt-get install -y openjdk-8-jdk libpython3.5-dev openjdk-8-source sudo git maven \
-    && apt-get -t stretch-backports-sloppy install -y libarchive13\
-    && apt-get -t stretch-backports install -y cmake
+RUN apt-get update && apt-get install -y openjdk-11-jdk openjdk-11-source libpython3.7-dev sudo git maven libarchive13 cmake
 
 RUN mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}
