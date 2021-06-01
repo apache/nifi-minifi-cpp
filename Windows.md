@@ -65,6 +65,7 @@ After the build directory it will take optional parameters modifying the CMake c
 | /C | Enables CoAP |
 | /A | Enables AWS |
 | /Z | Enables Azure |
+| /L | Enables Linter |
 | /PDH | Enables Performance Monitor |
 | /M | Creates installer with merge modules |
 | /64 | Creates 64-bit build instead of a 32-bit one |
