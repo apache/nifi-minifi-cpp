@@ -17,7 +17,7 @@
 #
 
 # First stage: the build environment
-FROM fedora:29 AS build_deps
+FROM fedora:34 AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION

@@ -17,7 +17,7 @@
 #
 
 # First stage: the build environment
-FROM centos:7 AS build_deps
+FROM centos:8 AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION
@@ -27,11 +27,10 @@ ARG MINIFI_VERSION
 ENV MINIFI_BASE_DIR /opt/minifi
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 
-RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel gcc g++ sudo git which maven make
+RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python36-devel gcc gcc-c++ sudo git which maven make cmake
 
 RUN mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}
-
 
 FROM build_deps AS release
 ARG ENABLE_JNI
