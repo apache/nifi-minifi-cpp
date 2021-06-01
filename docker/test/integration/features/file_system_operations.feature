@@ -20,7 +20,7 @@ Feature: File system operations are handled by the GetFile and PutFile processor
       | GetFile | GetFile   | 66259995-11da-41df-bff7-e262d5f6d7c9 |
       | PutFile | PutFile_1 | 694423a0-26f3-4e95-9f9f-c03b6d6c189d |
       | PutFile | PutFile_2 | f37e51e9-ad67-4e16-9dc6-ad853b0933e3 |
-      | PutFile | PutFile_3 | f37e51e9-ad67-4e16-9dc6-ad853b0933e3 |
+      | PutFile | PutFile_3 | f37e51e9-ad67-4e16-9dc6-ad853b0933e4 |
 
     And these processor properties are set:
       | processor name | property name   | property value |
@@ -33,7 +33,7 @@ Feature: File system operations are handled by the GetFile and PutFile processor
       | source name | relationship name | destination name |
       | GetFile     | success           | PutFile_1        |
       | PutFile_1   | success           | PutFile_2        |
-      | PutFile_2   | failuire          | PutFile_3        |
+      | PutFile_2   | failure           | PutFile_3        |
 
     And a file with the content "test" is present in "/tmp/input"
     When the MiNiFi instance starts up
