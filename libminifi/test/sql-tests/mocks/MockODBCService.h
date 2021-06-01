@@ -19,6 +19,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "MockConnectors.h"
 #include "services/DatabaseService.h"

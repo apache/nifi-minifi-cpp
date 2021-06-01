@@ -18,12 +18,15 @@
 
 #pragma once
 
-#include "data/DatabaseConnectors.h"
-#include "utils/StringUtils.h"
-
 #include <regex>
 #include <map>
 #include <vector>
+#include <algorithm>
+#include <memory>
+#include <string>
+
+#include "data/DatabaseConnectors.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -50,11 +53,11 @@ class MockRow : public Row {
   std::string getColumnName(std::size_t index) const override;
   bool isNull(std::size_t index) const override;
   DataType getDataType(std::size_t index) const override;
-  std::string getString(std::size_t index) const override ;
+  std::string getString(std::size_t index) const override;
   double getDouble(std::size_t index) const override;
-  int getInteger(std::size_t index) const override ;
-  long long getLongLong(std::size_t index) const override;
-  unsigned long long getUnsignedLongLong(std::size_t index) const override;
+  int getInteger(std::size_t index) const override;
+  long long getLongLong(std::size_t index) const override;  // NOLINT Return type comes from SOCI interface
+  unsigned long long getUnsignedLongLong(std::size_t index) const override;  // NOLINT Return type comes from SOCI interface
   std::tm getDate(std::size_t /*index*/) const override;
 
   std::vector<std::string> getValues() const;
@@ -95,7 +98,7 @@ class MockRowset : public Rowset {
 
 class MockDB {
  public:
-  MockDB(const std::string& file_path) : file_path_(file_path) {
+  explicit MockDB(const std::string& file_path) : file_path_(file_path) {
     readDb();
   }
 
@@ -128,7 +131,6 @@ class MockDB {
 
 class MockStatement : public Statement {
  public:
-
   explicit MockStatement(const std::string& query, const std::string& file_path)
     : Statement(minifi::utils::StringUtils::toLower(query)), file_path_(file_path) {
   }
@@ -141,10 +143,6 @@ class MockStatement : public Statement {
 
 class MockSession : public Session {
  public:
-
-  explicit MockSession() {
-  }
-
   void begin() override {
   }
 
