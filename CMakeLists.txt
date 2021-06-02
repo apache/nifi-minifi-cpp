@@ -583,8 +583,11 @@ add_subdirectory(main)
 add_subdirectory(nanofi)
 add_dependencies(nanofi minifiexe)
 
-add_subdirectory(encrypt-config)
-add_dependencies(encrypt-config minifi)
+option(DISABLE_ENCRYPT_CONFIG "Disables build of encrypt-config binary." OFF)
+if (NOT DISABLE_ENCRYPT_CONFIG)
+	add_subdirectory(encrypt-config)
+	add_dependencies(encrypt-config minifi)
+endif()
 
 if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
 	add_subdirectory(controller)

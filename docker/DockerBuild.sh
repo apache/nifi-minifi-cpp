@@ -24,7 +24,7 @@ set -euo pipefail
 UID_ARG=1000
 GID_ARG=1000
 MINIFI_VERSION=
-IMAGE_TYPE=release
+IMAGE_TAG=
 DUMP_LOCATION=
 DISTRO_NAME=
 BUILD_NUMBER=
@@ -33,7 +33,7 @@ function usage {
   echo "Usage: ./DockerBuild.sh -v <MINIFI_VERSION> [additional options]"
   echo "Options:"
   echo "-v, --minifi-version  Minifi version number to be used (required)"
-  echo "-i, --image-type      Can be release or minimal (default: release)"
+  echo "-t, --tag             Additional prefix added to the image tag"
   echo "-u, --uid             User id to be used in the Docker image (default: 1000)"
   echo "-g, --gid             Group id to be used in the Docker image (default: 1000)"
   echo "-d, --distro-name     Linux distribution build to be used for alternative builds (bionic|focal|fedora|debian|centos)"
@@ -62,8 +62,8 @@ while [[ $# -gt 0 ]]; do
     shift
     shift
     ;;
-    -i|--image-type)
-      IMAGE_TYPE="$2"
+    -t|--tag)
+      IMAGE_TAG="$2"
       shift
       shift
       ;;
@@ -114,8 +114,8 @@ else
 fi
 
 TAG=""
-if [ "${IMAGE_TYPE}" != "release" ]; then
-  TAG="${IMAGE_TYPE}-"
+if [ -n "${IMAGE_TAG}" ]; then
+  TAG="${IMAGE_TAG}-"
 fi
 if [ -n "${DISTRO_NAME}" ]; then
   TAG="${TAG}${DISTRO_NAME}-"
@@ -137,12 +137,10 @@ DOCKER_COMMAND="docker build "
 BUILD_ARGS="--build-arg UID=${UID_ARG} \
             --build-arg GID=${GID_ARG} \
             --build-arg MINIFI_VERSION=${MINIFI_VERSION} \
-            --build-arg IMAGE_TYPE=${IMAGE_TYPE} \
             --build-arg DUMP_LOCATION=${DUMP_LOCATION} \
             --build-arg DISTRO_NAME=${DISTRO_NAME} ${BUILD_ARGS}"
 
 DOCKER_COMMAND="${DOCKER_COMMAND} ${BUILD_ARGS} \
-                --target ${IMAGE_TYPE} \
                 -f ${DOCKERFILE} \
                 -t \
                 apacheminificpp:${TAG} .."
