@@ -25,61 +25,83 @@
 #include "LogAttribute.h"
 #include "GetFile.h"
 #include "utils/file/FileUtils.h"
+#include "utils/TestUtils.h"
 
 #ifdef WIN32
 #include <fileapi.h>
 #endif
 
-/**
- * This is an invalidly named test as we can't guarantee order, nor shall we.
- */
-TEST_CASE("GetFile: MaxSize", "[getFileFifo]") {  // NOLINT
-  TestController testController;
+namespace {
 
+class GetFileTestController {
+ public:
+  GetFileTestController();
+  void setProperty(const core::Property& property, const std::string& value);
+  void runSession();
+
+  TestController test_controller_;
+  std::shared_ptr<TestPlan> test_plan_;
+  std::shared_ptr<core::Processor> get_file_processor_;
+  std::string input_file_name_;
+};
+
+GetFileTestController::GetFileTestController() {
   LogTestController::getInstance().setTrace<TestPlan>();
   LogTestController::getInstance().setTrace<processors::GetFile>();
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
 
-  auto plan = testController.createPlan();
+  test_plan_ = test_controller_.createPlan();
   auto repo = std::make_shared<TestRepository>();
 
-  // Define directory for input
-  char in_dir[] = "/tmp/gt.XXXXXX";
-  auto temp_path = testController.createTempDirectory(in_dir);
-  REQUIRE(!temp_path.empty());
+  auto temp_dir = utils::createTempDir(&test_controller_);
+  REQUIRE(!temp_dir.empty());
 
   // Define test input file
-  std::string in_file(temp_path + utils::file::FileUtils::get_separator() + "testfifo");
-  std::string hidden_in_file(temp_path + utils::file::FileUtils::get_separator() + ".testfifo");
+  input_file_name_ = temp_dir + utils::file::FileUtils::get_separator() + "test.txt";
+  std::string large_input_file_name = temp_dir + utils::file::FileUtils::get_separator() + "large_test_file.txt";
+  std::string hidden_input_file_name = temp_dir + utils::file::FileUtils::get_separator() + ".test.txt";
 
   // Build MiNiFi processing graph
-
-  auto get_file = plan->addProcessor("GetFile", "Get");
-  plan->setProperty(get_file, processors::GetFile::Directory.getName(), temp_path);
-  plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "true");
-  plan->setProperty(get_file, processors::GetFile::MaxSize.getName(), "50 B");
-  plan->setProperty(get_file, processors::GetFile::IgnoreHiddenFile.getName(), "true");
-  auto log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
-  plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  get_file_processor_ = test_plan_->addProcessor("GetFile", "Get");
+  test_plan_->setProperty(get_file_processor_, processors::GetFile::Directory.getName(), temp_dir);
+  auto log_attr = test_plan_->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
+  test_plan_->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
   // Write test input.
-  std::ofstream in_file_stream(in_file);
+  std::ofstream in_file_stream(input_file_name_);
   in_file_stream << "The quick brown fox jumps over the lazy dog" << std::endl;
   in_file_stream.close();
 
-  in_file_stream.open(in_file + "2");
+  in_file_stream.open(large_input_file_name);
   in_file_stream << "The quick brown fox jumps over the lazy dog who is 2 legit to quit" << std::endl;
   in_file_stream.close();
 
-  std::ofstream hidden_in_file_stream(hidden_in_file);
+  std::ofstream hidden_in_file_stream(hidden_input_file_name);
   hidden_in_file_stream << "But noone has ever seen it" << std::endl;
   hidden_in_file_stream.close();
 #ifdef WIN32
-  const auto hide_file_err = utils::file::FileUtils::hide_file(hidden_in_file.c_str());
+  const auto hide_file_err = utils::file::FileUtils::hide_file(hidden_input_file_name.c_str());
   REQUIRE(!hide_file_err);
 #endif
-  plan->runNextProcessor();  // Get
-  plan->runNextProcessor();  // Log
+}
+
+void GetFileTestController::setProperty(const core::Property& property, const std::string& value) {
+    test_plan_->setProperty(get_file_processor_, property.getName(), value);
+}
+
+void GetFileTestController::runSession() {
+  test_controller_.runSession(test_plan_);
+}
+
+}  // namespace
+
+TEST_CASE("GetFile ignores hidden files and files larger than MaxSize", "[GetFile]") {
+  GetFileTestController test_controller;
+  SECTION("IgnoreHiddenFile not set, so defaults to true") {}
+  SECTION("IgnoreHiddenFile set to true explicitly") { test_controller.setProperty(processors::GetFile::IgnoreHiddenFile, "true"); }
+  test_controller.setProperty(processors::GetFile::MaxSize, "50 B");
+
+  test_controller.runSession();
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));  // The hidden and the too big files should be ignored
   // Check log output on windows std::endl; will produce \r\n can write manually but might as well just
@@ -92,14 +114,32 @@ TEST_CASE("GetFile: MaxSize", "[getFileFifo]") {  // NOLINT
 #endif
 }
 
-
-TEST_CASE("GetFile: Directory", "[getFileDir]") {
-  TestController testController;
+TEST_CASE("GetFile onSchedule() throws if the required Directory property is not set", "[GetFile]") {
+  TestController test_controller;
   LogTestController::getInstance().setTrace<TestPlan>();
   LogTestController::getInstance().setTrace<processors::GetFile>();
-  auto plan = testController.createPlan();
+  auto plan = test_controller.createPlan();
   auto get_file = plan->addProcessor("GetFile", "Get");
   REQUIRE_THROWS_AS(plan->runNextProcessor(), minifi::Exception&);
+}
+
+TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {
+  GetFileTestController test_controller;
+  SECTION("KeepSourceFile is not set, so defaults to false") {}
+  SECTION("KeepSourceFile is set to false explicitly") { test_controller.setProperty(processors::GetFile::KeepSourceFile, "false"); }
+
+  test_controller.runSession();
+
+  REQUIRE_FALSE(utils::file::FileUtils::exists(test_controller.input_file_name_));
+}
+
+TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
+  GetFileTestController test_controller;
+  test_controller.setProperty(processors::GetFile::KeepSourceFile, "true");
+
+  test_controller.runSession();
+
+  REQUIRE(utils::file::FileUtils::exists(test_controller.input_file_name_));
 }
 
 TEST_CASE("GetFileHiddenPropertyCheck", "[getFileProperty]") {

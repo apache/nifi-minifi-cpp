@@ -16,24 +16,18 @@
  * limitations under the License.
  */
 #include "GetFile.h"
-#include <sys/types.h>
+
 #include <sys/stat.h>
-#include <time.h>
-#include <stdio.h>
-#include <limits.h>
-#ifndef WIN32
-#include <regex.h>
-#else
-#include <regex>
-#endif
+#include <sys/types.h>
+
+#include <cstring>
 #include <vector>
 #include <queue>
 #include <map>
 #include <memory>
 #include <set>
-#include <sstream>
 #include <string>
-#include <iostream>
+
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/TimeUtil.h"
@@ -41,12 +35,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/TypedValues.h"
-
-#ifndef R_OK
-#define R_OK    4       /* Test for read permission.  */
-#define W_OK    2       /* Test for write permission.  */
-#define F_OK    0       /* Test for existence.  */
-#endif
+#include "utils/FileReaderCallback.h"
 
 namespace org {
 namespace apache {
@@ -158,76 +147,86 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
   request_.inputDirectory = value;
 }
 
-void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) {
-  // Perform directory list
-
+void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* session) {
   metrics_->iterations_++;
 
-  const bool isDirEmptyBeforePoll = isListingEmpty();
-  logger_->log_debug("Is listing empty before polling directory %i", isDirEmptyBeforePoll);
-  if (isDirEmptyBeforePoll) {
+  const bool is_dir_empty_before_poll = isListingEmpty();
+  logger_->log_debug("Listing is %s before polling directory", is_dir_empty_before_poll ? "empty" : "not empty");
+  if (is_dir_empty_before_poll) {
     if (request_.pollInterval == 0 || (utils::timeutils::getTimeMillis() - last_listing_time_) > request_.pollInterval) {
       performListing(request_);
       last_listing_time_.store(utils::timeutils::getTimeMillis());
     }
   }
 
-  const bool isDirEmptyAfterPoll = isListingEmpty();
-  logger_->log_debug("Is listing empty after polling directory %i", isDirEmptyAfterPoll);
+  const bool is_dir_empty_after_poll = isListingEmpty();
+  logger_->log_debug("Listing is %s after polling directory", is_dir_empty_after_poll ? "empty" : "not empty");
+  if (is_dir_empty_after_poll) {
+    yield();
+    return;
+  }
 
-  if (!isDirEmptyAfterPoll) {
-    try {
-      std::queue<std::string> list;
-      pollListing(list, request_);
-      while (!list.empty()) {
-        std::string fileName = list.front();
-        list.pop();
-        logger_->log_info("GetFile process %s", fileName);
-        auto flowFile = session->create();
-        if (flowFile == nullptr)
-          return;
-        std::size_t found = fileName.find_last_of("/\\");
-        std::string path = fileName.substr(0, found);
-        std::string name = fileName.substr(found + 1);
-        flowFile->setAttribute(core::SpecialFlowAttribute::FILENAME, name);
-        flowFile->setAttribute(core::SpecialFlowAttribute::PATH, path);
-        flowFile->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, fileName);
-        session->import(fileName, flowFile, request_.keepSourceFile);
-        session->transfer(flowFile, Success);
-      }
-    } catch (std::exception &exception) {
-      logger_->log_debug("GetFile Caught Exception %s", exception.what());
-      throw;
-    } catch (...) {
-      throw;
-    }
+  std::queue<std::string> list_of_file_names = pollListing(request_.batchSize);
+  while (!list_of_file_names.empty()) {
+    std::string file_name = list_of_file_names.front();
+    list_of_file_names.pop();
+    getSingleFile(*session, file_name);
   }
 }
 
-bool GetFile::isListingEmpty() {
-  std::lock_guard<std::mutex> lock(mutex_);
+void GetFile::getSingleFile(core::ProcessSession& session, const std::string& file_name) const {
+  logger_->log_info("GetFile process %s", file_name);
+  auto flow_file = session.create();
+  gsl_Expects(flow_file);
+  std::string path;
+  std::string name;
+  std::tie(path, name) = utils::file::split_path(file_name);
+  flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, name);
+  flow_file->setAttribute(core::SpecialFlowAttribute::PATH, path);
+  flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, file_name);
 
-  return _dirList.empty();
+  try {
+    utils::FileReaderCallback file_reader_callback{file_name};
+    session.write(flow_file, &file_reader_callback);
+    session.transfer(flow_file, Success);
+    if (!request_.keepSourceFile) {
+      auto remove_status = remove(file_name.c_str());
+      if (remove_status != 0) {
+        logger_->log_error("GetFile could not delete file '%s', error %d: %s", file_name, errno, strerror(errno));
+      }
+    }
+  } catch (const utils::FileReaderCallbackIOError& io_error) {
+    logger_->log_error("IO error while processing file '%s': %s", file_name, io_error.what());
+    flow_file->setDeleted(true);
+  }
+}
+
+bool GetFile::isListingEmpty() const {
+  std::lock_guard<std::mutex> lock(directory_listing_mutex_);
+
+  return directory_listing_.empty();
 }
 
 void GetFile::putListing(std::string fileName) {
   logger_->log_trace("Adding file to queue: %s", fileName);
 
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(directory_listing_mutex_);
 
-  _dirList.push(fileName);
+  directory_listing_.push(fileName);
 }
 
-void GetFile::pollListing(std::queue<std::string> &list, const GetFileRequest &request) {
-  std::lock_guard<std::mutex> lock(mutex_);
+std::queue<std::string> GetFile::pollListing(uint64_t batch_size) {
+  std::lock_guard<std::mutex> lock(directory_listing_mutex_);
 
-  while (!_dirList.empty() && (request.batchSize == 0 || list.size() < request.batchSize)) {
-    list.push(_dirList.front());
-    _dirList.pop();
+  std::queue<std::string> list;
+  while (!directory_listing_.empty() && (batch_size == 0 || list.size() < batch_size)) {
+    list.push(directory_listing_.front());
+    directory_listing_.pop();
   }
+  return list;
 }
 
-bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRequest &request) {
+bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name, const GetFileRequest &request) {
   logger_->log_trace("Checking file: %s", fullName);
 
 #ifdef WIN32
@@ -259,12 +258,6 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
   if (request.ignoreHiddenFile && utils::file::FileUtils::is_hidden(fullName))
     return false;
 
-  if (utils::file::FileUtils::access(fullName.c_str(), R_OK) != 0)
-    return false;
-
-  if (request.keepSourceFile == false && utils::file::FileUtils::access(fullName.c_str(), W_OK) != 0)
-    return false;
-
   utils::Regex rgx(request.fileFilter);
   if (!rgx.match(name)) {
     return false;
@@ -278,7 +271,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
 void GetFile::performListing(const GetFileRequest &request) {
   auto callback = [this, request](const std::string& dir, const std::string& filename) -> bool {
     std::string fullpath = dir + utils::file::FileUtils::get_separator() + filename;
-    if (acceptFile(fullpath, filename, request)) {
+    if (fileMatchesRequestCriteria(fullpath, filename, request)) {
       putListing(fullpath);
     }
     return isRunning();
