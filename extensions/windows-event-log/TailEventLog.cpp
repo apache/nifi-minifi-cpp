@@ -19,7 +19,6 @@
  */
 
 #include "TailEventLog.h"
-#include <stdio.h>
 
 #include <vector>
 #include <map>
