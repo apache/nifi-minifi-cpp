@@ -56,7 +56,8 @@ After the build directory it will take optional parameters modifying the CMake c
 
 | Argument | Effect |
 |----------|------------------------------------------------|
-| /T | Disables tests |
+| /T | Disables building tests |
+| /R | Disables automatic test running after build |
 | /P | Enables MSI creation |
 | /K | Enables Kafka extension |
 | /J | Enables JNI |
@@ -64,6 +65,7 @@ After the build directory it will take optional parameters modifying the CMake c
 | /C | Enables CoAP |
 | /A | Enables AWS |
 | /Z | Enables Azure |
+| /L | Enables Linter |
 | /PDH | Enables Performance Monitor |
 | /M | Creates installer with merge modules |
 | /64 | Creates 64-bit build instead of a 32-bit one |
@@ -76,7 +78,7 @@ Examples:
  - 32-bit build with kafka, disabling tests, enabling MSI creation: `win_build_vs.bat build32 /T /K /P`
  - 64-bit build with JNI, with debug symbols: `win_build_vs.bat build64 /64 /J /D`
 
-`win_build_vs.bat` requires either a Visual Studio 2017 or a Visual Studio 2019 (if called with the `/2019` flag) build environment to be set up. With Visual Studio 2017 use the `x86 Native Tools Command Prompt for VS 2017` for 32-bit, or the `x64 Native Tools Command Prompt for VS 2017` for 64-bit builds. 
+`win_build_vs.bat` requires either a Visual Studio 2017 or a Visual Studio 2019 (if called with the `/2019` flag) build environment to be set up. With Visual Studio 2017 use the `x86 Native Tools Command Prompt for VS 2017` for 32-bit, or the `x64 Native Tools Command Prompt for VS 2017` for 64-bit builds.
 For Visual Studio 2019 use the `x86 Native Tools Command Prompt for VS 2019`, or the `x64 Native Tools Command Prompt for VS 2019` for 32-bit and 64-bit builds respectively.
 
 ## Building directly with CMake

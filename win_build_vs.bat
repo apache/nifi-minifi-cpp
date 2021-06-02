@@ -21,6 +21,7 @@ if [%1]==[] goto usage
 
 set builddir=%1
 set skiptests=OFF
+set skiptestrun=OFF
 set cmake_build_type=Release
 set build_platform=Win32
 set build_kafka=OFF
@@ -43,6 +44,7 @@ for %%x in (%*) do (
     set /A arg_counter+=1
     echo %%~x
     if [%%~x] EQU [/T]           set skiptests=ON
+    if [%%~x] EQU [/R]           set skiptestrun=ON
     if [%%~x] EQU [/P]           set cpack=ON
     if [%%~x] EQU [/K]           set build_kafka=ON
     if [%%~x] EQU [/J]           set build_JNI=ON
@@ -72,8 +74,10 @@ if [%cpack%] EQU [ON] (
     IF !ERRORLEVEL! NEQ 0 ( popd & exit /b !ERRORLEVEL! )
 )
 if [%skiptests%] NEQ [ON] (
-    ctest --timeout 300 --parallel 8 -C %cmake_build_type% --output-on-failure
-    IF !ERRORLEVEL! NEQ 0 ( popd & exit /b !ERRORLEVEL! )
+    if [%skiptestrun%] NEQ [ON] (
+        ctest --timeout 300 --parallel 8 -C %cmake_build_type% --output-on-failure
+        IF !ERRORLEVEL! NEQ 0 ( popd & exit /b !ERRORLEVEL! )
+    )
 )
 popd
 goto :eof
