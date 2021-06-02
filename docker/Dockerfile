@@ -62,7 +62,7 @@ ARG DISABLE_ENCRYPT_CONFIG=OFF
 ARG CMAKE_BUILD_TYPE=Release
 
 # Install the system dependencies needed for a build
-RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
+RUN apk --no-cache add gcc \
   g++ \
   make \
   bison \
@@ -95,29 +95,27 @@ ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-${MINIFI_VERSION}
 ENV MINIFI_VERSION ${MINIFI_VERSION}
 
 # Setup minificpp user
-RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
-
-RUN install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR}
+RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} && \
+    install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR}
 COPY --chown=${USER}:${USER} . ${MINIFI_BASE_DIR}
 
 USER ${USER}
 
-RUN cd ${MINIFI_BASE_DIR} \
-  && mkdir build \
-  && cd build \
-  && cmake -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_ALL=${ENABLE_ALL} -DENABLE_PYTHON=${ENABLE_PYTHON} -DENABLE_OPS=${ENABLE_OPS} \
-    -DENABLE_JNI=${ENABLE_JNI} -DENABLE_OPENCV=${ENABLE_OPENCV} -DENABLE_OPC=${ENABLE_OPC} -DENABLE_GPS=${ENABLE_GPS} -DENABLE_COAP=${ENABLE_COAP} \
-    -DENABLE_WEL=${ENABLE_WEL} -DENABLE_SQL=${ENABLE_SQL} -DENABLE_MQTT=${ENABLE_MQTT} -DENABLE_PCAP=${ENABLE_PCAP} \
-    -DENABLE_LIBRDKAFKA=${ENABLE_LIBRDKAFKA} -DENABLE_SENSORS=${ENABLE_SENSORS} \
-    -DENABLE_USB_CAMERA=${ENABLE_USB_CAMERA} -DENABLE_TENSORFLOW=${ENABLE_TENSORFLOW} -DENABLE_AWS=${ENABLE_AWS} \
-    -DENABLE_BUSTACHE=${ENABLE_BUSTACHE} -DENABLE_SFTP=${ENABLE_SFTP} -DENABLE_OPENWSMAN=${ENABLE_OPENWSMAN} -DENABLE_AZURE=${ENABLE_AZURE} \
-    -DDISABLE_CURL=${DISABLE_CURL} -DDISABLE_JEMALLOC=${DISABLE_JEMALLOC} -DDISABLE_CIVET=${DISABLE_CIVET} \
-    -DDISABLE_EXPRESSION_LANGUAGE=${DISABLE_EXPRESSION_LANGUAGE} -DDISABLE_ROCKSDB=${DISABLE_ROCKSDB} \
-    -DDISABLE_LIBARCHIVE=${DISABLE_LIBARCHIVE} -DDISABLE_LZMA=${DISABLE_LZMA} -DDISABLE_BZIP2=${DISABLE_BZIP2} \
-    -DDISABLE_SCRIPTING=${DISABLE_SCRIPTING} -DDISABLE_PYTHON_SCRIPTING=${DISABLE_PYTHON_SCRIPTING} -DDISABLE_CONTROLLER=${DISABLE_CONTROLLER} \
-    -DDISABLE_ENCRYPT_CONFIG=${DISABLE_ENCRYPT_CONFIG} -DAWS_ENABLE_UNITY_BUILD=OFF -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .. \
-  && make -j$(nproc) package \
-  && tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
+RUN mkdir ${MINIFI_BASE_DIR}/build
+WORKDIR ${MINIFI_BASE_DIR}/build
+RUN cmake -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_ALL="${ENABLE_ALL}" -DENABLE_PYTHON="${ENABLE_PYTHON}" -DENABLE_OPS="${ENABLE_OPS}" \
+    -DENABLE_JNI="${ENABLE_JNI}" -DENABLE_OPENCV="${ENABLE_OPENCV}" -DENABLE_OPC="${ENABLE_OPC}" -DENABLE_GPS="${ENABLE_GPS}" -DENABLE_COAP="${ENABLE_COAP}" \
+    -DENABLE_WEL="${ENABLE_WEL}" -DENABLE_SQL="${ENABLE_SQL}" -DENABLE_MQTT="${ENABLE_MQTT}" -DENABLE_PCAP="${ENABLE_PCAP}" \
+    -DENABLE_LIBRDKAFKA="${ENABLE_LIBRDKAFKA}" -DENABLE_SENSORS="${ENABLE_SENSORS}" \
+    -DENABLE_USB_CAMERA="${ENABLE_USB_CAMERA}" -DENABLE_TENSORFLOW="${ENABLE_TENSORFLOW}" -DENABLE_AWS="${ENABLE_AWS}" \
+    -DENABLE_BUSTACHE="${ENABLE_BUSTACHE}" -DENABLE_SFTP="${ENABLE_SFTP}" -DENABLE_OPENWSMAN="${ENABLE_OPENWSMAN}" -DENABLE_AZURE="${ENABLE_AZURE}" \
+    -DDISABLE_CURL="${DISABLE_CURL}" -DDISABLE_JEMALLOC="${DISABLE_JEMALLOC}" -DDISABLE_CIVET="${DISABLE_CIVET}" \
+    -DDISABLE_EXPRESSION_LANGUAGE="${DISABLE_EXPRESSION_LANGUAGE}" -DDISABLE_ROCKSDB="${DISABLE_ROCKSDB}" \
+    -DDISABLE_LIBARCHIVE="${DISABLE_LIBARCHIVE}" -DDISABLE_LZMA="${DISABLE_LZMA}" -DDISABLE_BZIP2="${DISABLE_BZIP2}" \
+    -DDISABLE_SCRIPTING="${DISABLE_SCRIPTING}" -DDISABLE_PYTHON_SCRIPTING="${DISABLE_PYTHON_SCRIPTING}" -DDISABLE_CONTROLLER="${DISABLE_CONTROLLER}" \
+    -DDISABLE_ENCRYPT_CONFIG="${DISABLE_ENCRYPT_CONFIG}" -DAWS_ENABLE_UNITY_BUILD=OFF -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. \
+  && make -j "$(nproc)" package \
+  && tar -xzvf "${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz" -C "${MINIFI_BASE_DIR}"
 
 
 # Release image
@@ -147,17 +145,15 @@ ENV MINIFI_VERSIONED_HOME ${MINIFI_BASE_DIR}/nifi-minifi-cpp-${MINIFI_VERSION}
 ENV JAVA_HOME /usr/lib/jvm/default-jvm
 ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
 
-RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
-RUN install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} \
-  && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
-
-RUN apk --update --no-cache upgrade && apk add --update --no-cache libstdc++ && \
-    if [ "$ENABLE_GPS" = "ON" ]; then apk add --update --no-cache gpsd; fi && \
-    if [ "$ENABLE_JNI" = "ON" ]; then apk add --update --no-cache openjdk8-jre-base; fi && \
-    if [ "$ENABLE_PCAP" = "ON" ]; then apk add --update --no-cache libpcap; fi && \
-    if [ "$ENABLE_USB_CAMERA" = "ON" ]; then apk add --update --no-cache libpng libusb; fi && \
-    if [ "$ENABLE_OPENCV" = "ON" ] || [ "$ENABLE_BUSTACHE" = "ON" ]; then apk add --update --no-cache boost; fi && \
-    if [ "$ENABLE_PYTHON" = "ON" ] || [ "$DISABLE_SCRIPTING" = "OFF" ]; then apk add --update --no-cache python3-dev; fi
+RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} && \
+    install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME} && \
+    apk add --no-cache libstdc++ && \
+    if [ "$ENABLE_GPS" = "ON" ]; then apk add --no-cache gpsd; fi && \
+    if [ "$ENABLE_JNI" = "ON" ]; then apk add --no-cache openjdk8-jre-base; fi && \
+    if [ "$ENABLE_PCAP" = "ON" ]; then apk add --no-cache libpcap; fi && \
+    if [ "$ENABLE_USB_CAMERA" = "ON" ]; then apk add --no-cache libpng libusb; fi && \
+    if [ "$ENABLE_OPENCV" = "ON" ] || [ "$ENABLE_BUSTACHE" = "ON" ]; then apk add --no-cache boost; fi && \
+    if [ "$ENABLE_PYTHON" = "ON" ] || [ "$DISABLE_SCRIPTING" = "OFF" ]; then apk add --no-cache python3-dev; fi
 
 # Copy built minifi distribution from builder
 COPY --from=build --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
@@ -166,4 +162,4 @@ USER ${USER}
 WORKDIR ${MINIFI_HOME}
 
 # Start MiNiFi CPP in the foreground
-CMD ./bin/minifi.sh run
+CMD ["./bin/minifi.sh", "run"]
