@@ -113,21 +113,23 @@ else
   DOCKERFILE="Dockerfile"
 fi
 
-TAG="${MINIFI_VERSION}"
-
+TAG=""
 if [ "${IMAGE_TYPE}" != "release" ]; then
-  TAG="${TAG}-${IMAGE_TYPE}"
+  TAG="${IMAGE_TYPE}-"
+fi
+if [ -n "${DISTRO_NAME}" ]; then
+  TAG="${TAG}${DISTRO_NAME}-"
+fi
+TAG="${TAG}${MINIFI_VERSION}"
+if [ -n "${BUILD_NUMBER}" ]; then
+  TAG="${TAG}-${BUILD_NUMBER}"
 fi
 
 TARGZ_TAG="bin"
-
 if [ -n "${DISTRO_NAME}" ]; then
-  TAG="${TAG}-${DISTRO_NAME}"
   TARGZ_TAG="${TARGZ_TAG}-${DISTRO_NAME}"
 fi
-
 if [ -n "${BUILD_NUMBER}" ]; then
-  TAG="${TAG}-${BUILD_NUMBER}"
   TARGZ_TAG="${TARGZ_TAG}-${BUILD_NUMBER}"
 fi
 
