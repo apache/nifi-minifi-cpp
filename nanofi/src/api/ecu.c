@@ -272,10 +272,7 @@ void on_trigger_tailfilechunk(processor_session * ps, processor_context * ctx) {
 
         props = (struct proc_properties *)malloc(sizeof(struct proc_properties));
         memset(props, 0, sizeof(struct proc_properties));
-        int len = strlen(file_path);
-        props->file_path = (char *)malloc((len + 1) * sizeof(char));
-        strncpy(props->file_path, file_path, len);
-        props->file_path[len] = '\0';
+        props->file_path = strdup(file_path);
         props->chunk_size = chunk_size_value;
         add_processor_properties(uuid_str, props);
     }
@@ -402,10 +399,7 @@ struct proc_properties * get_properties(const char * uuid, processor_context * c
         }
     }
 
-    int len = strlen(file_path);
-    props->file_path = (char *)malloc((len + 1) * sizeof(char));
-    strncpy(props->file_path, file_path, len);
-    props->file_path[len] = '\0';
+    props->file_path = strdup(file_path);
     props->delimiter = delim;
 
     add_processor_properties(uuid, props);
