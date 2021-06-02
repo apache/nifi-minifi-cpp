@@ -20,6 +20,9 @@
 #include <strsafe.h>
 
 #include <map>
+#include <functional>
+#include <codecvt>
+#include <regex>
 #include <string>
 #include <utility>
 #include <vector>

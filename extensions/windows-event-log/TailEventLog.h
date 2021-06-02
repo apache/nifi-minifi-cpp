@@ -122,6 +122,8 @@ class TailEventLog : public core::Processor {
       0, NULL);
 
     logger_->log_debug("Error %d: %s\n", static_cast<int>(error_id), reinterpret_cast<char *>(lpMsg));
+
+    LocalFree(lpMsg);
   }
 
  private:

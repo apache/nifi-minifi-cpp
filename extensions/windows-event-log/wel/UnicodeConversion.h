@@ -30,15 +30,15 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace wel {
-  inline std::string to_string(const wchar_t* pChar) {
-    ATL::CW2A aString(pChar, CP_UTF8);
-    return std::string(aString);
-  }
+inline std::string to_string(const wchar_t* pChar) {
+  ATL::CW2A aString(pChar, CP_UTF8);
+  return std::string(aString);
+}
 
-  inline std::wstring to_wstring(const char* pChar) {
-    ATL::CA2W wString(pChar, CP_UTF8);
-    return std::wstring(wString);
-  }
+inline std::wstring to_wstring(const char* pChar) {
+  ATL::CA2W wString(pChar, CP_UTF8);
+  return std::wstring(wString);
+}
 } /* namespace wel */
 } /* namespace minifi */
 } /* namespace nifi */

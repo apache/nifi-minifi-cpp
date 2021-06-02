@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <atomic>
 
 #include "core/Connectable.h"
 #include "coap_server.h"

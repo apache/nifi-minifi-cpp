@@ -19,7 +19,8 @@
 
 #include <memory>
 #include <string>
-#include <unordered_map>
+#include <mutex>
+#include <atomic>
 #include <utility>
 
 #include "core/logging/LoggerConfiguration.h"

@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <stdexcept>
 
 #include <pugixml.hpp>
 

@@ -21,6 +21,7 @@
 #include <direct.h>
 #include <vector>
 #include <unordered_map>
+#include <fstream>
 
 #include "wel/UnicodeConversion.h"
 #include "utils/file/FileUtils.h"

@@ -17,9 +17,7 @@
  */
 #pragma once
 
-#include <stdio.h>
-#include <string.h>
-
+#include <cstring>
 #include <algorithm>
 #include <iostream>
 #include <memory>
@@ -27,6 +25,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <stdexcept>
+#include <mutex>
 
 #include "c2/C2Protocol.h"
 #include "io/BaseStream.h"

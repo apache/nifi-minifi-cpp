@@ -19,14 +19,12 @@
  */
 
 #include "CollectorInitiatedSubscription.h"
-#include <stdio.h>
 #include <vector>
 #include <queue>
 #include <map>
 #include <set>
 #include <sstream>
 #include <string>
-#include <iostream>
 #include <memory>
 #include <codecvt>
 #include <utility>

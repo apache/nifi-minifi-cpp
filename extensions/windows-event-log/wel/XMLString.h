@@ -23,7 +23,6 @@
 #include <Windows.h>
 #include <winevt.h>
 
-#include <codecvt>
 #include <sstream>
 #include <string>
 #include <regex>
