@@ -180,28 +180,32 @@ class PayloadSerializer {
     stream->read(&type, 1);
     state::response::ValueNode node;
     switch (type) {
-      case 1:
-        uint32_t thb;
+      case 1: {
+        uint32_t thb = 0;
         stream->read(thb);
         node = thb;
         break;
-      case 2:
-        uint64_t base;
+      }
+      case 2: {
+        uint64_t base = 0;
         stream->read(base);
         node = base;
         break;
-      case 3:
+      }
+      case 3: {
         stream->read(&type, 1);
         if (type == 1)
           node = true;
         else
           node = false;
         break;
-      default:
+      }
       case 4:
+      default: {
         std::string str;
         stream->read(str);
         node = str;
+      }
     }
     return node;
   }

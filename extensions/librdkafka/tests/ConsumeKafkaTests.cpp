@@ -422,7 +422,7 @@ class ConsumeKafkaContinuousPublishingTest : public ConsumeKafkaTest {
       int64_t value{};
       org::apache::nifi::minifi::core::TimeUnit unit{};
       REQUIRE(org::apache::nifi::minifi::core::Property::StringToTime(property_string, value, unit));
-      int64_t value_as_ms;
+      int64_t value_as_ms = 0;
       REQUIRE(org::apache::nifi::minifi::core::Property::ConvertTimeUnitToMS(value, unit, value_as_ms));
       return value_as_ms;
     };
