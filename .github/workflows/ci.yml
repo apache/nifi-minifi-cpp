@@ -106,6 +106,7 @@ jobs:
           move "$cl_exe_dir\cl.exe.config" "$cl_exe_dir\cl_original.exe.config"
           move "$cl_exe_dir\clcache.exe" "$cl_exe_dir\cl.exe"
           echo "CLCACHE_CL=$cl_exe_dir\cl_original.exe" >> $env:GITHUB_ENV
+          echo "CLCACHE_NODIRECT=1" >> $env:GITHUB_ENV
       - name: build
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x86
@@ -148,6 +149,7 @@ jobs:
           move "$cl_exe_dir\cl.exe.config" "$cl_exe_dir\cl_original.exe.config"
           move "$cl_exe_dir\clcache.exe" "$cl_exe_dir\cl.exe"
           echo "CLCACHE_CL=$cl_exe_dir\cl_original.exe" >> $env:GITHUB_ENV
+          echo "CLCACHE_NODIRECT=1" >> $env:GITHUB_ENV
       - name: build
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64
