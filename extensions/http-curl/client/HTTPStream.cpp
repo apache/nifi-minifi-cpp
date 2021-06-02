@@ -56,25 +56,22 @@ void HttpStream::seek(size_t /*offset*/) {
 // data stream overrides
 
 size_t HttpStream::write(const uint8_t *value, size_t size) {
-  if (size == 0) {
-    return 0;
-  }
-  if (!IsNullOrEmpty(value)) {
-    if (!started_) {
-      std::lock_guard<std::mutex> lock(mutex_);
-      if (!started_) {
-        callback_.ptr = &http_callback_;
-        callback_.pos = 0;
-        http_client_->setUploadCallback(&callback_);
-        http_client_future_ = std::async(std::launch::async, submit_client, http_client_);
-        started_ = true;
-      }
-    }
-    http_callback_.process(value, size);
-    return size;
-  } else {
+  if (size == 0) return 0;
+  if (IsNullOrEmpty(value)) {
     return STREAM_ERROR;
   }
+  if (!started_) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!started_) {
+      callback_.ptr = &http_callback_;
+      callback_.pos = 0;
+      http_client_->setUploadCallback(&callback_);
+      http_client_future_ = std::async(std::launch::async, submit_client, http_client_);
+      started_ = true;
+    }
+  }
+  http_callback_.process(value, size);
+  return size;
 }
 
 size_t HttpStream::read(uint8_t *buf, size_t buflen) {

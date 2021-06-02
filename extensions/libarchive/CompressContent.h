@@ -181,9 +181,8 @@ public:
 
     static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
       auto* const callback = static_cast<WriteCallback*>(context);
-      const auto ret = callback->stream_->write(reinterpret_cast<uint8_t*>(const_cast<void*>(buff)), size);
-      if (ret > 0 && !io::isError(ret))
-        callback->size_ += gsl::narrow<int64_t>(ret);
+      const auto ret = callback->stream_->write(reinterpret_cast<const uint8_t*>(buff), size);
+      if (!io::isError(ret)) callback->size_ += gsl::narrow<int64_t>(ret);
       return io::isError(ret) ? -1 : gsl::narrow<la_ssize_t>(ret);
     }
 
@@ -377,8 +376,8 @@ public:
 
         int64_t process(const std::shared_ptr<io::BaseStream>& inputStream) override {
           std::vector<uint8_t> buffer(16 * 1024U);
-          int64_t read_size = 0;
-          while (read_size < gsl::narrow<int64_t>(writer_.flow_->getSize())) {
+          size_t read_size = 0;
+          while (read_size < writer_.flow_->getSize()) {
             const auto ret = inputStream->read(buffer.data(), buffer.size());
             if (io::isError(ret)) {
               return -1;
@@ -389,11 +388,11 @@ public:
               if (io::isError(writeret) || gsl::narrow<size_t>(writeret) != ret) {
                 return -1;
               }
-              read_size += gsl::narrow<int64_t>(ret);
+              read_size += ret;
             }
           }
           outputStream_->close();
-          return read_size;
+          return gsl::narrow<int64_t>(read_size);
         }
 
         GzipWriteCallback& writer_;

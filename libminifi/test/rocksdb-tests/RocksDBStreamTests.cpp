@@ -47,7 +47,7 @@ TEST_CASE_METHOD(RocksDBStreamTest, "Verify simple operation") {
   outStream.write(content);
   const auto second_write_result = outStream.write(content);
   REQUIRE(second_write_result > 0);
-  REQUIRE(!minifi::io::isError(second_write_result));
+  REQUIRE_FALSE(minifi::io::isError(second_write_result));
   minifi::io::RocksDbStream inStream("one", gsl::make_not_null(db.get()));
   std::string str;
   inStream.read(str);
@@ -67,7 +67,7 @@ TEST_CASE_METHOD(RocksDBStreamTest, "Write zero bytes") {
 TEST_CASE_METHOD(RocksDBStreamTest, "Read zero bytes") {
   minifi::io::RocksDbStream one("one", gsl::make_not_null(db.get()), true);
   const auto banana_write_result = one.write("banana");
-  REQUIRE(!minifi::io::isError(banana_write_result));
+  REQUIRE_FALSE(minifi::io::isError(banana_write_result));
   REQUIRE(banana_write_result > 0);
 
   minifi::io::RocksDbStream stream("one", gsl::make_not_null(db.get()));

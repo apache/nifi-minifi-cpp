@@ -154,8 +154,7 @@ typedef struct {
 
 la_ssize_t UnfocusArchiveEntry::WriteCallback::write_cb(struct archive *, void *d, const void *buffer, size_t length) {
   auto* const data = static_cast<UnfocusArchiveEntryWriteData *>(d);
-  const auto* const ui_buffer = static_cast<const uint8_t*>(buffer);
-  const auto write_ret = data->stream->write(const_cast<uint8_t*>(ui_buffer), length);
+  const auto write_ret = data->stream->write(static_cast<const uint8_t*>(buffer), length);
   return io::isError(write_ret) ? -1 : gsl::narrow<la_ssize_t>(write_ret);
 }
 

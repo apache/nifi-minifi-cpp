@@ -64,7 +64,7 @@ size_t FlowFileV3Serializer::writeString(const std::string &str, const std::shar
 int FlowFileV3Serializer::serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) {
   size_t sum = 0;
   {
-    const auto ret = out->write(const_cast<uint8_t*>(MAGIC_HEADER), sizeof(MAGIC_HEADER));
+    const auto ret = out->write(MAGIC_HEADER, sizeof(MAGIC_HEADER));
     if (io::isError(ret)) return -1;
     if (ret != sizeof(MAGIC_HEADER)) return -1;
     sum += ret;

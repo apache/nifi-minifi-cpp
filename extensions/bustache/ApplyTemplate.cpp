@@ -84,8 +84,7 @@ int64_t ApplyTemplate::WriteCallback::process(const std::shared_ptr<io::BaseStre
 
   // TODO(calebj) write ostream reciever for format() to prevent excessive copying
   std::string ostring = to_string(format(data));
-  stream->write(reinterpret_cast<uint8_t *>(const_cast<char *>(ostring.c_str())),
-                    ostring.length());
+  stream->write(reinterpret_cast<const uint8_t *>(ostring.c_str()), ostring.length());
 
   return ostring.length();
 }

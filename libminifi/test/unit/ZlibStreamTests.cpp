@@ -55,7 +55,7 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
     for (size_t i = 0U; i < 1024U; i++) {
       std::generate(buf.begin(), buf.end(), [&](){return dist(gen);});
       original += std::string(reinterpret_cast<const char*>(buf.data()), buf.size());
-      REQUIRE(!io::isError(compressStream.write(buf.data(), buf.size())));
+      REQUIRE_FALSE(io::isError(compressStream.write(buf.data(), buf.size())));
     }
   }
 
@@ -71,7 +71,7 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
   io::BufferStream decompressBuffer;
   io::ZlibDecompressStream decompressStream(gsl::make_not_null(&decompressBuffer));
 
-  decompressStream.write(const_cast<uint8_t*>(compressBuffer.getBuffer()), compressBuffer.size());
+  decompressStream.write(compressBuffer.getBuffer(), compressBuffer.size());
 
   REQUIRE(decompressStream.isFinished());
   REQUIRE(original == std::string(reinterpret_cast<const char*>(decompressBuffer.getBuffer()), decompressBuffer.size()));

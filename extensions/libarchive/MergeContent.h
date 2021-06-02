@@ -64,7 +64,7 @@ class BinaryConcatenationMerge : public MergeBin {
   BinaryConcatenationMerge(const std::string& header, const std::string& footer, const std::string& demarcator);
 
   void merge(core::ProcessContext *context, core::ProcessSession *session,
-      std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile);
+      std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) override;
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
    public:
@@ -77,35 +77,35 @@ class BinaryConcatenationMerge : public MergeBin {
     std::string &demarcator_;
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
     FlowFileSerializer& serializer_;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      int64_t ret = 0;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+      size_t write_size_sum = 0;
       if (!header_.empty()) {
-        const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(header_.data())), header_.size());
+        const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(header_.data()), header_.size());
         if (io::isError(write_ret))
           return -1;
-        ret += gsl::narrow<int64_t>(write_ret);
+        write_size_sum += write_ret;
       }
       bool isFirst = true;
       for (const auto& flow : flows_) {
         if (!isFirst && !demarcator_.empty()) {
-          const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(demarcator_.data())), demarcator_.size());
+          const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(demarcator_.data()), demarcator_.size());
           if (io::isError(write_ret))
             return -1;
-          ret += gsl::narrow<int64_t>(write_ret);
+          write_size_sum += write_ret;
         }
         int len = serializer_.serialize(flow, stream);
         if (len < 0)
           return len;
-        ret += len;
+        write_size_sum += gsl::narrow<size_t>(len);
         isFirst = false;
       }
       if (!footer_.empty()) {
-        const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(footer_.data())), footer_.size());
+        const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(footer_.data()), footer_.size());
         if (io::isError(write_ret))
           return -1;
-        ret += gsl::narrow<int64_t>(write_ret);
+        write_size_sum += write_ret;
       }
-      return ret;
+      return gsl::narrow<int64_t>(write_size_sum);
     }
   };
 
@@ -162,7 +162,7 @@ class ArchiveMerge {
       size_ = 0;
       stream_ = nullptr;
     }
-    ~WriteCallback() = default;
+    ~WriteCallback() override = default;
 
     std::string merge_type_;
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
@@ -192,7 +192,7 @@ class ArchiveMerge {
       return totalWrote;
     }
 
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       struct archive *arch;
 
       arch = archive_write_new();
@@ -306,7 +306,7 @@ class MergeContent : public processors::BinFiles {
     attributeStrategy_ = merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON;
   }
   // Destructor
-  virtual ~MergeContent() = default;
+  ~MergeContent() override = default;
   // Processor Name
   static constexpr char const* ProcessorName = "MergeContent";
   // Supported Properties

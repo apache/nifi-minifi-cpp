@@ -50,22 +50,17 @@ void DescriptorStream::seek(size_t offset) {
 }
 
 size_t DescriptorStream::write(const uint8_t *value, size_t size) {
-  if (size == 0) {
-    return 0;
-  }
-  if (!IsNullOrEmpty(value)) {
-    std::lock_guard<std::recursive_mutex> lock(file_lock_);
+  if (size == 0) return 0;
+  if (IsNullOrEmpty(value)) return STREAM_ERROR;
+  std::lock_guard<std::recursive_mutex> lock(file_lock_);
 #ifdef WIN32
-    if (static_cast<size_t>(_write(fd_, value, size)) != size) {
+  if (static_cast<size_t>(_write(fd_, value, size)) != size) {
 #else
-    if (static_cast<size_t>(::write(fd_, value, size)) != size) {
+  if (static_cast<size_t>(::write(fd_, value, size)) != size) {
 #endif
-      return STREAM_ERROR;
-    } else {
-      return size;
-    }
-  } else {
     return STREAM_ERROR;
+  } else {
+    return size;
   }
 }
 

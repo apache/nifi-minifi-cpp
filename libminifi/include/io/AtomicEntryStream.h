@@ -111,18 +111,15 @@ void AtomicEntryStream<T>::seek(size_t offset) {
 // data stream overrides
 template<typename T>
 size_t AtomicEntryStream<T>::write(const uint8_t *value, size_t size) {
-  if (size == 0) {
-    return 0;
-  }
-  if (nullptr != value && !invalid_stream_) {
-    std::lock_guard<std::recursive_mutex> lock(entry_lock_);
-    if (entry_->insert(key_, const_cast<uint8_t*>(value), size)) {
-      offset_ += size;
-      if (offset_ > length_) {
-        length_ = offset_;
-      }
-      return size;
+  if (size == 0) return 0;
+  if (!value || invalid_stream_) return STREAM_ERROR;
+  std::lock_guard<std::recursive_mutex> lock(entry_lock_);
+  if (entry_->insert(key_, const_cast<uint8_t*>(value), size)) {
+    offset_ += size;
+    if (offset_ > length_) {
+      length_ = offset_;
     }
+    return size;
   }
   return STREAM_ERROR;
 }

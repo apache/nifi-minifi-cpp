@@ -71,7 +71,7 @@ class SensorBase : public core::Processor {
       std::string data_;
       int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
         if (data_.empty()) return 0;
-        const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(data_.data())), data_.size());
+        const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(data_.data()), data_.size());
         return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
       }
     };

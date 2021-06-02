@@ -26,7 +26,7 @@
 TEST_CASE("Test CRC1", "[testcrc1]") {
   org::apache::nifi::minifi::io::BufferStream base;
   org::apache::nifi::minifi::io::CRCStream<org::apache::nifi::minifi::io::BaseStream> test(gsl::make_not_null(&base));
-  test.write(reinterpret_cast<uint8_t*>(const_cast<char*>("cow")), 3);
+  test.write(reinterpret_cast<const uint8_t*>("cow"), 3);
   REQUIRE(2580823964 == test.getCRC());
 }
 

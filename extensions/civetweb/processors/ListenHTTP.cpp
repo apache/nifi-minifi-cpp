@@ -509,7 +509,7 @@ ListenHTTP::WriteCallback::WriteCallback(std::unique_ptr<io::BufferStream> reque
 }
 
 int64_t ListenHTTP::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  const auto write_ret = stream->write(const_cast<uint8_t*>(request_content_->getBuffer()), request_content_->size());
+  const auto write_ret = stream->write(request_content_->getBuffer(), request_content_->size());
   return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
 }
 
