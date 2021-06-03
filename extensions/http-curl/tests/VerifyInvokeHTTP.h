@@ -24,6 +24,7 @@
 #include "processors/LogAttribute.h"
 #include "core/state/ProcessorController.h"
 #include "HTTPIntegrationBase.h"
+#include "utils/GeneralUtils.h"
 
 class VerifyInvokeHTTP : public HTTPIntegrationBase {
  public:
@@ -50,7 +51,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     HTTPIntegrationBase::setUrl(url, handler);
   }
 
-  void setProperties(std::shared_ptr<core::Processor> proc) {
+  void setProperties(const std::shared_ptr<core::Processor>& proc) {
     std::string url = scheme + "://localhost:" + getWebPort() + *path_;
     proc->setProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
   }
@@ -59,7 +60,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     const auto components = flowController_->getComponents("InvokeHTTP");
     assert(!components.empty());
 
-    const auto stateController = components.at(0);
+    const auto stateController = components[0];
     assert(stateController);
     const auto processorController = std::dynamic_pointer_cast<minifi::state::ProcessorController>(stateController);
     assert(processorController);
@@ -80,8 +81,8 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
-    std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-        new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, flow_yml_path));
+    std::unique_ptr<core::FlowConfiguration> yaml_ptr =
+      minifi::utils::make_unique<core::YamlConfiguration>(test_repo, test_repo, content_repo, stream_factory, configuration, flow_yml_path);
 
     flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
     flowController_->load();
