@@ -84,6 +84,14 @@ std::string MockRow::getValue(const std::string& col_name) const {
   throw std::runtime_error("Unknown column name for getting value");
 }
 
+DataType MockRow::getDataType(const std::string& col_name) const {
+  auto it = std::find(column_names_->begin(),  column_names_->end(), col_name);
+  if (it != column_names_->end()) {
+    return column_types_->at(it-column_names_->begin());
+  }
+  throw std::runtime_error("Unknown column name for getting type");
+}
+
 void MockRowset::addRow(const std::vector<std::string>& column_values) {
   rows_.emplace_back(&column_names_, &column_types_, column_values);
 }
@@ -244,22 +252,7 @@ std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vect
   }
   std::string table_name = match[2];
   std::string condition_str = match[4];
-  std::function<bool(const MockRow&)> condition;
-  if (!condition_str.empty()) {
-    if (condition_str == "int_col > 103") {
-      condition = [&](const MockRow& row){ return std::stoi(row.getValue("int_col")) > 103; };
-    } else if (condition_str == "int_col > 102") {
-      condition = [&](const MockRow& row){ return std::stoi(row.getValue("int_col")) > 102; };
-    } else if (condition_str == "int_col = 11") {
-      condition = [&](const MockRow& row){ return std::stoi(row.getValue("int_col")) == 11; };
-    } else if (condition_str == "int_col = 11 and text_col = banana") {
-      condition = [&](const MockRow& row){ return std::stoi(row.getValue("int_col")) == 11 && row.getValue("text_col") == "banana"; };
-    } else {
-      throw std::runtime_error("Unimplemented WHERE condition");
-    }
-  } else {
-    condition = [](const MockRow&){ return true; };
-  }
+  auto condition = parseWhereCondition(condition_str);
   std::string order = match[7];
   std::string order_col;
   bool descending = false;
@@ -269,6 +262,43 @@ std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vect
     descending = order_col_and_sort[1] == "desc";
   }
   return tables_.at(table_name).select(cols, condition, order_col, !descending);
+}
+
+std::function<bool(const MockRow&)> MockDB::parseWhereCondition(const std::string& full_condition_str) {
+  if (full_condition_str.empty()) {
+    return [](const MockRow&){ return true; };
+  }
+
+  auto condition_strings = minifi::utils::StringUtils::splitAndTrimOnString(full_condition_str, "and");
+  std::vector<std::function<bool(const MockRow&)>> condition_parts;
+  for (const auto& condition_str : condition_strings) {
+    if (condition_str.find(">") != std::string::npos) {
+      auto elements = minifi::utils::StringUtils::splitAndTrim(condition_str, ">");
+      condition_parts.push_back([elements](const MockRow& row){ return std::stoi(row.getValue(elements[0])) > std::stoi(elements[1]); });
+    } else if (condition_str.find("<") != std::string::npos) {
+      auto elements = minifi::utils::StringUtils::splitAndTrim(condition_str, "<");
+      condition_parts.push_back([elements](const MockRow& row){ return std::stoi(row.getValue(elements[0])) < std::stoi(elements[1]); });
+    } else if (condition_str.find("=") != std::string::npos) {
+      auto elements = minifi::utils::StringUtils::splitAndTrim(condition_str, "=");
+      condition_parts.push_back([elements](const MockRow& row) {
+        if (row.getDataType(elements[0]) == DataType::STRING) {
+          return row.getValue(elements[0]) == minifi::utils::StringUtils::removeFramingCharacters(elements[1], '"');
+        } else {
+          return std::stoi(row.getValue(elements[0])) == std::stoi(elements[1]);
+        }
+      });
+    } else {
+      throw std::runtime_error("Unimplemented WHERE condition");
+    }
+  }
+
+  return [condition_parts](const MockRow& row) {
+    bool result = true;
+    for (const auto& condition : condition_parts) {
+      result = result && condition(row);
+    }
+    return result;
+  };
 }
 
 void MockDB::readDb() {

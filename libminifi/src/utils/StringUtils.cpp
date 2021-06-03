@@ -80,6 +80,25 @@ std::vector<std::string> StringUtils::splitAndTrim(const std::string& str, const
   return split_transformed(str, delimiter, trim);
 }
 
+std::vector<std::string> StringUtils::splitAndTrimOnString(std::string str, const std::string& delimiter) {
+  std::vector<std::string> result;
+  size_t pos = str.find(delimiter);
+  if (pos == std::string::npos) {
+    return result;
+  }
+  while (pos != std::string::npos) {
+    if (pos != 0) {
+      result.push_back(minifi::utils::StringUtils::trim(str.substr(0, pos)));
+    }
+    str = str.substr(pos + delimiter.size());
+    pos = str.find(delimiter);
+  }
+  if (!str.empty()) {
+    result.push_back(minifi::utils::StringUtils::trim(str));
+  }
+  return result;
+}
+
 bool StringUtils::StringToFloat(std::string input, float &output, FailurePolicy cp /*= RETURN*/) {
   try {
     output = std::stof(input);

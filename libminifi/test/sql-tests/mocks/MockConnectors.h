@@ -53,6 +53,7 @@ class MockRow : public Row {
 
   std::vector<std::string> getValues() const;
   std::string getValue(const std::string& col_name) const;
+  DataType getDataType(const std::string& col_name) const;
 
  private:
   std::vector<std::string>* column_names_;
@@ -111,6 +112,7 @@ class MockDB {
   std::unique_ptr<Rowset> select(const std::string& query, const std::vector<std::string>& args);
   void readDb();
   void storeDb();
+  std::function<bool(const MockRow&)> parseWhereCondition(const std::string& condition_str);
 
   static DataType stringToDataType(const std::string& type_str);
   static std::string dataTypeToString(DataType data_type);

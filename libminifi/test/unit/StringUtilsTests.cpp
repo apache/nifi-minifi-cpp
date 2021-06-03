@@ -58,6 +58,10 @@ TEST_CASE("TestStringUtils::split5", "[test split with delimiter set to empty st
 TEST_CASE("TestStringUtils::splitTrasformed", "[test split with trim]") {
   std::vector<std::string> expected{ "hello", "world peace" };
   REQUIRE(expected == StringUtils::splitAndTrim("hello, world peace", ","));
+  REQUIRE(std::vector<std::string>{} == StringUtils::splitAndTrim("", ","));
+  REQUIRE(std::vector<std::string>{} == StringUtils::splitAndTrim(",", ","));
+  expected = {"", ""};
+  REQUIRE(expected == StringUtils::splitAndTrim(", , ,,,", ","));
 }
 
 TEST_CASE("StringUtils::replaceEnvironmentVariables works correctly", "[replaceEnvironmentVariables]") {
@@ -407,4 +411,17 @@ TEST_CASE("StringUtils::removeFramingCharacters works correctly", "[removeFramin
   REQUIRE(utils::StringUtils::removeFramingCharacters("aa", 'a') == "");
   REQUIRE(utils::StringUtils::removeFramingCharacters("\"abba\"", '"') == "abba");
   REQUIRE(utils::StringUtils::removeFramingCharacters("\"\"abba\"\"", '"') == "\"abba\"");
+}
+
+TEST_CASE("StringUtils::splitAndTrimOnString", "[test split by word with trim]") {
+  std::vector<std::string> expected{ "tom", "jerry" };
+  REQUIRE(expected == StringUtils::splitAndTrimOnString("tom and jerry", "and"));
+  REQUIRE(std::vector<std::string>{} == StringUtils::splitAndTrimOnString("and", "and"));
+  REQUIRE(std::vector<std::string>{} == StringUtils::splitAndTrimOnString("andand", "and"));
+  expected = {"stan", "pan", ""};
+  REQUIRE(expected == StringUtils::splitAndTrimOnString("stan and pan and ", "and"));
+  expected = {"", ""};
+  REQUIRE(expected == StringUtils::splitAndTrimOnString(" and ", "and"));
+  expected = {"a", "b", "c"};
+  REQUIRE(expected == StringUtils::splitAndTrimOnString("a and ... b and ...  c", "and ..."));
 }
