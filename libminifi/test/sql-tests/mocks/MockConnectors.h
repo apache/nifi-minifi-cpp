@@ -36,17 +36,8 @@ namespace sql {
 
 class MockRow : public Row {
  public:
-  MockRow(std::vector<std::string>& column_names, std::vector<DataType>& column_types, const std::vector<std::string>& column_values)
+  MockRow(std::vector<std::string>* column_names, std::vector<DataType>* column_types, const std::vector<std::string>& column_values)
     : column_names_(column_names), column_types_(column_types), column_values_(column_values) {
-  }
-
-  MockRow(MockRow&& other) = default;
-  MockRow(const MockRow& other) = default;
-  MockRow& operator=(MockRow&& other) {
-    column_names_ = other.column_names_;
-    column_types_ = other.column_types_;
-    column_values_ = other.column_values_;
-    return *this;
   }
 
   std::size_t size() const override;
@@ -64,10 +55,9 @@ class MockRow : public Row {
   std::string getValue(const std::string& col_name) const;
 
  private:
-  std::vector<std::string>& column_names_;
-  std::vector<DataType>& column_types_;
+  std::vector<std::string>* column_names_;
+  std::vector<DataType>* column_types_;
   std::vector<std::string> column_values_;
-  std::vector<std::string>::iterator current_;
 };
 
 class MockRowset : public Rowset {

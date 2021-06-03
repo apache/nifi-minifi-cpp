@@ -33,11 +33,11 @@ namespace minifi {
 namespace sql {
 
 std::size_t MockRow::size() const {
-  return column_names_.size();
+  return column_names_->size();
 }
 
 std::string MockRow::getColumnName(std::size_t index) const {
-  return column_names_.at(index);
+  return column_names_->at(index);
 }
 
 bool MockRow::isNull(std::size_t index) const {
@@ -45,7 +45,7 @@ bool MockRow::isNull(std::size_t index) const {
 }
 
 DataType MockRow::getDataType(std::size_t index) const {
-  return column_types_.at(index);
+  return column_types_->at(index);
 }
 
 std::string MockRow::getString(std::size_t index) const {
@@ -77,15 +77,15 @@ std::vector<std::string> MockRow::getValues() const {
 }
 
 std::string MockRow::getValue(const std::string& col_name) const {
-  auto it = std::find(column_names_.begin(),  column_names_.end(), col_name);
-  if (it != column_names_.end()) {
-    return column_values_.at(it-column_names_.begin());
+  auto it = std::find(column_names_->begin(),  column_names_->end(), col_name);
+  if (it != column_names_->end()) {
+    return column_values_.at(it-column_names_->begin());
   }
   throw std::runtime_error("Unknown column name for getting value");
 }
 
 void MockRowset::addRow(const std::vector<std::string>& column_values) {
-  rows_.emplace_back(column_names_, column_types_, column_values);
+  rows_.emplace_back(&column_names_, &column_types_, column_values);
 }
 
 void MockRowset::reset() {
