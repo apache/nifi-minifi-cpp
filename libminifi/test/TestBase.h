@@ -449,7 +449,7 @@ class TestController {
   utils::Path createTempDirectory(const char (&format)[N]) {
     char buffer[N];
     std::memcpy(buffer, format, N);
-    return createTempDirectory(static_cast<char*>(buffer));
+    return utils::Path{createTempDirectory(static_cast<char*>(buffer))};
   }
 
  protected:

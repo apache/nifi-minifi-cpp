@@ -50,7 +50,7 @@ class Aes256EcbCipher {
  private:
   template<typename ...Args>
   static void handleError(Args&& ...args) {
-    std::string error_msg = core::logging::format_string(std::forward<Args>(args)...);
+    std::string error_msg = core::logging::format_string(-1, "%s", std::forward<Args>(args)...);
     logger_->log_error("%s", error_msg);
     throw CipherError(error_msg);
   }
