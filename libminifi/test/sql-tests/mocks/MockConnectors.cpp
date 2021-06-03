@@ -53,19 +53,19 @@ std::string MockRow::getString(std::size_t index) const {
 }
 
 double MockRow::getDouble(std::size_t index) const {
-  return std::atof(column_values_.at(index).c_str());
+  return std::stof(column_values_.at(index));
 }
 
 int MockRow::getInteger(std::size_t index) const {
-  return std::atoi(column_values_.at(index).c_str());
+  return std::stoi(column_values_.at(index));
 }
 
 long long MockRow::getLongLong(std::size_t index) const {  // NOLINT
-  return std::atoll(column_values_.at(index).c_str());
+  return std::stoll(column_values_.at(index));
 }
 
 unsigned long long MockRow::getUnsignedLongLong(std::size_t index) const {  // NOLINT
-  return static_cast<unsigned long long>(std::atoll(column_values_.at(index).c_str()));  // NOLINT
+  return static_cast<unsigned long long>(std::stoll(column_values_.at(index)));  // NOLINT
 }
 
 std::tm MockRow::getDate(std::size_t /*index*/) const {
@@ -247,13 +247,13 @@ std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vect
   std::function<bool(const MockRow&)> condition;
   if (!condition_str.empty()) {
     if (condition_str == "int_col > 103") {
-      condition = [&](const MockRow& row){ return std::atoi(row.getValue("int_col").c_str()) > 103; };
+      condition = [&](const MockRow& row){ return std::stoi(row.getValue("int_col")) > 103; };
     } else if (condition_str == "int_col > 102") {
-      condition = [&](const MockRow& row){ return std::atoi(row.getValue("int_col").c_str()) > 102; };
+      condition = [&](const MockRow& row){ return std::stoi(row.getValue("int_col")) > 102; };
     } else if (condition_str == "int_col = 11") {
-      condition = [&](const MockRow& row){ return std::atoi(row.getValue("int_col").c_str()) == 11; };
+      condition = [&](const MockRow& row){ return std::stoi(row.getValue("int_col")) == 11; };
     } else if (condition_str == "int_col = 11 and text_col = banana") {
-      condition = [&](const MockRow& row){ return std::atoi(row.getValue("int_col").c_str()) == 11 && row.getValue("text_col") == "banana"; };
+      condition = [&](const MockRow& row){ return std::stoi(row.getValue("int_col")) == 11 && row.getValue("text_col") == "banana"; };
     } else {
       throw std::runtime_error("Unimplemented WHERE condition");
     }
