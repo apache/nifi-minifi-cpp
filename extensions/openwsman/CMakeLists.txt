@@ -30,3 +30,4 @@ target_link_libraries(minifi-openwsman OpenWSMAN::libwsman CIVETWEB::civetweb-cp
 
 SET (OPENWSMAN-EXTENSION minifi-openwsman PARENT_SCOPE)
 register_extension(minifi-openwsman)
+register_extension_linter(minifi-openwsman-linter)

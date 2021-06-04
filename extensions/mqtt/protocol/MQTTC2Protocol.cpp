@@ -34,8 +34,9 @@ void MQTTC2Protocol::initialize(core::controller::ControllerServiceProvider* con
   if (configure->get("nifi.c2.mqtt.connector.service", controller_service_name_)) {
     auto service = controller->getControllerService(controller_service_name_);
     mqtt_service_ = std::static_pointer_cast<controllers::MQTTControllerService>(service);
-  } else
+  } else {
     mqtt_service_ = nullptr;
+  }
 
   agent_identifier_ = configure->getAgentIdentifier();
 

@@ -15,20 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_MQTT_PROTOCOL_CONVERTUPDATE_H_
-#define EXTENSIONS_MQTT_PROTOCOL_CONVERTUPDATE_H_
+#pragma once
 
+#include <string>
+#include <memory>
 
 #include "MQTTControllerService.h"
-#include "FlowFileRecord.h"
-#include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Resource.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "MQTTClient.h"
-#include "c2/protocols/RESTProtocol.h"
 #include "ConvertBase.h"
 
 namespace org {
@@ -60,8 +56,7 @@ class ConvertUpdate : public ConvertBase {
   // Processor Name
   static constexpr char const* ProcessorName = "ConvertUpdate";
 
-public:
-
+ public:
   /**
      * Initialization of the processor
      */
@@ -75,9 +70,10 @@ public:
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
-protected:
+ protected:
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
-private:
+
+ private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
@@ -86,5 +82,3 @@ private:
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_MQTT_PROTOCOL_CONVERTUPDATE_H_ */

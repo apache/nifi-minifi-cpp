@@ -15,6 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <string>
+#include <memory>
+#include <vector>
+#include <algorithm>
+#include <set>
+
 #include "ConvertUpdate.h"
 #include "utils/HTTPClient.h"
 #include "io/BaseStream.h"

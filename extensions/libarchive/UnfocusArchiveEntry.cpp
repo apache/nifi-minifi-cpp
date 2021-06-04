@@ -26,8 +26,8 @@
 #include <string>
 #include <set>
 
-#include <archive.h>
-#include <archive_entry.h>
+#include "archive.h"
+#include "archive_entry.h"
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -192,7 +192,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(const std::shared_ptr<io::Ba
     archive_entry_set_size(entry, entryMetadata.entrySize);
     archive_entry_set_uid(entry, entryMetadata.entryUID);
     archive_entry_set_gid(entry, entryMetadata.entryGID);
-    archive_entry_set_mtime(entry, entryMetadata.entryMTime, gsl::narrow<long>(entryMetadata.entryMTimeNsec));
+    archive_entry_set_mtime(entry, entryMetadata.entryMTime, gsl::narrow<long>(entryMetadata.entryMTimeNsec));  // NOLINT long comes from libarchive API
 
     logger_->log_info("Writing %s with type %d, perms %d, size %d, uid %d, gid %d, mtime %d,%d", entryMetadata.entryName, entryMetadata.entryType, entryMetadata.entryPerm,
                       entryMetadata.entrySize, entryMetadata.entryUID, entryMetadata.entryGID, entryMetadata.entryMTime, entryMetadata.entryMTimeNsec);

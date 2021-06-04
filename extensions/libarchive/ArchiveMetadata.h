@@ -20,79 +20,75 @@
 #ifndef EXTENSIONS_LIBARCHIVE_ARCHIVEMETADATA_H_
 #define EXTENSIONS_LIBARCHIVE_ARCHIVEMETADATA_H_
 
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/error/en.h"
-
 #include <list>
 #include <vector>
 #include <string>
-#include <algorithm>
+
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
 
 #include "ArchiveCommon.h"
-#include "core/Core.h"
 #include "utils/file/FileManager.h"
 
 class ArchiveEntryMetadata {
-public:
-    std::string entryName;
-    mode_t entryType;
-    mode_t entryPerm;
-    uid_t entryUID;
-    gid_t entryGID;
-    uint64_t entryMTime;
-    uint64_t entryMTimeNsec;
-    uint64_t entrySize;
+ public:
+  std::string entryName;
+  mode_t entryType;
+  mode_t entryPerm;
+  uid_t entryUID;
+  gid_t entryGID;
+  uint64_t entryMTime;
+  uint64_t entryMTimeNsec;
+  uint64_t entrySize;
 
-    std::string tmpFileName;
-    std::string stashKey;
+  std::string tmpFileName;
+  std::string stashKey;
 
-    inline rapidjson::Value toJson(rapidjson::Document::AllocatorType &alloc) const;
-    static inline ArchiveEntryMetadata fromJson(const rapidjson::Value&);
+  inline rapidjson::Value toJson(rapidjson::Document::AllocatorType &alloc) const;
+  static inline ArchiveEntryMetadata fromJson(const rapidjson::Value&);
 
-private:
-    inline void loadJson(const rapidjson::Value&);
+ private:
+  inline void loadJson(const rapidjson::Value&);
 };
 
 using ArchiveEntryIterator = typename std::list<ArchiveEntryMetadata>::iterator;
 
 class ArchiveMetadata {
-public:
-    std::string archiveName;
-    std::string archiveFormatName;
-    int archiveFormat;
-    std::list<ArchiveEntryMetadata> entryMetadata;
+ public:
+  std::string archiveName;
+  std::string archiveFormatName;
+  int archiveFormat;
+  std::list<ArchiveEntryMetadata> entryMetadata;
 
-    std::string focusedEntry;
+  std::string focusedEntry;
 
-    ArchiveEntryIterator find(const std::string& name);
-    ArchiveEntryIterator eraseEntry(ArchiveEntryIterator position);
-    ArchiveEntryIterator insertEntry(ArchiveEntryIterator it, const ArchiveEntryMetadata& entry);
+  ArchiveEntryIterator find(const std::string& name);
+  ArchiveEntryIterator eraseEntry(ArchiveEntryIterator position);
+  ArchiveEntryIterator insertEntry(ArchiveEntryIterator it, const ArchiveEntryMetadata& entry);
 
-    void seedTempPaths(fileutils::FileManager* file_man, bool keep);
+  void seedTempPaths(fileutils::FileManager* file_man, bool keep);
 
-    rapidjson::Value toJson(rapidjson::Document::AllocatorType &alloc) const;
-    static ArchiveMetadata fromJson(const rapidjson::Value&);
+  rapidjson::Value toJson(rapidjson::Document::AllocatorType &alloc) const;
+  static ArchiveMetadata fromJson(const rapidjson::Value&);
 
-private:
-    void loadJson(const rapidjson::Value&);
+ private:
+  void loadJson(const rapidjson::Value&);
 };
 
 class ArchiveStack {
-public:
-    static ArchiveStack fromJsonString(const std::string& input);
-    static ArchiveStack fromJson(const rapidjson::Value& input);
-    void push(const ArchiveMetadata& metadata) { stack_.push_back(metadata); }
-    ArchiveMetadata pop() { auto x = top(); stack_.pop_back(); return x; }
-    ArchiveMetadata top() const { return stack_.back(); }
-    void loadJson(const rapidjson::Value& input);
-    void loadJsonString(const std::string& input);
-    std::string toJsonString() const;
-    rapidjson::Document toJson() const;
+ public:
+  static ArchiveStack fromJsonString(const std::string& input);
+  static ArchiveStack fromJson(const rapidjson::Value& input);
+  void push(const ArchiveMetadata& metadata) { stack_.push_back(metadata); }
+  ArchiveMetadata pop() { auto x = top(); stack_.pop_back(); return x; }
+  ArchiveMetadata top() const { return stack_.back(); }
+  void loadJson(const rapidjson::Value& input);
+  void loadJsonString(const std::string& input);
+  std::string toJsonString() const;
+  rapidjson::Document toJson() const;
 
-private:
-    std::vector<ArchiveMetadata> stack_;
+ private:
+  std::vector<ArchiveMetadata> stack_;
 };
 
 #endif  // EXTENSIONS_LIBARCHIVE_ARCHIVEMETADATA_H_

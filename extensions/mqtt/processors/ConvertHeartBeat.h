@@ -15,19 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __CONVERT_HEARTBEAT_H__
-#define __CONVERT_HEARTBEAT_H__
+#pragma once
 
-#include "MQTTControllerService.h"
-#include "FlowFileRecord.h"
-#include "core/Processor.h"
+#include <string>
+#include <memory>
+
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Resource.h"
-#include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "MQTTClient.h"
-#include "c2/protocols/RESTProtocol.h"
 #include "ConvertBase.h"
 
 namespace org {
@@ -40,7 +35,7 @@ namespace processors {
  * Purpose: ConvertHeartBeat converts heatbeats into MQTT messages.
  */
 class ConvertHeartBeat: public ConvertBase{
-public:
+ public:
   // Constructor
   /*!
    * Create a new processor
@@ -53,7 +48,7 @@ public:
   // Processor Name
   static constexpr char const* ProcessorName = "ConvertHeartBeat";
 
-public:
+ public:
   /**
    * Function that's executed when the processor is triggered.
    * @param context process context.
@@ -63,7 +58,7 @@ public:
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
-private:
+ private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
@@ -73,5 +68,3 @@ private:
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

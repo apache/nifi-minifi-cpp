@@ -17,14 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __ABSTRACTMQTT_H__
-#define __ABSTRACTMQTT_H__
+#pragma once
+
+#include <set>
+#include <string>
+#include <memory>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "MQTTClient.h"
 
@@ -98,11 +100,11 @@ class AbstractMQTTProcessor : public core::Processor {
 
   // MQTT async callbacks
   static void msgDelivered(void *context, MQTTClient_deliveryToken dt) {
-    AbstractMQTTProcessor *processor = (AbstractMQTTProcessor *) context;
+    AbstractMQTTProcessor *processor = reinterpret_cast<AbstractMQTTProcessor *>(context);
     processor->delivered_token_ = dt;
   }
   static int msgReceived(void *context, char *topicName, int /*topicLen*/, MQTTClient_message *message) {
-    AbstractMQTTProcessor *processor = (AbstractMQTTProcessor *) context;
+    AbstractMQTTProcessor *processor = reinterpret_cast<AbstractMQTTProcessor *>(context);
     if (processor->isSubscriber_) {
       if (!processor->enqueueReceiveMQTTMsg(message))
         MQTTClient_freeMessage(&message);
@@ -113,7 +115,7 @@ class AbstractMQTTProcessor : public core::Processor {
     return 1;
   }
   static void connectionLost(void *context, char* /*cause*/) {
-    AbstractMQTTProcessor *processor = (AbstractMQTTProcessor *) context;
+    AbstractMQTTProcessor *processor = reinterpret_cast<AbstractMQTTProcessor *>(context);
     processor->reconnect();
   }
   bool reconnect();
@@ -154,5 +156,3 @@ class AbstractMQTTProcessor : public core::Processor {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

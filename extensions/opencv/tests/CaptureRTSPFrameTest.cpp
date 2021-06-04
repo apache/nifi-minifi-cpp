@@ -37,7 +37,7 @@
 #include "processors/LogAttribute.h"
 #include "../../../libminifi/test/unit/ProvenanceTestHelper.h"
 
-// TODO: valid capture test needs to be fixed
+// TODO(_): valid capture test needs to be fixed
 TEST_CASE("CaptureRTSPFrame::ValidCapture", "[!mayfail]") {
     TestController testController;
 

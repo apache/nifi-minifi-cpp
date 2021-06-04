@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_CAPTURERTSPFRAME_H
-#define NIFI_MINIFI_CPP_CAPTURERTSPFRAME_H
+#pragma once
 
 #include <atomic>
 #include <iomanip>
@@ -27,6 +26,7 @@
 #include "core/Processor.h"
 #include "utils/gsl.h"
 
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -35,7 +35,6 @@ namespace processors {
 
 class CaptureRTSPFrame : public core::Processor {
  public:
-
   explicit CaptureRTSPFrame(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<CaptureRTSPFrame>::getLogger()) {
@@ -63,8 +62,8 @@ class CaptureRTSPFrame : public core::Processor {
 
   class CaptureRTSPFrameWriteCallback : public OutputStreamCallback {
    public:
-    explicit CaptureRTSPFrameWriteCallback(cv::Mat image_mat, std::string image_encoding_)
-        : image_mat_(std::move(image_mat)), image_encoding_(image_encoding_) {
+    explicit CaptureRTSPFrameWriteCallback(cv::Mat image_mat, std::string image_encoding)
+        : image_mat_(std::move(image_mat)), image_encoding_(image_encoding) {
     }
     ~CaptureRTSPFrameWriteCallback() override = default;
 
@@ -135,6 +134,3 @@ REGISTER_RESOURCE(CaptureRTSPFrame, "Captures a frame from the RTSP stream at sp
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-
-#endif  // NIFI_MINIFI_CPP_CAPTURERTSPFRAME_H

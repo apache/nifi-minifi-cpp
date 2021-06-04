@@ -17,8 +17,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __MERGE_CONTENT_H__
-#define __MERGE_CONTENT_H__
+#pragma once
+
+#include <deque>
+#include <map>
+#include <vector>
+#include <memory>
+#include <string>
 
 #include "ArchiveCommon.h"
 #include "BinFiles.h"
@@ -172,7 +177,7 @@ class ArchiveMerge {
     FlowFileSerializer& serializer_;
 
     static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
-      WriteCallback *callback = (WriteCallback *) context;
+      WriteCallback *callback = reinterpret_cast<WriteCallback *>(context);
       uint8_t* data = reinterpret_cast<uint8_t*>(const_cast<void*>(buff));
       la_ssize_t totalWrote = 0;
       size_t remaining = size;
@@ -376,5 +381,3 @@ REGISTER_RESOURCE(MergeContent, "Merges a Group of FlowFiles together based on a
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

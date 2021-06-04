@@ -19,13 +19,10 @@
  */
 #include "CompressContent.h"
 #include <stdio.h>
-#include <algorithm>
 #include <memory>
 #include <string>
 #include <map>
 #include <set>
-#include "utils/TimeUtil.h"
-#include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 

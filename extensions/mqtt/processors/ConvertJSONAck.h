@@ -17,21 +17,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __CONVERT_ACKNOWLEDGEMENT_H__
-#define __CONVERT_ACKNOWLEDGEMENT_H__
+#pragma once
 
-#include "MQTTControllerService.h"
+#include <vector>
+#include <string>
+#include <memory>
+
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
-#include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "MQTTClient.h"
-#include "c2/protocols/RESTProtocol.h"
 #include "ConvertBase.h"
 #include "utils/gsl.h"
+
 
 namespace org {
 namespace apache {
@@ -70,7 +69,6 @@ class ConvertJSONAck : public ConvertBase {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  protected:
-
   class ReadCallback : public InputStreamCallback {
    public:
     ReadCallback() = default;
@@ -90,6 +88,7 @@ class ConvertJSONAck : public ConvertBase {
    * @param json json representation defined by the restful protocol
    */
   std::string parseTopicName(const std::string &json);
+
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
@@ -99,5 +98,3 @@ class ConvertJSONAck : public ConvertBase {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

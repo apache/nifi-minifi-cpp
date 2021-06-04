@@ -18,15 +18,13 @@
  * limitations under the License.
  */
 
-#ifndef ARCHIVE_TESTS_H
-#define ARCHIVE_TESTS_H
+#pragma once
 
 #include <map>
 #include <vector>
 #include <string>
 
-#include <archive.h>
-#include <archive_entry.h>
+#include "archive_entry.h"
 
 #include "ArchiveCommon.h"
 
@@ -63,4 +61,3 @@ void build_test_archive(std::string, OrderedTestArchive);
 bool check_archive_contents(std::string, TAE_MAP_T entries, bool check_attributes = true, FN_VEC_T order = FN_VEC_T());
 bool check_archive_contents(std::string, OrderedTestArchive, bool check_attributes = true);
 
-#endif

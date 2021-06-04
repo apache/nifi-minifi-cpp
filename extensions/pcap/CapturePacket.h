@@ -16,11 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_CAPTUREPACKET_H
-#define EXTENSIONS_CAPTUREPACKET_H
+#pragma once
 
 #include <memory>
 #include <regex>
+#include <vector>
+#include <string>
 
 #include "PcapLiveDeviceList.h"
 #include "PcapFilter.h"
@@ -73,15 +74,16 @@ class CapturePacketMechanism {
     return file_;
   }
 
-  long getSize() const {
+  int64_t getSize() const {
     return atomic_count_;
   }
+
  protected:
   CapturePacketMechanism &operator=(const CapturePacketMechanism &other) = delete;
   std::string path_;
   std::string file_;
   int64_t *max_size_;
-  std::atomic<long> atomic_count_;
+  std::atomic<int64_t> atomic_count_;
 };
 
 struct PacketMovers {
@@ -92,7 +94,6 @@ struct PacketMovers {
 // CapturePacket Class
 class CapturePacket : public core::Processor {
  public:
-
   // Constructor
   /*!
    * Create a new processor
@@ -122,7 +123,6 @@ class CapturePacket : public core::Processor {
   static void packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, void* data);
 
  protected:
-
   void notifyStop() override {
     logger_->log_debug("Stopping capture");
     for (auto dev : device_list_) {
@@ -149,7 +149,6 @@ class CapturePacket : public core::Processor {
   static CapturePacketMechanism *create_new_capture(const std::string &base_path, int64_t *max_size);
 
  private:
-
   inline std::string getPath() {
     return base_dir_ + "/" + base_path_;
   }
@@ -174,5 +173,3 @@ REGISTER_RESOURCE(CapturePacket, "CapturePacket captures and writes one or more 
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_CAPTUREPACKET_H */

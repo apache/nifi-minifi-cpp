@@ -17,17 +17,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __BIN_FILES_H__
-#define __BIN_FILES_H__
+#pragma once
 
 #include <cinttypes>
 #include <limits>
 #include <deque>
+#include <memory>
+#include <unordered_set>
+#include <string>
+#include <set>
 #include <map>
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
@@ -124,8 +126,6 @@ class Bin {
     return groupId_;
   }
 
- protected:
-
  private:
   uint64_t minSize_;
   uint64_t maxSize_;
@@ -184,8 +184,6 @@ class BinManager {
   // get ready bin from binManager
   void getReadyBin(std::deque<std::unique_ptr<Bin>> &retBins);
 
- protected:
-
  private:
   std::mutex mutex_;
   uint64_t minSize_{0};
@@ -205,6 +203,7 @@ class BinManager {
 class BinFiles : public core::Processor {
  protected:
   static core::Relationship Self;
+
  public:
   using core::Processor::Processor;
   // Destructor
@@ -302,4 +301,3 @@ REGISTER_RESOURCE(BinFiles, "Bins flow files into buckets based on the number of
 } /* namespace apache */
 } /* namespace org */
 
-#endif

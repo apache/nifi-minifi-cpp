@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_PCAPLOADER_H
-#define EXTENSIONS_PCAPLOADER_H
+#pragma once
+
+#include <vector>
+#include <string>
+#include <memory>
 
 #include "core/ClassLoader.h"
 #include "CapturePacket.h"
@@ -61,4 +64,3 @@ class PcapFactory : public core::ObjectFactory {
 extern "C" {
 DLL_EXPORT void *createPcapFactory(void);
 }
-#endif /* EXTENSIONS_PCAPLOADER_H */

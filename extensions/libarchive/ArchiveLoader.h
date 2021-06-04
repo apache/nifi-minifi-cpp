@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSION_ARCHIVELOADER_H
-#define EXTENSION_ARCHIVELOADER_H
+#pragma once
+
+#include <vector>
+#include <string>
+#include <memory>
 
 #include "MergeContent.h"
 #include "CompressContent.h"
@@ -76,4 +79,3 @@ class ArchiveFactory : public core::ObjectFactory {
 extern "C" {
 void *createArchiveFactory(void);
 }
-#endif /* EXTENSION_ARCHIVELOADER_H */

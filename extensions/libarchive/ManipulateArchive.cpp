@@ -17,16 +17,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <string.h>
 #include <iostream>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <set>
 #include <list>
+#include <algorithm>
 
-#include <archive.h>
-#include <archive_entry.h>
+#include "archive.h"
+#include "archive_entry.h"
 
 #include "ManipulateArchive.h"
 #include "Exception.h"
@@ -34,6 +33,8 @@
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
 #include "utils/file/FileManager.h"
+#include "FocusArchiveEntry.h"
+#include "UnfocusArchiveEntry.h"
 
 namespace org {
 namespace apache {
@@ -107,7 +108,7 @@ void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessS
     if (before_.size() && after_.size()) {
         logger_->log_error("ManipulateArchive: cannot specify both before and after.");
         invalid = true;
-    }   
+    }
 
     if (invalid) {
         throw Exception(GENERAL_EXCEPTION, "Invalid ManipulateArchive configuration");

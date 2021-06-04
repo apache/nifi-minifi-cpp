@@ -35,3 +35,4 @@ target_link_libraries(minifi-opc-extensions ${CMAKE_DL_LIBS} spdlog open62541::o
 SET (OPC-EXTENSIONS minifi-opc-extensions PARENT_SCOPE)
 
 register_extension(minifi-opc-extensions)
+register_extension_linter(minifi-opc-extensions-linter)

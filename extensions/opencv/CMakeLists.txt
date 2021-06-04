@@ -76,3 +76,4 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 SET (OPENCV-EXTENSION minifi-opencv PARENT_SCOPE)
 register_extension(minifi-opencv)
+register_extension_linter(minifi-opencv-linter)

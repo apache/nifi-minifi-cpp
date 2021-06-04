@@ -21,16 +21,13 @@
 #include <stdio.h>
 #include <memory>
 #include <string>
-#include <vector>
 #include <set>
-#include <queue>
 #include <map>
 #include <deque>
 #include <utility>
 #include <algorithm>
 #include <numeric>
 #include "utils/TimeUtil.h"
-#include "utils/StringUtils.h"
 #include "utils/GeneralUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -289,11 +286,11 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
   }
 
   std::shared_ptr<core::FlowFile> merge_flow = std::static_pointer_cast<FlowFileRecord>(session->create());
-  if (attributeStrategy_ == merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON)
+  if (attributeStrategy_ == merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON) {
     KeepOnlyCommonAttributesMerger(bin->getFlowFile()).mergeAttributes(session, merge_flow);
-  else if (attributeStrategy_ == merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE)
+  } else if (attributeStrategy_ == merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE) {
     KeepAllUniqueAttributesMerger(bin->getFlowFile()).mergeAttributes(session, merge_flow);
-  else {
+  } else {
     logger_->log_error("Attribute strategy not supported %s", attributeStrategy_);
     return false;
   }

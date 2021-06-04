@@ -16,23 +16,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NIFI_MINIFI_CPP_FetchOPCProcessor_H
-#define NIFI_MINIFI_CPP_FetchOPCProcessor_H
+#pragma once
 
 #include <memory>
 #include <string>
-#include <list>
 #include <unordered_map>
 #include <mutex>
-#include <thread>
+#include <vector>
 
 #include "opc.h"
 #include "opcbase.h"
-#include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
 #include "core/Property.h"
 #include "core/Resource.h"
 #include "controllers/SSLContextService.h"
@@ -47,7 +43,7 @@ namespace minifi {
 namespace processors {
 
 class FetchOPCProcessor : public BaseOPCProcessor {
-public:
+ public:
   static constexpr char const* ProcessorName = "FetchOPC";
   // Supported Properties
   static core::Property NodeIDType;
@@ -60,7 +56,7 @@ public:
   static core::Relationship Success;
   static core::Relationship Failure;
 
-  FetchOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
+  explicit FetchOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
   : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), nodesFound_(0), variablesFound_(0), maxDepth_(0) {
     logger_ = logging::LoggerFactory<FetchOPCProcessor>::getLogger();
   }
@@ -71,7 +67,7 @@ public:
 
   void initialize(void) override;
 
-protected:
+ protected:
   bool nodeFoundCallBack(opc::Client& client, const UA_ReferenceDescription *ref, const std::string& path,
                          const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 
@@ -80,7 +76,7 @@ protected:
   class WriteCallback : public OutputStreamCallback {
     std::string data_;
    public:
-    WriteCallback(std::string&& data)
+    explicit WriteCallback(std::string&& data)
       : data_(data) {
     }
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
@@ -96,7 +92,7 @@ protected:
   uint64_t maxDepth_;
   bool lazy_mode_;
 
-private:
+ private:
   std::mutex onTriggerMutex_;
   std::vector<UA_NodeId> translatedNodeIDs_;  // Only used when user provides path, path->nodeid translation is only done once
   std::unordered_map<std::string, std::string> node_timestamp_;  // Key = Full path, Value = Timestamp
@@ -109,5 +105,3 @@ REGISTER_RESOURCE(FetchOPCProcessor, "Fetches OPC-UA node");
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_FetchOPCProcessor_H

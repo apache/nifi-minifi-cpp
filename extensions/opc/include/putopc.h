@@ -17,23 +17,18 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_PUTOPC_H
-#define NIFI_MINIFI_CPP_PUTOPC_H
+#pragma once
 
 #include <memory>
 #include <string>
-#include <list>
-#include <map>
+#include <vector>
 #include <mutex>
-#include <thread>
 
 #include "opc.h"
 #include "opcbase.h"
-#include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
 #include "core/Property.h"
 #include "core/Resource.h"
 #include "controllers/SSLContextService.h"
@@ -64,7 +59,7 @@ class PutOPCProcessor : public BaseOPCProcessor {
   static core::Relationship Success;
   static core::Relationship Failure;
 
-  PutOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
+  explicit PutOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
   : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), parentExists_(false) {
     logger_ = logging::LoggerFactory<PutOPCProcessor>::getLogger();
   }
@@ -76,14 +71,13 @@ class PutOPCProcessor : public BaseOPCProcessor {
   void initialize(void) override;
 
  private:
-
   class ReadCallback : public InputStreamCallback {
-  public:
-    ReadCallback(std::shared_ptr<logging::Logger> logger) : logger_(logger) {}
+   public:
+    explicit ReadCallback(std::shared_ptr<logging::Logger> logger) : logger_(logger) {}
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
     const std::vector<uint8_t>& getContent() const { return buf_; }
 
-  private:
+   private:
     std::vector<uint8_t> buf_;
     std::shared_ptr<logging::Logger> logger_;
   };
@@ -107,5 +101,3 @@ REGISTER_RESOURCE(PutOPCProcessor, "Creates/updates  OPC nodes");
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_PUTOPC_H
