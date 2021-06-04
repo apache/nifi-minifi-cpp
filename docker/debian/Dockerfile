@@ -26,9 +26,11 @@ ARG MINIFI_VERSION
 
 ENV MINIFI_BASE_DIR /opt/minifi
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
 
-RUN apt-get update && apt-get install -y openjdk-11-jdk openjdk-11-source libpython3.7-dev sudo git maven libarchive13 cmake
+RUN echo "deb http://deb.debian.org/debian buster-backports main" | tee -a /etc/apt/sources.list \
+    && apt-get update && apt-get install -y openjdk-11-jdk openjdk-11-source libpython3.7-dev sudo git maven libarchive13 libtool \
+    && apt-get -t buster-backports install -y cmake
 
 RUN mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}

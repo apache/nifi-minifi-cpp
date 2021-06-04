@@ -67,8 +67,8 @@ build_deps(){
           elif [ "$FOUND_VALUE" = "lua" ]; then
             INSTALLED+=("liblua5.1-0-dev")
           elif [ "$FOUND_VALUE" = "jnibuild" ]; then
-            INSTALLED+=("openjdk-8-jdk")
-            INSTALLED+=("openjdk-8-source")
+            INSTALLED+=("openjdk-11-jdk")
+            INSTALLED+=("openjdk-11-source")
             INSTALLED+=("maven")
           elif [ "$FOUND_VALUE" = "automake" ]; then
             INSTALLED+=("automake")
