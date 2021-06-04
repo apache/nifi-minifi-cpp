@@ -69,6 +69,10 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
   void initialize() override;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   std::string buildSelectQuery();
 
   void initializeMaxValues(core::ProcessContext& context);
@@ -77,7 +81,6 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
 
   bool saveState();
 
- private:
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::string table_name_;
   std::vector<std::string> return_columns_;

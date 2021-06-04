@@ -100,14 +100,15 @@ TEST_CASE("Test Relationships", "[rel1]") {
   const auto &processors = resp.children[0];
   REQUIRE(processors.children.size() > 0);
   minifi::state::response::SerializedResponseNode proc_0;
-  for (const auto &node : processors.children) {
+  for (const auto& node : processors.children) {
     if ("org.apache.nifi.minifi.processors.PutFile" == node.name) {
       proc_0 = node;
+      break;
     }
   }
 #ifndef WIN32
   REQUIRE(proc_0.children.size() > 0);
-  const auto &relationships = proc_0.children[1];
+  const auto& relationships = proc_0.children[2];
   REQUIRE("supportedRelationships" == relationships.name);
   // this is because they are now nested
   REQUIRE("supportedRelationships" == relationships.children[0].name);
@@ -117,6 +118,10 @@ TEST_CASE("Test Relationships", "[rel1]") {
 
   REQUIRE("success" == relationships.children[1].children[0].value.to_string());
   REQUIRE("description" == relationships.children[1].children[1].name);
+
+  const auto& inputRequirement = proc_0.children[1];
+  REQUIRE("inputRequirement" == inputRequirement.name);
+  REQUIRE("INPUT_REQUIRED" == inputRequirement.value.to_string());
 #endif
 }
 

@@ -111,6 +111,10 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   }
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   std::shared_ptr<logging::Logger> logger_;
   std::mutex mutex_;
   uint64_t maxQueueSize_;

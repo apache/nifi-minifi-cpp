@@ -40,6 +40,7 @@
 #include "Connectable.h"
 #include "Connection.h"
 #include "Core.h"
+#include "core/Annotation.h"
 #include "io/StreamFactory.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
@@ -251,6 +252,10 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 
   std::shared_ptr<Connectable> pickIncomingConnection() override;
 
+  void validateAnnotations() const;
+
+  std::string getInputRequirementAsString() const;
+
  protected:
   virtual void notifyStop() {
   }
@@ -297,6 +302,11 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   void updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force = false);
 
   static bool partOfCycle(const std::shared_ptr<Connection>& conn);
+
+  virtual annotation::Input getInputRequirement() const {
+      // default input requirement
+      return annotation::Input::INPUT_ALLOWED;
+  }
 
   // an outgoing connection allows us to reach these nodes
   std::unordered_map<std::shared_ptr<Connection>, std::unordered_set<std::shared_ptr<const Processor>>> reachable_processors_;

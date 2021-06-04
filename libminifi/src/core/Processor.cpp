@@ -21,15 +21,9 @@
 
 #include <time.h>
 
-#include <chrono>
-#include <functional>
-#include <map>
 #include <memory>
-#include <queue>
 #include <set>
 #include <string>
-#include <thread>
-#include <utility>
 #include <vector>
 
 #include "Connection.h"
@@ -37,7 +31,6 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessorConfig.h"
 #include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "io/StreamFactory.h"
 #include "utils/gsl.h"
@@ -384,6 +377,38 @@ std::shared_ptr<Connectable> Processor::pickIncomingConnection() {
 
   // we did not find a preferred connection
   return getNextIncomingConnectionImpl(rel_guard);
+}
+
+void Processor::validateAnnotations() const {
+  switch (getInputRequirement()) {
+    case annotation::Input::INPUT_REQUIRED: {
+      if (!hasIncomingConnections()) {
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_REQUIRED was specified for the processor, but no incoming connections were found");
+      }
+      return;
+    }
+    case annotation::Input::INPUT_ALLOWED:
+      return;
+    case annotation::Input::INPUT_FORBIDDEN: {
+      if (hasIncomingConnections()) {
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_FORBIDDEN was specified for the processor, but there are incoming connections");
+      }
+      return;
+    }
+  }
+}
+
+std::string Processor::getInputRequirementAsString() const {
+  switch (getInputRequirement()) {
+    case annotation::Input::INPUT_REQUIRED:
+      return "INPUT_REQUIRED";
+    case annotation::Input::INPUT_ALLOWED:
+      return "INPUT_ALLOWED";
+    case annotation::Input::INPUT_FORBIDDEN:
+      return "INPUT_FORBIDDEN";
+  }
+
+  return "ERROR_no_such_input_requirement";
 }
 
 }  // namespace core

@@ -69,6 +69,10 @@ class ListS3 : public S3Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   struct ListingState {
     int64_t listed_key_timestamp = 0;
     std::vector<std::string> listed_keys;

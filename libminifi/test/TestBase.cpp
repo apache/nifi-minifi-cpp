@@ -438,3 +438,9 @@ void TestPlan::finalize() {
   finalized = true;
 }
 
+void TestPlan::validateAnnotations() const {
+  for (const auto& processor : processor_queue_) {
+    processor->validateAnnotations();
+  }
+}
+

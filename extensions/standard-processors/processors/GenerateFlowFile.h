@@ -96,6 +96,10 @@ class GenerateFlowFile : public core::Processor {
   bool textData_;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   // logger instance
   std::shared_ptr<logging::Logger> logger_;
 };

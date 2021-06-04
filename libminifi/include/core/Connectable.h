@@ -103,7 +103,7 @@ class Connectable : public CoreComponent {
    * @return true if incoming connections > 0
    */
   bool hasIncomingConnections() const {
-    return (_incomingConnections.size() > 0);
+    return !_incomingConnections.empty();
   }
 
   uint8_t getMaxConcurrentTasks() const {

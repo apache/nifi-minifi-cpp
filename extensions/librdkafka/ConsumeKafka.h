@@ -151,6 +151,10 @@ class ConsumeKafka : public core::Processor {
     uint64_t dataSize_;
   };
 
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   std::string kafka_brokers_;
   std::string security_protocol_;
   std::vector<std::string> topic_names_;

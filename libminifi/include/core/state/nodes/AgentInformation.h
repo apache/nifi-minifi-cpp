@@ -100,13 +100,13 @@ class ComponentManifest : public DeviceInformation {
   }
 
  protected:
-  void serializeClassDescription(const std::vector<ClassDescription> &descriptions, const std::string name, SerializedResponseNode &response) const {
+  void serializeClassDescription(const std::vector<ClassDescription>& descriptions, const std::string& name, SerializedResponseNode& response) const {
     if (!descriptions.empty()) {
       SerializedResponseNode type;
       type.name = name;
       type.array = true;
       std::vector<SerializedResponseNode> serialized;
-      for (auto group : descriptions) {
+      for (const auto& group : descriptions) {
         SerializedResponseNode desc;
         desc.name = group.class_name_;
         SerializedResponseNode className;
@@ -250,7 +250,12 @@ class ComponentManifest : public DeviceInformation {
         dyn_relat.name = "supportsDynamicRelationships";
         dyn_relat.value = group.dynamic_relationships_;
 
-        if (group.class_relationships_.size() > 0) {
+        // only for processors
+        if (!group.class_relationships_.empty()) {
+          SerializedResponseNode inputReq;
+          inputReq.name = "inputRequirement";
+          inputReq.value = group.inputRequirement_;
+
           SerializedResponseNode relationships;
           relationships.name = "supportedRelationships";
           relationships.array = true;
@@ -271,10 +276,11 @@ class ComponentManifest : public DeviceInformation {
 
             relationships.children.push_back(child);
           }
+          desc.children.push_back(inputReq);
           desc.children.push_back(relationships);
         }
 
-        auto lastOfIdx = group.class_name_.find_last_of(".");
+        auto lastOfIdx = group.class_name_.find_last_of('.');
         std::string processorName = group.class_name_;
         if (lastOfIdx != std::string::npos) {
           lastOfIdx++;  // if a value is found, increment to move beyond the .

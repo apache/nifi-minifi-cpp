@@ -103,6 +103,10 @@ class PutFile : public core::Processor {
   std::string tmpWritePath(const std::string &filename, const std::string &directory) const;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
   std::string conflict_resolution_;
   bool try_mkdirs_ = true;
   int64_t max_dest_files_ = -1;

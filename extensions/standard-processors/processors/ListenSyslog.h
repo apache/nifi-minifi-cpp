@@ -134,7 +134,7 @@ class ListenSyslog : public core::Processor {
     }
     uint8_t *_data;
     uint64_t _dataSize;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       int64_t ret = 0;
       if (_data && _dataSize > 0)
         ret = stream->write(_data, _dataSize);
@@ -144,11 +144,15 @@ class ListenSyslog : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi ListenSyslog
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   // Initialize, over write by NiFi ListenSyslog
-  virtual void initialize(void);
+  void initialize() override;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Run function for the thread

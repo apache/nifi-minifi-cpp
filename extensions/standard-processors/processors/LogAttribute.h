@@ -126,6 +126,10 @@ class LogAttribute : public core::Processor {
   void initialize(void) override;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
   uint64_t flowfiles_to_log_;
   bool hexencode_;
   uint32_t max_line_length_;

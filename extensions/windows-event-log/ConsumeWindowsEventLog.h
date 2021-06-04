@@ -125,6 +125,10 @@ private:
     const decltype(std::chrono::steady_clock::now()) time_ = std::chrono::steady_clock::now();
   };
 
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   bool commitAndSaveBookmark(const std::wstring &bookmarkXml, const std::shared_ptr<core::ProcessSession> &session);
   std::tuple<size_t, std::wstring> processEventLogs(const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::ProcessSession> &session, const EVT_HANDLE& event_query_results);

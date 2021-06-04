@@ -151,18 +151,18 @@ class HashContent : public core::Processor {
   static core::Relationship Success;
   static core::Relationship Failure;
 
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);  // override
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
 
   //! OnTrigger method, implemented by NiFi HashContent
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session);  // override
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   //! Initialize, over write by NiFi HashContent
-  void initialize(void);  // override
+  void initialize() override;
 
   class ReadCallback : public InputStreamCallback {
    public:
     ReadCallback(std::shared_ptr<core::FlowFile> flowFile, const HashContent& parent);
-    ~ReadCallback() {}
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream);
+    ~ReadCallback() override = default;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
     std::shared_ptr<core::FlowFile> flowFile_;
@@ -170,6 +170,10 @@ class HashContent : public core::Processor {
   };
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
   //! Logger
   std::shared_ptr<logging::Logger> logger_;
   std::string algoName_;

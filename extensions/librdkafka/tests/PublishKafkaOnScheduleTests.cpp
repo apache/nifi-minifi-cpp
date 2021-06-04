@@ -27,7 +27,7 @@
 
 class PublishKafkaOnScheduleTests : public IntegrationBase {
  public:
-    virtual void runAssertions() {
+    void runAssertions() override {
       using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
       assert(verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] {
         const std::string logs = LogTestController::getInstance().log_output.str();
@@ -55,7 +55,7 @@ class PublishKafkaOnScheduleTests : public IntegrationBase {
       assert(test_success);
     }
 
-    virtual void testSetup() {
+    void testSetup() override {
       LogTestController::getInstance().setDebug<core::ProcessGroup>();
       LogTestController::getInstance().setDebug<core::Processor>();
       LogTestController::getInstance().setDebug<core::ProcessSession>();

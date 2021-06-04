@@ -55,19 +55,23 @@ class RouteOnAttribute : public core::Processor {
    * NiFi API implementation
    */
 
-  virtual bool supportsDynamicProperties() {
+  bool supportsDynamicProperties() override {
     return true;
   }
 
-  virtual bool supportsDynamicRelationships() {
+  bool supportsDynamicRelationships() override {
     return true;
   }
 
-  virtual void onDynamicPropertyModified(const core::Property &orig_property, const core::Property &new_property);
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-  virtual void initialize(void);
+  void onDynamicPropertyModified(const core::Property &orig_property, const core::Property &new_property) override;
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void initialize() override;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
   std::shared_ptr<logging::Logger> logger_;
   std::map<std::string, core::Property> route_properties_;
   std::map<std::string, core::Relationship> route_rels_;

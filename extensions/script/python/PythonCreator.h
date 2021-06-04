@@ -119,6 +119,7 @@ class PythonCreator : public minifi::core::CoreComponent {
 
             minifi::ClassDescription description(script_with_package);
             description.dynamic_properties_ = proc->getPythonSupportDynamicProperties();
+            description.inputRequirement_ = proc->getInputRequirementAsString();
             auto properties = proc->getPythonProperties();
 
             minifi::AgentDocs::putDescription(scriptName, proc->getDescription());

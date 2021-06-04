@@ -91,6 +91,9 @@ class FetchSFTP : public SFTPProcessorBase {
   };
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
 
   std::string completion_strategy_;
   bool create_directory_;

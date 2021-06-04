@@ -21,11 +21,13 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include "core/expect.h"
 #include "core/Property.h"
 #include "core/Relationship.h"
 #include "core/Processor.h"
+#include "core/Annotation.h"
 #include "io/validation.h"
 
 namespace org {
@@ -36,33 +38,30 @@ namespace minifi {
 class ClassDescription {
  public:
   explicit ClassDescription(std::string name)
-      : class_name_(name),
-        dynamic_properties_(false),
-        dynamic_relationships_(false),
-        is_controller_service_(false) {
+      : class_name_(std::move(name)) {
   }
+
   explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, bool dyn_prop)
-      : class_name_(name),
-        class_properties_(props),
-        dynamic_properties_(dyn_prop),
-        dynamic_relationships_(false),
-        is_controller_service_(false) {
+      : class_name_(std::move(name)),
+        class_properties_(std::move(props)),
+        dynamic_properties_(dyn_prop) {
   }
+
   explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, std::vector<core::Relationship> class_relationships, bool dyn_prop, bool dyn_rel)
-      : class_name_(name),
-        class_properties_(props),
-        class_relationships_(class_relationships),
+      : class_name_(std::move(name)),
+        class_properties_(std::move(props)),
+        class_relationships_(std::move(class_relationships)),
         dynamic_properties_(dyn_prop),
-        dynamic_relationships_(dyn_rel),
-        is_controller_service_(false) {
+        dynamic_relationships_(dyn_rel) {
   }
+
   std::string class_name_;
   std::map<std::string, core::Property> class_properties_;
   std::vector<core::Relationship> class_relationships_;
-  bool dynamic_properties_;
-  bool dynamic_relationships_;
-
-  bool is_controller_service_;
+  bool dynamic_properties_ = false;
+  std::string inputRequirement_;
+  bool dynamic_relationships_ = false;
+  bool is_controller_service_ = false;
 };
 
 struct Components {
@@ -90,7 +89,7 @@ class ExternalBuildDescription {
   }
 
  public:
-  static void addExternalComponent(struct BundleDetails details, const ClassDescription &description) {
+  static void addExternalComponent(const BundleDetails& details, const ClassDescription& description) {
     bool found = false;
     for (const auto &d : getExternal()) {
       if (d.artifact == details.artifact) {
@@ -151,6 +150,7 @@ class BuildDescription {
           description.dynamic_properties_ = component->supportsDynamicProperties();
           description.dynamic_relationships_ = component->supportsDynamicRelationships();
           if (is_processor) {
+            description.inputRequirement_ = processor->getInputRequirementAsString();
             description.class_relationships_ = processor->getSupportedRelationships();
             class_mappings[group].processors_.emplace_back(description);
           } else if (is_controller_service) {

@@ -329,21 +329,25 @@ class MergeContent : public processors::BinFiles {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   // OnTrigger method, implemented by NiFi MergeContent
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   // Initialize, over write by NiFi MergeContent
-  virtual void initialize(void);
-  virtual bool processBin(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
+  void initialize() override;
+  bool processBin(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin) override;
 
  protected:
   // Returns a group ID representing a bin. This allows flow files to be binned into like groups
-  virtual std::string getGroupId(core::ProcessContext *context, std::shared_ptr<core::FlowFile> flow);
+  std::string getGroupId(core::ProcessContext *context, std::shared_ptr<core::FlowFile> flow) override;
   // check whether the defragment bin is validate
   bool checkDefragment(std::unique_ptr<Bin> &bin);
 
  private:
   void validatePropertyOptions();
+
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
 
   std::shared_ptr<logging::Logger> logger_;
   std::string mergeStrategy_;

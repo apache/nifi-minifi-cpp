@@ -240,6 +240,8 @@ class ProcessGroup : public CoreComponent {
 
   std::size_t getTotalFlowFileCount() const;
 
+  void verify() const;
+
  protected:
   void startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
 

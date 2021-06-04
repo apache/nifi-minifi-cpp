@@ -108,6 +108,9 @@ namespace processors {
   };
 
  private:
+   core::annotation::Input getInputRequirement() const override {
+     return core::annotation::Input::INPUT_REQUIRED;
+   }
 
   bool create_directory_;
   uint64_t batch_size_;

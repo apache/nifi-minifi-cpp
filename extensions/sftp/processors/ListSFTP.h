@@ -103,6 +103,10 @@ class ListSFTP : public SFTPProcessorBase {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
 
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::string listing_strategy_;

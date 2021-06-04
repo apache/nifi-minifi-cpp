@@ -196,6 +196,10 @@ class ListenHTTP : public core::Processor {
  private:
   static const uint64_t DEFAULT_BUFFER_SIZE;
 
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   void processIncomingFlowFile(core::ProcessSession *session);
   void processRequestBuffer(core::ProcessSession *session);
 

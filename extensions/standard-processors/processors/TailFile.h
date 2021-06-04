@@ -136,6 +136,10 @@ class TailFile : public core::Processor {
     TimePoint mtime_;
   };
 
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
   void processAllRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
   void processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state, std::vector<TailState> &rotated_file_states);
