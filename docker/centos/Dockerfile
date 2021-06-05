@@ -27,7 +27,7 @@ ARG MINIFI_VERSION
 ENV MINIFI_BASE_DIR /opt/minifi
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 
-RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python36-devel gcc gcc-c++ sudo git which maven make cmake
+RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python36-devel gcc gcc-c++ sudo git which maven make cmake libarchive
 
 RUN mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}
