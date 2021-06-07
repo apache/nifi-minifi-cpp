@@ -430,7 +430,7 @@ class HeartbeatHandler : public ServerAwareHandler {
       rapidjson::Document root;
       rapidjson::ParseResult result = root.Parse(post_data.data(), post_data.size());
       if (!result) {
-        throw std::runtime_error("JSON parse error: " + std::string(rapidjson::GetParseError_En(result.Code())) + "\n JSON data: " + post_data);
+        throw std::runtime_error(fmt::format("JSON parse error: {0}\n JSON data: {1}", std::string(rapidjson::GetParseError_En(result.Code())), post_data));
       }
       std::string operation = root["operation"].GetString();
       if (operation == "heartbeat") {
