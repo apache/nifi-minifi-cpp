@@ -75,8 +75,11 @@ double SystemCpuUsageTracker::getCpuUsageBetweenLastTwoQueries() const {
   uint64_t total_user_low_diff = total_user_low_ - previous_total_user_low_;
   uint64_t total_system_diff = total_sys_ - previous_total_sys_;
   uint64_t total_idle_diff = total_idle_ - previous_total_idle_;
-  uint64_t total_diff =  total_user_diff + total_user_low_diff + total_system_diff;
-  double percent = static_cast<double>(total_diff)/static_cast<double>(total_diff+total_idle_diff);
+  uint64_t total_diff = total_user_diff + total_user_low_diff + total_system_diff;
+  if (total_diff + total_idle_diff == 0) {
+    return -1.0;
+  }
+  double percent = static_cast<double>(total_diff) / static_cast<double>(total_diff + total_idle_diff);
 
   return percent;
 }
@@ -126,6 +129,9 @@ double SystemCpuUsageTracker::getCpuUsageBetweenLastTwoQueries() const {
   uint64_t total_sys_diff = total_sys_ - previous_total_sys_;
   uint64_t total_idle_diff = total_idle_ - previous_total_idle_;
   uint64_t total_diff = total_user_diff + total_sys_diff;
+  if (total_diff == 0) {
+    return -1.0;
+  }
   double percent = static_cast<double>(total_diff - total_idle_diff) / static_cast<double>(total_diff);
 
   return percent;
@@ -176,8 +182,10 @@ bool SystemCpuUsageTracker::isCurrentQuerySameAsPrevious() const {
 double SystemCpuUsageTracker::getCpuUsageBetweenLastTwoQueries() const {
   uint64_t total_ticks_since_last_time = total_ticks_-previous_total_ticks_;
   uint64_t idle_ticks_since_last_time  = idle_ticks_-previous_idle_ticks_;
-
-  double percent = static_cast<double>(total_ticks_since_last_time-idle_ticks_since_last_time)/static_cast<double>(total_ticks_since_last_time);
+  if (total_ticks_since_last_time == 0) {
+    return -1.0;
+  }
+  double percent = static_cast<double>(total_ticks_since_last_time - idle_ticks_since_last_time) / static_cast<double>(total_ticks_since_last_time);
 
   return percent;
 }
