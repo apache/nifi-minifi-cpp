@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "../jvm/JavaControllerService.h"
+#include "JavaControllerService.h"
 
 #include <string>
 #include <memory>

@@ -19,13 +19,12 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_PYTHONBINDINGS_H
-#define NIFI_MINIFI_CPP_PYTHONBINDINGS_H
+#pragma once
 
-#include <pybind11/embed.h>
+#include <memory>
 
-#include <core/ProcessSession.h>
-#include <core/logging/LoggerConfiguration.h>
+#include "pybind11/embed.h"
+#include "core/ProcessSession.h"
 
 #include "../ScriptProcessContext.h"
 
@@ -80,5 +79,3 @@ PYBIND11_EMBEDDED_MODULE(minifi_native, m) { // NOLINT
       .def("read", static_cast<py::bytes (python::PyBaseStream::*)(size_t)>(&python::PyBaseStream::read))
       .def("write", &python::PyBaseStream::write);
 }
-
-#endif  // NIFI_MINIFI_CPP_PYTHONBINDINGS_H

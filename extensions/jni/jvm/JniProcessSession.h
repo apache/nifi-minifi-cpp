@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_JNIPROCESSSESSION_H
-#define EXTENSIONS_JNIPROCESSSESSION_H
+#pragma once
 
+#include <jni.h>
 #include <string>
 #include <memory>
 #include <vector>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
-#include <jni.h>
+
 #include "io/BaseStream.h"
 #include "FlowFileRecord.h"
 #include "core/ProcessSession.h"
@@ -86,5 +86,3 @@ JNIEXPORT jint JNICALL Java_org_apache_nifi_processor_JniInputStream_readWithOff
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* EXTENSIONS_JNIPROCESSSESSION_H */

@@ -20,9 +20,9 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "RocksDbStream.h"
-#include "rocksdb/merge_operator.h"
 #include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
 #include "Exception.h"

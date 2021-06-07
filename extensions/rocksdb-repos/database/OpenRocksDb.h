@@ -20,6 +20,7 @@
 
 #include <memory>
 #include "utils/gsl.h"
+
 #include "rocksdb/db.h"
 #include "rocksdb/utilities/checkpoint.h"
 #include "WriteBatch.h"

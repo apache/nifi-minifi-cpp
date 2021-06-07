@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSION_SFTPLOADER_H
-#define EXTENSION_SFTPLOADER_H
+#pragma once
+
+#include <vector>
+#include <string>
+#include <memory>
 
 #include "core/ClassLoader.h"
 #include "processors/PutSFTP.h"
@@ -76,4 +79,3 @@ class SFTPFactory : public core::ObjectFactory {
 extern "C" {
 DLL_EXPORT void *createSFTPFactory(void);
 }
-#endif /* EXTENSION_SFTPLOADER_H */

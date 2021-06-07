@@ -49,71 +49,84 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property PutSFTP::RemotePath(
-    core::PropertyBuilder::createProperty("Remote Path")->withDescription("The path on the remote system from which to pull or push files")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::CreateDirectory(
-    core::PropertyBuilder::createProperty("Create Directory")->withDescription("Specifies whether or not the remote directory should be created if it does not exist.")
-        ->isRequired(true)->withDefaultValue<bool>(false)->build());
-core::Property PutSFTP::DisableDirectoryListing(
-    core::PropertyBuilder::createProperty("Disable Directory Listing")->withDescription("If set to 'true', directory listing is not performed prior to create missing directories. "
-                                                                                        "By default, this processor executes a directory listing command to see target directory existence before creating missing directories. "
-                                                                                        "However, there are situations that you might need to disable the directory listing such as the following. "
-                                                                                        "Directory listing might fail with some permission setups (e.g. chmod 100) on a directory. "
-                                                                                        "Also, if any other SFTP client created the directory after this processor performed a listing and before a directory creation request by this processor is finished, "
-                                                                                        "then an error is returned because the directory already exists.")
-        ->isRequired(false)->withDefaultValue<bool>(false)->build());
-core::Property PutSFTP::BatchSize(
-    core::PropertyBuilder::createProperty("Batch Size")->withDescription("The maximum number of FlowFiles to send in a single connection")
-        ->isRequired(true)->withDefaultValue<uint64_t>(500)->build());
-core::Property PutSFTP::ConflictResolution(
-    core::PropertyBuilder::createProperty("Conflict Resolution")->withDescription("Determines how to handle the problem of filename collisions")
-        ->isRequired(true)
-        ->withAllowableValues<std::string>({CONFLICT_RESOLUTION_REPLACE,
-                                            CONFLICT_RESOLUTION_IGNORE,
-                                            CONFLICT_RESOLUTION_RENAME,
-                                            CONFLICT_RESOLUTION_REJECT,
-                                            CONFLICT_RESOLUTION_FAIL,
-                                            CONFLICT_RESOLUTION_NONE})
-        ->withDefaultValue(CONFLICT_RESOLUTION_NONE)->build());
-core::Property PutSFTP::RejectZeroByte(
-    core::PropertyBuilder::createProperty("Reject Zero-Byte Files")->withDescription("Determines whether or not Zero-byte files should be rejected without attempting to transfer")
-        ->isRequired(false)->withDefaultValue<bool>(true)->build());
-core::Property PutSFTP::DotRename(
-    core::PropertyBuilder::createProperty("Dot Rename")->withDescription("If true, then the filename of the sent file is prepended with a \".\" and then renamed back to the original once the file is completely sent. "
-                                                                         "Otherwise, there is no rename. This property is ignored if the Temporary Filename property is set.")
-        ->isRequired(false)->withDefaultValue<bool>(true)->build());
-core::Property PutSFTP::TempFilename(
-    core::PropertyBuilder::createProperty("Temporary Filename")->withDescription("If set, the filename of the sent file will be equal to the value specified during the transfer and after successful completion will be renamed to the original filename. "
-                                                                                 "If this value is set, the Dot Rename property is ignored.")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::LastModifiedTime(
-    core::PropertyBuilder::createProperty("Last Modified Time")->withDescription("The lastModifiedTime to assign to the file after transferring it. "
-                                                                                  "If not set, the lastModifiedTime will not be changed. "
-                                                                                  "Format must be yyyy-MM-dd'T'HH:mm:ssZ. "
-                                                                                  "You may also use expression language such as ${file.lastModifiedTime}. "
-                                                                                  "If the value is invalid, the processor will not be invalid but will fail to change lastModifiedTime of the file.")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::Permissions(
-    core::PropertyBuilder::createProperty("Permissions")->withDescription("The permissions to assign to the file after transferring it. "
-                                                                          "Format must be either UNIX rwxrwxrwx with a - in place of denied permissions (e.g. rw-r--r--) or an octal number (e.g. 644). "
-                                                                          "If not set, the permissions will not be changed. "
-                                                                          "You may also use expression language such as ${file.permissions}. "
-                                                                          "If the value is invalid, the processor will not be invalid but will fail to change permissions of the file.")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::RemoteOwner(
-    core::PropertyBuilder::createProperty("Remote Owner")->withDescription("Integer value representing the User ID to set on the file after transferring it. "
-                                                                           "If not set, the owner will not be set. You may also use expression language such as ${file.owner}. "
-                                                                           "If the value is invalid, the processor will not be invalid but will fail to change the owner of the file.")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::RemoteGroup(
-    core::PropertyBuilder::createProperty("Remote Group")->withDescription("Integer value representing the Group ID to set on the file after transferring it. "
-                                                                           "If not set, the group will not be set. You may also use expression language such as ${file.group}. "
-                                                                           "If the value is invalid, the processor will not be invalid but will fail to change the group of the file.")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::UseCompression(
-    core::PropertyBuilder::createProperty("Use Compression")->withDescription("Indicates whether or not ZLIB compression should be used when transferring files")
-        ->isRequired(true)->withDefaultValue<bool>(false)->build());
+core::Property PutSFTP::RemotePath(core::PropertyBuilder::createProperty("Remote Path")
+    ->withDescription("The path on the remote system from which to pull or push files")
+    ->isRequired(false)->supportsExpressionLanguage(true)->build());
+
+core::Property PutSFTP::CreateDirectory(core::PropertyBuilder::createProperty("Create Directory")
+    ->withDescription("Specifies whether or not the remote directory should be created if it does not exist.")
+    ->isRequired(true)->withDefaultValue<bool>(false)->build());
+
+core::Property PutSFTP::DisableDirectoryListing(core::PropertyBuilder::createProperty("Disable Directory Listing")
+    ->withDescription("If set to 'true', directory listing is not performed prior to create missing directories. "
+                      "By default, this processor executes a directory listing command to see target directory existence before creating missing directories. "
+                      "However, there are situations that you might need to disable the directory listing such as the following. "
+                      "Directory listing might fail with some permission setups (e.g. chmod 100) on a directory. "
+                      "Also, if any other SFTP client created the directory after this processor performed a listing and before a directory creation request by this processor is finished, "
+                      "then an error is returned because the directory already exists.")
+    ->isRequired(false)->withDefaultValue<bool>(false)->build());
+
+core::Property PutSFTP::BatchSize(core::PropertyBuilder::createProperty("Batch Size")
+    ->withDescription("The maximum number of FlowFiles to send in a single connection")
+    ->isRequired(true)->withDefaultValue<uint64_t>(500)->build());
+
+core::Property PutSFTP::ConflictResolution(core::PropertyBuilder::createProperty("Conflict Resolution")
+    ->withDescription("Determines how to handle the problem of filename collisions")
+    ->isRequired(true)
+    ->withAllowableValues<std::string>({CONFLICT_RESOLUTION_REPLACE,
+                                        CONFLICT_RESOLUTION_IGNORE,
+                                        CONFLICT_RESOLUTION_RENAME,
+                                        CONFLICT_RESOLUTION_REJECT,
+                                        CONFLICT_RESOLUTION_FAIL,
+                                        CONFLICT_RESOLUTION_NONE})
+    ->withDefaultValue(CONFLICT_RESOLUTION_NONE)->build());
+
+core::Property PutSFTP::RejectZeroByte(core::PropertyBuilder::createProperty("Reject Zero-Byte Files")
+    ->withDescription("Determines whether or not Zero-byte files should be rejected without attempting to transfer")
+    ->isRequired(false)->withDefaultValue<bool>(true)->build());
+
+core::Property PutSFTP::DotRename(core::PropertyBuilder::createProperty("Dot Rename")
+    ->withDescription("If true, then the filename of the sent file is prepended with a \".\" and then renamed back to the original once the file is completely sent. "
+                      "Otherwise, there is no rename. This property is ignored if the Temporary Filename property is set.")
+    ->isRequired(false)->withDefaultValue<bool>(true)->build());
+
+core::Property PutSFTP::TempFilename(core::PropertyBuilder::createProperty("Temporary Filename")
+    ->withDescription("If set, the filename of the sent file will be equal to the value specified during the transfer and after successful completion will be renamed to the original filename. "
+                      "If this value is set, the Dot Rename property is ignored.")
+    ->isRequired(false)->supportsExpressionLanguage(true)->build());
+
+core::Property PutSFTP::LastModifiedTime(core::PropertyBuilder::createProperty("Last Modified Time")
+    ->withDescription("The lastModifiedTime to assign to the file after transferring it. "
+                      "If not set, the lastModifiedTime will not be changed. "
+                      "Format must be yyyy-MM-dd'T'HH:mm:ssZ. "
+                      "You may also use expression language such as ${file.lastModifiedTime}. "
+                      "If the value is invalid, the processor will not be invalid but will fail to change lastModifiedTime of the file.")
+    ->isRequired(false)->supportsExpressionLanguage(true)->build());
+
+core::Property PutSFTP::Permissions(core::PropertyBuilder::createProperty("Permissions")
+    ->withDescription("The permissions to assign to the file after transferring it. "
+                      "Format must be either UNIX rwxrwxrwx with a - in place of denied permissions (e.g. rw-r--r--) or an octal number (e.g. 644). "
+                      "If not set, the permissions will not be changed. "
+                      "You may also use expression language such as ${file.permissions}. "
+                      "If the value is invalid, the processor will not be invalid but will fail to change permissions of the file.")
+    ->isRequired(false)->supportsExpressionLanguage(true)->build());
+
+core::Property PutSFTP::RemoteOwner(core::PropertyBuilder::createProperty("Remote Owner")
+    ->withDescription("Integer value representing the User ID to set on the file after transferring it. "
+                      "If not set, the owner will not be set. You may also use expression language such as ${file.owner}. "
+                      "If the value is invalid, the processor will not be invalid but will fail to change the owner of the file.")
+    ->isRequired(false)->supportsExpressionLanguage(true)->build());
+
+core::Property PutSFTP::RemoteGroup(core::PropertyBuilder::createProperty("Remote Group")
+    ->withDescription("Integer value representing the Group ID to set on the file after transferring it. "
+                     "If not set, the group will not be set. You may also use expression language such as ${file.group}. "
+                     "If the value is invalid, the processor will not be invalid but will fail to change the group of the file.")
+    ->isRequired(false)->supportsExpressionLanguage(true)->build());
+
+core::Property PutSFTP::UseCompression(core::PropertyBuilder::createProperty("Use Compression")
+    ->withDescription("Indicates whether or not ZLIB compression should be used when transferring files")
+    ->isRequired(true)->withDefaultValue<bool>(false)->build());
+
 
 core::Relationship PutSFTP::Success("success", "FlowFiles that are successfully sent will be routed to success");
 core::Relationship PutSFTP::Reject("reject", "FlowFiles that were rejected by the destination system");

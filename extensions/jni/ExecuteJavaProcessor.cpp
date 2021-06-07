@@ -49,10 +49,13 @@ namespace minifi {
 namespace jni {
 namespace processors {
 
-core::Property ExecuteJavaProcessor::JVMControllerService(
-    core::PropertyBuilder::createProperty("JVM Controller Service")->withDescription("Name of controller service defined within this flow")->isRequired(false)->withDefaultValue<std::string>("")->build());
-core::Property ExecuteJavaProcessor::NiFiProcessor(
-    core::PropertyBuilder::createProperty("NiFi Processor")->withDescription("Name of NiFi processor to load and run")->isRequired(true)->withDefaultValue<std::string>("")->build());
+core::Property ExecuteJavaProcessor::JVMControllerService(core::PropertyBuilder::createProperty("JVM Controller Service")
+    ->withDescription("Name of controller service defined within this flow")
+    ->isRequired(false)->withDefaultValue<std::string>("")->build());
+
+core::Property ExecuteJavaProcessor::NiFiProcessor(core::PropertyBuilder::createProperty("NiFi Processor")
+    ->withDescription("Name of NiFi processor to load and run")
+    ->isRequired(true)->withDefaultValue<std::string>("")->build());
 
 const char *ExecuteJavaProcessor::ProcessorName = "ExecuteJavaClass";
 

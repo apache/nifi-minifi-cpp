@@ -15,13 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_SENSORS_GETMOVEMENT_H_
-#define EXTENSIONS_SENSORS_GETMOVEMENT_H_
-
-
+#pragma once
 
 #include <memory>
 #include <regex>
+#include <string>
 
 #include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
@@ -44,12 +42,11 @@ namespace processors {
 // GetMovementSensors Class
 class GetMovementSensors : public SensorBase {
  public:
-
   // Constructor
   /*!
    * Create a new processor
    */
-  GetMovementSensors(const std::string& name, const utils::Identifier& uuid = {})
+  explicit GetMovementSensors(const std::string& name, const utils::Identifier& uuid = {})
       : SensorBase(name, uuid),
         logger_(logging::LoggerFactory<GetMovementSensors>::getLogger()) {
   }
@@ -74,4 +71,3 @@ REGISTER_RESOURCE(GetMovementSensors, "Defines a processor that is able to retri
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* EXTENSIONS_SENSORS_GETMOVEMENT_H_ */

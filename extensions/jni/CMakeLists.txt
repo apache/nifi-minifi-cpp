@@ -17,7 +17,7 @@
 # under the License.
 #
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 message(STATUS "JAVA_HOME: '$ENV{JAVA_HOME}'")
 find_package(JNI REQUIRED)
@@ -26,7 +26,7 @@ find_package(Maven REQUIRED)
 message(STATUS "MAVEN: ${MAVEN_EXECUTABLE}")
 include_directories(${JNI_INCLUDE_DIRS})
 
-file(GLOB SOURCES  "jvm/*.cpp" "*.cpp") 
+file(GLOB SOURCES  "jvm/*.cpp" "*.cpp")
 
 add_library(minifi-jni STATIC ${SOURCES})
 set_property(TARGET minifi-jni PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -61,11 +61,11 @@ execute_process(COMMAND "${MAVEN_EXECUTABLE}" "-q" "package" "-Denforcer.skip=tr
 endif()
 if("${mvn_result}" STREQUAL "0")
 	message("${mvn_output}")
-	        
+
 	install(DIRECTORY "${JNI_ASSEMBLY_JAR_BIN}/nifi-minifi-jni-assembly/target/nifi-minifi-jni-minifi-jni/nifi-minifi-jni-1.9.0/minifi-jni"
         DESTINATION .
         COMPONENT bin)
-	
+
 else()
 	message("Maven failed ${mvn_result} ${mvn_output} ${mvn_error}")
 endif()
@@ -92,7 +92,7 @@ if("${mvn_result}" STREQUAL "0")
 	message("${mvn_output}")
 	install(FILES ${JNI-FRAMEWORK-JAR}
 	        DESTINATION minifi-jni/lib
-	        COMPONENT bin)	
+	        COMPONENT bin)
 else()
 	message("Maven could not be invoked to build the framework jar")
 endif()
@@ -112,4 +112,4 @@ endif()
 
 SET (JNI-EXTENSION minifi-jni PARENT_SCOPE)
 register_extension(minifi-jni)
-
+register_extension_linter(minifi-jni-linter)

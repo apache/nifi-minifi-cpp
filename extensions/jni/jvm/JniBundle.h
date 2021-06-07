@@ -15,15 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_JNIBUNDLE_H
-#define EXTENSIONS_JNIBUNDLE_H
+#pragma once
+
+#include <jni.h>
 
 #include <string>
 #include <vector>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
-#include <jni.h>
+
 #include "JniProcessContext.h"
 #include "JniFlowFile.h"
 #include "JniProcessSession.h"
@@ -41,7 +42,6 @@ namespace jni {
  */
 class JniBundle {
  public:
-
   explicit JniBundle(struct BundleDetails details)
       : details_(details) {
   }
@@ -80,5 +80,3 @@ class JniBundle {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_JNIBUNDLE_H */

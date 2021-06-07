@@ -229,8 +229,9 @@ void FlowFileRepository::initialize_repository() {
     } else {
       logger_->log_trace("Could not create checkpoint. Corrupt?");
     }
-  } else
+  } else {
     logger_->log_trace("Could not create checkpoint directory. Not properly deleted?");
+  }
 }
 
 void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {

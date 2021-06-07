@@ -16,10 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_JNI_CLASSREGISTRAR_H_
-#define EXTENSIONS_JNI_CLASSREGISTRAR_H_
+#pragma once
 
 #include <memory>
+#include <string>
+#include <set>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -75,5 +76,3 @@ class ClassRegistrar {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_JNI_CLASSREGISTRAR_H_ */

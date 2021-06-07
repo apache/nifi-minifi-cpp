@@ -15,10 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_PYPROC_H
-#define EXTENSIONS_PYPROC_H
+#pragma once
 
 #include <map>
+#include <string>
+#include <memory>
+#include <vector>
 #include "core/ClassLoader.h"
 #include "ExecutePythonProcessor.h"
 #include "utils/StringUtils.h"
@@ -59,10 +61,8 @@ class PyProcFactory : public core::ObjectFactory {
   }
 
   static bool added;
-}
-;
+};
 
 extern "C" {
 DLL_EXPORT void *createPyProcFactory(void);
 }
-#endif /* EXTENSIONS_PYPROC_H */

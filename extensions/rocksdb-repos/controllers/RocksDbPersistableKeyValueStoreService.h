@@ -14,25 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_RocksDbPersistableKeyValueStoreService_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_RocksDbPersistableKeyValueStoreService_H_
+#pragma once
+
+#include <unordered_map>
+#include <string>
+#include <memory>
 
 #include "controllers/keyvalue/AbstractAutoPersistingKeyValueStoreService.h"
 #include "core/Core.h"
-#include "properties/Configure.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "../database/RocksDatabase.h"
 
-#include "rocksdb/db.h"
 #include "rocksdb/options.h"
-#include "rocksdb/slice.h"
 
-#include <unordered_map>
-#include <string>
-#include <mutex>
-#include <memory>
-#include <utility>
+
 
 namespace org {
 namespace apache {
@@ -83,5 +79,3 @@ REGISTER_RESOURCE(RocksDbPersistableKeyValueStoreService, "A key-value service i
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_RocksDbPersistableKeyValueStoreService_H_ */

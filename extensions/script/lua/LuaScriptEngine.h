@@ -15,12 +15,15 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_LUASCRIPTENGINE_H
-#define NIFI_MINIFI_CPP_LUASCRIPTENGINE_H
+#pragma once
 
 #include <mutex>
-#include <sol.hpp>
-#include <core/ProcessSession.h>
+#include <utility>
+#include <string>
+#include <memory>
+
+#include "sol.hpp"
+#include "core/ProcessSession.h"
 
 #include "../ScriptEngine.h"
 #include "../ScriptProcessContext.h"
@@ -105,5 +108,3 @@ class LuaScriptEngine : public script::ScriptEngine {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_LUASCRIPTENGINE_H

@@ -22,9 +22,11 @@
 #include <string>
 #include <exception>
 #include <sstream>
-#include <iomanip>
-#include "utils/StringUtils.h"
+#include <algorithm>
+#include <tuple>
+#include <utility>
 
+#include "utils/StringUtils.h"
 #include "utils/gsl.h"
 
 namespace org {
@@ -35,7 +37,7 @@ namespace utils {
 
 #define SFTP_ERROR(CODE) case CODE: \
                           return #CODE
-static const char* sftp_strerror(unsigned long err) {
+static const char* sftp_strerror(unsigned long err) {  // NOLINT(runtime/int) unsigned long comes from libssh2 API
   switch (err) {
     SFTP_ERROR(LIBSSH2_FX_OK);
     SFTP_ERROR(LIBSSH2_FX_EOF);
@@ -64,7 +66,7 @@ static const char* sftp_strerror(unsigned long err) {
   }
 }
 
-static SFTPError libssh2_sftp_error_to_sftp_error(unsigned long libssh2_sftp_error) {
+static SFTPError libssh2_sftp_error_to_sftp_error(unsigned long libssh2_sftp_error) {  // NOLINT(runtime/int) unsigned long comes from libssh2 API
   switch (libssh2_sftp_error) {
     case LIBSSH2_FX_OK:
       return SFTPError::Ok;
@@ -106,7 +108,7 @@ LastSFTPError::LastSFTPError()
     , sftp_error_(SFTPError::Ok) {
 }
 
-LastSFTPError& LastSFTPError::setLibssh2Error(unsigned long libssh2_sftp_error) {
+LastSFTPError& LastSFTPError::setLibssh2Error(unsigned long libssh2_sftp_error) {  // NOLINT(runtime/int) unsigned long comes from libssh2 API
   sftp_error_set_ = false;
   libssh2_sftp_error_ = libssh2_sftp_error;
   return *this;
@@ -118,7 +120,7 @@ LastSFTPError& LastSFTPError::setSftpError(const SFTPError& sftp_error) {
   return *this;
 }
 
-LastSFTPError::operator unsigned long() const {
+LastSFTPError::operator unsigned long() const {  // NOLINT(runtime/int) unsigned long comes from libssh2 API
   if (sftp_error_set_) {
     return LIBSSH2_FX_OK;
   } else {
@@ -289,7 +291,7 @@ bool SFTPClient::connect() {
   /* Only CURLINFO_ACTIVESOCKET works on Win64 */
   curl_res = curl_easy_getinfo(easy_, CURLINFO_ACTIVESOCKET, &sockfd);
 #else
-  long sockfd;
+  long sockfd;  // NOLINT(runtime/int) long due to libcurl API
   /* Some older cURL versions only support CURLINFO_LASTSOCKET */
   curl_res = curl_easy_getinfo(easy_, CURLINFO_LASTSOCKET, &sockfd);
 #endif

@@ -16,11 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_JNIUTIL_H
-#define NIFI_MINIFI_CPP_JNIUTIL_H
+#pragma once
 
-#include <string>
 #include <jni.h>
+#include <string>
 
 static inline std::string JniStringToUTF(JNIEnv *env, const jstring &jstr) {
   if (!jstr && !env) {
@@ -34,5 +33,3 @@ static inline std::string JniStringToUTF(JNIEnv *env, const jstring &jstr) {
   env->ReleaseStringUTFChars(jstr, c_str);
   return str;
 }
-
-#endif  // NIFI_MINIFI_CPP_JNIUTIL_H

@@ -16,8 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PUT_SFTP_H__
-#define __PUT_SFTP_H__
+#pragma once
 
 #include <memory>
 #include <string>
@@ -45,9 +44,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
- class PutSFTP : public SFTPProcessorBase {
+class PutSFTP : public SFTPProcessorBase {
  public:
-
   static constexpr char const *CONFLICT_RESOLUTION_REPLACE = "REPLACE";
   static constexpr char const *CONFLICT_RESOLUTION_IGNORE = "IGNORE";
   static constexpr char const *CONFLICT_RESOLUTION_RENAME = "RENAME";
@@ -61,7 +59,7 @@ namespace processors {
   /*!
    * Create a new processor
    */
-  PutSFTP(const std::string& name, const utils::Identifier& uuid = {});
+  explicit PutSFTP(const std::string& name, const utils::Identifier& uuid = {});
   virtual ~PutSFTP();
 
   // Supported Properties
@@ -108,9 +106,9 @@ namespace processors {
   };
 
  private:
-   core::annotation::Input getInputRequirement() const override {
-     return core::annotation::Input::INPUT_REQUIRED;
-   }
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
 
   bool create_directory_;
   uint64_t batch_size_;
@@ -128,5 +126,3 @@ REGISTER_RESOURCE(PutSFTP, "Sends FlowFiles to an SFTP Server");
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

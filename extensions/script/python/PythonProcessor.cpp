@@ -17,8 +17,9 @@
  */
 
 #include <memory>
+#include <string>
 
-#include <pybind11/embed.h>
+#include "pybind11/embed.h"
 #include "ExecutePythonProcessor.h"
 #include "PythonProcessor.h"
 

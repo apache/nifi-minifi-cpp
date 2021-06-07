@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_JNI_JVMCREATOR_H_
-#define EXTENSIONS_JNI_JVMCREATOR_H_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -39,7 +38,6 @@ namespace jni {
  */
 class JVMCreator : public minifi::core::CoreComponent {
  public:
-
   explicit JVMCreator(const std::string &name, const utils::Identifier &uuid = {})
       : minifi::core::CoreComponent(name, uuid),
         loader_(nullptr),
@@ -94,7 +92,6 @@ class JVMCreator : public minifi::core::CoreComponent {
   }
 
  private:
-
   minifi::jni::JVMLoader *loader_;
 
   std::vector<std::string> jvm_options_;
@@ -109,5 +106,3 @@ class JVMCreator : public minifi::core::CoreComponent {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_JNI_JVMCREATOR_H_ */

@@ -16,10 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_SCRIPTFLOWFILE_H
-#define NIFI_MINIFI_CPP_SCRIPTFLOWFILE_H
+#pragma once
 
-#include <core/FlowFile.h>
+#include <string>
+#include <memory>
+
+#include "core/FlowFile.h"
 
 namespace org {
 namespace apache {
@@ -47,5 +49,3 @@ class ScriptFlowFile {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_SCRIPTFLOWFILE_H

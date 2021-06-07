@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_PYPROCESSCONTEXT_H
-#define NIFI_MINIFI_CPP_PYPROCESSCONTEXT_H
+#pragma once
 
-#include <core/ProcessSession.h>
+#include <string>
+#include <memory>
 
-#include "ScriptFlowFile.h"
+#include "core/ProcessSession.h"
 
 namespace org {
 namespace apache {
@@ -45,5 +45,3 @@ class ScriptProcessContext {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_PYPROCESSCONTEXT_H

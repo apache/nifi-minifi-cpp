@@ -16,8 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_JNI_JVM_JNICONFIGURATIONCONTEXT_H_
-#define EXTENSIONS_JNI_JVM_JNICONFIGURATIONCONTEXT_H_
+#pragma once
+
+#include <string>
+#include <memory>
 
 #include "core/controller/ControllerService.h"
 
@@ -29,7 +31,6 @@ namespace jni {
 
 class ConfigurationContext : public core::controller::ControllerService {
  public:
-
   // Constructor
   /*!
    * Create a new processor
@@ -51,5 +52,3 @@ struct JniConfigurationContext {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_JNI_JVM_JNICONFIGURATIONCONTEXT_H_ */

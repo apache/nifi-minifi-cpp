@@ -58,8 +58,8 @@
 
 class ListSFTPTestsFixture {
  public:
-  ListSFTPTestsFixture(const std::shared_ptr<minifi::Configure>& configuration = nullptr)
-  : src_dir(strdup("/var/tmp/sftps.XXXXXX")) {
+  explicit ListSFTPTestsFixture(const std::shared_ptr<minifi::Configure>& configuration = nullptr)
+      : src_dir(strdup("/var/tmp/sftps.XXXXXX")) {
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -174,7 +174,7 @@ class ListSFTPTestsFixture {
 };
 
 class PersistentListSFTPTestsFixture : public ListSFTPTestsFixture {
-public:
+ public:
   PersistentListSFTPTestsFixture() :
     ListSFTPTestsFixture(std::make_shared<minifi::Configure>()) {
   }

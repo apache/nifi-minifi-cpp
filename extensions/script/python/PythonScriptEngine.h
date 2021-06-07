@@ -15,13 +15,16 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_PYTHONSCRIPTENGINE_H
-#define NIFI_MINIFI_CPP_PYTHONSCRIPTENGINE_H
+#pragma once
 
 #include <mutex>
-#include <pybind11/embed.h>
-#include <core/ProcessSession.h>
-#include <core/Processor.h>
+#include <memory>
+#include <string>
+#include <utility>
+
+#include "pybind11/embed.h"
+#include "core/ProcessSession.h"
+#include "core/Processor.h"
 
 #include "../ScriptEngine.h"
 #include "../ScriptProcessContext.h"
@@ -147,7 +150,7 @@ class PythonScriptEngine : public script::ScriptEngine {
 
   class TriggerSchedule {
    public:
-    TriggerSchedule(std::shared_ptr<script::ScriptProcessContext> script_context)
+    explicit TriggerSchedule(std::shared_ptr<script::ScriptProcessContext> script_context)
         : script_context_(script_context) {
     }
 
@@ -235,5 +238,3 @@ class PythonScriptEngine : public script::ScriptEngine {
 } /* namespace org */
 
 #pragma GCC visibility pop
-
-#endif  // NIFI_MINIFI_CPP_PYTHONSCRIPTENGINE_H

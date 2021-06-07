@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_LUAPROCESSSESSION_H
-#define NIFI_MINIFI_CPP_LUAPROCESSSESSION_H
+#pragma once
 
-#include <sol.hpp>
+#include <vector>
+#include <memory>
 
-#include <core/ProcessSession.h>
-
+#include "core/ProcessSession.h"
 #include "../ScriptFlowFile.h"
 
+#include "sol.hpp"
 #include "LuaBaseStream.h"
 
 namespace org {
@@ -95,5 +95,3 @@ class LuaProcessSession {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_LUAPROCESSSESSION_H

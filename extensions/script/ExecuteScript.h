@@ -18,12 +18,14 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_EXECUTESCRIPT_H
-#define NIFI_MINIFI_CPP_EXECUTESCRIPT_H
+#pragma once
 
-#include <concurrentqueue.h>
-#include <core/Resource.h>
-#include <core/Processor.h>
+#include <string>
+#include <memory>
+
+#include "concurrentqueue.h"
+#include "core/Resource.h"
+#include "core/Processor.h"
 
 #include "ScriptEngine.h"
 #include "ScriptProcessContext.h"
@@ -99,5 +101,3 @@ REGISTER_RESOURCE(ExecuteScript, "Executes a script given the flow file and a pr
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_EXECUTESCRIPT_H

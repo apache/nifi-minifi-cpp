@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_JNILOADER_H
-#define EXTENSIONS_JNILOADER_H
+#pragma once
+
+#include <vector>
+#include <string>
+#include <memory>
 
 #include "core/ClassLoader.h"
 #include "ExecuteJavaProcessor.h"
@@ -70,10 +73,8 @@ class JNIFactory : public core::ObjectFactory {
   static minifi::jni::JVMLoader jvm;
 
   static bool added;
-}
-;
+};
 
 extern "C" {
 DLL_EXPORT void *createJNIFactory(void);
 }
-#endif /* EXTENSIONS_JNILOADER_H */

@@ -15,8 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_FLOWFILEREPOSITORY_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_FLOWFILEREPOSITORY_H_
+#pragma once
+
+#include <utility>
+#include <vector>
+#include <string>
+#include <memory>
 
 #include "utils/file/FileUtils.h"
 #include "rocksdb/db.h"
@@ -61,7 +65,8 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       : FlowFileRepository(name) {
   }
 
-  FlowFileRepository(const std::string repo_name = "", const std::string& checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY, std::string directory = FLOWFILE_REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
+  FlowFileRepository(const std::string repo_name = "", const std::string& checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY,
+                     std::string directory = FLOWFILE_REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                      int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, uint64_t purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
         Repository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
@@ -94,7 +99,8 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     logger_->log_debug("NiFi FlowFile Max Partition Bytes %d", max_partition_bytes_);
     if (configure->get(Configure::nifi_flowfile_repository_max_storage_time, value)) {
       TimeUnit unit;
-      if (Property::StringToTime(value, max_partition_millis_, unit) && Property::ConvertTimeUnitToMS(max_partition_millis_, unit, max_partition_millis_)) {
+      if (Property::StringToTime(value, max_partition_millis_, unit)) {
+        Property::ConvertTimeUnitToMS(max_partition_millis_, unit, max_partition_millis_);
       }
     }
     logger_->log_debug("NiFi FlowFile Max Storage Time: [%d] ms", max_partition_millis_);
@@ -192,7 +198,6 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   }
 
  private:
-
   bool ExecuteWithRetry(std::function<rocksdb::Status()> operation);
 
   /**
@@ -225,5 +230,3 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_FLOWFILEREPOSITORY_H_ */

@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LIST_SFTP_H__
-#define __LIST_SFTP_H__
+#pragma once
 
 #include <memory>
 #include <string>
@@ -23,20 +22,18 @@
 #include <chrono>
 #include <cstdint>
 #include <unordered_map>
+#include <set>
+#include <tuple>
+#include <vector>
 
 #include "SFTPProcessorBase.h"
-#include "utils/ByteArrayCallback.h"
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
 #include "core/Property.h"
 #include "core/Resource.h"
-#include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 #include "utils/RegexUtils.h"
 #include "controllers/keyvalue/PersistableKeyValueStoreService.h"
-#include "../client/SFTPClient.h"
 
 namespace org {
 namespace apache {
@@ -46,7 +43,6 @@ namespace processors {
 
 class ListSFTP : public SFTPProcessorBase {
  public:
-
   static constexpr char const *LISTING_STRATEGY_TRACKING_TIMESTAMPS = "Tracking Timestamps";
   static constexpr char const *LISTING_STRATEGY_TRACKING_ENTITIES = "Tracking Entities";
 
@@ -64,7 +60,7 @@ class ListSFTP : public SFTPProcessorBase {
   /*!
    * Create a new processor
    */
-  ListSFTP(const std::string& name, const utils::Identifier& uuid = {});
+  explicit ListSFTP(const std::string& name, const utils::Identifier& uuid = {});
   virtual ~ListSFTP();
 
   // Supported Properties
@@ -208,5 +204,3 @@ REGISTER_RESOURCE(ListSFTP, "Performs a listing of the files residing on an SFTP
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif
