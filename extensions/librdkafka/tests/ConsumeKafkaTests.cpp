@@ -43,9 +43,9 @@ class KafkaTestProducer {
  public:
   enum class PublishEvent {
     PUBLISH,
-    TRANSACTION_START,
-    TRANSACTION_COMMIT,
-    CANCEL
+    BEGIN_TRANSACTION,
+    END_TRANSACTION,
+    CANCEL_TRANSACTION
   };
   KafkaTestProducer(const std::string& kafka_brokers, const std::string& topic, const bool transactional) :
       logger_(logging::LoggerFactory<KafkaTestProducer>::getLogger()) {
@@ -88,15 +88,15 @@ class KafkaTestProducer {
           publish_message(*next_message, message_key, message_headers);
           std::advance(next_message, 1);
           break;
-        case PublishEvent::TRANSACTION_START:
+        case PublishEvent::BEGIN_TRANSACTION:
           logger_->log_debug("Starting new transaction...");
           rd_kafka_begin_transaction(producer_.get());
           break;
-        case PublishEvent::TRANSACTION_COMMIT:
+        case PublishEvent::END_TRANSACTION:
           logger_->log_debug("Committing transaction...");
           rd_kafka_commit_transaction(producer_.get(), TRANSACTIONS_TIMEOUT_MS.count());
           break;
-        case PublishEvent::CANCEL:
+        case PublishEvent::CANCEL_TRANSACTION:
           logger_->log_debug("Cancelling transaction...");
           rd_kafka_abort_transaction(producer_.get(), TRANSACTIONS_TIMEOUT_MS.count());
       }
@@ -147,15 +147,15 @@ class ConsumeKafkaTest {
   using ExtractText = org::apache::nifi::minifi::processors::ExtractText;
 
   const KafkaTestProducer::PublishEvent PUBLISH            = KafkaTestProducer::PublishEvent::PUBLISH;
-  const KafkaTestProducer::PublishEvent TRANSACTION_START  = KafkaTestProducer::PublishEvent::TRANSACTION_START;
-  const KafkaTestProducer::PublishEvent TRANSACTION_COMMIT = KafkaTestProducer::PublishEvent::TRANSACTION_COMMIT;
-  const KafkaTestProducer::PublishEvent CANCEL             = KafkaTestProducer::PublishEvent::CANCEL;
+  const KafkaTestProducer::PublishEvent BEGIN_TRANSACTION  = KafkaTestProducer::PublishEvent::BEGIN_TRANSACTION;
+  const KafkaTestProducer::PublishEvent END_TRANSACTION    = KafkaTestProducer::PublishEvent::END_TRANSACTION;
+  const KafkaTestProducer::PublishEvent CANCEL_TRANSACTION = KafkaTestProducer::PublishEvent::CANCEL_TRANSACTION;
 
   const std::vector<KafkaTestProducer::PublishEvent> NON_TRANSACTIONAL_MESSAGES   { PUBLISH, PUBLISH };
-  const std::vector<KafkaTestProducer::PublishEvent> SINGLE_COMMITTED_TRANSACTION { TRANSACTION_START, PUBLISH, PUBLISH, TRANSACTION_COMMIT };
-  const std::vector<KafkaTestProducer::PublishEvent> TWO_SEPARATE_TRANSACTIONS    { TRANSACTION_START, PUBLISH, TRANSACTION_COMMIT, TRANSACTION_START, PUBLISH, TRANSACTION_COMMIT };
-  const std::vector<KafkaTestProducer::PublishEvent> NON_COMMITTED_TRANSACTION    { TRANSACTION_START, PUBLISH, PUBLISH };
-  const std::vector<KafkaTestProducer::PublishEvent> CANCELLED_TRANSACTION        { TRANSACTION_START, PUBLISH, CANCEL };
+  const std::vector<KafkaTestProducer::PublishEvent> SINGLE_COMMITTED_TRANSACTION { BEGIN_TRANSACTION, PUBLISH, PUBLISH, END_TRANSACTION };
+  const std::vector<KafkaTestProducer::PublishEvent> TWO_SEPARATE_TRANSACTIONS    { BEGIN_TRANSACTION, PUBLISH, END_TRANSACTION, BEGIN_TRANSACTION, PUBLISH, END_TRANSACTION };
+  const std::vector<KafkaTestProducer::PublishEvent> NON_COMMITTED_TRANSACTION    { BEGIN_TRANSACTION, PUBLISH, PUBLISH };
+  const std::vector<KafkaTestProducer::PublishEvent> CANCELLED_TRANSACTION        { BEGIN_TRANSACTION, PUBLISH, CANCEL_TRANSACTION };
 
   const std::string KEEP_FIRST            = ConsumeKafka::MSG_HEADER_KEEP_FIRST;
   const std::string KEEP_LATEST           = ConsumeKafka::MSG_HEADER_KEEP_LATEST;
@@ -301,8 +301,8 @@ class ConsumeKafkaPropertiesTest : public ConsumeKafkaTest {
     std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf_;
     std::unique_ptr<rd_kafka_t, utils::rd_kafka_consumer_deleter> consumer_;
 
-    const bool is_transactional = std::count(transaction_events.cbegin(), transaction_events.cend(), KafkaTestProducer::PublishEvent::TRANSACTION_START);
-    const bool transactions_committed = transaction_events.back() == KafkaTestProducer::PublishEvent::TRANSACTION_COMMIT;
+    const bool is_transactional = std::count(transaction_events.cbegin(), transaction_events.cend(), KafkaTestProducer::PublishEvent::BEGIN_TRANSACTION) != 0;
+    const bool transactions_committed = transaction_events.back() == KafkaTestProducer::PublishEvent::END_TRANSACTION;
 
     KafkaTestProducer producer(kafka_brokers, PRODUCER_TOPIC, is_transactional);
     producer.publish_messages_to_topic(messages_on_topic, TEST_MESSAGE_KEY, transaction_events, message_headers);
