@@ -77,4 +77,4 @@ endif()
 SET (SCRIPTING-EXTENSIONS minifi-script-extensions PARENT_SCOPE)
 
 register_extension(minifi-script-extensions)
-
+register_extension_linter(minifi-script-extensions-linter)

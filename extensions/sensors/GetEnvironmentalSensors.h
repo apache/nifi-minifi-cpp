@@ -15,13 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_SENSORS_GETENVIRONMENTALSENSORS_H_
-#define EXTENSIONS_SENSORS_GETENVIRONMENTALSENSORS_H_
-
-
+#pragma once
 
 #include <memory>
 #include <regex>
+#include <string>
 
 #include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
@@ -44,12 +42,11 @@ namespace processors {
 // EnvironmentalSensors Class
 class GetEnvironmentalSensors : public SensorBase {
  public:
-
   // Constructor
   /*!
    * Create a new processor
    */
-  GetEnvironmentalSensors(const std::string& name, const utils::Identifier& uuid = {})
+  explicit GetEnvironmentalSensors(const std::string& name, const utils::Identifier& uuid = {})
       : SensorBase(name, uuid),
         humidity_sensor_(nullptr),
         pressure_sensor_(nullptr),
@@ -68,6 +65,7 @@ class GetEnvironmentalSensors : public SensorBase {
 
  protected:
   void notifyStop() override;
+
  private:
   RTHumidity *humidity_sensor_;
   RTPressure *pressure_sensor_;
@@ -82,4 +80,3 @@ REGISTER_RESOURCE(GetEnvironmentalSensors, "Provides sensor information from kno
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* EXTENSIONS_SENSORS_GETENVIRONMENTALSENSORS_H_ */

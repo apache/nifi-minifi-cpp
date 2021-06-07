@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SFTP_TEST_SERVER_H__
-#define __SFTP_TEST_SERVER_H__
+#pragma once
 
 #include <cstdint>
 #include <string>
-#ifdef WIN32
-#else
+#include <memory>
+
+#ifndef WIN32
 #include <unistd.h>
 #include <sys/types.h>
 #endif
@@ -31,7 +31,6 @@
 
 class SFTPTestServer {
  public:
-
   SFTPTestServer(const std::string& working_directory,
       const std::string& host_key_file = "resources/host.pem",
       const std::string& jar_path = "tools/sftp-test-server/target/SFTPTestServer-1.0.0.jar");
@@ -42,7 +41,6 @@ class SFTPTestServer {
   uint16_t getPort();
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 
   std::string host_key_file_;
@@ -51,10 +49,7 @@ class SFTPTestServer {
   bool started_;
   std::string port_file_path_;
   uint16_t port_;
-#ifdef WIN32
-#else
+#ifndef WIN32
   pid_t server_pid_;
 #endif
 };
-
-#endif

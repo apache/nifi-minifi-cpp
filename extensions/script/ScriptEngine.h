@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_SCRIPTENGINE_H
-#define NIFI_MINIFI_CPP_SCRIPTENGINE_H
+#pragma once
 
 #include <string>
 
@@ -50,5 +49,3 @@ class ScriptEngine {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_SCRIPTENGINE_H

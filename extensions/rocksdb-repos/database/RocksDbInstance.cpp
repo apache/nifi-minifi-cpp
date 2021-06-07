@@ -17,6 +17,7 @@
  */
 
 #include "RocksDbInstance.h"
+#include <vector>
 #include "logging/LoggerConfiguration.h"
 #include "rocksdb/utilities/options_util.h"
 #include "OpenRocksDb.h"

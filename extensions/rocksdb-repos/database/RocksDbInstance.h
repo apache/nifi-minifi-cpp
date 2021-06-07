@@ -19,6 +19,8 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include <unordered_map>
 #include "utils/OptionalUtils.h"
 #include "RocksDbUtils.h"
 #include "rocksdb/db.h"

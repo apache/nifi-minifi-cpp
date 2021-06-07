@@ -16,16 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_PYTHONPROCESSOR_H
-#define NIFI_MINIFI_CPP_PYTHONPROCESSOR_H
+#pragma once
 
-#include <pybind11/embed.h>
+#include <string>
 #include <memory>
 
-#include <core/ProcessSession.h>
-#include <core/Processor.h>
-
-#include "PyBaseStream.h"
+#include "core/Processor.h"
 
 namespace org {
 namespace apache {
@@ -58,7 +54,6 @@ class PythonProcessor {
   void releaseCoreResources();
 
  private:
-
   std::shared_ptr<core::Processor> processor_;
 };
 
@@ -67,5 +62,3 @@ class PythonProcessor {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_PYTHONPROCESSOR_H

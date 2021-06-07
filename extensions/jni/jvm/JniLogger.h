@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_JNILOGGER_H
-#define EXTENSIONS_JNILOGGER_H
+#pragma once
+
+#include <jni.h>
 
 #include <string>
 #include <memory>
@@ -24,7 +25,7 @@
 #include <sstream>
 #include <iterator>
 #include <algorithm>
-#include <jni.h>
+
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {
@@ -67,5 +68,3 @@ JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniLogger_trace(JNIEnv *en
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* EXTENSIONS_JNILOGGER_H */

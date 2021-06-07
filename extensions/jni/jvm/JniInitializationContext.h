@@ -15,15 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_JNIINITIALIZATIONCONTEXT_H
-#define EXTENSIONS_JNIINITIALIZATIONCONTEXT_H
+#pragma once
+
+#include <jni.h>
 
 #include <string>
 #include <vector>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
-#include <jni.h>
+
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "JniControllerServiceLookup.h"
@@ -72,6 +73,3 @@ JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniConfigurationContext
 #ifdef __cplusplus
 }
 #endif
-
-
-#endif /* EXTENSIONS_JNIINITIALIZATIONCONTEXT_H */

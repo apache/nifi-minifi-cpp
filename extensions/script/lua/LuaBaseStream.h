@@ -15,12 +15,13 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_LUABASESTREAM_H
-#define NIFI_MINIFI_CPP_LUABASESTREAM_H
+#pragma once
 
 #include <memory>
-#include <sol.hpp>
-#include <io/BaseStream.h>
+#include <string>
+
+#include "sol.hpp"
+#include "io/BaseStream.h"
 
 namespace org {
 namespace apache {
@@ -54,5 +55,3 @@ class LuaBaseStream {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_LUABASESTREAM_H

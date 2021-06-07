@@ -16,15 +16,15 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_PYPROCESSESSION_H
-#define NIFI_MINIFI_CPP_PYPROCESSESSION_H
+#pragma once
 
-#include <pybind11/embed.h>
+#include <utility>
+#include <memory>
+#include <vector>
 
-#include <core/ProcessSession.h>
-
+#include "pybind11/embed.h"
+#include "core/ProcessSession.h"
 #include "../ScriptFlowFile.h"
-
 #include "PyBaseStream.h"
 
 #pragma GCC visibility push(hidden)
@@ -100,5 +100,3 @@ class PyProcessSession {
 } /* namespace org */
 
 #pragma GCC visibility pop
-
-#endif  // NIFI_MINIFI_CPP_PYPROCESSESSION_H

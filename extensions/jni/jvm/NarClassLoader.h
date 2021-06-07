@@ -15,18 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_NARCLASSLOADER_H
-#define EXTENSIONS_NARCLASSLOADER_H
+#pragma once
 
-#include "JavaServicer.h"
-#include "JniBundle.h"
-#include "../JavaException.h"
+#include <jni.h>
+
 #include <string>
 #include <vector>
 #include <sstream>
 #include <iterator>
+#include <memory>
+#include <utility>
+#include <map>
 #include <algorithm>
-#include <jni.h>
+
+#include "JavaServicer.h"
+#include "JniBundle.h"
+#include "../JavaException.h"
 
 namespace org {
 namespace apache {
@@ -36,7 +40,6 @@ namespace jni {
 
 class NarClassLoader {
  public:
-
   NarClassLoader(std::shared_ptr<minifi::jni::JavaServicer> servicer, JavaClass &clazz, const std::string &dir_name, const std::string &scratch_nar_dir, const std::string &docs_dir)
       : java_servicer_(servicer) {
     class_ref_ = clazz;
@@ -196,7 +199,6 @@ class NarClassLoader {
   }
 
  private:
-
   /**
    * Call empty constructor
    */
@@ -469,5 +471,3 @@ class NarClassLoader {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_NARCLASSLOADER_H */

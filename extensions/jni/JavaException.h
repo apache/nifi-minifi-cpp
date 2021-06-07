@@ -17,15 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __JAVA_EXCEPTION_H__
-#define __JAVA_EXCEPTION_H__
+#pragma once
+
+#include <errno.h>
+#include <jni.h>
 
 #include <sstream>
 #include <stdexcept>
-#include <errno.h>
-#include <string.h>
+#include <string>
+#include <utility>
+
 #include "core/expect.h"
-#include <jni.h>
 #include "jvm/JavaDefs.h"
 #include "JNIUtil.h"
 
@@ -44,7 +46,7 @@ class JavaException : public std::exception {
   /*!
    * Create a new JavaException
    */
-  JavaException(std::string errorMsg)
+  explicit JavaException(std::string errorMsg)
       : message_(std::move(errorMsg)) {
   }
 
@@ -113,5 +115,3 @@ static inline void ThrowJava(JNIEnv *env, const char *message) {
 #define THROW_IF_NULL(expr, env, message) if (UNLIKELY(expr == nullptr)) minifi::jni::ThrowJava(env, message)
 
 #define THROW_IF(expr, env, message) if (UNLIKELY(expr)) minifi::jni::ThrowJava(env, message)
-
-#endif

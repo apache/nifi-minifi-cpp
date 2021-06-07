@@ -16,11 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __EXECUTE_JAVA_CS_
-#define __EXECUTE_JAVA_CS_
+#pragma once
 
 #include <memory>
 #include <regex>
+#include <string>
 
 #include "FlowFileRecord.h"
 #include "core/controller/ControllerService.h"
@@ -55,7 +55,6 @@ namespace controllers {
  */
 class ExecuteJavaControllerService : public ConfigurationContext, public std::enable_shared_from_this<ConfigurationContext> {
  public:
-
   // Constructor
   /*!
    * Create a new processor
@@ -136,10 +135,7 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
     return methodSignatures;
   }
 
- protected:
-
  private:
-
   minifi::jni::JniConfigurationContext config_context_;
 
   jobject contextInstance;
@@ -163,5 +159,3 @@ REGISTER_RESOURCE(ExecuteJavaControllerService, "ExecuteJavaClass runs NiFi Cont
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

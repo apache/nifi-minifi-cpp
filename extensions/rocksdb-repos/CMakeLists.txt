@@ -17,7 +17,7 @@
 # under the License.
 #
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp" "controllers/*.cpp" "database/*.cpp")
 
@@ -29,3 +29,4 @@ target_link_libraries(minifi-rocksdb-repos RocksDB::RocksDB)
 
 SET (ROCKSDB-REPOS minifi-rocksdb-repos PARENT_SCOPE)
 register_extension(minifi-rocksdb-repos)
+register_extension_linter(minifi-rocksdb-repos-linter)

@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <iterator>
 #include <set>
+#include <utility>
 #include "core/Property.h"
 #include "io/validation.h"
 #include "utils/StringUtils.h"
@@ -113,7 +114,7 @@ JNIEXPORT jint JNICALL  Java_org_apache_nifi_processor_JniInputStream_readWithOf
     // this technically can't happen per JNI specs
     return -1;
   }
-  return jin->read(env, arr, (int) offset, (int) length);
+  return jin->read(env, arr, static_cast<int>(offset), static_cast<int>(length));
 }
 
 JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniProcessSession_write(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray) {
@@ -254,7 +255,7 @@ jstring Java_org_apache_nifi_processor_JniProcessSession_getPropertyValue(JNIEnv
   std::string keystr = JniStringToUTF(env, propertyName);
   if (!context->getProperty(keystr, value)) {
     context->getDynamicProperty(keystr, value);
-  };
+  }
   return env->NewStringUTF(value.c_str());
 }
 

@@ -15,11 +15,13 @@
  * limitations under the License.
  */
 
+#include <fstream>
+#include <set>
+
 #include "RocksDbPersistableKeyValueStoreService.h"
 
 #include "utils/StringUtils.h"
 
-#include <fstream>
 
 namespace org {
 namespace apache {

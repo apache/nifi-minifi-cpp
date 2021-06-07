@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_JVMLOADER_H
-#define EXTENSIONS_JVMLOADER_H
+#pragma once
+#include <jni.h>
 
+#include <memory>
+#include <utility>
 #include <string>
 #include <map>
 #include <vector>
@@ -28,7 +30,7 @@
 #include "JavaServicer.h"
 #include "../JavaException.h"
 #include "core/Core.h"
-#include <jni.h>
+
 #ifndef WIN32
 #include <dlfcn.h>
 #endif
@@ -88,7 +90,6 @@ void setPtr(JNIEnv *env, jobject obj, T *t);
  */
 class JVMLoader {
  public:
-
   bool initialized() {
     return initialized_;
   }
@@ -99,10 +100,10 @@ class JVMLoader {
    */
   JNIEnv *attach(const std::string& /*name*/ = "") {
     JNIEnv* jenv;
-    jint ret = jvm_->GetEnv((void**) &jenv, JNI_VERSION_1_8);
+    jint ret = jvm_->GetEnv(reinterpret_cast<void**>(&jenv), JNI_VERSION_1_8);
 
     if (ret == JNI_EDETACHED) {
-      ret = jvm_->AttachCurrentThread((void**) &jenv, NULL);
+      ret = jvm_->AttachCurrentThread(reinterpret_cast<void**>(&jenv), NULL);
       if (ret != JNI_OK || jenv == NULL) {
         throw std::runtime_error("Could not find class");
       }
@@ -220,8 +221,9 @@ class JVMLoader {
 #else
           str << ":" << path;
 #endif
-        } else
+        } else {
           str << path;
+        }
       }
       options.insert(options.end(), otherOptions.begin(), otherOptions.end());
       std::string classpath = "-Djava.class.path=" + str.str();
@@ -294,7 +296,6 @@ class JVMLoader {
   }
 
  protected:
-
   static FieldMapping &getClassMapping() {
     static FieldMapping map;
     return map;
@@ -348,7 +349,7 @@ class JVMLoader {
 #ifdef _MSC_VER
 #pragma warning(suppress: 4054)
 #endif
-    return (void*)symbol;
+    return reinterpret_cast<void*>(symbol);
   }
 
   const char *dlerror(void) {
@@ -383,8 +384,7 @@ class JVMLoader {
           resource_mapping_.insert(std::make_pair(allModules[i], "minifi-system"));
         }
       }
-    }
-    else {
+    } else {
       char lpFileName[MAX_PATH];
       int i;
 
@@ -407,7 +407,7 @@ class JVMLoader {
     /* Return to previous state of the error-mode bit flags. */
     SetErrorMode(uMode);
 
-    return (void *)object;
+    return reinterpret_cast<void *>(object);
   }
 
   int dlclose(void *handle) {
@@ -423,7 +423,7 @@ class JVMLoader {
 
     ret = !ret;
 
-    return (int)ret;
+    return static_cast<int>(ret);
   }
 
 #endif
@@ -456,7 +456,7 @@ class JVMLoader {
     vm_args.ignoreUnrecognized = JNI_FALSE;
     // load and initialize a Java VM, return a JNI interface
     // pointer in env
-    JNI_CreateJavaVM(&jvm_, (void**) &env_, &vm_args);
+    JNI_CreateJavaVM(&jvm_, reinterpret_cast<void **>(&env_), &vm_args);
     // we're actually using a known class to locate the class loader and provide it
     // to referentially perform lookups.
     auto randomClass = find_class_global(env_, "org/apache/nifi/processor/ProcessContext");
@@ -472,7 +472,6 @@ class JVMLoader {
   }
 
  private:
-
   std::atomic<bool> initialized_;
 
   std::map<std::string, JavaClass> objects_;
@@ -511,5 +510,3 @@ class JVMLoader {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_JVMLOADER_H */

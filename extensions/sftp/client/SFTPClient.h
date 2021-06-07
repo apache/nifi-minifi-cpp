@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SFTP_CLIENT_H__
-#define __SFTP_CLIENT_H__
+#pragma once
 
 #include <curl/curl.h>
 #include <libssh2.h>
@@ -24,15 +23,13 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <vector>
+#include <tuple>
+#include <memory>
 
 #include "Exception.h"
 #include "utils/Enum.h"
 #include "utils/HTTPClient.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "properties/Configure.h"
-#include "io/validation.h"
 #include "io/BaseStream.h"
 
 namespace org {
@@ -70,20 +67,19 @@ class LastSFTPError {
   LastSFTPError& operator=(const LastSFTPError&) = delete;
   LastSFTPError& operator=(LastSFTPError&&) = delete;
 
-  LastSFTPError& setLibssh2Error(unsigned long libssh2_sftp_error);
+  LastSFTPError& setLibssh2Error(unsigned long libssh2_sftp_error);  // NOLINT(runtime/int) unsigned long comes from libssh2 API
   LastSFTPError& setSftpError(const SFTPError& sftp_error);
-  operator unsigned long() const;
+  operator unsigned long() const;  // NOLINT(runtime/int) unsigned long comes from libssh2 API
   operator SFTPError() const;
 
  private:
   bool sftp_error_set_;
-  unsigned long libssh2_sftp_error_;
+  unsigned long libssh2_sftp_error_;  // NOLINT(runtime/int) unsigned long comes from libssh2 API
   SFTPError sftp_error_;
 };
 
 class SFTPClient {
  public:
-
   SFTPClient(const std::string &hostname, uint16_t port, const std::string& username);
 
   ~SFTPClient();
@@ -203,5 +199,3 @@ class SFTPClient {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

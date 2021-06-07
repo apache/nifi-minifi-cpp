@@ -32,3 +32,4 @@ target_link_libraries(minifi-sensors RTIMULib::RTIMULib)
 SET (SENSOR-EXTENSIONS minifi-sensors PARENT_SCOPE)
 
 register_extension(minifi-sensors)
+register_extension_linter(minifi-sensors-linter)

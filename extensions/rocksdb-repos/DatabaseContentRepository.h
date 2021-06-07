@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_DatabaseContentRepository_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_DatabaseContentRepository_H_
+#pragma once
+
+#include <string>
+#include <memory>
 
 #include "core/Core.h"
 #include "core/Connectable.h"
@@ -33,6 +35,7 @@ namespace minifi {
 namespace core {
 namespace repository {
 
+
 /**
  * DatabaseContentRepository is a content repository that stores data onto the local file system.
  */
@@ -43,9 +46,9 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
 
     void commit() override;
   };
- public:
 
-  DatabaseContentRepository(const std::string& name = getClassName<DatabaseContentRepository>(), const utils::Identifier& uuid = {})
+ public:
+  explicit DatabaseContentRepository(const std::string& name = getClassName<DatabaseContentRepository>(), const utils::Identifier& uuid = {})
       : core::Connectable(name, uuid),
         is_valid_(false),
         db_(nullptr),
@@ -105,5 +108,3 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORY_DatabaseContentRepository_H_ */

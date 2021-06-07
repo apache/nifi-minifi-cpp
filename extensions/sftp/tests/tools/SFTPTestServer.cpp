@@ -21,8 +21,7 @@
 #include <thread>
 #include <exception>
 
-#ifdef WIN32
-#else
+#ifndef WIN32
 #include <signal.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -35,15 +34,14 @@
 #include "utils/file/FileUtils.h"
 
 SFTPTestServer::SFTPTestServer(const std::string& working_directory,
-    const std::string& host_key_file /*= "resources/host.pem"*/,
-    const std::string& jar_path /*= "tools/sftp-test-server/target/SFTPTestServer-1.0.0.jar"*/)
- : logger_(logging::LoggerFactory<SFTPTestServer>::getLogger())
- , working_directory_(working_directory)
- , started_(false)
- , port_(0U)
-#ifdef WIN32
-#else
- , server_pid_(-1)
+                               const std::string& host_key_file /*= "resources/host.pem"*/,
+                               const std::string& jar_path /*= "tools/sftp-test-server/target/SFTPTestServer-1.0.0.jar"*/)
+    : logger_(logging::LoggerFactory<SFTPTestServer>::getLogger()),
+      working_directory_(working_directory),
+      started_(false),
+      port_(0U)
+#ifndef WIN32
+      , server_pid_(-1)
 #endif
 {
   auto executable_dir = utils::file::FileUtils::get_executable_dir();

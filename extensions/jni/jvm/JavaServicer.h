@@ -20,6 +20,7 @@
 #define EXTENSIONS_JNI_JVM_JAVASERVICER_H_
 
 #include <jni.h>
+#include <string>
 #include "JavaClass.h"
 
 namespace org {

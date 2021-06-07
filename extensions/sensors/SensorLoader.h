@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_SENSORS_SENSORLOADER_H
-#define EXTENSIONS_SENSORS_SENSORLOADER_H
+#pragma once
+
+#include <vector>
+#include <string>
+#include <memory>
 
 #include "core/ClassLoader.h"
 #include "GetEnvironmentalSensors.h"
@@ -59,10 +62,8 @@ class SensorFactory : public core::ObjectFactory {
   }
 
   static bool added;
-}
-;
+};
 
 extern "C" {
 DLL_EXPORT void *createSensorFactory(void);
 }
-#endif  // EXTENSIONS_SENSORS_SENSORLOADER_H

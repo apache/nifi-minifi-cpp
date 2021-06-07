@@ -15,10 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_PYPROCESS_PYPROCCREATOR_H_
-#define EXTENSIONS_PYPROCESS_PYPROCCREATOR_H_
+#pragma once
 
 #include <map>
+#include <vector>
+#include <string>
+#include <memory>
+
 #include "core/ClassLoader.h"
 #include "ExecutePythonProcessor.h"
 #include "utils/StringUtils.h"
@@ -27,15 +30,11 @@
 
 class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::processors::ExecutePythonProcessor> {
  public:
-
   explicit PythonObjectFactory(const std::string &file, const std::string &name)
       : file_(file),
         name_(name) {
   }
 
-  /**
-   * Create a shared pointer to a new processor.
-   */
   std::shared_ptr<core::CoreComponent> create(const std::string &name) override {
     auto ptr = std::static_pointer_cast<minifi::python::processors::ExecutePythonProcessor>(DefautObjectFactory::create(name));
     ptr->initialize();
@@ -43,9 +42,6 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
     return std::static_pointer_cast<core::CoreComponent>(ptr);
   }
 
-  /**
-   * Create a shared pointer to a new processor.
-   */
   std::shared_ptr<core::CoreComponent> create(const std::string &name, const utils::Identifier &uuid) override {
     auto ptr = std::static_pointer_cast<minifi::python::processors::ExecutePythonProcessor>(DefautObjectFactory::create(name, uuid));
     ptr->initialize();
@@ -53,9 +49,6 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
     return std::static_pointer_cast<core::CoreComponent>(ptr);
   }
 
-  /**
-   * Create a shared pointer to a new processor.
-   */
   core::CoreComponent* createRaw(const std::string &name) override {
     auto ptr = dynamic_cast<minifi::python::processors::ExecutePythonProcessor*>(DefautObjectFactory::createRaw(name));
     ptr->initialize();
@@ -63,15 +56,13 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
     return dynamic_cast<core::CoreComponent*>(ptr);
   }
 
-  /**
-   * Create a shared pointer to a new processor.
-   */
   core::CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) override {
     auto ptr = dynamic_cast<minifi::python::processors::ExecutePythonProcessor*>(DefautObjectFactory::createRaw(name, uuid));
     ptr->initialize();
     ptr->setProperty(minifi::python::processors::ExecutePythonProcessor::ScriptFile, file_);
     return dynamic_cast<core::CoreComponent*>(ptr);
   }
+
  private:
   std::string file_;
   std::string name_;
@@ -79,7 +70,6 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
 
 class PyProcCreator {
  public:
-
   void addClassName(const std::string &name, std::string file) {
     file_mapping_[name] = file;
   }
@@ -106,5 +96,3 @@ class PyProcCreator {
 };
 
 #pragma GCC visibility pop
-
-#endif /* EXTENSIONS_PYPROCESS_PYPROCCREATOR_H_ */

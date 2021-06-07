@@ -15,15 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_JNI_JVM_JNIMETHOD_H_
-#define EXTENSIONS_JNI_JVM_JNIMETHOD_H_
+#pragma once
 
+#include <jni.h>
+
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
-#include <jni.h>
+
 
 namespace org {
 namespace apache {
@@ -72,7 +75,6 @@ class JavaMethodSignature {
   JavaMethodSignature &operator=(JavaMethodSignature &&other) = default;
 
  private:
-
   std::string name_;
   std::string params_;
   void *ptr_;
@@ -112,6 +114,7 @@ class JavaSignatures {
   size_t getSize() const {
     return size_;
   }
+
  private:
   mutable std::mutex mutex_;
   mutable std::unique_ptr<JNINativeMethod[]> method_ptr_;
@@ -124,5 +127,3 @@ class JavaSignatures {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_JNI_JVM_JNIMETHOD_H_ */

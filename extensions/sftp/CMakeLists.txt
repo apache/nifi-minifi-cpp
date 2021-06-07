@@ -30,3 +30,4 @@ target_link_libraries(minifi-sftp CURL::libcurl libssh2 RapidJSON)
 
 SET (SFTP minifi-sftp PARENT_SCOPE)
 register_extension(minifi-sftp)
+register_extension_linter(minifi-sftp-linter)

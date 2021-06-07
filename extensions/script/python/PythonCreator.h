@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_SCRIPT_PYTHONCREATOR_H_
-#define EXTENSIONS_SCRIPT_PYTHONCREATOR_H_
+#pragma once
 
 #include <vector>
+#include <utility>
+#include <algorithm>
 #include <string>
 #include <memory>
 #include "core/Core.h"
@@ -42,7 +43,6 @@ namespace python {
  */
 class PythonCreator : public minifi::core::CoreComponent {
  public:
-
   explicit PythonCreator(const std::string &name, const utils::Identifier &uuid = {})
       : minifi::core::CoreComponent(name, uuid),
         logger_(logging::LoggerFactory<PythonCreator>::getLogger()) {
@@ -176,13 +176,10 @@ class PythonCreator : public minifi::core::CoreComponent {
   std::vector<std::string> classpaths_;
 
   std::shared_ptr<logging::Logger> logger_;
-}
-;
+};
 
 } /* namespace python */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_SCRIPT_PYTHONCREATOR_H_ */

@@ -19,12 +19,14 @@
 #ifndef EXTENSIONS_JNI_JVM_JNIFLOWFILE_H_
 #define EXTENSIONS_JNI_JVM_JNIFLOWFILE_H_
 
+#include <jni.h>
+
 #include <string>
 #include <vector>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
-#include <jni.h>
+
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 

@@ -16,8 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SFTP_PROCESSOR_BASE_H__
-#define __SFTP_PROCESSOR_BASE_H__
+#pragma once
 
 #include <memory>
 #include <string>
@@ -25,16 +24,13 @@
 #include <map>
 #include <mutex>
 #include <thread>
+#include <set>
 
-#include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "controllers/SSLContextService.h"
-#include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 #include "../client/SFTPClient.h"
 
@@ -152,5 +148,3 @@ class SFTPProcessorBase : public core::Processor {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

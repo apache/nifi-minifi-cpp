@@ -15,15 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_JAVACLASS_H
-#define EXTENSIONS_JAVACLASS_H
+#pragma once
+
+#include <jni.h>
 
 #include <string>
 #include <vector>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
-#include <jni.h>
+#include <utility>
+
 #include "JniProcessContext.h"
 #include "JniFlowFile.h"
 #include "JniProcessSession.h"
@@ -43,7 +45,6 @@ namespace jni {
  */
 class JavaClass {
  public:
-
   JavaClass()
       : class_ref_(nullptr) {
   }
@@ -130,5 +131,3 @@ class JavaClass {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_JAVACLASS_H */

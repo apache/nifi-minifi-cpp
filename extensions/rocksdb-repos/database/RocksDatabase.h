@@ -18,6 +18,9 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "utils/OptionalUtils.h"
 #include "rocksdb/db.h"
 #include "logging/Logger.h"
@@ -38,7 +41,10 @@ class RocksDbInstance;
  */
 class RocksDatabase {
  public:
-  static std::unique_ptr<RocksDatabase> create(const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch, const std::string& uri, RocksDbMode mode = RocksDbMode::ReadWrite);
+  static std::unique_ptr<RocksDatabase> create(const DBOptionsPatch& db_options_patch,
+                                               const ColumnFamilyOptionsPatch& cf_options_patch,
+                                               const std::string& uri,
+                                               RocksDbMode mode = RocksDbMode::ReadWrite);
 
   RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, DBOptionsPatch db_options_patch, ColumnFamilyOptionsPatch cf_options_patch);
 

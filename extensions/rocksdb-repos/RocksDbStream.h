@@ -15,14 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_TLS_RocksDbStream_H_
-#define LIBMINIFI_INCLUDE_IO_TLS_RocksDbStream_H_
+#pragma once
 
-#include "database/RocksDatabase.h"
 #include <iostream>
 #include <cstdint>
 #include <string>
-#include "io/EndianCheck.h"
+#include <memory>
+#include "database/RocksDatabase.h"
 #include "io/BaseStream.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -97,7 +96,6 @@ class RocksDbStream : public io::BaseStream {
   size_t size_;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 };
 
@@ -106,5 +104,3 @@ class RocksDbStream : public io::BaseStream {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_IO_TLS_RocksDbStream_H_ */

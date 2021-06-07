@@ -19,12 +19,15 @@
 #ifndef EXTENSIONS_JNI_JVM_JNICONTROLLERSERVICELOOKUP_H_
 #define EXTENSIONS_JNI_JVM_JNICONTROLLERSERVICELOOKUP_H_
 
+#include <jni.h>
+
 #include <string>
 #include <vector>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
-#include <jni.h>
+#include <memory>
+
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 
@@ -36,7 +39,6 @@ namespace jni {
 
 class JniControllerService {
  public:
-
   std::shared_ptr<core::controller::ControllerService> cs_reference_;
 };
 

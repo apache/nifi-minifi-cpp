@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include <core/FlowFile.h>
+#include "core/FlowFile.h"
 
 #include "ScriptFlowFile.h"
 

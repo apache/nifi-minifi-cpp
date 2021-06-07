@@ -17,14 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SCRIPT_EXCEPTION_H__
-#define __SCRIPT_EXCEPTION_H__
+#pragma once
 
-#include <sstream>
 #include <exception>
+#include <utility>
+#include <string>
 #include <stdexcept>
-#include <errno.h>
-#include <string.h>
 
 namespace org {
 namespace apache {
@@ -40,8 +38,8 @@ class ScriptException : public std::exception {
   /*!
    * Create a new exception
    */
-  ScriptException(std::string errorMsg)
-      : error_(std::move(errorMsg)) {
+  explicit ScriptException(std::string errorMsg)
+    : error_(std::move(errorMsg)) {
   }
 
   virtual ~ScriptException() noexcept = default;
@@ -58,4 +56,3 @@ class ScriptException : public std::exception {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif

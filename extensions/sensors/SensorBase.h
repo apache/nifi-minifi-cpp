@@ -15,13 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_SENSORS_SENSORBASE_H_
-#define EXTENSIONS_SENSORS_SENSORBASE_H_
-
-
+#pragma once
 
 #include <memory>
 #include <regex>
+#include <string>
 
 #include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
@@ -43,7 +41,6 @@ namespace processors {
 // SensorBase Class
 class SensorBase : public core::Processor {
  public:
-
   // Constructor
   /*!
    * Create a new processor
@@ -64,17 +61,18 @@ class SensorBase : public core::Processor {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
   class WriteCallback : public OutputStreamCallback {
-     public:
-      explicit WriteCallback(std::string data)
-          : data_{std::move(data)}
-      {}
-      std::string data_;
-      int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-        if (data_.empty()) return 0;
-        const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(data_.data()), data_.size());
-        return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-      }
-    };
+   public:
+    explicit WriteCallback(std::string data)
+        : data_{std::move(data)} {
+    }
+    std::string data_;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+      if (data_.empty()) return 0;
+      const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(data_.data()), data_.size());
+      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
+    }
+  };
+
  protected:
   RTIMUSettings settings;
   std::unique_ptr<RTIMU> imu;
@@ -86,4 +84,3 @@ class SensorBase : public core::Processor {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* EXTENSIONS_SENSORS_SENSORBASE_H_ */

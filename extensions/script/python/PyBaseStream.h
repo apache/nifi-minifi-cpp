@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_PYBYTESTREAM_H
-#define NIFI_MINIFI_CPP_PYBYTESTREAM_H
+#pragma once
 
-#include <pybind11/embed.h>
+#include <memory>
 
-#include <io/BaseStream.h>
+#include "pybind11/embed.h"
+#include "io/BaseStream.h"
 
 namespace org {
 namespace apache {
@@ -48,5 +48,3 @@ class PyBaseStream {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_PYBYTESTREAM_H

@@ -16,15 +16,19 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_JNI_JVM_REFERNCEOBJECTS_H_
-#define EXTENSIONS_JNI_JVM_REFERNCEOBJECTS_H_
+#pragma once
+
+#include <jni.h>
 
 #include <string>
 #include <vector>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
-#include <jni.h>
+#include <functional>
+#include <memory>
+#include <utility>
+
 #include "JavaServicer.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -72,7 +76,6 @@ class JniFlowFile : public core::WeakReference {
   }
 
  protected:
-
   bool removed;
 
   jobject ff_object;
@@ -102,7 +105,7 @@ class JniByteOutStream : public minifi::OutputStreamCallback {
 
   virtual ~JniByteOutStream() = default;
   virtual int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
-    const auto write_ret = stream->write((uint8_t*)bytes_, length_);
+    const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(bytes_), length_);
     return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
   }
  private:
@@ -115,7 +118,7 @@ class JniByteOutStream : public minifi::OutputStreamCallback {
  */
 class JniByteInputStream : public minifi::InputStreamCallback {
  public:
-  JniByteInputStream(uint64_t size)
+  explicit JniByteInputStream(uint64_t size)
       : stream_(nullptr),
         read_size_(0) {
     buffer_size_ = size;
@@ -152,7 +155,7 @@ class JniByteInputStream : public minifi::InputStreamCallback {
       }
 
       read += actual;
-      env->SetByteArrayRegion(arr, offset + writtenOffset, actual, (jbyte*) buffer_);
+      env->SetByteArrayRegion(arr, offset + writtenOffset, actual, reinterpret_cast<jbyte*>(buffer_));
       writtenOffset += actual;
 
       remaining -= actual;
@@ -299,7 +302,6 @@ struct check_empty : public std::unary_function<std::shared_ptr<JniSession>, boo
 
 class JniSessionFactory : public core::WeakReference {
  public:
-
   JniSessionFactory(const std::shared_ptr<core::ProcessSessionFactory> &factory, const std::shared_ptr<JavaServicer> &servicer, jobject java_object)
       : servicer_(servicer),
         factory_(factory),
@@ -363,5 +365,3 @@ class JniSessionFactory : public core::WeakReference {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_JNI_JVM_REFERNCEOBJECTS_H_ */
