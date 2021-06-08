@@ -48,27 +48,26 @@ std::string StringUtils::trim(const std::string& s) {
 }
 
 template<typename Fun>
-std::vector<std::string> split_transformed(const std::string& str, const std::string& delimiter, Fun transformation) {
+std::vector<std::string> split_transformed(std::string str, const std::string& delimiter, Fun transformation) {
   std::vector<std::string> result;
   if (delimiter.empty()) {
-    std::transform(str.begin(), str.end(), std::back_inserter(result), [&] (const char c) { return transformation(std::string{c}); });
+    for (auto c : str) {
+      result.push_back(transformation(std::string(1, c)));
+    }
     return result;
   }
-  auto curr = str.begin();
-  auto end = str.end();
-  auto is_func = [delimiter](int s) {
-    return delimiter.at(0) == s;
-  };
-  while (curr != end) {
-    curr = std::find_if_not(curr, end, is_func);
-    if (curr == end) {
-      break;
-    }
-    auto next = std::find_if(curr, end, is_func);
-    result.push_back(transformation(std::string(curr, next)));
-    curr = next;
-  }
 
+  size_t pos = str.find(delimiter);
+  if (pos == std::string::npos) {
+    result.push_back(transformation(str));
+    return result;
+  }
+  while (pos != std::string::npos) {
+    result.push_back(transformation(str.substr(0, pos)));
+    str = str.substr(pos + delimiter.size());
+    pos = str.find(delimiter);
+  }
+  result.push_back(transformation(str));
   return result;
 }
 
@@ -76,26 +75,19 @@ std::vector<std::string> StringUtils::split(const std::string& str, const std::s
   return split_transformed(str, delimiter, identity{});
 }
 
+std::vector<std::string> StringUtils::splitRemovingEmpty(const std::string& str, const std::string& delimiter) {
+  auto result = split(str, delimiter);
+  result.erase(std::remove_if(result.begin(), result.end(), [](const std::string& str) { return str.empty(); }), result.end());
+  return result;
+}
+
 std::vector<std::string> StringUtils::splitAndTrim(const std::string& str, const std::string& delimiter) {
   return split_transformed(str, delimiter, trim);
 }
 
-std::vector<std::string> StringUtils::splitAndTrimOnString(std::string str, const std::string& delimiter) {
-  std::vector<std::string> result;
-  size_t pos = str.find(delimiter);
-  if (pos == std::string::npos) {
-    return result;
-  }
-  while (pos != std::string::npos) {
-    if (pos != 0) {
-      result.push_back(minifi::utils::StringUtils::trim(str.substr(0, pos)));
-    }
-    str = str.substr(pos + delimiter.size());
-    pos = str.find(delimiter);
-  }
-  if (!str.empty()) {
-    result.push_back(minifi::utils::StringUtils::trim(str));
-  }
+std::vector<std::string> StringUtils::splitAndTrimRemovingEmpty(const std::string& str, const std::string& delimiter) {
+  auto result = splitAndTrim(str, delimiter);
+  result.erase(std::remove_if(result.begin(), result.end(), [](const std::string& str) { return str.empty(); }), result.end());
   return result;
 }
 

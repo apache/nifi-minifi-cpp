@@ -136,8 +136,9 @@ class StringUtils {
   }
 
   static std::vector<std::string> split(const std::string &str, const std::string &delimiter);
+  static std::vector<std::string> splitRemovingEmpty(const std::string& str, const std::string& delimiter);
   static std::vector<std::string> splitAndTrim(const std::string &str, const std::string &delimiter);
-  static std::vector<std::string> splitAndTrimOnString(std::string str, const std::string& delimiter);
+  static std::vector<std::string> splitAndTrimRemovingEmpty(const std::string& str, const std::string& delimiter);
 
   /**
    * Converts a string to a float

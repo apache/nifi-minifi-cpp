@@ -35,11 +35,11 @@ DistinguishedName::DistinguishedName(const std::vector<std::string>& components)
 }
 
 DistinguishedName DistinguishedName::fromCommaSeparated(const std::string& comma_separated_components) {
-  return DistinguishedName{utils::StringUtils::split(comma_separated_components, ",")};
+  return DistinguishedName{utils::StringUtils::splitRemovingEmpty(comma_separated_components, ",")};
 }
 
 DistinguishedName DistinguishedName::fromSlashSeparated(const std::string &slash_separated_components) {
-  return DistinguishedName{utils::StringUtils::split(slash_separated_components, "/")};
+  return DistinguishedName{utils::StringUtils::splitRemovingEmpty(slash_separated_components, "/")};
 }
 
 utils::optional<std::string> DistinguishedName::getCN() const {
