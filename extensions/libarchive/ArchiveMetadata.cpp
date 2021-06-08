@@ -177,8 +177,8 @@ void ArchiveStack::loadJsonString(const std::string& input) {
   if (!ok) {
     std::stringstream ss;
     ss << "Failed to parse archive lens stack from JSON string with reason: "
-     << rapidjson::GetParseError_En(ok.Code())
-     << " at offset " << ok.Offset();
+        << rapidjson::GetParseError_En(ok.Code())
+        << " at offset " << ok.Offset();
 
     throw Exception(ExceptionType::GENERAL_EXCEPTION, ss.str());
   }
