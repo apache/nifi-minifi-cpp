@@ -17,7 +17,7 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.16)
 
 IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)

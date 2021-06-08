@@ -54,6 +54,7 @@ target
 thirdparty/**/*.o
 thirdparty/**/*.a
 libminifi/test/**/*.a
+libminifi/test/corecomponentstate/
 libminifi/src/agent/agent_version.cpp
 docs/generated
 thirdparty/apache-rat/apache-rat*

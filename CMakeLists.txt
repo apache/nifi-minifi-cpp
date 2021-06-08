@@ -118,7 +118,6 @@ endif()
 
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
-include(CheckCXXCompilerFlag)
 if (WIN32)
     add_compile_definitions(WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS NOMINMAX)
     add_compile_options(/W3 /utf-8)
@@ -138,13 +137,8 @@ if (NOT PORTABLE)
 	endif()
 endif()
 
-if (WIN32)
-	set(CMAKE_CXX_STANDARD 14)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14")
-else()
-	set(CMAKE_CXX_STANDARD 11)
-endif()
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+include(CppVersion)
+set_cpp_version()
 
 # thread library - we must find this before we set ASAN flags, otherwise FindThreads.cmake sometimes thinks we don't
 # need to link with libpthread because libasan already provides some overridden pthread_* symbols.
