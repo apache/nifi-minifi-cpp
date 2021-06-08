@@ -69,6 +69,9 @@ class OpenRocksDb {
   rocksdb::DB* get();
 
  private:
+  void handleResult(const rocksdb::Status& result);
+  void handleResult(const std::vector<rocksdb::Status>& results);
+
   gsl::not_null<RocksDbInstance*> db_;
   gsl::not_null<std::shared_ptr<rocksdb::DB>> impl_;
   gsl::not_null<std::shared_ptr<ColumnHandle>> column_;

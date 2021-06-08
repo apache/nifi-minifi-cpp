@@ -31,53 +31,38 @@ OpenRocksDb::OpenRocksDb(RocksDbInstance& db, gsl::not_null<std::shared_ptr<rock
 
 rocksdb::Status OpenRocksDb::Put(const rocksdb::WriteOptions& options, const rocksdb::Slice& key, const rocksdb::Slice& value) {
   rocksdb::Status result = impl_->Put(options, column_->handle.get(), key, value);
-  if (result == rocksdb::Status::NoSpace()) {
-    db_->invalidate();
-  }
+  handleResult(result);
   return result;
 }
 
 rocksdb::Status OpenRocksDb::Get(const rocksdb::ReadOptions& options, const rocksdb::Slice& key, std::string* value) {
   rocksdb::Status result = impl_->Get(options, column_->handle.get(), key, value);
-  if (result == rocksdb::Status::NoSpace()) {
-    db_->invalidate();
-  }
+  handleResult(result);
   return result;
 }
 
 std::vector<rocksdb::Status> OpenRocksDb::MultiGet(const rocksdb::ReadOptions& options, const std::vector<rocksdb::Slice>& keys, std::vector<std::string>* values) {
   std::vector<rocksdb::Status> results = impl_->MultiGet(
       options, std::vector<rocksdb::ColumnFamilyHandle*>(keys.size(), column_->handle.get()), keys, values);
-  for (const auto& result : results) {
-    if (result == rocksdb::Status::NoSpace()) {
-      db_->invalidate();
-      break;
-    }
-  }
+  handleResult(results);
   return results;
 }
 
 rocksdb::Status OpenRocksDb::Write(const rocksdb::WriteOptions& options, internal::WriteBatch* updates) {
   rocksdb::Status result = impl_->Write(options, &updates->impl_);
-  if (result == rocksdb::Status::NoSpace()) {
-    db_->invalidate();
-  }
+  handleResult(result);
   return result;
 }
 
 rocksdb::Status OpenRocksDb::Delete(const rocksdb::WriteOptions& options, const rocksdb::Slice& key) {
   rocksdb::Status result = impl_->Delete(options, column_->handle.get(), key);
-  if (result == rocksdb::Status::NoSpace()) {
-    db_->invalidate();
-  }
+  handleResult(result);
   return result;
 }
 
 rocksdb::Status OpenRocksDb::Merge(const rocksdb::WriteOptions& options, const rocksdb::Slice& key, const rocksdb::Slice& value) {
   rocksdb::Status result = impl_->Merge(options, column_->handle.get(), key, value);
-  if (result == rocksdb::Status::NoSpace()) {
-    db_->invalidate();
-  }
+  handleResult(result);
   return result;
 }
 
@@ -95,10 +80,23 @@ rocksdb::Status OpenRocksDb::NewCheckpoint(rocksdb::Checkpoint **checkpoint) {
 
 rocksdb::Status OpenRocksDb::FlushWAL(bool sync) {
   rocksdb::Status result = impl_->FlushWAL(sync);
+  handleResult(result);
+  return result;
+}
+
+void OpenRocksDb::handleResult(const rocksdb::Status& result) {
   if (result == rocksdb::Status::NoSpace()) {
     db_->invalidate();
   }
-  return result;
+}
+
+void OpenRocksDb::handleResult(const std::vector<rocksdb::Status>& results) {
+  for (const auto& result : results) {
+    if (result == rocksdb::Status::NoSpace()) {
+      db_->invalidate();
+      break;
+    }
+  }
 }
 
 WriteBatch OpenRocksDb::createWriteBatch() const noexcept {

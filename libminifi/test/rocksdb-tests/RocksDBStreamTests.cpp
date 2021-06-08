@@ -26,15 +26,15 @@ class RocksDBStreamTest : TestController {
   RocksDBStreamTest() {
     char format[] = "/var/tmp/testdb.XXXXXX";
     dbPath = createTempDirectory(format);
-    auto db_opts = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
+    auto set_db_opts = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
       db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
       db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
       db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
     };
-    auto cf_opts = [] (minifi::internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts) {
+    auto set_cf_opts = [] (minifi::internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts) {
       cf_opts.transform<core::repository::StringAppender>(&rocksdb::ColumnFamilyOptions::merge_operator);
     };
-    db = minifi::internal::RocksDatabase::create(db_opts, cf_opts, dbPath);
+    db = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, dbPath);
     REQUIRE(db->open());
   }
 

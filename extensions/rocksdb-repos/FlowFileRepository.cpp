@@ -130,12 +130,12 @@ void FlowFileRepository::run() {
 }
 
 void FlowFileRepository::prune_stored_flowfiles() {
-  auto db_opts = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
+  auto set_db_opts = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
   };
-  auto checkpointDB = minifi::internal::RocksDatabase::create(db_opts, {}, checkpoint_dir_, minifi::internal::RocksDbMode::ReadOnly);
+  auto checkpointDB = minifi::internal::RocksDatabase::create(set_db_opts, {}, checkpoint_dir_, minifi::internal::RocksDbMode::ReadOnly);
   utils::optional<minifi::internal::OpenRocksDb> opendb;
   if (nullptr != checkpoint_) {
     opendb = checkpointDB->open();

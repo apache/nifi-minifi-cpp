@@ -42,17 +42,17 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   } else {
     directory_ = configuration->getHome() + "/dbcontentrepository";
   }
-  auto db_opts = [] (internal::Writable<rocksdb::DBOptions>& db_opts) {
+  auto set_db_opts = [] (internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
     db_opts.set(&rocksdb::DBOptions::error_if_exists, false);
   };
-  auto cf_opts = [] (internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts){
+  auto set_cf_opts = [] (internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts){
     cf_opts.transform<StringAppender>(&rocksdb::ColumnFamilyOptions::merge_operator);
     cf_opts.set<size_t>(&rocksdb::ColumnFamilyOptions::max_successive_merges, 0);
   };
-  db_ = minifi::internal::RocksDatabase::create(db_opts, cf_opts, directory_);
+  db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_);
   if (db_->open()) {
     logger_->log_debug("NiFi Content DB Repository database open %s success", directory_);
     is_valid_ = true;

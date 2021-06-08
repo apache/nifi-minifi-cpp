@@ -32,12 +32,12 @@ std::shared_ptr<core::logging::Logger> RocksDatabase::logger_ = core::logging::L
 std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch, const std::string& uri, RocksDbMode mode) {
   const std::string scheme = "minifidb://";
 
-  logger_->log_trace("Acquiring database handle '%s'", uri);
+  logger_->log_info("Acquiring database handle '%s'", uri);
   std::string db_path = uri;
   std::string db_column = "default";
   if (utils::StringUtils::startsWith(uri, scheme)) {
     const std::string path = uri.substr(scheme.length());
-    logger_->log_trace("RocksDB scheme is detected in '%s'", uri);
+    logger_->log_info("RocksDB scheme is detected in '%s'", uri);
     // last segment is treated as the column name
     std::string::size_type pos = path.find_last_of('/');
     if (pos == std::string::npos) {
@@ -49,9 +49,9 @@ std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_op
     }
     db_path = path.substr(0, pos);
     db_column = path.substr(pos + 1);
-    logger_->log_trace("Using column '%s' in rocksdb database '%s'", db_column, db_path);
+    logger_->log_info("Using column '%s' in rocksdb database '%s'", db_column, db_path);
   } else {
-    logger_->log_trace("Simple directory detected '%s', using as is", uri);
+    logger_->log_info("Simple directory detected '%s', using as is", uri);
   }
 
   if (mode == RocksDbMode::ReadOnly) {
@@ -67,11 +67,11 @@ std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_op
     std::lock_guard<std::mutex> guard(mtx);
     instance = databases[db_path].lock();
     if (!instance) {
-      logger_->log_trace("Opening rocksdb database '%s'", db_path);
+      logger_->log_info("Opening rocksdb database '%s'", db_path);
       instance = std::make_shared<RocksDbInstance>(db_path, mode);
       databases[db_path] = instance;
     } else {
-      logger_->log_trace("Using previously opened rocksdb instance '%s'", db_path);
+      logger_->log_info("Using previously opened rocksdb instance '%s'", db_path);
     }
   }
   return utils::make_unique<RocksDatabase>(instance, db_column, db_options_patch, cf_options_patch);
