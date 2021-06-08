@@ -1,0 +1,14 @@
+diff -rupN orig/sdk/core/azure-core/inc/azure/core/http/winhttp/win_http_client.hpp patched/sdk/core/azure-core/inc/azure/core/http/winhttp/win_http_client.hpp
+--- orig/sdk/core/azure-core/inc/azure/core/http/winhttp/win_http_client.hpp	2021-06-07 16:51:23.179818286 +0200
++++ patched/sdk/core/azure-core/inc/azure/core/http/winhttp/win_http_client.hpp	2021-06-07 16:51:55.536150585 +0200
+@@ -132,8 +132,8 @@ namespace Azure { namespace Core { names
+     void CreateRequestHandle(std::unique_ptr<Details::HandleManager>& handleManager);
+     void Upload(std::unique_ptr<Details::HandleManager>& handleManager);
+     void SendRequest(std::unique_ptr<Details::HandleManager>& handleManager);
+-    void WinHttpTransport::ReceiveResponse(std::unique_ptr<Details::HandleManager>& handleManager);
+-    int64_t WinHttpTransport::GetContentLength(
++    void ReceiveResponse(std::unique_ptr<Details::HandleManager>& handleManager);
++    int64_t GetContentLength(
+         std::unique_ptr<Details::HandleManager>& handleManager,
+         HttpMethod requestMethod,
+         HttpStatusCode responseStatusCode);

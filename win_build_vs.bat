@@ -32,7 +32,7 @@ set build_AWS=OFF
 set build_SFTP=OFF
 set build_azure=OFF
 set test_custom_wel_provider=OFF
-set generator="Visual Studio 15 2017"
+set generator="Visual Studio 16 2019"
 set cpack=OFF
 set installer_merge_modules=OFF
 set strict_gsl_checks=
@@ -55,7 +55,6 @@ for %%x in (%*) do (
     if [%%~x] EQU [/PDH]         set build_PDH=ON
     if [%%~x] EQU [/M]           set installer_merge_modules=ON
     if [%%~x] EQU [/Z]           set build_azure=ON
-    if [%%~x] EQU [/2019]        set generator="Visual Studio 16 2019"
     if [%%~x] EQU [/64]          set build_platform=x64
     if [%%~x] EQU [/D]           set cmake_build_type=RelWithDebInfo
     if [%%~x] EQU [/DD]          set cmake_build_type=Debug

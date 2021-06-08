@@ -17,14 +17,13 @@
 
 ## Requirements
 
-Apache NiFi MiNiFi C++ has been built on Window Server 2016, 2019, and Windows 10 operating systems. The project is CMake focused we suggest building via
-Visual Studio 2017, Visual Studio 2019 or our `win_build_vs.bat` script.
+Apache NiFi MiNiFi C++ has been built on Window Server 2016, 2019, and Windows 10 operating systems. The project is CMake focused we suggest building via Visual Studio 2019 or our `win_build_vs.bat` script.
 
 The project previously required OpenSSL to be installed. If you follow our build procedures, below, you will not need to install that dependency.
 
 ### Required software
 
- - Visual Studio 2017 or Visual Studio 2019
+ - Visual Studio 2019
  - [CMake](https://cmake.org/download/)
  - [Git](https://git-scm.com/download/win)
  - (Optional) [WiX Toolset](https://wixtoolset.org/releases/) (only for building the MSI)
@@ -72,14 +71,12 @@ After the build directory it will take optional parameters modifying the CMake c
 | /D | Builds RelWithDebInfo build instead of Release |
 | /DD | Builds Debug build instead of Release |
 | /CI | Sets STRICT_GSL_CHECKS to AUDIT |
-| /2019 | Use the Visual Studio 2019 environment instead of the default Visual Studio 2017 |
 
 Examples:
  - 32-bit build with kafka, disabling tests, enabling MSI creation: `win_build_vs.bat build32 /T /K /P`
  - 64-bit build with JNI, with debug symbols: `win_build_vs.bat build64 /64 /J /D`
 
-`win_build_vs.bat` requires either a Visual Studio 2017 or a Visual Studio 2019 (if called with the `/2019` flag) build environment to be set up. With Visual Studio 2017 use the `x86 Native Tools Command Prompt for VS 2017` for 32-bit, or the `x64 Native Tools Command Prompt for VS 2017` for 64-bit builds.
-For Visual Studio 2019 use the `x86 Native Tools Command Prompt for VS 2019`, or the `x64 Native Tools Command Prompt for VS 2019` for 32-bit and 64-bit builds respectively.
+`win_build_vs.bat` requires a Visual Studio 2019 build environment to be set up. Use the `x86 Native Tools Command Prompt for VS 2019`, or the `x64 Native Tools Command Prompt for VS 2019` for 32-bit and 64-bit builds respectively.
 
 ## Building directly with CMake
 
@@ -92,7 +89,7 @@ A basic working CMake configuration can be inferred from the `win_build_vs.bat`.
 ```
 mkdir build
 cd build
-cmake -G "Visual Studio 15 2017" -DINSTALLER_MERGE_MODULES=OFF -DENABLE_SQL=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=OFF -DENABLE_JNI=OFF -DOPENSSL_OFF=OFF -DENABLE_COAP=OFF -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
+cmake -G "Visual Studio 16 2019" -DINSTALLER_MERGE_MODULES=OFF -DENABLE_SQL=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=OFF -DENABLE_JNI=OFF -DOPENSSL_OFF=OFF -DENABLE_COAP=OFF -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
 msbuild /m nifi-minifi-cpp.sln /property:Configuration=Release /property:Platform=Win32
 copy main\Release\minifi.exe main\
 cpack

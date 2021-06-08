@@ -17,23 +17,6 @@
 # under the License.
 #
 
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++14 " COMPILER_SUPPORTS_CXX14)
-CHECK_CXX_COMPILER_FLAG("-std=c++1y " COMPILER_SUPPORTS_CXX1Y)
-
-if (ENABLE_LUA_SCRIPTING)
-    if(COMPILER_SUPPORTS_CXX14)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-    elseif(COMPILER_SUPPORTS_CXX1Y)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
-    else()
-        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support and lua is enabled. Please use a different C++ compiler or disable lua.")
-    endif()
-
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
-
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 set (OTHER_SOURCES "")
@@ -87,6 +70,8 @@ if (ENABLE_LUA_SCRIPTING)
     target_link_libraries(minifi-lua-extensions ${LIBMINIFI})
     target_link_libraries(minifi-lua-extensions ${LUA_LIBRARIES} sol)
     target_link_libraries(minifi-script-extensions minifi-lua-extensions)
+
+    target_compile_features(minifi-lua-extensions PUBLIC cxx_std_14)
 endif()
 
 SET (SCRIPTING-EXTENSIONS minifi-script-extensions PARENT_SCOPE)

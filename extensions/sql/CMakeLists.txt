@@ -19,9 +19,6 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 include_directories(SYSTEM ../../thirdparty/rapidjson-1.1.0/include/ ../../thirdparty/rapidjson-1.1.0/include/rapidjson)
 include_directories(".")
 
@@ -159,6 +156,7 @@ add_library(SOCI::libsoci_core STATIC IMPORTED)
 set_target_properties(SOCI::libsoci_core PROPERTIES IMPORTED_LOCATION "${SOCI_BYPRODUCT_DIR}/${LIBDIR}/libsoci_core${BYPRODUCT_SUFFIX}")
 set_target_properties(SOCI::libsoci_core PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${SOCI_INCLUDE_DIR}")
 add_dependencies(SOCI::libsoci_core soci-external)
+target_compile_features(SOCI::libsoci_core INTERFACE cxx_std_14)
 
 add_library(SOCI::libsoci_odbc STATIC IMPORTED)
 set_target_properties(SOCI::libsoci_odbc PROPERTIES IMPORTED_LOCATION "${SOCI_BYPRODUCT_DIR}/${LIBDIR}/libsoci_odbc${BYPRODUCT_SUFFIX}")
@@ -166,6 +164,7 @@ set_target_properties(SOCI::libsoci_odbc PROPERTIES INTERFACE_INCLUDE_DIRECTORIE
 add_dependencies(SOCI::libsoci_odbc soci-external)
 set_property(TARGET SOCI::libsoci_odbc APPEND PROPERTY INTERFACE_LINK_LIBRARIES SOCI::libsoci_core)
 set_property(TARGET SOCI::libsoci_odbc APPEND PROPERTY INTERFACE_LINK_LIBRARIES ODBC::ODBC)
+target_compile_features(SOCI::libsoci_odbc INTERFACE cxx_std_14)
 
 target_link_libraries(minifi-sql SOCI::libsoci_odbc SOCI::libsoci_core)
 

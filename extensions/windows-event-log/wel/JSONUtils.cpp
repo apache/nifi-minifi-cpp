@@ -156,7 +156,7 @@ rapidjson::Document toFlattenedJSON(const pugi::xml_node& root) {
   return toJSONImpl(root, true);
 }
 
-std::string jsonToString(rapidjson::Document& doc) {
+std::string jsonToString(const rapidjson::Document& doc) {
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   doc.Accept(writer);

@@ -56,6 +56,8 @@ void RunAsServiceIfNeeded() {
   static HANDLE s_hProcess;
   static HANDLE s_hEvent;
 
+  static char serviceNameMutable[] = SERVICE_NAME;
+
   static auto Log = []() {
     static std::shared_ptr<logging::Logger> s_logger = logging::LoggerConfiguration::getConfiguration().getLogger("service");
     return s_logger;
@@ -63,7 +65,7 @@ void RunAsServiceIfNeeded() {
 
   SERVICE_TABLE_ENTRY serviceTable[] = {
     {
-      SERVICE_NAME,
+      serviceNameMutable,
       [](DWORD argc, LPTSTR *argv) {
         setSyslogLogger();
 

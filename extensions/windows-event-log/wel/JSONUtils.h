@@ -79,7 +79,7 @@ rapidjson::Document toSimpleJSON(const pugi::xml_node& root);
  */
 rapidjson::Document toFlattenedJSON(const pugi::xml_node& root);
 
-std::string jsonToString(rapidjson::Document& doc);
+std::string jsonToString(const rapidjson::Document& doc);
 
 }  // namespace wel
 }  // namespace minifi

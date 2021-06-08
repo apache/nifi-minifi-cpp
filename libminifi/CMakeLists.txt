@@ -22,48 +22,19 @@ cmake_policy(SET CMP0096 NEW) # policy to preserve the leading zeros in PROJECT_
 project(nifi-libcore-minifi VERSION 0.11.0)
 set(PROJECT_NAME "nifi-libcore-minifi")
 
-
-#### Establish Project Configuration ####
-# Enable usage of the VERSION specifier
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 if (WIN32)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif()
-IF (IOS)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-abi-version=2 -fobjc-arc -std=gnu++11 -stdlib=libc++ -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-abi-version=2 -fobjc-arc -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
-ELSE ()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DYAML_SUPPORT")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DYAML_SUPPORT")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBDIFF")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DBDIFF")
-#include_directories(SYSTEM "../thirdparty/bsdiff/")
-
-ENDIF()
-
-
-include(CheckCXXCompilerFlag)
-if (WIN32)
-  if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
-	    CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
-	    if (_cpp_latest_flag_supported)
-	        add_compile_options("/std:c++14")
-	    endif()
-	endif()
-else()
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-else()
- message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+if (IOS)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-abi-version=2 -fobjc-arc -std=gnu++11 -stdlib=libc++ -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-abi-version=2 -fobjc-arc -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
+else ()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DYAML_SUPPORT")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DYAML_SUPPORT")
 endif()
 
-endif()
+include(CppVersion)
+set_cpp_version()
 
 if (WIN32)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
@@ -75,11 +46,11 @@ include_directories(include)
 
 
 if(WIN32)
-include_directories(opsys/win)
-set(SOCKET_SOURCES "src/io/win/*.cpp")
+	include_directories(opsys/win)
+	set(SOCKET_SOURCES "src/io/win/*.cpp")
 else()
-include_directories(opsys/posix)
-set(SOCKET_SOURCES "src/io/posix/*.cpp")
+	include_directories(opsys/posix)
+	set(SOCKET_SOURCES "src/io/posix/*.cpp")
 endif()
 
 if (NOT OPENSSL_OFF)
@@ -94,9 +65,9 @@ if(WIN32)
 	include(FindMessageCompiler)
 	find_package(MessageCompiler REQUIRED)
 	add_custom_target(message-strings
-						COMMAND "${CMAKE_MC_COMPILER}" -U "${CMAKE_CURRENT_SOURCE_DIR}/src/core/logging/WindowsMessageTextFile.mc" -h "${CMAKE_CURRENT_BINARY_DIR}/include/core/logging" -r "${CMAKE_CURRENT_BINARY_DIR}/src/core/logging"
-						DEPENDS "src/core/logging/WindowsMessageTextFile.mc"
-						BYPRODUCTS "include/core/logging/WindowsMessageTextFile.h" "src/core/logging/WindowsMessageTextFile.rc")
+			COMMAND "${CMAKE_MC_COMPILER}" -U "${CMAKE_CURRENT_SOURCE_DIR}/src/core/logging/WindowsMessageTextFile.mc" -h "${CMAKE_CURRENT_BINARY_DIR}/include/core/logging" -r "${CMAKE_CURRENT_BINARY_DIR}/src/core/logging"
+			DEPENDS "src/core/logging/WindowsMessageTextFile.mc"
+			BYPRODUCTS "include/core/logging/WindowsMessageTextFile.h" "src/core/logging/WindowsMessageTextFile.rc")
 	file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/src/core/logging")
 	file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include/core/logging")
 endif()

@@ -21,28 +21,17 @@ cmake_minimum_required(VERSION 3.16)
 
 include_directories(../main/ ../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core)
 
-
 if(WIN32)
 	include_directories(../libminifi/opsys/win)
 else()
 	include_directories(../libminifi/opsys/posix)
 endif()
 
-
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Os")
-elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Os")
-else()
- message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif()
+include(CppVersion)
+set_cpp_version()
 
 add_executable(minificontroller MiNiFiController.cpp ../main/MainHelper.cpp)
 target_wholearchive_library(minificontroller minifi)
-
 target_link_libraries(minificontroller cxxopts Threads::Threads)
 
 get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
@@ -56,7 +45,6 @@ install(TARGETS minificontroller
         RUNTIME
         DESTINATION bin
         COMPONENT bin)
-
 
 add_custom_command(TARGET minificontroller POST_BUILD
            COMMAND cat ${CMAKE_BINARY_DIR}/all.log)

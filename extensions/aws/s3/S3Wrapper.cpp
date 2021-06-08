@@ -192,7 +192,7 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::Object>& conten
 minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVersions(const ListRequestParameters& params) {
   auto request = createListRequest<Aws::S3::Model::ListObjectVersionsRequest>(params);
   std::vector<ListedObjectAttributes> attribute_list;
-  nonstd::optional_lite::optional<Aws::S3::Model::ListObjectVersionsResult> aws_result;
+  minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> aws_result;
   do {
     aws_result = request_sender_->sendListVersionsRequest(request, params.credentials, params.client_config);
     if (!aws_result) {
@@ -213,7 +213,7 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVers
 minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObjects(const ListRequestParameters& params) {
   auto request = createListRequest<Aws::S3::Model::ListObjectsV2Request>(params);
   std::vector<ListedObjectAttributes> attribute_list;
-  nonstd::optional_lite::optional<Aws::S3::Model::ListObjectsV2Result> aws_result;
+  minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> aws_result;
   do {
     aws_result = request_sender_->sendListObjectsRequest(request, params.credentials, params.client_config);
     if (!aws_result) {

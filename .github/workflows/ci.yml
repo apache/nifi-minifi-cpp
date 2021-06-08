@@ -73,49 +73,6 @@ jobs:
         run: cd build && make test ARGS="--timeout 300 -j4 --output-on-failure"
       - name: linter
         run: cd build && make linter
-  windows_VS2017:
-    name: "windows-vs2017"
-    runs-on: windows-2016
-    timeout-minutes: 120
-    env:
-      CLCACHE_DIR: ${{ GITHUB.WORKSPACE }}\clcache
-    steps:
-      - id: checkout
-        uses: actions/checkout@v2
-      - id: cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.CLCACHE_DIR }}
-          key: windows-vs2017-clcache-${{github.ref}}-${{github.sha}}
-          restore-keys: |
-            windows-vs2017-clcache-${{github.ref}}-
-            windows-vs2017-clcache-refs/heads/main-
-      - name: Setup PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-      - id: install-sqliteodbc-driver
-        run: |
-          Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc.exe" -OutFile "sqliteodbc.exe"
-          ./sqliteodbc.exe /S
-        shell: powershell
-      - name: Setup clcache
-        run: |
-          (New-Object System.Net.WebClient).DownloadFile('https://github.com/frerich/clcache/releases/download/v4.2.0/clcache-4.2.0.zip', "$pwd\clcache.zip")
-          $cl_exe_dir = Split-Path -parent $(vswhere -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find VC\Tools\MSVC\**\bin\Hostx86\x86\cl.exe | select-object -last 1)
-          Expand-Archive -Force -Path clcache.zip -DestinationPath "$cl_exe_dir";
-          move "$cl_exe_dir\cl.exe" "$cl_exe_dir\cl_original.exe"
-          move "$cl_exe_dir\cl.exe.config" "$cl_exe_dir\cl_original.exe.config"
-          move "$cl_exe_dir\clcache.exe" "$cl_exe_dir\cl.exe"
-          echo "CLCACHE_CL=$cl_exe_dir\cl_original.exe" >> $env:GITHUB_ENV
-          echo "CLCACHE_NODIRECT=1" >> $env:GITHUB_ENV
-      - name: build
-        run: |
-          PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x86
-          PATH %PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\Roslyn
-          win_build_vs.bat build /CI /S /A /Z /PDH /R
-        shell: cmd
-      - name: test
-        run: cd build && ctest --timeout 300 --parallel 8 -C Release --output-on-failure
-        shell: cmd
   windows_VS2019:
     name: "windows-vs2019"
     runs-on: windows-2019
@@ -154,7 +111,7 @@ jobs:
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64
           PATH %PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\Roslyn
-          win_build_vs.bat build /2019 /64 /CI /S /A /PDH /K /L /R
+          win_build_vs.bat build /64 /CI /S /A /PDH /K /L /R /Z
         shell: cmd
       - name: test
         run: cd build && ctest --timeout 300 --parallel 8 -C Release --output-on-failure

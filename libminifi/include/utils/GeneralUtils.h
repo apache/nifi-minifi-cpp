@@ -181,7 +181,7 @@ auto invoke_impl(F&& f, Args&&... args) MINIFICPP_UTIL_DEDUCED_CONDITIONAL(
 template<typename F, typename... Args>
 auto invoke(F&& f, Args&&... args) MINIFICPP_UTIL_DEDUCED(detail::invoke_impl(std::forward<F>(f), std::forward<Args>(args)...))
 #else
-using std::invoke
+using std::invoke;
 #endif /* < C++17 */
 
 
