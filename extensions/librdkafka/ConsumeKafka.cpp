@@ -79,7 +79,7 @@ core::Property ConsumeKafka::TopicNames(core::PropertyBuilder::createProperty("T
 
 core::Property ConsumeKafka::TopicNameFormat(core::PropertyBuilder::createProperty("Topic Name Format")
   ->withDescription("Specifies whether the Topic(s) provided are a comma separated list of names or a single regular expression. "
-      "Using regular expressions does not automatically discover kafka topics created after the processor started.")
+                    "Using regular expressions does not automatically discover Kafka topics created after the processor started.")
   ->withAllowableValues<std::string>({TOPIC_FORMAT_NAMES, TOPIC_FORMAT_PATTERNS})
   ->withDefaultValue(TOPIC_FORMAT_NAMES)
   ->isRequired(true)
@@ -167,7 +167,7 @@ core::Property ConsumeKafka::SessionTimeout(core::PropertyBuilder::createPropert
   ->withDefaultValue<core::TimePeriodValue>("60 seconds")
   ->build());
 
-const core::Relationship ConsumeKafka::Success("success", "Incoming kafka messages as flowfiles. Depending on the demarcation strategy, this can be one or multiple flowfiles per message.");
+const core::Relationship ConsumeKafka::Success("success", "Incoming Kafka messages as flowfiles. Depending on the demarcation strategy, this can be one or multiple flowfiles per message.");
 
 void ConsumeKafka::initialize() {
   setSupportedProperties({

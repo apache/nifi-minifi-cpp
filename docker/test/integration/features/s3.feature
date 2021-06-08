@@ -156,10 +156,10 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
   Scenario: A MiNiFi instance can list an S3 bucket directly
     Given a TailFile processor with the "File to Tail" property set to "/tmp/input/test_file.log"
-    And the "Input Delimiter" of the TailFile processor is set to "%"
+    And the "Input Delimiter" property of the TailFile processor is set to "%"
     And a file with filename "test_file.log" and content "test_data%" is present in "/tmp/input"
     And a PutS3Object processor set up to communicate with an s3 server
-    And the "Object Key" of the PutS3Object processor is set to "${filename}"
+    And the "Object Key" property of the PutS3Object processor is set to "${filename}"
     And the "success" relationship of the TailFile processor is connected to the PutS3Object
 
     Given a ListS3 processor in the "secondary" flow

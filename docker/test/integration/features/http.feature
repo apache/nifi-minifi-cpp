@@ -8,10 +8,10 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
 
   Scenario: A MiNiFi instance transfers data to another MiNiFi instance with message body
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And the "Keep Source File" of the GetFile processor is set to "true"
+    And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
-    And the "HTTP Method" of the InvokeHTTP processor is set to "POST"
+    And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
     And the "success" relationship of the GetFile processor is connected to the InvokeHTTP
 
     And a ListenHTTP processor with the "Listening Port" property set to "8080" in a "secondary" flow
@@ -21,26 +21,9 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     When both instances start up
     Then at least one flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
 
-  # Failing scenario, needs to be fixed
-  @skip
-  Scenario: Multiple files transfered via HTTP are received and transferred only once
-    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And the "Keep Source File" of the GetFile processor is set to "false"
-    And two files with content "first message" and "second message" are placed in "/tmp/input"
-    And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
-    And the "HTTP Method" of the InvokeHTTP processor is set to "POST"
-    And the "success" relationship of the GetFile processor is connected to the InvokeHTTP
-
-    And a ListenHTTP processor with the "Listening Port" property set to "8080" in a "secondary" flow
-    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "secondary" flow
-    And the "success" relationship of the ListenHTTP processor is connected to the PutFile
-
-    When both instances start up
-    Then two flowfiles with the contents "first message" and "second message" are placed in the monitored directory in less than 120 seconds
-
   Scenario: A MiNiFi instance sends data through a HTTP proxy and another one listens
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And the "Keep Source File" of the GetFile processor is set to "true"
+    And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://minifi-listen:8080/contentListener"
     And these processor properties are set to match the http proxy:
@@ -64,11 +47,11 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
 
   Scenario: A MiNiFi instance and transfers hashed data to another MiNiFi instance
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And the "Keep Source File" of the GetFile processor is set to "true"
+    And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
     And a HashContent processor with the "Hash Attribute" property set to "hash"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
-    And the "HTTP Method" of the InvokeHTTP processor is set to "POST"
+    And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
     And the "success" relationship of the GetFile processor is connected to the HashContent
     And the "success" relationship of the HashContent processor is connected to the InvokeHTTP
 
@@ -81,11 +64,11 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
 
   Scenario: A MiNiFi instance transfers data to another MiNiFi instance without message body
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And the "Keep Source File" of the GetFile processor is set to "true"
+    And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
-    And the "HTTP Method" of the InvokeHTTP processor is set to "POST"
-    And the "Send Message Body" of the InvokeHTTP processor is set to "false"
+    And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
+    And the "Send Message Body" property of the InvokeHTTP processor is set to "false"
     And the "success" relationship of the GetFile processor is connected to the InvokeHTTP
 
     And a ListenHTTP processor with the "Listening Port" property set to "8080" in a "secondary" flow

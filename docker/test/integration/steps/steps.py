@@ -137,7 +137,7 @@ def step_impl(context):
 def step_impl(context, directory):
     context.execute_steps("""
         given a GetFile processor with the \"Input Directory\" property set to \"{directory}\"
-        and the \"Keep Source File\" of the GetFile processor is set to \"false\"
+        and the \"Keep Source File\" property of the GetFile processor is set to \"false\"
         and a PublishKafka processor set up to communicate with a kafka broker instance
         and the "success" relationship of the GetFile processor is connected to the PublishKafka""".format(directory=directory))
 
@@ -155,7 +155,7 @@ def step_impl(context, cluster_name):
         cluster.set_flow(consume_kafka)
 
 
-@given("the \"{property_name}\" of the {processor_name} processor is set to \"{property_value}\"")
+@given("the \"{property_name}\" property of the {processor_name} processor is set to \"{property_value}\"")
 def step_impl(context, property_name, processor_name, property_value):
     processor = context.test.get_node_by_name(processor_name)
     if property_value == "(not set)":
@@ -164,7 +164,7 @@ def step_impl(context, property_name, processor_name, property_value):
         processor.set_property(property_name, property_value)
 
 
-@given("the \"{property_name}\" of the {processor_name} processor is set to match {key_attribute_encoding} encoded kafka message key \"{message_key}\"")
+@given("the \"{property_name}\" property of the {processor_name} processor is set to match {key_attribute_encoding} encoded kafka message key \"{message_key}\"")
 def step_impl(context, property_name, processor_name, key_attribute_encoding, message_key):
     encoded_key = ""
     if(key_attribute_encoding.lower() == "hex"):
@@ -181,7 +181,7 @@ def step_impl(context, property_name, processor_name, key_attribute_encoding, me
     processor.set_property(property_name, filtering)
 
 
-@given("the \"{property_name}\" of the {processor_name} processor is set to match the attribute \"{attribute_key}\" to \"{attribute_value}\"")
+@given("the \"{property_name}\" property of the {processor_name} processor is set to match the attribute \"{attribute_key}\" to \"{attribute_value}\"")
 def step_impl(context, property_name, processor_name, attribute_key, attribute_value):
     processor = context.test.get_node_by_name(processor_name)
     if attribute_value == "(not set)":
@@ -477,7 +477,7 @@ def step_impl(context, duration, contents):
     context.test.check_for_multiple_files_generated(len(contents_arr), timeparse(duration), contents_arr)
 
 
-@then("minimum {lower_bound}, maximum {upper_bound} flowfiles are produced and placed in the monitored directory in less than {duration}")
+@then("after a wait of {duration}, at least {lower_bound} and at most {upper_bound} flowfiles are produced and placed in the monitored directory")
 def step_impl(context, lower_bound, upper_bound, duration):
     context.test.check_for_num_file_range_generated(int(lower_bound), int(upper_bound), timeparse(duration))
 

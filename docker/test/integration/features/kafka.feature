@@ -72,9 +72,9 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
   Scenario Outline: ConsumeKafka parses and uses kafka topics and topic name formats
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
-    And the "Topic Names" of the ConsumeKafka processor is set to "<topic names>"
-    And the "Topic Name Format" of the ConsumeKafka processor is set to "<topic name format>"
-    And the "Offset Reset" of the ConsumeKafka processor is set to "earliest"
+    And the "Topic Names" property of the ConsumeKafka processor is set to "<topic names>"
+    And the "Topic Name Format" property of the ConsumeKafka processor is set to "<topic name format>"
+    And the "Offset Reset" property of the ConsumeKafka processor is set to "earliest"
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
@@ -98,11 +98,11 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
   Scenario Outline: ConsumeKafka key attribute is encoded according to the "Key Attribute Encoding" property
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
-    And the "Key Attribute Encoding" of the ConsumeKafka processor is set to "<key attribute encoding>"
+    And the "Key Attribute Encoding" property of the ConsumeKafka processor is set to "<key attribute encoding>"
     And a RouteOnAttribute processor in the "kafka-consumer-flow" flow
     And a LogAttribute processor in the "kafka-consumer-flow" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
-    And the "success" of the RouteOnAttribute processor is set to match <key attribute encoding> encoded kafka message key "consume_kafka_test_key"
+    And the "success" property of the RouteOnAttribute processor is set to match <key attribute encoding> encoded kafka message key "consume_kafka_test_key"
 
     And the "success" relationship of the ConsumeKafka processor is connected to the LogAttribute
     And the "success" relationship of the LogAttribute processor is connected to the RouteOnAttribute
@@ -125,8 +125,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
   Scenario Outline: ConsumeKafka transactional behaviour is supported
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
-    And the "Topic Names" of the ConsumeKafka processor is set to "ConsumeKafkaTest"
-    And the "Honor Transactions" of the ConsumeKafka processor is set to "<honor transactions>"
+    And the "Topic Names" property of the ConsumeKafka processor is set to "ConsumeKafkaTest"
+    And the "Honor Transactions" property of the ConsumeKafka processor is set to "<honor transactions>"
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
@@ -148,12 +148,12 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
   Scenario Outline: Headers on consumed kafka messages are extracted into attributes if requested on ConsumeKafka
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
-    And the "Headers To Add As Attributes" of the ConsumeKafka processor is set to "<headers to add as attributes>"
-    And the "Duplicate Header Handling" of the ConsumeKafka processor is set to "<duplicate header handling>"
+    And the "Headers To Add As Attributes" property of the ConsumeKafka processor is set to "<headers to add as attributes>"
+    And the "Duplicate Header Handling" property of the ConsumeKafka processor is set to "<duplicate header handling>"
     And a RouteOnAttribute processor in the "kafka-consumer-flow" flow
     And a LogAttribute processor in the "kafka-consumer-flow" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And the "success" of the RouteOnAttribute processor is set to match the attribute "<headers to add as attributes>" to "<expected value>"
+    And the "success" property of the RouteOnAttribute processor is set to match the attribute "<headers to add as attributes>" to "<expected value>"
 
     And the "success" relationship of the ConsumeKafka processor is connected to the LogAttribute
     And the "success" relationship of the LogAttribute processor is connected to the RouteOnAttribute
@@ -178,7 +178,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
   Scenario: Messages are separated into multiple flowfiles if the message demarcator is present in the message
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
-    And the "Message Demarcator" of the ConsumeKafka processor is set to "a"
+    And the "Message Demarcator" property of the ConsumeKafka processor is set to "a"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
 
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
@@ -196,10 +196,10 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a LogAttribute processor in the "kafka-consumer-flow" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output"
 
-    And the "Max Poll Records" of the ConsumeKafka processor is set to "<max poll records>"
+    And the "Max Poll Records" property of the ConsumeKafka processor is set to "<max poll records>"
     And the scheduling period of the ConsumeKafka processor is set to "<scheduling period>"
     And the scheduling period of the LogAttribute processor is set to "<scheduling period>"
-    And the "FlowFiles To Log" of the LogAttribute processor is set to "<max poll records>"
+    And the "FlowFiles To Log" property of the LogAttribute processor is set to "<max poll records>"
 
     And the "success" relationship of the ConsumeKafka processor is connected to the LogAttribute
     And the "success" relationship of the LogAttribute processor is connected to the PutFile
@@ -209,16 +209,16 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     When all instances start up
     And 1000 kafka messages are sent to the topic "ConsumeKafkaTest"
 
-    Then minimum <min expected messages>, maximum <max expected messages> flowfiles are produced and placed in the monitored directory in less than <polling time>
+    Then after a wait of <polling time>, at least <min expected messages> and at most <max expected messages> flowfiles are produced and placed in the monitored directory
 
   Examples: Message batching
     | max poll records | scheduling period | polling time | min expected messages | max expected messages |
-    | 3                | 10 sec            | 60 seconds   | 12                    | 24                    |
-    | 6                | 10 sec            | 60 seconds   | 24                    | 48                    |
+    | 3                | 10 sec            | 30 seconds   | 6                     | 12                    |
+    | 6                | 10 sec            | 30 seconds   | 12                    | 24                    |
 
   Scenario Outline: Unsupported encoding attributes for ConsumeKafka throw scheduling errors
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
-    And the "<property name>" of the ConsumeKafka processor is set to "<property value>"
+    And the "<property name>" property of the ConsumeKafka processor is set to "<property value>"
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
