@@ -218,7 +218,7 @@ class SingleNodeDockerCluster(Cluster):
     def deploy_kafka_broker(self):
         logging.info('Creating and running docker containers for kafka broker...')
         zookeeper = self.client.containers.run(
-            self.client.images.pull("wurstmeister/zookeeper:latest"),
+            self.client.images.pull("wurstmeister/zookeeper:3.4.6"),
             detach=True,
             name='zookeeper',
             network=self.network.name,
@@ -281,7 +281,7 @@ class SingleNodeDockerCluster(Cluster):
 
     def deploy_azure_storage_server(self):
         server = self.client.containers.run(
-            "mcr.microsoft.com/azure-storage/azurite",
+            "mcr.microsoft.com/azure-storage/azurite:3.13.0",
             detach=True,
             name='azure-storage-server',
             network=self.network.name,
