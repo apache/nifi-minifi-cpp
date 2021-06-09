@@ -247,14 +247,6 @@ def step_impl(context, content, path):
 def step_impl(context, file_name, content, path):
     context.test.add_test_data(path, content, file_name)
 
-
-@given("two files with content \"{content_1}\" and \"{content_2}\" are placed in \"{path}\"")
-def step_impl(context, content_1, content_2, path):
-    context.execute_steps("""
-        given a file with the content \"{content_1}\" is present in \"{path}\"
-        and a file with the content \"{content_2}\" is present in \"{path}\"""".format(content_1=content_1, content_2=content_2, path=path))
-
-
 # NiFi setups
 @given("a NiFi flow \"{cluster_name}\" receiving data from a RemoteProcessGroup \"{source_name}\" on port {port}")
 def step_impl(context, cluster_name, source_name, port):
