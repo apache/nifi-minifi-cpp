@@ -33,13 +33,11 @@ Feature: Execuring SQL operations from MiNiFi-C++
     Then a flowfile with the content '[{"int_col":2,"text_col":"banana"},{"int_col":1,"text_col":"apple"}]' is placed in the monitored directory in less than 120 seconds
 
   Scenario: A MiNiFi instance can query to test table with QueryDatabaseTable processor
-    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
-    And a QueryDatabaseTable processor with the "Table Name" property set to "test_table"
+    Given a QueryDatabaseTable processor with the "Table Name" property set to "test_table"
     And the "Columns to Return" of the QueryDatabaseTable processor is set to "text_col"
     And the "Where Clause" of the QueryDatabaseTable processor is set to "int_col = 1"
     And the "Output Format" of the QueryDatabaseTable processor is set to "JSON"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And the "success" relationship of the GenerateFlowFile processor is connected to the QueryDatabaseTable
     And the "success" relationship of the QueryDatabaseTable processor is connected to the PutFile
     And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService" and connection string "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
     And a PostgreSQL server "postgresql" is set up
