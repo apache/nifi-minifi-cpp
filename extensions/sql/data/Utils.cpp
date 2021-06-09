@@ -30,11 +30,10 @@ namespace minifi {
 namespace utils {
 
 std::vector<std::string> inputStringToList(const std::string& str) {
-  std::vector<std::string> fragments = StringUtils::split(str, ",");
+  std::vector<std::string> fragments = StringUtils::splitAndTrimRemovingEmpty(str, ",");
   for (auto& item : fragments) {
-    item = StringUtils::toLower(StringUtils::trim(item));
+    item = StringUtils::toLower(item);
   }
-  fragments.erase(std::remove(fragments.begin(), fragments.end(), ""), fragments.end());
 
   return fragments;
 }

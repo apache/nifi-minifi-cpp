@@ -30,7 +30,7 @@ DWORD PDHCounter::getDWFormat() const {
 }
 
 std::unique_ptr<PDHCounter> PDHCounter::createPDHCounter(const std::string& query_name, bool is_double) {
-  auto groups = utils::StringUtils::split(query_name, "\\");
+  auto groups = utils::StringUtils::splitRemovingEmpty(query_name, "\\");
   if (groups.size() != 2 || query_name.substr(0, 1) != "\\")
     return nullptr;
   if (query_name.find("(*)") != std::string::npos) {
@@ -45,12 +45,12 @@ const std::string& PDHCounter::getName() const {
 }
 
 std::string PDHCounter::getObjectName() const {
-  auto groups = utils::StringUtils::split(pdh_english_counter_name_, "\\");
+  auto groups = utils::StringUtils::splitRemovingEmpty(pdh_english_counter_name_, "\\");
   return groups[0];
 }
 
 std::string PDHCounter::getCounterName() const {
-  auto groups = utils::StringUtils::split(pdh_english_counter_name_, "\\");
+  auto groups = utils::StringUtils::splitRemovingEmpty(pdh_english_counter_name_, "\\");
   return groups[1];
 }
 
