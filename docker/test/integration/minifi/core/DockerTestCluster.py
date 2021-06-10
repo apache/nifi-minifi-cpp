@@ -3,6 +3,7 @@ import logging
 import subprocess
 import sys
 import time
+import os
 
 from .SingleNodeDockerCluster import SingleNodeDockerCluster
 from .utils import retry_check
@@ -52,41 +53,45 @@ class DockerTestCluster(SingleNodeDockerCluster):
         if b'Segmentation fault' in container.logs():
             logging.warn('Container segfaulted: %s', container.name)
             self.segfault = True
-        if container.status == 'running':
+
+        try:
             apps = [("MiNiFi", self.minifi_root + '/logs/minifi-app.log'), ("NiFi", self.nifi_root + '/logs/nifi-app.log'), ("Kafka", self.kafka_broker_root + '/logs/server.log')]
-            for app in apps:
-                app_log_status, app_log = container.exec_run('/bin/sh -c \'cat ' + app[1] + '\'')
-                if app_log_status == 0:
-                    logging.info('%s app logs for container \'%s\':\n', app[0], container.name)
-                    return app_log
-            else:
-                logging.warning("The container is running, but none of %s logs were found, presuming application logs to stdout, returning docker logs",
-                                " or ".join([x[0] for x in apps]))
-                logging.info('Docker logs for container \'%s\':\n', container.name)
-                return container.logs()
-        else:
-            logging.info(container.status)
-            logging.info('Could not cat app logs for container \'%s\' because it is not running', container.name)
-        return None
+            if container.status == 'running':
+                for app in apps:
+                    app_log_status, app_log = container.exec_run('/bin/sh -c \'cat ' + app[1] + '\'')
+                    if app_log_status == 0:
+                        return container.status, app_log
+            elif container.status == 'exited':
+                for app in apps:
+                    log_file_name = container_id + ".log"
+                    code = subprocess.run(["docker", "cp", container_id + ":" + app[1], log_file_name]).returncode
+                    if code == 0:
+                        output = open(log_file_name, 'rb').read()
+                        os.remove(log_file_name)
+                        return container.status, output
+        except Exception:
+            return container.status, None
+
+        return container.status, container.logs()
 
     def wait_for_app_logs(self, log, timeout_seconds, count=1):
         wait_start_time = time.perf_counter()
         while (time.perf_counter() - wait_start_time) < timeout_seconds:
             for container_name, container in self.containers.items():
                 logging.info('Waiting for app-logs `%s` in container `%s`', log, container_name)
-                logs = self.get_app_log(container.id)
+                status, logs = self.get_app_log(container.id)
                 if logs is not None and count <= logs.decode("utf-8").count(log):
                     return True
+                elif status == 'exited':
+                    return False
             time.sleep(1)
-
-        logging.error('Waiting for app-log failed. Current logs:')
-        self.log_nifi_output()
         return False
 
-    def log_nifi_output(self):
+    def log_app_output(self):
         for container_name, container in self.containers.items():
-            logs = self.get_app_log(container.id)
+            _, logs = self.get_app_log(container.id)
             if logs is not None:
+                logging.info("Logs of container '%s':", container_name)
                 for line in logs.decode("utf-8").splitlines():
                     logging.info(line)
 

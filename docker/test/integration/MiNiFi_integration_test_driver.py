@@ -96,7 +96,7 @@ class MiNiFi_integration_test():
             logging.info("Starting cluster %s with an engine of %s", cluster.get_name(), cluster.get_engine())
             cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id))
             cluster.deploy_flow()
-        for cluster_name, cluster in self.clusters.items():
+        for _, cluster in self.clusters.items():
             startup_success = True
             logging.info("Engine: %s", cluster.get_engine())
             if cluster.get_engine() == "minifi-cpp":
@@ -112,7 +112,8 @@ class MiNiFi_integration_test():
             elif cluster.get_engine() == "azure-storage-server":
                 startup_success = cluster.wait_for_app_logs("Azurite Queue service is successfully listening at", 120)
             if not startup_success:
-                cluster.log_nifi_output()
+                logging.error("Cluster startup failed for %s", cluster.get_name())
+                cluster.log_app_output()
             assert startup_success
 
     def add_node(self, processor):
@@ -194,8 +195,7 @@ class MiNiFi_integration_test():
             output_validator.subdir = subdir
         self.file_system_observer.wait_for_output(timeout_seconds, output_validator, max_files)
         for cluster in self.clusters.values():
-            # Logs for both nifi and minifi, but not other engines
-            cluster.log_nifi_output()
+            cluster.log_app_output()
             assert not cluster.segfault_happened()
         assert output_validator.validate()
 
