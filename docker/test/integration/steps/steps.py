@@ -469,9 +469,9 @@ def step_impl(context, duration, contents):
     context.test.check_for_multiple_files_generated(len(contents_arr), timeparse(duration), contents_arr)
 
 
-@then("after a wait of {duration}, at least {lower_bound} and at most {upper_bound} flowfiles are produced and placed in the monitored directory")
+@then("after a wait of {duration}, at least {lower_bound:d} and at most {upper_bound:d} flowfiles are produced and placed in the monitored directory")
 def step_impl(context, lower_bound, upper_bound, duration):
-    context.test.check_for_num_file_range_generated(int(lower_bound), int(upper_bound), timeparse(duration))
+    context.test.check_for_num_file_range_generated(lower_bound, upper_bound, timeparse(duration))
 
 
 @then("{number_of_files:d} flowfiles are placed in the monitored directory in {duration}")

@@ -152,7 +152,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "Duplicate Header Handling" property of the ConsumeKafka processor is set to "<duplicate header handling>"
     And a RouteOnAttribute processor in the "kafka-consumer-flow" flow
     And a LogAttribute processor in the "kafka-consumer-flow" flow
-    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
     And the "success" property of the RouteOnAttribute processor is set to match the attribute "<headers to add as attributes>" to "<expected value>"
 
     And the "success" relationship of the ConsumeKafka processor is connected to the LogAttribute
@@ -179,7 +179,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
   Scenario: Messages are separated into multiple flowfiles if the message demarcator is present in the message
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
     And the "Message Demarcator" property of the ConsumeKafka processor is set to "a"
-    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
 
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
@@ -194,7 +194,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
   Scenario Outline: The ConsumeKafka "Maximum Poll Records" property sets a limit on the messages processed in a single batch
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
     And a LogAttribute processor in the "kafka-consumer-flow" flow
-    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
 
     And the "Max Poll Records" property of the ConsumeKafka processor is set to "<max poll records>"
     And the scheduling period of the ConsumeKafka processor is set to "<scheduling period>"
@@ -213,8 +213,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
   Examples: Message batching
     | max poll records | scheduling period | polling time | min expected messages | max expected messages |
-    | 3                | 10 sec            | 30 seconds   | 6                     | 12                    |
-    | 6                | 10 sec            | 30 seconds   | 12                    | 24                    |
+    | 3                | 5 sec             | 15 seconds   | 6                     | 12                    |
+    | 6                | 5 sec             | 15 seconds   | 12                    | 24                    |
 
   Scenario Outline: Unsupported encoding attributes for ConsumeKafka throw scheduling errors
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow

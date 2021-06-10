@@ -18,4 +18,4 @@ class NumFileRangeValidator(FileOutputValidator):
             return False
 
         num_files = self.get_num_files(full_dir)
-        return self.min_files < num_files and num_files < self.max_files
+        return self.min_files <= num_files and num_files <= self.max_files
