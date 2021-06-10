@@ -64,8 +64,6 @@ __pycache__/
 /content_repository
 /provenance_repository
 /logs
-/build*
-/cmake-build*
 
 # Ignore source files that have been placed in the docker directory during build
 docker/minificppsource

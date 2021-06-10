@@ -303,7 +303,7 @@ bool RawSiteToSiteClient::handShake() {
 
   {
     const auto ret = readRespond(nullptr, code, message);
-    if (ret == 0 || io::isError(ret)) {
+    if (ret <= 0) {
       return false;
     }
   }

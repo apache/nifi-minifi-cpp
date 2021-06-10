@@ -90,48 +90,55 @@ void TLSServerSocket::registerCallback(std::function<bool()> accept_function, st
  * Initializes the socket
  * @return result of the creation operation.
  */
-void TLSServerSocket::registerCallback(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler, std::chrono::milliseconds timeout) {
-  fx = [this](std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*, int *)> handler, std::chrono::milliseconds timeout) {
-    std::vector<int> fds;
-    int size;
-    while (accept_function()) {
-      int fd = select_descriptor(gsl::narrow<uint16_t>(timeout.count()));
-      if (fd > 0) {
-        int fd_remove = 0;
-        std::vector<uint8_t> data;
-        if ( handler(&data, &size) > 0 ) {
-          const auto clamped_size = gsl::narrow<size_t>(utils::clamp(size, 0, std::numeric_limits<int>::max()));
-          const auto ret = writeData(data.data(), clamped_size, fd);
-          if (io::isError(ret)) {
-            close_ssl(fd_remove);
-          } else {
-            fds.push_back(fd);
-          }
-        }
-      } else {
-        int fd_remove = 0;
-        for (auto &&fd : fds) {
+void TLSServerSocket::registerCallback(std::function<bool()> accept_function, std::function<size_t(std::vector<uint8_t>*)> handler, std::chrono::milliseconds timeout) {
+  struct Fx {
+    void operator()() const {
+      std::vector<int> fds;
+      size_t size;
+      while (accept_function()) {
+        int fd = server_socket_->select_descriptor(gsl::narrow<uint16_t>(timeout.count()));
+        if (fd > 0) {
+          int fd_remove = 0;
           std::vector<uint8_t> data;
-          if ( handler(&data, &size) > 0 ) {
-            const auto clamped_size = gsl::narrow<size_t>(utils::clamp(size, 0, std::numeric_limits<int>::max()));
-            const auto ret = writeData(data.data(), clamped_size, fd);
+          size = handler(&data);
+          if (size > 0 && !io::isError(size)) {
+            const auto ret = server_socket_->writeData(data.data(), size, fd);
             if (io::isError(ret)) {
-              fd_remove = fd;
-              break;
+              server_socket_->close_ssl(fd_remove);
+            } else {
+              fds.push_back(fd);
             }
           }
-        }
-        if (fd_remove > 0) {
-          close_ssl(fd_remove);
-          fds.erase(std::remove(fds.begin(), fds.end(), fd_remove), fds.end());
+        } else {
+          int fd_remove = 0;
+          for (auto &&fd : fds) {
+            std::vector<uint8_t> data;
+            size = handler(&data);
+            if (size > 0 && !io::isError(size)) {
+              const auto ret = server_socket_->writeData(data.data(), size, fd);
+              if (io::isError(ret)) {
+                fd_remove = fd;
+                break;
+              }
+            }
+          }
+          if (fd_remove > 0) {
+            server_socket_->close_ssl(fd_remove);
+            fds.erase(std::remove(fds.begin(), fds.end(), fd_remove), fds.end());
+          }
         }
       }
+      for (auto &&fd : fds) {
+        server_socket_->close_ssl(fd);
+      }
     }
-    for (auto &&fd : fds) {
-      close_ssl(fd);
-    }
+
+    TLSServerSocket* server_socket_;
+    std::function<bool()> accept_function;
+    std::function<size_t(std::vector<uint8_t>*)> handler;
+    std::chrono::milliseconds timeout;
   };
-  server_read_thread_ = std::thread(fx, accept_function, handler, timeout);
+  server_read_thread_ = std::thread(Fx{this, std::move(accept_function), std::move(handler), timeout});
 }
 
 void TLSServerSocket::close_fd(int fd) {

@@ -426,7 +426,7 @@ int16_t SiteToSiteClient::send(const utils::Identifier &transactionID, DataPacke
 
   if (transaction->current_transfers_ > 0) {
     const auto ret = writeResponse(transaction, CONTINUE_TRANSACTION, "CONTINUE_TRANSACTION");
-    if (ret == 0 || io::isError(ret)) {
+    if (ret <= 0) {
       return -1;
     }
   }
@@ -439,20 +439,20 @@ int16_t SiteToSiteClient::send(const utils::Identifier &transactionID, DataPacke
     }
   }
 
-  for (const auto& _attribute : packet->_attributes) {
+  for (const auto& attribute : packet->_attributes) {
     {
-      const auto ret = transaction->getStream().write(_attribute.first, true);
+      const auto ret = transaction->getStream().write(attribute.first, true);
       if (ret == 0 || io::isError(ret)) {
         return -1;
       }
     }
     {
-      const auto ret = transaction->getStream().write(_attribute.second, true);
+      const auto ret = transaction->getStream().write(attribute.second, true);
       if (ret == 0 || io::isError(ret)) {
         return -1;
       }
     }
-    logger_->log_debug("Site2Site transaction %s send attribute key %s value %s", transactionID.to_string(), _attribute.first, _attribute.second);
+    logger_->log_debug("Site2Site transaction %s send attribute key %s value %s", transactionID.to_string(), attribute.first, attribute.second);
   }
 
   bool flowfile_has_content = (flowFile != nullptr);

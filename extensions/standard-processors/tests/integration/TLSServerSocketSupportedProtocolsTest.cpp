@@ -248,17 +248,13 @@ class TLSServerSocketSupportedProtocolsTest {
       assert(0 == server_socket_->initialize());
 
       is_running_ = true;
-      auto check = [this]() -> bool {
-        return is_running_;
+      auto handler = [](std::vector<uint8_t> *bytes_written) {
+        const char contents[] = "hello world";
+        *bytes_written = {std::begin(contents), std::end(contents)};
+        assert(12 == bytes_written->size());
+        return bytes_written->size();
       };
-      auto handler = [](std::vector<uint8_t> *bytes_written, int *size) {
-        std::string contents = "hello world";
-        *bytes_written = {contents.begin(), contents.end()};
-        bytes_written->push_back(0);
-        *size = bytes_written->size();
-        return *size;
-      };
-      server_socket_->registerCallback(check, handler, std::chrono::milliseconds(50));
+      server_socket_->registerCallback([this]{ return is_running_.load(); }, std::move(handler), std::chrono::milliseconds(50));
     }
 
     void verifyTLSServerSocketExclusiveCompatibilityWithTLSv1_2() {

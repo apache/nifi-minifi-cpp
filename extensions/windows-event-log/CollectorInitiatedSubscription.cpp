@@ -624,7 +624,7 @@ void CollectorInitiatedSubscription::unsubscribe() {
 
 int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::ProcessSession> &session) {
   struct WriteCallback: public OutputStreamCallback {
-    explicit WriteCallback(std::string& str)
+    explicit WriteCallback(const std::string& str)
       : str_(&str) {
     }
 
@@ -633,7 +633,7 @@ int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::Pro
       return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
     }
 
-    gsl::not_null<std::string*> str_;
+    gsl::not_null<const std::string*> str_;
   };
 
   int flowFileCount = 0;

@@ -88,7 +88,7 @@ class FixedBuffer : public minifi::InputStreamCallback {
     REQUIRE(size_ + len <= capacity_);
     int total_read = 0;
     do {
-      const auto ret = input.read(end(), len);
+      const size_t ret{ input.read(end(), len) };
       if (ret == 0) break;
       if (minifi::io::isError(ret)) return -1;
       size_ += ret;

@@ -31,10 +31,6 @@ inline bool isError(const size_t read_write_return) noexcept {
       || read_write_return == static_cast<size_t>(-2);  // read: Socket EAGAIN, to be refactored to eliminate this error condition
 }
 
-inline bool isError(const int legacy_write_return) noexcept {
-  return legacy_write_return == -1;
-}
-
 /**
  * All streams serialize/deserialize in big-endian
  */
