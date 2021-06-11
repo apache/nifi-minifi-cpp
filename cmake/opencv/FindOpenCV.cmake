@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,17 +14,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
+# Dummy OPENCV find for when we use bundled version
 
-file(GLOB SOURCES  "*.cpp")
-
-add_library(minifi-opencv STATIC ${SOURCES})
-
-target_link_libraries(minifi-opencv ${LIBMINIFI})
-target_link_libraries(minifi-opencv OPENCV::libopencv)
-
-SET (OPENCV-EXTENSION minifi-opencv PARENT_SCOPE)
-register_extension(minifi-opencv)
-register_extension_linter(minifi-opencv-linter)
+if(NOT OPENCV_FOUND)
+  set(OPENCV_FOUND "YES" CACHE STRING "" FORCE)
+  set(OPENCV_INCLUDE_DIR "${EXPORTED_OPENCV_INCLUDE_DIR}" CACHE STRING "" FORCE)
+  set(OPENCV_LIBRARIES ${EXPORTED_OPENCV_LIBRARIES} CACHE STRING "" FORCE)
+  set(OPENCV_VERSION "4.1.0" CACHE STRING "" FORCE)
+endif()
