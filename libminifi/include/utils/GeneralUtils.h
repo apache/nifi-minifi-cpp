@@ -185,18 +185,6 @@ struct dereference_t {
 
 constexpr detail::dereference_t dereference{};
 
-#if __cplusplus < 201703L
-template<typename T, typename Compare = std::less<T>>
-constexpr const T& clamp(const T& v, const T& lo, const T& hi, Compare less = {}) {
-#if __cplusplus >= 201402L
-  gsl_Expects(!less(hi, lo));
-#endif
-  return less(v, lo) ? lo : (less(hi, v) ? hi : v);
-}
-#else
-using std::clamp;
-#endif /* < C++17 */
-
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi

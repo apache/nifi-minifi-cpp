@@ -118,7 +118,6 @@ class SecureSocketTest : public IntegrationBase {
 
     isRunning_ = true;
     auto handler = [](std::vector<uint8_t> *b) {
-      std::cout << "oh write!" << std::endl;
       *b = {'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', 0, 0, 0, 0, 0, 0, 0, 0, 0};
       assert(b->size() == 20);
       return b->size();
