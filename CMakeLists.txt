@@ -288,8 +288,7 @@ add_library(cron INTERFACE)
 target_include_directories(cron SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cron")
 
 # cxxopts
-add_library(cxxopts INTERFACE)
-target_include_directories(cxxopts SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cxxopts/include")
+include(CxxOpts)
 
 # gsl-lite
 add_library(gsl-lite INTERFACE)
