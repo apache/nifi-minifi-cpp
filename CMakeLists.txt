@@ -20,7 +20,7 @@
 cmake_minimum_required(VERSION 3.16)
 cmake_policy(SET CMP0096 NEW) # policy to preserve the leading zeros in PROJECT_VERSION_{MAJOR,MINOR,PATCH,TWEAK}
 cmake_policy(SET CMP0065 OLD) # default export policy, required for self-dlopen
-project(nifi-minifi-cpp VERSION 0.10.0)
+project(nifi-minifi-cpp VERSION 0.11.0)
 set(PROJECT_NAME "nifi-minifi-cpp")
 
 # Optional build number for linux distribution targets' tar.gz output

@@ -445,7 +445,7 @@ advanced features.
   CPack: Install projects
   CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
   CPack: Create package
-  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.10.0-bin.tar.gz generated.
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.11.0-bin.tar.gz generated.
   ```
 
 - Create a source assembly located in your build directory with suffix -source.tar.gz
@@ -457,18 +457,18 @@ advanced features.
   CPack: Install projects
   CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
   CPack: Create package
-  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.10.0-source.tar.gz generated.
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.11.0-source.tar.gz generated.
   ```
 
 - (Optional) Create a Docker image from the resulting binary assembly output from "make package".
 ```
 ~/Development/code/apache/nifi-minifi-cpp/build
 $ make docker
-NiFi-MiNiFi-CPP Version: 0.10.0
+NiFi-MiNiFi-CPP Version: 0.11.0
 Current Working Directory: /Users/jdyer/Development/github/nifi-minifi-cpp/docker
 CMake Source Directory: /Users/jdyer/Development/github/nifi-minifi-cpp
-MiNiFi Package: nifi-minifi-cpp-0.10.0-bin.tar.gz
-Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.10.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.10.0-bin.tar.gz -t apacheminificpp:0.10.0 .'
+MiNiFi Package: nifi-minifi-cpp-0.11.0-bin.tar.gz
+Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.11.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.11.0-bin.tar.gz -t apacheminificpp:0.11.0 .'
 Sending build context to Docker daemon 777.2 kB
 Step 1 : FROM alpine:3.5
  ---> 88e169ea8f46

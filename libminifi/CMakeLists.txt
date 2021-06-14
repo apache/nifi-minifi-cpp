@@ -19,7 +19,7 @@
 
 cmake_minimum_required (VERSION 3.16)
 cmake_policy(SET CMP0096 NEW) # policy to preserve the leading zeros in PROJECT_VERSION_{MAJOR,MINOR,PATCH,TWEAK}
-project(nifi-libcore-minifi VERSION 0.10.0)
+project(nifi-libcore-minifi VERSION 0.11.0)
 set(PROJECT_NAME "nifi-libcore-minifi")
 
 
