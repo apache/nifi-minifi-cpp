@@ -15,19 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_HTTP_CURL_CLIENT_CIVETSTREAM_H_
-#define EXTENSIONS_HTTP_CURL_CLIENT_CIVETSTREAM_H_
+#pragma once
 
-#include <algorithm>
 #include <memory>
-#include <thread>
-#include <mutex>
-#include <future>
-#include <vector>
 
 #include "io/BaseStream.h"
 #include "civetweb.h"
-#include "CivetServer.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -57,7 +50,6 @@ class CivetStream : public io::InputStream {
   struct mg_connection *conn;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 };
 } /* namespace io */
@@ -65,5 +57,3 @@ class CivetStream : public io::InputStream {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_HTTP_CURL_CLIENT_CIVETSTREAM_H_ */

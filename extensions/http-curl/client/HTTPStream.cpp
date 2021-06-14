@@ -18,12 +18,8 @@
 
 #include "HTTPStream.h"
 
-#include <algorithm>
 #include <fstream>
-#include <vector>
 #include <memory>
-#include <string>
-#include <Exception.h>
 
 #include "HTTPCallback.h"
 #include "io/validation.h"
@@ -97,7 +93,7 @@ int HttpStream::read(uint8_t *buf, int buflen) {
         started_ = true;
       }
     }
-    return gsl::narrow<int>(http_read_callback_.readFully((char*) buf, buflen));
+    return gsl::narrow<int>(http_read_callback_.readFully(reinterpret_cast<char*>(buf), buflen));
 
   } else {
     return -1;

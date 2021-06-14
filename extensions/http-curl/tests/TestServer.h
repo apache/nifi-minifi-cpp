@@ -15,14 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_TEST_TESTSERVER_H_
-#define LIBMINIFI_TEST_TESTSERVER_H_
+#pragma once
 
 #include <string>
-#include <iostream>
+#include <memory>
+#include <vector>
 #include "civetweb.h"
 #include "CivetServer.h"
-#include "civetweb.h"
 #include "HTTPUtils.h"
 #include "ServerAwareHandler.h"
 
@@ -49,6 +48,7 @@ class TestServer{
       return counter;
     }
   };
+
  public:
   TestServer(std::string &port, std::string &rooturi, CivetHandler *handler, CivetCallbacks *callbacks, std::string& /*cert*/, std::string &ca_cert) {
     if (!mg_check_feature(2)) {
@@ -86,6 +86,7 @@ class TestServer{
       if (serverAwareHandler) serverAwareHandler->stop();
     }
   }
+
  private:
   // server_ depends on lib_ (the library initializer)
   // so their order matters
@@ -94,5 +95,3 @@ class TestServer{
 
   std::vector<CivetHandler*> handlers_;
 };
-
-#endif

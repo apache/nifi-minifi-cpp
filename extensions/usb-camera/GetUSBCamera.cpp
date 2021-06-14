@@ -20,7 +20,10 @@
 #include <png.h>
 
 #include <utility>
+#include <string>
 #include <vector>
+#include <set>
+#include <algorithm>
 
 #include "GetUSBCamera.h"
 

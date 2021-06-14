@@ -15,16 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_RESTRCVR_H_
-#define LIBMINIFI_INCLUDE_C2_RESTRCVR_H_
+#pragma once
 
 #include <string>
 #include <mutex>
+#include <memory>
 #include "core/Resource.h"
 #include "c2/protocols/RESTProtocol.h"
 #include "CivetServer.h"
 #include "c2/C2Protocol.h"
-#include "controllers/SSLContextService.h"
 
 namespace org {
 namespace apache {
@@ -46,14 +45,13 @@ int ssl_protocol_en(void *ssl_context, void *user_data);
  */
 class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
  public:
-  RESTReceiver(const std::string& name, const utils::Identifier& uuid = {});
+  explicit RESTReceiver(const std::string& name, const utils::Identifier& uuid = {});
 
   void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
                           const std::shared_ptr<Configure> &configure) override;
   int16_t heartbeat(const C2Payload &heartbeat) override;
 
  protected:
-
   class ListeningProtocol : public CivetHandler {
    public:
     ListeningProtocol() = default;
@@ -96,10 +94,8 @@ class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
 
 REGISTER_RESOURCE(RESTReceiver, "Provides a webserver to display C2 heartbeat information");
 
-} /* namesapce c2 */
+} /* namespace c2 */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_C2_RESTRCVR_H_ */

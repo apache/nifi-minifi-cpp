@@ -17,12 +17,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __GET_GPS_H__
-#define __GET_GPS_H__
+#pragma once
+
+#include <memory>
+#include <string>
 
 #include "../FlowFileRecord.h"
 #include "../core/Processor.h"
-#include "../core/ProcessSession.h"
 
 namespace org {
 namespace apache {
@@ -31,9 +32,9 @@ namespace minifi {
 namespace processors {
 
 class GetGPS : public core::Processor {
-public:
-  GetGPS(const std::string& name, const utils::Identifier& uuid = {})
-  : core::Processor(name, uuid), logger_(logging::LoggerFactory<GetGPS>::getLogger()) {
+ public:
+  explicit GetGPS(const std::string& name, const utils::Identifier& uuid = {})
+      : core::Processor(name, uuid), logger_(logging::LoggerFactory<GetGPS>::getLogger()) {
     gpsdHost_ = "localhost";
     gpsdPort_ = "2947";
     gpsdWaitTime_ = 50000000;
@@ -48,7 +49,7 @@ public:
   // Supported Relationships
   static core::Relationship Success;
 
-public:
+ public:
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
@@ -61,9 +62,7 @@ public:
   //! Initialize, over write by NiFi GetGPS
   void initialize(void) override;
 
-protected:
-
-private:
+ private:
   std::string gpsdHost_;
   std::string gpsdPort_;
   int64_t gpsdWaitTime_;
@@ -79,5 +78,3 @@ REGISTER_RESOURCE(GetGPS, "Obtains GPS coordinates from the GPSDHost and port.")
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

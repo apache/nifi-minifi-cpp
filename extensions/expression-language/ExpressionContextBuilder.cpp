@@ -17,6 +17,11 @@
 
 #include "ExpressionContextBuilder.h"
 
+#include <memory>
+#include <string>
+
+#include "ProcessContextExpr.h"
+
 namespace org {
 namespace apache {
 namespace nifi {

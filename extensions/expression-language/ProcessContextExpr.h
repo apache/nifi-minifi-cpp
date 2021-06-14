@@ -15,9 +15,13 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include <ProcessContext.h>
 #include <memory>
-#include <impl/expression/Expression.h>
+#include <map>
+#include <string>
+#include "impl/expression/Expression.h"
 
 namespace org {
 namespace apache {
@@ -33,7 +37,6 @@ namespace core {
  */
 class ProcessContextExpr : public core::ProcessContext {
  public:
-
   /**
    std::forward of argument list did not work on all platform.
    **/
@@ -61,8 +64,8 @@ class ProcessContextExpr : public core::ProcessContext {
   bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
 
   bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
- protected:
 
+ protected:
   std::map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
   std::map<std::string, org::apache::nifi::minifi::expression::Expression> dynamic_property_expressions_;
 

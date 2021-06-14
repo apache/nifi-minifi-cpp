@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_HTTP_CURL_SITETOSITE_PEERSENTITY_H_
-#define EXTENSIONS_HTTP_CURL_SITETOSITE_PEERSENTITY_H_
+#pragma once
 
 #include <string>
-#include <exception>
+#include <vector>
+#include <memory>
+#include <utility>
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
@@ -39,7 +40,6 @@ namespace sitetosite {
  */
 class PeersEntity {
  public:
-
   static bool parse(const std::shared_ptr<logging::Logger> &logger, const std::string &entity, const utils::Identifier &id, std::vector<PeerStatus> &peer_statuses) {
     try {
       rapidjson::Document root;
@@ -122,5 +122,3 @@ class PeersEntity {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_HTTP_CURL_SITETOSITE_PEERSENTITY_H_ */

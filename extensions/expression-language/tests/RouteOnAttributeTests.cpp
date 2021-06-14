@@ -20,7 +20,6 @@
 #include <RouteOnAttribute.h>
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"
-#include "processors/GenerateFlowFile.h"
 
 TEST_CASE("RouteOnAttributeMatchedTest", "[routeOnAttributeMatchedTest]") {
   TestController testController;

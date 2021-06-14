@@ -15,16 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_RESTSENDER_H_
-#define LIBMINIFI_INCLUDE_C2_RESTSENDER_H_
+#pragma once
 
 #include <string>
-#include <mutex>
+#include <memory>
 
-#include "utils/ByteArrayCallback.h"
 #include "c2/C2Protocol.h"
 #include "c2/protocols/RESTProtocol.h"
-#include "c2/HeartbeatReporter.h"
 #include "controllers/SSLContextService.h"
 #include "../client/HTTPClient.h"
 
@@ -79,10 +76,8 @@ class RESTSender : public RESTProtocol, public C2Protocol {
 
 REGISTER_RESOURCE(RESTSender, "Encapsulates the restful protocol that is built upon C2Protocol.");
 
-}  // namesapce c2
+}  // namespace c2
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif /* LIBMINIFI_INCLUDE_C2_RESTPROTOCOL_H_ */

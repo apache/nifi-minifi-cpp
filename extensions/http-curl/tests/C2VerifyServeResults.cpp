@@ -30,8 +30,8 @@
 #include "utils/IntegrationTestUtils.h"
 
 class VerifyC2Server : public HTTPIntegrationBase {
-public:
-  explicit VerifyC2Server() {
+ public:
+  VerifyC2Server() {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }

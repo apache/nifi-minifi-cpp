@@ -20,9 +20,9 @@
 #include <iomanip>
 #include <limits>
 #include <algorithm>
+#include <utility>
 
-#ifndef NIFI_MINIFI_CPP_VALUE_H
-#define NIFI_MINIFI_CPP_VALUE_H
+#pragma once
 
 namespace org {
 namespace apache {
@@ -36,7 +36,6 @@ namespace expression {
  */
 class Value {
  public:
-
   /**
    * Construct a default (NULL) value
    */
@@ -79,11 +78,11 @@ class Value {
 
   bool isNull() const {
     return is_null_;
-  };
+  }
 
   bool isString() const {
     return is_string_;
-  };
+  }
 
   bool isDecimal() const {
     if (is_long_double_) {
@@ -260,5 +259,3 @@ class Value {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_VALUE_H

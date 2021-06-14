@@ -18,7 +18,6 @@
 #include "HTTPClient.h"
 
 #include <memory>
-#include <climits>
 #include <cinttypes>
 #include <map>
 #include <vector>
@@ -261,7 +260,7 @@ bool HTTPClient::submit() {
     progress_.reset();
     curl_easy_setopt(http_session_, CURLOPT_NOPROGRESS, 0);
     curl_easy_setopt(http_session_, CURLOPT_XFERINFOFUNCTION, onProgress);
-    curl_easy_setopt(http_session_, CURLOPT_XFERINFODATA, (void*)this);
+    curl_easy_setopt(http_session_, CURLOPT_XFERINFODATA, this);
   } else {
     // the user explicitly set it to 0
     curl_easy_setopt(http_session_, CURLOPT_NOPROGRESS, 1);
@@ -287,8 +286,7 @@ bool HTTPClient::submit() {
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 1L);
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPINTVL, keepAlive.count());
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPIDLE, keepIdle.count());
-  }
-  else {
+  } else {
     logger_->log_debug("Not using keep alive");
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 0L);
   }
@@ -296,7 +294,7 @@ bool HTTPClient::submit() {
   if (callback == nullptr) {
     read_callback_.close();
   }
-  long http_code;
+  long http_code;  // NOLINT long due to libcurl API
   curl_easy_getinfo(http_session_, CURLINFO_RESPONSE_CODE, &http_code);
   http_code_ = http_code;
   curl_easy_getinfo(http_session_, CURLINFO_CONTENT_TYPE, &content_type_str_);
@@ -351,7 +349,7 @@ void HTTPClient::set_request_method(const std::string method) {
 }
 
 int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dlnow, curl_off_t /*ultotal*/, curl_off_t ulnow) {
-  HTTPClient& client = *(HTTPClient*)(clientp);
+  HTTPClient& client = *reinterpret_cast<HTTPClient*>(clientp);
   auto now = std::chrono::steady_clock::now();
   auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - client.progress_.last_transferred_);
   if (dlnow != client.progress_.downloaded_data_ || ulnow != client.progress_.uploaded_data_) {
@@ -365,7 +363,7 @@ int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dln
   if (elapsed.count() > client.read_timeout_ms_.count()) {
     // timeout
     client.logger_->log_error("HTTP operation has been idle for %dms, limit (%dms) reached, terminating connection\n",
-      (int)elapsed.count(), (int)client.read_timeout_ms_.count());
+      static_cast<int>(elapsed.count()), static_cast<int>(client.read_timeout_ms_.count()));
     return 1;
   }
   return 0;
@@ -390,8 +388,7 @@ void HTTPClient::configure_secure_connection(CURL *http_session) {
   if (!ssl_context_service_->getCertificateFile().empty()) {
     if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getCertificateFile(), "p12")) {
       curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "P12");
-    }
-    else {
+    } else {
       curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "PEM");
     }
     curl_easy_setopt(http_session, CURLOPT_SSLCERT, ssl_context_service_->getCertificateFile().c_str());
@@ -399,8 +396,7 @@ void HTTPClient::configure_secure_connection(CURL *http_session) {
   if (!ssl_context_service_->getPrivateKeyFile().empty()) {
     if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getPrivateKeyFile(), "p12")) {
       curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "P12");
-    }
-    else {
+    } else {
       curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "PEM");
     }
     curl_easy_setopt(http_session, CURLOPT_SSLKEY, ssl_context_service_->getPrivateKeyFile().c_str());

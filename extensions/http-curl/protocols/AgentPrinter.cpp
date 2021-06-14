@@ -20,13 +20,7 @@
 
 #include <algorithm>
 #include <memory>
-#include <utility>
-#include <map>
-#include <list>
 #include <string>
-#include <vector>
-
-#include "utils/gsl.h"
 
 #include "rapidjson/prettywriter.h"
 

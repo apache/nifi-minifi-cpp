@@ -23,7 +23,6 @@
 #include <chrono>
 #include <memory>
 #include <string>
-#include <thread>
 #include <vector>
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"

@@ -62,7 +62,7 @@ class Responder : public ServerAwareHandler {
 };
 
 class SiteToSiteTestHarness : public HTTPIntegrationBase {
-public:
+ public:
   explicit SiteToSiteTestHarness(bool isSecure)
       : isSecure(isSecure) {
     char format[] = "/tmp/ssth.XXXXXX";

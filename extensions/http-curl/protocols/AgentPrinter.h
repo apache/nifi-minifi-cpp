@@ -15,16 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_AGENTPRINTER_H_
-#define LIBMINIFI_INCLUDE_C2_AGENTPRINTER_H_
+#pragma once
 
 #include <string>
-#include <mutex>
+#include <memory>
 #include "core/Resource.h"
 #include "c2/protocols/RESTProtocol.h"
-#include "CivetServer.h"
 #include "c2/C2Protocol.h"
-#include "controllers/SSLContextService.h"
 
 namespace org {
 namespace apache {
@@ -58,18 +55,14 @@ class AgentPrinter : public HeartbeatJsonSerializer, public HeartbeatReporter {
    */
   rapidjson::Value serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc) override;
 
- protected:
-
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
 REGISTER_RESOURCE(AgentPrinter, "Encapsulates printing agent information.");
 
-} /* namesapce c2 */
+} /* namespace c2 */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_C2_AGENTPRINTER_H_ */

@@ -16,17 +16,12 @@
  * limitations under the License.
  */
 
-#include <fstream>
 #include <map>
 #include <memory>
 #include <utility>
+#include <vector>
 #include <string>
-#include <set>
-#include "FlowController.h"
-#include "io/BaseStream.h"
 #include "TestBase.h"
-#include "processors/GetFile.h"
-#include "core/Core.h"
 #include "client/HTTPClient.h"
 #include "CivetServer.h"
 
@@ -56,7 +51,7 @@ TEST_CASE("HTTPClientTestChunkedResponse", "[basic]") {
       mg_printf(conn, "HTTP/1.1 100 Continue\r\n\r\n");
 
       std::array<uint8_t, 16384U> buf;
-      while (mg_read(conn, buf.data(), buf.size()) > 0);
+      while (mg_read(conn, buf.data(), buf.size()) > 0) {}
 
       send_response(conn);
       return true;

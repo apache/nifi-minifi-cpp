@@ -32,7 +32,7 @@
 #include "utils/IntegrationTestUtils.h"
 
 class HttpTestHarness : public HTTPIntegrationBase {
-public:
+ public:
   HttpTestHarness() : HTTPIntegrationBase(4000) {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);

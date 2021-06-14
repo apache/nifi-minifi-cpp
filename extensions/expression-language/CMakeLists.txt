@@ -104,3 +104,4 @@ target_link_libraries(minifi-expression-language-extensions date::tz RapidJSON C
 SET (EXPRESSION-LANGUAGE-EXTENSIONS minifi-expression-language-extensions PARENT_SCOPE)
 
 register_extension(minifi-expression-language-extensions)
+register_extension_linter(minifi-expression-language-extensions-linter)

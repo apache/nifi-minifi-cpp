@@ -16,11 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_SERVERAWAREHANDLER_H
-#define NIFI_MINIFI_CPP_SERVERAWAREHANDLER_H
+#pragma once
 
 class ServerAwareHandler: public CivetHandler{
-protected:
+ protected:
   void sleep_for(std::chrono::milliseconds time) {
     std::unique_lock<std::mutex> lock(mutex_);
     stop_signal_.wait_for(lock, time, [&] {return terminate_.load();});
@@ -30,7 +29,7 @@ protected:
     return !terminate_.load();
   }
 
-public:
+ public:
   void stop() {
     terminate_ = true;
     stop_signal_.notify_all();
@@ -41,5 +40,3 @@ public:
   std::condition_variable stop_signal_;
   std::atomic_bool terminate_{false};
 };
-
-#endif  // NIFI_MINIFI_CPP_SERVERAWAREHANDLER_H

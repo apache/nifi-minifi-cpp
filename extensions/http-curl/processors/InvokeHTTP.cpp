@@ -22,24 +22,15 @@
 #else
 #include <regex.h>
 #endif
-#include <curl/easy.h>
 #include <memory>
-#include <algorithm>
-#include <cctype>
 #include <cinttypes>
 #include <cstdint>
-#include <cstring>
-#include <iostream>
-#include <iterator>
-#include <map>
 #include <set>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "utils/ByteArrayCallback.h"
 #include "core/FlowFile.h"
-#include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
 #include "io/BufferStream.h"

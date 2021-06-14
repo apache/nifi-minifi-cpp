@@ -15,13 +15,11 @@
  * limitations under the License.
  */
 
-#ifndef __EXPRESSION_LANGUAGE_DRIVER_H__
-#define __EXPRESSION_LANGUAGE_DRIVER_H__
+#pragma once
 
 #include <string>
 #include <map>
-#include <sstream>
-#include <expression/Expression.h>
+#include "expression/Expression.h"
 
 #undef yyFlexLexer
 #include <FlexLexer.h>
@@ -57,5 +55,3 @@ class Driver : public yyFlexLexer {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* __EXPRESSION_LANGUAGE_DRIVER_H__ */

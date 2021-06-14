@@ -31,3 +31,4 @@ target_link_libraries(minifi-http-curl minifi-civet-extensions)
 
 SET (HTTP-CURL minifi-http-curl PARENT_SCOPE)
 register_extension(minifi-http-curl)
+register_extension_linter(minifi-http-curl-linter)

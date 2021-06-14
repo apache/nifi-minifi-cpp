@@ -15,30 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SITE2SITE_CLIENT_PROTOCOL_H__
-#define __SITE2SITE_CLIENT_PROTOCOL_H__
+#pragma once
 
-#include <stdio.h>
-#include <sys/types.h>
 #include <string>
-#include <errno.h>
-#include <chrono>
-#include <set>
-#include <thread>
-#include <algorithm>
+#include <map>
+#include <memory>
+#include <vector>
+#include <utility>
 #include "HTTPTransaction.h"
 #include "sitetosite/SiteToSite.h"
 #include "sitetosite/SiteToSiteClient.h"
-#include "core/Property.h"
-#include "properties/Configure.h"
-#include "FlowFileRecord.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "io/CRCStream.h"
 #include "sitetosite/Peer.h"
 #include "utils/Id.h"
-#include "../client/HTTPClient.h"
 
 namespace org {
 namespace apache {
@@ -58,12 +49,12 @@ typedef struct Site2SitePeerStatus {
 // HttpSiteToSiteClient Class
 class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   static constexpr char const* PROTOCOL_VERSION_HEADER = "x-nifi-site-to-site-protocol-version";
- public:
 
+ public:
   /*!
    * Create a new http protocol
    */
-  HttpSiteToSiteClient(const std::string& /*name*/, const utils::Identifier& /*uuid*/ = {})
+  explicit HttpSiteToSiteClient(const std::string& /*name*/, const utils::Identifier& /*uuid*/ = {})
       : SiteToSiteClient(),
         current_code(UNRECOGNIZED_RESPONSE_CODE),
         logger_(logging::LoggerFactory<HttpSiteToSiteClient>::getLogger()) {
@@ -73,7 +64,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   /*!
    * Create a new http protocol
    */
-  HttpSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer)
+  explicit HttpSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer)
       : SiteToSiteClient(),
         current_code(UNRECOGNIZED_RESPONSE_CODE),
         logger_(logging::LoggerFactory<HttpSiteToSiteClient>::getLogger()) {
@@ -108,7 +99,6 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   void deleteTransaction(const utils::Identifier& transactionID) override;
 
  protected:
-
   /**
    * Closes the transaction
    * @param transactionID transaction id reference.
@@ -177,7 +167,6 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   }
 
  private:
-
   RespondCode current_code;
   std::shared_ptr<logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation
@@ -192,4 +181,3 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
