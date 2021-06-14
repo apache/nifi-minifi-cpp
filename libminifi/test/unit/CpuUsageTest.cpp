@@ -49,7 +49,7 @@ TEST_CASE("Test System CPU Utilization", "[testcpuusage]") {
 
   org::apache::nifi::minifi::utils::SystemCpuUsageTracker hostTracker;
   org::apache::nifi::minifi::utils::ProcessCpuUsageTracker processTracker;
-  int vCores = std::thread::hardware_concurrency();
+  auto vCores = (std::max)(uint32_t{1}, std::thread::hardware_concurrency());
   auto test_start = std::chrono::system_clock::now();
   for (int i = 0; i < number_of_rounds; ++i) {
     {
