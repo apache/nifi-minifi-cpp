@@ -15,14 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_COAPLOADER_H_
-#define EXTENSIONS_COAPLOADER_H_
+#pragma once
 
 #ifdef WIN32
 #pragma comment(lib, "wldap32.lib" )
 #pragma comment(lib, "crypt32.lib" )
 #pragma comment(lib, "Ws2_32.lib")
 #endif
+
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "core/ClassLoader.h"
 #include "utils/StringUtils.h"
@@ -86,4 +89,3 @@ class COAPObjectFactory : public core::ObjectFactory {
 extern "C" {
   DLL_EXPORT void *createCOAPFactory(void);
 }
-#endif /* EXTENSIONS_COAPLOADER_H_ */

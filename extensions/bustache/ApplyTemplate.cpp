@@ -17,16 +17,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "ApplyTemplate.h"
+
 #include <iostream>
 #include <fstream>
 #include <memory>
 #include <set>
+#include <string>
 
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include <bustache/model.hpp>
 
-#include "ApplyTemplate.h"
 
 namespace org {
 namespace apache {

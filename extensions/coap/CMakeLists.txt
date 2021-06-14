@@ -35,4 +35,4 @@ target_link_libraries(minifi-coap nanofi-coap-c Threads::Threads COAP::libcoap m
 
 SET (COAP-EXTENSION minifi-coap PARENT_SCOPE)
 register_extension(minifi-coap)
-
+register_extension_linter(minifi-coap-extensions-linter)

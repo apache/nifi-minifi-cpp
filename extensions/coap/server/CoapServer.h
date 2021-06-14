@@ -16,16 +16,21 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_COAP_SERVER_COAPSERVER_H_
-#define EXTENSIONS_COAP_SERVER_COAPSERVER_H_
+#pragma once
 
-#include "core/Connectable.h"
-#include "coap_server.h"
-#include "coap_message.h"
 #include <coap2/coap.h>
 #include <functional>
 #include <thread>
 #include <future>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <atomic>
+
+#include "core/Connectable.h"
+#include "coap_server.h"
+#include "coap_message.h"
 
 namespace org {
 namespace apache {
@@ -84,6 +89,7 @@ class CoapResponse {
   CoapResponse(const CoapResponse &qry) = delete;
   CoapResponse(CoapResponse &&qry) = default;
   CoapResponse &operator=(CoapResponse &&qry) = default;
+
  private:
   int code_;
   std::unique_ptr<uint8_t[]> data_;
@@ -101,7 +107,7 @@ class CoapServer : public core::Connectable {
       : core::Connectable(name, uuid),
         server_(nullptr),
         port_(0) {
-    // TODO: this allows this class to be instantiated via the the class loader
+    // TODO(_): this allows this class to be instantiated via the the class loader
     // need to define this capability in the future.
   }
   CoapServer(const std::string &hostname, uint16_t port)
@@ -203,8 +209,12 @@ class CoapServer : public core::Connectable {
   }
 
  protected:
-
-  static void handle_response_with_passthrough(coap_context_t* /*ctx*/, struct coap_resource_t *resource, coap_session_t *session, coap_pdu_t *request, coap_binary_t* /*token*/, coap_string_t* /*query*/,
+  static void handle_response_with_passthrough(coap_context_t* /*ctx*/,
+                                               struct coap_resource_t *resource,
+                                               coap_session_t *session,
+                                               coap_pdu_t *request,
+                                               coap_binary_t* /*token*/,
+                                               coap_string_t* /*query*/,
                                                coap_pdu_t *response) {
     auto fx = functions_.find(resource);
     if (fx != functions_.end()) {
@@ -234,5 +244,3 @@ class CoapServer : public core::Connectable {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_COAP_SERVER_COAPSERVER_H_ */

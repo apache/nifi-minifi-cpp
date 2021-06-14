@@ -15,15 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_COAP_CONTROLLERSERVICE_COAPMESSAGING_H_
-#define EXTENSIONS_COAP_CONTROLLERSERVICE_COAPMESSAGING_H_
+#pragma once
+
+#include <unordered_map>
+#include <mutex>
+#include <utility>
 
 #include "CoapResponse.h"
 #include "coap_functions.h"
 #include "coap_connection.h"
 #include "coap_message.h"
-#include <memory>
-#include <unordered_map>
 
 namespace org {
 namespace apache {
@@ -59,8 +60,8 @@ class CoapMessaging {
     }
     return response;
   }
- protected:
 
+ protected:
   /**
    * Intended to receive errors from the context.
    */
@@ -100,12 +101,9 @@ class CoapMessaging {
   // at any given time.
   std::unordered_map<coap_context_t*, CoapResponse> messages_;
 };
-
 } /* namespace controllers */
 } /* namespace coap */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_COAP_CONTROLLERSERVICE_COAPMESSAGING_H_ */

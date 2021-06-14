@@ -20,6 +20,14 @@
 
 #pragma once
 
+#include <Windows.h>
+#include <winevt.h>
+#include <EvColl.h>
+
+#include <vector>
+#include <string>
+#include <memory>
+
 #include "core/Core.h"
 #include "FlowFileRecord.h"
 #include "concurrentqueue.h"
@@ -27,8 +35,6 @@
 #include "core/ProcessSession.h"
 #include "SupportedProperty.h"
 
-#include <winevt.h>
-#include <EvColl.h>
 
 namespace org {
 namespace apache {
@@ -38,12 +44,12 @@ namespace processors {
 
 //! CollectorInitiatedSubscription Class
 class CollectorInitiatedSubscription : public core::Processor {
-public:
+ public:
   //! Constructor
   /*!
   * Create a new processor
   */
-  CollectorInitiatedSubscription(const std::string& name, const utils::Identifier& uuid = {});
+  explicit CollectorInitiatedSubscription(const std::string& name, const utils::Identifier& uuid = {});
 
   //! Destructor
   virtual ~CollectorInitiatedSubscription() = default;
@@ -51,7 +57,7 @@ public:
   //! Processor Name
   static const std::string ProcessorName;
 
-public:
+ public:
   /**
   * Function that's executed when the processor is scheduled.
   * @param context process context.
@@ -65,7 +71,7 @@ public:
   void initialize(void) override;
   void notifyStop() override;
 
-protected:
+ protected:
   bool createSubscription(const std::shared_ptr<core::ProcessContext> &context);
   bool subscribe(const std::shared_ptr<core::ProcessContext> &context);
   void unsubscribe();
@@ -75,7 +81,8 @@ protected:
   void logInvalidSubscriptionPropertyType(int line, DWORD type);
   bool getSubscriptionProperty(EC_HANDLE hSubscription, EC_SUBSCRIPTION_PROPERTY_ID propID, DWORD flags, std::vector<BYTE>& buffer, PEC_VARIANT& vProperty);
   bool checkSubscriptionRuntimeStatus();
-private:
+
+ private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   moodycamel::ConcurrentQueue<std::string> renderedXMLs_;

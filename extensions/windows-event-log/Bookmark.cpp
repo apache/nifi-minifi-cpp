@@ -19,6 +19,9 @@
 #include "Bookmark.h"
 
 #include <direct.h>
+#include <vector>
+#include <unordered_map>
+#include <fstream>
 
 #include "wel/UnicodeConversion.h"
 #include "utils/file/FileUtils.h"
@@ -30,9 +33,15 @@ namespace minifi {
 namespace processors {
 static const std::string BOOKMARK_KEY = "bookmark";
 
-Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const utils::Identifier& uuid, bool processOldEvents, std::shared_ptr<core::CoreComponentStateManager> state_manager, std::shared_ptr<logging::Logger> logger)
-  : logger_(logger)
-  , state_manager_(state_manager) {
+Bookmark::Bookmark(const std::wstring& channel,
+    const std::wstring& query,
+    const std::string& bookmarkRootDir,
+    const utils::Identifier& uuid,
+    bool processOldEvents,
+    std::shared_ptr<core::CoreComponentStateManager> state_manager,
+    std::shared_ptr<logging::Logger> logger)
+    : logger_(logger),
+      state_manager_(state_manager) {
   std::unordered_map<std::string, std::string> state_map;
   if (state_manager_->get(state_map) && state_map.count(BOOKMARK_KEY) == 1U) {
     bookmarkXml_ = wel::to_wstring(state_map[BOOKMARK_KEY].c_str());
@@ -171,7 +180,7 @@ bool Bookmark::getBookmarkXmlFromFile(std::wstring& bookmarkXml) {
     return false;
   }
 
-  // Generically is not efficient, but bookmarkXML is small ~100 bytes. 
+  // Generally is not efficient, but bookmarkXML is small ~100 bytes.
   wchar_t c;
   do {
     file.read(&c, 1);

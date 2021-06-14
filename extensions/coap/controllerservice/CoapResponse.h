@@ -15,12 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_COAPRESPONSE_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_COAPRESPONSE_H_
-
-#include "coap_message.h"
+#pragma once
 
 #include <memory>
+
+#include "coap_message.h"
 
 namespace org {
 namespace apache {
@@ -34,7 +33,6 @@ namespace controllers {
  */
 class CoapResponse {
  public:
-
   /**
    * Creates a CoAPResponse to a CoAPMessage. Takes ownership of the argument
    * and copies the data.
@@ -96,6 +94,7 @@ class CoapResponse {
 
   CoapResponse &operator=(const CoapResponse &other) = delete;
   CoapResponse &operator=(CoapResponse &&other) = default;
+
  private:
   uint32_t code_;
   size_t size_;
@@ -108,5 +107,3 @@ class CoapResponse {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_COAPRESPONSE_H_ */

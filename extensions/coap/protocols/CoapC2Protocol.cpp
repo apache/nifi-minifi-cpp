@@ -237,7 +237,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
     default:
       logger_->log_error("Could not identify operation");
       return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
-  };
+  }
 
   size_t bsize = stream.size();
 

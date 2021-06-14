@@ -17,11 +17,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LISTEN_HTTP_H__
-#define __LISTEN_HTTP_H__
+#pragma once
 
+#include <map>
 #include <memory>
 #include <regex>
+#include <string>
+#include <utility>
 
 #include <CivetServer.h>
 
@@ -48,7 +50,7 @@ class ListenHTTP : public core::Processor {
   /*!
    * Create a new processor
    */
-  ListenHTTP(const std::string& name, const utils::Identifier& uuid = {})
+  explicit ListenHTTP(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ListenHTTP>::getLogger()),
         batch_size_(0) {
@@ -148,7 +150,7 @@ class ListenHTTP : public core::Processor {
   // Write callback for transferring data from HTTP request to content repo
   class WriteCallback : public OutputStreamCallback {
    public:
-    WriteCallback(std::unique_ptr<io::BufferStream>);
+    explicit WriteCallback(std::unique_ptr<io::BufferStream>);
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
@@ -190,6 +192,7 @@ class ListenHTTP : public core::Processor {
     }
     return 0;
   }
+
  protected:
   void notifyStop() override;
 
@@ -223,5 +226,3 @@ REGISTER_RESOURCE(ListenHTTP, "Starts an HTTP Server and listens on a given base
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

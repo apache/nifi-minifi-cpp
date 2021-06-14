@@ -125,8 +125,8 @@ class Socket : public BaseStream {
    */
   int initialize() override;
 
-  virtual void setInterface(io::NetworkInterface interface) {
-    local_network_interface_ = std::move(interface);
+  virtual void setInterface(io::NetworkInterface network_interface) {
+    local_network_interface_ = std::move(network_interface);
   }
 
   /**

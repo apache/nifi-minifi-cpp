@@ -18,13 +18,13 @@
 
 #include "CoapConnector.h"
 
-#include "core/logging/LoggerConfiguration.h"
-#include "core/controller/ControllerService.h"
 #include <string>
 #include <memory>
 #include <set>
+
+#include "core/logging/LoggerConfiguration.h"
+#include "core/controller/ControllerService.h"
 #include "core/Property.h"
-#include "CoapConnector.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
 

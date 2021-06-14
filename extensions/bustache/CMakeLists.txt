@@ -33,3 +33,4 @@ target_link_libraries(minifi-bustache-extensions BUSTACHE::libbustache)
 SET (BUSTACHE-EXTENSIONS minifi-bustache-extensions PARENT_SCOPE)
 
 register_extension(minifi-bustache-extensions)
+register_extension_linter(minifi-bustache-extensions-linter)

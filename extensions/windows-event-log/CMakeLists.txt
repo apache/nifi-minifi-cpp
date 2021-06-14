@@ -30,3 +30,4 @@ target_link_libraries(minifi-wel PUGI::libpugixml ZLIB::ZLIB Wevtapi.lib)
 SET(WEL-EXTENSION minifi-wel PARENT_SCOPE)
 
 register_extension(minifi-wel)
+register_extension_linter(minifi-wel-extension-linter)

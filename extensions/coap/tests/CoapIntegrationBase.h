@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_COAP_TESTS_COAPINTEGRATIONBASE_H
-#define EXTENSIONS_COAP_TESTS_COAPINTEGRATIONBASE_H
+#pragma once
+
+#include <utility>
+#include <memory>
+#include <string>
 
 #include "../tests/TestServer.h"
 #include "CivetServer.h"
@@ -33,7 +36,7 @@ int ssl_enable(void *, void *) {
 
 class CoapIntegrationBase : public IntegrationBase {
  public:
-  CoapIntegrationBase(uint64_t waitTime = 5000)
+  explicit CoapIntegrationBase(uint64_t waitTime = 5000)
       : IntegrationBase(waitTime),
         server(nullptr) {
   }
@@ -109,5 +112,3 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
     }
   }
 }
-
-#endif  // EXTENSIONS_COAP_TESTS_COAPINTEGRATIONBASE_H

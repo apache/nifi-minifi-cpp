@@ -20,6 +20,11 @@
  */
 #include "ListenHTTP.h"
 
+#include <set>
+#include <vector>
+#include <utility>
+#include <string>
+
 #include "utils/gsl.h"
 
 namespace org {

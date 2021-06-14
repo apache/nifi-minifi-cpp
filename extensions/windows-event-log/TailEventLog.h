@@ -17,8 +17,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef TAIL_EVENT_LOG_H_
-#define TAIL_EVENT_LOG_H_
+#pragma once
+
+#include <memory>
+#include <string>
 
 #include "core/Core.h"
 #include "FlowFileRecord.h"
@@ -36,8 +38,8 @@ const LPCWSTR pEventTypeNames[] = { L"Error", L"Warning", L"Informational", L"Au
 const char log_name[255] = "Application";
 
 class TailEventLog : public core::Processor {
-public:
-  TailEventLog(const std::string& name, const utils::Identifier& uuid = {})
+ public:
+  explicit TailEventLog(const std::string& name, const utils::Identifier& uuid = {})
   : core::Processor(name, uuid), logger_(logging::LoggerFactory<TailEventLog>::getLogger()), max_events_(1) {
   }
   virtual ~TailEventLog() = default;
@@ -50,7 +52,7 @@ public:
   // Supported Relationships
   static core::Relationship Success;
 
-public:
+ public:
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
@@ -63,8 +65,7 @@ public:
   // Initialize, over write by NiFi TailEventLog
   void initialize(void) override;
 
-protected:
-
+ protected:
   void notifyStop() override {
     CloseEventLog(log_handle_);
   }
@@ -120,10 +121,12 @@ protected:
       (LPTSTR)&lpMsg,
       0, NULL);
 
-    logger_->log_debug("Error %d: %s\n", (int)error_id, (char *)lpMsg);
+    logger_->log_debug("Error %d: %s\n", static_cast<int>(error_id), reinterpret_cast<char *>(lpMsg));
+
+    LocalFree(lpMsg);
   }
 
-private:
+ private:
   std::mutex log_mutex_;
   std::string log_source_;
   uint32_t max_events_;
@@ -141,5 +144,3 @@ REGISTER_RESOURCE(TailEventLog, "Windows event log reader that functions as a st
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

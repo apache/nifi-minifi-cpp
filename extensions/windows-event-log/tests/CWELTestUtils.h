@@ -17,6 +17,12 @@
 
 #pragma once
 
+#include <utility>
+#include <memory>
+#include <string>
+#include <fstream>
+#include <iterator>
+
 #include "ConsumeWindowsEventLog.h"
 #include "processors/PutFile.h"
 #include "TestBase.h"

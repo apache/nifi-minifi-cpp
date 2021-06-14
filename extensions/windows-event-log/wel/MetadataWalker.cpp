@@ -17,9 +17,18 @@
  */
 
 #include <windows.h>
+#include <strsafe.h>
+
+#include <map>
+#include <functional>
+#include <codecvt>
+#include <regex>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "MetadataWalker.h"
 #include "XMLString.h"
-#include <strsafe.h>
 
 namespace org {
 namespace apache {
@@ -64,20 +73,15 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
       }
       node.text().set(nodeText.c_str());
     }
-  }
-  else if (node_name == "TimeCreated") {
+  } else if (node_name == "TimeCreated") {
     metadata_["TimeCreated"] = node.attribute("SystemTime").value();
-  }
-  else if (node_name == "EventRecordID") {
+  } else if (node_name == "EventRecordID") {
     metadata_["EventRecordID"] = node.text().get();
-  }
-  else if (node_name == "Provider") {
+  } else if (node_name == "Provider") {
     metadata_["Provider"] = node.attribute("Name").value();
-  }
-  else if (node_name == "EventID") {
+  } else if (node_name == "EventID") {
     metadata_["EventID"] = node.text().get();
-  }
-  else {
+  } else {
     static std::map<std::string, EVT_FORMAT_MESSAGE_FLAGS> formatFlagMap = {
         {"Channel", EvtFormatMessageChannel}, {"Keywords", EvtFormatMessageKeyword}, {"Level", EvtFormatMessageLevel},
         {"Opcode", EvtFormatMessageOpcode}, {"Task", EvtFormatMessageTask}
@@ -94,8 +98,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
         return input;
       };
       updateText(node, node.name(), std::move(updateFunc));
-    }
-    else {
+    } else {
       // no conversion is required here, so let the node fall through
     }
   }
@@ -144,7 +147,7 @@ std::string MetadataWalker::getMetadata(METADATA metadata) const {
         return std::to_string(windows_event_log_metadata_.getEventTypeIndex());
       case COMPUTER:
         return windows_event_log_metadata_.getComputerName();
-    };
+    }
     return "N/A";
 }
 
@@ -168,8 +171,7 @@ std::string MetadataWalker::updateXmlMetadata(const std::string &xml, EVT_HANDLE
     wel::XmlString writer;
     doc.print(writer, "", pugi::format_raw);  // no indentation or formatting
     return writer.xml_;
-  }
-  else {
+  } else {
     throw std::runtime_error("Could not parse XML document");
   }
 }

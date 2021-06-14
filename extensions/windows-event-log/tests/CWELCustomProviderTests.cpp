@@ -58,8 +58,7 @@ bool dispatchCustomEvent(const CustomEventData& event) {
     event.second.c_str(),
     event.third.c_str(),
     event.binary_length,
-    event.binary_data
-  );
+    event.binary_data);
   return result == ERROR_SUCCESS;
 }
 

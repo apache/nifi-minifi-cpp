@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_COAPPROTOCOL_H_
-#define EXTENSIONS_COAPPROTOCOL_H_
+#pragma once
 
+#include <cstring>
 #include <algorithm>
 #include <iostream>
 #include <memory>
@@ -25,6 +25,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <stdexcept>
+#include <mutex>
 
 #include "c2/C2Protocol.h"
 #include "io/BaseStream.h"
@@ -34,8 +36,6 @@
 #include "coap2/coap.h"
 #include "coap2/uri.h"
 #include "coap2/address.h"
-#include <stdio.h>
-#include <string.h>
 #include "protocols/RESTSender.h"
 
 #undef RAPIDJSON_ASSERT
@@ -89,7 +89,6 @@ class CoapProtocol : public minifi::c2::RESTSender {
   // Supported Properties
 
  protected:
-
   bool isRegistrationMessage(controllers::CoapResponse &response) {
     if (LIKELY(response.getSize() != 8)) {
       return false;
@@ -131,7 +130,6 @@ class CoapProtocol : public minifi::c2::RESTSender {
   std::string controller_service_name_;
 
  private:
-
   static uint8_t REGISTRATION_MSG[8];
 
   std::shared_ptr<logging::Logger> logger_;
@@ -142,4 +140,3 @@ class CoapProtocol : public minifi::c2::RESTSender {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* EXTENSIONS_COAPPROTOCOL_H_ */

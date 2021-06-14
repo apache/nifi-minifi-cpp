@@ -19,14 +19,12 @@
  */
 
 #include "TailEventLog.h"
+
 #include <vector>
-#include <queue>
 #include <map>
 #include <set>
-#include <sstream>
-#include <stdio.h>
 #include <string>
-#include <iostream>
+#include <memory>
 
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
@@ -77,14 +75,14 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
   BYTE buffer[MAX_RECORD_BUFFER_SIZE];
 
-  EVENTLOGRECORD *event_record = (EVENTLOGRECORD*)&buffer;
+  EVENTLOGRECORD *event_record = reinterpret_cast<EVENTLOGRECORD*>(&buffer);
 
   DWORD bytes_to_read = 0, min_bytes = 0;
-  
+
   GetOldestEventLogRecord(log_handle_, &current_record_);
   GetNumberOfEventLogRecords(log_handle_, &num_records_);
   current_record_ = num_records_-max_events_;
-  
+
   logger_->log_trace("%d and %d", current_record_, num_records_);
 
   if (ReadEventLog(log_handle_, EVENTLOG_FORWARDS_READ | EVENTLOG_SEEK_READ, current_record_, event_record, MAX_RECORD_BUFFER_SIZE, &bytes_to_read, &min_bytes)) {
@@ -107,23 +105,21 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       flowFile->addAttribute("source", source);
       flowFile->addAttribute("record_number", std::to_string(event_record->RecordNumber));
       flowFile->addAttribute("computer_name", computer_name);
-      
+
       flowFile->addAttribute("event_time", getTimeStamp(event_record->TimeGenerated));
       flowFile->addAttribute("event_type", typeToString(event_record->EventType));
-      
+
       io::BufferStream stream((const uint8_t*)(event_record + event_record->DataOffset), event_record->DataLength);
       // need an import from the data stream.
       session->importFrom(stream, flowFile);
       session->transfer(flowFile, Success);
       bytes_to_read -= event_record->Length;
-      event_record = (EVENTLOGRECORD *)
-        ((LPBYTE)event_record + event_record->Length);
+      event_record = reinterpret_cast<EVENTLOGRECORD *>((LPBYTE)event_record + event_record->Length);
     }
 
-    event_record = (EVENTLOGRECORD *)&buffer;
+    event_record = reinterpret_cast<EVENTLOGRECORD*>(&buffer);
     logger_->log_trace("All done no more");
-  }
-  else {
+  } else {
     LogWindowsError();
     logger_->log_trace("Yielding due to error");
     context->yield();

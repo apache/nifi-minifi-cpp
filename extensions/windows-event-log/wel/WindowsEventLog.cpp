@@ -16,11 +16,14 @@
  * limitations under the License.
  */
 #include <winmeta.h>
+
+#include <algorithm>
+#include <memory>
+#include <string>
+
 #include "WindowsEventLog.h"
 #include "UnicodeConversion.h"
 #include "utils/Deleters.h"
-#include <algorithm>
-
 #include "utils/gsl.h"
 
 namespace org {
@@ -46,18 +49,17 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
     EvtClose(context);
   });
   if (!EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount)) {
-    if (ERROR_INSUFFICIENT_BUFFER == (status = GetLastError())) {
-      dwBufferSize = dwBufferUsed;
-      rendered_values.reset((PEVT_VARIANT)(malloc(dwBufferSize)));
-      if (!rendered_values) {
-        return;
-      }
-      EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount);
-    }
-    else {
+    if (ERROR_INSUFFICIENT_BUFFER != (status = GetLastError())) {
       return;
     }
 
+    dwBufferSize = dwBufferUsed;
+    rendered_values.reset((PEVT_VARIANT)(malloc(dwBufferSize)));
+    if (!rendered_values) {
+      return;
+    }
+
+    EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, rendered_values.get(), &dwBufferUsed, &dwPropertyCount);
     if (ERROR_SUCCESS != (status = GetLastError())) {
       return;
     }
@@ -82,7 +84,8 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
     hour -= 12;
   if (hour == 0)
     hour = 12;
-  datestr << st.wMonth << "/" << st.wDay << "/" << st.wYear << " " << std::setfill('0') << std::setw(2) << hour << ":" << std::setfill('0') << std::setw(2) << st.wMinute << ":" << std::setfill('0') << std::setw(2) << st.wSecond << " " << period;
+  datestr << st.wMonth << "/" << st.wDay << "/" << st.wYear << " " << std::setfill('0') << std::setw(2) << hour << ":" << std::setfill('0')
+          << std::setw(2) << st.wMinute << ":" << std::setfill('0') << std::setw(2) << st.wSecond << " " << period;
   event_timestamp_str_ = datestr.str();
   auto level = static_cast<PEVT_VARIANT>(rendered_values.get())[EvtSystemLevel];
   auto keyword = static_cast<PEVT_VARIANT>(rendered_values.get())[EvtSystemKeywords];
@@ -104,9 +107,8 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
         break;
       default:
         event_type_index_ = 0;
-    };
-  }
-  else {
+    }
+  } else {
     event_type_ = "N/A";
   }
 
@@ -205,8 +207,7 @@ void WindowsEventLogHeader::setDelimiter(const std::string &delim) {
 std::string WindowsEventLogHeader::createDefaultDelimiter(size_t max, size_t length) const {
   if (max > length) {
     return ":" + std::string(max - length, ' ');
-  }
-  else {
+  } else {
     return ": ";
   }
 }

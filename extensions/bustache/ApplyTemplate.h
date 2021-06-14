@@ -17,10 +17,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __APPLY_TEMPLATE_H__
-#define __APPLY_TEMPLATE_H__
+#pragma once
 
 #include <memory>
+#include <string>
 
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -41,7 +41,7 @@ class ApplyTemplate : public core::Processor {
   /*!
    * Create a new processor
    */
-  ApplyTemplate(const std::string& name, const utils::Identifier& uuid = {})
+  explicit ApplyTemplate(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ApplyTemplate>::getLogger()) {}
   ~ApplyTemplate() = default;
@@ -81,5 +81,3 @@ REGISTER_RESOURCE(ApplyTemplate, "Applies the mustache template specified by the
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif
