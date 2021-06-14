@@ -22,6 +22,7 @@
 #include "core/state/nodes/MetricsBase.h"
 #include "core/state/nodes/QueueMetrics.h"
 #include "core/state/nodes/AgentInformation.h"
+#include "core/state/nodes/ConfigurationChecksums.h"
 #include "core/state/nodes/RepositoryMetrics.h"
 #include "properties/Configure.h"
 #include "core/state/UpdateController.h"
@@ -85,22 +86,27 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
     for (const std::string& clazz : classes) {
-      auto processor = std::dynamic_pointer_cast<state::response::ResponseNode>(core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz));
-      if (nullptr == processor) {
+      auto response_node = std::dynamic_pointer_cast<state::response::ResponseNode>(core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz));
+      if (nullptr == response_node) {
         logger_->log_error("No metric defined for %s", clazz);
         continue;
       }
-      auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(processor);
+      auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(response_node);
       if (identifier != nullptr) {
         identifier->setAgentIdentificationProvider(configuration_);
       }
-      auto monitor = std::dynamic_pointer_cast<state::response::AgentMonitor>(processor);
+      auto monitor = std::dynamic_pointer_cast<state::response::AgentMonitor>(response_node);
       if (monitor != nullptr) {
         monitor->addRepository(provenance_repo_);
         monitor->addRepository(flow_file_repo_);
         monitor->setStateMonitor(update_sink);
       }
-      auto flowMonitor = std::dynamic_pointer_cast<state::response::FlowMonitor>(processor);
+      auto configuration_checksums = std::dynamic_pointer_cast<state::response::ConfigurationChecksums>(response_node);
+      if (configuration_checksums) {
+        configuration_checksums->addChecksumCalculator(configuration_->getChecksumCalculator());
+        configuration_checksums->addChecksumCalculator(flow_configuration_->getChecksumCalculator());
+      }
+      auto flowMonitor = std::dynamic_pointer_cast<state::response::FlowMonitor>(response_node);
       if (flowMonitor != nullptr) {
         for (auto &con : connections) {
           flowMonitor->addConnection(con.second);
@@ -109,7 +115,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
         flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
       }
       std::lock_guard<std::mutex> guard(metrics_mutex_);
-      root_response_nodes_[processor->getName()] = processor;
+      root_response_nodes_[response_node->getName()] = response_node;
     }
   }
 

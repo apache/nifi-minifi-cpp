@@ -109,7 +109,9 @@ bool FlowConfiguration::persist(const std::string &configuration) {
     logger_->log_debug("Copy %s to %s", *config_path_, config_file_backup);
   }
 
-  return filesystem_->write(*config_path_, configuration);
+  const bool status = filesystem_->write(*config_path_, configuration);
+  checksum_calculator_.invalidateChecksum();
+  return status;
 }
 
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(const std::string &name, const utils::Identifier &uuid, int version) {

@@ -27,6 +27,8 @@
 #include <utility>
 
 #include "core/logging/Logger.h"
+#include "utils/ChecksumCalculator.h"
+#include "utils/gsl.h"
 #include "utils/OptionalUtils.h"
 
 namespace org {
@@ -41,7 +43,7 @@ class Properties {
   };
 
  public:
-  Properties(const std::string& name = ""); // NOLINT
+  explicit Properties(const std::string& name = "");
 
   virtual ~Properties() = default;
 
@@ -113,6 +115,8 @@ class Properties {
 
   bool persistProperties();
 
+  gsl::not_null<utils::ChecksumCalculator*> getChecksumCalculator() { return gsl::make_not_null(&checksum_calculator_); }
+
  protected:
   std::map<std::string, std::string> getProperties() const;
 
@@ -122,6 +126,8 @@ class Properties {
   bool dirty_{false};
 
   std::string properties_file_;
+
+  utils::ChecksumCalculator checksum_calculator_;
 
   // Mutex for protection
   mutable std::mutex mutex_;
