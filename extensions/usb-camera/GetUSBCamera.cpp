@@ -19,12 +19,13 @@
  */
 #include "GetUSBCamera.h"
 
+#include <png.h>
+
 #include <utility>
 #include <string>
 #include <vector>
 #include <set>
 #include <algorithm>
-#include <png.h>
 
 #include "utils/gsl.h"
 
