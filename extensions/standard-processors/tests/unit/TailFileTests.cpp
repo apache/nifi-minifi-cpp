@@ -1618,6 +1618,7 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
 
   const std::string DATA_IN_NEW_FILE = "data in new file\n";
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));  // make sure the new file gets newer modification time
   appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
   renameTempFile(dir, TMP_FILE, ROLLED_OVER_TMP_FILE);
   createTempFile(dir, TMP_FILE, DATA_IN_NEW_FILE);
