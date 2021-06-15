@@ -2,9 +2,7 @@ import argparse
 import os
 import cpplint
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
 parser = argparse.ArgumentParser()
-
 parser.add_argument('-i', '--includePaths', nargs="+", help='Run linter check in these directories')
 parser.add_argument('-q', '--quiet', action='store_true', help='Don\'t print anything if no errors are found.')
 args = parser.parse_args()
@@ -16,7 +14,8 @@ for include_path in args.includePaths:
       if (".h" in file_name) or (".cpp" in file_name):
         list_of_files += [os.path.join(dir_path, file_name)]
 
-repository_path = script_dir + "../../"
+script_dir = os.path.dirname(os.path.realpath(__file__))
+repository_path = os.path.abspath(os.path.join(script_dir, os.pardir, os.pardir))
 
 arg_list = list()
 arg_list.append("--linelength=200")
