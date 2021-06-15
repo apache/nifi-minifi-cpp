@@ -30,7 +30,6 @@ add_custom_target(
         -c ENABLE_OPC=${ENABLE_OPC}
         -c ENABLE_GPS=${ENABLE_GPS}
         -c ENABLE_COAP=${ENABLE_COAP}
-        -c ENABLE_WEL=${ENABLE_WEL}
         -c ENABLE_SQL=${ENABLE_SQL}
         -c ENABLE_MQTT=${ENABLE_MQTT}
         -c ENABLE_PCAP=${ENABLE_PCAP}
