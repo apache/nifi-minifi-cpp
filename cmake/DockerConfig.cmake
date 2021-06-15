@@ -77,7 +77,6 @@ add_custom_target(
         -c AWS_ENABLE_UNITY_BUILD=OFF
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
         -c BUILD_NUMBER=${BUILD_NUMBER}
-        -c CMAKE_BUILD_TYPE=MinSizeRel
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(

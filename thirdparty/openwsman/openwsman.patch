@@ -1,3 +1,6 @@
+PTHREAD_MUTEX_RECURSIVE_NP is a non-portable glibc mutex and our docker base distro alpine does not have glibc, only musl is available.
+On these systems only PTHREAD_MUTEX_RECURSIVE mutex is available that's why we redefine the non-portable symbol.
+
 diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
 --- orig/CMakeLists.txt	2019-09-17 11:38:38.000000000 +0200
 +++ patched/CMakeLists.txt	2020-04-16 23:43:22.000000000 +0200
