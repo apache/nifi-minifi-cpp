@@ -34,7 +34,7 @@ class VerifyHTTPGet : public VerifyInvokeHTTP {
 
 class VerifyRetryHTTPGet : public VerifyInvokeHTTP {
  public:
-  virtual void runAssertions() override {
+  void runAssertions() override {
     assert(org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds(10),
         "isSuccess: 0, response code 501"));

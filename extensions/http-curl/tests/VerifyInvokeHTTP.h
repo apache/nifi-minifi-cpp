@@ -18,6 +18,11 @@
 #pragma once
 
 #undef NDEBUG
+
+#include <memory>
+#include <utility>
+#include <string>
+
 #include "TestBase.h"
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"
