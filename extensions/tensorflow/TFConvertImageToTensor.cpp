@@ -333,7 +333,7 @@ int64_t TFConvertImageToTensor::TensorWriteCallback::process(const std::shared_p
   auto num_wrote = stream->write(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
                                      static_cast<int>(tensor_proto_buf.size()));
 
-  if (static_cast<size_t>(num_wrote) != tensor_proto_buf.size()) {
+  if (num_wrote != tensor_proto_buf.size()) {
     std::string msg = "TensorWriteCallback failed to fully write flow file output stream; Expected ";
     msg.append(std::to_string(tensor_proto_buf.size()));
     msg.append(" and wrote ");

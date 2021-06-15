@@ -220,7 +220,7 @@ int64_t TFApplyGraph::TensorWriteCallback::process(const std::shared_ptr<io::Bas
   auto num_wrote = stream->write(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]),
                                      static_cast<int>(tensor_proto_buf.size()));
 
-  if (static_cast<size_t>(num_wrote) != tensor_proto_buf.size()) {
+  if (num_wrote != tensor_proto_buf.size()) {
     throw std::runtime_error("TensorWriteCallback failed to fully write flow file output stream");
   }
 
