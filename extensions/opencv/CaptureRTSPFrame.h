@@ -20,6 +20,10 @@
 #include <atomic>
 #include <iomanip>
 #include <ctime>
+#include <utility>
+#include <vector>
+#include <memory>
+#include <string>
 #include <opencv2/opencv.hpp>
 
 #include "core/Resource.h"

@@ -190,7 +190,7 @@ class CompressContent : public core::Processor {
     }
 
     static la_ssize_t archive_read(struct archive* archive, void *context, const void **buff) {
-      auto *callback = (WriteCallback *) context;
+      auto *callback = reinterpret_cast<WriteCallback *>(context);
       callback->session_->read(callback->flow_, &callback->readDecompressCb_);
       *buff = callback->readDecompressCb_.buffer;
       if (io::isError(callback->readDecompressCb_.stream_read_result)) {
