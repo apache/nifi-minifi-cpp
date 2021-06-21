@@ -58,7 +58,7 @@ ARG DISABLE_LIBARCHIVE=OFF
 ARG DISABLE_LZMA=OFF
 ARG DISABLE_BZIP2=OFF
 ARG DISABLE_SCRIPTING=OFF
-ARG DISABLE_PYTHON_SCRIPTING=OFF
+ARG DISABLE_PYTHON_SCRIPTING=
 ARG DISABLE_CONTROLLER=OFF
 ARG CMAKE_BUILD_TYPE=Release
 
@@ -135,6 +135,7 @@ ARG ENABLE_OPENCV=OFF
 ARG ENABLE_PYTHON=OFF
 ARG ENABLE_BUSTACHE=OFF
 ARG DISABLE_SCRIPTING=OFF
+ARG DISABLE_PYTHON_SCRIPTING=
 
 # Add testing repo for rocksdb
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
@@ -154,7 +155,7 @@ RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} 
     if [ "$ENABLE_PCAP" = "ON" ]; then apk add --no-cache libpcap; fi && \
     if [ "$ENABLE_USB_CAMERA" = "ON" ]; then apk add --no-cache libpng libusb; fi && \
     if [ "$ENABLE_OPENCV" = "ON" ] || [ "$ENABLE_BUSTACHE" = "ON" ]; then apk add --no-cache boost; fi && \
-    if [ "$ENABLE_PYTHON" = "ON" ] || [ "$DISABLE_SCRIPTING" = "OFF" ]; then apk add --no-cache python3-dev; fi
+    if { [ "$ENABLE_PYTHON" = "ON" ] || [ "$DISABLE_SCRIPTING" = "OFF" ]; } && [ -z "$DISABLE_PYTHON_SCRIPTING" ]; then apk add --no-cache python3-dev; fi
 
 # Copy built minifi distribution from builder
 COPY --from=build --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
