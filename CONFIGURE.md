@@ -167,7 +167,11 @@ folder. You may specify your own path in place of these defaults.
 	 nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
 
 It is also possible to use a single database to store multiple repositories with the `minifidb://` scheme.
-This could help with migration and centralize agent state persistence.
+This could help with migration and centralize agent state persistence. In the scheme the final path segment designates the
+column family in the repository, while the preceding path indicates the directory the rocksdb database is
+created into. E.g. in `minifidb:///home/user/minifi/agent_state/flowfile` a directory will be created at
+`/home/user/minifi/agent_state` populated with rocksdb-specific content, and in that repository a logically
+separate "subdatabase" is created under the name `"flowfile"`.
 
      in minifi.properties
      nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
