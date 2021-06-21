@@ -58,12 +58,12 @@ if ! command swig -version &> /dev/null; then
 fi
 
 pip install --upgrade \
-            behave \
-            pytimeparse \
-            docker \
-            PyYAML \
-            m2crypto \
-            watchdog
+            behave==1.2.6 \
+            pytimeparse==1.1.8 \
+            docker==5.0.0 \
+            PyYAML==5.4.1 \
+            m2crypto==0.37.1 \
+            watchdog==2.1.2
 JAVA_HOME="/usr/lib/jvm/default-jvm"
 export JAVA_HOME
 PATH="$PATH:/usr/lib/jvm/default-jvm/bin"
