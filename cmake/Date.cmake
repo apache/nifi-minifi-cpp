@@ -33,16 +33,7 @@ if (WIN32)
         COMPONENT tzdata
     )
 
-    FetchContent_Declare(cldr_common
-        URL         https://unicode.org/Public/cldr/38.1/cldr-common-38.1.zip
-        URL_HASH    SHA512=3d641921c82c15b6257791229ed20db391675089927959869a5d96b17e7d0c3ad9063faf21151766eafe8ff7b85a98b37b9608f4c4f1d3f6f2b8e5565725db03
-    )
-    FetchContent_GetProperties(cldr_common)
-    if (NOT cldr_common_POPULATED)
-        FetchContent_Populate(cldr_common)
-    endif()
-
-    install(FILES ${cldr_common_SOURCE_DIR}/common/supplemental/windowsZones.xml
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
         DESTINATION tzdata
         COMPONENT tzdata
     )
