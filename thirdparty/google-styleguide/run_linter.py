@@ -15,7 +15,7 @@ for include_path in args.includePaths:
         list_of_files += [os.path.join(dir_path, file_name)]
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
-repository_path = os.path.abspath(os.path.join(script_dir, '..', '..'))
+repository_path = os.path.abspath(os.path.join(script_dir, os.pardir, os.pardir))
 
 arg_list = list()
 arg_list.append("--linelength=200")
