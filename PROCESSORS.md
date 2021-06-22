@@ -729,7 +729,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|The original FlowFile will be routed upon success (2xx status codes). It will have new attributes detailing the success of the request.|
-|response|A Response FlowFile will be routed upon success (2xx status codes). If the 'Output Response Regardless' property is true then the response will be sent to this relationship regardless of the status code received.|
+|response|A Response FlowFile will be routed upon success (2xx status codes). If the 'Always Output Response' property is true then the response will be sent to this relationship regardless of the status code received.|
 |retry|The original FlowFile will be routed on any status code that can be retried (5xx status codes). It will have new attributes detailing the request.|
 |no retry|The original FlowFile will be routed on any status code that should NOT be retried (1xx, 3xx, 4xx status codes). It will have new attributes detailing the request.|
 |failure|The original FlowFile will be routed on any type of connection failure, timeout or general exception. It will have new attributes detailing the request.|

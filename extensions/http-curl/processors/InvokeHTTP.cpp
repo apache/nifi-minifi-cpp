@@ -127,7 +127,7 @@ core::Relationship InvokeHTTP::Success("success", "The original FlowFile will be
                                        "It will have new attributes detailing the success of the request.");
 
 core::Relationship InvokeHTTP::RelResponse("response", "A Response FlowFile will be routed upon success (2xx status codes). "
-                                           "If the 'Output Response Regardless' property is true then the response will be sent "
+                                           "If the 'Always Output Response' property is true then the response will be sent "
                                            "to this relationship regardless of the status code received.");
 
 core::Relationship InvokeHTTP::RelRetry("retry", "The original FlowFile will be routed on any status code that can be retried "
