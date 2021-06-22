@@ -33,7 +33,6 @@ namespace opencv {
 class FrameWriteCallback : public OutputStreamCallback {
  public:
   explicit FrameWriteCallback(cv::Mat image_mat, std::string image_encoding)
-  // TODO(Nghia): Check std::move(img_mat).
       : image_mat_(std::move(image_mat)), image_encoding_(image_encoding) {
   }
   ~FrameWriteCallback() override = default;
