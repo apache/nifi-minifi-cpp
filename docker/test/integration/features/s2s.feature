@@ -12,7 +12,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a RemoteProcessGroup node opened on "http://nifi:8080/nifi"
     And the "success" relationship of the GetFile processor is connected to the input port on the RemoteProcessGroup
 
-    And a NiFi flow "nifi" receiving data from a RemoteProcessGroup "from-minifi" on port 8080
+    And a NiFi flow receiving data from a RemoteProcessGroup "from-minifi" on port 8080
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
@@ -24,7 +24,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a RemoteProcessGroup node opened on "http://nifi:8080/nifi"
     And the "success" relationship of the GenerateFlowFile processor is connected to the input port on the RemoteProcessGroup
 
-    And a NiFi flow "nifi" receiving data from a RemoteProcessGroup "from-minifi" on port 8080
+    And a NiFi flow receiving data from a RemoteProcessGroup "from-minifi" on port 8080
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
@@ -37,7 +37,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And the "success" relationship of the GenerateFlowFile processor is connected to the input port on the RemoteProcessGroup
     And the connection going to the RemoteProcessGroup has "drop empty" set
 
-    And a NiFi flow "nifi" receiving data from a RemoteProcessGroup "from-minifi" on port 8080
+    And a NiFi flow receiving data from a RemoteProcessGroup "from-minifi" on port 8080
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 

@@ -15,7 +15,7 @@ Feature: Execuring SQL operations from MiNiFi-C++
     And an ODBCService is setup up for PutSQL with the name "ODBCService" and connection string "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
     And a PostgreSQL server "postgresql" is set up
     When all instances start up
-    Then the query "SELECT * FROM test_table WHERE int_col = 42" returns 1 rows in less than 120 seconds on the "postgresql" PostgreSQL server
+    Then the query "SELECT * FROM test_table WHERE int_col = 42" returns 1 rows in less than 120 seconds on the PostgreSQL server
 
   Scenario: A MiNiFi instance can query to test table with ExecuteSQL processor
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"

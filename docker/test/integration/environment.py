@@ -23,7 +23,7 @@ def before_scenario(context, scenario):
         return
 
     logging.info("Integration test setup at {time:%H:%M:%S.%f}".format(time=datetime.datetime.now()))
-    context.test = MiNiFi_integration_test(context)
+    context.test = MiNiFi_integration_test()
 
 
 def after_scenario(context, scenario):
@@ -33,7 +33,6 @@ def after_scenario(context, scenario):
 
     logging.info("Integration test teardown at {time:%H:%M:%S.%f}".format(time=datetime.datetime.now()))
     if context is not None and hasattr(context, "test"):
-        context.test.cleanup()  # force invocation
         del context.test
     else:
         raise Exception("Unable to manually clean up test context. Might already be deleted?")

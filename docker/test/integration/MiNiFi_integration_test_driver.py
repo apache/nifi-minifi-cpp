@@ -1,6 +1,4 @@
-import docker
 import logging
-import threading
 import time
 import uuid
 
@@ -9,7 +7,6 @@ from pydoc import locate
 from minifi.core.InputPort import InputPort
 
 from minifi.core.DockerTestCluster import DockerTestCluster
-from minifi.core.SingleNodeDockerCluster import SingleNodeDockerCluster
 from minifi.core.DockerTestDirectoryBindings import DockerTestDirectoryBindings
 
 from minifi.validators.EmptyFilesOutPutValidator import EmptyFilesOutPutValidator
@@ -23,70 +20,22 @@ from minifi.validators.SingleJSONFileOutputValidator import SingleJSONFileOutput
 
 
 class MiNiFi_integration_test():
-    def __init__(self, context):
+    def __init__(self):
         self.test_id = str(uuid.uuid4())
-        self.clusters = {}
+        self.cluster = DockerTestCluster()
 
         self.connectable_nodes = []
         # Remote process groups are not connectables
         self.remote_process_groups = []
         self.file_system_observer = None
 
-        self.docker_network = None
-        self.cleanup_lock = threading.Lock()
-
         self.docker_directory_bindings = DockerTestDirectoryBindings()
         self.docker_directory_bindings.create_new_data_directories(self.test_id)
 
     def __del__(self):
-        self.cleanup()
+        logging.info("MiNiFi_integration_test cleanup")
 
-    def cleanup(self):
-        with self.cleanup_lock:
-            logging.info("MiNiFi_integration_test cleanup")
-            # Clean up network, for some reason only this order of events work for cleanup
-            if self.docker_network is not None:
-                logging.info('Cleaning up network network: %s', self.docker_network.name)
-                while len(self.docker_network.containers) != 0:
-                    for container in self.docker_network.containers:
-                        self.docker_network.disconnect(container, force=True)
-                    self.docker_network.reload()
-                self.docker_network.remove()
-                self.docker_network = None
-
-            container_ids = []
-            for cluster in self.clusters.values():
-                for container in cluster.containers.values():
-                    container_ids.append(container.id)
-                del cluster
-
-            # The cluster deleter is not reliable for cleaning up
-            logging.info("%d containers left for integration tests.", len(container_ids))
-            for container_id in container_ids:
-                self.delete_docker_container_by_id(container_id)
-
-            if self.docker_directory_bindings is not None:
-                del self.docker_directory_bindings
-                self.docker_directory_bindings = None
-
-    def delete_docker_container_by_id(self, container_id):
-        docker_client = docker.from_env()
-        try:
-            container = docker_client.containers.get(container_id)
-            container.remove(v=True, force=True)
-        except docker.errors.NotFound:
-            logging.warn("Contaner '%s' is already cleaned up before.", container_id)
-            return
-        wait_start_time = time.perf_counter()
-        while (time.perf_counter() - wait_start_time) < 35:
-            try:
-                docker_client.containers.get(container_id)
-                logging.error("Docker container '%s' still exists after removal attempt. Waiting for docker daemon to update...", container_id)
-                time.sleep(5)
-            except docker.errors.NotFound:
-                logging.info("Docker container cleanup successful for '%s'.", container_id)
-                return
-        logging.error("Failed to clean up docker container '%s'.", container_id)
+        del self.docker_directory_bindings
 
     def docker_path_to_local_path(self, docker_path):
         return self.docker_directory_bindings.docker_path_to_local_path(self.test_id, docker_path)
@@ -94,58 +43,45 @@ class MiNiFi_integration_test():
     def get_test_id(self):
         return self.test_id
 
-    def acquire_cluster(self, name):
-        return self.clusters.setdefault(name, DockerTestCluster())
+    def acquire_container(self, name, engine='minifi-cpp'):
+        return self.cluster.acquire_container(name, engine)
 
-    def set_up_cluster_network(self):
-        if self.docker_network is None:
-            logging.info("Setting up new network.")
-            self.docker_network = SingleNodeDockerCluster.create_docker_network()
-            for cluster in self.clusters.values():
-                cluster.set_network(self.docker_network)
-        else:
-            logging.info("Network is already set.")
-
-    def wait_for_cluster_startup_finish(self, cluster):
+    def wait_for_container_startup_finish(self, container):
         startup_success = True
-        logging.info("Engine: %s", cluster.get_engine())
-        if cluster.get_engine() == "minifi-cpp":
-            startup_success = cluster.wait_for_app_logs("Starting Flow Controller", 120)
-        elif cluster.get_engine() == "nifi":
-            startup_success = cluster.wait_for_app_logs("Starting Flow Controller...", 120)
-        elif cluster.get_engine() == "kafka-broker":
-            startup_success = cluster.wait_for_app_logs("Kafka startTimeMs", 120)
-        elif cluster.get_engine() == "http-proxy":
-            startup_success = cluster.wait_for_app_logs("Accepting HTTP Socket connections at", 120)
-        elif cluster.get_engine() == "s3-server":
-            startup_success = cluster.wait_for_app_logs("Started S3MockApplication", 120)
-        elif cluster.get_engine() == "azure-storage-server":
-            startup_success = cluster.wait_for_app_logs("Azurite Queue service is successfully listening at", 120)
-        elif cluster.get_engine() == "postgresql-server":
-            startup_success = cluster.wait_for_app_logs("database system is ready to accept connections", 120)
+        logging.info("Engine: %s", container.get_engine())
+        if container.get_engine() == "minifi-cpp":
+            startup_success = self.cluster.wait_for_app_logs("Starting Flow Controller", 120)
+        elif container.get_engine() == "nifi":
+            startup_success = self.cluster.wait_for_app_logs("Starting Flow Controller...", 120)
+        elif container.get_engine() == "kafka-broker":
+            startup_success = self.cluster.wait_for_app_logs("Kafka startTimeMs", 120)
+        elif container.get_engine() == "http-proxy":
+            startup_success = self.cluster.wait_for_app_logs("Accepting HTTP Socket connections at", 120)
+        elif container.get_engine() == "s3-server":
+            startup_success = self.cluster.wait_for_app_logs("Started S3MockApplication", 120)
+        elif container.get_engine() == "azure-storage-server":
+            startup_success = self.cluster.wait_for_app_logs("Azurite Queue service is successfully listening at", 120)
+        elif container.get_engine() == "postgresql-server":
+            startup_success = self.cluster.wait_for_app_logs("database system is ready to accept connections", 120)
         if not startup_success:
-            logging.error("Cluster startup failed for %s", cluster.get_name())
-            cluster.log_app_output()
+            logging.error("Cluster startup failed for %s", container.get_name())
+            self.cluster.log_app_output()
         return startup_success
 
-    def start_single_cluster(self, cluster_name):
-        self.set_up_cluster_network()
-        cluster = self.clusters[cluster_name]
-        cluster.deploy_flow()
-        assert self.wait_for_cluster_startup_finish(cluster)
+    def start_kafka_broker(self):
+        self.cluster.acquire_container('zookeeper', 'zookeeper')
+        self.cluster.deploy('zookeeper')
+        container = self.cluster.acquire_container('kafka-broker', 'kafka-broker')
+        self.cluster.deploy('kafka-broker')
+        assert self.wait_for_container_startup_finish(container)
 
     def start(self):
         logging.info("MiNiFi_integration_test start")
-        self.set_up_cluster_network()
-        for cluster in self.clusters.values():
-            if len(cluster.containers) == 0:
-                logging.info("Starting cluster %s with an engine of %s", cluster.get_name(), cluster.get_engine())
-                cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id))
-                cluster.deploy_flow()
-            else:
-                logging.info("Container %s is already started with an engine of %s", cluster.get_name(), cluster.get_engine())
-        for cluster in self.clusters.values():
-            assert self.wait_for_cluster_startup_finish(cluster)
+        logging.info("Starting cluster...")
+        self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id))
+        self.cluster.deploy_flow()
+        for container in self.cluster.containers.values():
+            assert self.wait_for_container_startup_finish(container)
 
     def add_node(self, processor):
         if processor.get_name() in (elem.get_name() for elem in self.connectable_nodes):
@@ -247,45 +183,38 @@ class MiNiFi_integration_test():
         self.validate(output_validator)
 
     def validate(self, validator):
-        for cluster in self.clusters.values():
-            cluster.log_app_output()
-            assert not cluster.segfault_happened()
+        self.cluster.log_app_output()
+        assert not self.cluster.segfault_happened()
         assert validator.validate()
 
-    def check_s3_server_object_data(self, cluster_name, object_data):
-        cluster = self.acquire_cluster(cluster_name)
-        assert cluster.check_s3_server_object_data(object_data)
+    def check_s3_server_object_data(self, object_data):
+        assert self.cluster.check_s3_server_object_data(object_data)
 
-    def check_s3_server_object_metadata(self, cluster_name, content_type):
-        cluster = self.acquire_cluster(cluster_name)
-        assert cluster.check_s3_server_object_metadata(content_type)
+    def check_s3_server_object_metadata(self, content_type):
+        assert self.cluster.check_s3_server_object_metadata(content_type)
 
-    def check_empty_s3_bucket(self, cluster_name):
-        cluster = self.acquire_cluster(cluster_name)
-        assert cluster.is_s3_bucket_empty()
+    def check_empty_s3_bucket(self):
+        assert self.cluster.is_s3_bucket_empty()
 
-    def check_http_proxy_access(self, cluster_name, url):
-        assert self.clusters[cluster_name].check_http_proxy_access(url)
+    def check_http_proxy_access(self, url):
+        assert self.cluster.check_http_proxy_access(url)
 
-    def check_azure_storage_server_data(self, cluster_name, object_data):
-        cluster = self.acquire_cluster(cluster_name)
-        assert cluster.check_azure_storage_server_data(object_data)
+    def check_azure_storage_server_data(self, object_data):
+        assert self.cluster.check_azure_storage_server_data(object_data)
 
-    def wait_for_kafka_consumer_to_be_registered(self, cluster_name):
-        cluster = self.acquire_cluster(cluster_name)
-        assert cluster.wait_for_kafka_consumer_to_be_registered()
-
-    def check_query_results(self, cluster_name, query, number_of_rows, timeout_seconds):
-        cluster = self.acquire_cluster(cluster_name)
-        assert cluster.check_query_results(query, number_of_rows, timeout_seconds)
+    def wait_for_kafka_consumer_to_be_registered(self):
+        assert self.cluster.wait_for_kafka_consumer_to_be_registered()
 
     def check_minifi_log_contents(self, line):
-        line_found = False
-        for cluster in self.clusters.values():
-            if cluster.get_engine() == "minifi-cpp":
-                line_found = cluster.wait_for_app_logs(line, 60)
-        assert line_found
+        for container in self.cluster.containers.values():
+            if container.get_engine() == "minifi-cpp":
+                line_found = self.cluster.wait_for_app_logs(line, 60)
+                if line_found:
+                    return
+        assert False
 
-    def check_minifi_logs_for_message(self, cluster_name, log_message, timeout_seconds):
-        cluster = self.acquire_cluster(cluster_name)
-        assert cluster.wait_for_app_logs(log_message, timeout_seconds)
+    def check_minifi_logs_for_message(self, log_message, timeout_seconds):
+        assert self.cluster.wait_for_app_logs(log_message, timeout_seconds)
+
+    def check_query_results(self, query, number_of_rows, timeout_seconds):
+        assert self.cluster.check_query_results(query, number_of_rows, timeout_seconds)

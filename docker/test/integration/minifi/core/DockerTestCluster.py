@@ -12,32 +12,16 @@ from .utils import retry_check
 class DockerTestCluster(SingleNodeDockerCluster):
     def __init__(self):
         self.segfault = False
+        self.minifi_version = os.environ['MINIFI_VERSION']
+        self.minifi_root = '/opt/minifi/nifi-minifi-cpp-' + self.minifi_version
+        self.nifi_version = '1.7.0'
+        self.nifi_root = '/opt/nifi/nifi-' + self.nifi_version
+        self.kafka_broker_root = '/opt/kafka'
 
         super(DockerTestCluster, self).__init__()
 
     def deploy_flow(self):
-
         super(DockerTestCluster, self).deploy_flow()
-
-    def start_flow(self, name):
-        container = self.containers[name]
-        container.reload()
-        logging.info("Status before start: %s", container.status)
-        if container.status == 'exited':
-            logging.info("Start container: %s", name)
-            container.start()
-            return True
-        return False
-
-    def stop_flow(self, name):
-        container = self.containers[name]
-        container.reload()
-        logging.info("Status before stop: %s", container.status)
-        if container.status == 'running':
-            logging.info("Stop container: %s", name)
-            container.stop(timeout=0)
-            return True
-        return False
 
     @staticmethod
     def get_stdout_encoding():
@@ -49,7 +33,11 @@ class DockerTestCluster(SingleNodeDockerCluster):
         return encoding
 
     def get_app_log(self, container_id):
-        container = self.client.containers.get(container_id)
+        try:
+            container = self.client.containers.get(container_id)
+        except Exception:
+            return 'not started', None
+
         if b'Segmentation fault' in container.logs():
             logging.warn('Container segfaulted: %s', container.name)
             self.segfault = True
@@ -77,9 +65,9 @@ class DockerTestCluster(SingleNodeDockerCluster):
     def wait_for_app_logs(self, log, timeout_seconds, count=1):
         wait_start_time = time.perf_counter()
         while (time.perf_counter() - wait_start_time) < timeout_seconds:
-            for container_name, container in self.containers.items():
+            for container_name in self.containers:
                 logging.info('Waiting for app-logs `%s` in container `%s`', log, container_name)
-                status, logs = self.get_app_log(container.id)
+                status, logs = self.get_app_log(container_name)
                 if logs is not None and count <= logs.decode("utf-8").count(log):
                     return True
                 elif status == 'exited':
@@ -88,18 +76,18 @@ class DockerTestCluster(SingleNodeDockerCluster):
         return False
 
     def log_app_output(self):
-        for container_name, container in self.containers.items():
-            _, logs = self.get_app_log(container.id)
+        for container_name in self.containers:
+            _, logs = self.get_app_log(container_name)
             if logs is not None:
                 logging.info("Logs of container '%s':", container_name)
                 for line in logs.decode("utf-8").splitlines():
                     logging.info(line)
 
     def check_minifi_container_started(self):
-        for container in self.containers.values():
-            container = self.client.containers.get(container.id)
-            if b'Segmentation fault' in container.logs():
-                logging.warn('Container segfaulted: %s', container.name)
+        for container_name in self.containers:
+            docker_container = self.client.containers.get(container_name)
+            if b'Segmentation fault' in docker_container.logs():
+                logging.warn('Container segfaulted: %s', docker_container.name)
                 raise Exception("Container failed to start up.")
 
     def check_http_proxy_access(self, url):

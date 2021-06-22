@@ -1,17 +1,17 @@
-import gzip
 import docker
 import logging
-import os
-import tarfile
 import uuid
 
-from collections import OrderedDict
-from io import BytesIO
-from textwrap import dedent
-
 from .Cluster import Cluster
-from ..flow_serialization.Minifi_flow_yaml_serializer import Minifi_flow_yaml_serializer
-from ..flow_serialization.Nifi_flow_xml_serializer import Nifi_flow_xml_serializer
+from .MinifiContainer import MinifiContainer
+from .NifiContainer import NifiContainer
+from .ZookeeperContainer import ZookeeperContainer
+from .KafkaBrokerContainer import KafkaBrokerContainer
+from .S3ServerContainer import S3ServerContainer
+from .AzureStorageServerContainer import AzureStorageServerContainer
+from .HttpProxyContainer import HttpProxyContainer
+from .HttpProxyContainer import PostgreSQLServerContainer
+
 
 
 class SingleNodeDockerCluster(Cluster):
@@ -27,13 +27,8 @@ class SingleNodeDockerCluster(Cluster):
         self.start_nodes = []
         self.name = None
         self.vols = {}
-        self.minifi_root = '/opt/minifi/nifi-minifi-cpp-' + self.minifi_version
-        self.nifi_root = '/opt/nifi/nifi-' + self.nifi_version
-        self.kafka_broker_root = '/opt/kafka'
-        self.network = None
-        self.containers = OrderedDict()
-        self.images = []
-        self.tmp_files = []
+        self.network = self.create_docker_network()
+        self.containers = {}
 
         # Get docker client
         self.client = docker.from_env()
@@ -74,6 +69,8 @@ class SingleNodeDockerCluster(Cluster):
 
     def set_directory_bindings(self, bindings):
         self.vols = bindings
+        for container in self.containers.values():
+            container.vols = self.vols
 
     @staticmethod
     def create_docker_network():
@@ -81,41 +78,43 @@ class SingleNodeDockerCluster(Cluster):
         logging.info('Creating network: %s', net_name)
         return docker.from_env().networks.create(net_name)
 
-    def set_network(self, network):
-        self.network = network
+    def acquire_container(self, name, engine='minifi-cpp'):
+        if name is not None and name in self.containers:
+            return self.containers[name]
 
-    def deploy_flow(self):
-        """
-        Compiles the flow to a valid config file and overlays it into a new image.
-        """
+        if name is None and (engine == 'nifi' or engine == 'minifi-cpp'):
+            name = engine + '-' + str(uuid.uuid4())
+            logging.info('Container name was not provided; using generated name \'%s\'', self.name)
 
-        if self.vols is None:
-            self.vols = {}
-
-        if self.name is None:
-            self.name = self.engine + '-' + str(uuid.uuid4())
-            logging.info('Flow name was not provided; using generated name \'%s\'', self.name)
-
-        logging.info('Deploying %s flow \"%s\"...', self.engine, self.name)
-
-        # Create network if necessary
-        if self.network is None:
-            self.set_network(self.create_docker_network())
-
-        if self.engine == 'nifi':
-            self.deploy_nifi_flow()
-        elif self.engine == 'minifi-cpp':
-            self.deploy_minifi_cpp_flow()
-        elif self.engine == 'kafka-broker':
-            self.deploy_kafka_broker()
-        elif self.engine == 'http-proxy':
-            self.deploy_http_proxy()
-        elif self.engine == 's3-server':
-            self.deploy_s3_server()
-        elif self.engine == 'azure-storage-server':
-            self.deploy_azure_storage_server()
-        elif self.engine == 'postgresql-server':
-            self.deploy_postgres_server()
+        if engine == 'nifi':
+            container = NifiContainer(name, self.vols, self.network)
+            self.containers.setdefault(name, container)
+            return container
+        elif engine == 'minifi-cpp':
+            container = MinifiContainer(name, self.vols, self.network)
+            self.containers.setdefault(name, container)
+            return container
+        elif engine == 'kafka-broker':
+            self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network))
+            container = KafkaBrokerContainer('kafka-broker', self.vols, self.network)
+            self.containers.setdefault('kafka-broker', container)
+            return container
+        elif engine == 'http-proxy':
+            container = HttpProxyContainer('http-proxy', self.vols, self.network)
+            self.containers.setdefault('http-proxy', container)
+            return container
+        elif engine == 's3-server':
+            container = S3ServerContainer('s3-server', self.vols, self.network)
+            self.containers.setdefault('s3-server', container)
+            return container
+        elif engine == 'azure-storage-server':
+            container = AzureStorageServerContainer('azure-storage-server', self.vols, self.network)
+            self.containers.setdefault('azure-storage-server', container)
+            return container
+        elif engine == 'postgresql-server':
+            container = PostgreSQLServerContainer('postgresql-server', self.vols, self.network)
+            self.containers.setdefault('postgresql-server', container)
+            return container
         else:
             raise Exception('invalid flow engine: \'%s\'' % self.engine)
 
@@ -181,13 +180,7 @@ class SingleNodeDockerCluster(Cluster):
         finally:
             conf_file_buffer.close()
 
-        container = self.client.containers.run(
-            configured_image[0],
-            detach=True,
-            name=self.name,
-            network=self.network.name,
-            volumes=self.vols)
-        self.network.reload()
+        self.containers[name].deploy()
 
         logging.info('Adding container \'%s\'', container.name)
         self.containers[container.name] = container
