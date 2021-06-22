@@ -1,0 +1,6 @@
+behave==1.2.6
+pytimeparse==1.1.8
+docker==5.0.0
+PyYAML==5.4.1
+m2crypto==0.37.1
+watchdog==2.1.2
