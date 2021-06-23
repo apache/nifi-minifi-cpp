@@ -77,9 +77,9 @@ class Container:
 
             logging.info('Creating configured image...')
             self.image = self.client.images.build(fileobj=docker_context_buffer,
-                                                        custom_context=True,
-                                                        rm=True,
-                                                        forcerm=True)
+                                                  custom_context=True,
+                                                  rm=True,
+                                                  forcerm=True)
             logging.info('Created image with id: %s', self.image[0].id)
 
         finally:
@@ -92,9 +92,9 @@ class Container:
         try:
             logging.info('Creating configured image...')
             self.image = self.client.images.build(path=dir,
-                                                        tag=name,
-                                                        rm=True,
-                                                        forcerm=True)
+                                                  tag=name,
+                                                  rm=True,
+                                                  forcerm=True)
             logging.info('Created image with id: %s', self.image[0].id)
             return self.image
         except Exception as e:
