@@ -19,9 +19,10 @@ class Container:
 
     def __del__(self):
         logging.info('Cleaning up container: %s', self.name)
-        container = self.client.containers.get(self.name)
-        if container:
-            container.remove(v=True, force=True)
+        try:
+            self.client.containers.get(self.name).remove(v=True, force=True)
+        except docker.errors.NotFound:
+            pass
 
         # Clean up images
         if self.image:
