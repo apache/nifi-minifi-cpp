@@ -1,3 +1,6 @@
+PTHREAD_MUTEX_RECURSIVE_NP is a non-portable glibc mutex and our docker base distro alpine does not have glibc, only musl is available.
+On these systems only PTHREAD_MUTEX_RECURSIVE mutex is available that's why we redefine the non-portable symbol.
+
 diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
 --- orig/CMakeLists.txt	2019-09-17 11:38:38.000000000 +0200
 +++ patched/CMakeLists.txt	2020-04-16 23:43:22.000000000 +0200
@@ -79,3 +82,39 @@ diff -rupN orig/src/lib/wsman-soap.c patched/src/lib/wsman-soap.c
                          max_connections_per_thread = (* fptr)();
                  }
                  else{
+
+diff -rupN orig/src/lib/u/lock.c patched/src/lib/u/lock.c
+--- orig/src/lib/u/lock.c	2021-05-31 13:44:43.992941115 +0200
++++ patched/src/lib/u/lock.c	2021-05-31 12:00:21.972733061 +0200
+@@ -50,7 +50,7 @@
+ extern int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
+ #endif
+ 
+-#if defined (__SVR4) && defined (__sun)
++#if (defined (__SVR4) && defined (__sun)) || !defined(__GLIBC__)
+ #define PTHREAD_MUTEX_RECURSIVE_NP PTHREAD_MUTEX_RECURSIVE
+ #endif
+ 
+@@ -94,7 +94,7 @@ void u_destroy_lock(void* data)
+ void u_unlock(void* data)
+ {
+     if ( data )
+-    {	
++    {
+         pthread_mutex_unlock((pthread_mutex_t*)data);
+     }
+ }
+
+diff -rupN orig/include/u/lock.h patched/include/u/lock.h
+--- orig/include/u/lock.h	2021-05-31 13:44:43.992941115 +0200
++++ patched/include/u/lock.h	2021-05-31 12:00:30.792726402 +0200
+@@ -2,7 +2,7 @@
+ #ifndef LOCKING_H
+ #define LOCKING_H
+ 
+-#if defined (__FreeBSD__)  || defined (__OpenBSD__) || defined (__NetBSD__) || defined (__APPLE__)
++#if defined (__FreeBSD__)  || defined (__OpenBSD__) || defined (__NetBSD__) || defined (__APPLE__) || !defined(__GLIBC__)
+ /* Provide the Linux initializers for MacOS X */
+ #define PTHREAD_MUTEX_RECURSIVE_NP                                      PTHREAD_MUTEX_RECURSIVE
+ #define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP           { 0x4d555458, \
+

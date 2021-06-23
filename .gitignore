@@ -66,13 +66,6 @@ __pycache__/
 /provenance_repository
 /logs
 
-# Ignore source files that have been placed in the docker directory during build
-docker/minificppsource
-docker/bionic/minificppsource
-docker/focal/minificppsource
-docker/debian/minificppsource
-docker/centos/minificppsource
-docker/fedora/minificppsource
 .vs/**
 *.swp
 .cache

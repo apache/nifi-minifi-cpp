@@ -577,8 +577,11 @@ add_subdirectory(main)
 add_subdirectory(nanofi)
 add_dependencies(nanofi minifiexe)
 
-add_subdirectory(encrypt-config)
-add_dependencies(encrypt-config minifi)
+option(ENABLE_ENCRYPT_CONFIG "Enables build of encrypt-config binary." ON)
+if (ENABLE_ENCRYPT_CONFIG)
+	add_subdirectory(encrypt-config)
+	add_dependencies(encrypt-config minifi)
+endif()
 
 if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
 	add_subdirectory(controller)
@@ -833,18 +836,7 @@ registerTest("encrypt-config/tests")
 
 include(BuildDocs)
 
-if (ENABLE_PYTHON OR NOT DISABLE_SCRIPTING)
-	message(STATUS "Python and scripting extensions will disabled for the docker build as they produce many error messages on MiNiFi startup.")
-	set(ENABLE_PYTHON_CACHE ${ENABLE_PYTHON})
-	set(DISABLE_SCRIPTING_CACHE ${DISABLE_SCRIPTING})
-	set(ENABLE_PYTHON OFF)
-	set(DISABLE_SCRIPTING ON) # Implies DISABLE_PYTHON_SCRIPTING as well
-	include(DockerConfig)
-	set(ENABLE_PYTHON ${ENABLE_PYTHON_CACHE})
-	set(DISABLE_SCRIPTING ${DISABLE_SCRIPTING_CACHE})
-else()
-	include(DockerConfig)
-endif()
+include(DockerConfig)
 
 # Create a custom build target that will run the linter.
 get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)

@@ -22,7 +22,6 @@ add_custom_target(
         -u 1000
         -g 1000
         -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
-        -i release
         -c ENABLE_ALL=${ENABLE_ALL}
         -c ENABLE_PYTHON=${ENABLE_PYTHON}
         -c ENABLE_OPS=${ENABLE_OPS}
@@ -31,7 +30,6 @@ add_custom_target(
         -c ENABLE_OPC=${ENABLE_OPC}
         -c ENABLE_GPS=${ENABLE_GPS}
         -c ENABLE_COAP=${ENABLE_COAP}
-        -c ENABLE_WEL=${ENABLE_WEL}
         -c ENABLE_SQL=${ENABLE_SQL}
         -c ENABLE_MQTT=${ENABLE_MQTT}
         -c ENABLE_PCAP=${ENABLE_PCAP}
@@ -44,6 +42,7 @@ add_custom_target(
         -c ENABLE_SFTP=${ENABLE_SFTP}
         -c ENABLE_OPENWSMAN=${ENABLE_OPENWSMAN}
         -c ENABLE_AZURE=${ENABLE_AZURE}
+        -c ENABLE_ENCRYPT_CONFIG=${ENABLE_ENCRYPT_CONFIG}
         -c DISABLE_CURL=${DISABLE_CURL}
         -c DISABLE_JEMALLOC=${DISABLE_JEMALLOC}
         -c DISABLE_CIVET=${DISABLE_CIVET}
@@ -65,8 +64,16 @@ add_custom_target(
     COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
         -u 1000
         -g 1000
+        -t minimal
         -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
-        -i minimal
+        -c ENABLE_PYTHON=OFF
+        -c ENABLE_LIBRDKAFKA=ON
+        -c ENABLE_AWS=ON
+        -c DISABLE_CONTROLLER=ON
+        -c DISABLE_SCRIPTING=ON
+        -c DISABLE_PYTHON_SCRIPTING=ON
+        -c ENABLE_ENCRYPT_CONFIG=OFF
+        -c AWS_ENABLE_UNITY_BUILD=OFF
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
         -c BUILD_NUMBER=${BUILD_NUMBER}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
@@ -77,7 +84,6 @@ add_custom_target(
         -u 1000
         -g 1000
         -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
-        -i release
         -c ENABLE_JNI=${ENABLE_JNI}
         -l ${CMAKE_BINARY_DIR}
         -d centos
@@ -90,7 +96,6 @@ add_custom_target(
         -u 1000
         -g 1000
         -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
-        -i release
         -c ENABLE_JNI=${ENABLE_JNI}
         -l ${CMAKE_BINARY_DIR}
         -d debian
@@ -103,7 +108,6 @@ add_custom_target(
         -u 1000
         -g 1000
         -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
-        -i release
         -c ENABLE_JNI=${ENABLE_JNI}
         -l ${CMAKE_BINARY_DIR}
         -d fedora
@@ -116,7 +120,6 @@ add_custom_target(
         -u 1000
         -g 1000
         -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
-        -i release
         -c ENABLE_JNI=${ENABLE_JNI}
         -l ${CMAKE_BINARY_DIR}
         -d bionic
@@ -129,7 +132,6 @@ add_custom_target(
         -u 1000
         -g 1000
         -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
-        -i release
         -c ENABLE_JNI=${ENABLE_JNI}
         -l ${CMAKE_BINARY_DIR}
         -d focal
