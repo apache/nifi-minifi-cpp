@@ -115,7 +115,7 @@ void TFConvertImageToTensor::initialize() {
   setSupportedRelationships(std::move(relationships));
 }
 
-void TFConvertImageToTensor::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void TFConvertImageToTensor::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
   context->getProperty(ImageFormat.getName(), input_format_);
 
   if (input_format_.empty()) {
@@ -189,8 +189,8 @@ void TFConvertImageToTensor::onSchedule(core::ProcessContext *context, core::Pro
   }
 }
 
-void TFConvertImageToTensor::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-                                       const std::shared_ptr<core::ProcessSession> &session) {
+void TFConvertImageToTensor::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
+                                       const std::shared_ptr<core::ProcessSession>& session) {
   auto flow_file = session->get();
 
   if (!flow_file) {

@@ -26,13 +26,12 @@ find_package(TensorFlow REQUIRED)
 
 message("-- Found TensorFlow: ${TENSORFLOW_INCLUDE_DIRS}")
 
-include_directories(${TENSORFLOW_INCLUDE_DIRS})
-
 file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-tensorflow-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-tensorflow-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
 
+target_include_directories(minifi-tensorflow-extensions SYSTEM PRIVATE ${TENSORFLOW_INCLUDE_DIRS})
 target_link_libraries(minifi-tensorflow-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-tensorflow-extensions ${TENSORFLOW_LIBRARIES})
 

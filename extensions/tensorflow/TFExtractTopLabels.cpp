@@ -48,10 +48,10 @@ void TFExtractTopLabels::initialize() {
   setSupportedRelationships(std::move(relationships));
 }
 
-void TFExtractTopLabels::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void TFExtractTopLabels::onSchedule(core::ProcessContext* /*context*/, core::ProcessSessionFactory* /*sessionFactory*/) {
 }
 
-void TFExtractTopLabels::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
+void TFExtractTopLabels::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
                                    const std::shared_ptr<core::ProcessSession> &session) {
   auto flow_file = session->get();
 
@@ -88,7 +88,10 @@ void TFExtractTopLabels::onTrigger(const std::shared_ptr<core::ProcessContext> &
     session->read(flow_file, &tensor_cb);
 
     tensorflow::Tensor input;
-    input.FromProto(*input_tensor_proto);
+    if (!input.FromProto(*input_tensor_proto)) {
+      // failure deliberately ignored at this time
+      // added to avoid warn_unused_result build errors
+    }
     auto input_flat = input.flat<float>();
 
     std::vector<std::pair<uint64_t, float>> scores;
@@ -102,7 +105,7 @@ void TFExtractTopLabels::onTrigger(const std::shared_ptr<core::ProcessContext> &
       return a.second > b.second;
     });
 
-    for (int i = 0; i < 5 && i < scores.size(); i++) {
+    for (std::size_t i = 0; i < 5 && i < scores.size(); i++) {
       if (!labels || scores[i].first > labels->size()) {
         logger_->log_error("Label index is out of range (are the correct labels loaded?); routing to retry...");
         session->transfer(flow_file, Retry);
