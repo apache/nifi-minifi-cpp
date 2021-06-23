@@ -20,7 +20,7 @@ Flow Controller:
     name: MiNiFi Flow
     id: 2438e3c8-015a-1000-79ca-83af40ec1990
 Processors:
-    - name: invoke
+    - name: InvokeHTTP
       id: 2438e3c8-015a-1000-79ca-83af40ec1991
       class: org.apache.nifi.processors.standard.InvokeHTTP
       max concurrent tasks: 1
@@ -30,7 +30,6 @@ Processors:
       yield period: 1 sec
       run duration nanos: 0
       auto-terminated relationships list:
-          - retry
           - no retry
           - response
           - failure
@@ -54,7 +53,7 @@ Processors:
 Connections:
     - name: TransferFilesToRPG
       id: 2438e3c8-015a-1000-79ca-83af40ec1997
-      source name: invoke
+      source name: InvokeHTTP
       source id: 2438e3c8-015a-1000-79ca-83af40ec1991
       source relationship name: success
       destination name: LogAttribute
@@ -67,11 +66,22 @@ Connections:
       source name: LogAttribute
       source id: 2438e3c8-015a-1000-79ca-83af40ec1992
       destination name: LogAttribute
-      destination id: 2438e3c8-015a-1000-79ca-83af40ec1992  
+      destination id: 2438e3c8-015a-1000-79ca-83af40ec1992
       source relationship name: success
       max work queue size: 0
       max work queue data size: 1 MB
       flowfile expiration: 60 sec
+    - name: RetryInvokeHTTP
+      id: c8a96f1d-48cd-4ee3-8a2f-081c3e3c7bcd
+      source name: InvokeHTTP
+      source id: 2438e3c8-015a-1000-79ca-83af40ec1991
+      source relationship names: retry
+      destination name: InvokeHTTP
+      destination id: 2438e3c8-015a-1000-79ca-83af40ec1991
+      max work queue size: 0
+      max work queue data size: 1 MB
+      flowfile expiration: 60 seconds
+
 
 Remote Processing Groups:
-    
+

@@ -624,3 +624,25 @@ class TimeoutingHTTPHandler : public ServerAwareHandler {
   }
   std::vector<std::chrono::milliseconds> wait_times_;
 };
+
+class HttpGetResponder : public ServerAwareHandler {
+ public:
+  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
+    puts("handle get");
+    static const std::string site2site_rest_resp = "hi this is a get test";
+    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+              site2site_rest_resp.length());
+    mg_printf(conn, "%s", site2site_rest_resp.c_str());
+    return true;
+  }
+};
+
+class RetryHttpGetResponder : public ServerAwareHandler {
+ public:
+  bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
+    puts("handle get with retry");
+    mg_printf(conn, "HTTP/1.1 501 Not Implemented\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+    return true;
+  }
+};

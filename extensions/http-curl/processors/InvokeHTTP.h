@@ -47,6 +47,7 @@ class InvokeHTTP : public core::Processor {
    */
   explicit InvokeHTTP(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
+    setTriggerWhenEmpty(true);
   }
   // Destructor
   virtual ~InvokeHTTP();

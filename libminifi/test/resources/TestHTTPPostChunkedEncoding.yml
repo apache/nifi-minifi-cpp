@@ -48,12 +48,11 @@ Processors:
       id: 2438e3c8-015a-1000-79ca-83af40ec1992
       class: org.apache.nifi.processors.standard.InvokeHTTP
       max concurrent tasks: 1
-      scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1 sec
+      scheduling strategy: EVENT_DRIVEN
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
-      auto-terminated relationships list: 
+      auto-terminated relationships list:
           - success
           - retry
           - failure
@@ -68,17 +67,16 @@ Processors:
       id: 2438e3c8-015a-1000-79ca-83af40ec1993
       class: org.apache.nifi.processors.standard.LogAttribute
       max concurrent tasks: 1
-      scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1 sec
+      scheduling strategy: EVENT_DRIVEN
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
-      auto-terminated relationships list: 
+      auto-terminated relationships list:
           - success
       Properties:
           LogLevel: debug
 
-Connections:    
+Connections:
     - name: GenerateFlowFile/Invoke
       id: 2438e3c8-015a-1000-79ca-83af40ec1997
       source name: invoke
@@ -98,4 +96,4 @@ Connections:
       max work queue data size: 1 MB
       flowfile expiration: 60 sec
 Remote Processing Groups:
-    
+
