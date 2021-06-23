@@ -16,7 +16,7 @@ from minifi.validators.EmptyFilesOutPutValidator import EmptyFilesOutPutValidato
 from minifi.validators.NoFileOutPutValidator import NoFileOutPutValidator
 from minifi.validators.SingleFileOutputValidator import SingleFileOutputValidator
 from minifi.validators.MultiFileOutputValidator import MultiFileOutputValidator
-from minifi.validators.SingleOrMoreFileOutputValidator import SingleOrMoreFileOutputValidator
+from minifi.validators.SingleOrMultiFileOutputValidator import SingleOrMultiFileOutputValidator
 from minifi.validators.NoContentCheckFileNumberValidator import NoContentCheckFileNumberValidator
 from minifi.validators.NumFileRangeValidator import NumFileRangeValidator
 
@@ -211,7 +211,7 @@ class MiNiFi_integration_test():
         self.check_output(timeout_seconds, output_validator, file_count)
 
     def check_for_at_least_one_file_with_content_generated(self, content, timeout_seconds):
-        output_validator = SingleOrMoreFileOutputValidator(content)
+        output_validator = SingleOrMultiFileOutputValidator(content)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, 1)
 

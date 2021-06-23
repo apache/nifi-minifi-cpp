@@ -4,9 +4,9 @@ import os
 from .FileOutputValidator import FileOutputValidator
 
 
-class SingleOrMoreFileOutputValidator(FileOutputValidator):
+class SingleOrMultiFileOutputValidator(FileOutputValidator):
     """
-    Validates the content of a single file in the given directory.
+    Validates the content of a single or multiple files in the given directory.
     """
 
     def __init__(self, expected_content):

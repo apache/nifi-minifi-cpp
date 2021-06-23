@@ -6,7 +6,7 @@ from .FileOutputValidator import FileOutputValidator
 
 class NoContentCheckFileNumberValidator(FileOutputValidator):
     """
-    Validates the content of a single file in the given directory.
+    Validates the number of files created without content validation.
     """
 
     def __init__(self, num_files_expected):
