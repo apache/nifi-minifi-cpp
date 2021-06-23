@@ -297,16 +297,6 @@ def step_impl(context, source_name):
         container.add_start_node(source)
 
 
-# @given("in the \"{cluster_name}\" flow the \"{relationship}\" relationship of the {source_name} processor is connected to the {destination_name}")
-# def step_impl(context, cluster_name, relationship, source_name, destination_name):
-#     cluster = context.test.acquire_container(cluster_name)
-#     source = context.test.get_or_create_node_by_name(source_name)
-#     destination = context.test.get_or_create_node_by_name(destination_name)
-#     source.out_proc.connect({relationship: destination})
-#     if cluster.get_flow() is None:
-#         cluster.set_flow(source)
-
-
 # HTTP proxy setup
 @given("the http proxy server is set up")
 @given("a http proxy server is set up accordingly")

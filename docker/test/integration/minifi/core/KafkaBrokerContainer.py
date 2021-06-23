@@ -1,11 +1,10 @@
 import logging
 import os
 from .Container import Container
-from textwrap import dedent
 
 
 class KafkaBrokerContainer(Container):
-    def __init__(self, name,  vols, network):
+    def __init__(self, name, vols, network):
         super().__init__(name, 'kafka-broker', vols, network)
         self.kafka_broker_root = '/opt/kafka'
 
