@@ -57,13 +57,7 @@ if ! command swig -version &> /dev/null; then
   exit 1
 fi
 
-pip install --upgrade \
-            behave \
-            pytimeparse \
-            docker \
-            PyYAML \
-            m2crypto \
-            watchdog
+pip install -r "${docker_dir}/requirements.txt"
 JAVA_HOME="/usr/lib/jvm/default-jvm"
 export JAVA_HOME
 PATH="$PATH:/usr/lib/jvm/default-jvm/bin"
