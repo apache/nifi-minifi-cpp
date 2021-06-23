@@ -12,7 +12,7 @@ class ZookeeperContainer(Container):
         if not self.set_deployed():
             return
 
-        self.docker_container = self.client.containers.run(
+        self.client.containers.run(
             self.client.images.pull("wurstmeister/zookeeper:3.4.6"),
             detach=True,
             name='zookeeper',

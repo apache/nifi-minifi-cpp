@@ -13,11 +13,13 @@ class Container:
 
         # Get docker client
         self.client = docker.from_env()
-        self.docker_container = None
         self.image = None
         self.deployed = False
 
     def __del__(self):
+        self.cleanup()
+
+    def cleanup(self):
         logging.info('Cleaning up container: %s', self.name)
         try:
             self.client.containers.get(self.name).remove(v=True, force=True)
@@ -28,6 +30,7 @@ class Container:
         if self.image:
             logging.info('Cleaning up image: %s', self.image[0].id)
             self.client.images.remove(self.image[0].id, force=True)
+            self.image = None
 
     def set_deployed(self):
         if self.deployed:
@@ -73,29 +76,27 @@ class Container:
             docker_context_buffer.seek(0)
 
             logging.info('Creating configured image...')
-            configured_image = self.client.images.build(fileobj=docker_context_buffer,
+            self.image = self.client.images.build(fileobj=docker_context_buffer,
                                                         custom_context=True,
                                                         rm=True,
                                                         forcerm=True)
-            logging.info('Created image with id: %s', configured_image[0].id)
-            self.image = configured_image
+            logging.info('Created image with id: %s', self.image[0].id)
 
         finally:
             conf_dockerfile_buffer.close()
             docker_context_buffer.close()
 
-        return configured_image
+        return self.image
 
     def build_image_by_path(self, dir, name=None):
         try:
             logging.info('Creating configured image...')
-            configured_image = self.client.images.build(path=dir,
+            self.image = self.client.images.build(path=dir,
                                                         tag=name,
                                                         rm=True,
                                                         forcerm=True)
-            logging.info('Created image with id: %s', configured_image[0].id)
-            self.image = configured_image
-            return configured_image
+            logging.info('Created image with id: %s', self.image[0].id)
+            return self.image
         except Exception as e:
             logging.info(e)
             raise

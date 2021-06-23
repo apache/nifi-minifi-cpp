@@ -12,7 +12,7 @@ class AzureStorageServerContainer(Container):
         if not self.set_deployed():
             return
 
-        self.docker_container = self.client.containers.run(
+        self.client.containers.run(
             "mcr.microsoft.com/azure-storage/azurite:3.13.0",
             detach=True,
             name=self.name,

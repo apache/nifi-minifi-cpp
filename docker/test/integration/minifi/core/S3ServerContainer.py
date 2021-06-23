@@ -12,7 +12,7 @@ class S3ServerContainer(Container):
         if not self.set_deployed():
             return
 
-        self.docker_container = self.client.containers.run(
+        self.client.containers.run(
             "adobe/s3mock:2.1.28",
             detach=True,
             name=self.name,

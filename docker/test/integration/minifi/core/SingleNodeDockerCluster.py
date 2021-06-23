@@ -33,38 +33,16 @@ class SingleNodeDockerCluster(Cluster):
         self.client = docker.from_env()
 
     def __del__(self):
-        """
-        Clean up ephemeral cluster resources
-        """
+        self.cleanup()
 
-        # Containers and networks are expected to be freed outside of this function
-
-        # Clean up images
-        for image in reversed(self.images):
-            logging.info('Cleaning up image: %s', image[0].id)
-            self.client.images.remove(image[0].id, force=True)
-
-        # Clean up tmp files
-        for tmp_file in self.tmp_files:
-            os.remove(tmp_file)
-
-    def set_name(self, name):
-        self.name = name
-
-    def get_name(self):
-        return self.name
-
-    def set_engine(self, engine):
-        self.engine = engine
-
-    def get_engine(self):
-        return self.engine
-
-    def get_start_nodes(self):
-        return self.start_nodes
-
-    def add_start_node(self, node):
-        self.start_nodes.append(node)
+    def cleanup(self):
+        for container in self.containers.values():
+            container.cleanup()
+        self.containers = {}
+        if self.network:
+            logging.info('Cleaning up network: %s', self.network.name)
+            self.network.remove()
+            self.network = None
 
     def set_directory_bindings(self, bindings):
         self.vols = bindings

@@ -26,7 +26,7 @@ class HttpProxyContainer(Container):
                 ENTRYPOINT ["/sbin/entrypoint.sh"]
                 """.format(base_image='sameersbn/squid:3.5.27-2', proxy_username='admin', proxy_password='test101', proxy_port='3128'))
         configured_image = self.build_image(dockerfile, [])
-        self.docker_container = self.client.containers.run(
+        self.client.containers.run(
             configured_image[0],
             detach=True,
             name=self.name,

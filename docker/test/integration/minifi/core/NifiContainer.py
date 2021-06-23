@@ -60,7 +60,7 @@ class NifiContainer(FlowContainer):
 
         logging.info('Creating and running docker container for flow...')
 
-        self.docker_container = self.client.containers.run(
+        self.client.containers.run(
             configured_image[0],
             detach=True,
             name=self.name,

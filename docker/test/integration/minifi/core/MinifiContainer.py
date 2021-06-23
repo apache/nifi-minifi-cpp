@@ -82,11 +82,11 @@ class MinifiContainer(FlowContainer):
         finally:
             conf_file_buffer.close()
 
-        self.docker_container = self.client.containers.run(
+        self.client.containers.run(
             configured_image[0],
             detach=True,
             name=self.name,
             network=self.network.name,
             volumes=self.vols)
 
-        logging.info('Started container \'%s\'', self.docker_container.name)
+        logging.info('Started container \'%s\'', self.name)

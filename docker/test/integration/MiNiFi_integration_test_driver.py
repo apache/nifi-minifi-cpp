@@ -32,6 +32,12 @@ class MiNiFi_integration_test():
         self.docker_directory_bindings = DockerTestDirectoryBindings()
         self.docker_directory_bindings.create_new_data_directories(self.test_id)
 
+    def __del__(self):
+        self.cleanup()
+
+    def cleanup(self):
+        self.cluster.cleanup()
+
     def docker_path_to_local_path(self, docker_path):
         return self.docker_directory_bindings.docker_path_to_local_path(self.test_id, docker_path)
 
