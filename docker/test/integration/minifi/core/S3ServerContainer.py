@@ -5,6 +5,9 @@ class S3ServerContainer(Container):
     def __init__(self, name, vols, network):
         super().__init__(name, 's3-server', vols, network)
 
+    def get_startup_finish_text(self):
+        return "Started S3MockApplication"
+
     def deploy(self):
         if not self.set_deployed():
             return

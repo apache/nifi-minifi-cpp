@@ -32,56 +32,33 @@ class MiNiFi_integration_test():
         self.docker_directory_bindings = DockerTestDirectoryBindings()
         self.docker_directory_bindings.create_new_data_directories(self.test_id)
 
-    def __del__(self):
-        logging.info("MiNiFi_integration_test cleanup")
-
-        del self.docker_directory_bindings
-
     def docker_path_to_local_path(self, docker_path):
         return self.docker_directory_bindings.docker_path_to_local_path(self.test_id, docker_path)
-
-    def get_test_id(self):
-        return self.test_id
 
     def acquire_container(self, name, engine='minifi-cpp'):
         return self.cluster.acquire_container(name, engine)
 
-    def wait_for_container_startup_finish(self, container):
-        startup_success = True
-        logging.info("Engine: %s", container.get_engine())
-        if container.get_engine() == "minifi-cpp":
-            startup_success = self.cluster.wait_for_app_logs("Starting Flow Controller", 120)
-        elif container.get_engine() == "nifi":
-            startup_success = self.cluster.wait_for_app_logs("Starting Flow Controller...", 120)
-        elif container.get_engine() == "kafka-broker":
-            startup_success = self.cluster.wait_for_app_logs("Kafka startTimeMs", 120)
-        elif container.get_engine() == "http-proxy":
-            startup_success = self.cluster.wait_for_app_logs("Accepting HTTP Socket connections at", 120)
-        elif container.get_engine() == "s3-server":
-            startup_success = self.cluster.wait_for_app_logs("Started S3MockApplication", 120)
-        elif container.get_engine() == "azure-storage-server":
-            startup_success = self.cluster.wait_for_app_logs("Azurite Queue service is successfully listening at", 120)
-        elif container.get_engine() == "postgresql-server":
-            startup_success = self.cluster.wait_for_app_logs("database system is ready to accept connections", 120)
+    def wait_for_container_startup_finish(self, container_name):
+        startup_success = self.cluster.wait_for_app_logs(container_name, 120)
         if not startup_success:
-            logging.error("Cluster startup failed for %s", container.get_name())
+            logging.error("Cluster startup failed for %s", container_name)
             self.cluster.log_app_output()
         return startup_success
 
     def start_kafka_broker(self):
         self.cluster.acquire_container('zookeeper', 'zookeeper')
         self.cluster.deploy('zookeeper')
-        container = self.cluster.acquire_container('kafka-broker', 'kafka-broker')
+        self.cluster.acquire_container('kafka-broker', 'kafka-broker')
         self.cluster.deploy('kafka-broker')
-        assert self.wait_for_container_startup_finish(container)
+        assert self.wait_for_container_startup_finish('kafka-broker')
 
     def start(self):
         logging.info("MiNiFi_integration_test start")
         logging.info("Starting cluster...")
         self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id))
         self.cluster.deploy_flow()
-        for container in self.cluster.containers.values():
-            assert self.wait_for_container_startup_finish(container)
+        for container_name in self.cluster.containers:
+            assert self.wait_for_container_startup_finish(container_name)
 
     def add_node(self, processor):
         if processor.get_name() in (elem.get_name() for elem in self.connectable_nodes):

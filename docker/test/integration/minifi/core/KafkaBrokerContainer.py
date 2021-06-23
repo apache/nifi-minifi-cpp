@@ -7,6 +7,13 @@ from textwrap import dedent
 class KafkaBrokerContainer(Container):
     def __init__(self, name,  vols, network):
         super().__init__(name, 'kafka-broker', vols, network)
+        self.kafka_broker_root = '/opt/kafka'
+
+    def get_startup_finish_text(self):
+        return "Kafka startTimeMs"
+
+    def get_log_file_path(self):
+        return self.kafka_broker_root + '/logs/server.log'
 
     def deploy(self):
         if not self.set_deployed():

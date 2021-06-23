@@ -12,6 +12,12 @@ class MinifiContainer(FlowContainer):
         self.minifi_version = os.environ['MINIFI_VERSION']
         self.minifi_root = '/opt/minifi/nifi-minifi-cpp-' + self.minifi_version
 
+    def get_startup_finish_text(self):
+        return "Starting Flow Controller"
+
+    def get_log_file_path(self):
+        return self.minifi_root + '/logs/minifi-app.log'
+
     def deploy(self):
         if not self.set_deployed():
             return

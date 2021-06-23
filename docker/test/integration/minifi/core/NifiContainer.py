@@ -12,6 +12,12 @@ class NifiContainer(FlowContainer):
         self.nifi_version = '1.7.0'
         self.nifi_root = '/opt/nifi/nifi-' + self.nifi_version
 
+    def get_startup_finish_text(self):
+        return "Starting Flow Controller"
+
+    def get_log_file_path(self):
+        return self.nifi_root + '/logs/nifi-app.log'
+
     def deploy(self):
         if not self.set_deployed():
             return

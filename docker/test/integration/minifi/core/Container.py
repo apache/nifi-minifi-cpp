@@ -43,6 +43,12 @@ class Container:
     def deploy(self):
         raise NotImplementedError()
 
+    def get_startup_finish_text(self):
+        raise NotImplementedError()
+
+    def get_log_file_path(self):
+        return None
+
     def build_image(self, dockerfile, context_files):
         conf_dockerfile_buffer = BytesIO()
         docker_context_buffer = BytesIO()
