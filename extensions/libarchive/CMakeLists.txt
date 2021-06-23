@@ -17,7 +17,7 @@
 # under the License.
 #
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
 
@@ -30,4 +30,4 @@ target_link_libraries(minifi-archive-extensions LibArchive::LibArchive)
 SET (ARCHIVE-EXTENSIONS minifi-archive-extensions PARENT_SCOPE)
 
 register_extension(minifi-archive-extensions)
-
+register_extension_linter(minifi-archive-extensions-linter)

@@ -17,7 +17,7 @@
 # under the License.
 #
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(./controllerservice ./processors ./protocol ../../libminifi/include  ../../libminifi/include/core)
 
 file(GLOB SOURCES "*.cpp" "protocol/*.cpp" "processors/*.cpp" "controllerservice/*.cpp")
@@ -34,4 +34,4 @@ target_link_libraries(minifi-mqtt-extensions paho.mqtt.c)
 SET (MQTT-EXTENSIONS minifi-mqtt-extensions PARENT_SCOPE)
 
 register_extension(minifi-mqtt-extensions)
-
+register_extension_linter(minifi-mqtt-extensions-linter)

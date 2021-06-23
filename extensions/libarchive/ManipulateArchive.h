@@ -17,19 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_PROCESSORS_MANIPULATEARCHIVE_H_
-#define LIBMINIFI_INCLUDE_PROCESSORS_MANIPULATEARCHIVE_H_
+#pragma once
 
-#include <list>
 #include <string>
+#include <memory>
 
 #include "FlowFileRecord.h"
 #include "ArchiveMetadata.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 
-#include "FocusArchiveEntry.h"
-#include "UnfocusArchiveEntry.h"
 
 namespace org {
 namespace apache {
@@ -40,8 +37,8 @@ namespace processors {
 using logging::Logger;
 
 class ManipulateArchive : public core::Processor {
-public:
-  ManipulateArchive(const std::string& name, const utils::Identifier& uuid = {})
+ public:
+  explicit ManipulateArchive(const std::string& name, const utils::Identifier& uuid = {})
   : core::Processor(name, uuid),
     logger_(logging::LoggerFactory<ManipulateArchive>::getLogger()) {
   }
@@ -70,9 +67,7 @@ public:
   // Initialize, over write by NiFi ManipulateArchive
   void initialize(void);
 
-protected:
-
-private:
+ private:
   // Logger
   std::shared_ptr<Logger> logger_;
   std::string before_, after_, operation_, destination_, targetEntry_;
@@ -85,5 +80,3 @@ REGISTER_RESOURCE(ManipulateArchive, "Performs an operation which manipulates an
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // LIBMINIFI_INCLUDE_PROCESSORS_MANIPULATEARCHIVE_H_

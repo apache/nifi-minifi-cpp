@@ -17,10 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __CONSUME_MQTT_H__
-#define __CONSUME_MQTT_H__
+#pragma once
 
 #include <limits>
+#include <string>
+#include <memory>
+
 #include <deque>
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -135,5 +137,3 @@ REGISTER_RESOURCE(ConsumeMQTT, "This Processor gets the contents of a FlowFile f
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

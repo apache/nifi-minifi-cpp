@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_OPCBASE_H
-#define NIFI_MINIFI_CPP_OPCBASE_H
+#pragma once
 
 #include <string>
+#include <memory>
+#include <vector>
+#include <set>
 
 #include "opc.h"
 #include "core/Processor.h"
@@ -45,7 +47,7 @@ class BaseOPCProcessor : public core::Processor {
   static core::Property KeyPath;
   static core::Property TrustedPath;
 
-  BaseOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
+  explicit BaseOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
   : Processor(name, uuid) {
   }
 
@@ -79,5 +81,3 @@ class BaseOPCProcessor : public core::Processor {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_OPCBASE_H

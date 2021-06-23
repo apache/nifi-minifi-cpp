@@ -17,8 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PUBLISH_MQTT_H__
-#define __PUBLISH_MQTT_H__
+#pragma once
+
+#include <vector>
+#include <string>
+#include <memory>
 
 #include <limits>
 
@@ -151,5 +154,3 @@ REGISTER_RESOURCE(PublishMQTT, "PublishMQTT serializes FlowFile content as an MQ
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

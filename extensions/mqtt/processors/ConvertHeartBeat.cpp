@@ -20,7 +20,9 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <vector>
 #include <set>
+
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"

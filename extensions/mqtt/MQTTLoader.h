@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSION_MQTTLOADER_H
-#define EXTENSION_MQTTLOADER_H
+#pragma once
+
+#include <vector>
+#include <string>
+#include <memory>
 
 #include "controllerservice/MQTTControllerService.h"
 #include "processors/PublishMQTT.h"
@@ -83,4 +86,3 @@ class MQTTFactory : public core::ObjectFactory {
 extern "C" {
 DLL_EXPORT void *createMQTTFactory(void);
 }
-#endif /* EXTENSION_MQTTLOADER_H */

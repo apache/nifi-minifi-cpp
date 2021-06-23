@@ -16,9 +16,7 @@
  * limitations under the License.
  */
 
-#include <iostream>
 #include <map>
-#include <set>
 #include <string>
 #include <algorithm>
 #include <memory>
@@ -30,6 +28,8 @@
 #include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
 #include "ManipulateArchive.h"
+#include "FocusArchiveEntry.h"
+#include "UnfocusArchiveEntry.h"
 
 const char TEST_ARCHIVE_NAME[] = "manipulate_test_archive.tar";
 const int NUM_FILES = 3;

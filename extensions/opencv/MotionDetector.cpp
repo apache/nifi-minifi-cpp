@@ -15,7 +15,12 @@
  * limitations under the License.
  */
 
+#include <set>
+#include <utility>
+#include <vector>
+
 #include "MotionDetector.h"
+#include "FrameIO.h"
 
 namespace org {
 namespace apache {

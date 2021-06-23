@@ -27,8 +27,6 @@
 #include <string>
 #include <set>
 
-#include <iostream>
-#include <fstream>
 #include <memory>
 
 #include "core/ProcessContext.h"
@@ -123,9 +121,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 
     archiveStack.push(archiveMetadata);
 
-    std::string stackStr = archiveStack.toJsonString();
-  
-    flowFile->setAttribute("lens.archive.stack", stackStr);
+    flowFile->setAttribute("lens.archive.stack", archiveStack.toJsonString());
   }
 
   // Update filename attribute to that of focused entry

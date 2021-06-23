@@ -17,11 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __COMPRESS_CONTENT_H__
-#define __COMPRESS_CONTENT_H__
+#pragma once
 
 #include <cinttypes>
+#include <vector>
 #include <utility>
+#include <memory>
+#include <map>
+#include <string>
 
 #include "archive_entry.h"
 #include "archive.h"
@@ -45,7 +48,7 @@ namespace processors {
 
 // CompressContent Class
 class CompressContent : public core::Processor {
-public:
+ public:
   // Constructor
   /*!
    * Create a new processor
@@ -88,10 +91,10 @@ public:
     (USE_MIME_TYPE, "use mime.type attribute")
   )
 
-public:
+ public:
   // Nest Callback Class for read stream from flow for compress
   class ReadCallbackCompress: public InputStreamCallback {
-  public:
+   public:
     ReadCallbackCompress(std::shared_ptr<core::FlowFile> &flow, struct archive *arch, struct archive_entry *entry) :
         flow_(flow), arch_(arch), entry_(entry), status_(0), logger_(logging::LoggerFactory<CompressContent>::getLogger()) {
     }
@@ -155,7 +158,7 @@ public:
   };
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
-  public:
+   public:
     WriteCallback(CompressionMode compress_mode, int compress_level, CompressionFormat compress_format,
         const std::shared_ptr<core::FlowFile> &flow, const std::shared_ptr<core::ProcessSession> &session) :
         compress_mode_(compress_mode), compress_level_(compress_level), compress_format_(compress_format),
@@ -187,7 +190,7 @@ public:
     }
 
     static la_ssize_t archive_read(struct archive* archive, void *context, const void **buff) {
-      auto *callback = (WriteCallback *) context;
+      auto *callback = reinterpret_cast<WriteCallback *>(context);
       callback->session_->read(callback->flow_, &callback->readDecompressCb_);
       *buff = callback->readDecompressCb_.buffer;
       if (io::isError(callback->readDecompressCb_.stream_read_result)) {
@@ -414,7 +417,7 @@ public:
     }
   };
 
-public:
+ public:
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
@@ -430,7 +433,7 @@ public:
   // Initialize, over write by NiFi CompressContent
   void initialize() override;
 
-private:
+ private:
   static std::string toMimeType(CompressionFormat format);
 
   void processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<core::ProcessSession>& session);
@@ -457,5 +460,3 @@ REGISTER_RESOURCE(CompressContent, "Compresses or decompresses the contents of F
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif

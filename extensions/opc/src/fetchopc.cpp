@@ -207,8 +207,8 @@ namespace processors {
           variablesFound_++;
         }
       } catch (const std::exception& exception) {
-        std::string browsename((char*)ref->browseName.name.data, ref->browseName.name.length);
-        logger_->log_warn("Caught Exception while trying to get data from node %s: %s", path + "/" + browsename,  exception.what());
+        std::string browse_name(reinterpret_cast<char*>(ref->browseName.name.data), ref->browseName.name.length);
+        logger_->log_warn("Caught Exception while trying to get data from node %s: %s", path + "/" + browse_name, exception.what());
       }
     }
     return true;

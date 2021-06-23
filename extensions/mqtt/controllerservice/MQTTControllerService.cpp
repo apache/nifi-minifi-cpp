@@ -70,7 +70,7 @@ void MQTTControllerService::onEnable() {
     }
 
     if (client_) {
-      MQTTClient_setCallbacks(client_, (void *) this, reconnectCallback, receiveCallback, deliveryCallback);
+      MQTTClient_setCallbacks(client_, this, reconnectCallback, receiveCallback, deliveryCallback);
       // call reconnect to bootstrap
       this->reconnect();
     }

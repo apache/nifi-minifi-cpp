@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_OPENCVLOADER_H_
-#define EXTENSIONS_OPENCVLOADER_H_
+#pragma once
+
+#include <vector>
+#include <string>
+#include <memory>
 
 #include "CaptureRTSPFrame.h"
 #include "core/ClassLoader.h"
@@ -70,7 +73,7 @@ class OpenCVObjectFactory : public core::ObjectFactory {
     }
   }
 
-  virtual std::unique_ptr<core::ObjectFactoryInitializer> getInitializer() override {
+  std::unique_ptr<core::ObjectFactoryInitializer> getInitializer() override {
     return std::unique_ptr<core::ObjectFactoryInitializer>(new OpenCVObjectFactoryInitializer());
   }
 
@@ -80,4 +83,3 @@ class OpenCVObjectFactory : public core::ObjectFactory {
 extern "C" {
   DLL_EXPORT void *createOpenCVFactory(void);
 }
-#endif /* EXTENSIONS_OPENCVLOADER_H_ */

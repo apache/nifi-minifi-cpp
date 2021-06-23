@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SOURCE_INITIATED_SUBSCRIPTION_PROCESSOR_H__
-#define __SOURCE_INITIATED_SUBSCRIPTION_PROCESSOR_H__
+#pragma once
 
 #include <memory>
 #include <string>
@@ -169,5 +168,3 @@ REGISTER_RESOURCE(SourceInitiatedSubscriptionListener, "This processor implement
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // __SOURCE_INITIATED_SUBSCRIPTION_PROCESSOR_H__

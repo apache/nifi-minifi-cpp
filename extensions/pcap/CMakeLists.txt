@@ -19,7 +19,7 @@
 
 find_package(PCAP REQUIRED)
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 include_directories(/usr/include/netinet)
 
@@ -67,4 +67,4 @@ target_link_libraries(minifi-pcap ${LIBMINIFI} Threads::Threads)
 
 SET (PCAP-EXTENSION minifi-pcap PARENT_SCOPE)
 register_extension(minifi-pcap)
-
+register_extension_linter(minifi-pcap-linter)

@@ -15,20 +15,16 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_MOTIONDETECTOR_H
-#define NIFI_MINIFI_CPP_MOTIONDETECTOR_H
-
-#include <atomic>
-
-#include <core/Resource.h>
-#include <core/Processor.h>
-#include <opencv2/opencv.hpp>
-#include <opencv2/objdetect.hpp>
-#include <opencv2/imgproc.hpp>
-#include "FrameIO.h"
+#pragma once
 
 #include <iomanip>
-#include <ctime>
+#include <memory>
+#include <string>
+
+#include "core/Resource.h"
+#include "core/Processor.h"
+#include "opencv2/opencv.hpp"
+#include "opencv2/imgproc.hpp"
 
 namespace org {
 namespace apache {
@@ -38,7 +34,6 @@ namespace processors {
 
 class MotionDetector : public core::Processor {
  public:
-
   explicit MotionDetector(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<MotionDetector>::getLogger()) {
@@ -60,7 +55,6 @@ class MotionDetector : public core::Processor {
   void notifyStop() override;
 
  private:
-
   bool detectAndDraw(cv::Mat &frame);
 
   std::shared_ptr<logging::Logger> logger_;
@@ -76,12 +70,10 @@ class MotionDetector : public core::Processor {
   const double IMG_WIDTH = 500.0;
 };
 
-REGISTER_RESOURCE(MotionDetector, "Detect motion from captured images."); // NOLINT
+REGISTER_RESOURCE(MotionDetector, "Detect motion from captured images.");
 
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_MOTIONDETECTOR_H

@@ -22,6 +22,7 @@
 #include <type_traits>
 #include <string>
 #include <cstring>
+#include <memory>
 
 /**
  * A checker that will, at compile time, tell us

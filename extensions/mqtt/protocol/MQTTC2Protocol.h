@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_MQTT_PROTOCOL_MQTTC2PROTOCOL_H_
-#define EXTENSIONS_MQTT_PROTOCOL_MQTTC2PROTOCOL_H_
+#pragma once
 
 #include <algorithm>
 #include <iostream>
@@ -67,7 +66,6 @@ class MQTTC2Protocol : public C2Protocol {
   void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) override;
 
  protected:
-
   C2Payload serialize(const C2Payload &payload);
 
   std::mutex input_mutex_;
@@ -85,11 +83,9 @@ class MQTTC2Protocol : public C2Protocol {
   std::shared_ptr<logging::Logger> logger_;
   // mqtt controller serviec name.
   std::string controller_service_name_;
-
 };
 } /* namespace c2 */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* EXTENSIONS_MQTT_PROTOCOL_MQTTC2PROTOCOL_H_ */

@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_MQTT_PROTOCOL_CONVERTBASE_H_
-#define EXTENSIONS_MQTT_PROTOCOL_CONVERTBASE_H_
+#pragma once
+
+#include <string>
+#include <memory>
 
 #include "MQTTControllerService.h"
 #include "FlowFileRecord.h"
@@ -57,7 +59,6 @@ class ConvertBase : public core::Processor, public minifi::c2::RESTProtocol {
   static core::Relationship Success;
 
  public:
-
   /**
    * Initialization of the processor
    */
@@ -69,8 +70,8 @@ class ConvertBase : public core::Processor, public minifi::c2::RESTProtocol {
    * ProcessSession objects.
    */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
- protected:
 
+ protected:
   /**
    * MQTT controller service.
    */
@@ -84,5 +85,3 @@ class ConvertBase : public core::Processor, public minifi::c2::RESTProtocol {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_MQTT_PROTOCOL_CONVERTBASE_H_ */

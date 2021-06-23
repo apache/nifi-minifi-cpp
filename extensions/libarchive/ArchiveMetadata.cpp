@@ -20,10 +20,8 @@
 
 #include "ArchiveMetadata.h"
 
-#include <archive.h>
 #include <archive_entry.h>
 
-#include <list>
 #include <string>
 #include <algorithm>
 #include <iostream>
@@ -32,179 +30,180 @@
 #include "utils/gsl.h"
 #include "Exception.h"
 
+#include "rapidjson/writer.h"
+#include "rapidjson/error/en.h"
+
 using org::apache::nifi::minifi::Exception;
 using org::apache::nifi::minifi::ExceptionType;
 
 rapidjson::Value ArchiveEntryMetadata::toJson(rapidjson::Document::AllocatorType &alloc) const {
-    rapidjson::Value entryVal(rapidjson::kObjectType);
+  rapidjson::Value entryVal(rapidjson::kObjectType);
 
-    rapidjson::Value entryNameVal;
-    entryNameVal.SetString(entryName.c_str(), gsl::narrow<rapidjson::SizeType>(entryName.length()));
-    entryVal.AddMember("entry_name", entryNameVal, alloc);
+  rapidjson::Value entryNameVal;
+  entryNameVal.SetString(entryName.c_str(), gsl::narrow<rapidjson::SizeType>(entryName.length()));
+  entryVal.AddMember("entry_name", entryNameVal, alloc);
 
-    entryVal.AddMember("entry_type", entryType, alloc);
-    entryVal.AddMember("entry_perm", entryPerm, alloc);
-    entryVal.AddMember("entry_size", entrySize, alloc);
-    entryVal.AddMember("entry_uid", entryUID, alloc);
-    entryVal.AddMember("entry_gid", entryGID, alloc);
-    entryVal.AddMember("entry_mtime", entryMTime, alloc);
-    entryVal.AddMember("entry_mtime_nsec", entryMTimeNsec, alloc);
+  entryVal.AddMember("entry_type", entryType, alloc);
+  entryVal.AddMember("entry_perm", entryPerm, alloc);
+  entryVal.AddMember("entry_size", entrySize, alloc);
+  entryVal.AddMember("entry_uid", entryUID, alloc);
+  entryVal.AddMember("entry_gid", entryGID, alloc);
+  entryVal.AddMember("entry_mtime", entryMTime, alloc);
+  entryVal.AddMember("entry_mtime_nsec", entryMTimeNsec, alloc);
 
-    if (entryType == AE_IFREG) {
-        rapidjson::Value stashKeyVal;
-        stashKeyVal.SetString(stashKey.c_str(), gsl::narrow<rapidjson::SizeType>(stashKey.length()));
-        entryVal.AddMember("stash_key", stashKeyVal, alloc);
-    }
+  if (entryType == AE_IFREG) {
+    rapidjson::Value stashKeyVal;
+    stashKeyVal.SetString(stashKey.c_str(), gsl::narrow<rapidjson::SizeType>(stashKey.length()));
+    entryVal.AddMember("stash_key", stashKeyVal, alloc);
+  }
 
-    return entryVal;
+  return entryVal;
 }
 
 void ArchiveEntryMetadata::loadJson(const rapidjson::Value& entryVal) {
-    entryName.assign(entryVal["entry_name"].GetString());
-    entryType = gsl::narrow<mode_t>(entryVal["entry_type"].GetUint64());
-    entryPerm = gsl::narrow<mode_t>(entryVal["entry_perm"].GetUint64());
-    entrySize = entryVal["entry_size"].GetUint64();
-    entryUID = gsl::narrow<uid_t>(entryVal["entry_uid"].GetUint64());
-    entryGID = entryVal["entry_gid"].GetUint64();
-    entryMTime = entryVal["entry_mtime"].GetUint64();
-    entryMTimeNsec = entryVal["entry_mtime_nsec"].GetInt64();
+  entryName.assign(entryVal["entry_name"].GetString());
+  entryType = gsl::narrow<mode_t>(entryVal["entry_type"].GetUint64());
+  entryPerm = gsl::narrow<mode_t>(entryVal["entry_perm"].GetUint64());
+  entrySize = entryVal["entry_size"].GetUint64();
+  entryUID = gsl::narrow<uid_t>(entryVal["entry_uid"].GetUint64());
+  entryGID = entryVal["entry_gid"].GetUint64();
+  entryMTime = entryVal["entry_mtime"].GetUint64();
+  entryMTimeNsec = entryVal["entry_mtime_nsec"].GetInt64();
 
-    if (entryType == AE_IFREG)
-        stashKey.assign(entryVal["stash_key"].GetString());
+  if (entryType == AE_IFREG)
+    stashKey.assign(entryVal["stash_key"].GetString());
 }
 
 ArchiveEntryMetadata ArchiveEntryMetadata::fromJson(const rapidjson::Value& entryVal) {
-    ArchiveEntryMetadata aem;
-    aem.loadJson(entryVal);
-    return aem;
+  ArchiveEntryMetadata aem;
+  aem.loadJson(entryVal);
+  return aem;
 }
 
 ArchiveEntryIterator ArchiveMetadata::find(const std::string& name) {
-    auto targetTest = [&](const ArchiveEntryMetadata& entry) -> bool {
-        return entry.entryName == name;
-    };
+  auto targetTest = [&](const ArchiveEntryMetadata& entry) -> bool {
+    return entry.entryName == name;
+  };
 
-    return std::find_if(entryMetadata.begin(),
-                        entryMetadata.end(),
-                        targetTest);
+  return std::find_if(entryMetadata.begin(), entryMetadata.end(), targetTest);
 }
 
 ArchiveEntryIterator ArchiveMetadata::eraseEntry(ArchiveEntryIterator position) {
-    return entryMetadata.erase(position);
+  return entryMetadata.erase(position);
 }
 
 ArchiveEntryIterator ArchiveMetadata::insertEntry(
-    ArchiveEntryIterator position, const ArchiveEntryMetadata& entry) {
-    return entryMetadata.insert(position, entry);
+  ArchiveEntryIterator position, const ArchiveEntryMetadata& entry) {
+  return entryMetadata.insert(position, entry);
 }
 
 rapidjson::Value ArchiveMetadata::toJson(rapidjson::Document::AllocatorType &alloc) const {
-    rapidjson::Value structVal(rapidjson::kArrayType);
+  rapidjson::Value structVal(rapidjson::kArrayType);
 
-    for (const auto &entry : entryMetadata) {
-        structVal.PushBack(entry.toJson(alloc), alloc);
-    }
+  for (const auto &entry : entryMetadata) {
+      structVal.PushBack(entry.toJson(alloc), alloc);
+  }
 
-    rapidjson::Value lensVal(rapidjson::kObjectType);
+  rapidjson::Value lensVal(rapidjson::kObjectType);
 
-    rapidjson::Value archiveFormatNameVal;
-    archiveFormatNameVal.SetString(archiveFormatName.c_str(), gsl::narrow<rapidjson::SizeType>(archiveFormatName.length()));
-    lensVal.AddMember("archive_format_name", archiveFormatNameVal, alloc);
+  rapidjson::Value archiveFormatNameVal;
+  archiveFormatNameVal.SetString(archiveFormatName.c_str(), gsl::narrow<rapidjson::SizeType>(archiveFormatName.length()));
+  lensVal.AddMember("archive_format_name", archiveFormatNameVal, alloc);
 
-    lensVal.AddMember("archive_format", archiveFormat, alloc);
-    lensVal.AddMember("archive_structure", structVal, alloc);
+  lensVal.AddMember("archive_format", archiveFormat, alloc);
+  lensVal.AddMember("archive_structure", structVal, alloc);
 
-    if (!archiveName.empty()) {
-        rapidjson::Value archiveNameVal;
-        archiveNameVal.SetString(archiveName.c_str(), gsl::narrow<rapidjson::SizeType>(archiveName.length()));
-        lensVal.AddMember("archive_name", archiveNameVal, alloc);
-    }
+  if (!archiveName.empty()) {
+    rapidjson::Value archiveNameVal;
+    archiveNameVal.SetString(archiveName.c_str(), gsl::narrow<rapidjson::SizeType>(archiveName.length()));
+    lensVal.AddMember("archive_name", archiveNameVal, alloc);
+  }
 
-   rapidjson::Value focusedEntryVal;
-    focusedEntryVal.SetString(focusedEntry.c_str(), gsl::narrow<rapidjson::SizeType>(focusedEntry.length()));
-    lensVal.AddMember("focused_entry", focusedEntryVal, alloc);
+  rapidjson::Value focusedEntryVal;
+  focusedEntryVal.SetString(focusedEntry.c_str(), gsl::narrow<rapidjson::SizeType>(focusedEntry.length()));
+  lensVal.AddMember("focused_entry", focusedEntryVal, alloc);
 
-    return lensVal;
+  return lensVal;
 }
 
 ArchiveMetadata ArchiveMetadata::fromJson(const rapidjson::Value& metadataDoc) {
-    ArchiveMetadata am;
-    am.loadJson(metadataDoc);
-    return am;
+  ArchiveMetadata am;
+  am.loadJson(metadataDoc);
+  return am;
 }
 
 void ArchiveMetadata::loadJson(const rapidjson::Value& metadataDoc) {
-    rapidjson::Value::ConstMemberIterator itr = metadataDoc.FindMember("archive_name");
-    if (itr != metadataDoc.MemberEnd())
-        archiveName.assign(itr->value.GetString());
+  rapidjson::Value::ConstMemberIterator itr = metadataDoc.FindMember("archive_name");
+  if (itr != metadataDoc.MemberEnd())
+    archiveName.assign(itr->value.GetString());
 
-    archiveFormatName.assign(metadataDoc["archive_format_name"].GetString());
-    archiveFormat = gsl::narrow<int>(metadataDoc["archive_format"].GetUint64());
+  archiveFormatName.assign(metadataDoc["archive_format_name"].GetString());
+  archiveFormat = gsl::narrow<int>(metadataDoc["archive_format"].GetUint64());
 
-    focusedEntry = metadataDoc["focused_entry"].GetString();
-  
-    for (const auto &entryVal : metadataDoc["archive_structure"].GetArray()) {
-        entryMetadata.push_back(ArchiveEntryMetadata::fromJson(entryVal));
-    }
+  focusedEntry = metadataDoc["focused_entry"].GetString();
+
+  for (const auto &entryVal : metadataDoc["archive_structure"].GetArray()) {
+    entryMetadata.push_back(ArchiveEntryMetadata::fromJson(entryVal));
+  }
 }
 
 void ArchiveMetadata::seedTempPaths(fileutils::FileManager *file_man, bool keep = false) {
-    for (auto& entry : entryMetadata)
-        entry.tmpFileName.assign(file_man->unique_file(keep));
+  for (auto& entry : entryMetadata)
+    entry.tmpFileName.assign(file_man->unique_file(keep));
 }
 
 ArchiveStack ArchiveStack::fromJson(const rapidjson::Value& input) {
-    ArchiveStack as;
-    as.loadJson(input);
-    return as;
+  ArchiveStack as;
+  as.loadJson(input);
+  return as;
 }
 
 ArchiveStack ArchiveStack::fromJsonString(const std::string& input) {
-    ArchiveStack as;
-    as.loadJsonString(input);
-    return as;
+  ArchiveStack as;
+  as.loadJsonString(input);
+  return as;
 }
 
 void ArchiveStack::loadJson(const rapidjson::Value& lensStack) {
-    for (const auto& metadata : lensStack.GetArray()) {
-        stack_.push_back(ArchiveMetadata::fromJson(metadata));
-    }
+  for (const auto& metadata : lensStack.GetArray()) {
+    stack_.push_back(ArchiveMetadata::fromJson(metadata));
+  }
 }
 
 void ArchiveStack::loadJsonString(const std::string& input) {
-    rapidjson::Document lensStack;
-    rapidjson::ParseResult ok = lensStack.Parse(input.c_str());
+  rapidjson::Document lensStack;
+  rapidjson::ParseResult ok = lensStack.Parse(input.c_str());
 
-    if (!ok) {
-        std::stringstream ss;
-        ss << "Failed to parse archive lens stack from JSON string with reason: "
-           << rapidjson::GetParseError_En(ok.Code())
-           << " at offset " << ok.Offset();
+  if (!ok) {
+    std::stringstream ss;
+    ss << "Failed to parse archive lens stack from JSON string with reason: "
+        << rapidjson::GetParseError_En(ok.Code())
+        << " at offset " << ok.Offset();
 
-        throw Exception(ExceptionType::GENERAL_EXCEPTION, ss.str());
-    }
+    throw Exception(ExceptionType::GENERAL_EXCEPTION, ss.str());
+  }
 
-    loadJson(lensStack);
+  loadJson(lensStack);
 }
 
 rapidjson::Document ArchiveStack::toJson() const {
-    rapidjson::Document lensStack(rapidjson::kArrayType);
-    rapidjson::Document::AllocatorType &alloc = lensStack.GetAllocator();
+  rapidjson::Document lensStack(rapidjson::kArrayType);
+  rapidjson::Document::AllocatorType &alloc = lensStack.GetAllocator();
 
-    for (const auto& metadata : stack_) {
-        lensStack.PushBack(metadata.toJson(alloc), alloc);
-    }
+  for (const auto& metadata : stack_) {
+    lensStack.PushBack(metadata.toJson(alloc), alloc);
+  }
 
-    return lensStack;
+  return lensStack;
 }
 
 std::string ArchiveStack::toJsonString() const {
-    rapidjson::Document d = toJson();
+  rapidjson::Document d = toJson();
 
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    d.Accept(writer);
-    
-    std::string jsonString = buffer.GetString();
-    return jsonString;
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  d.Accept(writer);
+
+  std::string jsonString = buffer.GetString();
+  return jsonString;
 }

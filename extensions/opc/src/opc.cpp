@@ -15,23 +15,23 @@
  * limitations under the License.
  */
 
-// OPC includes
 #include "opc.h"
 
-// MiNiFi includes
+#include <stdlib.h>
+#include <memory>
+#include <vector>
+#include <string>
+#include <functional>
+
 #include "utils/StringUtils.h"
 #include "logging/Logger.h"
 #include "Exception.h"
 
 #include "utils/gsl.h"
 
-// Standard includes
-#include <stdlib.h>
-#include <iostream>
-#include <memory>
-#include <vector>
-#include <string>
-#include <functional>
+#include "open62541/client_highlevel.h"
+#include "open62541/client_config_default.h"
+
 
 namespace org {
 namespace apache {
@@ -45,70 +45,70 @@ namespace opc {
 
 namespace {
 
-  void add_value_to_variant(UA_Variant *variant, std::string &value) {
-    UA_String ua_value = UA_STRING(&value[0]);
-    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_STRING]);
-  }
+void add_value_to_variant(UA_Variant *variant, std::string &value) {
+  UA_String ua_value = UA_STRING(&value[0]);
+  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_STRING]);
+}
 
-  void add_value_to_variant(UA_Variant *variant, const char *value) {
-    std::string strvalue(value);
-    add_value_to_variant(variant, strvalue);
-  }
+void add_value_to_variant(UA_Variant *variant, const char *value) {
+  std::string strvalue(value);
+  add_value_to_variant(variant, strvalue);
+}
 
-  void add_value_to_variant(UA_Variant *variant, int64_t value) {
-    UA_Int64 ua_value = value;
-    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_INT64]);
-  }
+void add_value_to_variant(UA_Variant *variant, int64_t value) {
+  UA_Int64 ua_value = value;
+  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_INT64]);
+}
 
-  void add_value_to_variant(UA_Variant *variant, uint64_t value) {
-    UA_UInt64 ua_value = value;
-    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_UINT64]);
-  }
+void add_value_to_variant(UA_Variant *variant, uint64_t value) {
+  UA_UInt64 ua_value = value;
+  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_UINT64]);
+}
 
-  void add_value_to_variant(UA_Variant *variant, int32_t value) {
-    UA_Int32 ua_value = value;
-    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_INT32]);
-  }
+void add_value_to_variant(UA_Variant *variant, int32_t value) {
+  UA_Int32 ua_value = value;
+  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_INT32]);
+}
 
-  void add_value_to_variant(UA_Variant *variant, uint32_t value) {
-    UA_UInt32 ua_value = value;
-    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_UINT32]);
-  }
+void add_value_to_variant(UA_Variant *variant, uint32_t value) {
+  UA_UInt32 ua_value = value;
+  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_UINT32]);
+}
 
-  void add_value_to_variant(UA_Variant *variant, bool value) {
-    UA_Boolean ua_value = value;
-    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_BOOLEAN]);
-  }
+void add_value_to_variant(UA_Variant *variant, bool value) {
+  UA_Boolean ua_value = value;
+  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_BOOLEAN]);
+}
 
-  void add_value_to_variant(UA_Variant *variant, float value) {
-    UA_Float ua_value = value;
-    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_FLOAT]);
-  }
+void add_value_to_variant(UA_Variant *variant, float value) {
+  UA_Float ua_value = value;
+  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_FLOAT]);
+}
 
-  void add_value_to_variant(UA_Variant *variant, double value) {
-    UA_Double ua_value = value;
-    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_DOUBLE]);
-  }
+void add_value_to_variant(UA_Variant *variant, double value) {
+  UA_Double ua_value = value;
+  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_DOUBLE]);
+}
 
-  core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
-    switch (ualvl) {
-      case UA_LOGLEVEL_TRACE:
-        return core::logging::trace;
-      case UA_LOGLEVEL_DEBUG:
-        return core::logging::debug;
-      case UA_LOGLEVEL_INFO:
-        return core::logging::info;
-      case UA_LOGLEVEL_WARNING:
-        return core::logging::warn;
-      case UA_LOGLEVEL_ERROR:
-        return core::logging::err;
-      case UA_LOGLEVEL_FATAL:
-        return core::logging::critical;
-      default:
-        return core::logging::critical;
-    }
+core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
+  switch (ualvl) {
+    case UA_LOGLEVEL_TRACE:
+      return core::logging::trace;
+    case UA_LOGLEVEL_DEBUG:
+      return core::logging::debug;
+    case UA_LOGLEVEL_INFO:
+      return core::logging::info;
+    case UA_LOGLEVEL_WARNING:
+      return core::logging::warn;
+    case UA_LOGLEVEL_ERROR:
+      return core::logging::err;
+    case UA_LOGLEVEL_FATAL:
+      return core::logging::critical;
+    default:
+      return core::logging::critical;
   }
 }
+}  // namespace
 
 /*
  * End of internal functions
@@ -127,13 +127,13 @@ Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string&
     // Certificate
     UA_ByteString certByteString = UA_STRING_NULL;
     certByteString.length = certBuffer.size();
-    certByteString.data = (UA_Byte*)UA_malloc(certByteString.length * sizeof(UA_Byte));
+    certByteString.data = reinterpret_cast<UA_Byte*>(UA_malloc(certByteString.length * sizeof(UA_Byte)));
     memcpy(certByteString.data, certBuffer.data(), certByteString.length);
 
     // Key
     UA_ByteString keyByteString = UA_STRING_NULL;
     keyByteString.length = keyBuffer.size();
-    keyByteString.data = (UA_Byte*)UA_malloc(keyByteString.length * sizeof(UA_Byte));
+    keyByteString.data = reinterpret_cast<UA_Byte*>(UA_malloc(keyByteString.length * sizeof(UA_Byte)));
     memcpy(keyByteString.data, keyBuffer.data(), keyByteString.length);
 
     // Trusted certificates
@@ -142,7 +142,7 @@ Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string&
     for (size_t i = 0; i < trustBuffers.size(); i++) {
       trustList[i] = UA_STRING_NULL;
       trustList[i].length = trustBuffers[i].size();
-      trustList[i].data = (UA_Byte*)UA_malloc(trustList[i].length * sizeof(UA_Byte));
+      trustList[i].data = reinterpret_cast<UA_Byte*>(UA_malloc(trustList[i].length * sizeof(UA_Byte)));
       memcpy(trustList[i].data, trustBuffers[i].data(), trustList[i].length);
     }
     UA_StatusCode sc = UA_ClientConfig_setDefaultEncryption(cc, certByteString, keyByteString,
@@ -313,8 +313,8 @@ void Client::traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb,
       UA_ReferenceDescription *ref = &(bResp.results[i].references[j]);
       if (cb(*this, ref, basePath)) {
         if (ref->nodeClass == UA_NODECLASS_VARIABLE || ref->nodeClass == UA_NODECLASS_OBJECT) {
-          std::string browsename((char *) ref->browseName.name.data, ref->browseName.name.length);
-          traverse(ref->nodeId.nodeId, cb, basePath + browsename, maxDepth, false);
+          std::string browse_name(reinterpret_cast<char *>(ref->browseName.name.data), ref->browseName.name.length);
+          traverse(ref->nodeId.nodeId, cb, basePath + browse_name, maxDepth, false);
         }
       } else {
         return;
@@ -347,7 +347,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   UA_BrowsePath_init(&browsePath);
   browsePath.startingNode = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER);
 
-  browsePath.relativePath.elements = (UA_RelativePathElement*)UA_Array_new(tokens.size(), &UA_TYPES[UA_TYPES_RELATIVEPATHELEMENT]);
+  browsePath.relativePath.elements = reinterpret_cast<UA_RelativePathElement*>(UA_Array_new(tokens.size(), &UA_TYPES[UA_TYPES_RELATIVEPATHELEMENT]));
   browsePath.relativePath.elementsSize = tokens.size();
 
   for (size_t i = 0; i < tokens.size(); ++i) {
@@ -381,7 +381,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
       UA_NodeId resultId;
       UA_NodeId_copy(&res.targets[j].targetId.nodeId, &resultId);
       foundNodeIDs.push_back(resultId);
-      std::string namespaceUri((char*)res.targets[j].targetId.namespaceUri.data, res.targets[j].targetId.namespaceUri.length);
+      std::string namespaceUri(reinterpret_cast<char*>(res.targets[j].targetId.namespaceUri.data), res.targets[j].targetId.namespaceUri.length);
     }
   }
 
@@ -450,8 +450,10 @@ template UA_StatusCode Client::add_node<uint32_t>(const UA_NodeId parentNodeId, 
 template UA_StatusCode Client::add_node<float>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, float value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
 template UA_StatusCode Client::add_node<double>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, double value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
 template UA_StatusCode Client::add_node<bool>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, bool value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, const char * value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, std::string value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName,
+    const char * value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName,
+    std::string value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
 
 int32_t OPCNodeDataTypeToTypeID(OPCNodeDataType dt) {
   switch (dt) {
@@ -482,7 +484,7 @@ std::string nodeValue2String(const NodeData& nd) {
     case UA_TYPES_STRING:
     case UA_TYPES_LOCALIZEDTEXT:
     case UA_TYPES_BYTESTRING: {
-      UA_String value = *(UA_String *)(nd.var_->data);
+      UA_String value = *reinterpret_cast<UA_String *>(nd.var_->data);
       ret_val = std::string(reinterpret_cast<const char *>(value.data), value.length);
       break;
     }
@@ -572,7 +574,7 @@ std::string OPCDateTime2String(UA_DateTime raw_date) {
 
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory /*category*/, const char *msg, va_list args) {
   char buffer[1024];
-  vsnprintf(buffer, 1024, msg, args);
+  vsnprintf(buffer, sizeof buffer, msg, args);
   auto loggerPtr = reinterpret_cast<core::logging::BaseLogger*>(context);
   loggerPtr->log_string(MapOPCLogLevel(level), buffer);
 }

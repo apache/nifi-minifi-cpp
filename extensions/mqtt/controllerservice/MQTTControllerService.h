@@ -15,16 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_MQTTCONTEXTSERVICE_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_MQTTCONTEXTSERVICE_H_
+#pragma once
 
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <iostream>
 #include <memory>
+#include <vector>
+#include <utility>
+#include <map>
+#include <string>
+
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
-#include "io/validation.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "controllers/SSLContextService.h"
@@ -47,7 +50,7 @@ class Message {
   Message() = default;
   explicit Message(const std::string &topic, void *data, size_t dataLen)
       : topic_(topic),
-        data_((uint8_t*) data, ((uint8_t*)data + dataLen)) {
+        data_(reinterpret_cast<uint8_t*>(data), (reinterpret_cast<uint8_t*>(data) + dataLen)) {
   }
 
   Message(const Message &other) = default;
@@ -223,7 +226,6 @@ class MQTTControllerService : public core::controller::ControllerService {
   }
 
  protected:
-
   void acknowledgeDelivery(MQTTClient_deliveryToken token) {
     std::lock_guard<std::mutex> lock(delivery_mutex_);
     // locked the mutex
@@ -242,12 +244,12 @@ class MQTTControllerService : public core::controller::ControllerService {
   }
 
   static void deliveryCallback(void *context, MQTTClient_deliveryToken dt) {
-    MQTTControllerService *service = (MQTTControllerService *) context;
+    MQTTControllerService *service = reinterpret_cast<MQTTControllerService *>(context);
     service->acknowledgeDelivery(dt);
   }
 
   static int receiveCallback(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
-    MQTTControllerService *service = (MQTTControllerService *) context;
+    MQTTControllerService *service = reinterpret_cast<MQTTControllerService *>(context);
     std::string topic(topicName, topicLen == 0 ? strlen(topicName) : topicLen);
     Message queueMessage(topic, message->payload, message->payloadlen);
     service->enqueue(topic, std::move(queueMessage));
@@ -256,7 +258,7 @@ class MQTTControllerService : public core::controller::ControllerService {
     return 1;
   }
   static void reconnectCallback(void *context, char* /*cause*/) {
-    MQTTControllerService *service = (MQTTControllerService *) context;
+    MQTTControllerService *service = reinterpret_cast<MQTTControllerService *>(context);
     service->reconnect();
   }
 
@@ -302,7 +304,6 @@ class MQTTControllerService : public core::controller::ControllerService {
   std::string passWord_;
 
  private:
-
   std::map<int, bool> delivered_;
   std::map<std::string, moodycamel::ConcurrentQueue<Message> > topics_;
 
@@ -321,5 +322,3 @@ class MQTTControllerService : public core::controller::ControllerService {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_MQTTCONTEXTSERVICE_H_ */
