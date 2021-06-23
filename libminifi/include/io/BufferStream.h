@@ -43,6 +43,14 @@ class BufferStream : public BaseStream {
     write(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
   }
 
+  /*
+   * prepares the stream to accept and additional byte_count bytes
+   * @param byte_count number of bytes we expect to write
+   */
+  void extend(size_t byte_count) {
+    buffer_.reserve(buffer_.size() + byte_count);
+  }
+
   using BaseStream::read;
   using BaseStream::write;
 

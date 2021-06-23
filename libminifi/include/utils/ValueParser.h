@@ -137,6 +137,10 @@ class ValueParser {
     }
   }
 
+  std::string rest() const noexcept {
+    return str.substr(offset);
+  }
+
  private:
   /**
    *

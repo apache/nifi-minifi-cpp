@@ -21,12 +21,15 @@
 #include <algorithm>
 #include <string>
 #include <typeindex>
+#include <map>
+#include <memory>
 
 #include "state/Value.h"
 #include "utils/StringUtils.h"
 #include "utils/ValueParser.h"
 #include "utils/PropertyErrors.h"
 #include "utils/OptionalUtils.h"
+#include "utils/Literals.h"
 
 namespace org {
 namespace apache {
@@ -114,6 +117,8 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
  * format <numeric> <byte size>.
  */
 class DataSizeValue : public TransformableValue, public state::response::UInt64Value {
+  static std::shared_ptr<logging::Logger>& getLogger();
+
  public:
   static const std::type_index type_id;
 
@@ -128,72 +133,41 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
   }
 
 
-// Convert String to Integer
+  // Convert String to Integer
   template<typename T, typename std::enable_if<
       std::is_integral<T>::value>::type* = nullptr>
   static bool StringToInt(const std::string &input, T &output) {
-    if (input.size() == 0) {
+    // TODO(adebreceni): this mapping is to preserve backwards compatibility,
+    //  we should entertain the idea of moving to standardized units in
+    //  the configuration (i.e. K = 1000, Ki = 1024)
+    static std::map<std::string, int64_t> unit_map{
+      {"B", 1},
+      {"K", 1_KB}, {"M", 1_MB}, {"G", 1_GB}, {"T", 1_TB}, {"P", 1_PB},
+      {"KB", 1_KiB}, {"MB", 1_MiB}, {"GB", 1_GiB}, {"TB", 1_TiB}, {"PB", 1_PiB},
+    };
+
+    int64_t value;
+    std::string unit_str;
+    try {
+      unit_str = utils::StringUtils::trim(utils::internal::ValueParser(input).parse(value).rest());
+    } catch (const utils::internal::ParseException&) {
       return false;
     }
 
-    const char *cvalue = input.c_str();
-    char *pEnd;
-    auto ival = std::strtoll(cvalue, &pEnd, 0);
-
-    if (pEnd[0] == '\0') {
-      output = gsl::narrow<T>(ival);
-      return true;
-    }
-
-    while (*pEnd == ' ') {
-      // Skip the space
-      pEnd++;
-    }
-
-    char end0 = toupper(pEnd[0]);
-    if (end0 == 'B') {
-      output = gsl::narrow<T>(ival);
-      return true;
-    } else if ((end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T') || (end0 == 'P')) {
-      if (pEnd[1] == '\0') {
-        unsigned long int multiplier = 1000; // NOLINT
-
-        if ((end0 != 'K')) {
-          multiplier *= 1000;
-          if (end0 != 'M') {
-            multiplier *= 1000;
-            if (end0 != 'G') {
-              multiplier *= 1000;
-              if (end0 != 'T') {
-                multiplier *= 1000;
-              }
-            }
-          }
-        }
-        output = gsl::narrow<T>(ival * multiplier);
-        return true;
-
-      } else if ((pEnd[1] == 'b' || pEnd[1] == 'B') && (pEnd[2] == '\0')) {
-        unsigned long int multiplier = 1024; // NOLINT
-
-        if ((end0 != 'K')) {
-          multiplier *= 1024;
-          if (end0 != 'M') {
-            multiplier *= 1024;
-            if (end0 != 'G') {
-              multiplier *= 1024;
-              if (end0 != 'T') {
-                multiplier *= 1024;
-              }
-            }
-          }
-        }
-        output = gsl::narrow<T>(ival * multiplier);
-        return true;
+    if (!unit_str.empty()) {
+      std::transform(unit_str.begin(), unit_str.end(), unit_str.begin(), ::toupper);
+      auto multiplierIt = unit_map.find(unit_str);
+      if (multiplierIt == unit_map.end()) {
+        getLogger()->log_warn("Unrecognized data unit: '%s', in the future this will constitute as an error", unit_str);
+        // backwards compatibility
+        // return false;
+      } else {
+        value *= multiplierIt->second;
       }
     }
 
-    return false;
+    output = gsl::narrow<T>(value);
+    return true;
   }
 };
 

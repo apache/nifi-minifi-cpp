@@ -16,28 +16,47 @@
  * limitations under the License.
  */
 
-#include <memory>
+#pragma once
 
-#include "core/Property.h"
-#include "core/TypedValues.h"
-#include "core/logging/LoggerConfiguration.h"
+#include <memory>
+#include <utility>
+
+#include "io/BufferStream.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
+namespace logging {
+namespace internal {
 
-const  std::type_index DataSizeValue::type_id = typeid(uint64_t);
-const  std::type_index TimePeriodValue::type_id = typeid(uint64_t);
+class LogBuffer {
+ public:
+  LogBuffer() = default;
+  explicit LogBuffer(std::unique_ptr<io::BufferStream> buffer): buffer_{std::move(buffer)} {}
 
-std::shared_ptr<logging::Logger>& DataSizeValue::getLogger() {
-  static std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<DataSizeValue>::getLogger();
-  return logger;
-}
+  static LogBuffer allocate(size_t max_size) {
+    LogBuffer instance{utils::make_unique<io::BufferStream>()};
+    instance.buffer_->extend(max_size);
+    return instance;
+  }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+  LogBuffer commit() {
+    return LogBuffer{std::move(buffer_)};
+  }
+
+  size_t size() const {
+    return buffer_->size();
+  }
+
+  std::unique_ptr<io::BufferStream> buffer_;
+};
+
+}  // namespace internal
+}  // namespace logging
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

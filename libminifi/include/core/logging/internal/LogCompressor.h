@@ -16,28 +16,36 @@
  * limitations under the License.
  */
 
-#include <memory>
+#pragma once
 
-#include "core/Property.h"
-#include "core/TypedValues.h"
-#include "core/logging/LoggerConfiguration.h"
+#include <memory>
+#include "io/ZlibStream.h"
+#include "io/OutputStream.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
+namespace logging {
+namespace internal {
 
-const  std::type_index DataSizeValue::type_id = typeid(uint64_t);
-const  std::type_index TimePeriodValue::type_id = typeid(uint64_t);
+class LogCompressor : public io::ZlibCompressStream {
+ public:
+  LogCompressor(gsl::not_null<OutputStream *> output, std::shared_ptr<logging::Logger> logger);
 
-std::shared_ptr<logging::Logger>& DataSizeValue::getLogger() {
-  static std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<DataSizeValue>::getLogger();
-  return logger;
-}
+  enum class FlushResult {
+    Success,
+    Error
+  };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+  FlushResult flush();
+};
+
+}  // namespace internal
+}  // namespace logging
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

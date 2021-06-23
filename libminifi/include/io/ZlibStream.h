@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "BaseStream.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/Logger.h"
 #include "utils/gsl.h"
 
 namespace org {
@@ -80,8 +80,13 @@ class ZlibCompressStream : public ZlibBaseStream {
 
   void close() override;
 
- private:
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ZlibCompressStream>::getLogger()};
+ protected:
+  ZlibCompressStream(gsl::not_null<OutputStream*> ouput, ZlibCompressionFormat format, int level, std::shared_ptr<core::logging::Logger> logger);
+
+  using FlushMode = int;
+  size_t write(const uint8_t* value, size_t size, FlushMode mode);
+
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 class ZlibDecompressStream : public ZlibBaseStream {
@@ -98,7 +103,7 @@ class ZlibDecompressStream : public ZlibBaseStream {
   size_t write(const uint8_t *value, size_t size) override;
 
  private:
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ZlibDecompressStream>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace io

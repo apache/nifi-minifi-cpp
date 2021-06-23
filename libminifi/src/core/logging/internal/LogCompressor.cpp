@@ -16,10 +16,7 @@
  * limitations under the License.
  */
 
-#include <memory>
-
-#include "core/Property.h"
-#include "core/TypedValues.h"
+#include "core/logging/internal/LogCompressor.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {
@@ -27,17 +24,24 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
+namespace logging {
+namespace internal {
 
-const  std::type_index DataSizeValue::type_id = typeid(uint64_t);
-const  std::type_index TimePeriodValue::type_id = typeid(uint64_t);
+LogCompressor::LogCompressor(gsl::not_null<OutputStream *> output, std::shared_ptr<logging::Logger> logger)
+    : ZlibCompressStream(output, io::ZlibCompressionFormat::GZIP, Z_DEFAULT_COMPRESSION, std::move(logger)) {}
 
-std::shared_ptr<logging::Logger>& DataSizeValue::getLogger() {
-  static std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<DataSizeValue>::getLogger();
-  return logger;
+LogCompressor::FlushResult LogCompressor::flush() {
+  if (write(nullptr, 0, Z_SYNC_FLUSH) == 0) {
+    return FlushResult::Success;
+  }
+  return FlushResult::Error;
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace internal
+}  // namespace logging
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+
