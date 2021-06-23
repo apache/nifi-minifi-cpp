@@ -13,7 +13,6 @@ from .HttpProxyContainer import HttpProxyContainer
 from .HttpProxyContainer import PostgreSQLServerContainer
 
 
-
 class SingleNodeDockerCluster(Cluster):
     """
     A "cluster" which consists of a single docker node. Useful for
@@ -75,7 +74,7 @@ class SingleNodeDockerCluster(Cluster):
     @staticmethod
     def create_docker_network():
         net_name = 'minifi_integration_test_network-' + str(uuid.uuid4())
-        logging.info('Creating network: %s', net_name)
+        logging.debug('Creating network: %s', net_name)
         return docker.from_env().networks.create(net_name)
 
     def acquire_container(self, name, engine='minifi-cpp'):
@@ -96,20 +95,20 @@ class SingleNodeDockerCluster(Cluster):
             return container
         elif engine == 'kafka-broker':
             self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network))
-            container = KafkaBrokerContainer('kafka-broker', self.vols, self.network)
-            self.containers.setdefault('kafka-broker', container)
+            container = KafkaBrokerContainer(name, self.vols, self.network)
+            self.containers.setdefault(name, container)
             return container
         elif engine == 'http-proxy':
-            container = HttpProxyContainer('http-proxy', self.vols, self.network)
-            self.containers.setdefault('http-proxy', container)
+            container = HttpProxyContainer(name, self.vols, self.network)
+            self.containers.setdefault(name, container)
             return container
         elif engine == 's3-server':
-            container = S3ServerContainer('s3-server', self.vols, self.network)
-            self.containers.setdefault('s3-server', container)
+            container = S3ServerContainer(name, self.vols, self.network)
+            self.containers.setdefault(name, container)
             return container
         elif engine == 'azure-storage-server':
-            container = AzureStorageServerContainer('azure-storage-server', self.vols, self.network)
-            self.containers.setdefault('azure-storage-server', container)
+            container = AzureStorageServerContainer(name, self.vols, self.network)
+            self.containers.setdefault(name, container)
             return container
         elif engine == 'postgresql-server':
             container = PostgreSQLServerContainer('postgresql-server', self.vols, self.network)
