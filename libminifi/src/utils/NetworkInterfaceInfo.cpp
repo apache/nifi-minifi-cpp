@@ -109,7 +109,7 @@ std::unordered_map<std::string, NetworkInterfaceInfo> NetworkInterfaceInfo::getN
   }
 #else
   struct ifaddrs* interface_addresses = nullptr;
-  auto cleanup = gsl::finally([&interface_addresses] { freeifaddrs(interface_addresses); });
+  auto cleanup = gsl::finally([interface_addresses] { freeifaddrs(interface_addresses); });
   if (getifaddrs(&interface_addresses) == -1)
     return network_adapters;
 
