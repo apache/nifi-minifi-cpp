@@ -17,7 +17,7 @@
 #
 
 # First stage: the build environment
-FROM centos:8 AS build_deps
+FROM centos:7 AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION
