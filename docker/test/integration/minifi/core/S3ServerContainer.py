@@ -1,3 +1,4 @@
+import logging
 from .Container import Container
 
 
@@ -12,6 +13,7 @@ class S3ServerContainer(Container):
         if not self.set_deployed():
             return
 
+        logging.info('Creating and running s3 server docker container...')
         self.client.containers.run(
             "adobe/s3mock:2.1.28",
             detach=True,
@@ -19,3 +21,4 @@ class S3ServerContainer(Container):
             network=self.network.name,
             ports={'9090/tcp': 9090, '9191/tcp': 9191},
             environment=["initialBuckets=test_bucket"])
+        logging.info('Added container \'%s\'', self.name)

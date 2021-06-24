@@ -22,6 +22,7 @@ class NifiContainer(FlowContainer):
         if not self.set_deployed():
             return
 
+        logging.info('Creating and running nifi docker container...')
         dockerfile = dedent(r"""FROM {base_image}
                 USER root
                 ADD flow.xml.gz {nifi_root}/conf/flow.xml.gz
@@ -58,8 +59,6 @@ class NifiContainer(FlowContainer):
         finally:
             conf_file_buffer.close()
 
-        logging.info('Creating and running docker container for flow...')
-
         self.client.containers.run(
             configured_image[0],
             detach=True,
@@ -67,5 +66,4 @@ class NifiContainer(FlowContainer):
             hostname=self.name,
             network=self.network.name,
             volumes=self.vols)
-
-        logging.info('Started container \'%s\'', self.name)
+        logging.info('Added container \'%s\'', self.name)

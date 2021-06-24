@@ -22,6 +22,7 @@ class MinifiContainer(FlowContainer):
         if not self.set_deployed():
             return
 
+        logging.info('Creating and running minifi docker container...')
         # Build configured image
         dockerfile = dedent("""FROM {base_image}
                 USER root
@@ -88,5 +89,4 @@ class MinifiContainer(FlowContainer):
             name=self.name,
             network=self.network.name,
             volumes=self.vols)
-
-        logging.info('Started container \'%s\'', self.name)
+        logging.info('Added container \'%s\'', self.name)

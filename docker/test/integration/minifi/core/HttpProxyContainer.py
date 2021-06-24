@@ -32,3 +32,4 @@ class HttpProxyContainer(Container):
             name=self.name,
             network=self.network.name,
             ports={'3128/tcp': 3128})
+        logging.info('Added container \'%s\'', self.name)

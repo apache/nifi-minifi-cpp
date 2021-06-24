@@ -6,21 +6,18 @@ from .Container import Container
 class KafkaBrokerContainer(Container):
     def __init__(self, name, vols, network):
         super().__init__(name, 'kafka-broker', vols, network)
-        self.kafka_broker_root = '/opt/kafka'
 
     def get_startup_finish_text(self):
         return "Kafka startTimeMs"
-
-    def get_log_file_path(self):
-        return self.kafka_broker_root + '/logs/server.log'
 
     def deploy(self):
         if not self.set_deployed():
             return
 
+        logging.info('Creating and running kafka broker docker container...')
         test_dir = os.environ['PYTHONPATH'].split(':')[-1]  # Based on DockerVerify.sh
         broker_image = self.build_image_by_path(test_dir + "/resources/kafka_broker", 'minifi-kafka')
-        broker = self.client.containers.run(
+        self.client.containers.run(
             broker_image[0],
             detach=True,
             name='kafka-broker',
@@ -33,4 +30,4 @@ class KafkaBrokerContainer(Container):
                 "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,SSL:SSL",
                 "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka-broker:9092,SSL://kafka-broker:9093,PLAINTEXT_HOST://localhost:29092",
                 "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181"])
-        logging.info('Adding container \'%s\'', broker.name)
+        logging.info('Added container \'%s\'', self.name)

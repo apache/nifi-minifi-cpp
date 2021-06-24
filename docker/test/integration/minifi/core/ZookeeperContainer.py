@@ -1,3 +1,4 @@
+import logging
 from .Container import Container
 
 
@@ -12,9 +13,11 @@ class ZookeeperContainer(Container):
         if not self.set_deployed():
             return
 
+        logging.info('Creating and running zookeeper docker container...')
         self.client.containers.run(
             self.client.images.pull("wurstmeister/zookeeper:3.4.6"),
             detach=True,
             name='zookeeper',
             network=self.network.name,
             ports={'2181/tcp': 2181})
+        logging.info('Added container \'%s\'', self.name)
