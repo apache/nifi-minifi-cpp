@@ -60,7 +60,6 @@ class MiNiFi_integration_test():
 
     def start(self):
         logging.info("MiNiFi_integration_test start")
-        logging.info("Starting cluster...")
         self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id))
         self.cluster.deploy_flow()
         for container_name in self.cluster.containers:

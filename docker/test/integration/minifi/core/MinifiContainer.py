@@ -18,12 +18,7 @@ class MinifiContainer(FlowContainer):
     def get_log_file_path(self):
         return self.minifi_root + '/logs/minifi-app.log'
 
-    def deploy(self):
-        if not self.set_deployed():
-            return
-
-        logging.info('Creating and running minifi docker container...')
-        # Build configured image
+    def __build_minifi_image(self):
         dockerfile = dedent("""FROM {base_image}
                 USER root
                 RUN apk --update --no-cache add psqlodbc
@@ -64,12 +59,10 @@ class MinifiContainer(FlowContainer):
         logging.info('Using generated flow config yml:\n%s', test_flow_yaml)
 
         conf_file_buffer = BytesIO()
-
         try:
             conf_file_buffer.write(test_flow_yaml.encode('utf-8'))
             conf_file_len = conf_file_buffer.tell()
             conf_file_buffer.seek(0)
-
             context_files = [
                 {
                     'name': 'config.yml',
@@ -77,11 +70,18 @@ class MinifiContainer(FlowContainer):
                     'file_obj': conf_file_buffer
                 }
             ]
-
             configured_image = self.build_image(dockerfile, context_files)
-
         finally:
             conf_file_buffer.close()
+
+        return configured_image
+
+    def deploy(self):
+        if not self.set_deployed():
+            return
+
+        logging.info('Creating and running minifi docker container...')
+        configured_image = self.__build_minifi_image()
 
         self.client.containers.run(
             configured_image[0],

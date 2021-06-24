@@ -18,11 +18,7 @@ class NifiContainer(FlowContainer):
     def get_log_file_path(self):
         return self.nifi_root + '/logs/nifi-app.log'
 
-    def deploy(self):
-        if not self.set_deployed():
-            return
-
-        logging.info('Creating and running nifi docker container...')
+    def __build_nifi_image(self):
         dockerfile = dedent(r"""FROM {base_image}
                 USER root
                 ADD flow.xml.gz {nifi_root}/conf/flow.xml.gz
@@ -39,13 +35,11 @@ class NifiContainer(FlowContainer):
         logging.info('Using generated flow config xml:\n%s', test_flow_xml)
 
         conf_file_buffer = BytesIO()
-
         try:
             with gzip.GzipFile(mode='wb', fileobj=conf_file_buffer) as conf_gz_file_buffer:
                 conf_gz_file_buffer.write(test_flow_xml.encode())
             conf_file_len = conf_file_buffer.tell()
             conf_file_buffer.seek(0)
-
             context_files = [
                 {
                     'name': 'flow.xml.gz',
@@ -53,11 +47,18 @@ class NifiContainer(FlowContainer):
                     'file_obj': conf_file_buffer
                 }
             ]
-
             configured_image = self.build_image(dockerfile, context_files)
-
         finally:
             conf_file_buffer.close()
+
+        return configured_image
+
+    def deploy(self):
+        if not self.set_deployed():
+            return
+
+        logging.info('Creating and running nifi docker container...')
+        configured_image = self.__build_nifi_image()
 
         self.client.containers.run(
             configured_image[0],
