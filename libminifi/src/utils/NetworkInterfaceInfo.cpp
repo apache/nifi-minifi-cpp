@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 #include "utils/NetworkInterfaceInfo.h"
-
+#include "utils/OsUtils.h"
 #ifdef WIN32
 #include <Windows.h>
 #include <winsock2.h>
@@ -38,28 +38,24 @@ namespace minifi {
 namespace utils {
 
 #ifdef WIN32
+namespace {
 std::string utf8_encode(const std::wstring& wstr) {
   if (wstr.empty())
     return std::string();
-  int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], wstr.size(), nullptr, 0, nullptr, nullptr);
+  int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0, nullptr, nullptr);
   std::string result_string(size_needed, 0);
-  WideCharToMultiByte(CP_UTF8, 0, &wstr[0], wstr.size(), &result_string[0], size_needed, nullptr, nullptr);
+  WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, result_string.data(), size_needed, nullptr, nullptr);
   return result_string;
+}
 }
 
 NetworkInterfaceInfo::NetworkInterfaceInfo(const IP_ADAPTER_ADDRESSES* adapter) {
   name_ = utf8_encode(adapter->FriendlyName);
   for (auto unicast_address = adapter->FirstUnicastAddress; unicast_address != nullptr; unicast_address = unicast_address->Next) {
     if (unicast_address->Address.lpSockaddr->sa_family == AF_INET) {
-      char address_buffer[INET_ADDRSTRLEN];
-      void* sin_address = &(reinterpret_cast<SOCKADDR_IN*>(unicast_address->Address.lpSockaddr)->sin_addr);
-      InetNtopA(AF_INET, sin_address, address_buffer, INET_ADDRSTRLEN);
-      ip_v4_addresses_.push_back(address_buffer);
+      ip_v4_addresses_.push_back(OsUtils::sockaddr_ntop(unicast_address->Address.lpSockaddr));
     } else if (unicast_address->Address.lpSockaddr->sa_family == AF_INET6) {
-      char address_buffer[INET6_ADDRSTRLEN];
-      void* sin_address = &(reinterpret_cast<SOCKADDR_IN*>(unicast_address->Address.lpSockaddr)->sin_addr);
-      InetNtopA(AF_INET6, sin_address, address_buffer, INET6_ADDRSTRLEN);
-      ip_v6_addresses_.push_back(address_buffer);
+      ip_v6_addresses_.push_back(OsUtils::sockaddr_ntop(unicast_address->Address.lpSockaddr));
     }
   }
   running_ = adapter->OperStatus == IfOperStatusUp;
@@ -68,38 +64,44 @@ NetworkInterfaceInfo::NetworkInterfaceInfo(const IP_ADAPTER_ADDRESSES* adapter) 
 #else
 NetworkInterfaceInfo::NetworkInterfaceInfo(const struct ifaddrs* ifa) {
   name_ = ifa->ifa_name;
-  void* sin_address = &(reinterpret_cast<struct sockaddr_in*>(ifa->ifa_addr)->sin_addr);
   if (ifa->ifa_addr->sa_family == AF_INET) {
-    char address_buffer[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, sin_address, address_buffer, INET_ADDRSTRLEN);
-    ip_v4_addresses_.push_back(address_buffer);
+    ip_v4_addresses_.push_back(OsUtils::sockaddr_ntop(ifa->ifa_addr));
   } else if (ifa->ifa_addr->sa_family == AF_INET6) {
-    char address_buffer[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, sin_address, address_buffer, INET6_ADDRSTRLEN);
-    ip_v6_addresses_.push_back(address_buffer);
+    ip_v6_addresses_.push_back(OsUtils::sockaddr_ntop(ifa->ifa_addr));
   }
   running_ = (ifa->ifa_flags & IFF_RUNNING);
   loopback_ = (ifa->ifa_flags & IFF_LOOPBACK);
 }
 #endif
 
-std::unordered_map<std::string, NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos(std::function<bool(const NetworkInterfaceInfo&)> filter,
+namespace {
+struct HasName {
+  explicit HasName(const std::string& name) : name_(name) {}
+  bool operator()(const NetworkInterfaceInfo& network_interface_info) {
+    return network_interface_info.getName() == name_;
+  }
+  const std::string& name_;
+};
+}
+
+std::vector<NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos(std::function<bool(const NetworkInterfaceInfo&)> filter,
                                                                                                      const utils::optional<uint32_t> max_interfaces) {
-  std::unordered_map<std::string, NetworkInterfaceInfo> network_adapters;
+  std::vector<NetworkInterfaceInfo> network_adapters;
 #ifdef WIN32
   ULONG buffer_length = sizeof(IP_ADAPTER_ADDRESSES);
   if (ERROR_BUFFER_OVERFLOW != GetAdaptersAddresses(0, 0, nullptr, nullptr, &buffer_length))
     return network_adapters;
-  std::vector<uint8_t> bytes(buffer_length, 0);
+  std::vector<char> bytes(buffer_length, 0);
   IP_ADAPTER_ADDRESSES* adapter = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(bytes.data());
   if (NO_ERROR == GetAdaptersAddresses(0, 0, nullptr, adapter, &buffer_length)) {
     while (adapter != nullptr) {
       NetworkInterfaceInfo interface_info(adapter);
       if (filter(interface_info)) {
-        if (network_adapters.find(interface_info.getName()) == network_adapters.end()) {
-          network_adapters.emplace(interface_info.getName(), std::move(interface_info));
+        auto it = std::find_if(network_adapters.begin(), network_adapters.end(), HasName(interface_info.getName()));
+        if (it == network_adapters.end()) {
+          network_adapters.emplace_back(std::move(interface_info));
         } else {
-          interface_info.moveAddressesInto(network_adapters.at(interface_info.getName()));
+          interface_info.moveAddressesInto(*it);
         }
       }
       if (max_interfaces.has_value() && network_adapters.size() >= max_interfaces.value())
@@ -118,10 +120,11 @@ std::unordered_map<std::string, NetworkInterfaceInfo> NetworkInterfaceInfo::getN
       continue;
     NetworkInterfaceInfo interface_info(ifa);
     if (filter(interface_info)) {
-      if (network_adapters.find(interface_info.getName()) == network_adapters.end()) {
-        network_adapters.emplace(interface_info.getName(), std::move(interface_info));
+      auto it = std::find_if(network_adapters.begin(), network_adapters.end(), HasName(interface_info.getName()));
+      if (it == network_adapters.end()) {
+        network_adapters.emplace_back(std::move(interface_info));
       } else {
-        interface_info.moveAddressesInto(network_adapters.at(interface_info.getName()));
+        interface_info.moveAddressesInto(*it);
       }
     }
     if (max_interfaces.has_value() && network_adapters.size() >= max_interfaces.value())

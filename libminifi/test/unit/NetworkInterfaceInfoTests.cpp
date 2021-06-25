@@ -24,7 +24,7 @@ TEST_CASE("NetworkInterfaceInfo test", "[testnetworkinterfaceinfo]") {
   auto network_interface_infos = utils::NetworkInterfaceInfo::getNetworkInterfaceInfos();
   REQUIRE(network_interface_infos.size() > 0);
 
-  auto valid_interface_name = network_interface_infos.begin()->second.getName();
+  auto valid_interface_name = network_interface_infos.begin()->getName();
   auto filter = [&valid_interface_name](const utils::NetworkInterfaceInfo& interface_info) -> bool { return interface_info.getName() == valid_interface_name; };
   REQUIRE(utils::NetworkInterfaceInfo::getNetworkInterfaceInfos(filter, 1).size() == 1);
 }
@@ -36,7 +36,7 @@ bool is_localhost(const std::string& ip_address) {
 TEST_CASE("NetworkInterfaceInfo isLoopback test", "[testnetworkinterfaceinfoloopback]") {
   auto network_interface_infos = utils::NetworkInterfaceInfo::getNetworkInterfaceInfos([] (const utils::NetworkInterfaceInfo& interface_info) -> bool { return !interface_info.isLoopback();});
   for (auto& network_interface_info : network_interface_infos) {
-    auto& ip_v4_addresses = network_interface_info.second.getIpV4Addresses();
+    auto& ip_v4_addresses = network_interface_info.getIpV4Addresses();
     REQUIRE(std::none_of(ip_v4_addresses.begin(), ip_v4_addresses.end(), is_localhost));
   }
 }

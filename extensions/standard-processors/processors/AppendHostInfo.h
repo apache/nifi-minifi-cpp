@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <string>
+#include <regex>
 
 #include "core/Property.h"
 #include "FlowFileRecord.h"
@@ -69,7 +70,7 @@ class AppendHostInfo : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
   std::string hostname_attribute_name_;
   std::string ipaddress_attribute_name_;
-  std::string interface_name_filter_;
+  utils::optional<std::regex> interface_name_filter_;
 
   std::string hostname_;
   utils::optional<std::string> ipaddresses_;

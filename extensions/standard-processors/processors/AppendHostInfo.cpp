@@ -58,7 +58,11 @@ void AppendHostInfo::initialize() {
 void AppendHostInfo::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   context->getProperty(HostAttribute.getName(), hostname_attribute_name_);
   context->getProperty(IPAttribute.getName(), ipaddress_attribute_name_);
-  context->getProperty(InterfaceNameFilter.getName(), interface_name_filter_);
+  std::string interface_name_filter_str;
+  if (context->getProperty(InterfaceNameFilter.getName(), interface_name_filter_str) && !interface_name_filter_str.empty())
+    interface_name_filter_.emplace(interface_name_filter_str);
+  else
+    interface_name_filter_ = utils::nullopt;
   std::string refresh_policy;
   context->getProperty(RefreshPolicy.getName(), refresh_policy);
   if (refresh_policy == REFRESH_POLICY_ON_TRIGGER)
@@ -88,7 +92,7 @@ void AppendHostInfo::refreshHostInfo() {
   hostname_ = org::apache::nifi::minifi::io::Socket::getMyHostName();
   auto filter = [this](const utils::NetworkInterfaceInfo& interface_info) -> bool {
     bool has_ipv4_address = interface_info.hasIpV4Address();
-    bool matches_regex_or_empty_regex = interface_name_filter_.empty() || std::regex_match(interface_info.getName(), std::regex(interface_name_filter_));
+    bool matches_regex_or_empty_regex = (!interface_name_filter_.has_value()) || std::regex_match(interface_info.getName(), interface_name_filter_.value());
     return has_ipv4_address && matches_regex_or_empty_regex;
   };
   auto network_interface_infos = utils::NetworkInterfaceInfo::getNetworkInterfaceInfos(filter);
@@ -97,7 +101,7 @@ void AppendHostInfo::refreshHostInfo() {
     ipaddresses_ = utils::nullopt;
   } else {
     for (auto& network_interface_info : network_interface_infos) {
-      auto& ip_v4_addresses = network_interface_info.second.getIpV4Addresses();
+      auto& ip_v4_addresses = network_interface_info.getIpV4Addresses();
       std::copy(std::begin(ip_v4_addresses), std::end(ip_v4_addresses), std::ostream_iterator<std::string>(oss, ","));
     }
     ipaddresses_ = oss.str();

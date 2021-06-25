@@ -37,23 +37,24 @@ namespace minifi {
 namespace utils {
 class NetworkInterfaceInfo {
  public:
-  NetworkInterfaceInfo(NetworkInterfaceInfo&& src) = default;
+  NetworkInterfaceInfo(NetworkInterfaceInfo&& src) noexcept = default;
 #ifdef WIN32
   explicit NetworkInterfaceInfo(const IP_ADAPTER_ADDRESSES* adapter);
 #else
   explicit NetworkInterfaceInfo(const struct ifaddrs* ifa);
 #endif
-  const std::string& getName() const { return name_; }
-  bool hasIpV4Address() const { return ip_v4_addresses_.size() > 0; }
-  bool hasIpV6Address() const { return ip_v6_addresses_.size() > 0; }
-  bool isRunning() const { return running_; }
-  bool isLoopback() const { return loopback_; }
-  const std::vector<std::string>& getIpV4Addresses() const { return ip_v4_addresses_; }
-  const std::vector<std::string>& getIpV6Addresses() const { return ip_v6_addresses_; }
+  NetworkInterfaceInfo& operator=(NetworkInterfaceInfo&& other) = default;  // TODO(mzink): mark noexcept after gcc 4.9
+  const std::string& getName() const noexcept { return name_; }
+  bool hasIpV4Address() const noexcept { return ip_v4_addresses_.size() > 0; }
+  bool hasIpV6Address() const noexcept { return ip_v6_addresses_.size() > 0; }
+  bool isRunning() const noexcept { return running_; }
+  bool isLoopback() const noexcept { return loopback_; }
+  const std::vector<std::string>& getIpV4Addresses() const noexcept { return ip_v4_addresses_; }
+  const std::vector<std::string>& getIpV6Addresses() const noexcept { return ip_v6_addresses_; }
 
   void moveAddressesInto(NetworkInterfaceInfo& destination);
 
-  static std::unordered_map<std::string, NetworkInterfaceInfo> getNetworkInterfaceInfos(std::function<bool(const NetworkInterfaceInfo&)> filter = { [](const NetworkInterfaceInfo&) { return true; } },
+  static std::vector<NetworkInterfaceInfo> getNetworkInterfaceInfos(std::function<bool(const NetworkInterfaceInfo&)> filter = { [](const NetworkInterfaceInfo&) { return true; } },
                                                                                         const utils::optional<uint32_t> max_interfaces = utils::nullopt);
 
  private:

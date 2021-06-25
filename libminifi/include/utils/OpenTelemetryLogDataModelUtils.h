@@ -59,8 +59,7 @@ class OpenTelemetryLogDataModel {
     resource.AddMember("host.ip", rapidjson::Value{ rapidjson::kObjectType }, alloc);
     rapidjson::Value& ip = resource["host.ip"];
     auto network_interface_infos = utils::NetworkInterfaceInfo::getNetworkInterfaceInfos();
-    for (const auto& it : network_interface_infos) {
-      const auto& network_interface_info = it.second;
+    for (const auto& network_interface_info : network_interface_infos) {
       rapidjson::Value interface_name(network_interface_info.getName().c_str(), network_interface_info.getName().length(), alloc);
       rapidjson::Value interface_address_array(rapidjson::kArrayType);
       for (auto& ip_v4_address : network_interface_info.getIpV4Addresses()) {

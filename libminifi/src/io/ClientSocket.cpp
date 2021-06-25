@@ -48,6 +48,7 @@
 #include "utils/file/FileUtils.h"
 #include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
+#include "utils/OsUtils.h"
 
 namespace util = org::apache::nifi::minifi::utils;
 namespace mio = org::apache::nifi::minifi::io;
@@ -60,29 +61,6 @@ std::string get_last_getaddrinfo_err_str(int getaddrinfo_result) {
 #else
   return gai_strerror(getaddrinfo_result);
 #endif /* WIN32 */
-}
-
-std::string sockaddr_ntop(const sockaddr* const sa) {
-  std::string result;
-  if (sa->sa_family == AF_INET) {
-    sockaddr_in sa_in{};
-    std::memcpy(reinterpret_cast<void*>(&sa_in), sa, sizeof(sockaddr_in));
-    result.resize(INET_ADDRSTRLEN);
-    if (inet_ntop(AF_INET, &sa_in.sin_addr, &result[0], INET_ADDRSTRLEN) == nullptr) {
-      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, mio::get_last_socket_error_message() };
-    }
-  } else if (sa->sa_family == AF_INET6) {
-    sockaddr_in6 sa_in6{};
-    std::memcpy(reinterpret_cast<void*>(&sa_in6), sa, sizeof(sockaddr_in6));
-    result.resize(INET6_ADDRSTRLEN);
-    if (inet_ntop(AF_INET6, &sa_in6.sin6_addr, &result[0], INET6_ADDRSTRLEN) == nullptr) {
-      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, mio::get_last_socket_error_message() };
-    }
-  } else {
-    throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, "sockaddr_ntop: unknown address family" };
-  }
-  result.resize(strlen(result.c_str()));  // discard remaining null bytes at the end
-  return result;
 }
 
 template<typename T, typename Pred, typename Adv>
@@ -273,7 +251,7 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
         continue;
       }
 
-      logger_->log_info("Listening on %s:%" PRIu16 " with backlog %" PRIu16, sockaddr_ntop(current_addr->ai_addr), port_, listeners_);
+      logger_->log_info("Listening on %s:%" PRIu16 " with backlog %" PRIu16, utils::OsUtils::sockaddr_ntop(current_addr->ai_addr), port_, listeners_);
     } else {
       // client socket
 #ifndef WIN32
@@ -286,12 +264,12 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
 
       const auto connect_result = connect(socket_file_descriptor_, current_addr->ai_addr, current_addr->ai_addrlen);
       if (connect_result == SOCKET_ERROR) {
-        logger_->log_warn("Couldn't connect to %s:%" PRIu16 ": %s", sockaddr_ntop(current_addr->ai_addr), port_, get_last_socket_error_message());
+        logger_->log_warn("Couldn't connect to %s:%" PRIu16 ": %s", utils::OsUtils::sockaddr_ntop(current_addr->ai_addr), port_, get_last_socket_error_message());
         close();
         continue;
       }
 
-      logger_->log_info("Connected to %s:%" PRIu16, sockaddr_ntop(current_addr->ai_addr), port_);
+      logger_->log_info("Connected to %s:%" PRIu16, utils::OsUtils::sockaddr_ntop(current_addr->ai_addr), port_);
     }
 
     FD_SET(socket_file_descriptor_, &total_list_);

@@ -132,7 +132,7 @@ class Device {
       };
       auto network_interface_infos = utils::NetworkInterfaceInfo::getNetworkInterfaceInfos(filter);
       for (const auto& network_interface_info : network_interface_infos)
-        for (const auto& ip_v4_address : network_interface_info.second.getIpV4Addresses())
+        for (const auto& ip_v4_address : network_interface_info.getIpV4Addresses())
           ips.push_back(ip_v4_address);
     }
     return ips;
