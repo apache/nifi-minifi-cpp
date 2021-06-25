@@ -46,6 +46,7 @@ class AWSCredentialsProvider {
   void setAccessKey(const std::string &access_key);
   void setSecretKey(const std::string &secret_key);
   void setCredentialsFile(const std::string &credentials_file);
+  bool getUseDefaultCredentials() const;
   minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
 
  private:

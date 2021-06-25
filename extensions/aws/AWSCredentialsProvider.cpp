@@ -44,6 +44,10 @@ void AWSCredentialsProvider::setUseDefaultCredentials(bool use_default_credentia
   use_default_credentials_ = use_default_credentials;
 }
 
+bool AWSCredentialsProvider::getUseDefaultCredentials() const {
+  return use_default_credentials_;
+}
+
 void AWSCredentialsProvider::setAccessKey(const std::string &access_key) {
   access_key_ = access_key;
 }
