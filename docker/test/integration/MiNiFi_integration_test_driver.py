@@ -262,3 +262,7 @@ class MiNiFi_integration_test():
     def check_azure_storage_server_data(self, cluster_name, object_data):
         cluster = self.acquire_cluster(cluster_name)
         assert cluster.check_azure_storage_server_data(object_data)
+
+    def wait_for_kafka_consumer_to_be_registered(self, cluster_name):
+        cluster = self.acquire_cluster(cluster_name)
+        assert cluster.wait_for_kafka_consumer_to_be_registered()

@@ -55,7 +55,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
             self.segfault = True
 
         try:
-            apps = [("MiNiFi", self.minifi_root + '/logs/minifi-app.log'), ("NiFi", self.nifi_root + '/logs/nifi-app.log'), ("Kafka", self.kafka_broker_root + '/logs/server.log')]
+            apps = [("MiNiFi", self.minifi_root + '/logs/minifi-app.log'), ("NiFi", self.nifi_root + '/logs/nifi-app.log')]
             if container.status == 'running':
                 for app in apps:
                     app_log_status, app_log = container.exec_run('/bin/sh -c \'cat ' + app[1] + '\'')
@@ -134,17 +134,8 @@ class DockerTestCluster(SingleNodeDockerCluster):
         ls_result = subprocess.check_output(["docker", "exec", "s3-server", "ls", s3_mock_dir + "/test_bucket/"]).decode(self.get_stdout_encoding())
         return not ls_result
 
-    def wait_for_container_logs(self, container_name, log, timeout, count=1):
-        logging.info('Waiting for logs `%s` in container `%s`', log, container_name)
-        container = self.containers[container_name]
-        check_count = 0
-        while check_count <= timeout:
-            if count <= container.logs().decode("utf-8").count(log):
-                return True
-            else:
-                check_count += 1
-                time.sleep(1)
-        return False
-
     def segfault_happened(self):
         return self.segfault
+
+    def wait_for_kafka_consumer_to_be_registered(self):
+        return self.wait_for_app_logs("Assignment received from leader for group docker_test_group", 60)

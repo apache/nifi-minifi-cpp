@@ -247,6 +247,7 @@ def step_impl(context, content, path):
 def step_impl(context, file_name, content, path):
     context.test.add_test_data(path, content, file_name)
 
+
 # NiFi setups
 @given("a NiFi flow \"{cluster_name}\" receiving data from a RemoteProcessGroup \"{source_name}\" on port {port}")
 def step_impl(context, cluster_name, source_name, port):
@@ -438,6 +439,11 @@ def step_impl(context, content, topic_name, semicolon_separated_headers):
     producer = KafkaProducer(bootstrap_servers='localhost:29092')
     future = producer.send(topic_name, content.encode("utf-8"), headers=headers)
     assert future.get(timeout=60)
+
+
+@when("the Kafka consumer is registered in kafka broker \"{cluster_name}\"")
+def step_impl(context, cluster_name):
+    context.test.wait_for_kafka_consumer_to_be_registered(cluster_name)
 
 
 @then("a flowfile with the content \"{content}\" is placed in the monitored directory in less than {duration}")

@@ -82,8 +82,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the kafka broker "broker" is started
     And the topic "ConsumeKafkaTest" is initialized on the kafka broker
 
-    When all other processes start up
-    And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic
+    When a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic
+    And all other processes start up
     And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic
 
     Then two flowfiles with the contents "<message 1>" and "<message 2>" are placed in the monitored directory in less than 90 seconds
@@ -95,6 +95,24 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     | War and Peace        | Lev Tolstoy         | a,b,c,ConsumeKafkaTest,d | Names             |
     | Nineteen Eighty Four | George Orwell       | ConsumeKafkaTest         | Patterns          |
     | Hamlet               | William Shakespeare | Cons[emu]*KafkaTest      | Patterns          |
+
+  Scenario: ConsumeKafka consumes only messages after MiNiFi startup when "Offset Reset" property is set to latest
+    Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
+    And the "Topic Names" property of the ConsumeKafka processor is set to "ConsumeKafkaTest"
+    And the "Offset Reset" property of the ConsumeKafka processor is set to "latest"
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
+    And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
+
+    And a kafka broker "broker" is set up in correspondence with the third-party kafka publisher
+    And the kafka broker "broker" is started
+    And the topic "ConsumeKafkaTest" is initialized on the kafka broker
+
+    When a message with content "Ulysses" is published to the "ConsumeKafkaTest" topic
+    And all other processes start up
+    And the Kafka consumer is registered in kafka broker "broker"
+    And a message with content "James Joyce" is published to the "ConsumeKafkaTest" topic
+
+    Then a flowfile with the content "James Joyce" is placed in the monitored directory in less than 60 seconds
 
   Scenario Outline: ConsumeKafka key attribute is encoded according to the "Key Attribute Encoding" property
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
