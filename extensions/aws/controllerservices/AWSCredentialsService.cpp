@@ -77,7 +77,7 @@ void AWSCredentialsService::onEnable() {
 }
 
 minifi::utils::optional<Aws::Auth::AWSCredentials> AWSCredentialsService::getAWSCredentials() {
-  if (!aws_credentials_ || aws_credentials_->IsExpiredOrEmpty()) {
+  if (aws_credentials_provider_.getUseDefaultCredentials() || !aws_credentials_ || aws_credentials_->IsExpiredOrEmpty()) {
     aws_credentials_ = aws_credentials_provider_.getAWSCredentials();
   }
   return aws_credentials_;
