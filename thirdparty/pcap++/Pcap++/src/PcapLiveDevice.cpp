@@ -26,11 +26,6 @@
 #endif
 #ifdef MAC_OS_X
 #include <net/if_dl.h>
-#endif
-
-#if defined(__linux__) && !defined(__GLIBC__)
-#include <linux/sysctl.h>
-#elif !defined(WIN32) && !defined(WINx64)
 #include <sys/sysctl.h>
 #endif
 
