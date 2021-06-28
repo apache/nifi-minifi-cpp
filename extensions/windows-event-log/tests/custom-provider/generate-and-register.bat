@@ -16,6 +16,12 @@ rem limitations under the License.
 
 cd %1
 
+set man_path=%1"\unit-test-provider.man"
+set man_path=%man_path:"=%
+
+set dll_path=%1"\unit-test-provider.dll"
+set dll_path=%dll_path:"=%
+
 (
   echo ^<?xml version="1.0" encoding="UTF-8"?^>
   echo ^<instrumentationManifest xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/events eventman.xsd"
@@ -29,8 +35,8 @@ cd %1
   echo     ^<provider name="minifi_unit_test_provider"
   echo        symbol="minifi_unit_test_provider"
   echo          guid="{ABCDEF01-8174-F1CA-87BE-DA129FF6001B}"
-  echo          resourceFileName="%1\unit-test-provider.dll"
-  echo          messageFileName="%1\unit-test-provider.dll"^>  
+  echo          resourceFileName="%dll_path%"
+  echo          messageFileName="%dll_path%"^>
   echo        ^<events^>
   echo          ^<event symbol="CustomEvent" value="10000" version="1" channel="minifi_unit_test_provider/Log" template="CustomTemplate" /^>
   echo        ^</events^>
@@ -53,7 +59,7 @@ cd %1
   echo  ^</instrumentation^>
   echo  ^<localization/^>
   echo  ^</instrumentationManifest^>
-) > "%1/unit-test-provider.man"
+) > "%man_path%"
 
 mc -css Namespace unit-test-provider.man
 mc -um unit-test-provider.man

@@ -77,3 +77,12 @@ __pycache__/
 .vs/slnx.sqlite
 /.ccls-cache
 /.vscode
+
+# generated files from WEL test
+extensions/windows-event-log/tests/custom-provider/unit-test-provider.cs
+extensions/windows-event-log/tests/custom-provider/unit-test-provider.dll
+extensions/windows-event-log/tests/custom-provider/unit-test-provider.h
+extensions/windows-event-log/tests/custom-provider/unit-test-provider.man
+extensions/windows-event-log/tests/custom-provider/unit-test-provider.rc
+extensions/windows-event-log/tests/custom-provider/unit-test-provider.res
+extensions/windows-event-log/tests/custom-provider/unit-test-providerTEMP.BIN
