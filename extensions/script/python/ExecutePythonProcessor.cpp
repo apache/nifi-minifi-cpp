@@ -53,79 +53,39 @@ core::Relationship ExecutePythonProcessor::Success("success", "Script successes"
 core::Relationship ExecutePythonProcessor::Failure("failure", "Script failures");
 
 void ExecutePythonProcessor::initialize() {
-  // initialization requires that we do a little leg work prior to onSchedule
-  // so that we can provide manifest our processor identity
-  if (getProperties().empty()) {
-    setSupportedProperties({
-      ScriptFile,
-      ScriptBody,
-      ModuleDirectory
-    });
-    setAcceptAllProperties();
-    setSupportedRelationships({
-      Success,
-      Failure
-    });
-    valid_init_ = false;
-    return;
-  }
+  setSupportedProperties({
+    ScriptFile,
+    ScriptBody,
+    ModuleDirectory
+  });
+  setAcceptAllProperties();
+  setSupportedRelationships({
+    Success,
+    Failure
+  });
+}
 
+void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   python_logger_ = logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
 
   getProperty(ModuleDirectory.getName(), module_directory_);
 
-  valid_init_ = false;
   appendPathForImportModules();
   loadScript();
-  try {
-    if (script_to_exec_.size()) {
-      std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
-      engine->eval(script_to_exec_);
-      auto shared_this = shared_from_this();
-      engine->describe(shared_this);
-      engine->onInitialize(shared_this);
-      handleEngineNoLongerInUse(std::move(engine));
-      valid_init_ = true;
-    }
-  }
-  catch (const std::exception& exception) {
-    logger_->log_error("Caught Exception: %s", exception.what());
-    std::rethrow_exception(std::current_exception());
-  }
-  catch (...) {
-    logger_->log_error("Caught Exception");
-    std::rethrow_exception(std::current_exception());
-  }
-}
 
-void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  if (!valid_init_) {
-    throw std::runtime_error("Could not correctly initialize " + getName());
+  if (script_to_exec_.empty()) {
+    throw std::runtime_error("Neither Script Body nor Script File is available to execute");
   }
-  try {
-    reloadScriptIfUsingScriptFileProperty();
-    if (script_to_exec_.empty()) {
-      throw std::runtime_error("Neither Script Body nor Script File is available to execute");
-    }
-    std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
-
-    engine->eval(script_to_exec_);
-    engine->onSchedule(context);
-
-    handleEngineNoLongerInUse(std::move(engine));
-  }
-  catch (const std::exception& exception) {
-    logger_->log_error("Caught Exception: %s", exception.what());
-  }
-  catch (...) {
-    logger_->log_error("Caught Exception");
-  }
+  std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
+  engine->eval(script_to_exec_);
+  auto shared_this = shared_from_this();
+  engine->describe(shared_this);
+  engine->onInitialize(shared_this);
+  engine->onSchedule(context);
+  handleEngineNoLongerInUse(std::move(engine));
 }
 
 void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  if (!valid_init_) {
-    throw std::runtime_error("Could not correctly initialize " + getName());
-  }
   try {
     // TODO(hunyadi): When using "Script File" property, we currently re-read the script file content every time the processor is triggered. This should change to single-read when we release 1.0.0
     // https://issues.apache.org/jira/browse/MINIFICPP-1223
