@@ -475,6 +475,7 @@ def step_impl(context, content, duration):
 
 
 @then("at least one flowfile with the content \"{content}\" is placed in the monitored directory in less than {duration}")
+@then("at least one flowfile with the content '{content}' is placed in the monitored directory in less than {duration}")
 def step_impl(context, content, duration):
     context.test.check_for_at_least_one_file_with_content_generated(content, timeparse(duration))
 
