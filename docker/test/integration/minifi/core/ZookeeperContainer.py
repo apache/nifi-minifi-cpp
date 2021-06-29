@@ -6,7 +6,7 @@ class ZookeeperContainer(Container):
     def __init__(self, name, vols, network):
         super().__init__(name, 'zookeeper', vols, network)
 
-    def get_startup_finish_text(self):
+    def get_startup_finished_log_entry(self):
         return "binding to port"
 
     def deploy(self):

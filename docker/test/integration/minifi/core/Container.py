@@ -47,7 +47,7 @@ class Container:
     def deploy(self):
         raise NotImplementedError()
 
-    def get_startup_finish_text(self):
+    def get_startup_finished_log_entry(self):
         raise NotImplementedError()
 
     def get_log_file_path(self):

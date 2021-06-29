@@ -67,7 +67,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
         return False
 
     def wait_for_startup_log(self, container_name, timeout_seconds):
-        return self.wait_for_app_logs(container_name, self.containers[container_name].get_startup_finish_text(), timeout_seconds, 1)
+        return self.wait_for_app_logs(container_name, self.containers[container_name].get_startup_finished_log_entry(), timeout_seconds, 1)
 
     def log_app_output(self):
         for container_name in self.containers:

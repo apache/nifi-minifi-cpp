@@ -7,7 +7,7 @@ class HttpProxyContainer(Container):
     def __init__(self, name, vols, network):
         super().__init__(name, 'http-proxy', vols, network)
 
-    def get_startup_finish_text(self):
+    def get_startup_finished_log_entry(self):
         return "Accepting HTTP Socket connections at"
 
     def deploy(self):
