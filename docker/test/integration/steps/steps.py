@@ -3,13 +3,6 @@ from minifi.core.RemoteProcessGroup import RemoteProcessGroup
 from minifi.core.SSL_cert_utils import gen_cert, rsa_gen_key_callback
 from minifi.core.Funnel import Funnel
 
-from minifi.processors.ConsumeKafka import ConsumeKafka
-from minifi.processors.DeleteS3Object import DeleteS3Object
-from minifi.processors.FetchS3Object import FetchS3Object
-from minifi.processors.PutAzureBlobStorage import PutAzureBlobStorage
-from minifi.processors.PublishKafka import PublishKafka
-from minifi.processors.PutS3Object import PutS3Object
-
 from minifi.controllers.SSLContextService import SSLContextService
 from minifi.controllers.ODBCService import ODBCService
 
@@ -36,10 +29,10 @@ def step_impl(context, directory):
 
 
 # MiNiFi cluster setups
-@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{minifi_flow_name}\" flow")
-@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_flow_name}\" flow")
-def step_impl(context, processor_type, processor_name, property, property_value, minifi_flow_name):
-    container = context.test.acquire_container(minifi_flow_name)
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, processor_name, property, property_value, minifi_container_name):
+    container = context.test.acquire_container(minifi_container_name)
     processor = locate("minifi.processors." + processor_type + "." + processor_type)()
     processor.set_name(processor_name)
     if property:
@@ -50,40 +43,50 @@ def step_impl(context, processor_type, processor_name, property, property_value,
         container.add_start_node(processor)
 
 
-@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in a \"{minifi_flow_name}\" flow")
-@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{minifi_flow_name}\" flow")
-def step_impl(context, processor_type, property, property_value, minifi_flow_name):
-    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_flow_name}\" flow".
-                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_flow_name=minifi_flow_name, processor_name=processor_type))
+@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, property, property_value, minifi_container_name):
+    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow".
+                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name=minifi_container_name, processor_name=processor_type))
 
 
 @given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\"")
 def step_impl(context, processor_type, property, property_value):
-    context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{minifi_flow_name}\" flow".
-                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_flow_name="minifi-cpp-flow"))
+    context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow".
+                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name="minifi-cpp-flow"))
 
 
 @given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\"")
 def step_impl(context, processor_type, property, property_value, processor_name):
-    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{minifi_flow_name}\" flow".
-                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_flow_name="minifi-cpp-flow", processor_name=processor_name))
+    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow".
+                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name="minifi-cpp-flow", processor_name=processor_name))
 
 
-@given("a {processor_type} processor in the \"{minifi_flow_name}\" flow")
-@given("a {processor_type} processor in a \"{minifi_flow_name}\" flow")
-def step_impl(context, processor_type, minifi_flow_name):
-    context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{minifi_flow_name}\" flow".
-                          format(processor_type=processor_type, property=None, property_value=None, minifi_flow_name=minifi_flow_name))
+@given("a {processor_type} processor in the \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor in a \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor set up in a \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, minifi_container_name):
+    container = context.test.acquire_container(minifi_container_name)
+    processor = locate("minifi.processors." + processor_type + "." + processor_type)()
+    processor.set_name(processor_type)
+    context.test.add_node(processor)
+    # Assume that the first node declared is primary unless specified otherwise
+    if container.get_flow() is None:
+        container.set_flow(processor)
 
 
 @given("a {processor_type} processor")
+@given("a {processor_type} processor set up to communicate with an s3 server")
+@given("a {processor_type} processor set up to communicate with the same s3 server")
+@given("a {processor_type} processor set up to communicate with an Azure blob storage")
+@given("a {processor_type} processor set up to communicate with a kafka broker instance")
 def step_impl(context, processor_type):
-    context.execute_steps("given a {processor_type} processor in the \"{minifi_flow_name}\" flow".format(processor_type=processor_type, minifi_flow_name="minifi-cpp-flow"))
+    context.execute_steps("given a {processor_type} processor in the \"{minifi_container_name}\" flow".format(processor_type=processor_type, minifi_container_name="minifi-cpp-flow"))
 
 
-@given("a set of processors in the \"{minifi_flow_name}\" flow")
-def step_impl(context, minifi_flow_name):
-    container = context.test.acquire_container(minifi_flow_name)
+@given("a set of processors in the \"{minifi_container_name}\" flow")
+def step_impl(context, minifi_container_name):
+    container = context.test.acquire_container(minifi_container_name)
     logging.info(context.table)
     for row in context.table:
         processor = locate("minifi.processors." + row["type"] + "." + row["type"])()
@@ -98,53 +101,15 @@ def step_impl(context, minifi_flow_name):
 @given("a set of processors")
 def step_impl(context):
     rendered_table = ModelDescriptor.describe_table(context.table, "    ")
-    context.execute_steps("""given a set of processors in the \"{minifi_flow_name}\" flow
+    context.execute_steps("""given a set of processors in the \"{minifi_container_name}\" flow
         {table}
-        """.format(minifi_flow_name="minifi-cpp-flow", table=rendered_table))
+        """.format(minifi_container_name="minifi-cpp-flow", table=rendered_table))
 
 
 @given("a RemoteProcessGroup node opened on \"{address}\"")
 def step_impl(context, address):
     remote_process_group = RemoteProcessGroup(address, "RemoteProcessGroup")
     context.test.add_remote_process_group(remote_process_group)
-
-
-@given("a PutS3Object processor set up to communicate with an s3 server")
-def step_impl(context):
-    put_s3 = PutS3Object()
-    put_s3.set_name("PutS3Object")
-    context.test.add_node(put_s3)
-
-
-@given("a DeleteS3Object processor set up to communicate with the same s3 server")
-@given("a DeleteS3Object processor set up to communicate with an s3 server")
-def step_impl(context):
-    delete_s3 = DeleteS3Object()
-    delete_s3.set_name("DeleteS3Object")
-    context.test.add_node(delete_s3)
-
-
-@given("a FetchS3Object processor set up to communicate with the same s3 server")
-@given("a FetchS3Object processor set up to communicate with an s3 server")
-def step_impl(context):
-    fetch_s3 = FetchS3Object()
-    fetch_s3.set_name("FetchS3Object")
-    context.test.add_node(fetch_s3)
-
-
-@given("a PutAzureBlobStorage processor set up to communicate with an Azure blob storage")
-def step_impl(context):
-    put_azure_blob_storage = PutAzureBlobStorage()
-    put_azure_blob_storage.set_name("PutAzureBlobStorage")
-    context.test.add_node(put_azure_blob_storage)
-
-
-@given("a PublishKafka processor set up to communicate with a kafka broker instance")
-def step_impl(context):
-    # PublishKafka is never the first node of a flow potential cluster-flow setup is omitted
-    publish_kafka = PublishKafka()
-    publish_kafka.set_name("PublishKafka")
-    context.test.add_node(publish_kafka)
 
 
 @given("a kafka producer workflow publishing files placed in \"{directory}\" to a broker exactly once")
@@ -154,17 +119,6 @@ def step_impl(context, directory):
         and the \"Keep Source File\" property of the GetFile processor is set to \"false\"
         and a PublishKafka processor set up to communicate with a kafka broker instance
         and the "success" relationship of the GetFile processor is connected to the PublishKafka""".format(directory=directory))
-
-
-@given("a ConsumeKafka processor set up in a \"{minifi_flow_name}\" flow")
-def step_impl(context, minifi_flow_name):
-    consume_kafka = ConsumeKafka()
-    consume_kafka.set_name("ConsumeKafka")
-    context.test.add_node(consume_kafka)
-    container = context.test.acquire_container(minifi_flow_name)
-    # Assume that the first node declared is primary unless specified otherwise
-    if not container.get_start_nodes():
-        container.add_start_node(consume_kafka)
 
 
 @given("the \"{property_name}\" property of the {processor_name} processor is set to \"{property_value}\"")
