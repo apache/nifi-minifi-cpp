@@ -16,6 +16,7 @@ rem limitations under the License.
 
 cd %1
 
+rem Define full path to file and remove quotation marks
 set man_path=%1"\unit-test-provider.man"
 set man_path=%man_path:"=%
 
