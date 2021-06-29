@@ -12,15 +12,25 @@ class MultiFileOutputValidator(FileOutputValidator):
     Validates the content of multiple files in the given directory, also verifying that the old files are not rewritten.
     """
 
-    def __init__(self, expected_file_count, subdir=''):
+    def __init__(self, expected_file_count, expected_content=[]):
         self.valid = False
         self.expected_file_count = expected_file_count
-        self.subdir = subdir
         self.file_timestamps = dict()
+        self.expected_content = expected_content
+
+    def check_expected_content(self, full_dir):
+        if not self.expected_content:
+            return True
+
+        for content in self.expected_content:
+            if self.num_files_matching_content_in_dir(full_dir, content) == 0:
+                return False
+
+        return True
 
     def validate(self):
         self.valid = False
-        full_dir = os.path.join(self.output_dir, self.subdir)
+        full_dir = os.path.join(self.output_dir)
         logging.info("Output folder: %s", full_dir)
 
         if not os.path.isdir(full_dir):
@@ -49,7 +59,7 @@ class MultiFileOutputValidator(FileOutputValidator):
             logging.info("New file added %s", full_path)
 
             if len(self.file_timestamps) == self.expected_file_count:
-                self.valid = True
+                self.valid = self.check_expected_content(full_dir)
                 return self.valid
 
         return self.valid

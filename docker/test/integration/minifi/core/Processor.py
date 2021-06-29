@@ -44,8 +44,14 @@ class Processor(Connectable):
         else:
             self.properties[key] = value
 
+    def unset_property(self, key):
+        self.properties.pop(key, None)
+
+    def set_scheduling_strategy(self, value):
+        self.schedule["scheduling strategy"] = value
+
     def set_scheduling_period(self, value):
-        self.schedule['scheduling period'] = value
+        self.schedule["scheduling period"] = value
 
     def nifi_property_key(self, key):
         """

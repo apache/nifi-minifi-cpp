@@ -78,7 +78,8 @@ core::Property ConsumeKafka::TopicNames(core::PropertyBuilder::createProperty("T
   ->build());
 
 core::Property ConsumeKafka::TopicNameFormat(core::PropertyBuilder::createProperty("Topic Name Format")
-  ->withDescription("Specifies whether the Topic(s) provided are a comma separated list of names or a single regular expression.")
+  ->withDescription("Specifies whether the Topic(s) provided are a comma separated list of names or a single regular expression. "
+                    "Using regular expressions does not automatically discover Kafka topics created after the processor started.")
   ->withAllowableValues<std::string>({TOPIC_FORMAT_NAMES, TOPIC_FORMAT_PATTERNS})
   ->withDefaultValue(TOPIC_FORMAT_NAMES)
   ->isRequired(true)
@@ -166,7 +167,7 @@ core::Property ConsumeKafka::SessionTimeout(core::PropertyBuilder::createPropert
   ->withDefaultValue<core::TimePeriodValue>("60 seconds")
   ->build());
 
-const core::Relationship ConsumeKafka::Success("success", "Incoming kafka messages as flowfiles. Depending on the demarcation strategy, this can be one or multiple flowfiles per message.");
+const core::Relationship ConsumeKafka::Success("success", "Incoming Kafka messages as flowfiles. Depending on the demarcation strategy, this can be one or multiple flowfiles per message.");
 
 void ConsumeKafka::initialize() {
   setSupportedProperties({
@@ -318,10 +319,12 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext& context)
   rd_kafka_conf_set_rebalance_cb(conf_.get(), rebalance_cb);
 
   // Uncomment this for librdkafka debug logs:
-  // setKafkaConfigurationField(conf_.get(), "debug", "all");
+  // logger_->log_info("Enabling all debug logs for kafka consumer.");
+  // setKafkaConfigurationField(*conf_, "debug", "all");
 
   setKafkaConfigurationField(*conf_, "bootstrap.servers", kafka_brokers_);
-  setKafkaConfigurationField(*conf_, "auto.offset.reset", "latest");
+  setKafkaConfigurationField(*conf_, "allow.auto.create.topics", "true");
+  setKafkaConfigurationField(*conf_, "auto.offset.reset", offset_reset_);
   setKafkaConfigurationField(*conf_, "enable.auto.commit", "false");
   setKafkaConfigurationField(*conf_, "enable.auto.offset.store", "false");
   setKafkaConfigurationField(*conf_, "isolation.level", honor_transactions_ ? "read_committed" : "read_uncommitted");
@@ -359,25 +362,6 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext& context)
   if (RD_KAFKA_RESP_ERR_NO_ERROR != poll_set_consumer_response) {
     logger_->log_error("rd_kafka_poll_set_consumer error %d: %s", poll_set_consumer_response, rd_kafka_err2str(poll_set_consumer_response));
   }
-
-  // There is no rd_kafka_seek alternative for rd_kafka_topic_partition_list_t, only rd_kafka_topic_t
-  // rd_kafka_topic_partition_list_set_offset should reset the offsets to the latest (or whatever is set in the config),
-  // Also, rd_kafka_committed should also fetch and set latest the latest offset
-  // In reality, neither of them seem to work (not even with calling rd_kafka_position())
-  logger_->log_info("Resetting offset manually.");
-  while (true) {
-    std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
-        message_wrapper{ rd_kafka_consumer_poll(consumer_.get(), max_poll_time_milliseconds_.count()), utils::rd_kafka_message_deleter() };
-
-    if (!message_wrapper || RD_KAFKA_RESP_ERR_NO_ERROR != message_wrapper->err) {
-      break;
-    }
-    utils::print_kafka_message(*message_wrapper, *logger_);
-    // Commit offsets on broker for the provided list of partitions
-    logger_->log_info("Committing offset: %" PRId64 ".", message_wrapper->offset);
-    rd_kafka_commit_message(consumer_.get(), message_wrapper.get(), /* async = */ 0);
-  }
-  logger_->log_info("Done resetting offset manually.");
 }
 
 std::string ConsumeKafka::extract_message(const rd_kafka_message_t& rkmessage) const {
