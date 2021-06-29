@@ -45,7 +45,7 @@ class MiNiFi_integration_test():
         return self.cluster.acquire_container(name, engine)
 
     def wait_for_container_startup_finish(self, container_name):
-        startup_success = self.cluster.wait_for_app_logs(container_name, 120)
+        startup_success = self.cluster.wait_for_startup_log(container_name, 120)
         if not startup_success:
             logging.error("Cluster startup failed for %s", container_name)
             self.cluster.log_app_output()
@@ -184,8 +184,8 @@ class MiNiFi_integration_test():
     def check_azure_storage_server_data(self, object_data):
         assert self.cluster.check_azure_storage_server_data(object_data)
 
-    def wait_for_kafka_consumer_to_be_registered(self):
-        assert self.cluster.wait_for_kafka_consumer_to_be_registered()
+    def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name):
+        assert self.cluster.wait_for_kafka_consumer_to_be_registered(kafka_container_name)
 
     def check_minifi_log_contents(self, line):
         for container in self.cluster.containers.values():

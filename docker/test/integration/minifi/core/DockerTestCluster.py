@@ -54,18 +54,20 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         return container.status, None
 
-    def wait_for_app_logs(self, container_name, timeout_seconds, count=1):
+    def wait_for_app_logs(self, container_name, log_entry, timeout_seconds, count=1):
         wait_start_time = time.perf_counter()
-        startup_finish_log_entry = self.containers[container_name].get_startup_finish_text()
         while (time.perf_counter() - wait_start_time) < timeout_seconds:
-            logging.info('Waiting for app-logs `%s` in container `%s`', startup_finish_log_entry, container_name)
+            logging.info('Waiting for app-logs `%s` in container `%s`', log_entry, container_name)
             status, logs = self.get_app_log(container_name)
-            if logs is not None and count <= logs.decode("utf-8").count(startup_finish_log_entry):
+            if logs is not None and count <= logs.decode("utf-8").count(log_entry):
                 return True
             elif status == 'exited':
                 return False
             time.sleep(1)
         return False
+
+    def wait_for_startup_log(self, container_name, timeout_seconds):
+        return self.wait_for_app_logs(container_name, self.containers[container_name].get_startup_finish_text(), timeout_seconds, 1)
 
     def log_app_output(self):
         for container_name in self.containers:
@@ -121,5 +123,5 @@ class DockerTestCluster(SingleNodeDockerCluster):
     def segfault_happened(self):
         return self.segfault
 
-    def wait_for_kafka_consumer_to_be_registered(self):
-        return self.wait_for_app_logs("Assignment received from leader for group docker_test_group", 60)
+    def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name):
+        return self.wait_for_app_logs(kafka_container_name, "Assignment received from leader for group docker_test_group", 60)
