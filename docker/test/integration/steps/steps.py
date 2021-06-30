@@ -444,6 +444,9 @@ def step_impl(context, content, topic_name, semicolon_separated_headers):
 @when("the Kafka consumer is registered in kafka broker \"{cluster_name}\"")
 def step_impl(context, cluster_name):
     context.test.wait_for_kafka_consumer_to_be_registered(cluster_name)
+    # After the consumer is registered there is still some time needed for consumer-broker synchronization
+    # Unfortunately there are no additional log messages that could be checked for this
+    time.sleep(2)
 
 
 @then("a flowfile with the content \"{content}\" is placed in the monitored directory in less than {duration}")
