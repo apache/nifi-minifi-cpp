@@ -64,34 +64,20 @@ class SingleNodeDockerCluster(Cluster):
             logging.info('Container name was not provided; using generated name \'%s\'', self.name)
 
         if engine == 'nifi':
-            container = NifiContainer(name, self.vols, self.network)
-            self.containers.setdefault(name, container)
-            return container
+            return self.containers.setdefault(name, NifiContainer(name, self.vols, self.network))
         elif engine == 'minifi-cpp':
-            container = MinifiContainer(name, self.vols, self.network)
-            self.containers.setdefault(name, container)
-            return container
+            return self.containers.setdefault(name, MinifiContainer(name, self.vols, self.network))
         elif engine == 'kafka-broker':
             self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network))
-            container = KafkaBrokerContainer(name, self.vols, self.network)
-            self.containers.setdefault(name, container)
-            return container
+            return self.containers.setdefault(name, KafkaBrokerContainer(name, self.vols, self.network))
         elif engine == 'http-proxy':
-            container = HttpProxyContainer(name, self.vols, self.network)
-            self.containers.setdefault(name, container)
-            return container
+            return self.containers.setdefault(name, HttpProxyContainer(name, self.vols, self.network))
         elif engine == 's3-server':
-            container = S3ServerContainer(name, self.vols, self.network)
-            self.containers.setdefault(name, container)
-            return container
+            return self.containers.setdefault(name, S3ServerContainer(name, self.vols, self.network))
         elif engine == 'azure-storage-server':
-            container = AzureStorageServerContainer(name, self.vols, self.network)
-            self.containers.setdefault(name, container)
-            return container
+            return self.containers.setdefault(name, AzureStorageServerContainer(name, self.vols, self.network))
         elif engine == 'postgresql-server':
-            container = PostgreSQLServerContainer('postgresql-server', self.vols, self.network)
-            self.containers.setdefault('postgresql-server', container)
-            return container
+            return self.containers.setdefault(name, PostgreSQLServerContainer(name, self.vols, self.network))
         else:
             raise Exception('invalid flow engine: \'%s\'' % self.engine)
 

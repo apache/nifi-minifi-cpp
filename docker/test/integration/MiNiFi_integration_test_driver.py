@@ -44,7 +44,7 @@ class MiNiFi_integration_test():
     def acquire_container(self, name, engine='minifi-cpp'):
         return self.cluster.acquire_container(name, engine)
 
-    def wait_for_container_startup_finish(self, container_name):
+    def wait_for_container_startup_to_finish(self, container_name):
         startup_success = self.cluster.wait_for_startup_log(container_name, 120)
         if not startup_success:
             logging.error("Cluster startup failed for %s", container_name)
@@ -56,14 +56,14 @@ class MiNiFi_integration_test():
         self.cluster.deploy('zookeeper')
         self.cluster.acquire_container('kafka-broker', 'kafka-broker')
         self.cluster.deploy('kafka-broker')
-        assert self.wait_for_container_startup_finish('kafka-broker')
+        assert self.wait_for_container_startup_to_finish('kafka-broker')
 
     def start(self):
         logging.info("MiNiFi_integration_test start")
         self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id))
         self.cluster.deploy_flow()
         for container_name in self.cluster.containers:
-            assert self.wait_for_container_startup_finish(container_name)
+            assert self.wait_for_container_startup_to_finish(container_name)
 
     def add_node(self, processor):
         if processor.get_name() in (elem.get_name() for elem in self.connectable_nodes):
@@ -169,20 +169,20 @@ class MiNiFi_integration_test():
         assert not self.cluster.segfault_happened()
         assert validator.validate()
 
-    def check_s3_server_object_data(self, object_data):
-        assert self.cluster.check_s3_server_object_data(object_data)
+    def check_s3_server_object_data(self, s3_container_name, object_data):
+        assert self.cluster.check_s3_server_object_data(s3_container_name, object_data)
 
-    def check_s3_server_object_metadata(self, content_type):
-        assert self.cluster.check_s3_server_object_metadata(content_type)
+    def check_s3_server_object_metadata(self, s3_container_name, content_type):
+        assert self.cluster.check_s3_server_object_metadata(s3_container_name, content_type)
 
-    def check_empty_s3_bucket(self):
-        assert self.cluster.is_s3_bucket_empty()
+    def check_empty_s3_bucket(self, s3_container_name):
+        assert self.cluster.is_s3_bucket_empty(s3_container_name)
 
-    def check_http_proxy_access(self, url):
-        assert self.cluster.check_http_proxy_access(url)
+    def check_http_proxy_access(self, http_proxy_container_name, url):
+        assert self.cluster.check_http_proxy_access(http_proxy_container_name, url)
 
-    def check_azure_storage_server_data(self, object_data):
-        assert self.cluster.check_azure_storage_server_data(object_data)
+    def check_azure_storage_server_data(self, azure_container_name, object_data):
+        assert self.cluster.check_azure_storage_server_data(azure_container_name, object_data)
 
     def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name):
         assert self.cluster.wait_for_kafka_consumer_to_be_registered(kafka_container_name)
@@ -198,5 +198,5 @@ class MiNiFi_integration_test():
     def check_minifi_logs_for_message(self, log_message, timeout_seconds):
         assert self.cluster.wait_for_app_logs(log_message, timeout_seconds)
 
-    def check_query_results(self, query, number_of_rows, timeout_seconds):
-        assert self.cluster.check_query_results(query, number_of_rows, timeout_seconds)
+    def check_query_results(self, postgresql_container_name, query, number_of_rows, timeout_seconds):
+        assert self.cluster.check_query_results(postgresql_container_name, query, number_of_rows, timeout_seconds)

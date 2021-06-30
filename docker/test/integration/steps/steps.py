@@ -490,33 +490,33 @@ def step_impl(context, duration):
 
 @then("no errors were generated on the http-proxy regarding \"{url}\"")
 def step_impl(context, url):
-    context.test.check_http_proxy_access(url)
+    context.test.check_http_proxy_access('http-proxy', url)
 
 
 @then("the object on the s3 server is \"{object_data}\"")
 def step_impl(context, object_data):
-    context.test.check_s3_server_object_data(object_data)
+    context.test.check_s3_server_object_data("s3-server", object_data)
 
 
 @then("the object content type on the s3 server is \"{content_type}\" and the object metadata matches use metadata")
 def step_impl(context, content_type):
-    context.test.check_s3_server_object_metadata(content_type)
+    context.test.check_s3_server_object_metadata("s3-server", content_type)
 
 
 @then("the object bucket on the s3 server is empty")
 def step_impl(context):
-    context.test.check_empty_s3_bucket()
+    context.test.check_empty_s3_bucket("s3-server")
 
 
 @then("the object on the Azure storage server is \"{object_data}\"")
 def step_impl(context, object_data):
-    context.test.check_azure_storage_server_data(object_data)
+    context.test.check_azure_storage_server_data("azure-storage-server", object_data)
 
 
 # SQL
 @then("the query \"{query}\" returns {number_of_rows:d} rows in less than {timeout_seconds:d} seconds on the PostgreSQL server")
 def step_impl(context, query, number_of_rows, timeout_seconds):
-    context.test.check_query_results(query, number_of_rows, timeout_seconds)
+    context.test.check_query_results("postgresql-server", query, number_of_rows, timeout_seconds)
 
 
 @then("the minifi log contains \"{line}\"")

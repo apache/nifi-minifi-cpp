@@ -77,45 +77,63 @@ class DockerTestCluster(SingleNodeDockerCluster):
                 for line in logs.decode("utf-8").splitlines():
                     logging.info(line)
 
-    def check_http_proxy_access(self, url):
-        output = subprocess.check_output(["docker", "exec", "http-proxy", "cat", "/var/log/squid/access.log"]).decode(self.get_stdout_encoding())
-        return url in output \
+    def check_http_proxy_access(self, container_name, url):
+        (code, output) = self.client.containers.get(container_name).exec_run(["cat", "/var/log/squid/access.log"])
+        output = output.decode(self.get_stdout_encoding())
+        return code == 0 and url in output \
             and ((output.count("TCP_DENIED") != 0
-                  and output.count("TCP_MISS") == output.count("TCP_DENIED"))
+                 and output.count("TCP_MISS") == output.count("TCP_DENIED"))
                  or output.count("TCP_DENIED") == 0 and "TCP_MISS" in output)
 
     @retry_check()
-    def check_s3_server_object_data(self, test_data):
-        s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(self.get_stdout_encoding()).strip()
-        file_data = subprocess.check_output(["docker", "exec", "s3-server", "cat", s3_mock_dir + "/test_bucket/test_object_key/fileData"]).decode(self.get_stdout_encoding())
-        return file_data == test_data
+    def check_s3_server_object_data(self, container_name, test_data):
+        (code, output) = self.client.containers.get(container_name).exec_run(["find", "/tmp/", "-type", "d", "-name", "s3mock*"])
+        if code != 0:
+            return False
+        s3_mock_dir = output.decode(self.get_stdout_encoding()).strip()
+        (code, output) = self.client.containers.get(container_name).exec_run(["cat", s3_mock_dir + "/test_bucket/test_object_key/fileData"])
+        file_data = output.decode(self.get_stdout_encoding())
+        return code == 0 and file_data == test_data
 
     @retry_check()
-    def check_s3_server_object_metadata(self, content_type="application/octet-stream", metadata=dict()):
-        s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(self.get_stdout_encoding()).strip()
-        metadata_json = subprocess.check_output(["docker", "exec", "s3-server", "cat", s3_mock_dir + "/test_bucket/test_object_key/metadata"]).decode(self.get_stdout_encoding())
-        server_metadata = json.loads(metadata_json)
-        return server_metadata["contentType"] == content_type and metadata == server_metadata["userMetadata"]
+    def check_s3_server_object_metadata(self, container_name, content_type="application/octet-stream", metadata=dict()):
+        (code, output) = self.client.containers.get(container_name).exec_run(["find", "/tmp/", "-type", "d", "-name", "s3mock*"])
+        if code != 0:
+            return False
+        s3_mock_dir = output.decode(self.get_stdout_encoding()).strip()
+        (code, output) = self.client.containers.get(container_name).exec_run(["cat", s3_mock_dir + "/test_bucket/test_object_key/metadata"])
+        server_metadata = json.loads(output.decode(self.get_stdout_encoding()))
+        return code == 0 and server_metadata["contentType"] == content_type and metadata == server_metadata["userMetadata"]
 
     @retry_check()
-    def check_azure_storage_server_data(self, test_data):
-        data_file = subprocess.check_output(["docker", "exec", "azure-storage-server", "find", "/data/__blobstorage__", "-type", "f"]).decode(self.get_stdout_encoding()).strip()
-        file_data = subprocess.check_output(["docker", "exec", "azure-storage-server", "cat", data_file]).decode(self.get_stdout_encoding())
-        return test_data in file_data
+    def check_azure_storage_server_data(self, container_name, test_data):
+        (code, output) = self.client.containers.get(container_name).exec_run(["find", "/data/__blobstorage__", "-type", "f"])
+        if code != 0:
+            return False
+        data_file = output.decode(self.get_stdout_encoding()).strip()
+        (code, output) = self.client.containers.get(container_name).exec_run(["cat", data_file])
+        file_data = output.decode(self.get_stdout_encoding())
+        return code == 0 and test_data in file_data
 
     @retry_check()
-    def is_s3_bucket_empty(self):
-        s3_mock_dir = subprocess.check_output(["docker", "exec", "s3-server", "find", "/tmp/", "-type", "d", "-name", "s3mock*"]).decode(self.get_stdout_encoding()).strip()
-        ls_result = subprocess.check_output(["docker", "exec", "s3-server", "ls", s3_mock_dir + "/test_bucket/"]).decode(self.get_stdout_encoding())
-        return not ls_result
+    def is_s3_bucket_empty(self, container_name):
+        (code, output) = self.client.containers.get(container_name).exec_run(["find", "/tmp/", "-type", "d", "-name", "s3mock*"])
+        if code != 0:
+            return False
+        s3_mock_dir = output.decode(self.get_stdout_encoding()).strip()
+        (code, output) = self.client.containers.get(container_name).exec_run(["ls", s3_mock_dir + "/test_bucket/"])
+        ls_result = output.decode(self.get_stdout_encoding())
+        return code == 0 and not ls_result
 
-    def query_postgres_server(self, query, number_of_rows):
-        return str(number_of_rows) + " rows" in subprocess.check_output(["docker", "exec", "postgresql-server", "psql", "-U", "postgres", "-c", query]).decode(self.get_stdout_encoding()).strip()
+    def query_postgres_server(self, postgresql_container_name, query, number_of_rows):
+        (code, output) = self.client.containers.get(postgresql_container_name).exec_run(["psql", "-U", "postgres", "-c", query])
+        output = output.decode(self.get_stdout_encoding())
+        return code == 0 and str(number_of_rows) + " rows" in output
 
-    def check_query_results(self, query, number_of_rows, timeout_seconds):
+    def check_query_results(self, postgresql_container_name, query, number_of_rows, timeout_seconds):
         start_time = time.perf_counter()
         while (time.perf_counter() - start_time) < timeout_seconds:
-            if self.query_postgres_server(query, number_of_rows):
+            if self.query_postgres_server(postgresql_container_name, query, number_of_rows):
                 return True
             time.sleep(2)
         return False
