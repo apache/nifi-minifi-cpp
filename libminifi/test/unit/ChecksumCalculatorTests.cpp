@@ -79,3 +79,23 @@ TEST_CASE("Checksums can be computed for binary (eg. encrypted) files, too", "[C
   checksum_calculator.setFileLocation(file_location);
   REQUIRE(checksum_calculator.getChecksum() == "bdec77160c394c067419735de757e4daa1c4679ea45e82a33fa8f706eed87709");
 }
+
+TEST_CASE("The agent identifier is excluded from the checksum", "[ChecksumCalculator]") {
+  TestController test_controller;
+  std::string test_dir = utils::createTempDir(&test_controller);
+  std::string file_location_1 = utils::putFileToDir(test_dir, "agent_one.txt",
+      "nifi.c2.agent.class=Test\n"
+      "nifi.c2.agent.identifier=Test-111\n"
+      "nifi.c2.agent.heartbeat.period=10000\n");
+  std::string file_location_2 = utils::putFileToDir(test_dir, "agent_two.txt",
+      "nifi.c2.agent.class=Test\n"
+      "nifi.c2.agent.identifier=Test-222\n"
+      "nifi.c2.agent.heartbeat.period=10000\n");
+
+  utils::ChecksumCalculator checksum_calculator_1;
+  checksum_calculator_1.setFileLocation(file_location_1);
+  utils::ChecksumCalculator checksum_calculator_2;
+  checksum_calculator_2.setFileLocation(file_location_2);
+
+  REQUIRE(checksum_calculator_1.getChecksum() == checksum_calculator_2.getChecksum());
+}

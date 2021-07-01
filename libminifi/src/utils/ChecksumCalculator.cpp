@@ -23,6 +23,12 @@
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
 
+namespace {
+
+const std::string AGENT_IDENTIFIER_KEY = "nifi.c2.agent.identifier=";
+
+}
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -67,6 +73,9 @@ std::string ChecksumCalculator::computeChecksum(const std::string& file_location
 
   std::string line;
   while (std::getline(input_file, line)) {
+    if (StringUtils::startsWith(line, AGENT_IDENTIFIER_KEY)) {
+      continue;
+    }
     if (!input_file.eof()) {  // eof() means we have just read the last line, which was not terminated by a newline
       line.append("\n");
     }
