@@ -367,6 +367,7 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
     W. Openwsman Support ...........Disabled
     X. Azure Support ...............Disabled
     Y. Systemd Support .............Enabled
+    Z. NanoFi Support ..............Enabled
     ****************************************
                 Build Options.
     ****************************************
