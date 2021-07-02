@@ -113,7 +113,7 @@ TEST_CASE("Trying to use an uninitialized ChecksumCalculator will throw", "[Chec
 
 TEST_CASE("ChecksumCalculator::getChecksum will throw if the file does not exist", "[ChecksumCalculator]") {
   utils::ChecksumCalculator checksum_calculator;
-  checksum_calculator.setFileLocation("/this/file/does/not/exist/84a77fd9-16b3-49d2-aead-a1f9e58e530b");
+  checksum_calculator.setFileLocation("/this/file/does/not/exist/84a77fd9-16b3-49d2-aead-a1f9e58e530d");
 
   REQUIRE_THROWS(checksum_calculator.getChecksum());
 }
