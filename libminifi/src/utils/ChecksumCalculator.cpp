@@ -73,6 +73,7 @@ std::string ChecksumCalculator::computeChecksum(const std::string& file_location
 
   std::string line;
   while (std::getline(input_file, line)) {
+    // skip lines containing the agent identifier, so agents in the same class will have the same checksum
     if (StringUtils::startsWith(line, AGENT_IDENTIFIER_KEY)) {
       continue;
     }
