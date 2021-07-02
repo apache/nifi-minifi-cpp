@@ -99,3 +99,21 @@ TEST_CASE("The agent identifier is excluded from the checksum", "[ChecksumCalcul
 
   REQUIRE(checksum_calculator_1.getChecksum() == checksum_calculator_2.getChecksum());
 }
+
+TEST_CASE("Trying to use an uninitialized ChecksumCalculator will throw", "[ChecksumCalculator]") {
+  utils::ChecksumCalculator uninitialized_checksum_calculator;
+
+  SECTION("Calling getFileName throws") {
+    REQUIRE_THROWS(uninitialized_checksum_calculator.getFileName());
+  }
+  SECTION("Calling getChecksum throws") {
+    REQUIRE_THROWS(uninitialized_checksum_calculator.getChecksum());
+  }
+}
+
+TEST_CASE("ChecksumCalculator::getChecksum will throw if the file does not exist", "[ChecksumCalculator]") {
+  utils::ChecksumCalculator checksum_calculator;
+  checksum_calculator.setFileLocation("/this/file/does/not/exist/84a77fd9-16b3-49d2-aead-a1f9e58e530b");
+
+  REQUIRE_THROWS(checksum_calculator.getChecksum());
+}
