@@ -50,6 +50,7 @@ option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
 option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
 option(ENABLE_OPENCV "Instructs the build system to enable the OpenCV extension" OFF)
 option(ENABLE_OPC "Instructs the build system to enable the OPC extension" OFF)
+option(ENABLE_NANOFI "Instructs the build system to enable nanofi library" OFF)
 option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
 
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
@@ -574,8 +575,10 @@ endif()
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 add_subdirectory(main)
 
-add_subdirectory(nanofi)
-add_dependencies(nanofi minifiexe)
+if (ENABLE_NANOFI)
+	add_subdirectory(nanofi)
+	add_dependencies(nanofi minifiexe)
+endif()
 
 option(ENABLE_ENCRYPT_CONFIG "Enables build of encrypt-config binary." ON)
 if (ENABLE_ENCRYPT_CONFIG)
@@ -590,11 +593,11 @@ endif()
 
 
 if (NOT DISABLE_CURL)
-  if (ENABLE_PYTHON)
+  if (ENABLE_PYTHON AND ENABLE_NANOFI)
   	if (NOT WIN32)
   		add_subdirectory(python/library)
   	endif()
-  endif(ENABLE_PYTHON)
+  endif()
 endif()
 
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
