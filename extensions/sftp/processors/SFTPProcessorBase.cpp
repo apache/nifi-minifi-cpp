@@ -97,8 +97,8 @@ core::Property SFTPProcessorBase::ProxyType(core::PropertyBuilder::createPropert
                        "Supported proxies: HTTP + AuthN, SOCKS + AuthN")
     ->isRequired(false)
     ->withAllowableValues<std::string>({PROXY_TYPE_DIRECT,
-                                            PROXY_TYPE_HTTP,
-                                            PROXY_TYPE_SOCKS})
+                                        PROXY_TYPE_HTTP,
+                                        PROXY_TYPE_SOCKS})
     ->withDefaultValue(PROXY_TYPE_DIRECT)->build());
 
 core::Property SFTPProcessorBase::ProxyHost(core::PropertyBuilder::createProperty("Proxy Host")
