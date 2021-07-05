@@ -32,7 +32,8 @@ TEST_CASE("ChecksumCalculator can calculate the checksum, which is equal to sha2
   std::string file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
 
   REQUIRE(std::string{utils::ChecksumCalculator::CHECKSUM_TYPE} == std::string{"SHA256"});
-  REQUIRE(utils::ChecksumCalculator::LENGTH_OF_HASH_IN_BYTES == 32);
+  // the first size_t{} is required by Catch2; it can't use a constexpr expression directly
+  REQUIRE(size_t{utils::ChecksumCalculator::LENGTH_OF_HASH_IN_BYTES} == size_t{32});
 
   utils::ChecksumCalculator checksum_calculator;
   checksum_calculator.setFileLocation(file_location);

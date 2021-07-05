@@ -35,9 +35,6 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-constexpr const char* ChecksumCalculator::CHECKSUM_TYPE;
-constexpr size_t ChecksumCalculator::LENGTH_OF_HASH_IN_BYTES;
-
 void ChecksumCalculator::setFileLocation(const std::string& file_location) {
   file_location_ = file_location;
   file_name_ = utils::file::get_child_path(file_location);
