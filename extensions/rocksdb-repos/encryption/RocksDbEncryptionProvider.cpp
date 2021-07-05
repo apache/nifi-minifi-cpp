@@ -30,8 +30,6 @@ namespace repository {
 using utils::crypto::Bytes;
 using utils::crypto::Aes256EcbCipher;
 
-namespace {
-
 class AES256BlockCipher final : public rocksdb::BlockCipher {
   static std::shared_ptr<logging::Logger> logger_;
  public:
@@ -72,8 +70,6 @@ class EncryptingEnv : public rocksdb::EnvWrapper {
   std::unique_ptr<Env> env_;
   std::shared_ptr<AES256BlockCipher> cipher_;
 };
-
-}  // namespace
 
 std::shared_ptr<logging::Logger> AES256BlockCipher::logger_ = logging::LoggerFactory<AES256BlockCipher>::getLogger();
 
