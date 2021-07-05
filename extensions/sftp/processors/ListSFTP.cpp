@@ -71,7 +71,7 @@ core::Property ListSFTP::RemotePath(core::PropertyBuilder::createProperty("Remot
 
 core::Property ListSFTP::SearchRecursively(core::PropertyBuilder::createProperty("Search Recursively")
     ->withDescription("If true, will pull files from arbitrarily nested subdirectories; "
-                                                                                 "otherwise, will not traverse subdirectories")
+                      "otherwise, will not traverse subdirectories")
     ->isRequired(true)->withDefaultValue<bool>(false)->build());
 
 core::Property ListSFTP::FollowSymlink(core::PropertyBuilder::createProperty("Follow symlink")
