@@ -71,7 +71,8 @@ class SensorBase : public core::Processor {
       const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(data_.data()), data_.size());
       return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
     }
-};
+  };
+
  protected:
   RTIMUSettings settings;
   std::unique_ptr<RTIMU> imu;
