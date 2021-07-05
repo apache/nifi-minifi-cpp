@@ -51,10 +51,10 @@ class RocksDatabase {
   utils::optional<OpenRocksDb> open();
 
  private:
-  std::shared_ptr<RocksDbInstance> db_;
   const std::string column_;
   const DBOptionsPatch db_options_patch_;
   const ColumnFamilyOptionsPatch cf_options_patch_;
+  std::shared_ptr<RocksDbInstance> db_;
 
   static std::shared_ptr<core::logging::Logger> logger_;
 };

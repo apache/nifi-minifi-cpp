@@ -63,6 +63,8 @@ class RocksDbInstance {
   std::shared_ptr<rocksdb::DB> impl_;
   std::unordered_map<std::string, std::shared_ptr<ColumnHandle>> columns_;
 
+  DBOptionsPatch db_options_patch_;
+
   static std::shared_ptr<core::logging::Logger> logger_;
 };
 

@@ -39,17 +39,12 @@ class Writable {
  public:
   explicit Writable(T& target) : target_(target) {}
 
-  template<typename F>
-  void set(F T::* member, typename utils::type_identity<F>::type value) {
-    if (!(target_.*member == value)) {
+  template<typename F, typename Comparator = std::equal_to<F>>
+  void set(F T::* member, typename utils::type_identity<F>::type value, const Comparator& comparator = Comparator{}) {
+    if (!comparator(target_.*member, value)) {
       target_.*member = value;
       is_modified_ = true;
     }
-  }
-
-  template<typename Transformer, typename F>
-  void transform(F T::* member) {
-    set(member, Transformer::transform(target_.*member));
   }
 
   template<typename F>

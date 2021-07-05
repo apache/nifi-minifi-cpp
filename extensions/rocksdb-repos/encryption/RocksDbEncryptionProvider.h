@@ -35,7 +35,11 @@ struct DbEncryptionOptions {
   std::string encryption_key_name;
 };
 
-std::shared_ptr<rocksdb::EncryptionProvider> createEncryptionProvider(const utils::crypto::EncryptionManager& manager, const DbEncryptionOptions& options);
+std::shared_ptr<rocksdb::Env> createEncryptingEnv(const utils::crypto::EncryptionManager& manager, const DbEncryptionOptions& options);
+
+struct EncryptionEq {
+  bool operator()(const rocksdb::Env* lhs, const rocksdb::Env* rhs) const;
+};
 
 }  // namespace repository
 }  // namespace core

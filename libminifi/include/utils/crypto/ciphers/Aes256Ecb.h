@@ -47,6 +47,8 @@ class Aes256EcbCipher {
 
   static Bytes generateKey();
 
+  bool equals(const Aes256EcbCipher& other) const;
+
  private:
   template<typename ...Args>
   static void handleError(Args&& ...args) {

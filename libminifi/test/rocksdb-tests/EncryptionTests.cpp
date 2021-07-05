@@ -106,3 +106,7 @@ TEST_CASE_METHOD(FFRepoFixture, "FlowFileRepository creates checkpoint and loads
     REQUIRE(flowfile->getAttribute("my little pony") == "my horse is amazing");
   });
 }
+
+TEST_CASE("Using different encryption keys for different column families logs error") {
+
+}

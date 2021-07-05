@@ -108,6 +108,12 @@ void Aes256EcbCipher::decrypt(unsigned char *data) const {
   gsl_Expects(plaintext_len == BLOCK_SIZE);
 }
 
+bool Aes256EcbCipher::equals(const Aes256EcbCipher &other) const {
+  if (encryption_key_.size() != other.encryption_key_.size()) return false;
+  if (encryption_key_.size() != KEY_SIZE) return false;
+  return CRYPTO_memcmp(encryption_key_.data(), other.encryption_key_.data(), KEY_SIZE) == 0;
+}
+
 }  // namespace crypto
 }  // namespace utils
 }  // namespace minifi

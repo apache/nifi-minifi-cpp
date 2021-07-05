@@ -48,7 +48,20 @@ utils::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column, co
     rocksdb::DB* db_instance = nullptr;
     rocksdb::Status result;
 
-    rocksdb::ConfigOptions conf_options;
+    rocksdb::ConfigOptions conf_options = [&] {
+      // we have to extract the encryptor environment otherwise
+      // we won't be able to read the options file
+      rocksdb::ConfigOptions result;
+      if (db_options_patch) {
+        rocksdb::DBOptions dummy_opts;
+        Writable<rocksdb::DBOptions> db_options_writer(dummy_opts);
+        db_options_patch(db_options_writer);
+        if (dummy_opts.env) {
+          result.env = dummy_opts.env;
+        }
+      }
+      return result;
+    }();
     db_options_ = rocksdb::DBOptions{};
     std::vector<rocksdb::ColumnFamilyDescriptor> cf_descriptors;
     rocksdb::Status option_status = rocksdb::LoadLatestOptions(conf_options, db_name_, &db_options_, &cf_descriptors);
@@ -100,6 +113,7 @@ utils::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column, co
       return utils::nullopt;
     }
     gsl_Expects(db_instance);
+    db_options_patch_ = db_options_patch;
     impl_.reset(db_instance);
     for (size_t cf_idx{0}; cf_idx < column_handles.size(); ++cf_idx) {
       columns_[column_handles[cf_idx]->GetName()]

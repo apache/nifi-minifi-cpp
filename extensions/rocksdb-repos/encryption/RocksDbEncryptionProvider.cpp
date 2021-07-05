@@ -39,12 +39,16 @@ class AES256BlockCipher final : public rocksdb::BlockCipher {
       : database_(std::move(database)),
         cipher_impl_(std::move(cipher_impl)) {}
 
-  const char* Name() const override {
+  const char *Name() const override {
     return "AES256BlockCipher";
   }
 
   size_t BlockSize() override {
     return Aes256EcbCipher::BLOCK_SIZE;
+  }
+
+  bool equals(const AES256BlockCipher& other) const {
+    return cipher_impl_.equals(other.cipher_impl_);
   }
 
   rocksdb::Status Encrypt(char *data) override;
@@ -56,18 +60,31 @@ class AES256BlockCipher final : public rocksdb::BlockCipher {
   const Aes256EcbCipher cipher_impl_;
 };
 
+class EncryptingEnv : public rocksdb::EnvWrapper {
+ public:
+  EncryptingEnv(Env* target, std::shared_ptr<AES256BlockCipher> cipher) : EnvWrapper(target), env_(target), cipher_(std::move(cipher)) {}
+
+  bool equals(const EncryptingEnv& other) const {
+    return cipher_->equals(*other.cipher_);
+  }
+
+ private:
+  std::unique_ptr<Env> env_;
+  std::shared_ptr<AES256BlockCipher> cipher_;
+};
+
 }  // namespace
 
 std::shared_ptr<logging::Logger> AES256BlockCipher::logger_ = logging::LoggerFactory<AES256BlockCipher>::getLogger();
 
-std::shared_ptr<rocksdb::EncryptionProvider> createEncryptionProvider(const utils::crypto::EncryptionManager& manager, const DbEncryptionOptions& options) {
-  auto cipher = manager.createAes256EcbCipher(options.encryption_key_name);
-  if (!cipher) {
+std::shared_ptr<rocksdb::Env> createEncryptingEnv(const utils::crypto::EncryptionManager& manager, const DbEncryptionOptions& options) {
+  auto cipher_impl = manager.createAes256EcbCipher(options.encryption_key_name);
+  if (!cipher_impl) {
     return {};
   }
-  return rocksdb::EncryptionProvider::NewCTRProvider(
-      std::make_shared<AES256BlockCipher>(options.database, cipher.value())
-  );
+  auto cipher = std::make_shared<AES256BlockCipher>(options.database, cipher_impl.value());
+  return std::make_shared<EncryptingEnv>(
+      rocksdb::NewEncryptedEnv(rocksdb::Env::Default(), rocksdb::EncryptionProvider::NewCTRProvider(cipher)), cipher);
 }
 
 rocksdb::Status AES256BlockCipher::Encrypt(char *data) {
@@ -88,6 +105,14 @@ rocksdb::Status AES256BlockCipher::Decrypt(char *data) {
     logger_->log_error("Error while decrypting in database '%s': %s", database_, error.what());
     return rocksdb::Status::IOError();
   }
+}
+
+bool EncryptionEq::operator()(const rocksdb::Env* lhs, const rocksdb::Env* rhs) const {
+  auto* lhs_enc = dynamic_cast<const EncryptingEnv*>(lhs);
+  auto* rhs_enc = dynamic_cast<const EncryptingEnv*>(rhs);
+  if (lhs_enc == rhs_enc) return true;
+  if (!lhs_enc || !rhs_enc) return false;
+  return lhs_enc->equals(*rhs_enc);
 }
 
 }  // namespace repository
