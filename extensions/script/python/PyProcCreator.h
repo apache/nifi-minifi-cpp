@@ -35,9 +35,6 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
         name_(name) {
   }
 
-  /**
-   * Create a shared pointer to a new processor.
-   */
   std::shared_ptr<core::CoreComponent> create(const std::string &name) override {
     auto ptr = std::static_pointer_cast<minifi::python::processors::ExecutePythonProcessor>(DefautObjectFactory::create(name));
     ptr->initialize();
@@ -45,19 +42,12 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
     return std::static_pointer_cast<core::CoreComponent>(ptr);
   }
 
-  /**
-   * Create a shared pointer to a new processor.
-   */
   std::shared_ptr<core::CoreComponent> create(const std::string &name, const utils::Identifier &uuid) override {
     auto ptr = std::static_pointer_cast<minifi::python::processors::ExecutePythonProcessor>(DefautObjectFactory::create(name, uuid));
     ptr->initialize();
     ptr->setProperty(minifi::python::processors::ExecutePythonProcessor::ScriptFile, file_);
     return std::static_pointer_cast<core::CoreComponent>(ptr);
   }
-
-  /**
-   * Create a shared pointer to a new processor.
-   */
 
   core::CoreComponent* createRaw(const std::string &name) override {
     auto ptr = dynamic_cast<minifi::python::processors::ExecutePythonProcessor*>(DefautObjectFactory::createRaw(name));
@@ -66,9 +56,6 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
     return dynamic_cast<core::CoreComponent*>(ptr);
   }
 
-  /**
-   * Create a shared pointer to a new processor.
-   */
   core::CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) override {
     auto ptr = dynamic_cast<minifi::python::processors::ExecutePythonProcessor*>(DefautObjectFactory::createRaw(name, uuid));
     ptr->initialize();
