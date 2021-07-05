@@ -43,18 +43,9 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   } else {
     directory_ = configuration->getHome() + "/dbcontentrepository";
   }
-  std::shared_ptr<rocksdb::Env> encrypted_env = [&] {
-    DbEncryptionOptions encryption_opts;
-    encryption_opts.database = directory_;
-    encryption_opts.encryption_key_name = ENCRYPTION_KEY_NAME;
-    auto env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration->getHome()}, encryption_opts);
-    if (env) {
-      logger_->log_info("Using encrypted DatabaseContentRepository");
-    } else {
-      logger_->log_info("Using plaintext DatabaseContentRepository");
-    }
-    return env;
-  }();
+  const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
+  logger_->log_info("Using %s DatabaseContentRepository", encrypted_env ? "encrypted" : "plaintext");
+
   auto set_db_opts = [encrypted_env] (internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);

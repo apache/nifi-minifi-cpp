@@ -60,18 +60,10 @@ void RocksDbPersistableKeyValueStoreService::onEnable() {
   }
 
   db_.reset();
-  std::shared_ptr<rocksdb::Env> encrypted_env = [&] {
-    core::repository::DbEncryptionOptions encryption_opts;
-    encryption_opts.database = directory_;
-    encryption_opts.encryption_key_name = ENCRYPTION_KEY_NAME;
-    auto env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration_->getHome()}, encryption_opts);
-    if (env) {
-      logger_->log_info("Using encrypted RocksDbPersistableKeyValueStoreService");
-    } else {
-      logger_->log_info("Using plaintext RocksDbPersistableKeyValueStoreService");
-    }
-    return env;
-  }();
+
+  const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration_->getHome()}, core::repository::DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
+  logger_->log_info("Using %s RocksDbPersistableKeyValueStoreService", encrypted_env ? "encrypted" : "plaintext");
+
   auto set_db_opts = [encrypted_env] (internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);

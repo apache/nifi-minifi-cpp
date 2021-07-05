@@ -207,10 +207,7 @@ TEST_CASE_METHOD(RocksDBTest, "Column options are applied", "[rocksDBTest9]") {
 }
 
 minifi::internal::DBOptionsPatch createEncrSetter(const utils::Path& home_dir, const std::string& db_name, const std::string& key_name) {
-  core::repository::DbEncryptionOptions encryption_opts;
-  encryption_opts.database = db_name;
-  encryption_opts.encryption_key_name = key_name;
-  auto env = core::repository::createEncryptingEnv(utils::crypto::EncryptionManager{home_dir.str()}, encryption_opts);
+  auto env = core::repository::createEncryptingEnv(utils::crypto::EncryptionManager{home_dir.str()}, core::repository::DbEncryptionOptions{db_name, key_name});
   REQUIRE(env);
   return [env] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);

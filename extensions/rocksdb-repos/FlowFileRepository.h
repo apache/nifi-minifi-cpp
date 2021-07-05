@@ -108,18 +108,10 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       }
     }
     logger_->log_debug("NiFi FlowFile Max Storage Time: [%d] ms", max_partition_millis_);
-    std::shared_ptr<rocksdb::Env> encrypted_env = [&] {
-      DbEncryptionOptions encryption_opts;
-      encryption_opts.database = directory_;
-      encryption_opts.encryption_key_name = ENCRYPTION_KEY_NAME;
-      auto env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, encryption_opts);
-      if (env) {
-        logger_->log_info("Using encrypted FlowFileRepository");
-      } else {
-        logger_->log_info("Using plaintext FlowFileRepository");
-      }
-      return env;
-    }();
+
+    const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
+    logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
+
     auto db_options = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& options) {
       options.set(&rocksdb::DBOptions::create_if_missing, true);
       options.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
