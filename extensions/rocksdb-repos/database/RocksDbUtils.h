@@ -19,6 +19,7 @@
 #pragma once
 
 #include <functional>
+#include <algorithm>
 #include "rocksdb/db.h"
 #include "utils/GeneralUtils.h"
 

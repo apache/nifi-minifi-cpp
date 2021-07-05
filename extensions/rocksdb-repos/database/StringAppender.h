@@ -17,8 +17,11 @@
 
 #pragma once
 
-#include "rocksdb/merge_operator.h"
 #include <cstring>
+#include <string>
+#include <memory>
+#include <algorithm>
+#include "rocksdb/merge_operator.h"
 
 namespace org {
 namespace apache {
@@ -29,9 +32,6 @@ namespace repository {
 
 class StringAppender : public rocksdb::AssociativeMergeOperator {
  public:
-  // Constructor: specify delimiter
-  explicit StringAppender() = default;
-
   static std::shared_ptr<rocksdb::MergeOperator> transform(const std::shared_ptr<rocksdb::MergeOperator>& other) {
     if (other && std::strcmp(other->Name(), "StringAppender") == 0) {
       return other;

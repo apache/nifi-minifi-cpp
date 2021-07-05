@@ -19,6 +19,8 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include <vector>
 #include "utils/gsl.h"
 
 #include "rocksdb/db.h"

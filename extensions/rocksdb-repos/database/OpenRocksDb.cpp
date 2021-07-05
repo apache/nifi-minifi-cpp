@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#include <utility>
+
 #include "OpenRocksDb.h"
 #include "ColumnHandle.h"
 #include "RocksDbInstance.h"

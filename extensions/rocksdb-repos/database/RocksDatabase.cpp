@@ -17,6 +17,10 @@
  */
 
 #include "RocksDatabase.h"
+
+#include <unordered_map>
+#include <utility>
+
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
 #include "RocksDbInstance.h"

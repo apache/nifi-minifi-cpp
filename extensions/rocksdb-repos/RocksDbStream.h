@@ -17,11 +17,11 @@
  */
 #pragma once
 
-#include "database/RocksDatabase.h"
 #include <iostream>
 #include <cstdint>
 #include <string>
 #include <memory>
+#include "database/RocksDatabase.h"
 #include "io/BaseStream.h"
 #include "core/logging/LoggerConfiguration.h"
 
